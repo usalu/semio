@@ -60,7 +60,7 @@ impl From<MeshKernelError> for LowpolyCoreError {
 //#endregion ⚠️ Errors
 
 //#region 🔖️ComputeSession
-/// @emoji 🛠️ Mutable compute session built from a projection clone plus ephemeral editing context
+/// 🛠️ Mutable compute session built from a projection clone plus ephemeral editing context
 /// (active object + selection) PLUS the session-local `mesh_workspace` cache (round 2 of ticket
 /// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM's round-trip law fix — `LowpolyObject` carries no live
 /// mesh content field at all any more, only the `🖌️session::LowpolyScratch` cache does). The program
@@ -312,7 +312,7 @@ impl LowpolyDocument {
         Ok(sum.scale(1.0 / verts.len() as f32))
     }
 
-    /// @emoji ➕️ Appends a primitive object, making it active, and returns its new id.
+    /// ➕️ Appends a primitive object, making it active, and returns its new id.
     pub fn add_primitive(&mut self, kind: &str) -> Result<String, LowpolyCoreError> {
         let mut mesh = match kind {
             "box" => HalfedgeMesh::box_prim(1.0, 1.0, 1.0),
@@ -472,7 +472,7 @@ impl LowpolyDocument {
         Ok(crate::schema::composite_layer_pixels(&self.snapshot.objects[idx].paint_layers))
     }
 
-    /// @emoji 🖌️ Stamps a soft brush (or eraser) into a layer's pixel buffer in place.
+    /// 🖌️ Stamps a soft brush (or eraser) into a layer's pixel buffer in place.
     #[allow(clippy::too_many_arguments, reason = "1:1 forwarder for stamp_brush's own justified 8 args plus object_id/layer_index; a params struct would only move the same fields around for this single call site")]
     pub fn paint_stroke(&mut self, object_id: &str, layer_index: usize, u: f32, v: f32, radius: f32, color: [u8; 4], hardness: f32, opacity: f32, eraser: bool) -> Result<(), LowpolyCoreError> {
         let layer_pixels = self.layer_pixels_mut(object_id, layer_index)?;

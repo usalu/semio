@@ -76,7 +76,7 @@ async fn retained_spr_resume_preserves_exact_prefix_and_commit_chain() {
     writer.next_commit_seq = resume["exhaustedSequence"].as_str().unwrap().parse().unwrap();
     assert!(writer.commit().await.is_err());
     assert_eq!(writer.into_sink().await, bytes);
-    eprintln!("[DEBUG] SPR resume: 6 verified prefixes survive byte-exactly; chain/sequence/offset continue; 12 wrong sink lengths and exhausted sequence denied");
+    eprintln!("SPR resume: 6 verified prefixes survive byte-exactly; chain/sequence/offset continue; 12 wrong sink lengths and exhausted sequence denied");
 }
 
 async fn verify_compressed_fixture(fixture: &serde_json::Value) {
@@ -171,7 +171,7 @@ async fn retained_spr_verification_matches_neutral_commits_and_torn_prefixes() {
         assert_eq!(&bytes[start + 35..start + 67], &chain);
     }
     assert_eq!(span.chain(), &chain);
-    eprintln!("[DEBUG] retained SPR: 2 real writer commits, 224 LastCommit prefixes at 3 fuel grants; exact EOF required; one span handoff; no typed records");
+    eprintln!("retained SPR: 2 real writer commits, 224 LastCommit prefixes at 3 fuel grants; exact EOF required; one span handoff; no typed records");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -233,5 +233,5 @@ async fn retained_spr_verification_rejects_hostile_frames_without_publication() 
     for end in 0..32 {
         assert_eq!(scan(&bytes[..end], 1, RetainedSprLimits::default()), Err(RetainedSprDiagnostic::Header));
     }
-    eprintln!("[DEBUG] retained SPR: 26 hostile header/frame/commit/limit denials and 10 compressed grammar cases at 3 grants; cancellation at all 256 byte boundaries; no input authority or semantic publication");
+    eprintln!("retained SPR: 26 hostile header/frame/commit/limit denials and 10 compressed grammar cases at 3 grants; cancellation at all 256 byte boundaries; no input authority or semantic publication");
 }

@@ -128,7 +128,6 @@ export function testUiDirtyScopeContract(): void {
 
   assert.deepEqual(resolveUiDirtyScope(undefined), { kind: "full" });
   assert.equal(uiDirtyScopeAsksForNothing(resolveUiDirtyScope(undefined)), false);
-  console.log(`[DEBUG] ui-dirty-scope contract: ${fixture.selections.length} selections, ${fixture.unions.length} unions, ${fixture.laws.length} laws`);
 }
 
 /** 🧮️ One canonical shape for comparison — an omitted optional and an explicit `false`/`[]` are the

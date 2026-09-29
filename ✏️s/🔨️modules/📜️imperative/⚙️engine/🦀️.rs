@@ -83,7 +83,7 @@ impl protocol::Identified<String> for Step {
     }
 }
 
-/// @emoji 🩹️ `protocol::Patchable`'s split shape: `apply_patch` mutates only (no returned inverse —
+/// 🩹️ `protocol::Patchable`'s split shape: `apply_patch` mutates only (no returned inverse —
 /// `protocol_command::invert_collection_operation` recomputes the inverse from a prior snapshot via
 /// `diff_patch` instead); `diff_patch` reports `None` when `params` is unchanged, matching this same
 /// full-replace semantics as `vcs::Patchable`'s impl above.

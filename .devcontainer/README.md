@@ -1,12 +1,12 @@
 # Summary
 
-Devcontainer configuration and lifecycle scripts.
+Devcontainer configuration: one Compose service, the image, and the lifecycle commands `devcontainer.json` runs.
 
 # Docs
 
 ## devcontainer.json
 
-Devcontainer configuration with VS Code customizations, container/remote env, post-create/start/attach commands, and persisted volumes for AI auth, editor server state, GitKraken workspace state, and the shared `.🧬semio/🦑️repo/⚡️cache` root (cargo, Nx, Playwright, and every other repo-managed build cache).
+Devcontainer configuration with VS Code customizations, container/remote env, the create/start/attach lifecycle commands, and persisted volumes for AI auth, editor server state, GitKraken workspace state, and the shared `.🧬semio/🦑️repo/⚡️cache` root (cargo, Nx, Playwright, and every other repo-managed build cache).
 
 It forwards exactly the ports the launch rows start (a law in `⚡️caching/📦️artifacts/🐳️containers/🧪️tests/🚀️runtime-bootstrap` keeps the list equal to the rows): `os-hub` 8787 (`🛠️dev🗄️os-hub`), the `s` React serve 6070 and its two-person pair 6072/6073, the `s` wgpu serve 6066 and 6067/6068, Storybook 6010, and the MCP Inspector 6274/6277. `hostRequirements` states what a container that builds the hub needs (4 CPUs, 8 GB memory, 32 GB disk: a fresh-clone run measured 7 GB and 25 GB). The hub's Postgres/Neo4j backends (`os-hub-ts:backend-up`) run in the container's own Docker daemon (`docker-in-docker`), whose state persists in that feature's volume.
 
@@ -16,136 +16,46 @@ On macOS, Docker Desktop must be allowed to read the folder the repository lives
 
 Compose stack for the devcontainer: one service, **`semio`**. It sets no project, image or container name, so the devcontainer CLI names the project after the checkout folder and two checkouts run side by side.
 
-## Dependency Preparation
+## Dockerfile
 
-The image provides Bun 1.3.14 and Node 24.15.0 from pinned, checksum-verified Linux x64/arm64 archives. Nx comes from the repository's locked tooling bootstrap. Container creation invokes `bun nx run workspace:setup` (every language environment, the generated sources, the agent instruction aliases and both MCP binaries); the hub and the `s` serves then start from their launch rows. Select additional dependency environments and project builds through their Nx launch configurations. Post-start and post-attach remain separate lifecycle hooks.
+Ubuntu 24.04 devcontainer base with the build toolchain, fonts (`fonts-noto-color-emoji`, CJK, mono), headless-browser libraries, `xvfb`, `ripgrep` and `sqlite3`, plus Bun 1.3.14 and Node 24.15.0 from pinned, checksum-verified Linux x64/arm64 archives. Nx comes from the repository's locked tooling bootstrap.
 
-## post-start.sh
+## Lifecycle
 
-Devcontainer start script that fixes ownership for persisted volumes, normalizes Claude Code auth storage, sets git safe directories, and activates the Python virtual environment.
+Every lifecycle step is a program argv — no shell script — implemented once in `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🐳️containers/🔁️lifecycle/🟦️.ts` and proven by the law next to it (`🧪️tests/🔁️lifecycle`, recording hosts, no container needed):
 
-## post-attach.sh
+| Hook | Command | What it does |
+|---|---|---|
+| `onCreateCommand` | `sudo chown vscode:vscode` of the two checkout volumes | Docker creates them root-owned |
+| `postCreateCommand` | `bun nx run workspace:setup` | every language environment, the generated sources, the agent instruction aliases and both MCP binaries |
+| `postStartCommand` | `bun ./📜️script.ts setup devcontainer start` | hands the persisted home volumes and submodules to `vscode`; Noto Color Emoji fontconfig fallback for `sans-serif`/`serif`/`monospace`; keeps `~/.claude.json` inside the Claude volume and links it back; adds only the missing git `safe.directory` entries; with `~/.ssh/id_ed25519_signing.pub`, SSH commit/tag signing through one agent on `~/.ssh/semio-ssh-agent.sock` |
+| `postAttachCommand` | `bun ./📜️script.ts setup devcontainer attach` | installs GitKraken Desktop, the `gk` CLI and F3D when missing; creates or completes the GitKraken workspace from the checkout and its submodules and sets it as default; syncs the repo hook configuration; packages the workspace VS Code extension through `@semio-tech/repo-vscode:build-vsix` and installs it into the first editor CLI that confirms it |
+| on demand | `bun ./📜️script.ts setup devcontainer gitkraken` | starts GitKraken Desktop on the checkout, on the virtual display `:99` (Xvfb) when none is set |
 
-The attach hook detects the active editor CLI and invokes `bun nx run @semio-tech/repo-vscode:build-vsix`. Nx owns source invalidation, the build prerequisite and VSIX restoration. A successful package is installed through the selected editor CLI and verified with its extension list; a failed package skips installation. Linux developer-tool and repo configuration steps remain separate parts of this hook.
+Optional steps report and continue; a start never runs a destructive source-control or database command. Environment: `SEMIO_GITKRAKEN_WORKSPACE_NAME` (workspace name), `SEMIO_POST_ATTACH_SKIP_TOOL_INSTALL` (skip the GUI tool installs), `SEMIO_POST_ATTACH_SKIP_EXTENSION_INSTALL` (skip the extension), `SEMIO_REPO_IMPLEMENTATION=go` (sync hooks through the Go repo client).
+
+MCP client configurations are repository files (`.mcp.json`, `.cursor/mcp.json`, `.codex/config.toml`, …) kept consistent by the root `📜️script.ts` policy, not by the container lifecycle.
 
 ## Devcontainer Persistence
 
-Devcontainer rebuilds keep AI tooling state by mounting named volumes for CLI auth folders (`~/.claude`, `~/.codex`, `~/.config/openai`), GitKraken Desktop state (`~/.gitkraken`), GitKraken CLI state (`~/.local/share/GitKrakenCLI`, `~/.local/share/gk`), and editor servers (`~/.vscode-server`, `~/.windsurf-server`).
-One additional named volume mounts at `${containerWorkspaceFolder}/.🧬semio/🦑️repo/⚡️cache` — the single shared build/tool cache root (cargo, Nx, Vite, Playwright, Go, …) — so every agent and dev process in the container reuses the same cache and rebuilds never start cold.
-Claude Code persists its auth files by storing `~/.claude.json` inside the mounted Claude volume and linking it back into `$HOME` on start.
-Post-start ownership fixes keep the mounted volumes writable so chat history and tokens survive container replacement.
-Post-attach reconciles VS Code workspace chat storage for `GitHub.copilot-chat` and `openai.chatgpt` by merging transcript and chat resource folders from older workspace-storage hashes into the active workspace-storage directories after attach.
-Post-attach asks Nx for the current VSIX on every enabled attach, then installs that package with the editor CLI. Source or archive timestamps do not decide whether a build is needed.
-Post-attach also materializes Windsurf's MCP config at `~/.codeium/windsurf/mcp_config.json` and merges Codex MCP server entries into `~/.codex/config.toml` from the monorepo `.mcp.json`, so both clients pick up the `repo` and `semio` servers after rebuilds without manual setup while preserving existing Codex user settings such as model and personality.
-Post-attach installs Linux GitKraken Desktop and its CLI when missing, then creates or updates the local GitKraken workspace from the repo root and submodules.
-Engine compatibility for the local extension is aligned to the lowest supported editor build so Cursor and VS Code accept the same VSIX.
-
-## Emoji Font Setup
-
-The devcontainer image installs comprehensive emoji font support including `fonts-noto-color-emoji`, `fonts-noto-cjk`, `fonts-noto-mono`, and additional font packages. Font configuration is automatically applied to ensure emoji rendering works across all applications.
-
-### Font Configuration
-
-- **Automatic fontconfig setup**: Scripts configure `/etc/font/local.conf` with proper emoji font fallbacks
-- **Generic font families**: Emoji fonts are added to `sans-serif`, `serif`, and `monospace` font families
-- **Locale support**: UTF-8 locale variables are set for proper emoji encoding
-- **Comprehensive coverage**: Multiple font packages ensure broad emoji support
-
-### Application Support
-
-- **VS Code**: Emojis display properly in editor, terminal, and UI
-- **GitKraken**: Commit messages and interface show emojis correctly
-- **Web browsers**: Container browsers render emojis with proper fonts
-- **Terminal applications**: Emoji support depends on client capabilities
-
-### Testing
-
-Use the provided test files to verify emoji rendering:
-
-- `test_emoji.py`: Python script to test emoji support
-- `emoji_test.html`: HTML page for browser emoji testing
-
-The font configuration refreshes on container start and ensures emoji glyphs are available without manual package installation.
-
-## Devcontainer Extension Install
-
-When an editor CLI is available, post-attach resolves the workspace VSIX through its Nx target and installs it automatically after packaging succeeds.
-This keeps the active editor clean of stale versions while aligning installation with a running IDE server, avoiding failures during container creation and preserving automatic delivery.
-
-## GitKraken Zero Touch
-
-GitKraken zero-touch setup persists Linux GitKraken Desktop state, the `gk` runtime, and local workspace metadata across rebuilds and refreshes the Compose workspace automatically on attach.
-The bootstrap targets the repo root and declared git submodules, then sets the Compose GitKraken workspace as the default so the same graph opens immediately in Linux GitKraken Desktop.
-
-### WSL Compatibility
-
-The devcontainer automatically detects WSL environments and starts GitKraken with the `--no-sandbox` flag to handle namespace restrictions. This ensures GitKraken works seamlessly in WSL without manual intervention.
-
-### VS Code Integration
-
-A VS Code task is available for launching GitKraken:
-
-- Use `Ctrl+Shift+P` → "Tasks: Run Task" → "🐧️gitkraken"
-- Or run from terminal: `bash .devcontainer/gitkraken-launch.sh`
-
-The launcher script automatically:
-
-- Detects if GitKraken is already running
-- Applies WSL-compatible flags (`--no-sandbox --no-debug`)
-- Prevents debugger hanging issues
-- Launches GitKraken in the background
-
-### Environment Variables
-
-Configure GitKraken behavior with these environment variables:
-
-- `SEMIO_GITKRAKEN_WORKSPACE_NAME`: Workspace name (default: "compose")
-- `SEMIO_GITKRAKEN_AUTO_START`: Auto-start GitKraken on attach (default: "false", disabled to prevent spurious git stashing in concurrent editing workflows)
-- `SEMIO_POST_ATTACH_SKIP_EXTENSION_INSTALL`: Skip extension installation (default: empty)
-
-### Error Resilience
-
-All setup scripts include comprehensive error handling:
-
-- Failed installations continue with warnings rather than blocking
-- Authentication checks prevent unnecessary GitKraken CLI operations
-- Extension installation retries across multiple IDE CLIs
-- Timeout handling for concurrent operations
-
-## Search Tooling
-
-The devcontainer image installs ripgrep (`rg`) as part of the base apt package set so fast recursive code search is available immediately in all editor terminals and scripts.
-
-## Playwright Browser Cache
-
-Playwright browser downloads live under `.🧬semio/🦑️repo/⚡️cache/tools/ms-playwright`, inside the single named volume mounted at the shared cache root, so the binaries persist across container restarts, editor reloads, and rebuilds.
-The devcontainer sets `PLAYWRIGHT_BROWSERS_PATH` to that shared cache location, and the provisioning script installs Chromium into that path so `npx playwright install` is a no-operation once cached.
+Named volumes keep CLI auth folders (`~/.claude`, `~/.codex`, `~/.config/openai`, `~/.config/gh`), GitKraken Desktop and CLI state (`~/.gitkraken`, `~/.local/share/GitKrakenCLI`, `~/.local/share/gk`), editor servers (`~/.vscode-server`, `~/.cursor-server`, `~/.windsurf-server`, `~/.antigravity-server`) and `~/.kiro` — shared by every checkout with the same folder name. `node_modules` and the build/tool cache root `.🧬semio/🦑️repo/⚡️cache` (cargo, Nx, Vite, Playwright, Go, …) are volumes private to one checkout (`${devcontainerId}`), so rebuilds never start cold and a second clone never reads the first one's dependencies or build state; `onCreateCommand` hands both (created root-owned by Docker) to `vscode` before `postCreateCommand` installs into them. `PLAYWRIGHT_BROWSERS_PATH` points into the cache volume.
 
 # 💯️Requirements
 
 ## Devcontainer
 
-Devcontainer provisioning MUST install the workspace VS Code extension automatically after editor attach without manual installation steps.
+Devcontainer lifecycle commands MUST be program argv run through `bun ./📜️script.ts setup devcontainer <start|attach|gitkraken>`, never shell scripts.
 
-Devcontainer post-attach MUST resolve the workspace extension through the Nx packaging target, install only after that target succeeds, and validate installation through the active editor CLI.
+Devcontainer attach MUST resolve the workspace extension through the Nx packaging target, install only after that target succeeds, and validate the installation through the editor CLI's extension list.
 
-Devcontainer post-attach MUST generate Windsurf MCP config, write `.cursor/mcp.json` with repo-root-absolute MCP commands (so Cursor discovers stdio servers even when the spawn cwd is not the repo root), and merge Codex MCP server entries from the monorepo `.mcp.json` into the clients' home config folders without removing unrelated Codex user settings.
-
-Compose VS Code extension engine compatibility MUST include Cursor's supported VS Code version range.
-
-Playwright browser caches MUST use the shared `.🧬semio/🦑️repo/⚡️cache/tools/ms-playwright` path so browser install stays cached across reloads and is pruned by the same cache budget as every other build output.
-
-Claude Code and Codex auth plus chat history MUST persist across devcontainer rebuilds via named volumes for CLI config and editor server state.
-VS Code chat-provider workspace history MUST persist across devcontainer rebuilds even when the active `workspaceStorage` hash changes for the same repo.
+Devcontainer start MUST NOT run destructive source-control or database commands and MUST NOT append duplicate git `safe.directory` entries.
 
 Claude Code auth files MUST live in the persisted Claude volume and be linked into the home directory.
 
-Devcontainer provisioning MUST install Linux GitKraken Desktop and the official GitKraken `gk` CLI when they are missing.
+Devcontainer attach MUST install Linux GitKraken Desktop and the `gk` CLI when missing and create or complete the GitKraken workspace from the repo root and submodules without manual setup.
 
-Devcontainer lifecycle scripts MUST persist GitKraken CLI runtime files and local workspace metadata across rebuilds.
+Devcontainer start MUST enforce the fontconfig fallback to `Noto Color Emoji` for the generic font families used by Electron and GTK applications.
 
-Devcontainer post-attach MUST create or update the default Compose GitKraken local workspace from the repo root and submodules without manual GitKraken setup.
+Forwarded ports MUST equal the ports the launch rows start.
 
-Devcontainer provisioning MUST install a color emoji font and refresh fontconfig caches so GUI applications render emoji glyphs without manual setup.
-
-Devcontainer lifecycle scripts MUST enforce fontconfig fallback to `Noto Color Emoji` for the common font families used by Electron and GTK applications.
+Playwright browser caches MUST use the shared `.🧬semio/🦑️repo/⚡️cache/tools/ms-playwright` path.

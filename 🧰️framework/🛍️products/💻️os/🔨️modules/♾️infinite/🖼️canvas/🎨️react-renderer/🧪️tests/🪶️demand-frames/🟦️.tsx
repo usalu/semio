@@ -3,7 +3,7 @@ type TestSource = { readonly directory: string; readonly url: string };
 type RenderBounds = { readonly min: number; readonly max: number };
 type Step = { readonly do: string; readonly advanceMs: number; readonly renders: RenderBounds };
 
-/** @emoji 🪶️ Replays `🧫️fixtures/🪶️demand-frames/🔣️.json` against the real {@link GraphWasmCanvas}, mounted by React DOM
+/** 🪶️ Replays `🧫️fixtures/🪶️demand-frames/🔣️.json` against the real {@link GraphWasmCanvas}, mounted by React DOM
  * (the third-party renderer) on a faked frame + wall clock — an idle canvas paints nothing, owner calls before a frame
  * paint it once, `renderFrame` paints at once and satisfies them — and against the one shared scheduler directly (an
  * explicit trailing window and a continuous reason are bounded animations). */

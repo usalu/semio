@@ -353,7 +353,7 @@ pub struct CraneRunway {
 //#region 🔖️ArtifactKind
 /// 🗿️ The computed-compliance artifact this standard publishes on its app's `report:out` port.
 pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
-    app_surface::artifact_kind_spec("en1993", "EN 1993")
+    app_surface::artifact_kind_spec("en1993", "EN 1993", EN1993_DOCUMENT_SCHEMA)
 }
 //#endregion 🔖️ArtifactKind
 

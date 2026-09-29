@@ -1126,7 +1126,7 @@ impl Iso16757Snapshot {
 /// lifted out of the pre-migration manifest's inline `.artifact_kind(ArtifactKindSpec { .. })` so the
 /// artifact node, not the app, owns its own kind declaration.
 pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
-    app_surface::artifact_kind_spec("iso16757", "ISO 16757")
+    app_surface::artifact_kind_spec("iso16757", "ISO 16757", ISO16757_DOCUMENT_SCHEMA)
 }
 //#endregion 🔖️ArtifactKind
 

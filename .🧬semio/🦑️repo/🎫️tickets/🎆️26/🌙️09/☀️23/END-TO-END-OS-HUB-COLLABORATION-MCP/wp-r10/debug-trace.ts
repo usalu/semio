@@ -17,14 +17,14 @@
  * prefix with it. A group lands `now` only when every member is open during the guest freeze (preamble 14 rule 2) and the
  * group holds no `trace` / `script-print` / `manual` member; everything else lands in window 3 in one pass (`--scope all`),
  * so no consumer ever sees a mixed channel.
- * Usage: bun debug-trace.ts [--scope now|all] [--apply]   (writes generated/debug-trace-<scope>.{json,diff})
+ * Usage: bun debug-trace.ts [--scope now|all] [--apply]   (writes `.🧬semio/🌐hub/s14-r10-state/debug-trace-<scope>.{json,diff}`)
  */
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 
 const ROOT = "/Users/ueli/Documents/semio";
-const OUT = join(import.meta.dir, "generated");
+const OUT = "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-r10-state";
 const flag = (name: string): string | undefined => (process.argv.includes(name) ? process.argv[process.argv.indexOf(name) + 1] : undefined);
 const scope = (flag("--scope") ?? "now") as "now" | "all";
 const apply = process.argv.includes("--apply");

@@ -39,27 +39,27 @@ export interface WindowConfig {
   controls?: React.ReactNode;
   measures?: React.ReactNode;
   utilityBar?: React.ReactNode;
-  /** @emoji 🎛️ Controlled fold state for the Window Options (measures) rail (default true); externally settable so the introduction walkthrough can force-unfold a step's measure target into view. */
+  /** 🎛️ Controlled fold state for the Window Options (measures) rail (default true); externally settable so the introduction walkthrough can force-unfold a step's measure target into view. */
   measuresFolded?: boolean;
-  /** @emoji 🎛️ Fires when the user or a redirect toggles the Window Options rail fold state. */
+  /** 🎛️ Fires when the user or a redirect toggles the Window Options rail fold state. */
   onMeasuresFoldedChange?: (folded: boolean) => void;
-  /** @emoji 🎛️ Controlled fold state for the Utilities rail (default true); externally settable so the introduction walkthrough can force-unfold a step's utility anchor into view. */
+  /** 🎛️ Controlled fold state for the Utilities rail (default true); externally settable so the introduction walkthrough can force-unfold a step's utility anchor into view. */
   utilityBarFolded?: boolean;
-  /** @emoji 🎛️ Fires when the user or a redirect toggles the Utilities rail fold state. */
+  /** 🎛️ Fires when the user or a redirect toggles the Utilities rail fold state. */
   onUtilityBarFoldedChange?: (folded: boolean) => void;
-  /** @emoji 🎛️ Categorized ad-hoc actions tree, merged into the top-left Actions pane below the active {@link engagement} (when present); folds to a chip by default. */
+  /** 🎛️ Categorized ad-hoc actions tree, merged into the top-left Actions pane below the active {@link engagement} (when present); folds to a chip by default. */
   actionPane?: React.ReactNode;
-  /** @emoji 🎛️ Controlled fold state for the merged top-left Actions pane (default true); externally settable so the palette/keybinding redirect can force-unfold. */
+  /** 🎛️ Controlled fold state for the merged top-left Actions pane (default true); externally settable so the palette/keybinding redirect can force-unfold. */
   actionsFolded?: boolean;
-  /** @emoji 🎛️ Fires when the user or a redirect toggles the Actions pane fold state. */
+  /** 🎛️ Fires when the user or a redirect toggles the Actions pane fold state. */
   onActionsFoldedChange?: (folded: boolean) => void;
-  /** @emoji 💬️ Active engagement content (options/status/control) rendered above {@link actionPane} inside the same top-left Actions pane. */
+  /** 💬️ Active engagement content (options/status/control) rendered above {@link actionPane} inside the same top-left Actions pane. */
   engagement?: EngagementSpec;
-  /** @emoji 🔎️ Top-middle floating search pane: typed action input with autocomplete possibles. */
+  /** 🔎️ Top-middle floating search pane: typed action input with autocomplete possibles. */
   search?: SearchSpec;
   active?: boolean;
   onActivate?: () => void;
-  /** @emoji 📐️ When true, the window body grows to fill its dock pane (canvas hosts). */
+  /** 📐️ When true, the window body grows to fill its dock pane (canvas hosts). */
   fill?: boolean;
 }
 

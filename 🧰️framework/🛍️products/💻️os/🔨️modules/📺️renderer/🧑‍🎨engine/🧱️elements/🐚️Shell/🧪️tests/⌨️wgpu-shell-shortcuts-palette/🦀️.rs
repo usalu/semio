@@ -86,7 +86,6 @@ fn every_row_dispatches_its_verb_and_outranks_app_keybindings() {
         }
     }
     assert_eq!(chords, 28, "20 rows, eight of which spell both the ctrl and the meta accelerator");
-    eprintln!("[DEBUG] wgpu shell shortcut table: {chords} chords dispatch and reserve their verb");
 }
 
 /// ⚖️ LAW: the two verbs with hand-written chord helpers (the surface-role and mode-cycle axes, kept as
@@ -179,7 +178,6 @@ fn each_panel_anchor_chord_toggles_its_own_anchor() {
     let before = shell.open_anchors();
     press(&mut shell, "ctrl+alt+shift+m", &mut input);
     assert_eq!(shell.open_anchors(), before, "a chord for an empty anchor opens nothing");
-    eprintln!("[DEBUG] wgpu panel anchors: eight chords, each toggling its own anchor; empty anchors are witnessed no-ops");
 }
 
 /// ⚖️ LAW: the palette/find toggles still own their chords through the table, including the second press
@@ -253,7 +251,6 @@ fn the_window_chords_close_maximize_and_open_a_new_instance() {
     press(&mut shell, "mod+shift+w", &mut input);
     assert!(shell.dock.window_instances().is_empty(), "and keeps closing: React's `closeWindow` has no last-window guard, so an empty mode is reachable by chord too");
     assert_eq!(shell.deferred_actions.len(), 2, "each successful shortcut close queues one journal note");
-    eprintln!("[DEBUG] wgpu window chords: close / maximize / new-instance all drive the dock");
 }
 
 //#endregion 🧭️PanelAndWindowChords
@@ -385,7 +382,6 @@ fn the_palette_lists_and_executes_every_in_palette_command() {
         assert_eq!(row.label, label, "a command whose args cannot be expanded carries React's `…` suffix");
         assert!(row.action.as_deref().is_some_and(|action| action.starts_with("command-form:")), "and redirects to its staged form rather than firing a guess: {:?}", row.action);
     }
-    eprintln!("[DEBUG] wgpu palette: {} rows, every declared command reachable", items.len());
 }
 
 /// ⚖️ LAW: an arg-carrying os command is the same single staged row React publishes; only a

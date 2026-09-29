@@ -23,5 +23,4 @@ export function testRetainedWindowInputOracle(): void {
   for (const [owner, blocked] of pending) if (!blocked) pending.delete(owner);
   assert.deepEqual([...pending.keys()], fairness.expectedSurvivors);
   assert.equal(fairness.zeroGrantAdvancesCursor, false);
-  console.log(`[DEBUG] retained window input: ${identities.size} distinct owner/generation tuples agree with Ajv uniqueItems`);
 }

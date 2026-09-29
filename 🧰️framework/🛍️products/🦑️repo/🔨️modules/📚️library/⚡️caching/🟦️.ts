@@ -9,8 +9,13 @@ export function repoCacheDirectory(repoRoot: string, ...segments: string[]): str
   return join(repoRoot, ".🧬semio", "🦑️repo", "⚡️cache", ...segments);
 }
 
-/** 🗑️ True when a path lies inside a policy-declared generated directory (`dist`, `🗑️generated`, …): disposable output that never feeds source inputs. */
-export function isGeneratedPath(path: string): boolean {
+/** 📁️ True when one directory name is a policy-declared generated directory (`dist`, `🗑️generated`, …). */
+export function isGeneratedDirectoryName(name: string): boolean {
   generatedDirectories ??= new Set(JSON.parse(readFileSync(fileURLToPath(new URL("./🔣️policy.json", import.meta.url)), "utf8")).generatedDirectories);
-  return path.split(/[\\/]/u).some((segment) => generatedDirectories!.has(segment));
+  return generatedDirectories.has(name);
+}
+
+/** 🗑️ True when a path lies inside a policy-declared generated directory: disposable output that never feeds source inputs. */
+export function isGeneratedPath(path: string): boolean {
+  return path.split(/[\\/]/u).some(isGeneratedDirectoryName);
 }

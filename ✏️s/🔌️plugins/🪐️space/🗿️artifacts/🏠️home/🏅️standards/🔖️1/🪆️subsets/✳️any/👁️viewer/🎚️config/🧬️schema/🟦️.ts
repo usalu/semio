@@ -2,11 +2,5 @@
  * @see ✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs */
 export interface HomeConfig {
   /** @state config */
-  directoryJson: string;
-  /** @state config */
-  directorySessionBindingSha256: string;
-  /** @state config */
-  directoryAuthorizationGeneration: number;
-  /** @state config */
-  directoryReceiptSha256: string;
+  retiredLocalStudioIds: readonly string[];
 }

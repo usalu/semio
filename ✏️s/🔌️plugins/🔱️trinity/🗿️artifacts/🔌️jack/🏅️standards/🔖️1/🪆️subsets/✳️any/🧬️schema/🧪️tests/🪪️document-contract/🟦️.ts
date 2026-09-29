@@ -68,6 +68,4 @@ export function testJackDocumentContract(): void {
     assert.equal(validateDiff(invalid), false);
     assert.throws(() => parseJackDiff(invalid));
   }
-  console.log("[DEBUG] Jack artifact, snapshot, and diff accept the committed shared-child fixture and refuse embedded graph and replacement-artifact shapes");
-  console.log(`[DEBUG] Jack document contract admitted ${snapshotFixtures.length} exact s.stdio.semio content child identities`);
 }

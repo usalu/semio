@@ -20,51 +20,48 @@
 //! protocol-family type this crate touches comes from the `protocol` facade, per the contract.
 use crate::db_durability::Frontier;
 use crate::*;
-/// @emoji 📍️ First record marker in a fresh segment: document identity, segment index, and the
+/// 📍️ First record marker in a fresh segment: document identity, segment index, and the
 /// previous segment's final commit `chain_hash` (the WAL's cross-segment hash chain — protocol's
 /// own commit chain resets to `chain_0 = blake3(header)` at every segment boundary, since
 /// `SprWriter::begin` always starts fresh; this record is how a document's WAL stays one
 /// verifiable chain across segment rotation).
 pub const WAL_SEGMENT_HEADER: u8 = 0x40;
-/// @emoji 🚪️ Opens a logical transaction: one group of records (typically one `submit()` batch)
+/// 🚪️ Opens a logical transaction: one group of records (typically one `submit()` batch)
 /// that must be applied atomically on replay.
 pub const WAL_TX_BEGIN: u8 = 0x41;
-/// @emoji 🏁️ Closes a transaction successfully; carries the record count written since the
+/// 🏁️ Closes a transaction successfully; carries the record count written since the
 /// matching `WAL_TX_BEGIN` as a replay sanity check.
 pub const WAL_TX_COMMIT: u8 = 0x42;
-/// @emoji 🚫️ Closes a transaction as rolled back; replay must discard every record since the
+/// 🚫️ Closes a transaction as rolled back; replay must discard every record since the
 /// matching `WAL_TX_BEGIN`.
 pub const WAL_TX_ABORT: u8 = 0x43;
-/// @emoji ✉️ A `protocol::MutationEnvelope`'s bytes, stored verbatim (zero-copy on the write
+/// ✉️ A `protocol::MutationEnvelope`'s bytes, stored verbatim (zero-copy on the write
 /// path — this crate never re-encodes what `db_artifact` hands it).
 pub const WAL_COMMAND: u8 = 0x44;
-/// @emoji 🫙️ A command payload, either inlined or referenced by CAS hash (see `WalPayloadRef`).
+/// 🫙️ A command payload, either inlined or referenced by CAS hash (see `WalPayloadRef`).
 pub const WAL_PAYLOAD: u8 = 0x45;
-/// @emoji 🔀️ An opaque `protocol::MutationDiff`-shaped byte blob (db crates below `db_artifact`
+/// 🔀️ An opaque `protocol::MutationDiff`-shaped byte blob (db crates below `db_artifact`
 /// never interpret operation semantics, per the contract's hard dependency rule).
 pub const WAL_DIFF: u8 = 0x46;
-/// @emoji ⏪️ An opaque inverse/undo byte blob for `db_artifact`'s inverse-undo pipeline.
+/// ⏪️ An opaque inverse/undo byte blob for `db_artifact`'s inverse-undo pipeline.
 pub const WAL_INVERSE: u8 = 0x47;
-/// @emoji 📣️ An opaque effect/notification byte blob.
+/// 📣️ An opaque effect/notification byte blob.
 pub const WAL_EVENT: u8 = 0x48;
-/// @emoji 📤️ An opaque outgoing-effect outbox entry byte blob.
+/// 📤️ An opaque outgoing-effect outbox entry byte blob.
 pub const WAL_OUTBOX: u8 = 0x49;
-/// @emoji 🧭️ A structured `Frontier` snapshot, written periodically so recovery can
+/// 🧭️ A structured `Frontier` snapshot, written periodically so recovery can
 /// cross-check replay against a known-good checkpoint.
 pub const WAL_FRONTIER: u8 = 0x4A;
-/// @emoji 🌿️ An opaque vcs change/checkpoint id string, recorded alongside the WAL entry that
-/// produced it (`db_engine`'s `VersionGraph` seam; this crate stores the id, never interprets it).
-pub const WAL_VCS_REF: u8 = 0x4B;
-/// @emoji 📸️ Marks that a snapshot generation was published, with the frontier it covers.
+/// 📸️ Marks that a snapshot generation was published, with the frontier it covers.
 pub const WAL_SNAPSHOT_PUB: u8 = 0x4C;
-/// @emoji 🔖️ Marks an index checkpoint: the set of `db_index` run ids current as of this point.
+/// 🔖️ Marks an index checkpoint: the set of `db_index` run ids current as of this point.
 pub const WAL_INDEX_CKPT: u8 = 0x4D;
-/// @emoji ⏳️ A lease grant/renewal/release record (`db_cluster`'s ownership-lease durability).
+/// ⏳️ A lease grant/renewal/release record (`db_cluster`'s ownership-lease durability).
 pub const WAL_LEASE: u8 = 0x4E;
-/// @emoji 🚚️ An opaque schema/data migration descriptor byte blob.
+/// 🚚️ An opaque schema/data migration descriptor byte blob.
 pub const WAL_MIGRATION: u8 = 0x4F;
 
-/// @emoji ✅️ True iff `kind` falls in this crate's SPR extension range — the test every reader
+/// ✅️ True iff `kind` falls in this crate's SPR extension range — the test every reader
 /// (`WalReplayCursor`) uses to decide whether a frame is one of ours (vs.
 /// protocol's own `REC_COMMIT`, which every `.spr` stream also contains and this crate skips).
 pub const fn is_wal_record_kind(kind: u8) -> bool {
@@ -73,17 +70,17 @@ pub const fn is_wal_record_kind(kind: u8) -> bool {
 //#endregion 🔖️RecordKinds
 
 //#region 🔖️Records
-/// @emoji 🛡️ Ceiling on any single length-prefixed scalar field (document id, resource name,
-/// holder id, vcs ref) this crate decodes — validated BEFORE allocating, mirroring
+/// 🛡️ Ceiling on any single length-prefixed scalar field (document id, resource name,
+/// holder id) this crate decodes — validated BEFORE allocating, mirroring
 /// `pack::PackLimits`'s stated invariant. Generous for any legitimate identifier, small
 /// enough to reject an obviously-corrupt length up front.
 const MAX_FIELD_BYTES: u64 = 1024 * 1024;
-/// @emoji 🛡️ Ceiling on a `WAL_INDEX_CKPT` record's run-id count, validated before the `Vec` is
+/// 🛡️ Ceiling on a `WAL_INDEX_CKPT` record's run-id count, validated before the `Vec` is
 /// sized.
 #[cfg(test)]
 const MAX_RUN_IDS: u64 = 1_000_000;
 
-/// @emoji ✍️ Writes a varint-length-prefixed byte field — this crate's one field encoding used by
+/// ✍️ Writes a varint-length-prefixed byte field — this crate's one field encoding used by
 /// every string/id-shaped record field.
 #[cfg(test)]
 async fn write_field(writer: &mut pack::ByteWriter, bytes: &[u8]) {
@@ -91,7 +88,7 @@ async fn write_field(writer: &mut pack::ByteWriter, bytes: &[u8]) {
     writer.write_bytes(bytes);
 }
 
-/// @emoji 📖️ Inverse of `write_field`.
+/// 📖️ Inverse of `write_field`.
 #[cfg(test)]
 async fn read_field_bytes(reader: &mut pack::ByteReader<'_>) -> Result<Vec<u8>, DbError> {
     let len = reader.read_varint_u64()?;
@@ -99,7 +96,7 @@ async fn read_field_bytes(reader: &mut pack::ByteReader<'_>) -> Result<Vec<u8>, 
     Ok(reader.read_bytes(len as usize)?.to_vec())
 }
 
-/// @emoji 📖️ `read_field_bytes` plus a utf-8 validation, for text fields.
+/// 📖️ `read_field_bytes` plus a utf-8 validation, for text fields.
 #[cfg(test)]
 async fn read_field_string(reader: &mut pack::ByteReader<'_>) -> Result<String, DbError> {
     String::from_utf8(read_field_bytes(reader).await?).map_err(|_| DbError::Corrupt("wal record field is not valid utf-8".to_string()))
@@ -310,7 +307,7 @@ impl WalBytes {
         })
     }
 
-    /// @emoji 🧺️ Stages `source` under an operation that already holds DB I/O credit, so every record
+    /// 🧺️ Stages `source` under an operation that already holds DB I/O credit, so every record
     /// of one transaction shares one ledger slot instead of each claiming its own.
     pub async fn copy_for_operation(operation: u64, source: &[u8], control: &mut WalCursorControl) -> Result<Self, DbError> {
         let mut writer = db_storage::DbIoPageWriter::try_reserve_for_operation(operation, source.len().div_ceil(db_storage::DB_IO_PAGE_BYTES)).map_err(db_storage::DbIoPageWriterRejected::into_error)?;
@@ -476,14 +473,14 @@ impl Drop for WalBytesRejected {
     }
 }
 
-/// @emoji 🫙️ `WAL_PAYLOAD`'s two shapes: small payloads inline, large ones by CAS reference into
+/// 🫙️ `WAL_PAYLOAD`'s two shapes: small payloads inline, large ones by CAS reference into
 /// `db_storage::PayloadStorage` — mirrors that trait's own blake3-CAS design.
 pub enum WalPayloadRef {
     Inline(WalBytes),
     CasRef(ContentHash),
 }
 
-/// @emoji 📜️ One decoded WAL record — the typed shape every `WAL_*` kind decodes to/encodes from.
+/// 📜️ One decoded WAL record — the typed shape every `WAL_*` kind decodes to/encodes from.
 /// `Command`/`Diff`/`Inverse`/`Event`/`Outbox`/`Migration` carry opaque bytes verbatim (per the
 /// contract, no db crate below `db_artifact` interprets operation semantics); the rest are
 /// structured since this crate itself owns their meaning (transaction boundaries, segment
@@ -500,7 +497,6 @@ pub enum WalRecord {
     Event(WalBytes),
     Outbox(WalBytes),
     Frontier(Frontier),
-    VcsRef(db_storage::DbIoText),
     SnapshotPub { generation: u64, frontier: Frontier },
     IndexCkpt { run_ids: db_storage::DbIoU64List },
     Lease { resource: db_storage::DbIoText, holder: db_storage::DbIoText, fence: u64, expires_at_ms: u64 },
@@ -564,7 +560,7 @@ impl Default for WalRecordBatch {
 }
 
 impl WalRecord {
-    /// @emoji 🔢️ The transaction id carried by a `TxBegin`/`TxCommit`/`TxAbort` record, or `None`
+    /// 🔢️ The transaction id carried by a `TxBegin`/`TxCommit`/`TxAbort` record, or `None`
     /// for every other kind — used by `ArtifactWal::open` to resume `next_tx_id` past whatever was
     /// already durable.
     fn tx_id(&self) -> Option<u64> {
@@ -577,7 +573,6 @@ impl WalRecord {
     pub fn close_step(&mut self) -> Result<bool, DbError> {
         match self {
             Self::Command(bytes) | Self::Diff(bytes) | Self::Inverse(bytes) | Self::Event(bytes) | Self::Outbox(bytes) | Self::Migration(bytes) | Self::Payload(WalPayloadRef::Inline(bytes)) => Ok(bytes.close_step()?.is_some()),
-            Self::VcsRef(text) => Ok(text.close_step()),
             Self::IndexCkpt { run_ids } => Ok(run_ids.close_step()),
             Self::Lease { resource, holder, .. } => {
                 if resource.close_step() {
@@ -592,14 +587,13 @@ impl WalRecord {
     pub fn terminal_is_empty(&self) -> bool {
         match self {
             Self::Command(bytes) | Self::Diff(bytes) | Self::Inverse(bytes) | Self::Event(bytes) | Self::Outbox(bytes) | Self::Migration(bytes) | Self::Payload(WalPayloadRef::Inline(bytes)) => bytes.terminal_is_empty(),
-            Self::VcsRef(text) => text.terminal_is_empty(),
             Self::IndexCkpt { run_ids } => run_ids.terminal_is_empty(),
             Self::Lease { resource, holder, .. } => resource.terminal_is_empty() && holder.terminal_is_empty(),
             _ => true,
         }
     }
 
-    /// @emoji ✍️ Encodes `self` to its on-disk `(kind, critical, payload)` triple, ready for
+    /// ✍️ Encodes `self` to its on-disk `(kind, critical, payload)` triple, ready for
     /// `protocol::SprWriter::write_record`. Every kind is critical: unlike protocol's own
     /// history-log records (where e.g. a dictionary delta can plausibly be "skippable" to some
     /// future reader), every `WAL_*` record is load-bearing for correct replay — there is no
@@ -680,10 +674,6 @@ impl WalRecord {
                 encode_frontier(&mut writer, frontier).await;
                 WAL_FRONTIER
             }
-            WalRecord::VcsRef(id) => {
-                write_field(&mut writer, id.as_str().as_bytes()).await;
-                WAL_VCS_REF
-            }
             WalRecord::SnapshotPub { generation, frontier } => {
                 writer.write_u64_le(*generation);
                 encode_frontier(&mut writer, frontier).await;
@@ -727,7 +717,6 @@ impl WalRecord {
             Self::Event(bytes) => (WAL_EVENT, bytes.len()),
             Self::Outbox(bytes) => (WAL_OUTBOX, bytes.len()),
             Self::Frontier(frontier) => (WAL_FRONTIER, wal_frontier_len(frontier)),
-            Self::VcsRef(id) => (WAL_VCS_REF, wal_field_len(id.as_str().as_bytes())),
             Self::SnapshotPub { frontier, .. } => (WAL_SNAPSHOT_PUB, 8 + wal_frontier_len(frontier)),
             Self::IndexCkpt { run_ids } => (WAL_INDEX_CKPT, wal_varint_len(run_ids.len() as u64) + run_ids.len() * 8),
             Self::Lease { resource, holder, .. } => (WAL_LEASE, wal_field_len(resource.as_str().as_bytes()) + wal_field_len(holder.as_str().as_bytes()) + 16),
@@ -770,7 +759,6 @@ impl WalRecord {
                 wal_record_write(&mut record, &hash.0).await?;
             }
             Self::Frontier(frontier) => wal_record_write_frontier(&mut record, frontier).await?,
-            Self::VcsRef(id) => wal_record_write_field(&mut record, id.as_str().as_bytes()).await?,
             Self::SnapshotPub { generation, frontier } => {
                 wal_record_write(&mut record, &generation.to_le_bytes()).await?;
                 wal_record_write_frontier(&mut record, frontier).await?;
@@ -792,7 +780,7 @@ impl WalRecord {
         record.finish().await.map_err(protocol_err)
     }
 
-    /// @emoji 📖️ Inverse of `encode`. Errors `DbError::Corrupt` on an unrecognized `kind` (a
+    /// 📖️ Inverse of `encode`. Errors `DbError::Corrupt` on an unrecognized `kind` (a
     /// genuinely corrupt or future-version record) rather than silently dropping it — every
     /// `WAL_*` kind is critical (see `encode`'s doc).
     #[cfg(test)]
@@ -824,7 +812,6 @@ impl WalRecord {
             WAL_EVENT => WalRecord::Event(WalBytes::copy_for_operation(operation, payload, control).await?),
             WAL_OUTBOX => WalRecord::Outbox(WalBytes::copy_for_operation(operation, payload, control).await?),
             WAL_FRONTIER => WalRecord::Frontier(decode_frontier(&mut reader).await?),
-            WAL_VCS_REF => WalRecord::VcsRef(db_storage::DbIoText::try_from_str(&read_field_string(&mut reader).await?)?),
             WAL_SNAPSHOT_PUB => {
                 let generation = reader.read_u64_le()?;
                 WalRecord::SnapshotPub { generation, frontier: decode_frontier(&mut reader).await? }
@@ -855,7 +842,7 @@ impl WalRecord {
 //#endregion 🔖️Records
 
 //#region 🔖️PayloadTransform
-/// @emoji 🔐️ The encryption hook for `WAL_PAYLOAD` bytes: a caller building a `WalPayloadRef`
+/// 🔐️ The encryption hook for `WAL_PAYLOAD` bytes: a caller building a `WalPayloadRef`
 /// applies `encrypt` to the plaintext BEFORE wrapping it as `WalPayloadRef::Inline` or handing it to
 /// `db_storage::PayloadStorage::put` for a `WalPayloadRef::CasRef`, and applies `decrypt` after
 /// reading either form back — this crate itself never calls `PayloadStorage` (see `WalPayloadRef`'s
@@ -864,13 +851,13 @@ impl WalRecord {
 /// a trait only, no real implementation here — external crypto libraries stay behind it (the
 /// family's "external libs behind an interface" rule).
 pub trait PayloadTransform: Send + Sync {
-    /// @emoji 🔒️ Transforms `plaintext` before it is embedded inline or stored via `PayloadStorage`.
+    /// 🔒️ Transforms `plaintext` before it is embedded inline or stored via `PayloadStorage`.
     async fn encrypt(&self, plaintext: WalBytes, control: &mut WalCursorControl) -> Result<WalBytes, DbError>;
-    /// @emoji 🔓️ Inverts `encrypt` — must exactly reconstruct the original bytes.
+    /// 🔓️ Inverts `encrypt` — must exactly reconstruct the original bytes.
     async fn decrypt(&self, ciphertext: WalBytes, control: &mut WalCursorControl) -> Result<WalBytes, DbError>;
 }
 
-/// @emoji 🪟️ A `PayloadTransform` that passes bytes through unchanged — the default for a
+/// 🪟️ A `PayloadTransform` that passes bytes through unchanged — the default for a
 /// deployment with no encryption configured.
 #[derive(Clone, Copy, Default, Debug)]
 pub struct IdentityPayloadTransform;
@@ -889,7 +876,7 @@ impl PayloadTransform for IdentityPayloadTransform {
 //#endregion 🔖️PayloadTransform
 
 //#region 🔖️GroupCommit
-/// @emoji ⏱️ Bounds a segment's group-commit batching: whichever of delay/bytes/records is hit
+/// ⏱️ Bounds a segment's group-commit batching: whichever of delay/bytes/records is hit
 /// first triggers the next physical `SprWriter::commit()` + `WalStorage::sync`. This crate's own
 /// choice of defaults (the contract fixes the mechanism, not the numbers) — 20ms/256KiB/256
 /// records amortizes fsync cost under load while keeping worst-case latency low for a single
@@ -908,7 +895,7 @@ impl Default for GroupCommitPolicy {
 }
 
 impl GroupCommitPolicy {
-    /// @emoji ⏰️ True iff any bound is currently exceeded — `ArtifactWal::submit` also always
+    /// ⏰️ True iff any bound is currently exceeded — `ArtifactWal::submit` also always
     /// commits immediately regardless of this policy when the caller requests `Fsync`/`Quorum`
     /// durability (a durability request stronger than what's already durable can never be
     /// satisfied by deferring the commit).
@@ -919,17 +906,17 @@ impl GroupCommitPolicy {
 //#endregion 🔖️GroupCommit
 
 //#region 🔖️Sink
-/// @emoji 📐️ Pages one active segment's tail window may ever hold: the window never outgrows the
+/// 📐️ Pages one active segment's tail window may ever hold: the window never outgrows the
 /// readable segment it belongs to.
 const WAL_TAIL_WINDOW_PAGES: usize = (db_storage::DB_IO_MAX_READ_BYTES as usize).div_ceil(db_storage::DB_IO_PAGE_BYTES);
 
-/// @emoji 🔢️ Writers one tail window may chain under its one I/O operation. Each new writer is at
+/// 🔢️ Writers one tail window may chain under its one I/O operation. Each new writer is at
 /// least as large as the whole window before it, so this many always reach `WAL_TAIL_WINDOW_PAGES`.
 const WAL_TAIL_WINDOW_WRITERS: usize = 6;
 
 const _: () = assert!(1 << (WAL_TAIL_WINDOW_WRITERS - 1) >= WAL_TAIL_WINDOW_PAGES);
 
-/// @emoji 🪟️ The unflushed tail of one active WAL segment, held in fixed DB I/O pages only while
+/// 🪟️ The unflushed tail of one active WAL segment, held in fixed DB I/O pages only while
 /// records wait for their commit and flush. `base` is the absolute segment offset of the window's
 /// first byte: everything before it is durable in `WalStorage` and no longer in memory, so an idle
 /// document holds no I/O pages at all. Holding the whole segment image instead charged every mounted
@@ -1014,14 +1001,14 @@ impl WalTailWindow {
     }
 }
 
-/// @emoji 🪞️ A `pack::PackSink` over one segment's `WalTailWindow`. `protocol::SprWriter` owns one
+/// 🪞️ A `pack::PackSink` over one segment's `WalTailWindow`. `protocol::SprWriter` owns one
 /// clone and `SegmentWriter` another to flush the unflushed suffix to `db_storage::WalStorage` —
 /// `SprWriter` has no public accessor for its private `sink` field. Every write is admitted first
 /// (`admit`), so a full process budget refuses a transaction before any of its bytes exist.
 #[derive(Clone)]
 struct SharedBuf(std::sync::Arc<std::sync::Mutex<WalTailWindow>>);
 
-/// @emoji 🩹️ Recovers a poisoned lock instead of panicking — one panicking document actor must
+/// 🩹️ Recovers a poisoned lock instead of panicking — one panicking document actor must
 /// never turn every other document's WAL access into a cascading panic (mirrors `db_storage`'s
 /// own `MemoryStorage` convention).
 // 🚫️async: E1 pure accessor (no suspension: `Mutex::lock` on a never-genuinely-contended
@@ -1031,7 +1018,7 @@ fn lock<T>(mutex: &std::sync::Mutex<T>) -> std::sync::MutexGuard<'_, T> {
 }
 
 impl SharedBuf {
-    /// @emoji 📍️ An empty window whose next byte lands at absolute segment offset `base`.
+    /// 📍️ An empty window whose next byte lands at absolute segment offset `base`.
     fn at(base: u64) -> Self {
         Self(std::sync::Arc::new(std::sync::Mutex::new(WalTailWindow::at(base))))
     }
@@ -1040,13 +1027,13 @@ impl SharedBuf {
         lock(&self.0).len()
     }
 
-    /// @emoji 🎟️ Ensures the next `bytes` written fit the window's pages, growing it by one writer
+    /// 🎟️ Ensures the next `bytes` written fit the window's pages, growing it by one writer
     /// under the window's own I/O operation when they do not.
     fn admit(&self, bytes: u64) -> Result<(), DbError> {
         lock(&self.0).admit(bytes)
     }
 
-    /// @emoji 🧺️ Returns one flushed page (or writer shell) to the process budget; `false` once the
+    /// 🧺️ Returns one flushed page (or writer shell) to the process budget; `false` once the
     /// window is empty again and rebased past everything it held.
     fn release_step(&self) -> Result<bool, DbError> {
         lock(&self.0).release_step()
@@ -1121,7 +1108,7 @@ impl pack::PackSink for SharedBuf {
     }
 }
 
-/// @emoji ⛓️ Every `db_wal` segment is opened requiring `protocol::wire::REQUIRED_HASH_CHAIN` —
+/// ⛓️ Every `db_wal` segment is opened requiring `protocol::wire::REQUIRED_HASH_CHAIN` —
 /// `SprWriter` always computes the commit chain regardless of this flag, but stamping it into the
 /// header makes the requirement an explicit, reader-enforced part of the file's contract rather
 /// than an implicit convention only this crate happens to uphold.
@@ -1132,7 +1119,7 @@ fn segment_write_options() -> protocol::format::WriteOptions {
 //#endregion 🔖️Sink
 
 //#region 🔖️Recovery
-/// @emoji 🚨️ Maps `protocol::ProtocolError` (this crate never leaks it in a public signature, per
+/// 🚨️ Maps `protocol::ProtocolError` (this crate never leaks it in a public signature, per
 /// the family's `DbError`-only rule) onto the closest `DbError` variant.
 // 🚫️async: E4 fn-pointer slot
 fn protocol_err(err: protocol::ProtocolError) -> DbError {
@@ -1342,7 +1329,6 @@ fn wal_decode_scalar_record(kind: u8, reader: &mut WalPageReader<'_>) -> Result<
             _ => return Err(DbError::Corrupt("wal payload tag".to_string())),
         },
         WAL_FRONTIER => WalRecord::Frontier(wal_decode_frontier(reader)?),
-        WAL_VCS_REF => WalRecord::VcsRef(reader.text()?),
         WAL_SNAPSHOT_PUB => WalRecord::SnapshotPub { generation: u64::from_le_bytes(reader.array()?), frontier: wal_decode_frontier(reader)? },
         WAL_LEASE => WalRecord::Lease { resource: reader.text()?, holder: reader.text()?, fence: u64::from_le_bytes(reader.array()?), expires_at_ms: u64::from_le_bytes(reader.array()?) },
         _ => return Err(DbError::Corrupt(format!("unknown wal record kind {kind:#x}"))),
@@ -1539,7 +1525,7 @@ fn wal_next_verified_page_frame(pages: &dyn WalImmutableByteSource, offset: &mut
     Ok(WalVerifiedFrameStep::PhysicalCommit)
 }
 
-/// @emoji 🧮️ Most body records one WAL transaction holds: a declared-legal document batch's commands
+/// 🧮️ Most body records one WAL transaction holds: a declared-legal document batch's commands
 /// (`protocol::DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES`) plus its frontier. `ArtifactWal::preflight_submit`
 /// refuses a larger transaction before any I/O and `WalTransactionGate` holds up to exactly this many frames, so
 /// every transaction the writer admits is one recovery and replay read back (it held 64 while the writer bounded a
@@ -1648,12 +1634,12 @@ impl WalTransactionGate {
     }
 }
 
-/// @emoji 📋️ What `ArtifactWal::open` found while recovering a document's WAL.
+/// 📋️ What `ArtifactWal::open` found while recovering a document's WAL.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct WalRecoveryReport {
     pub segments_seen: u64,
     pub records_replayed: u64,
-    /// @emoji ✂️ Bytes discarded off the active segment's tail because they came after the last
+    /// ✂️ Bytes discarded off the active segment's tail because they came after the last
     /// trusted commit (a torn write from a crash mid-append) — `0` on a clean recovery.
     pub torn_tail_bytes: u64,
     /// 🧯️ Incomplete active transaction durably aborted before this opener returned.
@@ -1910,7 +1896,7 @@ impl<S: WalImmutableByteSource> WalAuthenticatedSource<S> {
     }
 }
 
-/// @emoji 🔁️ Decodes every `WAL_*` record across a document's ENTIRE WAL (every sealed segment in
+/// 🔁️ Decodes every `WAL_*` record across a document's ENTIRE WAL (every sealed segment in
 /// full, plus the active segment), in segment then on-disk order. Each segment's complete retained
 /// bytes must end in a verified commit; torn tails are rejected. Page-bounded verification checks
 /// every frame and commit before releasing that segment's records, carrying the validated chain
@@ -2464,7 +2450,7 @@ fn exact_prior_tip(prior: WalPriorChainTip) -> Result<Option<[u8; 32]>, DbError>
 //#endregion 🔖️Recovery
 
 //#region 🔖️Segment
-/// @emoji 📦️ The live write path for exactly one WAL segment: an in-memory `protocol::SprWriter`
+/// 📦️ The live write path for exactly one WAL segment: an in-memory `protocol::SprWriter`
 /// over a `SharedBuf` tail window, plus how much of the segment has been flushed (durably appended)
 /// to `db_storage::WalStorage` so far. The writer lives as long as the segment — sealed and
 /// replaced by a fresh one on rotation — while the window holds pages only between an admitted
@@ -2571,7 +2557,7 @@ impl SegmentWriter {
         Ok(segment)
     }
 
-    /// @emoji 🆕️ Creates segment `index` in `storage`, writes its `WAL_SEGMENT_HEADER` record, and
+    /// 🆕️ Creates segment `index` in `storage`, writes its `WAL_SEGMENT_HEADER` record, and
     /// commits+flushes immediately (a segment's own identity/chain-link should never be lost to a
     /// crash before the segment records anything else).
     async fn begin(storage: &impl db_storage::WalStorage, permit: &db_storage::WalWriterPermit, document: ArtifactId, index: u64, prev_chain_hash: Option<[u8; 32]>, now_ms: u64) -> Result<Self, DbError> {
@@ -2611,7 +2597,7 @@ impl SegmentWriter {
         Ok(offset)
     }
 
-    /// @emoji 📨️ Appends one `WAL_COMMAND` record straight from the command's own encoded bytes — the same frame
+    /// 📨️ Appends one `WAL_COMMAND` record straight from the command's own encoded bytes — the same frame
     /// `WalRecord::Command` writes, without first staging the bytes in DB I/O pages.
     async fn append_command(&mut self, command: &[u8], now_ms: u64) -> Result<u64, DbError> {
         self.buf()?.admit(wal_frame_bytes(command.len())?)?;
@@ -2629,18 +2615,18 @@ impl SegmentWriter {
         self.pending_records += 1;
     }
 
-    /// @emoji 📏️ Bytes written since the last flush — not yet visible to `WalStorage`.
+    /// 📏️ Bytes written since the last flush — not yet visible to `WalStorage`.
     fn pending_bytes(&self) -> Result<u64, DbError> {
         self.buf()?.len().checked_sub(self.flushed_len).ok_or_else(|| DbError::Corrupt("WAL flushed length exceeds its retained writer".to_string()))
     }
 
-    /// @emoji 📏️ The segment's total logical length so far, flushed or not — what
+    /// 📏️ The segment's total logical length so far, flushed or not — what
     /// `ArtifactWal::submit` compares against its segment-rotation threshold.
     fn total_len(&self) -> Result<u64, DbError> {
         Ok(self.buf()?.len())
     }
 
-    /// @emoji ⛓️ Physically commits (`SprWriter::commit`, hash-chaining everything pending),
+    /// ⛓️ Physically commits (`SprWriter::commit`, hash-chaining everything pending),
     /// flushes the newly-committed suffix to `WalStorage::append` + `sync(class)` and hands the
     /// flushed tail window's pages back — the group-commit primitive `ArtifactWal::submit`/
     /// `force_flush`/`rotate` all funnel through. A no-op (`Ok(None)`) if nothing is pending.
@@ -2688,7 +2674,7 @@ impl SegmentWriter {
         }
     }
 
-    /// @emoji ⛓️ The chain_hash of this segment's last commit (`blake3(header)` if nothing has
+    /// ⛓️ The chain_hash of this segment's last commit (`blake3(header)` if nothing has
     /// committed beyond the segment's own header write, which `begin` always performs). Used by
     /// `ArtifactWal::rotate` to seed the next segment's `WAL_SEGMENT_HEADER.prev_chain_hash`; the
     /// writer carries it, because the committed bytes themselves have already left the tail window.
@@ -2722,7 +2708,7 @@ impl SegmentWriter {
 //#endregion 🔖️Segment
 
 //#region 🔖️ArtifactWal
-/// @emoji 📏️ Default segment-rotation threshold (this crate's own choice — the contract fixes
+/// 📏️ Default segment-rotation threshold (this crate's own choice — the contract fixes
 /// "per-document segment files", not an exact size): large enough that rotation stays rare under
 /// ordinary load, small enough that a single segment's crash-recovery replay stays bounded.
 const DEFAULT_MAX_SEGMENT_BYTES: u64 = db_storage::DB_IO_MAX_READ_BYTES;
@@ -2732,7 +2718,7 @@ fn wal_frame_bytes(payload: usize) -> Result<u64, DbError> {
     body.checked_add(wal_varint_len(body) as u64 + 8).ok_or(DbError::LimitExceeded("wal frame bytes"))
 }
 
-/// @emoji 🎟️ Bytes one submitted transaction adds to its segment: its framed commands and records plus the
+/// 🎟️ Bytes one submitted transaction adds to its segment: its framed commands and records plus the
 /// commit that may seal them.
 fn wal_submit_reservation(commands: &[Vec<u8>], records: &WalRecordBatch) -> Result<u64, DbError> {
     wal_transaction_frame_bytes(commands, records)?.checked_add(protocol::format::COMMIT_FRAME_LEN).ok_or(DbError::LimitExceeded("wal transaction reservation"))
@@ -2746,18 +2732,18 @@ fn wal_transaction_frame_bytes(commands: &[Vec<u8>], records: &WalRecordBatch) -
     Ok(bytes)
 }
 
-/// @emoji 🧾️ What `ArtifactWal::submit` did with one transaction's records.
+/// 🧾️ What `ArtifactWal::submit` did with one transaction's records.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct WalAppendReceipt {
     pub segment_index: u64,
     pub tx_id: u64,
-    /// @emoji ✅️ True iff this call caused (or piggybacked on) a physical `commit()`+`sync` —
+    /// ✅️ True iff this call caused (or piggybacked on) a physical `commit()`+`sync` —
     /// false means the transaction is durable only up to `DurabilityClass::Memory` so far, still
     /// batched behind `GroupCommitPolicy`.
     pub committed: bool,
 }
 
-/// @emoji 📼️ One document's write-ahead log: an ordered chain of per-segment `.spr` files over
+/// 📼️ One document's write-ahead log: an ordered chain of per-segment `.spr` files over
 /// `db_storage::WalStorage`, with group-commit batching and crash recovery. This is the type
 /// `db_artifact`'s authority actor owns one of per open document.
 pub struct ArtifactWal {
@@ -2871,7 +2857,7 @@ impl std::fmt::Debug for ArtifactWalOpenRejected {
 }
 
 impl ArtifactWal {
-    /// @emoji 🌱️ Creates a brand new WAL for `document` (segment 0, genesis — no prior segment to
+    /// 🌱️ Creates a brand new WAL for `document` (segment 0, genesis — no prior segment to
     /// chain from). Errors `AlreadyExists` if `document` already has WAL segments in `storage`.
     pub async fn create(storage: &impl db_storage::WalStorage, document: ArtifactId, policy: GroupCommitPolicy, now_ms: u64) -> Result<Self, ArtifactWalOpenRejected> {
         let writer = storage.acquire_writer(&document).await.map_err(ArtifactWalOpenRejected::before_acquire)?;
@@ -3080,7 +3066,7 @@ impl ArtifactWal {
         Ok(true)
     }
 
-    /// @emoji ✍️ Appends `commands` (each a `WAL_COMMAND` record written from its own encoded bytes) and then
+    /// ✍️ Appends `commands` (each a `WAL_COMMAND` record written from its own encoded bytes) and then
     /// `records` as one transaction (`WAL_TX_BEGIN` .. `WAL_TX_COMMIT`), then group-commits per `GroupCommitPolicy` —
     /// except `durability >= Fsync` always forces an immediate commit, since deferring one can never satisfy a
     /// durability request stronger than what's already flushed. Rotates to a new segment (sealing this one first, which
@@ -3121,20 +3107,20 @@ impl ArtifactWal {
         Ok(WalAppendReceipt { segment_index, tx_id, committed })
     }
 
-    /// @emoji 🚿️ Forces a commit+flush of whatever is currently pending, regardless of policy —
+    /// 🚿️ Forces a commit+flush of whatever is currently pending, regardless of policy —
     /// the primitive a timer-driven group-commit loop or a clean-shutdown drain calls. Returns
     /// `true` iff there was anything to flush.
     pub async fn force_flush(&mut self, storage: &impl db_storage::WalStorage) -> Result<bool, DbError> {
         Ok(self.active.commit_and_flush(storage, self.writer.as_ref().ok_or(DbError::Closed)?, DurabilityClass::Fsync).await?.is_some())
     }
 
-    /// @emoji ⏸️ True while group-committed records still wait in the open active segment; the
+    /// ⏸️ True while group-committed records still wait in the open active segment; the
     /// retained close must drain them through `close_flush` before `close_step` can retire it.
     pub fn has_pending(&self) -> bool {
         self.active.pending_records != 0 && self.active.writer.is_some()
     }
 
-    /// @emoji 🚰️ Clean-shutdown drain of the pending group commit. A failed drain poisons the active
+    /// 🚰️ Clean-shutdown drain of the pending group commit. A failed drain poisons the active
     /// segment, so `close_step` still reaches terminal and only the never-fsynced suffix is lost.
     pub async fn close_flush(&mut self, storage: &impl db_storage::WalStorage) -> Result<(), DbError> {
         let flushed = self.force_flush(storage).await;
@@ -3144,7 +3130,7 @@ impl ArtifactWal {
         flushed.map(|_| ())
     }
 
-    /// @emoji 🔄️ Seals the active segment (after a final commit+flush) and begins a fresh one,
+    /// 🔄️ Seals the active segment (after a final commit+flush) and begins a fresh one,
     /// carrying the sealed segment's tip `chain_hash` forward as the new segment's
     /// `WAL_SEGMENT_HEADER.prev_chain_hash` — the cross-segment hash-chain link.
     async fn rotate(&mut self, storage: &impl db_storage::WalStorage, now_ms: u64) -> Result<(), DbError> {
@@ -3166,7 +3152,7 @@ impl ArtifactWal {
         Ok(())
     }
 
-    /// @emoji 🔕️ Advances one close step. A step that made progress wakes its own waker; a pending
+    /// 🔕️ Advances one close step. A step that made progress wakes its own waker; a pending
     /// writer release parks the waker in the release signal, so the backend's terminal
     /// notification is the only thing that resumes the caller — never a re-poll.
     pub fn poll_close(&mut self, context: &mut std::task::Context<'_>) -> std::task::Poll<Result<(), DbError>> {

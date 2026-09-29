@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** @emoji 🌐 Shared jco transpile + plugin web glue (dev runner + extension store).
+/** 🌐 Shared jco transpile + plugin web glue (dev runner + extension store).
  *
  * MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (H2): `pluginWorkerSource`/`PLUGIN_WORKER_FILE`
  * (one Worker per plugin) are replaced by `shardWorkerSource`/`SHARD_WORKER_FILE` — ONE
@@ -127,7 +127,7 @@ export function ensurePreview2ShimVendorAt(preview2VendorDir: string, repoRoot: 
 export function patchPreview2ShimGuestLogClassification(cliPath: string): void {
   const source = readFileSync(cliPath, "utf8");
   const original = "consoleStream((line) => console.error(line))";
-  const classified = 'consoleStream((line) => line.startsWith("[DEBUG]") ? console.debug(line) : console.error(line))';
+  const classified = 'consoleStream((line) => line.startsWith("[TRACE]") ? console.debug(line) : console.error(line))';
   const originalCount = source.split(original).length - 1, classifiedCount = source.split(classified).length - 1;
   if (originalCount === 0 && classifiedCount === 2) return;
   if (originalCount !== 2 || classifiedCount !== 0) throw new Error(`preview2 cli.js guest-log patch did not match: ${cliPath}`);
@@ -178,10 +178,10 @@ const SEMIO_COMPLETE_LINE_RELEASE = `        flush() {
 /** 🧵 Releases guest log lines whole, so {@link patchPreview2ShimGuestLogClassification}'s severity
  * classifies a MESSAGE instead of a `core::fmt` fragment.
  *
- * 🐛️ Rust's stderr is unbuffered, so `core::fmt::write` turns one `eprintln!("[DEBUG] … {a} … {b}")`
+ * 🐛️ Rust's stderr is unbuffered, so `core::fmt::write` turns one `eprintln!("[TRACE] … {a} … {b}")`
  * into one `blocking-write-and-flush` per literal piece and per argument, and `io.js`'s
  * `blockingWriteAndFlush` is `handler.write()` + `handler.blockingFlush()`. Under upstream's partial
- * release every fragment became its own console call: fragment 1 carried the `[DEBUG] ` prefix and
+ * release every fragment became its own console call: fragment 1 carried the `[TRACE] ` prefix and
  * reached `console.debug`, fragments 2..n did not and reached `console.error` — 16 bogus `[error]`
  * lines on every canvas play pane and 172 on puzzle3d, which failed the strict acceptance suite on
  * 44 of 60 panes (ticket 26/09/19, `📓️console-spam.md`). */
@@ -195,7 +195,7 @@ export function patchPreview2ShimGuestLogLineRelease(cliPath: string): void {
 }
 
 /**
- * @emoji 🧵️ ONE package-agnostic worker bootstrap shared by every actor this tab's shard pool
+ * 🧵️ ONE package-agnostic worker bootstrap shared by every actor this tab's shard pool
  * activates — pairs with `ShardClient` (`🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts`), which
  * owns exactly K of these workers (design-runtime.md §1 `ShardTable`: `min(hardwareConcurrency-1,
  * 4)` on web) instead of one per plugin. Keeps `Map<actorId, {api, instance}>` and dynamically
@@ -544,7 +544,7 @@ function replyError(requestId, error, frames, retryableLifecycle) {
 // 🩺️ Hands every component this worker hosts the guest-side diagnostics switch through
 // \`wasi:cli/environment\` — the ONE schema-declared door a \`wasm32-wasip2\` component's own
 // \`std::env::var\` reads (\`semio_framework_trace::RUNTIME_DIAGNOSTICS_ENV\`). Before this, every
-// \`[DEBUG]\` line the guest's Rust hot path prints was unreachable from a browser session: the page's
+// \`[TRACE]\` line the guest's Rust hot path prints was unreachable from a browser session: the page's
 // \`localStorage\` switch only ever armed TypeScript-side traces, and \`runtime_diagnostics_from_environment\`
 // resolved against an environment nobody populated (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
 // \`📓️audit-guest-tick-cost-2026-09-12.md\` §0/§4 rank 1).
@@ -881,7 +881,7 @@ self.addEventListener("message", async (event) => {
 }
 
 /**
- * @emoji 🌉️ Normalizes ONE actor's jco-transpiled component (`world actor`: exports `reactor`/
+ * 🌉️ Normalizes ONE actor's jco-transpiled component (`world actor`: exports `reactor`/
  * `jobs`/`checkpoint`/`describe`, imports only `pure` — see `component.wit`) behind the flat
  * `createActorApi()` shape `🟨️shard-worker.js` calls: `poll`/`startJob`/`stepJob`/`cancelJob`/
  * `takeSegmentedDownloadChunk`/`checkpoint`/`restore`, and `codec` — the component's `codec` interface
@@ -1141,7 +1141,7 @@ export function rewriteJcoAsyncResultLifting(source: string): string {
   return source;
 }
 
-/** @emoji 💾️ Applies {@link rewriteJcoAsyncResultLifting} to one freshly transpiled jco module. */
+/** 💾️ Applies {@link rewriteJcoAsyncResultLifting} to one freshly transpiled jco module. */
 function rewriteJcoAsyncResultLiftingAt(modulePath: string): void {
   const source = readFileSync(modulePath, "utf8");
   const rewritten = rewriteJcoAsyncResultLifting(source);
@@ -1190,7 +1190,7 @@ export function rewriteJcoComponentAssetUrls(source: string): string {
   return rewritten === source ? source : `${JCO_COMPONENT_ASSET_URL_HELPER}\n\n${rewritten}`;
 }
 
-/** @emoji 💾️ Applies {@link rewriteJcoComponentAssetUrls} to one freshly transpiled jco module. */
+/** 💾️ Applies {@link rewriteJcoComponentAssetUrls} to one freshly transpiled jco module. */
 function rewriteJcoComponentAssetUrlsAt(modulePath: string): void {
   const source = readFileSync(modulePath, "utf8");
   const rewritten = rewriteJcoComponentAssetUrls(source);
@@ -1220,7 +1220,7 @@ export function transpilePluginComponent(artifact: string, outDir: string, compo
   rewritePreview2ShimImports(join(outDir, `${componentBase}.js`), ctx.preview2VendorDir);
 }
 
-/** @emoji 🚀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T-P8): non-blocking subprocess spawn, used ONLY
+/** 🚀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T-P8): non-blocking subprocess spawn, used ONLY
  * by {@link transpilePluginComponentAsync} below. The shared repo-lib's `runNodeBinStatus`/
  * `runCmdStatus` (used by the SYNC {@link transpilePluginComponent} above, which stays exactly as-is
  * for its one other caller, the extension store's `webMaterialize`) both wrap Node's `spawnSync` —
@@ -1266,7 +1266,7 @@ function spawnNodeBinAsync(args: readonly string[], cwd: string, signal?: AbortS
   return spawnAsync("node", [resolved ?? binName, ...args.slice(1)], cwd, signal);
 }
 
-/** @emoji 🪶️ Async twin of {@link optimizePluginCoreModules} — same ship-mode-only `wasm-opt` pass,
+/** 🪶️ Async twin of {@link optimizePluginCoreModules} — same ship-mode-only `wasm-opt` pass,
  * same `WASM_OPT_ARGS`, just spawned via {@link spawnAsync} instead of `runCmdStatus`'s `spawnSync` so
  * it can run concurrently with sibling plugins' own optimize pass under
  * `📜️script.ts`'s bounded-parallel materialize stage (T-P8). */
@@ -1288,7 +1288,7 @@ export async function optimizePluginCoreModulesAsync(outDir: string, componentBa
   }
 }
 
-/** @emoji 🚀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T-P8): async twin of
+/** 🚀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T-P8): async twin of
  * {@link transpilePluginComponent} — identical jco invocation, ship-mode `wasm-opt` pass, and
  * preview2-shim-import rewrite, but spawned non-blockingly so `📜️script.ts`'s bounded-parallel
  * MATERIALIZE stage (`buildPluginCatalog`) can actually overlap several plugins' transpile/optimize
@@ -1317,7 +1317,7 @@ export async function transpilePluginComponentAsync(artifact: string, outDir: st
 
 
 /**
- * @emoji 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2/H2, design-abi.md §1) + 🧪️ terra-web-bridges
+ * 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2/H2, design-abi.md §1) + 🧪️ terra-web-bridges
  * (async-worlds). `pure` (`interface pure { log; now-ms; trace-span; }`, component.wit ~:823) stays
  * plain synchronous `func` and is unchanged from H2 — the old `host` world's larger surface
  * (`read-document`/`write-document`/`open-window`/`invoke-action`/`read-asset`/`network-fetch`/

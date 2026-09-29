@@ -4,6 +4,9 @@ async fn hash(byte: u8) -> PackageHash {
     PackageHash([byte; 32])
 }
 
+/// 👶️ host-dedyn: `#[test] fn` is a sanctioned `block_on` entry point (R4 clause 5) — this
+/// test drives `GuestRuntime`'s async methods directly against the concrete `MockGuestRuntime`
+/// (not through the `GuestRuntimes` enum), same as it did through the deleted `poll_ready`.
 #[semio_framework_async_macros::async_test]
 async fn scripted_turn_is_returned_exactly_once_fifo() {
     let runtime = MockGuestRuntime::new().await;
@@ -18,9 +21,6 @@ async fn scripted_turn_is_returned_exactly_once_fifo() {
     runtime.script_turn(actor, first).await;
     runtime.script_turn(actor, second).await;
 
-    // 👶️ host-dedyn: `#[test] fn` is a sanctioned `block_on` entry point (R4 clause 5) — this
-    // test drives `GuestRuntime`'s async methods directly against the concrete `MockGuestRuntime`
-    // (not through the `GuestRuntimes` enum), same as it did through the deleted `poll_ready`.
     let got_first = semio_framework_async::block_on(runtime.execute_turn(&mut inst, &[], Budget { fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 })).expect("first scripted turn");
     assert_eq!(got_first.fuel_used, 7);
     let got_second = semio_framework_async::block_on(runtime.execute_turn(&mut inst, &[], Budget { fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 })).expect("second scripted turn");

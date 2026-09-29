@@ -33,7 +33,7 @@
 //! Postgres gives us a genuine row lock across concurrent connections/processes for free.
 
 //#region 🔖️Schema
-/// @emoji 🧱️ Idempotent DDL bootstrapped by `PostgresStorage::connect` — one statement per table,
+/// 🧱️ Idempotent DDL bootstrapped by `PostgresStorage::connect` — one statement per table,
 /// plus a seed row for the catalog singleton (`db_catalog_root.id = 1`) so `CatalogStorage`'s
 /// compare-and-swap can always `SELECT ... FOR UPDATE` a real row instead of racing to insert one.
 const SCHEMA_STATEMENTS: &[&str] = &[
@@ -74,14 +74,14 @@ const SCHEMA_STATEMENTS: &[&str] = &[
     )",
 ];
 
-/// @emoji 🔒️ The transaction-scoped advisory lock (two-key form, a keyspace apart from the one-key WAL writer locks) that
+/// 🔒️ The transaction-scoped advisory lock (two-key form, a keyspace apart from the one-key WAL writer locks) that
 /// serialises schema bootstraps on one database: PostgreSQL's `CREATE TABLE IF NOT EXISTS` is not safe against a
 /// concurrent creator of the same table (`duplicate key value violates unique constraint "pg_type_typname_nsp_index"`), so
 /// two storages — two hub processes, a hub and the db CLI, two laws — opening a fresh database at once refused one of
 /// them. Keys: `semi` as a big-endian i32, and the schema generation.
 const SCHEMA_BOOTSTRAP_LOCK: (i32, i32) = (0x7365_6d69, 1);
 
-/// @emoji 🧱️ Runs [`SCHEMA_STATEMENTS`] in one transaction under [`SCHEMA_BOOTSTRAP_LOCK`], so concurrent openers of one
+/// 🧱️ Runs [`SCHEMA_STATEMENTS`] in one transaction under [`SCHEMA_BOOTSTRAP_LOCK`], so concurrent openers of one
 /// database bootstrap it one after the other and every later one finds the tables.
 async fn bootstrap_schema(pool: &PgPool) -> Result<(), DbError> {
     let mut transaction = pool.begin().await.map_err(map_sqlx_error)?;
@@ -133,7 +133,7 @@ fn postgres_wal_segment_state(sealed: bool) -> WalSegmentState {
     }
 }
 
-/// @emoji 🐘️ A `db_storage::DbStorage` backend over PostgreSQL — `pool` is the connection pool
+/// 🐘️ A `db_storage::DbStorage` backend over PostgreSQL — `pool` is the connection pool
 /// every trait method below runs its query against directly (no runtime of its own to bridge
 /// through anymore — see module doc).
 struct PostgresDbIoExecutor {
@@ -146,7 +146,7 @@ struct PostgresDbIoExecutor {
 }
 
 impl PostgresDbIoExecutor {
-    /// @emoji 🔌️ Connects to `database_url` and bootstraps the schema (idempotent, no migration
+    /// 🔌️ Connects to `database_url` and bootstraps the schema (idempotent, no migration
     /// framework — matches the deleted `os-semio_hub-storage-postgres` precedent), returning a ready
     /// `PostgresStorage`. `async` because connecting a pool and running DDL are themselves I/O — the
     /// caller (ultimately the hub's `#[tokio::main]`) already awaits this on a real runtime.
@@ -170,7 +170,7 @@ impl PostgresDbIoExecutor {
 //#endregion 🔖️Connection
 
 //#region 🔖️ErrorMapping
-/// @emoji 🚨️ Maps a `sqlx::Error` to this family's `DbError` — the only place `sqlx::Error` is
+/// 🚨️ Maps a `sqlx::Error` to this family's `DbError` — the only place `sqlx::Error` is
 /// allowed to appear, mirroring `db_storage::FsStorage`'s single `io_err` chokepoint for
 /// `std::io::Error`. A `Database`-flavored error further classifies via
 /// `DatabaseError::is_unique_violation` (driver-agnostic, no hand-parsed SQLSTATE string).
@@ -196,7 +196,7 @@ fn map_sqlx_error(err: sqlx::Error) -> DbError {
     DbError::Io(err.to_string())
 }
 
-/// @emoji 🆕️ Like `map_session_error`, but a unique-violation becomes `DbError::AlreadyExists(what())`
+/// 🆕️ Like `map_session_error`, but a unique-violation becomes `DbError::AlreadyExists(what())`
 /// — used by the writer session's `create_segment`.
 // 🚫️async: E1 pure accessor called from sync `.map_err(|err| map_create_error(...))` closures — see R9
 fn map_create_error(err: sqlx::Error, what: impl FnOnce() -> String) -> DbError {
@@ -210,7 +210,7 @@ fn map_create_error(err: sqlx::Error, what: impl FnOnce() -> String) -> DbError 
 //#endregion 🔖️ErrorMapping
 
 //#region 🔖️Conversions
-/// @emoji 🔢️ Every dense index/generation/run/epoch/timestamp this crate stores is `u64` at the
+/// 🔢️ Every dense index/generation/run/epoch/timestamp this crate stores is `u64` at the
 /// trait boundary but `BIGINT` (`i64`) in Postgres — this is the one narrowing conversion point,
 /// erroring rather than silently wrapping on the (astronomically unlikely) values above
 /// `i64::MAX`.
@@ -218,7 +218,7 @@ fn to_i64(value: u64) -> Result<i64, DbError> {
     i64::try_from(value).map_err(|_| DbError::InvalidArgument(format!("value {value} exceeds i64::MAX")))
 }
 
-/// @emoji 📋️ One document's ascending id column in ONE round trip, bounded by the DB I/O list capacity (`sql` binds
+/// 📋️ One document's ascending id column in ONE round trip, bounded by the DB I/O list capacity (`sql` binds
 /// the document as `$1` and the row bound as `$2`; a list one row over the capacity is refused exactly as pushing it
 /// would be). A list used to cost one round trip per row (`… > $2 ORDER BY … LIMIT 1` in a loop): the index lists its
 /// runs several times per edit, so every edit on a remote server paid hundreds of round trips and outgrew the hub's
@@ -233,7 +233,7 @@ async fn postgres_ascending_ids(pool: &PgPool, sql: &'static str, document: &Art
     Ok(result)
 }
 
-/// @emoji ✂️ Validates a `WalStorage::read` range against the segment's actual current length
+/// ✂️ Validates a `WalStorage::read` range against the segment's actual current length
 /// (already fetched via `octet_length`, so this never touches the segment bytes themselves) and
 /// converts to the 1-indexed `(offset, len)` pair Postgres's `substring(bytea, int, int)` expects.
 fn validate_read_range(current_len: u64, range: ByteRange) -> Result<(i64, i64), DbError> {
@@ -244,7 +244,7 @@ fn validate_read_range(current_len: u64, range: ByteRange) -> Result<(i64, i64),
     Ok((to_i64(range.offset)?, to_i64(range.len)?))
 }
 
-/// @emoji ✂️ Validates a `WalStorage::truncate_tail` request against the segment's sealed flag and
+/// ✂️ Validates a `WalStorage::truncate_tail` request against the segment's sealed flag and
 /// current length, matching `db_storage::{MemoryStorage, FsStorage}`'s identical checks.
 fn validate_truncate(sealed: bool, current_len: u64, new_len: u64) -> Result<(), DbError> {
     if sealed {
@@ -258,19 +258,19 @@ fn validate_truncate(sealed: bool, current_len: u64, new_len: u64) -> Result<(),
 //#endregion 🔖️Conversions
 
 //#region 🔖️WriterFence
-/// @emoji 🔒️ Namespace hashed with the document into the session advisory-lock key — contract
+/// 🔒️ Namespace hashed with the document into the session advisory-lock key — contract
 /// `🔐️writer/🧫️fixtures/🌐️remote-guard` (`postgres.lockNamespace`).
 const WAL_WRITER_LOCK_NAMESPACE: &str = "semio/db/wal-writer/v1";
 
-/// @emoji 🏷️ `application_name` of every writer session, so an operator (or the conformance law's
+/// 🏷️ `application_name` of every writer session, so an operator (or the conformance law's
 /// independent `psql`) can name the exact session that holds a document.
 const WAL_WRITER_APPLICATION_NAME: &str = "semio-wal-writer";
 
-/// @emoji 💓 Server-side TCP keepalive of a writer session: a vanished host's lock is released after
+/// 💓 Server-side TCP keepalive of a writer session: a vanished host's lock is released after
 /// `idle + interval × count` seconds instead of the kernel's two-hour default.
 const WAL_WRITER_KEEPALIVE: [(&str, &str); 3] = [("tcp_keepalives_idle", "10"), ("tcp_keepalives_interval", "5"), ("tcp_keepalives_count", "3")];
 
-/// @emoji 🔑 The 64-bit advisory-lock key of one document: the first eight bytes (big-endian) of
+/// 🔑 The 64-bit advisory-lock key of one document: the first eight bytes (big-endian) of
 /// `sha256(namespace ‖ 0x00 ‖ document)`.
 fn wal_writer_lock_key(document: &str) -> i64 {
     let mut hash = semio_framework_hash::Sha256::new();
@@ -281,7 +281,7 @@ fn wal_writer_lock_key(document: &str) -> i64 {
     i64::from_be_bytes(digest[..8].try_into().expect("sha256 digest has eight leading bytes"))
 }
 
-/// @emoji 🧵 A dedicated connection whose session holds the document's advisory lock; every WAL
+/// 🧵 A dedicated connection whose session holds the document's advisory lock; every WAL
 /// mutation of the permit runs on this session, so a terminated session can never write.
 struct PostgresWalWriterSession {
     connection: PgConnection,
@@ -305,7 +305,7 @@ impl PostgresWalWriterSession {
     }
 }
 
-/// @emoji 🚨️ Classifies an error raised on the writer session: transport loss and the server's
+/// 🚨️ Classifies an error raised on the writer session: transport loss and the server's
 /// operator-intervention / connection-exception classes (`57P*`, `08*`) end the session, and with it
 /// the advisory lock, so they answer `Fenced` — the caller then drops the session instead of lending it again.
 fn map_session_error(err: sqlx::Error) -> DbError {
@@ -319,13 +319,13 @@ fn map_session_error(err: sqlx::Error) -> DbError {
     map_sqlx_error(err)
 }
 
-/// @emoji 🔔 Completion witness of a detached unlock; wakes the release controller and a parked backend close.
+/// 🔔 Completion witness of a detached unlock; wakes the release controller and a parked backend close.
 struct PostgresWalWriterUnlock {
     done: std::sync::atomic::AtomicBool,
     waker: std::sync::Mutex<Option<std::task::Waker>>,
 }
 
-/// @emoji 🔐️ One document's cross-process writer fence: the lock session, lent to one pinned
+/// 🔐️ One document's cross-process writer fence: the lock session, lent to one pinned
 /// operation at a time, then an in-flight unlock, then terminal.
 enum PostgresWalWriterGuard {
     Held { session: Option<PostgresWalWriterSession>, backend: DbIoBackendControl },
@@ -440,7 +440,7 @@ impl PostgresDbIoExecutor {
         result
     }
 
-    /// @emoji 💾️ Every write above already ran as a committed statement/transaction on the writer
+    /// 💾️ Every write above already ran as a committed statement/transaction on the writer
     /// session, and Postgres fsyncs its own WAL at COMMIT under the default `synchronous_commit =
     /// on`, so `Fsync` is satisfied when `append`/`truncate_tail` return. `Quorum` (replica
     /// acknowledgement) is `db_cluster`'s concern over Postgres's own replication.
@@ -507,7 +507,7 @@ impl PostgresDbIoExecutor {
         self.writers.get_mut().unwrap_or_else(std::sync::PoisonError::into_inner).as_deref_mut().ok_or(DbError::Closed)
     }
 
-    /// @emoji 🔐️ Runs one pinned WAL mutation on its permit's lock session. A session the server
+    /// 🔐️ Runs one pinned WAL mutation on its permit's lock session. A session the server
     /// ended is never lent again: the permit is fenced from then on and its release is immediate.
     async fn fenced_wal_mutation(&mut self, operation: u64, task: &mut DbIoTask) -> Result<DbIoResult, DbError> {
         let (key, backend, document) = task.writer_stamp().map(|(key, backend, document)| (key, backend, document.clone())).ok_or_else(|| DbError::Internal("PostgreSQL WAL mutation lost its writer stamp".to_string()))?;
@@ -707,7 +707,7 @@ impl IndexStorage for PostgresDbIoExecutor {
 //#endregion 🔖️IndexStorage
 
 //#region 🔖️LeaseStorage
-/// @emoji ⏳️ The row currently held on a resource, as read from `db_lease` — the DB-shaped input to
+/// ⏳️ The row currently held on a resource, as read from `db_lease` — the DB-shaped input to
 /// the pure `lease_*_decision`/`lease_*_check` functions below, so the hand-off/renew/release state
 /// machine is unit-testable without a live Postgres connection.
 struct ExistingLease {
@@ -716,7 +716,7 @@ struct ExistingLease {
     expires_at_ms: u64,
 }
 
-/// @emoji 🤝️ Pure decision for `LeaseStorage::acquire` — identical state machine to
+/// 🤝️ Pure decision for `LeaseStorage::acquire` — identical state machine to
 /// `db_storage::{MemoryStorage, FsStorage}::acquire`: re-acquire by the same still-live holder keeps
 /// the fence, a genuine hand-off (absent or expired) bumps it, a live foreign holder conflicts.
 fn lease_acquire_decision(existing: Option<&ExistingLease>, holder: &str, now_ms: u64) -> Result<EpochFence, DbError> {
@@ -732,7 +732,7 @@ fn lease_acquire_decision(existing: Option<&ExistingLease>, holder: &str, now_ms
     }
 }
 
-/// @emoji ♻️ Pure decision for `LeaseStorage::renew` — errors precisely as documented on the trait:
+/// ♻️ Pure decision for `LeaseStorage::renew` — errors precisely as documented on the trait:
 /// `NotFound` absent, `Unavailable` expired, `Unauthorized` wrong holder, `Fenced` wrong epoch.
 fn lease_renew_check(existing: Option<&ExistingLease>, holder: &str, fence: EpochFence, now_ms: u64) -> Result<(), DbError> {
     let info = existing.ok_or_else(|| DbError::NotFound("lease not found".to_string()))?;
@@ -745,7 +745,7 @@ fn lease_renew_check(existing: Option<&ExistingLease>, holder: &str, fence: Epoc
     fence.check(info.fence)
 }
 
-/// @emoji 🕊️ Pure decision for `LeaseStorage::release` — same holder/fence checks as `renew`, minus
+/// 🕊️ Pure decision for `LeaseStorage::release` — same holder/fence checks as `renew`, minus
 /// the expiry check (a holder may release its own already-expired-but-not-yet-reclaimed lease).
 fn lease_release_check(existing: Option<&ExistingLease>, holder: &str, fence: EpochFence) -> Result<(), DbError> {
     let info = existing.ok_or_else(|| DbError::NotFound("lease not found".to_string()))?;
@@ -755,7 +755,7 @@ fn lease_release_check(existing: Option<&ExistingLease>, holder: &str, fence: Ep
     fence.check(info.fence)
 }
 
-/// @emoji 🔒️ Reads `resource`'s current lease row through `executor`, taking a `FOR UPDATE` row
+/// 🔒️ Reads `resource`'s current lease row through `executor`, taking a `FOR UPDATE` row
 /// lock when `executor` is a transaction (the row-lock variant every `acquire`/`renew`/`release`
 /// call uses so the read-decide-write sequence is atomic across concurrent connections) —
 /// `LeaseStorage::current` instead calls this with the bare pool for a non-locking snapshot read.
@@ -1075,7 +1075,7 @@ impl DbIoTaskExecutor for PostgresDbIoExecutor {
 }
 //#endregion 🔖️TypedExecutor
 
-/// @emoji 🐘️ Typed PostgreSQL facade; only the registered executor owns the external driver.
+/// 🐘️ Typed PostgreSQL facade; only the registered executor owns the external driver.
 pub struct PostgresStorage {
     control: DbIoBackendControl,
     worker_pool: Arc<WorkerPool>,
@@ -1087,7 +1087,7 @@ impl PostgresStorage {
         crate::db_storage::open_db_io_backend_admitted(&worker_pool, || Self::connect_once(worker_pool.clone(), database_url)).await
     }
 
-    /// @emoji 🎯️ One PostgreSQL backend open attempt, refused at once when the backend capacity is taken.
+    /// 🎯️ One PostgreSQL backend open attempt, refused at once when the backend capacity is taken.
     async fn connect_once(worker_pool: Arc<WorkerPool>, database_url: &str) -> Result<Self, DbStorageOpenRejected> {
         let database_url = DbIoText::try_from_str(database_url)?;
         let rollback = DbIoBackendRollbackReservation::try_reserve()?;
@@ -1307,14 +1307,14 @@ impl LeaseStorage for PostgresStorage {
 }
 
 //#region 🔖️DbBackend
-/// @emoji 🎚️ `PostgresStorage`'s fixed capability set — extracted to a free fn so the unit tests
+/// 🎚️ `PostgresStorage`'s fixed capability set — extracted to a free fn so the unit tests
 /// below can assert on it without opening a real connection.
 fn postgres_capabilities() -> StorageCapabilities {
     StorageCapabilities { durable: true, max_durability: DurabilityClass::Fsync, supports_fsync: true, supports_cas: true }
 }
 
 impl PostgresStorage {
-    /// @emoji 🎚️ What this backend actually supports — see [`postgres_capabilities`].
+    /// 🎚️ What this backend actually supports — see [`postgres_capabilities`].
     pub async fn capabilities(&self) -> StorageCapabilities {
         postgres_capabilities()
     }

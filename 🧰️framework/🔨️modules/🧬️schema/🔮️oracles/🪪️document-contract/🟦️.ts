@@ -65,5 +65,5 @@ export function assertDocumentContractOracle(spec: DocumentContractOracle): void
     if (isSnapshot) snapshots++; else diffs++;
   }
   assert.deepEqual({ snapshots, diffs }, spec.committed);
-  console.log(`[DEBUG] ${spec.name} exact document contracts matched ${snapshots} native snapshots, ${diffs} committed diffs and independent owner/child rejection vectors`);
+  console.log(`[TRACE] ${spec.name} exact document contracts matched ${snapshots} native snapshots, ${diffs} committed diffs and independent owner/child rejection vectors`);
 }

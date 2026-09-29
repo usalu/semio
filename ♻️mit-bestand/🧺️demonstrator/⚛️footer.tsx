@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🏛️ Entwerfen mit Bestand Aggregator's shell-chrome partner/funding credits — brand-exclusive footer items, not part of the shared `@semio-tech/ui-react` component library. */
+/** 🏛️ Entwerfen mit Bestand Aggregator's shell-chrome partner/funding credits — brand-exclusive footer items, not part of the shared `@semio-tech/ui-react` component library. */
 // #endregion 🧲️Header
 
 import type { NavbarItem, UiLocale } from "../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
@@ -8,7 +8,7 @@ import { cn } from "../../🧰️framework/🔨️modules/🖱️ui/🎯️targe
 type PartnerLogoStyle = Readonly<Record<string, string | number | undefined>>;
 
 //#region 🏛️ZukunftBauLogo
-/** @emoji 🏛️ Zukunft Bau wordmark, used to credit the BBSR research funding programme in app chrome. @see https://www.zukunftbau.de/projekte/forschungsfoerderung/1008187-2506 */
+/** 🏛️ Zukunft Bau wordmark, used to credit the BBSR research funding programme in app chrome. @see https://www.zukunftbau.de/projekte/forschungsfoerderung/1008187-2506 */
 export function ZukunftBauLogo({ className, style }: { className?: string; style?: PartnerLogoStyle }) {
   return (
     <svg viewBox="0 0 336 59.185" className={className} style={style} xmlns="http://www.w3.org/2000/svg">
@@ -59,14 +59,14 @@ export function ZukunftBauLogo({ className, style }: { className?: string; style
 //#endregion 🏛️ZukunftBauLogo
 
 //#region 🏛️LuhLogo
-/** @emoji 🏛️ Leibniz Universität Hannover wordmark for partner chrome credits. @see https://www.iek.uni-hannover.de/ngs/team */
+/** 🏛️ Leibniz Universität Hannover wordmark for partner chrome credits. @see https://www.iek.uni-hannover.de/ngs/team */
 export const LUH_LOGO_URL = "/♻️mit-bestand/🧺️demonstrator/🖼️asset/🪧️logos/🎓️luh/☀️logo.png";
-/** @emoji 🏛️ Dark-appearance LUH wordmark. */
+/** 🏛️ Dark-appearance LUH wordmark. */
 export const LUH_LOGO_DARK_URL = "/♻️mit-bestand/🧺️demonstrator/🖼️asset/🪧️logos/🎓️luh/🌙️logo-dark.png";
-/** @emoji 🏛️ LUH NGS team page. */
+/** 🏛️ LUH NGS team page. */
 export const LUH_URL = "https://www.iek.uni-hannover.de/ngs/team";
 
-/** @emoji 🏛️ Leibniz Universität Hannover logo with light/dark variants served from `♻️mit-bestand/🧺️demonstrator/🖼️asset`. */
+/** 🏛️ Leibniz Universität Hannover logo with light/dark variants served from `♻️mit-bestand/🧺️demonstrator/🖼️asset`. */
 export function LuhLogo({ className, style }: { className?: string; style?: PartnerLogoStyle }) {
   return (
     <span className={cn("inline-flex shrink-0 items-center", className)} style={style}>
@@ -78,14 +78,14 @@ export function LuhLogo({ className, style }: { className?: string; style?: Part
 //#endregion 🏛️LuhLogo
 
 //#region 🏛️UdkLogo
-/** @emoji 🏛️ Universität der Künste Berlin wordmark for partner chrome credits. @see https://www.udk-berlin.de/studium/architektur/fachgebiete/konstruktives-entwerfen-und-tragwerksplanung/team-2025-2026/ */
+/** 🏛️ Universität der Künste Berlin wordmark for partner chrome credits. @see https://www.udk-berlin.de/studium/architektur/fachgebiete/konstruktives-entwerfen-und-tragwerksplanung/team-2025-2026/ */
 export const UDK_LOGO_URL = "/♻️mit-bestand/🧺️demonstrator/🖼️asset/🪧️logos/🎨️udk/☀️logo.png";
-/** @emoji 🏛️ Dark-appearance UdK wordmark. */
+/** 🏛️ Dark-appearance UdK wordmark. */
 export const UDK_LOGO_DARK_URL = "/♻️mit-bestand/🧺️demonstrator/🖼️asset/🪧️logos/🎨️udk/🌙️logo-dark.png";
-/** @emoji 🏛️ UdK KET team page. */
+/** 🏛️ UdK KET team page. */
 export const UDK_URL = "https://www.udk-berlin.de/studium/architektur/fachgebiete/konstruktives-entwerfen-und-tragwerksplanung/team-2025-2026/";
 
-/** @emoji 🏛️ Universität der Künste Berlin logo with light/dark variants served from `♻️mit-bestand/🧺️demonstrator/🖼️asset`. */
+/** 🏛️ Universität der Künste Berlin logo with light/dark variants served from `♻️mit-bestand/🧺️demonstrator/🖼️asset`. */
 export function UdkLogo({ className, style }: { className?: string; style?: PartnerLogoStyle }) {
   return (
     <span className={cn("inline-flex shrink-0 items-center", className)} style={style}>
@@ -97,16 +97,16 @@ export function UdkLogo({ className, style }: { className?: string; style?: Part
 //#endregion 🏛️UdkLogo
 
 //#region 🏛️FundedByZukunftBauFooterItem
-/** @emoji 🏛️ Footer credit for the Zukunft Bau (BBSR) research funding programme, linking out to the funded project page. */
+/** 🏛️ Footer credit for the Zukunft Bau (BBSR) research funding programme, linking out to the funded project page. */
 export const ZUKUNFT_BAU_PROJECT_URL = "https://www.zukunftbau.de/projekte/forschungsfoerderung/1008187-2506";
 
 /**
- * @emoji 🏛️ A plain (non-margined) footer item — the caller sits it between the bottom-middle command palette and
+ * 🏛️ A plain (non-margined) footer item — the caller sits it between the bottom-middle command palette and
  * the bottom-right corner toggle by bracketing it with two `navbarFillItem` spacers, so it never claims the
  * exact corner pixel a floating corner `Panel` also anchors to. `relative z-40` matches `panel-tabs`' z-index so it
  * never disappears behind an anchored panel's own chrome. Rendered as a real `<button>` (not a link) so it reads as
  * chrome rather than page content; the click opens the funded project page in a new tab.
- * @emoji 📱️ On mobile the credit shrinks to just its logo — the "Funded by"/"Ein Projekt von" text has no room.
+ * 📱️ On mobile the credit shrinks to just its logo — the "Funded by"/"Ein Projekt von" text has no room.
  **/
 export function fundedByZukunftBauFooterItem(key = "fundedByZukunftBau", locale: UiLocale = "de", iconOnly = false): NavbarItem {
   return {
@@ -128,10 +128,10 @@ export function fundedByZukunftBauFooterItem(key = "fundedByZukunftBau", locale:
 
 //#region 🏛️AProjectOfLuhUdkFooterItem
 /**
- * @emoji 🏛️ Left-side footer partner credit mirroring {@link fundedByZukunftBauFooterItem} on the right —
+ * 🏛️ Left-side footer partner credit mirroring {@link fundedByZukunftBauFooterItem} on the right —
  * "Ein Projekt von" / "A project of" with LUH and UdK logos. Each logo links out to the partner team page;
  * `relative z-40` matches panel-tab chrome so the credit stays visible above anchored panels.
- * @emoji 📱️ On mobile the credit shrinks to just its logos — the "Ein Projekt von"/"und" text has no room.
+ * 📱️ On mobile the credit shrinks to just its logos — the "Ein Projekt von"/"und" text has no room.
  **/
 export function aProjectOfLuhUdkFooterItem(key = "aProjectOfLuhUdk", locale: UiLocale = "de", iconOnly = false): NavbarItem {
   return {

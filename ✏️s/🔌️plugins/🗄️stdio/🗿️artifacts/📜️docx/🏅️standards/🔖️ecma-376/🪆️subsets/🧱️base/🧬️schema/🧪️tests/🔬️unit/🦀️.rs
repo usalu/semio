@@ -370,7 +370,6 @@ fn save_preserves_relationship_selected_part_paths_and_clears_the_last_style() {
             assert!(archive.by_name(MAIN_DOCUMENT_PART).is_err());
         }
     }
-    println!("[DEBUG] DOCX custom main/styles relationships and last-style removal survive save/reopen and independent ZIP inspection");
 }
 
 fn canonical_authority_fixture() -> (DocxSnapshot, serde_json::Value) {

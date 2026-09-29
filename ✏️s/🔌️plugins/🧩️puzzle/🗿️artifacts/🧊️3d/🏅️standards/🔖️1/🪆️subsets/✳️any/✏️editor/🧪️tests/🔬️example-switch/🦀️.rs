@@ -28,7 +28,6 @@ async fn a_fresh_session_config_names_the_example_its_document_was_seeded_from()
     );
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("nakagin switch");
     assert_ne!(object_count(&app), seeded, "the switch must actually replace the document it was measured against");
-    eprintln!("[DEBUG] seeded example id={} objects={}", Puzzle3dConfig::default().active_example_id, seeded);
 }
 
 /// 🎵️ Wave W-X: a whole-fixture switch must stay cursorized (hostile law) but land as ONE
@@ -119,7 +118,7 @@ async fn nakagin_world3d_surface_fits_reconcile_node_cap() {
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("nakagin switch");
     let census = world_surface_carrier_census(&mut app, main::BODY_KEY).await;
     assert!(census.nodes <= semio_framework_ui_contract::UI_DOCUMENT_NODES, "Nakagin world-3d surface presented {} nodes over UI_DOCUMENT_NODES: {}", census.nodes, census.report());
-    eprintln!("[DEBUG] Nakagin world-3d surface presented {} nodes (cap {}) {}", census.nodes, semio_framework_ui_contract::UI_DOCUMENT_NODES, census.report());
+    eprintln!("Nakagin world-3d surface presented {} nodes (cap {}) {}", census.nodes, semio_framework_ui_contract::UI_DOCUMENT_NODES, census.report());
 }
 
 /// 🚚️ Wave W-P5 — the switch is only done when what a RENDER HOST assembles is drawable. The lane
@@ -151,7 +150,6 @@ async fn the_nakagin_switch_assembles_every_object_onto_a_mesh_the_same_publicat
     let instances_lane = census.lane(semio_framework_plugin::World3dSceneLane::Instances.body_key()).expect("the instances lane always publishes");
     assert_eq!(instances_lane.declared_hash, semio_framework_plugin::scene_lane_hash(&census.assembled.instances_json), "the spine manifest must describe the very text the host reassembles");
     assert_eq!(instances_lane.bytes, census.assembled.instances_json.len(), "the carrier text and the assembled lane are the same bytes");
-    eprintln!("[DEBUG] Nakagin switch assembled {} instances over {} declared meshes ({} unresolved) from a {}-byte instances lane in {} leaves", instances.len(), declared_meshes.len(), dangling.len(), instances_lane.bytes, instances_lane.leaves);
 }
 
 /// 🎵️ Wave W-AA: `VcsArtifactApp::backfill_command_log` labels an unpublished tool-job edit from
@@ -209,5 +207,4 @@ async fn a_document_swap_republishes_the_camera_fit_lane_and_an_object_edit_does
     dispatch(&mut app, "translateSelection", Some(&json!({ "ids": [object.as_str()], "dx": 4.0, "dy": 0.0, "dz": 0.0 })), None).await.expect("move one object");
     let edited = world_surface_carrier_census(&mut app, main::BODY_KEY).await;
     assert_eq!(fit_of(&edited)["revision"], nakagin_fit["revision"], "an ordinary edit must never move the camera");
-    eprintln!("[DEBUG] fit lane revision forest={} nakagin={} after-edit={}", forest_fit["revision"], nakagin_fit["revision"], fit_of(&edited)["revision"]);
 }

@@ -234,7 +234,7 @@ impl std::fmt::Display for ValueTypeRetirementError {
 impl std::error::Error for ValueTypeRetirementError {}
 
 impl PropertyDef {
-    /// @emoji 🧹️ Detaches at most one exact nested value-type string or list box. A terminal
+    /// 🧹️ Detaches at most one exact nested value-type string or list box. A terminal
     /// definition has only the definitionally shallow `Any` tag left for its final drop.
     pub fn retire_value_type_step(&mut self, maximum_bytes: usize) -> Result<Option<String>, ValueTypeRetirementError> {
         if let ValueType::Schema(value) = &self.value_type {

@@ -115,7 +115,27 @@ def dedupe_step() -> list[str]:
     return notes
 
 
+
+#: 🏁️ Set-level landing markers `(repo path, text)` — `None` = the set deletes that file. All present → the set is
+#: landed and nothing is applied (per-hunk checks alone cannot see an insert whose text a later codemod reworded).
+LANDED = [('🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs', 'Ok(bounded_document_store_initialization_job(envelope, Self::DOCUMENT_SCHEMA, operation, generation))')]
+
+
+def landed_guard() -> bool:
+    """🏁️ True when every landing marker is in the tree; a partial landing is a conflict, never a second write."""
+    tree = Path("/Users/ueli/Documents/semio")
+    present = [(not (tree / rel).exists()) if marker is None else ((tree / rel).exists() and marker in (tree / rel).read_text()) for rel, marker in LANDED]
+    if all(present):
+        print("landed: every set marker is in the tree — nothing to apply")
+        return True
+    if any(present):
+        raise SystemExit(f"CONFLICT: set partially landed (markers {present}) — nothing written")
+    return False
+
+
 def main() -> None:
+    if landed_guard():
+        return
     notes = sdk_step() + dedupe_step()
     print("\n".join(notes))
     print(f"{'dry-run' if DRY else 'applied'}: {sum(1 for line in notes if line.startswith('B dedupe'))} plugin files deduped")

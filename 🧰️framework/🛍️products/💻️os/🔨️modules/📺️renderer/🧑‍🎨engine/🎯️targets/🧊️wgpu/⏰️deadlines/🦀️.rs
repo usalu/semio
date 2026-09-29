@@ -89,13 +89,13 @@ pub struct HotSwapPoll {
 }
 
 impl HotSwapPoll {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    /// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new() -> Self {
         Self { last_checked_seconds: f64::NEG_INFINITY }
     }
 
     /// ⏱️ `true` at most once per `NATIVE_HOT_SWAP_POLL_SECONDS` window.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    /// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn is_due(&mut self, now_seconds: f64) -> bool {
         if now_seconds - self.last_checked_seconds < NATIVE_HOT_SWAP_POLL_SECONDS {
             return false;

@@ -160,7 +160,7 @@ function expectSelection(entry: Dispatched | undefined, expected: Gesture["expec
   expect(entry!.args.method).toBe(expected.method);
   const targets = JSON.parse(String(entry!.args.targets)) as readonly { readonly granularity: string; readonly id: string }[];
   expect(targets).toEqual(expected.targets);
-  expect(new Set(targets.map((target) => `${target.granularity}\u0000${target.id}`)).size, `[DEBUG] duplicate topology target pair in ${JSON.stringify(targets)}`).toBe(targets.length);
+  expect(new Set(targets.map((target) => `${target.granularity}\u0000${target.id}`)).size, `[TRACE] duplicate topology target pair in ${JSON.stringify(targets)}`).toBe(targets.length);
 }
 
 export function testWorld3dInteraction(): void {
@@ -299,7 +299,7 @@ export function testWorld3dInteraction(): void {
     it("collapses repeated topology ids into one wire target in the selection args builder", () => {
       const spec = gesture("repeated-ids-collapse-in-the-args-builder");
       const ids = spec.ids!;
-      expect(new Set(ids).size, "[DEBUG] the fixture must hand the builder a repeated id or the law proves nothing").toBeLessThan(ids.length);
+      expect(new Set(ids).size, "[TRACE] the fixture must hand the builder a repeated id or the law proves nothing").toBeLessThan(ids.length);
       const args = world3dSelectionActionArgs(fixture.scene.domainId, spec.granularity!, ids, spec.expect.merge! as MergeMode);
       expect(args.domainId).toBe(spec.expect.domainId);
       expect(args.merge).toBe(spec.expect.merge);
@@ -317,7 +317,7 @@ export function testWorld3dInteraction(): void {
         const selects = only(dispatched, "interactionSelect");
         expect(selects.length, `${row.id} dispatched ${selects.length} selects`).toBe(1);
         expect(selects[0]!.args.merge, `${row.id} must resolve to ${row.pick}`).toBe(row.pick);
-        expect(componentPickMergeMode(row.pick as MergeMode), `[DEBUG] ${row.id} component pick`).toBe(row.componentPick);
+        expect(componentPickMergeMode(row.pick as MergeMode), `[TRACE] ${row.id} component pick`).toBe(row.componentPick);
         for (const never of mergeModes.modifierPolicy.neverEmitted) expect(selects[0]!.args.merge).not.toBe(never);
         cleanup();
       }

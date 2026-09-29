@@ -54,7 +54,6 @@ fn retained_fixed_list_pages_counter_rejects_actual_signed_limit_and_preserves_r
         }
         assert_eq!((list.root.capacity(), list.len(), list.capacity(), list.allocated_bytes()), (0, 0, 0, 0));
     }
-    eprintln!("[DEBUG] paged-list-signed-limit metadata-and-payload rejected-actual=true retained-on-small-release=true released-exact=true");
 }
 
 #[test]
@@ -86,5 +85,4 @@ fn retained_fixed_list_pages_counter_keeps_actual_failed_allocation_until_releas
     list.release_empty_page(exact).unwrap();
     assert!(list.terminal_is_empty());
     assert_eq!((list.root.capacity(), list.len(), list.capacity(), list.allocated_bytes()), (0, 0, 0, 0));
-    eprintln!("[DEBUG] fixed-list-allocation-error metadata-and-payload actual-capacity-retained=true released-exact=true");
 }

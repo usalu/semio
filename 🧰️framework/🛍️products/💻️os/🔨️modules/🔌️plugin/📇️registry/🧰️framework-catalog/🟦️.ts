@@ -5,7 +5,7 @@ import { TAXONOMY } from "../🔎️discovery/🟦️.ts";
 
 
 //#region 🏛️FrameworkPackageCatalog
-/** @emoji 🏛️ One framework package as seen by the shared discovery contract (`role = "framework"`).
+/** 🏛️ One framework package as seen by the shared discovery contract (`role = "framework"`).
  * The framework families are not wasm components, so they never enter `PLUGIN_BUILD_TARGETS`; this is
  * their own catalog section — the consumable answer to "which framework packages exist, in which
  * language/render target, and how far has their owner migrated" that every downstream mechanism
@@ -21,7 +21,7 @@ export type FrameworkPackageEntry = {
 };
 
 
-/** @emoji 🏛️ Framework-role half of the shared `discoverPackages()` walk (three-level `🎯️targets`
+/** 🏛️ Framework-role half of the shared `discoverPackages()` walk (three-level `🎯️targets`
  * aware), flattened into a stable catalog. Plugin and framework catalogs therefore come from one
  * traversal and one vocabulary, and can never drift apart. */
 export function generateFrameworkPackageRegistry(repoRoot = getWorkspaceRoot(), packages: readonly DiscoveredPackage[] = discoverCatalogPackages(repoRoot, TAXONOMY)): FrameworkPackageEntry[] {

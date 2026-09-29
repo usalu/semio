@@ -64,7 +64,7 @@ const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️
   };
 };
 
-/** @emoji 🔮️ Independent oracle: `whatwg-url` is a third-party, spec-complete URL implementation whose
+/** 🔮️ Independent oracle: `whatwg-url` is a third-party, spec-complete URL implementation whose
  * relative-reference resolution is a second implementation of the `..`/segment arithmetic behind the one
  * staging root — the expected path is rebuilt from the repository root through it, never through the
  * `node:path` call the production function itself uses. */
@@ -138,7 +138,7 @@ describe("one plugin staging root", () => {
   });
 });
 
-/** @emoji 🩺️ The healthy-set rule a 60-plugin host stands or falls on: one red crate is a missing
+/** 🩺️ The healthy-set rule a 60-plugin host stands or falls on: one red crate is a missing
  * component, never an un-bootable product. Every case is stated against the same pure pair
  * (`preparedComponentVerdict` → `healthyPreparedComponents`) the preparation pass and the activation
  * receipt both call, so there is no second, drifting notion of "prepared". */
@@ -316,7 +316,7 @@ describe("staged module freshness", () => {
     }
   });
 
-  /** @emoji 🚦️ The freshness walk runs beside a dev server: bounded as the fixture declares, and asynchronous — over a tree
+  /** 🚦️ The freshness walk runs beside a dev server: bounded as the fixture declares, and asynchronous — over a tree
    * without a staged index (every file hashed) nearly all of its work happens after its first `await`, timers keep firing
    * while it walks, and every per-file digest agrees with WebCrypto's SHA-256 (independent oracle). */
   it("boot freshness: walks asynchronously within the declared bounds and agrees with WebCrypto", async () => {
@@ -388,7 +388,7 @@ describe("staged module freshness", () => {
     expect(out).toEqual(Array.from({ length: 50 }, (_, index) => index * 2));
   });
 
-  /** @emoji 🔮️ Independent oracle: `picomatch` is the glob engine chokidar filters with, so the declared
+  /** 🔮️ Independent oracle: `picomatch` is the glob engine chokidar filters with, so the declared
    * output-directory exclusions are decided a second time by a third-party matcher rather than by a
    * second reading of the exported list. */
   it("agrees with picomatch on which walked paths are build output", () => {
@@ -399,7 +399,7 @@ describe("staged module freshness", () => {
     expect(COMPONENT_SOURCE_SCAN_MAXIMUM_ENTRIES).toBeGreaterThan(0);
   });
 
-  /** @emoji 🛂️ The describe outputs sit at the owner ROOT, next to the sources, and are tracked in git —
+  /** 🛂️ The describe outputs sit at the owner ROOT, next to the sources, and are tracked in git —
    * so only a name-and-depth rule can tell them from authored files. The walk must skip exactly those two
    * at exactly that level: a `🔣️.json` one directory deeper is a schema or a fixture and decides
    * freshness like any other source. */
@@ -429,7 +429,7 @@ describe("staged module freshness", () => {
     }
   });
 
-  /** @emoji 🛂️ Pinned to the `describe` target's own file names, read from the module that declares them
+  /** 🛂️ Pinned to the `describe` target's own file names, read from the module that declares them
    * (`🔌️plugin/🖨️describe/🏗️component-build/🟦️.ts`) as SOURCE TEXT — importing it would drag the cargo
    * tool-chain into a filesystem suite, and this module keeps a node-builtin-only import surface because
    * every dev server's Vite config bundles it. */

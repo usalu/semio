@@ -51,7 +51,6 @@ async fn every_generation_row_verb_is_reachable_from_the_rendered_tree() {
     assert!(!body.contains("\"placement\":\"menu\""), "row actions must paint ON the row, never only in its right-click menu: {body}");
     assert!(body.contains(&format!("procedural3d-play-generate.generation.{}.rename", ids[1])), "the selected row must carry the inline rename editor: {body}");
     assert!(!body.contains(&format!("procedural3d-play-generate.generation.{}.rename", ids[0])), "only the selected row carries the rename editor: {body}");
-    eprintln!("[DEBUG] generations rows={} selected={}", ids.len(), ids[1]);
 }
 
 /// ⚖️ LAW: the inline rename editor's typed text reaches `renameGeneration`. A scalar `Trigger::Commit`
@@ -90,7 +89,6 @@ async fn select_rename_and_remove_converge_on_the_roster_the_user_asked_for() {
     let body = render_body(&mut app, GENERATION_3D_PLAY_BODY_GENERATIONS).await;
     assert!(body.contains("Balcony Study"), "the rendered roster must show the new name: {body}");
     assert!(!body.contains(&format!("generation.{}\"", ids[0])), "the removed row must be gone from the rendered roster: {body}");
-    eprintln!("[DEBUG] roster after select/rename/remove names={names:?}");
 }
 
 /// ⚖️ LAW: the Generations window speaks both declared languages with no default — the German locale
@@ -137,7 +135,6 @@ async fn add_generation_lands_a_row_under_every_renderer_argument_shape() {
         expected += 1;
         let landed = snapshot(&app).generation.generations.len();
         assert_eq!(landed, expected, "{label}: addGeneration must land exactly one generation whatever envelope the renderer attaches");
-        eprintln!("[DEBUG] addGeneration shape={label} roster={landed}");
     }
     let body = render_body(&mut app, GENERATION_3D_PLAY_BODY_GENERATIONS).await;
     assert_eq!(body.matches("procedural3d-play-generate.generation.").count() >= 3, true, "all three rows must render: {body}");

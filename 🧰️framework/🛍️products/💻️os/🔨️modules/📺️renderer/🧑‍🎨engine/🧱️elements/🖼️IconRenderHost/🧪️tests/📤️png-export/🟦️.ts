@@ -1,4 +1,4 @@
-/** @emoji 📷️ Chromium Canvas and Sharp validate straight-alpha PNG export bytes. */
+/** 📷️ Chromium Canvas and Sharp validate straight-alpha PNG export bytes. */
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";

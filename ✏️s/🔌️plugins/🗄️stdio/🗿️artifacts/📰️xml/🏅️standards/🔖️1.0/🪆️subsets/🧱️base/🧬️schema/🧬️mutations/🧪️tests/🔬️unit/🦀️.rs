@@ -24,6 +24,5 @@ fn restore_leaf_layout_and_values_match_neutral_oracle() {
         ("set-text", measure::<SetTextMutation>(oracle)),
     ];
     let maximum = fixture["maximumInlineBytes"].as_u64().unwrap() as usize;
-    eprintln!("[DEBUG] XML restore wire oracles=6 inline sizes={sizes:?} maximum={maximum}");
     assert!(sizes.iter().all(|(_, bytes)| *bytes <= maximum), "XML restore leaves exceed their neutral inline budget");
 }

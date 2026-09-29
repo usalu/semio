@@ -10,7 +10,7 @@ const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️
 const dir = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
 const repoRoot = resolve(dir, "../../../../..");
 
-/** @emoji 🧪️ Vitest for `@semio-tech/hub-admin` — component tests in the module-owned `🛡️admin` case, plus the
+/** 🧪️ Vitest for `@semio-tech/hub-admin` — component tests in the module-owned `🛡️admin` case, plus the
  * `📚️I18n` element's own in-source `import.meta.vitest` parity test. */
 export default defineConfig({
   root: testRoot,

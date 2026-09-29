@@ -70,10 +70,10 @@ fn native_composition_and_validation_claims_are_disjoint_but_each_exclusive() {
 #[test]
 fn artifact_owned_native_codec_receipts_form_one_complete_static_bijection() {
     let receipts = native_codec_factory_receipts().expect("artifact-owned native codec receipts");
-    assert_eq!(receipts.len(), 26);
-    assert_eq!(receipts.iter().map(|receipt| receipt.factory_id.as_str()).collect::<BTreeSet<_>>().len(), 26);
-    assert_eq!(receipts.iter().map(|receipt| receipt.descriptor_codec_id.as_str()).collect::<BTreeSet<_>>().len(), 26);
-    assert_eq!(receipts.iter().map(|receipt| (receipt.artifact_kind.as_str(), receipt.schema.as_str())).collect::<BTreeSet<_>>().len(), 26);
+    assert_eq!(receipts.len(), 29);
+    assert_eq!(receipts.iter().map(|receipt| receipt.factory_id.as_str()).collect::<BTreeSet<_>>().len(), 29);
+    assert_eq!(receipts.iter().map(|receipt| receipt.descriptor_codec_id.as_str()).collect::<BTreeSet<_>>().len(), 29);
+    assert_eq!(receipts.iter().map(|receipt| (receipt.artifact_kind.as_str(), receipt.schema.as_str())).collect::<BTreeSet<_>>().len(), 29);
     assert!(receipts.iter().all(|receipt| receipt.pack_schema_hash != [0; 32] && receipt.instantiate().is_ok()));
 }
 
@@ -136,11 +136,11 @@ fn native_catalog_commitment_covers_all_definition_semantics_and_codec_authoriti
     println!("native-catalog-payload={}", serde_json::to_string(&original["payload"]).unwrap());
     assert_eq!(original["topic"], fixture["topic"]);
     assert_eq!(original["payload"]["definitions"].as_array().unwrap().len(), 36);
-    assert_eq!(original["payload"]["codecs"].as_array().unwrap().len(), 26);
+    assert_eq!(original["payload"]["codecs"].as_array().unwrap().len(), 29);
     for case in fixture["cases"].as_array().unwrap() {
         let started = std::time::Instant::now();
         let progress = |stage: &str| {
-            std::io::Write::write_fmt(&mut std::io::stderr().lock(), format_args!("[DEBUG] native-catalog case={} stage={stage} elapsed-ms={}\n", case["id"], started.elapsed().as_millis())).unwrap();
+            std::io::Write::write_fmt(&mut std::io::stderr().lock(), format_args!("[TRACE] native-catalog case={} stage={stage} elapsed-ms={}\n", case["id"], started.elapsed().as_millis())).unwrap();
         };
         progress("begin");
         let mut changed = original.clone();
@@ -229,5 +229,44 @@ fn native_codec_projection_pack_schema_hashes_equal_live_receipts() {
         std::fs::write(&path, &generated).unwrap();
     } else {
         assert_eq!(generated, committed, "stdio native codec projection is stale: run the stdio native-codec-projection verb");
+    }
+}
+
+/// 🔤️ LAW: txt, tsv and html open over the hub through linked native codecs. For every case of the neutral fixture
+/// `📇️registry/🧫️fixtures/📇️native-text-codecs` the artifact-owned receipt's codec compiles the source (a new document's ops
+/// log is its bare `doc` header) into a pack whose decoded snapshot is the fixture's snapshot and whose printed mirror and ops
+/// log compile back to the identical pack; the same snapshots are what independent readers (Python's `str.splitlines`, `csv`
+/// and `html.parser`) derive from each source.
+#[semio_framework_async_macros::async_test]
+async fn text_document_codecs_compile_their_neutral_fixture_through_the_linked_receipts() {
+    fn neutral<T: semio_framework_os_kernel::ToValue>(snapshot: T) -> serde_json::Value {
+        serde_json::from_str(&pack::json_to_string(&pack::json_from_dsl_value(&snapshot.to_value()))).unwrap()
+    }
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../📇️registry/🧫️fixtures/📇️native-text-codecs/🔣️.json"))).unwrap();
+    assert_eq!(fixture["schema"], "semio.stdio.native-text-codecs/v1");
+    let receipts = native_codec_factory_receipts().expect("artifact-owned native codec receipts");
+    let cases = fixture["cases"].as_array().unwrap();
+    for kind in ["s.stdio.txt", "s.stdio.tsv", "s.stdio.html"] {
+        assert!(cases.iter().any(|case| case["artifactKind"] == kind), "{kind} has no neutral case");
+    }
+    for case in cases {
+        let id = case["id"].as_str().unwrap();
+        let kind = case["artifactKind"].as_str().unwrap();
+        let receipt = receipts.iter().find(|receipt| receipt.artifact_kind == kind).unwrap_or_else(|| panic!("{id}: {kind} owns no linked receipt"));
+        assert_eq!(receipt.factory_id, case["factoryId"].as_str().unwrap(), "{id}");
+        let codec = receipt.instantiate().expect("verified linked codec");
+        let genesis = format!("doc cx1 schema=\"{}\"\n", codec.schema);
+        let (files, mirror) = (codec.compile_dsl)(case["source"].as_str().unwrap(), &genesis).await.unwrap_or_else(|error| panic!("{id}: {error:?}"));
+        let printed = (codec.print_mirror)(&files.pack, &files.spr).await.unwrap_or_else(|error| panic!("{id}: {error:?}"));
+        assert_eq!(printed.dsl, mirror, "{id}: the pack prints the mirror its compile returned");
+        let (again, _) = (codec.compile_dsl)(&printed.dsl, &printed.ops).await.unwrap_or_else(|error| panic!("{id}: {error:?}"));
+        assert_eq!(again.pack, files.pack, "{id}: the mirror compiles back to the identical pack");
+        let snapshot = match kind {
+            "s.stdio.txt" => neutral(<semio_s_artifact_stdio_txt::TxtSnapshot as semio_framework_os_kernel::ArtifactPack>::decode_pack(&files.pack).unwrap()),
+            "s.stdio.tsv" => neutral(<semio_s_artifact_stdio_tsv::TsvSnapshot as semio_framework_os_kernel::ArtifactPack>::decode_pack(&files.pack).unwrap()),
+            "s.stdio.html" => neutral(<semio_s_artifact_stdio_html::HtmlSnapshot as semio_framework_os_kernel::ArtifactPack>::decode_pack(&files.pack).unwrap()),
+            other => panic!("{id}: {other} is outside the text codec fixture"),
+        };
+        assert_eq!(snapshot, case["snapshot"], "{id}");
     }
 }

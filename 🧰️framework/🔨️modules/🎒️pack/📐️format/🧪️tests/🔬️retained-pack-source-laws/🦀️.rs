@@ -269,7 +269,6 @@ fn cancellation_is_observable_and_still_requires_terminal_empty_close() {
     cursor.request_cancel();
     assert_eq!(cursor.grant(), Err("retained-pack.cancelled"));
     assert_eq!(close(&mut cursor), admitted);
-    eprintln!("[DEBUG] retained-pack-source cancelled-after-byte=true admitted-allocation-bytes={admitted} released-allocation-bytes={admitted}");
 }
 
 #[test]
@@ -283,7 +282,6 @@ fn physical_allocation_refusal_preserves_the_page_producer_and_zero_ledger() {
     assert_eq!(cursor.allocated_bytes(), 0);
     assert_eq!(cursor.close_step(1, 0).expect("empty close"), RetainedPackCloseStep::Complete);
     assert!(cursor.terminal_is_empty());
-    eprintln!("[DEBUG] retained-pack-source allocation-refusal producer-preserved=true allocation-ledger=0 terminal=true");
 }
 
 #[test]
@@ -360,7 +358,6 @@ fn retained_pack_catalog_exact_utf8_allocation_refusal_and_release_are_conserved
     let terminal = cursor.progress();
     assert_eq!((terminal.symbols, terminal.symbol_capacity, terminal.symbol_utf8_bytes, terminal.symbol_scalars, terminal.symbol_scalar_capacity), (0, 0, 0, 0, 0));
     assert_eq!((terminal.chunks, terminal.chunk_capacity, terminal.observed_chunks, terminal.observed_chunk_capacity, terminal.allocated_bytes, terminal.partial_symbol_bytes), (0, 0, 0, 0, 0, 0));
-    eprintln!("[DEBUG] retained-pack-catalog symbols=3 utf8-bytes=12 scalars=7 subexact-allocation-preserved=true bytes-only-close-preserved=true allocated-bytes={allocated} released-bytes={released}");
 }
 
 #[test]
@@ -403,7 +400,6 @@ fn retained_symbol_table_crosses_a_leaf_with_target_aware_demands_and_checked_co
     let released = close_symbol_table(&mut table);
     assert_eq!(released, allocated);
     assert!(table.terminal_is_empty());
-    eprintln!("[DEBUG] retained-symbol-table first-leaf-capacity={first_leaf_capacity} target={target} checked-u64=true allocated-bytes={allocated} released-bytes={released}");
 }
 
 #[test]
@@ -429,7 +425,6 @@ fn retained_symbol_table_preserves_the_first_span_fault_and_every_admitted_backi
     assert_eq!(table.next_symbol_allocation_bytes(2, 10).expect_err("allocation query preserves first fault"), first);
     assert_eq!(close_symbol_table(&mut table), allocated);
     assert!(table.terminal_is_empty());
-    eprintln!("[DEBUG] retained-symbol-table sticky-first-fault={} admitted-bytes={allocated} exact-release=true", first.code);
 }
 
 #[test]
@@ -526,7 +521,6 @@ fn retained_pack_catalog_limit_and_utf8_faults_are_sticky_until_exact_close() {
     assert!(table_count.progress().pending_input);
     assert_eq!(table_count.grant().expect_err("sticky chunk-table count fault"), table_fault);
     assert_eq!(close_catalog(&mut table_count), table_allocated);
-    eprintln!("[DEBUG] retained-pack-catalog sticky-faults=symbol-count,physical-credit,cumulative-utf8,malformed-utf8,truncated-utf8,observed-chunk-count,chunk-table-count pending-input-preserved=true");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -562,7 +556,7 @@ async fn retained_pack_catalog_multibyte_scalar_crosses_physical_source_page_and
     close_segment(&mut segment);
     assert_eq!(close_catalog(&mut catalog), allocated);
     close(&mut source);
-    eprintln!("[DEBUG] retained-pack-catalog page-crossing-offset={position} scalar={} independent-pack-file=true allocated-bytes={allocated}", u32::from('€'));
+    eprintln!("retained-pack-catalog page-crossing-offset={position} scalar={} independent-pack-file=true allocated-bytes={allocated}", u32::from('€'));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -628,7 +622,6 @@ async fn multi_byte_chunk_is_observed_once_at_begin_and_matches_pack_file() {
     close_segment(&mut segment);
     assert!(close_catalog(&mut catalog_cursor) > 0);
     close(&mut source);
-    eprintln!("[DEBUG] retained-pack-catalog multi-byte-chunk-bytes={} begin-observations=1 independent-reader-match=true", chunk.len());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -669,7 +662,6 @@ fn retained_pack_pipeline_diagnostic_anchor_is_inline_sticky_and_closes_the_sour
     assert_eq!(anchor.close_step(), RetainedPackCloseStep::Complete);
     assert!(anchor.terminal_is_empty());
     assert_eq!(close(&mut source), allocated);
-    eprintln!("[DEBUG] retained-pack-pipeline anchor-fault=inline-static sticky=true source-allocation-release={allocated}/{allocated}");
 }
 
 fn segment_byte(cursor: &mut RetainedPackSegmentCursor, offset: u64, value: u8) -> Result<Option<RetainedPackSegmentEvent>, PackError> {
@@ -712,7 +704,6 @@ fn retained_pack_pipeline_diagnostic_segment_and_varint_are_inline_sticky_and_re
     assert_eq!(segment.admit(later).expect_err("faulted segment rejects later ingress"), later);
     close_segment(&mut segment);
     assert!(segment.terminal_is_empty());
-    eprintln!("[DEBUG] retained-pack-pipeline segment-faults=varint,reserved-flags inline-static=true sticky=true later-ingress=rejected");
 }
 
 #[cfg(feature = "deflate")]
@@ -768,7 +759,6 @@ fn retained_pack_pipeline_diagnostic_deflate_is_inline_sticky_and_closes_after_r
     }
     assert!(cursor.terminal_is_empty());
     assert_eq!(released, allocated);
-    eprintln!("[DEBUG] retained-pack-pipeline deflate-fault=inline-static sticky=true decoded-bytes={} physical-backing-release={released}/{allocated}", produced.len());
 }
 
 #[cfg(feature = "deflate")]
@@ -837,7 +827,6 @@ async fn retained_pack_inflater_physical_identity_has_zero_demand_and_compressed
     assert!(compressed_begins >= 2, "canonical compressed pack must exercise backing reuse across segments");
     assert!(pointer.is_some());
     assert_eq!(released, allocated);
-    eprintln!("[DEBUG] retained-pack-inflater identity-allocation=0 compressed-segments={compressed_begins} backing-reuse=true exact-release={released}/{allocated}");
 }
 
 #[cfg(feature = "deflate")]
@@ -859,5 +848,4 @@ fn retained_pack_inflater_physical_cancellation_retires_pending_input_before_exa
     assert_eq!(cursor.close_step(0, allocated), crate::codec::RetainedInflateCloseStep::Pending { released_items: 0, released_bytes: allocated });
     assert_eq!(cursor.close_step(1, 0), crate::codec::RetainedInflateCloseStep::Complete);
     assert!(cursor.terminal_is_empty());
-    eprintln!("[DEBUG] retained-pack-inflater cancel-order=pending,history-logical,decoder-logical,history-physical exact-release={allocated}/{allocated}");
 }

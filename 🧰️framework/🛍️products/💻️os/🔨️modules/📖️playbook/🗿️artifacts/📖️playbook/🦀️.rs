@@ -507,7 +507,7 @@ pub mod generation_forms {
     //#endregion 🔖️Crud
 
     //#region 🔖️Mutations
-    /// @emoji 🧬️ Typed, invertible Generate-mode operation vocabulary. WS-F embeds this as a variant in
+    /// 🧬️ Typed, invertible Generate-mode operation vocabulary. WS-F embeds this as a variant in
     /// `forms/module/procedural`'s own `Mutation` enum so generation edits flow through the document store with
     /// true inverses (replacing the in-place-mutating CRUD helpers as the document mutation surface).
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
@@ -520,7 +520,7 @@ pub mod generation_forms {
         UpdateValues { id: String, question_id: String, value: DslValue },
     }
 
-    /// @emoji 🎛️ Maps a Generate-mode action id to the document operations it produces, or `None` for
+    /// 🎛️ Maps a Generate-mode action id to the document operations it produces, or `None` for
     /// non-document (view) actions like `selectGeneration`. Pure — reads `state`/`spec` but mutates
     /// nothing; the caller applies the returned operations through its store.
     pub fn generation_operations(action: &str, args: Option<&DslValue>, state: &GenerationPlayState, spec: &PlaybookSpec) -> Option<Vec<GenerationMutation>> {
@@ -543,7 +543,7 @@ pub mod generation_forms {
         }
     }
 
-    /// @emoji ▶️ Applies a {@link GenerationMutation} to `state` in place.
+    /// ▶️ Applies a {@link GenerationMutation} to `state` in place.
     pub fn apply_generation_mutation(state: &mut GenerationPlayState, operation: &GenerationMutation) {
         match operation {
             GenerationMutation::Add { generation } => {
@@ -556,7 +556,7 @@ pub mod generation_forms {
         }
     }
 
-    /// @emoji ↩️ Computes the inverse of a {@link GenerationMutation} from the pre-state `state`.
+    /// ↩️ Computes the inverse of a {@link GenerationMutation} from the pre-state `state`.
     pub fn invert_generation_operation(state: &GenerationPlayState, operation: &GenerationMutation) -> Vec<GenerationMutation> {
         match operation {
             GenerationMutation::Add { generation } => vec![GenerationMutation::Remove { id: generation.id.clone() }],

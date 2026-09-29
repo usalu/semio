@@ -59,8 +59,9 @@ async fn norm_io_declares_model_in_and_report_out_beside_the_implicit_document_p
 
 #[semio_framework_async_macros::async_test]
 async fn the_artifact_kind_spec_is_a_data_value_document() {
-    let spec = artifact_kind_spec("en1990", "EN 1990");
+    let spec = artifact_kind_spec("en1990", "EN 1990", "semio.norm.en1990/v1");
     assert_eq!(spec.id, "computation.norm.en1990");
+    assert_eq!(spec.schema, "semio.norm.en1990/v1");
     assert_eq!(spec.source_format, "norm.en1990.document");
     assert_eq!(spec.dimension, "data");
     assert_eq!(spec.component_kind, "norm");

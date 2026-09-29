@@ -13,7 +13,7 @@ pub mod map;
 pub use map::{MapDelta, MapEntryDelta, MapEntryOperation, MapPresence};
 
 //#region 🔖️Mutation
-/// @emoji 🚫️ Structured rejection of a diff that cannot be applied to its supplied base.
+/// 🚫️ Structured rejection of a diff that cannot be applied to its supplied base.
 /// The shape is protocol-owned and wire-safe: callers never need a technology crate's error type
 /// to preserve the stable machine code, human diagnostic, and outermost-first target address.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -88,10 +88,10 @@ impl MutationApplyError {
     }
 }
 
-/// @emoji 🛡️ Crate-owned result of applying a diff to a snapshot.
+/// 🛡️ Crate-owned result of applying a diff to a snapshot.
 pub type MutationApplyResult<P> = Result<P, MutationApplyError>;
 
-/// @emoji 📦️ Centralized snapshot mutation — one fallible `apply` per technology. A
+/// 📦️ Centralized snapshot mutation — one fallible `apply` per technology. A
 /// malformed or base-incompatible persisted diff must return [`MutationApplyError`]; it must never
 /// clamp an index, ignore a missing target, or return the unchanged base as implicit success.
 ///
@@ -102,7 +102,7 @@ pub type MutationApplyResult<P> = Result<P, MutationApplyError>;
 /// 🔍️research/📓️serde-replacement-surface.md`.
 pub trait MutationDiff<P>: Clone + Default + crate::value::ToValue + crate::value::FromValue {
     fn apply(&self, base: &P) -> MutationApplyResult<P>;
-    /// @emoji ➕️ Composes `self` (base→mid) with `other` (mid→after) into base→after, in place.
+    /// ➕️ Composes `self` (base→mid) with `other` (mid→after) into base→after, in place.
     /// Normative absorb contract (`.claude/plans/the-current-schemas-are-scalable-journal.md`
     /// `## Absorb`): **structural** (operates on the diff's own key/index/field shape, never on
     /// applied snapshot values), **total** (defined for every pair of diffs over the same
@@ -143,7 +143,7 @@ pub trait MutationDiff<P>: Clone + Default + crate::value::ToValue + crate::valu
     }
 }
 
-/// @emoji 🧮️ Diff-level algebra for a technology's [`MutationDiff`] type: inverse, state-delta
+/// 🧮️ Diff-level algebra for a technology's [`MutationDiff`] type: inverse, state-delta
 /// construction, and emptiness. Deliberately a SEPARATE trait from `MutationDiff` (not new
 /// methods added to it) — `MutationDiff` already has 51+ repo-wide implementors, so a breaking
 /// method addition there would break all of them at once. Follows this crate's own `DiffCodec`
@@ -161,7 +161,7 @@ pub trait DiffAlgebra<P>: Sized {
     fn is_empty(&self) -> bool;
 }
 
-/// @emoji 🔁️ Stored operation: emits a [`MutationOutcome`] (diff plus messages) and computes inverse
+/// 🔁️ Stored operation: emits a [`MutationOutcome`] (diff plus messages) and computes inverse
 /// from pre-state. Moved from `os_store::Mutation` verbatim except: `mutation_id`/
 /// `dependencies`/`author_id` now return the `protocol_core` id newtypes (were bare `String`) and
 /// `base_version` now returns `Option<crate::ids::ArtifactVersion>` (was a bare `u64`
@@ -195,7 +195,7 @@ pub trait Mutation<P>: Clone + crate::value::ToValue + crate::value::FromValue {
     fn dependencies(&self) -> Vec<crate::ids::MutationId> {
         Vec::new()
     }
-    /// @emoji 🎯️ The structured address this operation writes (outermost segment first; empty: the
+    /// 🎯️ The structured address this operation writes (outermost segment first; empty: the
     /// whole artifact), carried as `MutationEnvelope::target` so the hub can tell concurrent writes
     /// to disjoint parts of a document it cannot read from writes to the same part.
     /// `#[derive(Mutations)]` forwards each leaf's declared `MutationKind::target`.
@@ -214,16 +214,16 @@ pub trait Mutation<P>: Clone + crate::value::ToValue + crate::value::FromValue {
     fn undo_policy(&self) -> crate::UndoPolicy {
         crate::UndoPolicy::ExactBaseOnly
     }
-    /// @emoji 🗂️ Which durability/visibility class this operation's diffs belong to.
+    /// 🗂️ Which durability/visibility class this operation's diffs belong to.
     fn state_class(&self) -> crate::StateClass {
         crate::StateClass::Artifact
     }
-    /// @emoji 🌐️ Conservative base-independent foreign-step capability used to avoid replaying
+    /// 🌐️ Conservative base-independent foreign-step capability used to avoid replaying
     /// ordinary local operations solely for transaction-proposal discovery.
     fn may_emit_foreign_steps(&self) -> bool {
         true
     }
-    /// @emoji 🌐️ Foreign steps this operation additionally dispatches to OTHER artifacts — empty
+    /// 🌐️ Foreign steps this operation additionally dispatches to OTHER artifacts — empty
     /// for every ordinary single-artifact operation. Defaults to `Vec::new().await` so no existing
     /// `impl Mutation` breaks; only a composite mutation's delegating `MutationKind::foreign_steps`
     /// (see `🔖️Composite` below, `plan_foreign_steps`) ever returns anything here.
@@ -936,7 +936,7 @@ pub trait MutationLeaf {
 mod mutation_leaf_metadata_tests;
 
 //#region 🔖️Message
-/// @emoji 📨️ One outcome-carried diagnostic from a `Mutation`/`MutationKind::diff` — the level
+/// 📨️ One outcome-carried diagnostic from a `Mutation`/`MutationKind::diff` — the level
 /// vocabulary is [`crate::diagnostic::Severity`] (`Info < Warning < Error < Fatal`, that declaration
 /// order IS the level order via `derive(Ord)`); `code` is one of the frozen seven `mutation.*`
 /// codes (`.🧬semio/🦑️repo/🎫️tickets/26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS/
@@ -1038,12 +1038,12 @@ impl MutationMessage {
     }
 }
 
-/// @emoji 🚦️ The worst (highest) [`crate::diagnostic::Severity`] across `messages`, or `None` if empty.
+/// 🚦️ The worst (highest) [`crate::diagnostic::Severity`] across `messages`, or `None` if empty.
 pub fn worst_level(messages: &[MutationMessage]) -> Option<crate::diagnostic::Severity> {
     messages.iter().map(|message| message.level).max()
 }
 
-/// @emoji 🗂️ A `Mutation`/`MutationKind::diff`'s full result: the diff plus every
+/// 🗂️ A `Mutation`/`MutationKind::diff`'s full result: the diff plus every
 /// [`MutationMessage`] it raised. LAWS (`📋️contract-freeze.md` §C2): (1) a `Fatal` message ⇒
 /// `diff == D::default()`; (2) an `Error` message ⇒ `diff` carries no change for the named target;
 /// (3) deterministic — equal `(op, base)` ⇒ equal `messages`. Laws 1/2 are upheld by every `diff`
@@ -1202,7 +1202,7 @@ impl<D> MutationOutcome<D> {
 //#endregion 🔖️Message
 
 //#region 🔖️OpText
-/// @emoji ⚡️ Handcrafted ONE-LINE textual representation of an operation, implemented once per
+/// ⚡️ Handcrafted ONE-LINE textual representation of an operation, implemented once per
 /// technology next to its `Mutation` enum. Moved verbatim from `os_store::OpText` (method order
 /// flipped to match the frozen contract; behavior unchanged). LAWS: `print_op` output never
 /// contains `\n`; `Op::parse_op` recovers an equal operation from `op.print_op().await`.
@@ -1213,7 +1213,7 @@ pub trait OpText: Sized {
 //#endregion 🔖️OpText
 
 //#region 🔖️OpBinary
-/// @emoji 🎞️ Binary twin of [`OpText`]: the maximum-token-efficient one-line grammar and this
+/// 🎞️ Binary twin of [`OpText`]: the maximum-token-efficient one-line grammar and this
 /// byte encoding are two renderings of the same operation, implemented per technology next to its
 /// `Mutation` enum (in practice emitted by `#[derive(os_dsl::DslOps)]` through `os_dsl::op_rt`, the
 /// exact mirror of the `ArtifactDsl`/`ArtifactPack` pairing). Layout (owned by the runtime, not
@@ -1229,7 +1229,7 @@ pub trait OpBinary: Sized {
 //#endregion 🔖️OpBinary
 
 //#region 🔖️DiffCodec
-/// @emoji 🧬️ Grammared twin of [`OpText`]/[`OpBinary`], but for a technology's `MutationDiff::Diff`
+/// 🧬️ Grammared twin of [`OpText`]/[`OpBinary`], but for a technology's `MutationDiff::Diff`
 /// value rather than its `Mutation`: the W1 foundation of the `handcrafted-grammar-for-every-artifact`
 /// program's diff track (design ruling B-R4 at `.claude/plans/the-final-goal-for-jolly-spindle.md`) —
 /// today every `*Diff` type is serde-only, this trait promotes a diff to a first-class grammared value
@@ -1251,7 +1251,7 @@ pub trait DiffCodec: Sized {
 //#endregion 🔖️DiffCodec
 
 //#region 🔖️Foreign
-/// @emoji 🌉️ A mutation step aimed at an artifact OTHER than the one being mutated. Cross-boundary
+/// 🌉️ A mutation step aimed at an artifact OTHER than the one being mutated. Cross-boundary
 /// identity travels as plain strings, never `semio_framework::*`/`io::*` types — see the
 /// dependency-edge law at `.🧬semio/🦑️repo/🎫️tickets/26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS/📋️contract-freeze.md`
 /// §0.
@@ -1301,7 +1301,7 @@ impl crate::value::FromValue for ForeignTarget {
     }
 }
 
-/// @emoji 🪜️ One foreign hop of a [`Planner`]'s plan: the target artifact, the mutation/contributed
+/// 🪜️ One foreign hop of a [`Planner`]'s plan: the target artifact, the mutation/contributed
 /// id it dispatches, its already-encoded payload, and a human label.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ForeignStep {
@@ -1353,7 +1353,7 @@ impl crate::value::FromValue for ForeignStep {
 
 //#region 🔖️Meta
 
-/// @emoji 🧾️ Per-operation causal/undo metadata attached to one `Edit` slot. Moved from
+/// 🧾️ Per-operation causal/undo metadata attached to one `Edit` slot. Moved from
 /// `crate::os_store::MutationMeta` (was `vcs/rs/lib.rs` L59) with the id-flavored fields upgraded from bare
 /// `String`/`Option<String>` to the `protocol_core` newtypes and `timestamp` upgraded from
 /// `Option<HybridLogicalTimestamp>` to a required field (an edit's op always has a tick by the time
@@ -1367,15 +1367,15 @@ pub struct MutationMeta {
     pub timestamp: crate::ids::HybridLogicalTimestamp,
     pub undo_policy: crate::UndoPolicy,
     pub payload_hash: Option<crate::ids::PayloadHash>,
-    /// @emoji 🗣️ `"<doc-schema>#<kind>"` once the authoring mutation implements [`SemanticMutation`]
+    /// 🗣️ `"<doc-schema>#<kind>"` once the authoring mutation implements [`SemanticMutation`]
     /// — additive, `None` for mutations still on generic vocabulary. Populated by callers (store
     /// replay tightens this once a store's `Mutation: SemanticMutation<P>`, at the final ratchet);
     /// this crate never derives it implicitly to avoid a premature trait-bound change here.
     pub semantic_kind: Option<crate::ids::SchemaId>,
-    /// @emoji 🏷️ Human undo/history label captured at authoring time (`MutationKind::label`/
+    /// 🏷️ Human undo/history label captured at authoring time (`MutationKind::label`/
     /// `SemanticMutation::label`), so history UI stops reverse-engineering one from `print_op`.
     pub label: Option<String>,
-    /// @emoji 🧑‍🤝‍🧑️ Composite-gesture stamp: `Some(id)` when this edit was authored as one member
+    /// 🧑‍🤝‍🧑️ Composite-gesture stamp: `Some(id)` when this edit was authored as one member
     /// of a multi-document composite gesture (the future `CompositionCoordinator`'s atomic
     /// parent+child dispatch across several `ArtifactEnvelope`s), so group undo can find and
     /// reverse every sibling member together; `None` for a solitary, single-document edit.
@@ -1388,7 +1388,7 @@ pub struct MutationMeta {
     /// through `Edit.mutation_meta` into the `.spr` history log (`HistoryOpMeta.group_id`,
     /// `📡️spr/📜️history/🦀️.rs`) so it survives persistence and sync.
     pub group_id: Option<String>,
-    /// @emoji 🔀️ Provenance of this operation: `Owner` (default, omitted from wire — the
+    /// 🔀️ Provenance of this operation: `Owner` (default, omitted from wire — the
     /// overwhelming common case, an edit authored by the artifact's own owner logic), `Contributed`
     /// (synthesized by a contributor plugin's `contributor.artifact-mutation-plan` response), or
     /// `Transaction` (applied as one member of a cross-artifact composite gesture initiated
@@ -1482,7 +1482,7 @@ impl crate::value::FromValue for MutationMeta {
     }
 }
 
-/// @emoji 📝️ One coalesced batch of operations, forward and backward, plus their causal metadata.
+/// 📝️ One coalesced batch of operations, forward and backward, plus their causal metadata.
 /// Moved verbatim from `crate::os_store::Edit` (was `vcs/rs/lib.rs` L73).
 #[derive(Clone, Debug, PartialEq)]
 pub struct Edit<Op> {
@@ -1577,7 +1577,7 @@ impl<Op: crate::value::FromValue> crate::value::FromValue for Edit<Op> {
 //#endregion 🔖️Meta
 
 //#region 🔖️Origin
-/// @emoji 🔀️ Provenance of one [`MutationMeta`]-described operation. `Owner` is the default (and
+/// 🔀️ Provenance of one [`MutationMeta`]-described operation. `Owner` is the default (and
 /// the overwhelming common case), omitted from wire by `MutationMeta.origin`'s
 /// `skip_serializing_if`.
 #[derive(Clone, Debug, Default, PartialEq)]

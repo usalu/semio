@@ -31,7 +31,7 @@ type Vec3 = core.Vec3;
 // #region 🧊️StoryBoxKernel
 type StoryBoxInput = { readonly cornerA: Vec3; readonly cornerB: Vec3; readonly height: number };
 
-/** @emoji 📦️ Builds a real (double-sided, so winding never hides it) box `MeshTransfer` purely from JS math — no OpenCascade wasm. */
+/** 📦️ Builds a real (double-sided, so winding never hides it) box `MeshTransfer` purely from JS math — no OpenCascade wasm. */
 function buildStoryBoxMesh({ cornerA, cornerB, height }: StoryBoxInput): MeshTransfer {
   const minX = Math.min(cornerA[0], cornerB[0]);
   const maxX = Math.max(cornerA[0], cornerB[0]);
@@ -70,7 +70,7 @@ function buildStoryBoxMesh({ cornerA, cornerB, height }: StoryBoxInput): MeshTra
   };
 }
 
-/** @emoji 🧊️ Story-local `SpatialKernel` stub: preview math inherited from `r3fPreviewKernel`, solid operations hand-authored — mirrors `RecordingStubKernel` in `cad/core/js/index.ts`'s interaction test suite. */
+/** 🧊️ Story-local `SpatialKernel` stub: preview math inherited from `r3fPreviewKernel`, solid operations hand-authored — mirrors `RecordingStubKernel` in `cad/core/js/index.ts`'s interaction test suite. */
 class StoryBoxKernel {
   readonly id = "story-box-kernel";
   readonly operations = ["solid.createBox", "entity.tessellate"] as const;

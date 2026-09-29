@@ -1,4 +1,4 @@
-//! @emoji 🧱️ GPU-layout mirrors this crate needs that `ui_render::scene` does not already export as
+//! 🧱️ GPU-layout mirrors this crate needs that `ui_render::scene` does not already export as
 //! `#[repr(C)]`/`Pod` — `ui_render::{QuadInstance, VectorVertex, GlassInstance}` are byte-identical to
 //! their Metal buffer layout already and are used directly via `bytemuck::cast_slice`; only the
 //! world3d instance/vertex/uniform shapes need a Metal-side GPU form, built from

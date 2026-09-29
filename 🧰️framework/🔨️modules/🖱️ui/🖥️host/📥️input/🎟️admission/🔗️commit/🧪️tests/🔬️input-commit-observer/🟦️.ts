@@ -96,5 +96,5 @@ export function testInputCommitObserverFixture(): void {
     Object.assign(candidate.invariants, patch);
     assert.equal(validate(candidate), false);
   }
-  console.log("[DEBUG] input commit observer format oracle: 3 exact 56-byte tuples, 3 declared phases, 5 schema hostiles; independent updates remain legitimate; single-operation native interlock and funding unexecuted");
+  console.log("input commit observer format oracle: 3 exact 56-byte tuples, 3 declared phases, 5 schema hostiles; independent updates remain legitimate; single-operation native interlock and funding unexecuted");
 }

@@ -1,4 +1,4 @@
-/** @emoji 🧪️ Peer-overlay derivation against the language-agnostic `👕️peer-overlay-v1` fixture. */
+/** 🧪️ Peer-overlay derivation against the language-agnostic `👕️peer-overlay-v1` fixture. */
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";

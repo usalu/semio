@@ -388,5 +388,15 @@
   "id": "077",
   "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🫧️mutate-s-home-1-any-editor-transient/🦀️.rs",
   "mode": "create"
+ },
+ {
+  "id": "078",
+  "path": "✏️s/🔌️plugins/🪐️space/🧪️tests/🔬️surface/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "079",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧫️fixtures/📬️directory-feed/🔣️.json",
+  "mode": "whole"
  }
 ]

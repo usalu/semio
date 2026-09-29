@@ -65,5 +65,4 @@ fn point_marquee_matches_transformed_anchor_and_merge_fixtures() {
     }
     let mut hasher=geometry_hasher();for segment in &segments {hash_segment(&mut hasher,segment).unwrap();}
     assert_eq!(Some(hasher.finalize().to_hex()),geometry_id(&segments));
-    eprintln!("[DEBUG] marquee anchor inclusion, selection set algebra and incremental geometry hash agree with shared fixtures");
 }

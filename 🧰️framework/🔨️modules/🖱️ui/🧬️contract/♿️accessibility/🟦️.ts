@@ -1,6 +1,6 @@
 import { formatUiNumber } from "../🔢️number-format/🟦️.ts";
 /**
- * @emoji ♿️ The TypeScript twin of the contract's own `♿️accessibility/🦀️.rs` projection region.
+ * ♿️ The TypeScript twin of the contract's own `♿️accessibility/🦀️.rs` projection region.
  *
  * `AccessibilitySpec` deliberately carries no `role`: a `Component::Button` is a button on every
  * renderer, so the role is IMPLIED by the component. React reaches that implication for free — each
@@ -68,7 +68,7 @@ function containerRoleName(role: ContainerRole | undefined): string {
 }
 
 /**
- * @emoji ♿️ The ARIA role a component implies. `activatable` is the record's own `activate` binding:
+ * ♿️ The ARIA role a component implies. `activatable` is the record's own `activate` binding:
  * a container you can press IS a button, exactly as the React Interpreter spells it
  * (`role={activateBinding ? "button" : role}`) — except where the author already declared a landmark
  * (`form`/`toolbar`), which outranks the press.
@@ -183,7 +183,12 @@ export function uiAccessibilityProjectionNodeV1(record: UiNodeRecord, depth: num
   const activatable = bindings.some((binding) => binding.trigger === "activate");
   const focusable = uiAccessibilityIsFocusableV1(record.component, activatable);
   const accessibility = (record.accessibility ?? {}) as Partial<AccessibilitySpec>;
-  const componentLabel = record.component.type === "button" || record.component.type === "treeItem" || record.component.type === "table" || (record.component.type === "container" && (record.component.role === "section" || record.component.role === "group")) ? record.component.label : null;
+  const componentLabel =
+    record.component.type === "text"
+      ? record.component.value
+      : record.component.type === "button" || record.component.type === "treeItem" || record.component.type === "table" || (record.component.type === "container" && (record.component.role === "section" || record.component.role === "group"))
+        ? record.component.label
+        : null;
   const treeItem = record.component.type === "treeItem" ? record.component : null;
   const treeItemHasOrdinaryChild = treeItem !== null && (record.children ?? []).some((child) => child !== treeItem.inlineToolbar && child !== treeItem.detail);
   const expanded = record.component.type === "select"

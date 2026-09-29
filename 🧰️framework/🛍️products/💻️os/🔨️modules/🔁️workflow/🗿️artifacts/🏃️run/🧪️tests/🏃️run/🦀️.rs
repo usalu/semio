@@ -263,6 +263,5 @@ async fn language_neutral_package_cases_match_serde_json() {
         let status: serde_json::Value = serde_json::from_str(&dsl::os_pack::json::to_json_string(&document.status)).expect("status JSON");
         let actual = serde_json::json!({"schema":document.schema,"status":status,"sealed":document.sealed,"logs":document.logs.iter().map(|line| &line.message).collect::<Vec<_>>(),"rejections":rejections});
         assert_eq!(actual, case["expected"], "{}", case["name"]);
-        println!("[DEBUG] Workflow run package fixture passed: {}", case["name"]);
     }
 }

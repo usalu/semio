@@ -26,7 +26,6 @@ async fn mesh_knife_widget_preserves_shared_fixture_surfaces() {
             let actual = read_channel_number(&report, key).unwrap();
             if expected == 0.0 { assert_eq!(actual, 0.0); } else { assert!((actual / expected - 1.0).abs() < 1e-6, "{key}: {actual} != {expected}"); }
         }
-        eprintln!("[DEBUG] knife widget {}: {} vertices, {} faces", case.get("name").unwrap().as_str().unwrap(), mesh.vertex_count(), mesh.face_count());
     }
 }
 
@@ -56,7 +55,6 @@ async fn mesh_component_transforms_match_shared_fixtures() {
             let actual = mesh.vertex_position(VertexId(id as u32)).unwrap().0;
             for axis in 0..3 { assert!((actual[axis] as f64 - expected.as_array().unwrap()[axis].as_f64().unwrap()).abs() < 1e-5); }
         }
-        eprintln!("[DEBUG] mesh component transform: {}, {} vertices", case.get("name").unwrap().as_str().unwrap(), mesh.vertex_count());
     }
 }
 
@@ -77,7 +75,6 @@ async fn mesh_loop_cut_consumes_preview_halfedge_ids() {
     let report = neural_engine::ColdOwner::new(analyze(&mesh).unwrap());
     assert_eq!(read_channel_number(&report, "boundaryEdges").unwrap(), 0.0);
     assert!((read_channel_number(&report, "volume").unwrap() - 1.0).abs() < 1e-6);
-    eprintln!("[DEBUG] loop-cut widget: preview edge={edge}, vertices={}, faces={}", mesh.vertex_count(), mesh.face_count());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -100,7 +97,6 @@ async fn brep_scale_preserves_each_axis_and_explicit_center() {
                 assert!((maximum[axis] - coordinates("maximum")[axis]).abs() < 1e-6);
             }
             assert!((volume - case.get("volume").unwrap().as_f64().unwrap()).abs() < 1e-6);
-            eprintln!("[DEBUG] B-Rep axis scale: factors={:?}, volume={volume}", coordinates("factors"));
             Ok(())
         }).unwrap();
     }
@@ -140,7 +136,7 @@ fn indexed_mesh_contract_fixtures() {
                 assert!((actual - number).abs() <= if number == 0.0 { 1e-12 } else { number.abs() * 1e-5 }, "{key}: {actual} != {number}");
             } else { assert!(report.get(key).is_none(), "open surfaces cannot report enclosed volume"); }
         }
-        eprintln!("[DEBUG] mesh fixture {}: area={}", case.get("name").unwrap().as_str().unwrap(), read_channel_number(&report, "area").unwrap());
+        eprintln!("mesh fixture {}: area={}", case.get("name").unwrap().as_str().unwrap(), read_channel_number(&report, "area").unwrap());
         assert_eq!(mesh.to_obj().unwrap(), decode_mesh(&encode_mesh(&mesh).unwrap()).unwrap().to_obj().unwrap());
     }
     for case in fixture.get("invalid").unwrap().as_array().unwrap() {
@@ -182,7 +178,6 @@ async fn mesh_widget_workflow_fixtures_execute() {
             let actual = report.get(key).unwrap().as_dictionary().unwrap().get("value").unwrap().as_atom().unwrap().as_f64().unwrap();
             assert!((actual - expected.as_f64().unwrap()).abs() < 1e-5, "{id} {key}: {actual} != {expected:?}");
         }
-        eprintln!("[DEBUG] {id}: {} vertices, {} faces", mesh.vertex_count(), mesh.face_count());
     }
 }
 
@@ -196,7 +191,6 @@ fn mesh_preview_preserves_topology_identifiers() {
     assert_eq!(preview.face_ids.len(), 12);
     assert!(preview.face_ids.iter().all(|id| *id < 6));
     assert!(preview.vertex_ids.iter().all(|id| *id < 8));
-    eprintln!("[DEBUG] native mesh preview: {} triangles, {} face ids", preview.indices.len() / 3, preview.face_ids.len());
 }
 
 #[test]
@@ -230,5 +224,4 @@ async fn mesh_workbench_creates_edits_analyzes_and_converts() {
     let handle = read_geometry(&brep, "geometry").unwrap();
     let transfer = with_kernel_read(|kernel| kernel.tessellate(&handle, 0.1).map_err(|error| map_kernel_error(&error))).unwrap();
     assert!(!transfer.index.is_empty());
-    eprintln!("[DEBUG] mesh workbench: area={area}, volume={volume}, B-Rep preview triangles={}", transfer.index.len() / 3);
 }

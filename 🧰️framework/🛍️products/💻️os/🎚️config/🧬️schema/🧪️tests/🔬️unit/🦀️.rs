@@ -47,7 +47,6 @@ fn every_appearance_boot_case_replays_to_the_appearance_the_fixture_declares() {
         replayed += 1;
     }
     assert!(replayed >= 5, "the fixture must carry real replays: {replayed}");
-    eprintln!("[DEBUG] appearance boot replayed {replayed} cases through the OS config projection");
 }
 
 /// ⚖️ LAW: every storage key the fixture retires is named by no mutation this facet declares — the

@@ -1,4 +1,4 @@
-//! @emoji 🍎️ `MetalBackend`: the concrete `ui_render::GraphicsBackend` implementation for macOS.
+//! 🍎️ `MetalBackend`: the concrete `ui_render::GraphicsBackend` implementation for macOS.
 //!
 //! Milestones reached (see `📓️terra-backend-metal-report.md` for the authoritative statement):
 //! device + `CAMetalLayer` + swapchain (resize incl. zero-size park/restore, `nextDrawable`, present,

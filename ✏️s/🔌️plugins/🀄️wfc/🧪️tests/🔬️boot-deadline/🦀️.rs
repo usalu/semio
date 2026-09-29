@@ -96,7 +96,7 @@ async fn every_wfc_editor_boot_fits_the_strict_lifecycle_turn_authority() {
         }
         let settle_total_us: u64 = settle_us.iter().sum();
         let settle_max_us = settle_us.iter().copied().max().unwrap_or(0);
-        eprintln!("[DEBUG] {label} first step manifest_us={manifest_us} install_us={install_us} describe_us={describe_us} descriptor_bytes={} open_us={open_us} ack_us={ack_us} settle_turns={} settle_total_us={settle_total_us} settle_max_us={settle_max_us}", descriptor_bytes.len(), settle_us.len());
+        eprintln!("{label} first step manifest_us={manifest_us} install_us={install_us} describe_us={describe_us} descriptor_bytes={} open_us={open_us} ack_us={ack_us} settle_turns={} settle_total_us={settle_total_us} settle_max_us={settle_max_us}", descriptor_bytes.len(), settle_us.len());
 
         for (phase, spent_us) in [("open", open_us), ("ack", ack_us), ("settle-max", settle_max_us)] {
             assert!(spent_us * 4 < ceiling_us, "{label} {phase} turn spent {spent_us} us and must keep a 4x margin under the {ceiling_us} us strict lifecycle authority");

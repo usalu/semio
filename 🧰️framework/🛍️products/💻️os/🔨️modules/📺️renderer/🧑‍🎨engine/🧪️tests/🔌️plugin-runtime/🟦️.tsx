@@ -523,7 +523,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       });
   
       // 💼️ Ticket 26/09/02/PUZZLE-3D-END-TO-END W-J. `Effect::SpawnJob` used to reach
-      // `wireEffectToFriendly`'s `default:` arm and be dropped with a `[DEBUG]` warning, and nothing
+      // `wireEffectToFriendly`'s `default:` arm and be dropped with a `[TRACE]` warning, and nothing
       // in this renderer ever called `ShardClient.startJob`/`stepJob` — so on this target EVERY
       // plugin-authored isolated job was started zero times and stepped zero times, silently. That is
       // what left puzzle 3d's fill planning frozen at zero in the browser.
@@ -1882,11 +1882,9 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         expect(handle.documentPack(instanceId)).toEqual({ pack: new Uint8Array([1, 2]), spr: new Uint8Array([3]) });
       });
   
-      /** 📜️ `ops` is the third half of the frame, not decoration: `🏛️ShellHost`'s contributions push
-       * reads it (`documentSourcesFromPack` → `resolveDocumentOperatorKinds`) and treats a MISSING
-       * one as `{ status: "unresolved", reason: "document-ops-missing" }`, so an adapter that drops
-       * it silently unresolves every operator scope. This law therefore pins the text crossing
-       * verbatim, not merely that a document was read. */
+      /** 📜️ `ops` is the third half of the frame, not decoration: a reader of the live document gets the
+       * pack, the spr AND the op text, so an adapter that drops it silently loses the document's ops.
+       * This law therefore pins the text crossing verbatim, not merely that a document was read. */
       it("readAppDocumentPack() returns the AppFrame::Document pack/spr/ops, and null when the reply carries no document frame", async () => {
         const { decodeAppCommand, encodeAppFrame } = await import("@semio-tech/framework-os");
         const turnBroadcast = createTurnOutcomeBroadcast<TurnOutcome>();

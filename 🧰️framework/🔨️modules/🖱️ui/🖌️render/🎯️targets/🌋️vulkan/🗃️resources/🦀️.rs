@@ -1,4 +1,4 @@
-//! @emoji 🗃️ GPU-side residency for `ui_render::ResourceOp` — the Vulkan counterpart of the Metal
+//! 🗃️ GPU-side residency for `ui_render::ResourceOp` — the Vulkan counterpart of the Metal
 //! target's `🗃️resources.rs`, keyed by the same typed generational ids (`TextureId`/`MeshId`/
 //! `AtlasId`). Every upload goes through a host-visible staging buffer into a `DEVICE_LOCAL` image or
 //! buffer (dedicated `vkAllocateMemory` per resource, per the ticket brief — no VMA, no per-resource

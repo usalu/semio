@@ -77,7 +77,6 @@ fn late_ui_owners_arm_turns_until_their_credits_return_without_waiting_for_live_
             assert_eq!(serde_json::to_value(&sibling).unwrap(), fixture["arguments"], "live sibling is unchanged");
             drop(sibling);
         }
-        println!("[DEBUG] late UI retirement {} drained queued owners without holding a live sibling", case["name"]);
     }
     for _ in 0..limit {
         if !super::turn::close_late_ui_retirement().unwrap() {
@@ -188,7 +187,6 @@ fn a_guest_answering_more_work_k_times_with_nothing_costs_one_host_crossing() {
         );
         assert_eq!(stop, DriveStop::Carried, "a drive of {steps} steps must absorb {run} silent turns, spent {spent}");
         assert_eq!(turns.get(), run + 1, "the drive must run every silent turn plus the one that carried");
-        eprintln!("[DEBUG] more-work-drive silent={run} crossings={expected} turns={} steps={steps}", turns.get());
     }
     assert_eq!(expected, 1, "the contract this law is named after declares exactly one crossing per silent run");
 }
@@ -232,7 +230,6 @@ fn the_hosts_continuation_ceiling_covers_more_guest_turns_under_the_drive_never_
         assert_eq!(turns.get(), needed, "the drive must run exactly the turns the guest needed");
     }
     assert_eq!(ceiling * steps, ceiling.checked_mul(steps).expect("the ceiling's guest-turn reach"), "the reach is the ceiling priced in drive steps");
-    eprintln!("[DEBUG] more-work-drive continuation ceiling={ceiling} steps={steps} guest-turn reach={}", ceiling * steps);
 }
 
 /// 📬️ A host-owned input pending behind the drive — an ingress message, a cancel, a view-state change
@@ -261,7 +258,6 @@ fn a_pending_host_input_interrupts_the_drive_within_one_turn() {
         assert_eq!(stop, DriveStop::Input, "an input pending after {arrives_after} turns must end the drive");
         assert!(spent <= arrives_after.max(1) + within, "the drive ran {spent} turns after an input that arrived at turn {arrives_after}, past the declared {within}-turn interrupt");
     }
-    eprintln!("[DEBUG] more-work-drive ingress interrupt within={within} steps={steps}");
 }
 
 /// 🛑️ A cancellation mid-drive — the actor disposed, or re-activated under a new generation — ends the
@@ -292,7 +288,6 @@ fn a_cancellation_mid_drive_ends_the_drive_on_the_turn_it_lands() {
         assert_eq!(stop, DriveStop::Closed, "a close landing after {closes_after} turns must end the drive");
         assert_eq!(spent, closes_after, "the drive ran {spent} turns against a close at {closes_after}");
     }
-    eprintln!("[DEBUG] more-work-drive cancellation steps={steps}");
 }
 
 /// ⏱️ Hold coherence: the reactor's own executor slice and what a whole guest turn costs are two
@@ -316,7 +311,6 @@ fn the_worker_drive_budget_is_derived_from_the_measured_turn_cost_not_from_the_r
     assert_eq!(more_work_drive_budget_ms(cost - 1, cost), cost, "a grant smaller than one measured turn still buys one whole turn");
     assert_eq!(more_work_drive_steps(cost - 1, cost), 1, "a grant smaller than one turn still admits one turn");
     assert_eq!(more_work_drive_steps(grant, 0), 1, "an unmeasured turn cost still admits one turn");
-    eprintln!("[DEBUG] more-work-drive coherence hold={hold}ms cost={cost}ms grant={grant}ms steps={steps} budget={}ms", more_work_drive_budget_ms(grant, cost));
 }
 
 /// 🎚️ Readiness is per ALLOCATION, not global: a finished output publishes while a DIFFERENT
@@ -345,7 +339,6 @@ fn a_ready_output_is_not_blocked_by_another_allocations_running_job() {
             assert!(admissible(ready_generation, &[(other, in_flight_generation)]), "foreign g{in_flight_generation} against ready g{ready_generation}");
         }
     }
-    eprintln!("[DEBUG] more-work-drive readiness gate: per-allocation, 64 generation pairs checked on both sides");
 }
 
 /// 🎚️ The widened gate through the PRODUCTION ladder: eight surfaces driven one reconcile opportunity
@@ -400,7 +393,7 @@ fn the_widened_readiness_gate_keeps_every_surfaces_own_publication_order() {
             break;
         }
     }
-    eprintln!("[DEBUG] more-work-drive readiness ladder turns={turns} published={published} overlapped={overlapped} surfaces={}", revisions.len());
+    eprintln!("more-work-drive readiness ladder turns={turns} published={published} overlapped={overlapped} surfaces={}", revisions.len());
     assert_eq!(published, 8, "every mounted surface must publish exactly once");
     assert_eq!(revisions.len(), 8, "every mounted surface must be its own publication line");
     drain_pending_authority();
@@ -414,7 +407,7 @@ fn the_production_reconcile_ladder_costs_fewer_crossings_when_the_worker_owns_th
     let host_polled = settle_one_opportunity_per_turn(72, 8, 1);
     let worker_driven = settle_one_opportunity_per_turn(73, 8, declared_steps());
     eprintln!(
-        "[DEBUG] more-work-drive ladder host-polled crossings={} turns={} idle={} | worker-driven crossings={} turns={} idle={}",
+        "more-work-drive ladder host-polled crossings={} turns={} idle={} | worker-driven crossings={} turns={} idle={}",
         host_polled.crossings, host_polled.turns, host_polled.idle, worker_driven.crossings, worker_driven.turns, worker_driven.idle
     );
     assert_eq!(host_polled.published, 8);
@@ -436,6 +429,9 @@ fn the_production_reconcile_ladder_costs_fewer_crossings_when_the_worker_owns_th
 /// INTERACTIVE-TOOLS-VISIBLE-PROCESS on :6013, 2026-09-15). The cut page's own laws
 /// (`🧺️turn-patch-batch`) never saw it because they drive `take_one`/`hand_back_turn` directly and
 /// never stage a receipt against a cut page.
+///
+/// 🧾️ A budget of exactly ONE patch: every page after the first entry is cut, which is the
+/// shape a world-3d surface produces against the real per-lane budget.
 #[test]
 fn a_page_cut_by_its_byte_budget_stages_exactly_what_it_delivered_and_loses_nothing() {
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -461,8 +457,6 @@ fn a_page_cut_by_its_byte_budget_stages_exactly_what_it_delivered_and_loses_noth
     let mut pages = 0usize;
     let mut cuts = 0usize;
     for _ in 0..64 {
-        // 🧾️ A budget of exactly ONE patch: every page after the first entry is cut, which is the
-        // shape a world-3d surface produces against the real per-lane budget.
         let page = turn_patch_page_of_two(unit);
         if page.is_empty() {
             break;
@@ -493,7 +487,6 @@ fn a_page_cut_by_its_byte_budget_stages_exactly_what_it_delivered_and_loses_noth
         });
         drive_reconcile_within(&tracker, reconcile_step_opportunities(u64::MAX), far_deadline()).expect("reconcile drive");
     }
-    eprintln!("[DEBUG] more-work-drive cut-page unit={unit}B pages={pages} cuts={cuts} delivered={delivered:?}");
     assert_eq!(delivered.len(), 4, "every mounted surface must be delivered exactly once across the cut pages");
     let mut surfaces: Vec<&String> = delivered.iter().map(|(surface, _)| surface).collect();
     surfaces.sort();

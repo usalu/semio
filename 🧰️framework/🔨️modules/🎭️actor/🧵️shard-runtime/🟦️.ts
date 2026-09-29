@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🧵️ Renderer-agnostic bootstrap for the pooled shard-worker runtime (design-runtime.md
+/** 🧵️ Renderer-agnostic bootstrap for the pooled shard-worker runtime (design-runtime.md
  * §1/§3) — `ShardClient` (bounded worker pool, `actorId`-multiplexed) + the pool-sizing/default-budget
  * constants every caller of it needs, factored out of `PluginRuntime/🟦️.tsx`'s own
  * `getShardClient`/`poolConcurrency`/`buildShardClientOptions` (`🔖️ActorAdapter` region) so a SECOND
@@ -28,7 +28,7 @@ export const SHARD_WORKER_URL = "/🔌️plugin-modules/🧵️shard/🟨️shar
 export { SHARD_RUNTIME_DIAGNOSTICS_KEY, SHARD_WORKER_DIAGNOSTICS_PARAM, shardRuntimeDiagnosticsArmed, stampShardWorkerDiagnostics } from "../🩺️diagnostics/🟦️.ts";
 
 /** 🩺️ {@link SHARD_WORKER_URL}, plus the diagnostics stamp when this page armed them. Every
- * `new Worker(...)` in the repo goes through this so the guest's own `[DEBUG]` trace sites are
+ * `new Worker(...)` in the repo goes through this so the guest's own `[TRACE]` trace sites are
  * reachable from a browser session without a second build. */
 export function shardWorkerUrl(): string {
   return stampShardWorkerDiagnostics(SHARD_WORKER_URL);

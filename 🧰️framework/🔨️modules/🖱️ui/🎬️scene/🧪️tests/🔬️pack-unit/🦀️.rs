@@ -103,7 +103,6 @@ fn viewport_projection_pack_round_trips_every_shared_mode_orientation_pair() {
             combinations += 1;
         }
     }
-    eprintln!("[DEBUG] Shared viewport projection Pack codec round-tripped the full preference bank and {combinations} mode-orientation pairs including outside-control active values");
 }
 
 #[test]
@@ -117,7 +116,6 @@ fn viewport_projection_pack_outside_control_fov_matches_native_projection_math()
     camera.fov_y = (fov as f32).to_radians();
     let matrix = camera.view_proj(1600.0, 900.0);
     assert!(matrix.cols.into_iter().flatten().all(f32::is_finite));
-    eprintln!("[DEBUG] Shared viewport projection Pack preserved FOV 130 and native projection math produced a finite matrix");
 }
 
 #[test]
@@ -127,7 +125,6 @@ fn viewport_projection_pack_rejects_nonfinite_active_values() {
     let invalid = Viewport3dProjectionSpec { mode: Viewport3dProjectionMode::ThreePoint { fov: f64::NAN }, orientation: Viewport3dProjectionOrientation::Free {} };
     let bytes = to_bytes(&invalid).unwrap();
     assert!(from_bytes::<Viewport3dProjectionSpec>(&bytes).is_err());
-    eprintln!("[DEBUG] Shared viewport projection Pack decode rejected a nonfinite active lens");
 }
 
 #[test]
@@ -203,7 +200,6 @@ fn viewport_projection_render_math_matches_the_shared_three_oracle() {
             assert!((actual - expected).abs() <= 2e-6, "{} visible", row["name"]);
         }
     }
-    eprintln!("[DEBUG] Shared projection matrix, orientation, content frame, and curvilinear inverse matched Three.js fixture output");
 }
 
 //#region 🎬️RetainedSceneOracle
@@ -291,6 +287,8 @@ fn typed_scene_neutral_catalog_matches_native_serde_contracts() {
                 if let Some(value) = values.get("$some") {
                     bytes.push(TAG_SOME);
                     packet(value, bytes);
+                } else if let Some(value) = values.get("$u64") {
+                    bytes.extend(to_bytes(&value.as_u64().unwrap()).unwrap());
                 } else {
                     bytes.push(TAG_MAP);
                     write_varint(bytes, values.len() as u64);

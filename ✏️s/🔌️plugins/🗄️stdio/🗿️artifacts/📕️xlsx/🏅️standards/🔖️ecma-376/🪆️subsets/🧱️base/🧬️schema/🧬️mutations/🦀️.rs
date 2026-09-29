@@ -1,21 +1,20 @@
 //! 🧬️ XlsxMutation — document mutation dispatch. Every variant's `diff()` is handcrafted (never
 //! apply-and-capture) and every variant's `inverse()` is handcrafted, key/index-aware.
 
-use crate::schema::diff::{
-    dec_cell_value, dec_cell_value_bin, dec_ct_entry, dec_opc_part_bin, dec_owner_rels, dec_part, dec_rel_bin, dec_sheet, dec_sheet_bin, dec_str, diff_set_snapshot, enc_cell_value, enc_cell_value_bin, enc_ct_entry, enc_opc_part_bin, enc_owner_rels,
-    enc_part, enc_rel_bin, enc_sheet, enc_sheet_bin, enc_str, read_str_lp, split_top_level, strip_brackets, write_str_lp, XlsxDiff,
-};
+use crate::schema::diff::{dec_cell_value, dec_cell_value_bin, dec_sheet, dec_sheet_bin, dec_str, diff_set_snapshot, enc_cell_value, enc_cell_value_bin, enc_sheet, enc_sheet_bin, enc_str, read_str_lp, write_str_lp, XlsxDiff};
 #[cfg(test)]
 use crate::schema::snapshot::XlsxCell;
-use crate::schema::snapshot::{XlsxCellValue, XlsxSheet, XlsxWorkbook};
+#[cfg(test)]
+use crate::schema::snapshot::XlsxWorkbook;
+use crate::schema::snapshot::{XlsxCellValue, XlsxSheet};
 use crate::XlsxSnapshot;
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
-use semio_s_artifact_stdio_zip::opc::{OpcContentTypes, OpcPackage, OpcRelationship};
+#[cfg(test)]
+use semio_s_artifact_stdio_zip::opc::OpcRelationship;
 #[cfg(test)]
 use semio_s_artifact_stdio_zip::opc::OpcTargetMode;
-use std::collections::HashMap;
 
 //#region 🔖️Mutations
 #[path = "🧭️canonical-edit/🦀️.rs"]
@@ -131,64 +130,6 @@ pub(crate) fn agg_inverse(this: &XlsxMutation, base: &XlsxSnapshot) -> Vec<XlsxM
 /// duplicating them a second time in this file. Grammar: `keyword arg=value ...` (space-separated,
 /// same shape the derive's own handcrafted-wrapper convention uses), one match arm per variant.
 //#region 🔖️SnapshotCodec
-/// 🧮️ Full-VALUE codecs (not diffs) for `OpcPackage`/`XlsxWorkbook`/`XlsxSnapshot` — reuses the
-/// diff module's per-item encoders (`enc_part`/`enc_ct_entry`/`enc_owner_rels`/`enc_sheet`, all
-/// already full-value, not diff, shapes) directly; only the outer struct-of-collections wrapping is
-/// new here.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_content_types(ct: &OpcContentTypes) -> String {
-    let defaults = ct.defaults.iter().map(enc_ct_entry).collect::<Vec<_>>().join(",");
-    let overrides = ct.overrides.iter().map(enc_ct_entry).collect::<Vec<_>>().join(",");
-    format!("[[{defaults}],[{overrides}]]")
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_content_types(s: &str) -> Result<OpcContentTypes, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [defaults, overrides] = parts.as_slice() else { return Err(format!("content types: expected 2 fields, got {}", parts.len())) };
-    let defaults = split_top_level(strip_brackets(defaults)?, ',').into_iter().map(dec_ct_entry).collect::<Result<Vec<_>, String>>()?;
-    let overrides = split_top_level(strip_brackets(overrides)?, ',').into_iter().map(dec_ct_entry).collect::<Result<Vec<_>, String>>()?;
-    Ok(OpcContentTypes { defaults, overrides })
-}
-/// 🗺️ Owners sorted for determinism (`HashMap` iteration order is not stable) — matches this
-/// artifact's other `HashMap`-backed encodings' expectation of a canonical wire order.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_relationships_map(rels: &HashMap<String, Vec<OpcRelationship>>) -> String {
-    let mut owners: Vec<&String> = rels.keys().collect();
-    owners.sort();
-    let entries = owners.into_iter().map(|o| enc_owner_rels(&(o.clone(), rels[o].clone()))).collect::<Vec<_>>().join(",");
-    format!("[{entries}]")
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_relationships_map(s: &str) -> Result<HashMap<String, Vec<OpcRelationship>>, String> {
-    let entries = split_top_level(strip_brackets(s)?, ',').into_iter().map(dec_owner_rels).collect::<Result<Vec<_>, String>>()?;
-    Ok(entries.into_iter().collect())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_opc_package(pkg: &OpcPackage) -> String {
-    let parts = pkg.parts.iter().map(enc_part).collect::<Vec<_>>().join(",");
-    format!("[[{parts}],{},{},{}]", enc_content_types(&pkg.content_types), enc_relationships_map(&pkg.relationships), enc_str(&pkg.comment))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_opc_package(s: &str) -> Result<OpcPackage, String> {
-    let outer = split_top_level(strip_brackets(s)?, ',');
-    let [parts, ct, rels, comment] = outer.as_slice() else { return Err(format!("opc package: expected 4 fields, got {}", outer.len())) };
-    let parts = split_top_level(strip_brackets(parts)?, ',').into_iter().map(dec_part).collect::<Result<Vec<_>, String>>()?;
-    Ok(OpcPackage { parts, content_types: dec_content_types(ct)?, relationships: dec_relationships_map(rels)?, comment: dec_str(comment)? })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_workbook(wb: &XlsxWorkbook) -> String {
-    let sheets = wb.sheets.iter().map(enc_sheet).collect::<Vec<_>>().join(",");
-    let strings = wb.shared_strings.iter().map(|s| enc_str(s)).collect::<Vec<_>>().join(",");
-    format!("[[{sheets}],[{strings}]]")
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_workbook(s: &str) -> Result<XlsxWorkbook, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [sheets, strings] = parts.as_slice() else { return Err(format!("workbook: expected 2 fields, got {}", parts.len())) };
-    let sheets = split_top_level(strip_brackets(sheets)?, ',').into_iter().map(dec_sheet).collect::<Result<Vec<_>, String>>()?;
-    let shared_strings = split_top_level(strip_brackets(strings)?, ',').into_iter().map(dec_str).collect::<Result<Vec<_>, String>>()?;
-    Ok(XlsxWorkbook { sheets, shared_strings })
-}
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_xlsx_snapshot(s: &XlsxSnapshot) -> String {
     enc_str(&dsl::json::to_json_string(s))
@@ -252,111 +193,6 @@ impl OpText for XlsxMutation {
 }
 
 //#region 🔖️OpBinaryCodec
-/// 🧪️ FG-wave: real recursive binary primitives backing the upgraded `OpBinary` impl below --
-/// mirrors docx's own `../🧬️mutations/🦀️.rs`'s `OpBinaryCodec` region shape (this
-/// wave's OPC pattern-setter), reusing `store::pack_rt::write_varint_u64`/`store::ByteReader`
-/// plus `XlsxDiff`'s own `write_str_lp`/`read_str_lp`/`enc_opc_part_bin`/`dec_opc_part_bin`/
-/// `enc_rel_bin`/`dec_rel_bin`/`enc_sheet_bin`/`dec_sheet_bin`/`enc_cell_value_bin`/
-/// `dec_cell_value_bin` (`../🔺️diff/🦀️.rs`, `pub(crate)` to this artifact).
-/// 🌱 Full (non-diff) `OpcContentTypes`/`OpcPackage`/`XlsxWorkbook`/`XlsxSnapshot` binary codecs --
-/// only `SetSnapshot`'s whole-payload encoding needs these, mirroring this file's own
-/// `enc_content_types`/`enc_opc_package`/`enc_workbook`/`enc_xlsx_snapshot` text forms above.
-/// Owners sorted for a deterministic encoding, same `HashMap`-iteration-order caveat those text
-/// forms document.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_opc_content_types_bin(ct: &OpcContentTypes, out: &mut Vec<u8>) {
-    store::pack_rt::write_varint_u64(out, ct.defaults.len() as u64);
-    for e in &ct.defaults {
-        write_str_lp(out, &e.0);
-        write_str_lp(out, &e.1);
-    }
-    store::pack_rt::write_varint_u64(out, ct.overrides.len() as u64);
-    for e in &ct.overrides {
-        write_str_lp(out, &e.0);
-        write_str_lp(out, &e.1);
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_opc_content_types_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcContentTypes, String> {
-    let default_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut defaults = Vec::with_capacity(default_count as usize);
-    for _ in 0..default_count {
-        defaults.push((read_str_lp(reader)?, read_str_lp(reader)?));
-    }
-    let override_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut overrides = Vec::with_capacity(override_count as usize);
-    for _ in 0..override_count {
-        overrides.push((read_str_lp(reader)?, read_str_lp(reader)?));
-    }
-    Ok(OpcContentTypes { defaults, overrides })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_opc_package_bin(pkg: &OpcPackage, out: &mut Vec<u8>) {
-    store::pack_rt::write_varint_u64(out, pkg.parts.len() as u64);
-    for p in &pkg.parts {
-        enc_opc_part_bin(p, out);
-    }
-    enc_opc_content_types_bin(&pkg.content_types, out);
-    let mut owners: Vec<&String> = pkg.relationships.keys().collect();
-    owners.sort();
-    store::pack_rt::write_varint_u64(out, owners.len() as u64);
-    for owner in owners {
-        write_str_lp(out, owner);
-        let list = &pkg.relationships[owner];
-        store::pack_rt::write_varint_u64(out, list.len() as u64);
-        for r in list {
-            enc_rel_bin(r, out);
-        }
-    }
-    write_str_lp(out, &pkg.comment);
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_opc_package_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcPackage, String> {
-    let part_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut parts = Vec::with_capacity(part_count as usize);
-    for _ in 0..part_count {
-        parts.push(dec_opc_part_bin(reader)?);
-    }
-    let content_types = dec_opc_content_types_bin(reader)?;
-    let owner_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut relationships = HashMap::with_capacity(owner_count as usize);
-    for _ in 0..owner_count {
-        let owner = read_str_lp(reader)?;
-        let rel_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-        let mut list = Vec::with_capacity(rel_count as usize);
-        for _ in 0..rel_count {
-            list.push(dec_rel_bin(reader)?);
-        }
-        relationships.insert(owner, list);
-    }
-    let comment = read_str_lp(reader)?;
-    Ok(OpcPackage { parts, content_types, relationships, comment })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_workbook_bin(wb: &XlsxWorkbook, out: &mut Vec<u8>) {
-    store::pack_rt::write_varint_u64(out, wb.sheets.len() as u64);
-    for s in &wb.sheets {
-        enc_sheet_bin(s, out);
-    }
-    store::pack_rt::write_varint_u64(out, wb.shared_strings.len() as u64);
-    for s in &wb.shared_strings {
-        write_str_lp(out, s);
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_workbook_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxWorkbook, String> {
-    let sheet_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut sheets = Vec::with_capacity(sheet_count as usize);
-    for _ in 0..sheet_count {
-        sheets.push(dec_sheet_bin(reader)?);
-    }
-    let string_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut shared_strings = Vec::with_capacity(string_count as usize);
-    for _ in 0..string_count {
-        shared_strings.push(read_str_lp(reader)?);
-    }
-    Ok(XlsxWorkbook { sheets, shared_strings })
-}
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_xlsx_snapshot_bin(s: &XlsxSnapshot, out: &mut Vec<u8>) {
     write_str_lp(out, &dsl::json::to_json_string(s));

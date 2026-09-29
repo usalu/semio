@@ -2,14 +2,29 @@
   "schema": "semio.flow-note.action-cohort.v1",
   "owner": "FlowPlayApp",
   "source": "🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
-  "routeCount": 34,
+  "routeCount": 36,
   "retainedRoutes": [
+    "addWidget",
+    "removeWidget",
+    "deleteSelection",
+    "disconnect",
     "connectMediaPorts",
+    "moveMediaNode",
     "reorganize",
+    "patchFlowWidgets",
     "renameFlowWidget",
     "nodeGraphEdit",
     "spotlightCommit",
     "runExtensionAction",
+    "setActiveExample",
+    "duplicateWidget",
+    "evaluate",
+    "contextMenuAt",
+    "openSpotlight",
+    "replaceImage",
+    "flowEvalTick",
+    "flowEvalResolve",
+    "setContributions",
     "focusSelection",
     "nodeGraphViewport",
     "setLodMode",
@@ -24,35 +39,53 @@
     "removeGeneration",
     "selectGeneration",
     "renameGeneration",
-    "updateGenerationValues",
-    "duplicateWidget",
-    "addWidget",
-    "removeWidget",
-    "deleteSelection",
-    "disconnect",
-    "moveMediaNode",
-    "patchFlowWidgets",
-    "evaluate",
-    "contextMenuAt",
-    "openSpotlight",
-    "replaceImage",
-    "flowEvalTick",
-    "flowEvalResolve"
+    "updateGenerationValues"
   ],
-  "frameworkOwnedRoutes": [],
   "groups": [
     {
       "status": "migrated",
       "lanes": [
-        "artifact"
+        "child"
       ],
       "routes": [
+        "addWidget",
+        "removeWidget",
+        "deleteSelection",
+        "disconnect",
         "connectMediaPorts",
+        "moveMediaNode",
         "reorganize",
+        "patchFlowWidgets",
         "renameFlowWidget",
         "nodeGraphEdit",
         "spotlightCommit",
-        "runExtensionAction"
+        "runExtensionAction",
+        "setActiveExample"
+      ]
+    },
+    {
+      "status": "migrated",
+      "lanes": [
+        "child",
+        "transient"
+      ],
+      "routes": [
+        "duplicateWidget"
+      ]
+    },
+    {
+      "status": "migrated",
+      "lanes": [
+        "host-only"
+      ],
+      "routes": [
+        "evaluate",
+        "contextMenuAt",
+        "openSpotlight",
+        "replaceImage",
+        "flowEvalTick",
+        "flowEvalResolve",
+        "setContributions"
       ]
     },
     {
@@ -84,52 +117,6 @@
         "selectGeneration",
         "renameGeneration",
         "updateGenerationValues"
-      ]
-    },
-    {
-      "status": "migrated",
-      "lanes": [
-        "child",
-        "transient"
-      ],
-      "routes": [
-        "duplicateWidget"
-      ]
-    },
-    {
-      "status": "migrated",
-      "lanes": [
-        "child"
-      ],
-      "routes": [
-        "addWidget"
-      ]
-    },
-    {
-      "status": "migrated",
-      "lanes": [
-        "artifact"
-      ],
-      "routes": [
-        "removeWidget",
-        "deleteSelection",
-        "disconnect",
-        "moveMediaNode",
-        "patchFlowWidgets"
-      ]
-    },
-    {
-      "status": "migrated",
-      "lanes": [
-        "host-only"
-      ],
-      "routes": [
-        "evaluate",
-        "contextMenuAt",
-        "openSpotlight",
-        "replaceImage",
-        "flowEvalTick",
-        "flowEvalResolve"
       ]
     }
   ],

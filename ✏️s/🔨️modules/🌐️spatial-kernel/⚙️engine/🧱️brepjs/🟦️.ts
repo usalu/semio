@@ -1,7 +1,7 @@
 // #region 🧲️Header
 /// <reference types="vite/client" />
 /// <reference types="vitest/importMeta" />
-/** @emoji 🧭️ `@semio-tech/cad-js/brepjs` — `SpatialKernel` backed by brepjs + OpenCascade WASM, kept ONLY as a vitest differential oracle (see `import.meta.vitest`-guarded exports below and `🎫️tickets/…/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME/📓️w4a-spatial-kernel-first-party.md`). The production runtime kernel is `🧠️semio/🟦️.ts`; pure preview math moved to `🧮️preview/🟦️.ts`. */
+/** 🧭️ `@semio-tech/cad-js/brepjs` — `SpatialKernel` backed by brepjs + OpenCascade WASM, kept ONLY as a vitest differential oracle (see `import.meta.vitest`-guarded exports below and `🎫️tickets/…/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME/📓️w4a-spatial-kernel-first-party.md`). The production runtime kernel is `🧠️semio/🟦️.ts`; pure preview math moved to `🧮️preview/🟦️.ts`. */
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
@@ -75,15 +75,18 @@ import {
   arcSamplePoints,
   boxModelDiff,
   circleFromCenterRadiusPoint,
+  derivedFacePoints,
   edgeCurveLength,
   ellipseSamplePoints,
   faceCentroid,
+  faceNormalFromPoints,
   fuseSolidsToExternalFaces,
   geom,
   meshFaceModelDiff,
   modelObjectAabb,
   nurbsCurveFromPoles,
   nurbsDisplaySamplePoints,
+  readVec3,
   vec3Add,
   vec3Cross,
   vec3Distance,
@@ -110,12 +113,12 @@ export { kernelGeometry };
 // #endregion 🔌️Adapters
 
 // #region 🧩️OpenCascade
-const isBrepjsTestRun = import.meta.env.VITEST === true || import.meta.env.MODE === "test" || Boolean(import.meta.vitest);
+const isBrepjsTestRun = import.meta.env.VITEST === "true" || import.meta.env.MODE === "test" || Boolean(import.meta.vitest);
 
 const openCascadeWasmNeedsNodeResolve =
   (import.meta.env.VITEST || import.meta.env.MODE === "test") && (ownedOpenCascadeWasmBundledUrl.includes("@fs") || ownedOpenCascadeWasmBundledUrl.includes("node_modules/brepjs-opencascade"));
 
-/** @emoji 📂️ Builds `locateFile` for OpenCascade: Vite asset URL in browser, `createRequire` on disk in Vitest. */
+/** 📂️ Builds `locateFile` for OpenCascade: Vite asset URL in browser, `createRequire` on disk in Vitest. */
 async function createOpenCascadeLocateFile(): Promise<(path: string) => string> {
   if (!openCascadeWasmNeedsNodeResolve) {
     return (path) => (path === "brepjs_single.wasm" ? ownedOpenCascadeWasmBundledUrl : path);
@@ -222,7 +225,7 @@ function alignUnmatchedBrepFacesByNormal(model: Model, unmatchedBrepFaces: Face[
   }
 }
 
-/** @emoji 🗺️ Maps brepjs `getHashCode` handles to spatial `FaceRef`/`EdgeRef`; brepjs has no geometry userData. */
+/** 🗺️ Maps brepjs `getHashCode` handles to spatial `FaceRef`/`EdgeRef`; brepjs has no geometry userData. */
 function buildBrepEntityMaps(brepSolid: ValidSolid, context: { readonly solidRef: SolidRef; readonly model?: Model; readonly solidRecord?: SolidRecord }): BrepEntityMaps {
   const faceByHash = new Map<number, FaceRef>();
   const edgeByHash = new Map<number, EdgeRef>();
@@ -350,7 +353,7 @@ function collectEdgeInfos(brepSolid: ValidSolid, maps: BrepEntityMaps, solidRef:
   return infos;
 }
 
-/** @emoji 🖼️ Tessellates a solid to grouped buffers + B-Rep edge polylines (caller owns solid lifetime). */
+/** 🖼️ Tessellates a solid to grouped buffers + B-Rep edge polylines (caller owns solid lifetime). */
 function meshTransferFromBrep(brepSolid: ValidSolid, tolerance: number, context: { readonly solidRef: SolidRef; readonly model?: Model; readonly solidRecord?: SolidRecord }, collectInspection = true): MeshTransfer {
   const maps = buildBrepEntityMaps(brepSolid, context);
   const shapeMesh = mesh(brepSolid, { tolerance, cache: true, angularTolerance: 0.2 });
@@ -403,7 +406,7 @@ function cloneMeshTransfer(mesh: MeshTransfer): MeshTransfer {
 // #endregion ♻️BrepjsScratch
 
 // #region 🔌️BrepModelBridge
-/** @emoji 🔗️ Builds a brepjs `Edge` from a model edge record. */
+/** 🔗️ Builds a brepjs `Edge` from a model edge record. */
 function geomEdgeToBrepEdge(model: Model, edge: EdgeRecord): Edge | null {
   const ids = edge.vertexIds;
   if (ids.length < 1) return null;
@@ -433,7 +436,7 @@ function geomEdgeToBrepEdge(model: Model, edge: EdgeRecord): Edge | null {
   return line(p0, p1);
 }
 
-/** @emoji 🔗️ brepjs wire from a model wire (closed `wireLoop` or open `wire`). */
+/** 🔗️ brepjs wire from a model wire (closed `wireLoop` or open `wire`). */
 function geomWireToBrepWire(model: Model, wireId: WireRef): Wire | null {
   const w = geom(model).wires[wireId];
   if (!w?.edgeIds.length) return null;
@@ -451,7 +454,7 @@ function geomWireToBrepWire(model: Model, wireId: WireRef): Wire | null {
   return isOk(open) ? open.value : null;
 }
 
-/** @emoji 🔗️ Closed planar brepjs face from a model wire (`wireLoop` + `face`). */
+/** 🔗️ Closed planar brepjs face from a model wire (`wireLoop` + `face`). */
 function geomWireToOrientedFace(model: Model, wireId: WireRef): OrientedFace | null {
   const w = geom(model).wires[wireId];
   if (!w?.edgeIds.length) return null;
@@ -469,7 +472,7 @@ function geomWireToOrientedFace(model: Model, wireId: WireRef): OrientedFace | n
   return isOk(f) ? f.value : null;
 }
 
-/** @emoji 🔗️ Oriented face from a model wire; uses `filledFace` when planar `face` fails (deformed boxes). */
+/** 🔗️ Oriented face from a model wire; uses `filledFace` when planar `face` fails (deformed boxes). */
 function geomWireToOrientedFaceLoose(model: Model, wireId: WireRef): OrientedFace | null {
   const planar = geomWireToOrientedFace(model, wireId);
   if (planar) return planar;
@@ -489,7 +492,7 @@ function geomWireToOrientedFaceLoose(model: Model, wireId: WireRef): OrientedFac
   return isOk(filled) ? filled.value : null;
 }
 
-/** @emoji 🔗️ Extrudes a model wire to a `ValidSolid` via brepjs (planar face or open-curve loft). */
+/** 🔗️ Extrudes a model wire to a `ValidSolid` via brepjs (planar face or open-curve loft). */
 function extrudeModelWire(model: Model, wireId: string, direction: Vec3, distance: number): ValidSolid | null {
   const wid = wireId as WireRef;
   const vec = extrudeDirection(direction, distance);
@@ -530,7 +533,7 @@ function selectionPicksFromParams(params: Record<string, unknown>): SelectionPic
   return out;
 }
 
-/** @emoji 🧵️ Resolves wire ids from curve selection targets (`wire` or parent wire of `edge`). */
+/** 🧵️ Resolves wire ids from curve selection targets (`wire` or parent wire of `edge`). */
 function wireIdsFromSelectionPicks(model: Model, picks: readonly SelectionPick[]): WireRef[] {
   const g = geom(model);
   const out: WireRef[] = [];
@@ -558,7 +561,7 @@ function mergeSolidAdds(diffs: readonly ModelDiff[]): ModelDiff {
   return added.length ? { solids: { added } } : {};
 }
 
-/** @emoji 🧩️ Parses raw `SelectionTarget[]`-shaped context data into `{kind,id}` picks (any field). */
+/** 🧩️ Parses raw `SelectionTarget[]`-shaped context data into `{kind,id}` picks (any field). */
 function picksFromRaw(raw: unknown): SelectionPick[] {
   if (!Array.isArray(raw)) return [];
   const out: SelectionPick[] = [];
@@ -571,7 +574,7 @@ function picksFromRaw(raw: unknown): SelectionPick[] {
   return out;
 }
 
-/** @emoji 🧱️ Resolves solid ids from raw `SelectionTarget[]`-shaped selection context (boolean operands). */
+/** 🧱️ Resolves solid ids from raw `SelectionTarget[]`-shaped selection context (boolean operands). */
 function solidRefsFromSelectionRaw(model: Model, raw: unknown): SolidRef[] {
   const g = geom(model);
   const out: SolidRef[] = [];
@@ -584,7 +587,7 @@ function solidRefsFromSelectionRaw(model: Model, raw: unknown): SolidRef[] {
   return out;
 }
 
-/** @emoji 🧵️ Resolves wire ids from a raw `targets` context field that may be a flat array or `command.addSelection`'s keyed sub-object (e.g. `{rail:[...]}`, `{railA:[...],railB:[...]}`). */
+/** 🧵️ Resolves wire ids from a raw `targets` context field that may be a flat array or `command.addSelection`'s keyed sub-object (e.g. `{rail:[...]}`, `{railA:[...],railB:[...]}`). */
 function wireIdsFromKeyedRaw(model: Model, raw: unknown): WireRef[] {
   if (Array.isArray(raw)) return wireIdsFromSelectionPicks(model, picksFromRaw(raw));
   if (!raw || typeof raw !== "object") return [];
@@ -600,7 +603,7 @@ function wireIdsFromKeyedRaw(model: Model, raw: unknown): WireRef[] {
   return out;
 }
 
-/** @emoji 🧵️ Synthesizes a small circular cross-section wire when `surface.sweep{1,2}` receives no explicit profile curve. */
+/** 🧵️ Synthesizes a small circular cross-section wire when `surface.sweep{1,2}` receives no explicit profile curve. */
 function defaultSweepProfileWire(model: Model, railWireId: WireRef): Wire | null {
   const g = geom(model);
   const rail = g.wires[railWireId];
@@ -628,7 +631,7 @@ function defaultSweepProfileWire(model: Model, railWireId: WireRef): Wire | null
 }
 
 // #region ✂️EditTopologyOps
-/** @emoji 🧷️ Parses a raw selection-target array (`{kind,id}[]`) from an `edit.*` command param. */
+/** 🧷️ Parses a raw selection-target array (`{kind,id}[]`) from an `edit.*` command param. */
 function picksFromValue(raw: unknown): SelectionPick[] {
   if (!Array.isArray(raw)) return [];
   const out: SelectionPick[] = [];
@@ -645,7 +648,7 @@ function freshEditRef(kind: string): string {
   return `brepjs-${kind}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-/** @emoji 🧷️ Flattens picks (`edge` verbatim, `wire`/`face` expand to member edges) into concrete edge ids. */
+/** 🧷️ Flattens picks (`edge` verbatim, `wire`/`face` expand to member edges) into concrete edge ids. */
 function edgeIdsFromPicks(model: Model, picks: readonly SelectionPick[]): EdgeRef[] {
   const g = geom(model);
   const out: EdgeRef[] = [];
@@ -687,7 +690,7 @@ function clampNumber(x: number, lo: number, hi: number): number {
   return x < lo ? lo : x > hi ? hi : x;
 }
 
-/** @emoji 📏️ Closest points between two 3D segments (Ericson's segment-segment algorithm); `t` is the parameter (0..1) on the first segment. */
+/** 📏️ Closest points between two 3D segments (Ericson's segment-segment algorithm); `t` is the parameter (0..1) on the first segment. */
 function closestPointsOnSegments(p1: Vec3, p2: Vec3, q1: Vec3, q2: Vec3): { readonly onFirst: Vec3; readonly onSecond: Vec3; readonly t: number } {
   const d1 = vec3Sub(p2, p1);
   const d2 = vec3Sub(q2, q1);
@@ -726,7 +729,7 @@ function closestPointsOnSegments(p1: Vec3, p2: Vec3, q1: Vec3, q2: Vec3): { read
   return { onFirst: vec3Add(p1, vec3Scale(d1, s)), onSecond: vec3Add(q1, vec3Scale(d2, t)), t: s };
 }
 
-/** @emoji 🧷️ `edit.join`: merges the edges of the selected wires/edges/faces into one new wire (topological grouping, no geometric coincidence required). */
+/** 🧷️ `edit.join`: merges the edges of the selected wires/edges/faces into one new wire (topological grouping, no geometric coincidence required). */
 function editJoinDiff(model: Model, params: Record<string, unknown>): ModelDiff {
   const g = geom(model);
   const picks = picksFromValue(params.targets);
@@ -768,7 +771,7 @@ function editJoinDiff(model: Model, params: Record<string, unknown>): ModelDiff 
   return removedWires.length ? { wires: { added: [joined], removed: removedWires } } : { wires: { added: [joined] } };
 }
 
-/** @emoji 💥️ `edit.explode`: inverse of `edit.join` — decomposes each selected wire into one single-edge wire per member edge; shells/solids explode by dropping their container record. */
+/** 💥️ `edit.explode`: inverse of `edit.join` — decomposes each selected wire into one single-edge wire per member edge; shells/solids explode by dropping their container record. */
 function editExplodeDiff(model: Model, params: Record<string, unknown>): ModelDiff {
   const g = geom(model);
   const picks = picksFromValue(params.targets);
@@ -799,7 +802,7 @@ function editExplodeDiff(model: Model, params: Record<string, unknown>): ModelDi
   return diff;
 }
 
-/** @emoji ✂️ Splits `edgeId` at parameter `s` (0..1 along its segment), rewiring the containing wire if any. New sub-edges default to straight lines (honest chord approximation for non-line curves). */
+/** ✂️ Splits `edgeId` at parameter `s` (0..1 along its segment), rewiring the containing wire if any. New sub-edges default to straight lines (honest chord approximation for non-line curves). */
 function splitEdgeAt(model: Model, edgeId: EdgeRef, seg: EdgeSegment, s: number): ModelDiff {
   const g = geom(model);
   const edge = g.edges[edgeId];
@@ -823,7 +826,7 @@ function splitEdgeAt(model: Model, edgeId: EdgeRef, seg: EdgeSegment, s: number)
   return diff;
 }
 
-/** @emoji ✂️ `edit.split`: cuts the split-object edge closest to the cutting reference into two edges at their closest-approach point. */
+/** ✂️ `edit.split`: cuts the split-object edge closest to the cutting reference into two edges at their closest-approach point. */
 function editSplitDiff(model: Model, params: Record<string, unknown>): ModelDiff {
   const targetIds = edgeIdsFromPicks(model, picksFromValue(params.splitObjects));
   const cutterIds = edgeIdsFromPicks(model, picksFromValue(params.cutters));
@@ -850,7 +853,7 @@ function editSplitDiff(model: Model, params: Record<string, unknown>): ModelDiff
   return splitEdgeAt(model, bestId, bestSeg, bestS);
 }
 
-/** @emoji ✂️ `edit.trim`: trims the object edge closest to the cutting reference, discarding the shorter side of the closest-approach split point. */
+/** ✂️ `edit.trim`: trims the object edge closest to the cutting reference, discarding the shorter side of the closest-approach split point. */
 function editTrimDiff(model: Model, params: Record<string, unknown>): ModelDiff {
   const g = geom(model);
   const cutterIds = edgeIdsFromPicks(model, picksFromValue(params.cutters));
@@ -904,7 +907,7 @@ function otherVertexOf(vertexIds: readonly VertexRef[], id: VertexRef): VertexRe
   return (vertexIds[0] === id ? vertexIds[1] : vertexIds[0])! as VertexRef;
 }
 
-/** @emoji 📐️ Replaces the span between `startId` and `endId` in `wire.edgeIds` (inclusive ends, kept) with `replacement`, in whichever array order they appear. Returns `null` if either id is absent. */
+/** 📐️ Replaces the span between `startId` and `endId` in `wire.edgeIds` (inclusive ends, kept) with `replacement`, in whichever array order they appear. Returns `null` if either id is absent. */
 function spliceWireSpan(wire: WireRecord, startId: EdgeRef, endId: EdgeRef, replacement: EdgeRef): readonly EdgeRef[] | null {
   const ids = wire.edgeIds;
   const i0 = ids.indexOf(startId);
@@ -914,7 +917,7 @@ function spliceWireSpan(wire: WireRecord, startId: EdgeRef, endId: EdgeRef, repl
   return [...ids.slice(0, i1 + 1), replacement, ...ids.slice(i0)];
 }
 
-/** @emoji 📐️ Shared builder for `edit.chamfer` (straight connector) and `edit.fillet` (tangent-arc connector): bridges two curves at their shared vertex, their single connecting edge, or (failing that) their nearest endpoints — extending both lines to a virtual corner when no direct link exists. */
+/** 📐️ Shared builder for `edit.chamfer` (straight connector) and `edit.fillet` (tangent-arc connector): bridges two curves at their shared vertex, their single connecting edge, or (failing that) their nearest endpoints — extending both lines to a virtual corner when no direct link exists. */
 function cornerConnectorDiff(model: Model, edgeAId: EdgeRef, edgeBId: EdgeRef, style: "chamfer" | "fillet"): ModelDiff {
   const g = geom(model);
   const edgeA = g.edges[edgeAId];
@@ -1048,12 +1051,12 @@ function extrusionDistanceFromParams(params: Record<string, unknown>): number {
   return Math.abs(vec3Dot(vec3Sub(end, origin), dir));
 }
 
-/** @emoji ✅️ True when `cell` references at least one face through its shell graph. */
+/** ✅️ True when `cell` references at least one face through its shell graph. */
 function solidRecordHasShellTopology(model: Model, cell: SolidRecord): boolean {
   return modelFaceIdsForSolid(model, cell).length > 0;
 }
 
-/** @emoji 🧊️ Builds one brep face from the model face's outer wire (live vertex positions). */
+/** 🧊️ Builds one brep face from the model face's outer wire (live vertex positions). */
 function brepFaceFromModelFaceRecord(model: Model, faceRec: FaceRecord): Face | null {
   const wireId = faceRec.wireIds[0];
   if (!wireId) return null;
@@ -1061,7 +1064,7 @@ function brepFaceFromModelFaceRecord(model: Model, faceRec: FaceRecord): Face | 
   return oriented;
 }
 
-/** @emoji 🧊️ Builds a brepjs `ValidSolid` by sewing closed shell faces from model topology. */
+/** 🧊️ Builds a brepjs `ValidSolid` by sewing closed shell faces from model topology. */
 function solidFromModelTopology(model: Model, cell: SolidRecord): ValidSolid | null {
   const faceIds = modelFaceIdsForSolid(model, cell);
   if (faceIds.length === 0) return null;
@@ -1084,7 +1087,7 @@ function solidFromModelTopology(model: Model, cell: SolidRecord): ValidSolid | n
   return null;
 }
 
-/** @emoji 🧊️ Brep for records with shell topology or analytic `SolidPrimitive` when no shell graph exists. */
+/** 🧊️ Brep for records with shell topology or analytic `SolidPrimitive` when no shell graph exists. */
 function deriveValidSolidFromRecordOrPrimitive(model: Model, cell: SolidRecord, primitiveFrom: (p: SolidPrimitive) => ValidSolid): ValidSolid | null {
   if (String(cell.id).startsWith("from_geometry-")) return null;
   if (solidRecordHasShellTopology(model, cell)) {
@@ -1149,14 +1152,14 @@ function orderWireEdgeIds(edges: readonly Edge[], edgeIdByHash: ReadonlyMap<numb
 }
 
 
-/** @emoji 🗺️ `spatial.modelspace/v1` JSON with one object's primitives inlined as raw `materializeInlineObjectPrimitives` rows (pre-normalization). */
+/** 🗺️ `spatial.modelspace/v1` JSON with one object's primitives inlined as raw `materializeInlineObjectPrimitives` rows (pre-normalization). */
 export interface InlineModelSpaceFixtureJson {
   readonly schema: "spatial.modelspace";
   readonly revision: number;
   readonly models: readonly { readonly id: string; readonly model: { readonly schema: "spatial.model"; readonly revision: number; readonly objects: readonly { readonly id: string; readonly typology: string; readonly primitives: readonly unknown[] }[] } }[];
 }
 
-/** @emoji 🧾️ Serializes one object and its solid closure as inline `spatial.modelspace/v1` fixture JSON. */
+/** 🧾️ Serializes one object and its solid closure as inline `spatial.modelspace/v1` fixture JSON. */
 export function inlineModelSpaceFixtureJson(model: Model, modelId: string, objectId: string): InlineModelSpaceFixtureJson {
   const object = model.objects[objectId];
   if (!object) throw new Error(`missing object ${objectId}`);
@@ -1217,7 +1220,7 @@ export function inlineModelSpaceFixtureJson(model: Model, modelId: string, objec
 // #endregion 🪜️StepBrepImport
 
 // #region 🔌️BrepjsWasmEngine
-/** @emoji 🔌️ WASM-side engine: exact solids keyed by `SolidRef` (runs in worker or local fallback). */
+/** 🔌️ WASM-side engine: exact solids keyed by `SolidRef` (runs in worker or local fallback). */
 class BrepjsWasmEngine {
   readonly operations: readonly string[] = ["solid.createBox", "wire.extrudeToSolid", "face.offset", "entity.tessellate", "measure.distance", "measure.area", "measure.volume"];
 
@@ -1226,7 +1229,7 @@ class BrepjsWasmEngine {
   private readonly solids = new Map<SolidRef, ValidSolid>();
   private solidsModelKey: string | null = null;
 
-  /** @emoji 🧪️ Clears solids cache (vitest shared kernel). */
+  /** 🧪️ Clears solids cache (vitest shared kernel). */
   resetDerivedPipeline(): void {
     this.solids.clear();
     this.meshCache.clear();
@@ -1310,7 +1313,7 @@ class BrepjsWasmEngine {
     return transfer;
   }
 
-  /** @emoji 🧊️ Brep for one shape source solid (topology or primitive; no fused-hull metadata). */
+  /** 🧊️ Brep for one shape source solid (topology or primitive; no fused-hull metadata). */
   private brepForShapeSourceSolid(model: Model, solidId: SolidRef): ValidSolid | null {
     const rec = geom(model).solids[solidId];
     if (!rec) return null;
@@ -1319,7 +1322,7 @@ class BrepjsWasmEngine {
     return deriveValidSolidFromRecordOrPrimitive(model, rec, (p) => this.solidFromSolidPrimitive(p));
   }
 
-  /** @emoji 🧊️ Boolean-union brep for energy hull rows tagged with `fuseSourceSolidIds` metadata. */
+  /** 🧊️ Boolean-union brep for energy hull rows tagged with `fuseSourceSolidIds` metadata. */
   private fusedHullBrepFromMetadata(model: Model, hullId: SolidRef): ValidSolid | null {
     const meta = model.metadata.get(String(hullId));
     const raw = meta?.fuseSourceSolidIds;
@@ -1335,7 +1338,7 @@ class BrepjsWasmEngine {
     return isOk(fused) ? fused.value : null;
   }
 
-  /** @emoji 🧊️ Authoritative brep for a solid: fused hull metadata, shell topology, else analytic primitive. */
+  /** 🧊️ Authoritative brep for a solid: fused hull metadata, shell topology, else analytic primitive. */
   solidForSolidRecord(model: Model, solid: SolidRecord): ValidSolid | null {
     const cached = this.solids.get(solid.id);
     if (cached) return cached;
@@ -1347,7 +1350,7 @@ class BrepjsWasmEngine {
     return deriveValidSolidFromRecordOrPrimitive(model, solid, (p) => this.solidFromSolidPrimitive(p));
   }
 
-  /** @emoji 🧊️ Resolves solid refs to live `ValidSolid` breps for boolean operands (fused hull, shell topology, or primitive). */
+  /** 🧊️ Resolves solid refs to live `ValidSolid` breps for boolean operands (fused hull, shell topology, or primitive). */
   validSolidsFromRefs(model: Model, refs: readonly SolidRef[]): ValidSolid[] {
     const out: ValidSolid[] = [];
     for (const ref of refs) {
@@ -1381,7 +1384,7 @@ class BrepjsWasmEngine {
     this.solidsModelKey = modelKey;
   }
 
-  /** @emoji 🧊️ Builds brepjs `ValidSolid` from `SolidPrimitive` (sphere/cylinder/cone/box). */
+  /** 🧊️ Builds brepjs `ValidSolid` from `SolidPrimitive` (sphere/cylinder/cone/box). */
   solidFromSolidPrimitive(solid: SolidPrimitive): ValidSolid {
     if (solid.kind === "sphere") {
       return sphere(solid.radius, { at: [solid.center[0], solid.center[1], solid.center[2]] });
@@ -1864,7 +1867,7 @@ type BrepjsWorkerResponse =
   | { readonly type: "rpc-result"; readonly id: string; readonly result: unknown }
   | { readonly type: "rpc-error"; readonly id: string; readonly error: string };
 
-/** @emoji 📨️ Walks RPC payloads so nested `Model` / `ModelSpace` survive worker `postMessage`. */
+/** 📨️ Walks RPC payloads so nested `Model` / `ModelSpace` survive worker `postMessage`. */
 function serializeWorkerValue(value: unknown): unknown {
   if (value instanceof Model) return { __modelJson: value.toJSON() };
   if (value instanceof ModelSpace) return { __modelSpaceJson: value.toJSON() };
@@ -1880,7 +1883,7 @@ function serializeWorkerArg(arg: unknown): unknown {
   return serializeWorkerValue(arg);
 }
 
-/** @emoji 📨️ Restores `Model` / `ModelSpace` instances from worker RPC payloads. */
+/** 📨️ Restores `Model` / `ModelSpace` instances from worker RPC payloads. */
 function deserializeWorkerValue(value: unknown): unknown {
   if (value && typeof value === "object" && "__modelJson" in value) {
     return Model.fromJSON((value as { readonly __modelJson: ModelJson }).__modelJson);
@@ -1902,7 +1905,7 @@ function deserializeWorkerArg(arg: unknown): unknown {
 // #endregion 📨️WorkerProtocol
 
 // #region 🎬️BrepjsWorkerClient
-/** @emoji 🎬️ Routes brepjs RPC to a dedicated worker or local `BrepjsWasmEngine` (vitest / no Worker). */
+/** 🎬️ Routes brepjs RPC to a dedicated worker or local `BrepjsWasmEngine` (vitest / no Worker). */
 class BrepjsWorkerClient {
   private localEngine: BrepjsWasmEngine | null = null;
   private worker: Worker | null = null;
@@ -1991,7 +1994,7 @@ class BrepjsWorkerClient {
 // #endregion 🎬️BrepjsWorkerClient
 
 // #region 🔌️BrepjsKernel
-/** @emoji 🔌️ `SpatialKernel` facade: preview math on main thread, WASM in worker via `BrepjsWorkerClient`. */
+/** 🔌️ `SpatialKernel` facade: preview math on main thread, WASM in worker via `BrepjsWorkerClient`. */
 export class BrepjsKernel extends PreciseSpatialKernelMath implements SpatialKernel {
   readonly id: string = "brepjs-opencascade";
   private readonly wasm = new BrepjsWorkerClient();
@@ -2010,7 +2013,7 @@ export class BrepjsKernel extends PreciseSpatialKernelMath implements SpatialKer
     return this.wasm.rpc("tessellate", [solid, tolerance, model]);
   }
 
-  /** @emoji 🧪️ Clears worker solids cache between vitest cases. */
+  /** 🧪️ Clears worker solids cache between vitest cases. */
   async resetDerivedPipelineForTest(): Promise<void> {
     return this.wasm.rpc("resetDerivedPipeline", []);
   }
@@ -2071,39 +2074,39 @@ export class BrepjsKernel extends PreciseSpatialKernelMath implements SpatialKer
     await this.wasm.rpc("syncSolidsFromModel", [model]);
   }
 
-  /** @emoji 🪜️ Exports a linked `ModelSpace` to AP242 STEP. */
+  /** 🪜️ Exports a linked `ModelSpace` to AP242 STEP. */
   async exportModelSpaceToStep(space: ModelSpace, modelSpaceId = "default"): Promise<string> {
     return this.wasm.rpc("exportModelSpaceToStep", [space, modelSpaceId]);
   }
 
-  /** @emoji 🪜️ Exports one `Model` to AP242 STEP. */
+  /** 🪜️ Exports one `Model` to AP242 STEP. */
   async exportModelToStep(model: Model, modelId = "model"): Promise<string> {
     return this.wasm.rpc("exportModelToStep", [model, modelId]);
   }
 
-  /** @emoji 🪜️ Imports AP242 STEP into a `ModelSpace`. */
+  /** 🪜️ Imports AP242 STEP into a `ModelSpace`. */
   async importStepToModelSpace(stepText: string): Promise<ModelSpace> {
     return this.wasm.rpc("importStepToModelSpace", [stepText]);
   }
 
-  /** @emoji 🪜️ Imports raw AP242 BREP STEP (no spatial UDA) into a `ModelSpace`. */
+  /** 🪜️ Imports raw AP242 BREP STEP (no spatial UDA) into a `ModelSpace`. */
   async importStepBrepToModelSpace(stepText: string, options?: { readonly prefix?: string; readonly lengthScale?: number }): Promise<ModelSpace> {
     return this.wasm.rpc("importStepBrepToModelSpace", [stepText, options]);
   }
 
-  /** @emoji 🏗️ Imports AP242 BREP STEP with presentation layers into a building `ModelSpace`. */
+  /** 🏗️ Imports AP242 BREP STEP with presentation layers into a building `ModelSpace`. */
   async importStepBimToModelSpace(stepText: string, options?: { readonly prefix?: string; readonly lengthScale?: number; readonly modelDefinitionId?: string }): Promise<ModelSpace> {
     return this.wasm.rpc("importStepBimToModelSpace", [stepText, options]);
   }
 }
 
-/** @emoji 🪜️ Exports `space` via a fresh `BrepjsKernel` (convenience). */
+/** 🪜️ Exports `space` via a fresh `BrepjsKernel` (convenience). */
 export async function exportModelSpaceToStep(space: ModelSpace, modelSpaceId = "default"): Promise<string> {
   const kernel = new BrepjsKernel();
   return kernel.exportModelSpaceToStep(space, modelSpaceId);
 }
 
-/** @emoji 💾️ Exports `space` solids as merged OBJ via tessellation. */
+/** 💾️ Exports `space` solids as merged OBJ via tessellation. */
 export async function exportModelSpaceToObj(space: ModelSpace, deflection = 0.1): Promise<string> {
   const { meshTransferToObj, mergeMeshTransfers } = await import("@semio-tech/s-3d-js");
   const kernel = new BrepjsKernel();
@@ -2118,7 +2121,7 @@ export async function exportModelSpaceToObj(space: ModelSpace, deflection = 0.1)
   return meshTransferToObj(mergeMeshTransfers(meshes));
 }
 
-/** @emoji 💾️ Exports `space` solids as merged GLB via tessellation. */
+/** 💾️ Exports `space` solids as merged GLB via tessellation. */
 export async function exportModelSpaceToGlb(space: ModelSpace, deflection = 0.1): Promise<Uint8Array> {
   const { meshTransferToGlb, mergeMeshTransfers } = await import("@semio-tech/s-3d-js");
   const kernel = new BrepjsKernel();
@@ -2133,25 +2136,25 @@ export async function exportModelSpaceToGlb(space: ModelSpace, deflection = 0.1)
   return meshTransferToGlb(mergeMeshTransfers(meshes));
 }
 
-/** @emoji 🪜️ Exports `model` via a fresh `BrepjsKernel` (convenience). */
+/** 🪜️ Exports `model` via a fresh `BrepjsKernel` (convenience). */
 export async function exportModelToStep(model: Model, modelId = "model"): Promise<string> {
   const kernel = new BrepjsKernel();
   return kernel.exportModelToStep(model, modelId);
 }
 
-/** @emoji 🪜️ Imports STEP text via a fresh `BrepjsKernel` (convenience). */
+/** 🪜️ Imports STEP text via a fresh `BrepjsKernel` (convenience). */
 export async function importStepToModelSpace(stepText: string): Promise<ModelSpace> {
   const kernel = new BrepjsKernel();
   return kernel.importStepToModelSpace(stepText);
 }
 
-/** @emoji 🪜️ Imports raw BREP STEP text via a fresh `BrepjsKernel` (convenience). */
+/** 🪜️ Imports raw BREP STEP text via a fresh `BrepjsKernel` (convenience). */
 export async function importStepBrepToModelSpace(stepText: string, options?: { readonly prefix?: string; readonly lengthScale?: number }): Promise<ModelSpace> {
   const kernel = new BrepjsKernel();
   return kernel.importStepBrepToModelSpace(stepText, options);
 }
 
-/** @emoji 🏗️ Imports presentation-layer BIM STEP text via a fresh `BrepjsKernel` (convenience). */
+/** 🏗️ Imports presentation-layer BIM STEP text via a fresh `BrepjsKernel` (convenience). */
 export async function importStepBimToModelSpace(stepText: string, options?: { readonly prefix?: string; readonly lengthScale?: number; readonly modelDefinitionId?: string }): Promise<ModelSpace> {
   const kernel = new BrepjsKernel();
   return kernel.importStepBimToModelSpace(stepText, options);
@@ -2211,8 +2214,30 @@ if (isBrepjsDedicatedWorker()) {
 // #endregion 🌐️BrepjsWorkerEntry
 
 // #region 🧪️Tests
+/** 🎒️ The values this module hands its extracted suite `./🧪️tests/🧪️semio-tech-cad-js-brepjs/🟦️.ts`. */
+export type BrepjsTestDependencies = {
+  readonly BrepjsKernel: typeof BrepjsKernel;
+  readonly Model: typeof Model;
+  readonly ModelSpace: typeof ModelSpace;
+  readonly aabbDifferencePieces: typeof aabbDifferencePieces;
+  readonly aabbIntersect: typeof aabbIntersect;
+  readonly applyModelDiff: typeof applyModelDiff;
+  readonly boxModelDiff: typeof boxModelDiff;
+  readonly defaultModelDefinitionId: typeof defaultModelDefinitionId;
+  readonly deserializeWorkerValue: typeof deserializeWorkerValue;
+  readonly face: typeof face;
+  readonly faceCentroid: typeof faceCentroid;
+  readonly fuseSolidsToExternalFaces: typeof fuseSolidsToExternalFaces;
+  readonly geom: typeof geom;
+  readonly kernelGeometry: typeof kernelGeometry;
+  readonly mesh: typeof mesh;
+  readonly modelObjectAabb: typeof modelObjectAabb;
+  readonly serializeWorkerValue: typeof serializeWorkerValue;
+  readonly solidRef: typeof solidRef;
+};
+
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️semio-tech-cad-js-brepjs/🟦️.ts");
-  await registerTests1(import.meta.vitest, { BrepjsKernel, Model, ModelSpace, aabbDifferencePieces, aabbIntersect, applyModelDiff, boxModelDiff, defaultModelDefinitionId, deserializeWorkerValue, face, faceCentroid, fuseSolidsToExternalFaces, geom, kernelGeometry, mesh, modelObjectAabb, serializeWorkerValue, solidRef }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { BrepjsKernel, Model, ModelSpace, aabbDifferencePieces, aabbIntersect, applyModelDiff, boxModelDiff, defaultModelDefinitionId, deserializeWorkerValue, face, faceCentroid, fuseSolidsToExternalFaces, geom, kernelGeometry, mesh, modelObjectAabb, serializeWorkerValue, solidRef }, { url: import.meta.url });
 }
 // #endregion 🧪️Tests

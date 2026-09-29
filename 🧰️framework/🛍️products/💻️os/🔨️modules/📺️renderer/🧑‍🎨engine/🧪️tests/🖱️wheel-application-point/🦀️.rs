@@ -39,6 +39,5 @@ fn every_admitted_wheel_reaches_dispatch_at_its_original_point() {
         assert_eq!(actual, expected, "{}", case["name"]);
         assert!(queue.close_step() || queue.close_step());
         assert!(queue.terminal_is_empty());
-        println!("[DEBUG] wheel dispatch {} preserved {} original samples", case["name"], actual.len());
     }
 }

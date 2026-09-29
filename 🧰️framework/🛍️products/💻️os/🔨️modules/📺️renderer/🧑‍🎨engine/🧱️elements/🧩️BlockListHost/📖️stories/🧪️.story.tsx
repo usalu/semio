@@ -41,7 +41,7 @@ function storyPaletteLabel(palette: readonly StoryPaletteEntry[], kind: string):
   return palette.find((entry) => entry.blockKind === kind)?.label ?? kind;
 }
 
-/** @emoji 🧩️ Story-local mirror of the `addStep`/`removeStep`/`moveStep`/`addBlock`/`removeBlock`/`moveBlock` handling a real host app performs against `🧩️BlockListHost`'s dispatched actions (`dispatchBlockListAction`). */
+/** 🧩️ Story-local mirror of the `addStep`/`removeStep`/`moveStep`/`addBlock`/`removeBlock`/`moveBlock` handling a real host app performs against `🧩️BlockListHost`'s dispatched actions (`dispatchBlockListAction`). */
 function reduceStoryBlockListAction(state: StoryBlockListState, descriptor: ActionDescriptor): StoryBlockListState {
   const args = (descriptor.args ?? {}) as Record<string, unknown>;
   switch (descriptor.action) {
@@ -133,7 +133,7 @@ function BlockListStoryHost({ initialSteps }: { readonly initialSteps: readonly 
   );
 }
 
-/** @emoji 🕳️ `🧩️BlockListHost` with an absent `blockList` scene — exercises the `emptyLabel` fallback path with zero fixture setup. */
+/** 🕳️ `🧩️BlockListHost` with an absent `blockList` scene — exercises the `emptyLabel` fallback path with zero fixture setup. */
 function BlockListStoryEmptyHost(): ReactElement {
   const node: UiComponentSceneNode = { type: "componentScene", surfaceId: "block-list.story.empty", controllerId: STORY_BLOCK_LIST_CONTROLLER_ID, componentKind: "block-list" };
   return (

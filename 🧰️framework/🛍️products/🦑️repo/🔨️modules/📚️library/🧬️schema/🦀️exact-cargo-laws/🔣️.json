@@ -38,7 +38,7 @@
       ]
     },
     "capturedOutput": {
-      "const": "[DEBUG] retained native owner reached its terminal witness"
+      "const": "[TRACE] retained native owner reached its terminal witness"
     },
     "activeLease": {
       "type": "object",

@@ -5,7 +5,7 @@
 //! (`🏪️store/👷️worker/🟦️.ts`): the answer is bounded before it is decoded, its digests are verified, and it is
 //! admitted only as the checkpoint the hub authorized for this open.
 
-use super::super::schema::{decode_canonical_checkpoint_pair_v1, CanonicalCheckpointPairV1, DocumentOpenCheckpointV1, DocumentScope, CANONICAL_CHECKPOINT_PAIR_MAX_WIRE_BYTES, CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE_V1};
+use super::super::schema::{decode_canonical_checkpoint_pair_v1, CanonicalCheckpointPairV1, DocumentOpenCheckpointV1, DocumentScope, RebootstrapRequired, CANONICAL_CHECKPOINT_PAIR_MAX_WIRE_BYTES, CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE_V1};
 use super::{encode_url_component, execution_target_refusal, DirectoryClient, DirectoryClientError, DirectoryTransport};
 use semio_framework_async::OperationContext;
 
@@ -26,6 +26,21 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
     /// execution-target lease's `checkpoint`). A transient refusal is asked again up to
     /// [`CANONICAL_CHECKPOINT_PAIR_TRANSIENT_ATTEMPTS`] times while `ctx` is live; any other refusal is final.
     pub async fn document_canonical_checkpoint_pair(&self, ctx: &OperationContext, scope: &DocumentScope, expected: &DocumentOpenCheckpointV1) -> Result<CanonicalCheckpointPairV1, DirectoryClientError> {
+        let pair = self.fetch_canonical_checkpoint_pair(ctx, scope).await?;
+        pair.admit(scope, expected).map_err(|refusal| DirectoryClientError::Decode(refusal.code().into()))?;
+        Ok(pair)
+    }
+
+    /// 🛟️ Fetches and verifies the document's active pair for a hub `RebootstrapRequired`, admitted only as exactly the
+    /// checkpoint the control names — the one seed a rebuilding document restarts from, as on its first open.
+    pub async fn rebootstrap_canonical_checkpoint_pair(&self, ctx: &OperationContext, control: &RebootstrapRequired) -> Result<CanonicalCheckpointPairV1, DirectoryClientError> {
+        let pair = self.fetch_canonical_checkpoint_pair(ctx, &control.scope).await?;
+        pair.admit_rebootstrap(control).map_err(|refusal| DirectoryClientError::Decode(refusal.code().into()))?;
+        Ok(pair)
+    }
+
+    /// 🪢️ The route read shared by both admissions: bounded, transient refusals asked again, decoded and digest-verified.
+    async fn fetch_canonical_checkpoint_pair(&self, ctx: &OperationContext, scope: &DocumentScope) -> Result<CanonicalCheckpointPairV1, DirectoryClientError> {
         let url = self.url(&canonical_checkpoint_pair_path(scope));
         let mut attempt = 0;
         let response = loop {
@@ -50,8 +65,6 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
         if response.body.len() > CANONICAL_CHECKPOINT_PAIR_MAX_WIRE_BYTES {
             return Err(DirectoryClientError::Decode("canonical-checkpoint-pair.oversized".into()));
         }
-        let pair = decode_canonical_checkpoint_pair_v1(&response.body).map_err(|refusal| DirectoryClientError::Decode(refusal.code().into()))?;
-        pair.admit(scope, expected).map_err(|refusal| DirectoryClientError::Decode(refusal.code().into()))?;
-        Ok(pair)
+        decode_canonical_checkpoint_pair_v1(&response.body).map_err(|refusal| DirectoryClientError::Decode(refusal.code().into()))
     }
 }

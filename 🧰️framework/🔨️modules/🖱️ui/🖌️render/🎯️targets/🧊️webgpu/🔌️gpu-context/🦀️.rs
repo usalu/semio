@@ -1,4 +1,4 @@
-//! @emoji 🔌️ Instance → adapter → device → surface construction, and the pure
+//! 🔌️ Instance → adapter → device → surface construction, and the pure
 //! `wgpu` → `ui_render` capability/format translations `crate::backend::WebGpuBackend`/
 //! `capabilities` need. Ported from `🎯️targets/🧊️wgpu/🦀️gpu.rs`'s `GpuContext::from_window`, adapted
 //! to an owned surface selector registered by the browser-host shim.

@@ -87,5 +87,4 @@ export function testInputRootFixture(): void {
   assert.equal(validate({ ...fixture, storage: { ...fixture.storage, maximumCasAttempts: 2 } }), false);
   assert.equal(validate({ ...fixture, scope: "distributed-wire-identity" }), false);
   assert.equal(validate({ ...fixture, extra: true }), false);
-  console.log(`[DEBUG] input root oracle: ${fixture.cases.length} arithmetic vectors, 6 schema hostiles; native CAS, concurrency, queue ownership and allocation remain separate`);
 }

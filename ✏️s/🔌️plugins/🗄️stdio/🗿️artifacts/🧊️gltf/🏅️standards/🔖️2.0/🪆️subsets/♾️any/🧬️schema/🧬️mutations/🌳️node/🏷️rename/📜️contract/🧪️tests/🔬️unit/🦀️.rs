@@ -19,5 +19,4 @@ fn canonical_vectors_execute_direct_mutation_and_codec_laws() {
         assert!(mutation::apply(&invalid, &base).is_err());
         assert!(mutation::apply(&payload, &expected).is_err());
     }
-    println!("[DEBUG] change_node_name: {} canonical vectors verified through direct mutations, inverse restoration and the independent JSON oracle.", vectors.len());
 }

@@ -2011,6 +2011,11 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
             )
             .action_interactive_job("combineBoolean", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("editSelection", LocalizedLabel::native("Arrange Selection", "Auswahl anordnen"), ActionKind::Mutation)
+                .describe(LocalizedLabel::native(
+                    "Arranges the given layers, or the current selection when none are given, in one undoable step: groups or ungroups them, duplicates or deletes them, moves them one step or all the way to the front or back, aligns their edges or centres (two or more layers), or distributes them evenly (three or more). Every layer must be unlocked; grouping, duplicating, deleting and reordering need layers of one parent group.",
+                    "Ordnet die angegebenen Ebenen, oder die aktuelle Auswahl, wenn keine angegeben sind, in einem rückgängig machbaren Schritt an: gruppiert sie oder hebt ihre Gruppierung auf, dupliziert oder löscht sie, verschiebt sie eine Ebene oder ganz nach vorne oder hinten, richtet ihre Kanten oder Mitten aus (ab zwei Ebenen) oder verteilt sie gleichmäßig (ab drei Ebenen). Jede Ebene muss entsperrt sein; Gruppieren, Duplizieren, Löschen und Umordnen verlangen Ebenen derselben Gruppe.",
+                ))
+                .use_when(["group the selected shapes", "ungroup the selection", "duplicate the selection", "delete the selected layers", "bring the selection forward", "send the selection to the back", "align the selected layers", "distribute the selection evenly"])
                 .with_args(vec![semio_framework_plugin::ActionArgDef::select("operation", LocalizedLabel::native("Operation", "Aktion"), vec![
                     semio_framework_plugin::ActionArgOption::new("group", LocalizedLabel::native("Group", "Gruppieren")),
                     semio_framework_plugin::ActionArgOption::new("duplicate", LocalizedLabel::native("Duplicate", "Duplizieren")),
@@ -2031,9 +2036,19 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
                 ]).required(), semio_framework_plugin::ActionArgDef::text_list("ids", LocalizedLabel::native("Layers", "Ebenen"))]))
             .action_interactive_job("editSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("editPath", LocalizedLabel::native("Edit Path", "Pfad bearbeiten"), ActionKind::Mutation)
+                .describe(LocalizedLabel::native(
+                    "Edits one unlocked path layer's geometry in one undoable step, given as a JSON node edit: moves or deletes chosen anchors and control handles, sets one point's position or coordinate, splits, deletes or converts a segment between line and cubic curve, opens, closes or joins the path at a node, or reverses its direction.",
+                    "Bearbeitet die Geometrie einer entsperrten Pfadebene in einem rückgängig machbaren Schritt, angegeben als JSON-Knotenbearbeitung: verschiebt oder löscht gewählte Anker- und Steuerpunkte, setzt die Position oder eine Koordinate eines Punkts, teilt, löscht oder wandelt ein Segment zwischen Linie und kubischer Kurve um, öffnet, schließt oder verbindet den Pfad an einem Knoten oder kehrt seine Richtung um.",
+                ))
+                .use_when(["move a path node", "drag a bezier handle", "delete path points", "split a path segment", "convert a segment to a curve", "close the path", "reverse the path direction"])
                 .with_args([semio_framework_plugin::ActionArgDef::text("layerId", LocalizedLabel::native("Path", "Pfad")).required(), semio_framework_plugin::ActionArgDef::json_text("edit", LocalizedLabel::native("Node Edit", "Knotenbearbeitung")).required()]))
             .action_interactive_job("editPath", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("editFill", LocalizedLabel::native("Edit Fill", "Füllung bearbeiten"), ActionKind::Mutation)
+                .describe(LocalizedLabel::native(
+                    "Edits one unlocked layer's fill in one undoable step, given as a JSON fill edit: sets its type (none, solid, linear or radial gradient), a colour or its opacity, a gradient coordinate or stop offset, or adds or removes a gradient stop.",
+                    "Bearbeitet die Füllung einer entsperrten Ebene in einem rückgängig machbaren Schritt, angegeben als JSON-Füllungsbearbeitung: setzt ihren Typ (keine, einfarbig, linearer oder radialer Verlauf), eine Farbe oder deren Deckkraft, eine Verlaufskoordinate oder den Versatz eines Farbstopps, oder fügt einen Farbstopp hinzu oder entfernt ihn.",
+                ))
+                .use_when(["change the fill colour", "make the fill a gradient", "add a gradient stop", "set the fill opacity", "remove the fill"])
                 .with_args([semio_framework_plugin::ActionArgDef::text("layerId", LocalizedLabel::native("Layer", "Ebene")).required(), semio_framework_plugin::ActionArgDef::json_text("edit", LocalizedLabel::native("Fill Edit", "Füllungsbearbeitung")).required()]))
             .action_interactive_job("editFill", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation))

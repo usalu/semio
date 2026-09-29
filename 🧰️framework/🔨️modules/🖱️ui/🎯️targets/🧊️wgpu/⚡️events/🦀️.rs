@@ -14,7 +14,9 @@ use crate::wgpu::chrome::UiDriverDrag;
 use crate::wgpu::component::layout::ActionDescriptor;
 use crate::wgpu::component::ui::{SurfaceKind, UiNode, UiNumberStepperNode, UiSliderNode, UiState, UiTreeItemNode, UiTreeSectionNode};
 use crate::wgpu::geometry::Rect;
-use crate::wgpu::layout::{number_stepper_segments, ring_t_at, slider_control_presentation, slider_unit_label, slider_value_at, tree_drag_handle_rect, tree_drag_role, tree_section_header_band, tree_section_header_height, TreeRowMetrics};
+use crate::wgpu::layout::{
+    number_stepper_segments, ring_t_at, slider_control_presentation, slider_unit_label, slider_value_at, tree_drag_handle_rect, tree_drag_handle_reservation, tree_drag_role, tree_section_header_band, tree_section_header_height, TreeRowMetrics,
+};
 use crate::wgpu::select;
 use crate::wgpu::tree::{EditState, Node, NodeFlags, NodeKey, UiTree};
 use crate::wgpu::{intent_is_stale, UiIntentAddress, UiIntentCommand, UiIntentSequencer};
@@ -210,10 +212,15 @@ fn disclosure_header_band(tree: &UiTree, id: NodeId, rect: Rect, reversed: bool,
 /// caller in `dispatch`). ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W3a: a `Tree`
 /// row's per-item `hover_action`/`unhover_action` exception is deleted — hover on a tree row is now
 /// dispatched through the row's `UiTreeNode.interaction_domain` binding (`interactionHover`),
-/// never an ad hoc per-item action.
+/// never an ad hoc per-item action. A tree or table row carrying Row-placed actions is a target too:
+/// its action slots resolve in `EventRouter::pointer_row_action`.
 fn is_plain_stack_container(tree: &UiTree, id: NodeId, node: &Node) -> bool {
     let UiNode::Stack(stack) = &node.spec.0 else { return false };
-    stack.activate.is_none() && stack.drop_action.is_none() && !node.flags.contains(NodeFlags::DRAG_SOURCE) && !tree.disclosure_is_interactive(id)
+    stack.activate.is_none()
+        && stack.drop_action.is_none()
+        && !node.flags.contains(NodeFlags::DRAG_SOURCE)
+        && !tree.disclosure_is_interactive(id)
+        && !tree.authored_tree_item(id).and_then(|item| item.actions.as_deref()).is_some_and(|actions| actions.iter().any(|action| action.placement() == crate::wgpu::UiTreeActionPlacement::Row))
 }
 
 //#region 🔖️TreeItemLookup
@@ -1470,6 +1477,32 @@ impl EventRouter {
             out.push(command);
         }
     }
+
+    /// 🎬️ A row action's intent: the row's own address with the ACTION's versioned id from its `RowAction` binding
+    /// (`mounted_layout::document_row_action`) — `build_intent` would answer the row's own `Trigger::Activate` binding, its
+    /// primary activation, for the same trigger.
+    fn row_action_command(&mut self, tree: &UiTree, row: NodeId, index: usize) -> Option<UiCommand> {
+        let binding = &crate::wgpu::mounted_layout::document_row_action(tree, row, index)?.action;
+        let args = tree.authored_tree_item(row)?.actions.as_deref()?.get(index)?.action.args.clone();
+        let current_revision = tree.document().map_or(0, |document| document.revision().0);
+        let address = match tree.node(row)?.intent.as_ref() {
+            Some(bindings) if intent_is_stale(bindings.address.revision, current_revision) => return None,
+            Some(bindings) => bindings.address.clone(),
+            None => UiIntentAddress::default(),
+        };
+        let seq = self.intents.next(&address.surface);
+        Some(UiCommand::App { window_id: self.window_id.clone(), intent: UiIntentCommand { address, trigger: binding.trigger, action: binding.action.clone(), args, input: None, seq } })
+    }
+
+    /// 🎬️ The index of the Row-placed action whose trailing slot (`layout::tree_row_action_at`, the slots `paint` draws) holds the
+    /// pointer on a tree or table row — a click there fires that action, never the row's activation or disclosure.
+    fn pointer_row_action(&self, tree: &UiTree, id: NodeId, x: f32, y: f32) -> Option<usize> {
+        let item = tree.authored_tree_item(id)?;
+        let metrics = crate::wgpu::mounted_layout::retained_tree_row_metrics(tree, id, &self.tree_drag_metrics);
+        let band = tree_section_header_band(tree.absolute_rect(id)?, metrics.row_height, self.flow.block.is_reversed());
+        let trailing = if self.tree_drag_driver == UiDriverDrag::Handle && tree_drag_role(item).is_some() { tree_drag_handle_reservation(&metrics) } else { 0.0 };
+        crate::wgpu::layout::tree_row_action_at(item, band.w, band.h, trailing, &metrics, x - band.x, y - band.y)
+    }
     //#endregion 🎬️IntentApi
 
     fn resolve_target(&self, tree: &UiTree, root: NodeId, x: f32, y: f32) -> Option<NodeId> {
@@ -2416,6 +2449,16 @@ impl EventRouter {
         commands
     }
 
+    /// ♿️ The accessibility mirror's activation of a row's `index`-th action (`accessibility::row_accessibility_action`), fired
+    /// exactly as a pointer on its trailing icon fires it.
+    pub(crate) fn dispatch_accessibility_row_action(&mut self, tree: &mut UiTree, target: NodeId, index: usize, event: &AccessibilityUiEvent) -> Vec<UiCommand> {
+        let enabled = tree.node(target).is_some_and(|node| node.spec.0.presence().state != UiState::Disabled);
+        if !enabled || !matches!(event, AccessibilityUiEvent::Activate) {
+            return Vec::new();
+        }
+        self.row_action_command(tree, target, index).into_iter().collect()
+    }
+
     pub(crate) fn dispatch_accessibility_slider_editor(&mut self, tree: &mut UiTree, target: NodeId, event: &AccessibilityUiEvent) -> Vec<UiCommand> {
         let mut commands = Vec::new();
         if !tree.node(target).is_some_and(|node| matches!(node.spec.0, UiNode::Slider(_)) && node.state.edit.is_some() && node.spec.0.presence().state != UiState::Disabled) {
@@ -2601,9 +2644,12 @@ impl EventRouter {
                                 // a `Stack` with `activate` set fires that action (see
                                 // `paint::paint_stack_frame`'s matching visual for the same field).
                                 let is_select = tree.node(active_id).is_some_and(|node| matches!(node.spec.0, UiNode::Select(_)));
-                                let disclosed = self.pointer_toggle_disclosure(tree, active_id, *x, *y);
+                                let row_action = self.pointer_row_action(tree, active_id, *x, *y);
+                                let disclosed = row_action.is_none() && self.pointer_toggle_disclosure(tree, active_id, *x, *y);
                                 let row_also_activates = disclosed && tree.authored_tree_item(active_id).is_some() && tree.node(active_id).is_some_and(|node| matches!(&node.spec.0, UiNode::Stack(stack) if stack.activate.is_some()));
                                 if slider_readout {
+                                } else if let Some(index) = row_action {
+                                    commands.extend(self.row_action_command(tree, active_id, index));
                                 } else if disclosed && !row_also_activates {
                                 } else if is_select && select_scroll_release {
                                     let _ = select::arm_retained_select_scroll_at(tree, active_id, *x, *y);

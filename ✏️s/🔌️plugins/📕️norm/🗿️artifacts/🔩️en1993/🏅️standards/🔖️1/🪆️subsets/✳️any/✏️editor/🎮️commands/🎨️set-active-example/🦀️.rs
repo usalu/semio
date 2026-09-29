@@ -2,7 +2,7 @@
 
 use super::set_snapshot;
 use crate::{En1993Mutation, En1993Snapshot};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
+use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Payload
@@ -14,13 +14,10 @@ pub struct SetActiveExample {
 //#endregion 🔖️Payload
 
 //#region 🔖️Handler
-/// 🎨️ Replaces the live document with the named example snapshot constructors.
+/// 🎨️ Replaces the live document with the named roster example, or clears it when the id is empty.
 pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, En1993Snapshot>, cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<En1993Mutation, NoConfigMutation>, Fault> {
-    let snapshot = match payload.example_id.trim() {
-        "" => En1993Snapshot::default(),
-        id if id == crate::heb240_compliant::ID => En1993Snapshot::compliant_heb240_frame(),
-        id if id == crate::high_strength_connection::ID => En1993Snapshot::noncompliant_overloaded_frame(),
-        _ => return Ok(Emit::default()),
+    let Some(snapshot) = crate::app_surface::roster_example_snapshot(<crate::editor::en1993::En1993PlayApp as ArtifactEditor>::examples(), &payload.example_id)? else {
+        return Ok(Emit::default());
     };
     set_snapshot::handle(&set_snapshot::ReplaceSnapshot { snapshot }, doc, cfg)
 }

@@ -340,7 +340,7 @@ export function SpacesPage(): React.ReactElement {
       {expandedId && detail ? (
         <MembersPanel spaceId={expandedId} detail={detail} loadingMore={loadingMembers} onLoadMore={(cursor) => loadDetail(expandedId, cursor, true)} onChanged={refreshExpanded} />
       ) : null}
-      <CreateSpaceDialog open={createOpen} onOpenChange={setCreateOpen} onCreate={(name, kind, visibility) => client.createSpace(name, kind, visibility).then(loadSpaces)} />
+      <CreateSpaceDialog open={createOpen} onOpenChange={setCreateOpen} onCreate={(name, kind, visibility) => client.createSpace(name, kind, visibility).then(() => loadSpaces())} />
     </div>
   );
 }

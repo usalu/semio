@@ -1,4 +1,4 @@
-//! @emoji 📊️ `dsl_family_sheet` — the calc-sheet family notation kit, shared by fem2d/3d and the
+//! 📊️ `dsl_family_sheet` — the calc-sheet family notation kit, shared by fem2d/3d and the
 //! 15 norm-family apps (`en1990`-`en1999`, `din4108`, `din16798`, `din18599`, `iso16757`,
 //! `vdi3805`). `crate::os_dsl::schema::Shape::Expr`/`ExprValue` deliberately "parses/prints the formula, never
 //! evaluates it" (its own doc comment says so, naming this exact role: "resolved by the consuming
@@ -17,7 +17,7 @@ use crate::os_dsl::{lex, Limits, TextError, TextSpan, TokenKind};
 use std::collections::HashMap;
 
 //#region 🔖️Evaluate
-/// @emoji 🚫️ Why an expression failed to evaluate — never a panic, always a diagnosable value.
+/// 🚫️ Why an expression failed to evaluate — never a panic, always a diagnosable value.
 #[derive(Clone, Debug, PartialEq)]
 pub enum EvalError {
     UnknownVariable(String),
@@ -35,7 +35,7 @@ impl std::fmt::Display for EvalError {
     }
 }
 
-/// @emoji 🧮️ Evaluates an `ExprValue` against a variable environment. Supports the small,
+/// 🧮️ Evaluates an `ExprValue` against a variable environment. Supports the small,
 /// deliberately-closed function set a calc sheet actually needs (`min`, `max`, `abs`, `sqrt`) —
 /// not a general call-out mechanism; an unrecognized name/arity is a diagnosed `EvalError`, never
 /// a silent 0 or a panic.
@@ -77,7 +77,7 @@ pub fn evaluate(expr: &ExprValue, env: &HashMap<String, f64>) -> Result<f64, Eva
 //#endregion 🔖️Evaluate
 
 //#region 🔖️Trace
-/// @emoji 📈️ One self-verifying calc-sheet line: `name = expr -> value`. `value` is whatever was
+/// 📈️ One self-verifying calc-sheet line: `name = expr -> value`. `value` is whatever was
 /// last printed — `canonicalize_trace` is what re-derives it from `expr`/`env` and keeps it honest;
 /// parsing alone doesn't check it (a stale/hand-edited trace parses fine as data — it's
 /// `canonicalize_trace`'s job to catch drift, exactly like every other canonicalizer in this
@@ -93,7 +93,7 @@ async fn find_arrow_after(tokens: &[crate::os_dsl::SpannedToken], after: usize) 
     tokens.iter().position(|t| t.kind == TokenKind::Arrow).filter(|&i| i > after)
 }
 
-/// @emoji 🔌️ Parses one standalone trace line: `name = expr -> value`.
+/// 🔌️ Parses one standalone trace line: `name = expr -> value`.
 pub async fn parse_trace_text(text: &str) -> Result<Trace, TextError> {
     let limits = Limits::default();
     let tokens: Vec<_> = lex(text, &limits, false)?.into_iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).collect();
@@ -119,13 +119,13 @@ pub async fn parse_trace_text(text: &str) -> Result<Trace, TextError> {
     Ok(Trace { name, expr, value })
 }
 
-/// @emoji 🖨️ Canonical printer — prints `value` exactly as stored (does NOT recompute; that's
+/// 🖨️ Canonical printer — prints `value` exactly as stored (does NOT recompute; that's
 /// `canonicalize_trace`'s job, matching this engine's `parse`/`print`/`canonicalize` split).
 pub async fn print_trace(trace: &Trace) -> String {
     format!("{} = {} -> {}", trace.name, print_expr(&trace.expr), crate::os_dsl::format_f64(trace.value))
 }
 
-/// @emoji ♻️ The self-verifying step: parses `text`, RE-EVALUATES its expression against `env`
+/// ♻️ The self-verifying step: parses `text`, RE-EVALUATES its expression against `env`
 /// (ignoring whatever value was written), and reprints with the freshly computed value. A hand-
 /// edited or stale trace canonicalizes to the correct one; an unparseable expression or an
 /// evaluation error (unknown variable, etc.) surfaces as `Err`, never silently keeps the old value.

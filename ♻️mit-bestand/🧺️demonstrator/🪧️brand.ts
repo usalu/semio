@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🏷️ Entwerfen mit Bestand demonstrator brands — shared landing introduction plus per-app shell brands. */
+/** 🏷️ Entwerfen mit Bestand demonstrator brands — shared landing introduction plus per-app shell brands. */
 // #endregion 🧲️Header
 
 import { DEMONSTRATOR_HOST, DEMONSTRATOR_ASSETS_DIR, demonstratorPaneRuntimeVariant } from "./🔨️modules/🧩️runtime/🟦️.ts";
@@ -17,12 +17,12 @@ import {
 import type { IconName } from "@semio-tech/ui-react";
 
 //#region 🏷️DemonstratorShared
-/** @emoji 🇩🇪️ The whole demonstrator is German-locked (every brand's `locks.locale` below) — the
+/** 🇩🇪️ The whole demonstrator is German-locked (every brand's `locks.locale` below) — the
  * single source the landing page's boot-time `initUiLocaleSync` call reads, so it can never drift
  * from the per-app brands. */
 export const DEMONSTRATOR_LOCALE: ShellLocale = "de";
 
-/** @emoji 🏷️ Shell brand ids that receive Entwerfen-mit-Bestand partner chrome in the react renderer. */
+/** 🏷️ Shell brand ids that receive Entwerfen-mit-Bestand partner chrome in the react renderer. */
 export const ENTWERFEN_MIT_BESTAND_BRAND_IDS = [
   "entwerfen-mit-bestand-aggregator",
   "entwerfen-mit-bestand-aussuchen",
@@ -36,17 +36,17 @@ export const ENTWERFEN_MIT_BESTAND_BRAND_IDS = [
 
 export type EntwerfenMitBestandBrandId = (typeof ENTWERFEN_MIT_BESTAND_BRAND_IDS)[number];
 
-/** @emoji 🏷️ Whether a shell brand id is one of the demonstrator's Entwerfen-mit-Bestand panes. */
+/** 🏷️ Whether a shell brand id is one of the demonstrator's Entwerfen-mit-Bestand panes. */
 export function isEntwerfenMitBestandBrandId(id: string | undefined): id is EntwerfenMitBestandBrandId {
   return id !== undefined && (ENTWERFEN_MIT_BESTAND_BRAND_IDS as readonly string[]).includes(id);
 }
 
-/** @emoji ✒️ Semio emblem shared across demonstrator brands and the landing page. */
+/** ✒️ Semio emblem shared across demonstrator brands and the landing page. */
 export const ENTWERFEN_MIT_BESTAND_LOGO_SVG = `<svg viewBox="0 0 350 350" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Entwerfen mit Bestand"><path d="M270.589 28.413a175 175 0 0151.24 241.804A175 175 0 0180.155 322.07 175 175 0 0127.691 80.528a175 175 0 01241.408-53.076" fill="#001117"/><path d="M76.25 271.933l35-35.808V118.75h-35z" fill="#fa9500" stroke="#f7f3e3" stroke-width="2.5" stroke-miterlimit="5"/><g fill="#ff344f" stroke="#f7f3e3" stroke-width="2.5" stroke-miterlimit="5"><path d="M76.25 113.75h155.563l37.66-37.5H76.25zM236.263 273.75l-.013-155.606 37.5-37.62V273.75z"/></g><g fill="#34d1bf" stroke="#f7f3e3" stroke-width="2.5" stroke-miterlimit="5"><path d="M160.467 273.75h70.783v-37.5h-34.169zM160.468 193.75h70.782v-37.5h-34.169z"/></g></svg>`;
 
 const demonstratorLogoUrl = (file: string) => `/${DEMONSTRATOR_ASSETS_DIR}/🪧️logos/${file}`;
 
-/** @emoji 🎓️ General demonstrator introduction shown on the landing page only (not inside app shells). */
+/** 🎓️ General demonstrator introduction shown on the landing page only (not inside app shells). */
 export const ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION: IntroductionDefinition = {
   title: "Willkommen bei Entwerfen mit Bestand",
   steps: [
@@ -113,7 +113,7 @@ function heroCameraKeyframe(at: number, position: readonly [number, number, numb
   };
 }
 
-/** @emoji 🎬️ The Aggregator's first recorded-tutorial demo — a ~4-minute, 12-chapter walkthrough mirroring
+/** 🎬️ The Aggregator's first recorded-tutorial demo — a ~4-minute, 12-chapter walkthrough mirroring
  * `ENTWERFEN_MIT_BESTAND_BRAND.introduction`'s tour verbatim (same German narration, same element ids,
  * same demonstrated gestures) but as a TIMED, VOICED, SEEKABLE recording rather than a step-gated
  * walkthrough: the user presses Play once and the whole app follows along, camera included, instead of
@@ -862,7 +862,7 @@ export const ENTWERFEN_MIT_BESTAND_STATIK_BRAND: ShellBrand = {
 //#endregion 🏷️EntwerfenMitBestandStatikBrand
 
 //#region 🎪️DemonstratorPanes
-/** @emoji ⏱️ Browser timing surface used by the demonstrator's paced pane-boot queue. */
+/** ⏱️ Browser timing surface used by the demonstrator's paced pane-boot queue. */
 export type DemonstratorIdleScheduler = {
   readonly setTimeout: (callback: () => void, delayMs: number) => number;
   readonly clearTimeout: (handle: number) => void;
@@ -870,7 +870,7 @@ export type DemonstratorIdleScheduler = {
   readonly cancelIdleCallback?: (handle: number) => void;
 };
 
-/** @emoji 🐢️ Enforces a minimum delay before yielding the next warm boot to the browser's idle queue. */
+/** 🐢️ Enforces a minimum delay before yielding the next warm boot to the browser's idle queue. */
 export function scheduleDemonstratorIdle(callback: () => void, delayMs: number, scheduler: DemonstratorIdleScheduler): () => void {
   let idleHandle: number | null = null;
   const timeoutHandle = scheduler.setTimeout(() => {
@@ -883,7 +883,7 @@ export function scheduleDemonstratorIdle(callback: () => void, delayMs: number, 
   };
 }
 
-/** @emoji 🎪️ One live pane in the demonstrator's 4×2 grid — order here IS grid order (row-major: index
+/** 🎪️ One live pane in the demonstrator's 4×2 grid — order here IS grid order (row-major: index
  * 0-3 top row, 4-7 bottom row). */
 export type DemonstratorPaneSpec = {
   readonly id: string;
@@ -891,17 +891,17 @@ export type DemonstratorPaneSpec = {
   readonly brand: ShellBrand;
   readonly label: string;
   readonly tagline: string;
-  /** @emoji 📖 Overview copy — blank-line separated paragraphs (same convention as introduction steps). */
+  /** 📖 Overview copy — blank-line separated paragraphs (same convention as introduction steps). */
   readonly description: string;
   readonly icon: IconName;
 };
 
-/** @emoji 📖 Splits pane overview copy into introduction-style body paragraphs. */
+/** 📖 Splits pane overview copy into introduction-style body paragraphs. */
 export function demonstratorPaneDescriptionParagraphs(description: string): readonly string[] {
   return description.split(/\n\n+/).map((paragraph) => paragraph.trim()).filter((paragraph) => paragraph.length > 0);
 }
 
-/** @emoji 🧭️ Separates the module-owning runtime variant from the branded pane's manifest row.
+/** 🧭️ Separates the module-owning runtime variant from the branded pane's manifest row.
  * Generator executes the standalone procedural module, but its branded `generator` row carries the
  * canonical app id that the module manifest actually declares. */
 export function demonstratorPaneBootVariants(variant: string): { readonly runtime: string; readonly manifest: string } {

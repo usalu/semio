@@ -53,6 +53,12 @@ semio-framework-async = { workspace = true }
 semio-framework-async-macros = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 
 # 🌳️ The built-node pool saturation law, alone in its process (the pool is process-global).
+# 🧩️ The host contributions law, alone in its process (the flow extension registry is process-global and a host
+# push replaces its whole contributed table).
+[[test]]
+name = "set-contributions-registry"
+path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set-contributions/🧪️tests/🧩️registry/🦀️.rs"
+
 [[test]]
 name = "tree-projection-arena"
 path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🌳️tree-projection-arena/🦀️.rs"

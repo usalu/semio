@@ -10,7 +10,7 @@ import { APP_CHANNEL_VERSION, encodePackValue } from "../../../../../🟦️.ts"
 import { emitOwnerDescriptorPairV1, remainingDescriptorEmissionBudgetMs } from "../../../🖨️describe/🛂️descriptor-emission/🟦️.ts";
 import { CATALOG_ARTIFACT_MAX_BYTES, CATALOG_COMMIT_MARKER_FILENAME, CATALOG_DEPENDENCY_MAX, CATALOG_NODE_MAX, auditNavbarExampleArtifactPayload, auditNavbarExamplePickerCoverage, auditPluginCatalogSources, createFreshCatalogCommitMarker, createFreshCatalogBuildVerifier, executeCatalogVerificationPlan, orderCatalogNodes, rejectPlaceholderCatalogIdentity, sha256CatalogArtifact, validateCatalogDescriptorPair, verifyDescriptorPairBytesV1, type CatalogVerificationNode } from "../../✅️catalog-verification/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { auditInteractiveJobClassificationDrift } from "../../🛂️descriptor-verification/🟦️.ts";
+import { auditInteractiveJobClassificationDrift, describedComponentFindings, describedComponentPath, publicationWasmPath } from "../../🛂️descriptor-verification/🟦️.ts";
 import { parseComponentPackageId, type PluginRegistryEntry } from "../../🔎️discovery/🟦️.ts";
 import { resolvePlaygroundBoot } from "@semio-tech/framework";
 import { PLUGIN_CATALOG } from "../../🟦️.ts";
@@ -563,5 +563,28 @@ describe("strict plugin catalog completion", () => {
         .map((pluginId) => `${target.pluginId} → ${pluginId} → ${target.pluginId}`),
     );
     expect(backEdges, backEdges.join("\n")).toEqual([]);
+  });
+});
+
+describe("descriptor gate component identity", () => {
+  it("checks hashes.wasmSha256 against the described component-dev deliverable and never against a canonical release artifact", () => {
+    const root = mkdtempSync(join(tmpdir(), "semio-described-component-"));
+    try {
+      const entry = { pluginId: "fixture", cratePath: "plugins/fixture/rust", wasmOut: "semio_s_plugin_fixture.wasm" };
+      const described = describedComponentPath(root, entry);
+      expect(described).toBe(join(root, "plugins/fixture/rust/dist/component-dev/semio_s_plugin_fixture.wasm"));
+      const bytes = new TextEncoder().encode("described component bytes");
+      const named = createHash("sha256").update(bytes).digest("hex");
+      expect(describedComponentFindings(root, entry, named)).toEqual({ warnings: [expect.stringContaining("no component-dev deliverable")], errors: [] });
+      mkdirSync(join(root, "plugins/fixture/rust/dist/component-dev"), { recursive: true });
+      writeFileSync(described, bytes);
+      expect(describedComponentFindings(root, entry, named)).toEqual({ warnings: [], errors: [] });
+      expect(publicationWasmPath(root, entry.wasmOut)).not.toBe(described);
+      const stale = describedComponentFindings(root, entry, "0".repeat(64));
+      expect(stale.warnings).toEqual([]);
+      expect(stale.errors).toEqual([expect.stringContaining(`actually hashes to ${named}`)]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 });

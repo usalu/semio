@@ -6,7 +6,7 @@ usage: python3 c12-splice-patch.py [--apply]   (default: dry run; exit 1 when an
 import os
 import sys
 
-REPO = "/Users/ueli/Documents/semio"
+REPO = os.environ.get("C12_REPO", "/Users/ueli/Documents/semio")
 HERE = os.path.dirname(os.path.abspath(__file__))
 TREE = os.path.join(HERE, "tree")
 APPLY = "--apply" in sys.argv
@@ -131,6 +131,10 @@ HUNKS = [
      "        self.terminal && self.active.is_none() && self.payload.is_none() && self.value.is_none() && self.retirement.is_none()",
      "        self.terminal && self.active.is_none() && self.payload.is_none() && self.splice.strings.iter().all(Option::is_none) && self.value.is_none() && self.retirement.is_none()"),
     # ✏️ editor: the `textSplice` verb, its retained emission and its declarations.
+    # 🧩️ the editor names the new command module (E0433 in L1's T3 check without it).
+    (EDITOR,
+     "use crate::editor::writer::commands::{commit_rename, format_document, open_document, set_active_example, set_fixture_json, set_snapshot, set_snapshot_json, set_text, text_edit};\n",
+     "use crate::editor::writer::commands::{commit_rename, format_document, open_document, set_active_example, set_fixture_json, set_snapshot, set_snapshot_json, set_text, text_edit, text_splice};\n"),
     (EDITOR,
      "        \"engagementSubmit\" as \"engagement-submit\" => engagement_submit::EngagementSubmit,\n    }\n}",
      "        \"engagementSubmit\" as \"engagement-submit\" => engagement_submit::EngagementSubmit,\n        \"textSplice\" as \"text-splice\" => text_splice::TextSplice,\n    }\n}"),

@@ -1,4 +1,4 @@
-//! @emoji 🎞️ Protocol materialization: resolving *which* checkpoint/tail combination to replay
+//! 🎞️ Protocol materialization: resolving *which* checkpoint/tail combination to replay
 //! from a `.spr` byte stream (`resolve_plan`), and a closure-generic driver that actually replays
 //! it into a caller-owned snapshot type `P` (`materialize_with`). This crate never knows what
 //! `P` is or how an op applies to it — `crate::os_spr::history::HistoryEdit`'s `ops: Vec<OpPayload>` stay
@@ -6,7 +6,7 @@
 //! technology (its own `dsl`-generated `Mutation` impls) turns them into real mutations. Frozen
 //! contract: `.🧬semio/🦑️repo/🎫️tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` (`## protocol_materialize`).
 //!
-//! @emoji 🧭️ `REC_PROJECTION` bodies (a complete `.spk` or dsl-text snapshot) are just as opaque to
+//! 🧭️ `REC_PROJECTION` bodies (a complete `.spk` or dsl-text snapshot) are just as opaque to
 //! this crate as op payloads are — it stores/hashes/frames them, never decodes them; only
 //! `decode_base`'s caller knows how to turn embedded bytes into `P`.
 
@@ -16,7 +16,7 @@ use crate::os_spr::wire::{DictReader, ProtocolError, ProtocolLimits, RecordHashe
 use std::collections::HashMap;
 
 //#region 🔖️Snapshot
-/// @emoji 🗂️ How a `REC_PROJECTION` frame's body bytes are stored relative to the frame itself.
+/// 🗂️ How a `REC_PROJECTION` frame's body bytes are stored relative to the frame itself.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SnapshotBodyKind {
     EmbeddedPack,
@@ -24,7 +24,7 @@ pub enum SnapshotBodyKind {
     EmbeddedDsl,
 }
 
-/// @emoji 📸️ One decoded `REC_PROJECTION` record: an anchor (checkpoint id or bare edit ordinal),
+/// 📸️ One decoded `REC_PROJECTION` record: an anchor (checkpoint id or bare edit ordinal),
 /// the edit ordinal it was taken at, and its opaque body (present iff embedded — `None` for
 /// `SidecarPack`, whose bytes live in a separate `.sprc` file this crate never opens).
 #[derive(Clone, Debug, PartialEq)]
@@ -36,7 +36,7 @@ pub struct SnapshotRecord {
     pub body: Option<Vec<u8>>,
 }
 
-/// @emoji 🚨️ This crate's own structural-decode error, `offset` left at 0 since snapshot payloads
+/// 🚨️ This crate's own structural-decode error, `offset` left at 0 since snapshot payloads
 /// are decoded standalone (no absolute file position in scope) — callers threading through
 /// `resolve_plan` see the frame's real offset via the propagated `ProtocolError` from
 /// `protocol_format` itself when the surrounding frame is malformed.
@@ -63,7 +63,7 @@ async fn body_kind_from_byte(byte: u8) -> Result<SnapshotBodyKind, ProtocolError
     }
 }
 
-/// @emoji 🪪️ The header fields of a `REC_PROJECTION` payload, decoded without copying the body —
+/// 🪪️ The header fields of a `REC_PROJECTION` payload, decoded without copying the body —
 /// `resolve_plan` uses this directly against a zero-copy `RecordFrame::payload()` slice so the
 /// eventual `BaseBytes::Borrowed` span never allocates; `decode_snapshot` (the public, owning API)
 /// layers a `body.to_vec()` on top for callers that don't care about zero-copy (e.g. `protocol_cli`).
@@ -74,7 +74,7 @@ struct SnapshotHeader {
     body_hash: [u8; 32],
 }
 
-/// @emoji 👓️ Parses a `REC_PROJECTION` payload's header, returning the `(start, len)` span of the
+/// 👓️ Parses a `REC_PROJECTION` payload's header, returning the `(start, len)` span of the
 /// embedded body *within `payload`* (so a caller already holding a `&'a [u8]` payload can slice it
 /// zero-copy) — `None` iff `body_kind == SidecarPack`, which never embeds a body.
 async fn parse_snapshot(payload: &[u8]) -> Result<(SnapshotHeader, Option<(usize, usize)>), ProtocolError> {
@@ -107,7 +107,7 @@ async fn parse_snapshot(payload: &[u8]) -> Result<(SnapshotHeader, Option<(usize
     Ok((SnapshotHeader { anchor_checkpoint_id, edit_ordinal, body_kind, body_hash }, body_span))
 }
 
-/// @emoji ✍️ `format(1), anchor_tag(0=checkpoint+id / 1=ordinal-only), [checkpoint_id], edit_ordinal
+/// ✍️ `format(1), anchor_tag(0=checkpoint+id / 1=ordinal-only), [checkpoint_id], edit_ordinal
 /// varint, body_kind, body_hash[32], [body_len varint + body iff embedded]` — no `DictBuilder`
 /// parameter (unlike `protocol_history`'s per-kind codecs) since a snapshot anchor is written at
 /// most once per snapshot and gains nothing from dictionary interning; `checkpoint_id` is always
@@ -134,7 +134,7 @@ pub async fn encode_snapshot(record: &SnapshotRecord) -> Vec<u8> {
     out.into_bytes()
 }
 
-/// @emoji 👓️ The owning twin of `parse_snapshot`, for callers (e.g. `protocol_cli inspect`) that
+/// 👓️ The owning twin of `parse_snapshot`, for callers (e.g. `protocol_cli inspect`) that
 /// want a self-contained `SnapshotRecord` rather than a zero-copy span.
 pub async fn decode_snapshot(payload: &[u8]) -> Result<SnapshotRecord, ProtocolError> {
     let (header, body_span) = parse_snapshot(payload).await?;
@@ -142,7 +142,7 @@ pub async fn decode_snapshot(payload: &[u8]) -> Result<SnapshotRecord, ProtocolE
     Ok(SnapshotRecord { anchor_checkpoint_id: header.anchor_checkpoint_id, edit_ordinal: header.edit_ordinal, body_kind: header.body_kind, body_hash: header.body_hash, body })
 }
 
-/// @emoji 🔎️ Reads a dict-record payload written by `protocol_history`'s (private) flush routine —
+/// 🔎️ Reads a dict-record payload written by `protocol_history`'s (private) flush routine —
 /// `format(1), base_count varint, count varint, count x (len varint + utf8)`. Duplicated here rather
 /// than imported because it is a private implementation detail of `protocol_history`; the wire shape
 /// is fully pinned by that crate's own `//#region 🔖️Codec` doc comment, so this stays in lockstep by
@@ -169,7 +169,7 @@ async fn apply_dict_record(dict: &mut DictReader, payload: &[u8]) -> Result<(), 
 //#endregion 🔖️Snapshot
 
 //#region 🔖️Policy
-/// @emoji 🗓️ Advisory triggers for when a technology's writer should ask this crate's caller to
+/// 🗓️ Advisory triggers for when a technology's writer should ask this crate's caller to
 /// take a fresh `REC_PROJECTION` snapshot; this crate never triggers a checkpoint itself (it has no
 /// write path), it only carries the policy so `protocol_io`/a `db` server can consult one shared
 /// definition rather than each inventing its own.
@@ -188,12 +188,12 @@ impl Default for CheckpointPolicy {
 }
 
 impl CheckpointPolicy {
-    /// @emoji ✅️ Whether a snapshot is due given how much has accumulated since the last one.
+    /// ✅️ Whether a snapshot is due given how much has accumulated since the last one.
     pub async fn should_checkpoint(&self, edits_since_last: u64, bytes_since_last: u64, is_checkpoint_commit: bool) -> bool {
         (self.on_checkpoint_commit && is_checkpoint_commit) || edits_since_last >= self.every_edits || bytes_since_last >= self.every_bytes
     }
 
-    /// @emoji 📦️ Whether a body of `body_len` bytes should be embedded inline vs. written as a
+    /// 📦️ Whether a body of `body_len` bytes should be embedded inline vs. written as a
     /// `.sprc` sidecar (`SnapshotBodyKind::SidecarPack`).
     pub async fn should_embed(&self, body_len: u64) -> bool {
         body_len < self.embed_below
@@ -202,14 +202,14 @@ impl CheckpointPolicy {
 //#endregion 🔖️Policy
 
 //#region 🔖️Plan
-/// @emoji 🧺️ Where the base of a materialization plan's bytes actually live.
+/// 🧺️ Where the base of a materialization plan's bytes actually live.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum BaseBytes<'a> {
     Borrowed(&'a [u8]),
     Sidecar { expected_hash: [u8; 32] },
 }
 
-/// @emoji 🧱️ A resolved base to decode (`P::default()`-equivalent for the caller's snapshot type)
+/// 🧱️ A resolved base to decode (`P::default()`-equivalent for the caller's snapshot type)
 /// plus how many leading edits (0-based ordinals `0..applied_edits`) it already reflects.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct BaseSnapshot<'a> {
@@ -217,7 +217,7 @@ pub struct BaseSnapshot<'a> {
     pub applied_edits: u64,
 }
 
-/// @emoji 🗺️ A fully resolved plan: decode `base.bytes` into `P`, then replay every `REC_EDIT` frame
+/// 🗺️ A fully resolved plan: decode `base.bytes` into `P`, then replay every `REC_EDIT` frame
 /// starting at `tail_start_offset` whose 0-based ordinal is `<= target_edit_ordinal` (`None` means
 /// "no cap — replay through the trusted tail").
 ///
@@ -235,7 +235,7 @@ pub struct MaterializePlan<'a> {
     pub(crate) skipped_corrupt: u32,
 }
 
-/// @emoji 🎯️ What edit ordinal a caller wants materialized through.
+/// 🎯️ What edit ordinal a caller wants materialized through.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum MaterializeTarget {
     LatestOnActive,
@@ -243,7 +243,7 @@ pub enum MaterializeTarget {
     AtEditOrdinal(u64),
 }
 
-/// @emoji 📸️ One candidate `REC_PROJECTION` frame found during plan resolution, still borrowing
+/// 📸️ One candidate `REC_PROJECTION` frame found during plan resolution, still borrowing
 /// zero-copy from the trusted byte range so a `Borrowed` base never allocates.
 struct Candidate<'a> {
     offset: u64,
@@ -261,7 +261,7 @@ async fn verify_candidate(hasher: &Blake3Hasher, candidate: &Candidate<'_>) -> b
     }
 }
 
-/// @emoji 👓️ Reads and header-parses the `REC_PROJECTION` frame expected at an absolute offset
+/// 👓️ Reads and header-parses the `REC_PROJECTION` frame expected at an absolute offset
 /// (as recorded by a `crate::os_spr::history::IndexReader`'s `SEC_SNAPSHOT_OFFSETS` section).
 async fn read_snapshot_at(trusted: &[u8], offset: u64) -> Result<Candidate<'_>, ProtocolError> {
     let mut cursor = FrameCursor::new(trusted, offset).await;
@@ -273,7 +273,7 @@ async fn read_snapshot_at(trusted: &[u8], offset: u64) -> Result<Candidate<'_>, 
     Ok(Candidate { offset, frame_len: frame.frame_len().await, header, body_span, payload: frame.payload().await })
 }
 
-/// @emoji 🔎️ Reverse-scans the whole trusted record stream for the LATEST `REC_INDEX` frame — the
+/// 🔎️ Reverse-scans the whole trusted record stream for the LATEST `REC_INDEX` frame — the
 /// only kind this crate needs from the advisory index, since `SEC_SNAPSHOT_OFFSETS`/
 /// `SEC_CHECKPOINT_OFFSETS` are exactly what `resolve_plan` consults. `None` if no valid `REC_INDEX`
 /// frame exists (a file that has never been compacted/indexed), signalling the reverse-frame-scan
@@ -291,7 +291,7 @@ async fn locate_index(trusted: &[u8]) -> Option<crate::os_spr::history::IndexRea
     None
 }
 
-/// @emoji 🔁️ Index-backed search: looks up the newest snapshot `<= cap`, verifies it, and on
+/// 🔁️ Index-backed search: looks up the newest snapshot `<= cap`, verifies it, and on
 /// corruption retries at a strictly lower ordinal cap (jumping straight past the corrupt entry when
 /// its own ordinal is known, else stepping down by one) until a valid candidate is found or the
 /// index is exhausted.
@@ -314,7 +314,7 @@ async fn find_snapshot_via_index<'a>(trusted: &'a [u8], index: &crate::os_spr::h
     }
 }
 
-/// @emoji 🔁️ Reverse-frame-scan fallback for when no usable `REC_INDEX` exists (or it doesn't cover
+/// 🔁️ Reverse-frame-scan fallback for when no usable `REC_INDEX` exists (or it doesn't cover
 /// the snapshot actually needed): walks every frame back from the trusted end, returning the
 /// first valid `REC_PROJECTION` at or before `cap`.
 async fn find_snapshot_by_scan<'a>(trusted: &'a [u8], cap: u64, skipped: &mut u32) -> Option<Candidate<'a>> {
@@ -349,7 +349,7 @@ async fn find_best_snapshot<'a>(trusted: &'a [u8], cap: u64, skipped: &mut u32) 
     find_snapshot_by_scan(trusted, cap, skipped).await
 }
 
-/// @emoji 🧮️ Resolves a checkpoint id to the 0-based edit ordinal of the last edit it covers, via
+/// 🧮️ Resolves a checkpoint id to the 0-based edit ordinal of the last edit it covers, via
 /// the advisory index when available, else a full decode-and-fold fallback (folded checkpoint ->
 /// change_ids -> each change's edit_ids -> max ordinal by position in `log.edits`, matching
 /// `crate::os_spr::history::encode_history`'s own ordinal assignment).
@@ -387,7 +387,7 @@ async fn resolve_target_edit_ordinal(trusted: &[u8], target: &MaterializeTarget,
     }
 }
 
-/// @emoji 🗺️ Resolves which base (an embedded/sidecar snapshot, or `initial_pack` at ordinal 0)
+/// 🗺️ Resolves which base (an embedded/sidecar snapshot, or `initial_pack` at ordinal 0)
 /// and tail range to replay to reach `target`. Steps (per the frozen contract): recover the trusted
 /// byte range; resolve `target` to a concrete edit ordinal cap; find the newest valid snapshot at
 /// or before that cap (index first, reverse-scan fallback, skipping and retrying older candidates on
@@ -425,10 +425,10 @@ pub async fn resolve_plan<'a>(protocol_bytes: &'a [u8], initial_pack: &'a [u8], 
 //#endregion 🔖️Plan
 
 //#region 🔖️Drive
-/// @emoji 📋️ What a `materialize_with` call actually did.
+/// 📋️ What a `materialize_with` call actually did.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct MaterializeReport {
-    /// @emoji 🧾️ `Some((anchor_checkpoint_id, applied_edits))` iff a snapshot (not `initial_pack`)
+    /// 🧾️ `Some((anchor_checkpoint_id, applied_edits))` iff a snapshot (not `initial_pack`)
     /// was used as the base. 🎯️ Design choice: `MaterializePlan` (frozen shape) never threads the
     /// anchor checkpoint id this far — only `resolve_plan` ever saw it — so the inner `Option<String>`
     /// is always `None` here; the field shape is kept exactly as specified for a future revision that
@@ -440,7 +440,7 @@ pub struct MaterializeReport {
     pub genesis_replay: bool,
 }
 
-/// @emoji 🔎️ Builds the `DictReader` + forward-ordered edit-id table covering every `REC_STR_DICT`/
+/// 🔎️ Builds the `DictReader` + forward-ordered edit-id table covering every `REC_STR_DICT`/
 /// `REC_EDIT` frame strictly before `up_to_offset` — needed before decoding any tail `REC_EDIT`
 /// frame, since its `id`/dependency fields may reference dictionary entries or edit ordinals
 /// introduced anywhere earlier in the file, including inside the base snapshot's own coverage.
@@ -466,7 +466,7 @@ async fn prescan_dict_and_edits(trusted: &[u8], up_to_offset: u64) -> Result<(Di
     Ok((dict, edit_ids))
 }
 
-/// @emoji ▶️ Decodes `plan.base.bytes` into `P` (never for `BaseBytes::Sidecar` — a caller that
+/// ▶️ Decodes `plan.base.bytes` into `P` (never for `BaseBytes::Sidecar` — a caller that
 /// resolved a sidecar snapshot must substitute `BaseBytes::Borrowed` with the fetched `.sprc`
 /// bytes, e.g. via `crate::os_spr::io::read_sidecar`, before calling this), then replays every `REC_EDIT`
 /// frame from `plan.tail_start_offset` onward whose ordinal is `<= plan.target_edit_ordinal` (no cap

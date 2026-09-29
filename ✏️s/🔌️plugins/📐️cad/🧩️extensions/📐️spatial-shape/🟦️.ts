@@ -1,5 +1,5 @@
 // #region 🧭️Header
-/** @emoji 📐️ `@semio-tech/cad-js-module-spatial-shape` — shape model-definition stat and property computers. */
+/** 📐️ `@semio-tech/cad-js-module-spatial-shape` — shape model-definition stat and property computers. */
 // #endregion 🧭️Header
 
 import { core } from "@semio-tech/cad-js";
@@ -54,7 +54,7 @@ async function computeShapeVolumeProperty(ctx: PropertyComputeContext): Promise<
 // #endregion 📐️PropertyComputer
 
 // #region 📦️Register
-/** @emoji 📦️ Registers spatial.shape stat and property computers on the core engine. */
+/** 📦️ Registers spatial.shape stat and property computers on the core engine. */
 export function register(): void {
   registerStatComputer(SPATIAL_SHAPE_GEOMETRY_STAT_ID, computeShapeGeometryStat);
   registerPropertyComputer(SPATIAL_SHAPE_VOLUME_PROPERTY_ID, computeShapeVolumeProperty);
@@ -62,8 +62,16 @@ export function register(): void {
 // #endregion 📦️Register
 
 // #region 🧪️Tests
+/** 🎒️ The values this module hands its extracted suite `./🧪️tests/🧪️semio-tech-cad-js-module-spatial-shape/🟦️.ts`. */
+export type SpatialShapeTestDependencies = {
+  readonly SPATIAL_SHAPE_GEOMETRY_STAT_ID: typeof SPATIAL_SHAPE_GEOMETRY_STAT_ID;
+  readonly SPATIAL_SHAPE_VOLUME_PROPERTY_ID: typeof SPATIAL_SHAPE_VOLUME_PROPERTY_ID;
+  readonly core: typeof core;
+  readonly solidRef: typeof solidRef;
+};
+
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️semio-tech-cad-js-module-spatial-shape/🟦️.ts");
-  await registerTests1(import.meta.vitest, { SPATIAL_SHAPE_GEOMETRY_STAT_ID, SPATIAL_SHAPE_VOLUME_PROPERTY_ID, core, solidRef }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { SPATIAL_SHAPE_GEOMETRY_STAT_ID, SPATIAL_SHAPE_VOLUME_PROPERTY_ID, core, solidRef }, { url: import.meta.url });
 }
 // #endregion 🧪️Tests

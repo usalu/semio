@@ -310,6 +310,7 @@
         }
       ],
       "kinds": [
+        "set-snapshot",
         "create-vertex",
         "delete-vertex",
         "create-edge",

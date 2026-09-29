@@ -59,7 +59,7 @@ import { ensureAppleDeveloperDir } from "../../../🧑‍💻dev/⚙️engine/�
 
 
 
-/** @emoji 🎯️ Builds exactly one target end to end (cargo then materialize then the shared shard-worker
+/** 🎯️ Builds exactly one target end to end (cargo then materialize then the shared shard-worker
  * publish) — used where only one crate is being built at a time, so there is no concurrency to bound:
  * the file-watch rebuild loop (`watchPluginRebuilds`, which deliberately serializes overlapping rebuild
  * requests onto the SAME `target/` cargo lock) and the two-crate collab-e2e prebuild. The full-catalog
@@ -71,7 +71,7 @@ async function buildPlugin(target: PluginRegistryEntry): Promise<void> {
   publishShardWorker();
 }
 
-/** @emoji 🧵️ Minimal counting semaphore bounding how many `fn()` calls run concurrently. Local to this
+/** 🧵️ Minimal counting semaphore bounding how many `fn()` calls run concurrently. Local to this
  * file rather than promoted to the shared repo-lib — this packet's ownership (`📌️important.md`
  * registrar-only list) is scoped to `📜️script.ts` and `🟦️.ts` only. FIFO wakeup,
  * never reorders which caller gets the next free slot. */
@@ -102,7 +102,7 @@ function createConcurrencyLimiter(limit: number): { run: <T>(fn: () => Promise<T
   };
 }
 
-/** @emoji 🧵️ Concurrency cap for bounded-parallel plugin catalog stages — each materialize invocation is
+/** 🧵️ Concurrency cap for bounded-parallel plugin catalog stages — each materialize invocation is
  * a mostly-single-threaded subprocess with its own decoded wasm footprint, so the cap tracks machine
  * width via `semioNxParallel()`. `SEMIO_MATERIALIZE_CONCURRENCY` overrides for measurement. */
 function materializeConcurrencyLimit(): number {
@@ -114,7 +114,7 @@ function materializeConcurrencyLimit(): number {
   return semioNxParallel();
 }
 
-/** @emoji 🧵️ Concurrency cap for the plugin catalog cargo stage (isolated `CARGO_TARGET_DIR` per build). */
+/** 🧵️ Concurrency cap for the plugin catalog cargo stage (isolated `CARGO_TARGET_DIR` per build). */
 function cargoConcurrencyLimit(): number {
   const override = process.env.SEMIO_CARGO_CONCURRENCY;
   if (override) {
@@ -129,7 +129,7 @@ function assertNoStalePublicPluginOutputs(path: string): void {
   if (existsSync(path)) throw new Error(`Unexpected public plugin output preserved at ${path}; inspect its owner before running @semio-tech/framework-os-dev:plugin.`);
 }
 
-/** @emoji 🎯️ Shared setup for every plugin-build entry point below: registry regeneration, output dirs,
+/** 🎯️ Shared setup for every plugin-build entry point below: registry regeneration, output dirs,
  * vendor shims, read-only stale-output checks, and the resolved+logged target list — everything a build needs
  * that isn't itself a `cargo build`. Split out of the old monolithic `buildPlugins` so the dev runner's
  * streaming variant can run this fast (no-cargo) prep synchronously before Vite starts, then stream the
@@ -156,7 +156,7 @@ async function preparePluginBuildTargets(filterPlugin?: string): Promise<readonl
   return targets;
 }
 
-/** @emoji 🎪️ Exported so a multi-variant host (e.g. the mit-bestand demonstrator, which needs every one
+/** 🎪️ Exported so a multi-variant host (e.g. the mit-bestand demonstrator, which needs every one
  * of its six panes' plugin crates built into the SAME shared `🔌️plugin-modules/` dir rather than one
  * variant's own isolated dev/build) can call this directly per variant instead of shelling out to this
  * script's own CLI once per variant.
@@ -175,7 +175,7 @@ export async function buildPlugins(filterPlugin?: string): Promise<void> {
   assertPluginCatalogComplete(failedPluginIds);
 }
 
-/** @emoji 🌊️ Host-plugin-first, best-effort variant of `buildPlugins` for the dev runner's streaming
+/** 🌊️ Host-plugin-first, best-effort variant of `buildPlugins` for the dev runner's streaming
  * boot (`DevScript`, react renderer only): the shell's boot effect gates only on the host/primary
  * plugin (see os-core's `hostConfig` path), so building it first (and cargo-building it before any
  * other crate) gets the shell out of its "waiting for host program" state fastest — every other crate

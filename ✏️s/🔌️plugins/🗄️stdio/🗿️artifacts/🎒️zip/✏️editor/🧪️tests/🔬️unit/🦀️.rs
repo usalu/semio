@@ -47,7 +47,6 @@ fn archive_cursor_checkpoint_matches_the_neutral_wire_and_resumes() {
         assert!(retained::ArchiveTextCursor::default().restore(&invalid).is_err());
     }
     assert!(retained::ArchiveTextCursor::default().restore(&bytes[1..]).is_err());
-    println!("[DEBUG] ZIP resumes a serialized cursor after one scanned member and refuses changed command or malformed checkpoint");
 }
 
 #[test]
@@ -68,7 +67,6 @@ fn archive_target_resolution_yields_without_copying_entry_payloads() {
     }
     let emit = cursor.advance(&snapshot, &node, value, &revision).unwrap().unwrap();
     assert_eq!(emit.artifact_mutations, edit_node(&snapshot, &node, value, &revision).unwrap().artifact_mutations);
-    println!("[DEBUG] ZIP target resolution yields once per member and leaves the 2 MiB payload owner unchanged");
 }
 
 #[test]
@@ -219,7 +217,6 @@ fn archive_rename_survives_reordering_and_matches_independent_json_oracle() {
     assert_eq!(inverse.len(), 1);
     assert_eq!(MutationDiff::apply(inverse[0].diff(&next).diff(), &next).unwrap(), snapshot);
     assert!(edit_node(&next, &node, "stale.txt", &text_revision(original_name)).is_err());
-    println!("[DEBUG] ZIP rename preserves entry identity across reordering and exactly undoes the native mutation");
 }
 
 #[test]
@@ -289,7 +286,6 @@ async fn retained_archive_law<E: ArtifactEditor<Snapshot = ZipSnapshot, Mutation
     assert_eq!(app.snapshot().unwrap(), expected);
     let saved = <ZipSnapshot as store::ArtifactPack>::encode_pack(&expected);
     assert_eq!(<ZipSnapshot as store::ArtifactPack>::decode_pack(&saved).unwrap(), expected);
-    println!("[DEBUG] ZIP primary draft publishes through its exact retained factory, undoes, redoes, and reopens without changing entry bytes");
     artifact_app_laws::close_registered_fixture_app(&mut app);
 }
 
@@ -490,5 +486,4 @@ fn archive_registered_factory_resumes_the_exact_cursor_and_refuses_another_revis
         assert!(resumed.job.terminal_is_empty());
     }
     assert!(crate::editor::zip::iso21320::ZipIso21320Editor::NATIVE_CHECKPOINT_RESUME);
-    println!("[DEBUG] Registered ZIP factory resumes after one scanned member, preserves exact output, refuses another canonical revision, and closes retained owners");
 }

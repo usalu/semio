@@ -8,7 +8,6 @@ fn borrowed_slices_match_neutral_values_and_serde() {
         assert_eq!(serde_json::to_string(&actual).unwrap(), serde_json::to_string(values.as_slice()).unwrap());
         assert_eq!(actual, case.clone());
     }
-    eprintln!("[DEBUG] Borrowed slice encoding agrees with the neutral corpus and serde");
 }
 use super::*;
 

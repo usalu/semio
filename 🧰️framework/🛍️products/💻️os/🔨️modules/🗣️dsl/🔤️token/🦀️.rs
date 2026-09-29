@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex, OnceLock};
 
 //#region 🔖️Intern
-/// @emoji 🔖️ An interned string handle — cheap to copy/compare, the payload type for `Ident`
+/// 🔖️ An interned string handle — cheap to copy/compare, the payload type for `Ident`
 /// tokens and keyword/key lookups.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Symbol(u32);
@@ -47,7 +47,7 @@ impl Symbol {
 //#endregion 🔖️Intern
 
 //#region 🔖️Tokens
-/// @emoji 🪙️ Stable token identity WITHIN one lex pass — an index into that pass's token vector,
+/// 🪙️ Stable token identity WITHIN one lex pass — an index into that pass's token vector,
 /// never a byte offset. Snapshot-scoped: a fresh lex pass assigns fresh ids, so a `TokenId` is
 /// only meaningful against the exact token vector it came from.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -88,7 +88,7 @@ pub enum TokenKind {
     RBracket,
     LParen,
     RParen,
-    /// @emoji 🅰️ Promoted single-char tokens (P2-M1): bare `<`/`>` (XML/SVG tags, never fused into
+    /// 🅰️ Promoted single-char tokens (P2-M1): bare `<`/`>` (XML/SVG tags, never fused into
     /// `<-`/`->`/edge-arrow forms — those are checked first and `continue` before this token can be
     /// produced), `&` (XML entity refs), `$` (STEP unset sigil / DXF header var names), `;` (STEP
     /// statement terminators). Previously every one of these was an "unknown character" `Error`.
@@ -97,7 +97,7 @@ pub enum TokenKind {
     Amp,
     Dollar,
     Semicolon,
-    /// @emoji 🔵️ STEP Part 21 dot-delimited enum literal (`.T.` / `.UNSPECIFIED.`) — a leading dot,
+    /// 🔵️ STEP Part 21 dot-delimited enum literal (`.T.` / `.UNSPECIFIED.`) — a leading dot,
     /// an ident-shaped run, a closing dot, captured as one token (text includes both dots).
     DotEnum,
     Comment,
@@ -114,7 +114,7 @@ impl TokenKind {
     }
 }
 
-/// @emoji 🎨️ Editor-facing classification of a token — the highlighting/completion vocabulary,
+/// 🎨️ Editor-facing classification of a token — the highlighting/completion vocabulary,
 /// generalizing `math::graph::dsl`'s `TokenClass`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum TokenClass {
@@ -128,7 +128,7 @@ pub enum TokenClass {
     Error,
 }
 
-/// @emoji 🧾️ One lexed token: kind, interned text, and a real span (never `(1,1)` placeholder).
+/// 🧾️ One lexed token: kind, interned text, and a real span (never `(1,1)` placeholder).
 #[derive(Clone, Debug, PartialEq)]
 pub struct SpannedToken {
     pub id: TokenId,
@@ -140,7 +140,7 @@ pub struct SpannedToken {
 //#endregion 🔖️Tokens
 
 //#region 🔖️Escape
-/// @emoji 🔐️ The ONE canonical escape scheme for quoted `Text` tokens: `\\ \" \n \r \t` plus
+/// 🔐️ The ONE canonical escape scheme for quoted `Text` tokens: `\\ \" \n \r \t` plus
 /// `\u{XXXX}` for any other control character. Nesting-sound because quoting is a token
 /// boundary — re-escaping an already-printed line is exactly invertible, no percent-encoding
 /// or per-technology scheme needed. Strict superset of every hand-rolled scheme it replaces.
@@ -161,7 +161,7 @@ pub fn escape_text(value: &str) -> String {
     out
 }
 
-/// @emoji 🔓️ Inverse of [`escape_text`]. Unknown escapes in strict mode are an error; `forgiving`
+/// 🔓️ Inverse of [`escape_text`]. Unknown escapes in strict mode are an error; `forgiving`
 /// keeps the backslash and following character literal instead (editor/recovery mode).
 pub fn unescape_text(value: &str, forgiving: bool) -> Result<String, String> {
     let mut out = String::with_capacity(value.len());
@@ -213,7 +213,7 @@ pub fn unescape_text(value: &str, forgiving: bool) -> Result<String, String> {
 //#endregion 🔖️Escape
 
 //#region 🔖️Numbers
-/// @emoji 🔢️ Canonical float printing: Rust's `Display` (shortest round-trip repr), with
+/// 🔢️ Canonical float printing: Rust's `Display` (shortest round-trip repr), with
 /// explicit `nan`/`inf`/`-inf` idents so the grammar never emits ambiguous bit patterns.
 // 🚫️async: E1 pure Display formatting consumed by `dsl_schema::print_expr_prec`, itself forced sync by an
 // `Iterator::map(...).join(...)` sync-closure consumer (`Call` arm) — see R9
@@ -265,7 +265,7 @@ pub fn parse_f32(text: &str) -> Result<f32, String> {
 //#endregion 🔖️Numbers
 
 //#region 🔖️Units
-/// @emoji 📐️ SI base-unit exponents (metre, kilogram, second, kelvin, ampere, radian) identifying
+/// 📐️ SI base-unit exponents (metre, kilogram, second, kelvin, ampere, radian) identifying
 /// a physical dimension. Two units convert into each other only when their `Dimension`s match —
 /// this is what stops `Shape::Quantity`/`Shape::Angle` from accepting an incompatible suffix.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
@@ -278,7 +278,7 @@ pub struct Dimension {
     pub rad: i8,
 }
 
-/// @emoji 📏️ One named unit: its printed symbol, physical dimension, and linear factor to the
+/// 📏️ One named unit: its printed symbol, physical dimension, and linear factor to the
 /// dimension's SI base unit (`base_value = value * factor`). Offset units (`°C`) are out of scope
 /// for v1 — every unit here is linear through the origin.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -306,7 +306,7 @@ pub(crate) const DIM_ACCELERATION: Dimension = Dimension { m: 1, kg: 0, s: -2, k
 pub(crate) const DIM_AREAL_LOAD: Dimension = Dimension { m: -2, kg: 1, s: -2, k: 0, a: 0, rad: 0 };
 pub(crate) const DIM_HEAT_TRANSFER: Dimension = Dimension { m: 0, kg: 1, s: -3, k: -1, a: 0, rad: 0 };
 
-/// @emoji 📚️ The static unit vocabulary every `Shape::Quantity`/`Shape::Angle` field draws from.
+/// 📚️ The static unit vocabulary every `Shape::Quantity`/`Shape::Angle` field draws from.
 /// Symbols are matched verbatim against the ident glued onto a numeric literal
 /// (`210GPa` -> number `210`, suffix `GPa`) — see `crate::os_dsl::schema::parse_scalar`'s `Quantity`/`Angle`
 /// arms. Grows as adopter DSLs need new units; never remove a symbol once a fixture uses it.
@@ -354,12 +354,12 @@ const UNITS: &[UnitSpec] = &[
     UnitSpec { symbol: "W/m2K", dimension: DIM_HEAT_TRANSFER, factor: 1.0 },
 ];
 
-/// @emoji 🔍️ Looks up a unit by its exact printed symbol (e.g. `"GPa"`).
+/// 🔍️ Looks up a unit by its exact printed symbol (e.g. `"GPa"`).
 pub fn unit_by_symbol(symbol: &str) -> Option<&'static UnitSpec> {
     UNITS.iter().find(|u| u.symbol == symbol)
 }
 
-/// @emoji 🔁️ Converts `value` (expressed in `from`) into the equivalent value expressed in `to`.
+/// 🔁️ Converts `value` (expressed in `from`) into the equivalent value expressed in `to`.
 /// `None` if the two units don't share a dimension — never silently reinterprets across
 /// incompatible units (e.g. a length suffix on an angle field).
 pub fn convert(value: f64, from: &UnitSpec, to: &UnitSpec) -> Option<f64> {

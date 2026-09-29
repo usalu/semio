@@ -23,11 +23,37 @@ silent-exports).
 | # | Item | State | Evidence |
 |---|---|---|---|
 | 1 | chunk staging PHASE 2 (generation3d + puzzle3d drop private stagings, architect CSV picker, puzzle2d/5d import limits) — lands with phase 1 in T1 | **prepared, dry-run clean 21:5x (27 files), relayed to L1** (script + crates + laws); compile/laws = L1's T1 proof (overlay skipped: rule 23 disk, 107 GiB) | `wp-s20/s20-patch-chunk-staging-2.py`, `wp-s20/s20-chunk-staging-2/{old,new}/` |
-| 2 | raster Import Document hang → native root cause + prepared guest fix | open | |
-| 3 | io-matrix `matrixVerbOf` → rendered edits (`driveRenderedEdit`, `pluginEdits`/`kindEdits`) | **landed 21:3x** (host TS dev harness), tsc rc 0 | `generated/tsc-io-3.txt`, landing row |
-| 4 | `verify io` on hub 7800 (p24) en + de, publish records, route reds | open (load 62, swap 14/15 GB at 21:32 — after phase 2) | |
+| 2 | raster Import Document hang → native root cause + prepared guest fix | repro law in the tree (test-only, end of raster `✏️editor/🧪️tests/🔬️unit/🦀️.rs`); 3 native runs lost (peer red 21:58, panics 22:42/00:31) — NOT yet run | `wp-s20/s20-raster-archive/` |
+| 3 | io-matrix `matrixVerbOf` → rendered edits (`driveRenderedEdit`, `pluginEdits`/`kindEdits`) | **landed 21:3x** (host TS dev harness); tsc rc 0 21:3x and again on the post-T1 tree 23:2x (0 errors) | landing row (captures in `wp-s20/generated/` lost in the 01:14 sweep) |
+| 4 | `verify io` on hub 7800 (p24) en + de, publish records, route reds | **en partial** (10/12 pinned kinds before the 00:31 panic; verdicts below); de not run (panics, then window closed) — rerun on the ALL-34 catalog after the 07:18 chain | `.🧬semio/🌐hub/s14-s20-io/s20c-hub7800-en-3/` |
+| 5 | T6 set: app refusal crosses the interactive-job boundary as a TYPED RECORD `semio.typed-operation-fault.v1` (coordinator decisions 08:0x + 08:3x) | **v2 prepared, dry-run clean 08:3x** (18 files, 4 new); AJV twins + TS decoder ran green on the new fixtures in a scratch copy (14/14, 10/10, 7/7), strict tsc of the TS block rc 0; approved by main 08:4x; relayed L1 + R10 (2 new dirs) | `wp-s20/s20-patch-fault-code.py`, `wp-s20/s20-fault-code/`, `.🧬semio/🌐hub/s14-s20-sets/fault-code-dry-2.txt` |
+| 7 | fault localization: apps declare every refusal code with en/de text; hosts/agents render by code; GLOBAL law | **F1 on overlay 11:1x** (`.🧬semio/🌐hub/s14-s20-overlay-faults/`): tightened `FaultCode`/`Fault` types, `app_fault`/`with_parameter`, `AppDefinition.faults` + `.fault` + build validation, framework catalog + schema, `verify faults` (self-test 43/43, oracle agrees), record v3 (row 10 merged into T6 row 12), host `faultTextV1` (vitest 16/16 + PluginRuntime 135/135), Rust `fault_text` law, MCP `details.fault`; F2 codemods (1 287 code-like, 103 double paths, 46 literal `Fault::new`, 50 framework `Fault::from`). Helpers FH1–FH3 on F3 (census-only). Framework overlay check QUEUED (overlay lane) | spec `📓️fault-localization-api.md` §1–4; scripts `wp-s20/s20-f1/`; census `.🧬semio/🌐hub/s14-s20-sets/census/` |
+| 6 | all S20 set scripts idempotent (L1 finding) | **done 08:1x**: result-before-anchor checks + set-level landing guard in all 10 scripts; every landed set answers `landed` | `wp-s20/s20-idempotence-check.py` |
 
 #### Session 14c log
+- 11:2x–12:1x census made CODE-BASED (coordinator): every `FaultCode::new("…")`/`app_fault("…")` literal is a raise of its owner
+  (helpers take `FaultCode`, new `app_refusal(code)`); `Fault::from` caught as a path; nested/in-string `#[cfg(test)]` fixed (FH1/FH3
+  reports); self-test 46/46. Mutation reports: `MutationMessageCode` trait (literal or FaultCode) for pass 1 compile; coordinator
+  decision: pass 2 localizes reports (constructors `FaultCode` only, ~3.7k sites). FRAMEWORK GREEN 12:02 on the overlay
+  (`check --lib` replication, os-kernel, framework, plugin SDK, os-mcp; 3 stamped iterations: `MutationApplyError` code forwarded as
+  `received`, 2 SDK `?`-over-String sites → `plugin.action.argument-missing`, MCP `FaultTexts` path; 36 own `unused_qualifications`
+  removed, `fix-qualifications.py`). Helpers FH1–FH3 at 0 census violations for their families, crate checks running (FIFO).
+  Framework `--tests` queued (framework test `Fault::from` converted, `f2-framework-tests.py`). Landing tool `s20-overlay-land.py plan`
+  validated against today's live: 688 clean, 1 merged, 1 approximate-base merge (`📜️script.ts`), 8 creates, 0 conflicts.
+
+- 09:0x–11:1x F1 on the faults overlay (session 14c successor after the usage cut): diagnostic types tightened (`f1-tighten.py`:
+  `FaultCode::new(&'static str)`, `Fault::new(origin, FaultCode, msg)`, no `From` into `Fault`/`FaultCode`, `FaultCode::received`,
+  boxed `FaultParameters` keeps `Fault` ≤ 112 B, `Diagnostic::new(code, severity, …)`); `f1-fault-new-literal.py` (46 sites);
+  `f2-framework-from.py` (50 framework `Fault::from` → catalogued framework raises); `f1-code-types.py` (runtime-string code
+  sites → `&'static str`, `PluginAssemblyError.code: &'static str`, hub codes `received`); `f1-manifest.py` += `validate_fault_definitions`
+  (wired into `try_build_definition`), `FaultCatalog`, `framework_fault_catalog()`, `fault_text` + law `🛂️manifest/🧪️tests/🔬️fault-text`;
+  `verify faults` census (`runFaultCensus` + `faultLawViolations`, orchestration module; gate in root `📜️script.ts`; fixture cases in
+  `🧮️source-census`; oracle `git grep -o` agrees; runs on the overlay via `GIT_DIR`/`GIT_WORK_TREE`); record v3 (`parameters`) via
+  `s20-fault-code-v3-overlay.py` (v2 snapshot kept), v3 set dry-run clean on live (18 files); host render-by-code (`faultTextV1`,
+  `declaredFaultsV1`, fixture `⚠️diagnostic/🧫️fixtures/🧯️fault/🔣️text.json`); MCP `details.fault` (`f1-mcp.py`). Census on the overlay:
+  3 665 violations / 1 917 raises / 0 declarations before F3 (per family in `census/family-A..H.json`). Helper reports fixed: cfg(test)
+  statement blanking, doubled `semio_framework_plugin::` paths (`f2-double-path.py`, 103 sites). Framework `cargo check` queued on
+  the overlay lane 10:47 (5th); coordinator: no reprioritisation, helpers proceed census-only.
 
 - 21:1x read preamble 14 (+14b/14c, rules 1–24), window-3 plan, fleet tail (pending relay: matrixVerbOf), L1 report (T1 holds
   `s20-chunk-staging` until phase 2 exists). Dry runs of all 8 sets clean.
@@ -85,6 +111,51 @@ silent-exports).
   loaders that replace via `LoadDocument` — draw drawing is one).
 - 23:3x 7800 document column = **expected red until the next chain (pre-T1 guests)**: since T1 landed `s20-document-verbs` the
   harness presses the SDK-reserved Export/Import Artifact Document rail rows, which the p24 guests do not declare (`pressed: absent`).
+- 08:0x resume after the usage cut, 4 kernel panics and the 01:14 sweep (rules 25–27; `wp-s20/generated/` is gone — captures now
+  only under `.🧬semio/🌐hub/s14-s20-*`). T1 (incl. S20 initializer/poll-yield/document-verbs/chunk-staging 1+2/retire-load-request)
+  and T3 (cad-solids, process-formats, silent-exports) are landed; LW1: cad 5/5, process3d export 2/2, shooting export 5/5, remodeling
+  32/1 (`export_qc_report_is_a_no_op_without_a_report` asserted the old silent success; the refusal's code was the wrapper
+  `interactive-job.app-owned-output` with `remodeling.qc-report.missing` inside the text — `.🧬semio/🌐hub/s14-lw1-logs/s20-laws-1.txt`).
+- 08:1x item 5 (T6, prepared): root cause = `retained-command` `reducer_fault_detail` flattened the app's `Fault` into prose
+  (`retained command reducer rejected operation: <code> <message>`) and `ArtifactBoundedToolFault::from_payload` kept job details as
+  message-only bytes → the fault page carried `interactive-job.app-owned-output`; only the agent preview re-parsed the prose; puzzle's
+  retained job DROPPED reducer faults for a fixed sentence. The set frames every reducer refusal as `<code>\u{1f}<message>` (the page
+  framing `decode_typed_operation_fault_page` already splits), parses that framing in `from_payload`, answers agents with origin `App`
+  for a coded refusal, removes the prose helpers, and updates the language-agnostic agent-lane preview fixture + AJV twin, the
+  retained-command laws and the remodeling law (now asserts the domain code and that it is NOT in the text). Gap noted: `Fault.message`
+  is one language (the app's); hosts localize by the structural code.
+- 08:1x item 6: L1 found "apply" reported for already-inserted hunks (anchor still present inside the insertion). Fixed in all 10 scripts:
+  a hunk whose RESULT is present is `applied` before its anchor is considered, plus a set-level landing guard (`LANDED` markers: all
+  present → `landed: nothing to apply`; partial → CONFLICT, no write) — needed because T5's codemods reworded inserted docstrings, so a
+  per-hunk result check alone cannot see a landed insert. All 9 landed sets answer `landed` on the live tree; the T6 set is proven
+  idempotent in memory (`wp-s20/s20-idempotence-check.py`).
+- **7800 (p24) io verdicts per format, en** (`.🧬semio/🌐hub/s14-s20-io/s20c-hub7800-en-3/`, 10 of 12 pinned kinds; guests are p24 =
+  pre-window-3, so every verdict below is on the OLD guest code; document column = expected red until the next chain (pre-T1 guests)):
+
+  | kind | format verdicts on a hub document | cause (measured) → owner |
+  |---|---|---|
+  | draw/drawing | pdf, svg: refused (`action-state-unconfirmed`, then `action-owner-mismatch`) | example seat `setActiveExample` refused on the hub doc → browser actor closed → cascade (S18; U7: draw's example = one `LoadDocument`) |
+  | layout/layout | png, svg, pdf, package: pressed, NO file, no refusal, no dispatch line | hub-doc action never reaches the guest (C12 gate `[DEBUG] c12 gate … pair:false`) → C12/S18 |
+  | puzzle/puzzle2d, puzzle/puzzle5d | json: pressed, no file, no refusal | same silent no-dispatch as layout → C12/S18 |
+  | puzzle/puzzle3d | json: refused `action-refused`; no example seated (0 examples offered on the hub doc) | S18 |
+  | cad/cad | step/obj/stl: `action-owner-mismatch`; reach 4/4 dispatched | cascade after the example seat (S18) |
+  | process/process3d | step/obj/stl/glb: refused `process3d.media.export unknown process export format kind` | fixed by S20 process-formats (landed T3, not on p24) |
+  | remodel/remodeling | qc: no file, no refusal | fixed by S20 silent-exports (landed T3) |
+  | animate/presentation | video: `interactive-job.not-ui-safe` (BatchOnlyPendingRewrite) | fixed by AV2 video export (landed T3) |
+  | procedural/generation3d | created document never opened | S19 / hub creation |
+  | architect/program, note/note | not reached (panic 00:31) | rerun on ALL |
+- 08:3x item 5 v2 (coordinator correction 08:3x: no string-packed side channel): the refusal is the typed record
+  `semio.typed-operation-fault.v1` {schema, code, origin, message} — schema `🔌️plugin/🧬️schema/🧯️typed-operation-fault/🔣️.json`,
+  Rust `app::TypedOperationFault` (`of_fault`/`encode`/`decode`/`into_fault`) carried by the job fault detail AND all 8 Fault-lane
+  page producers (the completion path used to publish `fault.as_bytes()` = message only, the cancellation and latest-wins paths raw
+  text); `ArtifactBoundedToolFault` keeps code + origin + message and publishes its record; agent preview + registered fixture answer
+  the record's own code/origin; TS twin `decodeTypedOperationFaultV1` + `typedOperationPageFaultV1` in wire-turn (scan faults and
+  page answers are records), React router rejects with `TypedOperationFaultError{fault}`. Fixture `🧫️fixtures/🧯️typed-operation-
+  fault.json` (7 record + 7 decode cases) + Rust law + AJV twin (registered in the plugin SDK `test` script); agent-lane fixture moves
+  to records (10 cases). Pre-validation without cargo (guest freeze): both AJV twins and the TS decoder run green against the new
+  fixtures in a scratch copy; strict tsc of the TS block rc 0; every removed Rust symbol has no user left after the patch; set proven
+  idempotent in memory.
+- 08:4x item 7 census (`wp-s20/s20-fault-census.py`): see the table row; plan = F1 mechanism + ratchet ledger, then F2…Fn per family.
 
 ### Session 14b
 

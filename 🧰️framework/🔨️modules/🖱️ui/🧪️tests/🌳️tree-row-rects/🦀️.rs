@@ -151,7 +151,7 @@ fn every_fixture_row_is_published_at_the_rect_the_painter_draws_it_at() {
             let expected = (rect["x"].as_f64().expect("x"), rect["y"].as_f64().expect("y"), rect["width"].as_f64().expect("width"), rect["height"].as_f64().expect("height"));
             assert!(close(x, expected.0) && close(y, expected.1) && close(width, expected.2) && close(height, expected.3), "{name} {:?}: got ({x}, {y}, {width}, {height}), want {expected:?}", rect["path"]);
         }
-        println!("[DEBUG] tree-row-rects case {name}: {} rows pinned", entry["rects"].as_array().map_or(0, Vec::len));
+        println!("tree-row-rects case {name}: {} rows pinned", entry["rects"].as_array().map_or(0, Vec::len));
     }
 }
 
@@ -171,7 +171,6 @@ fn a_pointer_aimed_at_a_painted_row_hits_that_row() {
         let expects = probe["expects"].as_str().expect("expects");
         let want = expects.rsplit('/').next().expect("expected row id");
         assert_eq!(key, want, "hit at ({x}, {y}) — {}", probe["why"]);
-        println!("[DEBUG] tree-row-rects hit ({x}, {y}) -> {key}");
     }
 }
 

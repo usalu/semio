@@ -103,6 +103,14 @@ fn check_optional_json_payload(label: &str, payload: &Option<String>, limits: &R
     Ok(())
 }
 
+/// ☁️ `points_json` payload-size validation only — the point-sprite GPU pipeline itself lives in
+/// `infinite_world::world::World3dState` (see `render_world_3d`, imported below), a separate crate this
+/// file delegates all actual mesh/instance drawing to and does not construct wgpu render
+/// pipelines/shaders directly for (confirmed: no `create_render_pipeline`/`RenderPipelineDescriptor`
+/// call anywhere in this file). Threading the base64 point buffers through `infinite_world`'s own
+/// draw path is out of scope here (that crate isn't in this ticket's touched-file list); this
+/// validator still guards the native shell against an oversized/malformed payload same as every
+/// other optional world3d field above.
 pub fn validate_component_scene(scene: &UiComponentSceneNode, limits: &RenderPlanLimits) -> Result<(), String> {
     let scene_label = format!("component scene '{}'", scene.surface_id);
     if let Some(canvas) = &scene.canvas_2d {
@@ -131,14 +139,6 @@ pub fn validate_component_scene(scene: &UiComponentSceneNode, limits: &RenderPla
         check_optional_json_payload(&format!("{scene_label} world3d.pickTargets"), &world.pick_targets_json, limits)?;
         check_optional_json_payload(&format!("{scene_label} world3d.lod"), &world.lod_json, limits)?;
         check_optional_json_payload(&format!("{scene_label} world3d.chunking"), &world.chunking_json, limits)?;
-        // ☁️ `points_json` payload-size validation only — the point-sprite GPU pipeline itself lives in
-        // `infinite_world::world::World3dState` (see `render_world_3d`, imported below), a separate crate this
-        // file delegates all actual mesh/instance drawing to and does not construct wgpu render
-        // pipelines/shaders directly for (confirmed: no `create_render_pipeline`/`RenderPipelineDescriptor`
-        // call anywhere in this file). Threading the base64 point buffers through `infinite_world`'s own
-        // draw path is out of scope here (that crate isn't in this ticket's touched-file list); this
-        // validator still guards the native shell against an oversized/malformed payload same as every
-        // other optional world3d field above.
         check_optional_json_payload(&format!("{scene_label} world3d.points"), &world.points_json, limits)?;
         check_tool_run_trace(&format!("{scene_label} world3d.toolRunTrace"), &world.tool_run_trace, limits)?;
     }
@@ -3193,7 +3193,7 @@ pub(crate) fn progress_presented_input_candidate(witness: u64, input: &mut ui_wg
 }
 
 //#region 🖱️SurfaceContextMenu
-/** @emoji 🖱️ One component scene resolved for a right-click: which surface the pointer is over, and
+/** 🖱️ One component scene resolved for a right-click: which surface the pointer is over, and
  * that kind's own `hits`/`selection`/`text` — the `surface` half of React's
  * `openSurfaceContextMenu({ surface: { surfaceId, kind, hits, selection } })`. */
 pub struct SurfaceContextMenuTarget {
@@ -3203,7 +3203,7 @@ pub struct SurfaceContextMenuTarget {
     pub target: crate::scenes::SceneContextMenuTarget,
 }
 
-/** @emoji 🖱️ The component scene under a WINDOW-LOCAL point, already resolved into its context-menu
+/** 🖱️ The component scene under a WINDOW-LOCAL point, already resolved into its context-menu
  * surface target. `None` when the point is over chrome that no scene owns — the caller then falls
  * back to the shell's own `"window"` menu, exactly as React's `ShellContextMenu` does when no scene
  * host claimed the event.
@@ -3226,7 +3226,7 @@ pub fn surface_context_menu_target(window_id: &str, x: f32, y: f32) -> Option<Su
     })
 }
 
-/** @emoji 🖱️ Parks a context-menu row on the text-editor surface under a WINDOW-LOCAL point when
+/** 🖱️ Parks a context-menu row on the text-editor surface under a WINDOW-LOCAL point when
  * that row is one the editor answers itself, and reports whether it did — React's
  * `dispatchTextEditorMenu`, which runs an id present in its own `localActions` map instead of
  * dispatching it to the guest. `false` for every other surface kind and every other row. */
@@ -3240,7 +3240,7 @@ pub fn text_editor_claim_menu_action(window_id: &str, x: f32, y: f32, action: &s
         .unwrap_or(false)
 }
 
-/** @emoji 📋️ An ALT-held secondary press on a text editor opens the completions dropdown instead of
+/** 📋️ An ALT-held secondary press on a text editor opens the completions dropdown instead of
  * a context menu — React's `event.altKey && completions.length > 0` branch in the host's own
  * `onContextMenu` (`🧱️elements/✏️TextEditor/🟦️.tsx:413`). `false` leaves the press to the menu. */
 pub fn text_editor_claim_alt_completions(window_id: &str, x: f32, y: f32) -> bool {
@@ -3267,6 +3267,11 @@ enum SceneIntentProgress {
 /// 🍿️ A press on an open completions dropdown COMMITS that row (and a press
 /// anywhere else dismisses it) before the caret path moves the caret — React's
 /// popup is a real element above the canvas and swallows the press the same way.
+///
+/// 🖱️ The two modifier flags were literal `false` here — `paint2d_pointer_button_into`
+/// has asked for shift/ctrl since it was written, and this, its only production caller,
+/// could not answer. React reads them off the pointer event
+/// (`🖌️Paint2dHost/🟦️.tsx:503`'s `marqueeModeFromModifiers`).
 fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<SceneIntentProgress, ui_wgpu::wgpu::BoundedActionFault> {
     let operation_generation = intent.generation;
     if operation_generation == 0 {
@@ -3341,10 +3346,6 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut ui
                 return Ok(SceneIntentProgress::Complete);
             };
             let result = match intent.event {
-                // 🖱️ The two modifier flags were literal `false` here — `paint2d_pointer_button_into`
-                // has asked for shift/ctrl since it was written, and this, its only production caller,
-                // could not answer. React reads them off the pointer event
-                // (`🖌️Paint2dHost/🟦️.tsx:503`'s `marqueeModeFromModifiers`).
                 SceneIntentEvent::PointerDown { x, y, button, modifiers } => crate::engine_canvas::paint2d_pointer_button_into(scene, rect, x, y, true, button, modifiers.shift, modifiers.ctrl || modifiers.meta, input),
                 SceneIntentEvent::PointerUp { x, y, button, modifiers } => crate::engine_canvas::paint2d_pointer_button_into(scene, rect, x, y, false, button, modifiers.shift, modifiers.ctrl || modifiers.meta, input),
                 SceneIntentEvent::PointerMove { x, y, .. } => crate::engine_canvas::paint2d_pointer_move_into(scene, rect, x, y, input),
@@ -3721,7 +3722,7 @@ fn apply_retained_document_page(engine: &mut ui_wgpu::wgpu::Ui, cursor: &mut UiD
         if rejection.fault == ui_wgpu::wgpu::tree::UiDocumentTreeFault::Generation && (step.is_cancelled() || step.should_yield()) {
             return;
         }
-        document_debug_log(&format!("[DEBUG] ui-doc page fault window={window_id} generation={} index={} fault={:?} cancelled={} yielded={}", rejection.generation, rejection.index, rejection.fault, step.is_cancelled(), step.should_yield()));
+        document_debug_log(&format!("[TRACE] ui-doc page fault window={window_id} generation={} index={} fault={:?} cancelled={} yielded={}", rejection.generation, rejection.index, rejection.fault, step.is_cancelled(), step.should_yield()));
         cursor.phase = UiDocumentFramePhase::Fault;
     }
 }
@@ -3736,13 +3737,44 @@ fn forward_retired_component_scene_one(window_id: &str) -> bool {
     let owner = ScenePointerTarget::from(retired.clone());
     let _retained = crate::scenes::retire_scene_identity(&owner);
     #[cfg(test)]
-    eprintln!("[DEBUG] scene retirement forward window={} host={} kind={:?} retained={_retained}", owner.window_id, owner.host_id, owner.kind);
+    eprintln!("[TRACE] scene retirement forward window={} host={} kind={:?} retained={_retained}", owner.window_id, owner.host_id, owner.kind);
     UI_ENGINE.with(|cell| {
         assert!(cell.borrow_mut().acknowledge_retired_component_scene(window_id, &retired), "the exact retired component scene head changed before acknowledgement");
     });
     false
 }
 
+/// 🚦️ A refused ingress opportunity is a RETRY, never a fault. `begin_document`,
+/// `apply_document_page` and `finish_document` all refuse a step whose `StepContext` is
+/// cancelled or out of budget, and this arm used to read every refusal as the terminal
+/// `Fault` phase — one `Deadline` on the very first opportunity froze the surface's page
+/// ingress for the life of the shell (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+/// `📓️wgpu-blank-paint-2026-09-12.md`). The budget is checked HERE instead, so an
+/// opportunity that cannot pay is simply not spent and the next one resumes the same page.
+///
+/// 🩺️ One line per ADMITTED ingress — never per page, never per frame. A surface that
+/// republishes an unchanged document answers `Published` and stays silent, so this line is
+/// exactly "surface X started ingesting a new document", the fact whose ABSENCE was the
+/// whole defect: every document after a surface's first was answered `Published` and never
+/// reached the arena (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+///
+/// 🌳️ The one production writer of the paintable arena: `Ui::apply_tree` is
+/// `cfg(test/testkit)`, so without this phase `tree.root` is `None` forever and
+/// `frame_into_step` answers `Missing` before it reads anything else.
+///
+/// 📐️ Advances on THIS window's own predicate, never on the layout queue's verdict.
+///
+/// 🩸️ `step_layouts` answers for the queue: `Idle` means it was empty and `Ready { .. }`
+/// may name another surface. Reading either as "my layout is done" moved the cursor to
+/// `Paint` against a still-dirty root, where `frame_into_step` short-circuits `Pending`
+/// before it ever opens a paint frame — measured on 6118 as `procedural-main` burning all
+/// 1 048 576 window-paint opportunities, twice a minute, which starved every OTHER
+/// window's paint (the preview's World3d snapshot-apply cursor advanced three times in
+/// 120 s) (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+///
+/// 🔁️ A paint that is waiting on a layout is not a paint step at all: the root
+/// went dirty again (a viewport change, a theme propagation, a fresh reconcile),
+/// and only the Layout phase can re-arm the lane that clears it.
 pub(crate) fn render_ui_document_step(
     cursor: &mut UiDocumentFrameCursor,
     document: &UiDocumentLease,
@@ -3786,29 +3818,17 @@ pub(crate) fn render_ui_document_step(
         let mut engine = cell.borrow_mut();
         engine.set_driver_drag(driver_drag);
         match cursor.phase {
-            // 🚦️ A refused ingress opportunity is a RETRY, never a fault. `begin_document`,
-            // `apply_document_page` and `finish_document` all refuse a step whose `StepContext` is
-            // cancelled or out of budget, and this arm used to read every refusal as the terminal
-            // `Fault` phase — one `Deadline` on the very first opportunity froze the surface's page
-            // ingress for the life of the shell (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
-            // `📓️wgpu-blank-paint-2026-09-12.md`). The budget is checked HERE instead, so an
-            // opportunity that cannot pay is simply not spent and the next one resumes the same page.
             UiDocumentFramePhase::Ingress if step.is_cancelled() || step.should_yield() => {}
-            // 🩺️ One line per ADMITTED ingress — never per page, never per frame. A surface that
-            // republishes an unchanged document answers `Published` and stays silent, so this line is
-            // exactly "surface X started ingesting a new document", the fact whose ABSENCE was the
-            // whole defect: every document after a surface's first was answered `Published` and never
-            // reached the arena (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
             UiDocumentFramePhase::Ingress => match {
                 let status = engine.document_status(window_id, generation);
                 if status == ui_wgpu::wgpu::engine::UiDocumentIngressStatus::Vacant {
-                    document_debug_log(&format!("[DEBUG] ui-doc ingress window={window_id} generation={generation} nodes={}", header.node_count));
+                    document_debug_log(&format!("[TRACE] ui-doc ingress window={window_id} generation={generation} nodes={}", header.node_count));
                 }
                 status
             } {
                 ui_wgpu::wgpu::engine::UiDocumentIngressStatus::Vacant => {
                     if let Err((_fault, _header)) = engine.begin_document(window_id, header, &mut step) {
-                        document_debug_log(&format!("[DEBUG] ui-doc begin refused window={window_id} generation={generation} nodes={} fault={_fault:?}", _header.node_count));
+                        document_debug_log(&format!("[TRACE] ui-doc begin refused window={window_id} generation={generation} nodes={} fault={_fault:?}", _header.node_count));
                         if !matches!(
                             _fault,
                             ui_wgpu::wgpu::engine::UiDocumentIngressFault::Cancelled
@@ -3831,7 +3851,7 @@ pub(crate) fn render_ui_document_step(
                                 | ui_wgpu::wgpu::engine::UiDocumentIngressFault::Deadline,
                             ) => {}
                             Err(_fault) => {
-                                document_debug_log(&format!("[DEBUG] ui-doc finish fault window={window_id} generation={generation} fault={_fault:?}"));
+                                document_debug_log(&format!("[TRACE] ui-doc finish fault window={window_id} generation={generation} fault={_fault:?}"));
                                 cursor.phase = UiDocumentFramePhase::Fault;
                             }
                         }
@@ -3841,7 +3861,7 @@ pub(crate) fn render_ui_document_step(
                                 apply_retained_document_page(&mut engine, cursor, window_id, page, &mut step);
                             }
                             _ => {
-                                document_debug_log(&format!("[DEBUG] ui-doc page read fault window={window_id} generation={generation} index={next_page}"));
+                                document_debug_log(&format!("[TRACE] ui-doc page read fault window={window_id} generation={generation} index={next_page}"));
                                 cursor.phase = UiDocumentFramePhase::Fault;
                             }
                         }
@@ -3849,14 +3869,11 @@ pub(crate) fn render_ui_document_step(
                 }
                 ui_wgpu::wgpu::engine::UiDocumentIngressStatus::Published => cursor.phase = UiDocumentFramePhase::Reconcile,
             },
-            // 🌳️ The one production writer of the paintable arena: `Ui::apply_tree` is
-            // `cfg(test/testkit)`, so without this phase `tree.root` is `None` forever and
-            // `frame_into_step` answers `Missing` before it reads anything else.
             UiDocumentFramePhase::Reconcile => match engine.step_document_reconcile(window_id, controller_id, &mut step) {
                 ui_wgpu::wgpu::reconcile::UiDocumentReconcileStep::Complete => cursor.phase = UiDocumentFramePhase::Viewport,
                 ui_wgpu::wgpu::reconcile::UiDocumentReconcileStep::Pending => {}
                 ui_wgpu::wgpu::reconcile::UiDocumentReconcileStep::Fault(fault) => {
-                    document_debug_log(&format!("[DEBUG] ui-doc reconcile fault window={window_id} fault={fault:?}"));
+                    document_debug_log(&format!("[TRACE] ui-doc reconcile fault window={window_id} fault={fault:?}"));
                     cursor.phase = UiDocumentFramePhase::Fault;
                 }
             },
@@ -3865,15 +3882,6 @@ pub(crate) fn render_ui_document_step(
                 engine.set_viewport(window_id, viewport_w, viewport_h);
                 cursor.phase = UiDocumentFramePhase::Layout;
             }
-            // 📐️ Advances on THIS window's own predicate, never on the layout queue's verdict.
-            //
-            // 🩸️ `step_layouts` answers for the queue: `Idle` means it was empty and `Ready { .. }`
-            // may name another surface. Reading either as "my layout is done" moved the cursor to
-            // `Paint` against a still-dirty root, where `frame_into_step` short-circuits `Pending`
-            // before it ever opens a paint frame — measured on 6118 as `procedural-main` burning all
-            // 1 048 576 window-paint opportunities, twice a minute, which starved every OTHER
-            // window's paint (the preview's World3d snapshot-apply cursor advanced three times in
-            // 120 s) (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
             UiDocumentFramePhase::Layout => {
                 let _ = drive_mounted_layout_text_one(&mut engine, window_id, ctx.atlas);
                 if engine.layout_is_dirty(window_id) {
@@ -3905,9 +3913,6 @@ pub(crate) fn render_ui_document_step(
                         cursor.stalled = 0;
                         cursor.phase = UiDocumentFramePhase::Complete;
                     }
-                    // 🔁️ A paint that is waiting on a layout is not a paint step at all: the root
-                    // went dirty again (a viewport change, a theme propagation, a fresh reconcile),
-                    // and only the Layout phase can re-arm the lane that clears it.
                     ui_wgpu::wgpu::UiFrameStep::Pending if engine.layout_is_dirty(window_id) => {
                         cursor.stalled = 0;
                         cursor.phase = UiDocumentFramePhase::Layout;
@@ -3919,12 +3924,12 @@ pub(crate) fn render_ui_document_step(
                             cursor.stalled = cursor.stalled.saturating_add(1);
                         }
                         if cursor.stalled > 0 && cursor.stalled % UI_DOCUMENT_PAINT_STALL_NOTICE == 0 {
-                            document_debug_log(&format!("[DEBUG] ui-doc paint stalled window={window_id} opportunities={} {}", cursor.stalled, engine.paint_stall_census(window_id)));
+                            document_debug_log(&format!("[TRACE] ui-doc paint stalled window={window_id} opportunities={} {}", cursor.stalled, engine.paint_stall_census(window_id)));
                         }
                     }
                     ui_wgpu::wgpu::UiFrameStep::Fault => {
                         document_debug_log(&format!(
-                            "[DEBUG] ui-doc paint fault window={window_id} phase={:?} sync-line={} nodes={:?} {}",
+                            "[TRACE] ui-doc paint fault window={window_id} phase={:?} sync-line={} nodes={:?} {}",
                             engine.paint_frame_phase(window_id),
                             engine.paint_frame_sync_fault_line(window_id),
                             engine.tree(window_id).map(|tree| tree.root.is_some()),
@@ -4674,6 +4679,10 @@ fn effective_hovered(node: &ui_wgpu::wgpu::Node, presence_hover: bool, disabled:
 /// order, same parent-relative-`LayoutBucket`-offset accumulation into absolute `(origin_x +
 /// node.layout.x, origin_y + node.layout.y)`), building one `DumpNode` per visited node and
 /// recording the first node found with `NodeFlags::FOCUSED` set as `focus_path`.
+///
+/// 📐️ `Node::layout` is the immediate-mode bucket and stays zero on the retained path; the paint
+/// walk consumes the double-buffered `mounted_layout`, so a probe reading the former reports an
+/// unlaid-out tree even when layout published (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[cfg(any(target_arch = "wasm32", test))]
 #[allow(clippy::too_many_arguments, reason = "one arg per walk-state accumulator; mirrors paint_node's own equally-wide signature")]
 fn walk_dump(tree: &ui_wgpu::wgpu::UiTree, id: NodeId, origin_x: f32, origin_y: f32, parent_path: &str, sibling_index: usize, theme: &Theme, focus_path: &mut Option<String>, nodes: &mut Vec<DumpNode>) {
@@ -4683,9 +4692,6 @@ fn walk_dump(tree: &ui_wgpu::wgpu::UiTree, id: NodeId, origin_x: f32, origin_y: 
     let segment = ui_node_path_segment(ui_node, sibling_index);
     let path = if parent_path.is_empty() { segment } else { format!("{parent_path}/{segment}") };
 
-    // 📐️ `Node::layout` is the immediate-mode bucket and stays zero on the retained path; the paint
-    // walk consumes the double-buffered `mounted_layout`, so a probe reading the former reports an
-    // unlaid-out tree even when layout published (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     let (layout_x, layout_y, layout_w, layout_h) = tree.mounted_layout(id).unwrap_or((node.layout.x, node.layout.y, node.layout.width, node.layout.height));
     let abs_x = origin_x + layout_x;
     let abs_y = origin_y + layout_y;
@@ -5389,6 +5395,10 @@ fn append_text_editor_accessibility_nodes(window_id: &str, tree: &ui_wgpu::wgpu:
 /// for a diagnostic and wrong for the accessibility path: on generation3d it announced
 /// `procedural-main` and silently dropped `procedural-preview` and both measure panels, so 26 of the
 /// app's 64 announced nodes were unreachable to a reader (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+///
+/// ♿️ …and the chrome around those windows, which owns no retained tree of its own. Announced
+/// only when the caller named no single window (or named the chrome itself), the same rule the
+/// per-window filter above follows.
 fn build_accessibility_dump(engine: &ui_wgpu::wgpu::Ui, requested: Option<&str>) -> DumpAccessibility {
     let window_ids = dump_window_ids(engine);
     let announced: Vec<String> = match requested.filter(|id| !id.is_empty()) {
@@ -5413,9 +5423,6 @@ fn build_accessibility_dump(engine: &ui_wgpu::wgpu::Ui, requested: Option<&str>)
             DumpAccessibilityWindow { window_id, window_generation, nodes }
         })
         .collect();
-    // ♿️ …and the chrome around those windows, which owns no retained tree of its own. Announced
-    // only when the caller named no single window (or named the chrome itself), the same rule the
-    // per-window filter above follows.
     let chrome = CHROME_ACCESSIBILITY.borrow().clone();
     if !chrome.nodes.is_empty() && requested.filter(|id| !id.is_empty()).is_none_or(|id| id == SHELL_CHROME_ACCESSIBILITY_WINDOW_ID) {
         windows.push(DumpAccessibilityWindow { window_id: SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: chrome.generation, nodes: chrome.nodes });
@@ -5423,22 +5430,22 @@ fn build_accessibility_dump(engine: &ui_wgpu::wgpu::Ui, requested: Option<&str>)
     DumpAccessibility { window_id: requested.filter(|id| !id.is_empty()).map(str::to_string), window_ids, windows }
 }
 
+/// 📊️ The production paint entry is `frame_into_step`, which appends into the CALLER's draw list
+/// and never publishes into the window's own — so `draw_list` answers "empty" no matter how much
+/// the window painted, which is why `drawCalls: 0` survived every earlier lane. The engine's own
+/// per-window paint census measures the delta that paint appended, for either entry; the retained
+/// `draw_list` is still read when it carries one (the `frame_step` path).
+/// 🩸️ `layers > 0` alone disqualified a window whose whole paint IS its scene pass: the wgpu
+/// preview appends one `push_scene_pass` and no new draw LAYER, so its real census
+/// (`scene_passes 1, scene_draws 2, scene_instances 1`) was thrown away and the empty retained
+/// `draw_list` answered zeros — the hexagonal column was on screen while `dumpFrameStats` said
+/// nothing had been drawn (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[cfg(any(target_arch = "wasm32", test))]
 fn build_frame_stats(engine: &ui_wgpu::wgpu::Ui, requested: Option<&str>) -> DumpFrameStats {
     let window_ids = dump_window_ids(engine);
     let Some(window_id) = dump_window_id(engine, requested) else {
         return DumpFrameStats { window_id: None, window_ids, draw_calls: 0, quad_count: 0, glyph_count: 0, scene_passes: 0, scene_draws: 0, scene_instances: 0, frame_latency: crate::frame_latency::snapshot() };
     };
-    // 📊️ The production paint entry is `frame_into_step`, which appends into the CALLER's draw list
-    // and never publishes into the window's own — so `draw_list` answers "empty" no matter how much
-    // the window painted, which is why `drawCalls: 0` survived every earlier lane. The engine's own
-    // per-window paint census measures the delta that paint appended, for either entry; the retained
-    // `draw_list` is still read when it carries one (the `frame_step` path).
-    // 🩸️ `layers > 0` alone disqualified a window whose whole paint IS its scene pass: the wgpu
-    // preview appends one `push_scene_pass` and no new draw LAYER, so its real census
-    // (`scene_passes 1, scene_draws 2, scene_instances 1`) was thrown away and the empty retained
-    // `draw_list` answered zeros — the hexagonal column was on screen while `dumpFrameStats` said
-    // nothing had been drawn (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     if let Some(census) = engine.paint_census(&window_id).filter(|census| census.layers > 0 || census.scene_passes > 0) {
         return DumpFrameStats {
             window_id: Some(window_id),

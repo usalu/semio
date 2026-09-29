@@ -5,16 +5,16 @@
 //! `../../🖼️assets/🎬️demo/🗣️.dsl.semio` without a `model=` line and therefore unparseable by this subset's own
 //! `ArtifactDsl` codec — the identity round-trip law had nothing to round-trip.
 
-/// @emoji 🪪 Example id.
+/// 🪪 Example id.
 pub const ID: &str = "demo";
 
-/// @emoji 🏷️ Example label.
+/// 🏷️ Example label.
 pub const LABEL_EN: &str = "Demo";
 
-/// @emoji 🏛️ The ANSI/ASHRAE 140 §5.2 case this demo carries.
+/// 🏛️ The ANSI/ASHRAE 140 §5.2 case this demo carries.
 pub const CASE: &str = "600";
 
-/// @emoji 🏗️ This example's model.
+/// 🏗️ This example's model.
 pub fn model() -> crate::model::Model {
     crate::bestest::model(CASE).expect("ANSI/ASHRAE 140 §5.2 case 600 is registered")
 }

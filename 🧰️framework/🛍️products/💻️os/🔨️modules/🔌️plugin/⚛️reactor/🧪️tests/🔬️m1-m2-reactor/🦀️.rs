@@ -36,6 +36,9 @@ async fn revision_guard_rejects_an_intent_trailing_by_more_than_the_tolerance() 
 /// completely untouched — no revision bump, no patch, because the two channels share no code
 /// path (by construction: `stamp_and_cache_interaction_ui` writes `pending_presence`, never
 /// `PENDING_PATCHES`/`PATCHES`).
+///
+/// 🩹️ Zero ui_patches: the surface's revision is EXACTLY what it was before — nothing was ever
+/// diffed against `PATCHES` for it, so there is nothing for a subsequent `poll` to have sent.
 #[semio_framework_async_macros::async_test]
 async fn a_presence_only_turn_emits_presence_and_zero_patches() {
     let before = patches_revision("presence-only").await;
@@ -43,8 +46,6 @@ async fn a_presence_only_turn_emits_presence_and_zero_patches() {
     let updates = presence_expire_and_flush(0).await;
     assert_eq!(updates.len(), 1);
     assert!(updates[0].own.selected);
-    // 🩹️ Zero ui_patches: the surface's revision is EXACTLY what it was before — nothing was ever
-    // diffed against `PATCHES` for it, so there is nothing for a subsequent `poll` to have sent.
     assert_eq!(patches_revision("presence-only").await, before);
 }
 

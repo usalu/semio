@@ -52,7 +52,6 @@ async fn cad_config_operation_snapshot_round_trips_and_restores_exactly() {
     let bytes = protocol::OpBinary::encode_op(&operation).expect("config mutation binary");
     assert_eq!(<CadConfigMutation as protocol::OpBinary>::decode_op(&bytes).expect("config mutation binary round trip"), operation);
     let inline_bytes = size_of::<CadConfigMutation>();
-    eprintln!("[DEBUG] CAD config mutation inline bytes={inline_bytes}");
     assert!(inline_bytes <= fixture["maximumInlineBytes"].as_u64().unwrap() as usize, "CAD config mutation exceeds its neutral inline budget");
     let restored = backwards[0].diff(&forward).diff().clone();
     assert_eq!(restored, base);

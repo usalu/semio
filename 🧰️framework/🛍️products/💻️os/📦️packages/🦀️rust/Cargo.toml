@@ -97,13 +97,13 @@ web-sys = { version = "0.3.98", features = ["Window", "Storage", "console", "Web
 # `📇️directory/🔌️client::browser` WebSocket bridge's `tokio::sync::mpsc` channel — both entirely
 # outside a WASI guest's reach (`🔄️sync/🦀️.rs`'s own docstring: "WASI-P2 plugins never link
 # this crate ... This actor is a host-side concern only"; the browser bridge is
-# `cfg(all(target_arch = "wasm32", not(target_env = "p2")))`-gated already). `zip` backs
-# `🧩️extension`'s `.sxt` package pack/unpack/verify — installing a runtime extension is host tooling
+# `cfg(all(target_arch = "wasm32", not(target_env = "p2")))`-gated already). `semio-framework-deflate` (its first-party
+# `zip_archive`) backs `🧩️extension`'s `.sxt` package pack/unpack/verify — installing a runtime extension is host tooling
 # (only caller repo-wide: `semio-framework-os`'s native host crate), never something a guest
 # component does to itself; its module mount is gated the same way in `🦀️.rs`.
 [target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
 tokio = { version = "1", features = ["sync", "macros"], default-features = false }
-zip = { version = "2.4", default-features = false, features = ["deflate"] }
+semio-framework-deflate = { path = "../../../../🔨️modules/🗜️deflate/📦️packages/🦀️rust" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 futures = "0.3"

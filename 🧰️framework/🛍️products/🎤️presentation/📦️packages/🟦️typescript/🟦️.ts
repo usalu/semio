@@ -1,29 +1,29 @@
 // #region 🧲️Header
-/** @emoji 🎤️ `@semio-tech/presentation` — render-independent declarative presentation model (reveal.js-oriented morph ids). */
+/** 🎤️ `@semio-tech/presentation` — render-independent declarative presentation model (reveal.js-oriented morph ids). */
 // #endregion 🧲️Header
 
 //#region 🔖️Emphasis
-/** @emoji 🎚️ Visual emphasis for a participant on one slide (maps to opacity layering in renderers). */
+/** 🎚️ Visual emphasis for a participant on one slide (maps to opacity layering in renderers). */
 export type ParticipantEmphasis = "active" | "muted";
 //#endregion 🔖️Emphasis
 
 //#region 🔖️Transition
-/** @emoji ↔ Transition from one slide to the next within a thought. */
+/** ↔ Transition from one slide to the next within a thought. */
 export interface Transition {
 	readonly kind: "morph" | "fade";
 }
 //#endregion 🔖️Transition
 
 //#region 🔖️Morph
-/** @emoji 📐️ reveal.js auto-animate DOM root for {@link TextEmbodiment} (see temp/eg-ice-25 intro slides). */
+/** 📐️ reveal.js auto-animate DOM root for {@link TextEmbodiment} (see temp/eg-ice-25 intro slides). */
 export type TextMorphRoot = "title" | "heading-block" | "heading-line" | "subheading-line" | "body";
 
-/** @emoji 🎯️ Stable reveal.js `data-id` for a placed participant (participant-scoped across embodiments). */
+/** 🎯️ Stable reveal.js `data-id` for a placed participant (participant-scoped across embodiments). */
 export function morphId(participantId: string): string {
 	return participantId;
 }
 
-/** @emoji 📐️ Chooses the eg-ice-25 text DOM root for reveal.js `data-id` pairing. */
+/** 📐️ Chooses the eg-ice-25 text DOM root for reveal.js `data-id` pairing. */
 export function resolveTextMorphRoot(embodiment: TextEmbodiment): TextMorphRoot {
 	if (embodiment.morphRoot) {
 		return embodiment.morphRoot;
@@ -42,7 +42,7 @@ export function resolveTextMorphRoot(embodiment: TextEmbodiment): TextMorphRoot 
 //#endregion 🔖️Morph
 
 //#region 🔖️Embodiment
-/** @emoji 📝️ Text lines at a heading level; optional `fit` hints fit-text in reveal renderers. */
+/** 📝️ Text lines at a heading level; optional `fit` hints fit-text in reveal renderers. */
 export interface TextEmbodiment {
 	readonly kind: "text";
 	readonly id: string;
@@ -50,24 +50,24 @@ export interface TextEmbodiment {
 	readonly level: "title" | "heading" | "subheading" | "body";
 	readonly fit?: boolean;
 	readonly morphRoot?: TextMorphRoot;
-	/** @emoji 🔀️ Prior lines keyed by index when visible lines shorten or relabel (e.g. full description → short). */
+	/** 🔀️ Prior lines keyed by index when visible lines shorten or relabel (e.g. full description → short). */
 	readonly morphFromLines?: readonly string[];
 }
 
-/** @emoji 🧩️ Rows×columns grid from {@link split}; enables seam-aligned background positioning. */
+/** 🧩️ Rows×columns grid from {@link split}; enables seam-aligned background positioning. */
 export interface FigureMosaicGrid {
 	readonly rows: number;
 	readonly columns: number;
-	/** @emoji 📐️ Normalized source region the grid subdivides (default full image). */
+	/** 📐️ Normalized source region the grid subdivides (default full image). */
 	readonly frame?: DispositionPosition;
 }
 
-/** @emoji ✨️ Frosted overlay hinting at hidden or upcoming media; optional {@link MediaTeaser.label}. */
+/** ✨️ Frosted overlay hinting at hidden or upcoming media; optional {@link MediaTeaser.label}. */
 export interface MediaTeaser {
 	readonly label?: string;
 }
 
-/** @emoji 📜️ Normalized scroll origin for scrollable media (CSS background-position semantics). */
+/** 📜️ Normalized scroll origin for scrollable media (CSS background-position semantics). */
 export interface MediaScrollOrigin {
 	readonly x?: number;
 	readonly y?: number;
@@ -76,7 +76,7 @@ export interface MediaScrollOrigin {
 export const MEDIA_SCROLL_ORIGIN_CENTER: MediaScrollOrigin = { x: 50, y: 50 };
 export const MEDIA_SCROLL_ORIGIN_TOP_LEFT: MediaScrollOrigin = { x: 0, y: 0 };
 
-/** @emoji 📜️ Resolves optional {@link MediaScrollOrigin} to x/y percents (default center). */
+/** 📜️ Resolves optional {@link MediaScrollOrigin} to x/y percents (default center). */
 export function resolveMediaScrollOrigin(origin: MediaScrollOrigin | undefined): {
 	readonly x: number;
 	readonly y: number;
@@ -84,7 +84,7 @@ export function resolveMediaScrollOrigin(origin: MediaScrollOrigin | undefined):
 	return { x: origin?.x ?? 50, y: origin?.y ?? 50 };
 }
 
-/** @emoji 📜️ Initial scroll percent along one cover-overflow axis from a scroll origin. */
+/** 📜️ Initial scroll percent along one cover-overflow axis from a scroll origin. */
 export function mediaScrollPercentForAxis(
 	axis: "x" | "y",
 	origin: MediaScrollOrigin | undefined,
@@ -93,26 +93,26 @@ export function mediaScrollPercentForAxis(
 	return axis === "x" ? resolved.x : resolved.y;
 }
 
-/** @emoji 🖼️ Raster or vector figure on a slide; optional {@link FigureEmbodiment.crop} for a normalized source region. */
+/** 🖼️ Raster or vector figure on a slide; optional {@link FigureEmbodiment.crop} for a normalized source region. */
 export interface FigureEmbodiment {
 	readonly kind: "figure";
 	readonly id: string;
 	readonly src: string;
 	readonly alt?: string;
 	readonly crop?: DispositionPosition;
-	/** @emoji 📐️ Source bitmap width÷height; used with {@link FigureEmbodiment.crop} for uniform cover (default 1). */
+	/** 📐️ Source bitmap width÷height; used with {@link FigureEmbodiment.crop} for uniform cover (default 1). */
 	readonly sourceAspect?: number;
-	/** @emoji 🧩️ When set, crop backgrounds use edge-aligned positions so adjacent cells do not overlap. */
+	/** 🧩️ When set, crop backgrounds use edge-aligned positions so adjacent cells do not overlap. */
 	readonly mosaic?: FigureMosaicGrid;
-	/** @emoji 📜️ When false, clip cover overflow instead of one-axis scroll (default scrollable; mosaic tiles always clip). */
+	/** 📜️ When false, clip cover overflow instead of one-axis scroll (default scrollable; mosaic tiles always clip). */
 	readonly scroll?: boolean;
-	/** @emoji ✨️ When set, shows a glassy veil over the figure (optional label). */
+	/** ✨️ When set, shows a glassy veil over the figure (optional label). */
 	readonly teaser?: MediaTeaser;
-	/** @emoji 📜️ Initial scroll origin as CSS background-position percents (default center). */
+	/** 📜️ Initial scroll origin as CSS background-position percents (default center). */
 	readonly scrollOrigin?: MediaScrollOrigin;
 }
 
-/** @emoji 🎬️ Video clip on a slide. */
+/** 🎬️ Video clip on a slide. */
 export interface VideoEmbodiment {
 	readonly kind: "video";
 	readonly id: string;
@@ -122,15 +122,15 @@ export interface VideoEmbodiment {
 	readonly loop?: boolean;
 	readonly muted?: boolean;
 	readonly controls?: boolean;
-	/** @emoji 📜️ When false, clip cover overflow instead of one-axis scroll (default scrollable). */
+	/** 📜️ When false, clip cover overflow instead of one-axis scroll (default scrollable). */
 	readonly scroll?: boolean;
-	/** @emoji ✨️ When set, shows a glassy veil over the video (optional label). */
+	/** ✨️ When set, shows a glassy veil over the video (optional label). */
 	readonly teaser?: MediaTeaser;
-	/** @emoji 📜️ Initial scroll origin as CSS background-position percents (default center). */
+	/** 📜️ Initial scroll origin as CSS background-position percents (default center). */
 	readonly scrollOrigin?: MediaScrollOrigin;
 }
 
-/** @emoji 📄️ PDF document page on a slide. */
+/** 📄️ PDF document page on a slide. */
 export interface PdfEmbodiment {
 	readonly kind: "pdf";
 	readonly id: string;
@@ -140,25 +140,25 @@ export interface PdfEmbodiment {
 	/** Ordered subset for prev/next navigation (e.g. thesis excerpt `[1, 12, 25, 35, 42, 43, 51]`). */
 	readonly pages?: readonly number[];
 	readonly alt?: string;
-	/** @emoji 📜️ When false, clip cover overflow instead of one-axis scroll (default scrollable). */
+	/** 📜️ When false, clip cover overflow instead of one-axis scroll (default scrollable). */
 	readonly scroll?: boolean;
-	/** @emoji ✨️ When set, shows a glassy veil over the pdf (optional label). */
+	/** ✨️ When set, shows a glassy veil over the pdf (optional label). */
 	readonly teaser?: MediaTeaser;
-	/** @emoji 📜️ Initial scroll origin as CSS background-position percents (default center). */
+	/** 📜️ Initial scroll origin as CSS background-position percents (default center). */
 	readonly scrollOrigin?: MediaScrollOrigin;
 }
 
-/** @emoji 🪟️ Embedded HTML document on a slide. */
+/** 🪟️ Embedded HTML document on a slide. */
 export interface IframeEmbodiment {
 	readonly kind: "iframe";
 	readonly id: string;
 	readonly src: string;
 	readonly title?: string;
-	/** @emoji ✨️ When set, shows a glassy veil in front of the iframe (optional label). */
+	/** ✨️ When set, shows a glassy veil in front of the iframe (optional label). */
 	readonly teaser?: MediaTeaser;
 }
 
-/** @emoji 📝️ Markdown body on a slide; rendered with repo prose typography in React renderers. */
+/** 📝️ Markdown body on a slide; rendered with repo prose typography in React renderers. */
 export interface MarkdownEmbodiment {
 	readonly kind: "markdown";
 	readonly id: string;
@@ -167,7 +167,7 @@ export interface MarkdownEmbodiment {
 	readonly title?: string;
 }
 
-/** @emoji 🧬️ JSON document on a slide; rendered as an expandable syntax tree in React renderers. */
+/** 🧬️ JSON document on a slide; rendered as an expandable syntax tree in React renderers. */
 export interface JsonEmbodiment {
 	readonly kind: "json";
 	readonly id: string;
@@ -176,27 +176,27 @@ export interface JsonEmbodiment {
 	readonly title?: string;
 }
 
-/** @emoji • Bulleted list body. */
+/** 🔘️ Bulleted list body. */
 export interface BulletEmbodiment {
 	readonly kind: "bullet";
 	readonly id: string;
 	readonly items: readonly string[];
 }
 
-/** @emoji 🔢️ One superscript affiliation mark on an author (optional fade for marks introduced earlier). */
+/** 🔢️ One superscript affiliation mark on an author (optional fade for marks introduced earlier). */
 export interface AuthorMark {
 	readonly mark: string;
 	readonly emphasis?: ParticipantEmphasis;
 }
 
-/** @emoji 👤️ One author name with optional affiliation marks. */
+/** 👤️ One author name with optional affiliation marks. */
 export interface AuthorPerson {
 	readonly name: string;
 	readonly marks?: readonly string[];
 	readonly markEntries?: readonly AuthorMark[];
 }
 
-/** @emoji 👤️ Author rows (names with optional superscript marks); use `lines` for multiple rows. */
+/** 👤️ Author rows (names with optional superscript marks); use `lines` for multiple rows. */
 export interface AuthorsEmbodiment {
 	readonly kind: "authors";
 	readonly id: string;
@@ -205,7 +205,7 @@ export interface AuthorsEmbodiment {
 	readonly abbreviateFirstName?: boolean;
 }
 
-/** @emoji 👤️ Abbreviates the first given name (`Ueli Saluz` → `U. Saluz`) for compact author rows with affiliation marks. */
+/** 👤️ Abbreviates the first given name (`Ueli Saluz` → `U. Saluz`) for compact author rows with affiliation marks. */
 export function abbreviateAuthorFirstName(fullName: string): string {
 	const parts = fullName.trim().split(/\s+/).filter(Boolean);
 	if (parts.length < 2) {
@@ -219,7 +219,7 @@ export function abbreviateAuthorFirstName(fullName: string): string {
 	return `${String.fromCodePoint(initial).toLocaleUpperCase("de-DE")}. ${rest.join(" ")}`;
 }
 
-/** @emoji 🏛️ One affiliation line with optional second mark+name on the same row (e.g. university + chair). */
+/** 🏛️ One affiliation line with optional second mark+name on the same row (e.g. university + chair). */
 export interface AffiliationEntry {
 	readonly mark: string;
 	readonly name: string;
@@ -229,12 +229,12 @@ export interface AffiliationEntry {
 	readonly suffixEmphasis?: ParticipantEmphasis;
 }
 
-/** @emoji 🏛️ Affiliation line label (`shortName` when set, else full `name`). */
+/** 🏛️ Affiliation line label (`shortName` when set, else full `name`). */
 export function affiliationLineName(entry: AffiliationEntry): string {
 	return entry.shortName ?? entry.name;
 }
 
-/** @emoji 🔀️ Maps affiliation marks whose line label changes between steps to the prior label for reveal.js morph pairing. */
+/** 🔀️ Maps affiliation marks whose line label changes between steps to the prior label for reveal.js morph pairing. */
 export function affiliationEmbodimentMorphLabels(
 	previousStep: readonly AffiliationEntry[],
 	currentStep: readonly AffiliationEntry[],
@@ -255,7 +255,7 @@ export function affiliationEmbodimentMorphLabels(
 	return labels;
 }
 
-/** @emoji 🏛️ Collects `mark` and `suffix.mark` values presentation in one affiliation step. */
+/** 🏛️ Collects `mark` and `suffix.mark` values presentation in one affiliation step. */
 export function affiliationMarksInStep(step: readonly AffiliationEntry[]): ReadonlySet<string> {
 	const marks = new Set<string>();
 	for (const entry of step) {
@@ -267,7 +267,7 @@ export function affiliationMarksInStep(step: readonly AffiliationEntry[]): Reado
 	return marks;
 }
 
-/** @emoji 🏛️ Footnote mark order as listed in one affiliation step (line marks, then suffix marks). */
+/** 🏛️ Footnote mark order as listed in one affiliation step (line marks, then suffix marks). */
 export function affiliationMarkOrderInStep(step: readonly AffiliationEntry[]): readonly string[] {
 	const order: string[] = [];
 	for (const entry of step) {
@@ -281,7 +281,7 @@ export function affiliationMarkOrderInStep(step: readonly AffiliationEntry[]): r
 	return order;
 }
 
-/** @emoji 👤️ Author rows with only marks defined in `currentStep`; newer marks vs `previousStep` stay active. */
+/** 👤️ Author rows with only marks defined in `currentStep`; newer marks vs `previousStep` stay active. */
 export function authorLinesForAffiliationStep(
 	lines: readonly (readonly AuthorPerson[])[],
 	currentStep: readonly AffiliationEntry[],
@@ -305,7 +305,7 @@ export function authorLinesForAffiliationStep(
 	);
 }
 
-/** @emoji 🏛️ Mutes prior affiliation lines; only marks or suffixes new vs `previousStep` stay active. */
+/** 🏛️ Mutes prior affiliation lines; only marks or suffixes new vs `previousStep` stay active. */
 export function highlightAffiliationDelta(
 	currentStep: readonly AffiliationEntry[],
 	previousStep: readonly AffiliationEntry[],
@@ -327,16 +327,16 @@ export function highlightAffiliationDelta(
 	});
 }
 
-/** @emoji 🏛️ Affiliation footnotes keyed by mark. */
+/** 🏛️ Affiliation footnotes keyed by mark. */
 export interface AffiliationsEmbodiment {
 	readonly kind: "affiliations";
 	readonly id: string;
 	readonly entries: readonly AffiliationEntry[];
-	/** @emoji 🔀️ Prior line labels keyed by mark when the visible label changes after position morph (e.g. full name → shortName). */
+	/** 🔀️ Prior line labels keyed by mark when the visible label changes after position morph (e.g. full name → shortName). */
 	readonly morphLineLabels?: Readonly<Record<string, string>>;
 }
 
-/** @emoji 🎭️ One visual form a {@link Participant} may take on a slide. */
+/** 🎭️ One visual form a {@link Participant} may take on a slide. */
 export type Embodiment =
 	| TextEmbodiment
 	| FigureEmbodiment
@@ -351,7 +351,7 @@ export type Embodiment =
 //#endregion 🔖️Embodiment
 
 //#region 🔖️Participant
-/** @emoji 🧑️ Entity that may appear on one or many slides (identity only; embodiments live in a scope registry). */
+/** 🧑️ Entity that may appear on one or many slides (identity only; embodiments live in a scope registry). */
 export interface Participant {
 	readonly id: string;
 	readonly name?: string;
@@ -359,25 +359,25 @@ export interface Participant {
 //#endregion 🔖️Participant
 
 //#region 🔖️Scope
-/** @emoji 🗂️ Optional scene clip metadata for animate video exports. */
+/** 🗂️ Optional scene clip metadata for animate video exports. */
 export interface ArrangementMetadata {
 	readonly sceneHash?: string;
 }
 
-/** @emoji 🗂️ Optional participant and embodiment registries on a presentation artifact and its children. */
+/** 🗂️ Optional participant and embodiment registries on a presentation artifact and its children. */
 export interface ArtifactScope {
 	readonly participants?: readonly Participant[];
 	readonly embodiments?: readonly Embodiment[];
 	readonly metadata?: ArrangementMetadata;
 }
 
-/** @emoji 🔍️ Merged participant and embodiment maps for resolving dispositions. */
+/** 🔍️ Merged participant and embodiment maps for resolving dispositions. */
 export interface ResolutionScope {
 	readonly participants: ReadonlyMap<string, Participant>;
 	readonly embodiments: ReadonlyMap<string, Embodiment>;
 }
 
-/** @emoji 🔍️ Merges registries from outer to inner scope layers (later layers override earlier ids). */
+/** 🔍️ Merges registries from outer to inner scope layers (later layers override earlier ids). */
 export function buildResolutionScope(ancestors: readonly ArtifactScope[]): ResolutionScope {
 	const participants = new Map<string, Participant>();
 	const embodiments = new Map<string, Embodiment>();
@@ -392,7 +392,7 @@ export function buildResolutionScope(ancestors: readonly ArtifactScope[]): Resol
 	return { participants, embodiments };
 }
 
-/** @emoji 🔍️ Builds the resolution scope for one arrangement inside a deck hierarchy. */
+/** 🔍️ Builds the resolution scope for one arrangement inside a deck hierarchy. */
 export function resolutionScopeForArrangement(
 	presentation: Presentation,
 	chapter: Chapter,
@@ -405,7 +405,7 @@ export function resolutionScopeForArrangement(
 //#endregion 🔖️Scope
 
 //#region 🔖️Disposition
-/** @emoji 📐️ Normalized slide rectangle (0..1 fractions) for a {@link Disposition}. */
+/** 📐️ Normalized slide rectangle (0..1 fractions) for a {@link Disposition}. */
 export interface DispositionPosition {
 	readonly x: number;
 	readonly y: number;
@@ -413,51 +413,51 @@ export interface DispositionPosition {
 	readonly height: number;
 }
 
-/** @emoji 🎨️ Optional style overrides on a {@link Disposition}. */
+/** 🎨️ Optional style overrides on a {@link Disposition}. */
 export interface DispositionStyle {
 	readonly opacity?: number;
 	readonly rotate?: number;
 	readonly scale?: number;
 }
 
-/** @emoji 🔀️ One source participant that morphs into a target disposition (many-to-one). */
+/** 🔀️ One source participant that morphs into a target disposition (many-to-one). */
 export interface MorphFromSlot {
 	readonly participantId: string;
-	/** @emoji 📐️ Target position and frame where the source travels before the target embodiment appears. */
+	/** 📐️ Target position and frame where the source travels before the target embodiment appears. */
 	readonly position: DispositionPosition;
-	/** @emoji 🧩️ Source embodiment shown during the position morph (e.g. figure crop), before switching to the target. */
+	/** 🧩️ Source embodiment shown during the position morph (e.g. figure crop), before switching to the target. */
 	readonly embodimentId: string;
-	/** @emoji 🎯️ Line index when the target uses a multi-line text morph root (`participantId--index`). */
+	/** 🎯️ Line index when the target uses a multi-line text morph root (`participantId--index`). */
 	readonly targetLineIndex?: number;
 }
 
-/** @emoji 🔀️ One target participant that morphs from a source disposition (one-to-many). */
+/** 🔀️ One target participant that morphs from a source disposition (one-to-many). */
 export interface MorphToSlot {
 	readonly participantId: string;
-	/** @emoji 📐️ Source position and frame on the source slide for this target during the morph. */
+	/** 📐️ Source position and frame on the source slide for this target during the morph. */
 	readonly position: DispositionPosition;
-	/** @emoji 🧩️ Target embodiment on the next slide (fallback when the target disposition is missing). */
+	/** 🧩️ Target embodiment on the next slide (fallback when the target disposition is missing). */
 	readonly embodimentId?: string;
 }
 
-/** @emoji 📍️ Concrete positioned, styled embodiment of a participant on one arrangement. */
+/** 📍️ Concrete positioned, styled embodiment of a participant on one arrangement. */
 export interface Disposition {
 	readonly participantId: string;
 	readonly embodimentId: string;
 	readonly emphasis: ParticipantEmphasis;
 	readonly position?: DispositionPosition;
 	readonly style?: DispositionStyle;
-	/** @emoji 🔀️ Source participants that morph into this disposition (many-to-one). */
+	/** 🔀️ Source participants that morph into this disposition (many-to-one). */
 	readonly morphFrom?: readonly MorphFromSlot[];
-	/** @emoji 🔀️ Target participants that morph from this disposition (one-to-many). */
+	/** 🔀️ Target participants that morph from this disposition (one-to-many). */
 	readonly morphTo?: readonly MorphToSlot[];
-	/** @emoji 🎯️ Morph anchor id when it differs from {@link Participant.id} (e.g. line index on multi-line text). */
+	/** 🎯️ Morph anchor id when it differs from {@link Participant.id} (e.g. line index on multi-line text). */
 	readonly morphAnchorId?: string;
 }
 //#endregion 🔖️Disposition
 
 //#region 🔖️Tile
-/** @emoji 🧩️ Spec for {@link tile}: one cropped figure embodiment from a source image. */
+/** 🧩️ Spec for {@link tile}: one cropped figure embodiment from a source image. */
 export interface TileSpec {
 	readonly id: string;
 	readonly source: string;
@@ -467,7 +467,7 @@ export interface TileSpec {
 	readonly mosaic?: FigureMosaicGrid;
 }
 
-/** @emoji 🧩️ Produces one cropped {@link FigureEmbodiment} from a source figure. */
+/** 🧩️ Produces one cropped {@link FigureEmbodiment} from a source figure. */
 export function tile(spec: TileSpec): FigureEmbodiment {
 	return {
 		kind: "figure",
@@ -482,7 +482,7 @@ export function tile(spec: TileSpec): FigureEmbodiment {
 //#endregion 🔖️Tile
 
 //#region 🔖️Split
-/** @emoji 📐️ One grid cell placement and source crop (internal to {@link splitFigureGrid}). */
+/** 📐️ One grid cell placement and source crop (internal to {@link splitFigureGrid}). */
 export interface SplitGridCell {
 	readonly key: string;
 	readonly crop: DispositionPosition;
@@ -491,7 +491,7 @@ export interface SplitGridCell {
 	readonly style?: DispositionStyle;
 }
 
-/** @emoji 📐️ Spec for {@link splitFigureGrid}: uniform rows×columns inside a slide frame. */
+/** 📐️ Spec for {@link splitFigureGrid}: uniform rows×columns inside a slide frame. */
 export interface SplitFigureGridSpec {
 	readonly rows: number;
 	readonly columns: number;
@@ -501,7 +501,7 @@ export interface SplitFigureGridSpec {
 	readonly keyPrefix?: string;
 }
 
-/** @emoji ✂️ Builds grid cells that pack a figure into a normalized slide frame (gap=0 reconstructs the frame). */
+/** ✂️ Builds grid cells that pack a figure into a normalized slide frame (gap=0 reconstructs the frame). */
 export function splitFigureGrid(spec: SplitFigureGridSpec): SplitGridCell[] {
 	const { rows, columns, frame, gap = 0, emphasis, keyPrefix = "tile" } = spec;
 	if (rows < 1 || columns < 1) {
@@ -535,7 +535,7 @@ export function splitFigureGrid(spec: SplitFigureGridSpec): SplitGridCell[] {
 	return cells;
 }
 
-/** @emoji 📐️ Union of normalized source-image crops. */
+/** 📐️ Union of normalized source-image crops. */
 export function unionSourceCrops(crops: readonly DispositionPosition[]): DispositionPosition {
 	if (crops.length === 0) {
 		throw new Error("unionSourceCrops: no crops.");
@@ -553,7 +553,7 @@ export function unionSourceCrops(crops: readonly DispositionPosition[]): Disposi
 	return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
 }
 
-/** @emoji ✂️ Spec for {@link split}: grid of tile participants, embodiments, and dispositions. */
+/** ✂️ Spec for {@link split}: grid of tile participants, embodiments, and dispositions. */
 export interface SplitSpec {
 	readonly source: string;
 	readonly rows: number;
@@ -567,14 +567,14 @@ export interface SplitSpec {
 	readonly sourceAspect?: number;
 }
 
-/** @emoji ✂️ Artifacts produced by the split template (one participant and disposition per grid cell). */
+/** ✂️ Artifacts produced by the split template (one participant and disposition per grid cell). */
 export interface SplitArtifacts {
 	readonly participants: readonly Participant[];
 	readonly embodiments: readonly FigureEmbodiment[];
 	readonly dispositions: readonly Disposition[];
 }
 
-/** @emoji ✂️ Produces a grid of tile figure embodiments with one disposition per cell. */
+/** ✂️ Produces a grid of tile figure embodiments with one disposition per cell. */
 export function split(spec: SplitSpec): SplitArtifacts {
 	const suffix = spec.embodimentIdSuffix ?? "figure";
 	const cells = splitFigureGrid({
@@ -613,7 +613,7 @@ export function split(spec: SplitSpec): SplitArtifacts {
 	return { participants, embodiments, dispositions };
 }
 
-/** @emoji 📐️ Replaces slide positions on split dispositions matched by participant id. */
+/** 📐️ Replaces slide positions on split dispositions matched by participant id. */
 export function remapSplitDispositions(
 	dispositions: readonly Disposition[],
 	positionsByParticipantId: Readonly<Record<string, DispositionPosition>>,
@@ -626,17 +626,17 @@ export function remapSplitDispositions(
 //#endregion 🔖️Split
 
 //#region 🔖️TilePlay
-/** @emoji 🧩️ One editable source-image crop for the presentation tile play (overlap allowed). */
+/** 🧩️ One editable source-image crop for the presentation tile play (overlap allowed). */
 export interface FigureTileDraft {
 	readonly id: string;
 	readonly name: string;
 	readonly crop: DispositionPosition;
 }
 
-/** @emoji 🖼️ Source figure loaded in the tile play (normalized {@link DispositionPosition.frame}). */
+/** 🖼️ Source figure loaded in the tile play (normalized {@link DispositionPosition.frame}). */
 export type FigureTileMediaKind = "figure" | "video" | "pdf";
 
-/** @emoji 📄️ Default PDF page width÷height (ISO A4 at 72 dpi) for tile play aspect before page probe. */
+/** 📄️ Default PDF page width÷height (ISO A4 at 72 dpi) for tile play aspect before page probe. */
 export const FIGURE_TILE_PDF_PAGE_ASPECT = 595 / 842;
 
 export interface FigureTileSource {
@@ -647,7 +647,7 @@ export interface FigureTileSource {
 	readonly pdfPage?: number;
 }
 
-/** @emoji 🔎️ Resolves tile-play media kind from a browser file MIME type and optional name. */
+/** 🔎️ Resolves tile-play media kind from a browser file MIME type and optional name. */
 export function figureTileMediaKindFromFile(mime: string, fileName = ""): FigureTileMediaKind | null {
 	const normalized = mime.toLowerCase().split(";")[0]?.trim() ?? "";
 	if (normalized.startsWith("video/")) {
@@ -672,17 +672,17 @@ export function figureTileMediaKindFromFile(mime: string, fileName = ""): Figure
 	return null;
 }
 
-/** @emoji ✅️ True when the file is supported by presentation tile play. */
+/** ✅️ True when the file is supported by presentation tile play. */
 export function isFigureTileMediaFile(mime: string, fileName = ""): boolean {
 	return figureTileMediaKindFromFile(mime, fileName) !== null;
 }
 
-/** @emoji ⊡ Eight resize handles for {@link resizeNormalizedRect}. */
+/** ⊡ Eight resize handles for {@link resizeNormalizedRect}. */
 export type NormalizedRectHandle = "nw" | "n" | "ne" | "e" | "se" | "s" | "sw" | "w";
 
 export const NORMALIZED_RECT_MIN_FRACTION = 0.02;
 
-/** @emoji 📐️ Spec for {@link populateTileDraftsFromGrid}. */
+/** 📐️ Spec for {@link populateTileDraftsFromGrid}. */
 export interface FigureTileGridSeedSpec {
 	readonly source: FigureTileSource;
 	readonly rows: number;
@@ -691,12 +691,12 @@ export interface FigureTileGridSeedSpec {
 	readonly keyPrefix?: string;
 }
 
-/** @emoji 🔢️ Clamps a unit-interval scalar. */
+/** 🔢️ Clamps a unit-interval scalar. */
 export function clampNormalizedFraction(value: number): number {
 	return Math.min(1, Math.max(0, value));
 }
 
-/** @emoji ↔ Moves a normalized rectangle by fractional deltas (overlap allowed). */
+/** ↔ Moves a normalized rectangle by fractional deltas (overlap allowed). */
 export function moveNormalizedRect(
 	rect: DispositionPosition,
 	dx: number,
@@ -713,7 +713,7 @@ export function moveNormalizedRect(
 	return { x, y, width: rect.width, height: rect.height };
 }
 
-/** @emoji ⊡ Resizes a normalized rectangle from one handle by fractional deltas. */
+/** ⊡ Resizes a normalized rectangle from one handle by fractional deltas. */
 export function resizeNormalizedRect(
 	rect: DispositionPosition,
 	handle: NormalizedRectHandle,
@@ -751,7 +751,7 @@ export function resizeNormalizedRect(
 	return { x, y, width, height };
 }
 
-/** @emoji 🔢️ Parses grid engagement tokens such as `3x5` or `3×5`. */
+/** 🔢️ Parses grid engagement tokens such as `3x5` or `3×5`. */
 export function parseGridEngagement(text: string): { readonly rows: number; readonly columns: number } | null {
 	const match = text.trim().match(/^(\d+)\s*[x×]\s*(\d+)$/iu);
 	if (!match) {
@@ -765,7 +765,7 @@ export function parseGridEngagement(text: string): { readonly rows: number; read
 	return { rows, columns };
 }
 
-/** @emoji 🧩️ Seeds {@link FigureTileDraft} rows from {@link splitFigureGrid} inside {@link FigureTileSource.frame}. */
+/** 🧩️ Seeds {@link FigureTileDraft} rows from {@link splitFigureGrid} inside {@link FigureTileSource.frame}. */
 export function populateTileDraftsFromGrid(spec: FigureTileGridSeedSpec): FigureTileDraft[] {
 	const cells = splitFigureGrid({
 		rows: spec.rows,
@@ -785,7 +785,7 @@ function formatTilePlayDispositionPosition(position: DispositionPosition): strin
 	return `{ x: ${position.x.toFixed(6)}, y: ${position.y.toFixed(6)}, width: ${position.width.toFixed(6)}, height: ${position.height.toFixed(6)} }`;
 }
 
-/** @emoji 📋️ Builds a natural-language LLM prompt embedding tile morph parameters for deck authoring. */
+/** 📋️ Builds a natural-language LLM prompt embedding tile morph parameters for deck authoring. */
 export function buildTileMorphPrompt(source: FigureTileSource, drafts: readonly FigureTileDraft[]): string {
 	const kind = source.kind ?? "figure";
 	const lines: string[] = [
@@ -822,19 +822,19 @@ export function buildTileMorphPrompt(source: FigureTileSource, drafts: readonly 
 //#endregion 🔖️TilePlay
 
 //#region 🔖️Arrangement
-/** @emoji 🖼️ One slide: participants disposed with emphasis, position, and style. */
+/** 🖼️ One slide: participants disposed with emphasis, position, and style. */
 export interface Arrangement extends ArtifactScope {
 	readonly id: string;
-	/** @emoji 🔖️ URL bookmark label only; falls back to {@link id}. Never rendered on the slide. */
+	/** 🔖️ URL bookmark label only; falls back to {@link id}. Never rendered on the slide. */
 	readonly name?: string;
 	readonly dispositions: readonly Disposition[];
-	/** @emoji ⏳️ Arrangement ids that settle ephemeral layout before auto-animating to them. */
+	/** ⏳️ Arrangement ids that settle ephemeral layout before auto-animating to them. */
 	readonly settleBeforeMorphTo?: readonly string[];
 }
 //#endregion 🔖️Arrangement
 
 //#region 🔖️Slide
-/** @emoji 🖼️ One slide: an arrangement with an optional transition to the next slide. */
+/** 🖼️ One slide: an arrangement with an optional transition to the next slide. */
 export interface Slide {
 	readonly arrangement: Arrangement;
 	readonly transition?: Transition;
@@ -842,40 +842,40 @@ export interface Slide {
 //#endregion 🔖️Slide
 
 //#region 🔖️Thought
-/** @emoji 💭️ Idea developed across one or more slides with scoped participants and embodiments. */
+/** 💭️ Idea developed across one or more slides with scoped participants and embodiments. */
 export interface Thought extends ArtifactScope {
 	readonly id: string;
-	/** @emoji 🔖️ URL bookmark label only; falls back to {@link id}. Never rendered on the slide. */
+	/** 🔖️ URL bookmark label only; falls back to {@link id}. Never rendered on the slide. */
 	readonly name?: string;
 	readonly slides: readonly Slide[];
 }
 //#endregion 🔖️Thought
 
 //#region 🔖️Sequence
-/** @emoji 📚️ Reveal.js horizontal stack: ordered thoughts rendered as one vertical slide column. */
+/** 📚️ Reveal.js horizontal stack: ordered thoughts rendered as one vertical slide column. */
 export interface Sequence extends ArtifactScope {
 	readonly id: string;
-	/** @emoji 🔖️ URL bookmark label only; falls back to {@link id}. Never rendered on the slide. */
+	/** 🔖️ URL bookmark label only; falls back to {@link id}. Never rendered on the slide. */
 	readonly name?: string;
 	readonly thoughts: readonly Thought[];
 }
 //#endregion 🔖️Sequence
 
 //#region 🔖️Chapter
-/** @emoji 📖️ Groups related sequences in a deck (bookmarks and authoring; sequences stay top-level in reveal.js). */
+/** 📖️ Groups related sequences in a deck (bookmarks and authoring; sequences stay top-level in reveal.js). */
 export interface Chapter extends ArtifactScope {
 	readonly id: string;
-	/** @emoji 🔖️ URL bookmark label only; falls back to {@link id}. Never rendered on the slide. */
+	/** 🔖️ URL bookmark label only; falls back to {@link id}. Never rendered on the slide. */
 	readonly name?: string;
 	readonly sequences: readonly Sequence[];
 }
 //#endregion 🔖️Chapter
 
 //#region 🔖️Presentation
-/** @emoji 🌐️ Main language of a deck; drives localized URL bookmark query keys. */
+/** 🌐️ Main language of a deck; drives localized URL bookmark query keys. */
 export type PresentationLanguageKind = "de" | "en";
 
-/** @emoji 📽️ Root deck: ordered chapters of sequences of thoughts. */
+/** 📽️ Root deck: ordered chapters of sequences of thoughts. */
 export interface Presentation extends ArtifactScope {
 	readonly id: string;
 	readonly name: string;
@@ -887,14 +887,14 @@ export interface Presentation extends ArtifactScope {
 //#endregion 🔖️Presentation
 
 //#region 🔖️Traverse
-/** @emoji 📚️ Flattens all sequences in chapter order (one reveal.js horizontal stack per sequence). */
+/** 📚️ Flattens all sequences in chapter order (one reveal.js horizontal stack per sequence). */
 export function presentationSequences(presentation: Presentation): readonly Sequence[] {
 	return presentation.chapters.flatMap((chapter) => chapter.sequences);
 }
 //#endregion 🔖️Traverse
 
 //#region 🔖️Resolved
-/** @emoji ✅️ One participant embodiment resolved for rendering a single arrangement. */
+/** ✅️ One participant embodiment resolved for rendering a single arrangement. */
 export interface ResolvedDisposition {
 	readonly participant: Participant;
 	readonly embodiment: Embodiment;
@@ -903,13 +903,13 @@ export interface ResolvedDisposition {
 	readonly morphId: string;
 	readonly position?: DispositionPosition;
 	readonly style?: DispositionStyle;
-	/** @emoji 🔀️ Presentation when this disposition receives a many-to-one morph. */
+	/** 🔀️ Presentation when this disposition receives a many-to-one morph. */
 	readonly morphFrom?: readonly MorphFromSlot[];
-	/** @emoji 🔀️ Presentation when this disposition is the one in a one-to-many morph. */
+	/** 🔀️ Presentation when this disposition is the one in a one-to-many morph. */
 	readonly morphTo?: readonly MorphToSlot[];
 }
 
-/** @emoji 📐️ Union of normalized placement rectangles. */
+/** 📐️ Union of normalized placement rectangles. */
 export function unionDispositionPositions(positions: readonly DispositionPosition[]): DispositionPosition {
 	if (positions.length === 0) {
 		throw new Error("unionDispositionPositions: no positions.");
@@ -927,7 +927,7 @@ export function unionDispositionPositions(positions: readonly DispositionPositio
 	return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
 }
 
-/** @emoji ⊕ Translation that centers {@link bounds} in the unit slide. */
+/** ⊕ Translation that centers {@link bounds} in the unit slide. */
 export function centerDispositionBoundsOffset(bounds: DispositionPosition): DispositionPosition {
 	return {
 		x: (1 - bounds.width) / 2 - bounds.x,
@@ -937,10 +937,10 @@ export function centerDispositionBoundsOffset(bounds: DispositionPosition): Disp
 	};
 }
 
-/** @emoji 📐️ Default slide width÷height used by the React renderer when unset (960×700). */
+/** 📐️ Default slide width÷height used by the React renderer when unset (960×700). */
 export const PRESENTATION_DEFAULT_SLIDE_ASPECT = 960 / 700;
 
-/** @emoji 📐️ Largest centered frame whose on-slide physical aspect matches {@link sourceAspect}. */
+/** 📐️ Largest centered frame whose on-slide physical aspect matches {@link sourceAspect}. */
 export function figureFrameForSourceAspect(
 	sourceAspect: number,
 	slideAspect = PRESENTATION_DEFAULT_SLIDE_ASPECT,
@@ -962,7 +962,7 @@ export function figureFrameForSourceAspect(
 	};
 }
 
-/** @emoji ↔ Moves a placement by a normalized offset. */
+/** ↔ Moves a placement by a normalized offset. */
 export function shiftDispositionPosition(
 	position: DispositionPosition,
 	offset: DispositionPosition,
@@ -981,12 +981,12 @@ function isDispositionVisibleForLayout(disposition: ResolvedDisposition): boolea
 	return disposition.style?.opacity !== 0;
 }
 
-/** @emoji 📍️ Dispositions declared on the arrangement at rest. */
+/** 📍️ Dispositions declared on the arrangement at rest. */
 export function arrangementRestDispositions(arrangement: Arrangement): readonly Disposition[] {
 	return arrangement.dispositions;
 }
 
-/** @emoji 📍️ Slide positions for layout centering (visible tiles and frames; omits opacity-0 dispositions). */
+/** 📍️ Slide positions for layout centering (visible tiles and frames; omits opacity-0 dispositions). */
 export function visibleArrangementPositions(resolved: readonly ResolvedDisposition[]): DispositionPosition[] {
 	const positions: DispositionPosition[] = [];
 	for (const disposition of resolved) {
@@ -1013,7 +1013,7 @@ function shiftResolvedDisposition(
 	};
 }
 
-/** @emoji ⊕ Centers visible placements in the unit slide frame. */
+/** ⊕ Centers visible placements in the unit slide frame. */
 export function centerResolvedArrangement(resolved: readonly ResolvedDisposition[]): ResolvedDisposition[] {
 	const positions = visibleArrangementPositions(resolved);
 	if (positions.length === 0) {
@@ -1032,13 +1032,13 @@ export function centerResolvedArrangement(resolved: readonly ResolvedDisposition
 //#endregion 🔖️Resolved
 
 //#region 🔖️Expand
-/** @emoji 🎞️ One renderable slide after morph expansion for reveal.js. */
+/** 🎞️ One renderable slide after morph expansion for reveal.js. */
 export interface RenderSlide {
 	readonly id: string;
-	/** @emoji 🔖️ URL bookmark label only; falls back to {@link id}. Never rendered on the slide. */
+	/** 🔖️ URL bookmark label only; falls back to {@link id}. Never rendered on the slide. */
 	readonly name?: string;
 	readonly arrangement: Arrangement;
-	/** @emoji ↔ reveal.js `data-auto-animate-id` shared by consecutive morph-linked slides in one run. */
+	/** ↔ reveal.js `data-auto-animate-id` shared by consecutive morph-linked slides in one run. */
 	readonly autoAnimateId?: string;
 	readonly metadata?: ArrangementMetadata;
 }
@@ -1064,7 +1064,7 @@ function slideMorphParticipantIds(slide: Slide): ReadonlySet<string> {
 	return ids;
 }
 
-/** @emoji 🔗️ True when two consecutive slides share at least one participant for morph transitions. */
+/** 🔗️ True when two consecutive slides share at least one participant for morph transitions. */
 export function slidesShareMorphParticipants(source: Slide, target: Slide): boolean {
 	const sourceIds = slideMorphParticipantIds(source);
 	for (const participantId of slideMorphParticipantIds(target)) {
@@ -1075,7 +1075,7 @@ export function slidesShareMorphParticipants(source: Slide, target: Slide): bool
 	return false;
 }
 
-/** @emoji 🎞️ Expands {@link Thought.slides} with morph-run auto-animate ids for renderers that pair consecutive slides. */
+/** 🎞️ Expands {@link Thought.slides} with morph-run auto-animate ids for renderers that pair consecutive slides. */
 export function expandThoughtSlides(thought: Thought): readonly RenderSlide[] {
 	const slides = thought.slides;
 	if (slides.length === 0) {
@@ -1113,7 +1113,7 @@ export function expandThoughtSlides(thought: Thought): readonly RenderSlide[] {
 //#endregion 🔖️Expand
 
 //#region 🔖️Resolve
-/** @emoji 🔍️ Looks up one embodiment in a {@link ResolutionScope}. */
+/** 🔍️ Looks up one embodiment in a {@link ResolutionScope}. */
 export function resolveEmbodiment(scope: ResolutionScope, embodimentId: string): Embodiment {
 	const match = scope.embodiments.get(embodimentId);
 	if (!match) {
@@ -1122,7 +1122,7 @@ export function resolveEmbodiment(scope: ResolutionScope, embodimentId: string):
 	return match;
 }
 
-/** @emoji 🔍️ Resolves all dispositions for one arrangement against a scope. */
+/** 🔍️ Resolves all dispositions for one arrangement against a scope. */
 export function resolveArrangement(scope: ResolutionScope, arrangement: Arrangement): ResolvedDisposition[] {
 	return arrangement.dispositions.flatMap((disposition) => {
 		const participant = scope.participants.get(disposition.participantId);
@@ -1149,7 +1149,7 @@ export function resolveArrangement(scope: ResolutionScope, arrangement: Arrangem
 	});
 }
 
-/** @emoji 🔢️ Counts render slides across all chapters and sequences. */
+/** 🔢️ Counts render slides across all chapters and sequences. */
 export function countArrangements(presentation: Presentation): number {
 	return presentationSequences(presentation).reduce(
 		(sum, sequence) =>
@@ -1158,13 +1158,13 @@ export function countArrangements(presentation: Presentation): number {
 	);
 }
 
-/** @emoji 🔖️ English bookmark query keys after the reveal.js hash path. */
+/** 🔖️ English bookmark query keys after the reveal.js hash path. */
 export const PRESENTATION_CHAPTER_QUERY_PARAM = "chapter";
 export const PRESENTATION_SEQUENCE_QUERY_PARAM = "sequence";
 export const PRESENTATION_THOUGHT_QUERY_PARAM = "thought";
 export const PRESENTATION_SLIDE_QUERY_PARAM = "slide";
 
-/** @emoji 🔖️ Localized bookmark query keys for chapter, sequence, thought, and slide. */
+/** 🔖️ Localized bookmark query keys for chapter, sequence, thought, and slide. */
 export interface PresentationSlideBookmarkParamKeys {
 	readonly chapter: string;
 	readonly sequence: string;
@@ -1172,12 +1172,12 @@ export interface PresentationSlideBookmarkParamKeys {
 	readonly slide: string;
 }
 
-/** @emoji 🌐️ Resolves a deck's main language (`en` when unset). */
+/** 🌐️ Resolves a deck's main language (`en` when unset). */
 export function presentationLanguage(presentation: Presentation): PresentationLanguageKind {
 	return presentation.language ?? "en";
 }
 
-/** @emoji 🌐️ Bookmark query param names for a presentation language (`sequenz`, `gedanke`, `folie` in German). */
+/** 🌐️ Bookmark query param names for a presentation language (`sequenz`, `gedanke`, `folie` in German). */
 export function presentationSlideBookmarkParamKeys(
 	language: PresentationLanguageKind = "en",
 ): PresentationSlideBookmarkParamKeys {
@@ -1197,7 +1197,7 @@ export function presentationSlideBookmarkParamKeys(
 	};
 }
 
-/** @emoji 🔗️ Bookmark ids carried in the URL hash query; navigation uses only the hash path. */
+/** 🔗️ Bookmark ids carried in the URL hash query; navigation uses only the hash path. */
 export interface PresentationSlideBookmark {
 	readonly chapter: string;
 	readonly sequence: string;
@@ -1205,18 +1205,18 @@ export interface PresentationSlideBookmark {
 	readonly slide: string;
 }
 
-/** @emoji 🔖️ Resolves the URL bookmark label for a sequence, thought, or arrangement. */
+/** 🔖️ Resolves the URL bookmark label for a sequence, thought, or arrangement. */
 export function presentationEntityBookmarkName(entity: { readonly id: string; readonly name?: string }): string {
 	return entity.name ?? entity.id;
 }
 
-/** @emoji 🔗️ One reveal.js slide location with localized bookmark labels for the URL. */
+/** 🔗️ One reveal.js slide location with localized bookmark labels for the URL. */
 export interface PresentationSlideRef extends PresentationSlideBookmark {
 	readonly h: number;
 	readonly v: number;
 }
 
-/** @emoji 🔗️ Lists every slide in reveal.js h/v order (one horizontal stack per sequence, chapters flattened). */
+/** 🔗️ Lists every slide in reveal.js h/v order (one horizontal stack per sequence, chapters flattened). */
 export function collectPresentationSlides(presentation: Presentation): readonly PresentationSlideRef[] {
 	const slides: PresentationSlideRef[] = [];
 	let h = 0;
@@ -1242,7 +1242,7 @@ export function collectPresentationSlides(presentation: Presentation): readonly 
 	return slides;
 }
 
-/** @emoji 🔗️ Resolves the slide at reveal.js indices within a deck. */
+/** 🔗️ Resolves the slide at reveal.js indices within a deck. */
 export function presentationSlideAt(
 	presentation: Presentation,
 	indices: { readonly h: number; readonly v: number },
@@ -1252,7 +1252,7 @@ export function presentationSlideAt(
 	);
 }
 
-/** @emoji 🔗️ Formats reveal.js hash path (`/` = first slide, `/2/1` = h=2 v=1). */
+/** 🔗️ Formats reveal.js hash path (`/` = first slide, `/2/1` = h=2 v=1). */
 export function formatPresentationSlideHash(indices: { readonly h: number; readonly v: number }): string {
 	if (indices.h <= 0 && indices.v <= 0) {
 		return "/";
@@ -1264,7 +1264,7 @@ export function formatPresentationSlideHash(indices: { readonly h: number; reado
 	return hash;
 }
 
-/** @emoji 🔗️ Parses reveal.js slide hash into zero-based h/v indices; ignores trailing bookmark query params. */
+/** 🔗️ Parses reveal.js slide hash into zero-based h/v indices; ignores trailing bookmark query params. */
 export function parsePresentationSlideHash(hash: string): { readonly h: number; readonly v: number } | null {
 	const pathPart = hash.replace(/^#/, "").trim().split("?")[0]?.replace(/^\/?/, "").trim() ?? "";
 	if (!pathPart) {
@@ -1279,7 +1279,7 @@ export function parsePresentationSlideHash(hash: string): { readonly h: number; 
 	return { h, v };
 }
 
-/** @emoji 🔗️ Formats reveal.js hash with localized sequence, thought, and slide bookmark params after the path. */
+/** 🔗️ Formats reveal.js hash with localized sequence, thought, and slide bookmark params after the path. */
 export function formatPresentationUrlHash(
 	indices: { readonly h: number; readonly v: number },
 	bookmark: PresentationSlideBookmark,
@@ -1302,14 +1302,14 @@ export function formatPresentationUrlHash(
 //#endregion 🔖️Resolve
 
 //#region 🔖️SlideFile
-/** @emoji 📄️ One slide module under `🎞️slide/<chapter>/<sequence>/<thought>/<slide>.ts`. */
+/** 📄️ One slide module under `🎞️slide/<chapter>/<sequence>/<thought>/<slide>.ts`. */
 export interface SlideFile extends ArtifactScope {
 	readonly order: number;
 	readonly arrangement: Arrangement;
 	readonly transition?: Transition;
 }
 
-/** @emoji 📁️ Parsed path segments for a slide module file. */
+/** 📁️ Parsed path segments for a slide module file. */
 export interface ParsedSlideFilePath {
 	readonly chapter: string;
 	readonly sequence: string;
@@ -1317,26 +1317,26 @@ export interface ParsedSlideFilePath {
 	readonly slide: string;
 }
 
-/** @emoji 📁️ Slide module path plus its parsed segments. */
+/** 📁️ Slide module path plus its parsed segments. */
 export interface SlideFileModule {
 	readonly path: ParsedSlideFilePath;
 	readonly file: SlideFile;
 }
 
-/** @emoji 📁️ Parsed path segments for a thought template module (`🎞️slide/<chapter>/<sequence>/<thought>.ts`). */
+/** 📁️ Parsed path segments for a thought template module (`🎞️slide/<chapter>/<sequence>/<thought>.ts`). */
 export interface ParsedThoughtFilePath {
 	readonly chapter: string;
 	readonly sequence: string;
 	readonly thought: string;
 }
 
-/** @emoji 📄️ Thought module expanded into slides via a named template (e.g. intro). */
+/** 📄️ Thought module expanded into slides via a named template (e.g. intro). */
 export type ThoughtFile = {
 	readonly template: "intro";
 	readonly spec: IntroSpec;
 };
 
-/** @emoji 📽️ Deck metadata paired with slide modules discovered from a glob import. */
+/** 📽️ Deck metadata paired with slide modules discovered from a glob import. */
 export interface PresentationMeta {
 	readonly id: string;
 	readonly name: string;
@@ -1345,7 +1345,7 @@ export interface PresentationMeta {
 	readonly height?: number;
 }
 
-/** @emoji 🔤️ Stable id derived from a titleized presentation entity name. */
+/** 🔤️ Stable id derived from a titleized presentation entity name. */
 export function presentationNameToId(name: string): string {
 	return name
 		.normalize("NFD")
@@ -1355,7 +1355,7 @@ export function presentationNameToId(name: string): string {
 		.replace(/^-+|-+$/g, "");
 }
 
-/** @emoji 📁️ Builds the canonical slide module path for one arrangement bookmark name. */
+/** 📁️ Builds the canonical slide module path for one arrangement bookmark name. */
 export function presentationSlideFilePath(
 	chapter: string,
 	sequence: string,
@@ -1365,13 +1365,13 @@ export function presentationSlideFilePath(
 	return `🎞️slide/${chapter}/${sequence}/${thought}/${slide}.ts`;
 }
 
-/** @emoji 📁️ Builds the canonical thought template path for one Gedanke bookmark name. */
+/** 📁️ Builds the canonical thought template path for one Gedanke bookmark name. */
 export function presentationThoughtFilePath(chapter: string, sequence: string, thought: string): string {
 	return `🎞️slide/${chapter}/${sequence}/${thought}.ts`;
 }
 
 /**
- * @emoji 🔤️ Drops the decorative emoji prefix a `🎞️slide` folder or file segment carries for
+ * 🔤️ Drops the decorative emoji prefix a `🎞️slide` folder or file segment carries for
  * human sorting, so the entity name is the text an author wrote (`🌷️Einführung` → `Einführung`).
  */
 export function presentationPathSegmentName(segment: string): string {
@@ -1379,7 +1379,7 @@ export function presentationPathSegmentName(segment: string): string {
 	return name.length > 0 ? name : segment;
 }
 
-/** @emoji 📁️ Parses `🎞️slide/<chapter>/<sequence>/<thought>/<slide>.ts` from an import path. */
+/** 📁️ Parses `🎞️slide/<chapter>/<sequence>/<thought>/<slide>.ts` from an import path. */
 export function parsePresentationSlideFilePath(path: string): ParsedSlideFilePath | null {
 	const normalized = path.replace(/\\/g, "/");
 	const match = normalized.match(/(?:^|\/)🎞️slide\/([^/]+)\/([^/]+)\/([^/]+)\/([^/]+)\.ts$/u);
@@ -1394,7 +1394,7 @@ export function parsePresentationSlideFilePath(path: string): ParsedSlideFilePat
 	};
 }
 
-/** @emoji 📁️ Parses `🎞️slide/<chapter>/<sequence>/<thought>.ts` from an import path. */
+/** 📁️ Parses `🎞️slide/<chapter>/<sequence>/<thought>.ts` from an import path. */
 export function parsePresentationThoughtFilePath(path: string): ParsedThoughtFilePath | null {
 	const normalized = path.replace(/\\/g, "/");
 	const match = normalized.match(/(?:^|\/)🎞️slide\/([^/]+)\/([^/]+)\/([^/]+)\.ts$/u);
@@ -1425,7 +1425,7 @@ function mergeArtifactScopeFromSlideFiles(modules: readonly SlideFile[]): Artifa
 	};
 }
 
-/** @emoji 🧩️ Assembles one thought from slide modules sharing the same folder path. */
+/** 🧩️ Assembles one thought from slide modules sharing the same folder path. */
 export function assembleThoughtFromSlideFiles(thoughtName: string, modules: readonly SlideFileModule[]): Thought {
 	const sorted = [...modules].sort((left, right) => left.file.order - right.file.order);
 	const slideFiles = sorted.map((module) => module.file);
@@ -1445,7 +1445,7 @@ export function assembleThoughtFromSlideFiles(thoughtName: string, modules: read
 	};
 }
 
-/** @emoji 📚️ Assembles one chapter from nested slide modules. */
+/** 📚️ Assembles one chapter from nested slide modules. */
 export function assembleChapterFromSlideFiles(
 	chapterName: string,
 	thoughtModules: ReadonlyMap<string, readonly SlideFileModule[]>,
@@ -1479,7 +1479,7 @@ function isThoughtFile(module: SlideFile | ThoughtFile): module is ThoughtFile {
 	return "template" in module;
 }
 
-/** @emoji 📽️ Assembles a deck from eager import.meta.glob slide and thought template modules. */
+/** 📽️ Assembles a deck from eager import.meta.glob slide and thought template modules. */
 export function loadPresentationFromSlideGlob(
 	meta: PresentationMeta,
 	globModules: Readonly<Record<string, { readonly default: SlideFile | ThoughtFile }>>,
@@ -1534,7 +1534,7 @@ export function loadPresentationFromSlideGlob(
 //#endregion 🔖️SlideFile
 
 //#region 🔖️Intro
-/** @emoji 🎬️ Spec for the standard paper intro template (title → description → goal → authors → affiliations ×3). */
+/** 🎬️ Spec for the standard paper intro template (title → description → goal → authors → affiliations ×3). */
 export interface IntroSpec {
 	readonly id?: string;
 	readonly name?: string;
@@ -1616,10 +1616,10 @@ const INTRO_ARRANGEMENT_BOOKMARK: Record<PresentationLanguageKind, Record<string
 	},
 };
 
-/** @emoji 🎬️ Arrangement ids produced by the intro template (language-independent). */
+/** 🎬️ Arrangement ids produced by the intro template (language-independent). */
 export const INTRO_ARRANGEMENT_IDS = new Set(Object.keys(INTRO_ARRANGEMENT_BOOKMARK.en)) as ReadonlySet<string>;
 
-/** @emoji 🎬️ True when an arrangement belongs to the standard intro slide sequence. */
+/** 🎬️ True when an arrangement belongs to the standard intro slide sequence. */
 export function isIntroArrangementId(arrangementId: string): boolean {
 	return INTRO_ARRANGEMENT_IDS.has(arrangementId);
 }
@@ -1737,7 +1737,7 @@ function introEmbodiments(spec: IntroSpec): Embodiment[] {
 	];
 }
 
-/** @emoji 🎬️ Slide modules for the standard intro thought (`🎞️slide/<chapter>/<sequence>/<thought>/<slide>.ts`). */
+/** 🎬️ Slide modules for the standard intro thought (`🎞️slide/<chapter>/<sequence>/<thought>/<slide>.ts`). */
 export function introSlideFiles(spec: IntroSpec): readonly SlideFile[] {
 	const language = introBookmarkLanguage(spec.language);
 	const participants = introParticipants();
@@ -1828,12 +1828,12 @@ export function introSlideFiles(spec: IntroSpec): readonly SlideFile[] {
 	];
 }
 
-/** @emoji 🎬️ Intro thought module referencing {@link IntroSpec}. */
+/** 🎬️ Intro thought module referencing {@link IntroSpec}. */
 export function introThoughtFile(spec: IntroSpec): ThoughtFile {
 	return { template: "intro", spec };
 }
 
-/** @emoji 🧩️ Expands a thought template module into slide modules under its folder path. */
+/** 🧩️ Expands a thought template module into slide modules under its folder path. */
 export function expandThoughtFileToSlideModules(path: ParsedThoughtFilePath, thought: ThoughtFile): SlideFileModule[] {
 	if (thought.template !== "intro") {
 		throw new Error(`Unknown thought template "${thought.template}" at ${presentationThoughtFilePath(path.chapter, path.sequence, path.thought)}.`);
@@ -1853,7 +1853,7 @@ export function expandThoughtFileToSlideModules(path: ParsedThoughtFilePath, tho
 	}));
 }
 
-/** @emoji 🎬️ Builds a seven-slide intro; each arrangement is that slide's target content for reveal.js auto-animate. */
+/** 🎬️ Builds a seven-slide intro; each arrangement is that slide's target content for reveal.js auto-animate. */
 export function intro(spec: IntroSpec): Presentation {
 	const language = introBookmarkLanguage(spec.language);
 	const chapterName = INTRO_CHAPTER_BOOKMARK[language];
@@ -1886,7 +1886,7 @@ const ANALOGY_EMBODIMENT_LABEL_TARGET = "label--target";
 const ANALOGY_EMBODIMENT_VISUAL_SOURCE = "visual--source";
 const ANALOGY_EMBODIMENT_VISUAL_TARGET = "visual--target";
 
-/** @emoji 🔀️ Spec for a two-slide analogy (source concept morphs into target via shared participant ids). */
+/** 🔀️ Spec for a two-slide analogy (source concept morphs into target via shared participant ids). */
 export interface AnalogySpec {
 	readonly id?: string;
 	readonly name?: string;
@@ -1900,7 +1900,7 @@ export interface AnalogySpec {
 	};
 }
 
-/** @emoji 🔀️ Builds a morph thought: source arrangement then mapping arrangement (reveal.js auto-animate). */
+/** 🔀️ Builds a morph thought: source arrangement then mapping arrangement (reveal.js auto-animate). */
 export function analogy(spec: AnalogySpec): Presentation {
 	const participants: Participant[] = [{ id: ANALOGY_PARTICIPANT_LABEL }];
 	const embodiments: Embodiment[] = [
@@ -1994,7 +1994,7 @@ export function analogy(spec: AnalogySpec): Presentation {
 //#endregion 🔖️Analogy
 
 //#region 🔖️Play
-/** @emoji 🛝️ Minimal play-app registration stub for presentation hosts. */
+/** 🛝️ Minimal play-app registration stub for presentation hosts. */
 export const animatePlayAppDefinition = {
 	id: "animate",
 	label: "Animate Presentation",
@@ -2006,6 +2006,6 @@ export const animatePlayAppDefinition = {
 	},
 } as const;
 
-/** @emoji 📽️ Concrete play-app definition consumed by presentation hosts. */
+/** 📽️ Concrete play-app definition consumed by presentation hosts. */
 export const presentationPlayAppDefinition = animatePlayAppDefinition;
 //#endregion 🔖️Play

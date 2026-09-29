@@ -52,11 +52,11 @@ pub fn handle(payload: &OpenSpace, _doc: &ArtifactView<'_, WorkflowSnapshot>, _c
     config_mutations.push(SpaceConfigMutation::SetActiveNode { node_id: active_node_id });
     match resolve_future(crate::workflow_artifact_envelope_pack(&workflow_snapshot)) {
         Some(files) => {
-            eprintln!("[DEBUG] openSpace id={} workflow_id={} nodes={} collections={}", space_id, workflow_snapshot.id, workflow_snapshot.vcs.initial_snapshot.graph.nodes.len(), document.vcs.initial_snapshot.collections.len());
+            eprintln!("[TRACE] openSpace id={} workflow_id={} nodes={} collections={}", space_id, workflow_snapshot.id, workflow_snapshot.vcs.initial_snapshot.graph.nodes.len(), document.vcs.initial_snapshot.collections.len());
             Ok(Emit { config_mutations, effects: vec![Effect::LoadDocument { pack: files.pack, spr: files.spr }], ..Default::default() })
         }
         None => {
-            eprintln!("[DEBUG] openSpace workflow pack export failed id={space_id}");
+            eprintln!("[TRACE] openSpace workflow pack export failed id={space_id}");
             Ok(Emit::config(config_mutations))
         }
     }

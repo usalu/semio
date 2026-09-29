@@ -1,8 +1,8 @@
-/** @emoji 🏛️ `UiTheme` model: paint-ref resolver, parse/serialize, shared by the token generator (`📽️projection`) and the
+/** 🏛️ `UiTheme` model: paint-ref resolver, parse/serialize, shared by the token generator (`📽️projection`) and the
  * runtime theme engine (`🌓️theme`). Dependency-free by contract: the token generator runs on a fresh clone, before
  * `🤖️generated/🔤️tokens/🟦️.ts` exists, and the theme barrel that re-exports this model imports those tokens. */
 //#region 🔖️types
-/** @emoji 🖌️ A single paint reference: a primitive token, a literal hex, or a blend of two tokens. */
+/** 🖌️ A single paint reference: a primitive token, a literal hex, or a blend of two tokens. */
 export interface ThemePaintRef {
   token?: string;
   hex?: string;
@@ -10,18 +10,18 @@ export interface ThemePaintRef {
   mix?: [string, string, number];
 }
 
-/** @emoji 🖌️ Resolved sRGB8888 color. */
+/** 🖌️ Resolved sRGB8888 color. */
 export type Rgba8 = [number, number, number, number];
 
-/** @emoji 🗂️ The six paint groups every appearance carries — `outcome` (error/warning/success/progress
+/** 🗂️ The six paint groups every appearance carries — `outcome` (error/warning/success/progress
  * status paints) and `diagram` (transparency checkerboard + diagram stroke/seam/accent) exist so the
  * wgpu target reads them from this one source instead of hand-written `Rgba` literals. */
 export type ThemePaletteGroup = "board" | "map" | "canvas" | "chrome" | "outcome" | "diagram";
 
-/** @emoji 🌓️ Light/dark palette dimension within a theme. */
+/** 🌓️ Light/dark palette dimension within a theme. */
 export type ThemeAppearanceName = "light" | "dark";
 
-/** @emoji 🖼️ Optional runtime icon appearance overrides keyed by compile-time icon ids. */
+/** 🖼️ Optional runtime icon appearance overrides keyed by compile-time icon ids. */
 export interface UiThemeIcons {
   readonly aliases?: Readonly<Partial<Record<string, string>>>;
   readonly variants?: Readonly<Partial<Record<string, string>>>;
@@ -33,7 +33,7 @@ const THEME_PALETTE_GROUPS: readonly ThemePaletteGroup[] = ["board", "map", "can
 
 const THEME_APPEARANCE_NAMES: readonly ThemeAppearanceName[] = ["light", "dark"];
 
-/** @emoji 🎨️ A named, fully editable design-token set (colors, spacing, fonts, strokes, radii, opacities, metrics, and light/dark appearance paints). */
+/** 🎨️ A named, fully editable design-token set (colors, spacing, fonts, strokes, radii, opacities, metrics, and light/dark appearance paints). */
 export interface UiTheme {
   readonly id: string;
   readonly label: string;
@@ -78,7 +78,7 @@ function blendHex(a: string, b: string, ratioA: number): string {
   return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${bl.toString(16).padStart(2, "0")}`;
 }
 
-/** @emoji 🖌️ Resolves a paint ref (token / hex / mix) against a theme's primitive colors to sRGB8888. */
+/** 🖌️ Resolves a paint ref (token / hex / mix) against a theme's primitive colors to sRGB8888. */
 export function resolveThemePaint(colors: Record<string, string>, ref: ThemePaintRef): Rgba8 {
   let hex: string;
   let alpha = ref.alpha ?? 1;
@@ -100,7 +100,7 @@ export function resolveThemePaint(colors: Record<string, string>, ref: ThemePain
   return [r, g, b, Math.round(alpha * 255)];
 }
 
-/** @emoji 📏️ Derives dag component width as twice the IO channel column width (mirrors the 🔣️.json authoring shortcut). */
+/** 📏️ Derives dag component width as twice the IO channel column width (mirrors the 🔣️.json authoring shortcut). */
 export function resolveThemeMetrics(metrics: UiTheme["metrics"]): UiTheme["metrics"] {
   const out = structuredClone(metrics ?? {});
   const dag = out.dag;
@@ -110,7 +110,7 @@ export function resolveThemeMetrics(metrics: UiTheme["metrics"]): UiTheme["metri
   return out;
 }
 
-/** @emoji 🎨️ Resolves every paint in one appearance of a theme to sRGB8888, grouped by palette. */
+/** 🎨️ Resolves every paint in one appearance of a theme to sRGB8888, grouped by palette. */
 export function resolveThemeAppearancePalettes(theme: UiTheme, appearance: ThemeAppearanceName): Record<ThemePaletteGroup, Record<string, Rgba8>> {
   const groups = theme.appearances[appearance];
   const out = {} as Record<ThemePaletteGroup, Record<string, Rgba8>>;
@@ -248,7 +248,7 @@ function parseMetrics(value: unknown, path: string): UiTheme["metrics"] {
   return out;
 }
 
-/** @emoji 🔎️ Strictly parses and validates a `UiTheme` (unknown token refs / missing palette groups throw). Every paint is resolved once to surface broken refs immediately. */
+/** 🔎️ Strictly parses and validates a `UiTheme` (unknown token refs / missing palette groups throw). Every paint is resolved once to surface broken refs immediately. */
 export function parseUiTheme(json: unknown): UiTheme {
   const obj = requireRecord(json, "");
   const colors = requireStringMap(obj.colors, "colors");
@@ -293,7 +293,7 @@ export function parseUiTheme(json: unknown): UiTheme {
   return theme;
 }
 
-/** @emoji 💾️ Serializes a `UiTheme` to canonical JSON. */
+/** 💾️ Serializes a `UiTheme` to canonical JSON. */
 export function serializeUiTheme(theme: UiTheme): string {
   return JSON.stringify(theme, null, 2);
 }

@@ -133,7 +133,7 @@ pub fn artifact_schema_registered() -> bool {
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️MediaConversion
-/// @emoji 🧵️ Builds a `MeshData` transfer payload from a raw tessellation-transfer `DslValue` (as
+/// 🧵️ Builds a `MeshData` transfer payload from a raw tessellation-transfer `DslValue` (as
 /// produced by the app's `LowpolyDocument::tessellate_transfer_json`), attaching a composited paint
 /// texture when one is supplied. Shared by the app's live 3D scene builder and media export. Relocated
 /// from `⚙️engine/🧵️media` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): a pure
@@ -193,7 +193,7 @@ pub fn mesh_from_mesh_document(doc: &serde_json::Value) -> Result<MeshData, Stri
 //#endregion 🔖️MediaConversion
 
 //#region 🔖️PixelCompute
-/// @emoji 🎨️ Alpha-composites an object's paint layers into one RGBA buffer (bottom to top). Relocated
+/// 🎨️ Alpha-composites an object's paint layers into one RGBA buffer (bottom to top). Relocated
 /// from `⚙️engine/🎨️paint` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): a pure
 /// pixel-buffer algorithm, not engine behaviour.
 pub fn composite_layer_pixels(layers: &[LowpolyPaintLayer]) -> Vec<u8> {
@@ -228,7 +228,7 @@ pub fn composite_layer_pixels(layers: &[LowpolyPaintLayer]) -> Vec<u8> {
     out
 }
 
-/// @emoji 🖌️ Stamps a soft round brush (or eraser) into a raw RGBA buffer in place. Shared by the
+/// 🖌️ Stamps a soft round brush (or eraser) into a raw RGBA buffer in place. Shared by the
 /// app's compute session and the plugin's mid-drag scratch buffer. Relocated from `⚙️engine/🎨️paint`.
 #[allow(clippy::too_many_arguments, reason = "one brush stamp per call site; a params struct would only move the same 8 fields around for this single leaf fn")]
 pub fn stamp_brush(pixels: &mut [u8], u: f32, v: f32, radius: f32, color: [u8; 4], hardness: f32, opacity: f32, eraser: bool) {
@@ -266,7 +266,7 @@ pub fn stamp_brush(pixels: &mut [u8], u: f32, v: f32, radius: f32, color: [u8; 4
     }
 }
 
-/// @emoji 🪣️ Flood-fills a contiguous same-color region of a raw RGBA buffer in place. Relocated from
+/// 🪣️ Flood-fills a contiguous same-color region of a raw RGBA buffer in place. Relocated from
 /// `⚙️engine/🎨️paint`.
 pub fn flood_fill(pixels: &mut [u8], u: f32, v: f32, color: [u8; 4]) {
     let size = LOWPOLY_PAINT_TEXTURE_SIZE;
@@ -303,7 +303,7 @@ pub fn flood_fill(pixels: &mut [u8], u: f32, v: f32, color: [u8; 4]) {
     }
 }
 
-/// @emoji 💧️ Reads one RGBA sample from a composited buffer at UV. Relocated from `⚙️engine/🎨️paint`.
+/// 💧️ Reads one RGBA sample from a composited buffer at UV. Relocated from `⚙️engine/🎨️paint`.
 pub fn sample_pixel_from(composite: &[u8], u: f32, v: f32) -> [u8; 4] {
     let size = LOWPOLY_PAINT_TEXTURE_SIZE;
     let x = ((u.clamp(0.0, 1.0) * (size as f32 - 1.0)).round() as usize).min(size - 1);
@@ -312,7 +312,7 @@ pub fn sample_pixel_from(composite: &[u8], u: f32, v: f32) -> [u8; 4] {
     [composite[offset], composite[offset + 1], composite[offset + 2], composite[offset + 3]]
 }
 
-/// @emoji 🧮️ Coalesces a `before`/`after` layer-buffer pair into the minimal contiguous pixel runs
+/// 🧮️ Coalesces a `before`/`after` layer-buffer pair into the minimal contiguous pixel runs
 /// (`(offset, bytes)`) that turn `before` into `after`; the seam where a mutated scratch buffer becomes
 /// a `PaintStroke` operation. Returns raw `(offset, bytes)` tuples — `op` wraps each into its own
 /// `PixelRun`. Relocated from `⚙️engine/🎨️paint`.

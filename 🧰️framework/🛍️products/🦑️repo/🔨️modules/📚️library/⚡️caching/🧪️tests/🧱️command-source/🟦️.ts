@@ -44,7 +44,7 @@ test("resolves every anonymous owner and cache semantic context", () => {
   }
 });
 
-test("typechecks an acyclic cache owner graph with no command back edge", { timeout: 30_000 }, () => {
+test("typechecks an acyclic cache owner graph with no command back edge", () => {
   const paths: string[] = fixture.owners.map((owner: { path: string }) => resolve(repoRoot, owner.path));
   const present = paths.filter(existsSync);
   expect(present).toHaveLength(paths.length);
@@ -88,7 +88,7 @@ test("typechecks an acyclic cache owner graph with no command back edge", { time
   };
   for (const owner of paths) visit(owner);
   expect(seen.size).toBe(paths.length);
-});
+}, { timeout: 30_000 });
 
 test("moves semantic bodies out of the router and binds exact consumers", () => {
   const commandPath = resolve(domainRoot, "📜️script.ts"),
@@ -176,7 +176,7 @@ test("projects cache areas through injected scanners and preserves cancellation"
   expect(() => scanCacheAreas("/repo", cancelled.signal, undefined, operations)).toThrow(/portable cancellation/);
 });
 
-test("captures bounded child output and terminates a timed-out process tree", { timeout: 10_000 }, async () => {
+test("captures bounded child output and terminates a timed-out process tree", async () => {
   const { captureArtifactContract } = await import("../../📦️artifacts/🏃️contract-capture/🟦️.ts");
   expect(await captureArtifactContract(process.execPath, ["-e", "process.stdout.write('bounded')"], repoRoot, 5_000)).toBe("bounded");
   await expect(captureArtifactContract(process.execPath, ["-e", "setTimeout(() => {}, 10_000)"], repoRoot, 50)).rejects.toThrow(/timeout 50ms/);
@@ -203,7 +203,7 @@ test("captures bounded child output and terminates a timed-out process tree", { 
     if (alive()) process.kill(descendant, "SIGKILL");
   }
   expect(readFileSync(resolve(domainRoot, "📦️artifacts/🏃️contract-capture/🟦️.ts"), "utf8")).toContain('["taskkill", "/pid", String(child.pid), "/t", "/f"]');
-});
+}, { timeout: 10_000 });
 
 test("keeps policy, bootstrap and prune executable coordinates source-relative", async () => {
   const { CACHE_BOOTSTRAP_EXECUTABLE } = await import("../../📇️inventory/🧮️composition/🟦️.ts");

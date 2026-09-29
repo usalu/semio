@@ -701,7 +701,7 @@ fn local_stdio_gis_profile_bundle() -> TrustedBundleV1 {
     };
     let gis_identity = TrustedBundleIdentityV1 { plugin_id: "gis".into(), package_id: "semio:gis".into(), version: version.clone() };
     let stdio_identity = TrustedBundleIdentityV1 { plugin_id: "stdio".into(), package_id: "semio:stdio".into(), version: version.clone() };
-    let stdio_codecs = (0u8..26).map(|index| TrustedBundleCodecV1 { artifact_kind: format!("s.stdio.fixture{index:02}"), artifact_schema: format!("stdio.fixture{index:02}"), pack_schema_hash: format!("{:02x}", index + 1).repeat(32) }).collect();
+    let stdio_codecs = (0u8..29).map(|index| TrustedBundleCodecV1 { artifact_kind: format!("s.stdio.fixture{index:02}"), artifact_schema: format!("stdio.fixture{index:02}"), pack_schema_hash: format!("{:02x}", index + 1).repeat(32) }).collect();
     let packages = vec![
         TrustedBundlePackageV1 {
             plugin_id: "gis".into(),
@@ -2055,12 +2055,12 @@ fn trusted_profile_generation_binds_zero_target_package_and_every_codec_row() {
 }
 
 #[test]
-fn local_stdio_gis_profile_is_exact_two_packages_twenty_eight_codecs_and_opens_every_package_target() {
+fn local_stdio_gis_profile_is_exact_two_packages_thirty_one_codecs_and_opens_every_package_target() {
     let bundle = local_stdio_gis_profile_bundle();
     let selected = validate_bundle(&bundle, "local-stdio-gis-open-v1").expect("closed stdio+GIS profile");
     assert_eq!(selected.package_indices.len(), 2);
     assert_eq!(selected.package_indices, vec![1, 0]);
-    assert_eq!(bundle.packages.iter().map(|package| package.native_codecs.len()).sum::<usize>(), 28);
+    assert_eq!(bundle.packages.iter().map(|package| package.native_codecs.len()).sum::<usize>(), 31);
     assert_eq!(bundle.packages.iter().map(|package| package.open_targets.len()).sum::<usize>(), 2);
     let mut writable_viewer = local_stdio_gis_profile_bundle();
     writable_viewer.packages[0].open_targets[1].grant.write = true;
@@ -2103,9 +2103,21 @@ const EDITORS_WITHOUT_A_DOCUMENT: [(&str, &str); 3] = [
     ("s.playbook.procedural@1/*#editor", "a `playbook.blockKind` module: its snapshot is the host playbook block's render payload (foreign document codec), never a document of its own"),
 ];
 
+/// 🔗️ The `(artifact kind, schema)` pairs each hub-LINKED package owns: the committed registries the hub's linked native
+/// providers and the publisher's `linkedCodecRegistry` read (`🌎️hub/📦️packages/🦀️rust/📜️script.ts`).
+fn linked_codec_registries() -> std::collections::BTreeMap<&'static str, BTreeSet<(String, String)>> {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../✏️s/🔌️plugins");
+    let pairs = |path: &str, kind: &str, schema: &str| -> BTreeSet<(String, String)> {
+        let registry: serde_json::Value = serde_json::from_slice(&std::fs::read(root.join(path)).expect("committed linked codec registry")).expect("linked codec registry JSON");
+        registry["receipts"].as_array().expect("linked codec receipts").iter().map(|row| (row[kind].as_str().expect("receipt kind").to_owned(), row[schema].as_str().expect("receipt schema").to_owned())).collect()
+    };
+    std::collections::BTreeMap::from([("stdio", pairs("🗄️stdio/📇️registry/📜️native-codec-factories.json", "artifact_kind", "artifact_schema")), ("gis", pairs("🌍️gis/📇️native-codecs/🔣️.json", "kind", "schema"))])
+}
+
 /// 🗺️ LAW (census): every editor surface of every committed, isolated package descriptor opens at least one artifact
-/// kind through [`descriptor_open_targets`], so every document kind with an editor is creatable and openable over the
-/// hub; the only exceptions are [`EDITORS_WITHOUT_A_DOCUMENT`], and each of those must still exist.
+/// kind through [`descriptor_open_targets`], and every kind a hub-LINKED package opens binds one of its linked native
+/// codecs ([`linked_codec_registries`]), so every document kind with an editor is creatable and openable over the hub;
+/// the only exceptions are [`EDITORS_WITHOUT_A_DOCUMENT`], and each of those must still exist.
 #[test]
 fn every_committed_editor_that_edits_a_document_opens_a_kind_through_the_one_rule() {
     let mut pending = vec![PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../✏️s/🔌️plugins")];
@@ -2120,13 +2132,18 @@ fn every_committed_editor_that_edits_a_document_opens_a_kind_through_the_one_rul
             }
         }
     }
-    let (mut editors, mut unopened, mut shells) = (0usize, Vec::new(), std::collections::BTreeSet::new());
+    let linked = linked_codec_registries();
+    let (mut editors, mut unopened, mut unlinked, mut shells) = (0usize, Vec::new(), Vec::new(), std::collections::BTreeSet::new());
     for path in &descriptors {
         let descriptor = decode_package_descriptor(&std::fs::read(path).expect("committed descriptor")).unwrap_or_else(|error| panic!("{}: {error}", path.display()));
         if descriptor.execution != semio_framework::ExecutionMode::Isolated {
             continue;
         }
-        let opened = descriptor_open_targets(&descriptor).into_iter().map(|target| target.surface_id).collect::<std::collections::BTreeSet<_>>();
+        let targets = descriptor_open_targets(&descriptor);
+        if let Some(owned) = linked.get(descriptor.manifest.plugin_id.as_str()) {
+            unlinked.extend(targets.iter().filter(|target| !owned.contains(&(target.artifact_kind.clone(), target.artifact_schema.clone()))).map(|target| format!("{} {} ({})", target.surface_id, target.artifact_kind, path.display())));
+        }
+        let opened = targets.into_iter().map(|target| target.surface_id).collect::<std::collections::BTreeSet<_>>();
         for app in descriptor.manifest.apps.iter().filter(|app| app.role == semio_framework::AppRole::Editor && app.id == semio_framework::surface_app_id(&app.dialect, app.role)) {
             editors += 1;
             if opened.contains(&app.id) {
@@ -2142,6 +2159,7 @@ fn every_committed_editor_that_edits_a_document_opens_a_kind_through_the_one_rul
     }
     assert!(editors > 0, "no committed editor surface found");
     assert!(unopened.is_empty(), "{} of {editors} editor surfaces open no kind: {unopened:#?}", unopened.len());
+    assert!(unlinked.is_empty(), "{} open targets of linked packages bind no linked native codec: {unlinked:#?}", unlinked.len());
     assert_eq!(shells.len(), EDITORS_WITHOUT_A_DOCUMENT.len(), "every allow-listed shell still exists and still opens nothing: {shells:?}");
 }
 
@@ -2206,7 +2224,7 @@ mod long {
             })
             .collect();
         let schemas: Vec<_> = baseline["packages"].as_array().unwrap().iter().flat_map(|record| record["nativeCodecs"].as_array().unwrap().iter().map(|codec| codec["artifactSchema"].as_str().unwrap().to_owned())).collect();
-        assert_eq!(schemas.len(), 28);
+        assert_eq!(schemas.len(), 31);
         let mut before = Vec::with_capacity(schemas.len());
         for schema in &schemas {
             before.push(document_codec(schema).await.unwrap().map(|codec| (codec.schema, codec.extension, codec.pack_schema_hash)));
@@ -2260,7 +2278,7 @@ mod long {
             let previews: Vec<String> = serde_json::from_value(row["previews"].clone()).unwrap();
             assert_eq!(*providers.previews.lock().unwrap(), previews, "successful private preview frontier: {change}");
             if let Ok(catalog) = result {
-                assert_eq!(catalog.codec_count(), 28);
+                assert_eq!(catalog.codec_count(), 31);
                 assert_eq!(catalog.packages().iter().map(VerifiedTrustedPackage::plugin_id).collect::<Vec<_>>(), vec!["stdio", "gis"]);
                 assert_eq!(catalog.open_target_count(), 1);
                 assert_eq!(catalog.selected_document_open().unwrap().package.plugin_id, "gis");

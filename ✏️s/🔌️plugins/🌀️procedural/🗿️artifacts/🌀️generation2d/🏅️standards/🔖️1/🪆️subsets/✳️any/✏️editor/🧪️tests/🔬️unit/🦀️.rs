@@ -1000,7 +1000,6 @@ async fn context_menu_reads_the_framework_owned_graph_selection() {
     context::select_graph(&mut app, "node", &["slider"]).await;
     let selected = ids_of(&app.context_menu(&request, &semio_framework_plugin::ViewModel::default()).await);
     assert!(selected.iter().any(|id| id.contains("delete")), "a live graph selection must offer the destructive delete row: {selected:?}");
-    eprintln!("[DEBUG] generation2d context menu unfolded {} rows for one framework-owned graph selection", selected.len());
     close(app);
 }
 //#endregion 🔖️ContextMenuTests

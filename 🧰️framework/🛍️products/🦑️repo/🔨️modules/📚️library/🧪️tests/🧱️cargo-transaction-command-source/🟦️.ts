@@ -42,7 +42,7 @@ test("resolves every anonymous owner and semantic context", () => {
     expect(owner.path.split("/").at(-1)).toBe("🟦️.ts");
     expect(owner.path).not.toContain("/📦️packages/");
     const rows = owner.contextChain.map((kindId: string) => contexts.get(kindId));
-    expect(rows.every(Boolean), owner.path).toBe(true);
+    expect<boolean>(rows.every(Boolean), owner.path).toBe(true);
     expect(owner.path.split("/").slice(-1 - rows.length, -1)).toEqual(rows.map((row: { directoryName: string }) => row.directoryName));
     for (let index = 1; index < rows.length; index++) expect(rows[index].parentKindId, owner.path).toBe(rows[index - 1].kindId);
     const path = resolve(repoRoot, owner.path);
@@ -52,7 +52,7 @@ test("resolves every anonymous owner and semantic context", () => {
   expect(new Set(fixture.owners.flatMap((owner: { contextChain: string[] }) => owner.contextChain))).toEqual(new Set(fixture.contexts.map((context: { kindId: string }) => context.kindId)));
 });
 
-test("typechecks an acyclic owner graph with no command-module back edge", { timeout: 30_000 }, () => {
+test("typechecks an acyclic owner graph with no command-module back edge", () => {
   const paths: string[] = fixture.owners.map((owner: { path: string }) => resolve(repoRoot, owner.path));
   const present = paths.filter(existsSync);
   expect(present).toHaveLength(paths.length);
@@ -102,7 +102,7 @@ test("typechecks an acyclic owner graph with no command-module back edge", { tim
   };
   for (const owner of paths) visit(owner);
   expect(seen.size).toBe(paths.length);
-});
+}, { timeout: 30_000 });
 
 test("moves behavior out of command modules and rebinds every live API consumer", () => {
   const moved = new Set(fixture.owners.flatMap((owner: { declarations: string[] }) => owner.declarations));
@@ -156,7 +156,7 @@ test("projects requested Go inputs without copying the canonical planner", async
         isDirectory: (path: string) => row.directories.includes(path),
         plan: () => plan,
       });
-    if (row.accepted) expect(invoke(), row.input).toEqual({ moduleRoot: "/repo", packages: row.expected });
+    if (row.accepted) expect<{ readonly moduleRoot: string; readonly packages: unknown }>(invoke(), row.input).toEqual({ moduleRoot: "/repo", packages: row.expected });
     else expect(invoke, row.input).toThrow(/compiler package owner/);
   }
   expect(readFileSync(owner, "utf8")).toContain("canonicalGoPlan");
@@ -223,7 +223,7 @@ test("keeps the 62-case shard selection and source-as-data consumers exact", asy
   expect(suite).not.toContain("📦️packages/🟦️typescript/📜️script.ts");
 });
 
-test("terminates a bounded owned descendant process", { timeout: 10_000 }, async () => {
+test("terminates a bounded owned descendant process", async () => {
   const owner = resolve(libraryRoot, "🏃️process/🎛️owned-execution/🟦️.ts");
   expect(existsSync(owner)).toBe(true);
   if (!existsSync(owner)) return;
@@ -261,7 +261,7 @@ test("terminates a bounded owned descendant process", { timeout: 10_000 }, async
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
-});
+}, { timeout: 10_000 });
 
 test("registers exact Bun, Nx, cache, package, and launch closure", () => {
   const projectPath = resolve(libraryRoot, "📦️packages/🟦️typescript/📋️project.json");

@@ -192,7 +192,6 @@ fn pdf_isolates_the_shared_compositing_fixtures() {
             std::fs::create_dir_all(&directory).unwrap();
             std::fs::write(directory.join(format!("{}.pdf",case["name"].as_str().unwrap())),pdf).unwrap();
         }
-        eprintln!("[DEBUG] {} PDF isolates {} groups and {} leaves",case["name"],groups.len(),isolated_leaves);
     }
 }
 

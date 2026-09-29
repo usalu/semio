@@ -1,5 +1,5 @@
 // #region 🧭️Header
-/** @emoji 🚀️ `@semio-tech/cad-js/runtime` — CAD composition root: assets glob + module registration. */
+/** 🚀️ `@semio-tech/cad-js/runtime` — CAD composition root: assets glob + module registration. */
 // #endregion 🧭️Header
 
 import { ephemeralBox } from "@semio-tech/framework";
@@ -13,7 +13,7 @@ import * as aecBuildingStructure from "@semio-tech/cad-js-module-aec-building-st
 // #region 🧩️Contributions
 export const CAD_PLAY_APP_ID = "cad-play";
 
-/** @emoji 📋️ Declarative computer/import metadata carried in the `cadComputer` `TopicContribution` payload's
+/** 📋️ Declarative computer/import metadata carried in the `cadComputer` `TopicContribution` payload's
  * `computersJson` field (ex `Contribution::CadComputer.computersJson`, pre open-contribution-mechanism migration). */
 export type CadComputersManifest = {
   modelDefinitionIds: string[];
@@ -39,7 +39,7 @@ const CAD_MODULE_REGISTRARS: Readonly<Record<string, () => void>> = {
 
 const cadComputerModulesSynced = ephemeralBox<Set<string>>("s.plugins.cad.modules.runtime.component.ts.cadComputerModulesSynced", new Set());
 
-/** @emoji 🗂️ `cad.computer` open-`TopicContribution` payload shape — mirrors Rust `CadComputerTopicPayload` (`💡️inferences/🦀️.rs`). */
+/** 🗂️ `cad.computer` open-`TopicContribution` payload shape — mirrors Rust `CadComputerTopicPayload` (`💡️inferences/🦀️.rs`). */
 const CAD_COMPUTER_TOPIC = "cad.computer";
 
 type CadComputerTopicPayload = {
@@ -48,7 +48,7 @@ type CadComputerTopicPayload = {
   readonly computersJson: string;
 };
 
-/** @emoji 🚢️ Default shipped `ProgramContributionEntry[]` JSON when the host has not pushed contributions yet. */
+/** 🚢️ Default shipped `ProgramContributionEntry[]` JSON when the host has not pushed contributions yet. */
 export function shippedCadComputerContributionsJson(): string {
   const entries: ProgramContributionEntry[] = [
     {
@@ -123,7 +123,7 @@ export function shippedCadComputerContributionsJson(): string {
   return JSON.stringify(entries);
 }
 
-/** @emoji 🧩️ Applies `cad.computer` contributions by `moduleId` via existing cad-js `register()` hooks. */
+/** 🧩️ Applies `cad.computer` contributions by `moduleId` via existing cad-js `register()` hooks. */
 export function syncCadComputerContributions(contributionsJson: string): void {
   let entries: ProgramContributionEntry[];
   try {
@@ -192,7 +192,7 @@ function shippedModelDefinitionAssets(): ModelDefinitionAssetModules {
 
 const cadModulesBootstrapped = ephemeralBox("s.plugins.cad.modules.runtime.component.ts.cadModulesBootstrapped", false);
 
-/** @emoji 🚀️ Loads model-definition assets and registers CAD computer modules from contributions once. */
+/** 🚀️ Loads model-definition assets and registers CAD computer modules from contributions once. */
 export function bootstrapCadModules(contributionsJson?: string): void {
   if (cadModulesBootstrapped.current) return;
   registerModelDefinitionAssets(shippedModelDefinitionAssets());
@@ -203,8 +203,13 @@ export function bootstrapCadModules(contributionsJson?: string): void {
 export { spatialShape, aecBuilding, aecBuildingEnergy, aecBuildingStructure };
 
 // #region 🧪️Tests
+/** 🎒️ The values this module hands its extracted suite `./🧪️tests/🧪️semio-tech-cad-js-runtime/🟦️.ts`. */
+export type RuntimeTestDependencies = {
+  readonly bootstrapCadModules: typeof bootstrapCadModules;
+};
+
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️semio-tech-cad-js-runtime/🟦️.ts");
-  await registerTests1(import.meta.vitest, { bootstrapCadModules }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { bootstrapCadModules }, { url: import.meta.url });
 }
 // #endregion 🧪️Tests

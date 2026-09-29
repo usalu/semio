@@ -1,7 +1,7 @@
 //! 📐️ 2D geometry: single-source first-party Point/Vec2/Affine/shape primitives, selection math, and curve/polygon algorithms. `kurbo` is a test-only differential oracle.
 
 // #region 🔖️Shapes
-//! @emoji 📦️ First-party 2D geometry primitives — the one interface boundary the rest of the codebase depends on. Every guest-reachable type here is a plain value on every target, including `wasm32-wasip2`.
+//! 📦️ First-party 2D geometry primitives — the one interface boundary the rest of the codebase depends on. Every guest-reachable type here is a plain value on every target, including `wasm32-wasip2`.
 
 #[macro_export]
 macro_rules! with_shape_ref {
@@ -962,7 +962,7 @@ impl From<Vec2> for (f64, f64) {
     }
 }
 
-/// @emoji 📐️ Appends flattened path elements from a shape into a path buffer.
+/// 📐️ Appends flattened path elements from a shape into a path buffer.
 pub fn append_shape_to_path<'a>(path: &mut BezPath, shape: impl Into<ShapeRef<'a>>, tolerance: f64) {
     let shape = shape.into();
     let elements = match shape {
@@ -981,7 +981,7 @@ pub fn append_shape_to_path<'a>(path: &mut BezPath, shape: impl Into<ShapeRef<'a
 // #endregion 🔖️Shapes
 
 // #region 🔖️GenericGeometry
-// @emoji 📏️ Distance/normalize/clamp primitives shared by every geometry consumer.
+// 📏️ Distance/normalize/clamp primitives shared by every geometry consumer.
 
 #[inline]
 pub fn clamp_f64(value: f64, min: f64, max: f64) -> f64 {
@@ -1078,7 +1078,7 @@ fn distance_to_segment(point: Point, start: Point, end: Point) -> f64 {
 // #endregion 🔖️GenericGeometry
 
 // #region 🔖️CurveExtensions
-// @emoji 🧮️ Cubic-bezier subdivision, length, nearest-point, and segment/circle intersection.
+// 🧮️ Cubic-bezier subdivision, length, nearest-point, and segment/circle intersection.
 
 /// 📐️ De Casteljau evaluation of a cubic bezier at parameter `t`.
 pub fn cubic_point_at(c: CubicBez, t: f64) -> Point {
@@ -1173,7 +1173,7 @@ pub fn circle_line_intersections(center: Point, r: f64, p0: Point, p1: Point) ->
 // #endregion 🔖️CurveExtensions
 
 // #region 🔖️PolygonExtensions
-// @emoji 🔺️ Convex hull, area, centroid, and point-set bounding box.
+// 🔺️ Convex hull, area, centroid, and point-set bounding box.
 
 /// 🐚️ Convex hull via Andrew's monotone chain (returned counter-clockwise, no duplicate closing point).
 pub fn convex_hull(points: &[Point]) -> Vec<Point> {

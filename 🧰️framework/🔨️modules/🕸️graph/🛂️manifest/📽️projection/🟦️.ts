@@ -154,7 +154,7 @@ function emitTsManifest(doc: ManifestDocument, typesSpecifier: string): string {
 
 export type GraphArtifact = { path: string; content: string };
 
-/** @emoji 🧾️ Renders the full graph catalog from lexically admitted manifest inputs without writes. */
+/** 🧾️ Renders the full graph catalog from lexically admitted manifest inputs without writes. */
 export function renderGraphArtifacts(root: string, outDir: string, log = true, pluginAreas?: readonly string[]): { artifacts: readonly GraphArtifact[]; manifestCount: number } {
     const artifacts: GraphArtifact[] = [];
     const docs = readGraphManifestDocuments(root, log, pluginAreas);

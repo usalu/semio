@@ -246,7 +246,7 @@ async fn cli_command_close_success_refusal_cancel_stale_fault_drop_interrupted_a
     }
     let waker = std::task::Waker::noop();
     let context = &mut std::task::Context::from_waker(waker);
-    let mut record = MountedWalRecordCommandClose::new(db::wal::WalRecord::VcsRef(db::storage::DbIoText::try_from_str("retained-cli-record").unwrap()));
+    let mut record = MountedWalRecordCommandClose::new(db::wal::WalRecord::Lease { resource: db::storage::DbIoText::try_from_str("retained-cli-record").unwrap(), holder: db::storage::DbIoText::try_from_str("").unwrap(), fence: 1, expires_at_ms: 1 });
     assert!(matches!(std::future::Future::poll(std::pin::Pin::new(&mut record), context), std::task::Poll::Pending));
     assert!(matches!(std::future::Future::poll(std::pin::Pin::new(&mut record), context), std::task::Poll::Ready(Ok(CliCommandCloseWitness { exit: CliCommandCloseExit::Closed, opportunities: 2 }))));
     assert!(matches!(std::future::Future::poll(std::pin::Pin::new(&mut record), context), std::task::Poll::Ready(Ok(CliCommandCloseWitness { exit: CliCommandCloseExit::Closed, opportunities: 2 }))));

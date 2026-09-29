@@ -40,11 +40,11 @@ function getAbsolutePath(value: string): string {
 }
 
 // #region 🔖️ScopeDerivation
-/** @emoji 🗂️ Active scopes for this process — computed once, reused by `stories`, aliases, watch-ignores, defines, and lazy scope `vitePlugins`. */
+/** 🗂️ Active scopes for this process — computed once, reused by `stories`, aliases, watch-ignores, defines, and lazy scope `vitePlugins`. */
 const activeScopes: readonly StoryScope[] = resolveActiveScopes(storybookScope);
 const activeScopeIds: readonly string[] = activeScopes.map((s) => s.id);
 
-/** @emoji 🔗️ Irregular per-scope aliases + a fixed baseline of always-present workspace shortcuts (css subpaths, single-file entries) not worth registering per-scope. */
+/** 🔗️ Irregular per-scope aliases + a fixed baseline of always-present workspace shortcuts (css subpaths, single-file entries) not worth registering per-scope. */
 function buildStorybookAliases(): Record<string, string> {
   const baseline: Record<string, string> = {
     // 🧪️ More specific than the bare package alias, so it must come FIRST — Vite substitutes an
@@ -150,12 +150,12 @@ const config: StorybookConfig = {
     }
     config.plugins.push(playgroundFlowWasmDevStubPlugin(repoRootPath));
     // #region 🔖️ScopeAssetsAndPlugins
-    /** @emoji 🌐️ Static-dir / tile-proxy / mesh-collection assets declared by active scopes (e.g. `framework/os`'s `/plugin-modules`, `/renderer-modules`). */
+    /** 🌐️ Static-dir / tile-proxy / mesh-collection assets declared by active scopes (e.g. `framework/os`'s `/plugin-modules`, `/renderer-modules`). */
     const scopeAssets = activeScopes.flatMap((s) => s.assets ?? []);
     if (scopeAssets.length > 0) {
       config.plugins.push(...playgroundAssetVitePlugins(repoRootPath, scopeAssets));
     }
-    /** @emoji 🌐️ Lazy scope-gated Vite plugins (only imported when the owning scope is active). */
+    /** 🌐️ Lazy scope-gated Vite plugins (only imported when the owning scope is active). */
     for (const scope of activeScopes) {
       if (scope.vitePlugins) {
         config.plugins.push(...(await scope.vitePlugins()));

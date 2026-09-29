@@ -15,7 +15,6 @@ pub struct NavigateVirtualFileSystemNode {
 
 pub fn handle(payload: &NavigateVirtualFileSystemNode, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
     let space_id = payload.node_id.strip_prefix("studio:").unwrap_or(&payload.node_id);
-    eprintln!("[DEBUG] home navigateVirtualFileSystemNode id={space_id}");
     Ok(Emit::effect(Effect::Navigate { uri: format!("/spaces/{space_id}") }))
 }
 

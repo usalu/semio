@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🎭️ React's canvas presence overlay, rendered to the DOM from the shared canvas-presence fixture (`🧫️fixtures/
+/** 🎭️ React's canvas presence overlay, rendered to the DOM from the shared canvas-presence fixture (`🧫️fixtures/
  * 👕️canvas-presence`, the wgpu twin's corpus): with the domain the board's app DECLARES (block's `handle`) it paints
  * exactly the fixture's peer marks and cursor; with any other domain — the literal `layer` Board2dHost used to pass — it
  * paints no mark at all (🎫️ 26/09/23 C10, WG8 relay). */

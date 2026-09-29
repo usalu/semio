@@ -45,7 +45,6 @@ async fn block_list_gestures_reach_mounted_document_commands() {
         let kinds: Vec<Vec<&str>> = snapshot.definition.steps.iter().map(|step| step.blocks.iter().map(|question| question.kind.as_str()).collect()).collect();
         assert_eq!(serde_json::to_value(kinds).unwrap(), case["kinds"], "{action} durable effect");
     }
-    eprintln!("[DEBUG] Forms block-list add, move, remove and page gestures committed through exact addressed manifest actions");
 }
 
 #[semio_framework_async_macros::async_test]

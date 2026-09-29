@@ -3,7 +3,7 @@
 use crate::ProtocolError;
 
 //#region 🔖️Dictionary
-/// @emoji 📚️ In-memory dictionary builder — deterministic first-use interning order — shared by
+/// 📚️ In-memory dictionary builder — deterministic first-use interning order — shared by
 /// `protocol_history`'s `REC_ACTOR_DICT`/`REC_STR_DICT` codec and `protocol_format`'s dict-aware
 /// frame helpers.
 #[derive(Clone, Debug, Default)]
@@ -17,7 +17,7 @@ impl DictBuilder {
         Self::default()
     }
 
-    /// @emoji ➕️ Returns `s`'s existing index, or appends it and returns the new index.
+    /// ➕️ Returns `s`'s existing index, or appends it and returns the new index.
     pub fn intern(&mut self, s: &str) -> u32 {
         if let Some(&idx) = self.index.get(s) {
             return idx;
@@ -36,13 +36,13 @@ impl DictBuilder {
         self.entries.is_empty()
     }
 
-    /// @emoji ✂️ The entries appended since `base_count` — the delta a `REC_*_DICT` record stores.
+    /// ✂️ The entries appended since `base_count` — the delta a `REC_*_DICT` record stores.
     pub fn entries_since(&self, base_count: u32) -> &[String] {
         &self.entries[base_count as usize..]
     }
 }
 
-/// @emoji 📖️ Read-side twin of `DictBuilder`: replays `REC_*_DICT` deltas in file order.
+/// 📖️ Read-side twin of `DictBuilder`: replays `REC_*_DICT` deltas in file order.
 #[derive(Clone, Debug, Default)]
 pub struct DictReader {
     entries: Vec<String>,
@@ -53,7 +53,7 @@ impl DictReader {
         Self::default()
     }
 
-    /// @emoji ➕️ Appends a dictionary delta. `base_count` must equal the reader's current length
+    /// ➕️ Appends a dictionary delta. `base_count` must equal the reader's current length
     /// — a mismatch means the stream's dictionary deltas arrived out of order.
     pub fn extend(&mut self, base_count: u32, new_entries: impl IntoIterator<Item = String>) -> Result<(), ProtocolError> {
         let expected = self.entries.len() as u32;

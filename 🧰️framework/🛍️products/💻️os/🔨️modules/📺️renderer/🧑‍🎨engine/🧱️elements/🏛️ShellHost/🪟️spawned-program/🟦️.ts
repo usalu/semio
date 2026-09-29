@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/ShellHost/spawned-program/component.ts
-/** @emoji 🪟️ A spawned program as a FIRST-CLASS member of the shell session — as an OWNED unit: no
+/** 🪟️ A spawned program as a FIRST-CLASS member of the shell session — as an OWNED unit: no
  * React, no shell imports, so a law can drive the whole projection without building the shell's
  * element graph (the separation `⌨️window-scope` and `📌️panel` already keep).
  *

@@ -118,7 +118,6 @@ fn member_history_verification_retains_input_and_bounds_verified_handoff() {
             }
         }
     }
-    eprintln!("[DEBUG] retained history input: 5 wire cases x 3 grants, separate copy/hash credit, scoped single handoff, exact 4531-byte paged retirement, no typed publication");
 }
 
 #[test]
@@ -195,5 +194,4 @@ fn member_history_verification_rechecks_every_owner_transition_and_retires_exact
     let failure = MemberHistoryVerification::new(closed, RetainedSprLimits::default()).err().expect("retired admission fails without panic");
     assert_eq!(failure.diagnostic, MemberOpenDiagnostic::Stale);
     assert!(failure.request.terminal_is_empty());
-    eprintln!("[DEBUG] retained history lifecycle: 13 owner traces, exact-one transfer, sticky denial before/after handoff, retired-request preservation, zero semantic hydration");
 }

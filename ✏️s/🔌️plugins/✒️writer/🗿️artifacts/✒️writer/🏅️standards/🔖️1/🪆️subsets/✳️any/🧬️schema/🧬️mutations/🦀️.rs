@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 pub use super::change_language::{change_language, ChangeLanguage};
 pub use super::change_uri::{change_uri, ChangeUri};
 pub use super::edit_text::{edit_text, EditText};
+pub use super::splice_text::{splice_text, SpliceText};
 pub use super::rename_writer::{rename_writer, RenameWriter};
 pub use crate::schema::operations::*;
 
@@ -22,6 +23,7 @@ pub enum WriterMutation {
     ChangeUri(ChangeUri),
     ChangeLanguage(ChangeLanguage),
     EditText(EditText),
+    SpliceText(SpliceText),
 }
 //#endregion 🔖️Aggregate
 

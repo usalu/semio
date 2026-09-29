@@ -89,23 +89,23 @@ impl Fixture {
 }
 
 //#region ClickToCaretGeometry
+/// 📍️ 8px left padding + ~7px/char advance (see `cursor_from_click`): clicking near x=8 should land at
+/// the very start of the line, clicking further right should land later in "hello".
 #[test]
 fn cursor_from_click_resolves_the_first_line_offset_at_the_click_x() {
     let scene = text_editor_scene("editor.click", "hello\nworld", None, None);
     let inner = Rect::new(0.0, 0.0, 200.0, 200.0);
-    // 8px left padding + ~7px/char advance (see `cursor_from_click`): clicking near x=8 should land at
-    // the very start of the line, clicking further right should land later in "hello".
     let start = cursor_from_click(&scene, inner, 8.0, 8.0, 0.0);
     let mid = cursor_from_click(&scene, inner, 8.0 + 7.0 * 3.0, 8.0, 0.0);
     assert_eq!(start, 0);
     assert!(mid >= 2 && mid <= 4, "expected an offset inside \"hello\", got {mid}");
 }
 
+/// ↕️ Line_h is 18.0 and the first line starts at y = inner.y + 8.0 (see `cursor_from_click`).
 #[test]
 fn cursor_from_click_accounts_for_line_index_via_y() {
     let scene = text_editor_scene("editor.click.line2", "ab\ncd\nef", None, None);
     let inner = Rect::new(0.0, 0.0, 200.0, 200.0);
-    // line_h is 18.0 and the first line starts at y = inner.y + 8.0 (see `cursor_from_click`).
     let offset = cursor_from_click(&scene, inner, 8.0, 8.0 + 18.0 + 2.0, 0.0);
     let (line, col) = line_col_at("ab\ncd\nef", offset);
     assert_eq!((line, col), (1, 0));

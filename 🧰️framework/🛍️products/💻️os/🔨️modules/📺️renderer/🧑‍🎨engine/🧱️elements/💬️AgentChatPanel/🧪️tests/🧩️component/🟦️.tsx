@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/💬️AgentChatPanel/tests/component.tsx
-/** @emoji 🧪️ `💬️AgentChatPanel` cancel affordance — ticket
+/** 🧪️ `💬️AgentChatPanel` cancel affordance — ticket
  * `26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END` slice U1, audit `📓️g5-ux-completeness-audit.md`
  * ranked item 2. The panel used to render a `running` tool call with no way to stop it although the
  * gateway's cancel path already existed. These laws cover which rows offer the control, what it

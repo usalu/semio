@@ -39,7 +39,6 @@ export async function testFormsDesignImport(): Promise<void> {
     assert.equal(valid, item.valid, `${item.name}: independent oracle`);
     if (actual) assert.deepEqual(JSON.parse(JSON.stringify(actual)), parsed, item.name);
   }
-  console.log("[DEBUG] Forms canonical import vectors matched independent JSON Schema validation");
 }
 
 /** 🪪️ Checks exact child identity and the editor/document boundary. */
@@ -65,7 +64,6 @@ export function testFormsDocumentContractOracle(): void {
     assert.deepEqual(applyPatch(structuredClone(item.before), compare(item.before, item.after)).newDocument, item.after, item.name);
     for (const field of ["structure", "results"] as const) if (!Object.hasOwn(item.diff, field)) assert.equal(applyFormsDiff(base, item.diff)[field], base[field]);
   }
-  console.log("[DEBUG] Forms sparse edit laws matched independent JSON Patch and retained untouched child identities");
 }
 
 /** 🧬️ The aggregate schema accepts every committed native mutation and rejects unknown tags. */
@@ -91,5 +89,4 @@ export async function testFormsMutationSchemas(): Promise<void> {
   for (const value of [...native, ...responses]) assert.equal(validate(value), true, JSON.stringify(validate.errors));
   assert.equal(validate({ mutation: "unknown", id: "q" }), false);
   for (const path of ["🔗️.graphql", "📸️snapshot/🔗️.graphql", "🔺️diff/🔗️.graphql", "📝️definition/🔗️.graphql", "📨️response/🔗️.graphql", "🧬️mutations/🔗️.graphql"]) parse(readFileSync(join(root, path), "utf8"));
-  console.log(`[DEBUG] Forms schema projections accepted ${native.length + responses.length} native event fixtures and parsed all GraphQL facets`);
 }

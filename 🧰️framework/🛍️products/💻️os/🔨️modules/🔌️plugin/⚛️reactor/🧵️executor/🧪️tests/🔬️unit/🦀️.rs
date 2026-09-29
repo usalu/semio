@@ -103,6 +103,10 @@ async fn cancel_before_the_first_run_until_idle_drops_the_future_without_ever_po
     assert!(!pending, "nothing should remain pending after cancelling the only task");
 }
 
+/// 🔁️ The freed slot comes back — cancel must not leak the index forever. The fixed arena hands
+/// its slots out FIFO from a pool pre-filled with every index, so the detached one is handed back
+/// after one full rotation, not on the very next spawn; walking the rotation is what proves it was
+/// returned to the pool at all, and the generation clause is asserted on that exact handback.
 #[semio_framework_async_macros::async_test]
 async fn cancel_of_a_parked_task_drops_it_and_frees_its_slot_for_reuse() {
     let executor = ColdFutureExecutor::new();
@@ -123,10 +127,6 @@ async fn cancel_of_a_parked_task_drops_it_and_frees_its_slot_for_reuse() {
     assert!(pending, "task must be parked");
     drop(executor.detach(id).expect("exact detached future"));
     assert!(!executor.has_pending(), "cancelling the only parked task must clear has_pending");
-    // 🔁️ The freed slot comes back — cancel must not leak the index forever. The fixed arena hands
-    // its slots out FIFO from a pool pre-filled with every index, so the detached one is handed back
-    // after one full rotation, not on the very next spawn; walking the rotation is what proves it was
-    // returned to the pool at all, and the generation clause is asserted on that exact handback.
     let mut reused = None;
     for _ in 0..LOCAL_EXECUTOR_TASK_SLOTS {
         let next = executor.spawn(async move {}).expect("reused fixed executor slot");
@@ -157,12 +157,13 @@ async fn spawn_with_id_hands_the_reserved_id_to_the_future_builder_before_it_eve
     assert_eq!(seen_id.get(), Some(id), "the future must observe the SAME id spawn_with_id returned");
 }
 
+/// ⏹️ Finishes and frees the slot
 #[semio_framework_async_macros::async_test]
 async fn cancel_is_idempotent_for_an_unknown_or_already_finished_id() {
     let executor = ColdFutureExecutor::new();
     assert!(executor.detach(999).is_none());
     let id = executor.spawn(async move {}).expect("fixed executor admission");
-    let _ = executor.run_until_idle(8); // finishes and frees the slot
+    let _ = executor.run_until_idle(8);
     assert!(executor.detach(id).is_none());
     assert!(executor.detach(id).is_none());
 }

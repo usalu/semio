@@ -91,9 +91,9 @@ fn the_accessibility_dump_announces_visible_windows_and_keeps_named_diagnostics(
     note_chrome_accessibility(0, Vec::new());
 }
 
+/// 🔒️ Guards path-grammar drift against `UiNode`'s own `#[serde(tag = "type")]` wire format.
 #[test]
 fn kind_tags_match_the_ui_node_wire_format_tag() {
-    // 🔒️ Guards path-grammar drift against `UiNode`'s own `#[serde(tag = "type")]` wire format.
     let node = text_node("x");
     let json = serde_json::to_value(&node).unwrap();
     assert_eq!(json.get("type").and_then(|v| v.as_str()), Some(ui_node_kind_tag(&node)));

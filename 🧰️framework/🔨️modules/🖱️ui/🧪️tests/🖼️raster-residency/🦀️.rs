@@ -277,7 +277,6 @@ fn real_gpu_table_commits_six_scene_leases_retires_the_first_and_recovers_its_na
 
     let _guard = RASTER_TABLE_GPU_LAW_LOCK.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     let Some(mut harness) = semio_framework_async::block_on(RasterTableGpuHarness::new()) else {
-        eprintln!("[DEBUG] raster-table-scene-integration skipped: no headless WGPU adapter available");
         return;
     };
     let contract = scene_raster_law();
@@ -348,7 +347,6 @@ fn real_gpu_table_commits_six_scene_leases_retires_the_first_and_recovers_its_na
     harness.close();
     assert_eq!(pool.gpu_resident_bytes(), 0, "closing the real table retires every GPU witness byte");
     assert!(semio_framework_async::block_on(harness.validation_error()).is_none());
-    eprintln!("[DEBUG] raster-table-scene-integration executed: textures=6 cpu_slots=2 resident_bytes=48 recovered=2x1 closed_bytes=0");
 }
 
 #[test]

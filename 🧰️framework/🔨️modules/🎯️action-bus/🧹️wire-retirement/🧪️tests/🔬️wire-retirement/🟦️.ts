@@ -64,5 +64,4 @@ export function testWireRetirementFixture():void {
   }
   const invalid=[{...fixture,pageBytes:4097},{...fixture,grants:[1,64]},{...fixture,terminalBackingBytes:4096},{...fixture,extra:true}];
   for(const value of invalid)assert.equal(validate(value),false);
-  console.log(`[DEBUG] raw wire retirement source: ${fixture.cases.length} ownership cases, ${invalid.length+1} hostile fixtures, ${fixture.shortClose.steps.length} short-close frontiers; native grant/terminal behavior is separate`);
 }

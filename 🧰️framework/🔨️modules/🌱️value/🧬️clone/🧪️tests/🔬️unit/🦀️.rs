@@ -91,7 +91,6 @@ fn shared_value_clone_matches_neutral_vectors_and_serde_json() {
     assert_eq!(checkpoint.completed_items, 3);
     let source = DslValue::Object(vec![("z".into(), DslValue::uint(u64::MAX)), ("a".into(), DslValue::float(1.0)), ("z".into(), DslValue::int(i64::MIN))]);
     assert_eq!(clone_value(&source, DSL_VALUE_CLONE_CHUNK_BYTES).0, source);
-    println!("[DEBUG] shared value clone: 9 neutral values, large UTF-8 chunks, exact numeric variants and duplicate-key order agree");
 }
 
 #[test]
@@ -147,7 +146,6 @@ fn shared_value_clone_grants_bound_utf8_progress_and_cancellation_returns_the_ex
             assert_eq!(Arc::strong_count(&root), 1);
         }
     }
-    println!("[DEBUG] shared value clone: 0/1/7/256 item-byte grants bound UTF-8 progress and every cancellation matrix position returns the exact source");
 }
 
 #[cfg(debug_assertions)]
@@ -158,7 +156,6 @@ fn shared_value_clone_drop_rejects_live_recursive_ownership() {
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| drop(cursor)));
     assert!(result.is_err());
     assert_eq!(Arc::strong_count(&root), 2);
-    println!("[DEBUG] shared value clone: live cursor Drop rejects recursive owner destruction and explicit close remains mandatory");
 }
 
 #[test]
@@ -177,7 +174,6 @@ fn shared_value_clone_rejects_capacity_and_depth_without_losing_the_source() {
         assert!(Arc::ptr_eq(&root, &returned));
         assert!(cursor.terminal_is_empty());
     }
-    println!("[DEBUG] shared value clone: capacity and depth rejection preserve exact source ownership");
 }
 
 #[test]
@@ -197,5 +193,4 @@ fn shared_value_clone_reservation_rejects_allocator_overcapacity_before_payload_
         assert_eq!(result.is_ok(), case["accepted"].as_bool().unwrap());
         if let Ok(value) = result { assert!(value.is_empty()); assert!(value.capacity() <= budget); }
     }
-    println!("[DEBUG] shared value reservation rejects an injected overcapacity allocator before admitting payload storage");
 }

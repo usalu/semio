@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 📱️ The ONE viewport-breakpoint policy of the shell, written once and read by every target.
+/** 📱️ The ONE viewport-breakpoint policy of the shell, written once and read by every target.
  *
  * `AGENTS.md` orders the devices desktop → mobile → tablet, and the settings surface has always exposed
  * all three (`ElementsSurfaceDevice`); until this module the AUTOMATIC detection was binary, so `tablet`

@@ -1805,12 +1805,12 @@ impl FlowHost {
         self.dag.hovered_node_id()
     }
 
-    /// @emoji 🎯️ All pick targets under a screen point as JSON for DOM disambiguation menus.
+    /// 🎯️ All pick targets under a screen point as JSON for DOM disambiguation menus.
     pub fn pick_targets_at_screen_json(&self, sx: f64, sy: f64) -> String {
         self.dag.pick_targets_at_screen_json(sx, sy)
     }
 
-    /// @emoji 🎯️ Screen-space geometry for a live entity (`domain`/`id` in the pick-target grammar) —
+    /// 🎯️ Screen-space geometry for a live entity (`domain`/`id` in the pick-target grammar) —
     /// see `DagHost::entity_screen_json`. Powers introduction-demonstration semantic targeting.
     pub fn entity_screen_json(&self, domain: &str, id: &str) -> String {
         self.dag.entity_screen_json(domain, id)

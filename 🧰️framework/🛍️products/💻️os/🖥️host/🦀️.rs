@@ -224,7 +224,7 @@ pub mod host {
 
         //#region 🔖️ActionKernel
 
-        /// @emoji 🩺️ Delegates to `ui_wgpu::wgpu::ui_recovery_panel`'s `🔖️StatusBuilders` builder — this host
+        /// 🩺️ Delegates to `ui_wgpu::wgpu::ui_recovery_panel`'s `🔖️StatusBuilders` builder — this host
         /// has no locale on hand at this call site (no `ViewModel` threaded into `recovery_ui`), so
         /// `is_de` is pinned to `false` (English) until a locale source is plumbed through.
         pub fn recovery_ui(&self, plugin_id: &str) -> UiNode {
@@ -276,7 +276,7 @@ pub mod host {
             Ok(())
         }
 
-        /// @emoji 🔢️ Same-version hot-swaps must not silently drop apps — a version bump is required to
+        /// 🔢️ Same-version hot-swaps must not silently drop apps — a version bump is required to
         /// shrink the app set, so a client relying on document/instance continuity can detect the change.
         fn validate_swap_app_retention(&self, program: &LoadedProgram, previous: Option<&LoadedProgram>) -> Result<(), String> {
             if let Some(previous) = previous {
@@ -372,7 +372,7 @@ pub mod host {
         pub id: String,
         pub name: String,
         pub vcs: ArtifactVcs<P, Op>,
-        /// @emoji 🔀️ The document's history transitions; with `vcs.edits` the complete event log
+        /// 🔀️ The document's history transitions; with `vcs.edits` the complete event log
         /// every position (applied/redo/checkpoint/alternative) is folded from.
         pub transitions: Vec<protocol::MutationEnvelope>,
         pub edit_messages: Vec<protocol::EditMessages>,
@@ -445,7 +445,7 @@ pub mod host {
     }
 
     impl<P, Op: Mutation<P>> BackboneDocument<P, Op> {
-        /// @emoji 🧮️ The edits the event log leaves applied, in fold order — what a projection replays.
+        /// 🧮️ The edits the event log leaves applied, in fold order — what a projection replays.
         pub fn applied_edit_ids(&self) -> Result<Vec<String>, VcsError> {
             store::fold_event_log::<P, Op>(&self.vcs.edits.iter().collect::<Vec<_>>(), &self.transitions, &self.conflicts).map(|fold| fold.applied)
         }
@@ -466,7 +466,7 @@ pub mod host {
     /// the spawned app's plugin into the owning space's `programs` list.
     pub type OsSpaceStore = ArtifactStore<space::SpaceSnapshot, space::SpaceMutation>;
 
-    /// @emoji 🌱️ Mints a fresh backbone document wrapping `initial_snapshot` with empty edit history.
+    /// 🌱️ Mints a fresh backbone document wrapping `initial_snapshot` with empty edit history.
     pub fn create_backbone_document<P, Op>(schema: &str, id: &str, name: &str, initial_snapshot: P) -> BackboneDocument<P, Op>
     where
         P: Clone,
@@ -484,7 +484,7 @@ pub mod host {
         }
     }
 
-    /// @emoji 🌉️ Builds the authoritative `ArtifactEnvelope` a `BackboneDocument` wraps, dropping only
+    /// 🌉️ Builds the authoritative `ArtifactEnvelope` a `BackboneDocument` wraps, dropping only
     /// the app-level `name` and preserving its complete event log.
     fn backbone_envelope_of<P, Op>(document: &BackboneDocument<P, Op>) -> ArtifactEnvelope<P, Op>
     where
@@ -508,7 +508,7 @@ pub mod host {
         })
     }
 
-    /// @emoji 🧺️ Lends a `BackboneDocument`'s authoritative envelope for the duration of one read,
+    /// 🧺️ Lends a `BackboneDocument`'s authoritative envelope for the duration of one read,
     /// then retires it through `into_owners` — `ArtifactEnvelope`'s `Drop` aborts the guest unless
     /// its nested owners were detached first, so no caller is allowed to build one and let it fall
     /// out of scope on its own.
@@ -531,7 +531,7 @@ pub mod host {
         with_backbone_envelope(document, |envelope| resolve_kernel_future(materialize_document_snapshot(envelope, applied_edit_ids)))
     }
 
-    /// @emoji 📤️ Exports an already-loaded backbone document as pack bytes + ops text.
+    /// 📤️ Exports an already-loaded backbone document as pack bytes + ops text.
     pub fn export_backbone_pack<P, Op>(document: &BackboneDocument<P, Op>) -> Result<store::ArtifactPackFiles, VcsError>
     where
         P: Clone + store::ArtifactPack,
@@ -540,7 +540,7 @@ pub mod host {
         with_backbone_envelope(document, |envelope| resolve_kernel_future(store::print_document_pack(envelope)))
     }
 
-    /// @emoji 📤️ DSL-text counterpart of `export_backbone_pack`.
+    /// 📤️ DSL-text counterpart of `export_backbone_pack`.
     pub fn export_backbone_dsl<P, Op>(document: &BackboneDocument<P, Op>) -> Result<store::ArtifactTextFiles, VcsError>
     where
         P: Clone + store::ArtifactDsl,
@@ -549,7 +549,7 @@ pub mod host {
         with_backbone_envelope(document, |envelope| resolve_kernel_future(store::print_document_text(envelope)))
     }
 
-    /// @emoji 📦️ Binary pack+spr payload for the whole `BackboneDocument` (name + genesis + event log)
+    /// 📦️ Binary pack+spr payload for the whole `BackboneDocument` (name + genesis + event log)
     /// — the persisted/synced form. `name` rides as a `store::encode_document_pack_bytes`-framed blob
     /// wrapping a nested `pack`+`spr` pair; `spr` carries the events, whose fold restores the exact
     /// undo/redo/checkpoint position.
@@ -563,7 +563,7 @@ pub mod host {
         Ok(resolve_kernel_future(store::encode_document_pack_bytes(document.name.as_bytes(), &inner)))
     }
 
-    /// @emoji 📥️ Inverse of `encode_backbone_payload` — `expected_schema` guards against decoding one
+    /// 📥️ Inverse of `encode_backbone_payload` — `expected_schema` guards against decoding one
     /// document kind's bytes as another.
     pub fn decode_backbone_payload<P, Op>(bytes: &[u8], expected_schema: &str) -> Result<BackboneDocument<P, Op>, VcsError>
     where
@@ -574,19 +574,21 @@ pub mod host {
         let name = String::from_utf8(name_bytes).map_err(|error| VcsError::Deserialize(error.to_string()))?;
         let (pack, spr) = resolve_kernel_future(store::decode_document_pack_bytes(&inner))?;
         let parsed: store::ParsedDocumentText<P, Op> = resolve_kernel_future(store::parse_document_pack(&pack, &spr)).map_err(|error| VcsError::Deserialize(error.to_string()))?;
-        if parsed.envelope.schema != expected_schema {
+        let envelope = parsed.into_envelope();
+        if envelope.schema != expected_schema {
+            envelope.retire_unadopted();
             return Err(VcsError::Deserialize(format!("expected schema {expected_schema}")));
         }
         // 🧺️ Consume the shell: its `Drop` asserts the owners were detached, so reading fields off it
         // and letting it fall out of scope aborts the guest at runtime.
-        let owners = parsed.envelope.into_owners();
+        let owners = envelope.into_owners();
         let edit_messages = owners.edit_messages.iter().cloned().collect();
         Ok(BackboneDocument { schema: owners.schema, id: owners.id, name, vcs: owners.vcs, transitions: owners.transitions, edit_messages, conflicts: owners.conflicts, backbone: owners.backbone })
     }
     //#endregion 🔖️BackboneDocument
 
     //#region 🔖️GraphReconcile
-    /// @emoji 🧵️ Post-materialization workflow integrity pass, invoked explicitly by
+    /// 🧵️ Post-materialization workflow integrity pass, invoked explicitly by
     /// `OsWorkflowStore::snapshot_with_conflicts` (NOT through `Mutation::reconcile` — the kernel
     /// `workflow::WorkflowMutation` inherits that trait hook's no-op default, since the two rules that
     /// used to run alongside these purely-structural ones need the os-core plugin/artifact registry the
@@ -711,7 +713,7 @@ pub mod host {
         (document, conflicts)
     }
 
-    /// @emoji 🎛️ Maps a `workflow::WorkflowParameter` to its `WorkflowParameterType` tag — needed here
+    /// 🎛️ Maps a `workflow::WorkflowParameter` to its `WorkflowParameterType` tag — needed here
     /// to type-check a binding's parameter against its target `ConfigFieldShape`.
     fn workflow_parameter_type_of(parameter: &workflow::WorkflowParameter) -> workflow::WorkflowParameterType {
         match parameter {
@@ -722,7 +724,7 @@ pub mod host {
         }
     }
 
-    /// @emoji 🌀️ Repeatedly finds a cycle in `edges` (by node-id adjacency) and drops the participating
+    /// 🌀️ Repeatedly finds a cycle in `edges` (by node-id adjacency) and drops the participating
     /// edge with the highest array index — a deterministic proxy for "newest edit" since
     /// `reconcile_workflow_snapshot` only receives the materialized `WorkflowSnapshot` by value, not
     /// per-edge `HybridLogicalTimestamp`s from the edit log. `apply_workflow_operation`'s `ConnectPorts`
@@ -744,7 +746,7 @@ pub mod host {
         edges
     }
 
-    /// @emoji 🔍️ DFS cycle detection adapted from `workflow::validate_workflow`'s check, but returning
+    /// 🔍️ DFS cycle detection adapted from `workflow::validate_workflow`'s check, but returning
     /// the participant node ids of the first cycle found (rather than just an error string) so the
     /// caller can identify which edges are eligible for dropping.
     fn find_workflow_cycle_participants(edges: &[workflow::WorkflowEdge]) -> Option<HashSet<String>> {
@@ -826,7 +828,7 @@ pub mod host {
             self.inner.snapshot()
         }
 
-        /// @emoji 🤝️ Fresh replay plus `reconcile_workflow_snapshot`'s whole 4(+1)-rule pipeline —
+        /// 🤝️ Fresh replay plus `reconcile_workflow_snapshot`'s whole 4(+1)-rule pipeline —
         /// invoked explicitly here rather than through `Mutation::reconcile` (a no-op default at the
         /// kernel-crate layer, since two of those rules need the os-core plugin/artifact registry).
         pub fn snapshot_with_conflicts(&self) -> Result<(workflow::WorkflowSnapshot, Vec<protocol::MutationMessage>), VcsError> {
@@ -865,7 +867,7 @@ pub mod host {
             let _ = self.inner.generation();
         }
 
-        /// @emoji 🆔️ Mints a fresh `WorkflowNode` (id, ports, document/config refs — everything) via
+        /// 🆔️ Mints a fresh `WorkflowNode` (id, ports, document/config refs — everything) via
         /// `workflow::workflow_node_for_app`, at dispatch time, so replay never re-derives it. Also
         /// dispatches `space::SpaceMutation::InstallProgram` against `space_store` — the owning space's
         /// `programs` list moved off the dissolved `OsSnapshot` onto `space::SpaceSnapshot` (see
@@ -898,12 +900,12 @@ pub mod host {
             self.dispatch_apply(vec![workflow::WorkflowMutation::ChangeParameter(workflow::ChangeParameter { parameter_id: target_parameter_id.into(), parameter: Box::new(next) })])
         }
 
-        /// @emoji 📡️ Pumps any queued inbound backbone messages into the edit timeline.
+        /// 📡️ Pumps any queued inbound backbone messages into the edit timeline.
         pub fn tick(&mut self) -> Result<bool, VcsError> {
             resolve_kernel_future(self.inner.tick())
         }
 
-        /// @emoji 🔗️ Resolves and attaches a backbone by uri. Only available inside the wasm sandbox
+        /// 🔗️ Resolves and attaches a backbone by uri. Only available inside the wasm sandbox
         /// (every scheme forwards to the host over the injected `BackboneChannelPort`, a pure queue) —
         /// see {@link attach_backbone} for the native counterpart, which takes an explicit
         /// `Box<dyn store::Backbone>` since native has no URI→IO auto-resolution anymore (`framework/sync`'s
@@ -913,7 +915,7 @@ pub mod host {
             resolve_kernel_future(self.inner.attach_backbone_uri(uri))
         }
 
-        /// @emoji 🔗️ Attaches an explicit native backbone channel (typically a `channel_backbone` handed
+        /// 🔗️ Attaches an explicit native backbone channel (typically a `channel_backbone` handed
         /// out by `framework/sync`'s `ArtifactHost::open`, per `ArtifactHost`'s canonical sequence).
         #[cfg(not(target_arch = "wasm32"))]
         pub fn attach_backbone(&mut self, backbone: store::Backbones) -> Result<(), VcsError> {
@@ -931,7 +933,7 @@ pub mod host {
     //#endregion 🔖️OsWorkflowStore
 
     //#region 🔖️Backbone
-    /// @emoji 🔌️ Byte-oriented studio persistence port — `read`/`write` carry `encode_backbone_payload`'s
+    /// 🔌️ Byte-oriented studio persistence port — `read`/`write` carry `encode_backbone_payload`'s
     /// binary pack+spr blob, never JSON. Every implementor today (`MemoryBackbonePort`,
     /// `LocalStorageBackbonePort`, and the `file://`/`folder://` host ports opened by
     /// `open_file_space_backbone`/`open_folder_space_backbone`) is bridged from the underlying
@@ -941,7 +943,7 @@ pub mod host {
         fn write(&self, uri: &str, payload: &[u8]) -> Result<(), VcsError>;
     }
 
-    /// @emoji 🌉️ `store::BackbonePort` is the shared string-typed transport for every document kind
+    /// 🌉️ `store::BackbonePort` is the shared string-typed transport for every document kind
     /// across the whole kernel (localStorage, in-memory, host file/folder ports) — changing its own
     /// signature to bytes is out of scope here. Base64 is the bridge: an empty payload maps to an
     /// empty string both ways (preserving `delete_os_space`'s tombstone-write semantics), and every
@@ -963,7 +965,7 @@ pub mod host {
         }
     }
 
-    /// @emoji 🧬️ Enum dispatch over every `OsBackbonePort` implementor (O1 — dyn dispatch dropped in
+    /// 🧬️ Enum dispatch over every `OsBackbonePort` implementor (O1 — dyn dispatch dropped in
     /// favor of enum/match dispatch, mirroring `🏪️store`'s `BackbonePorts` shape exactly —
     /// `📓️terra-store-dedyn-report.md`). `Store` covers every `store::BackbonePort`-shaped transport
     /// (in-memory, localStorage) via the blanket bridge above; `Space` covers the host-only
@@ -991,7 +993,7 @@ pub mod host {
         }
     }
 
-    /// @emoji 🌉️ Writes any `BackboneDocument<P, Op>` to `uri`, stamping its own `backbone` ref first —
+    /// 🌉️ Writes any `BackboneDocument<P, Op>` to `uri`, stamping its own `backbone` ref first —
     /// shared by every catalog write path below (space manifests, collections).
     fn sync_backbone_document<P, Op>(document: &BackboneDocument<P, Op>, backbone_uri: &str, port: &Arc<OsBackbonePorts>) -> Result<(), VcsError>
     where
@@ -1046,7 +1048,7 @@ pub mod host {
         }
     }
 
-    /// @emoji 🔎️ Extracts a bare space id from a `space://<id>` uri — deliberately excludes the
+    /// 🔎️ Extracts a bare space id from a `space://<id>` uri — deliberately excludes the
     /// `space://<id>/collection/<cid>` form (`space::collection_backbone_uri`), which the catalog
     /// tracks alongside a space's manifest uri but must not surface as a catalog row of its own.
     fn os_space_id_from_backbone_uri(uri: &str) -> Option<String> {
@@ -1064,7 +1066,7 @@ pub mod host {
         Ok(OsSpaceCatalogEntry { id: space_id, name: document.name.clone(), backbone_uri: backbone_uri.into(), kind: snapshot.kind, visibility: snapshot.visibility, collection_count: snapshot.collections.len(), updated_at })
     }
 
-    /// @emoji 📚️ Lists persisted space manifests from the dev backbone namespace.
+    /// 📚️ Lists persisted space manifests from the dev backbone namespace.
     pub fn list_os_space_catalog_entries(port: &Arc<OsBackbonePorts>) -> Result<Vec<OsSpaceCatalogEntry>, VcsError> {
         let mut entries = Vec::new();
         let uris: Vec<String> = SPACE_CATALOG_URIS.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(&port_key(port)).cloned().unwrap_or_default().into_iter().collect();
@@ -1085,7 +1087,7 @@ pub mod host {
         Ok(entries)
     }
 
-    /// @emoji 🆕️ Creates a space manifest PLUS one default "main" collection on the dev backbone — see
+    /// 🆕️ Creates a space manifest PLUS one default "main" collection on the dev backbone — see
     /// `## The inversion`/`Addressing` in the plan: a space no longer auto-creates a workflow artifact
     /// (that's an explicit, later user action), only the collection every space needs to hold artifacts
     /// in the first place.
@@ -1107,7 +1109,7 @@ pub mod host {
         os_space_catalog_entry_from_document(&space_uri, &space_document)
     }
 
-    /// @emoji 🗑️ Deletes a space manifest and every collection it references from the dev backbone.
+    /// 🗑️ Deletes a space manifest and every collection it references from the dev backbone.
     pub fn delete_os_space(space_id: &str, port: &Arc<OsBackbonePorts>) -> Result<(), VcsError> {
         let uri = space::space_backbone_uri(space_id);
         if let Ok(document) = load_os_space_document(space_id, port) {
@@ -1123,9 +1125,10 @@ pub mod host {
         port.write(&uri, &[])
     }
 
-    /// @emoji 🌉️ Shared admission tail for `import_os_space_from_dsl`/`import_os_space_from_pack`:
+    /// 🌉️ Admits one space document into the catalog of `port` under its own id and name — the shared tail of
+    /// `import_os_space_from_dsl`/`import_os_space_from_pack` and of a studio newly bound to a file or folder backbone:
     /// mints a fresh id when the source carried none, syncs, and tracks the catalog uri.
-    fn admit_os_space_document(mut document: OsSpaceDocument, port: &Arc<OsBackbonePorts>) -> Result<OsSpaceCatalogEntry, VcsError> {
+    pub fn admit_os_space_document(mut document: OsSpaceDocument, port: &Arc<OsBackbonePorts>) -> Result<OsSpaceCatalogEntry, VcsError> {
         let space_id = if document.id.is_empty() { create_os_id("space") } else { document.id.clone() };
         let backbone_uri = space::space_backbone_uri(&space_id);
         document.id = space_id;
@@ -1134,34 +1137,27 @@ pub mod host {
         os_space_catalog_entry_from_document(&backbone_uri, &document)
     }
 
-    /// @emoji 📥️ Imports a space manifest dsl text (`export_os_space_dsl`'s counterpart) onto the dev
-    /// backbone. Does not create a collection — a manifest imported this way is expected to already
+    /// 📥️ Imports a space manifest dsl text (`export_os_space_dsl`'s counterpart) onto the dev
+    /// backbone under the manifest's own name (the catalog lists a studio by its document name). Does not create a collection — a manifest imported this way is expected to already
     /// reference its own collections (a fresh, collection-less space only comes from `create_os_space`).
     pub fn import_os_space_from_dsl(dsl: &str, port: &Arc<OsBackbonePorts>) -> Result<OsSpaceCatalogEntry, VcsError> {
         let snapshot = <space::SpaceSnapshot as store::ArtifactDsl>::parse_dsl(dsl).map_err(|error| VcsError::Deserialize(error.message))?;
-        let vcs = create_document_envelope::<space::SpaceSnapshot, space::SpaceMutation>(space::S_SPACE_SCHEMA, "", snapshot, None).vcs.clone();
-        admit_os_space_document(BackboneDocument {
-                schema: space::S_SPACE_SCHEMA.into(),
-                id: String::new(),
-                name: String::new(),
-                vcs,
-                transitions: Vec::new(),
-                edit_messages: Vec::new(),
-                conflicts: Vec::new(),
-                backbone: None,
-            }, port)
+        let name = snapshot.name.trim().to_owned();
+        admit_os_space_document(create_backbone_document(space::S_SPACE_SCHEMA, "", &name, snapshot), port)
     }
 
-    /// @emoji 📦️ Pack counterpart of `import_os_space_from_dsl`.
+    /// 📦️ Pack counterpart of `import_os_space_from_dsl`: admits the pair under its own document id and the head
+    /// manifest's name (the catalog lists a studio by its document name).
     pub fn import_os_space_from_pack(pack: &[u8], spr: &[u8], port: &Arc<OsBackbonePorts>) -> Result<OsSpaceCatalogEntry, VcsError> {
         let parsed: store::ParsedDocumentText<space::SpaceSnapshot, space::SpaceMutation> = resolve_kernel_future(store::parse_document_pack(pack, spr)).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+        let name = parsed.snapshot.name.trim().to_owned();
         // 🧺️ See `decode_backbone_payload` above — the shell must be consumed, never dropped.
-        let owners = parsed.envelope.into_owners();
+        let owners = parsed.into_envelope().into_owners();
         let edit_messages = owners.edit_messages.iter().cloned().collect();
         let document = BackboneDocument {
             schema: owners.schema,
             id: owners.id,
-            name: String::new(),
+            name,
             vcs: owners.vcs,
             transitions: owners.transitions,
             edit_messages,
@@ -1171,17 +1167,17 @@ pub mod host {
         admit_os_space_document(document, port)
     }
 
-    /// @emoji 📤️ Exports an already-loaded space manifest as pack bytes + ops text.
+    /// 📤️ Exports an already-loaded space manifest as pack bytes + ops text.
     pub fn export_os_space_pack(document: &OsSpaceDocument) -> Result<store::ArtifactPackFiles, VcsError> {
         export_backbone_pack(document)
     }
 
-    /// @emoji 📤️ DSL-text counterpart of `export_os_space_pack`.
+    /// 📤️ DSL-text counterpart of `export_os_space_pack`.
     pub fn export_os_space_dsl(document: &OsSpaceDocument) -> Result<store::ArtifactTextFiles, VcsError> {
         export_backbone_dsl(document)
     }
 
-    /// @emoji 📂️ Loads a space manifest from the dev backbone.
+    /// 📂️ Loads a space manifest from the dev backbone.
     pub fn load_os_space_document(space_id: &str, port: &Arc<OsBackbonePorts>) -> Result<OsSpaceDocument, VcsError> {
         let backbone_uri = space::space_backbone_uri(space_id);
         let payload = port.read(&backbone_uri)?;
@@ -1191,7 +1187,7 @@ pub mod host {
         decode_backbone_payload(&payload, space::S_SPACE_SCHEMA)
     }
 
-    /// @emoji 🌱️ Seeds the demo space when the catalog is empty.
+    /// 🌱️ Seeds the demo space when the catalog is empty.
     pub fn seed_os_space_catalog_if_empty(seed_document: OsSpaceDocument, port: &Arc<OsBackbonePorts>) -> Result<Option<OsSpaceCatalogEntry>, VcsError> {
         if !list_os_space_catalog_entries(port)?.is_empty() {
             return Ok(None);
@@ -1347,14 +1343,14 @@ pub mod backbone {
     use store::MemoryBackbonePort;
     use vcs::VcsError;
 
-    /// @emoji 🗂️ Conventional single-document id used inside a folder-backed studio backbone — a studio
+    /// 🗂️ Conventional single-document id used inside a folder-backed studio backbone — a studio
     /// folder holds exactly one os document at its root (app documents get their own document ids once
     /// {@link OsArtifactRef} routes them through `framework/sync`'s multi-document `ArtifactHost`).
     #[cfg(not(target_arch = "wasm32"))]
     const SPACE_FOLDER_DOCUMENT_ID: &str = "studio";
 
     enum SpacePortKind {
-        /// @emoji 🗃️ A single document's pack blob addressed by an arbitrary `file://` path —
+        /// 🗃️ A single document's pack blob addressed by an arbitrary `file://` path —
         /// `<folder>/<document_id>.<extension>.pack` (authoritative) + `.ops` + a DSL mirror, via
         /// `FolderTextStorage::write_pack`/`read_pack` and the typed `store::parse_document_pack`/
         /// `print_document_pack::<OsSnapshot, OsMutation>` (this crate is fully typed, no
@@ -1394,7 +1390,7 @@ pub mod backbone {
         }
     }
 
-    /// @emoji 🌉️ `read`/`write`'s `payload` is the same `encode_os_space_payload` blob every
+    /// 🌉️ `read`/`write`'s `payload` is the same `encode_os_space_payload` blob every
     /// `OsBackbonePort` implementor carries: a `name` byte blob wrapping a nested `pack`+`spr` pair
     /// (`store::encode_document_pack_bytes`, twice). The file/folder storage backends below have no
     /// slot for `name` (they only ever persisted `pack`+`spr`, or before this crate's pack/dsl rollout
@@ -1413,8 +1409,8 @@ pub mod backbone {
                             match crate::host::resolve_kernel_future(storage.read(document_id, extension))? {
                                 Some(text_files) => {
                                     let snapshot = <space::SpaceSnapshot as store::ArtifactDsl>::parse_dsl(&text_files.dsl).map_err(|error| VcsError::Deserialize(error.message))?;
-                                    let envelope = store::create_document_envelope::<space::SpaceSnapshot, space::SpaceMutation>(space::S_SPACE_SCHEMA, document_id, snapshot, None);
-                                    let pack_files = crate::host::resolve_kernel_future(store::print_document_pack(&envelope))?;
+                                    let document: crate::host::OsSpaceDocument = crate::host::create_backbone_document(space::S_SPACE_SCHEMA, document_id, "", snapshot);
+                                    let pack_files = crate::host::export_backbone_pack(&document)?;
                                     (pack_files.pack, pack_files.spr)
                                 }
                                 None => return Err(VcsError::Backbone(format!("missing backbone file {uri}"))),
@@ -1442,7 +1438,7 @@ pub mod backbone {
                     SpacePortKind::File { uri: file_uri, storage, document_id, extension } if uri == file_uri => {
                         let (pack, spr) = decode_os_space_pack_payload(payload)?;
                         let parsed: store::ParsedDocumentText<space::SpaceSnapshot, space::SpaceMutation> = crate::host::resolve_kernel_future(store::parse_document_pack(&pack, &spr)).map_err(|error| VcsError::Deserialize(error.to_string()))?;
-                        let dsl_mirror = store::ArtifactDsl::print_dsl(&parsed.envelope.vcs.initial_snapshot);
+                        let dsl_mirror = store::ArtifactDsl::print_dsl(&parsed.into_snapshot());
                         let pack_files = store::ArtifactPackFiles { pack, spr, ops: String::new() };
                         return crate::host::resolve_kernel_future(storage.write_pack(document_id, extension, &pack_files, &dsl_mirror));
                     }
@@ -1458,7 +1454,7 @@ pub mod backbone {
         }
     }
 
-    /// @emoji 🔓️ Strips `encode_os_space_payload`'s `name` wrapper, returning the inner `pack`+`spr`
+    /// 🔓️ Strips `encode_os_space_payload`'s `name` wrapper, returning the inner `pack`+`spr`
     /// pair — the half of the payload `SpaceBackbonePort`'s file/folder storage actually persists.
     #[cfg(not(target_arch = "wasm32"))]
     fn decode_os_space_pack_payload(payload: &[u8]) -> Result<(Vec<u8>, Vec<u8>), VcsError> {
@@ -1467,7 +1463,7 @@ pub mod backbone {
     }
 
     impl SpaceBackbonePort {
-        /// @emoji 🌉️ `self.memory` is a plain `store::BackbonePort` (string-typed) fallback for any uri
+        /// 🌉️ `self.memory` is a plain `store::BackbonePort` (string-typed) fallback for any uri
         /// that isn't this port's own configured file/folder uri (e.g. the space catalog uri) — bridge
         /// bytes↔string via base64, same as the blanket `impl<T: store::BackbonePort> OsBackbonePort`.
         fn read_via_memory(&self, uri: &str) -> Result<Vec<u8>, VcsError> {
@@ -1514,7 +1510,7 @@ pub mod instance {
     pub const OS_PARAMETER_PORT_PREFIX: &str = "param.";
 
     //#region 🔖️Schemas
-    /// @emoji 🔗️ Handle to an app's own `framework/sync`-hosted vcs document — the os document never
+    /// 🔗️ Handle to an app's own `framework/sync`-hosted vcs document — the os document never
     /// embeds app content, only this reference (mirrors `framework/sync`'s `ArtifactActorConfig`).
     #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
@@ -1523,7 +1519,7 @@ pub mod instance {
         pub schema: String,
     }
 
-    /// @emoji 🆔️ Mints a fresh app document id — uuid-v7 (time-ordered), matching the id shape semio_hub already
+    /// 🆔️ Mints a fresh app document id — uuid-v7 (time-ordered), matching the id shape semio_hub already
     /// uses for its own entities (`framework/product/os/semio_hub/rs/bin.rs`'s `Uuid::now_v7()`).
     pub fn create_os_artifact_id() -> String {
         semio_framework_os_kernel::os_identity::time_ordered_id()
@@ -1616,13 +1612,13 @@ pub mod instance {
     //#region 🔖️Parameters
     static OS_ID: AtomicU64 = AtomicU64::new(0);
 
-    /// @emoji 🆔️ Allocates stable ids for OS studio entities.
+    /// 🆔️ Allocates stable ids for OS studio entities.
     pub fn create_os_id(prefix: &str) -> String {
         let n = OS_ID.fetch_add(1, Ordering::Relaxed) + 1;
         format!("{prefix}-{n}")
     }
 
-    /// @emoji 🎛️ Reads the runtime value from a space parameter definition.
+    /// 🎛️ Reads the runtime value from a space parameter definition.
     pub fn os_parameter_value(parameter: &OsParameter) -> Value {
         match parameter {
             OsParameter::Numeric { value, .. } => Value::from(*value),
@@ -1632,12 +1628,12 @@ pub mod instance {
         }
     }
 
-    /// @emoji 🎛️ Returns whether a parameter type can drive a bindable field type.
+    /// 🎛️ Returns whether a parameter type can drive a bindable field type.
     pub fn os_parameter_types_compatible(left: &OsParameterType, right: &OsParameterType) -> bool {
         left == right
     }
 
-    /// @emoji 🎛️ Creates a default space parameter of the given type.
+    /// 🎛️ Creates a default space parameter of the given type.
     pub fn create_default_os_parameter(parameter_type: &OsParameterType, name: &str, id: Option<&str>) -> OsParameter {
         let parameter_id = id.map_or_else(|| create_os_id("param"), str::to_string);
         match parameter_type {
@@ -1669,7 +1665,7 @@ pub mod instance {
         next
     }
 
-    /// @emoji 🎛️ Applies a partial patch to a space parameter, enforcing type constraints.
+    /// 🎛️ Applies a partial patch to a space parameter, enforcing type constraints.
     pub fn patch_os_parameter(parameter: &OsParameter, patch: &Value) -> OsParameter {
         let name = patch.get("name").and_then(|v| v.as_str()).map_or_else(|| parameter_name(parameter), str::to_string);
         let patch_type = patch.get("type").and_then(|v| v.as_str());
@@ -1747,7 +1743,7 @@ pub mod instance {
         }
     }
 
-    /// @emoji 🎛️ Deep-sets a JSON-pointer path on a plain object snapshot.
+    /// 🎛️ Deep-sets a JSON-pointer path on a plain object snapshot.
     pub fn set_json_pointer_value(root: &mut Value, pointer: &str, value: Value) {
         let segments = json_pointer_segments(pointer);
         if segments.is_empty() {
@@ -1771,7 +1767,7 @@ pub mod instance {
         }
     }
 
-    /// @emoji 🎛️ Applies bound space parameter values onto an app snapshot via JSON pointers. 🩹️
+    /// 🎛️ Applies bound space parameter values onto an app snapshot via JSON pointers. 🩹️
     /// Pre-`ConfigSpec` document-snapshot overlay, kept for its one remaining live caller
     /// (`app_instance_document_patches_for_binding`, the media-export path's synthetic-document seed)
     /// — `field_path` here is still read as a JSON pointer into that bare document, distinct from the
@@ -1811,7 +1807,7 @@ pub mod instance {
         }
     }
 
-    /// @emoji 🎛️ Resolves bound parameter values for a workflow node as a field-path map.
+    /// 🎛️ Resolves bound parameter values for a workflow node as a field-path map.
     pub fn resolve_parameter_values_for_instance(bindings: &[OsParameterFieldBinding], parameters: &[OsParameter], node_id: &str) -> HashMap<String, Value> {
         let mut values = HashMap::new();
         for binding in bindings.iter().filter(|entry| entry.node_id == node_id) {
@@ -1823,17 +1819,17 @@ pub mod instance {
         values
     }
 
-    /// @emoji 🎛️ Builds the workflow input port id for a bound space parameter.
+    /// 🎛️ Builds the workflow input port id for a bound space parameter.
     pub fn parameter_port_id(node_id: &str, parameter_id: &str) -> String {
         media_port_id_for_spec(node_id, &format!("{OS_PARAMETER_PORT_PREFIX}{parameter_id}"), "in")
     }
 
-    /// @emoji 🎛️ Returns whether a media port id denotes a space parameter input channel.
+    /// 🎛️ Returns whether a media port id denotes a space parameter input channel.
     pub fn is_parameter_port_id(port_id: &str) -> bool {
         media_port_spec_id(port_id).is_some_and(|spec_id| spec_id.starts_with(OS_PARAMETER_PORT_PREFIX))
     }
 
-    /// @emoji 🎛️ Extracts the space parameter id from a parameter input port id.
+    /// 🎛️ Extracts the space parameter id from a parameter input port id.
     pub fn parameter_id_from_port_id(port_id: &str) -> Option<String> {
         let spec_id = media_port_spec_id(port_id)?;
         spec_id.strip_prefix(OS_PARAMETER_PORT_PREFIX).map(str::to_string)
@@ -1861,12 +1857,12 @@ pub mod instance {
         OS_FIXTURE_JSON.get_or_init(|| Mutex::new(HashMap::new()))
     }
 
-    /// @emoji 📎️ Registers bundled fixture JSON for `payloadRef` materialization.
+    /// 📎️ Registers bundled fixture JSON for `payloadRef` materialization.
     pub fn register_os_fixture_json(slug: &str, json: &str) {
         os_fixture_json_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(slug.into(), json.into());
     }
 
-    /// @emoji 📎️ Looks up bundled fixture JSON by slug — the seed content for a freshly spawned app
+    /// 📎️ Looks up bundled fixture JSON by slug — the seed content for a freshly spawned app
     /// document. Replaces the old `OsSourceDocument.payloadRef = "fixture:…"` resolution: since app
     /// content no longer embeds in the os document, seeding now happens once, host-side, at
     /// {@link OsArtifactRef} creation time (see `ArtifactHost`), not on every materialize/read.
@@ -1874,7 +1870,7 @@ pub mod instance {
         os_fixture_json_registry().lock().ok().and_then(|registry| registry.get(slug).cloned())
     }
 
-    /// @emoji 🎚️ Default config value seeded from `config_spec.fields[].default` — what a freshly
+    /// 🎚️ Default config value seeded from `config_spec.fields[].default` — what a freshly
     /// spawned instance's config resolves to before any explicit `instance.config`/binding overlay.
     fn config_spec_default_value(config_spec: &ConfigSpec) -> Value {
         let mut defaults = serde_json::Map::new();
@@ -1887,7 +1883,7 @@ pub mod instance {
         Value::Object(defaults)
     }
 
-    /// @emoji 🧩️ Builds the dynamic config value for an `AppCommand::Configure` payload: starts from the
+    /// 🧩️ Builds the dynamic config value for an `AppCommand::Configure` payload: starts from the
     /// app's own `ConfigSpec` defaults, then overlays every parameter bound to one of `config_spec`'s
     /// fields with that parameter's current value — the config-driving counterpart to
     /// `apply_parameter_values_to_snapshot`'s document-JSON-pointer overlay (see
@@ -1930,7 +1926,7 @@ pub mod instance {
         config
     }
 
-    /// @emoji 🧩️ Overlays bound parameter values onto an app instance's current document snapshot.
+    /// 🧩️ Overlays bound parameter values onto an app instance's current document snapshot.
     /// Content itself lives in the app's own `framework/sync`-hosted document (referenced by
     /// {@link OsArtifactRef}, read host-side and passed in as `current_document_json`) — this function
     /// no longer resolves embedded/upstream source documents; that concept was deleted with
@@ -1942,7 +1938,7 @@ pub mod instance {
         serde_json::to_string(&with_params).unwrap_or_else(|_| "{}".into())
     }
 
-    /// @emoji 🔀️ Host-side hook for the common case: when a bound parameter's value changes, computes the
+    /// 🔀️ Host-side hook for the common case: when a bound parameter's value changes, computes the
     /// patched document JSON for every app instance with a field bound to it, keyed by document id — the
     /// host dispatches each as a snapshot replace into that app's own document store (e.g. via the program
     /// WIT boundary's `load-app-document`, or `framework/sync`'s document actor once the app is wired onto
@@ -2040,11 +2036,9 @@ pub mod media_export_raster {
         OS_MEDIA_IMPORT_HANDLERS.lock().expect("media import registry").insert((artifact_kind.to_string(), format_artifact_kind.to_string()), Box::new(handler));
     }
     //#endregion 🔖️MediaRegistryRegistryStubs
-    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-    use png::{BitDepth, ColorType, Encoder};
     use serde_json::Value;
 
-    /// @emoji 🖼️ Rasterizes SVG markup to a base64-encoded PNG payload.
+    /// 🖼️ Rasterizes SVG markup to a base64-encoded PNG payload.
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     pub fn rasterize_svg_to_png_base64(svg: &str, width: u32, height: u32) -> Result<String, String> {
         let tree = usvg::Tree::from_str(svg, &usvg::Options::default()).map_err(|error| error.to_string())?;
@@ -2059,23 +2053,16 @@ pub mod media_export_raster {
         Ok(base64_codec::base64_standard_encode(png_bytes))
     }
 
-    /// @emoji 🖼️ Preserves the raster-export API where the shipped guest has no native renderer tier.
+    /// 🖼️ Preserves the raster-export API where the shipped guest has no native renderer tier.
     #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
     pub fn rasterize_svg_to_png_base64(_: &str, _: u32, _: u32) -> Result<String, String> {
         Err("SVG rasterization requires the native semio-framework-os host".into())
     }
 
+    /// 📤️ Encodes the renderer's RGBA8 pixmap with the framework's own PNG codec.
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn encode_rgba_png(pixels: &[u8], width: u32, height: u32) -> Result<Vec<u8>, String> {
-        let mut bytes = Vec::new();
-        {
-            let mut encoder = Encoder::new(&mut bytes, width, height);
-            encoder.set_color(ColorType::Rgba);
-            encoder.set_depth(BitDepth::Eight);
-            let mut writer = encoder.write_header().map_err(|error| error.to_string())?;
-            writer.write_image_data(pixels).map_err(|error| error.to_string())?;
-        }
-        Ok(bytes)
+        semio_framework_pixels::encode_png(&semio_framework_pixels::RasterImage { width, height, pixels: pixels.to_vec() }).map_err(|error| error.to_string())
     }
 
     /// 📏️ One transformed SVG polyline in its source layer.
@@ -2189,10 +2176,10 @@ pub mod media_export_raster {
         *closed = false;
     }
 
-    /// @emoji 🧷️ Signature every 2D-resource-kind SVG document renderer must match to register via {@link register_2d_export_handlers}.
+    /// 🧷️ Signature every 2D-resource-kind SVG document renderer must match to register via {@link register_2d_export_handlers}.
     pub type Svg2dDocumentRenderer = fn(&Value) -> Result<(String, u32, u32), String>;
 
-    /// @emoji 💾️ Registers SVG and PNG export handlers for one 2D resource kind.
+    /// 💾️ Registers SVG and PNG export handlers for one 2D resource kind.
     pub fn register_2d_export_handlers(artifact_kind: &'static str, file_stem: &'static str, document_to_svg: Svg2dDocumentRenderer) {
         register_os_media_export_handler_kind(artifact_kind, "svg", move |doc| {
             let (svg, _width, _height) = document_to_svg(doc)?;
@@ -2219,7 +2206,7 @@ pub mod media_export_raster {
         });
     }
 
-    /// @emoji 🧵️ Registers one `MeshImporter` format (Obj/Glb/Stl/…) for a mesh resource kind; `document_from_mesh` bridges the decoded `MeshData` back into the app's own document shape.
+    /// 🧵️ Registers one `MeshImporter` format (Obj/Glb/Stl/…) for a mesh resource kind; `document_from_mesh` bridges the decoded `MeshData` back into the app's own document shape.
     pub fn register_mesh_importer(artifact_kind: &'static str, document_from_mesh: fn(&semio_framework_plugin::MeshData) -> Result<Value, String>, importer: Box<dyn semio_framework_plugin::MeshImporter>) {
         let format_kind = importer.format_kind();
         register_os_media_import_handler_kind(artifact_kind, format_kind, move |bytes| {
@@ -2230,6 +2217,9 @@ pub mod media_export_raster {
 
     #[cfg(all(test, target_arch = "wasm32", target_env = "p2"))]
     include!("🧪️tests/🔬️media-export-raster-wasip2/🦀️.rs");
+
+    #[cfg(all(test, not(target_arch = "wasm32")))]
+    include!("🧪️tests/🔬️media-export-raster-unit/🦀️.rs");
 
     // 🚪️ `//#region SolidMediaExport` DELETED WHOLESALE (ticket
     // 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave IO1): this used to
@@ -2264,20 +2254,20 @@ pub mod media_export_simple {
         value.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;")
     }
 
-    /// @emoji 🖼️ Wraps SVG body markup with explicit dimensions.
+    /// 🖼️ Wraps SVG body markup with explicit dimensions.
     pub fn wrap_svg(width: u32, height: u32, body: &str) -> (String, u32, u32) {
         let svg = format!(r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="{width}" height="{height}">{body}</svg>"#);
         (svg, width, height)
     }
 
-    /// @emoji 🏷️ Builds a title-card SVG from a document JSON value.
+    /// 🏷️ Builds a title-card SVG from a document JSON value.
     pub fn title_card_svg(value: &Value, label: &str, width: u32, height: u32) -> Result<(String, u32, u32), String> {
         let title = value.get("title").and_then(|entry| entry.as_str()).or_else(|| value.get("id").and_then(|entry| entry.as_str())).unwrap_or(label);
         let body = format!("<rect width=\"100%\" height=\"100%\" fill=\"white\"/><text x=\"32\" y=\"64\" font-size=\"32\" fill=\"#111827\">{}</text>", escape_svg_text(title));
         Ok(wrap_svg(width, height, &body))
     }
 
-    /// @emoji 📄️ Serializes page-like rectangles from a `pages` array.
+    /// 📄️ Serializes page-like rectangles from a `pages` array.
     pub fn pages_rects_svg(value: &Value, fallback_label: &str) -> Result<(String, u32, u32), String> {
         let pages = value.get("pages").and_then(|entry| entry.as_array()).cloned().unwrap_or_default();
         if pages.is_empty() {
@@ -2298,7 +2288,7 @@ pub mod media_export_simple {
         Ok(wrap_svg(max_x.max(1.0).round() as u32, max_y.max(1.0).round() as u32, &body))
     }
 
-    /// @emoji 🗺️ Serializes point features from common GIS fixture fields.
+    /// 🗺️ Serializes point features from common GIS fixture fields.
     pub fn map_points_svg(value: &Value, fallback_label: &str) -> Result<(String, u32, u32), String> {
         let positions = value.get("positions").or_else(|| value.get("points")).and_then(|entry| entry.as_array()).cloned().unwrap_or_default();
         if positions.is_empty() {
@@ -2406,7 +2396,7 @@ pub mod workflow {
     pub const OS_MEDIA_FLOW_MODULE_ID: &str = "os-media";
 
     //#region 🔖️Workflow
-    /// @emoji 🤝️ Negotiates the wire contract for connecting `source_port` (a producer/output) to
+    /// 🤝️ Negotiates the wire contract for connecting `source_port` (a producer/output) to
     /// `target_port` (a consumer/input). Compatibility itself is decided from the ports' own
     /// `MediaPortSpec.media_type` (always accurate, even for the implicit `document:*` ports whose
     /// `kind_id` is `None`); the artifact-kind registry is only consulted for wire-encoding details
@@ -2473,7 +2463,7 @@ pub mod workflow {
         Ok(None)
     }
 
-    /// @emoji ✅️ Validates workflow connectivity, cycle freedom (via `workflow::validate_workflow`,
+    /// ✅️ Validates workflow connectivity, cycle freedom (via `workflow::validate_workflow`,
     /// re-exported as `kernel_validate_workflow`), and edge-contract consistency (this layer's own
     /// pass, since it needs the artifact registry the kernel crate doesn't have).
     pub fn validate_workflow(graph: &Workflow) -> WorkflowValidation {
@@ -2560,7 +2550,7 @@ pub mod workflow {
         })
     }
 
-    /** @emoji 🔁️ Diffs a flow fixture back into workflow operations — inverse of [`os_workflow_to_flow_host_snapshot_json`]. */
+    /** 🔁️ Diffs a flow fixture back into workflow operations — inverse of [`os_workflow_to_flow_host_snapshot_json`]. */
     pub fn apply_flow_host_snapshot_to_os_workflow(graph: &Workflow, fixture_json: &str) -> Vec<WorkflowMutation> {
         let Ok(fixture) = serde_json::from_str::<Value>(fixture_json) else {
             return Vec::new();
@@ -2652,7 +2642,7 @@ pub mod workflow {
     #[cfg(test)]
     include!("🧪️tests/🔬️workflow-standalone/🦀️.rs");
 
-    /// @emoji 🕸️ Serializes an OS workflow into generic node-graph scene payloads.
+    /// 🕸️ Serializes an OS workflow into generic node-graph scene payloads.
     ///
     /// 🚧️ TEMP(Wave 3): still emits JSON-string payloads (typed `NodeGraphScene` records land with
     /// WP-0.3/WP-3.2) — kept load-bearing for the space plugin ui crate (WP-1.5) until then. Port keys
@@ -2739,7 +2729,7 @@ pub mod workflow {
         pub outputs: Vec<OsWorkflowChannelSpec>,
     }
 
-    /// @emoji 🎬️ Derives one `OsWorkflowChannelSpec` directly from a `WorkflowMediaPort`'s
+    /// 🎬️ Derives one `OsWorkflowChannelSpec` directly from a `WorkflowMediaPort`'s
     /// `MediaPortSpec` — `operators` (accepted schema ids) is the port's own `kind_id` (falling back to
     /// its id when unset, e.g. the implicit `document:*` ports).
     fn os_workflow_channel_spec(port: &WorkflowMediaPort, label: &str) -> OsWorkflowChannelSpec {
@@ -2749,7 +2739,7 @@ pub mod workflow {
         OsWorkflowChannelSpec { name: port.spec.id.clone(), code, abbreviation, full_name: label.into(), operators: vec![operator] }
     }
 
-    /// @emoji 🧩️ Registers per-node neuron metadata for the OS workflow flow extension — derived
+    /// 🧩️ Registers per-node neuron metadata for the OS workflow flow extension — derived
     /// directly from each node's `WorkflowMediaPort.spec: MediaPortSpec` (no more stringly synthesis
     /// from a separate `OsAppInstance` join). `parameters`/port-id helpers are the kernel `workflow`
     /// crate's own (`workflow::WorkflowParameter`/`workflow::media_port_spec_id`/
@@ -4591,7 +4581,7 @@ pub mod registry {
     /// the app roster — mirrors the `crate::workflow::export_handlers()` runtime-registry pattern.
     static RESOURCE_KIND_REGISTRY: LazyLock<Mutex<HashMap<OsArtifactKindId, ArtifactKindEntry>>> = LazyLock::new(|| Mutex::new(seed_builtin_artifact_kinds()));
 
-    /// @emoji 📚️ Registers every `ArtifactKindSpec` declared by `manifest`'s apps into the OS resource
+    /// 📚️ Registers every `ArtifactKindSpec` declared by `manifest`'s apps into the OS resource
     /// catalog — call at plugin registration time (`PluginHost::load_plugin`/`hot_swap_plugin`).
     pub fn register_artifact_descriptors(manifest: &PluginManifest) {
         let mut registry = RESOURCE_KIND_REGISTRY.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -4605,13 +4595,13 @@ pub mod registry {
         }
     }
 
-    /// @emoji 🧪️ Registers one resource kind directly, for tests/fixtures that don't build a full
+    /// 🧪️ Registers one resource kind directly, for tests/fixtures that don't build a full
     /// `PluginManifest`.
     pub fn register_artifact_descriptor(spec: &ArtifactKindSpec) {
         RESOURCE_KIND_REGISTRY.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(spec.id.clone(), artifact_kind_entry_from_spec(spec));
     }
 
-    /// @emoji 📚️ Lists all registered OS resource descriptors, sorted by kind id for a stable snapshot.
+    /// 📚️ Lists all registered OS resource descriptors, sorted by kind id for a stable snapshot.
     pub fn list_os_artifact_descriptors() -> Vec<OsArtifactDescriptor> {
         let registry = RESOURCE_KIND_REGISTRY.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let mut descriptors: Vec<OsArtifactDescriptor> = registry.values().map(|entry| entry.descriptor.clone()).collect();
@@ -4619,7 +4609,7 @@ pub mod registry {
         descriptors
     }
 
-    /// @emoji 📚️ Resolves presentation metadata for one resource kind. An unregistered kind falls back to a
+    /// 📚️ Resolves presentation metadata for one resource kind. An unregistered kind falls back to a
     /// bare placeholder built from the kind id itself — dimension is declared by the app, never inferred
     /// from an id-prefix convention.
     pub fn os_artifact_descriptor(kind: &str) -> OsArtifactDescriptor {
@@ -4639,7 +4629,7 @@ pub mod registry {
         }, |entry| entry.descriptor.clone())
     }
 
-    /// @emoji 🎯️🆕️ Ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM W1b task 2: the single
+    /// 🎯️🆕️ Ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM W1b task 2: the single
     /// accessor for a resource kind's real `ArtifactDialect` — reads the SAME stored value
     /// `os_artifact_descriptor` returns embedded (`.dialect`), so `native_dialect_kind`, the
     /// io-mechanism export/import path, and any shell calling `io-routes`/`io-entries` all resolve
@@ -4649,13 +4639,13 @@ pub mod registry {
         os_artifact_descriptor(kind).dialect
     }
 
-    /// @emoji 🧬️ Registry lookup for a resource kind's media capability; unregistered kinds default to
+    /// 🧬️ Registry lookup for a resource kind's media capability; unregistered kinds default to
     /// `MeshOnly` (the lighter, dependency-free representation).
     pub fn os_resource_media_capability(kind: &str) -> OsMediaCapability {
         RESOURCE_KIND_REGISTRY.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(kind).map_or(OsMediaCapability::MeshOnly, |entry| entry.media_capability)
     }
 
-    /// @emoji 🚫️ Fail-closed sibling of `os_artifact_descriptor` for workflow connect-time validation —
+    /// 🚫️ Fail-closed sibling of `os_artifact_descriptor` for workflow connect-time validation —
     /// `None` for an unknown kind instead of a fabricated placeholder (that fallback is still right for
     /// best-effort callers like rendering, which keep using `os_artifact_descriptor`).
     pub fn try_os_artifact_descriptor(kind: &str) -> Option<OsArtifactDescriptor> {
@@ -4704,7 +4694,7 @@ pub mod registry {
     /// declaring real `AppIo` ports in production.
     static APP_REGISTRATIONS: LazyLock<Mutex<HashMap<(String, String), OsAppRegistration>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
 
-    /// @emoji 📚️ Derives an `OsAppRegistration` from `app.io.all_ports()` (the implicit `document:in`/
+    /// 📚️ Derives an `OsAppRegistration` from `app.io.all_ports()` (the implicit `document:in`/
     /// `document:out` ports plus every declared `AppIo.ports` entry) and registers it — call at plugin
     /// registration time (`PluginHost::load_plugin`/`hot_swap_plugin`), beside `register_artifact_descriptors`.
     pub fn register_app_io(plugin_id: &str, app: &AppDefinition) {
@@ -4760,7 +4750,7 @@ pub mod registry {
         crate::host::resolve_kernel_future(io.with_ports(declared_ports))
     }
 
-    /// @emoji 🧩️ Resolves the AppDefinition backing an embedded os app instance. Returns `None` if the
+    /// 🧩️ Resolves the AppDefinition backing an embedded os app instance. Returns `None` if the
     /// registration declares zero modes — every app must declare at least one, so an ad hoc "inject a
     /// fake edit mode" fallback would just hide a mis-registered app instead of surfacing it. An embedded
     /// os app instance renders through exactly one component surface, so this synthesizes the single
@@ -4822,7 +4812,7 @@ pub mod registry {
         })
     }
 
-    /// @emoji 🎨️ One palette entry the browser shell can spawn a workflow node from — a thin,
+    /// 🎨️ One palette entry the browser shell can spawn a workflow node from — a thin,
     /// wire-friendly snapshot of `OsAppRegistration` (drops `ConfigSpec`/`ModeDefinition`s the
     /// palette doesn't need). `ports` is `app.io.all_ports()` so the palette UI can preview a node's
     /// wiring before it's spawned.
@@ -4836,7 +4826,7 @@ pub mod registry {
         pub ports: Vec<semio_framework::MediaPortSpec>,
     }
 
-    /// @emoji 🎨️ Lists every registered app as a palette entry, sorted by `(plugin_id, app_id)` for a
+    /// 🎨️ Lists every registered app as a palette entry, sorted by `(plugin_id, app_id)` for a
     /// stable snapshot. Replaces `buildSpacePrograms`'s manifest-`workflows`-driven palette (deleted with
     /// `WorkflowDefinition`/`PluginManifest.workflows` in WP-0.1) — the browser shell wiring to consume
     /// this via a wasm export lands in Wave 3 (WP-3.1); this crate only builds the plain Rust function for

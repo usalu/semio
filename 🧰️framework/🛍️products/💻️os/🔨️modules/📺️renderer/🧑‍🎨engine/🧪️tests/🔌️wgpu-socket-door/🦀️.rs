@@ -167,6 +167,8 @@ fn an_inbound_page_stops_at_the_message_ceiling() {
     assert_eq!(lane.inbound_len(), 5);
 }
 
+/// 🧾️ A single frame LARGER than the whole page ceiling still travels: refusing it would stall
+/// the lane forever on a frame the peer is entitled to send.
 #[test]
 fn an_inbound_page_stops_at_the_byte_ceiling_but_never_returns_nothing() {
     let mut lane = SocketLane::new();
@@ -175,8 +177,6 @@ fn an_inbound_page_stops_at_the_byte_ceiling_but_never_returns_nothing() {
     lane.push_inbound(SocketMessage::Text("x".repeat(64)));
     let page = lane.take_inbound_page();
     assert_eq!(page.len(), 1, "the byte ceiling cuts the page after the first frame");
-    // 🧾️ A single frame LARGER than the whole page ceiling still travels: refusing it would stall
-    // the lane forever on a frame the peer is entitled to send.
     let mut lane = SocketLane::new();
     lane.push_inbound(SocketMessage::Text("y".repeat(SOCKET_DOOR_POLL_MAX_BYTES * 2)));
     assert_eq!(lane.take_inbound_page().len(), 1);

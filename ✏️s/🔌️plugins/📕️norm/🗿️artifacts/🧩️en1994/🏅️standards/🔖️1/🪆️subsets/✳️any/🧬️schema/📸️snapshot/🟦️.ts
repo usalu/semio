@@ -111,6 +111,3 @@ export interface En1994Snapshot {
   insulationThicknessM: number;
   fatigueDetail: string;
 }
-
-/** @deprecated Use En1994Snapshot */
-export type En1994Artifact = En1994Snapshot;

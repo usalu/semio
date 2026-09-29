@@ -332,13 +332,43 @@ def _translated_material(entry):
     return material
 
 
+def _translated_window_stacks(model):
+    """🪟️ Every construction a `Fenestration.glazing_construction_id` names, as honeybee's layered window.
+
+    The semio model says such a construction IS the window (panes alternating with gas gaps, outside first)
+    and its `u_value_w_m2k`/`shgc`/`vlt` are only the fallback while the id is unset, so the translation
+    reaches for the stack first — exactly as the engine and the epJSON codec do.
+    """
+    from honeybee_energy.construction.window import WindowConstruction
+    from honeybee_energy.material.gas import EnergyWindowMaterialGas
+    from honeybee_energy.material.glazing import EnergyWindowMaterialGlazing
+
+    layers = {}
+    for pane in model.get("glazing_materials", []) or []:
+        glass = EnergyWindowMaterialGlazing(f"SEMIO_PANE_{pane['id']}", float(pane["thickness_m"]), float(pane["solar_transmittance"]), float(pane["solar_reflectance_front"]), float(pane["visible_transmittance"]), float(pane["visible_reflectance_front"]), float(pane["infrared_transmittance"]), float(pane["infrared_emissivity_front"]), float(pane["infrared_emissivity_back"]), float(pane["conductivity_w_m_k"]))
+        glass.solar_reflectance_back = float(pane["solar_reflectance_back"])
+        glass.visible_reflectance_back = float(pane["visible_reflectance_back"])
+        layers[int(pane["id"])] = glass
+    for gap in model.get("gas_materials", []) or []:
+        layers[int(gap["id"])] = EnergyWindowMaterialGas(f"SEMIO_GAP_{gap['id']}", float(gap["thickness_m"]), str(gap["gas"]))
+    bound = {window.get("glazing_construction_id") for window in model.get("fenestrations", []) or []}
+    stacks = {}
+    for entry in model.get("constructions", []) or []:
+        ids = [int(value) for value in entry["layer_material_ids"]]
+        if entry["id"] in bound and ids and all(value in layers for value in ids):
+            stacks[entry["id"]] = WindowConstruction(f"SEMIO_WINDOW_STACK_{entry['id']}", [layers[value] for value in ids])
+    return stacks
+
+
 def _infiltration_per_exterior_area(entry, room):
     """💨️ One semio `Infiltration` as honeybee's single flow-per-exterior-area number.
 
     `ScheduledAch` is converted against the zone volume and the same exterior area EnergyPlus itself
     uses for `Flow/ExteriorArea` — the gross area of every surface whose outside boundary is the
-    external environment, which is what `Zone Information` reports back. The wind/stack methods carry
-    no honeybee equivalent and are refused rather than silently approximated.
+    external environment, which is what `Zone Information` reports back. Both methods are constant
+    design flows in the semio engine (schedule × rate; the entity's four coefficient fields belong to
+    the wind/stack methods), so the caller keeps honeybee's constant-flow coefficients (1, 0, 0). The
+    wind/stack methods carry no honeybee equivalent and are refused rather than silently approximated.
     """
     method = entry.get("method", "PerExteriorArea")
     if method == "PerExteriorArea":
@@ -418,9 +448,12 @@ def _translated_model(document, layer_order, aspect, sill):
     resolved_schedules = _schedule_library(schedules, _schedule_kinds(model))
     always_on = _constant_schedule("SEMIO_ALWAYS_ON", 1.0, "Fractional")
 
+    window_stacks = _translated_window_stacks(model)
     materials = {int(entry["id"]): _translated_material(entry) for entry in model.get("materials", [])}
     constructions = {}
     for entry in model.get("constructions", []):
+        if entry["id"] in window_stacks:
+            continue
         layer_ids = [int(value) for value in entry["layer_material_ids"]]
         ordered = layer_ids if layer_order == "outside-in" else list(reversed(layer_ids))
         constructions[int(entry["id"])] = OpaqueConstruction(f"SEMIO_CONSTRUCTION_{entry['id']}", [materials[value] for value in ordered])
@@ -456,8 +489,7 @@ def _translated_model(document, layer_order, aspect, sill):
         total = sum(float(window["area_m2"]) for window in windows)
         _add_apertures(face, total, len(windows), aspect, sill)
         first = windows[0]
-        glazing = EnergyWindowMaterialSimpleGlazSys(f"SEMIO_GLAZING_{first['id']}", float(first["u_value_w_m2k"]), float(first["shgc"]), float(first["vlt"]))
-        construction = WindowConstruction(f"SEMIO_WINDOW_{first['id']}", [glazing])
+        construction = window_stacks.get(first.get("glazing_construction_id")) or WindowConstruction(f"SEMIO_WINDOW_{first['id']}", [EnergyWindowMaterialSimpleGlazSys(f"SEMIO_GLAZING_{first['id']}", float(first["u_value_w_m2k"]), float(first["shgc"]), float(first["vlt"]))])
         for aperture in face.apertures:
             aperture.properties.energy.construction = construction
 
@@ -465,7 +497,7 @@ def _translated_model(document, layer_order, aspect, sill):
     for entry in model.get("infiltrations", []):
         room = rooms_by_zone[int(entry["zone_id"])]
         schedule = resolved_schedules.get(int(entry["schedule_id"]), always_on)
-        room.properties.energy.infiltration = Infiltration(f"SEMIO_INFILTRATION_{entry['id']}", _infiltration_per_exterior_area(entry, room), schedule, float(entry["constant_term_coefficient"]), float(entry["temperature_term_coefficient"]), float(entry["velocity_term_coefficient"]))
+        room.properties.energy.infiltration = Infiltration(f"SEMIO_INFILTRATION_{entry['id']}", _infiltration_per_exterior_area(entry, room), schedule)
     for entry in model.get("equipment", []):
         room = rooms_by_zone[int(entry["zone_id"])]
         room.properties.energy.electric_equipment = ElectricEquipment(f"SEMIO_EQUIPMENT_{entry['id']}", float(entry["watts_per_area"]), resolved_schedules.get(int(entry["schedule_id"]), always_on), float(entry["radiant_fraction"]), float(entry["latent_fraction"]), 0.0)
@@ -491,7 +523,8 @@ def _translated_model(document, layer_order, aspect, sill):
         room.properties.energy.ventilation = Ventilation(f"SEMIO_VENTILATION_{entry['id']}", float(entry["outdoor_air_per_person_m3_s"]), float(entry["outdoor_air_per_area_m3_s_m2"]), 0.0, 0.0)
 
     shades = [Shade(f"SEMIO_SHADE_{entry['id']}", Face3D([Point3D(*vertex) for vertex in entry["vertices_m"]])) for entry in model.get("shading_surfaces", []) or []]
-    honeybee_model = Model(model.get("name") or "SEMIO_ENERGY_MODEL", rooms, orphaned_shades=shades, units="Meters", tolerance=0.01, angle_tolerance=1.0)
+    honeybee_model = Model("SEMIO_ENERGY_MODEL", rooms, orphaned_shades=shades, units="Meters", tolerance=0.01, angle_tolerance=1.0)
+    honeybee_model.display_name = model.get("name") or "SEMIO_ENERGY_MODEL"
     honeybee_model.user_data = {"northAngle": float(model.get("site", {}).get("north_axis_deg", 0.0))}
     return honeybee_model
 

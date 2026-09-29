@@ -8,9 +8,13 @@ export function startNativeProgress(label: string, intervalMs = 10_000, output: 
   return () => clearInterval(progress);
 }
 
-/** 🏃️ Runs a bounded owned command with progress and process-tree cancellation. */
+/** 🏃️ Runs a bounded owned command with progress and process-tree cancellation. Its stdout (unless ignored) and stderr are piped and
+ * forwarded, never inherited: an inherited pipe shares this Bun process's `O_NONBLOCK`, and a burst from the command then fails with
+ * `EAGAIN` once a slow reader lets the pipe fill ([[cargoStreamingStatus]], ticket 26/09/23 W4). */
 export async function runOwnedCommand(command: string, args: string[], cwd: string, label: string, timeoutMs = buildBudgetMs(), options: { stdout?: "inherit" | "ignore"; env?: NodeJS.ProcessEnv } = {}): Promise<void> {
-  const child = spawn(command, args, { cwd, env: options.env ?? process.env, detached: process.platform !== "win32", stdio: ["inherit", options.stdout ?? "inherit", "inherit"], windowsHide: true });
+  const child = spawn(command, args, { cwd, env: options.env ?? process.env, detached: process.platform !== "win32", stdio: ["inherit", options.stdout === "ignore" ? "ignore" : "pipe", "pipe"], windowsHide: true });
+  child.stdout?.pipe(process.stdout, { end: false });
+  child.stderr!.pipe(process.stderr, { end: false });
   let stopped = "",
     forceKill: ReturnType<typeof setTimeout> | undefined;
   const terminate = (reason: string): void => {

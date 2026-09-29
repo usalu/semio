@@ -649,7 +649,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
      * `protocol_channel`'s own `🔖️Corpus` region (`🔨️modules/📡️protocol/🧵️channel/📦️packages/🦀️rust/📦️lib.rs`,
      * `channel_command_fixture_corpus`/`channel_command_fixture_hex` and their `AppFrame` twins) —
      * sourced by running the real `encode_app_command`/`encode_app_frame` and copying their
-     * printed `[DEBUG] AppCommand::<label> = <hex>` output (`cargo test -p semio-protocol-channel
+     * printed `[TRACE] AppCommand::<label> = <hex>` output (`cargo test -p semio-protocol-channel
      * -- --nocapture`), NOT hand-computed. Any future change to either codec that shifts these
      * bytes fails on exactly one side, forcing a deliberate update of both this table and the Rust
      * golden hex in the same change.
@@ -2220,6 +2220,7 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(browserActorActionRefusalReasonV1(new Error("action-owner-mismatch"))).toBe("owner-mismatch");
       expect(browserActorActionRefusalReasonV1(new Error("action-busy"))).toBe("owner-mismatch");
       expect(browserActorActionRefusalReasonV1(new Error("action-state-unconfirmed"))).toBe("not-applied");
+      expect(browserActorActionRefusalReasonV1(new Error("action-catching-up"))).toBe("catching-up");
       expect(browserActorActionRefusalReasonV1(new Error("action-refused"))).toBe("dispatch-failed");
       expect(browserActorActionRefusalReasonV1(new Error("action-command-ingress-refused"))).toBe("dispatch-failed");
       expect(browserActorActionRefusalReasonV1(new Error("action-guest-refused"))).toBeNull();

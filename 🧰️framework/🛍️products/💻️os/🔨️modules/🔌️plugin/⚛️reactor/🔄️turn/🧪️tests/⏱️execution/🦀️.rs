@@ -51,22 +51,22 @@ fn guest_turn_execution_excludes_every_suspension_gap() {
     assert!(executing_us * law["wallToExecutingRatio"].as_u64().unwrap() < wall_us, "executing={executing_us} us must stay far below wall={wall_us} us");
     assert!(!semio_framework_trace::guest_lifecycle_turn_contract_violated(executing_us));
     assert!(semio_framework_trace::guest_lifecycle_turn_contract_violated(executing_us + semio_framework_trace::GUEST_LIFECYCLE_TURN_CEILING_US));
-    eprintln!("[DEBUG] guest turn execution executing_us={executing_us} wall_us={wall_us} suspension_us={suspension_us}");
 }
 
 /// ⚖️ LAW: the accumulator is per-turn — a fresh turn never inherits the previous turn's microseconds.
+///
+/// 🧭️ Non-inheritance is proved by CONSTRUCTION, not by a wall-clock read gap. The first turn spins
+/// until its own accumulator has passed the whole per-turn bound; a second turn that inherited it
+/// could not then come back under that bound. The previous shape drove two equally cheap turns and
+/// pinned `guest_turn_executing_us() == second_us` — an equality that holds only while the
+/// microsecond between the in-turn sample and the settled read rounds to zero, so a loaded machine
+/// failed it (`left: Some(3)`) while the product property held. Both clauses below are ratios
+/// against a measured accumulator, so load inflates both sides.
 #[test]
 fn guest_turn_execution_resets_for_every_turn() {
     let law = law();
     let suspension_us = law["suspensionUs"].as_u64().unwrap();
     let bound_us = law["perTurnBoundUs"].as_u64().unwrap();
-    // 🧭️ Non-inheritance is proved by CONSTRUCTION, not by a wall-clock read gap. The first turn spins
-    // until its own accumulator has passed the whole per-turn bound; a second turn that inherited it
-    // could not then come back under that bound. The previous shape drove two equally cheap turns and
-    // pinned `guest_turn_executing_us() == second_us` — an equality that holds only while the
-    // microsecond between the in-turn sample and the settled read rounds to zero, so a loaded machine
-    // failed it (`left: Some(3)`) while the product property held. Both clauses below are ratios
-    // against a measured accumulator, so load inflates both sides.
     let (busy_us, _) = drive_with_suspension_executing(suspension_us, bound_us);
     assert!(busy_us >= bound_us, "the first turn must really execute past the per-turn bound: busy={busy_us} us bound={bound_us} us");
     let (second_us, _) = drive_with_suspension(suspension_us);

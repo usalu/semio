@@ -59,6 +59,9 @@ fn world_pane_shell() -> ShellState {
     shell
 }
 
+/// 🎯️ A chip's hit row is DEFERRED to `pane_overlay_hits` and registered after the panels
+/// (`ShellChromeFramePhase::PaneOverlayHits`), so the pane's own overlay outranks a panel floating
+/// over it — the ledger this reads is the one that walk drains.
 fn paint_pane_chips(shell: &mut ShellState, theme: &Theme, window: Rect) -> Vec<String> {
     let mut input = InputState::<ActionDescriptor>::default();
     let mut draw = DrawList::default();
@@ -70,9 +73,6 @@ fn paint_pane_chips(shell: &mut ShellState, theme: &Theme, window: Rect) -> Vec<
             break;
         }
     }
-    // 🎯️ A chip's hit row is DEFERRED to `pane_overlay_hits` and registered after the panels
-    // (`ShellChromeFramePhase::PaneOverlayHits`), so the pane's own overlay outranks a panel floating
-    // over it — the ledger this reads is the one that walk drains.
     let _ = input.staged_hits();
     shell.pane_overlay_hits.iter().filter_map(|hit| hit.control_id.clone()).collect()
 }
@@ -277,6 +277,9 @@ fn a_pane_chip_press_over_an_engine_surface_belongs_to_the_shell() {
 ///
 /// 🩸️ The former body measured a bespoke label column once per row and abandoned a short pane on
 /// its first clipped row. The retained Tree now owns one shared 300px viewport and scrolls it.
+///
+/// 🧭️ A pane too short for 15 rows clamps to its own inset and still paints every row it can —
+/// it never abandons the body, which is what left the live pane blank.
 #[test]
 fn an_unfolded_projection_pane_publishes_its_rows_within_one_frame_budget() {
     let theme = Theme::light();
@@ -334,8 +337,6 @@ fn an_unfolded_projection_pane_publishes_its_rows_within_one_frame_budget() {
         }
     }
 
-    // 🧭️ A pane too short for 15 rows clamps to its own inset and still paints every row it can —
-    // it never abandons the body, which is what left the live pane blank.
     let mut short = world_pane_shell();
     short.projection_pane_folded.insert("pane-top".into(), false);
     let (_, clamped, _) = body(&mut short, Rect::new(0.0, 0.0, 800.0, theme.control_height * 6.0));
@@ -434,7 +435,6 @@ fn the_navbar_cluster_walks_to_completion_and_keeps_its_bands() {
     let mut hits: Vec<(String, Rect)> = input.staged_hits().iter().filter_map(|hit| hit.control_id.clone().map(|id| (id, hit.rect))).collect();
     hits.sort_by(|left, right| left.1.x.total_cmp(&right.1.x));
     let ids: Vec<&str> = hits.iter().map(|(id, _)| id.as_str()).collect();
-    eprintln!("[DEBUG] navbar x-order {:?}", hits.iter().map(|(id, rect)| (id, rect.x.round())).collect::<Vec<_>>());
     let fullscreen = hits.iter().position(|(id, _)| id == "ui.fullscreen.toggle").expect("🧭️ the navbar carries the fullscreen chip");
     let leading: Vec<usize> = hits.iter().enumerate().filter(|(_, (id, _))| shell.panel_tab_anchor(id) == Some(PanelAnchor::TopLeft)).map(|(index, _)| index).collect();
     assert!(leading.len() >= 3, "🧭️ three top-left tabs exercise the retained advancing cursor: {ids:?}");

@@ -465,6 +465,10 @@ fn tour_layout(shell: &mut ShellState, theme: &Theme, atlas: &mut FontAtlas) -> 
 /// `padding_standard * 2` narrower than its own label, so the total always fell off the end. Chrome
 /// text flows `RetainedTextFlow::Clip`, which drops an overflowing glyph silently rather than
 /// wrapping, so nothing in the walk reports it.
+///
+/// 🔠️ Only the label: the chip's four hairline strokes all start on its own edge, so insetting by
+/// one `--ui-spacing` leaves exactly the glyph quads. The vertical band is generous because a
+/// bitmap-fallback cell is taller than the `--text-xs` box it sits in.
 #[test]
 fn the_footer_counter_paints_its_whole_step_of_the_total() {
     let theme = Theme::light();
@@ -478,9 +482,6 @@ fn the_footer_counter_paints_its_whole_step_of_the_total() {
 
     let painted = paint_tour(&mut shell, &theme);
     let counter = layout.counter;
-    // 🔠️ Only the label: the chip's four hairline strokes all start on its own edge, so insetting by
-    // one `--ui-spacing` leaves exactly the glyph quads. The vertical band is generous because a
-    // bitmap-fallback cell is taller than the `--text-xs` box it sits in.
     let glyphs = painted.foreground.iter().filter(|rect| rect[0] >= counter.x + theme.padding_standard && rect[0] < counter.x + counter.w - theme.padding_standard && rect[1] > counter.y - counter.h && rect[1] < counter.y + counter.h).count();
     assert_eq!(glyphs, layout.counter_text.chars().count(), "🎓️ every scalar of `{}` is painted, none clipped off the end", layout.counter_text);
 }

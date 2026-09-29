@@ -12,7 +12,7 @@
 use crate::editor::flow::commands::{
     add_widget, connect_media_ports, context_menu_at, delete_selection, disconnect, duplicate_widget, evaluate, flow_eval_resolve, flow_eval_tick, focus_selection, move_media_node, node_graph_edit, node_graph_viewport,
     open_spotlight, patch_flow_widgets, remove_widget, rename_flow_widget, reorganize, replace_image, run_extension_action, set_active_example, set_catalogue_sections, set_grid_factor, set_grid_snap_enabled, set_grid_visible, set_lod_mode,
-    set_preview_off, set_proximity_distance, spotlight_commit, toggle_extension,
+    set_contributions, set_preview_off, set_proximity_distance, spotlight_commit, toggle_extension,
 };
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
@@ -230,6 +230,7 @@ semio_framework_plugin::app_commands! {
         "updateGenerationValues" as "update-generation-values" => update_generation_values::UpdateGenerationValues,
         "flowEvalTick" as "flow-eval-tick" => flow_eval_tick::FlowEvalTick,
         "flowEvalResolve" as "flow-eval-resolve" => flow_eval_resolve::FlowEvalResolve,
+        "setContributions" as "set-contributions" => set_contributions::SetContributions,
     }
 }
 
@@ -2168,6 +2169,153 @@ impl FlowChildGroupJobFactoryProofs {
     }
 }
 
+//#region 🧩️ContributionsRoute
+/// 🧩️ The host→guest contributions route — the flow twin of generation2d's: the shell's `flow.extension`
+/// closure is what makes this app's extension operators exist at all (`install_builtin_flow_extensions`
+/// installs none).
+const FLOW_CONTRIBUTIONS_TOOL_IDS: &[&str] = &["setContributions"];
+const FLOW_CONTRIBUTIONS_PAYLOAD_SCHEMA: &str = "flow.contributions-command.v1";
+/// 📐️ The real wire ceiling of one contributions push: the paged command ingress's assembled-command bound,
+/// exactly as generation2d/generation3d declare it — the unscoped nine-extension closure (293 642 characters,
+/// `flow-extension-brep` alone 190 656) crosses whole.
+const FLOW_CONTRIBUTIONS_RAW_BYTES: usize = semio_framework::kernel::COMMAND_MAXIMUM_BYTES;
+
+fn flow_contributions_contract() -> semio_framework::ToolExecutionContract {
+    semio_framework::ToolExecutionContract::bounded_first_step(FLOW_CONTRIBUTIONS_RAW_BYTES, 256, 1, 16_384, 7_500)
+}
+
+/// 🧩️ Installs one contributions page against the app instance's retained evaluation session.
+struct FlowContributionsWork {
+    instance_owner: Option<semio_framework_plugin::ArtifactInstanceOperationOwnerHandle>,
+    completed: bool,
+    closing: bool,
+}
+
+impl FlowContributionsWork {
+    fn new(instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
+        Self { instance_owner: Some(instance_owner), completed: false, closing: false }
+    }
+}
+
+impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for FlowContributionsWork {
+    fn tool_id(&self) -> &'static str {
+        "setContributions"
+    }
+
+    fn extent(
+        &self,
+        command: &FlowCommand,
+        _snapshot: &FlowSnapshot,
+        _interaction: &protocol::InteractionState,
+        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<FlowPlayApp>>>,
+    ) -> Option<usize> {
+        (!self.closing && !self.completed && matches!(command, FlowCommand::SetContributions(payload) if payload.json.len() <= FLOW_CONTRIBUTIONS_RAW_BYTES)).then_some(1)
+    }
+
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<FlowPlayApp>>) -> Result<ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<FlowPlayApp>>, Fault> {
+        if self.closing || self.completed {
+            return Err(Fault::from("flow-contributions-work-terminal"));
+        }
+        let FlowCommand::SetContributions(payload) = input.command else {
+            return Err(Fault::from("flow-contributions-route-rejected"));
+        };
+        let instance_owner = self.instance_owner.as_ref().ok_or_else(|| Fault::from("flow-contributions-instance-owner"))?;
+        instance_owner.with_mut::<FlowInstanceOperationOwner, _>(|owner| owner.with_session(|session| set_contributions::install(payload, session))?)?;
+        self.completed = true;
+        Ok(ArtifactCommandWorkStep::Complete(Emit::default()))
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if !self.closing || maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Blocked;
+        }
+        if self.instance_owner.take().is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.instance_owner.is_none()
+    }
+}
+
+struct FlowContributionsJobFactory {
+    keys: Vec<semio_framework::ToolFactoryKey>,
+}
+
+impl FlowContributionsJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: FLOW_CONTRIBUTIONS_TOOL_IDS.iter().map(|tool_id| semio_framework::ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl semio_framework::ToolJobFactory for FlowContributionsJobFactory {
+    type Payload = ArtifactRetainedCommandPayload<semio_framework_plugin::EditorApp<FlowPlayApp>>;
+    type Job = ArtifactRetainedCommandJob<semio_framework_plugin::EditorApp<FlowPlayApp>>;
+
+    fn keys(&self) -> &[semio_framework::ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        FLOW_CONTRIBUTIONS_PAYLOAD_SCHEMA
+    }
+
+    fn classification(&self) -> semio_framework::InteractiveJobClassification {
+        semio_framework::InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> semio_framework::ToolExecutionContract {
+        flow_contributions_contract()
+    }
+
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
+        Ok(ArtifactRetainedCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > FLOW_CONTRIBUTIONS_RAW_BYTES || checkpoint.is_some() {
+            return Err((semio_framework::ToolJobFactoryError::new("Flow contributions command rejects oversized wire or unsupported checkpoint owner"), input, checkpoint));
+        }
+        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
+    }
+}
+
+impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FlowContributionsJobFactory {
+    type Owner = semio_framework_plugin::EditorApp<FlowPlayApp>;
+    const TOOL_IDS: &'static [&'static str] = FLOW_CONTRIBUTIONS_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = FLOW_DOCUMENT_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] =
+        &[semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setContributions", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] }];
+}
+
+struct FlowContributionsJobFactoryProofs;
+
+impl FlowContributionsJobFactoryProofs {
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<FlowPlayApp>,
+        owner_file: "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        controller: "s.flow.flow@1/*#editor",
+        artifact_schema: "flow.host_snapshot",
+        factory: "FlowContributionsJobFactory",
+        factory_type: FlowContributionsJobFactory,
+        contract: flow_contributions_contract(),
+        tools: ["setContributions"]
+    }
+}
+//#endregion 🧩️ContributionsRoute
+
 //#region 🔖️FlowPlayApp
 struct FlowInstanceOperationOwner {
     eval_session: Option<FlowEvalSession>,
@@ -2314,6 +2462,7 @@ impl ArtifactEditor for FlowPlayApp {
         proofs.extend(FlowHostEffectJobFactoryProofs::bounded_first_step_tool_proofs());
         proofs.extend(FlowChildGroupJobFactoryProofs::bounded_first_step_tool_proofs());
         proofs.extend(FlowGraphOperationJobFactoryProofs::bounded_first_step_tool_proofs());
+        proofs.extend(FlowContributionsJobFactoryProofs::bounded_first_step_tool_proofs());
         proofs
     }
 
@@ -2322,6 +2471,7 @@ impl ArtifactEditor for FlowPlayApp {
         registry.register(FlowChildGroupJobFactory::new(&controller))?;
         registry.register(FlowHostEffectJobFactory::new(&controller))?;
         registry.register(FlowGraphOperationJobFactory::new(&controller))?;
+        registry.register(FlowContributionsJobFactory::new(&controller))?;
         registry.register(FlowDirectStoreJobFactory::new(&controller))
     }
 
@@ -2330,15 +2480,22 @@ impl ArtifactEditor for FlowPlayApp {
             && !FLOW_HOST_ONLY_TOOL_IDS.contains(&request.tool_id.as_str())
             && !FLOW_GRAPH_OPERATION_TOOL_IDS.contains(&request.tool_id.as_str())
             && !FLOW_DIRECT_STORE_TOOL_IDS.contains(&request.tool_id.as_str())
+            && !FLOW_CONTRIBUTIONS_TOOL_IDS.contains(&request.tool_id.as_str())
         {
             return Ok(None);
         }
         if request.command.command_id() != request.tool_id {
             return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.retained.tool-mismatch"), "Flow command does not match its exact retained tool registration"));
         }
-        if FLOW_CHILD_GROUP_TOOL_IDS.contains(&request.tool_id.as_str()) || FLOW_GRAPH_OPERATION_TOOL_IDS.contains(&request.tool_id.as_str()) || FLOW_DIRECT_STORE_TOOL_IDS.contains(&request.tool_id.as_str()) {
+        if FLOW_CHILD_GROUP_TOOL_IDS.contains(&request.tool_id.as_str())
+            || FLOW_GRAPH_OPERATION_TOOL_IDS.contains(&request.tool_id.as_str())
+            || FLOW_DIRECT_STORE_TOOL_IDS.contains(&request.tool_id.as_str())
+            || FLOW_CONTRIBUTIONS_TOOL_IDS.contains(&request.tool_id.as_str())
+        {
             let tool_id = request.command.command_id();
-            let work: Box<dyn ArtifactCommandWork<semio_framework_plugin::EditorApp<Self>>> = if FLOW_CHILD_GROUP_TOOL_IDS.contains(&tool_id) {
+            let work: Box<dyn ArtifactCommandWork<semio_framework_plugin::EditorApp<Self>>> = if FLOW_CONTRIBUTIONS_TOOL_IDS.contains(&tool_id) {
+                Box::new(FlowContributionsWork::new(request.instance_operation_owner))
+            } else if FLOW_CHILD_GROUP_TOOL_IDS.contains(&tool_id) {
                 Box::new(FlowChildGroupWork::new(tool_id, request.instance_operation_owner))
             } else if FLOW_GRAPH_OPERATION_TOOL_IDS.contains(&tool_id) {
                 Box::new(FlowGraphOperationWork::new(tool_id, request.instance_operation_owner))
@@ -2366,14 +2523,16 @@ impl ArtifactEditor for FlowPlayApp {
                     completion: request.completion,
                 },
                 FlowCommand::command_id,
-                if FLOW_CHILD_GROUP_TOOL_IDS.contains(&tool_id) {
+                if FLOW_CONTRIBUTIONS_TOOL_IDS.contains(&tool_id) {
+                    FLOW_CONTRIBUTIONS_RAW_BYTES
+                } else if FLOW_CHILD_GROUP_TOOL_IDS.contains(&tool_id) {
                     FLOW_CHILD_GROUP_RAW_BYTES
                 } else if FLOW_GRAPH_OPERATION_TOOL_IDS.contains(&tool_id) {
                     FLOW_GRAPH_OPERATION_RAW_BYTES
                 } else {
                     FLOW_DIRECT_STORE_RAW_BYTES
                 },
-                if FLOW_CHILD_GROUP_TOOL_IDS.contains(&tool_id) {
+                if FLOW_CHILD_GROUP_TOOL_IDS.contains(&tool_id) || FLOW_CONTRIBUTIONS_TOOL_IDS.contains(&tool_id) {
                     1
                 } else if FLOW_GRAPH_OPERATION_TOOL_IDS.contains(&tool_id) {
                     FLOW_GRAPH_OPERATION_CAPACITY.work_items()
@@ -2498,6 +2657,11 @@ impl ArtifactEditor for FlowPlayApp {
                 window_id: str_arg(&["windowId", "window_id"]).unwrap_or_else(|| main::FLOW_PLAY_WINDOW_MAIN.into()),
                 node_hash: u64_arg(&["nodeHash", "node_hash"]).unwrap_or_default(),
                 output_json: str_arg(&["outputJson", "output_json"]).unwrap_or_default(),
+            })),
+            "setContributions" => Ok(FlowCommand::SetContributions(set_contributions::SetContributions {
+                json: str_arg(&["json"]).unwrap_or_default(),
+                page: u64_arg(&["page"]).unwrap_or_default(),
+                page_count: u64_arg(&["pageCount", "page_count"]).unwrap_or(1),
             })),
             other => Err(Fault::from(format!(
                 "action '{other}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
@@ -2792,6 +2956,14 @@ pub fn create_flow_app() -> AppDefinition {
     Editor::builder(crate::FLOW_DIALECT)
         .command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("flowEvalTick", LocalizedLabel::native("Evaluate Flow Tick", "Flow-Auswertungsschritt"), "runtime", ActionKind::View) })
         .command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("flowEvalResolve", LocalizedLabel::native("Resolve Flow Evaluation", "Flow-Auswertung auflösen"), "runtime", ActionKind::View) })
+        .command(CommandDefinition {
+            in_palette: false,
+            ..CommandDefinition::bounded_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([
+                ActionArgDef::text("json", LocalizedLabel::native("Contributions Page", "Beiträge-Seite")),
+                ActionArgDef::text("page", LocalizedLabel::native("Page", "Seite")),
+                ActionArgDef::text("pageCount", LocalizedLabel::native("Page Count", "Seitenanzahl")),
+            ])
+        })
         .document(["semio", "flow"])
         .artifact_kind(crate::artifact_kind())
         .icon_id("flow")
@@ -2912,6 +3084,7 @@ pub fn create_flow_app() -> AppDefinition {
         .action_interactive_job("updateGenerationValues", semio_framework_plugin::InteractiveJobClassification::Migrated)
         .action_interactive_job("flowEvalTick", semio_framework_plugin::InteractiveJobClassification::Migrated)
         .action_interactive_job("flowEvalResolve", semio_framework_plugin::InteractiveJobClassification::Migrated)
+        .action_interactive_job("setContributions", semio_framework_plugin::InteractiveJobClassification::Migrated)
         .keybinding("mod+z", "undo")
         .keybinding("mod+shift+z", "redo")
         // 🕹️ `mod+a`/`escape` are no longer declared here — the framework auto-injects `selectAll`/

@@ -6,7 +6,7 @@ async fn snapshot_cursor_cancel_fuel_interrupted_close_and_terminal_empty_are_ex
     let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
     let manager = SnapshotManager::new(&storage).await;
     let document = ArtifactId::from("retained-snapshot");
-    let body = SnapshotBody { head_seq: 0, commit_seq: 0, epoch: 0, chain_hash: [0; 32], protocol_version: 1, vcs_head: None, base_pack_hash: None, roots: Vec::new(), created_at_ms: 0 };
+    let body = SnapshotBody { head_seq: 0, commit_seq: 0, epoch: 0, chain_hash: [0; 32], protocol_version: 1, base_pack_hash: None, roots: Vec::new(), created_at_ms: 0 };
     manager.publish(&document, SnapshotOrigin::FullBaseline, &[], body).await.unwrap();
 
     let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));

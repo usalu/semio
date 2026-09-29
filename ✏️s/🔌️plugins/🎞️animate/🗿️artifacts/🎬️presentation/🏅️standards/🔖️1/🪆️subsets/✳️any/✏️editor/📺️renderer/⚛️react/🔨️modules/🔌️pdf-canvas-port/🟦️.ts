@@ -1,45 +1,45 @@
 // #region 🔌️Contracts
-/** @emoji 📐️ Workspace-owned PDF viewport contract. */
+/** 📐️ Workspace-owned PDF viewport contract. */
 export interface PdfCanvasViewport {
   readonly width: number;
   readonly height: number;
 }
 
-/** @emoji ⏹️ Workspace-owned cancellable PDF render contract. */
+/** ⏹️ Workspace-owned cancellable PDF render contract. */
 export interface PdfCanvasRenderTask {
   readonly promise: Promise<void>;
   cancel(): void;
 }
 
-/** @emoji 📄️ Workspace-owned PDF page contract. */
+/** 📄️ Workspace-owned PDF page contract. */
 export interface PdfCanvasPage {
   getViewport(options: { readonly scale: number }): PdfCanvasViewport;
   render(options: { readonly canvas: HTMLCanvasElement; readonly canvasContext: CanvasRenderingContext2D; readonly viewport: PdfCanvasViewport }): PdfCanvasRenderTask;
   cleanup(): void;
 }
 
-/** @emoji 📑️ Workspace-owned loaded PDF document contract. */
+/** 📑️ Workspace-owned loaded PDF document contract. */
 export interface PdfCanvasDocument {
   readonly numPages: number;
   getPage(pageNumber: number): Promise<PdfCanvasPage>;
   destroy(): void | Promise<void>;
 }
 
-/** @emoji ⏳️ Workspace-owned cancellable PDF load contract. */
+/** ⏳️ Workspace-owned cancellable PDF load contract. */
 export interface PdfCanvasLoadingTask {
   readonly promise: Promise<PdfCanvasDocument>;
   destroy(): void | Promise<void>;
 }
 
-/** @emoji 🔌️ PDF document loader boundary used by the presentation renderer. */
+/** 🔌️ PDF document loader boundary used by the presentation renderer. */
 export interface PdfCanvasPort {
   load(source: string): PdfCanvasLoadingTask;
 }
 
-/** @emoji 🚦️ Renderer-owned PDF canvas status. */
+/** 🚦️ Renderer-owned PDF canvas status. */
 export type PdfCanvasStatus = "loading" | "ready" | "error";
 
-/** @emoji 📣️ Accessible loading/error announcement for a PDF canvas status. */
+/** 📣️ Accessible loading/error announcement for a PDF canvas status. */
 export function pdfCanvasStatusAnnouncement(status: PdfCanvasStatus): { readonly role: "status" | "alert"; readonly text: string } | null {
   if (status === "loading") {
     return { role: "status", text: "…" };
@@ -50,7 +50,7 @@ export function pdfCanvasStatusAnnouncement(status: PdfCanvasStatus): { readonly
   return null;
 }
 
-/** @emoji 🖼️ Device-pixel bitmap size for a logical PDF viewport. */
+/** 🖼️ Device-pixel bitmap size for a logical PDF viewport. */
 export function pdfCanvasBitmapSize(viewport: PdfCanvasViewport, pixelRatio: number): { readonly width: number; readonly height: number } {
   const ratio = Math.max(1, pixelRatio);
   return {
@@ -61,7 +61,7 @@ export function pdfCanvasBitmapSize(viewport: PdfCanvasViewport, pixelRatio: num
 // #endregion 🔌️Contracts
 
 // #region 🧹️Lifecycle
-/** @emoji 🧹️ Owns disposal ordering for one PDF canvas lifecycle. */
+/** 🧹️ Owns disposal ordering for one PDF canvas lifecycle. */
 export class PdfCanvasResourceOwner {
   private loadingTask: PdfCanvasLoadingTask | null = null;
   private document: PdfCanvasDocument | null = null;

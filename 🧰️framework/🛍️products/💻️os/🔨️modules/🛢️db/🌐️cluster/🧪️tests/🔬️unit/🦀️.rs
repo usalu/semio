@@ -283,7 +283,6 @@ async fn replicate_document_transfers_a_snapshot_when_the_follower_is_below_the_
     assert_eq!(copied, expected);
     close_replication_pages(&mut copied).await.unwrap();
     assert!(copied.terminal_is_empty());
-    eprintln!("[DEBUG] snapshot replication copied {} exact bytes through distinct aggregate owners; source and final read leases retired, follower writer reacquired", expected.len());
 }
 //#endregion 🔖️Replication
 

@@ -149,7 +149,7 @@ pub struct MemberEffect {
 //#region 🔖️ArtifactKind
 /// 🗿️ The computed-compliance artifact this standard publishes on its app's `report:out` port.
 pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
-    app_surface::artifact_kind_spec("en1990", "EN 1990")
+    app_surface::artifact_kind_spec("en1990", "EN 1990", EN1990_DOCUMENT_SCHEMA)
 }
 //#endregion 🔖️ArtifactKind
 

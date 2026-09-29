@@ -64,7 +64,6 @@ fn a_turn_that_still_owns_an_ingress_never_answers_idle() {
         let kept = crate::reactor::turn::command_ingress_while_owned(already.clone(), Some(cursor(0, 1)));
         assert_eq!(format!("{kept:?}"), format!("{already:?}"), "a turn that already said something keeps saying it");
     }
-    eprintln!("[DEBUG] owned ingress turn answers command-pending, unowned answers idle, every stated status is preserved");
 }
 
 #[test]
@@ -79,5 +78,4 @@ fn every_admitted_command_page_leaves_the_turn_with_a_named_status() {
     assert!(chain.contains(&named), "the chain names the drop it used to perform silently");
     assert!(chain.contains("} else {\n            // 📥️ The terminal arm this chain never had"), "the admission chain has a terminal else, so no page can fall out of it unremarked");
     assert!(!chain.contains("} else if let Some(CommandIngressOwner::GenericAssembly { cursor: active, mut pages }) = retained.take() {"), "the assembly arm no longer takes-and-drops every other owner shape");
-    eprintln!("[DEBUG] command page admission: terminal else present, fault named {named}, assembly take is shape-guarded");
 }

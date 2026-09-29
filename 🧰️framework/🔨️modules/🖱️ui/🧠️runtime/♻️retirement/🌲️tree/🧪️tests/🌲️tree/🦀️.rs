@@ -89,7 +89,7 @@ fn runtime_tree_retirement_preserves_occupied_sources_and_closes_exact_payloads(
     let mut foreign = ui_contract::UiValueRetirement::new(foreign);
     for _ in 0..10_000 { if foreign.close_step(1, 4096).unwrap().complete { break; } }
     assert!(foreign.terminal_is_empty());
-    eprintln!("[DEBUG] runtime tree exact owner:18 components*3 grants; occupied node/tree/held sources preserved; bytes matched; foreign untouched");
+    eprintln!("runtime tree exact owner:18 components*3 grants; occupied node/tree/held sources preserved; bytes matched; foreign untouched");
 }
 
 #[test]
@@ -120,7 +120,6 @@ fn runtime_tree_retirement_handback_preserves_partial_owner_until_full_readmissi
         assert!(cursor.try_begin_node(&mut source));
         assert_eq!(close(&mut cursor, 1), (pages + 1) * 2);
     }
-    eprintln!("[DEBUG] runtime partial tree:384 pages preserved by exact handback; take+close and queued maintenance restored full admission");
 }
 
 #[test]
@@ -141,5 +140,4 @@ fn runtime_tree_retirement_rejected_close_preserves_source_until_handback_admiss
     release_surface_reconcile_handback(reservations.0.pop().unwrap());
     for _ in 0..100_000 { if rejected.close_step() { break; } }
     assert!(rejected.terminal_is_empty());
-    eprintln!("[DEBUG] runtime rejected close:full handback admission preserved exact typed source+fault; one released slot allowed bounded terminal closure");
 }

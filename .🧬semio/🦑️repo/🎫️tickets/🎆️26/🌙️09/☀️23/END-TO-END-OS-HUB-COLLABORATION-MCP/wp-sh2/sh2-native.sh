@@ -1,7 +1,7 @@
 #!/bin/zsh
 # ⚖️ SH2 native-lane runs (session 14 rule 3): build-fleet-b, nice 15, incremental off, private target, one fleet-mutex hold per cargo.
 cd /Users/ueli/Documents/semio || exit 2
-out="/Users/ueli/Documents/semio/.tmp-ticket/wp-sh2/generated"
+out="/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-sh2-captures"
 tag="${SH2_TAG:-run}"
 export CARGO_INCREMENTAL=0 CARGO_TARGET_DIR=/Users/ueli/Documents/semio/.tmp-ticket/wp-sh2/target RUST_MIN_STACK=33554432
 export CARGO_BUILD_BUILD_DIR="/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/build-fleet-b"

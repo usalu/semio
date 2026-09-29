@@ -144,7 +144,7 @@ fn input_writer_native_every_actual_partial_copy_unwind_keeps_original_and_backi
                 buffer.validate_byte(byte, grant(1, 0));
                 buffer.copy_validated(grant(1, 0));
             }
-            panic!("[DEBUG] after actual partial input byte copy");
+            panic!("after actual partial input byte copy");
         }));
         assert!(outcome.is_err());
         drop(outcome);

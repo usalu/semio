@@ -438,6 +438,7 @@ fn an_opened_socket_announces_exactly_once_and_then_pings_on_reacts_own_cadence(
     assert_eq!(dialer.turn(&mut state, AgentBridgeSocketState::Open, 1_000.0 + PING_INTERVAL_MS * 2.0), AgentBridgeDialTurn::Ping);
 }
 
+/// ⏱️ attempt 1 → RECONNECT_BASE_MS, the first step of `scheduleReconnect`'s own ladder.
 #[test]
 fn a_closed_socket_is_retired_and_its_redial_waits_the_backoff_react_computes() {
     let mut state = AgentBridgeState::default();
@@ -446,7 +447,6 @@ fn a_closed_socket_is_retired_and_its_redial_waits_the_backoff_react_computes() 
     assert_eq!(dialer.turn(&mut state, AgentBridgeSocketState::Open, 0.0), AgentBridgeDialTurn::Announce);
     assert_eq!(dialer.turn(&mut state, AgentBridgeSocketState::Closed, 10_000.0), AgentBridgeDialTurn::Retire);
     assert_eq!(state.reconnect_attempt, 1);
-    // ⏱️ attempt 1 → RECONNECT_BASE_MS, the first step of `scheduleReconnect`'s own ladder.
     assert_eq!(dialer.turn(&mut state, AgentBridgeSocketState::Absent, 10_000.0), AgentBridgeDialTurn::Wait { until_ms: 10_000.0 + RECONNECT_BASE_MS });
     assert_eq!(state.status, AgentBridgeStatus::Reconnecting);
     assert!(matches!(dialer.turn(&mut state, AgentBridgeSocketState::Absent, 10_000.0 + RECONNECT_BASE_MS), AgentBridgeDialTurn::Dial { .. }));

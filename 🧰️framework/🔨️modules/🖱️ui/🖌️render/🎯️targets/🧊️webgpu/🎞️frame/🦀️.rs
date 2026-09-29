@@ -1,4 +1,4 @@
-//! @emoji 🎞️ Replays one [`ui_render::RenderPacket`]: buckets `packet.batches` by
+//! 🎞️ Replays one [`ui_render::RenderPacket`]: buckets `packet.batches` by
 //! [`crate::surface_state::ScenePhase`], renders backdrop content/overlay into the offscreen
 //! [`crate::scene_target::SceneColorTarget`], runs the blur chain, blits + composites glass onto the
 //! swapchain, then renders foreground content/overlay directly onto it. Ported from

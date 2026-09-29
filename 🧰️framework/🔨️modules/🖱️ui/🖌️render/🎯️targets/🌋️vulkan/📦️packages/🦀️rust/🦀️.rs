@@ -1,4 +1,4 @@
-//! @emoji 🌋️ Hand-written Vulkan backend for Linux.
+//! 🌋️ Hand-written Vulkan backend for Linux.
 //!
 //! Implements [`ui_render::GraphicsBackend`] for this platform. Everything above it — the element
 //! pipeline, layout, `Scene::finish`, the `RenderPacket` — is platform-neutral and shared, so this

@@ -13,19 +13,19 @@ import {
 import { BrowserFrameTransport, type BrowserFrameUiMessage, type BrowserFrameWorkerMessage, type BrowserFrameWorkerPort, type BrowserFrameWorkerStepReport } from "../../🎯️targets/🧊️wgpu/🚚️browser-frame-transport/🟦️.ts";
 import { resolveWgpuBootDescriptor, type WgpuBootDescriptor, type WgpuHostAppearance, type WgpuHostStorageSnapshot } from "../../🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts";
 
-/** @emoji 🧭️ One resolved boot descriptor for a fixture transport — the shared resolver, never a hand
+/** 🧭️ One resolved boot descriptor for a fixture transport — the shared resolver, never a hand
  * rolled literal, so these fixtures cannot drift from the shape the three real doors produce
  * (`🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts`). */
 function testBootDescriptor(variant: string): WgpuBootDescriptor {
   return resolveWgpuBootDescriptor({ defaultVariant: variant });
 }
 
-/** @emoji 🌓️ The appearance a realm that read nothing publishes — React's own no-window default. */
+/** 🌓️ The appearance a realm that read nothing publishes — React's own no-window default. */
 const TEST_HOST_APPEARANCE: WgpuHostAppearance = { preference: "", systemDark: false };
 const TEST_HOST_PLATFORM = "MacIntel";
 const TEST_HOST_STORAGE: WgpuHostStorageSnapshot = {};
 
-/** @emoji 🧵️ A frame Worker whose own steps all fit their ceiling — this suite measures the UI isolate. */
+/** 🧵️ A frame Worker whose own steps all fit their ceiling — this suite measures the UI isolate. */
 const ADMITTED_WORKER_STEPS: BrowserFrameWorkerStepReport = { degraded: false, recordedOverruns: 0, sustainedOverruns: 0, worstStepMs: 0, worstStepSite: "" };
 
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "..", "..", "..", "..", "..");
@@ -60,7 +60,7 @@ type Harness = {
   drainContinuations(): void;
 };
 
-/** @emoji 🧪️ One transport whose zero-delay continuations are drained by hand, so the boot-stall timer
+/** 🧪️ One transport whose zero-delay continuations are drained by hand, so the boot-stall timer
  * (the only other timer this seam arms) can never be mistaken for one. */
 function harness(options: { now?: () => number; onProgress?: (stage: string) => void } = {}): Harness {
   const worker = new FakeWorker();
@@ -190,7 +190,7 @@ describe("wgpu UI-turn budget", () => {
       expect(printed).toEqual([]);
       setTurnDiagnostics(true);
       new TurnLedger().admit("loud", 50);
-      expect(printed.some((line) => line.startsWith("[DEBUG] ui-turn recorded-overrun site=loud"))).toBe(true);
+      expect(printed.some((line) => line.startsWith("[TRACE] ui-turn recorded-overrun site=loud"))).toBe(true);
     } finally {
       console.debug = original;
       setTurnDiagnostics(undefined);

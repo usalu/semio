@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/AgentPresence/component.test.tsx
-/** @emoji 🧪️ `AgentPresence` tests: the pure `agentPresenceTone` state machine plus a render
+/** 🧪️ `AgentPresence` tests: the pure `agentPresenceTone` state machine plus a render
  * smoke test asserting the accessible `role="status"` name and visible text for each bridge
  * status/presence combination. Not wired into the nx `test` target — see
  * `AgentBridge/🧪️component.test.ts`'s header for why, and

@@ -340,8 +340,11 @@ async fn a_document_folded_from_the_hub_tail_initializes_again() {
         folded.ingest_remote(hub_tail_envelope(value)).await.expect("every operation and transition of the hub tail folds");
     }
     folded.dispatch(store::ArtifactCommand::Apply { mutations: vec![schema::mutations::edit_text("user1 typed after the hub tail".to_string())], description: None }).await.expect("a locally authored edit after the tail");
-    let (remote, local) = folded.envelope().vcs.edits.iter().fold((0, 0), |(remote, local), edit| if edit.mutation_meta.first().and_then(|meta| meta.mutation_id.as_ref()).is_some_and(|id| id.0 == edit.id) { (remote + 1, local) } else { (remote, local + 1) });
-    assert_eq!((remote, local), (15, 2), "STEP 8's mixed shape: every folded operation is an edit named after its own mutation id, the replica's own edits are local (entry id + operation id)");
+    let hub_actors: std::collections::BTreeSet<&str> = tail.iter().map(|value| value["actor"].as_str().expect("hub tail actor")).collect();
+    let edits = &folded.envelope().vcs.edits;
+    let from_hub = edits.iter().filter(|edit| edit.actor.as_deref().is_some_and(|actor| hub_actors.contains(actor))).count();
+    assert_eq!((from_hub, edits.len() - from_hub), (15, 2), "STEP 8's mixed shape: the hub's 15 operations beside this replica's own 2 edits");
+    assert!(edits.iter().all(|edit| edit.mutation_meta.first().and_then(|meta| meta.mutation_id.as_ref()).is_some_and(|id| id.0 == edit.id)), "every edit — folded or authored here — is named after its own operation, the shape SeedHistory must seed once");
     let live = folded.snapshot().expect("folded writer snapshot");
     let files = store::print_document_pack(folded.envelope()).await.expect("print the folded document pack");
     let parsed: store::ParsedDocumentText<WriterSnapshot, WriterMutation> = store::parse_document_pack(&files.pack, &files.spr).await.expect("parse the folded document pack");

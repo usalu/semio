@@ -110,7 +110,7 @@ async fn create_delete_properties_round_trips() {
 
 #[semio_framework_async_macros::async_test]
 async fn semantic_kinds_cover_every_variant() {
-    assert_eq!(SemioObjectMutation::kinds().len(), 9);
+    assert_eq!(SemioObjectMutation::kinds().len(), 10);
     let mutation = SemioObjectMutation::DeleteMesh(delete_mesh::DeleteMesh {});
     assert_eq!(mutation.semantics().kind, "delete-mesh");
     assert_eq!(mutation.semantics().record, "DeletedMesh");

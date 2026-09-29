@@ -22,11 +22,11 @@ export function installCadIoHostBridge(next: CadIoHostBridge): void {
 }
 
 export async function exportCadMedia(format: CadIoFormat): Promise<void> {
-  if (!bridge) throw new Error("[DEBUG] cad io host bridge missing — installCadIoHostBridge first");
+  if (!bridge) throw new Error("cad io host bridge missing — installCadIoHostBridge first");
   await bridge.exportMedia(format);
 }
 
 export async function importCadMedia(format: CadIoFormat): Promise<void> {
-  if (!bridge) throw new Error("[DEBUG] cad io host bridge missing — installCadIoHostBridge first");
+  if (!bridge) throw new Error("cad io host bridge missing — installCadIoHostBridge first");
   await bridge.importMedia(format);
 }

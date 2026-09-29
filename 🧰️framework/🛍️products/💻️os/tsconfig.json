@@ -4,7 +4,6 @@
   "compilerOptions": {
     "allowImportingTsExtensions": true,
     "allowJs": true,
-    "lib": ["DOM", "DOM.AsyncIterable", "DOM.Iterable", "ESNext"],
     "tsBuildInfoFile": "../../../node_modules/.cache/tsconfig.os.tsbuildinfo",
     "types": ["bun", "node", "react", "react-dom", "vite/client"],
     "paths": {

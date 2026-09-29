@@ -1,10 +1,10 @@
-//! @emoji 🎬️ `dsl_family_scene` — scene/layout family kit: layer stacks and shared edge notation.
+//! 🎬️ `dsl_family_scene` — scene/layout family kit: layer stacks and shared edge notation.
 
 pub use crate::os_dsl::notation::{print_edge, EdgeLabel, EdgeLink, EdgeNode, EdgeValue};
 
 use crate::os_dsl::{lex, Limits, TextError, TokenKind};
 
-/// @emoji 📐️ Parses `id@x y [z]` layer placement literals.
+/// 📐️ Parses `id@x y [z]` layer placement literals.
 pub async fn parse_layer_anchor_text(text: &str) -> Result<(String, f64, f64, Option<f64>), TextError> {
     let limits = Limits::default();
     let tokens: Vec<_> = lex(text, &limits, false)?.into_iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).collect();

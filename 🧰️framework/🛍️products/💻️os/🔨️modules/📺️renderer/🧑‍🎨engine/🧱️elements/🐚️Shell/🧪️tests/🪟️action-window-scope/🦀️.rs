@@ -61,7 +61,6 @@ fn scoping_binds_every_fixture_action_to_the_window_that_declared_it() {
         let before = resolve_window_instance(&action, focused);
         scope_action_to_window(&mut action, window_id);
         let after = arg_pairs(&action);
-        println!("[DEBUG] action-window-scope {name}: {before} -> {after:?}");
         assert_eq!(after, pairs(&case["expectedArgs"]), "{name}: scoped arguments");
         assert_eq!(after.iter().filter(|(key, _)| key == "windowId").count(), 1, "{name}: exactly one windowId survives");
         assert_eq!(resolve_window_instance(&action, focused), case["resolvesTo"].as_str().expect("resolvesTo"), "{name}: resolved window instance");

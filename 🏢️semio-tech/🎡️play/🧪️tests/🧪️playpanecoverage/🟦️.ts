@@ -1,29 +1,43 @@
 import { readdirSync, readFileSync, existsSync, statSync } from "node:fs";
 import { createRequire } from "node:module";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 
-/** @emoji 📂️ Repository-relative root every plugin directory lives directly below. */
+/** 📂️ Repository-relative root every plugin directory lives directly below. */
 const PLUGINS_ROOT = "✏️s/🔌️plugins";
 
-/** @emoji 🗄️ What stdio's SHIPPED component assembles: every artifact crate whose apps
- * `component-app-assembly` turns on. Its `full-app-catalog` sibling closes the same `StdioApps` enum
- * over all 88 subsets and costs ≈600 000 wasm functions, which `wasm-component-ld` refuses over
- * wasmparser's 1 000 000-function ceiling — so the shipped fleet must stay this bounded set, and
- * `default`/`plugin-root` must never reach `full-app-catalog`. */
+/** 🗄️ What stdio's OWN component assembles: every artifact crate whose apps its `component-app-assembly` turns
+ * on — the nine text/data subsets. Every other stdio subset ships in its family component under `🗄️stdio/🧩️extensions`,
+ * because one component closing all 176 stdio apps exceeds wasmparser's 1 000 000-function ceiling
+ * (`🗄️stdio/🧪️tests/🚢️shipped-fleet`). */
 const STDIO_COMPONENT_APP_CRATES: readonly string[] = ["csv", "html", "json", "md", "tsv", "txt", "xml"];
 
-/** @emoji 📂️ Every plugin directory name, in on-disk order. */
+/** 📂️ Every plugin directory name, in on-disk order. */
 function pluginDirectories(repoRoot: string): readonly string[] {
   return readdirSync(join(repoRoot, PLUGINS_ROOT)).filter(name => statSync(join(repoRoot, PLUGINS_ROOT, name)).isDirectory());
 }
 
-/** @emoji 📂️ The plugin directory a registry row's crate lives under. */
+/** 📂️ The plugin directory a registry row's crate lives under. */
 function pluginDirectoryOfCratePath(cratePath: string): string | undefined {
   const parts = cratePath.split("/");
   return parts[0] === "✏️s" && parts[1] === "🔌️plugins" ? parts[2] : undefined;
 }
 
-/** @emoji 🗂️ The apps every plugin descriptor declares, BOTH roles, keyed by the plugin DIRECTORY that
+/** 🗂️ The apps every registry plugin's descriptor declares, BOTH roles, keyed by the crate's OWNER root
+ * (`<owner>/📦️packages/🦀️rust` → `<owner>`): a family component nested under its plugin directory (`🗄️stdio/🧩️extensions/*`)
+ * commits its own descriptor there, and its apps must be reachable like every other plugin's. `undefined` for an owner
+ * that commits no descriptor yet. */
+function descriptorAppsByOwner(repoRoot: string, rows: readonly { readonly cratePath: string }[]): ReadonlyMap<string, { readonly pluginId: string; readonly apps: readonly any[] } | undefined> {
+  const byOwner = new Map<string, { readonly pluginId: string; readonly apps: readonly any[] } | undefined>();
+  for (const owner of rows.map(row => dirname(dirname(row.cratePath)))) {
+    const file = join(repoRoot, owner, "🔣️.json");
+    if (!existsSync(file)) { byOwner.set(owner, undefined); continue; }
+    const manifest = JSON.parse(readFileSync(file, "utf8")).manifest;
+    byOwner.set(owner, { pluginId: manifest.pluginId, apps: manifest.apps ?? [] });
+  }
+  return byOwner;
+}
+
+/** 🗂️ The apps every plugin descriptor declares, BOTH roles, keyed by the plugin DIRECTORY that
  * owns it — `undefined` for a directory that commits no descriptor, which the caller must then account
  * for explicitly. Reading by directory (never by whichever descriptors happen to exist) is what keeps a
  * plugin from disappearing out of these gates the moment it stops shipping one. */
@@ -38,7 +52,7 @@ function descriptorAppsByDirectory(repoRoot: string): ReadonlyMap<string, { read
   return byDirectory;
 }
 
-/** @emoji 🎛️ Every prop play's grid hands one pane's `FrameworkOsShell`. Pinned as a SET because the
+/** 🎛️ Every prop play's grid hands one pane's `FrameworkOsShell`. Pinned as a SET because the
  * navbar's editor⇄viewer role group is suppressed from the mount side, never from the catalog: an app
  * pin (`appRole`, a role-bearing `appId` lock), a chrome suppression or a filter that hides the pane's
  * own plugin would each make `…#viewer` unreachable while every other law here stays green. A new prop
@@ -51,10 +65,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   const { PLUGIN_BUILD_TARGETS, EXTENSION_TARGETS, PLUGIN_HOST_CONFIGS } = await import("../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts");
   const { dialectCoordinate } = await import("../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts");
   const appsByDirectory = descriptorAppsByDirectory(repoRoot);
-  const editorAppIds = (directory: string | undefined): readonly string[] => (appsByDirectory.get(directory!)?.apps ?? []).filter((app: any) => app.role === "editor").map((app: any) => app.id as string);
-  const paneDirectory = (pluginId: string): string => pluginDirectoryOfCratePath(PLUGIN_BUILD_TARGETS.find(entry => entry.pluginId === pluginId)!.cratePath)!;
+  const appsByOwner = descriptorAppsByOwner(repoRoot, PLUGIN_BUILD_TARGETS);
+  const editorAppIds = (owner: string): readonly string[] => (appsByOwner.get(owner)?.apps ?? []).filter((app: any) => app.role === "editor").map((app: any) => app.id as string);
+  const paneOwner = (pluginId: string): string => dirname(dirname(PLUGIN_BUILD_TARGETS.find(entry => entry.pluginId === pluginId)!.cratePath));
 
-  /** @emoji 🏠️ The ONE app that hosts other apps rather than being one — resolved the way the shell
+  /** 🏠️ The ONE app that hosts other apps rather than being one — resolved the way the shell
    * itself resolves it (`resolveRequiredHostApps`: an editor app whose artifact-kind tail is the host
    * crate's declared `hostAppId`), so play never guesses a literal. Its siblings Home and Space are
    * ordinary artifact apps and each carry their own pane. */
@@ -79,7 +94,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect([...panes].sort()).toEqual([...playExpectedVariants(PLAYGROUND_BUILD_TARGETS)].sort());
     });
 
-    /** @emoji 🧩️ Play shows ALL plugins: a plugin directory with no pane is a coverage regression, never
+    /** 🧩️ Play shows ALL plugins: a plugin directory with no pane is a coverage regression, never
      * a configuration choice, so this law carries no exemption list to hide one behind. */
     it("shows every plugin directory in at least one pane", () => {
       const byPluginId = new Map(PLUGIN_BUILD_TARGETS.map(row => [row.pluginId, row]));
@@ -92,13 +107,13 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const reachable = new Set<string>();
       for (const row of PLAY_RUNTIME_TARGETS) {
         if (row.app) reachable.add(row.app);
-        else for (const id of editorAppIds(paneDirectory(row.pluginId))) reachable.add(id);
+        else for (const id of editorAppIds(paneOwner(row.pluginId))) reachable.add(id);
       }
-      const unreachable = [...appsByDirectory.values()].flatMap(entry => (entry?.apps ?? []).filter((app: any) => app.role === "editor").map((app: any) => app.id as string)).filter(id => !exempt.has(id) && !reachable.has(id));
+      const unreachable = [...appsByOwner.values()].flatMap(entry => (entry?.apps ?? []).filter((app: any) => app.role === "editor").map((app: any) => app.id as string)).filter(id => !exempt.has(id) && !reachable.has(id));
       expect(unreachable).toEqual([]);
     });
 
-    /** @emoji 👁️ …and every VIEWER app, without a second pane for it, through the navbar's editor⇄viewer
+    /** 👁️ …and every VIEWER app, without a second pane for it, through the navbar's editor⇄viewer
      * role group. Restated against the ONE coordinate function both sides share (`dialectCoordinate`),
      * exactly as the sibling example gate restates `appSwitchesExamples` — importing
      * `🏛️ShellHost/🔀️surface-switch/🟦️.ts` pulls the `@semio-tech/framework` barrel through Vite and
@@ -118,7 +133,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       };
       const deadEnds: string[] = [], reachable = new Set<string>();
       for (const row of PLAY_RUNTIME_TARGETS) {
-        const apps = appsByDirectory.get(paneDirectory(row.pluginId))?.apps;
+        const apps = appsByOwner.get(paneOwner(row.pluginId))?.apps;
         if (apps === undefined) continue;
         const app = apps.find((candidate: any) => candidate.id === row.app) ?? apps[0];
         const viewer = viewerOf(apps, app);
@@ -126,11 +141,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         else reachable.add(viewer.id);
       }
       expect(deadEnds).toEqual([]);
-      const declared = PLAY_RUNTIME_TARGETS.flatMap((row: any) => (appsByDirectory.get(paneDirectory(row.pluginId))?.apps ?? []).filter((app: any) => app.role === "viewer").map((app: any) => app.id as string));
+      const declared = PLAY_RUNTIME_TARGETS.flatMap((row: any) => (appsByOwner.get(paneOwner(row.pluginId))?.apps ?? []).filter((app: any) => app.role === "viewer").map((app: any) => app.id as string));
       expect([...new Set(declared)].filter(id => !reachable.has(id)).sort()).toEqual([]);
     });
 
-    /** @emoji 🎛️ …and play's own mount never suppresses that switch. See {@link PLAY_PANE_SHELL_PROPS}. */
+    /** 🎛️ …and play's own mount never suppresses that switch. See {@link PLAY_PANE_SHELL_PROPS}. */
     it("mounts every pane with exactly the shell props the grid states", () => {
       const source = readFileSync(join(repoRoot, "🏢️semio-tech/🎡️play/🟦️.tsx"), "utf8");
       const mounts = [...source.matchAll(/<FrameworkOsShell\b([^>]*?)\/>/gs)];
@@ -138,7 +153,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect([...new Set([...mounts[0]![1]!.matchAll(/(\w+)=/g)].map(match => match[1]!))].sort()).toEqual([...PLAY_PANE_SHELL_PROPS].sort());
     });
 
-    /** @emoji 🛂️ The law above reads apps from committed descriptors, so a plugin that commits none
+    /** 🛂️ The law above reads apps from committed descriptors, so a plugin that commits none
      * would pass it by being invisible to it. Every plugin directory therefore MUST commit its
      * `🔣️.json` (`bun nx run <plugin>:describe` emits it beside `🛂️.descriptor.semio`): a missing
      * descriptor is a failure here, not an exemption. */
@@ -146,7 +161,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect([...appsByDirectory].filter(([, entry]) => entry === undefined).map(([directory]) => directory).sort()).toEqual([]);
     });
 
-    /** @emoji 🧩️ Play covers ALL components: every plugin AND every extension the registry knows is in
+    /** 🧩️ Play covers ALL components: every plugin AND every extension the registry knows is in
      * the union some pane's closure activates — an extension whose plugin declares no `consumes` for its
      * `contributes` capability lands in no closure at all and fails right here. */
     it("activates every registry component the panes need", () => {
@@ -165,7 +180,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         closure.add(next);
         for (const activation of features[next] ?? []) if (features[activation]) pending.push(activation);
       }
-      expect([...closure].filter(name => name === "full-app-catalog")).toEqual([]);
       expect([...closure].flatMap(name => features[name]!).flatMap(item => [...item.matchAll(/^semio-s-artifact-stdio-([a-z0-9]+)\/component-app-assembly$/g)].map(match => match[1]!)).sort()).toEqual([...STDIO_COMPONENT_APP_CRATES].sort());
     });
 

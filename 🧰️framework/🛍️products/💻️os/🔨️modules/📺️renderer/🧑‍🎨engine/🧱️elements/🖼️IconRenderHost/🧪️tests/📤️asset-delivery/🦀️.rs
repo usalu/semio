@@ -32,7 +32,6 @@ fn icon_export_asset_fault_is_delivered_once_to_its_exact_request() {
     retire(sibling_token);
     retire(replacement_token);
     assert!(slots().lock().unwrap().iter().all(Option::is_none));
-    eprintln!("[DEBUG] icon export asset failure delivered once; stale and sibling requests remained isolated");
 }
 
 #[test]
@@ -50,6 +49,5 @@ fn icon_export_asset_abandoned_request_is_cancelled_and_retired() {
     retire(token);
     retire(sibling_token);
     assert!(slots().lock().unwrap().iter().all(Option::is_none));
-    eprintln!("[DEBUG] icon export asset abandoned owner retired; sibling cancellation remained false");
 }
 

@@ -7,7 +7,7 @@ const assetsRoot = (): string => join(import.meta.dir, "..", "..", "..");
 export type AssetArtifact = { path: string; content: string };
 
 //#region 🔧️SvgNormalize
-/** @emoji ✂️ Strips root chrome and keeps stroke icons on `currentColor`. */
+/** ✂️ Strips root chrome and keeps stroke icons on `currentColor`. */
 export function normalizeCatalogSvg(raw: string): string {
   let svg = raw.replace(/<!--[\s\S]*?-->/g, "").trim();
   svg = svg.replace(/\sclass="[^"]*"/g, "");
@@ -25,7 +25,7 @@ export function normalizeCatalogSvg(raw: string): string {
   return svg.trim();
 }
 
-/** @emoji 🏷️ PascalCase identifier for C# from kebab icon id. */
+/** 🏷️ PascalCase identifier for C# from kebab icon id. */
 export function iconIdToPascal(id: string): string {
   return id
     .split("-")
@@ -33,12 +33,12 @@ export function iconIdToPascal(id: string): string {
     .join("");
 }
 
-/** @emoji 🐍️ Upper snake for Python constants. */
+/** 🐍️ Upper snake for Python constants. */
 export function iconIdToPythonConst(id: string): string {
   return id.replace(/-/g, "_").toUpperCase();
 }
 
-/** @emoji 🦀️ PascalCase Rust enum variant from kebab/snake icon id. */
+/** 🦀️ PascalCase Rust enum variant from kebab/snake icon id. */
 export function iconIdToRustVariant(id: string): string {
   return id
     .split(/[-_]/)
@@ -332,10 +332,10 @@ ${list}
   return { path: join(assetsDir, "README.md"), content: body };
 }
 
-/** @emoji 🔖️ Renders universal shortcode bindings from the explicit external emoji snapshot. */
-function renderShortcodes(icons: Record<string, string>, generatedDir: string): AssetArtifact {
+/** 🔖️ Renders universal shortcode bindings from the explicit external emoji snapshot. */
+function renderShortcodes(icons: Record<string, string>, iconsDir: string, generatedDir: string): AssetArtifact {
   const catalog = Object.keys(icons).sort();
-  const snapshotPath = join(generatedDir, "🔣️shortcodes.json");
+  const snapshotPath = join(iconsDir, "🔣️shortcodes.json");
   if (!existsSync(snapshotPath)) throw new Error("missing external 🔣️shortcodes.json snapshot");
   const snapshot = JSON.parse(readFileSync(snapshotPath, "utf8")) as { emoji?: Record<string, string>; catalog?: string[] };
   if (!snapshot.emoji || !Array.isArray(snapshot.catalog)) throw new Error("invalid external 🔣️shortcodes.json snapshot");
@@ -360,13 +360,13 @@ ${catalogEntries}
 
 export type ShortcodeCatalogName = (typeof SHORTCODE_CATALOG)[number];
 
-/** @emoji 🔍️ Resolves a shortcode body (without colons) to emoji glyph when known. */
+/** 🔍️ Resolves a shortcode body (without colons) to emoji glyph when known. */
 export function shortcodeEmoji(code: string): string | undefined {
   const key = code.trim().toLowerCase();
   return (SHORTCODE_EMOJI as Record<string, string>)[key];
 }
 
-/** @emoji 🔍️ True when the shortcode body names a vendored UI catalog icon. */
+/** 🔍️ True when the shortcode body names a vendored UI catalog icon. */
 export function shortcodeCatalogKey(code: string): ShortcodeCatalogName | undefined {
   const key = code.trim();
   return (SHORTCODE_CATALOG as readonly string[]).includes(key) ? (key as ShortcodeCatalogName) : undefined;
@@ -393,7 +393,7 @@ export function renderCatalogArtifacts(target: string): readonly AssetArtifact[]
   if (target === "net" || target === "all") artifacts.push(renderCs(icons, generatedDir));
   if (target === "py" || target === "all") artifacts.push(renderPy(icons, generatedDir));
   if (target === "rust" || target === "all") artifacts.push(...renderRust(icons, generatedDir, sources));
-  if (target === "all") artifacts.push(renderShortcodes(icons, generatedDir));
+  if (target === "all") artifacts.push(renderShortcodes(icons, iconsDir, generatedDir));
   return artifacts;
 }
 //#endregion 🚀️Commands

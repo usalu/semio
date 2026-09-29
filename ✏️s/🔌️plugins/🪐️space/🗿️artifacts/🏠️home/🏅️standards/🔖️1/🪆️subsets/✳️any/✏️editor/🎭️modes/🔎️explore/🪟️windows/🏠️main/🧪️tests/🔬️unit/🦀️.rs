@@ -89,11 +89,12 @@ async fn empty_rows_render_the_empty_message_not_a_zero_row_table() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn a_local_row_renders_with_open_only_actions() {
+async fn a_local_row_renders_without_directory_lifecycle_actions() {
     let json = project(rows(&TreeWindows::unhosted(), &[one_local_row()], &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN).expect("local Home row"));
     assert!(json.contains("Fixture Studio"));
     assert!(json.contains("local"));
-    assert!(!json.contains("rename"), "local-only rows offer open only, no rename/share/delete: {json}");
+    assert!(json.contains("Remove from Home"), "local-only rows offer the Home removal: {json}");
+    assert!(!json.contains("rename"), "local-only rows offer no directory rename/share/delete: {json}");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -133,11 +134,13 @@ async fn spectator_and_unbound_hub_rows_only_carry_open() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn a_local_row_only_carries_an_open_action_button() {
+async fn a_local_row_carries_open_and_remove_from_home() {
     observe(rows(&TreeWindows::unhosted(), &[one_local_row()], &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN).expect("local Home row"), |root| {
         let buttons = buttons(row(root, "space:sp-local"));
-        assert_eq!(buttons.len(), 1, "local-only rows offer open only");
-        assert_eq!(buttons[0].action.name.as_str(), "openSpace");
+        let names: Vec<&str> = buttons.iter().map(|binding| binding.action.name.as_str()).collect();
+        assert_eq!(names, ["openSpace", "deleteVirtualFileSystemNode"], "local-only rows offer open and the Home removal");
+        assert_eq!(buttons[1].action.scope.as_str(), S_HOME_CONTROLLER_ID);
+        assert_eq!(text_arg(buttons[1], "spaceId"), "sp-local", "the removal names the row's own studio");
     });
 }
 
@@ -149,7 +152,7 @@ async fn seeded_local_studio_renders_a_table_row() {
     // exercises the REAL end-to-end `render` (not `render_rows`), deliberately not asserting on
     // emptiness (see `empty_rows_render_the_empty_message_not_a_zero_row_table` for that, isolated).
     let _ = crate::list_all_space_catalog_entries().await;
-    let node = render(&cfg, &host_view(semio_framework_plugin::Locale::En)).expect("seeded Home rows");
+    let node = render(&cfg, &HomeDirectoryProjection::default(), &host_view(semio_framework_plugin::Locale::En)).expect("seeded Home rows");
     let json = project(node);
     assert!(json.contains("local"), "the seeded demo studio has no directory entry, so it renders origin=local: {json}");
 }
@@ -168,30 +171,46 @@ async fn render_resolves_labels_from_host_view() {
     let view_state = host_view(semio_framework_plugin::Locale::De);
     let json = project(rows(&TreeWindows::unhosted(), &[one_local_row()], &HomeTableLabels::NATIVE_DE, &SHomeLabels::NATIVE_DE).expect("German Home row"));
     assert!(json.contains("Aktualisiert"));
-    let _ = render(&cfg, &view_state).expect("localized Home rows");
+    let _ = render(&cfg, &HomeDirectoryProjection::default(), &view_state).expect("localized Home rows");
 }
 
-/// 🆔️ Contract §C0 lane 4-F: `render(cfg, view_state)` must wrap the table in a real button carrying the
-/// frozen `s-home-create-space` id, dispatching `createSpace` with no args — the harness clicks
-/// this directly instead of hunting the command palette. The button is preceded by two
-/// `window_content_dead_line_spacer()` separators (see that fn's doc) — found by type, not a
-/// hardcoded index, so this test stays valid if the spacer count ever changes.
+/// 🔎️ The first node anywhere in the tree carrying `key`.
+fn keyed<'a>(node: &'a semio_framework_plugin::BuiltNode, key: &str) -> Option<&'a semio_framework_plugin::BuiltNode> {
+    if node.key.as_str() == key {
+        return Some(node);
+    }
+    node.children.iter().find_map(|child| keyed(child, key))
+}
+
+/// 🆔️ Contract §C0 lane 4-F: `render(cfg, directory, view_state)` must wrap the table in real toolbar buttons carrying the
+/// frozen `s-home-create-space` / `s-home-import-studio` ids, dispatching `createSpace` / `importSpace` with no args —
+/// the harness clicks them directly instead of hunting the command palette. Found by key anywhere in the tree, so
+/// this test stays valid if the spacer count or the toolbar nesting ever changes.
 #[semio_framework_async_macros::async_test]
-async fn render_wraps_the_table_with_a_real_create_space_button() {
-    observe(render(&HomeConfig::default(), &host_view(semio_framework_plugin::Locale::En)).expect("Home rows with create action"), |root| {
-        let button = root.children.iter().find(|child| child.key.as_str() == "s-home-create-space").expect("a create-space button somewhere in the stack");
-        assert!(matches!(&button.component, semio_framework_ui_contract::Component::Button(_)));
-        let binding = button.bindings.get(0).expect("create button carries action");
-        assert_eq!(binding.action.scope.as_str(), S_HOME_CONTROLLER_ID);
-        assert_eq!(binding.action.name.as_str(), "createSpace");
-        assert!(binding.args.is_none(), "an empty-args dispatch is what makes the handler open the dialog");
+async fn render_wraps_the_table_with_real_create_space_and_import_studio_buttons() {
+    observe(render(&HomeConfig::default(), &HomeDirectoryProjection::default(), &host_view(semio_framework_plugin::Locale::En)).expect("Home rows with toolbar actions"), |root| {
+        for (key, action) in [("s-home-create-space", "createSpace"), ("s-home-import-studio", "importSpace")] {
+            let button = keyed(root, key).unwrap_or_else(|| panic!("a {key} button somewhere in the tree"));
+            assert!(matches!(&button.component, semio_framework_ui_contract::Component::Button(_)));
+            let binding = button.bindings.get(0).expect("toolbar button carries action");
+            assert_eq!(binding.action.scope.as_str(), S_HOME_CONTROLLER_ID);
+            assert_eq!(binding.action.name.as_str(), action);
+            assert!(binding.args.is_none(), "an empty-args dispatch opens the dialog / asks the host for the file");
+        }
     });
+}
+
+#[semio_framework_async_macros::async_test]
+async fn german_toolbar_and_removal_labels_resolve() {
+    let json = project(render_rows_wrapped(&[one_local_row()], &HomeTableLabels::NATIVE_DE, &SHomeLabels::NATIVE_DE, &TreeWindows::unhosted()).expect("German Home body"));
+    assert!(json.contains("Studio importieren") && json.contains("Space erstellen") && json.contains("Aus Home entfernen"), "German toolbar and removal labels must resolve: {json}");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn empty_catalog_still_renders_the_create_space_button() {
     observe(render_rows_wrapped_for_test(&[]).await.expect("empty Home rows with create action"), |root| {
-        assert!(root.children.iter().any(|child| matches!(&child.component, semio_framework_ui_contract::Component::Button(_))), "the create button must survive the empty-table branch too");
+        assert!(keyed(root, "s-home-create-space").is_some_and(|node| matches!(&node.component, semio_framework_ui_contract::Component::Button(_))), "the create button must survive the empty-table branch too");
+        assert!(keyed(root, "s-home-import-studio").is_some(), "the import button must survive the empty-table branch too");
     });
 }
 
@@ -228,9 +247,9 @@ async fn render_rows_wrapped_for_test(rows: &[crate::HomeSpaceRow]) -> semio_fra
 async fn ephemeral_row_offers_promote_and_persist_not_share() {
     observe(rows(&TreeWindows::unhosted(), &[one_ephemeral_row()], &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN).expect("ephemeral Home row"), |root| {
         let buttons = buttons(row(root, "space:sp-draft"));
-        assert_eq!(buttons.len(), 3, "ephemeral rows offer open + promote + persist");
+        assert_eq!(buttons.len(), 4, "ephemeral rows offer open + promote + persist + remove from Home");
         let names: Vec<&str> = buttons.iter().map(|binding| binding.action.name.as_str()).collect();
-        assert!(names.contains(&"openSpace") && names.contains(&"promoteToHubSpace") && names.contains(&"persistLocally"), "{names:?}");
+        assert!(names.contains(&"openSpace") && names.contains(&"promoteToHubSpace") && names.contains(&"persistLocally") && names.contains(&"deleteVirtualFileSystemNode"), "{names:?}");
         assert!(!names.contains(&"shareSpace") && !names.contains(&"deleteSpace"), "{names:?}");
     });
 }

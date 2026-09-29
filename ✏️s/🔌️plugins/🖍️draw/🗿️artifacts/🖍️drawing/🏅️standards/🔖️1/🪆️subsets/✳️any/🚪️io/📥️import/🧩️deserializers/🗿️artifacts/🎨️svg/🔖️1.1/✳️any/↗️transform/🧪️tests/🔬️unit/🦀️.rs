@@ -8,5 +8,4 @@ fn svg_transform_fixtures_retain_editable_affines() {
         let matrix=crate::schema::drawing_transform_to_matrix(&result.unwrap());
         for (actual,expected) in matrix.iter().zip(case["matrix"].as_array().unwrap()) {assert!((actual-expected.as_f64().unwrap()).abs()<1e-10,"{}",case["name"]);}
     }
-    eprintln!("[DEBUG] editable SVG transform fixtures preserve order, centered rotation, shear, reflections, and collapsed axes");
 }

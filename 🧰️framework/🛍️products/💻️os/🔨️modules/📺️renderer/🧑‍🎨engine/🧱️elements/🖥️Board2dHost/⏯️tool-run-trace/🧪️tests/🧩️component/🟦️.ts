@@ -1,4 +1,4 @@
-/** @emoji 🧪️ Laws of the board-2d trace footprints against the language-neutral board-2d lane contract (the Rust
+/** 🧪️ Laws of the board-2d trace footprints against the language-neutral board-2d lane contract (the Rust
  * `board2d_tool_run_trace_shapes` pins the same rows), and of the layer paint over the contract's placement lane: every
  * placement record fills its kind's footprint path once. */
 import { describe, expect, it } from "vitest";

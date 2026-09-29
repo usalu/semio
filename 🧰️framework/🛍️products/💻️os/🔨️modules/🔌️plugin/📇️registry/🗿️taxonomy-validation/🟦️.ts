@@ -10,7 +10,7 @@ import type { SemanticFacetPrimaryFileProjectionContract } from "../../../../../
 
 //#endregion 🎮️PlaygroundSession
 
-/** @emoji 🚦️ Cross-checks the flattened playground catalog for global uniqueness, multi-app crate discipline, and resolvable file-backed asset declarations; returns human-readable violations.
+/** 🚦️ Cross-checks the flattened playground catalog for global uniqueness, multi-app crate discipline, and resolvable file-backed asset declarations; returns human-readable violations.
  *
  * `hostPluginIds` names the plugin(s) whose crate declares `[package.metadata.semio].host`. The
  * multi-app rule below must not fire on that crate's SHELL row: `defaultHostVariant`
@@ -25,7 +25,7 @@ export function validatePlaygroundRegistry(playgrounds: PlaygroundEntry[], repoR
   const variantOwners = new Map<string, string>();
   const aliasOwners = new Map<string, string>();
   const portOwners = new Map<string, string>();
-  /** @emoji 🌐️ Every individual port (single-user `ports.react`/`ports.wgpu` plus every
+  /** 🌐️ Every individual port (single-user `ports.react`/`ports.wgpu` plus every
    * `userPorts.react[]`/`userPorts.wgpu[]` entry) across the whole catalog, keyed by the raw port
    * number — a dev machine has exactly one TCP namespace, so no two rows may ever claim the same port
    * regardless of which renderer or user slot it's for. */
@@ -88,13 +88,13 @@ export function validatePlaygroundRegistry(playgrounds: PlaygroundEntry[], repoR
 
 
 //#region 🗿️TaxonomyValidator
-/** @emoji 🗿️ Every artifact node must carry the completeness taxonomy component slots (incl. `🧬️mutations` + `⚙️engine`) — sourced from
+/** 🗿️ Every artifact node must carry the completeness taxonomy component slots (incl. `🧬️mutations` + `⚙️engine`) — sourced from
  * `🔣️taxonomy.json` (single vocabulary source of truth, see master ticket
  * `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`; this used to be an independently
  * hand-maintained copy, which is exactly the drift `🔣️taxonomy.json` exists to prevent). */
 export const TAXONOMY_ARTIFACT_COMPONENTS = TAXONOMY.artifactComponentDirs;
 
-/** @emoji 🪆️ The facets a SUBSET owns (`🔣️taxonomy.json` `subsetComponentDirs`) — where `🧬️schema`
+/** 🪆️ The facets a SUBSET owns (`🔣️taxonomy.json` `subsetComponentDirs`) — where `🧬️schema`
  * and `🚪️io` actually live since the W3 standards/subsets nesting. */
 export const TAXONOMY_SUBSET_COMPONENTS = TAXONOMY.subsetComponentDirs;
 
@@ -112,11 +112,11 @@ export const TAXONOMY_CONFIG_CHILD_DIRS = TAXONOMY.configChildDirs ?? [];
 
 export const TAXONOMY_PRESENCE_CHILD_DIRS = TAXONOMY.presenceChildDirs ?? [];
 
-/** @emoji 🎭️ A mode owns its windows plus its own three state lanes — the completeness set the
+/** 🎭️ A mode owns its windows plus its own three state lanes — the completeness set the
  * taxonomy declares for every `🎭️modes/<mode>/` node. */
 export const TAXONOMY_MODE_CHILDREN = TAXONOMY.modeChildDirs ?? [];
 
-/** @emoji 🧬️ Leaf filenames one `🧬️schema` facet must carry, resolved through the facet's **declared
+/** 🧬️ Leaf filenames one `🧬️schema` facet must carry, resolved through the facet's **declared
  * kind** (`🔣️taxonomy.json` `schemaFacetKinds`), never through the flat `schemaFormats` map. A
  * `🧬️data` facet owns the five data projections; `📜️.wit` belongs to the `📜️interface` kind, which the
  * taxonomy grants to exactly the two enumerated `facetPathIdentities` — so demanding a `📜️.wit` leaf
@@ -157,10 +157,10 @@ export const LEGACY_WASM_DIR = "🕸️wasm";
 
 export const TAXONOMY_TS_LEAF_FILENAME = primaryFilenameForKind(TAXONOMY.ecosystems["🟦️typescript"].componentFileKindId);
 
-/** @emoji 🪟️ A window dir may only contain these children, each itself a `🦀️.rs` leaf. */
+/** 🪟️ A window dir may only contain these children, each itself a `🦀️.rs` leaf. */
 export const TAXONOMY_WINDOW_CHILDREN = new Set(TAXONOMY.windowChildDirs);
 
-/** @emoji 🧪️ The test-ownership dirs any taxonomy owner may carry beside its facets. `🔣️taxonomy.json`
+/** 🧪️ The test-ownership dirs any taxonomy owner may carry beside its facets. `🔣️taxonomy.json`
  * `testOwnerKinds` names `🪟️windows` an owner kind, so a window owns its own `🧪️tests`/`🧫️fixtures`
  * exactly as a subset or a surface does; they are ownership dirs, never window facets. */
 export const TAXONOMY_TEST_OWNERSHIP_DIRS: ReadonlySet<string> = new Set(TAXONOMY.testOwnerKinds.includes(TAXONOMY.windowsDirName) ? [TAXONOMY.testsDirName, TAXONOMY.testFixturesDirName] : []);
@@ -170,7 +170,7 @@ export const TAXONOMY_LEAF_FILENAME = primaryFilenameForKind(TAXONOMY.ecosystems
 /** 🥒️ Gherkin feature leaf that marks a directory as a repository test-platform case. */
 export const TEST_FEATURE_FILENAME = primaryFilenameForKind(TAXONOMY.testFeatureFileKindId);
 
-/** @emoji 🧭️ One `semantic-facet-primary-file` projection contract, read through its own discriminant.
+/** 🧭️ One `semantic-facet-primary-file` projection contract, read through its own discriminant.
  *
  * `semanticOwnedFileProjectionContracts` holds a union, and its `exact-owner-path-catalog` member
  * names `sourceBasenames` rather than one `sourceFilename` — so a lookup that simply reads
@@ -192,7 +192,7 @@ function semanticFacetPrimaryProjection(contractId: string): SemanticFacetPrimar
  * `PluginManifest::commands` that no plugin actually offers. */
 export const PLUGIN_EMPTY_LANE_FILENAME = semanticFacetPrimaryProjection("artifact-empty-facet-primary-markdown-v1").sourceFilename;
 
-/** @emoji 🚪️ Rust entry filename and its Shape V2 home relative to the owner root. */
+/** 🚪️ Rust entry filename and its Shape V2 home relative to the owner root. */
 export const RUST_LIBRARY_ENTRY_CONTRACT_ID = TAXONOMY.ecosystems[RUST_LANG].entryContractIds.find((contractId) => TAXONOMY.configurableEntryContracts[contractId]?.role === "library");
 
 if (!RUST_LIBRARY_ENTRY_CONTRACT_ID) throw new Error("📇️registry: Rust ecosystem must declare a library entry contract");
@@ -201,7 +201,7 @@ export const RUST_ENTRY_FILENAME = TAXONOMY.configurableEntryContracts[RUST_LIBR
 
 export const RUST_ENTRY_DIR_FROM_OWNER = TAXONOMY.rustEntryPathRules.entryDirFromOwner.split("/");
 
-/** @emoji 📌️ The empty-facet marker a surface/mode/window lane carries, resolved from the SAME
+/** 📌️ The empty-facet marker a surface/mode/window lane carries, resolved from the SAME
  * projection contract as `PLUGIN_EMPTY_LANE_FILENAME`. `windowEmptyFacetFileKindId` names the file
  * KIND (`markdown`), whose primary filename is the generic `📝️.md`; the contract names the FILE
  * (`📌️.empty.md`) and cites that kind as its `fileKindAuthority`. Deriving the name from the kind
@@ -210,7 +210,7 @@ export const RUST_ENTRY_DIR_FROM_OWNER = TAXONOMY.rustEntryPathRules.entryDirFro
 export const WINDOW_EMPTY_FACET_FILENAME = PLUGIN_EMPTY_LANE_FILENAME;
 
 
-/** @emoji 🧭️ Plugin roots discovered via the shared package contract (`role = "plugin"`, rust, owner
+/** 🧭️ Plugin roots discovered via the shared package contract (`role = "plugin"`, rust, owner
  * sitting directly under one of `taxonomy.pluginAreas`). Drives the taxonomy tree audit below. */
 export function findNewContractPluginRoots(repoRoot: string): { pluginId: string; pluginRoot: string }[] {
   return discoverPackages(repoRoot, TAXONOMY)
@@ -226,7 +226,7 @@ export function listDirs(dir: string): string[] {
 }
 
 
-/** @emoji 👁️✏️ Every `👁️viewer`/`✏️editor` surface dir under one plugin's
+/** 👁️✏️ Every `👁️viewer`/`✏️editor` surface dir under one plugin's
  * `🗿️artifacts/<a>/🏅️standards/<s>/🪆️subsets/<sub>/` tree — the W3 dissolution replacement for the old
  * `🎛️apps/<app>/` root. Paired with a `"<subset>/<roleDirName>"` label for findings. */
 export function surfaceDirsForPlugin(pluginRoot: string): { abs: string; label: string }[] {
@@ -360,7 +360,7 @@ export function validatePluginContractRoot(pluginRoot: string, pluginId: string)
 }
 
 
-/** @emoji 🚦️ Structural audit of one migrated plugin's taxonomy tree, entirely against
+/** 🚦️ Structural audit of one migrated plugin's taxonomy tree, entirely against
  * `🔣️taxonomy.json`'s vocabulary. Severity is decided by the caller from the plugin area's declared
  * maturity: warn while it is `legacy`/`mixed`, hard failure once it is `clean`. */
 export function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {

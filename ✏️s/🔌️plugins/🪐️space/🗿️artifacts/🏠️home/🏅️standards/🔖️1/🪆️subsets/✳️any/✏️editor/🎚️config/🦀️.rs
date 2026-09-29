@@ -3,115 +3,12 @@
 //! never artifact-scoped).
 //!
 //! 🕳️ `SHomeSnapshot` is a two-field counter document (`schema` + `catalog_generation`) with no tree
-//! structure, id generation, or media import/export of its own — the original monolith never factored
-//! out a pure `empty_home_document()`/compute helper (every call site builds the literal
-//! `SHomeSnapshot { schema: "s.home".into(), catalog_generation: N }` directly), so this app has no
-//! document-side `⚙️engine` node under `🗿️artifacts/🏠️home`. What this file owns is `HomeConfig` — the
-//! Home launcher's real `ArtifactEditor::Config`: the folded hub directory read model
-//! (ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C1/§C6).
+//! structure, id generation, or media import/export of its own, so this app has no document-side `⚙️engine` node under
+//! `🗿️artifacts/🏠️home`. What this file owns is `HomeConfig` — the Home launcher's real `ArtifactEditor::Config`: the
+//! human's own, undoable Home choices, today the local-studio tombstones. The folded hub directory is DERIVED hub state
+//! and lives in the app transient lane instead (`🫧️transient`), never in this history.
 
-use crate::standards::v1::subsets::any::schema::mutations::text::SHomeMutation;
-use semio_framework_plugin::{AppEvent, Emit, Fault, NoDraftMutation, ToolExecutionContract};
-use std::collections::BTreeMap;
-
-/// 🧾️ Exact terminal proof that one authenticated directory frontier is the retained Home config.
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-pub struct DirectoryProjectionReceiptV1 {
-    pub schema: String,
-    pub session_binding_sha256: String,
-    pub authorization_generation: u64,
-    pub through_seq_inclusive: u64,
-    pub receipt_sha256: String,
-}
-
-impl DirectoryProjectionReceiptV1 {
-    pub const SCHEMA: &'static str = "semio.space.home.directory-projection-receipt.v1";
-
-    /// 🛡️ Validates the complete browser-visible receipt without admitting resume-only fields.
-    pub fn validate(&self) -> bool {
-        self.schema == Self::SCHEMA
-            && directory_sha256_is_valid(&self.session_binding_sha256)
-            && self.authorization_generation > 0
-            && self.authorization_generation <= store::os_directory::DOCUMENT_OPEN_MAX_SAFE_INTEGER
-            && self.through_seq_inclusive <= store::os_directory::DOCUMENT_OPEN_MAX_SAFE_INTEGER
-            && directory_sha256_is_valid(&self.receipt_sha256)
-    }
-}
-
-//#region 🔖️DirectoryJson
-/// 📇️ `store::os_directory::DirectoryReadModel`/`DirectorySpace` carry no `Serialize`/`Deserialize`
-/// derive of their own (framework-owned, `🧰️framework/**` is outside this lease) and the `dsl` derive
-/// has no opaque/json escape hatch for a nested non-`DslField` type (checked: `#[dsl(...)]` recognizes
-/// `key/positional/list/tuple/statements/block/base64/flatten/table/unit/angle/refs/defines/lang/
-/// lang_from/coord/dir` only — no `json`/`opaque`/`blob`, and `base64` is documented as `Vec<u8>`-only).
-/// Mirrors the sibling `🔱️trinity/🔌️jack` plugin's own `JackConfig.jack_result_json: String`
-/// convention instead: the DSL-layer field stays a plain `String`, the rich-type round trip happens by
-/// hand, entirely inside this file. `SpaceView`/`MemberView`/`UserView` (the read model's own leaves)
-/// already derive `Serialize`/`Deserialize`; only the two WRAPPER structs need a hand-written wire shape.
-#[derive(value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-struct DirectorySpaceWire {
-    view: store::os_directory::SpaceView,
-    members: Vec<store::os_directory::MemberView>,
-    documents: Vec<store::os_directory::DocumentDescriptor>,
-    indexed_documents: Vec<store::os_directory::DirectoryIndexedDocumentViewV1>,
-}
-
-#[derive(value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-struct DirectoryReadModelWire {
-    spaces: BTreeMap<String, DirectorySpaceWire>,
-    cursor: u64,
-    users: BTreeMap<String, store::os_directory::UserView>,
-}
-
-/// 📇️ Encodes a `DirectoryReadModel` as the `directory_json` DSL field's wire value.
-pub(crate) fn directory_to_json(model: &store::os_directory::DirectoryReadModel) -> String {
-    let wire = DirectoryReadModelWire {
-        spaces: model
-            .spaces
-            .iter()
-            .map(|(id, space)| (id.clone(), DirectorySpaceWire { view: space.view.clone(), members: space.members.clone(), documents: space.documents.clone(), indexed_documents: space.indexed_documents.clone() }))
-            .collect(),
-        cursor: model.cursor,
-        users: model.users.clone(),
-    };
-    pack::to_json_string(&wire)
-}
-
-/// 📇️ Decodes `directory_json` without converting persisted corruption into an empty projection.
-fn directory_from_json(json: &str) -> Result<store::os_directory::DirectoryReadModel, Fault> {
-    let wire: DirectoryReadModelWire = pack::from_json_str(json).map_err(|_| Fault::from("s.home.directory-projection-malformed"))?;
-    Ok(store::os_directory::DirectoryReadModel {
-        spaces: wire
-            .spaces
-            .into_iter()
-            .map(|(id, space)| (id, store::os_directory::DirectorySpace { view: space.view, members: space.members, documents: space.documents, indexed_documents: space.indexed_documents }))
-            .collect(),
-        cursor: wire.cursor,
-        users: wire.users,
-    })
-}
-
-fn directory_sha256_is_valid(value: &str) -> bool {
-    value.len() == 64 && value.bytes().all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))
-}
-
-/// 🛡️ Validates the complete persisted projection authority, including the intentional unbound initial state.
-pub(crate) fn directory_projection_state_is_valid(directory_json: &str, session_binding_sha256: &str, authorization_generation: u64, receipt_sha256: &str) -> bool {
-    if directory_from_json(directory_json).is_err() {
-        return false;
-    }
-    if session_binding_sha256.is_empty() && authorization_generation == 0 && receipt_sha256.is_empty() {
-        return true;
-    }
-    authorization_generation > 0
-        && authorization_generation <= store::os_directory::DOCUMENT_OPEN_MAX_SAFE_INTEGER
-        && directory_sha256_is_valid(session_binding_sha256)
-        && directory_sha256_is_valid(receipt_sha256)
-}
-//#endregion 🔖️DirectoryJson
+use semio_framework_plugin::ToolExecutionContract;
 
 //#region 🔖️Config
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslArtifact)]
@@ -120,92 +17,31 @@ pub(crate) fn directory_projection_state_is_valid(directory_json: &str, session_
 #[dsl(extension = "homecfg")]
 #[dsl(layout = "lines")]
 pub struct HomeConfig {
-    /// 📇️ JSON-serialized `DirectoryReadModel` (see `🔖️DirectoryJson` above), read via `directory()`.
-    /// No optimistic mutation (contract §C6): the ONLY writer is `HomeConfigMutation::ReplaceDirectoryProjection`,
-    /// sealed from one authenticated `DirectoryEventPageV1` together with the three receipt fields below.
-    pub directory_json: String,
-    /// 🔐️ Opaque digest binding the accepted page frontier to one authenticated hub session.
-    pub directory_session_binding_sha256: String,
-    /// 🛂️ Authorization generation under which the current projection was filtered.
-    pub directory_authorization_generation: u64,
-    /// 🧾️ Receipt of the last durably accepted directory page.
-    pub directory_receipt_sha256: String,
+    /// 🪦️ Tombstones of the local-only studios the human retired from Home (`deleteVirtualFileSystemNode`), sorted and
+    /// unique. Retiring never erases the studio's catalog document or its history: Home stops listing it, and undoing
+    /// the retirement lists it again. Written only by `HomeConfigMutation::RetireLocalStudio`/`RestoreLocalStudio`.
+    #[value(default)]
+    pub retired_local_studio_ids: Vec<String>,
 }
 
 impl HomeConfig {
-    /// 📇️ Decodes the folded hub directory read model.
-    pub fn directory(&self) -> Result<store::os_directory::DirectoryReadModel, Fault> {
-        directory_from_json(&self.directory_json)
+    /// 🪦️ Whether the human retired the local-only studio `space_id` from Home.
+    pub fn is_local_studio_retired(&self, space_id: &str) -> bool {
+        self.retired_local_studio_ids.binary_search_by(|retired| retired.as_str().cmp(space_id)).is_ok()
     }
 
-    /// 🧾️ Projects the retained config's exact terminal acknowledgement authority.
-    pub fn directory_projection_receipt(&self) -> Option<DirectoryProjectionReceiptV1> {
-        let through_seq_inclusive = self.directory().ok()?.cursor;
-        let receipt = DirectoryProjectionReceiptV1 {
-            schema: DirectoryProjectionReceiptV1::SCHEMA.into(),
-            session_binding_sha256: self.directory_session_binding_sha256.clone(),
-            authorization_generation: self.directory_authorization_generation,
-            through_seq_inclusive,
-            receipt_sha256: self.directory_receipt_sha256.clone(),
-        };
-        receipt.validate().then_some(receipt)
-    }
-
-    /// 📄️ Applies one authenticated page to a replacement config without exposing partial folds. A page from the origin
-    /// (`after_seq_exclusive == 0`) rebuilds the projection under any authority: the reader's visible set can change
-    /// retroactively (a human added to an existing space sees that space's earlier events), so the worker re-reads the
-    /// directory from the origin on the hub's `access-changed` signal; a later page must continue the held frontier.
-    pub fn apply_directory_event_page(&self, page: &store::os_directory::DirectoryEventPageV1) -> Result<Self, Fault> {
-        page.validate().map_err(|_| Fault::from("s.home.directory-event-page-invalid"))?;
-        let current = self.directory()?;
-        let same_authority = self.directory_session_binding_sha256 == page.session_binding_sha256
-            && self.directory_authorization_generation == page.authorization_generation;
-        if same_authority && current.cursor == page.through_seq_inclusive && self.directory_receipt_sha256 == page.receipt_sha256 {
-            return Ok(self.clone());
-        }
-        let mut directory = if page.after_seq_exclusive == 0 {
-            store::os_directory::DirectoryReadModel::default()
-        } else if !same_authority {
-            return Err(Fault::from("s.home.directory-event-page-rebootstrap-required"));
-        } else if page.after_seq_exclusive != current.cursor {
-            return Err(Fault::from("s.home.directory-event-page-frontier-race"));
-        } else {
-            current
-        };
-        for event in &page.events {
-            directory = store::os_directory::fold(directory, event);
-        }
-        directory.cursor = page.through_seq_inclusive;
+    /// 🪦️ The config with `space_id` retired (`true`) or restored (`false`); `None` when that is already its state.
+    pub fn with_local_studio_retired(&self, space_id: &str, retired: bool) -> Option<Self> {
+        let position = self.retired_local_studio_ids.binary_search_by(|entry| entry.as_str().cmp(space_id));
         let mut next = self.clone();
-        next.directory_json = directory_to_json(&directory);
-        next.directory_session_binding_sha256 = page.session_binding_sha256.clone();
-        next.directory_authorization_generation = page.authorization_generation;
-        next.directory_receipt_sha256 = page.receipt_sha256.clone();
-        Ok(next)
-    }
-
-    /// 📬️ The whole config-lane answer to one sealed page, for BOTH Home surfaces: the replacement projection (none
-    /// when the page is the frontier already held) and the typed terminal receipt the host acknowledges the page by.
-    /// The editor's `applyDirectoryEventPage` and the viewer's retained twin answer through this one function, so the
-    /// read-only Home lists exactly the rows the editor lists (ticket 26/09/23 S16).
-    pub fn directory_event_page_emit(&self, page_json: &str) -> Result<Emit<SHomeMutation, HomeConfigMutation, NoDraftMutation>, Fault> {
-        let page = store::os_directory::DirectoryEventPageV1::parse_canonical_json(page_json).map_err(|_| Fault::from("s.home.directory-event-page-invalid"))?;
-        let next = self.apply_directory_event_page(&page)?;
-        let receipt = next.directory_projection_receipt().ok_or_else(|| Fault::from("s.home.directory-projection-receipt-invalid"))?;
-        let event = AppEvent { kind: DirectoryProjectionReceiptV1::SCHEMA.into(), payload: protocol::ToValue::to_value(&receipt) };
-        if next == *self {
-            return Ok(Emit { events: vec![event], ..Default::default() });
+        match (position, retired) {
+            (Err(index), true) => next.retired_local_studio_ids.insert(index, space_id.to_owned()),
+            (Ok(index), false) => {
+                next.retired_local_studio_ids.remove(index);
+            }
+            _ => return None,
         }
-        Ok(Emit {
-            config_mutations: vec![HomeConfigMutation::ReplaceDirectoryProjection {
-                directory_json: next.directory_json,
-                session_binding_sha256: next.directory_session_binding_sha256,
-                authorization_generation: next.directory_authorization_generation,
-                receipt_sha256: next.directory_receipt_sha256,
-            }],
-            events: vec![event],
-            ..Default::default()
-        })
+        Some(next)
     }
 }
 
@@ -255,12 +91,7 @@ impl store::ArtifactPack for HomeConfig {
 
 impl Default for HomeConfig {
     fn default() -> Self {
-        Self {
-            directory_json: directory_to_json(&store::os_directory::DirectoryReadModel::default()),
-            directory_session_binding_sha256: String::new(),
-            directory_authorization_generation: 0,
-            directory_receipt_sha256: String::new(),
-        }
+        Self { retired_local_studio_ids: Vec::new() }
     }
 }
 
@@ -268,7 +99,7 @@ store::impl_whole_record_config!(HomeConfig);
 //#endregion 🔖️Config
 
 //#region 🔖️ConfigOperations
-/// @emoji 🧮️ `HomeConfig`'s operation enum — mirrors `engine::space::config::SpaceConfigMutation`'s
+/// 🧮️ `HomeConfig`'s operation enum — mirrors `engine::space::config::SpaceConfigMutation`'s
 /// whole-record-diff design (see its doc comment for the full rationale).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps)]
 pub enum HomeConfigMutation {
@@ -277,13 +108,15 @@ pub enum HomeConfigMutation {
         #[dsl(block)]
         config: HomeConfig,
     },
-    /// 📄️ Atomically replaces the page-derived projection and its authenticated resume authority.
-    #[dsl(key = "replace-directory-projection")]
-    ReplaceDirectoryProjection {
-        directory_json: String,
-        session_binding_sha256: String,
-        authorization_generation: u64,
-        receipt_sha256: String,
+    /// 🪦️ Retires one local-only studio from Home — a tombstone event; the studio's catalog document is never erased.
+    #[dsl(key = "retire-local-studio")]
+    RetireLocalStudio {
+        space_id: String,
+    },
+    /// ♻️ Lists one retired local-only studio in Home again — the exact inverse of `RetireLocalStudio`.
+    #[dsl(key = "restore-local-studio")]
+    RestoreLocalStudio {
+        space_id: String,
     },
 }
 
@@ -349,36 +182,46 @@ impl protocol::Mutation<HomeConfig> for HomeConfigMutation {
     /// variant below has an authored leaf directory on disk yet.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-snapshot", semantic_kind: "set-snapshot", display_name: "Set Snapshot", emoji: "⚙️", aggregate_variant: "Snapshot", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️replace-directory-projection", semantic_kind: "replace-directory-projection", display_name: "Replace Directory Projection", emoji: "📄️", aggregate_variant: "ReplaceDirectoryProjection", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🪦️retire-local-studio", semantic_kind: "retire-local-studio", display_name: "Retire Local Studio", emoji: "🪦️", aggregate_variant: "RetireLocalStudio", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied, protocol::MutationOutcomeClass::NoOp, protocol::MutationOutcomeClass::Rejected], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/♻️restore-local-studio", semantic_kind: "restore-local-studio", display_name: "Restore Local Studio", emoji: "♻️", aggregate_variant: "RestoreLocalStudio", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied, protocol::MutationOutcomeClass::NoOp, protocol::MutationOutcomeClass::Rejected], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
     ];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
             HomeConfigMutation::Snapshot { .. } => &Self::DESCRIPTORS[0],
-            HomeConfigMutation::ReplaceDirectoryProjection { .. } => &Self::DESCRIPTORS[1],
+            HomeConfigMutation::RetireLocalStudio { .. } => &Self::DESCRIPTORS[1],
+            HomeConfigMutation::RestoreLocalStudio { .. } => &Self::DESCRIPTORS[2],
         }
     }
 
     type Diff = HomeConfig;
 
     fn diff(&self, base: &HomeConfig) -> protocol::MutationOutcome<HomeConfig> {
-        let mut next = base.clone();
         match self {
-            HomeConfigMutation::Snapshot { config } => return protocol::MutationOutcome::new(config.clone()),
-            HomeConfigMutation::ReplaceDirectoryProjection { directory_json, session_binding_sha256, authorization_generation, receipt_sha256 } => {
-                if directory_projection_state_is_valid(directory_json, session_binding_sha256, *authorization_generation, receipt_sha256) {
-                    next.directory_json = directory_json.clone();
-                    next.directory_session_binding_sha256 = session_binding_sha256.clone();
-                    next.directory_authorization_generation = *authorization_generation;
-                    next.directory_receipt_sha256 = receipt_sha256.clone();
+            HomeConfigMutation::Snapshot { config } => protocol::MutationOutcome::new(config.clone()),
+            HomeConfigMutation::RetireLocalStudio { space_id } | HomeConfigMutation::RestoreLocalStudio { space_id } => {
+                let retired = matches!(self, HomeConfigMutation::RetireLocalStudio { .. });
+                match base.with_local_studio_retired(space_id, retired) {
+                    Some(candidate) if local_studio_tombstones_are_admissible(&candidate) => protocol::MutationOutcome::new(candidate),
+                    Some(_) => protocol::MutationOutcome::new(base.clone()).absorb_messages([protocol::MutationMessage::error("s.home.local-studio-tombstone-refused", format!("Local studio {space_id} cannot be retired: its id is not admissible or {HOME_RETIRED_LOCAL_STUDIOS_MAXIMUM} studios are retired already.")).at(["retiredLocalStudioIds"])]),
+                    None => protocol::MutationOutcome::new(base.clone()).warn("mutation.no-op", format!("Local studio {space_id} is already {}.", if retired { "retired" } else { "listed" })),
                 }
             }
         }
-        protocol::MutationOutcome::new(next)
     }
 
     fn inverse(&self, base: &HomeConfig) -> Vec<Self> {
-        vec![HomeConfigMutation::Snapshot { config: base.clone() }]
+        match self {
+            HomeConfigMutation::RetireLocalStudio { space_id } | HomeConfigMutation::RestoreLocalStudio { space_id } => {
+                let space_id = space_id.clone();
+                if base.is_local_studio_retired(&space_id) {
+                    vec![HomeConfigMutation::RetireLocalStudio { space_id }]
+                } else {
+                    vec![HomeConfigMutation::RestoreLocalStudio { space_id }]
+                }
+            }
+            HomeConfigMutation::Snapshot { .. } => vec![HomeConfigMutation::Snapshot { config: base.clone() }],
+        }
     }
 }
 //#endregion 🔖️ConfigOperations
@@ -389,27 +232,39 @@ impl protocol::Mutation<HomeConfig> for HomeConfigMutation {
 /// would refuse an ordinary page of a dozen spaces (ticket 26/09/18 S4). Shared by both Home surfaces.
 pub const HOME_DIRECTORY_PAGE_BYTES: usize = 128 * 1024;
 /// 📏️ Home's config lane is a ONE-ITEM retained lane, and `ArtifactStoreOneItemFootprint::is_admissible`
-/// refuses any item declaring more than [`store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES`] (1 MiB). These
-/// two constants were 4 MiB and 16 MiB, so `HomeConfigPreparationFactory::preflight`'s footprint could
-/// never be admitted and every retained config gesture died with "one-item preparation footprint exceeds
-/// its fixed item or byte capacity" — invisible while `applyDirectoryEventPage` was
-/// `BatchOnlyPendingRewrite` and therefore never reached this lane at all (ticket 26/09/18 S4).
-/// The directory projection they carry is a few KiB for an ordinary hub, and the hub pages it, so the
-/// store's own ceiling is the honest budget rather than an aspirational one.
+/// refuses any item declaring more than [`store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES`] (1 MiB). The config holds the
+/// local-studio tombstones only — at most [`HOME_RETIRED_LOCAL_STUDIOS_MAXIMUM`] ids of at most
+/// [`HOME_RETIRED_LOCAL_STUDIO_ID_BYTES`] each, which is exactly that ceiling — so the store's own bound is the honest
+/// base and step budget. The hub directory never travels this lane (`🫧️transient`).
 pub const HOME_CONFIG_BASE_BYTES: usize = store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES;
 pub const HOME_CONFIG_STEP_BYTES: usize = store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES;
+/// 📏️ The largest config value one retained Home config mutation carries: one local-studio tombstone id.
+pub const HOME_CONFIG_VALUE_BYTES: usize = HOME_RETIRED_LOCAL_STUDIO_ID_BYTES;
+/// 🪦️ The most local-only studios Home keeps retired at once, and the longest studio id one tombstone names (the public
+/// invocation scalar ceiling every Home route admits).
+pub const HOME_RETIRED_LOCAL_STUDIOS_MAXIMUM: usize = 256;
+pub const HOME_RETIRED_LOCAL_STUDIO_ID_BYTES: usize = semio_framework::PUBLIC_INVOCATION_STRING_BYTES;
 
-/// ⏱️ The execution contract of every Home retained route, editor and viewer alike: one page per operation, the config
-/// store's own step budget, resumable so a page that outlives one turn continues from its checkpoint.
+/// 🪦️ Whether every tombstone of `config` names an admissible studio id and the set stays within its ceiling.
+pub fn local_studio_tombstones_are_admissible(config: &HomeConfig) -> bool {
+    config.retired_local_studio_ids.len() <= HOME_RETIRED_LOCAL_STUDIOS_MAXIMUM && config.retired_local_studio_ids.iter().all(|space_id| local_studio_id_is_admissible(space_id))
+}
+
+/// 🪪️ A local studio id one tombstone may name: non-empty, no control characters, within the scalar ceiling.
+pub fn local_studio_id_is_admissible(space_id: &str) -> bool {
+    !space_id.is_empty() && space_id.len() <= HOME_RETIRED_LOCAL_STUDIO_ID_BYTES && !space_id.chars().any(char::is_control)
+}
+
+/// ⏱️ The execution contract of every Home retained route, editor and viewer alike: one page or one gesture per operation,
+/// the config store's own step budget, resumable so work that outlives one turn continues from its checkpoint.
 pub fn home_retained_contract() -> ToolExecutionContract {
     ToolExecutionContract::resumable(HOME_DIRECTORY_PAGE_BYTES, 256, 1, HOME_CONFIG_STEP_BYTES, 7_500, 1, 1)
 }
 //#endregion 📏️RetainedLimits
 
 //#region 📬️ConfigStorePreparation
-/// 📬️ The ONE retained one-item preparation of the Home config lane, shared by BOTH Home surfaces: the editor and
-/// the read-only viewer each fold sealed directory pages into their own config store through it, so a viewer
-/// lists the same hub rows as the editor (ticket 26/09/23 S16).
+/// 📬️ The ONE retained one-item preparation of the Home config lane, shared by BOTH Home surfaces (they share `HomeConfig`):
+/// it seals one local-studio tombstone as one point-invertible edit.
 pub struct HomeConfigPreparationFactory;
 
 struct HomeConfigPreparation {
@@ -427,12 +282,7 @@ struct HomeConfigPreparation {
 }
 
 fn home_config_retained_bytes(config: &HomeConfig) -> usize {
-    config
-        .directory_json
-        .len()
-        .saturating_add(config.directory_session_binding_sha256.len())
-        .saturating_add(config.directory_receipt_sha256.len())
-        .saturating_add(size_of_val(&config.directory_authorization_generation))
+    config.retired_local_studio_ids.iter().map(String::len).sum::<usize>()
 }
 
 fn home_config_edit(forward: HomeConfigMutation, inverse: HomeConfigMutation, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<HomeConfigMutation> {
@@ -469,17 +319,19 @@ fn home_config_edit_bytes(edit: &protocol::Edit<HomeConfigMutation>) -> Result<u
     Ok(bytes)
 }
 
+/// 🛂️ The byte extent and ceiling of the config mutations the retained lane admits: one local-studio tombstone. Every
+/// other mutation (a whole-record `Snapshot`) never travels the retained lane.
+fn home_config_retained_admission(mutation: &HomeConfigMutation) -> Option<(usize, usize)> {
+    match mutation {
+        HomeConfigMutation::RetireLocalStudio { space_id } | HomeConfigMutation::RestoreLocalStudio { space_id } if local_studio_id_is_admissible(space_id) => Some((space_id.len(), HOME_RETIRED_LOCAL_STUDIO_ID_BYTES)),
+        _ => None,
+    }
+}
+
 impl store::ArtifactStoreOneItemPreparationFactory<HomeConfig, HomeConfigMutation> for HomeConfigPreparationFactory {
     fn preflight(&self, mutation: &HomeConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        let (mutation_bytes, maximum_bytes) = match mutation {
-            HomeConfigMutation::ReplaceDirectoryProjection { directory_json, session_binding_sha256, authorization_generation, receipt_sha256 }
-                if *authorization_generation > 0
-                    && directory_json.len() <= HOME_CONFIG_BASE_BYTES
-                    && directory_projection_state_is_valid(directory_json, session_binding_sha256, *authorization_generation, receipt_sha256) =>
-            {
-                (directory_json.len().saturating_add(session_binding_sha256.len()).saturating_add(receipt_sha256.len()).saturating_add(8), HOME_CONFIG_BASE_BYTES + 136)
-            }
-            _ => return Err("Space Home config preparation rejects non-retained mutations".into()),
+        let Some((mutation_bytes, maximum_bytes)) = home_config_retained_admission(mutation) else {
+            return Err("Space Home config preparation rejects non-retained mutations".into());
         };
         if lane != store::HistoryLane::Document || mutation_bytes > maximum_bytes || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
             return Err("Space Home config preparation rejected its lane or byte envelope".into());
@@ -488,15 +340,8 @@ impl store::ArtifactStoreOneItemPreparationFactory<HomeConfig, HomeConfigMutatio
     }
 
     fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<HomeConfig, HomeConfigMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<HomeConfig, HomeConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<HomeConfig, HomeConfigMutation>> {
-        let (mutation_bytes, maximum_bytes) = match &request.mutation {
-            HomeConfigMutation::ReplaceDirectoryProjection { directory_json, session_binding_sha256, authorization_generation, receipt_sha256 }
-                if *authorization_generation > 0
-                    && directory_json.len() <= HOME_CONFIG_BASE_BYTES
-                    && directory_projection_state_is_valid(directory_json, session_binding_sha256, *authorization_generation, receipt_sha256) =>
-            {
-                (directory_json.len().saturating_add(session_binding_sha256.len()).saturating_add(receipt_sha256.len()).saturating_add(8), HOME_CONFIG_BASE_BYTES + 136)
-            }
-            _ => return Err(request),
+        let Some((mutation_bytes, maximum_bytes)) = home_config_retained_admission(&request.mutation) else {
+            return Err(request);
         };
         if request.lane != store::HistoryLane::Document || mutation_bytes > maximum_bytes || request.description.as_ref().is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES {
             return Err(request);
@@ -526,14 +371,15 @@ impl store::ArtifactStoreOneItemPreparation<HomeConfig, HomeConfigMutation> for 
             let base_bytes = home_config_retained_bytes(base);
             if base_bytes > HOME_CONFIG_BASE_BYTES { return Err("Space Home config base exceeds retained byte capacity".into()); }
             let mutation = self.mutation.take().ok_or_else(|| "Space Home config preparation lost its mutation owner".to_string())?;
-            let mut post = base.clone();
-            let inverse = match &mutation {
-                HomeConfigMutation::ReplaceDirectoryProjection { directory_json, session_binding_sha256, authorization_generation, receipt_sha256 } => HomeConfigMutation::ReplaceDirectoryProjection {
-                    directory_json: std::mem::replace(&mut post.directory_json, directory_json.clone()),
-                    session_binding_sha256: std::mem::replace(&mut post.directory_session_binding_sha256, session_binding_sha256.clone()),
-                    authorization_generation: std::mem::replace(&mut post.directory_authorization_generation, *authorization_generation),
-                    receipt_sha256: std::mem::replace(&mut post.directory_receipt_sha256, receipt_sha256.clone()),
-                },
+            let (post, inverse) = match &mutation {
+                HomeConfigMutation::RetireLocalStudio { space_id } | HomeConfigMutation::RestoreLocalStudio { space_id } => {
+                    let post = base
+                        .with_local_studio_retired(space_id, matches!(mutation, HomeConfigMutation::RetireLocalStudio { .. }))
+                        .filter(|candidate| local_studio_tombstones_are_admissible(candidate))
+                        .ok_or_else(|| format!("Space Home config preparation refuses the tombstone of {space_id}: it changes nothing or exceeds its ceiling"))?;
+                    let inverse = <HomeConfigMutation as protocol::Mutation<HomeConfig>>::inverse(&mutation, base).into_iter().next().ok_or_else(|| "Space Home config preparation lost its tombstone inverse".to_string())?;
+                    (post, inverse)
+                }
                 _ => return Err("Space Home config preparation received a non-retained mutation".into()),
             };
             self.candidate = Some((post, inverse, mutation));

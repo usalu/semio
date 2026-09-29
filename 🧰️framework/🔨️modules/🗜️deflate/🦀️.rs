@@ -949,6 +949,9 @@ pub fn deflate(raw: &[u8]) -> Vec<u8> {
 }
 //#endregion 🔖️Deflate
 
+#[path = "🎒️zip/🦀️.rs"]
+pub mod zip_archive;
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

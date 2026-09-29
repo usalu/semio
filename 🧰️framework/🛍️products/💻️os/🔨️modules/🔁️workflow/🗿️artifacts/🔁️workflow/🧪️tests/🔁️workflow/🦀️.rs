@@ -311,5 +311,4 @@ async fn independent_package_fixture_matches_json_oracle() {
     let decoded: WorkflowSnapshot = dsl::os_pack::json::from_json_str(&serde_json::to_string(&oracle).expect("oracle JSON")).expect("domain decoder");
     assert_eq!(decoded, document);
     store::os_store::test_support::assert_dsl_pack_equivalence(&document);
-    println!("[DEBUG] Workflow artifact independent package fixture passed");
 }

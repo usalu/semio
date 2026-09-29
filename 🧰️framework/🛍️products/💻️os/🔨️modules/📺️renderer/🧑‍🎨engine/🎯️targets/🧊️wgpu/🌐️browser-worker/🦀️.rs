@@ -288,6 +288,17 @@ impl BrowserRendererWorker {
         }
     }
 
+    /// 🔢️ The host's frame generation names ITS OWN input state and must be monotonic: every
+    /// event in this batch already advanced it through `enqueue_host_event`, and a frame build,
+    /// a presentation witness and a raster witness are all pinned to it.
+    ///
+    /// 🩸️ This used to ASSIGN the UI isolate's batch counter, which is a different sequence and
+    /// routinely lower — so the host's generation moved backwards on most batches, the in-flight
+    /// frame build was superseded against a generation it had never been admitted at, and no
+    /// build ever completed. Measured on 6118 as `frame build superseded: session generation
+    /// Generation(21) != requested Generation(20)` once per batch, with `render begin` frozen at
+    /// its seven boot surfaces (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+    /// `📓️wgpu-runtime-mailbox-dispatch-2026-09-13.md`).
     #[wasm_bindgen(js_name = enqueueBatch)]
     pub fn enqueue_batch(&mut self, events_json: &str, generation: u64) -> Result<(), JsValue> {
         self.ensure_live()?;
@@ -313,17 +324,6 @@ impl BrowserRendererWorker {
             self.apply_wire_event(event)?;
         }
         if let Some(host) = self.host.as_mut() {
-            // 🔢️ The host's frame generation names ITS OWN input state and must be monotonic: every
-            // event in this batch already advanced it through `enqueue_host_event`, and a frame build,
-            // a presentation witness and a raster witness are all pinned to it.
-            //
-            // 🩸️ This used to ASSIGN the UI isolate's batch counter, which is a different sequence and
-            // routinely lower — so the host's generation moved backwards on most batches, the in-flight
-            // frame build was superseded against a generation it had never been admitted at, and no
-            // build ever completed. Measured on 6118 as `frame build superseded: session generation
-            // Generation(21) != requested Generation(20)` once per batch, with `render begin` frozen at
-            // its seven boot surfaces (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
-            // `📓️wgpu-runtime-mailbox-dispatch-2026-09-13.md`).
             host.scheduler.invalidate(InvalidationReason::INPUT_STATE);
         }
         Ok(())
@@ -337,6 +337,10 @@ impl BrowserRendererWorker {
         serde_json::to_string(&host.runtime.asset_decode_step()).map_err(|error| js_error("asset-decode-result", &error.to_string()))
     }
 
+    /// 🎞️ A live frame build and an unapplied runtime completion each owe the shell another
+    /// frame. Without them a settled browser shell ticks only on input, so a build that needed
+    /// a second step never got one and a queued `DispatchEvents` was never pumped
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-runtime-mailbox-dispatch-2026-09-13.md`).
     pub fn tick(&mut self, _timestamp_ms: f64, _sequence: u64, generation: u64) -> Result<String, JsValue> {
         let _latency = crate::frame_latency::FrameLatencyTimer::start(crate::frame_latency::FrameLatencyAuthority::browser_input_batch(generation), crate::frame_latency::FrameLatencyStage::WorkerTick, 1);
         let _ = crate::os_host::OsHostRetirement::close_abandoned_step();
@@ -380,10 +384,6 @@ impl BrowserRendererWorker {
             BrowserTickOutput {
                 cursor: outcome.cursor_css,
                 fullscreen: host.platform_fullscreen.take(),
-                // 🎞️ A live frame build and an unapplied runtime completion each owe the shell another
-                // frame. Without them a settled browser shell ticks only on input, so a build that needed
-                // a second step never got one and a queued `DispatchEvents` was never pumped
-                // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-runtime-mailbox-dispatch-2026-09-13.md`).
                 request_frame: continue_frame,
                 next_deadline_delay_ms: host.scheduler.next_deadline().map(|deadline| ((deadline.due - host.clock.now_seconds()) * 1000.0).max(0.0)).filter(|delay| delay.is_finite()),
                 continue_frame,
@@ -762,13 +762,13 @@ impl BrowserRendererBootstrap {
         if self.phase != 6 {
             return Err(js_error("boot-phase", "shell boot requested outside its owned phase"));
         }
-        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str("[DEBUG] wgpu-worker boot_shell enter"));
+        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str("[TRACE] wgpu-worker boot_shell enter"));
         declare_boot_subphase("shell-boot:select-program", "enter", 0.0);
         let started = worker_now_ms();
         let result = self.shell.as_mut().expect("bootstrap shell exists").boot().await;
         let elapsed = (worker_now_ms() - started).max(0.0);
         declare_boot_subphase("shell-boot:select-program", "leave", elapsed);
-        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!("[DEBUG] wgpu-worker boot_shell leave {elapsed:.0} ms")));
+        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!("[TRACE] wgpu-worker boot_shell leave {elapsed:.0} ms")));
         result.map_err(|error| js_error("shell-boot", &error.to_string()))?;
         self.phase = 7;
         Ok(self)

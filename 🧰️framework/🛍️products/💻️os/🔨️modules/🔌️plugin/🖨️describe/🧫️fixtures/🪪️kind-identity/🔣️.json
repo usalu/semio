@@ -1,0 +1,89 @@
+{
+  "schema": "semio.plugin.describe.kind-identity-fixture/v1",
+  "cases": [
+    {
+      "name": "presented kind declared with the io schema",
+      "apps": [
+        {
+          "appId": "s.note.note@1/*#editor",
+          "presentedKind": "s.note.note",
+          "presentedSchema": "note.document",
+          "declared": [
+            [
+              "s.note.note",
+              "note.document"
+            ]
+          ]
+        }
+      ],
+      "faults": 0
+    },
+    {
+      "name": "an app presenting no artifact is not judged",
+      "apps": [
+        {
+          "appId": "s.note.note@1/*#viewer",
+          "presentedKind": "",
+          "presentedSchema": "note.document",
+          "declared": []
+        }
+      ],
+      "faults": 0
+    },
+    {
+      "name": "media schema distinct from the store schema",
+      "apps": [
+        {
+          "appId": "s.imperative.procedure@1/*#editor",
+          "presentedKind": "computation.procedure",
+          "presentedSchema": "procedure.document/v1",
+          "declared": [
+            [
+              "computation.procedure",
+              "procedure.document"
+            ]
+          ]
+        }
+      ],
+      "faults": 1
+    },
+    {
+      "name": "presented kind declared by no spec",
+      "apps": [
+        {
+          "appId": "s.fem.fem2d@1/*#editor",
+          "presentedKind": "2d.fem",
+          "presentedSchema": "fem.2d",
+          "declared": [
+            [
+              "computation.fem2d",
+              "computation.fem2d"
+            ]
+          ]
+        }
+      ],
+      "faults": 1
+    },
+    {
+      "name": "a plugin-level spec declares the presented kind",
+      "apps": [
+        {
+          "appId": "s.gis.gismap@1/*#editor",
+          "presentedKind": "s.gis.gismap",
+          "presentedSchema": "gis.map",
+          "declared": [
+            [
+              "2d.image",
+              "raster.document"
+            ],
+            [
+              "s.gis.gismap",
+              "gis.map"
+            ]
+          ]
+        }
+      ],
+      "faults": 0
+    }
+  ]
+}

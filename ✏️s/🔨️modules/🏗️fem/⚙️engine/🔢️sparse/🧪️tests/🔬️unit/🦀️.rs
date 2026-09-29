@@ -35,7 +35,6 @@ fn numerical_page_subspace_work_persists_solver_state_without_physical_retiremen
             let page = parse_numerical_page(bytes, b"FEMSCP1\0").unwrap();
             read_checkpoint_u64(page.bytes, if field == 534 { 8 } else { 0 }).unwrap()
         }).collect();
-        eprintln!("[DEBUG] numerical work physical cursor field={field}, counts={counts:?}, same_bytes={}", pages[0] == pages[1]);
         observations.push((field, counts, pages[0] == pages[1]));
     }
     let mut bytes = numerical_page_header(b"FEMSCP1\0", 12, NumericalPageCursor { field: 522, owner: 0, item: 0 }).to_vec();
@@ -65,7 +64,6 @@ fn numerical_page_subspace_work_persists_solver_state_without_physical_retiremen
         released += step.2;
         if step.0 { break; }
     }
-    eprintln!("[DEBUG] numerical work rejected physical cursor fault={fault:?}, first={first:?}, held={held}, allocated={allocated}, released={released}");
     for (field, counts, identical) in observations {
         assert_eq!(counts, vec![corpus["workControlEntries"].as_u64().unwrap(); 2], "field {field} contains only solver control values");
         assert!(identical, "field {field} physical cleanup does not change checkpoint bytes");
@@ -107,7 +105,6 @@ fn numerical_page_modal_complete_close_retains_empty_capacitated_matrix() {
             released += step.2;
             if step.0 { terminal = true; break; }
         }
-        eprintln!("[DEBUG] numerical modal complete close {} grant={grant}, before={before}, first={first:?}, retired={retired}, exact={exact}, released={released}, terminal={terminal}", row["id"]);
         observations.push((row["id"].clone(), retired, row["expectedRetiredOwners"].as_u64().unwrap() as usize, exact, before, released, terminal));
     }
     for (id, retired, expected, exact, allocated, released, terminal) in observations {
@@ -155,7 +152,6 @@ fn numerical_page_subspace_restore_close_preserves_every_ungranted_backing() {
             released += reported;
             if restore.terminal_is_empty() { break; }
         }
-        eprintln!("[DEBUG] numerical subspace restore close {} grant={grant}, before={before}, first={first:?}, retired={retired}, exact={exact}, released={released}, terminal={}", row["id"], restore.terminal_is_empty());
         observations.push((row["id"].clone(), retired, row["expectedRetiredOwners"].as_u64().unwrap() as usize, exact, before, released, restore.terminal_is_empty()));
     }
     for (id, retired, expected, exact, allocated, released, terminal) in observations {
@@ -190,7 +186,6 @@ fn numerical_page_restore_fault_is_sticky_before_later_input_or_allocation() {
         let _ = subspace.close_step(1, NUMERICAL_OWNER_PAGE_BYTES);
         if ldlt.terminal_is_empty() && subspace.terminal_is_empty() { break; }
     }
-    eprintln!("[DEBUG] numerical sticky restore faults observations={observations:?}, ldlt_closed={}, subspace_closed={}", ldlt.terminal_is_empty(), subspace.terminal_is_empty());
     assert!(ldlt.terminal_is_empty() && subspace.terminal_is_empty());
     for (left, right, left_page, left_entry, right_page, right_entry) in observations {
         assert_eq!(left, Some(expected));
@@ -273,7 +268,6 @@ fn numerical_page_matrix_restore_retains_dimensions_and_partial_capacity_across_
                 Err(()) => break,
             }
         }
-        eprintln!("[DEBUG] numerical matrix {} write={write_fault:?}, restore={restore_fault:?}, dimensions={dimensions:?}, capacity={capacity}, pages={page_items:?}, allocated={allocated}, released={released}", row["id"]);
         observations.push((row.clone(), write_fault, restore_fault, page_items, dimensions, capacity, values, matrix.data, allocated, released, restored.data.capacity()));
     }
     for (row, write_fault, restore_fault, pages, dimensions, capacity, values, expected, allocated, released, remaining) in observations {
@@ -327,7 +321,6 @@ fn numerical_page_restore_close_preserves_ungranted_backing_and_retires_one_owne
             released += reported;
             if restore.terminal_is_empty() { break; }
         }
-        eprintln!("[DEBUG] numerical restore close {} grant={grant}, before={before}, first={first:?}, retired={retired}, exact={exact}, released={released}, terminal={}", row["id"], restore.terminal_is_empty());
         observations.push((row["id"].clone(), retired, row["expectedRetiredOwners"].as_u64().unwrap() as usize, exact, before, released, restore.terminal_is_empty()));
     }
     for (id, retired, expected, exact, allocated, released, terminal) in observations {
@@ -373,7 +366,6 @@ fn numerical_page_restore_rejects_hostile_coordinates_without_changing_target_ba
         }
         let closed = owner.terminal_is_empty();
         let fault = result.err().map(|fault| format!("{fault:?}"));
-        eprintln!("[DEBUG] numerical hostile {} fault={fault:?}, held={held}, allocated={allocated}, released={released}, closed={closed}", row["id"]);
         observations.push((row["id"].clone(), fault, row["fault"].as_str().unwrap().to_owned(), held, closed, allocated, released));
     }
     assert_eq!(read_checkpoint_u16(&[], usize::MAX), Err(NumericalCheckpointFault::Truncated));
@@ -425,7 +417,6 @@ fn numerical_page_restore_accepts_every_declared_paged_scalar_continuation() {
             if owner.terminal_is_empty() { break; }
         }
         let closed = owner.terminal_is_empty();
-        eprintln!("[DEBUG] numerical restore {} complete_pages={complete_pages}, fault={fault:?}, scalars={}, allocated={allocated}, released={released}, closed={closed}", row["id"], actual.len());
         observations.push((row["id"].clone(), fault, complete_pages, row["pages"].as_array().unwrap().len(), actual, count, closed, allocated, released));
     }
     for (id, fault, pages, expected_pages, actual, count, closed, allocated, released) in observations {
@@ -503,7 +494,7 @@ fn numerical_page_ldlt_checkpoint_restores_maximum_admitted_matrix() {
         if restore.as_ref().is_none_or(LdltRestoreCursor::terminal_is_empty) && restored.as_ref().is_none_or(InteractiveJob::terminal_is_empty) && InteractiveJob::terminal_is_empty(&job) { break; }
     }
     let closed = restore.as_ref().is_none_or(LdltRestoreCursor::terminal_is_empty) && restored.as_ref().is_none_or(InteractiveJob::terminal_is_empty) && InteractiveJob::terminal_is_empty(&job);
-    eprintln!("[DEBUG] LDLT maximum owner checkpoint pages={pages:?}, write_fault={write_fault}, restore_fault={restore_fault:?}, restored={}, closed={closed}", actual.is_some());
+    eprintln!("LDLT maximum owner checkpoint pages={pages:?}, write_fault={write_fault}, restore_fault={restore_fault:?}, restored={}, closed={closed}", actual.is_some());
     assert!(closed);
     assert!(!write_fault);
     assert_eq!(pages, vec![serde_json::json!({ "owner": 0, "item": 0, "bytes": NUMERICAL_CHECKPOINT_HEADER_BYTES + 8 + count * 8, "scalars": count })]);
@@ -587,7 +578,7 @@ fn numerical_page_scalar_owner_continues_before_writing_past_exact_backing() {
             }
             assert!(writer.terminal_is_empty());
         }
-        eprintln!("[DEBUG] numerical page {} complete={complete}, fault={fault:?}, cursor={cursor:?}, pages={pages:?}, released={released}", row["id"]);
+        eprintln!("numerical page {} complete={complete}, fault={fault:?}, cursor={cursor:?}, pages={pages:?}, released={released}", row["id"]);
         observations.push((row["id"].clone(), complete, pages, row["pages"].clone(), decoded, values, released));
     }
     for (id, complete, pages, expected, decoded, values, released) in observations {
@@ -662,7 +653,6 @@ fn numerical_page_all_owner_entries_preserve_cursor_until_their_width_fits() {
             }
         }
         assert!(payload.terminal_is_empty());
-        eprintln!("[DEBUG] numerical entry {kind}/{remaining} fault={fault:?}, committed={committed}, held={held}, cursor={cursor:?}, released={released}");
         observations.push((format!("{kind}/{remaining}"), actual, row["expected"].clone(), fault.is_none(), held, released == page_count * JOB_PAYLOAD_PAGE_BYTES));
     }
     integers.pop();
@@ -1012,7 +1002,6 @@ fn pcg_job_construction_checks_order_before_backing_allocation() {
             let step = construction.close_step(ceiling.max(allocated));
             if step.0 { closed = true; break; }
         }
-        eprintln!("[DEBUG] PCG constructor order={order}, result={result:?}, allocated={allocated}, initialized={initialized}, closed={closed}");
         observations.push((case.clone(), result, allocated, initialized, closed));
     }
     for (case, result, allocated, initialized, closed) in observations {
@@ -1062,7 +1051,6 @@ fn pcg_job_construction_uses_actual_rhs_norm() {
             for _ in 0..20_000 {
                 if construction.close_step(PCG_SCALAR_BACKING_BYTES).0 { closed = true; break; }
             }
-            eprintln!("[DEBUG] PCG RHS id={}, mounted={mounted}, norm={:?}, iterations={:?}, turns={turns}, closed={closed}", row["id"], observed.as_ref().map(|value| value.0), solved.as_ref().map(|value| value.1.iterations));
             observations.push((row.clone(), mounted, rhs.clone(), observed, solved, turns, closed));
         }
     }
@@ -1124,7 +1112,7 @@ fn pcg_job_construction_rejects_nonfinite_rhs_without_losing_owners() {
             }
             let empty = construction.matrix.is_none() && construction.mounted_b.is_none() && construction.complete.is_none()
                 && [&construction.b, &construction.x, &construction.diag, &construction.r, &construction.z, &construction.p, &construction.ap].iter().all(|owner| owner.0.capacity() == 0);
-            eprintln!("[DEBUG] PCG invalid RHS id={}, mounted={mounted}, fault={failure:?}, stable={stable}, rhsBytes={rhs_bytes}, released={released}, closed={closed}, empty={empty}", row["id"]);
+            eprintln!("PCG invalid RHS id={}, mounted={mounted}, fault={failure:?}, stable={stable}, rhsBytes={rhs_bytes}, released={released}, closed={closed}, empty={empty}", row["id"]);
             observations.push((row.clone(), failure, repeated, stable, zeroes_unallocated, rhs_bytes, released, closed, empty));
         }
     }
@@ -1187,7 +1175,7 @@ fn pcg_job_publication_matches_canonical_wire_pages() {
         }
         for _ in 0..10_000 { if job.close_step(NUMERICAL_OWNER_PAGE_BYTES).0 { break; } }
         let closed = InteractiveJob::terminal_is_empty(&job);
-        eprintln!("[DEBUG] PCG canonical {kind}: turns={turns}, pages={}, delivered_again={delivered_again}, closed={closed}", pages.as_ref().map_or(0, Vec::len));
+        eprintln!("PCG canonical {kind}: turns={turns}, pages={}, delivered_again={delivered_again}, closed={closed}", pages.as_ref().map_or(0, Vec::len));
         observations.push((case.clone(), pages, turns, delivered_again, closed));
     }
     for (case, pages, turns, delivered_again, closed) in observations {
@@ -1224,7 +1212,6 @@ fn pcg_job_checkpoint_rejects_foreign_operation_identity() {
         }
     }
     for _ in 0..1_024 { if job.close_step(NUMERICAL_OWNER_PAGE_BYTES).0 { break; } }
-    eprintln!("[DEBUG] PCG checkpoint exact identity refusals: {rejected:?}");
     assert!(InteractiveJob::terminal_is_empty(&job));
     assert_eq!(rejected, vec![true; 4]);
 }
@@ -1267,7 +1254,6 @@ fn pcg_job_publication_grants_preserve_pending_state_and_work_cursor() {
         }
         assert!(closed, "publication fixture closes its exact matrix and scalar owners");
         observed["terminalEmpty"] = serde_json::json!(InteractiveJob::terminal_is_empty(&job));
-        eprintln!("[DEBUG] PCG publication first opportunity {index}/{kind}: {observed}");
         observations.push((observed, case["expected"].clone()));
     }
     for (index, (observed, expected)) in observations.into_iter().enumerate() {
@@ -1306,7 +1292,6 @@ fn pcg_job_initial_precondition_preserves_admitted_direction_backing() {
         assert_eq!(direction, expected[index], "precondition scalar {index}");
         assert_eq!(retained, case["retainsBacking"].as_bool().unwrap(), "direction backing {index}");
     }
-    eprintln!("[DEBUG] PCG initialized three NumPy scalars in the original admitted direction backing");
 }
 
 /// 🪜️ Retained LDLT substitution visits every factor column before diagonal scaling.
@@ -1352,7 +1337,6 @@ fn subspace_factor_cursor_matches_numpy_for_three_nondiagonal_right_hand_sides()
     assert!(InteractiveJob::terminal_is_empty(&job));
     assert!(terminal && scalar_steps && retained);
     assert_eq!(observed, expected);
-    eprintln!("[DEBUG] Subspace factor cursor matches three independent NumPy solves with one retained scalar per transition");
 }
 
 /// 🎶 Modal publication replaces every scalar before exposing terminal convergence.
@@ -1401,7 +1385,6 @@ fn subspace_publication_restarts_at_zero_and_commits_convergence_after_the_last_
         }
         assert_eq!(solution.values, eigenvalues[..modes]);
     }
-    eprintln!("[DEBUG] Subspace publication retains its backing and publishes all NumPy eigenvalues before terminal convergence");
 }
 
 /// 🛑 Every PCG publication cut preserves its suspended state and retires exact physical backing.
@@ -1480,7 +1463,6 @@ fn pcg_job_publication_every_cut_cancels_without_losing_backing() {
             cuts += 1;
         }
     }
-    eprintln!("[DEBUG] PCG every-cut cancellation: {cuts} cuts, {} failures", failures.len());
     assert_eq!(cuts, 173);
     assert!(failures.is_empty(), "{failures:?}");
 }
@@ -1567,7 +1549,7 @@ fn pcg_job_restore_every_cut_cancels_without_advancing_candidate() {
             failures.push(format!("cut={cut}, pending={pending}, cancel={cancelled}, sticky={sticky}, zero={zero}, held={held}, bounded={bounded}, terminal={terminal}, physical={}/{released}", before.4));
         }
     }
-    eprintln!("[DEBUG] PCG restore cancellation: {turns} cuts, fields={fields:#x}, failures={}", failures.len());
+    eprintln!("PCG restore cancellation: {turns} cuts, fields={fields:#x}, failures={}", failures.len());
     assert!(failures.is_empty(), "{failures:?}");
 }
 
@@ -1593,7 +1575,6 @@ fn pcg_job_checkpoint_dense_csr_continuations_restore_exactly() {
     close_pcg_job(&mut job);
     let (actual, stats) = drive_pcg_job(resumed, operation);
     let expected: Vec<f64> = serde_json::from_value(dense["expected"].clone()).unwrap();
-    eprintln!("[DEBUG] PCG dense CSR: order={n}, pages={}, iterations={}, converged={}", pages.len(), stats.iterations, stats.converged);
     assert_eq!(pages, restored_pages);
     assert_eq!(coordinates.iter().filter(|(field, _)| *field == 2).map(|(_, item)| *item).collect::<Vec<_>>(), serde_json::from_value::<Vec<usize>>(dense["indexPageItems"].clone()).unwrap());
     assert_eq!(coordinates.iter().filter(|(field, _)| *field == 3).map(|(_, item)| *item).collect::<Vec<_>>(), serde_json::from_value::<Vec<usize>>(dense["valuePageItems"].clone()).unwrap());
@@ -1613,7 +1594,6 @@ fn pcg_job_checkpoint_empty_restore_closes_all_owners() {
     let restored_bytes = pcg_physical_bytes(&resumed);
     close_pcg_job(&mut job);
     let (solution, stats) = drive_pcg_job(resumed, operation);
-    eprintln!("[DEBUG] PCG empty restore: input={input_bytes}, restored={restored_bytes}, converged={}", stats.converged);
     assert_eq!(input_bytes, restored_bytes);
     assert_eq!(solution.len(), 0);
     assert!(stats.converged && stats.residual_norm == 0.0);
@@ -1701,7 +1681,6 @@ fn pcg_job_restore_rejects_malformed_owners_and_closes_exact_backing() {
             }
         }
         let terminal = restore.terminal_is_empty() && retained(&restore) == 0;
-        eprintln!("[DEBUG] PCG hostile {}: {error:?}, sticky={sticky}, retained={}, released={released}, terminal={terminal}", case["id"], before.3);
         observations.push((case.clone(), error, sticky, unchanged, zero_items, subexact, bounded, terminal, before.3, released));
     }
     for (case, error, sticky, unchanged, zero_items, subexact, bounded, terminal, retained, released) in observations {

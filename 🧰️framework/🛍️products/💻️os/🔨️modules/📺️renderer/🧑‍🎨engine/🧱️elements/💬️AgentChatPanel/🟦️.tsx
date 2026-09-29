@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/AgentChatPanel/component.tsx
-/** @emoji 💬️ `AgentChatPanel` — the OS shell's agent dock. It renders the LIVE MCP conversation:
+/** 💬️ `AgentChatPanel` — the OS shell's agent dock. It renders the LIVE MCP conversation:
  * every tool the connected agent invokes (with its real arguments), every result, every approval the
  * gateway parked, every turn the human typed back, and every free-text turn the agent itself
  * published through `conversation_reply` — all of it sourced from `🧵️bridge` frames the

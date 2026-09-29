@@ -73,7 +73,6 @@ fn mesh_preparation_refuses_logical_fill_before_mutating_pending_input() {
             if complete { break; }
         }
         let terminal = InteractiveJob::terminal_is_empty(&job);
-        eprintln!("[DEBUG] mesh preparation logical fill {}: {actual}, fault={fault}, holds={holds}, admitted={admitted}, retained={retained}, released={released}, terminal={terminal}", row["id"]);
         observations.push((row["id"].clone(), actual, row["expected"].clone(), fault, holds, admitted, retained, released, terminal));
     }
     for (id, actual, expected, fault, holds, admitted, retained, released, terminal) in observations {
@@ -162,7 +161,6 @@ fn mesh_preparation_owns_each_reservation_and_preserves_lookup_on_handoff() {
             if complete { break; }
         }
         let actual = serde_json::json!({ "reservations": reservations, "fault": fault, "preservesIndexOnHandoff": preserves_index });
-        eprintln!("[DEBUG] mesh preparation {}: {actual}, admitted={admitted_bytes}, released={released}, holds={holds}, terminal={}", row["id"], InteractiveJob::terminal_is_empty(&job));
         observations.push((row["id"].clone(), actual, row["expected"].clone(), holds, admitted_bytes, released, InteractiveJob::terminal_is_empty(&job)));
     }
     for (id, actual, expected, holds, admitted, released, terminal) in observations {
@@ -214,7 +212,7 @@ fn mesh_preparation_cancellation_closes_each_partial_owner_under_exact_grants() 
         }
         assert!(InteractiveJob::terminal_is_empty(&job));
         assert_eq!(released, admitted);
-        eprintln!("[DEBUG] mesh preparation cancellation cut={cut}, admitted={admitted}, released={released}");
+        eprintln!("mesh preparation cancellation cut={cut}, admitted={admitted}, released={released}");
     }
 }
 
@@ -275,7 +273,6 @@ fn mesh_edge_authority_uses_completed_faces_and_closes_exact_backing() {
         assert!(closed, "all remaining mesh owners retire");
         assert!(InteractiveJob::terminal_is_empty(&job));
     }
-    eprintln!("[DEBUG] Mesh edge authority matched all three neutral adjacency cases and exact bounded close");
 }
 use semio_framework_job::{root_cancel_token, Generation, OperationId, RevisionId, StepBudget};
 use std::collections::HashSet;

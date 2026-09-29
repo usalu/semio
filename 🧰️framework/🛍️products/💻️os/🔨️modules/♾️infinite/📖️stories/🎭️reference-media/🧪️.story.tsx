@@ -22,7 +22,7 @@ type StoryReferenceMediaStatus = "loading" | "loaded" | "error";
  * renderer's reference-image-decode test holds the decoder to its committed oracle; this page only shows the parity live. */
 const PARITY_READOUT = { sampleCapacity: 4096, meanChannelDeltaMax: 4, maxChannelDeltaMax: 48 } as const;
 
-/** @emoji 🖼️ Loads one `infinite/fixture/*` file through the real `referenceMediaPort`, then blits the resolved texture's backing image/canvas onto a plain 2D canvas for display. */
+/** 🖼️ Loads one `infinite/fixture/*` file through the real `referenceMediaPort`, then blits the resolved texture's backing image/canvas onto a plain 2D canvas for display. */
 function ReferenceMediaPreview({ label, url, page }: { readonly label: string; readonly url: string; readonly page?: number }): ReactElement {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [status, setStatus] = useState<StoryReferenceMediaStatus>("loading");

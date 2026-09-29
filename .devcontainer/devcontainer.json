@@ -38,8 +38,8 @@
   "workspaceFolder": "/workspaces/semio",
   "onCreateCommand": ["sudo", "chown", "vscode:vscode", "/workspaces/semio/node_modules", "/workspaces/semio/.🧬semio/🦑️repo/⚡️cache"],
   "postCreateCommand": ["bun", "nx", "run", "workspace:setup"],
-  "postStartCommand": "bash .devcontainer/post-start.sh",
-  "postAttachCommand": "bash .devcontainer/post-attach.sh",
+  "postStartCommand": ["bun", "./📜️script.ts", "setup", "devcontainer", "start"],
+  "postAttachCommand": ["bun", "./📜️script.ts", "setup", "devcontainer", "attach"],
   "hostRequirements": {
     "cpus": 4,
     "memory": "8gb",
@@ -117,8 +117,6 @@
     "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
     "PLAYWRIGHT_BROWSERS_PATH": "${containerWorkspaceFolder}/.🧬semio/🦑️repo/⚡️cache/tools/ms-playwright",
     "SEMIO_GITKRAKEN_WORKSPACE_NAME": "compose",
-    "SEMIO_GITKRAKEN_AUTO_START": "false",
-    "SEMIO_F3D_AUTO_START": "true",
     "SEMIO_POST_ATTACH_SKIP_EXTENSION_INSTALL": "",
     "LANG": "en_US.UTF-8",
     "LC_ALL": "en_US.UTF-8",
@@ -129,7 +127,7 @@
   },
   "remoteEnv": {
     "PLAYWRIGHT_BROWSERS_PATH": "${containerWorkspaceFolder}/.🧬semio/🦑️repo/⚡️cache/tools/ms-playwright",
-    "SSH_AUTH_SOCK": "/home/vscode/.ssh/compose-ssh-agent.sock"
+    "SSH_AUTH_SOCK": "/home/vscode/.ssh/semio-ssh-agent.sock"
   },
   "customizations": {
     "vscode": {

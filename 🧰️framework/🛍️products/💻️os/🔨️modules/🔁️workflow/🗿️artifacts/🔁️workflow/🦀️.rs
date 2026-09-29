@@ -575,7 +575,7 @@ pub struct WorkflowValidation {
     pub errors: Vec<String>,
 }
 
-/// @emoji ✅️ Validates workflow connectivity and cycle freedom. Ported down from
+/// ✅️ Validates workflow connectivity and cycle freedom. Ported down from
 /// `framework/product/os/core`'s `workflow` module (`validate_workflow`); the edge-contract
 /// re-negotiation check that lived alongside it there (re-running `negotiate_media_contract` against
 /// the live artifact registry) stays in os-core for now — it needs the artifact-kind registry, which
@@ -632,7 +632,7 @@ pub struct WorkflowDelivery {
     pub consumer_port_id: String,
 }
 
-/// @emoji 🧭️ Post-order DFS reversed into a topological node order (source before target); same
+/// 🧭️ Post-order DFS reversed into a topological node order (source before target); same
 /// recursive shape as `validate_workflow`'s cycle-detection DFS, but collects the traversal order
 /// instead of flagging revisits (the graph is validated acyclic before planning runs).
 async fn workflow_topological_node_order(graph: &Workflow) -> Vec<String> {
@@ -658,7 +658,7 @@ async fn workflow_topological_node_order(graph: &Workflow) -> Vec<String> {
     order
 }
 
-/// @emoji 🚚️ Plans one [`WorkflowDelivery`] per edge in the downstream closure of `dirty_node_ids`,
+/// 🚚️ Plans one [`WorkflowDelivery`] per edge in the downstream closure of `dirty_node_ids`,
 /// propagating dirtiness onto each edge's consumer node so multi-hop chains (A→B→C) resolve in a
 /// single topological pass. Pure/side-effect-free — callers own applying the deliveries.
 pub async fn plan_workflow(graph: &Workflow, dirty_node_ids: &HashSet<String>) -> Vec<WorkflowDelivery> {
@@ -761,7 +761,7 @@ pub const WORKFLOW_PARAMETER_PORT_PREFIX: &str = "param.";
 
 static WORKFLOW_PARAMETER_ID: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
-/// @emoji 🆔️ Fallback id minter for a parameter created without a caller-supplied id — every real
+/// 🆔️ Fallback id minter for a parameter created without a caller-supplied id — every real
 /// caller (`os-core`'s `OsWorkflowStore::add_parameter`) supplies one via its own id minter instead, so
 /// this counter is scoped independently to this crate (not the same sequence as os-core's `create_os_id`).
 // 🚫️async: E1 transitive — consumed by std Iterator/Option combinators (external traits) in
@@ -863,7 +863,7 @@ async fn clamp_workflow_numeric_value(value: f64, min: Option<f64>, max: Option<
     next
 }
 
-/// @emoji 🎛️ Applies a partial patch to a workflow parameter, enforcing type constraints. Ported
+/// 🎛️ Applies a partial patch to a workflow parameter, enforcing type constraints. Ported
 /// verbatim from os-core's `patch_os_parameter`.
 pub async fn patch_workflow_parameter(parameter: &WorkflowParameter, patch: &dsl::DslValue) -> WorkflowParameter {
     let name = patch.get("name").and_then(|v| v.as_str()).map_or_else(|| workflow_parameter_name(parameter), str::to_string);
@@ -922,7 +922,7 @@ pub async fn patch_workflow_parameter(parameter: &WorkflowParameter, patch: &dsl
     parameter.clone()
 }
 
-/// @emoji ✅️ Type-checks one binding's `field_path` against the target app's declared `ConfigSpec` —
+/// ✅️ Type-checks one binding's `field_path` against the target app's declared `ConfigSpec` —
 /// `config_spec` is caller-resolved (os-core looks it up via `os_app_registration`), so this function
 /// itself needs no registry. Ported verbatim from os-core's `validate_parameter_config_binding`.
 /// Returns a `protocol::MutationMessage` rather than the deleted free-form `{kind, uri, message}`
@@ -1543,7 +1543,7 @@ impl protocol::OpBinary for WorkflowMutation {
 }
 //#endregion 🔖️WorkflowMutationOpText
 
-/// @emoji ✅️ Extends [`validate_workflow`] with the two `WorkflowSnapshot`-level checks that need the
+/// ✅️ Extends [`validate_workflow`] with the two `WorkflowSnapshot`-level checks that need the
 /// declared `inputs`/`input_bindings`/`output_bindings` (pure/registry-free, unlike os-core's own
 /// `validate_workflow` wrapper which layers on the contract-renegotiation check): (1) a required node
 /// in-port must have EITHER an incoming edge XOR a `WorkflowInputBinding` targeting it — never both,

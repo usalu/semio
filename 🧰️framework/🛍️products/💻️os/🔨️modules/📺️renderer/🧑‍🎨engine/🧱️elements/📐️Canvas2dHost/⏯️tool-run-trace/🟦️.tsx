@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🧩️ `ToolRunTrace2dLayer` — the canvas-2d twin of `🌐️World3dHost/⏯️tool-run-trace`: the same keyed
+/** 🧩️ `ToolRunTrace2dLayer` — the canvas-2d twin of `🌐️World3dHost/⏯️tool-run-trace`: the same keyed
  * record store fed by `Canvas2dScene.toolRunTrace`, painted as one batched path fill per
  * `(shape, verdict)` on an overlay canvas, with the same verdict tokens, age fade and newest-`testing`
  * highlight. Placement subjects draw; instance and entity subjects are counted only.

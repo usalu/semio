@@ -645,7 +645,7 @@ impl GraphHost {
         self.dag.pick_targets_at_screen_json(sx, sy)
     }
 
-    /// @emoji 🎯️ Screen-space geometry for a live entity (`domain`/`id` in the pick-target grammar) —
+    /// 🎯️ Screen-space geometry for a live entity (`domain`/`id` in the pick-target grammar) —
     /// see `DagHost::entity_screen_json`. Powers introduction-demonstration semantic targeting.
     pub fn entity_screen_json(&self, domain: &str, id: &str) -> String {
         self.dag.entity_screen_json(domain, id)

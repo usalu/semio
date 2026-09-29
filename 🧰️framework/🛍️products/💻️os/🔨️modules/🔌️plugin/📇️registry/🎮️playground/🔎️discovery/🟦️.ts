@@ -8,7 +8,7 @@ import { generatePluginRegistry, parseTomlStringArray, readDescriptorJson, tomlB
 
 
 //#region 🔖️PlaygroundEntry
-/** @emoji 🗂️ One `[[package.metadata.semio.assets]]` row: a dev-time asset-serving need declared by a
+/** 🗂️ One `[[package.metadata.semio.assets]]` row: a dev-time asset-serving need declared by a
  * plugin crate. `app` optionally scopes the row to one playground variant of a multi-app crate (unset
  * ⇒ every variant of the crate). Mirrors the TS discriminated union emitted for consumers as
  * `PlaygroundAssetSpec` (see `emitPlaygroundsTypeScript`). */
@@ -23,30 +23,30 @@ export type AssetSpecRow = {
 };
 
 
-/** @emoji 🎮️ One `[[package.metadata.semio.playground]]` row scoped to its owning plugin crate. */
+/** 🎮️ One `[[package.metadata.semio.playground]]` row scoped to its owning plugin crate. */
 export type PlaygroundEntry = {
   readonly variant: string;
   readonly pluginId: string;
   readonly cratePath: string;
   readonly app?: string;
-  /** @emoji 🏷️ Shell brand id (see `framework/os/dev/brand`) this variant ships as. */
+  /** 🏷️ Shell brand id (see `framework/os/dev/brand`) this variant ships as. */
   readonly brand?: string;
-  /** @emoji 📦️ Repo-root-relative CDN output directory for `build-<variant>-react-release` instead of framework-os-dev `dist/build-…`. */
+  /** 📦️ Repo-root-relative CDN output directory for `build-<variant>-react-release` instead of framework-os-dev `dist/build-…`. */
   readonly distDir?: string;
   readonly aliases: readonly string[];
   readonly ports: { readonly react: number; readonly wgpu: number };
-  /** @emoji 👥️ Extra per-user dev ports for a multi-user collaborative session (e.g. hub-backed `s`
+  /** 👥️ Extra per-user dev ports for a multi-user collaborative session (e.g. hub-backed `s`
    * studio dev launchers) — one port per concurrent user, over and above the single-user `ports` row. */
   readonly userPorts?: { readonly react: readonly number[]; readonly wgpu: readonly number[] };
   readonly examples: readonly string[];
-  /** @emoji 🔌️ Crate paths whose `wasm` build target must run for this playground variant. */
+  /** 🔌️ Crate paths whose `wasm` build target must run for this playground variant. */
   readonly engines: readonly string[];
-  /** @emoji 🗂️ Dev-time asset-serving needs for this variant. */
+  /** 🗂️ Dev-time asset-serving needs for this variant. */
   readonly assets: readonly AssetSpecRow[];
 };
 
 
-/** @emoji 🔢️ Every integer in a `key = [1, 2]` inline TOML array found inside `text` (used for
+/** 🔢️ Every integer in a `key = [1, 2]` inline TOML array found inside `text` (used for
  * sub-blocks like `user_ports = { react = [...], wgpu = [...] }` where `react`/`wgpu` aren't at the
  * start of a line). */
 export function parseTomlInlineNumberArray(text: string, key: string): number[] {
@@ -76,7 +76,7 @@ export function parsePlaygroundBlock(block: string, pluginId: string, cratePath:
 }
 
 
-/** @emoji 🗂️ Parses every `[[package.metadata.semio.assets]]` row for one crate manifest. */
+/** 🗂️ Parses every `[[package.metadata.semio.assets]]` row for one crate manifest. */
 export function parseAssetsForCrate(manifestPath: string, repoRoot: string, view?: RegistryCatalogInputView): AssetSpecRow[] {
   const path = relative(repoRoot, manifestPath).replaceAll("\\", "/");
   if (view ? view.kind(path) === null : !existsSync(manifestPath)) return [];
@@ -114,11 +114,11 @@ export function parseAssetsForCrate(manifestPath: string, repoRoot: string, view
 }
 
 
-/** @emoji ✂️ The variation selector that closes an emoji identity in `exampleSlugPattern` — everything after it is the example id. */
+/** ✂️ The variation selector that closes an emoji identity in `exampleSlugPattern` — everything after it is the example id. */
 export const EXAMPLE_SLUG_IDENTITY_SEPARATOR = "\uFE0F";
 
 
-/** @emoji 🪪️ The example ids one owner descriptor declares for a playground's app — every `manifest.examples` row when the playground names no app. */
+/** 🪪️ The example ids one owner descriptor declares for a playground's app — every `manifest.examples` row when the playground names no app. */
 export function declaredExampleIdsForPlayground(descriptor: Record<string, unknown> | undefined, app?: string): ReadonlySet<string> {
   const manifest = descriptor?.manifest as { examples?: unknown } | undefined;
   const rows = Array.isArray(manifest?.examples) ? (manifest.examples as unknown[]) : [];
@@ -132,7 +132,7 @@ export function declaredExampleIdsForPlayground(descriptor: Record<string, unkno
 
 
 /**
- * @emoji 🖼️ Example ids for one playground row: emoji-slug dirs under `🗿️artifacts/<a>/📚️examples/` and
+ * 🖼️ Example ids for one playground row: emoji-slug dirs under `🗿️artifacts/<a>/📚️examples/` and
  * every `👁️viewer`/`✏️editor` surface's `📚️examples/` that carry a definition leaf, narrowed to the
  * examples this playground's own app declares. One crate serves several apps (`puzzle` ships 2d/3d/5d
  * from one crate), so the membership scan alone advertises a sibling app's examples and test-only
@@ -159,7 +159,7 @@ export function parsePlaygroundsForCrate(manifestPath: string, pluginId: string,
 }
 
 
-/** @emoji 🕹️ Scans every plugin/module crate for `[[package.metadata.semio.playground]]` rows and flattens them into one repo-wide catalog. */
+/** 🕹️ Scans every plugin/module crate for `[[package.metadata.semio.playground]]` rows and flattens them into one repo-wide catalog. */
 export function generatePlaygroundRegistry(repoRoot = getWorkspaceRoot(), options: GeneratePluginRegistryOptions = {}): PlaygroundEntry[] {
   const view = options.view ?? registryCatalogInputView(repoRoot, TAXONOMY);
   const entries = generatePluginRegistry(repoRoot, { ...options, view });
@@ -187,7 +187,7 @@ export function generatePlaygroundRegistry(repoRoot = getWorkspaceRoot(), option
 
 
 
-/** @emoji 🏠️ Resolves the one playground variant that boots as the host/shell session: the data-driven
+/** 🏠️ Resolves the one playground variant that boots as the host/shell session: the data-driven
  * replacement for the previous hardcoded `"s"` literal. Exactly one plugin crate in the catalog may
  * declare `[package.metadata.semio].host` (see `parsePluginCargo`'s `host`/`shell` parse) — this scans
  * for that crate and returns its own `[[package.metadata.semio.playground]]` variant id, throwing a

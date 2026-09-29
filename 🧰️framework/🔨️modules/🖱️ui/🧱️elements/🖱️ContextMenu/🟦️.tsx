@@ -23,7 +23,7 @@ import { floatingMenuItemClass, ContextMenuChrome } from "../../🎯️targets/�
 const contextMenuShortcutClassName = "ms-auto text-xs text-muted-foreground ps-tiny";
 const contextMenuOrdinalClassName = "w-small shrink-0 text-center text-xs text-muted-foreground tabular-nums";
 
-/** @emoji 🪟️ Context-menu row — same density as {@link floatingMenuItemClass}; `checked` paints the active/preview highlight (no tick/checkmark), kept through hover like {@link CanvasPickMenu}. */
+/** 🪟️ Context-menu row — same density as {@link floatingMenuItemClass}; `checked` paints the active/preview highlight (no tick/checkmark), kept through hover like {@link CanvasPickMenu}. */
 export function contextMenuItemClassName(item: Pick<ContextMenuItem, "checked" | "destructive">, ...extra: Array<string | false | null | undefined>): string {
   return cn(
     floatingMenuItemClass,
@@ -118,9 +118,9 @@ function renderPortalInto(children: React.ReactNode, container: Element | Docume
 export interface ContextMenuProps {
   items?: readonly ContextMenuItem[];
   children: React.ReactNode;
-  /** @emoji 🪟️ Title chip on the window-chrome cap row. */
+  /** 🪟️ Title chip on the window-chrome cap row. */
   title: UiLabel;
-  /** @emoji 🪟️ Catalog icon shown in the title chip before the title. */
+  /** 🪟️ Catalog icon shown in the title chip before the title. */
   titleIcon?: IconSource;
 }
 
@@ -163,18 +163,18 @@ export interface ContextMenuControllerProps {
   position: { x: number; y: number } | null;
   items: readonly ContextMenuItem[];
   onOpenChange: (open: boolean) => void;
-  /** @emoji 🪟️ Title chip on the window-chrome cap row. */
+  /** 🪟️ Title chip on the window-chrome cap row. */
   title: UiLabel;
-  /** @emoji 🪟️ Catalog icon in the title chip. */
+  /** 🪟️ Catalog icon in the title chip. */
   titleIcon?: IconSource;
   /** 🖱️ When false, selecting a row does not dismiss — the row action owns closing (e.g. acceptSuggestion). Outside pointer / Escape still dismiss. Default true. */
   closeOnSelect?: boolean;
 }
 
-/** @emoji ⌨️ Keyboard navigation direction parsed from a keydown key. */
+/** ⌨️ Keyboard navigation direction parsed from a keydown key. */
 export type ContextMenuNavDirection = "up" | "down" | "left" | "right" | "activate" | "escape";
 
-/** @emoji 🔢️ Maps each enabled row id to its 1-based ordinal within `items` (separators skipped). */
+/** 🔢️ Maps each enabled row id to its 1-based ordinal within `items` (separators skipped). */
 export function contextMenuOrdinals(items: readonly ContextMenuItem[]): ReadonlyMap<string, number> {
   const map = new Map<string, number>();
   let ordinal = 0;
@@ -192,7 +192,7 @@ function contextMenuEnabledIndices(items: readonly ContextMenuItem[]): number[] 
   return items.flatMap((item, index) => (!item.separator && !item.disabled ? [index] : []));
 }
 
-/** @emoji 📂️ Resolves the item list at `pathPrefix` (empty = top level). */
+/** 📂️ Resolves the item list at `pathPrefix` (empty = top level). */
 export function contextMenuItemsAtLevel(root: readonly ContextMenuItem[], pathPrefix: readonly number[]): readonly ContextMenuItem[] {
   let level = root;
   for (const index of pathPrefix) {
@@ -205,7 +205,7 @@ export function contextMenuItemsAtLevel(root: readonly ContextMenuItem[], pathPr
   return level;
 }
 
-/** @emoji 📍️ Resolves the row at `path` (empty path → undefined). */
+/** 📍️ Resolves the row at `path` (empty path → undefined). */
 export function contextMenuItemAtPath(root: readonly ContextMenuItem[], path: readonly number[]): ContextMenuItem | undefined {
   if (path.length === 0) {
     return undefined;
@@ -224,7 +224,7 @@ export function contextMenuItemAtPath(root: readonly ContextMenuItem[], path: re
   return item;
 }
 
-/** @emoji ✅️ Path to the first enabled `checked` row, if any. */
+/** ✅️ Path to the first enabled `checked` row, if any. */
 export function findContextMenuCheckedPath(root: readonly ContextMenuItem[], prefix: readonly number[] = []): number[] | undefined {
   for (let index = 0; index < root.length; index += 1) {
     const item = root[index]!;
@@ -245,7 +245,7 @@ export function findContextMenuCheckedPath(root: readonly ContextMenuItem[], pre
   return undefined;
 }
 
-/** @emoji ⌨️ Maps arrows, wasd, Enter, Space, and Escape to menu navigation. */
+/** ⌨️ Maps arrows, wasd, Enter, Space, and Escape to menu navigation. */
 export function contextMenuNavigationFromKey(key: string): ContextMenuNavDirection | undefined {
   switch (key) {
     case "ArrowUp":
@@ -274,7 +274,7 @@ export function contextMenuNavigationFromKey(key: string): ContextMenuNavDirecti
   }
 }
 
-/** @emoji ⌨️ Next active path when moving up or down within the current menu level. */
+/** ⌨️ Next active path when moving up or down within the current menu level. */
 export function moveContextMenuActivePath(root: readonly ContextMenuItem[], path: readonly number[], direction: "up" | "down"): number[] {
   const levelPrefix = path.length > 0 ? path.slice(0, -1) : [];
   const level = contextMenuItemsAtLevel(root, levelPrefix);
@@ -295,7 +295,7 @@ export function moveContextMenuActivePath(root: readonly ContextMenuItem[], path
   return [...levelPrefix, enabled[nextPosition]!];
 }
 
-/** @emoji 🔢️ Active path for digit `ordinal` (1–9) within the level of `path`. */
+/** 🔢️ Active path for digit `ordinal` (1–9) within the level of `path`. */
 export function contextMenuPathForOrdinal(root: readonly ContextMenuItem[], path: readonly number[], ordinal: number): number[] | undefined {
   const levelPrefix = path.length > 0 ? path.slice(0, -1) : [];
   const level = contextMenuItemsAtLevel(root, levelPrefix);
@@ -313,7 +313,7 @@ export function contextMenuPathForOrdinal(root: readonly ContextMenuItem[], path
   return undefined;
 }
 
-/** @emoji 📂️ Opens the submenu under `path` and selects its first enabled child. */
+/** 📂️ Opens the submenu under `path` and selects its first enabled child. */
 export function contextMenuOpenSubmenuPath(root: readonly ContextMenuItem[], path: readonly number[]): number[] | undefined {
   const item = contextMenuItemAtPath(root, path);
   if (!item?.children?.length) {
@@ -359,11 +359,11 @@ type FixedContextMenuRenderOptions = {
   readonly submenuCollapsedAt: readonly number[] | null;
   readonly setActivePath: (path: number[], collapseSubmenuAt?: readonly number[] | null) => void;
   readonly onClose: () => void;
-  /** @emoji 🎯️ Every rendered row hands its element in under {@link contextMenuPathKey}, so the controller can move real DOM focus onto the active row wherever that row was portaled to. */
+  /** 🎯️ Every rendered row hands its element in under {@link contextMenuPathKey}, so the controller can move real DOM focus onto the active row wherever that row was portaled to. */
   readonly registerRow: (pathKey: string, node: HTMLButtonElement | null) => void;
 };
 
-/** @emoji 🔑️ Stable key for a row path, used to address a rendered row across submenu portals. */
+/** 🔑️ Stable key for a row path, used to address a rendered row across submenu portals. */
 export function contextMenuPathKey(path: readonly number[]): string {
   return path.join(".");
 }
@@ -381,7 +381,7 @@ function contextMenuFusionOffsetsEqual(a: ReadonlyMap<string, ContextMenuFusionP
   return true;
 }
 
-/** @emoji 📐️ Absolute placement of a fused submenu column inside {@link ContextMenuController}'s fusion body. */
+/** 📐️ Absolute placement of a fused submenu column inside {@link ContextMenuController}'s fusion body. */
 export interface ContextMenuFusionPlacement {
   readonly left: number;
   readonly top: number;
@@ -398,29 +398,29 @@ function isContextMenuSubmenuOpen(activePath: readonly number[], parentPath: rea
   return parentPath.every((value, index) => activePath[index] === value);
 }
 
-/** @emoji ⏱️ Delay before hovering a parent row opens its submenu, so a pointer merely passing over the row doesn't flash it open. */
+/** ⏱️ Delay before hovering a parent row opens its submenu, so a pointer merely passing over the row doesn't flash it open. */
 const CONTEXT_MENU_SUBMENU_HOVER_DELAY_MS = 150;
 
-/** @emoji ↔️ Gap between a parent row and its submenu panel, in px. */
+/** ↔️ Gap between a parent row and its submenu panel, in px. */
 const CONTEXT_MENU_SUBMENU_GAP_PX = 0;
 
-/** @emoji 📐️ Viewport-fixed placement of a submenu panel beside its parent row. */
+/** 📐️ Viewport-fixed placement of a submenu panel beside its parent row. */
 export interface ContextMenuSubmenuPlacement {
   readonly left: number;
   readonly top: number;
   readonly flipped: boolean;
 }
 
-/** @emoji 📂 One fused submenu column beside its parent row inside the shared {@link ContextMenuChrome}. */
+/** 📂 One fused submenu column beside its parent row inside the shared {@link ContextMenuChrome}. */
 export interface ContextMenuFusionPanel {
   readonly parentPath: readonly number[];
   readonly items: readonly ContextMenuItem[];
 }
 
-/** @emoji 🫙 The fused columns of a closed menu: one object, so a closed menu handed fresh `items` measures nothing. */
+/** 🫙 The fused columns of a closed menu: one object, so a closed menu handed fresh `items` measures nothing. */
 const CONTEXT_MENU_NO_FUSION_PANELS: readonly ContextMenuFusionPanel[] = [];
 
-/** @emoji 📂 Open submenu columns to render fused into the root menu chrome (one outline, no nested title chips). */
+/** 📂 Open submenu columns to render fused into the root menu chrome (one outline, no nested title chips). */
 export function contextMenuOpenFusionPanels(
   root: readonly ContextMenuItem[],
   activePath: readonly number[],
@@ -445,7 +445,7 @@ export function contextMenuOpenFusionPanels(
 }
 
 /**
- * @emoji 📐️ Places a submenu panel beside its anchor row in viewport coordinates, flipping to the
+ * 📐️ Places a submenu panel beside its anchor row in viewport coordinates, flipping to the
  * anchor's start side when the end side would overflow and clamping the top edge into view.
  **/
 export function contextMenuSubmenuPlacement(input: {
@@ -474,7 +474,7 @@ type ContextMenuSubmenuRowProps = {
   readonly registerRow: FixedContextMenuRenderOptions["registerRow"];
 };
 
-/** @emoji 📂️ Parent-row button for a submenu: click toggles it open/closed; hover opens it after a short delay. Child rows render in fused columns beside this row. */
+/** 📂️ Parent-row button for a submenu: click toggles it open/closed; hover opens it after a short delay. Child rows render in fused columns beside this row. */
 function ContextMenuSubmenuRow({ item, rowPath, ordinal, isActive, submenuOpen, setActivePath, registerRow }: ContextMenuSubmenuRowProps): React.ReactElement {
   const hoverTimerRef = reactHostPort.useRef<number | undefined>(undefined);
   const pathKey = contextMenuPathKey(rowPath);
@@ -606,17 +606,17 @@ function renderFixedContextMenuItems(items: readonly ContextMenuItem[], pathPref
   });
 }
 
-/** @emoji 🖱️ True when a pointer event targets any open context menu surface (including sibling menus from split world panes). */
+/** 🖱️ True when a pointer event targets any open context menu surface (including sibling menus from split world panes). */
 export function isContextMenuPointerTarget(target: EventTarget | null): boolean {
   return Boolean(target instanceof Element && target.closest('[role="menu"]'));
 }
 
-/** @emoji ⌨️ Maps a keydown key to a context-menu digit shortcut (`1`–`9`), if any. */
+/** ⌨️ Maps a keydown key to a context-menu digit shortcut (`1`–`9`), if any. */
 export function contextMenuDigitFromKey(key: string): string | undefined {
   return key.length === 1 && key >= "1" && key <= "9" ? key : undefined;
 }
 
-/** @emoji ⌨️ Finds the first enabled top-level row marked `checked`. */
+/** ⌨️ Finds the first enabled top-level row marked `checked`. */
 export function findCheckedContextMenuItem(items: readonly ContextMenuItem[]): ContextMenuItem | undefined {
   const path = findContextMenuCheckedPath(items);
   return path ? contextMenuItemAtPath(items, path) : undefined;
@@ -937,7 +937,7 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
   );
 };
 
-/** @emoji 📋️ Non-collapsed DOM text selection string, or empty. */
+/** 📋️ Non-collapsed DOM text selection string, or empty. */
 export function readDomTextSelection(): string {
   if (typeof window === "undefined") return "";
   const selection = window.getSelection();
@@ -945,7 +945,7 @@ export function readDomTextSelection(): string {
   return selection.toString();
 }
 
-/** @emoji 📋️ True when `target` intersects the current non-empty DOM text selection. */
+/** 📋️ True when `target` intersects the current non-empty DOM text selection. */
 export function isPointerEventOnDomTextSelection(target: EventTarget | null): boolean {
   if (typeof window === "undefined") return false;
   if (!(target instanceof Node)) return false;
@@ -959,7 +959,7 @@ export function isPointerEventOnDomTextSelection(target: EventTarget | null): bo
   }
 }
 
-/** @emoji ✏️ True when the event target (or its editable ancestor) accepts cut/paste. */
+/** ✏️ True when the event target (or its editable ancestor) accepts cut/paste. */
 export function isDomTextEditableTarget(target: EventTarget | null): boolean {
   if (target instanceof Text) return isDomTextEditableTarget(target.parentElement);
   if (!(target instanceof Element)) return false;
@@ -987,7 +987,7 @@ export interface TextSelectionContextMenuActions {
   readonly selectAll: () => void;
 }
 
-/** @emoji 📋️ Builds Cut/Copy/Paste/Select All rows for a DOM text selection. */
+/** 📋️ Builds Cut/Copy/Paste/Select All rows for a DOM text selection. */
 export function buildTextSelectionContextMenuItems(input: { readonly editable: boolean; readonly hasSelection: boolean }, labels: TextSelectionContextMenuLabels, actions: TextSelectionContextMenuActions): ContextMenuItem[] {
   const items: ContextMenuItem[] = [];
   if (input.editable) {
@@ -1003,7 +1003,7 @@ export function buildTextSelectionContextMenuItems(input: { readonly editable: b
 }
 
 /**
- * @emoji 📋️ Copies a DOM text selection to the clipboard — `captured` when the caller took a reading,
+ * 📋️ Copies a DOM text selection to the clipboard — `captured` when the caller took a reading,
  * otherwise whatever is selected right now.
  *
  * 🎯️ `captured` is not a convenience. An open menu HOLDS FOCUS (the active row is the focused
@@ -1018,7 +1018,7 @@ export async function copyDomTextSelection(captured?: string): Promise<void> {
   await navigator.clipboard.writeText(text);
 }
 
-/** @emoji ✂️ Cuts a DOM text selection when the target is editable; `captured` is the reading taken when the menu opened (see {@link copyDomTextSelection}). */
+/** ✂️ Cuts a DOM text selection when the target is editable; `captured` is the reading taken when the menu opened (see {@link copyDomTextSelection}). */
 export async function cutDomTextSelection(target: EventTarget | null, captured?: string): Promise<void> {
   await copyDomTextSelection(captured);
   if (!isDomTextEditableTarget(target)) return;
@@ -1039,7 +1039,7 @@ export async function cutDomTextSelection(target: EventTarget | null, captured?:
   window.getSelection()?.deleteFromDocument();
 }
 
-/** @emoji 📋️ Pastes clipboard text into the editable target (or active element). */
+/** 📋️ Pastes clipboard text into the editable target (or active element). */
 export async function pasteDomTextSelection(target: EventTarget | null): Promise<void> {
   if (typeof navigator === "undefined" || !navigator.clipboard?.readText) return;
   const text = await navigator.clipboard.readText();
@@ -1059,7 +1059,7 @@ export async function pasteDomTextSelection(target: EventTarget | null): Promise
   }
 }
 
-/** @emoji 🅰️ Selects all text in the editable focus target, or the current selection's root element. */
+/** 🅰️ Selects all text in the editable focus target, or the current selection's root element. */
 export function selectAllDomText(target: EventTarget | null): void {
   const focus = (target instanceof Element ? target : target instanceof Text ? target.parentElement : null) ?? (typeof document !== "undefined" ? document.activeElement : null);
   if (focus instanceof HTMLInputElement || focus instanceof HTMLTextAreaElement) {

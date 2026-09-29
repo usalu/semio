@@ -29,7 +29,6 @@ fn surface_output_pool_contended_drop_preserves_reserved_entry_until_exact_drain
     assert!(!ENTRY_RETURNS[entry_key.index].load(Ordering::Acquire));
     assert!(!QUEUE_RETURNS[queue_key.index].load(Ordering::Acquire));
     assert_eq!(waited, fixture["dropWaits"].as_bool().unwrap());
-    eprintln!("[DEBUG] output-pool held-mutex-drop-waits={waited} exact-return-drained=true");
 }
 
 #[test]
@@ -59,7 +58,6 @@ fn surface_output_pool_defers_reuse_and_rejects_stale_epoch_after_final_return()
         while !owner.close_step(1).unwrap().complete {}
     }
     while !queue.close_step(1, 1).unwrap().complete {}
-    eprintln!("[DEBUG] output-pool reuse-before-drain=false exact-epoch={} explicit-close-no-second-return=true", new_key.epoch);
 }
 
 #[test]
@@ -82,5 +80,5 @@ fn surface_output_pool_zero_grant_and_busy_registry_leave_authority_unchanged() 
     assert_eq!(queue.close_step(1, 0).unwrap().progressed, fixture["zeroGrantMutates"].as_bool().unwrap());
     while !reservation.close_step(1).unwrap().complete {}
     while !queue.close_step(1, 1).unwrap().complete {}
-    eprintln!("[DEBUG] output-pool busy-refusal-exact=true zero-grant-mutates=false static-bytes={}", SurfaceReconcileOutputs::static_backing_bytes());
+    eprintln!("output-pool busy-refusal-exact=true zero-grant-mutates=false static-bytes={}", SurfaceReconcileOutputs::static_backing_bytes());
 }

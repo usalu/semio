@@ -1,4 +1,4 @@
-/** @emoji 🃏️ Window-silhouette overview card for one demonstrator pane — icon title chip, no drag handle. */
+/** 🃏️ Window-silhouette overview card for one demonstrator pane — icon title chip, no drag handle. */
 
 import { cn, Icon, WindowChrome, windowChromeTitleChipClass } from "@semio-tech/ui-react";
 import { demonstratorPaneDescriptionParagraphs, type DemonstratorPaneSpec } from "./🪧️brand.ts";
@@ -12,7 +12,7 @@ export function DemonstratorCard({
   className,
 }: {
   readonly pane: DemonstratorPaneSpec;
-  /** @emoji 🎈️ Pointer-hover lift only — never maps to window `active` (that paints the primary silhouette stroke). */
+  /** 🎈️ Pointer-hover lift only — never maps to window `active` (that paints the primary silhouette stroke). */
   readonly lifted?: boolean;
   readonly onClick: () => void;
   readonly onMouseEnter?: () => void;

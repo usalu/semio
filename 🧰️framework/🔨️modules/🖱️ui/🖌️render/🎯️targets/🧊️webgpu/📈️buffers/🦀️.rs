@@ -1,4 +1,4 @@
-//! @emoji 📈️ Per-frame growable GPU buffers: [`GrowBuffer`] (upload-on-demand, doubles capacity
+//! 📈️ Per-frame growable GPU buffers: [`GrowBuffer`] (upload-on-demand, doubles capacity
 //! rather than reallocating every frame) and [`WorldGlobalsRing`] (a dynamic-offset uniform ring for
 //! per-`SurfacePass` `view_proj`/`light_dir`). Ported from `🎯️targets/🧊️wgpu/🦀️draw.rs`.
 

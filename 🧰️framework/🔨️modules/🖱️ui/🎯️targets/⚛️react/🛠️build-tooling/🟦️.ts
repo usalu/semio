@@ -102,27 +102,27 @@ export type OwnedBuildConfigFactory = (environment: OwnedBuildEnvironment) => Ow
 //#endregion 🔖️OwnedBuildContract
 
 //#region 🏭️Factories
-/** @emoji 🎨️ Tailwind's temporary build adapter behind the UI package that declares it. */
+/** 🎨️ Tailwind's temporary build adapter behind the UI package that declares it. */
 export function uiTailwindBuildPlugins(): OwnedBuildPlugin[] {
   return tailwindcss() as unknown as OwnedBuildPlugin[];
 }
 
-/** @emoji ⚛️ React's temporary build adapter behind the UI package that declares it. */
+/** ⚛️ React's temporary build adapter behind the UI package that declares it. */
 export function uiReactBuildPlugin(): OwnedBuildPlugin {
   return react() as unknown as OwnedBuildPlugin;
 }
 
-/** @emoji 🧪️ Defines a test/build config without exporting Vitest or Vite types. */
+/** 🧪️ Defines a test/build config without exporting Vitest or Vite types. */
 export function defineOwnedTestConfig<T extends OwnedBuildConfig>(config: T): T {
   return defineConfig(config as never) as T;
 }
 
-/** @emoji 🏗️ Identity helper for owned build configs that need no implementation runtime. */
+/** 🏗️ Identity helper for owned build configs that need no implementation runtime. */
 export function defineOwnedBuildConfig<T extends OwnedBuildConfig>(config: T): T {
   return config;
 }
 
-/** @emoji 🏭️ Identity helper for an owned build config a build tool resolves per command, the form a
+/** 🏭️ Identity helper for an owned build config a build tool resolves per command, the form a
  * configuration whose shape depends on `serve` versus `build` must take. */
 export function defineOwnedBuildConfigFactory<T extends OwnedBuildConfigFactory>(factory: T): T {
   return factory;

@@ -19,8 +19,10 @@ Successor agent (wave B, 2026-09-28 21:1x, WINDOW 3 OPEN). 7800 READY on `s14-w4
 | 1b | Coordinator 21:2x: commit cost vs document size + lost Ack (H13 hub 8010) | **measured**: hub CPU per 256-envelope batch flat 295 → ~370 ms over 0 → 17 k edits; wall 0.7–5 s = ~13 serial F_FULLFSYNC barriers per batch (WAL + 12 index-run replacements) under machine I/O; commit CPU 56 % in the unused `vcs` version graph. Lost Ack = 30 s frame deadline dropping a frame whose batch had reached the engine |
 | 1c | (a) Ack every committed batch (frame deadline = admission only) + bin law | **landed + proven**: hub check EXIT 0, bin laws 4/4 PASS 23:14 (hold 3) |
 | 1d | (b) hub builds kernel-db without `vcs` | **landed** 21:47, checks green 22:07/22:14/23:01 |
-| 1e | (c) index owned appends + level folds; (d) index flush after the receipt; (e) outbox/commit_log removed, receipts bounded | **landed** 22:05; laws: every assertion green in hold 3 incl. 70 016 single-envelope commits (≤ 300 runs); helper WAL-close fixed → full rerun in hold 4 (queued) |
-| 1f | P1 hello of a long document refused | (A) streamed tail `h14-hello-tail-stream.py` + `h14-hello-tail-fix.py` (first retained segment, last frame = welcome frontier incl. commit seq, dead helpers removed): compiled green in hold 3 (the revert there was my test-only law errors), **hold 4 queued** (apply + check + laws). (B2) `h14-hello-from-checkpoint.py`: a frontier-less hello from a `closed-browser-actor` plan resumes at the plan checkpoint's baseline (the worker's documented contract; the Rust store already names that baseline) + law. (B1) `h14-checkpoint-policy.py`: declared `features.checkpointPolicy` (schema, pipe fixture, README env rows `OS_HUB_CHECKPOINT_POLICY_EDITS`/`_BYTES`, default 1 024 edits / 512 KiB), per-document tally on committed socket batches, the policy Check In runs the ordinary claim → fold → fenced publication as the author whose batch reached it + 3 laws (bounds/readiness, tally, e2e GIS Check In). B1+B2 simulated clean on scratch copies; **hold 6 queued** (apply, hub check, bin + `integration-fixtures` Check In laws, TS parity) |
+| 1e | (c) index owned appends + level folds; (d) index flush after the receipt; (e) outbox/commit_log removed, receipts bounded | **landed** 22:05, **proven** holds 7 + 8: `seventy_thousand_single_envelope_commits_stay_writable_with_bounded_index_runs` (70 016 commits, ≤ 300 runs), `owned_appends_fold_full_runs_into_levels_and_every_entry_still_resolves`, `a_fold_beyond_one_read_credit_is_skipped_…`, `index_runs_follow_the_receipt_and_a_reopen_refills_them_from_the_wal` (crash/reopen), `applied_receipts_keep_a_bounded_window_…` all ok |
+| 1f | P1 hello of a long document refused | **landed + proven** (holds 8–9, 07:32–07:42): (A) streamed tail through ONE WAL reader + one-page handoff, stall-bounded hello deadline (re-armed only on a renewal) — db_sync 44/44 incl. **50 k-edit fresh replica within one frame of backing**; (B2) frontier-less hello from a `closed-browser-actor` plan resumes at the plan checkpoint baseline; (B1) declared `features.checkpointPolicy` (1 024 edits / 512 KiB, `OS_HUB_CHECKPOINT_POLICY_*`) → auto Check In through the ordinary claim/fold/fenced publication **as the committing author**, traced `server.document.check-in` started "checkpoint-policy …" — hub check EXIT 0, bin laws 17/17, Check In laws 7/7, hub TS 18/1 skip. en/de check 07:5x: no user surface shows the policy (only `/readyz`, README, event counts), so there is nothing to label; root `verify interactivity p1z` source gate still names the pre-stream design |
+| 1g | LW1 kernel `retained_clone` reds (coordinator 07:0x) | **root-caused 07:3x**: (i) `production_snapshot…` = O(bytes) retirement, not a livelock — `Vec<T>` retired one element per step even without drop glue (2 MiB `Vec<u8>` → ~6.3 M one-item pump turns); (ii) `paged_list … close_turns > 1` = the law's error (a spent cursor closes in one step). Set `wp-h14/h14-retire-pages.py` (kernel `🏪️store` = guest: page-per-step retirement for no-drop-glue collections, law, fixture + schema 9 → 11 cases, paged law `== 1`), Ajv-validated fixture on a scratch copy, dry-run clean → first post-chain train (L1) |
+| 1h | Laws on process-global state deterministic under the default runner (coordinator 07:4x) | **landed + proven** hold 10 (07:49–07:53, test-only): 8 `vcs_integration` admission laws process-isolated (`TEST_LOCK` removed), the history + round-trip laws shut their database down; kernel-db lib 729/729 default runner, `db_engine::` 136/136 ×3, 8-way stress 0 failures (was 4/40, 5/24) |
 | 2 | Idle-release / residency-LRU under real memory pressure, 24 packages (row 2.7) | **measured 23:5x** (hub 8161, `OS_HUB_GUEST_RESIDENCY_BYTES` = 128 MiB, `residency-watch --rounds 2`, `s14-h14-logs/residency-8161-p24-128mib-2.txt`): resident guests held at 6 / **133.2 MB ≤ 134.2 MB budget** both rounds; TinyLFU keeps a stable set — compiles 31 → 21, hits 34 → 44, bypassed 22 → 20, released 3 → 1; RSS 210.8 → **peak 629.5** → **settled 27.7 MiB** after 90 s idle (601.8 MiB released); pairs agree; 68/72 creations (2d/3d.generation genesis trap ×2 rounds = S19 `gen-archive-load`, T1) → verdict FAIL only on those. Finding: peak RSS ≈ 4.9× the residency budget — the budget charges component bytes + measured footprint (0 today; the T4 codec origin makes it real), interpreter working memory of a running creation is uncharged |
 | 3 | Warm restart + `/readyz` timings, creation latency per package | warm ready above; creation latency per kind (default budget, round 1): 1.0 s computation.sequence … 5.1 s 2d.block, 12.6 s data.program, 22.7 s 3d.cad, 26–53 s gis/vcs/stdio md+csv, 56 s 3d.puzzle, 82 s 2d.puzzle, 126 s 5d.puzzle = baseline for the T4 codec-origin set |
 | 4 | README/metrics parity law (row 4.9) | done in session 14 (7/7 PASS) |
@@ -113,6 +115,64 @@ Successor agent (wave B, 2026-09-28 21:1x, WINDOW 3 OPEN). 7800 READY on `s14-w4
   (it always passes the client's frontier to `db.hello`, so a fresh client gets the whole history on top of the seeded pair). The
   seeding happens only for `closed-browser-actor` leases with a checkpoint. React worker, wgpu directory client
   (`📇️directory/🔌️client/🪢️canonical-checkpoint-pair`) and the MCP workspace (`🌉️mcp/🏠️workspace/🔗️remote/🧩️pair`) read the pair route.
+
+- 00:10–07:0x (usage cut 00:1x, kernel panics 00:31–00:48, external sweep 01:14 deleted `wp-h14/generated/` incl. hold 4/6 captures).
+  07:09 resumed: reconcile — A present in the tree (every marker once, dry-runs "done"), B1/B2 absent (hold 6 never applied), no torn
+  hunk. T5's `@emoji` codemod changed doc lines my prepared anchors quoted → scripts rebased (`/// @emoji ` → `/// `), dry-runs clean;
+  backups of the pre-T5 scripts under `.🧬semio/🌐hub/s14-h14-backup/`. Captures from now on under `.🧬semio/🌐hub/s14-h14-logs/`,
+  target `.🧬semio/🌐hub/s14-h14-target`. Residency 128 MiB watch (row 2) survived (hub log dir).
+- 07:2x LW1 reds root-caused (row 1g). The policy Check In now emits its own `server.document.check-in` started record naming the
+  policy (coordinator: attributed to the committing author, an event, thresholds declared in the schema).
+
+- 07:20–07:27 **hold 7** (`h14-lane-p1-land.sh`, capture `.🧬semio/🌐hub/s14-h14-logs/hold7-1.txt` + `hold7-db-laws.txt`): kernel-db
+  check default + no-vcs **EXIT 0**; db laws 274 pass / 2 fail — green: seventy_thousand (70 016 commits), owned_appends, a_fold_beyond,
+  index_runs_follow (receipt before index + WAL refill), applied_receipts_keep, streams_exactly, derives_the_server_frontier; red:
+  (i) my `a_fifty_thousand_edit_document_streams…` → `Timeout("database sync hello deadline")`: the hello's 30 s deadline bounded the
+  WHOLE session incl. streaming, and each frame's page future re-read its segment from the start (~7× over a 50 k tail); (ii)
+  `db_engine::…artifact_history_empty_and_two_batch_replay_are_deterministic` → kernel `🏪️store` Drop "artifact store reached Drop without
+  its exact terminal-empty shallow-shell witness" (process-isolated; default `vcs` path, the database dropped without shutdown; kernel
+  store changed at 01:40 by the window-3 trains — not an H14 file; relayed). B1+B2 applied → hub check **red on my B1 only** (the two
+  test `HubState` initializers lacked `checkpoint_policy`) → restore-on-red put all five hub files back (verified: 0 markers).
+- 07:2x fixes: (A2) `wp-h14/h14-hello-tail-reader.py` — ONE tail reader walks the WAL once and hands frames over through a one-page slot
+  (`DatabaseSyncHelloTailHandoff`, reader parks while the slot is full, the driver wakes it when it takes a frame), and the hello deadline
+  is a STALL bound (`progress_deadline_ms`, renewed by every produced frame; the deadline callback re-arms at the renewed time; retry
+  expiry reads it; the now-unused `deadline_ms` field dropped). B1 script gains the test initializers. Note: root `verify interactivity
+  p1z` (source-shape gate) is red on the live tree for reasons older than my change (it looks for `database_sync_hello_allocate_envelope_vec`,
+  `returned_generation.fetch_update`, … that the code no longer has) — not in any chain gate; a rewrite of that gate for the streamed
+  design is follow-up work. Hold 8 queued 07:29 (`h14-lane-p1-land2.sh`).
+
+- 07:32–07:40 **hold 8** (`h14-lane-p1-land2.sh`, `.🧬semio/🌐hub/s14-h14-logs/hold8-*`): A2 applied → kernel-db check default + no-vcs
+  EXIT 0; db laws 268 / 8 — **50 k-edit law PASS**, reds: `retained_sync_hello_deadline_retry_drop_close_retains_registry_until_worker_service`
+  (my callback re-armed whenever the renewed deadline was in the future; the law drives the callback directly before the deadline and
+  requires expiry) + 7 `db_engine::vcs_integration` laws ("vcs operation capacity exhausted" then a PoisonError cascade; green in hold 7).
+  B2 + B1 applied → semio-hub check **EXIT 0 07:35**, bin laws **17/17**, integration-fixtures Check In laws **7/7**, hub TS long
+  observability + integration 18 pass / 1 skip (the lane's first vitest call passed root-relative filters → "no test files"; rerun from
+  the package script). **LANDED** — relayed to main 07:4x.
+- 07:40:56–07:42:44 **hold 9** (`h14-lane-hold9.sh`, `hold9-*`): `h14-hello-deadline-armed.py` (`deadline_armed_ms`: re-arm only when a
+  frame renewed the deadline after arming) → checks EXIT 0/0, **db_sync 44/44**, vcs_integration **11/11** on one thread and
+  `artifact_history_empty_and_two_batch_replay_are_deterministic` **1/1** alone (both hold-8 reds = parallel interference on
+  process-global state, not regressions; the Drop-witness panic of hold 7 does not reproduce alone), semio-hub check EXIT 0. New warnings
+  in my files: none (the kernel-db warnings sit in history replay, runner retirement and catalog work).
+- 07:4x coordinator: laws on process-global state must not depend on the runner. Root causes: (i) `vcs_integration::retained_tests`
+  claim from the process-global `VCS_ADMISSION` table (64 slots) and assert exact counts / slot identity, but their module `TEST_LOCK`
+  cannot exclude the engine laws that commit through the default `vcs` graph (`🗿️artifact` commit → `record_change` claims a slot) — in
+  hold 8 my 70 016-commit law held a slot while the aggregate law claimed all 64 → "vcs operation capacity exhausted", and the poisoned
+  `TEST_LOCK` failed six more; (ii) `artifact_history_empty_and_two_batch_replay_…` (already process-isolated) and
+  `full_submit_durable_query_round_trip_…` dropped their `Database` without `shutdown`, so the last `Arc<VersionGraphs>` dropped a live vcs
+  `ArtifactStore` on whichever thread released it; on the test thread the store's Drop witness panics (backtrace: `Arc<VersionGraphs>::
+  drop_slow` → `VcsStoreCell` in the test closure) — reproduced 4/40 and 5/24 with 8 concurrent isolated runs; 6 sibling laws with the
+  same shape passed 24/24 each (latent, untouched). Fix `wp-h14/h14-law-isolation.py` (test-only): the 8 admission laws become
+  process-isolated, `TEST_LOCK` removed, the two laws shut their database down.
+- 07:48:56–07:53 **hold 10** (`h14-lane-hold10.sh`, `hold10-*`): check EXIT 0 (no new warnings), whole kernel-db lib **729/729** under the
+  default runner, `db_engine::` 136/136 three times, 8-way stress 0/40 (+ 0/120 by hand) for both shut-down laws and 0/40 for the aggregate
+  law. Finding (production, not fixed — test-only scope): the `🗿️artifact` commit's vcs step says "best-effort … never blocks a commit" but
+  returns any error other than `Unimplemented` AFTER the WAL write was durable and before the receipt is remembered; only kernel-db's own
+  tests build `vcs` (the hub builds without it since (b)), so the default `vcs` feature has no production consumer.
+- 07:5x checkpoint-policy en/de check: no user-facing surface shows the policy — it appears in `/readyz` `features.checkpointPolicy`
+  (machine readout), the README env rows, and as `server.document.check-in` counts in the admin observability events table (an event
+  name, aggregated with manual Check Ins; the `checkpoint-policy …` detail is only in the trace record). So there is nothing to label; an admin
+  view of the policy would need `admin.*` en + de keys in `🛡️admin/🧱️elements/📚️I18n/🟦️.tsx`.
+
 
 ### Session 14b
 

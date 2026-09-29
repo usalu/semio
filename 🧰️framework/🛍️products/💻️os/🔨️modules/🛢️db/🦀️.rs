@@ -35,16 +35,10 @@ pub use crate::db_engine::{
     DatabaseShutdownProgress, DbHealth, HistoryEntry, HistoryView, LiveQuery, LiveQuerySpec, PreviewHandle, Query, QueryResultEntry, QueryStream, SnapshotFuture, SnapshotKind, SnapshotReceipt, SubmitFuture,
 };
 
-/// 🗄️🌿️ The real `vcs`-backed `VersionGraph` — the ONLY place in the whole `db` family
-/// allowed to depend on `vcs` (hard dependency rule). Present exactly when this crate's own `vcs`
-/// feature (default-on) is enabled, mirroring `db_engine`'s identically-named feature it forwards.
-#[cfg(feature = "vcs")]
-pub use crate::db_engine::vcs_integration;
-
 //#endregion 🔖️Database
 
 //#region 🔖️Family
-/// 🗄️#⃣ Former `db_core` surface — ids, durability, policy, and version-graph seams.
+/// 🗄️#⃣ Former `db_core` surface — ids, durability and policy.
 pub mod ids {
     pub use crate::db_ids::*;
 }
@@ -55,10 +49,6 @@ pub mod durability {
 
 pub mod policy {
     pub use crate::db_policy::*;
-}
-
-pub mod version_graph {
-    pub use crate::db_version_graph::*;
 }
 
 /// 🗄️🎭️ `db_actor` — the six-lane bounded-priority mailbox actor runtime every document/catalog
@@ -128,7 +118,7 @@ pub mod security {
 }
 
 /// 🗄️🏛️ `db_artifact` — the document authority actor: admit → dedupe → base-resolve → authz →
-/// deps → validate → conflict → execute → WAL append → durability → publish → project → vcs →
+/// deps → validate → conflict → execute → WAL append → durability → publish → project →
 /// preview-reconcile → receipt.
 pub mod document {
     pub use crate::db_artifact::*;
@@ -169,7 +159,7 @@ pub mod engine {
 
 //#region 🔖️StorageBackends
 /// 🗄️🪶️ `db_storage_sqlite` — the optional SQLite-backed `DbStorage` implementation (behind this
-/// crate's `sqlite` feature), linking the same bundled `rusqlite` version `vcs` already uses.
+/// crate's `sqlite` feature), linking the same bundled `rusqlite` version the kernel already uses.
 #[cfg(feature = "sqlite")]
 pub mod storage_sqlite {
     pub use crate::db_storage_sqlite::*;

@@ -7,6 +7,7 @@
 export interface WriterEditorSelection {
   start: number;
   end: number;
+  splice: number;
 }
 
 /** ✏️ Editor chrome settings — mirrors Rust `WriterEditorSettings`. */

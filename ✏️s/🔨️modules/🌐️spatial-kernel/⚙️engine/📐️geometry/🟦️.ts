@@ -1,8 +1,9 @@
 // #region 🧲️Header
-/** @emoji 🧭️ `@semio-tech/cad-js` — CAD domain module facet. See `cad/AGENTS.md`. */
+/** 🧭️ `@semio-tech/cad-js` — CAD domain module facet. See `cad/AGENTS.md`. */
 import { ephemeralBox, ephemeralMap, ephemeralWeakMap } from "@semio-tech/framework";
 import type { ArcPlaneFrame, EdgeCurve, EdgeGroup, EdgeInfo, FaceGroup, FaceInfo, MeshTransfer, Vec3 } from "@semio-tech/s-3d-js";
 import { emptyMeshTransfer, kernelGeometry, solidRef } from "@semio-tech/s-3d-js";
+import type { SpatialKernel, SpatialPreviewKernel } from "../🗺️spatial/🟦️.ts";
 // #endregion 🧲️Header
 
 
@@ -14,14 +15,14 @@ import { emptyMeshTransfer, kernelGeometry, solidRef } from "@semio-tech/s-3d-js
 // #region 🧱️kernelGeometry
 
 // #region 🎮️InteractionEvent
-/** @emoji 🧭️ Interaction input envelope; `kind` selects `machine.states[*].on` keys. */
+/** 🧭️ Interaction input envelope; `kind` selects `machine.states[*].on` keys. */
 export type InteractionEvent = { readonly kind: string; readonly [k: string]: unknown };
 // #endregion 🎮️InteractionEvent
 
 // #region 🪪️Selection
 const MODEL_ENTITY_KINDS = new Set<string>(["anchor", "vertex", "edge", "wire", "face", "shell", "solid", "object", "geometry", "attribute"]);
 
-/** @emoji 🪪️ One picked geometry or derived view target for `selection.changed`. */
+/** 🪪️ One picked geometry or derived view target for `selection.changed`. */
 export interface SelectionTarget {
   readonly kind: ModelEntityKind;
   readonly id: string;
@@ -29,26 +30,26 @@ export interface SelectionTarget {
   readonly derivedFrom?: readonly { kind: EditableEntityKind; id: string }[];
 }
 
-/** @emoji 🪪️ Host selection payload; `targets` filtered by `SelectionSpec.accept`. */
+/** 🪪️ Host selection payload; `targets` filtered by `SelectionSpec.accept`. */
 export interface SelectionEvent extends InteractionEvent {
   readonly kind: "selection.changed";
   readonly targets: readonly SelectionTarget[];
   readonly point?: Vec3;
 }
 
-/** @emoji 🪪️ Per-state declarative filter for model vs extension-view picking. */
+/** 🪪️ Per-state declarative filter for model vs extension-view picking. */
 export interface SelectionSpec {
   readonly accept: readonly ModelEntityKind[];
   readonly multiple?: boolean;
   readonly prompt?: string;
 }
 
-/** @emoji 🧭️ Returns `targets` whose `kind` is listed in `spec.accept`. */
+/** 🧭️ Returns `targets` whose `kind` is listed in `spec.accept`. */
 export function filterSelectionTargets(spec: SelectionSpec, targets: readonly SelectionTarget[]): SelectionTarget[] {
   return targets.filter((t) => spec.accept.includes(t.kind));
 }
 
-/** @emoji 🧭️ Maps object picks to wire/edge primitives when `spec.accept` lists curve geometry kinds. */
+/** 🧭️ Maps object picks to wire/edge primitives when `spec.accept` lists curve geometry kinds. */
 export function expandSelectionTargetsForAccept(model: Model, spec: SelectionSpec, targets: readonly SelectionTarget[]): SelectionTarget[] {
   const accept = new Set(spec.accept);
   const out: SelectionTarget[] = [];
@@ -76,7 +77,7 @@ export function expandSelectionTargetsForAccept(model: Model, spec: SelectionSpe
   return out;
 }
 
-/** @emoji 🧭️ True when every target is accepted (and at least one target exists). */
+/** 🧭️ True when every target is accepted (and at least one target exists). */
 export function selectionEventMatches(spec: SelectionSpec, ev: SelectionEvent): boolean {
   if (!ev.targets || ev.targets.length === 0) return false;
   const xs = filterSelectionTargets(spec, ev.targets);
@@ -85,7 +86,7 @@ export function selectionEventMatches(spec: SelectionSpec, ev: SelectionEvent): 
   return true;
 }
 
-/** @emoji 🧭️ Active `selection` block for `state`, or `null` when unrestricted. */
+/** 🧭️ Active `selection` block for `state`, or `null` when unrestricted. */
 export function getActiveSelectionSpec(
   spec: {
     readonly machine: {
@@ -99,7 +100,7 @@ export function getActiveSelectionSpec(
   return s ?? null;
 }
 
-/** @emoji ✅️ Whether Enter/Space can fire a guarded `confirm` transition in `state`. */
+/** ✅️ Whether Enter/Space can fire a guarded `confirm` transition in `state`. */
 export function interactionCanConfirmSelection(spec: InteractionSpec, state: string, ctx: Record<string, unknown>, preview: SpatialPreviewKernel): boolean {
   if (!getActiveSelectionSpec(spec, state)) return false;
   const handler = spec.machine.states.find((s) => s.name === state)?.on?.find((h) => h.event === "confirm");
@@ -117,19 +118,19 @@ export function interactionCanConfirmSelection(spec: InteractionSpec, state: str
 // #endregion 🪪️Selection
 
 // #region 🗺️Paths
-/** @emoji 🧭️ Root object for segmented path reads (`context`, `event`, or action `params`). */
+/** 🧭️ Root object for segmented path reads (`context`, `event`, or action `params`). */
 export type PathRoot = "context" | "event" | "params";
 
-/** @emoji 🧭️ One navigation step: object field or array index (no dynamic JSON keys). */
+/** 🧭️ One navigation step: object field or array index (no dynamic JSON keys). */
 export type PathSegment = { readonly kind: "field"; readonly name: string } | { readonly kind: "index"; readonly index: number };
 
-/** @emoji 🧭️ Absolute path into `context` or `event` payloads. */
+/** 🧭️ Absolute path into `context` or `event` payloads. */
 export interface PathTarget {
   readonly root: PathRoot;
   readonly segments: readonly PathSegment[];
 }
 
-/** @emoji 🧭️ Reads `segments` from `root` (object/array chain). */
+/** 🧭️ Reads `segments` from `root` (object/array chain). */
 export function readPathSegments(root: unknown, segments: readonly PathSegment[]): unknown {
   let cur: unknown = root;
   for (const seg of segments) {
@@ -151,12 +152,12 @@ function pathRootRecord(root: PathRoot, env: ExprEnv): unknown {
   return env.event;
 }
 
-/** @emoji 🧭️ Resolves a `PathTarget` against `ExprEnv`. */
+/** 🧭️ Resolves a `PathTarget` against `ExprEnv`. */
 export function readPathTarget(t: PathTarget, env: ExprEnv): unknown {
   return readPathSegments(pathRootRecord(t.root, env), t.segments);
 }
 
-/** @emoji 🧭️ Writes `value` at `segments` under `root` (creates object/array shells). */
+/** 🧭️ Writes `value` at `segments` under `root` (creates object/array shells). */
 export function writePathSegments(root: Record<string, unknown>, segments: readonly PathSegment[], value: unknown): void {
   if (segments.length === 0) return;
   let cur: Record<string, unknown> | unknown[] = root;
@@ -190,13 +191,13 @@ export function writePathSegments(root: Record<string, unknown>, segments: reado
   }
 }
 
-/** @emoji 🧭️ Writes into `env.context` using a context-rooted path. */
+/** 🧭️ Writes into `env.context` using a context-rooted path. */
 export function writePathTarget(t: PathTarget, env: ExprEnv, value: unknown): void {
   if (t.root !== "context") return;
   writePathSegments(env.context, t.segments, value);
 }
 
-/** @emoji 🧭️ Clears the value at `segments` (deletes final field or sets array slot to `undefined`). */
+/** 🧭️ Clears the value at `segments` (deletes final field or sets array slot to `undefined`). */
 export function clearPathSegments(root: Record<string, unknown>, segments: readonly PathSegment[]): void {
   if (segments.length === 0) return;
   if (segments.length === 1 && segments[0]!.kind === "field") {
@@ -216,7 +217,7 @@ export function clearPathSegments(root: Record<string, unknown>, segments: reado
   else (parent as unknown[])[last.index] = undefined;
 }
 
-/** @emoji 🧭️ Clears `target` on `env.context`. */
+/** 🧭️ Clears `target` on `env.context`. */
 export function clearPathTarget(t: PathTarget, env: ExprEnv): void {
   if (t.root !== "context") return;
   clearPathSegments(env.context, t.segments);
@@ -224,7 +225,7 @@ export function clearPathTarget(t: PathTarget, env: ExprEnv): void {
 // #endregion 🗺️Paths
 
 // #region 🏷️Metadata
-/** @emoji 🏷️ Sidecar semantic fields keyed by geometry or derived entity id (`FaceRef`, `EdgeRef`, …); never stored on brepjs shapes. */
+/** 🏷️ Sidecar semantic fields keyed by geometry or derived entity id (`FaceRef`, `EdgeRef`, …); never stored on brepjs shapes. */
 export class AttributeTable {
   private readonly byId = new Map<string, Record<string, unknown>>();
 
@@ -257,36 +258,36 @@ export class AttributeTable {
     if (this.byId.delete(id)) this.bumpRevision();
   }
 
-  /** @emoji 🧭️ Iterates `(entityId, fields)` pairs in stable id order. */
+  /** 🧭️ Iterates `(entityId, fields)` pairs in stable id order. */
   entries(): Iterable<[string, Readonly<Record<string, unknown>>]> {
     return [...this.byId.entries()].sort(([a], [b]) => a.localeCompare(b));
   }
 
-  /** @emoji 🧭️ Serializes sidecar attribute rows for STEP / JSON. */
+  /** 🧭️ Serializes sidecar attribute rows for STEP / JSON. */
   toJSON(): readonly { readonly id: string; readonly fields: Readonly<Record<string, unknown>> }[] {
     return [...this.entries()].map(([id, fields]) => ({ id, fields }));
   }
 
-  /** @emoji 🧭️ Hydrates sidecar attributes from JSON rows. */
+  /** 🧭️ Hydrates sidecar attributes from JSON rows. */
   static fromJSON(rows: readonly { readonly id: string; readonly fields: Readonly<Record<string, unknown>> }[]): AttributeTable {
     const store = new AttributeTable(() => {});
     for (const row of rows ?? []) store.byId.set(row.id, { ...row.fields });
     return store;
   }
 
-  /** @emoji 🧭️ Replaces all attribute rows; bumps parent revision when `bumpRevision` is true. */
+  /** 🧭️ Replaces all attribute rows; bumps parent revision when `bumpRevision` is true. */
   loadSnapshot(rows: readonly { readonly id: string; readonly fields: Readonly<Record<string, unknown>> }[], bumpRevision = true): void {
     this.byId.clear();
     for (const row of rows ?? []) this.byId.set(row.id, { ...row.fields });
     if (bumpRevision && rows.length > 0) this.bumpRevision();
   }
 
-  /** @emoji 👁️ Reads persisted hide/lock flags for any geometry or object entity id. */
+  /** 👁️ Reads persisted hide/lock flags for any geometry or object entity id. */
   getEntityFlags(id: string): SpatialEntityFlags {
     return spatialEntityFlagsFromFields(this.get(id));
   }
 
-  /** @emoji 👁️ Sets one persisted hide/lock flag; clears the field when set to false. */
+  /** 👁️ Sets one persisted hide/lock flag; clears the field when set to false. */
   setEntityFlag(id: string, flag: SpatialEntityFlagKey, value: boolean): void {
     if (value) {
       this.setField(id, flag, true);
@@ -296,16 +297,16 @@ export class AttributeTable {
   }
 }
 
-/** @emoji 👁️ Persisted per-entity hide/lock keys stored in `Model.metadata`. */
+/** 👁️ Persisted per-entity hide/lock keys stored in `Model.metadata`. */
 export type SpatialEntityFlagKey = "hidden" | "locked";
 
-/** @emoji 👁️ Persisted per-entity hide/lock flags for CAD spatial entities. */
+/** 👁️ Persisted per-entity hide/lock flags for CAD spatial entities. */
 export interface SpatialEntityFlags {
   readonly hidden?: boolean;
   readonly locked?: boolean;
 }
 
-/** @emoji 👁️ Parses hide/lock flags from a metadata field row. */
+/** 👁️ Parses hide/lock flags from a metadata field row. */
 export function spatialEntityFlagsFromFields(fields: Readonly<Record<string, unknown>> | undefined): SpatialEntityFlags {
   if (!fields) {
     return {};
@@ -316,7 +317,7 @@ export function spatialEntityFlagsFromFields(fields: Readonly<Record<string, unk
   };
 }
 
-/** @emoji 🪪️ `evalExpr` `field` target: a bound geometry row entity (`kind` + `id`). */
+/** 🪪️ `evalExpr` `field` target: a bound geometry row entity (`kind` + `id`). */
 export interface ModelEntityRef {
   readonly kind: ModelEntityKind;
   readonly id: string;
@@ -324,7 +325,7 @@ export interface ModelEntityRef {
 // #endregion 🏷️Metadata
 
 // #region 🗺️Expr
-/** @emoji 🗺️ Tagged declarative expression evaluated by `evalExpr`. */
+/** 🗺️ Tagged declarative expression evaluated by `evalExpr`. */
 export type Expr = ExprPath | ExprConst | ExprVar | ExprField | ExprLet | ExprExists | ExprNotEmpty | ExprAll | ExprAny | ExprNot | ExprAbs | ExprDistance | ExprKernelCall | ExprBinop | ExprFold;
 
 export interface ExprPath {
@@ -434,7 +435,7 @@ function isModelEntityRef(v: unknown): v is ModelEntityRef {
   return typeof o.kind === "string" && typeof o.id === "string";
 }
 
-/** @emoji 🧮️ Evaluates a tagged `Expr` against `ExprEnv` (guards + action values). */
+/** 🧮️ Evaluates a tagged `Expr` against `ExprEnv` (guards + action values). */
 export function evalExpr(expr: Expr, env: ExprEnv): unknown {
   switch (expr.kind) {
     case "const":
@@ -526,21 +527,21 @@ export function evalExpr(expr: Expr, env: ExprEnv): unknown {
   }
 }
 
-/** @emoji 🧭️ Coerces `evalExpr` output to strict boolean guard result. */
+/** 🧭️ Coerces `evalExpr` output to strict boolean guard result. */
 export function evalGuard(expr: Expr, env: ExprEnv): boolean {
   return Boolean(evalExpr(expr, env));
 }
 // #endregion 🗺️Expr
 
 // #region 📜️Spec
-/** @emoji 📜️ Declared interaction-local context slots (`spatial.interaction/v1` `context`). */
+/** 📜️ Declared interaction-local context slots (`spatial.interaction/v1` `context`). */
 export interface ContextFieldDecl {
   readonly name: string;
   readonly kind: "string" | "number" | "boolean" | "vec3" | "stringArray" | "unknown";
   readonly enumValues?: readonly string[];
 }
 
-/** @emoji 📜️ Named guard binding (`guards[]`). */
+/** 📜️ Named guard binding (`guards[]`). */
 export interface NamedGuard {
   readonly name: string;
   readonly expr: Expr;
@@ -577,7 +578,7 @@ export type EffectSpec =
       readonly outputs?: readonly InteractionOutputBinding[] | Record<string, unknown>;
     };
 
-/** @emoji 📞️ Maps host context paths from expressions evaluated against the child session context. */
+/** 📞️ Maps host context paths from expressions evaluated against the child session context. */
 export interface InteractionOutputBinding {
   readonly target: PathTarget;
   readonly value: Expr;
@@ -633,7 +634,7 @@ export type CommitOperationSpec = {
   readonly params?: Record<string, Expr>;
 };
 
-/** @emoji 📜️ Parsed static interaction document (`spatial.interaction/v1`). */
+/** 📜️ Parsed static interaction document (`spatial.interaction/v1`). */
 export interface InteractionSpec {
   readonly schema: "spatial.interaction";
   readonly id: string;
@@ -656,19 +657,19 @@ export interface InteractionSpec {
     readonly outputDataPath?: PathTarget;
     readonly operation: CommitOperationSpec;
   };
-  /** @emoji 📞️ `standalone` (default) for hosts; `callable` only via `interaction.call`. */
+  /** 📞️ `standalone` (default) for hosts; `callable` only via `interaction.call`. */
   readonly invocation?: InteractionInvocation;
-  /** @emoji 🏷️ Typology object created when this interaction commits geometry. */
+  /** 🏷️ Typology object created when this interaction commits geometry. */
   readonly produces?: { readonly typology: string };
 }
 
-/** @emoji 📞️ How hosts may start an interaction (`standalone` vs nested-only `callable`). */
+/** 📞️ How hosts may start an interaction (`standalone` vs nested-only `callable`). */
 export type InteractionInvocation = "standalone" | "callable";
 
-/** @emoji 🎛️ Engagement control kind declared on {@link InteractionLengthEntrySpec} / {@link InteractionScalarEntrySpec}. */
+/** 🎛️ Engagement control kind declared on {@link InteractionLengthEntrySpec} / {@link InteractionScalarEntrySpec}. */
 export type InteractionEngagementControlKind = "slider" | "stepper" | "ring";
 
-/** @emoji 🎛️ Optional engagement control parameters on numeric interaction entries. */
+/** 🎛️ Optional engagement control parameters on numeric interaction entries. */
 export interface InteractionEngagementEntryControl {
   readonly control?: InteractionEngagementControlKind;
   readonly min?: number;
@@ -678,30 +679,30 @@ export interface InteractionEngagementEntryControl {
   readonly default?: number;
 }
 
-/** @emoji 📏️ One rubber-band state where REPL digits clamp distance along the cursor ray. */
+/** 📏️ One rubber-band state where REPL digits clamp distance along the cursor ray. */
 export interface InteractionLengthEntrySpec extends InteractionEngagementEntryControl {
   readonly state: string;
   readonly anchor: string;
   readonly field: string;
-  /** @emoji ✅️ Host commit on Enter/Space (`pointer.down` default, `confirm` for scalar-like steps). */
+  /** ✅️ Host commit on Enter/Space (`pointer.down` default, `confirm` for scalar-like steps). */
   readonly commit?: "pointer.down" | "confirm";
 }
 
-/** @emoji 🔢️ One state where REPL digits set a scalar context field live (`set.height`, `set.radius`, …). */
+/** 🔢️ One state where REPL digits set a scalar context field live (`set.height`, `set.radius`, …). */
 export interface InteractionScalarEntrySpec extends InteractionEngagementEntryControl {
   readonly state: string;
   readonly event: string;
   readonly field: string;
-  /** @emoji ✅️ Host commit on Enter/Space (defaults to `confirm`). */
+  /** ✅️ Host commit on Enter/Space (defaults to `confirm`). */
   readonly commit?: "pointer.down" | "confirm";
-  /** @emoji 📍️ Context path to Vec3 for axis XY (Z from `axisFloor` when set). */
+  /** 📍️ Context path to Vec3 for axis XY (Z from `axisFloor` when set). */
   readonly axisAnchor?: string;
-  /** @emoji 📍️ Context path to Vec3 whose Z is the axis floor (defaults to `axisAnchor`). */
+  /** 📍️ Context path to Vec3 whose Z is the axis floor (defaults to `axisAnchor`). */
   readonly axisFloor?: string;
   readonly axis?: readonly [number, number, number];
 }
 
-/** @emoji 🎚️ Resolved numeric engagement control for one interaction state. */
+/** 🎚️ Resolved numeric engagement control for one interaction state. */
 export interface ResolvedInteractionEngagementNumericControl {
   readonly kind: "slider" | "stepper";
   readonly label: string;
@@ -712,7 +713,7 @@ export interface ResolvedInteractionEngagementNumericControl {
   readonly unit?: string;
 }
 
-/** @emoji 🧫️ Resolved ring engagement control for one interaction state. */
+/** 🧫️ Resolved ring engagement control for one interaction state. */
 export interface ResolvedInteractionEngagementRingControl {
   readonly kind: "ring";
   readonly label: string;
@@ -723,10 +724,10 @@ export interface ResolvedInteractionEngagementRingControl {
   readonly step: number;
 }
 
-/** @emoji 🎛️ Resolved engagement control descriptor for {@link interactionControlForState}. */
+/** 🎛️ Resolved engagement control descriptor for {@link interactionControlForState}. */
 export type ResolvedInteractionEngagementControl = ResolvedInteractionEngagementNumericControl | ResolvedInteractionEngagementRingControl;
 
-/** @emoji 🎮️ Host + viewport hints for spatial picking (declared per interaction). */
+/** 🎮️ Host + viewport hints for spatial picking (declared per interaction). */
 export interface InteractionSpatialConfig {
   readonly spatialGroundPick?: boolean;
   readonly pickDisabledStates?: readonly string[];
@@ -738,13 +739,13 @@ export interface InteractionSpatialConfig {
   readonly scalarEntry?: readonly InteractionScalarEntrySpec[];
 }
 
-/** @emoji 📞️ Resolved invocation for an interaction document. */
+/** 📞️ Resolved invocation for an interaction document. */
 export function interactionInvocation(spec: InteractionSpec): InteractionInvocation {
   if (spec.invocation === "callable" || spec.invocation === "standalone") return spec.invocation;
   return "standalone";
 }
 
-/** @emoji 📞️ True when an interaction must not be started standalone by hosts. */
+/** 📞️ True when an interaction must not be started standalone by hosts. */
 export function isCallableOnlyInteraction(spec: InteractionSpec): boolean {
   return interactionInvocation(spec) === "callable";
 }
@@ -753,7 +754,7 @@ function guardNames(spec: InteractionSpec): Set<string> {
   return new Set((spec.guards ?? []).map((g) => g.name));
 }
 
-/** @emoji 📜️ Resolves a named guard's `Expr` from `spec.guards`. */
+/** 📜️ Resolves a named guard's `Expr` from `spec.guards`. */
 function lookupGuard(spec: InteractionSpec, name: string): Expr | null {
   return spec.guards?.find((g) => g.name === name)?.expr ?? null;
 }
@@ -762,7 +763,7 @@ function findState(spec: InteractionSpec, name: string): StateDefSpec | undefine
   return spec.machine.states.find((s) => s.name === name);
 }
 
-/** @emoji 🏁️ True when `state` is marked `final` on the interaction machine. */
+/** 🏁️ True when `state` is marked `final` on the interaction machine. */
 export function isFinalInteractionState(spec: InteractionSpec, state: string): boolean {
   return Boolean(findState(spec, state)?.final);
 }
@@ -817,7 +818,7 @@ function normalizeInteractionDocumentRaw(r: Record<string, unknown>): void {
   }
 }
 
-/** @emoji 📞️ Writes child session values onto host context using declarative output bindings. */
+/** 📞️ Writes child session values onto host context using declarative output bindings. */
 export function mergeInteractionCallOutputs(hostContext: Record<string, unknown>, childContext: Record<string, unknown>, outputs: readonly InteractionOutputBinding[] | Record<string, unknown> | undefined): void {
   const bindings = interactionOutputBindings(outputs);
   if (!bindings?.length) return;
@@ -828,7 +829,7 @@ export function mergeInteractionCallOutputs(hostContext: Record<string, unknown>
   }
 }
 
-/** @emoji 🧾️ Validates and returns an `InteractionSpec` or `null` when malformed. */
+/** 🧾️ Validates and returns an `InteractionSpec` or `null` when malformed. */
 export function parseInteractionSpec(raw: unknown): InteractionSpec | null {
   if (!raw || typeof raw !== "object") return null;
   const r = structuredClone(raw) as Record<string, unknown>;
@@ -931,7 +932,7 @@ function compileInitialState(spec: InteractionSpec, transition: TransitionSpec |
   };
 }
 
-/** @emoji 📜️ Scripted commands that end in `committed` should commit from that state, not missing `ready`. */
+/** 📜️ Scripted commands that end in `committed` should commit from that state, not missing `ready`. */
 function normalizeCommitFromStates(spec: InteractionSpec): InteractionSpec {
   const finals = listFinalInteractionStates(spec);
   const hasReady = spec.machine.states.some((s) => s.name === "ready");
@@ -947,7 +948,7 @@ export function initialContextForSpec(spec: InteractionSpec): Record<string, unk
   return structuredClone(COMPILED_INITIAL_CONTEXTS.get(spec) ?? {});
 }
 
-/** @emoji 🧭️ Normalizes a parsed interaction so runtime sessions begin in the first active state. */
+/** 🧭️ Normalizes a parsed interaction so runtime sessions begin in the first active state. */
 export function compileInteraction(spec: InteractionSpec): InteractionSpec {
   const start = initialStartTransition(spec);
   if (!start) {
@@ -960,12 +961,12 @@ export function compileInteraction(spec: InteractionSpec): InteractionSpec {
   return compiled;
 }
 
-/** @emoji 🧾️ Declared shape of one `spatial.action/v1` step-spec parameter. */
+/** 🧾️ Declared shape of one `spatial.action/v1` step-spec parameter. */
 export interface ActionParameterSpec {
   readonly kind: "string" | "number" | "boolean" | "vec3" | "stringArray" | "unknown";
 }
 
-/** @emoji 🧾️ One headless step of a parsed `spatial.action/v1` document. */
+/** 🧾️ One headless step of a parsed `spatial.action/v1` document. */
 export type ActionStepSpec =
   | { readonly operation: "let"; readonly name: string; readonly value: Expr }
   | { readonly operation: "setContext"; readonly values: Record<string, Expr> }
@@ -974,7 +975,7 @@ export type ActionStepSpec =
   | { readonly operation: "guard"; readonly condition: Expr; readonly message?: string }
   | { readonly operation: "return"; readonly diff?: Expr; readonly data?: Expr; readonly patch?: Expr; readonly result?: Expr };
 
-/** @emoji 🧾️ Parsed data-only `spatial.action/v1` document. */
+/** 🧾️ Parsed data-only `spatial.action/v1` document. */
 export interface ActionSpec {
   readonly schema: "spatial.action";
   readonly id: string;
@@ -1006,7 +1007,7 @@ function isActionStepSpec(raw: unknown): raw is ActionStepSpec {
   return false;
 }
 
-/** @emoji 🧾️ Parses a data-only `spatial.action/v1` document. */
+/** 🧾️ Parses a data-only `spatial.action/v1` document. */
 export function parseActionSpec(raw: unknown): ActionSpec | null {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
   const r = structuredClone(raw) as Record<string, unknown>;
@@ -1036,7 +1037,7 @@ export type SolidRef = kernelGeometry.SolidRef;
 type GeometryEntityKind = kernelGeometry.GeometryEntityKind;
 type EditableEntityKind = GeometryEntityKind;
 
-/** @emoji 🧭️ Framework + brepjs sub-element selection kinds. */
+/** 🧭️ Framework + brepjs sub-element selection kinds. */
 export type ModelEntityKind = EditableEntityKind | "object" | "geometry" | "attribute";
 // #endregion 🧱️kernelGeometry
 
@@ -1052,16 +1053,16 @@ export type SolidPrimitive = kernelGeometry.SolidPrimitive;
 export type SolidRecord = kernelGeometry.SolidRecord;
 export type KernelGeometryJson = kernelGeometry.KernelGeometryJson;
 
-/** @emoji 🪪️ Opaque object id in a model. */
+/** 🪪️ Opaque object id in a model. */
 export type ObjectRef = string & { readonly __brand: "ObjectRef" };
 
-/** @emoji 🪪️ Typology id referenced by objects and extension assets. */
+/** 🪪️ Typology id referenced by objects and extension assets. */
 export type TypologyRef = string & { readonly __brand: "TypologyRef" };
 
-/** @emoji 📦️ Primitive refs owned by one object row. */
+/** 📦️ Primitive refs owned by one object row. */
 export type SpatialObjectPrimitives = Readonly<Record<string, string>>;
 
-/** @emoji 📦️ Object instance row in a model (`typology` + kernel `primitives`). */
+/** 📦️ Object instance row in a model (`typology` + kernel `primitives`). */
 export interface SpatialObjectRecord {
   readonly id: ObjectRef;
   readonly typology: TypologyRef;
@@ -1069,7 +1070,7 @@ export interface SpatialObjectRecord {
   readonly attributes?: Readonly<Record<string, unknown>>;
 }
 
-/** @emoji 🗺️ Serializable model (`spatial.model/v1`). */
+/** 🗺️ Serializable model (`spatial.model/v1`). */
 export interface ModelJson {
   readonly schema: "spatial.model";
   readonly revision: number;
@@ -1123,7 +1124,7 @@ function readVec3FromUnknown(value: unknown): Vec3 | null {
   return [x, y, z];
 }
 
-/** @emoji 🧱️ Promotes inline `objects[].primitives[]` rows into kernel geometry tables and slot refs. */
+/** 🧱️ Promotes inline `objects[].primitives[]` rows into kernel geometry tables and slot refs. */
 export function materializeInlineObjectPrimitives(model: Model, rawObjects: readonly unknown[] = []): void {
   let changed = false;
   const rawById = new Map<string, Record<string, unknown>>();
@@ -1207,7 +1208,7 @@ export function objectPrimaryPrimitiveRef(object: SpatialObjectRecord): string |
   return objectPrimitiveEntries(object)[0]?.[1] ?? null;
 }
 
-/** @emoji 🧱️ Mutable in-memory model: objects + kernel-private geometry + attribute store. */
+/** 🧱️ Mutable in-memory model: objects + kernel-private geometry + attribute store. */
 export class Model {
   revision = 0;
   objects: Record<string, SpatialObjectRecord> = {};
@@ -1220,7 +1221,7 @@ export class Model {
   solids: Record<string, SolidRecord> = {};
   readonly metadata: AttributeTable = new AttributeTable(() => this.bump());
 
-  /** @emoji 🧭️ Serializes to `ModelJson` (stable id-sorted arrays). */
+  /** 🧭️ Serializes to `ModelJson` (stable id-sorted arrays). */
   toJSON(): ModelJson {
     const meta = this.metadata.toJSON();
     return {
@@ -1240,7 +1241,7 @@ export class Model {
     };
   }
 
-  /** @emoji 🧭️ Hydrates from `ModelJson`. */
+  /** 🧭️ Hydrates from `ModelJson`. */
   static fromJSON(j: ModelJson): Model {
     const g = new Model();
     g.revision = j.revision;
@@ -1263,18 +1264,18 @@ export class Model {
     this.revision += 1;
   }
 
-  /** @emoji 👁️ Reads persisted hide/lock flags for an entity id from metadata. */
+  /** 👁️ Reads persisted hide/lock flags for an entity id from metadata. */
   getEntityFlags(id: string): SpatialEntityFlags {
     return this.metadata.getEntityFlags(id);
   }
 
-  /** @emoji 👁️ Sets one persisted hide/lock flag on an entity id. */
+  /** 👁️ Sets one persisted hide/lock flag on an entity id. */
   setEntityFlag(id: string, flag: SpatialEntityFlagKey, value: boolean): void {
     this.metadata.setEntityFlag(id, flag, value);
   }
 }
 
-/** @emoji 🗑️ Removes object rows by id; geometry primitives stay intact so linked topology remains valid. */
+/** 🗑️ Removes object rows by id; geometry primitives stay intact so linked topology remains valid. */
 export function deleteObjectsFromModel(model: Model, objectIds: readonly string[]): readonly string[] {
   const removed: string[] = [];
   for (const id of objectIds) {
@@ -1286,7 +1287,7 @@ export function deleteObjectsFromModel(model: Model, objectIds: readonly string[
   return removed;
 }
 
-/** @emoji 🪪️ Object ids from selection eligible for deletion (excludes geometry primitives). */
+/** 🪪️ Object ids from selection eligible for deletion (excludes geometry primitives). */
 export function deletableObjectIdsFromSelection(selection: readonly SelectionTarget[]): readonly string[] {
   const ids: string[] = [];
   const seen = new Set<string>();
@@ -1298,7 +1299,7 @@ export function deletableObjectIdsFromSelection(selection: readonly SelectionTar
   return ids;
 }
 
-/** @emoji #⃣ Stable FNV-1a digest for canonical geometry fingerprints. */
+/** #⃣ Stable FNV-1a digest for canonical geometry fingerprints. */
 export function fnv1aHex(input: string): string {
   let h = 0x811c9dc5;
   for (let i = 0; i < input.length; i++) {
@@ -1308,27 +1309,27 @@ export function fnv1aHex(input: string): string {
   return (h >>> 0).toString(16).padStart(8, "0");
 }
 
-/** @emoji #⃣ Opaque content hash for a hashed primitive (vertex position fingerprint). */
+/** #⃣ Opaque content hash for a hashed primitive (vertex position fingerprint). */
 export type GeometryPrimitiveHash = string & { readonly __brand: "GeometryPrimitiveHash" };
 
-/** @emoji #⃣ Quantizes a coordinate for stable hashing. */
+/** #⃣ Quantizes a coordinate for stable hashing. */
 export function quantizeCoord(value: number, decimals = 9): number {
   const factor = 10 ** decimals;
   return Math.round(value * factor) / factor;
 }
 
-/** @emoji #⃣ Hashes canonical primitive payload bytes. */
+/** #⃣ Hashes canonical primitive payload bytes. */
 export function hashPrimitivePayload(kind: string, payload: string): GeometryPrimitiveHash {
   return `${kind[0]}:${fnv1aHex(payload)}` as GeometryPrimitiveHash;
 }
 
-/** @emoji #⃣ Hashes a vertex position (`cad/AGENTS.md` primitive hashing). */
+/** #⃣ Hashes a vertex position (`cad/AGENTS.md` primitive hashing). */
 export function hashVertexPosition(position: Vec3): GeometryPrimitiveHash {
   const q: Vec3 = [quantizeCoord(position[0]), quantizeCoord(position[1]), quantizeCoord(position[2])];
   return hashPrimitivePayload("vertex", `${q[0]},${q[1]},${q[2]}`);
 }
 
-/** @emoji #⃣ Hashes an edge by vertex ids and optional curve. */
+/** #⃣ Hashes an edge by vertex ids and optional curve. */
 export function hashEdgeRecord(edge: EdgeRecord, vertices: Record<string, VertexRecord>): GeometryPrimitiveHash {
   const positions = edge.vertexIds.map((vid) => {
     const p = vertices[vid]?.position ?? ([0, 0, 0] as Vec3);
@@ -1338,37 +1339,37 @@ export function hashEdgeRecord(edge: EdgeRecord, vertices: Record<string, Vertex
   return hashPrimitivePayload("edge", `${edge.vertexIds.join(",")}|${curveKey}|${positions.join(";")}`);
 }
 
-/** @emoji #⃣ Hashes a wire by sorted edge ids. */
+/** #⃣ Hashes a wire by sorted edge ids. */
 export function hashWireRecord(wire: WireRecord): GeometryPrimitiveHash {
   return hashPrimitivePayload("wire", [...wire.edgeIds].sort().join(","));
 }
 
-/** @emoji #⃣ Hashes a face by sorted wire ids and surface kind. */
+/** #⃣ Hashes a face by sorted wire ids and surface kind. */
 export function hashFaceRecord(face: FaceRecord): GeometryPrimitiveHash {
   const surfaceKey = face.surface ? JSON.stringify(face.surface) : "none";
   return hashPrimitivePayload("face", `${[...face.wireIds].sort().join(",")}|${surfaceKey}`);
 }
 
-/** @emoji #⃣ Hashes a shell by sorted face ids. */
+/** #⃣ Hashes a shell by sorted face ids. */
 export function hashShellRecord(shell: ShellRecord): GeometryPrimitiveHash {
   return hashPrimitivePayload("shell", [...shell.faceIds].sort().join(","));
 }
 
-/** @emoji #⃣ Hashes a solid by sorted shell ids and solid primitive. */
+/** #⃣ Hashes a solid by sorted shell ids and solid primitive. */
 export function hashSolidRecord(solid: SolidRecord): GeometryPrimitiveHash {
   const primitiveKey = solid.solid ? JSON.stringify(solid.solid) : "none";
   return hashPrimitivePayload("solid", `${[...solid.shellIds].sort().join(",")}|${primitiveKey}`);
 }
 
-/** @emoji #⃣ Hashes an anchor position and attachment. */
+/** #⃣ Hashes an anchor position and attachment. */
 export function hashAnchorRecord(anchor: AnchorRecord): GeometryPrimitiveHash {
   return hashPrimitivePayload("anchor", `${anchor.position.map((c) => quantizeCoord(c)).join(",")}|${JSON.stringify(anchor.attachment)}`);
 }
 
-/** @emoji #⃣ Per-primitive hashes for one model (`ModelSpace` geometry fingerprint). */
+/** #⃣ Per-primitive hashes for one model (`ModelSpace` geometry fingerprint). */
 export type ModelPrimitiveHashes = Readonly<Partial<Record<KernelTopologyKind, Readonly<Record<string, GeometryPrimitiveHash>>>>>;
 
-/** @emoji #⃣ Maps primitive tables on `model` to content hashes (every vertex and primitive). */
+/** #⃣ Maps primitive tables on `model` to content hashes (every vertex and primitive). */
 export function hashModelPrimitives(model: Model): ModelPrimitiveHashes {
   const out: Partial<Record<KernelTopologyKind, Record<string, GeometryPrimitiveHash>>> = {};
   const put = (kind: KernelTopologyKind, id: string, hash: GeometryPrimitiveHash): void => {
@@ -1385,56 +1386,56 @@ export function hashModelPrimitives(model: Model): ModelPrimitiveHashes {
   return out;
 }
 
-/** @emoji #⃣ Maps every model vertex id to its position hash. */
+/** #⃣ Maps every model vertex id to its position hash. */
 export function hashModelVertices(model: Model): Readonly<Record<string, GeometryPrimitiveHash>> {
   return hashModelPrimitives(model).vertex ?? {};
 }
 
-/** @emoji 🗺️ Serializable model space (`spatial.modelspace/v1`). */
+/** 🗺️ Serializable model space (`spatial.modelspace/v1`). */
 export interface ModelSpaceJson {
   readonly schema: "spatial.modelspace";
   readonly revision: number;
   readonly models: readonly { readonly id: string; readonly model: ModelJson }[];
 }
 
-/** @emoji 🌌️ Container for linked models; geometry vertices are hashed per model. */
+/** 🌌️ Container for linked models; geometry vertices are hashed per model. */
 export class ModelSpace {
   revision = 0;
   models: Record<string, Model> = {};
 
-  /** @emoji 🔗️ Registers or replaces a linked model. */
+  /** 🔗️ Registers or replaces a linked model. */
   link(modelId: string, model: Model): void {
     this.models[modelId] = model;
     this.bump();
   }
 
-  /** @emoji ✂️ Removes a linked model. */
+  /** ✂️ Removes a linked model. */
   unlink(modelId: string): void {
     if (!(modelId in this.models)) return;
     delete this.models[modelId];
     this.bump();
   }
 
-  /** @emoji 🔍️ Returns a linked model or `null`. */
+  /** 🔍️ Returns a linked model or `null`. */
   get(modelId: string): Model | null {
     return this.models[modelId] ?? null;
   }
 
-  /** @emoji #⃣ Vertex position hashes keyed by linked model id. */
+  /** #⃣ Vertex position hashes keyed by linked model id. */
   vertexHashesByModel(): Readonly<Record<string, Readonly<Record<string, GeometryPrimitiveHash>>>> {
     const out: Record<string, Readonly<Record<string, GeometryPrimitiveHash>>> = {};
     for (const [modelId, model] of Object.entries(this.models)) out[modelId] = hashModelVertices(model);
     return out;
   }
 
-  /** @emoji #⃣ Full primitive hashes keyed by linked model id. */
+  /** #⃣ Full primitive hashes keyed by linked model id. */
   geometryHashesByModel(): Readonly<Record<string, ModelPrimitiveHashes>> {
     const out: Record<string, ModelPrimitiveHashes> = {};
     for (const [modelId, model] of Object.entries(this.models)) out[modelId] = hashModelPrimitives(model);
     return out;
   }
 
-  /** @emoji 🔄️ Transfers a transformation from a linked source model into a new linked target model. */
+  /** 🔄️ Transfers a transformation from a linked source model into a new linked target model. */
   transfer(linkedSourceId: string, linkedTargetId: string, spec: TransformationSpec, preview: SpatialPreviewKernel): Model {
     const source = this.models[linkedSourceId];
     if (!source) throw new Error(`ModelSpace: unknown source model ${linkedSourceId}`);
@@ -1443,7 +1444,7 @@ export class ModelSpace {
     return target;
   }
 
-  /** @emoji 🧭️ Serializes linked models (stable id order). */
+  /** 🧭️ Serializes linked models (stable id order). */
   toJSON(): ModelSpaceJson {
     const models = Object.keys(this.models)
       .sort()
@@ -1451,7 +1452,7 @@ export class ModelSpace {
     return { schema: "spatial.modelspace", revision: this.revision, models };
   }
 
-  /** @emoji 🧭️ Hydrates from `ModelSpaceJson`. */
+  /** 🧭️ Hydrates from `ModelSpaceJson`. */
   static fromJSON(json: ModelSpaceJson): ModelSpace {
     const space = new ModelSpace();
     space.revision = json.revision;
@@ -1465,7 +1466,7 @@ export class ModelSpace {
 }
 
 
-/** @emoji 🧭️ Reads `name` from metadata, geometry records, or model objects. */
+/** 🧭️ Reads `name` from metadata, geometry records, or model objects. */
 export function readModelEntityProperty(
   model: Model,
   meta: AttributeTable | undefined,
@@ -1515,7 +1516,7 @@ export function readModelEntityProperty(
   }
 }
 
-/** @emoji 🧾️ Parses `spatial.model/v1` JSON into a model or returns `null`. */
+/** 🧾️ Parses `spatial.model/v1` JSON into a model or returns `null`. */
 export function parseModelJson(raw: unknown): Model | null {
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Record<string, unknown>;
@@ -1544,13 +1545,13 @@ export function parseModelJson(raw: unknown): Model | null {
   return Model.fromJSON(json);
 }
 
-/** @emoji 🧱️ Standalone primitive kinds allowed on typology objects (`cad/AGENTS.md`). */
+/** 🧱️ Standalone primitive kinds allowed on typology objects (`cad/AGENTS.md`). */
 export type TypologyPrimitiveKind = "anchor" | "solid" | "surface" | "curve";
 
-/** @emoji 🧬️ Kernel-private topology entity kinds (faces, wires, … are not standalone primitives). */
+/** 🧬️ Kernel-private topology entity kinds (faces, wires, … are not standalone primitives). */
 export type KernelTopologyKind = "anchor" | "vertex" | "edge" | "wire" | "face" | "shell" | "solid";
 
-/** @emoji 🏷️ Parsed model-definition manifest (`spatial.modelDefinition/v1` on disk). */
+/** 🏷️ Parsed model-definition manifest (`spatial.modelDefinition/v1` on disk). */
 export interface ModelDefinitionManifest {
   readonly schema: "spatial.modelDefinition";
   readonly id: string;
@@ -1564,7 +1565,7 @@ export interface ModelDefinitionManifest {
 }
 
 // #region 📥️ModelDefinitionCatalog
-/** @emoji 📥️ Registered model-definition asset modules; shared singleton also read by `📔️registry/🟦️.ts` (`registerModelDefinitionAssets`) via the matching `ephemeralBox` key. */
+/** 📥️ Registered model-definition asset modules; shared singleton also read by `📔️registry/🟦️.ts` (`registerModelDefinitionAssets`) via the matching `ephemeralBox` key. */
 interface ModelDefinitionAssetModules {
   readonly typologies: Readonly<Record<string, unknown>>;
   readonly actions: Readonly<Record<string, unknown>>;
@@ -1623,7 +1624,7 @@ function modelDefinitionStatCatalog(): readonly unknown[] {
   return Object.values(modelDefinitionAssetModules.current.statDefinitions);
 }
 
-/** @emoji 📥️ Raw interaction asset rows; shared singleton also read by `📄️artifact/🟦️.ts` (via `📔️registry/🟦️.ts`'s matching `ephemeralBox`). */
+/** 📥️ Raw interaction asset rows; shared singleton also read by `📄️artifact/🟦️.ts` (via `📔️registry/🟦️.ts`'s matching `ephemeralBox`). */
 function modelDefinitionInteractionCatalog(): readonly unknown[] {
   return Object.values(modelDefinitionAssetModules.current.interactions);
 }
@@ -1633,7 +1634,7 @@ function modelDefinitionTransformationModules(): Readonly<Record<string, unknown
 }
 // #endregion 📥️ModelDefinitionCatalog
 
-/** @emoji 🧭️ Default geometry-edit model definition id (manifest `default: true`). */
+/** 🧭️ Default geometry-edit model definition id (manifest `default: true`). */
 export function defaultModelDefinitionId(): string {
   if (defaultModelDefinitionIdCache.current) return defaultModelDefinitionIdCache.current;
   const manifests = listModelDefinitionManifests();
@@ -1642,13 +1643,13 @@ export function defaultModelDefinitionId(): string {
   return defaultModelDefinitionIdCache.current;
 }
 
-/** @emoji 🧭️ True when the active definition is geometry edit (`ModelDefinition`) rather than typology objects. */
+/** 🧭️ True when the active definition is geometry edit (`ModelDefinition`) rather than typology objects. */
 export function isShapeModelDefinition(modelDefinitionId: string | null | undefined): boolean {
   if (modelDefinitionId == null) return true;
   return kernelTypologyIds(modelDefinitionId) !== null;
 }
 
-/** @emoji 🪪️ Kernel typology ids per primitive kind on a model-definition manifest. */
+/** 🪪️ Kernel typology ids per primitive kind on a model-definition manifest. */
 export function kernelTypologyIds(modelDefinitionId: string): Readonly<Partial<Record<KernelTopologyKind, string>>> | null {
   const manifest = listModelDefinitionManifests().find((row) => row.id === modelDefinitionId);
   const map = manifest?.kernelTypologies;
@@ -1656,7 +1657,7 @@ export function kernelTypologyIds(modelDefinitionId: string): Readonly<Partial<R
   return map;
 }
 
-/** @emoji 🧾️ Parses a model-definition manifest JSON or returns `null`. */
+/** 🧾️ Parses a model-definition manifest JSON or returns `null`. */
 export function parseModelDefinitionManifest(raw: unknown): ModelDefinitionManifest | null {
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Record<string, unknown>;
@@ -1688,17 +1689,17 @@ function parseKernelTypologies(raw: unknown): Readonly<Partial<Record<KernelTopo
   return Object.keys(out).length > 0 ? out : undefined;
 }
 
-/** @emoji 📚️ Lists model-definition manifests under spatial/asset/modelDefinition. */
+/** 📚️ Lists model-definition manifests under spatial/asset/modelDefinition. */
 export function listModelDefinitionManifests(): readonly ModelDefinitionManifest[] {
   return modelDefinitionManifestCatalog()
     .map((raw) => parseModelDefinitionManifest(raw))
     .filter((m): m is ModelDefinitionManifest => m !== null);
 }
 
-/** @emoji 🎨️ Surface pattern kind for typology display styling. */
+/** 🎨️ Surface pattern kind for typology display styling. */
 export type TypologyStylePatternKind = "none" | "hatch" | "crosshatch" | "dots";
 
-/** @emoji 🎨️ Authored surface pattern on a typology. */
+/** 🎨️ Authored surface pattern on a typology. */
 export interface TypologyStylePatternSpec {
   readonly kind: TypologyStylePatternKind;
   readonly direction?: number;
@@ -1707,7 +1708,7 @@ export interface TypologyStylePatternSpec {
   readonly color?: string;
 }
 
-/** @emoji 🎨️ Optional authored display style on a typology asset. */
+/** 🎨️ Optional authored display style on a typology asset. */
 export interface TypologyStyleSpec {
   readonly color?: string;
   readonly edgeColor?: string;
@@ -1715,7 +1716,7 @@ export interface TypologyStyleSpec {
   readonly pattern?: TypologyStylePatternSpec;
 }
 
-/** @emoji 🎨️ Fully resolved display style for one typology (auto fallback + authored overrides). */
+/** 🎨️ Fully resolved display style for one typology (auto fallback + authored overrides). */
 export interface ResolvedTypologyStyle {
   readonly color: string;
   readonly edgeColor: string;
@@ -1723,7 +1724,7 @@ export interface ResolvedTypologyStyle {
   readonly pattern: Required<Pick<TypologyStylePatternSpec, "kind" | "direction" | "spacing" | "lineWidth" | "color">>;
 }
 
-/** @emoji 🏷️ Parsed typology asset (`spatial.typology/v1`). */
+/** 🏷️ Parsed typology asset (`spatial.typology/v1`). */
 export interface TypologySpec {
   readonly schema: "spatial.typology";
   readonly id: string;
@@ -1738,7 +1739,7 @@ export interface TypologySpec {
   readonly style?: TypologyStyleSpec;
 }
 
-/** @emoji 🧭️ Infers default `primitiveKinds` from a shipped typology id when the asset omits the field. */
+/** 🧭️ Infers default `primitiveKinds` from a shipped typology id when the asset omits the field. */
 export function inferTypologyPrimitiveKinds(typology: string): readonly TypologyPrimitiveKind[] {
   const id = typology.toLowerCase();
   if (id.includes(".selection.") || id.includes(".command.")) return [];
@@ -1771,7 +1772,7 @@ function parseTypologyPrimitiveKinds(raw: unknown, typology: string): readonly T
   return kinds.length ? kinds : inferTypologyPrimitiveKinds(typology);
 }
 
-/** @emoji 🧭️ Maps a standalone typology primitive kind to the kernel entity kind used for picking. */
+/** 🧭️ Maps a standalone typology primitive kind to the kernel entity kind used for picking. */
 export function typologyPrimitiveToEntityKind(kind: TypologyPrimitiveKind): ModelEntityKind {
   if (kind === "surface") return "face";
   if (kind === "curve") return "wire";
@@ -1807,7 +1808,7 @@ function parseTypologyStyleSpec(raw: unknown): TypologyStyleSpec | undefined {
   };
 }
 
-/** @emoji 🧾️ Parses `spatial.typology/v1` JSON or returns `null`. */
+/** 🧾️ Parses `spatial.typology/v1` JSON or returns `null`. */
 export function parseTypologySpec(raw: unknown): TypologySpec | null {
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Record<string, unknown>;
@@ -1920,13 +1921,13 @@ function mergeTypologyStyle(typology: string, authored?: TypologyStyleSpec): Res
   };
 }
 
-/** @emoji 🎨️ Stable cache key for renderer material/pattern reuse. */
+/** 🎨️ Stable cache key for renderer material/pattern reuse. */
 export function typologyStyleCacheKey(style: ResolvedTypologyStyle): string {
   const p = style.pattern;
   return `${style.color}|${style.edgeColor}|${style.opacity}|${p.kind}|${p.direction}|${p.spacing}|${p.lineWidth}|${p.color}`;
 }
 
-/** @emoji 🎨️ Resolves display style for a typology (deterministic auto fallback + optional asset override). */
+/** 🎨️ Resolves display style for a typology (deterministic auto fallback + optional asset override). */
 export function resolveTypologyStyle(typology: string): ResolvedTypologyStyle {
   if (typologyStyleCache.current?.has(typology)) return typologyStyleCache.current.get(typology)!;
   const authored = loadTypology(typology)?.style;
@@ -1945,22 +1946,22 @@ function shippedTypologyCatalog(): readonly TypologySpec[] {
   );
 }
 
-/** @emoji 📚️ Lists typologies from shipped spatial/asset/modelDefinition assets. */
+/** 📚️ Lists typologies from shipped spatial/asset/modelDefinition assets. */
 export function listModelDefinitionTypologies(): readonly TypologySpec[] {
   return shippedTypologyCatalog();
 }
 
-/** @emoji 📚️ Loads a model-definition typology by stable `id`. */
+/** 📚️ Loads a model-definition typology by stable `id`. */
 export function loadTypology(typology: string): TypologySpec | null {
   return shippedTypologyCatalog().find((t) => t.id === typology) ?? null;
 }
 
-/** @emoji 📚️ Resolves the typology whose `interactions` list includes `interactionId`. */
+/** 📚️ Resolves the typology whose `interactions` list includes `interactionId`. */
 export function typologyForInteraction(interactionId: string): TypologySpec | null {
   return shippedTypologyCatalog().find((t) => t.interactions.some((id) => id === interactionId)) ?? null;
 }
 
-/** @emoji 🏷️ PascalCase object name from a typology label (`External Wall` → `ExternalWall`). */
+/** 🏷️ PascalCase object name from a typology label (`External Wall` → `ExternalWall`). */
 function typologyObjectPascalFromLabel(label: string): string {
   return label
     .replace(/[^a-zA-Z0-9]+/g, " ")
@@ -1971,7 +1972,7 @@ function typologyObjectPascalFromLabel(label: string): string {
     .join("");
 }
 
-/** @emoji 🧭️ Per-typology construct kit: three mode actions + one interaction id. */
+/** 🧭️ Per-typology construct kit: three mode actions + one interaction id. */
 export interface TypologyConstructKit {
   readonly typology: string;
   readonly interaction: string;
@@ -1980,7 +1981,7 @@ export interface TypologyConstructKit {
   readonly constructFromSurface: string;
 }
 
-/** @emoji 🧭️ Stable ids: three `construct*From*` actions and one `construct*` interaction. */
+/** 🧭️ Stable ids: three `construct*From*` actions and one `construct*` interaction. */
 function typologyConstructAssetIds(typology: string, label: string): TypologyConstructKit & { readonly construct: string } {
   const parts = typology.split(".");
   const prefix = parts.length > 1 ? `${parts.slice(0, -1).join(".")}.` : "";
@@ -1998,7 +1999,7 @@ function typologyConstructAssetIds(typology: string, label: string): TypologyCon
 
 const typologyConstructKitByInteractionCache = ephemeralBox<ReadonlyMap<string, TypologyConstructKit> | null>("s.plugins.cad.modules.core.component.ts.typologyConstructKitByInteractionCache", null);
 
-/** @emoji 🧭️ Maps each typology construct interaction id to its mode actions (not the interaction id). */
+/** 🧭️ Maps each typology construct interaction id to its mode actions (not the interaction id). */
 export function typologyConstructKitByInteraction(): ReadonlyMap<string, TypologyConstructKit> {
   if (typologyConstructKitByInteractionCache.current) return typologyConstructKitByInteractionCache.current;
   const map = new Map<string, TypologyConstructKit>();
@@ -2016,7 +2017,7 @@ export function typologyConstructKitByInteraction(): ReadonlyMap<string, Typolog
   return map;
 }
 
-/** @emoji 🏷️ Parsed attribute definition (`spatial.attribute/v1`). */
+/** 🏷️ Parsed attribute definition (`spatial.attribute/v1`). */
 export interface AttributeDefinitionSpec {
   readonly schema: "spatial.attribute";
   readonly id: string;
@@ -2029,7 +2030,7 @@ export interface AttributeDefinitionSpec {
   readonly geometrySelector?: { readonly kinds: readonly string[] };
 }
 
-/** @emoji 🧾️ Parses `spatial.attribute/v1` JSON or returns `null`. */
+/** 🧾️ Parses `spatial.attribute/v1` JSON or returns `null`. */
 export function parseAttributeDefinitionSpec(raw: unknown): AttributeDefinitionSpec | null {
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Record<string, unknown>;
@@ -2052,7 +2053,7 @@ export function parseAttributeDefinitionSpec(raw: unknown): AttributeDefinitionS
   };
 }
 
-/** @emoji 🏷️ Parsed property definition (`spatial.property/v1`). */
+/** 🏷️ Parsed property definition (`spatial.property/v1`). */
 export interface PropertyDefinitionSpec {
   readonly schema: "spatial.property";
   readonly id: string;
@@ -2064,7 +2065,7 @@ export interface PropertyDefinitionSpec {
   readonly output?: Readonly<Record<string, unknown>>;
 }
 
-/** @emoji 🧾️ Parses `spatial.property/v1` JSON or returns `null`. */
+/** 🧾️ Parses `spatial.property/v1` JSON or returns `null`. */
 export function parsePropertyDefinitionSpec(raw: unknown): PropertyDefinitionSpec | null {
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Record<string, unknown>;
@@ -2109,27 +2110,27 @@ function shippedPropertyDefinitionCatalog(): readonly PropertyDefinitionSpec[] {
   );
 }
 
-/** @emoji 📚️ Lists attribute definitions from model-definition assets. */
+/** 📚️ Lists attribute definitions from model-definition assets. */
 export function listModelDefinitionAttributeDefinitions(): readonly AttributeDefinitionSpec[] {
   return shippedAttributeDefinitionCatalog();
 }
 
-/** @emoji 📚️ Lists property definitions from model-definition assets. */
+/** 📚️ Lists property definitions from model-definition assets. */
 export function listModelDefinitionPropertyDefinitions(): readonly PropertyDefinitionSpec[] {
   return shippedPropertyDefinitionCatalog();
 }
 
-/** @emoji 📚️ Loads an attribute definition by stable `id`. */
+/** 📚️ Loads an attribute definition by stable `id`. */
 export function loadAttributeDefinition(attributeId: string): AttributeDefinitionSpec | null {
   return shippedAttributeDefinitionCatalog().find((row) => row.id === attributeId) ?? null;
 }
 
-/** @emoji 📚️ Loads a property definition by stable `id`. */
+/** 📚️ Loads a property definition by stable `id`. */
 export function loadPropertyDefinition(propertyId: string): PropertyDefinitionSpec | null {
   return shippedPropertyDefinitionCatalog().find((row) => row.id === propertyId) ?? null;
 }
 
-/** @emoji 🧭️ Resolves the kernel topology kind referenced by one primitive ref. */
+/** 🧭️ Resolves the kernel topology kind referenced by one primitive ref. */
 export function resolveKernelTopologyKind(model: Model, primitiveRef: string): KernelTopologyKind | null {
   if (model.anchors[primitiveRef]) return "anchor";
   if (model.vertices[primitiveRef]) return "vertex";
@@ -2141,7 +2142,7 @@ export function resolveKernelTopologyKind(model: Model, primitiveRef: string): K
   return null;
 }
 
-/** @emoji 🧭️ Resolves the standalone primitive kind referenced by one primitive ref. */
+/** 🧭️ Resolves the standalone primitive kind referenced by one primitive ref. */
 export function resolveStandalonePrimitiveKind(model: Model, primitiveRef: string): TypologyPrimitiveKind | null {
   if (model.anchors[primitiveRef]) return "anchor";
   if (model.solids[primitiveRef]) return "solid";
@@ -2150,10 +2151,10 @@ export function resolveStandalonePrimitiveKind(model: Model, primitiveRef: strin
   return null;
 }
 
-/** @emoji 🧭️ Resolves the kernel topology kind referenced by one primitive ref. */
+/** 🧭️ Resolves the kernel topology kind referenced by one primitive ref. */
 export const resolvePrimitiveRefKind = resolveKernelTopologyKind;
 
-/** @emoji 🌳️ Nested primitive node under an object primitive (`solid` → `shell` → `face` → `wire` → `edge` → `vertex`). */
+/** 🌳️ Nested primitive node under an object primitive (`solid` → `shell` → `face` → `wire` → `edge` → `vertex`). */
 export interface ModelPrimitiveDocumentNode {
   readonly kind: KernelTopologyKind;
   readonly id: string;
@@ -2222,19 +2223,19 @@ function buildModelPrimitiveDocumentNode(model: Model, kind: KernelTopologyKind,
   return { kind, id, children };
 }
 
-/** @emoji 🌳️ Builds nested primitive document under one object primitive ref in `model`. */
+/** 🌳️ Builds nested primitive document under one object primitive ref in `model`. */
 export function buildModelPrimitiveDocument(model: Model, primitiveRef: string): ModelPrimitiveDocumentNode | null {
   const kind = resolvePrimitiveRefKind(model, primitiveRef);
   if (!kind) return null;
   return buildModelPrimitiveDocumentNode(model, kind, primitiveRef);
 }
 
-/** @emoji ✅️ Whether `typology` allows objects whose geometry resolves to `primitiveKind`. */
+/** ✅️ Whether `typology` allows objects whose geometry resolves to `primitiveKind`. */
 export function typologyAllowsPrimitiveKind(typology: TypologySpec, primitiveKind: TypologyPrimitiveKind): boolean {
   return typology.primitiveKinds.includes(primitiveKind);
 }
 
-/** @emoji ✅️ Whether `object` on `model` satisfies its typology `primitiveKinds`. */
+/** ✅️ Whether `object` on `model` satisfies its typology `primitiveKinds`. */
 export function objectMatchesTypologyPrimitives(model: Model, object: SpatialObjectRecord): boolean {
   const typology = loadTypology(object.typology);
   if (!typology || typology.primitiveKinds.length === 0) return false;
@@ -2244,7 +2245,7 @@ export function objectMatchesTypologyPrimitives(model: Model, object: SpatialObj
   return primitiveKinds.length > 0 && primitiveKinds.every((kind) => typologyAllowsPrimitiveKind(typology, kind));
 }
 
-/** @emoji 🧭️ Typology → entity kind map for one model definition (`ModelDefinition` includes kernel typology ids; AEC typologies map to `object`). */
+/** 🧭️ Typology → entity kind map for one model definition (`ModelDefinition` includes kernel typology ids; AEC typologies map to `object`). */
 export function buildTypologyToEntityKindMapForModelDefinition(modelDefinitionId: string): Readonly<Record<string, ModelEntityKind>> {
   const out: Record<string, ModelEntityKind> = {};
   const kernelTypologies = kernelTypologyIds(modelDefinitionId);
@@ -2264,14 +2265,14 @@ export function buildTypologyToEntityKindMapForModelDefinition(modelDefinitionId
   return out;
 }
 
-/** @emoji ✅️ Whether a property definition applies to `object` on `model`. */
+/** ✅️ Whether a property definition applies to `object` on `model`. */
 export function propertyDefinitionAppliesToObject(defn: PropertyDefinitionSpec, object: SpatialObjectRecord): boolean {
   const typologies = defn.sources?.typologies;
   if (Array.isArray(typologies) && typologies.length > 0) return typologies.includes(object.typology);
   return true;
 }
 
-/** @emoji 📐️ Context passed to registered property computers. */
+/** 📐️ Context passed to registered property computers. */
 export interface PropertyComputeContext {
   readonly model: Model;
   readonly kernel: SpatialKernel;
@@ -2279,17 +2280,17 @@ export interface PropertyComputeContext {
   readonly defn: PropertyDefinitionSpec;
 }
 
-/** @emoji 📐️ Registered property computer for one property definition id. */
+/** 📐️ Registered property computer for one property definition id. */
 export type PropertyComputer = (ctx: PropertyComputeContext) => Promise<Record<string, unknown>>;
 
 const propertyComputers = ephemeralMap<string, PropertyComputer>("s.plugins.cad.modules.core.component.ts.propertyComputers");
 
-/** @emoji 📐️ Registers a TypeScript computer for one property definition id. */
+/** 📐️ Registers a TypeScript computer for one property definition id. */
 export function registerPropertyComputer(propertyId: string, computer: PropertyComputer): void {
   propertyComputers.set(propertyId, computer);
 }
 
-/** @emoji 📐️ Derives property output for one model object from a property definition. */
+/** 📐️ Derives property output for one model object from a property definition. */
 export async function derivePropertyValue(defn: PropertyDefinitionSpec, ctx: { readonly model: Model; readonly kernel: SpatialKernel; readonly object: SpatialObjectRecord }): Promise<Record<string, unknown>> {
   if (!propertyDefinitionAppliesToObject(defn, ctx.object)) return {};
   const computer = propertyComputers.get(defn.id);
@@ -2298,14 +2299,14 @@ export async function derivePropertyValue(defn: PropertyDefinitionSpec, ctx: { r
   return { ...output };
 }
 
-/** @emoji 📚️ Property definitions for one model definition that apply to `object` on `model`. */
+/** 📚️ Property definitions for one model definition that apply to `object` on `model`. */
 export function listApplicablePropertyDefinitionsForModelDefinition(modelDefinitionId: string, model: Model, object: SpatialObjectRecord): readonly PropertyDefinitionSpec[] {
   const scoped = new Set(listPropertyDefinitionsForModelDefinition(modelDefinitionId).map((row) => row.id));
   return shippedPropertyDefinitionCatalog().filter((defn) => scoped.has(defn.id) && propertyDefinitionAppliesToObject(defn, object));
 }
 
 // #region 📊️StatDefinitions
-/** @emoji 📊️ Live stat output descriptor shipped with a model definition. */
+/** 📊️ Live stat output descriptor shipped with a model definition. */
 export interface StatOutputSpec {
   readonly key: string;
   readonly label: string;
@@ -2313,7 +2314,7 @@ export interface StatOutputSpec {
   readonly format?: "integer" | "decimal" | "percent";
 }
 
-/** @emoji 📊️ Model-definition live stat declaration (`spatial.stat/v1`). */
+/** 📊️ Model-definition live stat declaration (`spatial.stat/v1`). */
 export interface StatDefinitionSpec {
   readonly schema: "spatial.stat";
   readonly id: string;
@@ -2325,7 +2326,7 @@ export interface StatDefinitionSpec {
   readonly outputs: readonly StatOutputSpec[];
 }
 
-/** @emoji 🧾️ Parses `spatial.stat/v1` JSON or returns `null`. */
+/** 🧾️ Parses `spatial.stat/v1` JSON or returns `null`. */
 export function parseStatDefinitionSpec(raw: unknown): StatDefinitionSpec | null {
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Record<string, unknown>;
@@ -2374,12 +2375,12 @@ function shippedStatDefinitionCatalog(): readonly StatDefinitionSpec[] {
   );
 }
 
-/** @emoji 📚️ Lists stat definitions from model-definition assets. */
+/** 📚️ Lists stat definitions from model-definition assets. */
 export function listModelDefinitionStatDefinitions(): readonly StatDefinitionSpec[] {
   return shippedStatDefinitionCatalog();
 }
 
-/** @emoji 📚️ Loads a stat definition by stable `id`. */
+/** 📚️ Loads a stat definition by stable `id`. */
 export function loadStatDefinition(statId: string): StatDefinitionSpec | null {
   return shippedStatDefinitionCatalog().find((row) => row.id === statId) ?? null;
 }
@@ -2397,17 +2398,17 @@ function statOwnerById(): ReadonlyMap<string, string> {
   return map;
 }
 
-/** @emoji 🧭️ Stat definitions owned by a model definition. */
+/** 🧭️ Stat definitions owned by a model definition. */
 export function listStatDefinitionsForModelDefinition(modelDefinitionId: string): readonly StatDefinitionSpec[] {
   return shippedStatDefinitionCatalog().filter((row) => statOwnerById().get(row.id) === modelDefinitionId);
 }
 
-/** @emoji ✅️ Whether a stat definition supports one compute scope. */
+/** ✅️ Whether a stat definition supports one compute scope. */
 export function statDefinitionAppliesToScope(defn: StatDefinitionSpec, scope: "model" | "selection"): boolean {
   return defn.scopes.includes(scope);
 }
 
-/** @emoji 🧾️ Formats one stat output value for display. */
+/** 🧾️ Formats one stat output value for display. */
 export function formatStatOutputValue(value: number, format?: StatOutputSpec["format"]): string {
   if (!Number.isFinite(value)) return "—";
   if (format === "integer") return String(Math.round(value));
@@ -2416,14 +2417,14 @@ export function formatStatOutputValue(value: number, format?: StatOutputSpec["fo
   return String(value);
 }
 
-/** @emoji ✅️ Whether `object` is included in stat sources for one definition. */
+/** ✅️ Whether `object` is included in stat sources for one definition. */
 export function statDefinitionAppliesToObject(defn: StatDefinitionSpec, object: SpatialObjectRecord): boolean {
   const typologies = defn.sources?.typologies;
   if (Array.isArray(typologies) && typologies.length > 0) return typologies.includes(object.typology);
   return true;
 }
 
-/** @emoji 📊️ Context passed to registered stat computers. */
+/** 📊️ Context passed to registered stat computers. */
 export interface StatComputeContext {
   readonly model: Model;
   readonly kernel: SpatialKernel;
@@ -2432,12 +2433,12 @@ export interface StatComputeContext {
   readonly objects: readonly SpatialObjectRecord[];
 }
 
-/** @emoji 📊️ Registered stat computer for one stat definition id. */
+/** 📊️ Registered stat computer for one stat definition id. */
 export type StatComputer = (ctx: StatComputeContext) => Promise<Record<string, number>>;
 
 const statComputers = ephemeralMap<string, StatComputer>("s.plugins.cad.modules.core.component.ts.statComputers");
 
-/** @emoji 📊️ Registers a TypeScript computer for one stat definition id. */
+/** 📊️ Registers a TypeScript computer for one stat definition id. */
 export function registerStatComputer(statId: string, computer: StatComputer): void {
   statComputers.set(statId, computer);
 }
@@ -2540,7 +2541,7 @@ export function bboxSizesFromPositions(positions: readonly Vec3[]): { readonly s
   return { sizeX: maxX - minX, sizeY: maxY - minY, sizeZ: maxZ - minZ };
 }
 
-/** @emoji 📊️ Derives live stat output for one definition and scope. */
+/** 📊️ Derives live stat output for one definition and scope. */
 export async function computeStat(defn: StatDefinitionSpec, ctx: StatComputeContext): Promise<Record<string, number>> {
   if (!statDefinitionAppliesToScope(defn, ctx.scope)) return zeroStatOutputs(defn);
   const objects = ctx.objects.filter((object) => statDefinitionAppliesToObject(defn, object));
@@ -2556,7 +2557,7 @@ export async function computeStat(defn: StatDefinitionSpec, ctx: StatComputeCont
   return out;
 }
 
-/** @emoji 📊️ Objects included when computing stats for one model definition scope. */
+/** 📊️ Objects included when computing stats for one model definition scope. */
 export function objectsForStatCompute(model: Model, modelDefinitionId: string, defn: StatDefinitionSpec, scope: "model" | "selection", selectionObjects: readonly SpatialObjectRecord[]): readonly SpatialObjectRecord[] {
   const typologyFilter = defn.sources?.typologies;
   let base: readonly SpatialObjectRecord[];
@@ -2572,7 +2573,7 @@ export function objectsForStatCompute(model: Model, modelDefinitionId: string, d
 
 // #endregion 📊️StatDefinitions
 
-/** @emoji 🧭️ Throws when `actionId` is outside the active model definition catalog. */
+/** 🧭️ Throws when `actionId` is outside the active model definition catalog. */
 export function assertActionAvailableInModelDefinition(actionId: string, activeModelDefinitionId?: string | null): void {
   const mdId = activeModelDefinitionId ?? defaultModelDefinitionId();
   if (!actionAvailableInModelDefinition(actionId, mdId)) {
@@ -2580,10 +2581,10 @@ export function assertActionAvailableInModelDefinition(actionId: string, activeM
   }
 }
 
-/** @emoji 🧱️ Primitive entity kinds selectable on factory geometry (excludes typology `object` rows). */
+/** 🧱️ Primitive entity kinds selectable on factory geometry (excludes typology `object` rows). */
 export const PRIMITIVE_MODEL_ENTITY_KINDS: readonly ModelEntityKind[] = ["anchor", "vertex", "edge", "wire", "face", "shell", "solid"];
 
-/** @emoji ✅️ True when `defn` applies to a model entity kind under the active model definition. */
+/** ✅️ True when `defn` applies to a model entity kind under the active model definition. */
 export function attributeDefinitionAppliesToEntity(defn: AttributeDefinitionSpec, entityKind: ModelEntityKind): boolean {
   if (!defn.targets.includes(entityKind)) return false;
   const selector = defn.geometrySelector?.kinds;
@@ -2591,17 +2592,17 @@ export function attributeDefinitionAppliesToEntity(defn: AttributeDefinitionSpec
   return true;
 }
 
-/** @emoji 📚️ Attribute definitions for one model definition and entity kind. */
+/** 📚️ Attribute definitions for one model definition and entity kind. */
 export function listAttributeDefinitionsForModelDefinitionEntity(modelDefinitionId: string, entityKind: ModelEntityKind): readonly AttributeDefinitionSpec[] {
   return listAttributeDefinitionsForModelDefinition(modelDefinitionId).filter((defn) => attributeDefinitionAppliesToEntity(defn, entityKind));
 }
 
-/** @emoji 🧲️ True when the active model definition exposes factory-geometry pick targets (all definitions). */
+/** 🧲️ True when the active model definition exposes factory-geometry pick targets (all definitions). */
 export function modelDefinitionUsesGeometryPicking(_modelDefinitionId: string): boolean {
   return true;
 }
 
-/** @emoji 📋️ String/number/boolean/record options from an attribute value schema. */
+/** 📋️ String/number/boolean/record options from an attribute value schema. */
 export function attributeDefinitionValueOptions(defn: AttributeDefinitionSpec): readonly string[] | null {
   const schema = defn.value;
   if (!schema || typeof schema !== "object") return null;
@@ -2621,7 +2622,7 @@ export function attributeDefinitionValueOptions(defn: AttributeDefinitionSpec): 
   return null;
 }
 
-/** @emoji 🧾️ Value editor kind inferred from an attribute definition schema. */
+/** 🧾️ Value editor kind inferred from an attribute definition schema. */
 export function attributeDefinitionEditorKind(defn: AttributeDefinitionSpec): "string" | "enum" | "number" | "boolean" | "text" {
   if (attributeDefinitionValueOptions(defn)) return "enum";
   const schema = defn.value;
@@ -2634,7 +2635,7 @@ export function attributeDefinitionEditorKind(defn: AttributeDefinitionSpec): "s
   return "text";
 }
 
-/** @emoji ✅️ Validates a value against an attribute definition schema. */
+/** ✅️ Validates a value against an attribute definition schema. */
 export function validateAttributeValue(defn: AttributeDefinitionSpec, value: unknown): boolean {
   const schema = defn.value;
   if (!schema || typeof schema !== "object") return false;
@@ -2658,15 +2659,15 @@ export function validateAttributeValue(defn: AttributeDefinitionSpec, value: unk
   return false;
 }
 
-/** @emoji 🪪️ Qualified transformation id (`modelDefinitionId.transformationId`). */
+/** 🪪️ Qualified transformation id (`modelDefinitionId.transformationId`). */
 export function qualifiedTransformationId(modelDefinitionId: string, transformationId: string): string {
   return `${modelDefinitionId}.${transformationId}`;
 }
 
-/** @emoji 🔄️ Z-band selector for surface classification rules. */
+/** 🔄️ Z-band selector for surface classification rules. */
 export type TransformationDeriveZBand = "min" | "max" | "mid";
 
-/** @emoji 🔄️ One surface-classification rule in a transformation `derive` block. */
+/** 🔄️ One surface-classification rule in a transformation `derive` block. */
 export interface TransformationDeriveClassifyRule {
   readonly role: string;
   readonly typology: string;
@@ -2677,7 +2678,7 @@ export interface TransformationDeriveClassifyRule {
   readonly fallback?: boolean;
 }
 
-/** @emoji 🔄️ Opening metadata → typology mapping in a transformation `derive` block. */
+/** 🔄️ Opening metadata → typology mapping in a transformation `derive` block. */
 export interface TransformationDeriveOpening {
   readonly fields: readonly string[];
   readonly values: readonly (string | boolean)[];
@@ -2685,32 +2686,32 @@ export interface TransformationDeriveOpening {
   readonly role: string;
 }
 
-/** @emoji 🔄️ Solid-fuse options for a transformation `derive` block. */
+/** 🔄️ Solid-fuse options for a transformation `derive` block. */
 export interface TransformationDeriveFuse {
   readonly hullSolidId?: string;
   readonly contactPairs?: readonly (readonly [string, string])[];
   readonly maxSeparation?: number;
 }
 
-/** @emoji 🔄️ Source primitive collection for a transformation `derive` block. */
+/** 🔄️ Source primitive collection for a transformation `derive` block. */
 export interface TransformationDeriveCollect {
   readonly sourceModelDefinition: string;
   readonly primitiveKind: TypologyPrimitiveKind;
 }
 
-/** @emoji 🔄️ Hull object row for a transformation `derive` block. */
+/** 🔄️ Hull object row for a transformation `derive` block. */
 export interface TransformationDeriveHull {
   readonly typology: string;
   readonly primitiveKind: string;
 }
 
-/** @emoji 🔄️ Ensures typology rows exist after derive. */
+/** 🔄️ Ensures typology rows exist after derive. */
 export interface TransformationDeriveEnsure {
   readonly typology: string;
   readonly empty?: boolean;
 }
 
-/** @emoji 🔄️ Declarative surface-classification derive spec on `spatial.transformation/v1`. */
+/** 🔄️ Declarative surface-classification derive spec on `spatial.transformation/v1`. */
 export interface TransformationDeriveSpec {
   readonly collect: TransformationDeriveCollect;
   readonly fuse?: TransformationDeriveFuse;
@@ -2726,7 +2727,7 @@ export interface TransformationDeriveSpec {
   readonly ensure?: readonly TransformationDeriveEnsure[];
 }
 
-/** @emoji 🔄️ Parsed transformation (`spatial.transformation/v1`). */
+/** 🔄️ Parsed transformation (`spatial.transformation/v1`). */
 export interface TransformationSpec {
   readonly schema: "spatial.transformation";
   readonly id: string;
@@ -2820,7 +2821,7 @@ function parseTransformationDeriveSpec(raw: unknown): TransformationDeriveSpec |
   };
 }
 
-/** @emoji 🧾️ Parses `spatial.transformation/v1` JSON; `modelDefinitionId` comes from the asset folder. */
+/** 🧾️ Parses `spatial.transformation/v1` JSON; `modelDefinitionId` comes from the asset folder. */
 export function parseTransformationSpec(raw: unknown, modelDefinitionId: string): TransformationSpec | null {
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Record<string, unknown>;
@@ -2868,22 +2869,22 @@ function shippedTransformationCatalog(): readonly TransformationSpec[] {
   return out;
 }
 
-/** @emoji 📚️ Lists transformation assets under spatial/asset/modelDefinition. */
+/** 📚️ Lists transformation assets under spatial/asset/modelDefinition. */
 export function listModelDefinitionTransformations(): readonly TransformationSpec[] {
   return shippedTransformationCatalog();
 }
 
-/** @emoji 📚️ Loads a transformation by qualified id (`aec.building.energy.from_geometry`). */
+/** 📚️ Loads a transformation by qualified id (`aec.building.energy.from_geometry`). */
 export function loadTransformation(qualifiedId: string): TransformationSpec | null {
   return shippedTransformationCatalog().find((row) => qualifiedTransformationId(row.modelDefinitionId, row.id) === qualifiedId) ?? null;
 }
 
-/** @emoji 🔄️ Lists transformations whose target is `modelDefinitionId` (derive current definition from source). */
+/** 🔄️ Lists transformations whose target is `modelDefinitionId` (derive current definition from source). */
 export function listTransformationsIntoModelDefinition(modelDefinitionId: string): readonly TransformationSpec[] {
   return listModelDefinitionTransformations().filter((row) => row.target.modelDefinition === modelDefinitionId);
 }
 
-/** @emoji 🔄️ Lists transformations whose source is `modelDefinitionId` (derive another definition from current). */
+/** 🔄️ Lists transformations whose source is `modelDefinitionId` (derive another definition from current). */
 export function listTransformationsFromModelDefinition(modelDefinitionId: string): readonly TransformationSpec[] {
   return listModelDefinitionTransformations().filter((row) => row.source.modelDefinition === modelDefinitionId);
 }
@@ -2922,7 +2923,7 @@ function modelDefinitionFolderIdMap(): ReadonlyMap<string, string> {
   return map;
 }
 
-/** @emoji 🧭️ Resolves manifest `id` from an asset path under `spatial/asset/modelDefinition`. */
+/** 🧭️ Resolves manifest `id` from an asset path under `spatial/asset/modelDefinition`. */
 export function modelDefinitionIdFromAssetPath(assetPath: string): string | null {
   const folder = modelDefinitionFolderFromAssetPath(assetPath);
   if (!folder) return null;
@@ -2942,7 +2943,7 @@ function typologyOwnerById(): ReadonlyMap<string, string> {
   return map;
 }
 
-/** @emoji 🧭️ Typologies owned by a model-definition folder manifest. */
+/** 🧭️ Typologies owned by a model-definition folder manifest. */
 export function listTypologiesForModelDefinition(modelDefinitionId: string): readonly TypologySpec[] {
   const owners = typologyOwnerById();
   return shippedTypologyCatalog().filter((row) => owners.get(row.id) === modelDefinitionId);
@@ -2961,21 +2962,21 @@ function actionOwnerById(): ReadonlyMap<string, string> {
   return map;
 }
 
-/** @emoji 🧭️ True when an action asset file lives under `modelDefinitionId`. */
+/** 🧭️ True when an action asset file lives under `modelDefinitionId`. */
 export function actionOwnedByModelDefinition(actionId: string, modelDefinitionId: string): boolean {
   return actionOwnerById().get(actionId) === modelDefinitionId;
 }
 
-/** @emoji 🧭️ Model definition that owns a typology asset. */
+/** 🧭️ Model definition that owns a typology asset. */
 export function modelDefinitionIdForTypology(typologyId: string): string | null {
   return typologyOwnerById().get(typologyId) ?? null;
 }
 
-/** @emoji 📚️ Host-facing interaction row from model-definition interaction JSON. */
+/** 📚️ Host-facing interaction row from model-definition interaction JSON. */
 export interface SpatialInteraction {
   readonly id: string;
   readonly label: string;
-  /** @emoji ⌨️ Host interaction key; must stay unique and appear in `label`. */
+  /** ⌨️ Host interaction key; must stay unique and appear in `label`. */
   readonly key: string;
 }
 
@@ -2989,14 +2990,14 @@ function interactionFixtureRow(spec: ModelDefinitionInteractionFixture): Spatial
   return { id: spec.id, label: spec.label ?? spec.id, key: typeof spec.key === "string" ? spec.key : (spec.id[0] ?? "?") };
 }
 
-/** @emoji 🧭️ Interaction rows shipped from model-definition interaction assets (id/label/key catalog view). */
+/** 🧭️ Interaction rows shipped from model-definition interaction assets (id/label/key catalog view). */
 function shippedSpatialInteractionCatalog(): readonly SpatialInteraction[] {
   return shippedInteractionJsons().map(interactionFixtureRow);
 }
 
 const COMPILED_INTERACTION_BY_ID = ephemeralMap<string, InteractionSpec>("s.plugins.cad.modules.core.component.ts.COMPILED_INTERACTION_BY_ID");
 
-/** @emoji 📚️ Loads a model-definition interaction by stable `id` (compiled once per id for stable React runtime identity). */
+/** 📚️ Loads a model-definition interaction by stable `id` (compiled once per id for stable React runtime identity). */
 export function loadSpatialInteraction(interactionId: string): InteractionSpec | null {
   const cached = COMPILED_INTERACTION_BY_ID.get(interactionId);
   if (cached) return cached;
@@ -3021,12 +3022,12 @@ function interactionOwnerById(): ReadonlyMap<string, string> {
   return map;
 }
 
-/** @emoji 🧭️ Model definition that owns an interaction asset. */
+/** 🧭️ Model definition that owns an interaction asset. */
 export function modelDefinitionIdForInteraction(interactionId: string): string | null {
   return interactionOwnerById().get(interactionId) ?? null;
 }
 
-/** @emoji 🧭️ Interactions shipped for a model definition (folder assets + typology references). */
+/** 🧭️ Interactions shipped for a model definition (folder assets + typology references). */
 export function listSpatialInteractionsForModelDefinition(modelDefinitionId: string, options?: { readonly includeCallable?: boolean }): readonly SpatialInteraction[] {
   const ids = new Set<string>();
   for (const [id, owner] of interactionOwnerById()) {
@@ -3060,7 +3061,7 @@ function attributeOwnerById(): ReadonlyMap<string, string> {
   return map;
 }
 
-/** @emoji 🧭️ Attribute definitions owned by a model definition. */
+/** 🧭️ Attribute definitions owned by a model definition. */
 export function listAttributeDefinitionsForModelDefinition(modelDefinitionId: string): readonly AttributeDefinitionSpec[] {
   const owners = attributeOwnerById();
   return shippedAttributeDefinitionCatalog().filter((row) => owners.get(row.id) === modelDefinitionId);
@@ -3082,7 +3083,7 @@ function propertyOwnerById(): ReadonlyMap<string, string> {
   return map;
 }
 
-/** @emoji 🧭️ Property definitions referenced by typologies in a model definition. */
+/** 🧭️ Property definitions referenced by typologies in a model definition. */
 export function listPropertyDefinitionsForModelDefinition(modelDefinitionId: string): readonly PropertyDefinitionSpec[] {
   const ids = new Set<string>();
   for (const row of shippedPropertyDefinitionCatalog()) {
@@ -3094,7 +3095,7 @@ export function listPropertyDefinitionsForModelDefinition(modelDefinitionId: str
   return [...ids].map((id) => loadPropertyDefinition(id)).filter((row): row is PropertyDefinitionSpec => row !== null);
 }
 
-/** @emoji 🧭️ Interaction ids invoked via `interaction.call` in one spec. */
+/** 🧭️ Interaction ids invoked via `interaction.call` in one spec. */
 export function interactionIdsReferencedByInteractionSpec(spec: InteractionSpec): readonly string[] {
   const ids = new Set<string>();
   for (const st of spec.machine.states) {
@@ -3109,7 +3110,7 @@ export function interactionIdsReferencedByInteractionSpec(spec: InteractionSpec)
   return [...ids];
 }
 
-/** @emoji 🧭️ Action ids referenced by one interaction spec (transition effects + commit + nested interactions). */
+/** 🧭️ Action ids referenced by one interaction spec (transition effects + commit + nested interactions). */
 export function actionIdsReferencedByInteractionSpec(spec: InteractionSpec): readonly string[] {
   const ids = new Set<string>();
   if (spec.commit.operation.kind === "action") {
@@ -3140,7 +3141,7 @@ export function actionIdsReferencedByInteractionSpec(spec: InteractionSpec): rea
   return [...ids];
 }
 
-/** @emoji 🧭️ Action ids declared on typologies, action assets, or owned interactions. */
+/** 🧭️ Action ids declared on typologies, action assets, or owned interactions. */
 export function listActionsForModelDefinition(modelDefinitionId: string): readonly string[] {
   const ids = new Set<string>();
   for (const typology of listTypologiesForModelDefinition(modelDefinitionId)) {
@@ -3162,7 +3163,7 @@ export function listActionsForModelDefinition(modelDefinitionId: string): readon
   return [...ids].sort((a, b) => a.localeCompare(b));
 }
 
-/** @emoji 🧭️ True when `actionId` is declared in the active model definition (or is `selection.apply`). */
+/** 🧭️ True when `actionId` is declared in the active model definition (or is `selection.apply`). */
 export function actionAvailableInModelDefinition(actionId: string, modelDefinitionId: string): boolean {
   if (actionId === "selection.apply") return true;
   if (actionId.startsWith("command.")) return true;
@@ -3173,10 +3174,10 @@ export function actionAvailableInModelDefinition(actionId: string, modelDefiniti
   return listActionsForModelDefinition(modelDefinitionId).includes(actionId);
 }
 
-/** @emoji 🪪️ model-definition selection command operation id (`selection.apply` param). */
+/** 🪪️ model-definition selection command operation id (`selection.apply` param). */
 export type SelectionApplyOperation = "selectAll" | "deselectAll" | "invert" | "selectKinds";
 
-/** @emoji 🪪️ model-definition selection command interaction row (`selection.*` registry). */
+/** 🪪️ model-definition selection command interaction row (`selection.*` registry). */
 export interface SelectionOperationInteractionDef {
   readonly id: string;
   readonly label: string;
@@ -3227,7 +3228,7 @@ function selectionOperationDefForActionId(actionId: string, label?: string): Sel
   };
 }
 
-/** @emoji 🧭️ Selection command fixtures whose action assets belong to a model definition. */
+/** 🧭️ Selection command fixtures whose action assets belong to a model definition. */
 export function listSelectionOperationsForModelDefinition(modelDefinitionId: string): readonly SelectionOperationInteractionDef[] {
   const out: SelectionOperationInteractionDef[] = [];
   for (const actionId of listActionsForModelDefinition(modelDefinitionId)) {
@@ -3237,7 +3238,7 @@ export function listSelectionOperationsForModelDefinition(modelDefinitionId: str
   return out.sort((a, b) => a.id.localeCompare(b.id));
 }
 
-/** @emoji 🧭️ Selection entity kinds available while a model definition is active (factory primitives + objects). */
+/** 🧭️ Selection entity kinds available while a model definition is active (factory primitives + objects). */
 export function modelDefinitionSelectionEntityKinds(modelDefinitionId: string): readonly ModelEntityKind[] {
   const entityKindIds = new Set<string>([...PRIMITIVE_MODEL_ENTITY_KINDS, "object", "geometry", "attribute"]);
   const kinds = new Set<ModelEntityKind>([...PRIMITIVE_MODEL_ENTITY_KINDS, "object"]);
@@ -3259,7 +3260,7 @@ export function modelDefinitionSelectionEntityKinds(modelDefinitionId: string): 
   return ordered;
 }
 
-/** @emoji 🧭️ Object rows owned by typologies declared under a model definition. */
+/** 🧭️ Object rows owned by typologies declared under a model definition. */
 export function listModelObjectsForModelDefinition(model: Model, modelDefinitionId: string): readonly SpatialObjectRecord[] {
   const typologyIds = new Set(listTypologiesForModelDefinition(modelDefinitionId).map((row) => row.id));
   const kernelTypologyMap = kernelTypologyIds(modelDefinitionId);
@@ -3274,12 +3275,12 @@ export function listModelObjectsForModelDefinition(model: Model, modelDefinition
   });
 }
 
-/** @emoji 🧭️ Counts in-view typology objects for a model definition (renderer scope). */
+/** 🧭️ Counts in-view typology objects for a model definition (renderer scope). */
 export function countViewObjectsForModelDefinition(model: Model, modelDefinitionId: string): number {
   return listModelObjectsForModelDefinition(model, modelDefinitionId).length;
 }
 
-/** @emoji 🧭️ Summarizes scoped catalogs for the active model definition (hosts + REPL). */
+/** 🧭️ Summarizes scoped catalogs for the active model definition (hosts + REPL). */
 export interface ModelDefinitionScope {
   readonly modelDefinitionId: string;
   readonly typologies: readonly TypologySpec[];
@@ -3292,7 +3293,7 @@ export interface ModelDefinitionScope {
   readonly selectionEntityKinds: readonly ModelEntityKind[];
 }
 
-/** @emoji 🧭️ Resolves everything available under one model definition manifest id. */
+/** 🧭️ Resolves everything available under one model definition manifest id. */
 export function resolveModelDefinitionScope(modelDefinitionId: string): ModelDefinitionScope {
   return {
     modelDefinitionId,
@@ -3309,12 +3310,12 @@ export function resolveModelDefinitionScope(modelDefinitionId: string): ModelDef
 // #endregion 🧭️ModelDefinitionScope
 
 // #region 🔄️TransformationGeometry
-/** @emoji 🔄️ Registered transformation applier for one qualified transformation id. */
+/** 🔄️ Registered transformation applier for one qualified transformation id. */
 export type TransformationApplier = (spec: TransformationSpec, source: Model) => Model;
 
 const transformationAppliers = ephemeralMap<string, TransformationApplier>("s.plugins.cad.modules.core.component.ts.transformationAppliers");
 
-/** @emoji 🔄️ Registers a model-definition-specific transformation implementation. */
+/** 🔄️ Registers a model-definition-specific transformation implementation. */
 export function registerTransformationApplier(qualifiedTransformationId: string, applier: TransformationApplier): void {
   transformationAppliers.set(qualifiedTransformationId, applier);
 }
@@ -3381,7 +3382,7 @@ export function cloneModelGeometryShell(source: Model): Model {
   return target;
 }
 
-/** @emoji 🔄️ Copies geometry and keeps only object rows whose typology is listed on the transformation spec. */
+/** 🔄️ Copies geometry and keeps only object rows whose typology is listed on the transformation spec. */
 function applyTransformationFallback(spec: TransformationSpec, source: Model): Model {
   const target = cloneModelGeometryShell(source);
   const allowedTypologies = new Set(spec.typologies);
@@ -3492,7 +3493,7 @@ function runDeriveTransformation(spec: TransformationSpec, source: Model, previe
 
 // #endregion 🔄️TransformationGeometry
 
-/** @emoji 🔄️ Derives a target-definition model from a source model (shared geometry, new object rows). */
+/** 🔄️ Derives a target-definition model from a source model (shared geometry, new object rows). */
 export function applyTransformation(spec: TransformationSpec, source: Model, preview: SpatialPreviewKernel): Model {
   const qualified = qualifiedTransformationId(spec.modelDefinitionId, spec.id);
   const applier = transformationAppliers.get(qualified);
@@ -3506,16 +3507,66 @@ export function applyTransformation(spec: TransformationSpec, source: Model, pre
 // #endregion 📦️📐️geometry
 
 // #region 🧪️Tests
-import { SpatialKernel, SpatialPreviewKernel, applyModelDiff } from "../🗺️spatial/🟦️.ts";
-import { CAD_GUMBALL_HIDDEN, cadGumballConfigVisible, collectGeometrySelectionTargets, modelDefinitionActionRegistry, runRegisteredAction } from "../../../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️.ts";
 
 const __geometryTestRuntime = import.meta.vitest ? await import("../../../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts") : null;
 const __geometryTestKernel = import.meta.vitest ? await import("../🧱️brepjs/🟦️.ts") : null;
 const CAD_E2E_ROUTES_MODEL_SPACE_JSON =
   '{"schema":"spatial.modelspace","revision":1,"models":[{"id":"spatial.shape","model":{"schema":"spatial.model","revision":1,"objects":[{"id":"object-wire-orbit-a","typology":"spatial.shape.kernel.wire","primitives":[{"kind":"vertex","id":"r10","position":[6,0,0.8]},{"kind":"vertex","id":"r11","position":[7.4,0.6,0.8]},{"kind":"vertex","id":"r12","position":[8.8,0.2,0.8]},{"kind":"vertex","id":"r13","position":[9.9,1.1,0.8]},{"kind":"vertex","id":"r14","position":[10.2,2.6,0.8]},{"kind":"vertex","id":"r15","position":[9.4,3.9,0.8]},{"kind":"vertex","id":"r16","position":[7.8,4.4,0.8]},{"kind":"vertex","id":"r17","position":[6.2,4.1,0.8]},{"kind":"curve","id":"re10","vertexIds":["r10","r11"]},{"kind":"curve","id":"re11","vertexIds":["r11","r12"]},{"kind":"curve","id":"re12","vertexIds":["r12","r13"]},{"kind":"curve","id":"re13","vertexIds":["r13","r14"]},{"kind":"curve","id":"re14","vertexIds":["r14","r15"]},{"kind":"curve","id":"re15","vertexIds":["r15","r16"]},{"kind":"curve","id":"re16","vertexIds":["r16","r17"]},{"kind":"curve","id":"re17","vertexIds":["r17","r10"]},{"kind":"curve","slot":"wire","id":"orbit-a","edgeIds":["re10","re11","re12","re13","re14","re15","re16","re17"]}]},{"id":"object-wire-spine-b","typology":"spatial.shape.kernel.wire","primitives":[{"kind":"vertex","id":"r18","position":[2,6,1.6]},{"kind":"vertex","id":"r19","position":[3.5,6.8,1.6]},{"kind":"vertex","id":"r20","position":[5.2,6.5,1.6]},{"kind":"vertex","id":"r21","position":[6.8,7.2,1.6]},{"kind":"vertex","id":"r22","position":[7.5,8.4,1.6]},{"kind":"vertex","id":"r23","position":[6.1,9.1,1.6]},{"kind":"curve","id":"re18","vertexIds":["r18","r19"]},{"kind":"curve","id":"re19","vertexIds":["r19","r20"]},{"kind":"curve","id":"re20","vertexIds":["r20","r21"]},{"kind":"curve","id":"re21","vertexIds":["r21","r22"]},{"kind":"curve","id":"re22","vertexIds":["r22","r23"]},{"kind":"curve","slot":"wire","id":"spine-b","edgeIds":["re18","re19","re20","re21","re22"]}]},{"id":"object-wire-stub-wire","typology":"spatial.shape.kernel.wire","primitives":[{"kind":"vertex","id":"r0","position":[0,0,0]},{"kind":"vertex","id":"r1","position":[1.2,0.4,0]},{"kind":"vertex","id":"r2","position":[2.6,0.1,0]},{"kind":"vertex","id":"r3","position":[3.8,0.9,0]},{"kind":"vertex","id":"r4","position":[4.5,2.1,0]},{"kind":"vertex","id":"r5","position":[4.2,3.5,0]},{"kind":"vertex","id":"r6","position":[3.1,4.2,0]},{"kind":"vertex","id":"r7","position":[1.5,4.5,0]},{"kind":"vertex","id":"r8","position":[0.2,3.8,0]},{"kind":"vertex","id":"r9","position":[-0.4,2.2,0]},{"kind":"curve","id":"re0","vertexIds":["r0","r1"]},{"kind":"curve","id":"re1","vertexIds":["r1","r2"]},{"kind":"curve","id":"re2","vertexIds":["r2","r3"]},{"kind":"curve","id":"re3","vertexIds":["r3","r4"]},{"kind":"curve","id":"re4","vertexIds":["r4","r5"]},{"kind":"curve","id":"re5","vertexIds":["r5","r6"]},{"kind":"curve","id":"re6","vertexIds":["r6","r7"]},{"kind":"curve","id":"re7","vertexIds":["r7","r8"]},{"kind":"curve","id":"re8","vertexIds":["r8","r9"]},{"kind":"curve","id":"re9","vertexIds":["r9","r0"]},{"kind":"curve","slot":"wire","id":"stub-wire","edgeIds":["re0","re1","re2","re3","re4","re5","re6","re7","re8","re9"]}]}]}}]}';
 
+/** 🎒️ The values this module hands its extracted suite `./🧪️tests/🧪️semio-tech-cad-js-core-vec/🟦️.ts`. */
+export type GeometryTestDependencies = {
+  readonly AttributeTable: typeof AttributeTable;
+  readonly CAD_E2E_ROUTES_MODEL_SPACE_JSON: typeof CAD_E2E_ROUTES_MODEL_SPACE_JSON;
+  readonly Model: typeof Model;
+  readonly ModelSpace: typeof ModelSpace;
+  readonly __geometryTestKernel: typeof __geometryTestKernel;
+  readonly __geometryTestRuntime: typeof __geometryTestRuntime;
+  readonly actionAvailableInModelDefinition: typeof actionAvailableInModelDefinition;
+  readonly applyTransformation: typeof applyTransformation;
+  readonly buildModelPrimitiveDocument: typeof buildModelPrimitiveDocument;
+  readonly computeStat: typeof computeStat;
+  readonly countViewObjectsForModelDefinition: typeof countViewObjectsForModelDefinition;
+  readonly defaultModelDefinitionId: typeof defaultModelDefinitionId;
+  readonly derivePropertyValue: typeof derivePropertyValue;
+  readonly evalExpr: typeof evalExpr;
+  readonly evalGuard: typeof evalGuard;
+  readonly expandSelectionTargetsForAccept: typeof expandSelectionTargetsForAccept;
+  readonly formatStatOutputValue: typeof formatStatOutputValue;
+  readonly hashModelPrimitives: typeof hashModelPrimitives;
+  readonly hashModelVertices: typeof hashModelVertices;
+  readonly hashSolidRecord: typeof hashSolidRecord;
+  readonly hashVertexPosition: typeof hashVertexPosition;
+  readonly listApplicablePropertyDefinitionsForModelDefinition: typeof listApplicablePropertyDefinitionsForModelDefinition;
+  readonly listAttributeDefinitionsForModelDefinitionEntity: typeof listAttributeDefinitionsForModelDefinitionEntity;
+  readonly listModelDefinitionAttributeDefinitions: typeof listModelDefinitionAttributeDefinitions;
+  readonly listModelDefinitionManifests: typeof listModelDefinitionManifests;
+  readonly listModelDefinitionPropertyDefinitions: typeof listModelDefinitionPropertyDefinitions;
+  readonly listModelDefinitionStatDefinitions: typeof listModelDefinitionStatDefinitions;
+  readonly listModelDefinitionTypologies: typeof listModelDefinitionTypologies;
+  readonly listModelObjectsForModelDefinition: typeof listModelObjectsForModelDefinition;
+  readonly listPropertyDefinitionsForModelDefinition: typeof listPropertyDefinitionsForModelDefinition;
+  readonly listSelectionOperationsForModelDefinition: typeof listSelectionOperationsForModelDefinition;
+  readonly listStatDefinitionsForModelDefinition: typeof listStatDefinitionsForModelDefinition;
+  readonly listTransformationsFromModelDefinition: typeof listTransformationsFromModelDefinition;
+  readonly listTransformationsIntoModelDefinition: typeof listTransformationsIntoModelDefinition;
+  readonly listTypologiesForModelDefinition: typeof listTypologiesForModelDefinition;
+  readonly loadAttributeDefinition: typeof loadAttributeDefinition;
+  readonly loadPropertyDefinition: typeof loadPropertyDefinition;
+  readonly loadStatDefinition: typeof loadStatDefinition;
+  readonly loadTransformation: typeof loadTransformation;
+  readonly loadTypology: typeof loadTypology;
+  readonly objectMatchesTypologyPrimitives: typeof objectMatchesTypologyPrimitives;
+  readonly objectsForStatCompute: typeof objectsForStatCompute;
+  readonly parseModelJson: typeof parseModelJson;
+  readonly resolveModelDefinitionScope: typeof resolveModelDefinitionScope;
+  readonly resolveTypologyStyle: typeof resolveTypologyStyle;
+  readonly selectionEventMatches: typeof selectionEventMatches;
+  readonly solidRef: typeof solidRef;
+  readonly validateAttributeValue: typeof validateAttributeValue;
+};
+
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️semio-tech-cad-js-core-vec/🟦️.ts");
-  await registerTests1(import.meta.vitest, { AttributeTable, CAD_E2E_ROUTES_MODEL_SPACE_JSON, CAD_GUMBALL_HIDDEN, Model, ModelSpace, SpatialKernel, SpatialPreviewKernel, __geometryTestKernel, __geometryTestRuntime, actionAvailableInModelDefinition, applyModelDiff, applyTransformation, buildModelPrimitiveDocument, cadGumballConfigVisible, collectGeometrySelectionTargets, computeStat, countViewObjectsForModelDefinition, defaultModelDefinitionId, derivePropertyValue, evalExpr, evalGuard, expandSelectionTargetsForAccept, formatStatOutputValue, hashModelPrimitives, hashModelVertices, hashSolidRecord, hashVertexPosition, listApplicablePropertyDefinitionsForModelDefinition, listAttributeDefinitionsForModelDefinitionEntity, listModelDefinitionAttributeDefinitions, listModelDefinitionManifests, listModelDefinitionPropertyDefinitions, listModelDefinitionStatDefinitions, listModelDefinitionTypologies, listModelObjectsForModelDefinition, listPropertyDefinitionsForModelDefinition, listSelectionOperationsForModelDefinition, listStatDefinitionsForModelDefinition, listTransformationsFromModelDefinition, listTransformationsIntoModelDefinition, listTypologiesForModelDefinition, loadAttributeDefinition, loadPropertyDefinition, loadStatDefinition, loadTransformation, loadTypology, modelDefinitionActionRegistry, objectMatchesTypologyPrimitives, objectsForStatCompute, parseModelJson, resolveModelDefinitionScope, resolveTypologyStyle, runRegisteredAction, selectionEventMatches, solidRef, validateAttributeValue }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { AttributeTable, CAD_E2E_ROUTES_MODEL_SPACE_JSON, Model, ModelSpace, __geometryTestKernel, __geometryTestRuntime, actionAvailableInModelDefinition, applyTransformation, buildModelPrimitiveDocument, computeStat, countViewObjectsForModelDefinition, defaultModelDefinitionId, derivePropertyValue, evalExpr, evalGuard, expandSelectionTargetsForAccept, formatStatOutputValue, hashModelPrimitives, hashModelVertices, hashSolidRecord, hashVertexPosition, listApplicablePropertyDefinitionsForModelDefinition, listAttributeDefinitionsForModelDefinitionEntity, listModelDefinitionAttributeDefinitions, listModelDefinitionManifests, listModelDefinitionPropertyDefinitions, listModelDefinitionStatDefinitions, listModelDefinitionTypologies, listModelObjectsForModelDefinition, listPropertyDefinitionsForModelDefinition, listSelectionOperationsForModelDefinition, listStatDefinitionsForModelDefinition, listTransformationsFromModelDefinition, listTransformationsIntoModelDefinition, listTypologiesForModelDefinition, loadAttributeDefinition, loadPropertyDefinition, loadStatDefinition, loadTransformation, loadTypology, objectMatchesTypologyPrimitives, objectsForStatCompute, parseModelJson, resolveModelDefinitionScope, resolveTypologyStyle, selectionEventMatches, solidRef, validateAttributeValue }, { url: import.meta.url });
 }
 // #endregion 🧪️Tests

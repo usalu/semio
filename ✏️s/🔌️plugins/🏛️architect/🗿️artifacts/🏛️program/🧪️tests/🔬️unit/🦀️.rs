@@ -66,7 +66,6 @@ fn program_document_contract_json_text_pack_and_projection() {
     assert_eq!(artifact.to_snapshot(), snapshot, "artifact/snapshot projection must preserve every document field");
     semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&snapshot);
     semio_framework_os_kernel::os_store::test_support::assert_pack_round_trip(&snapshot);
-    println!("[DEBUG] program-document-contract json=text=pack=projection child-identities=2 unknown-fields=parent,nested-row");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -115,7 +114,7 @@ async fn sample_plugin_dsl_text_is_parseable_and_reflects_registers() {
     assert!(printed.contains("REC"), "printed dsl text must contain the reception element code: {printed}");
 }
 
-/// @emoji 🧪️ The bundled `.architect` fixture (a static transcription of `sample_plugin()`)
+/// 🧪️ The bundled `.architect` fixture (a static transcription of `sample_plugin()`)
 /// parses and round-trips — the compile-time validation ground truth for
 /// `ARCHITECT_EXAMPLE_TEXT`. Compared field-by-field rather than via `PartialEq` against a
 /// freshly called `sample_plugin()`, because `EntityId::new_serial` draws from a

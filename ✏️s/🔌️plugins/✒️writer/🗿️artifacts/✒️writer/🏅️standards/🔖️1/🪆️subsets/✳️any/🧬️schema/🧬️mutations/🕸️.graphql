@@ -3,10 +3,12 @@ input RenameWriterInput { newId: String! }
 input ChangeUriInput { newUri: String! }
 input ChangeLanguageInput { newLanguageId: String! }
 input EditTextInput { text: String! }
+input SpliceTextInput { start: Int! deleted: String! insert: String! before: String! after: String! }
 
 input WriterMutationInput {
   renameWriter: RenameWriterInput
   changeUri: ChangeUriInput
   changeLanguage: ChangeLanguageInput
   editText: EditTextInput
+  spliceText: SpliceTextInput
 }

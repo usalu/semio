@@ -140,6 +140,10 @@ fn tree_row_kind(tree: &UiTree, id: NodeId, parent_kind: Option<LayoutNodeKind>,
     let metrics = retained_tree_row_metrics(tree, id, metrics);
     match parent_kind {
         LayoutNodeKind::Tree { reversed, .. } => {
+            if document_table(tree, tree.node(id)?.parent?).is_some() {
+                let item = owner.sections.iter().find_map(|section| find_tree_item(&section.items, key, 0))?;
+                return Some(LayoutNodeKind::TableRow { height: live_tree_item_height(tree, id, item, &metrics, 0), actions: table_actions_width_of(owner, &metrics) });
+            }
             let section = owner.sections.iter().find(|section| &section.id == key)?;
             let expanded = tree.disclosure_open(id).unwrap_or_else(|| crate::wgpu::layout::tree_section_default_open(section));
             let header = tree_section_header_height(section, &metrics);
@@ -179,6 +183,9 @@ pub(crate) fn live_tree_item_height(tree: &UiTree, id: NodeId, item: &UiTreeItem
     if tree_item_detail_node(tree, id).is_some() {
         height += TREE_DETAIL_HEIGHT;
     }
+    if document_table_row(tree, id).is_some() && tree.children(id).any(|child| matches!(tree.node(child).map(|node| &node.spec.0), Some(UiNode::ComponentScene(_)))) {
+        height = height.max(TREE_DETAIL_HEIGHT);
+    }
     if depth >= TREE_ROW_MAX_DEPTH || !tree.disclosure_open(id).unwrap_or(item.default_open.unwrap_or(false)) {
         return height;
     }
@@ -211,6 +218,35 @@ fn is_tree_item_detail(tree: &UiTree, child: NodeId, parent: NodeId) -> bool {
     tree_item_detail_node(tree, parent) == Some(child)
 }
 
+/// 📊️ The `TableProps` the mounted `Tree` node `id` renders — a table is a tree whose record is a `Component::Table`
+/// (`reconcile::table_section`), and its column grid stays on that record.
+pub(crate) fn document_table(tree: &UiTree, id: NodeId) -> Option<&ui_contract::TableProps> {
+    let ui_contract::Component::Table(props) = &tree.document()?.record(tree.document_id(id)?)?.component else { return None };
+    Some(props)
+}
+
+/// 📊️ The `TableRowProps` of the mounted table row `id` — its cells, positional to the table's columns.
+pub(crate) fn document_table_row(tree: &UiTree, id: NodeId) -> Option<&ui_contract::TableRowProps> {
+    let ui_contract::Component::TableRow(props) = &tree.document()?.record(tree.document_id(id)?)?.component else { return None };
+    Some(props)
+}
+
+/// 🎬️ The `index`-th `RowAction` the mounted tree or table row `id` declares — the exact versioned binding a click on its icon
+/// or its accessibility button fires (the retained item carries only the icon and the legacy descriptor).
+pub(crate) fn document_row_action(tree: &UiTree, id: NodeId, index: usize) -> Option<&ui_contract::RowAction> {
+    match &tree.document()?.record(tree.document_id(id)?)?.component {
+        ui_contract::Component::TreeItem(props) => props.row_actions.get(index),
+        ui_contract::Component::TableRow(props) => props.row_actions.get(index),
+        _ => None,
+    }
+}
+
+/// 📊️ A table's trailing actions column: one `layout::tree_row_action_rect` slot per action of its widest materialised row, as
+/// React sizes its actions track by the widest action strip.
+pub(crate) fn table_actions_width_of(node: &UiTreeNode, metrics: &TreeRowMetrics) -> f32 {
+    crate::wgpu::layout::table_actions_width(node.sections.iter().flat_map(|section| section.items.iter()).map(|item| item.actions.as_ref().map_or(0, Vec::len)).max().unwrap_or(0), metrics)
+}
+
 pub(crate) fn live_tree_section_height(tree: &UiTree, id: NodeId, section: &crate::wgpu::component::ui::UiTreeSectionNode, metrics: &TreeRowMetrics) -> f32 {
     if !section.presence.visible() {
         return 0.0;
@@ -224,6 +260,9 @@ pub(crate) fn live_tree_section_height(tree: &UiTree, id: NodeId, section: &crat
 
 pub(crate) fn retained_tree_height(tree: &UiTree, id: NodeId, node: &UiTreeNode, metrics: &TreeRowMetrics) -> f32 {
     let metrics = metrics.with_presentation(node.presentation);
+    if document_table(tree, id).is_some() {
+        return metrics.header_height + node.sections.iter().flat_map(|section| section.items.iter()).filter_map(|item| tree.explicit_child(id, &item.id).map(|row| live_tree_item_height(tree, row, item, &metrics, 0))).sum::<f32>();
+    }
     node.sections
         .iter()
         .filter(|section| section.presence.visible())
@@ -690,7 +729,7 @@ impl MountedLayoutJob {
             return (0, 0);
         };
         let parent_kind = parent.and_then(|index| self.nodes.get(index)).map(|input| input.kind);
-        let tree_inline_control = matches!(parent_kind, Some(LayoutNodeKind::TreeRow { .. }));
+        let tree_inline_control = matches!(parent_kind, Some(LayoutNodeKind::TreeRow { .. } | LayoutNodeKind::TableRow { .. }));
         let tree_detail = parent.and_then(|index| self.nodes.get(index)).is_some_and(|owner| is_tree_item_detail(tree, id, owner.id));
         let popup_overlay_row = tree.is_open_select_popup_row(id);
         let kind = if popup_overlay_row {
@@ -701,7 +740,9 @@ impl MountedLayoutJob {
             } else {
                 match &node.spec.0 {
                     UiNode::Text(_) => LayoutNodeKind::Text,
-                    UiNode::Tree(tree_node) => LayoutNodeKind::Tree { height: retained_tree_height(tree, id, tree_node, &self.row_metrics), reversed: root_reversed },
+                    UiNode::Tree(tree_node) => {
+                        LayoutNodeKind::Tree { height: retained_tree_height(tree, id, tree_node, &self.row_metrics), header: if document_table(tree, id).is_some() { self.row_metrics.header_height } else { 0.0 }, reversed: root_reversed }
+                    }
                     UiNode::Stack(stack) => tree_row_kind(tree, id, parent_kind, &self.row_metrics).unwrap_or(LayoutNodeKind::Stack {
                         horizontal: stack.direction == "horizontal",
                         gap: gap_for_token(&self.theme, stack.gap.as_deref()),

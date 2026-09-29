@@ -51,7 +51,6 @@ describe("Tree label reading order", () => {
         expect(result.direction).toBe(flow);
         expect(result.visual, flow + ":" + entry.locale + ":" + entry.text).toBe(entry.visual);
       }
-      console.info("[DEBUG] Chromium preserved twelve bilingual Tree label orders across both panel directions");
     } finally {
       await browser.close();
     }

@@ -107,12 +107,11 @@ fn equation_graph_window_config_retained_publications_isolate_and_reload_two_win
                 }
                 .await;
                 if let Err(error) = &outcome {
-                    eprintln!("[DEBUG] Equation exact-window runtime failure before close: {error}");
+                    eprintln!("Equation exact-window runtime failure before close: {error}");
                 }
                 artifact_app_laws::close_registered_fixture_app(&mut *reopened);
                 artifact_app_laws::close_registered_fixture_app(&mut *app);
                 outcome.expect("Equation exact-window config publication and persistence");
-                eprintln!("[DEBUG] two Equation graph windows published, rendered, and reloaded independent persisted camera state");
             })
         })
         .expect("spawn Equation window-config law")
@@ -140,5 +139,4 @@ fn equation_graph_window_config_mutations_follow_the_neutral_trace_and_restore()
             assert_eq!(state, &expected);
         }
     }
-    eprintln!("[DEBUG] Equation graph-window config matched the neutral exact-window trace, inverse, text, and binary laws");
 }

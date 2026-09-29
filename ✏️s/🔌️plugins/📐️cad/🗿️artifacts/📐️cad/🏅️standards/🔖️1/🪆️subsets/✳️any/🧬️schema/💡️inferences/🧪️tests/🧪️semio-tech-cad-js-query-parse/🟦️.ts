@@ -1,18 +1,17 @@
-type TestSource = { readonly directory: string; readonly url: string };
+import { preciseSpatialKernelMath } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧮️preview/🟦️.ts";
+import type { FaceRef, ShellRef, SolidRef } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import type { InferencesTestDependencies } from "../../🟦️.ts";
+import type { Model, ObjectRef, SelectionTarget, TypologyRef } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import type { SpatialKernel } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
+import type { Vec3 } from "@semio-tech/s-3d-js";
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+type TestSource = { readonly url: string };
+
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: InferencesTestDependencies, source: TestSource): Promise<void> {
   const { Model, __spatialQueryTestKernel, __spatialQueryTestRuntime, applyModelDiff, emptyMeshTransfer, modelDefinitionActionRegistry, parseConstruct, runConstruct, solidRef } = dependencies;
-  type FaceRef = any;
-  type ObjectRef = any;
-  type SelectionTarget = any;
-  type ShellRef = any;
-  type SolidRef = any;
-  type SpatialKernel = any;
-  type TypologyRef = any;
-  type Vec3 = any;
 
   __spatialQueryTestRuntime!.bootstrapCadModules();
-  const { BrepjsKernel, preciseSpatialKernelMath } = __spatialQueryTestKernel!;
+  const { BrepjsKernel } = __spatialQueryTestKernel!;
   const M = preciseSpatialKernelMath;
   const { describe, expect, it } = vitest;
 

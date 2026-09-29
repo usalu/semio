@@ -15,7 +15,6 @@ fn canonical_geometry_scenario_matches_diff_apply_and_inverse() {
     let mut restored = after;
     for undo in mutation.inverse(&before) { crate::mutations::apply_drawing_mutation(&mut restored, &undo).unwrap(); }
     assert_eq!(restored, before);
-    eprintln!("[DEBUG] canonical path geometry scenario preserves identity and roundtrips through inverse");
 }
 
 #[test]

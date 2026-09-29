@@ -156,7 +156,7 @@ use semio_s_artifact_stdio_step::standards::v_ap214::engine::part21::{parse_part
 use semio_s_artifact_stdio_step::StepSnapshot;
 use semio_s_artifact_stdio_stl::standards::v_ascii::engine::encode_stl_binary;
 
-/// @emoji 📤️ A native-geometry export ready to be wrapped into a `Effect::DownloadMediaExport`.
+/// 📤️ A native-geometry export ready to be wrapped into a `Effect::DownloadMediaExport`.
 pub struct CadSolidExport {
     pub filename: String,
     pub data: DslValue,
@@ -171,7 +171,7 @@ pub const CAD_SOLID_EXPORT_DIALECT_OBJ: &str = "s.stdio.obj";
 pub const CAD_SOLID_EXPORT_DIALECT_STL: &str = "s.stdio.stl";
 pub const CAD_SOLID_EXPORT_DIALECT_STEP: &str = "s.stdio.step";
 
-/// @emoji 🧾️ File extension for a `s.stdio.<format>` dialect id, as used in `export_solids_as`'s
+/// 🧾️ File extension for a `s.stdio.<format>` dialect id, as used in `export_solids_as`'s
 /// downloaded filename.
 fn cad_solid_export_extension(dialect_id: &str) -> Option<&'static str> {
     match dialect_id {
@@ -182,7 +182,7 @@ fn cad_solid_export_extension(dialect_id: &str) -> Option<&'static str> {
     }
 }
 
-/// @emoji 📎️ MIME type for a `s.stdio.<format>` dialect id, kept in parity with the retired
+/// 📎️ MIME type for a `s.stdio.<format>` dialect id, kept in parity with the retired
 /// enum's mime-type values for the three formats `export_solids_as` supports.
 fn cad_solid_export_mime_type(dialect_id: &str) -> Option<&'static str> {
     match dialect_id {
@@ -272,7 +272,7 @@ fn step_text_from_semio_brep_snapshot(brep: &SemioBrepSnapshot) -> Option<String
     Some(write_part21(&step_snapshot.to_part21_document()))
 }
 
-/// @emoji 📤️ Encodes `solids` for `format`, routed through stdio's real semio-subset codecs
+/// 📤️ Encodes `solids` for `format`, routed through stdio's real semio-subset codecs
 /// instead of a local hand-rolled encoder: OBJ/STL tessellate `solids` (via the live kernel) into
 /// a `semio/mesh` snapshot and call stdio's own `SemioMeshToObj`/`SemioMeshToStl` + text/binary
 /// grammar encoders; STEP still SOURCES its geometry from the framework brep kernel's native
@@ -316,7 +316,7 @@ pub fn export_solids_as(kernel: &mut Brep, solids: &[GeometryHandle], format: &s
 // 🐛️ Relocated from the deleted `⚙️engine/🦀️.rs` -- decoding a `requestFileOpen`
 // payload and routing it to the matching native-geometry importer by extension is deserialization
 // (rule 5), not artifact-engine compute.
-/// @emoji 📦️ Decodes a `requestFileOpen` payload (a `data:` URL when `readAs: "dataUrl"` was
+/// 📦️ Decodes a `requestFileOpen` payload (a `data:` URL when `readAs: "dataUrl"` was
 /// requested, otherwise a raw string) into bytes.
 pub fn cad_file_bytes_from_payload(payload: &DslValue) -> Option<Vec<u8>> {
     let raw = payload.as_str()?;
@@ -328,12 +328,12 @@ pub fn cad_file_bytes_from_payload(payload: &DslValue) -> Option<Vec<u8>> {
     }
 }
 
-/// @emoji 📦️ Decodes a `requestFileOpen` payload into UTF-8 text; see `cad_file_bytes_from_payload`.
+/// 📦️ Decodes a `requestFileOpen` payload into UTF-8 text; see `cad_file_bytes_from_payload`.
 pub fn cad_file_text_from_payload(payload: &DslValue) -> Option<String> {
     String::from_utf8(cad_file_bytes_from_payload(payload)?).ok()
 }
 
-/// @emoji 🧊️ Imports a STEP payload into the shared kernel, wrapping the first solid it contains
+/// 🧊️ Imports a STEP payload into the shared kernel, wrapping the first solid it contains
 /// (STEP files may hold more than one shape) as a `SemioModelElement` — id/typology/placement plus
 /// a `GeometryRef::Brep` naming the live kernel handle (the actual B-Rep geometry stays in the
 /// kernel session / gets bridged to a real `SemioBrepSnapshot` on export via `export_solids_as`,
@@ -345,7 +345,7 @@ pub fn import_step_object(text: &str) -> Option<semio_s_artifact_stdio_semio::st
     Some(model_element_from_solid_handle(crate::standards::v1::subsets::any::schema::inferences::next_cad_id("object-step"), handle))
 }
 
-/// @emoji 🧊️ Imports an OBJ payload into the shared kernel as a new `SemioModelElement` — see
+/// 🧊️ Imports an OBJ payload into the shared kernel as a new `SemioModelElement` — see
 /// `import_step_object`'s doc comment for the returned shape's rationale.
 pub fn import_obj_object(text: &str) -> Option<semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
     let mut kernel = crate::standards::v1::subsets::any::schema::inferences::cad_brep_kernel();
@@ -353,14 +353,14 @@ pub fn import_obj_object(text: &str) -> Option<semio_s_artifact_stdio_semio::sta
     Some(model_element_from_solid_handle(crate::standards::v1::subsets::any::schema::inferences::next_cad_id("object-obj"), handle))
 }
 
-/// @emoji 🧊️ Imports an STL payload into the shared kernel as a new `SemioModelElement`.
+/// 🧊️ Imports an STL payload into the shared kernel as a new `SemioModelElement`.
 pub fn import_stl_object(bytes: &[u8]) -> Option<semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
     let mut kernel = crate::standards::v1::subsets::any::schema::inferences::cad_brep_kernel();
     let handle = kernel.import_stl(bytes, 0.01).ok()?;
     Some(model_element_from_solid_handle(crate::standards::v1::subsets::any::schema::inferences::next_cad_id("object-stl"), handle))
 }
 
-/// @emoji 🧊️ Imports a GLB payload by decoding it to a tessellated mesh (via the shared
+/// 🧊️ Imports a GLB payload by decoding it to a tessellated mesh (via the shared
 /// `MeshImporter` codec) and re-importing that mesh into the kernel as a solid, matching the
 /// DWG-derived import path since GLB carries no exact B-Rep to preserve.
 pub fn import_glb_object(bytes: &[u8]) -> Option<semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
@@ -403,7 +403,7 @@ fn semio_mesh_snapshot_from_solids_placeholder(mesh: &semio_framework_plugin::Me
     })
 }
 
-/// @emoji 🗂️ Routes a `requestFileOpen` payload to the matching native-geometry import by the
+/// 🗂️ Routes a `requestFileOpen` payload to the matching native-geometry import by the
 /// picked file's extension; returns `None` for anything else so the caller can fall back to the
 /// spatial-JSON document path.
 pub fn import_cad_object_by_extension(name: &str, payload: &DslValue) -> Option<semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {

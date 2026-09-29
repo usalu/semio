@@ -1823,6 +1823,618 @@
       "reproducible": true,
       "family": "structural",
       "notes": "The before-state carries no `docProps/core.xml` part; removing it targets a part that is not in the package. Before-only."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-snapshot-readme-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-snapshot",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/📜️example-readme.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:f168e4b2edaa3a18d193004160d76a1e107776c7d0b568f0da10f27f958fc7de",
+          "bytes": 17024
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/🧾️readme-afters/📸️set-snapshot/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:a926417628a027ab2fa2b7d05464fd16d5d897a3367b74177195acf21c9abc4e",
+          "bytes": 2542
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "python-docx 1.2.0",
+        "engineFamily": "python-docx",
+        "engineVersion": "1.2.0",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/END-TO-END-OS-HUB-COLLABORATION-MCP/wp-en2/en2-docx-readme-afters.py --only set-snapshot-readme-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (python-docx)",
+        "attribution": "Generated with python-docx (MIT): the case's own Examples row applied to the real README package through python-docx's package/part/oxml model and saved; untouched parts stay verbatim, entries re-zipped with a fixed date",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The README's body and style table replaced by the row's three blocks (heading, mixed-run paragraph, 2-cell table) and three styles; docProps parts untouched."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-block-readme-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "insert-block",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/📜️example-readme.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:f168e4b2edaa3a18d193004160d76a1e107776c7d0b568f0da10f27f958fc7de",
+          "bytes": 17024
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/🧾️readme-afters/➕️insert-block/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:03770f9b98c74a5e9508ba30f1e6e14342ee7237a6449c90ed3ab79247787b84",
+          "bytes": 17047
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "python-docx 1.2.0",
+        "engineFamily": "python-docx",
+        "engineVersion": "1.2.0",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/END-TO-END-OS-HUB-COLLABORATION-MCP/wp-en2/en2-docx-readme-afters.py --only insert-block-readme-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (python-docx)",
+        "attribution": "Generated with python-docx (MIT): the case's own Examples row applied to the real README package through python-docx's package/part/oxml model and saved; untouched parts stay verbatim, entries re-zipped with a fixed date",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "An italic TableCell paragraph inserted at index 1 of body table 359, row 1, cell 0."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-block-readme-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "remove-block",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/📜️example-readme.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:f168e4b2edaa3a18d193004160d76a1e107776c7d0b568f0da10f27f958fc7de",
+          "bytes": 17024
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/🧾️readme-afters/➖️remove-block/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:fccf70852477fc99c41e61a40369147c161cfe9bc2190d6cd0d87d9dad588d2e",
+          "bytes": 17022
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "python-docx 1.2.0",
+        "engineFamily": "python-docx",
+        "engineVersion": "1.2.0",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/END-TO-END-OS-HUB-COLLABORATION-MCP/wp-en2/en2-docx-readme-afters.py --only remove-block-readme-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (python-docx)",
+        "attribution": "Generated with python-docx (MIT): the case's own Examples row applied to the real README package through python-docx's package/part/oxml model and saved; untouched parts stay verbatim, entries re-zipped with a fixed date",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The only block of body table 359, row 2, cell 0 removed."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-block-content-readme-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-block-content",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/📜️example-readme.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:f168e4b2edaa3a18d193004160d76a1e107776c7d0b568f0da10f27f958fc7de",
+          "bytes": 17024
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/🧾️readme-afters/📝️set-block-content/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:cfca730a1c8f7b749076611cafa522f133f96fe36e5a7adce53f161dcfe048ca",
+          "bytes": 17056
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "python-docx 1.2.0",
+        "engineFamily": "python-docx",
+        "engineVersion": "1.2.0",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/END-TO-END-OS-HUB-COLLABORATION-MCP/wp-en2/en2-docx-readme-afters.py --only set-block-content-readme-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (python-docx)",
+        "attribution": "Generated with python-docx (MIT): the case's own Examples row applied to the real README package through python-docx's package/part/oxml model and saved; untouched parts stay verbatim, entries re-zipped with a fixed date",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Body block 4 (the NOTE admonition paragraph) replaced by one italic Normal paragraph."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-run-text-readme-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-run-text",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/📜️example-readme.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:f168e4b2edaa3a18d193004160d76a1e107776c7d0b568f0da10f27f958fc7de",
+          "bytes": 17024
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/🧾️readme-afters/✍️set-run-text/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:8d9737a42f5eb85d6cb6d43857be4c8507fb9afbeeeba4a75f66a0ae7383828e",
+          "bytes": 17008
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "python-docx 1.2.0",
+        "engineFamily": "python-docx",
+        "engineVersion": "1.2.0",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/END-TO-END-OS-HUB-COLLABORATION-MCP/wp-en2/en2-docx-readme-afters.py --only set-run-text-readme-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (python-docx)",
+        "attribution": "Generated with python-docx (MIT): the case's own Examples row applied to the real README package through python-docx's package/part/oxml model and saved; untouched parts stay verbatim, entries re-zipped with a fixed date",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Run 0 of body paragraph 177 rewritten."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-run-formatting-readme-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-run-formatting",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/📜️example-readme.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:f168e4b2edaa3a18d193004160d76a1e107776c7d0b568f0da10f27f958fc7de",
+          "bytes": 17024
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/🧾️readme-afters/🪄️set-run-formatting/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:d9c694aaa2e9d39ccafb9e2a7f97391b941a7777a14a3ec6f4f7da4610bcf3ad",
+          "bytes": 17034
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "python-docx 1.2.0",
+        "engineFamily": "python-docx",
+        "engineVersion": "1.2.0",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/END-TO-END-OS-HUB-COLLABORATION-MCP/wp-en2/en2-docx-readme-afters.py --only set-run-formatting-readme-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (python-docx)",
+        "attribution": "Generated with python-docx (MIT): the case's own Examples row applied to the real README package through python-docx's package/part/oxml model and saved; untouched parts stay verbatim, entries re-zipped with a fixed date",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Run 0 of body paragraph 177: bold off, italic and underline on."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-style-readme-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "insert-style",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/📜️example-readme.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:f168e4b2edaa3a18d193004160d76a1e107776c7d0b568f0da10f27f958fc7de",
+          "bytes": 17024
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/🧾️readme-afters/💬️insert-style/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:61e3a4d40bfe3e12b263a5a55bc1ffa5c63221bdec1f5973ba1a0d8b0c1e9da4",
+          "bytes": 17060
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "python-docx 1.2.0",
+        "engineFamily": "python-docx",
+        "engineVersion": "1.2.0",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/END-TO-END-OS-HUB-COLLABORATION-MCP/wp-en2/en2-docx-readme-afters.py --only insert-style-readme-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (python-docx)",
+        "attribution": "Generated with python-docx (MIT): the case's own Examples row applied to the real README package through python-docx's package/part/oxml model and saved; untouched parts stay verbatim, entries re-zipped with a fixed date",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "A Callout paragraph style based on Normal appended to the style table."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-style-readme-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "remove-style",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/📜️example-readme.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:f168e4b2edaa3a18d193004160d76a1e107776c7d0b568f0da10f27f958fc7de",
+          "bytes": 17024
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/🧾️readme-afters/🗨️remove-style/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:f277224a677104e60c02e3db3ddc3e60a1d1dba4b8df488184021c138db28a66",
+          "bytes": 17010
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "python-docx 1.2.0",
+        "engineFamily": "python-docx",
+        "engineVersion": "1.2.0",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/END-TO-END-OS-HUB-COLLABORATION-MCP/wp-en2/en2-docx-readme-afters.py --only remove-style-readme-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (python-docx)",
+        "attribution": "Generated with python-docx (MIT): the case's own Examples row applied to the real README package through python-docx's package/part/oxml model and saved; untouched parts stay verbatim, entries re-zipped with a fixed date",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The last declared style, TableCell, removed."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-style-name-readme-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-style-name",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/📜️example-readme.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:f168e4b2edaa3a18d193004160d76a1e107776c7d0b568f0da10f27f958fc7de",
+          "bytes": 17024
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/🧾️readme-afters/🔤️set-style-name/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:bee72ffe383edeabb55c7d3d3a195e693c766f58ae3d7c5b1bfba7b07755b174",
+          "bytes": 17033
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "python-docx 1.2.0",
+        "engineFamily": "python-docx",
+        "engineVersion": "1.2.0",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/END-TO-END-OS-HUB-COLLABORATION-MCP/wp-en2/en2-docx-readme-afters.py --only set-style-name-readme-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (python-docx)",
+        "attribution": "Generated with python-docx (MIT): the case's own Examples row applied to the real README package through python-docx's package/part/oxml model and saved; untouched parts stay verbatim, entries re-zipped with a fixed date",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Heading2 renamed to Section Heading."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-style-based-on-readme-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-style-based-on",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/📜️example-readme.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:f168e4b2edaa3a18d193004160d76a1e107776c7d0b568f0da10f27f958fc7de",
+          "bytes": 17024
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/🧾️readme-afters/🌳️set-style-based-on/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:9b8e5547eb5227dc2a80fb1259ed49fdced3f88787fb02f553305146354de0fb",
+          "bytes": 17029
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "python-docx 1.2.0",
+        "engineFamily": "python-docx",
+        "engineVersion": "1.2.0",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/END-TO-END-OS-HUB-COLLABORATION-MCP/wp-en2/en2-docx-readme-afters.py --only set-style-based-on-readme-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (python-docx)",
+        "attribution": "Generated with python-docx (MIT): the case's own Examples row applied to the real README package through python-docx's package/part/oxml model and saved; untouched parts stay verbatim, entries re-zipped with a fixed date",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Heading3 re-based from Normal onto Heading1."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-part-readme-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-part",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/📜️example-readme.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:f168e4b2edaa3a18d193004160d76a1e107776c7d0b568f0da10f27f958fc7de",
+          "bytes": 17024
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/🧾️readme-afters/🧩️set-part/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:7f5f382cef208e5e3bc4b13cc6f969899c22ec29bfdc0813dcad3003eb91255f",
+          "bytes": 16980
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "python-docx 1.2.0",
+        "engineFamily": "python-docx",
+        "engineVersion": "1.2.0",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/END-TO-END-OS-HUB-COLLABORATION-MCP/wp-en2/en2-docx-readme-afters.py --only set-part-readme-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (python-docx)",
+        "attribution": "Generated with python-docx (MIT): the case's own Examples row applied to the real README package through python-docx's package/part/oxml model and saved; untouched parts stay verbatim, entries re-zipped with a fixed date",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "docProps/app.xml replaced by the row's extended-properties XML (same content type)."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-part-readme-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "remove-part",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/📜️example-readme.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:f168e4b2edaa3a18d193004160d76a1e107776c7d0b568f0da10f27f958fc7de",
+          "bytes": 17024
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/🧾️readme-afters/🧹️remove-part/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:7fd0d4e4b4b1d8ca25cfc11da5196748a4a12616891529316f8803b750c285c3",
+          "bytes": 16527
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "python-docx 1.2.0",
+        "engineFamily": "python-docx",
+        "engineVersion": "1.2.0",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/END-TO-END-OS-HUB-COLLABORATION-MCP/wp-en2/en2-docx-readme-afters.py --only remove-part-readme-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (python-docx)",
+        "attribution": "Generated with python-docx (MIT): the case's own Examples row applied to the real README package through python-docx's package/part/oxml model and saved; untouched parts stay verbatim, entries re-zipped with a fixed date",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The package relationship to docProps/core.xml dropped, so the part is no longer written."
     }
   ]
 }

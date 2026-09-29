@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::sync::{Mutex, OnceLock};
 
 //#region 🔖️Errors
-/// @emoji ⚠️ Envelope parse or registry lookup failure.
+/// ⚠️ Envelope parse or registry lookup failure.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SemioError {
     InvalidPreamble(String),
@@ -30,7 +30,7 @@ pub type SemioResult<T> = Result<T, SemioError>;
 //#endregion 🔖️Errors
 
 //#region 🔖️Component
-/// @emoji 🧩 Which constitutional encoding a `.semio` file carries.
+/// 🧩 Which constitutional encoding a `.semio` file carries.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Component {
     Dsl,
@@ -41,7 +41,7 @@ pub enum Component {
 }
 
 impl Component {
-    /// @emoji 🏷️ Wire token in the preamble and filename segment.
+    /// 🏷️ Wire token in the preamble and filename segment.
     pub const fn as_str(self) -> &'static str {
         match self {
             Self::Dsl => "dsl",
@@ -52,7 +52,7 @@ impl Component {
         }
     }
 
-    /// @emoji 📖️ Parses a component token from preamble or filename.
+    /// 📖️ Parses a component token from preamble or filename.
     pub fn parse(token: &str) -> Option<Self> {
         match token {
             "dsl" => Some(Self::Dsl),
@@ -64,7 +64,7 @@ impl Component {
         }
     }
 
-    /// @emoji 📝 Whether this component uses a text preamble rather than a binary header.
+    /// 📝 Whether this component uses a text preamble rather than a binary header.
     pub const fn is_text(self) -> bool {
         matches!(self, Self::Dsl | Self::Op | Self::Cmd)
     }
@@ -72,7 +72,7 @@ impl Component {
 //#endregion 🔖️Component
 
 //#region 🔖️Envelope
-/// @emoji 📨 Identity of a `.semio` payload — derived from content, not from the filename.
+/// 📨 Identity of a `.semio` payload — derived from content, not from the filename.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct SemioEnvelope {
     pub plugin: String,
@@ -87,22 +87,22 @@ impl SemioEnvelope {
         envelope_id.strip_prefix(&self.plugin).and_then(|rest| rest.strip_prefix('.')) == Some(self.artifact.as_str()) && self.component == component && self.version == version
     }
 
-    /// @emoji 🪪️ Dotted artifact id (`plugin.artifact`) used in `ArtifactDsl::ENVELOPE_ID`.
+    /// 🪪️ Dotted artifact id (`plugin.artifact`) used in `ArtifactDsl::ENVELOPE_ID`.
     pub fn envelope_id(&self) -> String {
         format!("{}.{}", self.plugin, self.artifact)
     }
 
-    /// @emoji 📜️ Full preamble line for text encodings, e.g. `semio gis.gismap.dsl v1`.
+    /// 📜️ Full preamble line for text encodings, e.g. `semio gis.gismap.dsl v1`.
     pub fn preamble_line(&self) -> String {
         format!("semio {}.{}.{} v{}", self.plugin, self.artifact, self.component.as_str(), self.version)
     }
 
-    /// @emoji 🧬️ Binary envelope token without the `semio` keyword.
+    /// 🧬️ Binary envelope token without the `semio` keyword.
     pub fn binary_token(&self) -> String {
         format!("{}.{}.{} v{}", self.plugin, self.artifact, self.component.as_str(), self.version)
     }
 
-    /// @emoji 📖️ Parses `plugin.artifact` from a document type id.
+    /// 📖️ Parses `plugin.artifact` from a document type id.
     pub fn from_envelope_id(envelope_id: &str, component: Component, version: u16) -> SemioResult<Self> {
         let (plugin, artifact) = envelope_id.split_once('.').ok_or_else(|| SemioError::InvalidPreamble(format!("envelope id must be plugin.artifact, got {envelope_id}")))?;
         Ok(Self { plugin: plugin.to_string(), artifact: artifact.to_string(), component, version })
@@ -111,12 +111,12 @@ impl SemioEnvelope {
 //#endregion 🔖️Envelope
 
 //#region 🔖️Binary
-/// @emoji 🧲️ Magic prefix for binary `.semio` files (`0x89` keeps them non-UTF-8).
+/// 🧲️ Magic prefix for binary `.semio` files (`0x89` keeps them non-UTF-8).
 pub const BINARY_MAGIC: [u8; 8] = [0x89, b'S', b'E', b'M', 0x0D, 0x0A, 0x1A, 0x0A];
 
 const BINARY_HEADER_PREFIX_LEN: usize = 8 + 4;
 
-/// @emoji 📦️ Wraps a binary payload with the semio binary header.
+/// 📦️ Wraps a binary payload with the semio binary header.
 pub fn wrap_binary(envelope: &SemioEnvelope, payload: &[u8]) -> Vec<u8> {
     let token = envelope.binary_token();
     let token_bytes = token.as_bytes();
@@ -128,7 +128,7 @@ pub fn wrap_binary(envelope: &SemioEnvelope, payload: &[u8]) -> Vec<u8> {
     out
 }
 
-/// @emoji 📖️ Strips the semio binary header and returns envelope + inner payload.
+/// 📖️ Strips the semio binary header and returns envelope + inner payload.
 pub fn unwrap_binary(bytes: &[u8]) -> SemioResult<(SemioEnvelope, Vec<u8>)> {
     if bytes.len() < BINARY_HEADER_PREFIX_LEN {
         return Err(SemioError::InvalidBinaryHeader("truncated".into()));
@@ -162,7 +162,7 @@ fn parse_binary_token(token: &str) -> SemioResult<SemioEnvelope> {
 //#endregion 🔖️Binary
 
 //#region 🔖️Text
-/// @emoji 📜️ Prepends the mandatory preamble to DSL/op/cmd body text.
+/// 📜️ Prepends the mandatory preamble to DSL/op/cmd body text.
 pub fn wrap_text(envelope: &SemioEnvelope, body: &str) -> String {
     let mut body_trimmed = body.trim_start_matches('\u{feff}');
     if body_trimmed.starts_with("semio ") {
@@ -173,7 +173,7 @@ pub fn wrap_text(envelope: &SemioEnvelope, body: &str) -> String {
     format!("{}\n{}", envelope.preamble_line(), body_trimmed.trim_start())
 }
 
-/// @emoji 📖️ Parses a text `.semio` file into envelope and body (without preamble line).
+/// 📖️ Parses a text `.semio` file into envelope and body (without preamble line).
 pub fn split_text_preamble(text: &str) -> SemioResult<(SemioEnvelope, &str)> {
     let mut lines = text.lines();
     let first = lines.next().ok_or_else(|| SemioError::InvalidPreamble("empty file".into()))?.trim();
@@ -182,7 +182,7 @@ pub fn split_text_preamble(text: &str) -> SemioResult<(SemioEnvelope, &str)> {
     Ok((envelope, rest))
 }
 
-/// @emoji 🔍 Parses `semio plugin.artifact.component vN`.
+/// 🔍 Parses `semio plugin.artifact.component vN`.
 pub fn parse_preamble_line(line: &str) -> SemioResult<SemioEnvelope> {
     let line = line.trim();
     let rest = line.strip_prefix("semio ").ok_or_else(|| SemioError::InvalidPreamble(format!("expected semio preamble, got {line}")))?;
@@ -200,7 +200,7 @@ pub fn parse_preamble_line(line: &str) -> SemioResult<SemioEnvelope> {
 //#endregion 🔖️Text
 
 //#region 🔖️Sniff
-/// @emoji 👃 Derives format identity from raw bytes alone.
+/// 👃 Derives format identity from raw bytes alone.
 pub fn sniff(bytes: &[u8]) -> SemioResult<SemioEnvelope> {
     if bytes.starts_with(&BINARY_MAGIC) {
         let (envelope, _) = unwrap_binary(bytes)?;
@@ -213,12 +213,12 @@ pub fn sniff(bytes: &[u8]) -> SemioResult<SemioEnvelope> {
 //#endregion 🔖️Sniff
 
 //#region 🔖️Paths
-/// @emoji 📁 On-disk filename for a document facet: `<id>.<plugin>.<artifact>.<component>.semio`.
+/// 📁 On-disk filename for a document facet: `<id>.<plugin>.<artifact>.<component>.semio`.
 pub fn semio_filename(document_id: &str, envelope_id: &str, component: Component) -> String {
     format!("{document_id}.{envelope_id}.{}.semio", component.as_str())
 }
 
-/// @emoji 📖️ Infers envelope from a decorative filename (fallback only — content wins in `sniff`).
+/// 📖️ Infers envelope from a decorative filename (fallback only — content wins in `sniff`).
 pub fn envelope_from_filename(name: &str) -> Option<SemioEnvelope> {
     let name = name.strip_suffix(".semio")?;
     let component = name.rsplit_once('.').and_then(|(_, c)| Component::parse(c))?;
@@ -230,7 +230,7 @@ pub fn envelope_from_filename(name: &str) -> Option<SemioEnvelope> {
 //#endregion 🔖️Paths
 
 //#region 🔖️Registry
-/// @emoji 🗂️ Handler keyed by full envelope identity.
+/// 🗂️ Handler keyed by full envelope identity.
 pub type SemioHandler = fn(&[u8]) -> Result<(), String>;
 
 struct RegistryState {
@@ -246,13 +246,13 @@ fn registry_key(envelope: &SemioEnvelope) -> String {
     format!("{}.{}.{}", envelope.plugin, envelope.artifact, envelope.component.as_str())
 }
 
-/// @emoji 📝 Registers a verify/parse handler for one envelope.
+/// 📝 Registers a verify/parse handler for one envelope.
 pub fn register_format(envelope: SemioEnvelope, handler: SemioHandler) {
     let key = registry_key(&envelope);
     registry_state().lock().expect("semio registry").by_key.insert(key, handler);
 }
 
-/// @emoji 🔎 Resolves a handler from sniffed content.
+/// 🔎 Resolves a handler from sniffed content.
 pub fn resolve(bytes: &[u8]) -> SemioResult<SemioHandler> {
     let envelope = sniff(bytes)?;
     let key = registry_key(&envelope);
@@ -260,7 +260,7 @@ pub fn resolve(bytes: &[u8]) -> SemioResult<SemioHandler> {
     state.by_key.get(&key).copied().ok_or(SemioError::UnknownEnvelope(key))
 }
 
-/// @emoji ✅ Runs the registered handler for these bytes.
+/// ✅ Runs the registered handler for these bytes.
 pub fn verify(bytes: &[u8]) -> SemioResult<()> {
     let handler = resolve(bytes)?;
     handler(bytes).map_err(SemioError::InvalidPreamble)
@@ -268,11 +268,11 @@ pub fn verify(bytes: &[u8]) -> SemioResult<()> {
 //#endregion 🔖️Registry
 
 //#region 🔖️Cli
-/// @emoji ⌨️ `semio` CLI entry (`inspect`, `open`, `convert`, `verify`).
+/// ⌨️ `semio` CLI entry (`inspect`, `open`, `convert`, `verify`).
 pub mod cli {
     use super::*;
 
-    /// @emoji 🏃 Dispatches argv; returns process exit code.
+    /// 🏃 Dispatches argv; returns process exit code.
     pub fn main_impl(args: &[String]) -> i32 {
         if args.is_empty() || args[0] == "help" || args[0] == "--help" {
             eprintln!("usage: semio <inspect|verify|open|convert> <path> [...]");
@@ -296,7 +296,7 @@ pub mod cli {
         match cmd {
             "inspect" => match sniff(&bytes) {
                 Ok(env) => {
-                    println!("[DEBUG] semio inspect {path}: {}", env.preamble_line());
+                    println!("[TRACE] semio inspect {path}: {}", env.preamble_line());
                     println!("{}", env.preamble_line());
                     0
                 }
@@ -307,7 +307,7 @@ pub mod cli {
             },
             "verify" => match verify(&bytes) {
                 Ok(()) => {
-                    println!("[DEBUG] semio verify {path}: ok");
+                    println!("[TRACE] semio verify {path}: ok");
                     0
                 }
                 Err(err) => {
@@ -323,7 +323,7 @@ pub mod cli {
                         return 1;
                     }
                 };
-                println!("[DEBUG] semio {cmd} {path}: identity from content only -> {}", env.preamble_line());
+                println!("[TRACE] semio {cmd} {path}: identity from content only -> {}", env.preamble_line());
                 if let Ok(handler) = resolve(&bytes) {
                     if let Err(detail) = handler(&bytes) {
                         eprintln!("[semio] handler: {detail}");

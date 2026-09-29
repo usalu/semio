@@ -43,7 +43,7 @@ async function handleReindex(jobs: OwnedServerJob<ReindexJob>[]) {
 // #endregion 🌊️Jobs
 
 // #region 🌩️Main
-/** @emoji 🌩️ Starts pg-boss workers (separate process entry via `🟦️worker.ts`). */
+/** 🌩️ Starts pg-boss workers (separate process entry via `🟦️worker.ts`). */
 export async function runRepoServerWorker(): Promise<void> {
   const boss = createOwnedServerJobQueue(DATABASE_URL);
 

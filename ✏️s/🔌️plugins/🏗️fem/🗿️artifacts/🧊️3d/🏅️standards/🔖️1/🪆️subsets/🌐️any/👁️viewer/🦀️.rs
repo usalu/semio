@@ -70,7 +70,7 @@ impl ArtifactViewer for Fem3dViewer {
     /// `crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_boot_snapshot`.
     fn initial_snapshot() -> Fem3dSnapshot {
         let snapshot = crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_boot_snapshot();
-        eprintln!("[DEBUG] fem3d viewer boot snapshot: nodes={} elements={} solids={}", snapshot.nodes.len(), snapshot.elements.len(), snapshot.solids.len());
+        eprintln!("[TRACE] fem3d viewer boot snapshot: nodes={} elements={} solids={}", snapshot.nodes.len(), snapshot.elements.len(), snapshot.solids.len());
         snapshot
     }
 

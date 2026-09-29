@@ -8,7 +8,7 @@ fn retry_runtime() -> (RetryRuntime, Arc<WorkerPool>) {
 }
 
 //#region 🔖️Transport
-/// @emoji 🧪️ An in-memory `RangeTransport` test double: serves slices of `data`, can be
+/// 🧪️ An in-memory `RangeTransport` test double: serves slices of `data`, can be
 /// scripted to fail transiently N times before succeeding, and records every request it
 /// received for assertions. `Clone`-able (all state lives behind `Arc`) so a test can hand
 /// one clone to `HttpPackSource` (which consumes it by value) while keeping another clone

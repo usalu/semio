@@ -10,11 +10,12 @@
 //! from any module in this crate.
 
 use crate::SHomeSnapshot;
-use crate::editor::home::commands::apply_directory_event_page;
+use crate::editor::home::commands::{apply_directory_event_page, apply_local_catalog_document};
 use crate::editor::home::commands::{bind_space_file, create_studio, import_space, open_space, persist_locally, promote_to_hub_space};
 use crate::editor::home::commands::{copy_invite_link, create_space, delete_space, manage_space, presence_heartbeat, rename_space, share_space};
 use crate::editor::home::commands::{delete_virtual_file_system_node, go_home, navigate_virtual_file_system_node};
 use crate::editor::home::config::{home_retained_contract, HomeConfig, HomeConfigMutation, HomeConfigPreparationFactory};
+use crate::editor::home::transient::{HomeTransient, HomeTransientMutation, HomeTransientRetirementFactory};
 use crate::editor::home::presence::{HomePresence, HomePresenceMutation};
 use semio_framework_plugin::app::Dialect;
 use semio_framework_plugin::app::InteractionView;
@@ -37,6 +38,7 @@ app_commands! {
     /// variant per action declared in `create_home_app`'s manifest.
     pub enum HomeCommand for SHomeSnapshot, crate::standards::v1::subsets::any::schema::mutations::text::SHomeMutation, HomeConfig, HomeConfigMutation {
         "applyDirectoryEventPage" as "apply-directory-event-page" => apply_directory_event_page::ApplyDirectoryEventPage,
+        "applyLocalCatalogDocument" as "apply-local-catalog-document" => apply_local_catalog_document::ApplyLocalCatalogDocument,
         "createStudio" as "create-studio" => create_studio::CreateStudio,
         "promoteToHubSpace" as "promote-to-hub-space" => promote_to_hub_space::PromoteToHubSpace,
         "persistLocally" as "persist-locally" => persist_locally::PersistLocally,
@@ -61,23 +63,26 @@ app_commands! {
 
 //#region 🧵️RetainedCommands
 const HOME_RETAINED_TOOL_IDS: &[&str] = &[
-    "applyDirectoryEventPage", "createStudio", "openSpace", "navigateVirtualFileSystemNode", "goHome", "createSpace", "deleteSpace", "renameSpace", "shareSpace", "manageSpace", "copyInviteLink", "promoteToHubSpace", "persistLocally", "presenceHeartbeat",
+    "applyDirectoryEventPage", "applyLocalCatalogDocument", "createStudio", "bindSpaceFile", "importSpace", "openSpace", "navigateVirtualFileSystemNode", "deleteVirtualFileSystemNode", "goHome", "createSpace", "deleteSpace", "renameSpace", "shareSpace", "manageSpace", "copyInviteLink", "promoteToHubSpace", "persistLocally", "presenceHeartbeat",
 ];
 const HOME_RETAINED_PAYLOAD_SCHEMA: &str = "space.home.tool-command.v1";
 const HOME_RETAINED_RAW_BYTES: usize = crate::editor::home::config::HOME_DIRECTORY_PAGE_BYTES;
 const HOME_RETAINED_SCALAR_BYTES: usize = semio_framework::PUBLIC_INVOCATION_STRING_BYTES;
 const HOME_RETAINED_WORK_ITEMS: usize = 1;
 const HOME_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
-    // 🛣️ These two are the only Home routes that WRITE: the typed-operation terminal refuses any emit
-    // whose store lane is absent from this contract ("typed-operation emitted a store lane absent from
-    // its exact factory publication contract"), so `HostOnly` — which declares no store lane at all and
-    // is right for the nine pure-`Effect` relays below — is wrong for them.
-    // `applyDirectoryEventPage` replaces the directory projection in the CONFIG store;
-    // `createStudio` bumps the catalog generation in the ARTIFACT store.
-    ArtifactToolPublicationContract { tool_id: "applyDirectoryEventPage", lanes: &[ArtifactToolPublicationLane::Config] },
+    // 🛣️ The typed-operation terminal refuses any emit whose store lane is absent from this contract ("typed-operation
+    // emitted a store lane absent from its exact factory publication contract"), so every writing route names its lane
+    // and only the pure-`Effect` relays are `HostOnly`. `applyDirectoryEventPage` folds one page into the TRANSIENT
+    // directory projection (derived hub state: no history, no persistence); the catalog routes bump the catalog
+    // generation in the ARTIFACT store; the tombstone lands in the CONFIG store.
+    ArtifactToolPublicationContract { tool_id: "applyDirectoryEventPage", lanes: &[ArtifactToolPublicationLane::Transient] },
+    ArtifactToolPublicationContract { tool_id: "applyLocalCatalogDocument", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "createStudio", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "bindSpaceFile", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "importSpace", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "openSpace", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "navigateVirtualFileSystemNode", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: "deleteVirtualFileSystemNode", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "goHome", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "createSpace", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "promoteToHubSpace", lanes: &[ArtifactToolPublicationLane::HostOnly] },
@@ -110,7 +115,10 @@ fn home_retained_extent(command: &HomeCommand, _snapshot: &SHomeSnapshot, _inter
         HomeCommand::PersistLocally(payload) => (payload.space_id.len().saturating_add(payload.folder_path.as_ref().map_or(0, String::len)), HOME_RETAINED_SCALAR_BYTES),
         HomeCommand::CreateStudio(payload) => (payload.name.len().saturating_add(payload.kind.len()).saturating_add(payload.folder_path.as_ref().map_or(0, String::len)), HOME_RETAINED_SCALAR_BYTES),
         HomeCommand::ApplyDirectoryEventPage(payload) => (payload.page_json.len(), HOME_RETAINED_RAW_BYTES),
-        HomeCommand::BindSpaceFile(_) | HomeCommand::ImportSpace(_) | HomeCommand::DeleteVirtualFileSystemNode(_) => return None,
+        HomeCommand::ApplyLocalCatalogDocument(payload) => (payload.document_id.len().saturating_add(payload.pack.len()).saturating_add(payload.spr.len()), HOME_RETAINED_RAW_BYTES),
+        HomeCommand::BindSpaceFile(payload) => (payload.space_id.len().saturating_add(payload.file_path.len()), HOME_RETAINED_SCALAR_BYTES),
+        HomeCommand::ImportSpace(payload) => (payload.dsl.as_ref().map_or(0, String::len), HOME_RETAINED_RAW_BYTES),
+        HomeCommand::DeleteVirtualFileSystemNode(payload) => (payload.node_id.len(), HOME_RETAINED_SCALAR_BYTES),
     };
     (admitted <= ceiling).then_some(HOME_RETAINED_WORK_ITEMS)
 }
@@ -132,12 +140,24 @@ fn home_retained_reduce(
     }
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
     let cfg = ConfigView { snapshot: config, window: None };
-    // 🪪️ `createStudio` is the one retained route whose handler needs the signed-in human (it names
-    // the studio's owner), exactly as the direct `ArtifactEditor::handle` lane routes it — the
-    // identity-less `create_studio::handle` answers `s.home.session-identity-required` by design.
+    let row = |space_id: &str| context.and_then(|context| context.transient.directory().space(space_id));
+    // 🪪️ `createStudio` needs the signed-in human (it names the studio's owner); rename/share/remove read the ONE folded
+    // directory row they need from the projection this job captured at dispatch — a page folded meanwhile publishes a new
+    // root and never mixes into it.
     match command {
         HomeCommand::CreateStudio(payload) => create_studio::handle_with_identity(payload, &doc, &cfg, identity),
+        HomeCommand::RenameSpace(payload) => rename_space::handle_with_row(payload, &doc, &cfg, row(&payload.space_id)),
+        HomeCommand::ShareSpace(payload) => share_space::handle_with_row(payload, &doc, &cfg, row(&payload.space_id)),
+        HomeCommand::DeleteVirtualFileSystemNode(payload) => delete_virtual_file_system_node::handle_with_row(payload, &doc, &cfg, row(delete_virtual_file_system_node::local_studio_id(&payload.node_id))),
         _ => command.dispatch(&doc, &cfg),
+    }
+}
+
+/// 📄️ The sealed page an editor command carries, for the shared page route.
+fn home_directory_page_json(command: &HomeCommand) -> Option<&str> {
+    match command {
+        HomeCommand::ApplyDirectoryEventPage(payload) => Some(&payload.page_json),
+        _ => None,
     }
 }
 
@@ -182,6 +202,115 @@ impl ArtifactOwnedToolJobFactory for HomeRetainedCommandJobFactory {
     const DOCUMENT_SCHEMA: &'static str = crate::S_HOME_DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = HOME_RETAINED_PUBLICATION_CONTRACTS;
 }
+//#region 💾️CatalogWork
+/// 💾️ The IO-owning retained work of the four Home commands that write the local studio catalog (`importSpace`,
+/// `bindSpaceFile`, `persistLocally`, and the host's `applyLocalCatalogDocument` re-hydration) — their IO never runs inside a `handle`. Stage `validate` reads only (identity, payload, target);
+/// stage `commit` performs the one catalog write and answers the `change-catalog-generation` event. The retained job
+/// checkpoints after `validate` (the checkpoint is the stage), so a cancellation between the stages writes nothing and
+/// a job restored from its checkpoint resumes at `commit`, whose write refuses by name if its target changed meanwhile.
+pub struct HomeCatalogWork {
+    tool_id: &'static str,
+    validated: bool,
+    committed: bool,
+}
+
+impl HomeCatalogWork {
+    pub fn new(tool_id: &'static str) -> Self {
+        Self { tool_id, validated: false, committed: false }
+    }
+
+    /// 🪜️ One stage for `command` against `doc`: `validate` (reads only) or `commit` (the one catalog write).
+    fn advance(&mut self, command: &HomeCommand, doc: &ArtifactView<'_, SHomeSnapshot>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<HomeApp>>, Fault> {
+        use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
+        if self.committed {
+            return Err(Fault::from("space-home-catalog-work-repeated"));
+        }
+        let validated_step = ArtifactCommandWorkStep::Progress { stage: HOME_CATALOG_VALIDATED_STAGE, preview: HOME_CATALOG_VALIDATED_PREVIEW.as_bytes() };
+        match (command, self.validated) {
+            (HomeCommand::ImportSpace(import_space::ImportSpace { dsl: None }), _) => {
+                self.committed = true;
+                Ok(ArtifactCommandWorkStep::Complete(import_space::file_request()))
+            }
+            (HomeCommand::ImportSpace(import_space::ImportSpace { dsl: Some(dsl) }), false) => {
+                import_space::validate(dsl)?;
+                self.validated = true;
+                Ok(validated_step)
+            }
+            (HomeCommand::ImportSpace(import_space::ImportSpace { dsl: Some(dsl) }), true) => {
+                self.committed = true;
+                import_space::commit(dsl, doc).map(ArtifactCommandWorkStep::Complete)
+            }
+            (HomeCommand::ApplyLocalCatalogDocument(payload), false) => {
+                apply_local_catalog_document::validate(payload)?;
+                self.validated = true;
+                Ok(validated_step)
+            }
+            (HomeCommand::ApplyLocalCatalogDocument(payload), true) => {
+                self.committed = true;
+                apply_local_catalog_document::commit(payload, doc).map(ArtifactCommandWorkStep::Complete)
+            }
+            (HomeCommand::BindSpaceFile(payload), false) => {
+                bind_space_file::validate(payload)?;
+                self.validated = true;
+                Ok(validated_step)
+            }
+            (HomeCommand::BindSpaceFile(payload), true) => {
+                self.committed = true;
+                bind_space_file::commit(payload, doc).map(ArtifactCommandWorkStep::Complete)
+            }
+            (HomeCommand::PersistLocally(payload), validated) => match (payload.folder_path.as_deref().map(str::trim), validated) {
+                (None | Some(""), _) => {
+                    self.committed = true;
+                    Ok(ArtifactCommandWorkStep::Complete(persist_locally::folder_dialog(&payload.space_id)))
+                }
+                (Some(folder_path), false) => {
+                    persist_locally::validate(&payload.space_id, folder_path)?;
+                    self.validated = true;
+                    Ok(validated_step)
+                }
+                (Some(folder_path), true) => {
+                    self.committed = true;
+                    persist_locally::commit(&payload.space_id, folder_path, doc).map(ArtifactCommandWorkStep::Complete)
+                }
+            },
+            _ => Err(Fault::from("space-home-catalog-work-command-mismatch")),
+        }
+    }
+}
+
+const HOME_CATALOG_VALIDATED_STAGE: &str = "space-home.catalog.validated";
+const HOME_CATALOG_VALIDATED_PREVIEW: &str = "{\"en\":\"Studio checked, writing the catalog\",\"de\":\"Studio geprüft, Katalog wird geschrieben\"}";
+
+impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<HomeApp>> for HomeCatalogWork {
+    fn tool_id(&self) -> &'static str {
+        self.tool_id
+    }
+
+    fn extent(&self, command: &HomeCommand, snapshot: &SHomeSnapshot, interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<HomeApp>>>) -> Option<usize> {
+        home_retained_extent(command, snapshot, interaction)
+    }
+
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<HomeApp>>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<HomeApp>>, Fault> {
+        require_session_identity(input.context.and_then(|context| context.view_state.as_ref()))?;
+        self.advance(input.command, &ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone()))
+    }
+
+    fn checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
+        let slot = target.first_mut().ok_or_else(|| Fault::from("space-home-catalog-work-checkpoint-capacity"))?;
+        *slot = u8::from(self.validated);
+        Ok(1)
+    }
+
+    fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> {
+        self.validated = match checkpoint {
+            [] | [0] => false,
+            [1] => true,
+            _ => return Err(Fault::from("space-home-catalog-work-checkpoint-invalid")),
+        };
+        Ok(())
+    }
+}
+//#endregion 💾️CatalogWork
 //#endregion 🧵️RetainedCommands
 
 //#region 🔖️HomeApp
@@ -203,8 +332,8 @@ impl ArtifactEditor for HomeApp {
     type DraftMutation = NoDraftMutation;
     type Presence = HomePresence;
     type PresenceMutation = HomePresenceMutation;
-    type Transient = semio_framework_plugin::NoTransient;
-    type TransientMutation = semio_framework_plugin::NoTransientMutation;
+    type Transient = HomeTransient;
+    type TransientMutation = HomeTransientMutation;
     type Command = HomeCommand;
 
     const DIALECT: Dialect = crate::HOME_DIALECT;
@@ -222,7 +351,7 @@ impl ArtifactEditor for HomeApp {
         factory: "HomeRetainedCommandJobFactory",
         factory_type: HomeRetainedCommandJobFactory,
         contract: home_retained_contract(),
-        tools: ["applyDirectoryEventPage", "createStudio", "openSpace", "navigateVirtualFileSystemNode", "goHome", "createSpace", "deleteSpace", "renameSpace", "shareSpace", "manageSpace", "copyInviteLink", "promoteToHubSpace", "persistLocally", "presenceHeartbeat"]
+        tools: ["applyDirectoryEventPage", "applyLocalCatalogDocument", "createStudio", "bindSpaceFile", "importSpace", "openSpace", "navigateVirtualFileSystemNode", "deleteVirtualFileSystemNode", "goHome", "createSpace", "deleteSpace", "renameSpace", "shareSpace", "manageSpace", "copyInviteLink", "promoteToHubSpace", "persistLocally", "presenceHeartbeat"]
     }
 
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
@@ -252,8 +381,19 @@ impl ArtifactEditor for HomeApp {
         Some(semio_framework_plugin::no_draft_store_disposer())
     }
 
+    /// 🫧️ The transient lane carries the folded hub directory: one bounded page item per publication
+    /// ([`semio_framework_plugin::bounded_transient_preparation_factory`] prices the encoded page, never the root), and
+    /// displaced or disposed roots retire in grants measured by the projection itself, never by encoding it.
     fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(semio_framework_plugin::no_transient_store_disposer())
+        Some(semio_framework_plugin::transient_store_disposer::<Self::Transient, Self::TransientMutation>(std::sync::Arc::new(HomeTransientRetirementFactory)))
+    }
+
+    fn build_transient_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Transient, Self::TransientMutation>>> {
+        Some(semio_framework_plugin::bounded_transient_preparation_factory::<Self::Transient, Self::TransientMutation>())
+    }
+
+    fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
+        Some(std::sync::Arc::new(HomeTransientRetirementFactory))
     }
 
     /// 👤️ Home reads its OWN presence root on the `createStudio` path (the studio it mints names the
@@ -291,7 +431,11 @@ impl ArtifactEditor for HomeApp {
             return Err(Fault::from("space-home-command-payload-too-large"));
         }
         let tool_id = request.command.command_id();
-        let work = Box::new(semio_framework_plugin::retained_command::BoundedArtifactCommandWork::new(tool_id, home_retained_reduce, home_retained_extent));
+        let work: Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Self>>> = match request.command.as_ref() {
+            HomeCommand::ApplyDirectoryEventPage(_) => Box::new(apply_directory_event_page::HomeDirectoryPageWork::<EditorApp<Self>>::new(tool_id, home_directory_page_json)),
+            HomeCommand::ImportSpace(_) | HomeCommand::BindSpaceFile(_) | HomeCommand::PersistLocally(_) | HomeCommand::ApplyLocalCatalogDocument(_) => Box::new(HomeCatalogWork::new(tool_id)),
+            _ => Box::new(semio_framework_plugin::retained_command::BoundedArtifactCommandWork::new(tool_id, home_retained_reduce, home_retained_extent)),
+        };
         let operation_context = AppOperationContext {
             app_instance_id: request.app_instance_id,
             parent_document_id: request.parent_document_id.clone(),
@@ -332,6 +476,11 @@ impl ArtifactEditor for HomeApp {
             "applyDirectoryEventPage" => Ok(HomeCommand::ApplyDirectoryEventPage(apply_directory_event_page::ApplyDirectoryEventPage {
                 page_json: str_field("pageJson").ok_or_else(|| Fault::from("s.home.directory-event-page-input-missing"))?,
             })),
+            "applyLocalCatalogDocument" => Ok(HomeCommand::ApplyLocalCatalogDocument(apply_local_catalog_document::ApplyLocalCatalogDocument {
+                document_id: str_field("documentId").unwrap_or_default(),
+                pack: str_field("pack").unwrap_or_default(),
+                spr: str_field("spr").unwrap_or_default(),
+            })),
             "createStudio" => Ok(HomeCommand::CreateStudio(create_studio::CreateStudio {
                 name: str_field("name").unwrap_or_else(|| "Untitled".into()),
                 kind: str_field("kind").unwrap_or_else(|| "catalog".into()),
@@ -341,7 +490,13 @@ impl ArtifactEditor for HomeApp {
                 space_id: str_field("spaceId").or_else(|| str_field("space_id")).unwrap_or_default(),
                 file_path: str_field("filePath").or_else(|| str_field("file_path")).unwrap_or_default(),
             })),
-            "importSpace" => Ok(HomeCommand::ImportSpace(import_space::ImportSpace { dsl: str_field("dsl").or_else(|| str_field("payload")) })),
+            "importSpace" => {
+                let chunk_count = args.and_then(|value| value.get(semio_framework::kernel::IMPORT_ARGUMENT_CHUNK_COUNT)).and_then(DslValue::as_f64).unwrap_or(1.0);
+                if chunk_count > 1.0 {
+                    return Err(Fault::new(FaultOrigin::App, "s.home.import-space.oversized", format!("a studio manifest must fit one import chunk of {} bytes", semio_framework::kernel::IMPORT_CHUNK_BYTES)));
+                }
+                Ok(HomeCommand::ImportSpace(import_space::ImportSpace { dsl: str_field("dsl").or_else(|| str_field(semio_framework::kernel::IMPORT_ARGUMENT_PAYLOAD)) }))
+            }
             "openSpace" => Ok(HomeCommand::OpenSpace(open_space::OpenSpace { space_id: str_field("spaceId").or_else(|| str_field("space_id")).unwrap_or_default() })),
             "navigateVirtualFileSystemNode" => Ok(HomeCommand::NavigateVirtualFileSystemNode(navigate_virtual_file_system_node::NavigateVirtualFileSystemNode {
                 node_id: str_field("nodeId").or_else(|| str_field("node_id")).or_else(|| str_field("spaceId")).or_else(|| str_field("space_id")).unwrap_or_default(),
@@ -410,15 +565,33 @@ impl ArtifactEditor for HomeApp {
     /// the ordinary first paint of a hub-configured shell; the window's own render now answers an empty
     /// space table instead (ticket 26/09/18, S2 §3.4).
     fn render(body_key: &str, _doc: &ArtifactView<'_, SHomeSnapshot>, cfg: &ConfigView<'_, HomeConfig>, view_state: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
-        let root = match body_key {
-            crate::editor::home::modes::explore::windows::main::S_HOME_BODY => crate::editor::home::modes::explore::windows::main::render(cfg.snapshot, view_state)?,
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}")))
-                .map_err(|_| PluginAssemblyError::new("s.home.render.unknown-body", "unknown body key text admission failed"))?,
-        };
-        Ok(ComponentTree { root })
+        render_body(body_key, cfg.snapshot, HomeTransient::default().directory(), view_state)
+    }
+
+    /// 🫧️ The host-facing render: the framework hands the app-local transient in here, so the table lists the folded hub
+    /// directory; the bare `render` above has no transient and lists the local rows only.
+    fn render_with_request_context(
+        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        body_key: &str,
+        _doc: &ArtifactView<'_, SHomeSnapshot>,
+        cfg: &ConfigView<'_, HomeConfig>,
+        view_state: &semio_framework_plugin::ViewModel,
+        transient: &semio_framework_plugin::TransientView<'_, HomeTransient>,
+        _interaction: &InteractionView<'_>,
+    ) -> UiAssemblyResult<ComponentTree> {
+        render_body(body_key, cfg.snapshot, transient.snapshot.directory(), view_state)
     }
 }
 //#endregion 🔖️HomeApp
+
+/// 🖼️ One Home body from the config and the folded directory projection.
+pub fn render_body(body_key: &str, config: &HomeConfig, directory: &crate::editor::home::transient::HomeDirectoryProjection, view_state: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
+    let root = match body_key {
+        crate::editor::home::modes::explore::windows::main::S_HOME_BODY => crate::editor::home::modes::explore::windows::main::render(config, directory, view_state)?,
+        _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| PluginAssemblyError::new("s.home.render.unknown-body", "unknown body key text admission failed"))?,
+    };
+    Ok(ComponentTree { root })
+}
 
 //#region 🔖️HomeManifest
 /// 🧱️ The manifest stitch: one call per taxonomy node. `.example(...)`/`.workflow(...)` do not exist on
@@ -438,8 +611,7 @@ pub async fn create_home_app() -> semio_framework_plugin::AppDefinition {
         .mutation("importSpace", LocalizedLabel::native("Import Studio", "Studio importieren"))
         .action_with(semio_framework_plugin::ActionDefinition::new("openSpace", LocalizedLabel::native("Open Studio", "Studio öffnen"), semio_framework_plugin::ActionKind::Shell, "folder-open"))
         .action_with(semio_framework_plugin::ActionDefinition::new("navigateVirtualFileSystemNode", LocalizedLabel::native("Navigate File System Node", "Dateisystemknoten navigieren"), semio_framework_plugin::ActionKind::Shell, "folder"))
-        .mutation("deleteVirtualFileSystemNode", LocalizedLabel::native("Delete File System Node", "Dateisystemknoten löschen"))
-        .action_destructive("deleteVirtualFileSystemNode")
+        .mutation("deleteVirtualFileSystemNode", LocalizedLabel::native("Remove Studio from Home", "Studio aus Home entfernen"))
         .action_with(semio_framework_plugin::ActionDefinition::new("goHome", LocalizedLabel::native("Go Home", "Zur Startseite"), semio_framework_plugin::ActionKind::Shell, "home"))
         // 🐙️ Ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS: the overview table's
         // row-scoped actions. Every one of these is a pure `Effect` relay (contract §C6) — never a
@@ -513,13 +685,14 @@ pub async fn create_home_app() -> semio_framework_plugin::AppDefinition {
         )
 
         .view_action("applyDirectoryEventPage", LocalizedLabel::native("Apply Directory Event Page", "Verzeichnis-Ereignisseite anwenden"))
+        .view_action("applyLocalCatalogDocument", LocalizedLabel::native("Show Studio Kept on This Device", "Auf diesem Gerät gespeichertes Studio anzeigen"))
         .view_action("presenceHeartbeat", LocalizedLabel::native("Presence Heartbeat", "Präsenz-Heartbeat"))
         .action_interactive_job("createStudio", InteractiveJobClassification::Migrated)
-        .action_interactive_job("bindSpaceFile", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("importSpace", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("bindSpaceFile", InteractiveJobClassification::Migrated)
+        .action_interactive_job("importSpace", InteractiveJobClassification::Migrated)
         .action_interactive_job("openSpace", InteractiveJobClassification::Migrated)
         .action_interactive_job("navigateVirtualFileSystemNode", InteractiveJobClassification::Migrated)
-        .action_interactive_job("deleteVirtualFileSystemNode", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("deleteVirtualFileSystemNode", InteractiveJobClassification::Migrated)
         .action_interactive_job("goHome", InteractiveJobClassification::Migrated)
         .action_interactive_job("createSpace", InteractiveJobClassification::Migrated)
         .action_interactive_job("deleteSpace", InteractiveJobClassification::Migrated)
@@ -531,6 +704,7 @@ pub async fn create_home_app() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("promoteToHubSpace", InteractiveJobClassification::Migrated)
         .action_interactive_job("persistLocally", InteractiveJobClassification::Migrated)
         .action_interactive_job("applyDirectoryEventPage", InteractiveJobClassification::Migrated)
+        .action_interactive_job("applyLocalCatalogDocument", InteractiveJobClassification::Migrated)
         .action_interactive_job("presenceHeartbeat", InteractiveJobClassification::Migrated)
         .window_kind_action_refs(crate::editor::home::modes::explore::windows::main::S_HOME_WINDOW, vec![
             "createStudio".into(),
@@ -552,11 +726,11 @@ pub async fn create_home_app() -> semio_framework_plugin::AppDefinition {
         .keybinding("mod+n", "createStudio")
         .keybinding("mod+o", "importSpace")
         .action_describe("createStudio", LocalizedLabel::native("Creates a new studio with the given name and kind, either a temporary local-only one or one kept in a folder when a folder path is given; sharing stays off until it is promoted.", "Erstellt ein neues Studio mit dem angegebenen Namen und der Art, entweder temporär und nur lokal oder mit Ordnerpfad in einem Ordner gespeichert; Teilen bleibt gesperrt, bis es hochgestuft wird."))
-        .action_describe("bindSpaceFile", LocalizedLabel::native("Binds a studio to a file on disk by path, so the studio's events are persisted to and read from that file.", "Verknüpft ein Studio anhand eines Pfads mit einer Datei auf dem Datenträger, sodass seine Ereignisse in diese Datei geschrieben und daraus gelesen werden."))
+        .action_describe("bindSpaceFile", LocalizedLabel::native("Binds a local studio to a file on disk by path, so the studio's events are persisted to and read from that file; a host without a filesystem refuses it.", "Verknüpft ein lokales Studio anhand eines Pfads mit einer Datei auf dem Datenträger, sodass seine Ereignisse in diese Datei geschrieben und daraus gelesen werden; ein Host ohne Dateisystem lehnt dies ab."))
         .action_describe("importSpace", LocalizedLabel::native("Imports a studio from the given .os DSL text, or opens the host's file picker for an .os file when no text is given.", "Importiert ein Studio aus dem angegebenen .os-DSL-Text oder öffnet ohne Text die Dateiauswahl des Hosts für eine .os-Datei."))
         .action_describe("openSpace", LocalizedLabel::native("Opens the space or studio with the given id, navigating the shell to it.", "Öffnet den Space oder das Studio mit der angegebenen Id und navigiert die Shell dorthin."))
         .action_describe("navigateVirtualFileSystemNode", LocalizedLabel::native("Navigates the shell to the space behind one node of the Home file tree.", "Navigiert die Shell zum Space hinter einem Knoten des Home-Dateibaums."))
-        .action_describe("deleteVirtualFileSystemNode", LocalizedLabel::native("Deletes the local studio behind one node of the Home file tree, including its draft; its content is gone.", "Löscht das lokale Studio hinter einem Knoten des Home-Dateibaums samt Entwurf; sein Inhalt ist fort."))
+        .action_describe("deleteVirtualFileSystemNode", LocalizedLabel::native("Removes the local studio behind one node of the Home file tree from Home; the studio and its history stay intact, and undoing the removal lists it again.", "Entfernt das lokale Studio hinter einem Knoten des Home-Dateibaums aus Home; das Studio und sein Verlauf bleiben erhalten, und das Rückgängigmachen listet es wieder."))
         .action_describe("goHome", LocalizedLabel::native("Navigates the shell back to the Home launcher.", "Navigiert die Shell zurück zum Home-Starter."))
         .action_describe("createSpace", LocalizedLabel::native("Creates a new shared space on the hub with the given name; without a name it opens the Create Space dialog.", "Erstellt auf dem Hub einen neuen geteilten Space mit dem angegebenen Namen; ohne Namen öffnet es den Dialog Space erstellen."))
         .action_describe("deleteSpace", LocalizedLabel::native("Deletes one space on the hub for every member; the first call opens a confirmation dialog, and only the confirmed call deletes it.", "Löscht einen Space auf dem Hub für alle Mitglieder; der erste Aufruf öffnet einen Bestätigungsdialog, erst der bestätigte Aufruf löscht."))
@@ -567,6 +741,7 @@ pub async fn create_home_app() -> semio_framework_plugin::AppDefinition {
         .action_describe("promoteToHubSpace", LocalizedLabel::native("Promotes a temporary local studio to a shared space on the hub under the given name, so it can be shared and edited together.", "Stuft ein temporäres lokales Studio unter dem angegebenen Namen zu einem geteilten Space auf dem Hub hoch, damit es geteilt und gemeinsam bearbeitet werden kann."))
         .action_describe("persistLocally", LocalizedLabel::native("Saves a temporary local studio into a folder on this machine so it survives restarts; it stays local-only and unshared.", "Speichert ein temporäres lokales Studio in einen Ordner auf diesem Rechner, damit es Neustarts übersteht; es bleibt lokal und ungeteilt."))
         .action_audience("applyDirectoryEventPage", semio_framework_plugin::CapabilityAudience::Chrome)
+        .action_audience("applyLocalCatalogDocument", semio_framework_plugin::CapabilityAudience::Chrome)
         .action_audience("presenceHeartbeat", semio_framework_plugin::CapabilityAudience::Chrome)
         .build_definition()
 }

@@ -25,7 +25,7 @@ export interface FooterProps {
   className?: string;
 }
 
-/** @emoji 🪟️ Footer mirrors {@link Navbar} exactly (normal flow, centered-item overlay, BASE stacking level — see `Navbar`'s own note for why chrome must never paint above `z-panel`) but anchored to the bottom edge with the border on top instead of the bottom. */
+/** 🪟️ Footer mirrors {@link Navbar} exactly (normal flow, centered-item overlay, BASE stacking level — see `Navbar`'s own note for why chrome must never paint above `z-panel`) but anchored to the bottom edge with the border on top instead of the bottom. */
 const Footer: React.FC<FooterProps> = ({ items, className = "" }) => {
   const parent = useSurface();
   const paints = shellFloorPaints(parent);

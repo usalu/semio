@@ -263,7 +263,7 @@ async fn the_validate_gate_judges_the_shape_it_was_asked_about_and_not_the_arena
     let stranger_issues = kernel.validate_gate_sync(&stranger).expect_err("the broken box must fail its own gate");
     assert!(!stranger_issues.is_empty(), "the broken box's gate must name at least one issue");
     assert!(kernel.validate_gate_sync(&healthy).is_ok(), "the healthy box must still pass while a STRANGER is broken: {stranger_issues:?}");
-    eprintln!("[DEBUG] scoped gate: healthy=ok stranger={:?}", stranger_issues.iter().map(|issue| format!("{}:{}", issue.entity, issue.code)).collect::<Vec<_>>());
+    eprintln!("scoped gate: healthy=ok stranger={:?}", stranger_issues.iter().map(|issue| format!("{}:{}", issue.entity, issue.code)).collect::<Vec<_>>());
 }
 
 /// ⚖️ LAW: a boolean leaves BOTH its inputs usable — it owns copies of everything it consumes.
@@ -299,6 +299,5 @@ async fn a_boolean_leaves_both_of_its_input_solids_alive_for_the_next_evaluation
         let first = kernel.volume_sync(&result).expect("first result volume");
         let second = kernel.volume_sync(&again).expect("second result volume");
         assert!((first - second).abs() < 1e-6, "{op:?}: re-evaluating the same inputs must answer the same solid: {first} vs {second}");
-        eprintln!("[DEBUG] boolean input lifetime {op:?}: inputs {after_sphere:.6}/{after_cube:.6} survive, result {first:.6} reproduces as {second:.6}");
     }
 }

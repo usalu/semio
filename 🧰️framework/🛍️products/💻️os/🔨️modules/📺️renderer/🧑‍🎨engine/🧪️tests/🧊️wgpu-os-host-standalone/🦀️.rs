@@ -390,7 +390,6 @@ fn native_asset_handoff_preserves_its_exact_response_across_seal_and_return_cont
     assert_eq!(retained_after_seal, (token, 7, true));
     assert_eq!(completed_token, token);
     assert!(fault.is_none());
-    eprintln!("[DEBUG] native handoff retained token {token:?} and all seven bytes across two busy ownership boundaries");
 }
 
 /// 🛑️ Closing one component returns its pending native response without faulting or cancelling its sibling.
@@ -424,7 +423,6 @@ fn native_asset_handoff_cancellation_returns_the_closing_request_and_preserves_i
     assert_eq!((cancelled, returned), (Some(true), Some(true)));
     assert!(terminal && fault.is_none());
     assert_eq!(sibling_current, Some(true));
-    eprintln!("[DEBUG] native component cancellation returned its pending response and preserved the sibling without a frame fault");
 }
 
 /// 🧯️ An unavailable native asset marks only its exact World miss and returns the owner without a frame fault.

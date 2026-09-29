@@ -91,9 +91,58 @@ transient; both surfaces share one page route (`HomeDirectoryPageWork`); receipt
   carries none of it (`git grep HomeTransient|apply-directory-page` 0, `git status` space plugin clean). Lost in the sweep: `wp-sh2/generated/`,
   `wp-sh2/target/` (captures only). Captures now go to `.🧬semio/🌐hub/s14-sh2-captures/`.
 
+- 01:3x–02:4x P1 fix written into the space-home set (now **80 files**; B1 re-based on it, **44 files**, one conflict in the editor
+  publication table / work routing resolved by hand, `wp-sh2/b1/b1-overlay-refresh.py` new):
+  - `✏️editor/🫧️transient/` — `HomeTransient` (`Arc<HomeDirectoryProjection>`: `BTreeMap<Arc<str>, Arc<DirectorySpace>>` rows, `Arc` user
+    table, frontier), `admit_page` / `fold_page` (canonical `store::os_directory::fold` over a one-row read model), receipt, wire
+    (ToValue/FromValue over the framework `DirectoryReadModel` wire), text/pack codec (tooling only), `HomeTransientRetirementFactory`
+    (byte estimate, never encodes the root); leaf `📬️apply-directory-page` (non-invertible, applied/no-op/rejected), JSON schema
+    (+ receipt def moved from the config), 3 handcrafted vectors + no-oracle decision (`wp-sh2/sh2-p1-vectors.py`), fixture
+    `📇️projection-wire-v1` + TS Ajv law moved from `🎚️config`, laws (10k bootstrap, page bound, captured-root isolation + CoW sharing,
+    origin re-bootstrap after a drop, wire round trip, vectors through the bridge, retirement grants).
+  - `HomeConfig` = tombstones only (schema leaves ×5 + viewer projection ×5: `surface-schema --plugin space --check` **0 drifted**);
+    `configValueBytes` 4096; `applyDirectoryEventPage` lane Config → **Transient** (fixture + subset schema).
+  - one page route for both surfaces: `HomeDirectoryPageWork<A>` (`CompleteWithEphemeral`: receipt event + ≤ 1 item); rename/share/
+    remove read the ONE row they need from the job context (`handle_with_row`; the direct lane refuses by name).
+  - language-neutral case `✳️any/🧪️tests/🫧️mutate-s-home-1-any-editor-transient` (Rust adapter via `law::vector`; subject features
+    `component-app-assembly` declared on the subset oracles), registered e2e laws for editor and viewer (the generic
+    `assert_viewer_never_mutates` admits only lane-less viewers → the plugin-space surface case for Home dropped, replaced by the
+    registered viewer law).
+  - space TS oracles re-stated (`home-directory-projection-persistence-check`, `home-directory-event-page-owner-check`: transient lane,
+    no directory in config, non-invertible leaf; native law selectors with exact `…::component::tests::…` paths).
+- 02:07 / 02:18 / 02:30 overlay `s14-sh2-overlay` (full mirror 80 302 files, APFS clones 1.5 GB): `check` space-home + plugin-space
+  `--lib --tests`: 1st run a stray brace in the Home test helper + an unreachable arm in `HomeConfig::diff`; 2nd run: the generic viewer
+  law's `NoTransient` bound → replaced; **3rd run rc 0** (type-checked, 0 errors; own warnings cleaned). tsc of the P1 TS (root
+  tsconfig): TS law + schema TS 0 errors; space `📜️script.ts` only the pre-existing `JSON.parse → unknown` class (tree 36, overlay 38).
+  Live-tree dry run 02:4x: **80/80 + 44/44 apply, 0 conflicts**.
+- 02:31–03:27 laws in the overlay (`p1` job, captures `.🧬semio/🌐hub/s14-sh2-captures/ov23…ov26-p1.txt`): ov23 (gated by load
+  until ~03:00) **7 red**, all one root cause: the new refusals were built with `Fault::from("<code>")`, whose code is `app.message`
+  (the code sat in the message) → every new refusal is now a coded `Fault::new(FaultOrigin::App, "<code>", "<message>")`
+  (direct-lane `…requires-retained-job` ×4, page `-invalid` / `-rebootstrap-required` / `-frontier-race` / `.work-repeated` /
+  `.context-missing` / `-input-missing`; the space TS owner oracle's source assertion follows); B1's re-hydration law now removes
+  the kept studio through `handle_with_row(…, None)`; the registered viewer law feeds every fixture page (the first page is an
+  empty cursor advance) and asserts every folded space is listed; the viewer fold law compares `fault.code`. ov24 1 red (that
+  last law) → ov25 / **ov26 green: space-home `component-app-assembly` 122/122, space-home plain 28/28, plugin-space 87/87,
+  space-space check clean**; own warnings cleaned (the one left, create-studio's unused `PluginApp`, and the core / engine
+  qualifications are on the tree already). The coordinator's two checks: (1) `a_captured_root_never_sees_a_later_page_and_untouched_rows_stay_shared`
+  (a job's captured `Arc` root never sees a later page; rename/share/remove read ONE row via `context.transient.directory().space(id)`,
+  the root is shared, never copied); (2) `a_ten_thousand_space_directory_bootstraps_page_by_page_under_the_one_item_bound` +
+  `a_dropped_transient_rebootstraps_from_the_origin_without_history` + `a_page_item_never_exceeds_the_one_item_bound` +
+  `a_dispatched_page_publishes_one_transient_item_and_no_history_row` — all green.
+- 03:0x case contract (`test contract --case 🫧️mutate-s-home-1-any-editor-transient`, repo-wide rules, `p1-contract-case.txt`): the
+  case's 3 breaches (kind uncovered / inverse uncovered / undeclared scenarios) are gone (contract 561 → 558); left for Home only the
+  repo-wide classes every transient lane shares (no runtime inventory yet; no third-party library, decision records the survey).
+  The case's Rust subject run was not executed (a standalone host workspace = a cold full build); the same three vectors run through
+  the production bridge in `the_committed_vectors_hold_through_the_production_bridge` (green).
+- 03:2x `b1-overlay-refresh.py` now leaves identical files untouched (a rewrite with a new mtime had rebuilt `semio-framework-os*`:
+  the re-runs took ~1 min instead of ~50). tsc of the space script: only the pre-existing TS18046 class (38). Final live-tree dry
+  runs **80/80** (2 via 3-way over peers: os host 🦀️.rs, ShellHost) and **B1 44/44** on top (2 via 3-way), 0 conflicts. Overlay
+  build/target dirs deleted (rule 23, 3.0 GB); the overlay mirror is kept for a fast re-proof.
+- 03:3x RELAY sent to L1 (crates, lanes, T3 regen/taxonomy extras) and main. Nothing of P1 landed on the tree (guest freeze → T3 via L1); no landing rows.
+
 #### Window-3 landing runbook (SH2, both sets, in this order)
 
-1. `python3 wp-sh2/sh2-apply.py` (dry) → `--write` (39 files).
+1. `python3 wp-sh2/sh2-apply.py` (dry) → `--write` (80 files).
 2. `python3 wp-sh2/b1/b1-apply.py` (dry, on the tree after step 1;
    every file must say `apply`, worker/ShellHost may say 3-way merge) → `--write` (44 files).
 3. Native lane: `test -p semio-framework-os-config --lib`, `test -p semio-s-artifact-space-home --features component-app-assembly
@@ -106,6 +155,10 @@ transient; both surfaces share one page route (`HomeDirectoryPageWork`); receipt
    `zsh wp-sh2/sh2-verify-home.sh --serve <6580> [--hub …] --locale en|de` (steps incl. import-kept-studio + reopen keeps it).
 6. R10: taxonomy rows for the new dirs (config leaves `📥️admit-local-document`, `📤️retire-local-document`, host case
    `📇️mutate-os-config-local-catalog`, `🏛️ShellHost/🗂️local-catalog`, home command `🗃️apply-local-catalog-document`).
+   P1 adds: `✏️editor/🫧️transient/` (`🧬️schema/🧬️mutations/📬️apply-directory-page`, `🧫️fixtures/📬️apply-directory-page/*`,
+   `🧫️fixtures/📇️projection-wire-v1`, `🧬️schema/📇️directory-projection/🧪️tests/🔬️unit`, `🔮️oracles`, `🧪️tests/🔬️unit`), case
+   `✳️any/🧪️tests/🫧️mutate-s-home-1-any-editor-transient`; the emptied `🎚️config/🧬️schema/📇️directory-projection/` dir is removed;
+   schema-catalog regen (the receipt `$def` moved from the Home config schema to the transient schema).
 
 ### Session 14b
 

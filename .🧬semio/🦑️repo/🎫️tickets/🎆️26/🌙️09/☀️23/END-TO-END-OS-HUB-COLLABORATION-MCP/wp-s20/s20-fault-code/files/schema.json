@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.typed-operation-fault.v1",
+  "title": "Typed-operation fault",
+  "description": "One refusal as it crosses the interactive-job boundary: the job fault detail an app-owned job hands the framework and the Fault-lane page a typed operation publishes. Decoded by type, never by splitting text. `code` is the frozen code a caller branches on and a host renders its declared text by — the app's `AppDefinition.faults` or the framework fault catalog (at most 64 UTF-8 bytes); `parameters` the named values that text shows in its `{name}` placeholders (at most 8, names `[a-z][A-Za-z0-9]*` within 32 bytes, values within 64 UTF-8 bytes); `origin` who refused; `message` the refuser's own detail (at most 256 UTF-8 bytes). Rust `semio_framework_plugin::app::TypedOperationFault`; TypeScript `decodeTypedOperationFaultV1` (`🎭️actor/🖼️wire-turn/🟦️.ts`).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "code",
+    "origin",
+    "message",
+    "parameters"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.typed-operation-fault.v1"
+    },
+    "code": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "origin": {
+      "enum": [
+        "edge",
+        "renderer",
+        "os",
+        "module",
+        "plugin",
+        "app",
+        "extension",
+        "framework"
+      ]
+    },
+    "message": {
+      "type": "string",
+      "maxLength": 256
+    },
+    "parameters": {
+      "type": "array",
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "value"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z][A-Za-z0-9]*$",
+            "maxLength": 32
+          },
+          "value": {
+            "type": "string",
+            "maxLength": 64
+          }
+        }
+      }
+    }
+  }
+}

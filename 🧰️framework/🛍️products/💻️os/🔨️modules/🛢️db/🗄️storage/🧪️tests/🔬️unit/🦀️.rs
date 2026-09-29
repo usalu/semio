@@ -310,7 +310,7 @@ async fn fs_storage_db_backend_accessors_and_capabilities() {
 #[cfg(feature = "fs")]
 static SCRATCH_COUNTER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
-/// @emoji 🎲️ A fresh `FsStorage` rooted at a unique scratch directory under
+/// 🎲️ A fresh `FsStorage` rooted at a unique scratch directory under
 /// `std::env::temp_dir()` — no external `tempfile` crate dependency, mirroring `pack_io`'s own
 /// test helper convention. The test-owned process pool drives the same retained operation path.
 #[cfg(feature = "fs")]
@@ -381,7 +381,6 @@ async fn fs_storage_canonical_alias_writer_fences_all_six_mutations() {
     contender.close().await.unwrap();
     storage.close().await.unwrap();
     assert_eq!(std::fs::read_dir(root.join(".semio-wal-writer")).unwrap().count(), sidecars);
-    eprintln!("[DEBUG] canonical filesystem aliases shared stable sidecars, fenced all six foreign-backend mutations before effect, and retained lock inodes after terminal release");
 }
 
 #[cfg(feature = "fs")]

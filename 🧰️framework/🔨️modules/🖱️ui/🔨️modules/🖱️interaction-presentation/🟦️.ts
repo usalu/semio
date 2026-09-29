@@ -9,7 +9,7 @@ import { cn } from "../🏷️class-name-composition/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🫳️InteractionPresentation
-/** @emoji 🎨️ Shared transition for interactive chrome. */
+/** 🎨️ Shared transition for interactive chrome. */
 export const interactiveControlTransitionClass = "transition-[color,border-color,background-color]";
 
 const hoverExcludingHandleBgFillClass = "hover:not-data-[handle-hovered=true]:bg-hover-interactive-fill";
@@ -17,28 +17,28 @@ const hoverExcludingHandleActiveBgClass = "hover:not-data-[handle-hovered=true]:
 const hoverExcludingHandleActiveBorderClass = "hover:not-data-[handle-hovered=true]:border-active-base";
 const hoverExcludingHandleActiveTextClass = "hover:not-data-[handle-hovered=true]:text-active-foreground";
 
-/** @emoji 🫳️ Tree-row hover fill excluding the nested drag handle. */
+/** 🫳️ Tree-row hover fill excluding the nested drag handle. */
 export const groupHoverExcludingHandleBgFillClass = "group-hover/tree-row:not-group-data-[handle-hovered=true]/tree-row:bg-hover-interactive-fill";
 
-/** @emoji 🫳️ Hover emphasis excluding the nested drag handle. */
+/** 🫳️ Hover emphasis excluding the nested drag handle. */
 export const hoverExcludingHandleTextEmphasizedClass = "hover:not-data-[handle-hovered=true]:text-emphasized";
 
-/** @emoji 🫳️ Hover fill excluding the nested drag handle. */
+/** 🫳️ Hover fill excluding the nested drag handle. */
 export { hoverExcludingHandleBgFillClass };
 
-/** @emoji 🎨️ Normal-border interactive hover fill. */
+/** 🎨️ Normal-border interactive hover fill. */
 export const interactiveHoverFillClass = "hover:bg-hover-interactive-fill";
 
-/** @emoji 🎨️ Interactive hover fill with emphasized content. */
+/** 🎨️ Interactive hover fill with emphasized content. */
 export const interactiveHoverClass = cn(interactiveHoverFillClass, "hover:text-emphasized");
 
-/** @emoji 📏️ Active stroke paired with interactive active fill. */
+/** 📏️ Active stroke paired with interactive active fill. */
 export const interactiveActiveBorderClass = "border-active-base";
 
-/** @emoji 🎨️ Pressed and selected active presentation. */
+/** 🎨️ Pressed and selected active presentation. */
 export const interactiveActiveFillClass = cn("bg-active-base", interactiveActiveBorderClass, "text-active-foreground", hoverExcludingHandleActiveBgClass, hoverExcludingHandleActiveBorderClass, hoverExcludingHandleActiveTextClass);
 
-/** @emoji 🎨️ Data-state on presentation. */
+/** 🎨️ Data-state on presentation. */
 export const interactiveOnClass = cn(
   "data-[state=on]:bg-active-base",
   "data-[state=on]:border-active-base",
@@ -48,7 +48,7 @@ export const interactiveOnClass = cn(
   "data-[state=on]:hover:text-active-foreground",
 );
 
-/** @emoji 🎨️ Active tab presentation. */
+/** 🎨️ Active tab presentation. */
 export const interactiveTabActiveClass = cn(
   "data-[state=active]:bg-active-base",
   "data-[state=active]:border-active-base",

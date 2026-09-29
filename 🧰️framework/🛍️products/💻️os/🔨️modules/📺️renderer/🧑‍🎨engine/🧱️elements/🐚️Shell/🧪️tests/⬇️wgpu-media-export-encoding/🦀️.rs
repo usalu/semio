@@ -48,7 +48,7 @@ fn the_wgpu_download_contract_decodes_every_fixture_export() {
 }
 
 /// 📥️ The host-effect funnel names the export effect. Without this arm every plugin export on this
-/// renderer was a `[DEBUG] wgpu-shell effect dropped` line and nothing else.
+/// renderer was a `[TRACE] wgpu-shell effect dropped` line and nothing else.
 #[test]
 fn the_host_effect_funnel_owns_download_media_export() {
     assert!(WGPU_SHELL_SOURCE.contains("Effect::DownloadMediaExport { filename, mime_type, data, encoding } => {"), "queue_host_effects must own DownloadMediaExport");

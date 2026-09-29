@@ -144,6 +144,8 @@ fn the_instance_interaction_carrier_is_schema_bounded_and_retires_one_entry_per_
     assert!(retirement.terminal_is_empty());
 }
 
+/// 🔍️ The pre-fix shape used the RENDER id and hardcoded `object`; both must differ
+/// from the fixture's declared topology target on every case.
 #[test]
 fn an_instance_pick_selects_the_topology_target_at_its_declared_granularity() {
     for id in ["instance-pick-replaces", "instance-pick-additive", "instance-pick-subtractive", "instance-pick-subtractive-on-command", "instance-pick-invertive", "second-instance-of-one-topology-id-pick"] {
@@ -159,10 +161,7 @@ fn an_instance_pick_selects_the_topology_target_at_its_declared_granularity() {
         assert_eq!(arg(&action, "merge"), expect["merge"].as_str().expect("merge"), "{id}");
         assert_eq!(arg(&action, "method"), expect["method"].as_str().expect("method"), "{id}");
         assert_eq!(decoded_targets(&action), expect["targets"], "{id}");
-        println!("[DEBUG] pointer-gestures {id}: targets={} merge={}", arg(&action, "targets"), arg(&action, "merge"));
 
-        // 🔍️ The pre-fix shape used the RENDER id and hardcoded `object`; both must differ
-        // from the fixture's declared topology target on every case.
         let render_id = case["instanceId"].as_str().expect("instanceId");
         let topology_id = expect["targets"][0]["id"].as_str().expect("expected target id");
         assert_ne!(render_id, topology_id, "{id}: the fixture's own scene renders the target under a different id");
@@ -185,7 +184,6 @@ fn an_instance_hover_reports_the_resolved_granularity_on_the_pointer_channel() {
         assert_eq!(decoded_targets(&action), expect["targets"], "{id}");
         assert_eq!(state.local_hover_id.as_deref(), expect["targets"][0]["id"].as_str(), "{id}: the local marker is the topology target");
         assert_eq!(state.local_hover_granularity_id.as_deref(), expect["targets"][0]["granularity"].as_str(), "{id}: local hover retains the exact target pair");
-        println!("[DEBUG] pointer-gestures {id}: targets={} hover={:?}", arg(&action, "targets"), state.local_hover_id);
     }
 }
 
@@ -200,7 +198,6 @@ fn a_background_click_clears_with_an_empty_target_list_rather_than_a_silence() {
     assert_eq!(arg(&action, "merge"), expect["merge"].as_str().expect("merge"));
     assert_eq!(arg(&action, "method"), expect["method"].as_str().expect("method"));
     assert_eq!(decoded_targets(&action), expect["targets"]);
-    println!("[DEBUG] pointer-gestures background-click: targets={}", arg(&action, "targets"));
 }
 
 #[test]
@@ -228,9 +225,13 @@ fn a_marquee_release_replaces_with_the_deduplicated_topology_targets() {
     assert_eq!(arg(&action, "domainId"), expect["domainId"].as_str().expect("domainId"));
     assert_eq!(arg(&action, "merge"), expect["merge"].as_str().expect("merge"));
     assert_eq!(decoded_targets(&action), expect["targets"], "only exact granularity/id pairs collapse; one id under two granularities remains two targets");
-    println!("[DEBUG] pointer-gestures marquee-release-replaces: targets={} instances={}", arg(&action, "targets"), state.draws[0].instances.len());
 }
 
+/// 🧭️ The zoom itself publishes nothing — the wire report is the SETTLE's, one per gesture, the
+/// trailing debounce React's `dispatchWorldCameraDebounced` keeps (`WorldCameraSync`).
+///
+/// 🪟️ `windowId`, never `surfaceId`: the shell resolves `ActionAddress::window_instance_id` from
+/// this argument, and a World3d surface IS keyed by its window instance id.
 #[test]
 fn a_camera_gesture_addresses_the_window_that_owns_the_surface() {
     let case = gesture("orbit-completes-into-one-setcamera");
@@ -242,8 +243,6 @@ fn a_camera_gesture_addresses_the_window_that_owns_the_surface() {
         turns += 1;
         assert!(turns < 64, "bounded publication terminates");
     }
-    // 🧭️ The zoom itself publishes nothing — the wire report is the SETTLE's, one per gesture, the
-    // trailing debounce React's `dispatchWorldCameraDebounced` keeps (`WorldCameraSync`).
     assert!(take_actions(&mut input).is_empty(), "a navigation step never publishes per move");
     let mut settle = plan_world3d_camera_settle(&state, 2).expect("a moved camera owes one settle");
     let mut turns = 0;
@@ -255,8 +254,6 @@ fn a_camera_gesture_addresses_the_window_that_owns_the_surface() {
     assert_eq!(published.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), vec!["noteWorldNavigation", "setCamera"], "the un-debounced navigation report lands ahead of the debounced camera report, exactly as React journals it");
     let action = published.into_iter().nth(1).expect("a camera gesture publishes its report");
     assert_eq!(action.action, case["expect"]["action"].as_str().expect("action id"));
-    // 🪟️ `windowId`, never `surfaceId`: the shell resolves `ActionAddress::window_instance_id` from
-    // this argument, and a World3d surface IS keyed by its window instance id.
     assert_eq!(arg(&action, "windowId"), fixture()["scene"]["surfaceId"].as_str().expect("surfaceId"));
     assert!(action.args.as_ref().and_then(|args| args.get("surfaceId")).is_none(), "the pre-fix `surfaceId` address is gone, not merely joined by `windowId`");
     let camera = action.args.as_ref().and_then(|args| args.get("camera")).expect("the pose nests under `camera`");
@@ -265,7 +262,7 @@ fn a_camera_gesture_addresses_the_window_that_owns_the_surface() {
         "the pose carries React's `{{position, target, zoom, up}}` — never `fov`, which the guest camera value has no member for"
     );
     assert!(camera.get("fov").is_none(), "`fov` is gone from the wire, not merely joined by `zoom`");
-    println!("[DEBUG] pointer-gestures orbit-completes-into-one-setcamera: windowId={} camera={:?}", arg(&action, "windowId"), camera);
+    println!("pointer-gestures orbit-completes-into-one-setcamera: windowId={} camera={:?}", arg(&action, "windowId"), camera);
 }
 
 /// 🧮️ A marquee page with NO targets still writes the two bytes of `[]`, and its reservation says so.
@@ -284,10 +281,13 @@ fn an_empty_marquee_page_reserves_the_bytes_of_its_own_empty_array() {
         .expect("base action bytes");
     let credit = job.page_credit(&state, 0).expect("empty page credit");
     assert_eq!(credit - base, INTERACTION_TARGETS_EMPTY.len(), "an empty page reserves exactly the `[]` it writes");
-    println!("[DEBUG] pointer-gestures empty-marquee-credit: base={base} credit={credit} array={}", INTERACTION_TARGETS_EMPTY.len());
+    println!("pointer-gestures empty-marquee-credit: base={base} credit={credit} array={}", INTERACTION_TARGETS_EMPTY.len());
 }
 
 /// 🕹️ The modifier → merge rule, in the ONE vocabulary, read off the fixture's own cases.
+///
+/// 🔍️ The pre-fix rule — `shift → additive, ctrl → INVERTIVE, else replace` — has no
+/// `subtractive` at all, so it disagrees on the two ctrl/cmd cases.
 #[test]
 fn the_merge_vocabulary_is_not_translated() {
     for id in ["instance-pick-replaces", "instance-pick-additive", "instance-pick-subtractive", "instance-pick-subtractive-on-command", "instance-pick-invertive"] {
@@ -295,8 +295,6 @@ fn the_merge_vocabulary_is_not_translated() {
         let code = world_merge_code(case["modifiers"]["shiftKey"].as_bool().unwrap_or(false), case["modifiers"]["ctrlKey"].as_bool().unwrap_or(false), case["modifiers"]["metaKey"].as_bool().unwrap_or(false));
         assert_eq!(world_merge_wire_label(code), case["expect"]["merge"].as_str().expect("merge"), "{id}");
     }
-    // 🔍️ The pre-fix rule — `shift → additive, ctrl → INVERTIVE, else replace` — has no
-    // `subtractive` at all, so it disagrees on the two ctrl/cmd cases.
     let pre_fix = |shift: bool, ctrl: bool| {
         if shift {
             MergeMode::Additive

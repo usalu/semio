@@ -114,28 +114,32 @@ fn axes(names: impl IntoIterator<Item = String>) -> BTreeSet<&'static str> {
 /// 🙈️ Axes one door legitimately does not carry, each with the reason it cannot. Nothing else may be
 /// missing: a NEW axis added to one door and not the others fails this law until it is either wired
 /// or listed here with a reason.
+///
+/// 🧭️ The descriptor is the RESOLVED axis set the renderer receives, not a caller's options:
+/// `rootId`/`plugins`/`rendererModuleUrl` address the mount and the module, never the session,
+/// and `surfaceSessionFactories` is a JS closure that cannot cross into wasm at all.
+///
+/// ⚛️ React's door: `appMode` has no React reader yet (the mode axis is `?mode=`, wgpu-only);
+/// `hub`/`hubUser`/`hubDataDir` reach React through ShellHost's backbone worker rather than
+/// through boot options; `brokerProof` is read from `location.hash` at module scope
+/// (`🏛️ShellHost/🟦️.tsx`), never passed in; `appExample` is React's `defaults.exampleId`, which
+/// `defaults` already covers; `rendererModuleUrl` has no React analogue (no wasm renderer
+/// module to point at).
+///
+/// 🧊️ The embeddable wgpu door: `surfaceSessionFactories` is React-only (see above);
+/// `brokerProof` is read from the page's own `location.hash`, like React's, never passed in.
+///
+/// ⌨️ The native CLI: `rootId`/`plugins`/`rendererModuleUrl`/`surfaceSessionFactories` are
+/// browser-mount concepts a winit window has no counterpart for; `brokerProof` is a browser
+/// hash hand-off (native claims its local credential through the inherited fd instead);
+/// `locks`/`defaults` stay process-env axes (`SEMIO_LOCKED_*`/`SEMIO_DEFAULT_EXAMPLE`), the
+/// same per-server level React reads them at (`VITE_SEMIO_LOCKED_*`), so they are deliberately
+/// NOT per-invocation flags.
 fn allowed_absences(door: &str) -> BTreeSet<&'static str> {
     match door {
-        // 🧭️ The descriptor is the RESOLVED axis set the renderer receives, not a caller's options:
-        // `rootId`/`plugins`/`rendererModuleUrl` address the mount and the module, never the session,
-        // and `surfaceSessionFactories` is a JS closure that cannot cross into wasm at all.
         "descriptor" => ["rootId", "plugins", "rendererModuleUrl", "surfaceSessionFactories"].into_iter().collect(),
-        // ⚛️ React's door: `appMode` has no React reader yet (the mode axis is `?mode=`, wgpu-only);
-        // `hub`/`hubUser`/`hubDataDir` reach React through ShellHost's backbone worker rather than
-        // through boot options; `brokerProof` is read from `location.hash` at module scope
-        // (`🏛️ShellHost/🟦️.tsx`), never passed in; `appExample` is React's `defaults.exampleId`, which
-        // `defaults` already covers; `rendererModuleUrl` has no React analogue (no wasm renderer
-        // module to point at).
         "react" => ["appMode", "appExample", "hub", "hubUser", "hubDataDir", "brokerProof", "rendererModuleUrl"].into_iter().collect(),
-        // 🧊️ The embeddable wgpu door: `surfaceSessionFactories` is React-only (see above);
-        // `brokerProof` is read from the page's own `location.hash`, like React's, never passed in.
         "wgpu-library" => ["surfaceSessionFactories", "brokerProof"].into_iter().collect(),
-        // ⌨️ The native CLI: `rootId`/`plugins`/`rendererModuleUrl`/`surfaceSessionFactories` are
-        // browser-mount concepts a winit window has no counterpart for; `brokerProof` is a browser
-        // hash hand-off (native claims its local credential through the inherited fd instead);
-        // `locks`/`defaults` stay process-env axes (`SEMIO_LOCKED_*`/`SEMIO_DEFAULT_EXAMPLE`), the
-        // same per-server level React reads them at (`VITE_SEMIO_LOCKED_*`), so they are deliberately
-        // NOT per-invocation flags.
         "native" => ["rootId", "plugins", "rendererModuleUrl", "surfaceSessionFactories", "brokerProof", "locks", "defaults"].into_iter().collect(),
         other => panic!("unknown door {other}"),
     }
@@ -144,6 +148,8 @@ fn allowed_absences(door: &str) -> BTreeSet<&'static str> {
 /// ⚙️ Native flags that are not boot axes at all — ops probes and the scale-bench harness.
 const NATIVE_NON_AXIS_FLAGS: [&str; 4] = ["scale", "scale-wasm", "report", "shards"];
 
+/// 🌐️ The hub trio is ONE field on the descriptor and three flags on the CLI; naming the two
+/// members here keeps the union honest without pretending the descriptor forgot them.
 #[test]
 fn every_boot_door_names_the_same_axes() {
     let react = axes(typescript_type_fields(&read("🧱️elements/🐚️Shell/🟦️.tsx"), "FrameworkOsBootOptions"));
@@ -151,8 +157,6 @@ fn every_boot_door_names_the_same_axes() {
     let library = axes(typescript_type_fields(&read("🎯️targets/🧊️wgpu/🎬️renderer-boot/🟦️.ts"), "FrameworkOsWgpuBootOptions"));
     let native = axes(native_arg_flags(&read("🎯️targets/🧊️wgpu/⌨️native-entrypoint/🦀️.rs")).into_iter().filter(|flag| !NATIVE_NON_AXIS_FLAGS.contains(&flag.as_str())).collect::<Vec<_>>());
 
-    // 🌐️ The hub trio is ONE field on the descriptor and three flags on the CLI; naming the two
-    // members here keeps the union honest without pretending the descriptor forgot them.
     let mut descriptor_axes = descriptor_ts.clone();
     if descriptor_axes.contains("hub") {
         descriptor_axes.extend(["hubUser", "hubDataDir"]);

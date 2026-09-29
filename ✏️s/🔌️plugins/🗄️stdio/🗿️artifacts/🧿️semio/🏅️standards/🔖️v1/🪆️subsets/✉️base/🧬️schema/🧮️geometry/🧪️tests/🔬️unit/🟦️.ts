@@ -17,5 +17,4 @@ export function testSemioGeometryContract(): void {
     if (entry.valid) assert.deepEqual(parser!(entry.input), entry.input, entry.type);
     else assert.throws(() => parser!(entry.input), entry.type);
   }
-  console.log("[DEBUG] Shared Semio geometry contracts agree with Ajv for " + fixture.cases.length + " neutral vectors");
 }

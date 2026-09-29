@@ -99,7 +99,6 @@ async fn close_to_retired(runtime: &WfcRuntime, lifetime: ActorInstanceLifetime,
     let mut retired = None;
     for spent in 0..CLOSE_TURN_BUDGET {
         if let Some(receipt @ ActorInstanceLifecycleReceipt::Retired { .. }) = turn(runtime, Vec::new()).await.lifecycle_receipt {
-            eprintln!("[DEBUG] {label} reached Retired after {spent} close turns");
             retired = Some(receipt);
             break;
         }
@@ -133,7 +132,7 @@ async fn close_turn_cost(runtime: &WfcRuntime, lifetime: ActorInstanceLifetime, 
                 }
                 acknowledge(runtime, receipt).await;
             }
-            eprintln!("[DEBUG] close-cost {label} reached Retired after {spent} close turns in {} ms", started.elapsed().as_millis());
+            eprintln!("close-cost {label} reached Retired after {spent} close turns in {} ms", started.elapsed().as_millis());
             return spent;
         }
         std::thread::yield_now();
@@ -263,7 +262,6 @@ fn wfc_close_cost_is_independent_of_the_retained_session() {
         let spent = session_close_cost(app, loads, turns_per_load, &label, budget);
         costs.push((label, spent, loads * turns_per_load));
     }
-    eprintln!("[DEBUG] close-cost fixture costs={costs:?} ceiling={ceiling} dilution-percent={dilution_percent}");
     for (label, spent, _) in &costs {
         assert!(*spent <= ceiling, "close after the {label} session spent {spent} turns, ceiling {ceiling}");
     }

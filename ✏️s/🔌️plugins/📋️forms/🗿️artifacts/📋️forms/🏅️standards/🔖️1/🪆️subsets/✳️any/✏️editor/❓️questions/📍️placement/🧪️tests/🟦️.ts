@@ -43,5 +43,4 @@ export function testFormsQuestionPlacement(): void {
       assert.deepEqual(actual, applyPatch([...before], item.patch as Operation[]).newDocument, item.name);
     }
   }
-  console.log("[DEBUG] Forms question creation and drag ordering matched shared events and JSON Patch");
 }

@@ -36,7 +36,6 @@ fn map_document_contract_preserves_all_children_and_dynamic_feature_payloads() {
     }
     let actual: GisMapDiff = dsl::json::from_json_str(&fixture["diff"].to_string()).unwrap();
     assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&actual)).unwrap(), fixture["diff"]);
-    eprintln!("[DEBUG] Map JSON/text/Pack and replacement retain drawing/image/value identities; dynamic feature payloads use the shared value schema");
 }
 
 #[test]

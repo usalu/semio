@@ -1886,7 +1886,7 @@ pub fn all_conforming_blatt_examples() -> Vec<(u16, Vdi3805Snapshot)> {
 /// lifted out of the pre-migration manifest's inline `.artifact_kind(ArtifactKindSpec { .. })` so the
 /// artifact node, not the app, owns its own kind declaration.
 pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
-    app_surface::artifact_kind_spec("vdi3805", "VDI 3805")
+    app_surface::artifact_kind_spec("vdi3805", "VDI 3805", VDI3805_DOCUMENT_SCHEMA)
 }
 //#endregion 🔖️ArtifactKind
 

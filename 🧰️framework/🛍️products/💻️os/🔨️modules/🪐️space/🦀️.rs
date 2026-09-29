@@ -275,8 +275,7 @@ pub fn draft_catalog_for(port: &Arc<store::BackbonePorts>) -> Arc<DraftCatalog> 
 #[derive(Debug)]
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub enum SpaceZipError {
-    Zip(zip::result::ZipError),
-    Io(std::io::Error),
+    Zip(semio_framework_deflate::zip_archive::ZipArchiveError),
     Pack(String),
     MissingPath(String),
 }
@@ -286,7 +285,6 @@ impl std::fmt::Display for SpaceZipError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Zip(error) => write!(formatter, "zip error: {error}"),
-            Self::Io(error) => write!(formatter, "io error: {error}"),
             Self::Pack(detail) => write!(formatter, "pack error: {detail}"),
             Self::MissingPath(path) => write!(formatter, "missing path for entry {path}"),
         }
@@ -298,23 +296,15 @@ impl std::error::Error for SpaceZipError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Self::Zip(error) => Some(error),
-            Self::Io(error) => Some(error),
             _ => None,
         }
     }
 }
 
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-impl From<zip::result::ZipError> for SpaceZipError {
-    fn from(error: zip::result::ZipError) -> Self {
+impl From<semio_framework_deflate::zip_archive::ZipArchiveError> for SpaceZipError {
+    fn from(error: semio_framework_deflate::zip_archive::ZipArchiveError) -> Self {
         Self::Zip(error)
-    }
-}
-
-#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-impl From<std::io::Error> for SpaceZipError {
-    fn from(error: std::io::Error) -> Self {
-        Self::Io(error)
     }
 }
 
@@ -329,27 +319,9 @@ pub struct ImportedCollection {
     pub blobs: Vec<(store::BlobRef, Vec<u8>)>,
 }
 
+/// 📏️ The largest single entry a collection archive may inflate to.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-fn zip_file_options() -> zip::write::SimpleFileOptions {
-    // 🕰️ Fixed (epoch) timestamp on every entry — the export→import→export byte-stability law
-    // depends on nothing time-varying leaking into the zip's central directory.
-    zip::write::SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated).last_modified_time(zip::DateTime::default())
-}
-
-#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-fn write_zip_file<W: std::io::Write + Seek>(writer: &mut zip::ZipWriter<W>, name: &str, bytes: &[u8], options: zip::write::SimpleFileOptions) -> Result<(), SpaceZipError> {
-    writer.start_file(name, options)?;
-    writer.write_all(bytes)?;
-    Ok(())
-}
-
-#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-fn read_zip_entry<R: std::io::Read + Seek>(archive: &mut zip::ZipArchive<R>, name: &str) -> Result<Vec<u8>, SpaceZipError> {
-    let mut file = archive.by_name(name)?;
-    let mut bytes = Vec::new();
-    file.read_to_end(&mut bytes)?;
-    Ok(bytes)
-}
+const MAX_COLLECTION_ENTRY_BYTES: usize = 1024 * 1024 * 1024;
 
 /// 🗃️ Reads serialized pack and SPR bytes for one artifact without taking filesystem ownership.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
@@ -368,11 +340,9 @@ pub fn export_collection_zip(
     read_artifact: &ArtifactArchiveReader<'_>,
     read_blob: &dyn Fn(&str) -> Result<Vec<u8>, SpaceZipError>,
 ) -> Result<Vec<u8>, SpaceZipError> {
-    let mut writer = zip::ZipWriter::new(Cursor::new(Vec::new()));
-    let options = zip_file_options();
-
-    write_zip_file(&mut writer, "collection.collection.pack", &store::ArtifactPack::encode_pack(collection), options)?;
-    write_zip_file(&mut writer, "collection.collection.spr", collection_spr, options)?;
+    let mut writer = semio_framework_deflate::zip_archive::ZipWriter::new();
+    writer.add("collection.collection.pack", &store::ArtifactPack::encode_pack(collection))?;
+    writer.add("collection.collection.spr", collection_spr)?;
 
     let mut entries: Vec<&CollectionEntry> = collection.entries.iter().collect();
     entries.sort_by(|a, b| a.id.cmp(&b.id));
@@ -381,18 +351,17 @@ pub fn export_collection_zip(
         match entry.body.as_ref() {
             ArtifactBody::Document { .. } => {
                 let (pack_bytes, spr_bytes) = read_artifact(&entry.id)?;
-                write_zip_file(&mut writer, &format!("{path}.pack"), &pack_bytes, options)?;
-                write_zip_file(&mut writer, &format!("{path}.spr"), &spr_bytes, options)?;
+                writer.add(&format!("{path}.pack"), &pack_bytes)?;
+                writer.add(&format!("{path}.spr"), &spr_bytes)?;
             }
             ArtifactBody::Blob { blob } => {
                 let bytes = read_blob(&blob.hash)?;
-                write_zip_file(&mut writer, &path, &bytes, options)?;
+                writer.add(&path, &bytes)?;
             }
         }
     }
 
-    let cursor = writer.finish()?;
-    Ok(cursor.into_inner())
+    Ok(writer.finish()?)
 }
 
 /// 📥️ Inverse of `export_collection_zip`. Parses `collection.collection.pack` first to learn the
@@ -400,9 +369,9 @@ pub fn export_collection_zip(
 /// read back — never guesses a layout from the zip's own directory listing.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub fn import_collection_zip(bytes: &[u8]) -> Result<ImportedCollection, SpaceZipError> {
-    let mut archive = zip::ZipArchive::new(Cursor::new(bytes))?;
-    let collection_pack = read_zip_entry(&mut archive, "collection.collection.pack")?;
-    let collection_spr = read_zip_entry(&mut archive, "collection.collection.spr")?;
+    let archive = semio_framework_deflate::zip_archive::ZipArchive::parse(bytes)?;
+    let collection_pack = archive.read("collection.collection.pack", MAX_COLLECTION_ENTRY_BYTES)?;
+    let collection_spr = archive.read("collection.collection.spr", MAX_COLLECTION_ENTRY_BYTES)?;
     let collection = <CollectionSnapshot as store::ArtifactPack>::decode_pack(&collection_pack).map_err(|error| SpaceZipError::Pack(error.to_string()))?;
 
     let mut artifacts = Vec::new();
@@ -413,12 +382,12 @@ pub fn import_collection_zip(bytes: &[u8]) -> Result<ImportedCollection, SpaceZi
         let path = entry_path(&collection, &entry.id).ok_or_else(|| SpaceZipError::MissingPath(entry.id.clone()))?;
         match entry.body.as_ref() {
             ArtifactBody::Document { .. } => {
-                let pack_bytes = read_zip_entry(&mut archive, &format!("{path}.pack"))?;
-                let spr_bytes = read_zip_entry(&mut archive, &format!("{path}.spr"))?;
+                let pack_bytes = archive.read(&format!("{path}.pack"), MAX_COLLECTION_ENTRY_BYTES)?;
+                let spr_bytes = archive.read(&format!("{path}.spr"), MAX_COLLECTION_ENTRY_BYTES)?;
                 artifacts.push((entry.clone(), pack_bytes, spr_bytes));
             }
             ArtifactBody::Blob { blob } => {
-                let raw = read_zip_entry(&mut archive, &path)?;
+                let raw = archive.read(&path, MAX_COLLECTION_ENTRY_BYTES)?;
                 blobs.push((blob.clone(), raw));
             }
         }

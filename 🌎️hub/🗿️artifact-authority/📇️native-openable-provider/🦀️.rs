@@ -8,8 +8,8 @@ use std::collections::BTreeSet;
 /// 🚪 Exact identity of the statically linked provider admitted by this boundary.
 pub const NATIVE_OPENABLE_PROVIDER_SET_V1_ID: &str = "stdio+gis+vcs/native-codecs/v1";
 /// 🧮 Complete fixed stdio, GIS and VCS factory closure admitted by V1.
-pub const NATIVE_OPENABLE_PROVIDER_SET_V1_RECEIPTS: usize = 29;
-const NATIVE_STDIO_PROVIDER_RECEIPTS: usize = 26;
+pub const NATIVE_OPENABLE_PROVIDER_SET_V1_RECEIPTS: usize = 32;
+const NATIVE_STDIO_PROVIDER_RECEIPTS: usize = 29;
 const NATIVE_VCS_PROVIDER_RECEIPTS: usize = 1;
 
 struct NativeCodecProviderEntryV1 {

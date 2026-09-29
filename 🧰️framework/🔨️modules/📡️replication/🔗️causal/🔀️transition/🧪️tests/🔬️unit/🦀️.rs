@@ -124,6 +124,25 @@ fn an_authors_new_edit_clears_only_its_own_redo() {
     assert_eq!(fold.redo, vec!["b"]);
 }
 
+/// 🛂️ An undo belongs to its author: a revert or reinstate naming another actor's operation — alone or beside the
+/// actor's own — withdraws or restores nothing and is listed as refused, on every replica.
+#[test]
+fn a_transition_naming_another_actors_operation_is_refused_whole() {
+    let edits = [edit("a", "x", 1), edit("b", "y", 2)];
+    let foreign = at(HistoryTransition::Revert { mutation_ids: vec![MutationId("op-a".into())] }, "y", 3);
+    let mixed = at(HistoryTransition::Revert { mutation_ids: vec![MutationId("op-a".into()), MutationId("op-b".into())] }, "y", 4);
+    let fold = fold_history(&edits, &[foreign.clone(), mixed.clone()], &none()).expect("fold");
+    assert_eq!(fold.applied, vec!["a", "b"]);
+    assert!(fold.redo.is_empty());
+    assert_eq!(fold.refused, vec![foreign.mutation_id.0.clone(), mixed.mutation_id.0.clone()]);
+    let own = at(HistoryTransition::Revert { mutation_ids: vec![MutationId("op-a".into())] }, "x", 5);
+    let stolen = at(HistoryTransition::Reinstate { mutation_ids: vec![MutationId("op-a".into())] }, "y", 6);
+    let fold = fold_history(&edits, &[own, stolen.clone()], &none()).expect("fold");
+    assert_eq!(fold.applied, vec!["b"]);
+    assert_eq!(fold.redo, vec!["a"]);
+    assert_eq!(fold.refused, vec![stolen.mutation_id.0.clone()]);
+}
+
 /// 🚩️ Commit materializes change/checkpoint facts; checkout restores exactly the checkpoint's edits.
 #[test]
 fn commit_and_checkout_materialize_facts_and_positions() {
@@ -217,8 +236,9 @@ fn fixture_transition(json: &serde_json::Value) -> HistoryTransition {
 }
 
 /// ♻️ Language-agnostic durable collaborative redo: two authors interleave, each undoes/redoes only
-/// their own mutations, and reload/`hub-restart` steps re-fold the same event set to the same
-/// applied/redo projection (pure durability proof shared with the TypeScript runner).
+/// their own mutations, another actor's revert/reinstate of them is refused, and reload/`hub-restart`
+/// steps re-fold the same event set to the same applied/redo/refused projection (pure durability
+/// proof shared with the TypeScript runner).
 #[test]
 fn durable_collaborative_redo_fixture_survives_reload_and_hub_restart() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🗄️durable-collaborative-redo-v1/🔣️.json")).expect("durable collaborative redo fixture parses");
@@ -256,6 +276,8 @@ fn durable_collaborative_redo_fixture_survives_reload_and_hub_restart() {
                 let redo: Vec<String> = step["expect"]["redo"].as_array().expect("redo").iter().map(|id| id.as_str().expect("id").into()).collect();
                 assert_eq!(fold.applied, applied, "{}", step["label"].as_str().unwrap_or("applied"));
                 assert_eq!(fold.redo, redo, "{}", step["label"].as_str().unwrap_or("redo"));
+                let refused: Vec<String> = step["expect"]["refused"].as_array().expect("refused").iter().map(|id| id.as_str().expect("id").into()).collect();
+                assert_eq!(fold.refused, refused, "{}", step["label"].as_str().unwrap_or("refused"));
             }
             "reload" | "hub-restart" => {
                 let first = fold_history(&edits, &transitions, &none).expect("fold before restart");
@@ -268,6 +290,7 @@ fn durable_collaborative_redo_fixture_survives_reload_and_hub_restart() {
     let observations: Vec<&str> = fixture["observations"].as_array().expect("observations").iter().map(|row| row.as_str().expect("obs")).collect();
     assert!(observations.contains(&"durable-collaborative-redo"));
     assert!(observations.contains(&"survives-hub-restart"));
+    assert!(observations.contains(&"foreign-transition-refused"));
 }
 
 #[test]

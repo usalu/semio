@@ -21,7 +21,7 @@ pub fn package_descriptor() -> Result<semio_s_artifact_norm_contract::NormArtifa
 }
 
 pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
-    app_surface::artifact_kind_spec("en1998", "EN 1998")
+    app_surface::artifact_kind_spec("en1998", "EN 1998", EN1998_DOCUMENT_SCHEMA)
 }
 
 /// 🪪️ This subset's canonical `(artifact_kind, standard, subset)` coordinate (ticket

@@ -3,7 +3,7 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
-    "lib": ["DOM", "ESNext"],
+    "lib": ["DOM", "DOM.AsyncIterable", "DOM.Iterable", "ESNext"],
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
     "strict": true,

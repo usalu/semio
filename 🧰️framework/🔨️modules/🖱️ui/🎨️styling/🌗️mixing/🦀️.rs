@@ -1,4 +1,4 @@
-    /// @emoji 🌈️ Converts sRGB8888 bytes to linear-sRGB `f32` components for GPU paints.
+    /// 🌈️ Converts sRGB8888 bytes to linear-sRGB `f32` components for GPU paints.
     // 🚫️async: E1 pure accessor consumed by external-trait impls (Default) and sync render/paint call sites — see R9
     pub fn rgba8_to_linear(r: u8, g: u8, b: u8, a: u8) -> [f32; 4] {
         // 🚫️async: E1 pure accessor consumed by external-trait impls (Default) and sync render/paint call sites — see R9
@@ -10,7 +10,7 @@
         [ch(r), ch(g), ch(b), f32::from(a) / 255.0]
     }
 
-    /// @emoji 🌈️ Converts linear-sRGB `f32` components to sRGB8888 bytes.
+    /// 🌈️ Converts linear-sRGB `f32` components to sRGB8888 bytes.
     // 🚫️async: E1 pure accessor consumed by external-trait impls (Default) and sync render/paint call sites — see R9
     pub fn linear_to_rgba8(lr: f32, lg: f32, lb: f32, la: f32) -> [u8; 4] {
         // 🚫️async: E1 pure accessor consumed by external-trait impls (Default) and sync render/paint call sites — see R9
@@ -22,7 +22,7 @@
         [ch(lr), ch(lg), ch(lb), (f64::from(la) * 255.0).round().clamp(0.0, 255.0) as u8]
     }
 
-    /// @emoji 🌓️ linear-sRGB → Oklab, Björn Ottosson's reference matrices — the twin of
+    /// 🌓️ linear-sRGB → Oklab, Björn Ottosson's reference matrices — the twin of
     /// `🌗️mixing/🟦️.ts`'s `linearToOklab` (https://bottosson.github.io/posts/oklab/).
     // 🚫️async: E1 pure accessor consumed by sync render/paint call sites — see R9
     pub fn linear_to_oklab(r: f32, g: f32, b: f32) -> [f32; 3] {
@@ -32,7 +32,7 @@
         [0.210_454_26 * l + 0.793_617_8 * m - 0.004_072_047 * s, 1.977_998_5 * l - 2.428_592_2 * m + 0.450_593_7 * s, 0.025_904_037 * l + 0.782_771_77 * m - 0.808_675_77 * s]
     }
 
-    /// @emoji 🌓️ Oklab → linear-sRGB, the inverse of [`linear_to_oklab`] and the twin of
+    /// 🌓️ Oklab → linear-sRGB, the inverse of [`linear_to_oklab`] and the twin of
     /// `🌗️mixing/🟦️.ts`'s `oklabToLinear`.
     // 🚫️async: E1 pure accessor consumed by sync render/paint call sites — see R9
     pub fn oklab_to_linear(lightness: f32, a: f32, b: f32) -> [f32; 3] {
@@ -42,7 +42,7 @@
         [4.076_741_7 * l - 3.307_711_6 * m + 0.230_969_93 * s, -1.268_438 * l + 2.609_757_4 * m - 0.341_319_4 * s, -0.004_196_086 * l - 0.703_418_6 * m + 1.707_614_7 * s]
     }
 
-    /// @emoji 🌓️ CSS `color-mix(in oklab, <a> <100·(1-t)%>, <b>)` over LINEAR paints — the twin of
+    /// 🌓️ CSS `color-mix(in oklab, <a> <100·(1-t)%>, <b>)` over LINEAR paints — the twin of
     /// `🌗️mixing/🟦️.ts`'s `oklabMix` without its byte round-trip, because every Rust paint is
     /// already linear. `t = 0` answers `a`, `t = 1` answers `b`; alpha lerps linearly.
     // 🚫️async: E1 pure accessor consumed by sync render/paint call sites — see R9

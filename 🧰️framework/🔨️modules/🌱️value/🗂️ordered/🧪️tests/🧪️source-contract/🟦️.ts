@@ -53,7 +53,6 @@ assert.equal(Buffer.byteLength(sharedKey), sharedFixture.expected.keyBytes);
 assert.equal(sharedFixture.aliases - 1, sharedFixture.expected.sharedReleases);
 assert.equal(stableStringify({ [sharedKey]: true }), JSON.stringify({ [sharedKey]: true }));
 for (const mutant of [{ ...sharedFixture, extra: true }, { ...sharedFixture, expected: { ...sharedFixture.expected, finalHandoffs: 0 } }]) assert(!validateShared(mutant));
-console.log("[DEBUG] Shared-owner source fixtures=1 hostileRejections=2 oracle=fast-json-stable-stringify runtimeClaims=0");
 //#endregion 📤️SharedOwnership
 //#region 🧺️SetContract
 /** 🧫️ Shape of `../../🧺️set/🧫️fixtures/🔣️.json`, the document its JSON Schema validates at load. */
@@ -76,6 +75,4 @@ const orderedSet = [...new Set<string>(setFixture.values)].sort((a, b) => Buffer
 assert.deepEqual(orderedSet, setFixture.expectedValues);
 assert.equal(stableStringify(orderedSet), JSON.stringify(setFixture.expectedValues));
 for (const mutant of [{ ...setFixture, extra: true }, { ...setFixture, expected: { ...setFixture.expected, explicitRetirement: false } }]) assert(!validateSet(mutant));
-console.log("[DEBUG] Ordered-set source fixtures=1 hostileRejections=2 oracle=fast-json-stable-stringify runtimeClaims=0");
 //#endregion 🧺️SetContract
-console.log("[DEBUG] Ordered-map source fixtures=3 lookupCases=2 hostileRejections=8 grants=1,64,4096 oracle=fast-json-stable-stringify runtimeClaims=0");

@@ -260,7 +260,7 @@ test("independent markdown-it published tokens prove only the declared common su
   for (const row of vector.cases.filter((candidate) => candidate.oracleScope === "common-subset")) {
     const actual = native(row.source);
     expect(actual.published, row.id).toEqual(row.expected.map((token) => actual.normalize(token.value)));
-    expect(actual.joined(), row.id).toEqual(row.expected);
+    expect(actual.joined(), row.id).toEqual<typeof row.expected>(row.expected);
   }
   const row = vector.cases.find((candidate) => candidate.id === "speculative-equal-destination")!;
   const ambiguous = native(row.source);

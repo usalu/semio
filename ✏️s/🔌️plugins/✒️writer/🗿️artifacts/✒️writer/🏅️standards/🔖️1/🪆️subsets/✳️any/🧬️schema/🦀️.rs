@@ -199,7 +199,7 @@ impl dsl::DslIdiom for WireWriterIdiom {
     }
 }
 
-/// @emoji 🎨️ Classifies `text` through the language registry (`idiom` / `LanguageSpec` hooks).
+/// 🎨️ Classifies `text` through the language registry (`idiom` / `LanguageSpec` hooks).
 pub fn tokenize_language(text: &str, language_id: &str) -> Vec<GrammarToken> {
     if language_id == "jack" {
         return semio_s_artifact_trinity_jack::core::semantic_tokens(text).into_iter().map(|t| GrammarToken { class: t.class, start: t.start, end: t.end }).collect();

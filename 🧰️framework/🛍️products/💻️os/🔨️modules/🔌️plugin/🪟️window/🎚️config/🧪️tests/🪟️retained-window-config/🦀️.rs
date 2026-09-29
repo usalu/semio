@@ -18,5 +18,4 @@ fn retained_window_config_context_identity_binds_owner_generation_and_revision()
         digests.insert(digest);
     }
     assert_eq!(digests.len(), fixture["expectedUniqueContexts"].as_u64().unwrap() as usize);
-    eprintln!("[DEBUG] retained window config binds concrete owner, generation, and revision");
 }

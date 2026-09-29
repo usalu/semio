@@ -239,7 +239,7 @@ impl std::fmt::Debug for WindowConfigMutation {
     }
 }
 
-/// @emoji 🚫️ A refused window-config emission hands its mutation BACK. The retained publication ladder
+/// 🚫️ A refused window-config emission hands its mutation BACK. The retained publication ladder
 /// pops one mutation out of the operation's `Emit` before it begins a batch, so a refusal that kept the
 /// mutation left the retry with nothing to publish and the operation completed clean — no page, no
 /// fault, the amend lost (ticket 26/09/19 `📓️flow.md` §5.2). Every other publication lane of that ladder
@@ -451,6 +451,10 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
         })
     }
 
+    /// 🎞️ The same latest-wins key [`dispatch`] spells for the non-retained path: a playback tick or
+    /// a gumball flag on a migrated route folds into the last uncommitted edit of ITS window
+    /// partition instead of minting a ledger slot per tick — without it a results window animated
+    /// for ~two seconds and then every later publication died at the 64-item ledger ceiling.
     fn begin(
         &mut self,
         operation: semio_framework_job::OperationId,
@@ -485,10 +489,6 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
                 return Err(reject(typed, "window-config.admission", &reason));
             }
         };
-        // 🎞️ The same latest-wins key [`dispatch`] spells for the non-retained path: a playback tick or
-        // a gumball flag on a migrated route folds into the last uncommitted edit of ITS window
-        // partition instead of minting a ledger slot per tick — without it a results window animated
-        // for ~two seconds and then every later publication died at the 64-item ledger ceiling.
         publication.set_coalesce_key(coalesce_key.map(|key| format!("window:{window_id}:{key}")));
         Ok(Box::new(TypedWindowConfigPublication::<O> { window_id, publication }))
     }

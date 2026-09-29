@@ -397,8 +397,6 @@ fn every_example_chain_costs_one_dispatched_hop_once_the_folds_continue_it_inlin
     let total_before: usize = fixture.examples.iter().map(|example| example.before_coalescing).sum();
     let total_after: usize = fixture.examples.iter().map(|example| example.after_inline).sum();
     assert!(total_after * 4 < total_before, "the eight example loads must fall by far more than a quarter: {total_before} -> {total_after}");
-    eprintln!("[DEBUG] inline hop ladder (id, before, afterCoalescing, afterInline): {ladders:?}");
-    eprintln!("[DEBUG] eight example loads: {total_before} dispatched hops -> {total_after}");
 }
 
 /// ⚖️ LAW: the fixture's interference rows — a cancel landing between two waves, and a turn with no
@@ -419,7 +417,6 @@ fn a_cancel_between_waves_and_a_spent_turn_each_hand_the_round_trip_back_to_the_
         if let Some(expected) = row.expected_continuations_after_cancel {
             assert_eq!(ladder.continuations_after_cancel, expected, "{}: a cancelled chain admits no continuation at all", row.id);
         }
-        eprintln!("[DEBUG] inline continuation row {}: {ladder:?}", row.id);
     }
 }
 //#endregion 🔁️InlineContinuation

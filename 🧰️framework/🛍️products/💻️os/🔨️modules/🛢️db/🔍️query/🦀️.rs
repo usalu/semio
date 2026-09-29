@@ -159,7 +159,7 @@ fn compare_query_bytes(left: &QueryBytes, right: &QueryBytes) -> Ordering {
     }
 }
 
-/// @emoji 🧬️ The dynamic value model every `Query` evaluates against. Deliberately this crate's
+/// 🧬️ The dynamic value model every `Query` evaluates against. Deliberately this crate's
 /// own type rather than `pack_value` (forbidden by the contract's hard dependency rules) or a
 /// `db_state` structure directly (those are the *storage* representation; a document's queryable
 /// shape is resolved into this tree by whichever layer above `db_query` owns the schema — typically
@@ -205,7 +205,7 @@ impl From<&str> for Value {
         Value::Text(v.to_string())
     }
 }
-/// @emoji 🥇️ Cross-type ordering rank, used only as `compare_values`'s tie-breaker between values
+/// 🥇️ Cross-type ordering rank, used only as `compare_values`'s tie-breaker between values
 /// of different variants — this crate's own choice of total order (the contract doesn't specify
 /// one), documented once here rather than re-derived at every call site.
 fn value_rank(value: &Value) -> u8 {
@@ -221,7 +221,7 @@ fn value_rank(value: &Value) -> u8 {
     }
 }
 
-/// @emoji ⚖️ A total order over `Value` (needed since `f64` alone isn't `Ord`): same-variant pairs
+/// ⚖️ A total order over `Value` (needed since `f64` alone isn't `Ord`): same-variant pairs
 /// compare structurally (`Int`/`Float` cross-compare numerically), everything else falls back to
 /// `value_rank`. `Ordering::Equal` on an unorderable float pair (`NaN`) rather than panicking.
 pub fn compare_values(a: &Value, b: &Value) -> Ordering {
@@ -260,7 +260,7 @@ pub fn compare_values(a: &Value, b: &Value) -> Ordering {
     }
 }
 
-/// @emoji 🧵️ A best-effort text rendering of any `Value`, used only by `Predicate::FullText`'s
+/// 🧵️ A best-effort text rendering of any `Value`, used only by `Predicate::FullText`'s
 /// index-free fallback match (see that variant's doc).
 // 🚫️async: E1 pure, self-recursive accessor consumed by a sync Iterator::map — see R9
 fn stringify_value(value: &Value) -> String {
@@ -282,7 +282,7 @@ fn stringify_value(value: &Value) -> String {
     }
 }
 
-/// @emoji 🧩️ One step of a `Path`: a named field into a `Value::Map`, or a positional index into a
+/// 🧩️ One step of a `Path`: a named field into a `Value::Map`, or a positional index into a
 /// `Value::List`.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum PathSegment {
@@ -290,7 +290,7 @@ pub enum PathSegment {
     Index(usize),
 }
 
-/// @emoji 🛤️ A field/index path into a `Value` tree — the addressing scheme every `Predicate`/
+/// 🛤️ A field/index path into a `Value` tree — the addressing scheme every `Predicate`/
 /// `SortKey`/`Select::Paths` entry resolves through. Supports both the "typed" construction style
 /// (`Path::field("a").push_field("b")`) and the "dynamic" style (`Path::parse("a.b.0")`) — the
 /// contract's "typed+dynamic queries" duality lives here, one shared representation underneath.
@@ -316,7 +316,7 @@ impl Path {
         self
     }
 
-    /// @emoji 🔤️ Splits a dotted string into segments, treating any segment that parses as a plain
+    /// 🔤️ Splits a dotted string into segments, treating any segment that parses as a plain
     /// `usize` as `PathSegment::Index` and everything else as `PathSegment::Field` — this crate's
     /// own convention for the "dynamic" half of typed+dynamic queries. `""` parses to `Path::empty()`
     /// (the whole document), matching `Predicate::FullText`'s use of an empty path for the same.
@@ -334,7 +334,7 @@ impl Path {
         )
     }
 
-    /// @emoji 🔎️ Walks `value` through this path's segments. `None` on any type mismatch (e.g. an
+    /// 🔎️ Walks `value` through this path's segments. `None` on any type mismatch (e.g. an
     /// `Index` segment against a `Map`) or out-of-range index/absent field along the way.
     pub fn get<'a>(&self, value: &'a Value) -> Option<&'a Value> {
         let mut current = value;
@@ -365,7 +365,7 @@ impl std::fmt::Display for Path {
 //#endregion 🔖️Value
 
 //#region 🔖️Consistency
-/// @emoji 🧭️ The six read-consistency modes `ArtifactHandle::query` accepts (frozen in the db
+/// 🧭️ The six read-consistency modes `ArtifactHandle::query` accepts (frozen in the db
 /// facade's stable API): read the live head, wait for at least a given frontier, pin to an exact
 /// one, replay as of a named commit, read through a named preview overlay only, or read canonical
 /// state augmented by a named preview.
@@ -379,7 +379,7 @@ pub enum Consistency {
     PreviewAugmented(String),
 }
 
-/// @emoji 🗺️ What a `Consistency` resolves to: the concrete `Frontier` a `QuerySource` should be
+/// 🗺️ What a `Consistency` resolves to: the concrete `Frontier` a `QuerySource` should be
 /// materialized at, which named preview (if any) participates, and whether this is a replay read
 /// (informational — callers use it to decide whether write-side effects like live-query
 /// registration are even meaningful for this read).
@@ -390,7 +390,7 @@ pub struct ResolvedConsistency {
     pub historical: bool,
 }
 
-/// @emoji 🔌️ What `resolve_consistency` needs from its caller: the document's current frontier, and
+/// 🔌️ What `resolve_consistency` needs from its caller: the document's current frontier, and
 /// a commit-id → frontier lookup for `Historical`. Kept minimal and storage-agnostic so this crate
 /// never needs a concrete storage dependency of its own — `IndexConsistencyResolver` below is the
 /// ready-made adapter over the sibling `db_index` crate.
@@ -399,7 +399,7 @@ pub trait ConsistencyResolver {
     async fn frontier_for_commit(&self, commit_id: &str) -> Result<Frontier, DbError>;
 }
 
-/// @emoji 🧮️ Resolves `consistency` against `resolver` into a concrete `ResolvedConsistency`.
+/// 🧮️ Resolves `consistency` against `resolver` into a concrete `ResolvedConsistency`.
 /// `AtLeast`/`Exact` are checked against `Frontier::dominates`/equality respectively — both are the
 /// contract's own definition of those two modes, not this crate's invention.
 pub async fn resolve_consistency(consistency: &Consistency, resolver: &impl ConsistencyResolver) -> Result<ResolvedConsistency, DbError> {
@@ -425,7 +425,7 @@ pub async fn resolve_consistency(consistency: &Consistency, resolver: &impl Cons
     }
 }
 
-/// @emoji 🔗️ A `ConsistencyResolver` backed by real `db_index` typed indexes: `Historical`
+/// 🔗️ A `ConsistencyResolver` backed by real `db_index` typed indexes: `Historical`
 /// resolution is exactly `CommitIndex::lookup` (commit id → command seq) followed by
 /// `FrontierIndex::lookup` (command seq → frontier), matching `CommitIndex`'s own doc comment
 /// ("for `Consistency::Historical(commit_id)` query resolution"). Construction needs a live
@@ -449,7 +449,7 @@ impl<'resolver, S: db_storage::IndexStorage> ConsistencyResolver for IndexConsis
 //#endregion 🔖️Consistency
 
 //#region 🔖️Query
-/// @emoji 🎯️ A single filter condition. `And`/`Or`/`Not` semio_compose_rs the rest into an arbitrary boolean
+/// 🎯️ A single filter condition. `And`/`Or`/`Not` semio_compose_rs the rest into an arbitrary boolean
 /// tree; `And([])` is vacuously true and `Or([])` is vacuously false, matching standard boolean
 /// algebra rather than being treated as errors.
 #[derive(Debug, PartialEq)]
@@ -462,7 +462,7 @@ pub enum Predicate {
     Gte(Path, Value),
     Exists(Path),
     Contains(Path, Value),
-    /// @emoji 🔤️ Case-insensitive substring match. `Path::empty()` matches against the whole
+    /// 🔤️ Case-insensitive substring match. `Path::empty()` matches against the whole
     /// document's `stringify_value` rendering. Doubles as both the index-free evaluation rule (used
     /// on every row, including full-text-pushdown candidates, as the authoritative re-check — see
     /// `QueryPlan::FullTextPushdown`'s doc) and the predicate the planner recognizes for pushdown.
@@ -476,7 +476,7 @@ fn compare_op(path: &Path, expected: &Value, value: &Value, accept: fn(Ordering)
     path.get(value).is_some_and(|found| accept(compare_values(found, expected)))
 }
 
-/// @emoji ✅️ Evaluates `predicate` against one materialized row `value`. A missing path is treated
+/// ✅️ Evaluates `predicate` against one materialized row `value`. A missing path is treated
 /// as failing every comparison predicate (including `Ne`, deliberately: "the field isn't even
 /// present" is not the same claim as "the field is present and differs").
 fn eval_predicate(predicate: &Predicate, value: &Value) -> bool {
@@ -506,7 +506,7 @@ fn eval_predicate(predicate: &Predicate, value: &Value) -> bool {
     }
 }
 
-/// @emoji 🗂️ Which fields a query returns: the whole materialized `Value`, or a projected `Map`
+/// 🗂️ Which fields a query returns: the whole materialized `Value`, or a projected `Map`
 /// keyed by each requested `Path`'s dotted `Display` string.
 #[derive(Debug, PartialEq, Default)]
 pub enum Select {
@@ -549,7 +549,7 @@ fn take_path(value: &mut Value, path: &[PathSegment]) -> Option<Value> {
     }
 }
 
-/// @emoji 🔀️ One sort key: a `Path` to compare by, and its direction. A missing path sorts as
+/// 🔀️ One sort key: a `Path` to compare by, and its direction. A missing path sorts as
 /// `Value::Null` (via `value_rank`, the lowest rank), so rows lacking the sort field sort first
 /// ascending / last descending, rather than being excluded or causing an error.
 #[derive(Clone, Debug, PartialEq)]
@@ -588,7 +588,7 @@ fn compare_rows(a: &Value, b: &Value, sort: &[SortKey]) -> Ordering {
     Ordering::Equal
 }
 
-/// @emoji 📜️ A complete query: what to return (`select`), which rows qualify (`filter`), in what
+/// 📜️ A complete query: what to return (`select`), which rows qualify (`filter`), in what
 /// order (`sort`), and how many (`limit`/`offset`). Builder-style construction (`Query::new()
 /// .filter(...).sort(...).limit(...)`).
 #[derive(Debug, Default, PartialEq)]
@@ -633,7 +633,7 @@ impl Query {
 //#endregion 🔖️Query
 
 //#region 🔖️Limits
-/// @emoji 🛡️ Query-side ceilings, checked via `check_len` before allocating the next row
+/// 🛡️ Query-side ceilings, checked via `check_len` before allocating the next row
 /// or byte, mirroring the family-wide "validate before allocating" invariant. `max_result_bytes`
 /// defaults to `DbLimits::default().max_query_bytes` — the same budget the mailbox layer
 /// already reserves for one query's wire payload, kept as a single source of truth.
@@ -650,7 +650,7 @@ impl Default for QueryLimits {
     }
 }
 
-/// @emoji 📐️ A conservative byte-size estimate of `value` — sums scalar widths and container
+/// 📐️ A conservative byte-size estimate of `value` — sums scalar widths and container
 /// element/key bytes. Only used to enforce `QueryLimits::max_result_bytes`, so slight
 /// under/over-estimation (e.g. `Value` enum tag overhead is ignored) is acceptable; being cheap and
 /// allocation-free is what matters.
@@ -670,7 +670,7 @@ fn value_byte_estimate(value: &Value) -> u64 {
 //#endregion 🔖️Limits
 
 //#region 🔖️QuerySource
-/// @emoji 🆔️ An opaque per-document row identifier. `u64` (not a `String`) to match `db_index`'s
+/// 🆔️ An opaque per-document row identifier. `u64` (not a `String`) to match `db_index`'s
 /// own `doc_ref` convention for full-text/touched-region postings (see `db_index::FullTextIndex`'s
 /// doc) — a `FullTextLookup`'s postings and a `QuerySource`'s row ids are meant to be the same
 /// space, so pushdown candidates resolve back into `QuerySource::get` directly.
@@ -725,7 +725,7 @@ impl QueryRows {
         self.len == 0
     }
 
-    /// @emoji 🛂️ Reserves the exact retirement authority before a caller acquires its next row.
+    /// 🛂️ Reserves the exact retirement authority before a caller acquires its next row.
     pub fn preflight_push(&mut self) -> Result<(), DbError> {
         if self.len() == QUERY_ROW_SLOTS {
             return Err(DbError::LimitExceeded("query row slots"));
@@ -736,7 +736,7 @@ impl QueryRows {
         Ok(())
     }
 
-    /// @emoji 📥️ Installs one row after `preflight_push` preserved its exact refusal boundary.
+    /// 📥️ Installs one row after `preflight_push` preserved its exact refusal boundary.
     pub fn push_preflighted(&mut self, row: QueryRow) {
         let index = self.len();
         self.slots[index] = Some(row);
@@ -991,13 +991,13 @@ fn value_close_step(value: &mut Value) -> Result<bool, DbError> {
     }
 }
 
-/// @emoji 🚰️ What the planner/evaluator need from a materialized document: every row (for a full
+/// 🚰️ What the planner/evaluator need from a materialized document: every row (for a full
 /// scan), or one row by id (for a pushdown candidate list). No `Send + Sync` bound — see the module
 /// doc's note on `db_state`'s `Rc`-based structures.
 pub trait QuerySource {
     async fn scan(&self, control: &mut QueryCursorControl) -> Result<QueryRows, DbError>;
 
-    /// @emoji 🎯️ Default: linear `scan` + find. Override when a cheaper direct lookup exists (e.g.
+    /// 🎯️ Default: linear `scan` + find. Override when a cheaper direct lookup exists (e.g.
     /// `PVec`'s below, which is index-addressed).
     async fn get(&self, id: RowId, control: &mut QueryCursorControl) -> Result<Option<QueryRow>, DbError> {
         let mut rows = self.scan(control).await?;
@@ -1010,17 +1010,17 @@ pub trait QuerySource {
     }
 }
 
-/// @emoji 🧵️ The natural `QuerySource` over a `db_state::PVec`: row id = element index. This is the
+/// 🧵️ The natural `QuerySource` over a `db_state::PVec`: row id = element index. This is the
 /// crate's one built-in `QuerySource`, demonstrating the intended wiring to `db_state`'s persistent
 /// structures — a caller with a richer per-document schema (`db_artifact`) supplies its own
 /// `QuerySource` over whatever `PMap`/`PTree`/overlay shape it actually stores.
-/// @emoji 🔌️ What a full-text pushdown needs: term → candidate row ids. `db_index::FullTextIndex`
+/// 🔌️ What a full-text pushdown needs: term → candidate row ids. `db_index::FullTextIndex`
 /// implements this directly below (its `doc_ref` postings are exactly this trait's `RowId`s).
 pub trait FullTextLookup {
     async fn search(&self, term: &str) -> Result<db_storage::DbIoU64List, DbError>;
 }
 
-/// @emoji 🚫️ The phantom `FullTextLookup` type for `execute`/`refresh`'s `fulltext: None` call
+/// 🚫️ The phantom `FullTextLookup` type for `execute`/`refresh`'s `fulltext: None` call
 /// sites — replaces the old `Option<&dyn FullTextLookup>` (per ruling **O1**, `dyn FullTextLookup`
 /// stopped being object-safe the moment `search` became a real `async fn`), so the generic
 /// `fulltext: Option<&impl FullTextLookup>` parameter needs a concrete type on every `None` call
@@ -1041,19 +1041,19 @@ impl<'index, S: db_storage::IndexStorage> FullTextLookup for FullTextIndex<'inde
 //#endregion 🔖️QuerySource
 
 //#region 🔖️ProjectionBridge
-/// @emoji 🛡️ Ceiling on a decoded `Value::List`/`Value::Map`'s declared element count, checked via
+/// 🛡️ Ceiling on a decoded `Value::List`/`Value::Map`'s declared element count, checked via
 /// `check_len` BEFORE `decode_value` allocates its `Vec`/`BTreeMap` — the same
 /// "validate before allocating" invariant `QueryLimits` and every decoder across the family holds to.
-/// @emoji ✍️ `Value`'s own canonical binary encoding — this crate's own choice (the
+/// ✍️ `Value`'s own canonical binary encoding — this crate's own choice (the
 /// `db_projection::ProjectionState` trait leaves the exact byte shape unspecified): a tag byte per
 /// variant followed by the variant's payload, `List`/`Map` recursing depth-first. `Map` is
 /// `BTreeMap`-backed, so its entries are already emitted in ascending key order.
-/// @emoji 🔌️ `Value`'s `db_projection::ProjectionState` impl — lets any `db_projection::ProjectionClass`
+/// 🔌️ `Value`'s `db_projection::ProjectionState` impl — lets any `db_projection::ProjectionClass`
 /// (registered by a higher layer, e.g. `db_artifact`, which owns the `protocol::MutationEnvelope`
 /// interpretation this crate deliberately never touches — see the module doc) declare `State = Value`
 /// and get this crate's query/planner/live-diff machinery for free over its checkpointed state, via
 /// `projection_query_source` below.
-/// @emoji 📽️ A `QuerySource` over one decoded projection state `Value`, row-shaped so `execute`/
+/// 📽️ A `QuerySource` over one decoded projection state `Value`, row-shaped so `execute`/
 /// `LiveQuery` can run over it exactly like any other source: a `List` becomes one row per element
 /// (positional `RowId`, matching `PVec<Value>`'s convention above), a `Map` becomes one row per
 /// entry (`RowId` assigned by ascending key order — `BTreeMap`'s natural iteration, so it's stable
@@ -1104,7 +1104,7 @@ impl QuerySource for ProjectionSource {
     }
 }
 
-/// @emoji 🌉️ The bridge the module doc's `db_projection`-integration note describes: decodes
+/// 🌉️ The bridge the module doc's `db_projection`-integration note describes: decodes
 /// `state_bytes` (whatever a caller already retrieved from `db_projection::ProjectionEngine::state_at`
 /// for `Consistency::Historical`/`Canonical`, or `::preview_augmented` for
 /// `Consistency::Speculative`/`PreviewAugmented` — both return exactly this shape, plain
@@ -1117,7 +1117,7 @@ pub async fn projection_query_source(value: Value) -> Result<ProjectionSource, D
 //#endregion 🔖️ProjectionBridge
 
 //#region 🔖️Planner
-/// @emoji 🗺️ The chosen execution strategy for a `Query`. `FullTextPushdown`'s `term` is always
+/// 🗺️ The chosen execution strategy for a `Query`. `FullTextPushdown`'s `term` is always
 /// re-verified against the full `Predicate` tree during evaluation (see `execute`) — pushdown is
 /// purely a candidate-narrowing optimization, never a correctness shortcut, so its result set is
 /// guaranteed identical to `FullScan`'s for the same query (exercised by
@@ -1143,7 +1143,7 @@ impl QueryPlan {
     }
 }
 
-/// @emoji 🔍️ Finds the first `Predicate::FullText` term reachable through a top-level conjunction
+/// 🔍️ Finds the first `Predicate::FullText` term reachable through a top-level conjunction
 /// (a bare `FullText` predicate, or one `And` branch) — the only shape this planner currently
 /// recognizes as pushdown-eligible. `Or`/`Not` wrapping a `FullText` predicate is deliberately left
 /// as `FullScan` (pushdown under `Or`/`Not` would need to reason about set complement/union, which
@@ -1158,7 +1158,7 @@ fn extract_full_text_term(predicate: &Predicate) -> Option<String> {
     }
 }
 
-/// @emoji 🧠️ Chooses a `QueryPlan` for `query`. Currently a single heuristic (full-text pushdown);
+/// 🧠️ Chooses a `QueryPlan` for `query`. Currently a single heuristic (full-text pushdown);
 /// the extension point for future pushdown kinds (indexed equality, etc.) is this one function.
 pub fn plan(query: &Query) -> QueryPlan {
     match query.filter.as_ref().and_then(extract_full_text_term) {
@@ -1169,7 +1169,7 @@ pub fn plan(query: &Query) -> QueryPlan {
 //#endregion 🔖️Planner
 
 //#region 🔖️Execute
-/// @emoji 📊️ What `execute` observed while producing a `QueryResult` — the contract's "diagnostics"
+/// 📊️ What `execute` observed while producing a `QueryResult` — the contract's "diagnostics"
 /// bullet.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct QueryDiagnostics {
@@ -1179,7 +1179,7 @@ pub struct QueryDiagnostics {
     pub rows_returned: u64,
 }
 
-/// @emoji 📦️ A fully materialized query result: the projected, sorted, paginated rows, plus
+/// 📦️ A fully materialized query result: the projected, sorted, paginated rows, plus
 /// `QueryDiagnostics`. Convert to a `QueryStream` via `into_stream` for incremental consumption.
 #[derive(Debug)]
 pub struct QueryResult {
@@ -1187,7 +1187,7 @@ pub struct QueryResult {
     pub diagnostics: QueryDiagnostics,
 }
 
-/// @emoji ▶️ Plans and evaluates `query` against `source`. `fulltext` is only consulted if the
+/// ▶️ Plans and evaluates `query` against `source`. `fulltext` is only consulted if the
 /// planner chose `QueryPlan::FullTextPushdown`; passing `None` for a query the planner would push
 /// down surfaces `DbError::InvalidArgument` rather than silently falling back to a full scan (a
 /// caller that owns a `FullTextLookup` should always pass it — silent fallback would hide a
@@ -1274,7 +1274,7 @@ pub async fn execute(query: &Query, source: &impl QuerySource, fulltext: Option<
 //#endregion 🔖️Execute
 
 //#region 🔖️Stream
-/// @emoji 🌊️ A `QueryResult`'s rows as an `Iterator`, for callers (`ArtifactHandle::query`'s
+/// 🌊️ A `QueryResult`'s rows as an `Iterator`, for callers (`ArtifactHandle::query`'s
 /// contract-frozen return type) that want to consume incrementally rather than hold the whole
 /// `Vec`. Backed by an already-materialized `Vec::IntoIter` — see `db_state::PMap::iter`'s doc for
 /// this crate family's established "eagerly materialize, simple to reason about" precedent; a
@@ -1300,7 +1300,7 @@ impl Iterator for QueryStream {
 //#endregion 🔖️Stream
 
 //#region 🔖️LiveQuery
-/// @emoji 📡️ A `Query` plus the `Consistency` it should be (re-)evaluated under — what a caller
+/// 📡️ A `Query` plus the `Consistency` it should be (re-)evaluated under — what a caller
 /// hands to `ArtifactHandle::subscribe`. This crate only owns the diffing law (below); actor-level
 /// registration/notification wiring belongs to `db_artifact`.
 pub struct LiveQuerySpec {
@@ -1308,7 +1308,7 @@ pub struct LiveQuerySpec {
     pub consistency: Consistency,
 }
 
-/// @emoji 🔀️ The change between two successive evaluations of a `LiveQuery`'s `Query`: rows newly
+/// 🔀️ The change between two successive evaluations of a `LiveQuery`'s `Query`: rows newly
 /// present, rows no longer present, and rows present in both but with a changed `Value`.
 pub struct QueryDiff {
     pub added: QueryRows,
@@ -1375,7 +1375,7 @@ fn query_value_hash(value: &Value) -> [u8; 32] {
     *hash.finalize().as_bytes()
 }
 
-/// @emoji 📺️ Tracks one live query's last-seen result set so `refresh` can emit a `QueryDiff`
+/// 📺️ Tracks one live query's last-seen result set so `refresh` can emit a `QueryDiff`
 /// instead of the caller having to re-diff two full `QueryResult`s itself. The law this crate's
 /// tests hold it to: applying a `QueryDiff` to the pre-refresh snapshot (add `added`, drop
 /// `removed`, overwrite `updated`) always reconstructs exactly the post-refresh snapshot. Per-row
@@ -1406,7 +1406,7 @@ impl LiveQuery {
         self.snapshot[..self.snapshot_len as usize].iter().flatten().copied()
     }
 
-    /// @emoji 🔁️ Re-executes `self.spec.query` against `source` and diffs the result against the
+    /// 🔁️ Re-executes `self.spec.query` against `source` and diffs the result against the
     /// previous snapshot, updating the snapshot in place. `source`/`fulltext` are expected to
     /// already be materialized at whatever frontier `resolve_consistency(&self.spec.consistency,
     /// ..)` resolved to — resolving that frontier and building the matching `QuerySource` is the

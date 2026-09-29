@@ -63,11 +63,11 @@ fn main() {
     }
 
     if !protected_credential_environment_is_absent() {
-        eprintln!("[DEBUG] native protected credential environment rejected");
+        eprintln!("[TRACE] native protected credential environment rejected");
         std::process::exit(1);
     }
     if IdentityEnv::from_process_env().is_some() && claim_inherited_local_hub_credential("native").is_err() {
-        eprintln!("[DEBUG] native local credential claim failed");
+        eprintln!("[TRACE] native local credential claim failed");
         std::process::exit(1);
     }
     if env::args().any(|arg| arg == "--assert-no-local-credential-state") {
@@ -125,11 +125,11 @@ fn main() {
     // measures and its honest single-shard-loop scope note.
     if let Some(registry_path) = arg_value("--scale") {
         let Some(wasm_path) = arg_value("--scale-wasm") else {
-            eprintln!("[DEBUG] --scale requires --scale-wasm <fixture.wasm>");
+            eprintln!("[TRACE] --scale requires --scale-wasm <fixture.wasm>");
             std::process::exit(1);
         };
         let Some(report_path) = arg_value("--report") else {
-            eprintln!("[DEBUG] --scale requires --report <out.json>");
+            eprintln!("[TRACE] --scale requires --report <out.json>");
             std::process::exit(1);
         };
         let shard_count: u16 = arg_value("--shards").and_then(|v| v.parse().ok()).unwrap_or(8);

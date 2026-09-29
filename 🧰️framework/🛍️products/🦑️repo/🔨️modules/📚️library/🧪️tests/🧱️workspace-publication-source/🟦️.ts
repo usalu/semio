@@ -150,7 +150,7 @@ test("private publication preserves unrelated fields and matches fast-glob membe
     const after = parseWorkspaceRootDocument(readFileSync(join(root, "package.json"), "utf8"));
     expect(result).toMatchObject({ fresh: false, written: true, expectedCount: expected.length, missing: expected, stale: ["obsolete"] });
     expect(after.workspaces).toEqual(expected);
-    expect({ ...after, workspaces: before.workspaces }).toEqual(before);
+    expect({ ...after, workspaces: before.workspaces }).toEqual<typeof before>(before);
     expect(progress.length).toBeGreaterThan(0);
     expect(publishWorkspaceMembership(root, "check", { report: () => {} })).toMatchObject({ fresh: true, written: false });
   } finally {
@@ -188,7 +188,7 @@ test("workspace payload ownership follows explicit physical exports independentl
       for (const resolution of row.resolutions) {
         const manifest = JSON.parse(readFileSync(join(root, resolution.owner, "package.json"), "utf8"));
         const targets = resolveExports(manifest, resolution.entry, { conditions: resolution.conditions });
-        expect(targets, row.name).toEqual(resolution.targets);
+        expect(targets, row.name).toEqual<readonly string[]>(resolution.targets);
         for (const target of targets!) {
           const absolute = resolve(root, resolution.owner, target);
           const files = await glob("**/*", { cwd: join(root, resolution.payload), onlyFiles: true, followSymbolicLinks: false });
@@ -199,7 +199,7 @@ test("workspace payload ownership follows explicit physical exports independentl
       if (row.duplicate) expect(() => computeWorkspaces(root), row.name).toThrow(/duplicate package name/u);
       else {
         const oracle = paths.map((path) => dirname(path)).filter((path) => !owned.has(path)).sort((a, b) => a.localeCompare(b));
-        expect(oracle, row.name).toEqual(row.expected);
+        expect(oracle, row.name).toEqual<readonly string[]>(row.expected);
         expect(computeWorkspaces(root), row.name).toEqual(oracle);
       }
     } finally {

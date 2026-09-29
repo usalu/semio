@@ -169,7 +169,6 @@ fn a_mounted_document_publishes_the_accessibility_tree_the_shared_fixture_declar
         assert_eq!(node.value_text.as_deref(), row["valueText"].as_str(), "{}: valueText", node.key);
         assert_eq!(node.busy, row["busy"].as_bool().unwrap_or(false), "{}: busy", node.key);
     }
-    eprintln!("[DEBUG] wgpu accessibility projection: {} nodes published in pre-order from a mounted document", projection.len());
 }
 
 /// 🏷️ THE law the audit asked for: every focusable-or-actionable node that carries an
@@ -190,7 +189,6 @@ fn every_labelled_reachable_node_appears_in_the_projection() {
         assert_eq!(projected.label.as_deref(), Some(label), "node {node_id}: the authored label reaches the projection verbatim");
     }
     assert!(!announced.is_empty(), "the corpus must actually exercise a reachable control");
-    eprintln!("[DEBUG] wgpu accessibility projection: {} of {} nodes reachable by name", announced.len(), projection.len());
 }
 
 /// 🕳️ A window that has published no document announces nothing, rather than faulting — "not laid
@@ -200,7 +198,6 @@ fn every_labelled_reachable_node_appears_in_the_projection() {
 fn an_unpublished_window_announces_nothing_instead_of_faulting() {
     let tree = UiTree::new();
     assert!(accessibility_projection(&tree).is_empty());
-    eprintln!("[DEBUG] wgpu accessibility projection: an unpublished window answers an empty projection");
 }
 
 /// 🎯️ Live state the published document does not carry is stamped from the ARENA: the retained
@@ -216,7 +213,6 @@ fn the_projection_carries_the_live_focus_and_laid_out_rect_from_the_arena() {
     let projection = accessibility_projection(&tree);
     let focused: Vec<u64> = projection.iter().filter(|node| node.focused).map(|node| node.node_id).collect();
     assert_eq!(focused, vec![width_id.0], "exactly the arena node holding FOCUSED is announced as focused");
-    eprintln!("[DEBUG] wgpu accessibility projection: focus stamped from the arena onto node {:?}", focused);
 }
 
 /// 📶️ A mounted progress bar publishes `progressbar` with its value attributes while determinate and

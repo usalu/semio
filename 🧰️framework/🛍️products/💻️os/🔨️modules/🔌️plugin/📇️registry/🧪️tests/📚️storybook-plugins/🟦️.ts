@@ -17,7 +17,7 @@ function significantConsoleErrors(messages: string[]): string[] {
 }
 
 // #region 🔖️ArtifactAvailability
-/** @emoji 🔍️ Same HEAD-probe `OsBootHost` (`🧰️framework/🛍️products/💻️os/📖️stories/🧭️coordination/🟦️.tsx`) itself does — mirrored here
+/** 🔍️ Same HEAD-probe `OsBootHost` (`🧰️framework/🛍️products/💻️os/📖️stories/🧭️coordination/🟦️.tsx`) itself does — mirrored here
  * so the spec knows, per target, whether to expect the readiness beacon or the artifact-missing panel. */
 async function pluginArtifactAvailable(page: Page, target: PluginBuildTarget): Promise<boolean> {
   const moduleUrl = pluginModuleUrl(target.pluginId);

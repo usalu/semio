@@ -38,7 +38,6 @@ async fn demo_example_ships_the_laid_out_default_graph_as_its_content_genesis() 
     assert!(ids.iter().all(|id| scene.layout.get(*id).is_some()), "every demo widget carries its layout");
     scene.retire_cold();
     assert!(crate::flow_genesis_content_pack(&snapshot, "content", &snapshot.content.child_id).is_some(), "the demo's content child must have a genesis pack, or the canvas loads empty");
-    eprintln!("[DEBUG] flow demo example ships 3 laid-out widgets + 2 synapses as its content genesis");
 }
 
 /// 🖊️ The ONLY way the demo asset is refreshed: `cargo test -p semio-s-artifact-flow-flow --lib --

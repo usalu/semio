@@ -1,0 +1,135 @@
+{
+  "schema": "semio.store.edit-digest-chains.v1",
+  "cases": [
+    {
+      "name": "single-operation",
+      "edit": {
+        "id": "edit-typing",
+        "actor": "actor-1",
+        "forwards": [
+          {
+            "SetN": {
+              "n": 1
+            }
+          }
+        ],
+        "inverse": [
+          {
+            "SetN": {
+              "n": 0
+            }
+          }
+        ],
+        "mutationMeta": [
+          {
+            "mutation_id": "edit-typing#0",
+            "dependencies": [
+              "prior-1"
+            ],
+            "base_version": 0,
+            "author_id": "actor-1",
+            "timestamp": {
+              "actor": 1,
+              "physical_ms": 42,
+              "logical": 0
+            },
+            "undo_policy": "ExactBaseOnly",
+            "label": "Edit text",
+            "group_id": "group-typing"
+          }
+        ],
+        "description": "typing 🧵",
+        "coalesceKey": "typing",
+        "sequenceNumber": 7,
+        "startedAt": "2026-09-29T11:00:00Z",
+        "finishedAt": "2026-09-29T11:00:09Z"
+      },
+      "expectedDigest": "87ef04718e7724e860fe74985366c195ba2820713ce1a26f3a17f5a5ff1baa14"
+    },
+    {
+      "name": "grown-to-two",
+      "edit": {
+        "id": "edit-typing",
+        "actor": "actor-1",
+        "forwards": [
+          {
+            "SetN": {
+              "n": 1
+            }
+          },
+          {
+            "SetN": {
+              "n": 2
+            }
+          }
+        ],
+        "inverse": [
+          {
+            "SetN": {
+              "n": 0
+            }
+          },
+          {
+            "SetN": {
+              "n": 1
+            }
+          }
+        ],
+        "mutationMeta": [
+          {
+            "mutation_id": "edit-typing#0",
+            "dependencies": [
+              "prior-1"
+            ],
+            "base_version": 0,
+            "author_id": "actor-1",
+            "timestamp": {
+              "actor": 1,
+              "physical_ms": 42,
+              "logical": 0
+            },
+            "undo_policy": "ExactBaseOnly",
+            "label": "Edit text",
+            "group_id": "group-typing"
+          },
+          {
+            "mutation_id": "edit-typing#1",
+            "dependencies": [
+              "prior-1"
+            ],
+            "base_version": 1,
+            "author_id": "actor-1",
+            "timestamp": {
+              "actor": 1,
+              "physical_ms": 43,
+              "logical": 0
+            },
+            "undo_policy": "ExactBaseOnly",
+            "label": "Edit text",
+            "group_id": "group-typing"
+          }
+        ],
+        "description": "typing 🧵",
+        "coalesceKey": "typing",
+        "sequenceNumber": 7,
+        "startedAt": "2026-09-29T11:00:00Z",
+        "finishedAt": "2026-09-29T11:00:09Z"
+      },
+      "expectedDigest": "3d2a6e092a9f185e673405f674282ec3c4c892033ce8299d464e304acba2f105"
+    },
+    {
+      "name": "grown-to-ten-thousand",
+      "header": {
+        "id": "edit-typing",
+        "actor": "actor-1",
+        "description": "typing 🧵",
+        "coalesceKey": "typing",
+        "sequenceNumber": 7,
+        "startedAt": "2026-09-29T11:00:00Z",
+        "finishedAt": "2026-09-29T11:00:09Z"
+      },
+      "generatedOperations": 10000,
+      "expectedDigest": "747be7889c6633277ad5da84894482d72fe237662080d81ff233a77ae83c7093"
+    }
+  ]
+}

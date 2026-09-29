@@ -220,5 +220,4 @@ export function testRecursiveOwnedDocumentReplacementOracle(): void {
     "cancel-view-preparation",
     "stale-child-content-authority",
   ]);
-  console.log("[DEBUG] recursive replacement: eight atomic replacement vectors, three retained history graphs, and one full recursive archive schema agree with Ajv and Graphlib");
 }

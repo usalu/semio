@@ -14,7 +14,7 @@
 use crate::os_dsl::{escape_text, lex as core_lex, unescape_text, Limits, TextError, TextSpan, TokenKind as CoreKind};
 
 //#region 🔖️Model
-/// @emoji 🌳️ One parsed math expression. Function/structure names (`frac`, `sqrt`, `mat`, `hat`, …)
+/// 🌳️ One parsed math expression. Function/structure names (`frac`, `sqrt`, `mat`, `hat`, …)
 /// are NOT baked into the grammar — every `name(...)` call parses generically as [`MathNode::Call`];
 /// resolving what a given name means is a layout-layer (Wave 2) concern, matching how `dsl_grammar`
 /// itself treats macro names as opaque until a matcher is registered.
@@ -49,7 +49,7 @@ pub enum MathNode {
     Sequence(Vec<SeqItem>),
 }
 
-/// @emoji 🧵️ One item in a [`MathNode::Sequence`] — `dot` is `true` when this item was joined to
+/// 🧵️ One item in a [`MathNode::Sequence`] — `dot` is `true` when this item was joined to
 /// the previous one by an explicit `*` (renders `⋅`), `false` for bare juxtaposition (no glyph).
 #[derive(Clone, Debug, PartialEq)]
 pub struct SeqItem {
@@ -134,7 +134,7 @@ fn line_col_at(text: &str, byte_pos: usize) -> (u32, u32) {
     (line, col)
 }
 
-/// @emoji 🔬️ Pre-scans `_ ; < > !` — none in `dsl_core`'s shared alphabet, and `_` in particular
+/// 🔬️ Pre-scans `_ ; < > !` — none in `dsl_core`'s shared alphabet, and `_` in particular
 /// would otherwise glue into a preceding ident (`x_1` lexing as one `Ident("x_1")`) since
 /// `os_dsl::lex`'s `is_ident_continue` accepts `_` — and delegates every other run of characters
 /// whole to `os_dsl::lex`, exactly like `os_dsl::grammar::lex` does for its own `? |` extras.
@@ -280,7 +280,7 @@ impl Cursor {
     }
 }
 
-/// @emoji 🚪️ Parses one complete math snippet — the crate's main entry point.
+/// 🚪️ Parses one complete math snippet — the crate's main entry point.
 pub fn parse_formula(text: &str) -> Result<MathNode, TextError> {
     let tokens = lex(text)?;
     let mut cursor = Cursor { tokens, pos: 0 };
@@ -333,7 +333,7 @@ fn starts_atom(kind: MKind) -> bool {
     matches!(kind, MKind::Ident | MKind::Int | MKind::Float | MKind::Text | MKind::Colon | MKind::LBrace | MKind::LParen | MKind::LBracket)
 }
 
-/// @emoji 🏃️ A "run" is one or more postfix terms joined by explicit `*`/`/` or bare juxtaposition.
+/// 🏃️ A "run" is one or more postfix terms joined by explicit `*`/`/` or bare juxtaposition.
 /// `/` binds tightly to its immediately preceding term (so `a * b / c` prints as `a * (b / c)`,
 /// documented left-to-right behavior — this notation has no `*`-vs-`/` precedence distinction, and
 /// current usage (icons, matrix cells) never chains the two).
@@ -432,7 +432,7 @@ fn parse_atom(cursor: &mut Cursor) -> Result<MathNode, TextError> {
     }
 }
 
-/// @emoji 📦️ `(` ROW {`;` ROW}* `)` — parens are macro-call syntax exclusively when they directly
+/// 📦️ `(` ROW {`;` ROW}* `)` — parens are macro-call syntax exclusively when they directly
 /// follow an `Ident` (see [`parse_atom`]'s `MKind::Ident` arm); a bare, non-ident-preceded `(`/`[`
 /// is a stretchy delimiter group instead. Same resolution `dsl_grammar` uses for `name(args)` vs
 /// `name (group)` — whitespace is trivia, so the token stream alone can't otherwise disambiguate.
@@ -529,7 +529,7 @@ fn print_node(node: &MathNode, out: &mut String) {
     }
 }
 
-/// @emoji 🖨️ Canonical printer — `parse_formula(print(&parse_formula(x)?)) == parse_formula(x)` is
+/// 🖨️ Canonical printer — `parse_formula(print(&parse_formula(x)?)) == parse_formula(x)` is
 /// this crate's round-trip law, checked in `🧪️Tests` over representative formulas.
 pub fn print(node: &MathNode) -> String {
     let mut out = String::new();
@@ -537,7 +537,7 @@ pub fn print(node: &MathNode) -> String {
     out
 }
 
-/// @emoji ♻️ `canonicalize(canonicalize(x)) == canonicalize(x)`.
+/// ♻️ `canonicalize(canonicalize(x)) == canonicalize(x)`.
 pub fn canonicalize(text: &str) -> Result<String, TextError> {
     Ok(print(&parse_formula(text)?))
 }

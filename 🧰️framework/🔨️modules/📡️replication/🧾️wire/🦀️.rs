@@ -1,7 +1,7 @@
 //! 🧾 Protocol errors, limits, record vocabulary, and wire codecs.
 
 //#region 🔖️Errors
-/// @emoji 🚨️ The one error type every `protocol_*` public fn returns; never leaks `std::io::Error`.
+/// 🚨️ The one error type every `protocol_*` public fn returns; never leaks `std::io::Error`.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ProtocolError {
     Pack(crate::codec::PackError),
@@ -57,7 +57,7 @@ crate::fault_from_error!(ProtocolError, crate::diagnostic::FaultOrigin::Module, 
 //#endregion 🔖️Errors
 
 //#region 🔖️Limits
-/// @emoji 🛡️ Corruption-hardening ceilings every decoder in this crate family must validate
+/// 🛡️ Corruption-hardening ceilings every decoder in this crate family must validate
 /// against BEFORE allocating — mirrors `crate::codec::PackLimits`'s stated invariant.
 #[derive(Clone, Debug)]
 pub struct ProtocolLimits {
@@ -80,41 +80,41 @@ impl Default for ProtocolLimits {
 // Plain `pub const` u8s (mirrors crate::codec::SegmentKind convention but this family uses bare
 // u8 kind bytes directly in the frame, no wrapper newtype — simpler, and every downstream crate
 // matches on the byte).
-/// @emoji 🔚️ Marks the end of the record stream.
+/// 🔚️ Marks the end of the record stream.
 pub const REC_END: u8 = 0x00;
-/// @emoji 📄️ The document-identity record: doc id + schema id.
+/// 📄️ The document-identity record: doc id + schema id.
 pub const REC_DOC: u8 = 0x01;
-/// @emoji 🎭️ A delta into the actor-id dictionary.
+/// 🎭️ A delta into the actor-id dictionary.
 pub const REC_ACTOR_DICT: u8 = 0x02;
-/// @emoji 🔤️ A delta into the general string dictionary.
+/// 🔤️ A delta into the general string dictionary.
 pub const REC_STR_DICT: u8 = 0x03;
-/// @emoji ✏️ One edit (a batch of forward ops, optionally inverse ops + explicit meta).
+/// ✏️ One edit (a batch of forward ops, optionally inverse ops + explicit meta).
 pub const REC_EDIT: u8 = 0x04;
-/// @emoji 🏔️ A frontier summary snapshot.
+/// 🏔️ A frontier summary snapshot.
 pub const REC_FRONTIER: u8 = 0x09;
-/// @emoji 📸️ A materialized snapshot body (opaque to this crate family).
+/// 📸️ A materialized snapshot body (opaque to this crate family).
 pub const REC_PROJECTION: u8 = 0x0A;
-/// @emoji 🔎️ An advisory, rebuildable offset index.
+/// 🔎️ An advisory, rebuildable offset index.
 pub const REC_INDEX: u8 = 0x0B;
-/// @emoji ⛓️ The commit frame: hash-chains everything written since the previous commit.
+/// ⛓️ The commit frame: hash-chains everything written since the previous commit.
 pub const REC_COMMIT: u8 = 0x0C;
-/// @emoji ✍️ A detached signature over a commit's chain hash.
+/// ✍️ A detached signature over a commit's chain hash.
 pub const REC_SIGNATURE: u8 = 0x0D;
-/// @emoji 🕳️ A tombstone recording a redaction; the original bytes are physically gone.
+/// 🕳️ A tombstone recording a redaction; the original bytes are physically gone.
 pub const REC_REDACTION: u8 = 0x0E;
-/// @emoji ⬆️ Records a schema-version upcast applied during a rewrite.
+/// ⬆️ Records a schema-version upcast applied during a rewrite.
 pub const REC_UPCAST: u8 = 0x0F;
-/// @emoji 👻️ Ephemeral/preview-lane data, dropped freely by compaction.
+/// 👻️ Ephemeral/preview-lane data, dropped freely by compaction.
 pub const REC_EPHEMERAL: u8 = 0x10;
-/// @emoji 🔏️ Marks a range of the file as sealed (immutable, already compacted).
+/// 🔏️ Marks a range of the file as sealed (immutable, already compacted).
 pub const REC_SEALED: u8 = 0x11;
-/// @emoji ♻️ A compaction batch: sealed, replayable inner record frames.
+/// ♻️ A compaction batch: sealed, replayable inner record frames.
 pub const REC_COMPACTION: u8 = 0x12;
-/// @emoji ⬜️ Padding, always safely skippable.
+/// ⬜️ Padding, always safely skippable.
 pub const REC_PADDING: u8 = 0x7F;
 // Extension range 0x40..=0x7E is caller-defined, never critical unless the frame's critical bit is set.
 
-/// @emoji ❗️ True iff an unrecognized `kind` byte with this value must abort the reader rather
+/// ❗️ True iff an unrecognized `kind` byte with this value must abort the reader rather
 /// than being skipped (see `protocol_format`'s skip-unknown rule).
 pub fn is_critical_kind(kind: u8) -> bool {
     matches!(kind, REC_DOC | REC_EDIT | REC_COMMIT | REC_ACTOR_DICT | REC_STR_DICT)
@@ -123,32 +123,32 @@ pub fn is_critical_kind(kind: u8) -> bool {
 
 //#region 🔖️Flags
 // Header required/optional flags (32-byte header, see protocol_format).
-/// @emoji ⛓️ Required flag bit: every commit frame's `chain_hash` must verify.
+/// ⛓️ Required flag bit: every commit frame's `chain_hash` must verify.
 pub const REQUIRED_HASH_CHAIN: u32 = 1 << 0;
-/// @emoji ✍️ Required flag bit: every commit frame must carry a valid `REC_SIGNATURE`.
+/// ✍️ Required flag bit: every commit frame must carry a valid `REC_SIGNATURE`.
 pub const REQUIRED_SIGNED: u32 = 1 << 1;
-/// @emoji 🔒️ Required flag bit: reserved for encryption, never set by this crate family.
+/// 🔒️ Required flag bit: reserved for encryption, never set by this crate family.
 pub const REQUIRED_ENCRYPTED: u32 = 1 << 2;
-/// @emoji 🧮️ Optional flag bit: the document body was encoded in canonical form.
+/// 🧮️ Optional flag bit: the document body was encoded in canonical form.
 pub const OPTIONAL_CANONICAL: u32 = 1 << 0;
-/// @emoji 📸️ Optional flag bit: this file contains at least one `REC_PROJECTION`.
+/// 📸️ Optional flag bit: this file contains at least one `REC_PROJECTION`.
 pub const OPTIONAL_HAS_PROJECTIONS: u32 = 1 << 1;
-/// @emoji 🔎️ Optional flag bit: this file contains at least one `REC_INDEX`.
+/// 🔎️ Optional flag bit: this file contains at least one `REC_INDEX`.
 pub const OPTIONAL_HAS_INDEX: u32 = 1 << 2;
-/// @emoji 🕳️ Optional flag bit: this file contains at least one `REC_REDACTION`.
+/// 🕳️ Optional flag bit: this file contains at least one `REC_REDACTION`.
 pub const OPTIONAL_REDACTED: u32 = 1 << 3;
 // Frame flags byte (per-record, not header): bit0 compressed, bit1 critical, bits2..4 = codec id (0..=7).await.
-/// @emoji 🗜️ Frame flags bit: the payload is compressed (see `frame_codec_id`).
+/// 🗜️ Frame flags bit: the payload is compressed (see `frame_codec_id`).
 pub const FRAME_FLAG_COMPRESSED: u8 = 1 << 0;
-/// @emoji ❗️ Frame flags bit: an unrecognized `kind` carrying this bit aborts the reader.
+/// ❗️ Frame flags bit: an unrecognized `kind` carrying this bit aborts the reader.
 pub const FRAME_FLAG_CRITICAL: u8 = 1 << 1;
 
-/// @emoji 🗜️ Extracts the 3-bit codec id (bits 2..4).await from a frame flags byte.
+/// 🗜️ Extracts the 3-bit codec id (bits 2..4).await from a frame flags byte.
 pub fn frame_codec_id(flags: u8) -> u8 {
     (flags >> 2) & 0b111
 }
 
-/// @emoji 🏗️ Assembles a frame flags byte from its three logical fields.
+/// 🏗️ Assembles a frame flags byte from its three logical fields.
 pub fn frame_flags(compressed: bool, critical: bool, codec: u8) -> u8 {
     (compressed as u8) | ((critical as u8) << 1) | ((codec & 0b111) << 2)
 }
@@ -164,7 +164,7 @@ pub fn frame_flags(compressed: bool, critical: bool, codec: u8) -> u8 {
 // whether a `MutationOutcome`'s worst `crate::diagnostic::Severity` gets accepted or quarantined as a
 // `Conflict` (`📡️spr/⚔️conflict`).
 
-/// @emoji ↩️ How an undo of this operation kind should be computed.
+/// ↩️ How an undo of this operation kind should be computed.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum UndoPolicy {
     ExactBaseOnly,
@@ -204,7 +204,7 @@ impl crate::value::FromValue for UndoPolicy {
     }
 }
 
-/// @emoji ⚖️ How strict an authority is about accepting a `MutationOutcome` whose messages reach a
+/// ⚖️ How strict an authority is about accepting a `MutationOutcome` whose messages reach a
 /// given `crate::diagnostic::Severity`. Local/authority state only — never wire-carried, never part of
 /// an artifact's shared history (see the region doc above). `Normal` is the default: the
 /// least-surprising choice for a fresh authority that has never been configured.
@@ -245,7 +245,7 @@ impl crate::value::FromValue for MergePolicy {
 }
 
 impl MergePolicy {
-    /// @emoji 🚫️ Whether this policy rejects an outcome whose worst level is `level`:
+    /// 🚫️ Whether this policy rejects an outcome whose worst level is `level`:
     /// `LaissezFaire` only rejects `Fatal`; `Normal` rejects `Error` and `Fatal`; `Vigilant` rejects
     /// `Warning`, `Error`, and `Fatal`. `Info` is never rejected by any policy.
     pub fn rejects(self, level: crate::diagnostic::Severity) -> bool {
@@ -283,7 +283,7 @@ impl MergePolicy {
 // durability × visibility square. Carried on MutationDescriptor (protocol_command) and on wire
 // envelopes (protocol_wire).
 
-/// @emoji 🗂️ Which of the four state lanes an operation's diffs belong to. Exhaustive by
+/// 🗂️ Which of the four state lanes an operation's diffs belong to. Exhaustive by
 /// construction: `Artifact` = persisted shared, `Config` = persisted local-only, `Presence` =
 /// ephemeral shared, `Transient` = ephemeral local-only UI state.
 ///
@@ -472,7 +472,7 @@ pub fn with_kernel_app_schema_catalog<R>(visit: impl FnOnce(&[KernelAppSchemaDes
 //#endregion 🔖️AppSchemaCatalog
 
 //#region 🔖️WireCodec
-/// @emoji 🎞️ Shared primitive codec for `protocol_causal`'s envelope records and `protocol_wire`'s
+/// 🎞️ Shared primitive codec for `protocol_causal`'s envelope records and `protocol_wire`'s
 /// frame bodies (W5) — hand-rolled, not `crate::codec::value::encode_record_body`, because the TS twin on
 /// the other end of the wire must reproduce these bytes exactly and has no pack engine to port;
 /// these primitives are simple enough to hand-implement identically in both languages. All
@@ -487,7 +487,7 @@ pub fn read_varint_u64(bytes: &[u8], pos: &mut usize) -> Result<u64, ProtocolErr
     Ok(crate::codec::read_varint_u64(bytes, pos)?)
 }
 
-/// @emoji 1️⃣ Single raw byte, no length prefix (fixed width) — the `read_*` twin every
+/// 1️⃣ Single raw byte, no length prefix (fixed width) — the `read_*` twin every
 /// `write_*` primitive above expects but this file never gave a single-byte field, forcing
 /// hand-rolled `bytes.get(pos)` + manual cursor bumps at call sites instead.
 pub fn read_u8(bytes: &[u8], pos: &mut usize) -> Result<u8, ProtocolError> {
@@ -496,7 +496,7 @@ pub fn read_u8(bytes: &[u8], pos: &mut usize) -> Result<u8, ProtocolError> {
     Ok(byte)
 }
 
-/// @emoji 🔤️ `varint len + utf8 bytes`.
+/// 🔤️ `varint len + utf8 bytes`.
 pub fn write_str(out: &mut Vec<u8>, s: &str) {
     write_varint_u64(out, s.len() as u64);
     out.extend_from_slice(s.as_bytes());
@@ -511,7 +511,7 @@ pub fn read_str(bytes: &[u8], pos: &mut usize) -> Result<String, ProtocolError> 
     Ok(s)
 }
 
-/// @emoji 📦️ `varint len + raw bytes`.
+/// 📦️ `varint len + raw bytes`.
 pub fn write_bytes(out: &mut Vec<u8>, b: &[u8]) {
     write_varint_u64(out, b.len() as u64);
     out.extend_from_slice(b);
@@ -525,7 +525,7 @@ pub fn read_bytes(bytes: &[u8], pos: &mut usize) -> Result<Vec<u8>, ProtocolErro
     Ok(slice.to_vec())
 }
 
-/// @emoji #⃣ 32 raw bytes, no length prefix (fixed width).
+/// #⃣ 32 raw bytes, no length prefix (fixed width).
 pub fn write_hash32(out: &mut Vec<u8>, h: &[u8; 32]) {
     out.extend_from_slice(h);
 }
@@ -539,7 +539,7 @@ pub fn read_hash32(bytes: &[u8], pos: &mut usize) -> Result<[u8; 32], ProtocolEr
     Ok(out)
 }
 
-/// @emoji ✅️❌️ `bool` as one byte (0/1) — never a varint, to keep single-byte fields self-evident
+/// ✅️❌️ `bool` as one byte (0/1) — never a varint, to keep single-byte fields self-evident
 /// when eyeballing a hex dump.
 pub fn write_bool(out: &mut Vec<u8>, value: bool) {
     out.push(if value { 1 } else { 0 });
@@ -551,7 +551,7 @@ pub fn read_bool(bytes: &[u8], pos: &mut usize) -> Result<bool, ProtocolError> {
     Ok(byte != 0)
 }
 
-/// @emoji 🔢️ `f64` as 8 little-endian bytes — for wire fields with no varint-friendly shape
+/// 🔢️ `f64` as 8 little-endian bytes — for wire fields with no varint-friendly shape
 /// (coordinates, zoom levels).
 pub fn write_f64(out: &mut Vec<u8>, value: f64) {
     out.extend_from_slice(&value.to_le_bytes());

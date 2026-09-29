@@ -49,7 +49,7 @@ function internalOwnerImports(path: string, owners: ReadonlySet<string>): string
     .sort();
 }
 
-function rootImportsForOwner(routerPath: string, ownerPath: string): string[] {
+function rootImportsForOwner(routerPath: string, ownerPath: string): readonly string[] {
   const source = ts.createSourceFile(routerPath, readFileSync(routerPath, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
   const owner = join(repoRoot, ownerPath);
   return source.statements.flatMap((node) => {

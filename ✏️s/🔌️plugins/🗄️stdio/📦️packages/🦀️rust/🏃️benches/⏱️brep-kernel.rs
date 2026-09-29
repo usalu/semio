@@ -20,7 +20,7 @@ fn measure(label: &str, mut operation: impl FnMut()) {
         *sample = started.elapsed().as_nanos();
     }
     samples.sort_unstable();
-    println!("[DEBUG] benchmark={label} samples={SAMPLES} median_ns={}", samples[SAMPLES / 2]);
+    println!("[TRACE] benchmark={label} samples={SAMPLES} median_ns={}", samples[SAMPLES / 2]);
 }
 //#endregion 🧰️Harness
 

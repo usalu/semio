@@ -54,7 +54,7 @@ use db_storage::IndexStorage;
 use protocol::MutationEnvelope;
 
 //#region 🔖️State
-/// @emoji 🧬️ What a projection's in-memory state must support to round-trip through
+/// 🧬️ What a projection's in-memory state must support to round-trip through
 /// `db_index::ProjectionIndex`'s opaque byte storage: a caller-defined, schema-specific
 /// encode/decode pair. `db_projection` never interprets the bytes it stores — only the
 /// `ProjectionClass` that produced them does (see the module doc's "no operation semantics" note).
@@ -65,7 +65,7 @@ pub trait ProjectionState: Clone + Send + Sync + 'static {
         Self: Sized;
 }
 
-/// @emoji 🔢️ A ready-made `ProjectionState` for the common "just count/accumulate a `u64`" shape.
+/// 🔢️ A ready-made `ProjectionState` for the common "just count/accumulate a `u64`" shape.
 impl ProjectionState for u64 {
     async fn encode(&self) -> Vec<u8> {
         self.to_le_bytes().to_vec()
@@ -77,7 +77,7 @@ impl ProjectionState for u64 {
     }
 }
 
-/// @emoji 🔤️ A ready-made `ProjectionState` for a UTF-8 text projection.
+/// 🔤️ A ready-made `ProjectionState` for a UTF-8 text projection.
 impl ProjectionState for String {
     async fn encode(&self) -> Vec<u8> {
         self.as_bytes().to_vec()
@@ -88,7 +88,7 @@ impl ProjectionState for String {
     }
 }
 
-/// @emoji 📦️ A ready-made `ProjectionState` for callers that already have their own opaque byte
+/// 📦️ A ready-made `ProjectionState` for callers that already have their own opaque byte
 /// encoding and just want the checkpoint machinery, not another codec layer.
 impl ProjectionState for Vec<u8> {
     async fn encode(&self) -> Vec<u8> {
@@ -100,11 +100,11 @@ impl ProjectionState for Vec<u8> {
     }
 }
 
-/// @emoji 🏷️ How many bytes `encode_versioned` prepends — a fixed-width `u32` schema version tag
+/// 🏷️ How many bytes `encode_versioned` prepends — a fixed-width `u32` schema version tag
 /// (see the module doc's versioning design-choice note).
 const VERSION_PREFIX_LEN: usize = 4;
 
-/// @emoji ✍️ Prefixes `state_bytes` with `schema_version` — the exact shape persisted via
+/// ✍️ Prefixes `state_bytes` with `schema_version` — the exact shape persisted via
 /// `ProjectionIndex::record`.
 async fn encode_versioned(schema_version: u32, state_bytes: &[u8]) -> Vec<u8> {
     let mut out = Vec::with_capacity(VERSION_PREFIX_LEN + state_bytes.len());
@@ -113,7 +113,7 @@ async fn encode_versioned(schema_version: u32, state_bytes: &[u8]) -> Vec<u8> {
     out
 }
 
-/// @emoji 📖️ Inverse of `encode_versioned`: splits the version prefix from the state bytes,
+/// 📖️ Inverse of `encode_versioned`: splits the version prefix from the state bytes,
 /// erroring `Corrupt` (never panicking) if `bytes` is shorter than the prefix itself.
 #[cfg(test)]
 async fn decode_versioned(bytes: &[u8]) -> Result<(u32, &[u8]), DbError> {
@@ -127,7 +127,7 @@ async fn decode_versioned(bytes: &[u8]) -> Result<(u32, &[u8]), DbError> {
 //#endregion 🔖️State
 
 //#region 🔖️ProjectionClass
-/// @emoji 👀️ One step's view onto sibling projections' just-computed state, for a projection whose
+/// 👀️ One step's view onto sibling projections' just-computed state, for a projection whose
 /// `dependencies()` names them — `ProjectionGraph`'s topological order guarantees every dependency
 /// has already run (and is present here) before a dependent's `apply` is called in the same step.
 /// Scoped to raw bytes (rather than a typed map) so heterogeneous `ProjectionClass::State` types
@@ -138,13 +138,13 @@ pub struct DepView {
 }
 
 impl DepView {
-    /// @emoji 🔍️ The raw encoded bytes a dependency computed this step, or `None` if `projection_id`
+    /// 🔍️ The raw encoded bytes a dependency computed this step, or `None` if `projection_id`
     /// isn't a registered dependency (or hasn't run yet — shouldn't happen given topological order).
     pub async fn get_raw(&self, projection_id: &str) -> Option<&Vec<u8>> {
         self.states.get(&projection_id.to_string())
     }
 
-    /// @emoji 🔍️ `get_raw` decoded through `S::decode` — the typed convenience most `apply` impls
+    /// 🔍️ `get_raw` decoded through `S::decode` — the typed convenience most `apply` impls
     /// reach for when they know a dependency's concrete `ProjectionState` shape by convention.
     pub async fn get<S: ProjectionState>(&self, projection_id: &str) -> Result<Option<S>, DbError> {
         match self.get_raw(projection_id).await {
@@ -154,7 +154,7 @@ impl DepView {
     }
 }
 
-/// @emoji 📽️ One projection's rules: identity, its schema version (bumping this invalidates every
+/// 📽️ One projection's rules: identity, its schema version (bumping this invalidates every
 /// previously-persisted checkpoint, see the module doc), which other projections it reads via
 /// `DepView` during `apply`, its starting state, and the state-transition function itself. Never
 /// interprets `envelope` beyond what the implementor chooses to (this crate stays semantics-free,
@@ -162,20 +162,20 @@ impl DepView {
 pub trait ProjectionClass: Send + Sync {
     type State: ProjectionState;
 
-    /// @emoji 🪪️ A stable, unique-within-one-`ProjectionEngine` identifier.
+    /// 🪪️ A stable, unique-within-one-`ProjectionEngine` identifier.
     async fn id(&self) -> &'static str;
 
-    /// @emoji 🔢️ This projection's current schema version (see the module doc's versioning note).
+    /// 🔢️ This projection's current schema version (see the module doc's versioning note).
     async fn schema_version(&self) -> u32;
 
-    /// @emoji 🕸️ The ids of other registered projections this one reads via `DepView` — must all
+    /// 🕸️ The ids of other registered projections this one reads via `DepView` — must all
     /// resolve to projections registered in the same `ProjectionEngine`, and must not form a cycle
     /// (`ProjectionGraph::build` validates both). Defaults to none.
     async fn dependencies(&self) -> &'static [&'static str] {
         &[]
     }
 
-    /// @emoji 👀️ The document-region path prefixes this projection reads directly —
+    /// 👀️ The document-region path prefixes this projection reads directly —
     /// `affected_by` checks these against a step's touched regions to decide whether this
     /// projection needs to run at all THIS step. Defaults to none, meaning "not directly triggered
     /// by anything" — a projection that should only ever run via a dependency's cascade (see
@@ -186,7 +186,7 @@ pub trait ProjectionClass: Send + Sync {
         &[]
     }
 
-    /// @emoji 🎯️ True iff `touched` should trigger this projection's `apply` on its own,
+    /// 🎯️ True iff `touched` should trigger this projection's `apply` on its own,
     /// independent of any dependency cascade (`ProjectionEngine`'s `should_run` layers that on
     /// top). Default: any declared `reads()` path intersects any touched region.
     async fn affected_by(&self, touched: &TouchedSet) -> bool {
@@ -194,16 +194,16 @@ pub trait ProjectionClass: Send + Sync {
         touched.regions.iter().any(|region| reads.iter().any(|&path| region.path_intersects(&TouchedRegion::read(path))))
     }
 
-    /// @emoji 🌱️ The state of a brand-new instance of this projection, before any envelope has
+    /// 🌱️ The state of a brand-new instance of this projection, before any envelope has
     /// been applied.
     async fn initial(&self) -> Self::State;
 
-    /// @emoji ⏩️ Computes the next state from `state`, `envelope`, and this step's already-computed
+    /// ⏩️ Computes the next state from `state`, `envelope`, and this step's already-computed
     /// sibling states (`deps`).
     async fn apply(&self, state: &Self::State, envelope: &MutationEnvelope, deps: &DepView) -> Result<Self::State, DbError>;
 }
 
-/// @emoji 🎭️ The object-safe view of a `ProjectionClass` — every method operates on raw encoded
+/// 🎭️ The object-safe view of a `ProjectionClass` — every method operates on raw encoded
 /// bytes instead of the associated `State` type, so a `ProjectionEngine<S, E>` can be generic over
 /// one concrete `E: ErasedProjection` (MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/dedyn-fw-os-guestruntime,
 /// O1/R1: no first-party `dyn` trait objects) instead of erasing into `Box<dyn ErasedProjection>`.
@@ -224,7 +224,7 @@ pub trait ErasedProjection: Send + Sync {
     async fn apply_bytes(&self, state_bytes: &[u8], envelope: &MutationEnvelope, deps: &DepView) -> Result<Vec<u8>, DbError>;
 }
 
-/// @emoji 🚫️ Zero-variant `ErasedProjection` — `db_artifact::ArtifactEngineConfig`'s `projections`
+/// 🚫️ Zero-variant `ErasedProjection` — `db_artifact::ArtifactEngineConfig`'s `projections`
 /// factory default type parameter. Nothing constructs `NoProjections` (uninhabited), so a
 /// `Vec<NoProjections>` is always empty by construction and every method body's `match *self {}` is
 /// exhaustive over zero arms. Repo-wide, as of this packet, NOTHING overrides that factory with a
@@ -297,7 +297,7 @@ impl<P: ProjectionClass> ErasedProjection for ErasedWrapper<P> {
     }
 }
 
-/// @emoji 🎁️ Wraps a concrete `ProjectionClass` into its `ErasedProjection` form for registering
+/// 🎁️ Wraps a concrete `ProjectionClass` into its `ErasedProjection` form for registering
 /// into a `ProjectionEngine`. Returns the concrete `ErasedWrapper<P>` (not boxed/erased) — a caller
 /// mixing several `ProjectionClass` types converts each into its own small closed enum instead (see
 /// `ErasedProjection`'s own doc).
@@ -308,17 +308,17 @@ pub fn erase<P: ProjectionClass + 'static>(class: P) -> ErasedWrapper<P> {
 //#endregion 🔖️ProjectionClass
 
 //#region 🔖️Graph
-/// @emoji 🕸️ The dependency-validated, topologically-sorted view of a set of registered
+/// 🕸️ The dependency-validated, topologically-sorted view of a set of registered
 /// projections — built once at `ProjectionEngine::new` and reused by every subsequent apply/
 /// rebuild pass so per-step ordering work is O(1) instead of a fresh sort each time.
 struct ProjectionGraph {
-    /// @emoji 🔢️ Indices into the owning `ProjectionEngine`'s `projections` vec, in an order where
+    /// 🔢️ Indices into the owning `ProjectionEngine`'s `projections` vec, in an order where
     /// every dependency appears before every projection that depends on it.
     order: Vec<usize>,
 }
 
 impl ProjectionGraph {
-    /// @emoji 🏗️ Validates that every id is unique, every `dependencies()` entry resolves to a
+    /// 🏗️ Validates that every id is unique, every `dependencies()` entry resolves to a
     /// registered projection, and the dependency relation is acyclic — then computes one
     /// deterministic topological order (ties broken lexicographically by id, so the same
     /// registration set always yields the same order across runs/processes).
@@ -354,7 +354,7 @@ impl ProjectionGraph {
     }
 }
 
-/// @emoji 🌀️ Kahn's algorithm over `graph` restricted to `ids`: repeatedly takes the
+/// 🌀️ Kahn's algorithm over `graph` restricted to `ids`: repeatedly takes the
 /// lexicographically-smallest zero-in-degree node, appends it, and decrements its successors'
 /// in-degree. `ids.len() > order.len()` at the end means a cycle remains (some node's in-degree
 /// never reached zero) — reported as `DbError::InvalidArgument` rather than silently truncating.
@@ -391,7 +391,7 @@ async fn topological_sort(graph: &PGraph<String, (), ()>, ids: &[String]) -> Res
 //#endregion 🔖️Graph
 
 //#region 🔖️Engine
-/// @emoji 🎯️ Whether `projection` should actually run `apply` for this step: directly touched
+/// 🎯️ Whether `projection` should actually run `apply` for this step: directly touched
 /// (`ErasedProjection::affected_by`) OR cascaded to because a declared dependency ran THIS SAME
 /// step (`changed_this_step`, populated in topological order so a dependency is always decided
 /// before its dependents are checked). Called identically from `apply_envelope`'s persisted,
@@ -402,7 +402,7 @@ async fn should_run<E: ErasedProjection>(projection: &E, touched: &TouchedSet, c
     projection.affected_by(touched).await || projection.dependencies().await.iter().any(|dependency| changed_this_step.contains(dependency))
 }
 
-/// @emoji 🚂️ Drives a fixed set of registered `ErasedProjection`s for one document: incremental
+/// 🚂️ Drives a fixed set of registered `ErasedProjection`s for one document: incremental
 /// per-command application with checkpoint persistence (`apply_envelope`), pure in-memory replay
 /// (`rebuild_in_memory`, the ground truth `apply_envelope`'s persisted path is checked against),
 /// checkpoint-recovery rebuild (`rebuild_and_persist`), historical lookup (`state_at`), and
@@ -418,7 +418,7 @@ pub struct ProjectionEngine<'a, S: IndexStorage, E: ErasedProjection> {
 }
 
 impl<'a, S: IndexStorage, E: ErasedProjection> ProjectionEngine<'a, S, E> {
-    /// @emoji 🏗️ Registers `projections` for `document` against `storage`, validating the
+    /// 🏗️ Registers `projections` for `document` against `storage`, validating the
     /// dependency DAG up front (see `ProjectionGraph::build`) so a misconfigured cycle/dangling
     /// dependency fails at construction rather than mid-apply.
     pub async fn new(storage: &'a S, document: ArtifactId, projections: Vec<E>) -> Result<Self, DbError> {
@@ -426,7 +426,7 @@ impl<'a, S: IndexStorage, E: ErasedProjection> ProjectionEngine<'a, S, E> {
         Ok(ProjectionEngine { storage, document, projections, graph })
     }
 
-    /// @emoji 📋️ Every registered projection's id, in topological (dependency-respecting) order —
+    /// 📋️ Every registered projection's id, in topological (dependency-respecting) order —
     /// exposed for callers/tests that want to observe or assert on the resolved DAG order.
     pub async fn topological_order(&self) -> Vec<&'static str> {
         {
@@ -468,7 +468,7 @@ impl<'a, S: IndexStorage, E: ErasedProjection> ProjectionEngine<'a, S, E> {
         }
     }
 
-    /// @emoji 🔓️ Decodes a raw `ProjectionIndex` value (version prefix + state bytes), rejecting a
+    /// 🔓️ Decodes a raw `ProjectionIndex` value (version prefix + state bytes), rejecting a
     /// stale schema version with `DbError::Conflict` rather than misinterpreting incompatible
     /// bytes — the shared guard behind both `load_checkpoint` and `state_at`.
     async fn decode_checkpoint(&self, projection: &E, versioned_bytes: &db_index::IndexBytes, control: &mut db_index::IndexCursorControl) -> Result<Vec<u8>, DbError> {
@@ -504,7 +504,7 @@ impl<'a, S: IndexStorage, E: ErasedProjection> ProjectionEngine<'a, S, E> {
         Ok(state)
     }
 
-    /// @emoji 📥️ `projection`'s persisted state at or before `at_or_before`, or its `initial()`
+    /// 📥️ `projection`'s persisted state at or before `at_or_before`, or its `initial()`
     /// bytes if nothing has been persisted at or before that point yet.
     async fn load_checkpoint(&self, projection: &E, at_or_before: u64) -> Result<Vec<u8>, DbError> {
         let index = self.index_for(projection.id().await).await;
@@ -526,7 +526,7 @@ impl<'a, S: IndexStorage, E: ErasedProjection> ProjectionEngine<'a, S, E> {
         Ok(())
     }
 
-    /// @emoji ⏩️ Applies one committed envelope at `command_seq` across every registered
+    /// ⏩️ Applies one committed envelope at `command_seq` across every registered
     /// projection in dependency order: for each, `should_run` decides whether it is directly
     /// affected by `touched` or cascaded to via a dependency that ran this same step; if so, loads
     /// its checkpoint at `command_seq - 1` (or `initial()` if none), computes the next state via
@@ -560,7 +560,7 @@ impl<'a, S: IndexStorage, E: ErasedProjection> ProjectionEngine<'a, S, E> {
         Ok(out)
     }
 
-    /// @emoji 🧮️ Pure, storage-independent replay: recomputes every registered projection from
+    /// 🧮️ Pure, storage-independent replay: recomputes every registered projection from
     /// `ProjectionClass::initial()` through `events` (each an envelope paired with its touched
     /// regions, ordered oldest-first) without ever touching `IndexStorage`, gating every step with
     /// the exact same `should_run` call `apply_envelope` uses. This is the ground truth
@@ -598,7 +598,7 @@ impl<'a, S: IndexStorage, E: ErasedProjection> ProjectionEngine<'a, S, E> {
         Ok(out)
     }
 
-    /// @emoji 🛠️ `rebuild_in_memory` followed by durably re-persisting each projection's final
+    /// 🛠️ `rebuild_in_memory` followed by durably re-persisting each projection's final
     /// state under `final_command_seq`, unconditionally overwriting any stale/incompatible
     /// checkpoint. This is the recovery path from a `DbError::Conflict` schema-version mismatch
     /// surfaced by `apply_envelope`/`state_at` — a projection whose `schema_version()` was bumped
@@ -615,7 +615,7 @@ impl<'a, S: IndexStorage, E: ErasedProjection> ProjectionEngine<'a, S, E> {
         Ok(final_states)
     }
 
-    /// @emoji 🏔️ Historical query: `projection_id`'s persisted state at or before `frontier_seq`
+    /// 🏔️ Historical query: `projection_id`'s persisted state at or before `frontier_seq`
     /// (past its version prefix), or `Ok(None)` if nothing was ever persisted at or before that
     /// frontier. Errors `DbError::Conflict` if the nearest checkpoint's schema version is stale.
     pub async fn state_at(&self, projection_id: &str, frontier_seq: u64) -> Result<Option<Vec<u8>>, DbError> {
@@ -632,7 +632,7 @@ impl<'a, S: IndexStorage, E: ErasedProjection> ProjectionEngine<'a, S, E> {
         }
     }
 
-    /// @emoji 🌫️ Preview-augmented query: `projection_id`'s canonical state at or before
+    /// 🌫️ Preview-augmented query: `projection_id`'s canonical state at or before
     /// `base_frontier_seq` (its `initial()` bytes if nothing persisted yet), with
     /// `preview_envelope` applied on top — computed entirely in memory and returned, NEVER
     /// persisted (the contract's "previews are never durable" law: this method never calls

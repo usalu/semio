@@ -2,11 +2,13 @@
 //! apply-and-capture) and every variant's `inverse()` is handcrafted, key/index-aware.
 
 use crate::schema::diff::{
-    dec_block, dec_bool, dec_ct_entry, dec_opc_part, dec_rel_owner_entry, dec_str, dec_style, dec_xml_node, dec_xml_node_bin, decode_option, enc_block, enc_bool, enc_ct_entry, enc_list, enc_opc_part, enc_rel_owner_entry, enc_str, enc_style,
-    enc_xml_node, enc_xml_node_bin, encode_option, hex_decode, hex_encode, parse_usize, split_top_level, strip_brackets,
+    dec_block, dec_bool, dec_str, dec_style, dec_xml_node, dec_xml_node_bin, decode_option, enc_block, enc_bool, enc_list, enc_str, enc_style, enc_xml_node, enc_xml_node_bin, encode_option, hex_decode, hex_encode, parse_usize, split_top_level,
+    strip_brackets,
 };
 use crate::schema::diff::{diff_set_snapshot, DocxBlockPath, DocxDiff, DocxPathSegment, DocxXmlPartDiff, NamedModified, NamedTripleDiff};
-use crate::schema::snapshot::{docx_part_is_xml, DocxBlock, DocxDocument, DocxStyle, DocxXmlPart};
+#[cfg(test)]
+use crate::schema::snapshot::DocxDocument;
+use crate::schema::snapshot::{docx_part_is_xml, DocxBlock, DocxStyle, DocxXmlPart};
 #[cfg(test)]
 use crate::schema::snapshot::{DocxParagraph, DocxRun, DocxTable, DocxTableCell, DocxTableRow};
 use crate::DocxSnapshot;
@@ -14,10 +16,8 @@ use protocol::OpBinary;
 use protocol::{Mutation, OpText};
 use semio_s_artifact_stdio_xml::schema::diff::{diff_at_path as xml_diff_at_path, XmlChildAdded, XmlChildrenDiff, XmlElementDiff, XmlNodeDiff};
 use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, XmlAttr, XmlNode};
-use semio_s_artifact_stdio_zip::opc::{OpcContentTypes, OpcPackage, OpcRelationship};
 #[cfg(test)]
 use semio_s_artifact_stdio_zip::opc::{OpcTargetMode, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
-use std::collections::HashMap;
 
 //#region 🔖️Mutations
 #[path = "➕insert-block/🦀️.rs"]
@@ -214,44 +214,6 @@ fn nested_blocks_mut<'a>(blocks: &'a mut Vec<XmlNode>, segments: &[DocxPathSegme
     let cell_index = nth_element_index(cells, "w:tc", segment.cell)?;
     let cell_children = element_children_mut(&mut cells[cell_index], "w:tc")?;
     nested_blocks_mut(cell_children, rest)
-}
-
-fn nth_descendant_element_mut<'a>(node: &'a mut XmlNode, expected: &str, remaining: &mut usize) -> Option<&'a mut XmlNode> {
-    if matches!(&*node, XmlNode::Element { name, .. } if name == expected) {
-        if *remaining == 0 {
-            return Some(node);
-        }
-        *remaining -= 1;
-        return None;
-    }
-    let XmlNode::Element { children, .. } = node else { return None };
-    for child in children {
-        if let Some(found) = nth_descendant_element_mut(child, expected, remaining) {
-            return Some(found);
-        }
-    }
-    None
-}
-
-fn set_run_formatting_xml(block: &mut XmlNode, run_index: usize, bold: bool, italic: bool, underline: bool) -> bool {
-    if !matches!(block, XmlNode::Element { name, .. } if name == "w:p") {
-        return false;
-    }
-    let mut remaining = run_index;
-    let Some(run) = nth_descendant_element_mut(block, "w:r", &mut remaining) else { return false };
-    let Some(run_children) = element_children_mut(run, "w:r") else { return false };
-    let rpr_index = nth_element_index(run_children, "w:rPr", 0).unwrap_or_else(|| {
-        run_children.insert(0, XmlNode::Element { name: "w:rPr".into(), attrs: Vec::new(), children: Vec::new() });
-        0
-    });
-    let Some(properties) = element_children_mut(&mut run_children[rpr_index], "w:rPr") else { return false };
-    properties.retain(|node| !matches!(node, XmlNode::Element { name, .. } if name == "w:b" || name == "w:i" || name == "w:u"));
-    for (enabled, name, attrs) in [(bold, "w:b", Vec::new()), (italic, "w:i", Vec::new()), (underline, "w:u", vec![XmlAttr { name: "w:val".into(), value: "single".into() }])] {
-        if enabled {
-            properties.push(XmlNode::Element { name: name.into(), attrs, children: Vec::new() });
-        }
-    }
-    true
 }
 
 fn styles_root_mut(snapshot: &mut DocxSnapshot) -> Option<&mut Vec<XmlNode>> {
@@ -537,56 +499,6 @@ fn dec_list_segments(s: &str) -> Result<Vec<DocxPathSegment>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_path_segment).collect()
 }
 
-/// 🌱 Full (non-diff) `OpcContentTypes`/`OpcPackage`/`DocxDocument`/`DocxSnapshot` codecs — only
-/// `SetSnapshot`'s whole-payload encoding needs these, so (unlike `DocxDiff`'s value codecs) they
-/// live here rather than in the diff file.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_opc_content_types(ct: &OpcContentTypes) -> String {
-    format!("[{},{}]", enc_list(&ct.defaults, enc_ct_entry), enc_list(&ct.overrides, enc_ct_entry))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_opc_content_types(s: &str) -> Result<OpcContentTypes, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
-    let [defaults, overrides] = parts.as_slice() else { return Err(format!("content types: expected 2 fields, got {}", parts.len())) };
-    Ok(OpcContentTypes {
-        defaults: split_top_level(strip_brackets(defaults)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_ct_entry).collect::<Result<Vec<_>, String>>()?,
-        overrides: split_top_level(strip_brackets(overrides)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_ct_entry).collect::<Result<Vec<_>, String>>()?,
-    })
-}
-/// 🗺️ `relationships: HashMap<String, Vec<OpcRelationship>>` -- owners sorted for a deterministic
-/// encoding (`DiffCodec`/`OpText` LAWS both require determinism; `HashMap` iteration order does not
-/// guarantee it).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_opc_package(pkg: &OpcPackage) -> String {
-    let mut owners: Vec<&String> = pkg.relationships.keys().collect();
-    owners.sort();
-    let rel_entries: Vec<(String, Vec<OpcRelationship>)> = owners.into_iter().map(|o| (o.clone(), pkg.relationships[o].clone())).collect();
-    format!("[{},{},{},{}]", enc_list(&pkg.parts, enc_opc_part), enc_opc_content_types(&pkg.content_types), enc_list(&rel_entries, enc_rel_owner_entry), enc_str(&pkg.comment))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_opc_package(s: &str) -> Result<OpcPackage, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
-    let [p, ct, rels, comment] = parts.as_slice() else { return Err(format!("opc package: expected 4 fields, got {}", parts.len())) };
-    let parts_list = split_top_level(strip_brackets(p)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_opc_part).collect::<Result<Vec<_>, String>>()?;
-    let rel_entries = split_top_level(strip_brackets(rels)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_rel_owner_entry).collect::<Result<Vec<_>, String>>()?;
-    Ok(OpcPackage { parts: parts_list, content_types: dec_opc_content_types(ct)?, relationships: rel_entries.into_iter().collect::<HashMap<_, _>>(), comment: dec_str(comment)? })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_docx_document(doc: &DocxDocument) -> String {
-    format!("[{},{}]", enc_list(&doc.body, enc_block), enc_list(&doc.styles, enc_style))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_docx_document(s: &str) -> Result<DocxDocument, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
-    let [body, styles] = parts.as_slice() else { return Err(format!("document: expected 2 fields, got {}", parts.len())) };
-    Ok(DocxDocument {
-        body: split_top_level(strip_brackets(body)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_block).collect::<Result<Vec<_>, String>>()?,
-        styles: split_top_level(strip_brackets(styles)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_style).collect::<Result<Vec<_>, String>>()?,
-    })
-}
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_docx_snapshot(snapshot: &DocxSnapshot) -> String {
     hex_encode(dsl::json::to_json_string(snapshot).as_bytes())
@@ -694,7 +606,7 @@ impl OpText for DocxMutation {
 /// `write_str_lp`/`read_str_lp`/`write_bytes_lp`/`read_bytes_lp`/`enc_block_bin`/`dec_block_bin`/
 /// `enc_style_bin`/`dec_style_bin`/`enc_opc_part_bin`/`dec_opc_part_bin`/`enc_rel_bin`/
 /// `dec_rel_bin` (`../🔺️diff/🦀️.rs`, `pub(crate)` to this artifact).
-use crate::schema::diff::{dec_block_bin, dec_opc_part_bin, dec_rel_bin, dec_style_bin, enc_block_bin, enc_opc_part_bin, enc_rel_bin, enc_style_bin, read_bytes_lp, read_str_lp, write_bytes_lp, write_str_lp};
+use crate::schema::diff::{dec_block_bin, dec_style_bin, enc_block_bin, enc_style_bin, read_bytes_lp, read_str_lp, write_bytes_lp, write_str_lp};
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_path_segment_bin(seg: &DocxPathSegment, out: &mut Vec<u8>) {
@@ -750,105 +662,6 @@ fn dec_xml_address_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxXmlAddr
     Ok(DocxXmlAddress { part_path, node_path, expected_name, revision })
 }
 
-/// 🌱 Full (non-diff) `OpcContentTypes`/`OpcPackage`/`DocxDocument`/`DocxSnapshot` binary codecs --
-/// only `SetSnapshot`'s whole-payload encoding needs these, mirroring this file's own
-/// `enc_opc_content_types`/`enc_opc_package`/`enc_docx_document`/`enc_docx_snapshot` text forms
-/// above. Owners sorted for a deterministic encoding, same `HashMap`-iteration-order caveat those
-/// text forms document.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_opc_content_types_bin(ct: &OpcContentTypes, out: &mut Vec<u8>) {
-    store::pack_rt::write_varint_u64(out, ct.defaults.len() as u64);
-    for e in &ct.defaults {
-        write_str_lp(out, &e.0);
-        write_str_lp(out, &e.1);
-    }
-    store::pack_rt::write_varint_u64(out, ct.overrides.len() as u64);
-    for e in &ct.overrides {
-        write_str_lp(out, &e.0);
-        write_str_lp(out, &e.1);
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_opc_content_types_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcContentTypes, String> {
-    let default_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut defaults = Vec::with_capacity(default_count as usize);
-    for _ in 0..default_count {
-        defaults.push((read_str_lp(reader)?, read_str_lp(reader)?));
-    }
-    let override_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut overrides = Vec::with_capacity(override_count as usize);
-    for _ in 0..override_count {
-        overrides.push((read_str_lp(reader)?, read_str_lp(reader)?));
-    }
-    Ok(OpcContentTypes { defaults, overrides })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_opc_package_bin(pkg: &OpcPackage, out: &mut Vec<u8>) {
-    store::pack_rt::write_varint_u64(out, pkg.parts.len() as u64);
-    for p in &pkg.parts {
-        enc_opc_part_bin(p, out);
-    }
-    enc_opc_content_types_bin(&pkg.content_types, out);
-    let mut owners: Vec<&String> = pkg.relationships.keys().collect();
-    owners.sort();
-    store::pack_rt::write_varint_u64(out, owners.len() as u64);
-    for owner in owners {
-        write_str_lp(out, owner);
-        let list = &pkg.relationships[owner];
-        store::pack_rt::write_varint_u64(out, list.len() as u64);
-        for r in list {
-            enc_rel_bin(r, out);
-        }
-    }
-    write_str_lp(out, &pkg.comment);
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_opc_package_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcPackage, String> {
-    let part_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut parts = Vec::with_capacity(part_count as usize);
-    for _ in 0..part_count {
-        parts.push(dec_opc_part_bin(reader)?);
-    }
-    let content_types = dec_opc_content_types_bin(reader)?;
-    let owner_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut relationships = HashMap::with_capacity(owner_count as usize);
-    for _ in 0..owner_count {
-        let owner = read_str_lp(reader)?;
-        let rel_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-        let mut list = Vec::with_capacity(rel_count as usize);
-        for _ in 0..rel_count {
-            list.push(dec_rel_bin(reader)?);
-        }
-        relationships.insert(owner, list);
-    }
-    let comment = read_str_lp(reader)?;
-    Ok(OpcPackage { parts, content_types, relationships, comment })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_docx_document_bin(doc: &DocxDocument, out: &mut Vec<u8>) {
-    store::pack_rt::write_varint_u64(out, doc.body.len() as u64);
-    for b in &doc.body {
-        enc_block_bin(b, out);
-    }
-    store::pack_rt::write_varint_u64(out, doc.styles.len() as u64);
-    for s in &doc.styles {
-        enc_style_bin(s, out);
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_docx_document_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxDocument, String> {
-    let body_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut body = Vec::with_capacity(body_count as usize);
-    for _ in 0..body_count {
-        body.push(dec_block_bin(reader)?);
-    }
-    let style_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut styles = Vec::with_capacity(style_count as usize);
-    for _ in 0..style_count {
-        styles.push(dec_style_bin(reader)?);
-    }
-    Ok(DocxDocument { body, styles })
-}
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_docx_snapshot_bin(snapshot: &DocxSnapshot, out: &mut Vec<u8>) {
     write_bytes_lp(out, dsl::json::to_json_string(snapshot).as_bytes());

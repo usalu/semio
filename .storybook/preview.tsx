@@ -15,7 +15,7 @@ declare const __STORYBOOK_ACTIVE_SCOPES__: string[];
 if (__STORYBOOK_ACTIVE_SCOPES__.length > 0) {
   await import("./🎨️styling/🎨️.css");
 }
-/** @emoji 🎯️ True when `prefix` is (a prefix of) an active `STORYBOOK_SCOPE` — for stories/decorators that gate behavior by scope. */
+/** 🎯️ True when `prefix` is (a prefix of) an active `STORYBOOK_SCOPE` — for stories/decorators that gate behavior by scope. */
 export function storybookScopeActive(prefix: string): boolean {
   return __STORYBOOK_ACTIVE_SCOPES__.some((id) => id === prefix || id.startsWith(`${prefix}/`));
 }
@@ -266,7 +266,7 @@ const LocaleHost: React.FC<{ children: React.ReactNode; locale: UiLocale }> = ({
   return <>{children}</>;
 };
 
-/** @emoji 🌐️ Drives the story's `changeLanguage` from the `locale` toolbar so `t(...)`-consuming components re-render translated. */
+/** 🌐️ Drives the story's `changeLanguage` from the `locale` toolbar so `t(...)`-consuming components re-render translated. */
 export const withLocale: Decorator = (Story, context) => (
   <LocaleHost locale={(context.globals.locale as UiLocale | undefined) ?? "en"}>
     <Story />
@@ -284,7 +284,7 @@ const TerminologyHost: React.FC<{ children: React.ReactNode; terminology: UiChro
   return <>{children}</>;
 };
 
-/** @emoji 📚️ Persists the `terminology` toolbar choice (native / reuse) before render, mirroring `useUiTerminology`'s storage-event contract. */
+/** 📚️ Persists the `terminology` toolbar choice (native / reuse) before render, mirroring `useUiTerminology`'s storage-event contract. */
 export const withTerminology: Decorator = (Story, context) => (
   <TerminologyHost terminology={(context.globals.terminology as UiChromeTerminologyId | undefined) ?? "native"}>
     <Story />
@@ -303,7 +303,7 @@ const ThemeHost: React.FC<{ children: React.ReactNode; themeId: string }> = ({ c
   return <>{children}</>;
 };
 
-/** @emoji 🎨️ Applies the `theme` toolbar selection via `setActiveUiTheme`; a no-operation until the toolbar's `items` are populated (see `populateThemeToolbarItems` below) since `initialGlobals.theme` is unset by default. */
+/** 🎨️ Applies the `theme` toolbar selection via `setActiveUiTheme`; a no-operation until the toolbar's `items` are populated (see `populateThemeToolbarItems` below) since `initialGlobals.theme` is unset by default. */
 export const withTheme: Decorator = (Story, context) => {
   const themeId = context.globals.theme as string | undefined;
   if (!themeId) return <Story />;
@@ -314,7 +314,7 @@ export const withTheme: Decorator = (Story, context) => {
   );
 };
 
-/** @emoji 🎨️ Populates the `theme` toolbar's `items` from `builtinUiThemes()` — deferred to module-init time (not the `globalTypes` literal above) since it needs the ui-styling module graph loaded. */
+/** 🎨️ Populates the `theme` toolbar's `items` from `builtinUiThemes()` — deferred to module-init time (not the `globalTypes` literal above) since it needs the ui-styling module graph loaded. */
 if (preview.globalTypes?.theme?.toolbar) {
   preview.globalTypes.theme.toolbar.items = builtinUiThemes().map((t) => ({ value: t.id, title: t.name ?? t.id }));
 }
@@ -323,7 +323,7 @@ if (preview.globalTypes?.theme?.toolbar) {
 //#region 🔖️withRenderer
 import { configureHostPorts, type HostPortOverrides } from "@semio-tech/ui-react";
 
-/** @emoji 🔌️ A story requests an alternate host-port adapter (stub renderer, test double, …) by setting
+/** 🔌️ A story requests an alternate host-port adapter (stub renderer, test double, …) by setting
  * `parameters.hostPortOverrides` to a {@link HostPortOverrides} object (or a thunk returning one, for
  * overrides that need `context.globals`, e.g. the `iconRenderer` toggle). Applied via `configureHostPorts`
  * before render and restored to whatever was installed beforehand on cleanup, since ports are page-global.
@@ -340,7 +340,7 @@ export const withRenderer: Decorator = (Story, context) => {
 //#endregion 🔖️withRenderer
 
 //#region 🔖️withWasm
-/** @emoji 🧱️ Single-flight dynamic-import loader registry for scope wasm graphs. Dynamic imports
+/** 🧱️ Single-flight dynamic-import loader registry for scope wasm graphs. Dynamic imports
  * code-split per loader, so a scoped Storybook boot never pulls in another scope's wasm graph until a
  * story actually requests it via `parameters.wasm`. */
 
@@ -403,7 +403,7 @@ const WasmGateHost: React.FC<{ children: React.ReactNode; ids: string[] }> = ({ 
   return <>{children}</>;
 };
 
-/** @emoji 🧱️ Gates a story behind `parameters.wasm: string[]` loader ids until every referenced wasm module resolves. */
+/** 🧱️ Gates a story behind `parameters.wasm: string[]` loader ids until every referenced wasm module resolves. */
 export const withWasm: Decorator = (Story, context) => {
   const ids = (context.parameters.wasm as string[] | undefined) ?? [];
   if (ids.length === 0) return <Story />;

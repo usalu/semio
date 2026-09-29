@@ -1,4 +1,4 @@
-//! @emoji 📬️ Per-frame growable upload buffers — the D3D12 counterpart of the wgpu target's
+//! 📬️ Per-frame growable upload buffers — the D3D12 counterpart of the wgpu target's
 //! `GrowBuffer`/`FrameBuffers` and the Metal backend's identical `📬️frame_buffers.rs` — plus
 //! `FrameDescriptors`, the per-frame shader-visible SRV bump allocator this backend's root signature
 //! needs that Metal's per-draw argument-table binding never did.

@@ -98,24 +98,20 @@ impl Inner {
         }
     }
 
+    /// 🔎️ SAFETY: occupancy is set only after `write` and cleared before `assume_init_read`.
     fn get_at(&self, index: usize) -> Option<&SlotEntry> {
         if !self.occupied(index) {
             return None;
         }
-        self.slots.get(index).map(|slot| {
-            // SAFETY: occupancy is set only after `write` and cleared before `assume_init_read`.
-            unsafe { slot.assume_init_ref() }
-        })
+        self.slots.get(index).map(|slot| unsafe { slot.assume_init_ref() })
     }
 
+    /// ✏️ SAFETY: occupancy is set only after `write` and cleared before `assume_init_read`.
     fn get_at_mut(&mut self, index: usize) -> Option<&mut SlotEntry> {
         if !self.occupied(index) {
             return None;
         }
-        self.slots.get_mut(index).map(|slot| {
-            // SAFETY: occupancy is set only after `write` and cleared before `assume_init_read`.
-            unsafe { slot.assume_init_mut() }
-        })
+        self.slots.get_mut(index).map(|slot| unsafe { slot.assume_init_mut() })
     }
 
     fn get(&self, id: u64) -> Option<&SlotEntry> {
@@ -126,13 +122,13 @@ impl Inner {
         self.get_at_mut(Self::index(id)).filter(|entry| entry.id == id)
     }
 
+    /// 🫳️ SAFETY: exact identity and occupancy were checked, and occupancy is now cleared.
     fn take(&mut self, id: u64) -> Option<SlotEntry> {
         let index = Self::index(id);
         if self.get_at(index).is_none_or(|entry| entry.id != id) {
             return None;
         }
         self.set_occupied(index, false);
-        // SAFETY: exact identity and occupancy were checked, and occupancy is now cleared.
         Some(unsafe { self.slots[index].assume_init_read() })
     }
 
@@ -146,7 +142,7 @@ impl Inner {
     /// 🔁️ The replace-and-take-waker step `resolve`/`append_chunk` both need — factored out so the
     /// chunk-reassembly cap/done paths reuse the EXACT same resolution mechanics `resolve` already
     /// had, rather than a second hand-rolled copy.
-    // 🚫️async: E1 pure in-memory slot mutation consumed by `RequestRegistry`'s sync API below — R9.
+    /// 🚫️async: E1 pure in-memory slot mutation consumed by `RequestRegistry`'s sync API below — R9.
     fn complete(&mut self, id: u64, result: Result<Vec<u8>, Fault>) -> Option<Waker> {
         match self.get_mut(id).map(|entry| &mut entry.value) {
             Some(slot @ Slot::Pending { .. }) => {
@@ -489,6 +485,9 @@ pub struct RequestFuture {
 impl Future for RequestFuture {
     type Output = Result<Vec<u8>, Fault>;
 
+    /// 🔁️ Unreachable by construction — `request_continuation` returns a bare `RequestId` and
+    /// never a future, so no `RequestFuture` can name a continuation slot. Reinstated rather
+    /// than consumed: taking it here would silently cancel a live redispatch someone else owns.
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         if self.admission_failed {
             return Poll::Ready(Err(Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.request-registry.capacity"), "fixed request authority is saturated".to_string())));
@@ -500,9 +499,6 @@ impl Future for RequestFuture {
                 inner.insert_admitted(SlotEntry { id: self.id, instance, value: Slot::Pending { waker: Some(cx.waker().clone()), partial } });
                 Poll::Pending
             }
-            // 🔁️ Unreachable by construction — `request_continuation` returns a bare `RequestId` and
-            // never a future, so no `RequestFuture` can name a continuation slot. Reinstated rather
-            // than consumed: taking it here would silently cancel a live redispatch someone else owns.
             Some(entry @ SlotEntry { value: Slot::Continuation { .. }, .. }) => {
                 inner.insert_admitted(entry);
                 Poll::Ready(Err(Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.request-registry.continuation"), "a redispatch continuation id can never back a parked future".to_string())))

@@ -130,7 +130,7 @@ fn enqueue_host_metrics(
 //#region 🔖️WindowDelegate for OsHost
 
 impl WindowDelegate for OsHost {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    /// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn scheduler_mut(&mut self) -> &mut ui_render::FrameScheduler {
         &mut self.scheduler
     }
@@ -145,8 +145,8 @@ impl WindowDelegate for OsHost {
     /// through a single `spawn_app_task` call, same coarse "any input event may have changed something"
     /// invalidation rule as before. Wrapped in a `semio_framework_trace::Watchdog` against
     /// `InteractiveStage::UiEvent`'s 1ms soft target — the ticket's own UI-event-callback gate.
-    // 🚫️async: U1 — the enqueue itself never awaits; the batched dispatch this feeds is the boundary-
-    // async exception U1 itself carves out.
+    /// 🚫️async: U1 — the enqueue itself never awaits; the batched dispatch this feeds is the boundary-
+    /// async exception U1 itself carves out.
     fn handle_event(&mut self, event: DispatchEvent) {
         let hold = self.frame_generation_hold();
         if enqueue_host_event(&mut self.events, &mut self.scheduler, self.ui_token, &mut self.frame_generation, hold, event) == ui_host::EnqueueOutcome::Overflow {
@@ -157,7 +157,7 @@ impl WindowDelegate for OsHost {
     /// 📐️ P5e funnels metrics through both the input queue and the fixed generation-qualified
     /// surface lane. This callback only publishes the newest scalar owner; worker preparation and the
     /// one UI-capability surface step advance from redraw opportunities.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    /// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn handle_metrics(&mut self, metrics: WindowMetrics) {
         let hold = self.frame_generation_hold();
         if enqueue_host_metrics(&mut self.events, &mut self.scheduler, self.ui_token, &mut self.frame_generation, hold, metrics.physical.width, metrics.physical.height, metrics.scale_factor) != ui_host::EnqueueOutcome::Accepted {
@@ -173,13 +173,13 @@ impl WindowDelegate for OsHost {
     /// polls/submits the worker-owned `AppRuntime::frame` transaction. `present_snapshot` acquires
     /// the latest immutable snapshot and applies only UI-capability directives. A stalled worker
     /// therefore preserves the last valid presentation without extending this callback.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    /// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn redraw(&mut self, _reason: InvalidationReason) -> RedrawOutcome {
         let _watchdog = semio_framework_trace::Watchdog::start("os_renderer_present", render_frame_operation_id(), semio_framework_trace::Generation(self.frame_generation), semio_framework_trace::InteractiveStage::UiPresent);
         self.redraw_core()
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    /// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn close_requested(&mut self) -> bool {
         true
     }
@@ -207,18 +207,18 @@ impl OsHost {
         crate::os_host::BrowserRedrawOutcome { cursor_css: ui_wgpu::wgpu::cursor::semio_cursor_css(snapshot.accepted_cursor, snapshot.accepted_theme_dark) }
     }
 
+    /// 🔢️ The frame generation names the INPUT STATE a build is answering, so it advances when input
+    /// changes (`enqueue_host_event`/`enqueue_host_metrics`) and when a redraw finds no build to
+    /// invalidate — never underneath a live one.
+    ///
+    /// 🩸️ `frame_ready` is only ever set by the native `HostUserEvent::FrameReady` proxy; the browser
+    /// worker has no such proxy, so this used to renumber the inputs on EVERY tick. A build was
+    /// therefore superseded one tick after it was admitted and could never take a second step: on
+    /// 6118 exactly one build ever ran (`frame build admitted generation=Generation(3)`), the next
+    /// tick superseded it, and the shell produced no further frame for the rest of the session
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-runtime-mailbox-dispatch-2026-09-13.md`).
     fn redraw_core(&mut self) -> RedrawOutcome {
         let _ = crate::surface_lane::MountedSurfaceResizeLane::close_abandoned_step();
-        // 🔢️ The frame generation names the INPUT STATE a build is answering, so it advances when input
-        // changes (`enqueue_host_event`/`enqueue_host_metrics`) and when a redraw finds no build to
-        // invalidate — never underneath a live one.
-        //
-        // 🩸️ `frame_ready` is only ever set by the native `HostUserEvent::FrameReady` proxy; the browser
-        // worker has no such proxy, so this used to renumber the inputs on EVERY tick. A build was
-        // therefore superseded one tick after it was admitted and could never take a second step: on
-        // 6118 exactly one build ever ran (`frame build admitted generation=Generation(3)`), the next
-        // tick superseded it, and the shell produced no further frame for the rest of the session
-        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-runtime-mailbox-dispatch-2026-09-13.md`).
         if self.frame_ready {
             self.frame_ready = false;
         } else if !self.frame_build.has_live_session() {
@@ -255,7 +255,23 @@ impl OsHost {
     /// 🖱️ The snapshot keeps the generic five-value host cursor beside the accepted 14-value product
     /// cursor and its accepted theme. Native already applies the product pair during presentation;
     /// the browser projects the same pair through `semio_cursor_css` after this publication.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    /// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    ///
+    /// 🧵️ `poll_runtime_and_resubmit` never waits: it accepts a fresh completed frame or leaves the
+    /// last presentation in place, then schedules at most one worker-owned frame transaction.
+    ///
+    /// 🩺️ The presentation gate decides whether a frame build runs at all, and a frame build is the
+    /// ONLY thing that pumps the runtime mailbox — so a gate stuck shut is indistinguishable from
+    /// "input never dispatched" unless it says who is holding it.
+    ///
+    /// 🖼️ Drive the present cursor for the rest of this tick's interactive share instead of one
+    /// phase per redraw. `AppPresentCursor` walks begin-GPU → engine surfaces → uploads → command
+    /// pages → submit one phase at a time; at one phase per browser frame a single presentation
+    /// took seconds, during which `admit_next_frame` refuses to build the next frame at all, so
+    /// the shell advanced roughly one frame every two seconds. Every prepared GPU opportunity
+    /// inside the loop is still priced by its own two-millisecond ceiling
+    /// (`🖱️ui/🎯️targets/🧊️wgpu/🧊️gpu/🦀️.rs` `admit_prepared_gpu_opportunity`), so the loop cannot
+    /// hide an over-ceiling submit (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     fn build_and_publish_snapshot(&mut self) {
         if !self.presenter.holds_presented_input_publication() {
             let _ = self.runtime.pump_pending_applies(RUNTIME_APPLY_TICK_CREDITS);
@@ -273,10 +289,8 @@ impl OsHost {
             let drained = self.events.drain_page(ui_host::WorkerContext::new(generation));
             let drained_shape = format!("move={} metrics={} ordered={}", drained.pointer_move.is_some(), drained.metrics.is_some(), drained.discrete.iter().filter(|slot| slot.is_some()).count());
             let admitted = self.runtime.enqueue_apply(None, true, crate::RuntimeApply::DispatchEvents(Some(crate::RuntimeDispatchCursor::new_for_generation(drained, self.frame_generation))));
-            crate::log_debug(&format!("[DEBUG] os_host drain events generation={generation:?} {drained_shape} enqueue-apply={admitted}"));
+            crate::log_debug(&format!("[TRACE] os_host drain events generation={generation:?} {drained_shape} enqueue-apply={admitted}"));
         }
-        // 🧵️ `poll_runtime_and_resubmit` never waits: it accepts a fresh completed frame or leaves the
-        // last presentation in place, then schedules at most one worker-owned frame transaction.
         let component_close_pending = crate::os_host::component_surface_close_pending();
         if !component_close_pending {
             let build_inputs = self.runtime.frame_inputs(crate::app_now_ms());
@@ -285,25 +299,14 @@ impl OsHost {
             crate::frame_latency::observe_frame_generation(build_generation.0);
             self.runtime.observe_presentation_input_generation(build_generation.0);
             let runtime = self.runtime.clone();
-            // 🩺️ The presentation gate decides whether a frame build runs at all, and a frame build is the
-            // ONLY thing that pumps the runtime mailbox — so a gate stuck shut is indistinguishable from
-            // "input never dispatched" unless it says who is holding it.
             crate::log_debug_diagnostic_once_per_transition(
                 "frame-gate",
                 self.presenter.has_pending_presentation(),
-                &format!("[DEBUG] os_host frame gate blocked={} {} generation={build_generation:?}", self.presenter.has_pending_presentation(), self.presenter.presentation_gate_shape()),
+                &format!("[TRACE] os_host frame gate blocked={} {} generation={build_generation:?}", self.presenter.has_pending_presentation(), self.presenter.presentation_gate_shape()),
             );
             let frame_build = &mut self.frame_build;
             let _ = self.presenter.admit_next_frame(|| frame_build.poll_runtime_and_resubmit(runtime, build_inputs, build_operation, build_generation));
         }
-        // 🖼️ Drive the present cursor for the rest of this tick's interactive share instead of one
-        // phase per redraw. `AppPresentCursor` walks begin-GPU → engine surfaces → uploads → command
-        // pages → submit one phase at a time; at one phase per browser frame a single presentation
-        // took seconds, during which `admit_next_frame` refuses to build the next frame at all, so
-        // the shell advanced roughly one frame every two seconds. Every prepared GPU opportunity
-        // inside the loop is still priced by its own two-millisecond ceiling
-        // (`🖱️ui/🎯️targets/🧊️wgpu/🧊️gpu/🦀️.rs` `admit_prepared_gpu_opportunity`), so the loop cannot
-        // hide an over-ceiling submit (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
         #[cfg(target_arch = "wasm32")]
         let present_deadline_us = semio_framework_job::default_now_us().map(|now| now.saturating_add(semio_framework_job::INTERACTIVE_STEP_CEILING_US / 2));
         loop {
@@ -340,7 +343,7 @@ impl OsHost {
                 Ok(crate::AppPresentStep::AwaitingRuntime) => return,
                 Ok(crate::AppPresentStep::Idle) => return,
                 Err(error) => {
-                    crate::log_debug(&format!("[DEBUG] os_host present_step faulted: {error}"));
+                    crate::log_debug(&format!("[TRACE] os_host present_step faulted: {error}"));
                     self.present_fault = Some(error);
                     if self.presenter.has_pending_presentation() {
                         self.scheduler.invalidate(InvalidationReason::RESOURCE_READY);
@@ -362,7 +365,7 @@ impl OsHost {
     /// governing rule verbatim) and applies its cursor/IME directives plus this file's deadline
     /// sources. This is the bounded, ≤2ms-budget half of `redraw`; expensive frame construction
     /// happens in the worker transaction submitted by `build_and_publish_snapshot`.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    /// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn present_snapshot(&mut self, now: f64) -> RedrawOutcome {
         let snapshot = self.snapshot_sink.acquire();
         crate::deadlines::sync_presented_deadlines(&mut self.scheduler, &mut self.animation_clock, self.runtime.retained_control_deadline(now), now, self.presenter.awaiting_runtime());
@@ -397,7 +400,7 @@ fn semio_cursor_to_request(cursor: ui_wgpu::wgpu::SemioCursor) -> CursorRequest 
 /// (`dispatch_actions`/world3d/graph/map/board call sites all branch on `0`/`1`/`2` verbatim).
 /// 📤️ P3a: the runtime mailbox invokes this for one retained cursor item per worker turn.
 pub(crate) async fn dispatch_normalized_event(app: &mut AppInteractionState, event: DispatchEvent) {
-    crate::log_debug(&format!("[DEBUG] os_host dispatch_normalized_event {event:?}"));
+    crate::log_debug(&format!("[TRACE] os_host dispatch_normalized_event {event:?}"));
     match event {
         DispatchEvent::PointerMove { pointer, x, y, modifiers } => {
             let (down, button, modifiers) = (app.pointer_down, app.pointer_button, event_modifiers_to_pointer(modifiers));
@@ -658,7 +661,7 @@ mod native {
     }
 
     impl WinitApp {
-        // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+        /// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
         #[allow(clippy::too_many_arguments)]
         pub fn new(
             proxy: EventLoopProxy<HostUserEvent>,
@@ -898,20 +901,25 @@ mod native {
         /// 🪟️ Window creation ported verbatim from the old `SemioApp::resumed` (title/size/canvas-mount
         /// logic unchanged — see this file's own module docstring for why the two-phase handshake this
         /// method starts is kept, not deleted). Only the tail changes: no `start_frame_loop` call.
-        // 🚫️async: U1 — sync per winit's own `ApplicationHandler` trait.
+        /// 🚫️async: U1 — sync per winit's own `ApplicationHandler` trait.
+        ///
+        /// ⏱️ P3a (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): registers THIS thread —
+        /// winit's callback thread, the only thread `resumed`/`window_event`/`about_to_wait` ever run
+        /// on — as the UI thread with `semio-framework-trace`'s thread-role census, so
+        /// `semio_framework_trace::is_ui_thread()`/`assert_ui_thread()` are meaningful anywhere in this
+        /// process from this point on. Exactly once, first callback, before any event can be normalized.
+        ///
+        /// 🏷️ React's `ShellBrand.windowTitle` — the brand ROW the boot descriptor carries
+        /// (`WgpuBootBrand`), `"Semio"` when this boot resolved no brand. React sets the same string
+        /// as the document title on its own shell (`🧑‍💻dev/🟦️.ts`'s brand mount).
+        ///
+        /// ♿️ The platform accessibility adapter must exist before the window is first shown (AccessKit's own
+        /// contract), so the native window is created hidden, the bridge attached, and only then shown.
         fn resumed(&mut self, event_loop: &ActiveEventLoop) {
             if self.window.is_some() {
                 return;
             }
-            // ⏱️ P3a (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): registers THIS thread —
-            // winit's callback thread, the only thread `resumed`/`window_event`/`about_to_wait` ever run
-            // on — as the UI thread with `semio-framework-trace`'s thread-role census, so
-            // `semio_framework_trace::is_ui_thread()`/`assert_ui_thread()` are meaningful anywhere in this
-            // process from this point on. Exactly once, first callback, before any event can be normalized.
             semio_framework_trace::register_ui_thread();
-            // 🏷️ React's `ShellBrand.windowTitle` — the brand ROW the boot descriptor carries
-            // (`WgpuBootBrand`), `"Semio"` when this boot resolved no brand. React sets the same string
-            // as the document title on its own shell (`🧑‍💻dev/🟦️.ts`'s brand mount).
             let mut attributes = WindowAttributes::default().with_title(crate::boot_window_title());
             #[cfg(target_arch = "wasm32")]
             {
@@ -929,8 +937,6 @@ mod native {
                 attributes = attributes.with_inner_size(winit::dpi::LogicalSize::new(1280.0, 800.0)).with_visible(false);
             }
             let window = Arc::new(event_loop.create_window(attributes).expect("create window"));
-            // ♿️ The platform accessibility adapter must exist before the window is first shown (AccessKit's own
-            // contract), so the native window is created hidden, the bridge attached, and only then shown.
             #[cfg(not(target_arch = "wasm32"))]
             {
                 let proxy = self.proxy.clone();
@@ -970,7 +976,9 @@ mod native {
             });
         }
 
-        // 🚫️async: U1 — sync per winit's own `ApplicationHandler` trait.
+        /// 🚫️async: U1 — sync per winit's own `ApplicationHandler` trait.
+        ///
+        /// 🔔️ Worker completion wake: invalidate only; no future is polled on this callback.
         fn user_event(&mut self, event_loop: &ActiveEventLoop, event: HostUserEvent) {
             match event {
                 HostUserEvent::RuntimeReady { runtime, presenter } => {
@@ -1000,7 +1008,6 @@ mod native {
                         host.scheduler.invalidate(InvalidationReason::RESOURCE_READY);
                     }
                 }
-                // 🔔️ Worker completion wake: invalidate only; no future is polled on this callback.
                 HostUserEvent::Wake => {
                     if let Some(host) = self.host.as_mut() {
                         if !advance_frame_generation(&mut host.frame_generation) {
@@ -1018,7 +1025,7 @@ mod native {
         /// so the only thing owed here is a redraw — the twin of React's ONE shared
         /// `matchMedia("(prefers-color-scheme: dark)")` `change` listener
         /// (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx`'s `ensureElementsSurfaceChromeSystemListeners`).
-        // 🚫️async: U1 — sync per winit's own `ApplicationHandler` trait.
+        /// 🚫️async: U1 — sync per winit's own `ApplicationHandler` trait.
         fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
             let Some(window) = self.window.clone() else { return };
             #[cfg(not(target_arch = "wasm32"))]
@@ -1088,7 +1095,10 @@ mod native {
 
         /// 🌙️ Requests a redraw only when the scheduler reports invalidation or a due deadline.
         /// Native futures run exclusively on the process worker pool; this callback never polls them.
-        // 🚫️async: U1 — sync per winit's own `ApplicationHandler` trait.
+        /// 🚫️async: U1 — sync per winit's own `ApplicationHandler` trait.
+        ///
+        /// ♿️ The platform tree follows the latest presented publication; every assistive-technology action is
+        /// handed to the shell as the accessibility event it is, exactly like a browser mirror event.
         fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
             if !OsHostRetirement::close_abandoned_step() {
                 event_loop.set_control_flow(winit::event_loop::ControlFlow::wait_duration(std::time::Duration::from_millis(1)));
@@ -1109,8 +1119,6 @@ mod native {
                 return;
             }
             let Some(host) = self.host.as_mut() else { return };
-            // ♿️ The platform tree follows the latest presented publication; every assistive-technology action is
-            // handed to the shell as the accessibility event it is, exactly like a browser mirror event.
             #[cfg(not(target_arch = "wasm32"))]
             if let Some(bridge) = self.accessibility.as_mut() {
                 bridge.refresh();
@@ -1135,7 +1143,7 @@ mod native {
         /// 🚦️ `WaitUntil(next deadline)` / `Wait` — never `Poll` (this file's own headline change).
         /// `ControlFlow::wait_duration` selects winit's target clock while the scheduler remains in
         /// elapsed seconds, so native and browser builds share the same deadline policy.
-        // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+        /// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
         fn recompute_control_flow(&mut self, event_loop: &ActiveEventLoop) {
             let Some(host) = self.host.as_ref() else {
                 event_loop.set_control_flow(winit::event_loop::ControlFlow::Wait);

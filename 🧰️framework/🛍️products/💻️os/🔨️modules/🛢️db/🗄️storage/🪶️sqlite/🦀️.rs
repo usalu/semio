@@ -905,7 +905,7 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
             crate::db_storage::open_db_io_backend_admitted(&pool, || Self::open_owned_once(pool.clone(), path.clone(), in_memory)).await
         }
 
-        /// @emoji 🎯️ One SQLite backend open attempt, refused at once when the backend capacity is taken.
+        /// 🎯️ One SQLite backend open attempt, refused at once when the backend capacity is taken.
         async fn open_owned_once(pool: Arc<WorkerPool>, path: DbIoText, in_memory: bool) -> Result<Self, DbStorageOpenRejected> {
             let rollback = DbIoBackendRollbackReservation::try_reserve()?;
             let pool_use = pool.acquire_use().map_err(|error| DbError::Unavailable(format!("SQLite DB I/O backend WorkerPool use rejected: {error:?}")))?;

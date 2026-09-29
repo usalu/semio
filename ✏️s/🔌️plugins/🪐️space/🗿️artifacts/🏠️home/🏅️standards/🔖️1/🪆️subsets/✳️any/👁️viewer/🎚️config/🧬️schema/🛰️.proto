@@ -4,11 +4,5 @@ syntax = "proto3";
 package semio.app.space.home;
 message HomeConfig {
   // @state config
-  string directory_json = 1;
-  // @state config
-  string directory_session_binding_sha256 = 2;
-  // @state config
-  uint64 directory_authorization_generation = 3;
-  // @state config
-  string directory_receipt_sha256 = 4;
+  repeated string retired_local_studio_ids = 1;
 }

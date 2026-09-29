@@ -1,5 +1,4 @@
 use super::*;
-use semio_framework_plugin::Component;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_a_table_window() {
@@ -13,8 +12,7 @@ async fn render_lists_one_row_per_record_with_35_columns() {
     let mut document = EpwSnapshot::default();
     document.records.push(Default::default());
     let node = render(&document).expect("render");
-    let Component::Surface(props) = node.component else { panic!("expected a retained table surface") };
-    let scene: semio_framework_ui_scene::TableScene = semio_framework_ui_scene::decode(&props).expect("decode table scene");
+    let scene: semio_framework_ui_scene::TableScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(&node).expect("decode the table scene with its lanes");
     // 🌦️ `TableWindowKit` contract: `columnsJson` is `{id, label}` records, `rowsJson` is
     // `{id, <column id>: cell}` records keyed by column position — so a 35-column row carries
     // 35 cell entries plus its `id`.

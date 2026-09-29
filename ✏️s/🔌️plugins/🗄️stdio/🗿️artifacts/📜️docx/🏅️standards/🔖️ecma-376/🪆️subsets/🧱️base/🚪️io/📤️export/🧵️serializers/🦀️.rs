@@ -3,7 +3,7 @@
 //! reimplemented here: it is reused from the shared `semio_s_artifact_stdio_zip::opc` layer and,
 //! transitively, `semio_s_artifact_stdio_zip::engine` + `semio_s_artifact_stdio_xml::schema::snapshot`.
 
-use super::super::super::{DocxError, MAIN_DOCUMENT_CONTENT_TYPE, MAIN_DOCUMENT_PART, REL_TYPE_STYLES, STRICT_REL_TYPE_OFFICE_DOCUMENT, STRICT_REL_TYPE_STYLES, STYLES_CONTENT_TYPE, STYLES_PART, STYLES_REL_TARGET, W_NS};
+use super::super::super::{DocxError, MAIN_DOCUMENT_CONTENT_TYPE, MAIN_DOCUMENT_PART, REL_TYPE_STYLES, STYLES_CONTENT_TYPE, STYLES_PART, STYLES_REL_TARGET, W_NS};
 use crate::{
     schema::snapshot::{DocxBlock, DocxDocument, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow, DocxXmlPart},
     DocxSnapshot,

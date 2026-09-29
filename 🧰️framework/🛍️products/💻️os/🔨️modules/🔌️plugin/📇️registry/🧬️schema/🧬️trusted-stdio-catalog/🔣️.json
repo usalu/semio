@@ -6,7 +6,7 @@
   "required": ["schemaVersion", "expectedCodecCount", "expectedOpenTargetKind", "expectedPublication", "expectedHubBundle", "hostile"],
   "properties": {
     "schemaVersion": { "const": 1 },
-    "expectedCodecCount": { "const": 26 },
+    "expectedCodecCount": { "const": 29 },
     "expectedOpenTargetKind": { "const": "s.stdio.json" },
     "expectedPublication": { "const": "committed" },
     "expectedHubBundle": { "const": "withheld" },
@@ -72,8 +72,8 @@
         "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
         "nativeCodecs": {
           "type": "array",
-          "minItems": 26,
-          "maxItems": 26,
+          "minItems": 29,
+          "maxItems": 29,
           "items": { "$ref": "#/$defs/codec" }
         },
         "openTargets": {

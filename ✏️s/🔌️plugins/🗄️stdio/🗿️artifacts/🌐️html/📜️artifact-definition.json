@@ -49,7 +49,9 @@
       "status": "declared"
     }
   ],
-  "codecs": [],
+  "codecs": [
+    { "id": "s.stdio.html.standard.5.codec.native-document.v1", "status": "implemented", "from": "s.stdio.html.standard.5.dialect.source", "to": "s.stdio.html.standard.5.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.html.v1", "artifact_kind": "s.stdio.html", "artifact_schema": "stdio.html", "extension": "html", "pack_schema_hash": "563a275178326c5e528ca2c6a9c5c4b4da8b7e0c83af5d6d49b0ea5b8b0b3e0d", "runtime_capability_id": "s.stdio.html.standard.5.codec.codec-stdio-html-extension-html.v1" } }
+  ],
   "mutations": [],
   "inferences": [],
   "resources": [
@@ -82,7 +84,34 @@
       "fixtures": []
     }
   ],
-  "runtime_capabilities": [],
+  "runtime_capabilities": [
+    {
+      "id": "s.stdio.html.standard.5.codec.codec-stdio-html-extension-html.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec-extension:10:stdio.html:html|codec:stdio.html",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.html"
+        },
+        {
+          "namespace": "codec-extension",
+          "value": "10:stdio.html:html"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.html.schema.schema-s-stdio-html.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.html",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.html"
+        }
+      ]
+    }
+  ],
   "support_ledger": {
     "normative_source": null,
     "publication_date": null,

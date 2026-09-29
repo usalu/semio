@@ -78,7 +78,7 @@ function assertPluginOutputChildren(outDir: string, componentBase: string): void
   }
 }
 
-/** @emoji 🛂️ Publishes the checked-in build-time descriptor beside the generated browser module.
+/** 🛂️ Publishes the checked-in build-time descriptor beside the generated browser module.
  * `fetchDescriptorManifest()` deliberately reads this sibling before any actor is instantiated, so
  * leaving descriptors only at their owner roots makes every otherwise-valid module appear app-less
  * at runtime. Unmigrated crates remain honest: no source descriptor means no staged descriptor. */
@@ -97,7 +97,7 @@ function stagePluginDescriptor(target: PluginRegistryEntry, outDir: string, root
   return true;
 }
 
-/** @emoji 🔁️ Refreshes descriptor siblings for already-materialized modules on zero-build starts. */
+/** 🔁️ Refreshes descriptor siblings for already-materialized modules on zero-build starts. */
 function syncBuiltPluginDescriptors(entries: readonly PluginRegistryEntry[]): void {
   for (const target of entries) {
     const outDir = join(pluginOutRoot, moduleDirectoryName(target.pluginId));

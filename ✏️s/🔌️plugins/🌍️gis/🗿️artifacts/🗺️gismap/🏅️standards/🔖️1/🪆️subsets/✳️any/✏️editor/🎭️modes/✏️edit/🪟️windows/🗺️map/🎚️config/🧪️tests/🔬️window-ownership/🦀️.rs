@@ -56,7 +56,6 @@ fn gis_map_window_ownership_mutations_match_neutral_fixture_and_codecs() {
         let expected: MapWindowConfig = dsl::json::from_json_str(&expected.to_string()).unwrap();
         assert_eq!(windows.get(id), Some(&expected));
     }
-    eprintln!("[DEBUG] GIS Map window config matched neutral fixture inverse, text, binary, left-only undo/redo, and two-instance isolation laws");
 }
 
 #[test]
@@ -234,10 +233,9 @@ fn gis_map_window_ownership_runtime_isolates_renders_and_reopens_two_map_windows
                 if addressed(&wrong, MapWindowConfigMutation::SetCamera(map_config_mutations::SetCamera { camera_json: "{}".into() })).is_ok() { return Err("GIS Map accepted the wrong concrete window kind".into()); }
                 Ok(())
             }.await;
-            if let Err(error) = &outcome { eprintln!("[DEBUG] GIS Map exact-window runtime failure before close: {error}"); }
+            if let Err(error) = &outcome { eprintln!("[TRACE] GIS Map exact-window runtime failure before close: {error}"); }
             artifact_app_laws::close_registered_fixture_app(&mut *app);
             outcome.expect("GIS Map exact-window runtime law");
-            eprintln!("[DEBUG] GIS Map retained commands isolated, rendered, measured, and reopened two concrete Map windows");
         }))
         .expect("spawn GIS Map window ownership law")
         .join()

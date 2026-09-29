@@ -145,7 +145,7 @@ class ActivationScript extends BundleScript {
   }
 }
 
-/** @emoji ♻️ Brings one playground variant's `renderer` runtime up to a publishable activation state by
+/** ♻️ Brings one playground variant's `renderer` runtime up to a publishable activation state by
  * running the Nx target that OWNS that closure — `activate-<variant>-<renderer>-<profile>`, whose declared
  * `dependsOn` (`…🦑️repo/🔨️modules/📚️library/🟨️.mjs` `playgroundPreparationTargets`) is the single
  * source of truth for the chain: every selected plugin's `component-<profile>` → `materialize-<profile>`,

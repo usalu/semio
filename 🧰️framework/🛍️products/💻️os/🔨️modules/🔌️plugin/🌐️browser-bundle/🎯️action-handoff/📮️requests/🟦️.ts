@@ -13,13 +13,14 @@ type QueuedActionV1 = {
 };
 
 /** 🚦️ Why the mailbox path refused an input, in the shell's input-ledger refusal vocabulary (L1/L5). */
-export type BrowserActorActionRefusalReasonV1 = "queue-full" | "owner-mismatch" | "dispatch-failed" | "not-applied";
+export type BrowserActorActionRefusalReasonV1 = "queue-full" | "owner-mismatch" | "dispatch-failed" | "not-applied" | "catching-up";
 
 /** 🧭️ Maps a mailbox or worker rejection onto the refusal vocabulary; `null` for errors this transport did not author. */
 export function browserActorActionRefusalReasonV1(error: unknown): BrowserActorActionRefusalReasonV1 | null {
   const message = error instanceof Error ? error.message : typeof error === "string" ? error : null;
   if (message === null) return null;
   if (message.includes("queue full")) return "queue-full";
+  if (/action-catching-up/u.test(message)) return "catching-up";
   if (/action-owner-mismatch|action-busy|owner retired/u.test(message)) return "owner-mismatch";
   if (/action-state-unconfirmed/u.test(message)) return "not-applied";
   if (/mailbox closed|completion unconfirmed|action-refused|action-command-ingress-/u.test(message)) return "dispatch-failed";

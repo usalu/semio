@@ -172,7 +172,7 @@ test("finite manifest candidates prove complete correlated targets without edita
   for (const row of contract.cases) {
     const candidates = inspect(row.source).filter((candidate) => candidate.value === contract.selectedValue);
     expect(candidates.map(({ value, targets }) => ({ value, targets })), row.id).toEqual(row.expected);
-    for (const candidate of candidates) expect(row.source.slice(candidate.start, candidate.end), row.id).toBe(candidate.value);
+    for (const candidate of candidates) expect<string>(row.source.slice(candidate.start, candidate.end), row.id).toBe(candidate.value);
     const files: Record<string, string> = { [contract.manifestPath]: '[package]\nname="candidate"\n[lib]\npath="lib.rs"\n', [contract.consumerPath]: row.source };
     const graph = inspectRustModuleGraph(Object.keys(files), (path) => files[path], { strictManifests: true });
     const manifests = [...new Set((graph.contexts.get(contract.consumerPath) ?? []).map((context) => context.manifestPath).filter(Boolean))];

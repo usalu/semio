@@ -113,6 +113,58 @@ FREEZE ON. Overlay `s14-t14-overlay` (+ `.t14-build` 13 GB) survived.
   semio-framework-plugin-host --lib --tests` **rc 0 00:00** (`s14c-hotfix-1.txt`); gate 2 (re-check with the kernel-home
   re-export + the stdio test) queued with priority stamp (`s14c-hotfix-2.txt`). Descriptor regen = `bun nx run-many -t
   describe --exclude @semio-tech/os-plugin-describe-rs --parallel=2` (describe → component-dev: wasm lane), when L1 frees it.
+- 00:12–00:16 gate 2: re-check with the kernel-home re-export **rc 0**; stdio `native_openable_provider` **7/7** (`s14c-hotfix-2.txt`).
+  T1 GREEN (L1). Descriptor regen done by L1 (not duplicated).
+- 02:4x (after kernel panics + 01:14 sweep; my scripts survived, captures live under `s14-t14-logs`) coordinator items:
+  (1) **picker "Editor" root cause**: all 75 editor apps carry the SDK default app label "Editor"; the pre-T1 hub
+  `artifact_creation_catalog` labelled choices by `app.label` (git 5bcb2da23d) → H9-L (T1, 27d829d8a5) reads `kind.label`; TS
+  twin `artifactKindChoices` fixed (22:3x) — **vitest 2/2** (existing + new law, in-source suite via a scratch config
+  `s14c-manifest-vitest.config.ts`, `s14c-kindchoices-vitest-2.txt`); rule 20: os tsc 0 + Home boots 0 faults since (G12/S18 02:1x–02:2x).
+  Live confirmation needs a hub from this tree + a catalog republished from regenerated descriptors (p24 descriptors carry no
+  kind `label`); check `wp-t14/kind-label-check.py` (02:4x mid-regen: 28/105 kinds labelled). (2) **gen2d/3d hub create crash**:
+  S19's `gen-archive-load` (genesis owners → `retire_unadopted` retiring snapshot + edits) is live after T1; 7800's p24 procedural
+  component predates it. Native proof = S19's genesis + archive laws on the live tree, queued behind wasm-idle + load < 32
+  (`s14c-genesis-laws-1.txt`).
+- 03:25–03:29 **gen2d/3d create path proven natively on the live tree** (after T1): gen2d `a_hub_genesis_pair_is_produced_and_
+  parses_back_without_trapping` + archive-door law **2/2 ok**, gen3d **2/2 ok** (`s14c-genesis-laws-1.txt`) → S19's set covers
+  the hub crash; 7800 needs a procedural package published from this tree (the all-34 chain after T2–T4).
+- 03:3x kind-label-check after L1's regen (L1: rc 1, 88 "no label"): the CHECK's rule was too narrow — viewers declare no kind
+  (they share the editor's). Package-wide lookup → 51 left, all "kind schema ≠ app io schema" = exactly W4's 9 packages (+ demonstrator
+  via sourcing) fixed by `wp-w4/w4-kind-spec-identity.py`, plus space Home (`s.home`, no kind: not creatable). W4's set re-diffed:
+  its forms anchor still said `name:` (H9-L made it `label:`) → fixed; **dry run 42 pending / 0 bad**; no extension needed.
+  New T3 set **`wp-t14/kind-choices/kind-choices.py`** (`--dry-run|--write|--revert`, backups `s14-t14-land/kind-choices/`, dry run
+  **8 pending / 0 bad**), lands WITH W4's set: TS `artifactKindChoices` + Rust twin `artifact_kind_choices` offer exactly the
+  package's DECLARED kinds (package-wide by schema), labelled by the kind, no app-label fallback; TS law extended (viewer shares its
+  editor's kind, no undeclared kind, unique labels) — **vitest 2/2 with the set applied** (`s14c-kindchoices-vitest-3.txt`), then
+  reverted live to the booted 22:3x state (vitest 2/2, `-4.txt`); the Rust hunk is written, not compiled (unused twin; T3 check).
+  `kind-label-check.py` now mirrors that rule: **rc 0, 95 picker kinds, 0 problems, 25 editor apps "not creatable" today** (the W4
+  packages until T3 + Home) (`s14c-kind-label-check-3.txt`).
+- 03:38 rule 23: deleted my overlay build-dir `.t14-build` (25 GB), `.t14-target` and the scratch clone `s14-t14-scratch`
+  (disk 118 → 135 GiB free); overlay sources kept. Hold h8 (22:18) died in the 22:42 kernel panic before a step finished; no
+  T14 process runs. Stopped (coordinator: free a slot). Open for T3: W4 identity set + `kind-choices` (one train), then
+  `kind-label-check.py` after the all-34 chain; raster `retained_image_export_completes_or_cancels_without_mutating_history`
+  (overlay-only red, not baselined live) and process3d fixtures (maps 1–4) to be confirmed by T1's owner tests.
+- 05:0x **T3 revert (L1 04:58)**: `w4-kind-spec-identity.py`'s fem `document_artifact_kind()` template still wrote `name:` → now
+  `label: LocalizedLabel::native("FEM 2D Model", "FEM-2D-Modell")` (3D alike; distinct from the results kinds). Sweep of all three
+  scripts: no other `name:` on `ArtifactKindSpec`/`OsArtifactDescriptor` (the gate fixture's `"name"` keys are case names). All three
+  scripts gain `--root <tree>`; kind-choices backups split `live/`/`scratch/`. Live dry runs: 42/0 bad, 8/0 bad, 8/0 bad. Scratch
+  `s14-t14-kindsets` (APFS clone of the live tree) with all three applied (29 crates + demonstrator); proof
+  `wp-t14/kindsets-proof.sh` (private seeded build-dir, `--lib --tests` check, then `artifact_kind`/`kind_identity` laws) queued behind
+  wasm-idle + native-idle + load < 32 (rule 25), captures `s14c-kindsets-*.txt`.
+- 05:55–06:10 (coordinator: native lane, load < 16, priority stamp) scratch proof **GREEN**: `--lib --tests` check of the 29 touched
+  crates + demonstrator (fem app features) **rc 0** (4 m 32 s, private seeded build-dir); laws **14 passed / 0 failed**
+  (`kind_identity_law_matches_the_fixture` + every `artifact_kind_names_the_store_schema`); kind-choices TS law vitest 2/2 (earlier).
+  Live re-dry-runs 42/0, 8/0, 8/0 bad. Scratch clone + build-dir deleted (disk 106 GiB free). RELAY L1: re-land in order
+  identity → gate → kind-choices. Stopped.
+- 10:2x **CHAIN FIX (critical path; freeze lifted for it by the coordinator)**: the all-34 chain failed twice at components → describe,
+  only flow: "none of its 1 declared artifact kinds is owned … flow.host_snapshot: artifact codec schema has no structural record
+  specification" — W4's identity set keyed flow's kind on `FLOW_DOCUMENT_SCHEMA`, whose hand-rolled `ArtifactPack` answered
+  `record_spec() = None`. Root fix (precedent: writer's snapshot, stdio `txt`): `FlowSnapshot` derives `dsl::DslRecord`
+  (`#[dsl(extension = "flow")]`) and `record_spec()` returns `Some(Self::__dsl_spec())` — the hash fingerprints the snapshot record
+  (`schema` + composed `content` handle); the JSON pack body is unchanged. File: flow `🧬️schema/📸️snapshot/🦀️.rs`. **Native check
+  `--lib --tests` of flow + 9 extensions + describe crate rc 0 (10:28), flow codec/pack laws 5/5** (`s14c-flow-spec-1.txt`);
+  **`bun nx run @semio-tech/flow-plugin:describe` rc 0 10:29** (gate passed; descriptor declares `computation.flow` =
+  `flow.host_snapshot`, label Flow/Fluss; `s14c-flow-describe-1.txt`). Relayed: relaunch `--from components`. Landing row added.
 
 ## Session 14b
 

@@ -50,11 +50,11 @@ base64_codec = { path = "../../../../../🔨️modules/🚪️io/🔤️base64/�
 # 🖼️ SVG parsing/rasterization is a native-host capability.  Keep its renderer stack out of a
 # wasm32-wasip2 guest while retaining the target-neutral media registry.
 [target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
-png = "0.17.16"
+semio-framework-pixels = { path = "../../../../../🔨️modules/🔲️pixels/📦️packages/🦀️rust" }
 resvg = "0.45.1"
 tiny-skia = "0.11.4"
 usvg = "0.45.1"
-# 🗜️ `zip` moved from an unconditional optional dependency: its only production consumer is
+# 🗜️ `semio-framework-deflate` (its first-party `zip_archive`) is optional: its only production consumer is
 # `🔨️modules/🪐️space/🦀️.rs`'s `//#region 🔖️Zip` (`export_collection_zip`/`import_collection_zip`
 # and their `ZipStoreBridge`), which builds a portable `.zip` byte stream from caller-injected,
 # already-in-memory bytes — zero ambient filesystem access, but genuinely host-only: it has no
@@ -64,7 +64,7 @@ usvg = "0.45.1"
 # shape as `os-kernel`'s `os_extension` module (`os-kernel-host-crates-split.md`): `target_arch =
 # "wasm32"` is TRUE for `wasm32-wasip2`, so this needs the full `not(all(...))` gate, not a bare
 # `not(target_arch = "wasm32")` one.
-zip = { version = "2.4", default-features = false, features = ["deflate"], optional = true }
+semio-framework-deflate = { path = "../../../../../🔨️modules/🗜️deflate/📦️packages/🦀️rust", optional = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 tokio = { version = "1", features = ["sync"], default-features = false }
@@ -78,9 +78,10 @@ semio-framework-plugin-host = { path = "../../../🔨️modules/🔌️plugin/�
 semio-framework-async = { workspace = true }
 
 [dev-dependencies]
+png = "0.17.16"
 semio-framework-async-macros = { path = "../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 
 [features]
 default = []
 space-guest = ["dep:semio-framework-artifact-space-space", "dep:semio-framework-artifact-space-collection"]
-os-host-full = ["space-guest", "dep:zip", "semio-framework-os-kernel/sync"]
+os-host-full = ["space-guest", "dep:semio-framework-deflate", "semio-framework-os-kernel/sync"]

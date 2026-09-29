@@ -6,7 +6,7 @@
 // but this generic pool has real non-plugin callers (the renderer's engine-session cache and others)
 // that must keep working — so it moves here instead of disappearing with its plugin-specific caller.
 
-/** @emoji 🪶️ One caller's reference to a {@link LeasePool}-managed resource. `release()` is idempotent —
+/** 🪶️ One caller's reference to a {@link LeasePool}-managed resource. `release()` is idempotent —
  * a second call is a no-op — and drops this caller's refcount; the pool only disposes the underlying
  * resource once every issued lease on that key has released (and, unless `lingerMs` is 0, only after
  * the linger window below elapses with no re-acquire). */
@@ -38,7 +38,7 @@ type LeasePoolEntry<T> = {
 };
 
 /**
- * @emoji 🪶️ Generic refcounted resource pool with linger-based eviction — the shared mechanism the
+ * 🪶️ Generic refcounted resource pool with linger-based eviction — the shared mechanism the
  * renderer's engine-session cache and other non-plugin callers build on top of, instead of each
  * hand-rolling its own refcounting. A resource loads once per `key` and is shared by every caller;
  * when the last lease on a key releases, the resource isn't disposed immediately — it lingers for
@@ -55,7 +55,7 @@ export function createLeasePool<T>(load: (key: string) => Promise<T>, dispose: (
     if (entries.get(key) !== entry) return;
     entries.delete(key);
     if (entry.settled !== undefined) {
-      console.log(`[DEBUG] ${label} evicted ${key}`);
+      console.log(`[TRACE] ${label} evicted ${key}`);
       dispose(entry.settled);
     }
   }
@@ -108,7 +108,7 @@ export function createLeasePool<T>(load: (key: string) => Promise<T>, dispose: (
       for (const [entryKey, entry] of key ? ([[key, entries.get(key)]] as const) : entries) {
         if (!entry) continue;
         if (entry.refs > 0) {
-          console.warn(`[DEBUG] ${label} evictNow(${entryKey}) skipped — ${entry.refs} active lease(s)`);
+          console.warn(`[TRACE] ${label} evictNow(${entryKey}) skipped — ${entry.refs} active lease(s)`);
           continue;
         }
         if (entry.lingerTimer !== null) clearTimeout(entry.lingerTimer);

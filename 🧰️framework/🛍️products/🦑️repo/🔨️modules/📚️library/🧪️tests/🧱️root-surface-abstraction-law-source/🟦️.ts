@@ -81,7 +81,7 @@ test("validates the portable surface and abstraction ownership contract", () => 
   expect((ts.parseJsonText("fixture.json", JSON.stringify(fixture)) as ts.JsonSourceFile & { readonly parseDiagnostics: readonly ts.Diagnostic[] }).parseDiagnostics).toEqual([]);
 });
 
-test("resolves every owner through its exact semantic context", { timeout: 30_000 }, () => {
+test("resolves every owner through its exact semantic context", () => {
   const taxonomy = loadTaxonomy();
   for (const context of fixture.contexts) expect(semanticDirectoryKindId(context.directoryName, taxonomy, { parentKindId: context.parentKindId }), JSON.stringify(context)).toBe(context.kindId);
   for (const owner of fixture.owners) {
@@ -89,9 +89,9 @@ test("resolves every owner through its exact semantic context", { timeout: 30_00
     expect(owner.path.split("/").at(-1)).toBe("🟦️.ts");
     expect(declarations(resolve(repoRoot, owner.path))).toEqual([...owner.declarations].sort());
   }
-});
+}, { timeout: 30_000 });
 
-test("typechecks all surface and abstraction owners", { timeout: 30_000 }, () => {
+test("typechecks all surface and abstraction owners", () => {
   const paths = fixture.owners.map((owner) => resolve(repoRoot, owner.path));
   const program = ts.createProgram(paths, {
     target: ts.ScriptTarget.ESNext,
@@ -110,7 +110,7 @@ test("typechecks all surface and abstraction owners", { timeout: 30_000 }, () =>
     return source ? [...program.getSyntacticDiagnostics(source), ...program.getSemanticDiagnostics(source)] : [];
   });
   expect(diagnostics.map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n"))).toEqual([]);
-});
+}, { timeout: 30_000 });
 
 test("removes root implementations and binds direct command consumers", () => {
   const moved = new Set(fixture.owners.flatMap((owner) => owner.declarations));
@@ -176,7 +176,7 @@ test("preserves distinct artifact-root and dialect inventories and surfaces unre
   expect(policyAppSchemaConfigRelocationBreaches("/repo", operations)).toEqual([expect.objectContaining({ kind: "app-schema/source-unreadable", scope: "✏️s/🔌️plugins" })]);
 });
 
-test("retains abstraction source-data and Ajv proof behavior", { timeout: 30_000 }, async () => {
+test("retains abstraction source-data and Ajv proof behavior", async () => {
   const { abstractionOwnershipChecks } = await import("../../📏️ownership/🏛️abstraction/✅️verification/🟦️.ts");
   expect(abstractionOwnershipChecks(repoRoot)).toBe(11);
   const sources = [
@@ -185,14 +185,14 @@ test("retains abstraction source-data and Ajv proof behavior", { timeout: 30_000
     readFileSync(resolve(libraryRoot, "🧬️schema/🗿️artifact/⚖️laws/🪪️ownership-field-parity/🟦️.ts"), "utf8"),
   ].join("\n");
   for (const path of fixture.sourceData) expect(sources).toContain(path);
-});
+}, { timeout: 30_000 });
 
-test("retains live surface law behavior without freezing diagnostic totals", { timeout: 30_000 }, async () => {
+test("retains live surface law behavior without freezing diagnostic totals", async () => {
   const { policyAppSchemaBreaches } = await import("../../🧬️schema/🗺️surface/⚖️laws/📋️aggregate/🟦️.ts"),
     breaches = policyAppSchemaBreaches(repoRoot);
   expect(breaches.length).toBeGreaterThan(0);
   expect(breaches.every((breach) => fixture.lawKinds.includes(breach.kind))).toBe(true);
-});
+}, { timeout: 30_000 });
 
 test("registers one Bun Nx and seed-derived launch route", () => {
   const project = JSON.parse(readFileSync(resolve(libraryRoot, "📦️packages/🟦️typescript/📋️project.json"), "utf8"));

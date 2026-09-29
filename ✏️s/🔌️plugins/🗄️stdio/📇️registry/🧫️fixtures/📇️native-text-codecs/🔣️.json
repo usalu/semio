@@ -1,0 +1,97 @@
+{
+  "schema": "semio.stdio.native-text-codecs/v1",
+  "cases": [
+    {
+      "id": "txt-lf-trailing-newline",
+      "artifactKind": "s.stdio.txt",
+      "factoryId": "stdio.native.txt.v1",
+      "source": "alpha\nbeta\n",
+      "snapshot": { "schema": "stdio.txt", "lines": ["alpha", "beta"], "trailingNewline": true, "lineEnding": "lf" }
+    },
+    {
+      "id": "txt-crlf-open-last-line",
+      "artifactKind": "s.stdio.txt",
+      "factoryId": "stdio.native.txt.v1",
+      "source": "Grüße aus Hannover\r\n\r\nstdio.txt",
+      "snapshot": { "schema": "stdio.txt", "lines": ["Grüße aus Hannover", "", "stdio.txt"], "trailingNewline": false, "lineEnding": "crLf" }
+    },
+    {
+      "id": "txt-empty",
+      "artifactKind": "s.stdio.txt",
+      "factoryId": "stdio.native.txt.v1",
+      "source": "",
+      "snapshot": { "schema": "stdio.txt", "lines": [], "trailingNewline": false, "lineEnding": "lf" }
+    },
+    {
+      "id": "tsv-price-list",
+      "artifactKind": "s.stdio.tsv",
+      "factoryId": "stdio.native.tsv.v1",
+      "source": "id\tname\tqty\n1\tOak Panel\t12\n2\tSteel Bracket L-90\t48\n",
+      "snapshot": { "schema": "stdio.tsv", "records": [["id", "name", "qty"], ["1", "Oak Panel", "12"], ["2", "Steel Bracket L-90", "48"]], "trailingNewline": true, "lineEnding": "lf" }
+    },
+    {
+      "id": "tsv-crlf-empty-cells",
+      "artifactKind": "s.stdio.tsv",
+      "factoryId": "stdio.native.tsv.v1",
+      "source": "a\t\tc\r\n\tb\t",
+      "snapshot": { "schema": "stdio.tsv", "records": [["a", "", "c"], ["", "b", ""]], "trailingNewline": false, "lineEnding": "crlf" }
+    },
+    {
+      "id": "html-nested-inline",
+      "artifactKind": "s.stdio.html",
+      "factoryId": "stdio.native.html.v1",
+      "source": "<!DOCTYPE html><html lang=\"en\"><body><p>Hello from the <b>semio</b> html demo.</p></body></html>",
+      "snapshot": {
+        "schema": "stdio.html",
+        "doctype": "DOCTYPE html",
+        "root": {
+          "kind": "element",
+          "name": "html",
+          "attributes": [{ "name": "lang", "value": "en" }],
+          "children": [
+            {
+              "kind": "element",
+              "name": "body",
+              "children": [
+                {
+                  "kind": "element",
+                  "name": "p",
+                  "children": [
+                    { "kind": "text", "text": "Hello from the " },
+                    { "kind": "element", "name": "b", "children": [{ "kind": "text", "text": "semio" }] },
+                    { "kind": "text", "text": " html demo." }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "html-comment-void-boolean-entity",
+      "artifactKind": "s.stdio.html",
+      "factoryId": "stdio.native.html.v1",
+      "source": "<!DOCTYPE html><html><body><!-- note --><input disabled><p class=\"lead\">a &amp; b</p></body></html>",
+      "snapshot": {
+        "schema": "stdio.html",
+        "doctype": "DOCTYPE html",
+        "root": {
+          "kind": "element",
+          "name": "html",
+          "children": [
+            {
+              "kind": "element",
+              "name": "body",
+              "children": [
+                { "kind": "comment", "text": " note " },
+                { "kind": "element", "name": "input", "attributes": [{ "name": "disabled" }] },
+                { "kind": "element", "name": "p", "attributes": [{ "name": "class", "value": "lead" }], "children": [{ "kind": "text", "text": "a & b" }] }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

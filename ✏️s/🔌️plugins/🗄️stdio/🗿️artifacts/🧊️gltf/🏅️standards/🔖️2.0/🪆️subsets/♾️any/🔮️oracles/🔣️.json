@@ -5065,8 +5065,8 @@
           "role": "expected-after-gltf",
           "path": "../../💎️material/🧫️fixtures/create-material-applied/after.gltf",
           "mediaType": "model/gltf+json",
-          "sha256": "sha256:4fdfc06c6abc757d226ed5ce9c9ca92246ca650f2bd2527554aa3a4ab712d994",
-          "bytes": 16577
+          "sha256": "sha256:4308e565bd052cf55428e8a7d7b2bb97b5159de2f9c49e975f6b4b533f0d560c",
+          "bytes": 16540
         }
       ],
       "generator": {
@@ -5087,7 +5087,7 @@
       "comparisonProfile": "semantic-gltf-reader-v1",
       "reproducible": true,
       "family": "structural",
-      "notes": "Inserts a minimal default material at position 1 — create-material{position}."
+      "notes": "Inserts a default material at position 1, reindexing every primitive.material reference at or past it — create-material{position}."
     },
     {
       "schema": "semio.repository-test.fixture/v2",
@@ -9174,6 +9174,307 @@
       "comparisonPipeline": "gltf-2-0-resource-compare-v1",
       "comparisonProfile": "semantic-gltf-resource-v1",
       "reproducible": true
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "bind-node-child-metabolism-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.gltf",
+        "standard": "2.0",
+        "subset": "scene"
+      },
+      "mutation": "bind-node-child",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-glb",
+          "path": "../🧫️fixtures/🧊️mutate-gltf-2-0/🌳️base-with-nested-node/🧊️.glb",
+          "mediaType": "model/gltf-binary",
+          "sha256": "sha256:70e9696fc69433b90aba4927e9da1c067a723dd2c429381611864f30f956bf3f",
+          "bytes": 284452
+        },
+        {
+          "role": "expected-after-glb",
+          "path": "../🧫️fixtures/🧊️mutate-gltf-2-0/🔗️bind-node-child/➡️after.glb",
+          "mediaType": "model/gltf-binary",
+          "sha256": "sha256:cfe5a103be32f290c4d927e6918b8f6921a31c41897e9174ba2d4a9a865f6458",
+          "bytes": 280628
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "n/a (structural JSON-chunk patch of the repository's own metabolism example export)",
+        "attribution": "The artifact-root case's committed real GLB export with this row's edit applied to its JSON chunk by the subset generator's generic structural operations, the BIN chunk carried byte for byte; reproduced by `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only bind-node-child-metabolism-applied`",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-gltf-reader-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Links node 3 as node 2's first child — bind-node-child{parent:2,child:3,position:0}; node 3 keeps its scene-root entry, which the operation never touches."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "unbind-node-child-metabolism-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.gltf",
+        "standard": "2.0",
+        "subset": "scene"
+      },
+      "mutation": "unbind-node-child",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-glb",
+          "path": "../🧫️fixtures/🧊️mutate-gltf-2-0/🌳️base-with-nested-node/🧊️.glb",
+          "mediaType": "model/gltf-binary",
+          "sha256": "sha256:70e9696fc69433b90aba4927e9da1c067a723dd2c429381611864f30f956bf3f",
+          "bytes": 284452
+        },
+        {
+          "role": "expected-after-glb",
+          "path": "../🧫️fixtures/🧊️mutate-gltf-2-0/✂️unbind-node-child/➡️after.glb",
+          "mediaType": "model/gltf-binary",
+          "sha256": "sha256:d10913fa3c2e5829730d79e0360ce0892ff3bebcd08ec0a3c29024d91517fe2c",
+          "bytes": 280612
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "n/a (structural JSON-chunk patch of the repository's own metabolism example export)",
+        "attribution": "The artifact-root case's committed real GLB export with this row's edit applied to its JSON chunk by the subset generator's generic structural operations, the BIN chunk carried byte for byte; reproduced by `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only unbind-node-child-metabolism-applied`",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-gltf-reader-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Removes the real input's one nested link, node 1 from node 0's children — unbind-node-child{parent:0,child:1}."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "bind-scene-root-node-metabolism-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.gltf",
+        "standard": "2.0",
+        "subset": "scene"
+      },
+      "mutation": "bind-scene-root-node",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-glb",
+          "path": "../🧫️fixtures/🧊️mutate-gltf-2-0/🌳️base-with-nested-node/🧊️.glb",
+          "mediaType": "model/gltf-binary",
+          "sha256": "sha256:70e9696fc69433b90aba4927e9da1c067a723dd2c429381611864f30f956bf3f",
+          "bytes": 284452
+        },
+        {
+          "role": "expected-after-glb",
+          "path": "../🧫️fixtures/🧊️mutate-gltf-2-0/🌲️bind-scene-root-node/➡️after.glb",
+          "mediaType": "model/gltf-binary",
+          "sha256": "sha256:b3a7fc8959d21e034b412a76afc60c4f68280e27696d7981abc01ae774ca6cab",
+          "bytes": 280616
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "n/a (structural JSON-chunk patch of the repository's own metabolism example export)",
+        "attribution": "The artifact-root case's committed real GLB export with this row's edit applied to its JSON chunk by the subset generator's generic structural operations, the BIN chunk carried byte for byte; reproduced by `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only bind-scene-root-node-metabolism-applied`",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-gltf-reader-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Adds node 1 (node 0's child) as scene 0's first root — bind-scene-root-node{scene:0,node:1,position:0}."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "unbind-scene-root-node-metabolism-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.gltf",
+        "standard": "2.0",
+        "subset": "scene"
+      },
+      "mutation": "unbind-scene-root-node",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-glb",
+          "path": "../🧫️fixtures/🧊️mutate-gltf-2-0/🌳️base-with-nested-node/🧊️.glb",
+          "mediaType": "model/gltf-binary",
+          "sha256": "sha256:70e9696fc69433b90aba4927e9da1c067a723dd2c429381611864f30f956bf3f",
+          "bytes": 284452
+        },
+        {
+          "role": "expected-after-glb",
+          "path": "../🧫️fixtures/🧊️mutate-gltf-2-0/🍂️unbind-scene-root-node/➡️after.glb",
+          "mediaType": "model/gltf-binary",
+          "sha256": "sha256:b2e3bc5190ed4c217f3c00bae3db91a4076324f6305442d459b4d90863988f2b",
+          "bytes": 280612
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "n/a (structural JSON-chunk patch of the repository's own metabolism example export)",
+        "attribution": "The artifact-root case's committed real GLB export with this row's edit applied to its JSON chunk by the subset generator's generic structural operations, the BIN chunk carried byte for byte; reproduced by `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only unbind-scene-root-node-metabolism-applied`",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-gltf-reader-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Removes node 5 from scene 0's root list — unbind-scene-root-node{scene:0,node:5}."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "change-material-alpha-mode-metabolism-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.gltf",
+        "standard": "2.0",
+        "subset": "material"
+      },
+      "mutation": "change-material-alpha-mode",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-glb",
+          "path": "../🧫️fixtures/🧊️mutate-gltf-2-0/🌳️base-with-nested-node/🧊️.glb",
+          "mediaType": "model/gltf-binary",
+          "sha256": "sha256:70e9696fc69433b90aba4927e9da1c067a723dd2c429381611864f30f956bf3f",
+          "bytes": 284452
+        },
+        {
+          "role": "expected-after-glb",
+          "path": "../🧫️fixtures/🧊️mutate-gltf-2-0/🎭️change-material-alpha-mode/➡️after.glb",
+          "mediaType": "model/gltf-binary",
+          "sha256": "sha256:83509669286e9171edc69a6513fcbf94283b4b97a615d6806dae130dc46d92ed",
+          "bytes": 280632
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "n/a (structural JSON-chunk patch of the repository's own metabolism example export)",
+        "attribution": "The artifact-root case's committed real GLB export with this row's edit applied to its JSON chunk by the subset generator's generic structural operations, the BIN chunk carried byte for byte; reproduced by `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-material-alpha-mode-metabolism-applied`",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-gltf-reader-v1",
+      "reproducible": true,
+      "family": "material",
+      "notes": "Material 0's alphaMode: OPAQUE (absent) -> MASK — change-material-alpha-mode{material:0,alphaMode:MASK}."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "change-material-double-sided-metabolism-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.gltf",
+        "standard": "2.0",
+        "subset": "material"
+      },
+      "mutation": "change-material-double-sided",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-glb",
+          "path": "../🧫️fixtures/🧊️mutate-gltf-2-0/🌳️base-with-nested-node/🧊️.glb",
+          "mediaType": "model/gltf-binary",
+          "sha256": "sha256:70e9696fc69433b90aba4927e9da1c067a723dd2c429381611864f30f956bf3f",
+          "bytes": 284452
+        },
+        {
+          "role": "expected-after-glb",
+          "path": "../🧫️fixtures/🧊️mutate-gltf-2-0/🪞️change-material-double-sided/➡️after.glb",
+          "mediaType": "model/gltf-binary",
+          "sha256": "sha256:56110ae0beae13512032586e4987b297e53d6030ee97cbabde1fa8fb8abcd2f5",
+          "bytes": 280632
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "n/a (structural JSON-chunk patch of the repository's own metabolism example export)",
+        "attribution": "The artifact-root case's committed real GLB export with this row's edit applied to its JSON chunk by the subset generator's generic structural operations, the BIN chunk carried byte for byte; reproduced by `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-material-double-sided-metabolism-applied`",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-gltf-reader-v1",
+      "reproducible": true,
+      "family": "material",
+      "notes": "Material 0's doubleSided: false (absent) -> true — change-material-double-sided{material:0,doubleSided:true}."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "create-scene-metabolism-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.gltf",
+        "standard": "2.0",
+        "subset": "scene"
+      },
+      "mutation": "create-scene",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-glb",
+          "path": "../🧫️fixtures/🧊️mutate-gltf-2-0/🌳️base-with-nested-node/🧊️.glb",
+          "mediaType": "model/gltf-binary",
+          "sha256": "sha256:70e9696fc69433b90aba4927e9da1c067a723dd2c429381611864f30f956bf3f",
+          "bytes": 284452
+        },
+        {
+          "role": "expected-after-glb",
+          "path": "../🧫️fixtures/🧊️mutate-gltf-2-0/🎬️create-scene/➡️after.glb",
+          "mediaType": "model/gltf-binary",
+          "sha256": "sha256:410ddd25e3d086b8cd4713306a8302fc10c5d333e4eb5048b50910a1d16c687c",
+          "bytes": 280616
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "n/a (structural JSON-chunk patch of the repository's own metabolism example export)",
+        "attribution": "The artifact-root case's committed real GLB export with this row's edit applied to its JSON chunk by the subset generator's generic structural operations, the BIN chunk carried byte for byte; reproduced by `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only create-scene-metabolism-applied`",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-gltf-reader-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Inserts one empty scene at position 0 and bumps the default scene pointer 0 -> 1 so it still names the real scene — create-scene{position:0}."
     }
   ]
 }

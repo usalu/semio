@@ -2,8 +2,7 @@
  *
  * Each package below is a real runtime dependency with a live call site in this program; none of them
  * publishes a `.d.ts` that `moduleResolution: "bundler"` can reach, and none of them has an
- * `@types/*` companion installed (`bun add -d @types/semver` fails repo-wide for the same workspace
- * reason recorded in `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🟦️.d.ts`).
+ * `@types/*` companion installed.
  * Declared here only: the exact members those call sites use, so this file cannot drift into a
  * hand-maintained copy of the packages' full surfaces. Delete an entry the moment its real types
  * become installable.
@@ -40,13 +39,4 @@ declare module "semver" {
 declare module "fresh" {
   /** 🧊️ Reports whether a response with `responseHeaders` is still fresh for a request carrying `requestHeaders`. */
   export default function fresh(requestHeaders: Readonly<Record<string, string | readonly string[] | undefined>>, responseHeaders: Readonly<Record<string, string | readonly string[] | undefined>>): boolean;
-}
-
-/** 🕸️ Vite's `?url` asset query: a wasm-pack payload imported as a served URL rather than a module.
- *
- * `🧊️3d`'s brep loader hands this URL to `initFlow({ module_or_path })`; the bundler rewrites the
- * specifier at build time, so only the type side needs declaring. */
-declare module "*.wasm?url" {
-  const url: string;
-  export default url;
 }

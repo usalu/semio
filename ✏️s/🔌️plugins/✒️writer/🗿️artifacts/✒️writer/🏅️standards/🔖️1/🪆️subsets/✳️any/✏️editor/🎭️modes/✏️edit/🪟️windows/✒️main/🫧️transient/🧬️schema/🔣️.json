@@ -11,10 +11,11 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["start", "end"],
+          "required": ["start", "end", "splice"],
           "properties": {
             "start": { "type": "integer", "minimum": 0 },
-            "end": { "type": "integer", "minimum": 0 }
+            "end": { "type": "integer", "minimum": 0 },
+            "splice": { "type": "integer", "minimum": 0 }
           }
         },
         { "type": "null" }

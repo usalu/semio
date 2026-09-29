@@ -273,7 +273,7 @@ function hostileSources(fixture: Fixture, sources: Sources): void {
     assert.notEqual(hostile.store, candidate.store);
     assert(inspect(fixture, hostile).problems.length > 0, "erased Send removal");
   }
-  console.log("[DEBUG] codec caller source hostiles: 12 exact local omissions; await/global-trait/A/PA/Diff/impl/erased-slot guards; in-memory candidate only");
+  console.log("codec caller source hostiles: 12 exact local omissions; await/global-trait/A/PA/Diff/impl/erased-slot guards; in-memory candidate only");
 }
 
 export function testPluginCodecCallerSource(repoRoot: string): void {
@@ -283,7 +283,6 @@ export function testPluginCodecCallerSource(repoRoot: string): void {
   const sources = Object.fromEntries(Object.entries(fixture.native.sources).map(([name, path]) => [name, readFileSync(resolve(repoRoot, path), "utf8")])) as Sources;
   hostileSources(fixture, sources);
   const result = inspect(fixture, sources);
-  console.log("[DEBUG] codec caller current-source desired law " + JSON.stringify(result));
   assert.deepEqual(result, { missing: [], problems: [] }, "actual Plugin codec qualification source boundary");
 }
 //#endregion 🧪️IndependentOracles

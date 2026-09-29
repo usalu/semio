@@ -1950,7 +1950,7 @@ pub struct World3dState {
 }
 
 impl World3dState {
-    /// 🩺️ What this surface's mesh ingest actually holds, for the one `[DEBUG] ` line the browser
+    /// 🩺️ What this surface's mesh ingest actually holds, for the one `[TRACE] ` line the browser
     /// Worker can emit. `draws=0` on a surface whose `meshes_json` carries a solid is ambiguous
     /// between "the bridge never ran", "the bridge ran and produced nothing" and "the draws exist
     /// but no frame has painted them since" — this separates the three
@@ -2001,7 +2001,7 @@ impl World3dState {
         rows
     }
 
-    /// 🕹️ What this surface's INTERACTION authority actually holds, for the one `[DEBUG] ` line the
+    /// 🕹️ What this surface's INTERACTION authority actually holds, for the one `[TRACE] ` line the
     /// browser Worker can emit.
     ///
     /// ⚖️ "hover, click and wheel changed nothing" is ambiguous between five different stops — no
@@ -2009,6 +2009,11 @@ impl World3dState {
     /// found no triangle, the plan was built but never published, or the action was published and
     /// the guest never took it. `ingest_census` separates the MESH half; this separates the INPUT
     /// half (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    ///
+    /// 🎥️ The surface's OWN camera, not the guest's `cameraJson`. A wheel or orbit turns the local
+    /// rig first (`publish_world3d_plan_step`'s `publish_with`) and only then asks the guest for the
+    /// same pose, so the local rig is the honest witness that the gesture was understood — the
+    /// scene's `cameraJson` cannot move until the guest answers.
     pub fn interaction_census(&self) -> String {
         let Some(authority) = self.interaction_authority.as_ref() else {
             return "authority=none".into();
@@ -2035,10 +2040,6 @@ impl World3dState {
             },
         );
         let active = authority.active.as_ref().map_or_else(|| "none".to_string(), world_interaction_active_census);
-        // 🎥️ The surface's OWN camera, not the guest's `cameraJson`. A wheel or orbit turns the local
-        // rig first (`publish_world3d_plan_step`'s `publish_with`) and only then asks the guest for the
-        // same pose, so the local rig is the honest witness that the gesture was understood — the
-        // scene's `cameraJson` cannot move until the guest answers.
         let eye = self.orbit.to_camera();
         format!(
             "camera=[{:.3},{:.3},{:.3}]->[{:.3},{:.3},{:.3}]/{:.1}deg {front} queued={} next-g={} active={active} blocked={} registry={} marquee={} gumball={} right-press={} faulted={} closing={} sync-owed={} sync-navigating={} sync-hover-owed={} revision={} objects-revision={} objects={} draws={} utility={} granularity={} mode={} bounds={}x{}+{},{} pick={}x{}+{},{} hover={:?} selected={}",
@@ -3205,6 +3206,15 @@ impl WorldInteractionRegistryBuildCursor {
         Self { revision, initialized: false, phase: WorldInteractionRegistryBuildPhase::Instances, draw: 0, instance: 0, mesh_probe: 0, vortex: 0, reference: 0, faulted: false }
     }
 
+    /// 🫥️ An EMPTY probe slot is "this mesh was never published", not a defect: the
+    /// guest publishes a draw list and its mesh leases in separate deliveries, so a
+    /// draw naming a glb whose lease has not landed is normal for the frames in
+    /// between. Faulting here killed the whole page with `world3d retained
+    /// interaction authority faulted` on the first pointer move after a mesh-bearing
+    /// document mounted (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w12c`).
+    /// Skipping the draw is React's own behaviour — a `GlbInstanceMesh` whose loader
+    /// has not resolved renders nothing and raycasts to nothing — and is the
+    /// interaction twin of W11a's "a miss is a skipped draw, not a quarantine".
     fn step(&mut self, state: &mut World3dState, context: &mut semio_framework_job::StepContext<'_>) -> WorldInteractionStep {
         if context.should_yield() {
             return WorldInteractionStep::Pending;
@@ -3240,15 +3250,6 @@ impl WorldInteractionRegistryBuildCursor {
                         context.consume_fuel(1);
                         return WorldInteractionStep::Pending;
                     }
-                    // 🫥️ An EMPTY probe slot is "this mesh was never published", not a defect: the
-                    // guest publishes a draw list and its mesh leases in separate deliveries, so a
-                    // draw naming a glb whose lease has not landed is normal for the frames in
-                    // between. Faulting here killed the whole page with `world3d retained
-                    // interaction authority faulted` on the first pointer move after a mesh-bearing
-                    // document mounted (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w12c`).
-                    // Skipping the draw is React's own behaviour — a `GlbInstanceMesh` whose loader
-                    // has not resolved renders nothing and raycasts to nothing — and is the
-                    // interaction twin of W11a's "a miss is a skipped draw, not a quarantine".
                     None => {
                         self.draw += 1;
                         self.instance = 0;
@@ -4234,13 +4235,13 @@ impl WorldMarqueePublishJob {
         false
     }
 
+    /// 🎯️ The `targets` VALUE is JSON text now, so its own punctuation is part of the reservation —
+    /// including the two bytes of `[]` a page with NO targets still writes. Charging the array
+    /// delimiters per target instead of once left an empty page two bytes short, and the shortfall
+    /// surfaced on the LAST string of the action (`method`), faulting the whole publish
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-world3d-interaction-2026-09-13.md`).
     fn page_credit(&self, state: &World3dState, page: usize) -> Result<usize, ui_wgpu::wgpu::BoundedActionFault> {
         let target_count = usize::from(self.results.lens[page]);
-        // 🎯️ The `targets` VALUE is JSON text now, so its own punctuation is part of the reservation —
-        // including the two bytes of `[]` a page with NO targets still writes. Charging the array
-        // delimiters per target instead of once left an empty page two bytes short, and the shortfall
-        // surfaced on the LAST string of the action (`method`), faulting the whole publish
-        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-world3d-interaction-2026-09-13.md`).
         let target_keys = target_count
             .checked_mul(INTERACTION_TARGETS_OPEN.len() + INTERACTION_TARGETS_MIDDLE.len() + INTERACTION_TARGETS_TAIL.len() + 1)
             .and_then(|bytes| bytes.checked_add(INTERACTION_TARGETS_ARRAY_OPEN.len() + INTERACTION_TARGETS_ARRAY_CLOSE.len()))
@@ -4256,6 +4257,16 @@ impl WorldMarqueePublishJob {
             .ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)
     }
 
+    /// 💥️ `then`, never `then_some`: `then_some`'s argument is evaluated EAGERLY, so `self.stage - 3`
+    /// ran on stages 0, 1 and 2 as well and underflowed the `u16` — an arithmetic panic that aborted
+    /// the wasm instance. Measured on 6118: every marquee release on the World3d preview killed the
+    /// renderer outright, and because the Worker installed no panic hook the only visible symptom was
+    /// the next `#[wasm_bindgen] &mut self` call failing with `recursive use of an object`
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-world3d-interaction-2026-09-13.md`).
+    ///
+    /// 🎯️ One TARGET per bounded step, appended to this page's `targets` text — the whole value is
+    /// handed to the builder once, at `target_stage_end`. The id is the TOPOLOGY target the rendered
+    /// instance stands for, deduplicated, exactly as a pick's is.
     fn step(&mut self, state: &World3dState, generation: u64, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, context: &mut semio_framework_job::StepContext<'_>) -> Result<WorldInteractionStep, ui_wgpu::wgpu::BoundedActionFault> {
         if context.should_yield() {
             return Ok(WorldInteractionStep::Pending);
@@ -4299,12 +4310,6 @@ impl WorldMarqueePublishJob {
         }
         let target_count = u16::from(self.results.lens[page]);
         let target_stage_end = 3 + target_count;
-        // 💥️ `then`, never `then_some`: `then_some`'s argument is evaluated EAGERLY, so `self.stage - 3`
-        // ran on stages 0, 1 and 2 as well and underflowed the `u16` — an arithmetic panic that aborted
-        // the wasm instance. Measured on 6118: every marquee release on the World3d preview killed the
-        // renderer outright, and because the Worker installed no panic hook the only visible symptom was
-        // the next `#[wasm_bindgen] &mut self` call failing with `recursive use of an object`
-        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-world3d-interaction-2026-09-13.md`).
         let target_index = (self.stage >= 3 && self.stage < target_stage_end).then(|| usize::from(self.stage - 3));
         let token = target_index
             .and_then(|index| self.results.pages[page][index])
@@ -4314,9 +4319,6 @@ impl WorldMarqueePublishJob {
             })
             .transpose()?;
         let entry = token.map(|token| state.interaction_objects.resolve(token).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)).transpose()?;
-        // 🎯️ One TARGET per bounded step, appended to this page's `targets` text — the whole value is
-        // handed to the builder once, at `target_stage_end`. The id is the TOPOLOGY target the rendered
-        // instance stands for, deduplicated, exactly as a pick's is.
         if self.stage >= 3 && self.stage < target_stage_end {
             let entry = entry.expect("marquee token resolved");
             let id = instance_interaction_id(state, entry.id.as_str());
@@ -4780,6 +4782,13 @@ impl WorldRayPickCursor {
         self.mesh_probe = 0;
     }
 
+    /// 🧲️ Sub-object PRE-PASS. One retained pick target per step (the set is capped at
+    /// `WORLD_PICK_TARGET_CAPACITY` when the lane is parsed, so this loop is bounded by
+    /// construction), scored with React's own `targetRayScore`. A `Paint`/`Surface` gesture aims
+    /// at the model itself, never at a pick proxy, so it skips the pass entirely.
+    ///
+    /// 🫥️ Unpublished mesh ⇒ an uninteractable draw, never a fault — see the same arm of
+    /// `WorldInteractionRegistryBuildCursor::step`.
     pub fn step(&mut self, state: &World3dState, generation: u64, context: &mut semio_framework_job::StepContext<'_>) -> WorldInteractionStep {
         if context.should_yield() {
             return WorldInteractionStep::Pending;
@@ -4796,10 +4805,6 @@ impl WorldRayPickCursor {
         if self.complete {
             return WorldInteractionStep::Complete;
         }
-        // 🧲️ Sub-object PRE-PASS. One retained pick target per step (the set is capped at
-        // `WORLD_PICK_TARGET_CAPACITY` when the lane is parsed, so this loop is bounded by
-        // construction), scored with React's own `targetRayScore`. A `Paint`/`Surface` gesture aims
-        // at the model itself, never at a pick proxy, so it skips the pass entirely.
         if matches!(self.purpose, WorldRayPickPurpose::Instance | WorldRayPickPurpose::Hover) && self.pick_target < state.pick_targets.len() {
             let index = self.pick_target;
             self.pick_target += 1;
@@ -4831,8 +4836,6 @@ impl WorldRayPickCursor {
                     self.mesh_probe = 0;
                 }
                 Some(_) => self.mesh_probe += 1,
-                // 🫥️ Unpublished mesh ⇒ an uninteractable draw, never a fault — see the same arm of
-                // `WorldInteractionRegistryBuildCursor::step`.
                 None => {
                     self.skip_draw();
                 }
@@ -4915,6 +4918,10 @@ impl WorldRayPickCursor {
         WorldInteractionStep::Pending
     }
 
+    /// 🧲️ ONE ordering across the sub-object proxies and the instance meshes, exactly as r3f
+    /// raycasts `SpatialPickHitTarget` and the model in the same scene: the lower score wins, and
+    /// a tie goes to the pick target (React's `targetRayScore` already folded the kind's
+    /// tie-break into the score, so `<=` here is that ladder's last rung).
     pub fn finish_plan(&self, state: &World3dState, generation: u64) -> Result<Option<WorldInteractionPlan>, WorldInteractionStep> {
         if self.faulted {
             return Err(WorldInteractionStep::Fault);
@@ -4925,10 +4932,6 @@ impl WorldRayPickCursor {
         if !self.complete {
             return Err(WorldInteractionStep::Pending);
         }
-        // 🧲️ ONE ordering across the sub-object proxies and the instance meshes, exactly as r3f
-        // raycasts `SpatialPickHitTarget` and the model in the same scene: the lower score wins, and
-        // a tie goes to the pick target (React's `targetRayScore` already folded the kind's
-        // tie-break into the score, so `<=` here is that ladder's last rung).
         if let Some((score, slot)) = self.best_target {
             if score <= self.best.map_or(f32::INFINITY, |hit| hit.distance) {
                 return self.pick_target_plan(state, generation, slot);
@@ -5011,11 +5014,12 @@ impl WorldRayPickCursor {
     /// 🧲️ The `interactionSelect`/`interactionHover` one WINNING sub-object pick target dispatches —
     /// React's own payload for a `SpatialPickHitTarget` pick, with the target's KIND as the
     /// granularity (`vertex`/`edge`/`face`/`object`) and its kernel entity id as the target id.
+    ///
+    /// 🪪️ Alias-aware, so a guest that echoes `solid:foo` for a host that dispatched `object:foo`
+    /// does not make every move re-publish the same hover.
     fn pick_target_plan(&self, state: &World3dState, generation: u64, slot: u16) -> Result<Option<WorldInteractionPlan>, WorldInteractionStep> {
         let target = state.pick_targets.get(usize::from(slot)).ok_or(WorldInteractionStep::Stale)?;
         let key = target.key();
-        // 🪪️ Alias-aware, so a guest that echoes `solid:foo` for a host that dispatched `object:foo`
-        // does not make every move re-publish the same hover.
         if self.purpose == WorldRayPickPurpose::Hover && world_pick_keys_match(state.pick_hover_key.as_deref(), Some(key.as_str())) {
             return Ok(None);
         }
@@ -5507,6 +5511,9 @@ impl WorldGumballPickCursor {
         }
     }
 
+    /// 🎛️ ONE gate for every handle: the resolved `gumballConfig` (authored, else the mode's
+    /// fallback) ∩ the drafting plane — React's `gumballHandleEnabled`. A handle the gumball does
+    /// not SHOW must not be pickable either.
     fn step(&mut self, state: &World3dState, generation: u64, context: &mut semio_framework_job::StepContext<'_>) -> WorldInteractionStep {
         if context.should_yield() {
             return WorldInteractionStep::Pending;
@@ -5596,9 +5603,6 @@ impl WorldGumballPickCursor {
             context.consume_fuel(1);
             return WorldInteractionStep::Pending;
         }
-        // 🎛️ ONE gate for every handle: the resolved `gumballConfig` (authored, else the mode's
-        // fallback) ∩ the drafting plane — React's `gumballHandleEnabled`. A handle the gumball does
-        // not SHOW must not be pickable either.
         if !world3d_gumball_config(state).admits(handle) {
             context.consume_fuel(1);
             return WorldInteractionStep::Pending;
@@ -6035,6 +6039,14 @@ impl WorldGumballCommitJob {
         }
     }
 
+    /// 🪟️ A transform verb is WINDOW-OWNED, exactly like `setCamera`: the app declares it on
+    /// its preview window kinds only, and the shell resolves `ActionAddress::window_instance_id`
+    /// from this argument before it falls back to the focused window
+    /// (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`'s `dispatch_action`). A World3d surface is keyed BY its
+    /// window instance, so its own id is that address. Without it a gumball drag in a
+    /// multi-window mode was addressed to whatever had focus, measured verbatim on 6118 as
+    /// `handle_action promise failed: window kind generation3d-generate-form does not own
+    /// action translateSelection` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     fn step(&mut self, state: &World3dState, generation: u64, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, context: &mut semio_framework_job::StepContext<'_>) -> Result<WorldInteractionStep, ui_wgpu::wgpu::BoundedActionFault> {
         if context.should_yield() {
             return Ok(WorldInteractionStep::Pending);
@@ -6075,14 +6087,6 @@ impl WorldGumballCommitJob {
         match self.stage {
             0 => draft.builder().begin_object(None)?,
             1 => draft.builder().string(Some("surfaceId"), &state.surface_id)?,
-            // 🪟️ A transform verb is WINDOW-OWNED, exactly like `setCamera`: the app declares it on
-            // its preview window kinds only, and the shell resolves `ActionAddress::window_instance_id`
-            // from this argument before it falls back to the focused window
-            // (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`'s `dispatch_action`). A World3d surface is keyed BY its
-            // window instance, so its own id is that address. Without it a gumball drag in a
-            // multi-window mode was addressed to whatever had focus, measured verbatim on 6118 as
-            // `handle_action promise failed: window kind generation3d-generate-form does not own
-            // action translateSelection` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
             2 => draft.builder().string(Some("windowId"), &state.surface_id)?,
             3 => draft.builder().string(Some("mode"), "mesh")?,
             4 => draft.builder().begin_array(Some("ids"))?,
@@ -6348,6 +6352,64 @@ pub fn world3d_interaction_terminal_is_empty(state: &World3dState) -> bool {
 }
 
 impl WorldInteractionAuthority {
+    /// 🧭️ A DRAINED queue is this lane's settle point — React's `CAMERA_SYNC_DEBOUNCE_MS`
+    /// trailing debounce without a timer, since the last answered intent of a gesture is
+    /// exactly when that debounce would fire. See [`WorldCameraSync`].
+    ///
+    /// 🧭️ three's `OrbitControls.onPointerUp` dispatches `_endEvent` UNCONDITIONALLY once the
+    /// last pointer lifts, and React's `onEnd` always reports the camera — so every release
+    /// over a world pane owes one `setCamera`, whatever the button and whether or not the
+    /// camera moved. The reference journals exactly that for `pick-instance` and
+    /// `context-menu` (`🗑️generated/parity-run-2/steps.json`).
+    ///
+    /// 🖱️ The MIDDLE button starts no CAMERA gesture of its own: pan is a middle-DRAG, planned by
+    /// `plan_world3d_drag` from the moves that follow it. What the press itself answers is the
+    /// SELECTION React publishes on any button (`plan_world3d_non_primary_press_pick`); with
+    /// neither, the intent used to fall through to the unclaimed-intent fault below, so the FIRST
+    /// middle-click on any world surface recorded a frame fault and killed the page
+    /// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w9c-behaviour-parity-run-2.md` step 20,
+    /// where React simply pans).
+    ///
+    /// 🖱️ Tracking the click/drag discrimination must NOT swallow the gesture: a right-drag is
+    /// also how `plan_world3d_drag` reaches pan (`+shift`) and orbit (`+alt`/`+meta`). Retiring
+    /// here unconditionally is what left the wgpu shell with zoom and middle-button pan only.
+    ///
+    /// 🖱️📋️ A right RELEASE closes the click/drag discrimination and answers nothing else. The
+    /// menu itself is the SHELL's (`🐚️Shell/🎯️targets/🧊️wgpu`'s `open_context_menu`, whose
+    /// `resolve_context_menu_surface` already fills a World3d surface's `hits`/`selection` from
+    /// [`world3d_context_menu_surface`]) and it opens on the PRESS, exactly as React's own
+    /// `onContextMenu` does.
+    ///
+    /// 🩸️ This arm used to run a `WorldContextMenuCursor` and publish `worldContextMenuAt`. No
+    /// app declares that verb — React deleted its twin `contextMenuAt` when the target moved onto
+    /// the menu REQUEST (`world3dContextMenuSurfaceV1`'s own docstring: "dispatching it anyway
+    /// only produced an `undeclaredActionDiagnostic` drop on every right-click"), and the whole
+    /// repository had exactly one mention of it left, here. So the wgpu target journalled a verb
+    /// the guest refuses where React journals a menu
+    /// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w10a-world-interaction-journal-parity.md`).
+    ///
+    /// 🚚️ A live relocate drag owns every move it receives: it only moves its own ghost and
+    /// publishes nothing until the release, so it must not also reach the camera arms below
+    /// (React returns early from `onPointerMove` for the same reason).
+    ///
+    /// 🚚️ The relocate gesture is checked FIRST, exactly as React's `handlePointerDown`
+    /// opens with `if (relocateMode && beginRelocateDrag(event)) return;`
+    /// (`🌐️World3dHost/🟦️.tsx:6883`). The press publishes nothing; the release publishes the
+    /// ONE absolute `worldRelocate`, or nothing at all when the drag never travelled.
+    ///
+    /// 🚪️ A leave over a surface that publishes no hover has nothing to clear — it is answered,
+    /// not refused, wherever it was aimed (the point it left at is usually OUTSIDE this
+    /// surface's own rect by construction).
+    ///
+    /// 🖱️ An intent aimed at a point this surface no longer covers is not this surface's to
+    /// answer. Every pick cursor is built through `pointer_in_pick_rect`, which refuses a point
+    /// outside the CURRENT pick rect — and a queued intent outlives a relayout: dragging the
+    /// dock's split gutter moves the pane out from under moves enqueued against its previous
+    /// bounds (measured: a hover at x=534.4 against `pick=…+535.6,54.4`). Faulting on that
+    /// refusal is a FRAME fault, which kills the page, so the whole shell tore down mid-drag
+    /// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w9c-behaviour-parity-run-2.md` step 15).
+    /// A stale aim retires like any other answered intent; a fault stays a fault for a point the
+    /// surface DOES cover, which is a real refusal.
     fn step(&mut self, state: &mut World3dState, generation: u64, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, context: &mut semio_framework_job::StepContext<'_>) -> WorldInteractionAuthorityStep {
         if self.closing || context.should_yield() {
             return WorldInteractionAuthorityStep::Pending;
@@ -6409,9 +6471,6 @@ impl WorldInteractionAuthority {
             }
         }
         let Some(intent) = self.queue.front().copied() else {
-            // 🧭️ A DRAINED queue is this lane's settle point — React's `CAMERA_SYNC_DEBOUNCE_MS`
-            // trailing debounce without a timer, since the last answered intent of a gesture is
-            // exactly when that debounce would fire. See [`WorldCameraSync`].
             if let Some(plan) = plan_world3d_camera_settle(state, generation) {
                 self.active = Some(WorldInteractionActive::Plan { plan, retirement: None });
                 context.consume_fuel(1);
@@ -6431,11 +6490,6 @@ impl WorldInteractionAuthority {
         };
         if !matches!(intent.phase, WorldInteractionPhase::Close | WorldInteractionPhase::PointerLeave) {
             state.camera_sync.at = Some([intent.x, intent.y]);
-            // 🧭️ three's `OrbitControls.onPointerUp` dispatches `_endEvent` UNCONDITIONALLY once the
-            // last pointer lifts, and React's `onEnd` always reports the camera — so every release
-            // over a world pane owes one `setCamera`, whatever the button and whether or not the
-            // camera moved. The reference journals exactly that for `pick-instance` and
-            // `context-menu` (`🗑️generated/parity-run-2/steps.json`).
             if intent.phase == WorldInteractionPhase::PointerButton && !intent.down {
                 state.camera_sync.owed = true;
             }
@@ -6461,13 +6515,6 @@ impl WorldInteractionAuthority {
             context.consume_fuel(1);
             return WorldInteractionAuthorityStep::Complete;
         }
-        // 🖱️ The MIDDLE button starts no CAMERA gesture of its own: pan is a middle-DRAG, planned by
-        // `plan_world3d_drag` from the moves that follow it. What the press itself answers is the
-        // SELECTION React publishes on any button (`plan_world3d_non_primary_press_pick`); with
-        // neither, the intent used to fall through to the unclaimed-intent fault below, so the FIRST
-        // middle-click on any world surface recorded a frame fault and killed the page
-        // (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w9c-behaviour-parity-run-2.md` step 20,
-        // where React simply pans).
         if intent.phase == WorldInteractionPhase::PointerButton && intent.button == 1 {
             if intent.down {
                 if let Some(active) = plan_world3d_non_primary_press_pick(state, generation, &intent) {
@@ -6486,9 +6533,6 @@ impl WorldInteractionAuthority {
                 let dy = intent.y - start[1];
                 self.right_dragged |= (dx * dx + dy * dy).sqrt() > CLICK_DRAG_THRESHOLD_PX;
             }
-            // 🖱️ Tracking the click/drag discrimination must NOT swallow the gesture: a right-drag is
-            // also how `plan_world3d_drag` reaches pan (`+shift`) and orbit (`+alt`/`+meta`). Retiring
-            // here unconditionally is what left the wgpu shell with zoom and middle-button pan only.
             let modifiers = PointerModifiers { shift: intent.shift, ctrl: intent.ctrl, alt: intent.alt, meta: intent.meta };
             if let Some(plan) = plan_world3d_drag(state, generation, intent.dx, intent.dy, intent.button, &modifiers) {
                 self.active = Some(WorldInteractionActive::Plan { plan, retirement: None });
@@ -6499,19 +6543,6 @@ impl WorldInteractionAuthority {
             context.consume_fuel(1);
             return WorldInteractionAuthorityStep::Complete;
         }
-        // 🖱️📋️ A right RELEASE closes the click/drag discrimination and answers nothing else. The
-        // menu itself is the SHELL's (`🐚️Shell/🎯️targets/🧊️wgpu`'s `open_context_menu`, whose
-        // `resolve_context_menu_surface` already fills a World3d surface's `hits`/`selection` from
-        // [`world3d_context_menu_surface`]) and it opens on the PRESS, exactly as React's own
-        // `onContextMenu` does.
-        //
-        // 🩸️ This arm used to run a `WorldContextMenuCursor` and publish `worldContextMenuAt`. No
-        // app declares that verb — React deleted its twin `contextMenuAt` when the target moved onto
-        // the menu REQUEST (`world3dContextMenuSurfaceV1`'s own docstring: "dispatching it anyway
-        // only produced an `undeclaredActionDiagnostic` drop on every right-click"), and the whole
-        // repository had exactly one mention of it left, here. So the wgpu target journalled a verb
-        // the guest refuses where React journals a menu
-        // (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w10a-world-interaction-journal-parity.md`).
         if intent.phase == WorldInteractionPhase::PointerButton && intent.button == 2 && !intent.down {
             self.right_press = None;
             self.right_dragged = false;
@@ -6617,9 +6648,6 @@ impl WorldInteractionAuthority {
             WorldInteractionPhase::Wheel => plan_world3d_wheel(state, generation, intent.delta).map(|plan| WorldInteractionActive::Plan { plan, retirement: None }),
             WorldInteractionPhase::PointerLeave => plan_world3d_pointer_leave(state, generation).map(|plan| WorldInteractionActive::Plan { plan, retirement: None }),
             WorldInteractionPhase::PointerDrag => {
-                // 🚚️ A live relocate drag owns every move it receives: it only moves its own ghost and
-                // publishes nothing until the release, so it must not also reach the camera arms below
-                // (React returns early from `onPointerMove` for the same reason).
                 if world3d_relocate_active(state) {
                     world3d_update_relocate_drag(state, intent.x, intent.y);
                     self.queue.retire_front(intent.generation);
@@ -6661,10 +6689,6 @@ impl WorldInteractionAuthority {
                 }
             }
             WorldInteractionPhase::PointerButton => {
-                // 🚚️ The relocate gesture is checked FIRST, exactly as React's `handlePointerDown`
-                // opens with `if (relocateMode && beginRelocateDrag(event)) return;`
-                // (`🌐️World3dHost/🟦️.tsx:6883`). The press publishes nothing; the release publishes the
-                // ONE absolute `worldRelocate`, or nothing at all when the drag never travelled.
                 if intent.button == 0 && (world3d_relocate_active(state) || world3d_relocate_mode(state)) {
                     if intent.down {
                         if world3d_begin_relocate_drag(state, intent.x, intent.y) {
@@ -6730,23 +6754,11 @@ impl WorldInteractionAuthority {
             if intent.phase == WorldInteractionPhase::Close {
                 return WorldInteractionAuthorityStep::Pending;
             }
-            // 🚪️ A leave over a surface that publishes no hover has nothing to clear — it is answered,
-            // not refused, wherever it was aimed (the point it left at is usually OUTSIDE this
-            // surface's own rect by construction).
             if intent.phase == WorldInteractionPhase::PointerLeave {
                 self.queue.retire_front(intent.generation);
                 context.consume_fuel(1);
                 return WorldInteractionAuthorityStep::Complete;
             }
-            // 🖱️ An intent aimed at a point this surface no longer covers is not this surface's to
-            // answer. Every pick cursor is built through `pointer_in_pick_rect`, which refuses a point
-            // outside the CURRENT pick rect — and a queued intent outlives a relayout: dragging the
-            // dock's split gutter moves the pane out from under moves enqueued against its previous
-            // bounds (measured: a hover at x=534.4 against `pick=…+535.6,54.4`). Faulting on that
-            // refusal is a FRAME fault, which kills the page, so the whole shell tore down mid-drag
-            // (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w9c-behaviour-parity-run-2.md` step 15).
-            // A stale aim retires like any other answered intent; a fault stays a fault for a point the
-            // surface DOES cover, which is a real refusal.
             if !world_pick_rect(state).contains(intent.x, intent.y) {
                 self.queue.retire_front(intent.generation);
                 context.consume_fuel(1);
@@ -6760,6 +6772,8 @@ impl WorldInteractionAuthority {
         WorldInteractionAuthorityStep::Pending
     }
 
+    /// 🧲️ A hover that hit NEITHER a mesh nor a sub-object pick target falls through to
+    /// the reference-plane tier; one that hit a pick target has its answer already.
     fn step_active(&mut self, active: WorldInteractionActive, state: &mut World3dState, generation: u64, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, context: &mut semio_framework_job::StepContext<'_>) -> WorldInteractionAuthorityStep {
         match active {
             WorldInteractionActive::Plan { mut plan, retirement } => {
@@ -6816,8 +6830,6 @@ impl WorldInteractionAuthority {
                         self.active = Some(WorldInteractionActive::Pick { cursor, retirement: None });
                         WorldInteractionAuthorityStep::Pending
                     }
-                    // 🧲️ A hover that hit NEITHER a mesh nor a sub-object pick target falls through to
-                    // the reference-plane tier; one that hit a pick target has its answer already.
                     WorldInteractionStep::Complete if cursor.purpose == WorldRayPickPurpose::Hover && cursor.best.is_none() && cursor.best_target.is_none() => {
                         self.active = Some(WorldInteractionActive::ObjectPick { cursor: WorldObjectPickCursor::from_ray(cursor.revision, cursor.generation, WorldObjectPickPurpose::ReferenceHover, cursor.origin, cursor.direction), retirement: None });
                         context.consume_fuel(1);
@@ -7235,6 +7247,8 @@ pub fn world3d_hover_clear_is_owed(state: &World3dState) -> bool {
  *
  * ⚖️ `None` when nothing is published, so a leave over an already-clear surface is retired without a
  * journal entry — React's canvas does not re-clear a hover it never had. */
+/// 🧲️ A leave clears whichever hover channel is live — the instance one OR the sub-object pick
+/// target one; the `Hover` publish arm with no target clears both.
 fn plan_world3d_pointer_leave(state: &World3dState, generation: u64) -> Option<WorldInteractionPlan> {
     let mut plan = WorldInteractionPlan::new(state.interaction_revision, generation);
     let controller = plan.push_string(&state.controller_id)?;
@@ -7250,8 +7264,6 @@ fn plan_world3d_pointer_leave(state: &World3dState, generation: u64) -> Option<W
         let action = WorldFlatAction { kind: WorldFlatActionKind::VortexHover, strings: [Some(controller), Some(surface), None, None, None, None, None, None], numbers: [0.0; 10] };
         return plan.push_action(action).then_some(plan);
     }
-    // 🧲️ A leave clears whichever hover channel is live — the instance one OR the sub-object pick
-    // target one; the `Hover` publish arm with no target clears both.
     if state.local_hover_id.is_none() && state.pick_hover_key.is_none() {
         return None;
     }
@@ -7411,6 +7423,30 @@ fn push_interaction_targets(builder: &mut ui_wgpu::wgpu::BoundedActionBuilder, s
     }
 }
 
+/// 🪟️ `windowId`, not `surfaceId`. `setCamera` is a WINDOW-OWNED action: the app declares
+/// it on its preview window kinds only, and the shell resolves
+/// `ActionAddress::window_instance_id` from this very argument
+/// (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`'s `dispatch_action`). Without it the address fell back
+/// to the focused window and the guest refused, measured verbatim on 6118 as
+/// `handle_action promise failed: window kind procedural-main does not own action
+/// setCamera` — the same defect class as the retained row's `addGeneration`
+/// (`📓️wgpu-input-hit-runtime-2026-09-13.md` §10.3). A World3d surface IS keyed by its
+/// window instance id (`ShellState::world3d_states`), so its own id is that address, and
+/// React's `worldCameraSetCameraDispatchArgs` sends exactly `{windowId, camera}`.
+///
+/// 📷️ `zoom`/`up`, never `fov`: `buildWorldCameraDispatchArgs` sends exactly
+/// `{position, target, zoom, up?}`, and the guest camera value has no `fov` member — a
+/// `fov` key makes the whole `camera` object fail deserialization and silently drops the
+/// dispatch, the same trap React's own docstring records for a bare `projection` string.
+///
+/// 🚚️ React sends `{objectId, position}` and nothing else (`dispatch("worldRelocate", args)`
+/// with `world3dRelocateDispatchArgsV1`'s own return); `surfaceId` rides along the way every
+/// other verb on this surface carries it.
+///
+/// 🧲️ `numbers[1]` marks a SUB-OBJECT hover (`WorldRayPickCursor::pick_target_plan`): the
+/// published target is a pick target's `kind:id`, so the dedupe key it updates is
+/// `pick_hover_key`, not the instance-level `local_hover_id`. A CLEAR (no object) clears
+/// both, because a move off the model leaves neither channel hovered.
 pub fn publish_world3d_plan_step(
     state: &mut World3dState,
     plan: &mut WorldInteractionPlan,
@@ -7441,16 +7477,6 @@ pub fn publish_world3d_plan_step(
             let mut reservation = input.reserve_action(controller, action_id, bytes)?;
             let builder = reservation.builder();
             builder.begin_object(None)?;
-            // 🪟️ `windowId`, not `surfaceId`. `setCamera` is a WINDOW-OWNED action: the app declares
-            // it on its preview window kinds only, and the shell resolves
-            // `ActionAddress::window_instance_id` from this very argument
-            // (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`'s `dispatch_action`). Without it the address fell back
-            // to the focused window and the guest refused, measured verbatim on 6118 as
-            // `handle_action promise failed: window kind procedural-main does not own action
-            // setCamera` — the same defect class as the retained row's `addGeneration`
-            // (`📓️wgpu-input-hit-runtime-2026-09-13.md` §10.3). A World3d surface IS keyed by its
-            // window instance id (`ShellState::world3d_states`), so its own id is that address, and
-            // React's `worldCameraSetCameraDispatchArgs` sends exactly `{windowId, camera}`.
             builder.string(Some("windowId"), surface)?;
             builder.begin_object(Some("camera"))?;
             builder.begin_array(Some("position"))?;
@@ -7463,10 +7489,6 @@ pub fn publish_world3d_plan_step(
                 builder.number(None, *value)?;
             }
             builder.end_container()?;
-            // 📷️ `zoom`/`up`, never `fov`: `buildWorldCameraDispatchArgs` sends exactly
-            // `{position, target, zoom, up?}`, and the guest camera value has no `fov` member — a
-            // `fov` key makes the whole `camera` object fail deserialization and silently drops the
-            // dispatch, the same trap React's own docstring records for a bare `projection` string.
             builder.number(Some("zoom"), action.numbers[6])?;
             builder.begin_array(Some("up"))?;
             for value in [state.orbit.up.x, state.orbit.up.y, state.orbit.up.z] {
@@ -7579,9 +7601,6 @@ pub fn publish_world3d_plan_step(
             let surface = plan.string(action.strings[1].expect("relocate surface span"));
             let object = plan.string(action.strings[2].expect("relocate object span"));
             let action_id = "worldRelocate";
-            // 🚚️ React sends `{objectId, position}` and nothing else (`dispatch("worldRelocate", args)`
-            // with `world3dRelocateDispatchArgsV1`'s own return); `surfaceId` rides along the way every
-            // other verb on this surface carries it.
             let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller, action_id, "surfaceId", surface, "objectId", object, "position"])?;
             let mut reservation = input.reserve_action(controller, action_id, bytes)?;
             let builder = reservation.builder();
@@ -7667,10 +7686,6 @@ pub fn publish_world3d_plan_step(
             builder.string(Some("channel"), "pointer")?;
             push_interaction_targets(builder, surface, object, granularity, action.numbers[0] != 0.0)?;
             builder.end_container()?;
-            // 🧲️ `numbers[1]` marks a SUB-OBJECT hover (`WorldRayPickCursor::pick_target_plan`): the
-            // published target is a pick target's `kind:id`, so the dedupe key it updates is
-            // `pick_hover_key`, not the instance-level `local_hover_id`. A CLEAR (no object) clears
-            // both, because a move off the model leaves neither channel hovered.
             let sub_object = action.numbers[1] != 0.0;
             let pick_key = match (sub_object, granularity, object) {
                 (true, Some(granularity), Some(object)) => Some(format!("{granularity}:{object}")),
@@ -8041,6 +8056,9 @@ pub const CELEBRATE_CONIC_SPIN_SECONDS: f32 = 1.2;
 /// `theme.celebrate[1]`), and `celebrated`, `highlighted` and `disabled` had no wgpu paint at all,
 /// so a disabled instance painted at full opacity where React paints it at 0.45
 /// (`📓️w8b-orthographic-camera-and-3d-parity.md` §7.4).
+///
+/// 🎨️ React's `color-mix(in oklab, var(--color-muted-foreground) 55%, var(--panel))` — the
+/// 55 % is the muted side, so the mix runs FROM the muted tone TOWARDS the panel by 0.45.
 pub fn mesh_style_paint(theme: &ui_wgpu::wgpu::Theme, kind: MeshStyleKind) -> MeshStylePaint {
     let rgba = |color: ui_wgpu::wgpu::Rgba| [color.r, color.g, color.b, color.a];
     let (primary, secondary, tertiary) = (rgba(theme.celebrate[0]), rgba(theme.celebrate[1]), rgba(theme.celebrate[2]));
@@ -8051,8 +8069,6 @@ pub fn mesh_style_paint(theme: &ui_wgpu::wgpu::Theme, kind: MeshStyleKind) -> Me
         MeshStyleKind::Highlighted => MeshStylePaint { fill: secondary, line: secondary, emissive_intensity: 0.2, opacity: 1.0, conic: None },
         MeshStyleKind::Provisional => MeshStylePaint { fill: secondary, line: secondary, emissive_intensity: 0.2, opacity: ui_styling::metrics::tool_run::PROVISIONAL_OPACITY as f32, conic: None },
         MeshStyleKind::Celebrated => MeshStylePaint { fill: primary, line: primary, emissive_intensity: 0.55, opacity: 1.0, conic: Some([primary, secondary, tertiary]) },
-        // 🎨️ React's `color-mix(in oklab, var(--color-muted-foreground) 55%, var(--panel))` — the
-        // 55 % is the muted side, so the mix runs FROM the muted tone TOWARDS the panel by 0.45.
         MeshStyleKind::Disabled => MeshStylePaint { fill: ui_styling::color::oklab_mix(rgba(theme.text_muted), rgba(theme.panel), 0.45), line: rgba(theme.text_muted), emissive_intensity: 0.0, opacity: 0.45, conic: None },
     }
 }
@@ -8194,6 +8210,9 @@ fn sort_world3d_translucent_material_draws(
     *draws = retained;
 }
 
+/// 🥽️ `pending_glb_urls` is keyed by URL, `mesh_source_urls` by mesh key — evicting the
+/// pool entry has to drop the url the ledger bound to it, not the key itself, or the
+/// lane refuses to re-fetch a mesh the scene names again.
 fn sync_mesh_pool(state: &mut World3dState, needed_mesh_keys: &HashSet<String>, gpu: &mut World3dBuildContext) {
     const PINNED: &[&str] = &["vortex-marker", "cylinder", "cone", "reference-plane", "vertex-marker", GUMBALL_PLANE_MESH];
     for key in needed_mesh_keys {
@@ -8207,9 +8226,6 @@ fn sync_mesh_pool(state: &mut World3dState, needed_mesh_keys: &HashSet<String>, 
             if !retire_world_mesh(state, &key) || !retire_world_pixels(state, &key, true) {
                 return;
             }
-            // 🥽️ `pending_glb_urls` is keyed by URL, `mesh_source_urls` by mesh key — evicting the
-            // pool entry has to drop the url the ledger bound to it, not the key itself, or the
-            // lane refuses to re-fetch a mesh the scene names again.
             if let Some(url) = state.mesh_source_urls.remove(&key) {
                 state.pending_glb_urls.remove(&url);
             }
@@ -8451,6 +8467,8 @@ fn terrain_tile_mesh_key(surface_id: &str, z: u32, x: u32, y: u32) -> String {
 /// [`apply_world3d_terrain_tile_bytes`]. Mirrors `TerrainTileRenderer.uploadOne` in
 /// `🗺️WorldTerrainLayer/🟦️.tsx`, including its `tileMiss` set: a tile whose bytes the terrain
 /// session refuses is never re-requested for this style.
+///
+/// 📡️ A full request table is back-pressure, not a fault: the next frame re-offers the tile.
 fn reserve_terrain_tile_fetch(state: &mut World3dState, tile_url_template: &str, (z, x, y): (u32, u32, u32)) {
     if state.terrain_tile_misses.contains(&(z, x, y)) {
         return;
@@ -8463,7 +8481,6 @@ fn reserve_terrain_tile_fetch(state: &mut World3dState, tile_url_template: &str,
         Ok(_) => {
             state.pending_terrain_tile_urls.insert(url, (z, x, y));
         }
-        // 📡️ A full request table is back-pressure, not a fault: the next frame re-offers the tile.
         Err(WorldAssetFault::ItemCapacity | WorldAssetFault::ByteCapacity | WorldAssetFault::Closing | WorldAssetFault::Stale) => {}
         Err(_) => {
             state.terrain_tile_misses.insert((z, x, y));
@@ -10653,6 +10670,15 @@ fn pick_gumball_handle_at(state: &World3dState, x: f32, y: f32, _inner: Rect) ->
     best.map(|(_, handle)| handle)
 }
 
+/// 🎛️ Same gate the PICK uses (`world3d_gumball_config`), so a handle can never be drawn without
+/// being pickable or picked without being drawn — React resolves both from one `gumballConfig`.
+///
+/// 🚨️ The draw this function pushes is answered on the GPU by `mesh_store.get_versioned`, and a
+/// miss there is a FATAL `present_step` fault, not a skipped draw. Every other world draw site
+/// pairs its `SceneDraw3d` with exactly this `ensure_mesh`; the gumball did not, so the first
+/// frame after a selection died with `prepared frame submit step: prepared world mesh was
+/// missing` and took the whole frame loop with it. Unreachable until the wgpu host actually ran
+/// the reserved tool job that applies a selection (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 fn append_gumball_geometry(
     lines: &mut Vec<LineVertex3d>,
     translucent: &mut Vec<SceneDraw3d>,
@@ -10666,8 +10692,6 @@ fn append_gumball_geometry(
         return;
     };
     let extent = gumball_extent(camera.position.sub(pivot).length());
-    // 🎛️ Same gate the PICK uses (`world3d_gumball_config`), so a handle can never be drawn without
-    // being pickable or picked without being drawn — React resolves both from one `gumballConfig`.
     let config = world3d_gumball_config(state);
     let axis_colors = [(GumballHandle::MoveX, Vec3::new(1.0, 0.0, 0.0), [0.92, 0.25, 0.25, 1.0]), (GumballHandle::MoveY, Vec3::new(0.0, 1.0, 0.0), [0.25, 0.85, 0.35, 1.0]), (GumballHandle::MoveZ, Vec3::new(0.0, 0.0, 1.0), [0.35, 0.55, 0.95, 1.0])];
     for (handle, axis, color) in axis_colors {
@@ -10700,12 +10724,6 @@ fn append_gumball_geometry(
     }
     if let Some(plane) = meshes.get(GUMBALL_PLANE_MESH) {
         let mesh_version = *mesh_versions.get(GUMBALL_PLANE_MESH).unwrap_or(&0);
-        // 🚨️ The draw this function pushes is answered on the GPU by `mesh_store.get_versioned`, and a
-        // miss there is a FATAL `present_step` fault, not a skipped draw. Every other world draw site
-        // pairs its `SceneDraw3d` with exactly this `ensure_mesh`; the gumball did not, so the first
-        // frame after a selection died with `prepared frame submit step: prepared world mesh was
-        // missing` and took the whole frame loop with it. Unreachable until the wgpu host actually ran
-        // the reserved tool job that applies a selection (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
         gpu.ensure_mesh(GUMBALL_PLANE_MESH, mesh_version, *plane);
         let half = extent * 0.35;
         let plane_specs = [(GumballHandle::MoveXY, Vec3::new(0.0, 0.0, 1.0), [half, half, 1.0]), (GumballHandle::MoveYZ, Vec3::new(1.0, 0.0, 0.0), [1.0, half, half]), (GumballHandle::MoveXZ, Vec3::new(0.0, 1.0, 0.0), [half, 1.0, half])];
@@ -11310,6 +11328,34 @@ pub enum World3dSnapshotApplyStep {
     Fault,
 }
 
+/// 🔢️ The revision this apply INSTALLS, decided BEFORE the draw rebuild it began is sealed.
+///
+/// 🩸️ `lease.revision` is this world's own `interaction_revision` as of the moment the bridge
+/// published the lease — `publish_world3d_scene_bridge_snapshot` is its one production writer —
+/// so adopting it verbatim moves the counter BACKWARDS whenever anything bumped the revision
+/// while the lease was in flight: a document-lane change (`sync_world3d_scene_document_lanes`),
+/// a parallel framing (`sync_world3d_projection_content_frame`), a fit, a camera report. The
+/// rollback then invalidated the very draws this apply had just built, because
+/// `step_world3d_draw_rebuild` refuses a cursor whose `descriptor.revision` no longer equals
+/// `state.interaction_revision`. Measured on 6118: generation3d's `procedural-preview` sat at
+/// `state-meshes=3 state-instances=0 state-draws=0` with three `world3d draw rebuild step=Stale`
+/// lines immediately after `world3d delivery applied`, and the tessellated column never painted
+/// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w14b-generation3d-labels-preview-layout.md`).
+///
+/// 🧱️ The draws this apply built ARE the content of the revision it installs, so they are
+/// re-stamped with it rather than left carrying whatever revision happened to be in force
+/// when the first `Mesh` page opened the rebuild.
+///
+/// 📐️ A LOCALLY selected projection is view state the wire never overrides — React holds
+/// it in `externalPendingProjectionSpec` and only falls back to the delivered
+/// `cameraState.projectionSpec` when the pane has none (`🌐️World3dHost/🟦️.tsx`).
+///
+/// 🩸️ Without this the switch undid itself within one round trip: the template press
+/// queues a settle, the settle publishes `setCamera`, the guest echoes a camera back, and
+/// `setCamera`'s payload has no `projection` member at all (`orbit_camera_action`), so the
+/// echo always arrives in the DELIVERED family. Measured live: the press moved the pane's
+/// target onto the content centre and `liveCamera` still read `perspective` 8 s later
+/// (`📓️w9b-projection-pane-framing-grid-materials.md` §1).
 pub fn step_world3d_snapshot(state: &mut World3dState, context: &mut semio_framework_job::StepContext<'_>) -> World3dSnapshotApplyStep {
     if context.should_yield() {
         return World3dSnapshotApplyStep::Pending;
@@ -11322,24 +11368,8 @@ pub fn step_world3d_snapshot(state: &mut World3dState, context: &mut semio_frame
         return World3dSnapshotApplyStep::Fault;
     }
     if cursor.page == cursor.lease.page_count {
-        // 🔢️ The revision this apply INSTALLS, decided BEFORE the draw rebuild it began is sealed.
-        //
-        // 🩸️ `lease.revision` is this world's own `interaction_revision` as of the moment the bridge
-        // published the lease — `publish_world3d_scene_bridge_snapshot` is its one production writer —
-        // so adopting it verbatim moves the counter BACKWARDS whenever anything bumped the revision
-        // while the lease was in flight: a document-lane change (`sync_world3d_scene_document_lanes`),
-        // a parallel framing (`sync_world3d_projection_content_frame`), a fit, a camera report. The
-        // rollback then invalidated the very draws this apply had just built, because
-        // `step_world3d_draw_rebuild` refuses a cursor whose `descriptor.revision` no longer equals
-        // `state.interaction_revision`. Measured on 6118: generation3d's `procedural-preview` sat at
-        // `state-meshes=3 state-instances=0 state-draws=0` with three `world3d draw rebuild step=Stale`
-        // lines immediately after `world3d delivery applied`, and the tessellated column never painted
-        // (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w14b-generation3d-labels-preview-layout.md`).
         let revision = state.interaction_revision.max(cursor.lease.revision);
         if cursor.draw_started {
-            // 🧱️ The draws this apply built ARE the content of the revision it installs, so they are
-            // re-stamped with it rather than left carrying whatever revision happened to be in force
-            // when the first `Mesh` page opened the rebuild.
             if let Some(rebuild) = state.draw_rebuild.as_mut() {
                 rebuild.descriptor.revision = revision;
             }
@@ -11351,16 +11381,6 @@ pub fn step_world3d_snapshot(state: &mut World3dState, context: &mut semio_frame
             }
         }
         if let Some(orbit) = cursor.staged_orbit.take() {
-            // 📐️ A LOCALLY selected projection is view state the wire never overrides — React holds
-            // it in `externalPendingProjectionSpec` and only falls back to the delivered
-            // `cameraState.projectionSpec` when the pane has none (`🌐️World3dHost/🟦️.tsx`).
-            //
-            // 🩸️ Without this the switch undid itself within one round trip: the template press
-            // queues a settle, the settle publishes `setCamera`, the guest echoes a camera back, and
-            // `setCamera`'s payload has no `projection` member at all (`orbit_camera_action`), so the
-            // echo always arrives in the DELIVERED family. Measured live: the press moved the pane's
-            // target onto the content centre and `liveCamera` still read `perspective` 8 s later
-            // (`📓️w9b-projection-pane-framing-grid-materials.md` §1).
             state.orbit = if state.projection_selected {
                 OrbitController { projection: ui_wgpu::wgpu::projection_spec_family(state.projection_spec), fov_y: ui_wgpu::wgpu::projection_spec_fov_degrees(state.projection_spec).to_radians(), ..orbit }
             } else {
@@ -11792,13 +11812,14 @@ struct World3dSceneFitRecord {
 /// The extent is React's `worldSceneContentBounds`: every non-provisional instance position plus
 /// every VISIBLE reference plane's footprint. `camera_user_moved` is the ownership latch — React's
 /// `viewportOwned`.
+///
+/// 📦️ The bridge exposes content positions before its camera lease becomes accepted. Framing in
+/// that interval would be overwritten by `step_world3d_snapshot`; wait for the same accepted
+/// snapshot boundary used by the camera-fit lane.
 fn sync_world3d_projection_content_frame(state: &mut World3dState) {
     if state.projection_frame_policy == Viewport3dProjectionFramePolicy::PreserveCamera || !state.projection_frame_owed {
         return;
     }
-    // 📦️ The bridge exposes content positions before its camera lease becomes accepted. Framing in
-    // that interval would be overwritten by `step_world3d_snapshot`; wait for the same accepted
-    // snapshot boundary used by the camera-fit lane.
     if state.scene_bridge.is_some()
         || state.snapshot_apply.is_some()
         || state.scene_bridge_lease.is_some_and(|lease| state.snapshot_lease != Some(lease))
@@ -12359,6 +12380,10 @@ fn step_world3d_scene_bridge_close(state: &mut World3dState) -> bool {
 /// parse → per-mesh `mesh3d_*` publication → snapshot page admission, then hands the sealed lease to
 /// [`sync_world3d_state`], which feeds it to the very same apply ladder a typed producer's own
 /// snapshot rides.
+///
+/// 📐️ The delivered spec seeds the framing plane only while the pane holds none of its
+/// own — React's `cameraState.projectionSpec ?? externalPendingProjectionSpec` precedence
+/// (`🌐️World3dHost/🟦️.tsx`), the same rule the snapshot apply keeps for the family.
 pub fn step_world3d_scene_bridge(state: &mut World3dState, context: &mut semio_framework_job::StepContext<'_>) -> World3dSceneBridgeStep {
     if context.should_yield() {
         return World3dSceneBridgeStep::Pending;
@@ -12389,9 +12414,6 @@ pub fn step_world3d_scene_bridge(state: &mut World3dState, context: &mut semio_f
                     state.projection_frame_zoom = None;
                 }
             }
-            // 📐️ The delivered spec seeds the framing plane only while the pane holds none of its
-            // own — React's `cameraState.projectionSpec ?? externalPendingProjectionSpec` precedence
-            // (`🌐️World3dHost/🟦️.tsx`), the same rule the snapshot apply keeps for the family.
             if let Some(camera) = cursor.camera.as_ref().filter(|_| !state.projection_selected) {
                 if let Some(spec) = camera.projection {
                     state.projection_spec = spec;
@@ -12573,6 +12595,15 @@ fn world3d_scene_bridge_has_pages(state: &World3dState, cursor: &World3dSceneBri
     cursor.meshes.iter().any(|mesh| (state.meshes.contains_key(&mesh.id) || scene_mesh_awaits_its_asset(state, &mesh.id)) && cursor.instances.iter().any(|instance| instance.mesh_id == mesh.id))
 }
 
+/// 🥽️ A url-declared mesh has no geometry yet and still earns its draw: the draw is what
+/// `render_world_3d`'s missing-mesh loop reads to reserve the GLB fetch, and what starts
+/// painting by itself the frame the decoded mesh lands under this key. Dropping it here was
+/// the second half of the dead url lane — the bridge kept the instances and then threw the
+/// draw away, so `state-draws=0 state-instances=0` (`📓️w3a-asset-decoder-boot-fault.md` §6).
+///
+/// 🌫️ Locked dimming rides the authored colour's alpha, so it survives the snapshot
+/// page (which carries a colour, not a style) and composes with whatever
+/// `MESH_STYLE_PAINT` row the instance later resolves to.
 fn publish_world3d_scene_bridge_snapshot(state: &mut World3dState, cursor: &World3dSceneBridgeCursor) -> Result<World3dSnapshotLease, World3dSnapshotFault> {
     let (neutral, neutral_source) = scene_bridge_neutral_color(state);
     state.instance_interaction_ids.clear();
@@ -12593,11 +12624,6 @@ fn publish_world3d_scene_bridge_snapshot(state: &mut World3dState, cursor: &Worl
     state.celebrating_instance_ids = cursor.instances.iter().filter(|instance| instance.celebrating).map(|instance| instance.id.clone()).collect();
     let mut draws: Vec<(&World3dSceneMeshEntry, Vec<&World3dSceneInstanceEntry>)> = Vec::new();
     for mesh in &cursor.meshes {
-        // 🥽️ A url-declared mesh has no geometry yet and still earns its draw: the draw is what
-        // `render_world_3d`'s missing-mesh loop reads to reserve the GLB fetch, and what starts
-        // painting by itself the frame the decoded mesh lands under this key. Dropping it here was
-        // the second half of the dead url lane — the bridge kept the instances and then threw the
-        // draw away, so `state-draws=0 state-instances=0` (`📓️w3a-asset-decoder-boot-fault.md` §6).
         if !state.meshes.contains_key(&mesh.id) && !scene_mesh_awaits_its_asset(state, &mesh.id) {
             continue;
         }
@@ -12632,9 +12658,6 @@ fn publish_world3d_scene_bridge_snapshot(state: &mut World3dState, cursor: &Worl
                 let rotation = instance.rotation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
                 let scale = instance.scale.unwrap_or([1.0; 3]);
                 let (mut color, color_source) = instance.color.as_deref().map_or((neutral, neutral_source), |color| (parse_color(color), SceneColorSource3d::Authored));
-                // 🌫️ Locked dimming rides the authored colour's alpha, so it survives the snapshot
-                // page (which carries a colour, not a style) and composes with whatever
-                // `MESH_STYLE_PAINT` row the instance later resolves to.
                 if let Some(opacity) = instance.opacity {
                     color[3] *= (opacity as f32).clamp(0.0, 1.0);
                 }
@@ -12704,6 +12727,8 @@ fn scene_bridge_neutral_color(state: &World3dState) -> ([f32; 4], SceneColorSour
 /// 🎯️ Applies the scene's own selection document to this world's live selection/hover channels —
 /// only when the document itself changed, so an optimistic local preview between two identical
 /// refreshes is never clobbered (the rule the React host follows too).
+///
+/// 🎛️ Authored config WINS over the mode, exactly as React's `gumballConfig ?? gumballConfigForTransformMode(mode)`.
 fn sync_world3d_scene_selection(state: &mut World3dState, selection_json: &str) {
     let digest = world3d_scene_digest(&[selection_json]);
     if state.scene_selection_digest == Some(digest) {
@@ -12740,13 +12765,15 @@ fn sync_world3d_scene_selection(state: &mut World3dState, selection_json: &str) 
     if let Some(transform_mode) = record.transform_mode {
         state.transform_mode = transform_mode;
     }
-    // 🎛️ Authored config WINS over the mode, exactly as React's `gumballConfig ?? gumballConfigForTransformMode(mode)`.
     state.gumball_config = record.gumball_config;
 }
 
 /// 🖼️ Applies the scene's vortex/attraction/target-volume/reference JSON lanes — the same payloads
 /// React's `World3dHost` parses every frame, but which the wgpu host had never copied into
 /// `World3dState` (so document-tree references never reached `render_world_3d`'s textured planes).
+///
+/// 🧲️ Caps applied at PARSE time (see `world_pick_targets_from_json`), so no later reader has to
+/// know the bound and the retained set can never exceed it however large the lane arrives.
 fn sync_world3d_scene_document_lanes(state: &mut World3dState, world: &ui_wgpu::wgpu::World3dScene) {
     let digest = world3d_scene_digest(&[
         world.vortices_json.as_deref().unwrap_or(""),
@@ -12767,8 +12794,6 @@ fn sync_world3d_scene_document_lanes(state: &mut World3dState, world: &ui_wgpu::
     reconcile_world3d_reference_urls(state, &references);
     state.references = references;
     state.engagement_preview = world.engagement_preview_json.as_deref().map(|json| serde_json::from_str(json).unwrap_or_default()).unwrap_or_default();
-    // 🧲️ Caps applied at PARSE time (see `world_pick_targets_from_json`), so no later reader has to
-    // know the bound and the retained set can never exceed it however large the lane arrives.
     state.pick_targets = world.pick_targets_json.as_deref().map(world_pick_targets_from_json).unwrap_or_default();
     if state.pick_hover_key.as_deref().is_some_and(|key| !state.pick_targets.iter().any(|target| world_pick_keys_match(Some(target.key().as_str()), Some(key)))) {
         state.pick_hover_key = None;
@@ -12895,19 +12920,22 @@ fn append_tool_run_trace_draws(state: &mut World3dState, gpu: &mut World3dBuildC
     }
 }
 
+/// 🎯️ A published id may name the rendered INSTANCE or the TOPOLOGY target it stands for, and both
+/// reach this state: the guest's `selectionJson.ids` carries render ids (pinned by
+/// `🧫️fixtures/🌉️scene-bridge/🔣️.json`'s `selectedIds`), while this surface's OWN optimistic
+/// `local_hover_id` is the topology id it just dispatched in `interactionHover`. Matching only one
+/// of the two leaves half the highlights dark. React resolves the same pair
+/// (`useWorldInstanceChrome(instance.id)` over a selection the host maps back through
+/// `interactionId`). See [`instance_interaction_id`].
+///
+/// 🎨️ Selection/hover flags must follow the live selection snapshot — OR-ing with the
+/// instancesJson bits left deselected meshes painted selected until a later hover rebuild.
 fn apply_runtime_draw_flags(state: &mut World3dState) {
     let granularity = state.granularity.clone();
     let component_ids: HashSet<String> = state.component_ids.iter().cloned().collect();
     let local_hover_id = state.local_hover_id.clone();
     let hovered_component_object_id = state.hovered_component_object_id.clone();
     let selected_ids: HashSet<String> = state.selected_ids.iter().cloned().collect();
-    // 🎯️ A published id may name the rendered INSTANCE or the TOPOLOGY target it stands for, and both
-    // reach this state: the guest's `selectionJson.ids` carries render ids (pinned by
-    // `🧫️fixtures/🌉️scene-bridge/🔣️.json`'s `selectedIds`), while this surface's OWN optimistic
-    // `local_hover_id` is the topology id it just dispatched in `interactionHover`. Matching only one
-    // of the two leaves half the highlights dark. React resolves the same pair
-    // (`useWorldInstanceChrome(instance.id)` over a selection the host maps back through
-    // `interactionId`). See [`instance_interaction_id`].
     let interaction_ids = state.instance_interaction_ids.clone();
     let mut object_index_map = HashMap::new();
     let mut index = 0u32;
@@ -12924,8 +12952,6 @@ fn apply_runtime_draw_flags(state: &mut World3dState) {
             let target_id = interaction_ids.get(&instance.id).map_or(instance.id.as_str(), String::as_str);
             let local_hovered = if component_mode { false } else { local_hover_id.as_deref() == Some(instance.id.as_str()) || local_hover_id.as_deref() == Some(target_id) || hovered_component_object_id.as_deref() == Some(instance.id.as_str()) };
             let local_selected = selected_ids.contains(&instance.id) || selected_ids.contains(target_id) || mesh_selected;
-            // 🎨️ Selection/hover flags must follow the live selection snapshot — OR-ing with the
-            // instancesJson bits left deselected meshes painted selected until a later hover rebuild.
             instance.hovered = local_hovered;
             instance.selected = local_selected;
         }
@@ -12937,6 +12963,10 @@ fn apply_runtime_draw_flags(state: &mut World3dState) {
 // `WidgetContext` bundles the font/icon atlases, which are genuinely GPU-adjacent (real `wgpu`
 // crate reachable through `wgpu-engine`), so this one function stays excluded from
 // `wasm32-wasip2`: `target_arch = "wasm32"` is TRUE for wasip2 too, hence `not(target_env = "p2")`.
+/// 👻️ Mirrors `BrushPreviewGhost`: renders whenever `origin` is present, regardless of
+/// `meshUrl` — a translucent unit box is the fallback ghost when there's no mesh URL (or
+/// its GLB hasn't resolved into `state.meshes` yet), not "nothing at all". The box itself is
+/// a placeholder LEASE, so the ghost appears on the frame that lease lands, never before it.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub fn render_world_3d(
     scene: &UiComponentSceneNode,
@@ -13187,10 +13217,6 @@ pub fn render_world_3d(
         }
     }
     if let Some(preview) = state.brush_preview.clone() {
-        // 👻️ Mirrors `BrushPreviewGhost`: renders whenever `origin` is present, regardless of
-        // `meshUrl` — a translucent unit box is the fallback ghost when there's no mesh URL (or
-        // its GLB hasn't resolved into `state.meshes` yet), not "nothing at all". The box itself is
-        // a placeholder LEASE, so the ghost appears on the frame that lease lands, never before it.
         if let Some(origin) = preview.origin {
             let mesh_id = ghost_mesh_id(state, preview.mesh_url.as_deref());
             if !state.meshes.contains_key(&mesh_id) {
@@ -13426,6 +13452,8 @@ fn handle_world3d_paint_actions(state: &mut World3dState, x: f32, y: f32, down: 
     Vec::new()
 }
 
+/// 🖱️📋️ A right RELEASE owes the unconditional camera report and NOTHING else: the menu is
+/// the shell's, opened on the press (see the authority's own right-release arm).
 #[cfg(test)]
 fn handle_world3d_pointer_button(state: &mut World3dState, x: f32, y: f32, down: bool, button: i16, modifiers: &PointerModifiers) -> Option<ActionDescriptor> {
     let inner = world_pick_rect(state);
@@ -13571,8 +13599,6 @@ fn handle_world3d_pointer_button(state: &mut World3dState, x: f32, y: f32, down:
         return pick_select_action(state, x, y, inner, shift, ctrl);
     }
     if button == 2 {
-        // 🖱️📋️ A right RELEASE owes the unconditional camera report and NOTHING else: the menu is
-        // the shell's, opened on the press (see the authority's own right-release arm).
         state.right_press_point = None;
         return Some(orbit_camera_action(state));
     }
@@ -13861,6 +13887,21 @@ fn selection_method_wire_str(method: SelectionMethod) -> &'static str {
 //#endregion 🔖️WorldInteractionDomain
 
 /// Applies hover/selection action payloads to renderer-local world state before the plugin round-trip.
+///
+/// 🕹️ An undecodable merge leaves this OPTIMISTIC LOCAL PREVIEW untouched — the word is
+/// outside `🕹️interaction`'s schema enum, so the authoritative path faults on it and the
+/// preview must not invent a meaning for it (see `MergeMode::from_wire_label`).
+///
+/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: replaces the deleted ad-hoc
+/// `worldSelect`/`worldHover` command strings with the framework interaction verbs
+/// (`domainId`/`targets`/`merge`/`method`, `domainId`/`channel`/`targets`) — see
+/// `resolved_domain_id` (the domain this surface actually targets: its bound app domain, or the
+/// OS `world` fallback). This is still the OPTIMISTIC LOCAL PREVIEW only; the framework's
+/// `next_selection`/`next_hover` machine (not this file) is the source of truth once the
+/// round-trip settles.
+///
+/// 🕹️ Same preview contract as `worldPick` above — an unknown merge is the framework's
+/// fault to raise, never this preview's to guess.
 pub fn apply_world_action_preview(state: &mut World3dState, action: &ActionDescriptor) {
     let Some(args) = action.args.as_ref() else {
         if action.action == "setHover" {
@@ -13897,9 +13938,6 @@ pub fn apply_world_action_preview(state: &mut World3dState, action: &ActionDescr
             }
         }
         "worldPick" => {
-            // 🕹️ An undecodable merge leaves this OPTIMISTIC LOCAL PREVIEW untouched — the word is
-            // outside `🕹️interaction`'s schema enum, so the authoritative path faults on it and the
-            // preview must not invent a meaning for it (see `MergeMode::from_wire_label`).
             let Some(merge) = MergeMode::from_wire_label(args.get("merge").and_then(|value| value.as_str()).unwrap_or(MergeMode::Replace.wire_label())) else {
                 return;
             };
@@ -13914,16 +13952,7 @@ pub fn apply_world_action_preview(state: &mut World3dState, action: &ActionDescr
                 state.component_ids = merge_string_ids(&state.component_ids, &[id], merge);
             }
         }
-        // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: replaces the deleted ad-hoc
-        // `worldSelect`/`worldHover` command strings with the framework interaction verbs
-        // (`domainId`/`targets`/`merge`/`method`, `domainId`/`channel`/`targets`) — see
-        // `resolved_domain_id` (the domain this surface actually targets: its bound app domain, or the
-        // OS `world` fallback). This is still the OPTIMISTIC LOCAL PREVIEW only; the framework's
-        // `next_selection`/`next_hover` machine (not this file) is the source of truth once the
-        // round-trip settles.
         "interactionSelect" if args.get("domainId").and_then(|value| value.as_str()) == Some(resolved_domain_id(state)) => {
-            // 🕹️ Same preview contract as `worldPick` above — an unknown merge is the framework's
-            // fault to raise, never this preview's to guess.
             let Some(merge) = MergeMode::from_wire_label(args.get("merge").and_then(|value| value.as_str()).unwrap_or(MergeMode::Replace.wire_label())) else {
                 return;
             };
@@ -13950,6 +13979,12 @@ pub fn apply_world_action_preview(state: &mut World3dState, action: &ActionDescr
     }
 }
 
+/// 🖼️ Falls back to reference-image plane hit-testing when no mesh instance is under the
+/// cursor — mirrors React's `hoveredId` covering both mesh instances and `"reference:"`-prefixed
+/// reference planes (see `resolveWorldContextMenuTarget`'s reference tier).
+///
+/// 🕹️ `interactionHover` — empty `targets` clears the channel (see `HoverInput`/`next_hover`);
+/// `domainId`/target id shape follow this surface's resolved (app-bound or `world`-fallback) domain.
 #[cfg(test)]
 fn pick_hover_action(state: &mut World3dState, x: f32, y: f32, inner: Rect) -> Option<ActionDescriptor> {
     if state.active_utility == "surfaceBrush" {
@@ -14005,9 +14040,6 @@ fn pick_hover_action(state: &mut World3dState, x: f32, y: f32, inner: Rect) -> O
         state.local_hover_granularity_id = None;
         return Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "setHover".into(), args: None });
     }
-    // 🖼️ Falls back to reference-image plane hit-testing when no mesh instance is under the
-    // cursor — mirrors React's `hoveredId` covering both mesh instances and `"reference:"`-prefixed
-    // reference planes (see `resolveWorldContextMenuTarget`'s reference tier).
     let hit = pick_instance_at(state, x, y, inner).or_else(|| pick_reference_at(state, x, y, inner).map(|url| format!("reference:{url}")));
     let target = hit.as_deref().map(|id| (instance_interaction_id(state, id).to_string(), instance_interaction_granularity_id(state, id).to_string()));
     if state.local_hover_id.as_deref() == target.as_ref().map(|(id, _)| id.as_str()) && state.local_hover_granularity_id.as_deref() == target.as_ref().map(|(_, granularity)| granularity.as_str()) {
@@ -14015,8 +14047,6 @@ fn pick_hover_action(state: &mut World3dState, x: f32, y: f32, inner: Rect) -> O
     }
     state.local_hover_id = target.as_ref().map(|(id, _)| id.clone());
     state.local_hover_granularity_id = target.as_ref().map(|(_, granularity)| granularity.clone());
-    // 🕹️ `interactionHover` — empty `targets` clears the channel (see `HoverInput`/`next_hover`);
-    // `domainId`/target id shape follow this surface's resolved (app-bound or `world`-fallback) domain.
     let targets = match &target {
         Some((id, granularity)) => semio_framework::dsl_value!([{ "granularity": granularity, "id": resolved_item_id(state, id) }]),
         None => semio_framework::dsl_value!([]),
@@ -14024,11 +14054,11 @@ fn pick_hover_action(state: &mut World3dState, x: f32, y: f32, inner: Rect) -> O
     Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "interactionHover".into(), args: Some(semio_framework::dsl_value!({ "domainId": resolved_domain_id(state), "channel": "pointer", "targets": targets })) })
 }
 
+/// 🕹️ Canonical `MergeMode` wire labels (see `MergeMode::wire_label`) — `worldPick` (unconverted,
+/// component-level picking) and the `interactionSelect` emission below now speak the SAME five
+/// words, so this one computation feeds both branches unchanged.
 #[cfg(test)]
 fn pick_select_action(state: &World3dState, x: f32, y: f32, inner: Rect, shift: bool, ctrl: bool) -> Option<ActionDescriptor> {
-    // 🕹️ Canonical `MergeMode` wire labels (see `MergeMode::wire_label`) — `worldPick` (unconverted,
-    // component-level picking) and the `interactionSelect` emission below now speak the SAME five
-    // words, so this one computation feeds both branches unchanged.
     let merge = world_merge_mode(shift, ctrl).wire_label();
     if state.interaction_mode == "paint" {
         return None;
@@ -14133,6 +14163,12 @@ fn merge_u32_ids(existing: &[String], incoming: &[String], merge: MergeMode) -> 
     }
 }
 
+/// 🕹️ ONE decoded `MergeMode` drives both the local merge and the wire word — see
+/// `pick_select_action`'s identical rationale.
+///
+/// 🕹️ Marquee/lasso stays GEOMETRIC here — `screen_select_instances` above is the surface's own
+/// hit-test, this just batches its raw hits into ONE `interactionSelect`; the merge/mode algebra is
+/// the os-kernel `next_selection` machine's job, not this file's.
 #[cfg(test)]
 fn marquee_select_action(state: &mut World3dState, inner: Rect, shift: bool, ctrl: bool) -> Option<ActionDescriptor> {
     if state.marquee_points.len() < 2 {
@@ -14150,8 +14186,6 @@ fn marquee_select_action(state: &mut World3dState, inner: Rect, shift: bool, ctr
     };
     state.marquee_points.clear();
     state.marquee_preview_ids.clear();
-    // 🕹️ ONE decoded `MergeMode` drives both the local merge and the wire word — see
-    // `pick_select_action`'s identical rationale.
     let merge = if shift {
         MergeMode::Additive
     } else if ctrl {
@@ -14170,9 +14204,6 @@ fn marquee_select_action(state: &mut World3dState, inner: Rect, shift: bool, ctr
             })),
         });
     }
-    // 🕹️ Marquee/lasso stays GEOMETRIC here — `screen_select_instances` above is the surface's own
-    // hit-test, this just batches its raw hits into ONE `interactionSelect`; the merge/mode algebra is
-    // the os-kernel `next_selection` machine's job, not this file's.
     let mut seen = HashSet::new();
     let targets: Vec<semio_framework::DslValue> = ids
         .iter()

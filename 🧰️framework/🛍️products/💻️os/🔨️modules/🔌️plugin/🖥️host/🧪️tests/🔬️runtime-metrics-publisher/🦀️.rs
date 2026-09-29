@@ -101,6 +101,9 @@ async fn lane_for_profile(profile: &str) -> Lane {
 /// deterministic sample through `submit`/`tick`/`complete` (including a `Faulted` turn for the
 /// `"crash"` profile), then asserts `RuntimeMetricsPublisher::maybe_sample`'s decoded snapshot
 /// reflects it — row count, package count, and the specific driven actors' turns/traps.
+///
+/// 🎬️ Drive a deterministic sample so the snapshot has non-zero activity to assert on: the
+/// first plugin gets a clean turn, the first "crash" profile actor gets a `Faulted` turn.
 #[semio_framework_async_macros::async_test]
 async fn runtime_metrics_publisher_reflects_the_2550_record_scale_fixture_registry() {
     let registry: ScaleFixtureRegistry = serde_json::from_str(SCALE_FIXTURE_REGISTRY_JSON).expect("scale fixture registry must be valid JSON matching the documented shape");
@@ -128,8 +131,6 @@ async fn runtime_metrics_publisher_reflects_the_2550_record_scale_fixture_regist
     }
     assert_eq!(actor_ids.len(), 2550, "every record activated exactly one distinct actor");
 
-    // 🎬️ Drive a deterministic sample so the snapshot has non-zero activity to assert on: the
-    // first plugin gets a clean turn, the first "crash" profile actor gets a `Faulted` turn.
     let first_record = &registry.records[0];
     let first_actor = actor_ids[&first_record.id];
     kernel.submit(&env(first_actor, lane_for_profile(&first_record.scale_fixture.profile).await, 1).await).await;

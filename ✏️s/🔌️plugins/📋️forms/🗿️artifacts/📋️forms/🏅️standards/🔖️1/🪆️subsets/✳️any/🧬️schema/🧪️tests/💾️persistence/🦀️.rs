@@ -16,5 +16,4 @@ fn definition_and_answers_survive_json_text_and_pack_restart() {
     assert_eq!(decoded.definition, snapshot.definition);
     assert_eq!(decoded.responses, snapshot.responses);
     assert_eq!(forms_steps(&decoded), forms_steps(&snapshot));
-    println!("[DEBUG] Forms definition and responses survived an independent binary decode");
 }

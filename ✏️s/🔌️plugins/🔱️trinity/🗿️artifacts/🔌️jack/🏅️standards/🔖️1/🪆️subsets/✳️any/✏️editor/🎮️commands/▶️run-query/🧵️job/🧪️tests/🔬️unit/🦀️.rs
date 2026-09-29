@@ -17,7 +17,6 @@ use super::*;
         let mut xor_collision = JackQueryWork::new("runQuery", "RETURN 1".into(), "editor".into(), "results".into(), 4_194_805, 13);
         assert_eq!(first.identity(), xor_collision.identity(), "fixture reproduces the old XOR collision");
         assert!(<JackQueryWork as ArtifactCommandWork<Owner>>::restore(&mut xor_collision, &bytes).is_err());
-        eprintln!("[DEBUG] Jack query checkpoint rejects the prior operation/generation XOR collision");
     }
 
     #[test]
@@ -32,5 +31,4 @@ use super::*;
         let rejected = checkpoint(&source);
         let mut target = JackQueryWork::new("runQuery", "RETURN 1".into(), "editor".into(), "results".into(), 700, 21);
         assert!(<JackQueryWork as ArtifactCommandWork<Owner>>::restore(&mut target, &rejected).is_err());
-        eprintln!("[DEBUG] Jack query checkpoint admits legal scans above one million and rejects progress beyond the derived admission");
     }

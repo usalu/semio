@@ -8,7 +8,7 @@
 import { cn } from "../🏷️class-name-composition/🟦️.ts";
 import { borderNormalClass } from "../📏️border-presentation/🟦️.ts";
 
-/** @emoji 📏️ Logical-end divider between siblings inside a chrome control group shell. */
+/** 📏️ Logical-end divider between siblings inside a chrome control group shell. */
 export const chromeControlGroupSiblingDividerClass = `border-e border-solid ${borderNormalClass} last:border-e-0`;
 import { formControlFocusBorderClass } from "../📝️form-control-presentation/🟦️.ts";
 import { hoverExcludingHandleBgFillClass, hoverExcludingHandleTextEmphasizedClass, interactiveHoverClass, interactiveOnClass } from "../🖱️interaction-presentation/🟦️.ts";
@@ -16,7 +16,7 @@ import { glassClass } from "../🌈️surface-presentation/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🎛️ChromeControlPresentation
-/** @emoji 🎛️ Shared transparent control-cell base. */
+/** 🎛️ Shared transparent control-cell base. */
 export const chromeControlItemBaseClass = cn(
   "text-element box-border inline-flex items-center justify-center gap-single text-xs font-medium bg-transparent overflow-visible",
   "cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed",
@@ -25,16 +25,16 @@ export const chromeControlItemBaseClass = cn(
   "whitespace-nowrap min-h-medium h-full max-h-full p-single leading-none",
 );
 
-/** @emoji 🎛️ Interactive chrome control cell. */
+/** 🎛️ Interactive chrome control cell. */
 export const chromeControlItemClass = cn(chromeControlItemBaseClass, interactiveHoverClass);
 
-/** @emoji 🎛️ Drag-handle-aware chrome tab cell. */
+/** 🎛️ Drag-handle-aware chrome tab cell. */
 export const chromeControlTabItemClass = cn(chromeControlItemBaseClass, hoverExcludingHandleBgFillClass, hoverExcludingHandleTextEmphasizedClass);
 
-/** @emoji 📑️ Default mode-dock tab label. */
+/** 📑️ Default mode-dock tab label. */
 export const modeDockTabClassName = cn(chromeControlTabItemClass, "group max-w-[12rem] shrink-0 cursor-pointer items-center px-single select-none transition-colors");
 
-/** @emoji 📑️ Pane chrome toggle presentation. */
+/** 📑️ Pane chrome toggle presentation. */
 export const windowPaneChromeToggleClass = cn(
   modeDockTabClassName,
   "relative z-30 box-border min-h-medium shrink-0 border-0 bg-transparent",
@@ -42,16 +42,16 @@ export const windowPaneChromeToggleClass = cn(
   "disabled:pointer-events-none disabled:opacity-50",
 );
 
-/** @emoji 🎛️ Shared outer chrome control shell. */
+/** 🎛️ Shared outer chrome control shell. */
 export const chromeControlGroupShellClass = cn("box-border flex items-stretch overflow-visible border w-fit shrink-0", borderNormalClass, glassClass);
 
-/** @emoji 🎛️ Standard chrome control group height. */
+/** 🎛️ Standard chrome control group height. */
 export const chromeControlGroupClass = cn(chromeControlGroupShellClass, "h-medium");
 
-/** @emoji 🎛️ Data-state on presentation for chrome controls. */
+/** 🎛️ Data-state on presentation for chrome controls. */
 export const chromeControlItemOnClass = interactiveOnClass;
 
-/** @emoji 🎛️ Data-active presentation for chrome tabs. */
+/** 🎛️ Data-active presentation for chrome tabs. */
 export const chromeControlTabActiveClass = cn(
   "data-[active=true]:bg-active-base",
   "data-[active=true]:border-active-base",

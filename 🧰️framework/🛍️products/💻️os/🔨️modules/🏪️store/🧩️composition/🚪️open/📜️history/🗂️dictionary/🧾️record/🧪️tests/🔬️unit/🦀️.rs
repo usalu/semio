@@ -152,7 +152,6 @@ fn retained_dictionary_delta_matches_neutral_text_ranges_without_publication() {
             assert_eq!(close(&mut cursor, grant), 0);
         }
     }
-    println!("[DEBUG] dictionary payload cursor: 11 neutral accepted wires x3 grants; exact ranges, UTF8, canonical LEB, no publication");
 }
 
 #[test]
@@ -194,5 +193,5 @@ fn retained_dictionary_delta_rejects_tail_and_preserves_partial_utf8_until_close
         cursor.finish().unwrap();
         close(&mut cursor, 1);
     }
-    println!("[DEBUG] dictionary payload cursor: 23 neutral denied wires x3 grants; sticky errors/event fences and exact scratch0..4 retirement; every four-byte scalar cancellation boundary");
+    println!("dictionary payload cursor: 23 neutral denied wires x3 grants; sticky errors/event fences and exact scratch0..4 retirement; every four-byte scalar cancellation boundary");
 }

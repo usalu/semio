@@ -176,7 +176,6 @@ fn stroke_fields_preserve_appearance_and_undo() {
     let scene = crate::schema::flatten_drawing_document_to_scene_nodes(&document);
     assert_eq!(scene.iter().find_map(|node| node.stroke.as_ref()), Some(stroke));
     assert_eq!(parse_layer_field_input("name", "123"), dsl::DslValue::String("123".into()));
-    eprintln!("[DEBUG] stroke edits preserve sibling attributes and undo atomically");
 }
 
 #[test]
@@ -218,5 +217,4 @@ fn all_inspector_blend_modes_preserve_other_fields_and_undo() {
         for undo in inverse { apply_drawing_mutation(&mut document, &undo).unwrap(); }
         assert_eq!(document, original, "{mode}");
     }
-    eprintln!("[DEBUG] all sixteen inspector blend modes preserve unrelated fields and undo");
 }

@@ -1,4 +1,4 @@
-//! @emoji 👥️ The `PresenceHub`: TTL-scoped, coalesced, never part of a document revision.
+//! 👥️ The `PresenceHub`: TTL-scoped, coalesced, never part of a document revision.
 //!
 //! 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md. Every `fn`
 //! below is plain sync by owner ruling U1.

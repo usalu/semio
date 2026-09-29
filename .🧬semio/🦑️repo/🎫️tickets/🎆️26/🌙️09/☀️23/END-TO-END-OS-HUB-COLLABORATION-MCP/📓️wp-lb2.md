@@ -53,6 +53,173 @@ guest code = prepared patches (dry-run clean) for window 3; rule 22 test-only ed
   apply → typecheck + Interpreter vitest → Home boot on serve 6630 → stop; revert on red). S18: its pins select by key/label, unaffected.
 - 19:01 p8 LANDED (landing row): typecheck 0, Interpreter 146/146, Home boot 12.6 s / 0 pageerrors, serve 6630 stopped, backup dropped.
 
+### Session 14c — phase 2 (2026-09-29): hosted kinds, runtime roots, editor catalogue
+
+Coordinator items (06:10, widened 06:3x): 7 stdio roots register no document schema; a family package must be self-sufficient for
+the kinds it hosts (ONE SDK mechanism: schemas + inferences + codecs + composers; hosting ≠ owning; law (d) per package in its own
+process); `editor_catalog` other reds. Rules 25/26: captures/backups/scratch only under `.🧬semio/🌐hub/s14-lb2-*`.
+
+| # | Item | Status |
+|---|---|---|
+| 9 | **p9 `lb2-p9-hosted-artifacts.py`** (window-3 set: SDK + stdio; 49 files) | see below |
+| 10 | **p10 `lb2-p10-editor-catalog.py`** (rule 22, test-only: law window roster + fixture rows) | see below |
+| 11 | **p11 `lb2-p11-editor-documents.py`** (window-3 set, stdio schema content) | see below |
+
+#### p9 — design (hosting is not owning)
+
+- **Root cause (native probe `c20-isolated-probe.txt`)**: after ST2's split each family is its own wasm guest (own process), but
+  family packages declare no artifacts — the owner declarations run only in the `stdio` guest. In a process that assembled only
+  `stdio-image`, png/jpg/bmp/svg schemas were absent (snapshot edits refused `schema-unregistered`), and so were the kinds'
+  document codecs (`store::document_codec`: emit-op application, replay), composers (Import/Export), formats and subset validators.
+  Independently, 7 roots (bmp, wav, epw, binary, ifc, gif, semio) were `definition_only_assembly` with `runtime_capabilities: []`
+  — no guest published anything for them (their imperative `register()` is called by no plugin).
+- **SDK `PluginBuilder::host_artifact(ArtifactDeclaration)`** (builder + `ArtifactDeclaration::preflight_hosted`): the owner's
+  declaration (built by the owner crate's own `declaration(definition()?)`) commits in the hosting guest through the SAME
+  transactional plan as owned declarations — schemas + inference descriptors (`publish_declared_catalogs`), composers, formats,
+  subset validators, document codecs, dialect migrations (`commit_artifact_registration_plan`: identical rows tolerated, conflicting
+  rows fatal). Preflight: the kind is owned by a DIRECT dependency (`plugin-assembly.hosted-artifact-dependency`), never by the host
+  (`…-owner`: declare it instead), once per kind (`…-repeated`), every channel inside the kind (shared `preflight_channels`).
+- **Hosting ≠ owning (W4 gate / hub catalog stay truthful)**: (1) the hosted definition is never registered by the host → the kind's
+  identity, capability claims and the native artifact-catalog topic stay `stdio`'s; (2) inference SERVICES are not hosted — they
+  stay listed/executed by the owner alone (only the inference DESCRIPTORS are published in-guest); (3) `describe` lists composers
+  only for kinds the plugin id owns (`owns_artifact_kind`: `s.stdio-image` never matches `s.stdio.png`) → no io/composer rows move;
+  (4) **codec rows** (W4 zero-codec gate, hub trusted catalog, `world actor` codec interface) are answered by `artifact_codec_owner`
+  over the bundle's APPS — a family already owns the codec rows of the kinds its editors/viewers open (unchanged by p9); a HOSTED
+  codec is a store-registry row (`store::document_codec`) the guest uses internally, never a descriptor/catalog row; (5) the
+  declaration's own capability requirements union into the host manifest (none declared in stdio today).
+- **Families**: each of the 9 families hosts exactly the kinds it activates on (29 `host_artifact` lines, generated from the
+  `.activation(OnArtifactKind …)` rows).
+- **7 roots → runtime declarations**: `declaration()` next to `definition()`; schema-first `runtime_capabilities` rows generated
+  from the declarations' OWN `runtime_capability_requirements()` (scratch-only dump, `lb2-p9-dump-probe.py`) with the id/descriptor
+  grammar all 29 existing runtime definitions follow (checker: 0 deviations) — bmp 5, wav 5, epw 5, binary 5, ifc 15 (4 + 2x3, 3 MVD
+  validators), gif 9 (87a + 89a), semio 90 (19 subsets); representation rows publish the kinds' formats. semio's 19 subsets and ifc's
+  3 MVD subsets gain `declare()`, the declarative twin of their `register()` (kept: native callers register without a plugin).
+- **Ownership finding (fixed in p9)**: semio's bridge tables mix deserializers (write semio) and serializers (write step, png, … — 28
+  foreign dialects). A composer capability claims the dialect it WRITES and a claim belongs to exactly one definition
+  (`artifact-definition.conflicting-claim`), so semio declares only the rows writing semio (`semio_written`); semio → X exports stay
+  X's to declare (they were never registered in the product: semio was definition-only).
+- **Law (d)** `every_package_hosts_the_runtime_of_every_kind_it_opens_in_its_own_process` (`🚢️shipped-fleet`): the test re-executes
+  its own binary once per package (`package_runtime_probe`, `#[ignore]`d child, env-selected); the child assembles ONLY that package,
+  asserts it assembled (`package_id`), and checks every requirement row of the owner declaration of every kind the package activates
+  on against the live registries (kernel schema/inference catalogs, store document codecs, io composers/formats/subset validators;
+  grammar rows are captured-never-published by design).
+- **Schema documents (added 08:1x, coordinator: "target 91/91")** — same set, same commit path: framework schema
+  `register_artifact_inference_descriptor` also registers the inference document as the `inference` export of its scope;
+  SDK `ArtifactDeclarationBuilder::schema_documents(ScopeSchemaExports)` (one `schema` row `<scope>.<export>` each, scope must be
+  the declaring kind — `plugin-assembly.schema-documents-owner`; hosted like every other channel); the kernel's store and io
+  vocabulary register their own documents (`os.store`: child/link/blob, `framework.io`: schema — kernel gains the
+  dependency-free `semio-framework-schema-registry`) from `publish_declared_catalogs`; semio declares
+  `SEMIO_SHARED_SCHEMA_DOCUMENTS` (geometry, child). LAW (e) `every_registered_snapshot_contract_resolves_in_each_package_process`
+  (child process per package: every registered artifact's snapshot contract compiles). Cargo.lock gains the two dependency
+  edges (kernel → schema-registry, stdio dev → schema). p9 = 56 files.
+- **Not in p9 (reported)**: conversion features — the stdio-semio family does not enable semio's `conversion-*` features, so its
+  guest hosts the semio composers compiled into ITS build (the deserializing bridges only exist where the feature is on); enabling
+  them is a packaging/wasm-size decision. `definition_only_assembly`/`ArtifactAssembly::Definition` lose their last production
+  callers (all 36 are runtime now) → a separate cleanup set (contract + registry + 36 `assembly()` fns).
+
+#### p10 / p11 / p12 — `editor_catalog` toward 91/91
+
+Baseline after p9 (scratch 07:3x, `p9-s7-all.out`): 42/91 (was 1/89 on ST2's T2 run): p9 cleared `schema-unregistered` ×28 and
+p10's window roster cleared `window-config.window-context` ×25. Remaining classes and their owner set:
+
+| Class (editors) | Root cause | Set |
+|---|---|---|
+| `window-config.window-context` (25) | law rendered `window_id` with an EMPTY `window_instances` roster | p10 (test) |
+| fixture rows (gltf, obj, pdf 1.4 ×3, xlsx ×3, json ×2, txt, csv, mp3, docx ×3, png, xml, gif) | rows written for older snapshot shapes, or edits a native file cannot carry on an empty document (csv header flag, 3-byte ID3v1, `trailingNewline` with no line, docx namespace rewrite) | p10 (test) |
+| identity law (new) | `E::DOCUMENT_SCHEMA` == initial snapshot `schema` | p10 (test) |
+| `snapshot-edit.schema-identity` (pdf ×10, gif 89a ×1, avi ×1) | pdf/gif-89a apps edit the canonical model but declared the legacy model's schema; avi `Default` had an empty schema | p12 (pdf, gif), p11 (avi) |
+| `invalid-schema-contract` (las, dwg ×2, ifc 4 once published) | broken `$ref`s (`#/definitions` vs `$defs`, camelCase vs `Dwg…` names) | p11 |
+| `constraint-invalid` (dxf, dwg ac1018) | schema requires what the model omits (`DxfTables`), `dwf_3dPrecision` vs projected `dwf3dPrecision` | p11 |
+| `schema.fragment.invalid` (png, xml ×2, ifc 2x3 ×3, binary) | Option fields projected `null` against optional non-null contracts; binary `bytes` typed string | p11 |
+| default encode panics (jpg ×2, tiff, gif ×2) + epw/wav/pptx new documents not reopening | a new document of those kinds was not a valid native file / not a codec fixed point | p11 (`blank_*_snapshot`, wav default data, pptx `build_minimal_pptx`) |
+| semio brep / kit / object (3) | their snapshot schemas `$ref` semio's shared schema documents (`base/geometry.json`, `base/child.json`, `brep/inference.json`) that no descriptor facet registers — the validator's cross-document scope is the schema export registry | **open**: needs a declaration channel for an artifact's shared schema documents (SDK) or moving the shared `$defs` into the registered `base/artifact.json` facet — reported, not in these sets |
+
+Landing order (shared files): p9 → p10 → p11 → p12 (p9/p12 both edit the gif root; p11/p12 both edit the gif 89a editor/viewer).
+p10 is test-only (rule 22), disjoint from the guest sets. p11/p12 are guest sets for T6 with p9 (L1 manifest: p9 → p11 → p12).
+
+- **p12 descriptor consequence**: the pdf (20 apps) and gif 89a (2 apps) `io.artifactSchema` change → `stdio-pdf` and `stdio-image`
+  descriptors (and their hub codec rows: `stdio.pdf` → `stdio.pdf.1.7`, 89a `stdio.gif` → `stdio.gif.89a`) must be regenerated
+  by describe in T6; p9 alone leaves every family descriptor unchanged. Follow-up (not in p12): the host-native pdf codec
+  (`stdio.native.pdf.v1`, receipts → hub bootstrap generation) still materializes the 1.4 `PageDoc` stub under `stdio.pdf`, which
+  no editor opens — mapping native open onto the canonical 1.7 model is a hub-generation change for H14/L1.
+- **semio shared schema documents (open)**: `brep` refs `brep/inference.json` (inference documents are not registered as schema
+  exports), `object` refs `base/geometry.json`, `kit` refs `base/child.json` → `os/store/child.json` (neither is a registered
+  export: artifact descriptors register only their 4 facets). Proposal: (1) `register_artifact_inference_descriptor` also
+  registers the inference document as an export of its scope; (2) an `ArtifactDeclarationBuilder` channel for an artifact's
+  shared schema documents (schema-first capability row, committed with the other catalogs); (3) the store registers its own
+  schema documents (`os/store/child.json`, `link.json`) as framework exports. Until then these 3 editors stay red.
+- **Oracle** `lb2-initial-snapshot-oracle.py` (python-jsonschema + referencing, third-party): validates every editor's NEW
+  document (scratch dump) against its own snapshot contract; on the 17 early dumps it reproduced the Rust findings exactly (dxf
+  required tables, las ref, png nulls, xml root, avi identity). `--refs` mode (third-party twin of law e, one global registry of
+  every `$id` document): live tree 3 of 57 snapshot contracts carry unresolvable `$ref`s (dwg, ifc, las) → scratch with p11: 0.
+
+### Session 14c — phase 2b (2026-09-29 08:3x–): s9 proof red → p9 grows, p13/p14 new, p10–p12 extended
+
+**s9** (scratch, p9+p10+p11+p12, 08:33, `s14-lb2-captures/p9-s9-catalog.out`): editor_catalog 59/90, shipped_fleet 4/6, stdio lib 7/8.
+L1 holds p9/p11/p12 out of T6 until a green proof (coordinator 08:5x: all T6 sets tracked in `📓️t6-queue.md`; rows 3–5c are LB2's).
+
+| s9 class | Root cause | Fix (set) |
+|---|---|---|
+| law e: `stdio-office` alone cannot compile docx/xlsx snapshot contracts | their `DocxXmlPart`/`XlsxXmlPart` `$ref` the xml snapshot document; office hosted only the kinds it opens | p9: a family hosts the kinds it opens **plus their schema closure** (`$ref`s of their snapshot contracts, transitively, computed from the tree: office → xml); office Cargo.toml + lock edge `semio-s-plugin-stdio-office → semio-s-artifact-stdio-xml` |
+| law d: `stdio-semio` alone: `schema s.stdio.semio.geometry/child` unmet | the schema-document claim `<scope>.<export>` has the exact shape of a subset schema id (`s.stdio.semio.brep`) — ambiguous, and it would collide with a subset named `child` | p9: own claim namespace `schema-export`, value `<scope>#<export>` (`ArtifactIdentityClaim::schema_export`, `ArtifactIdentityNamespace::schema_export`); stdio contract allow-list; semio rows `…schema.schema-export-s-stdio-semio-{geometry,child}.v1`; law d resolves them through `resolve_schema_export` |
+| laws d/e stopped at the first red package | loop asserted per package | p9: laws collect every package's failure |
+| stdio `descriptor_is_fresh` | the 7 runtime roots now publish formats (`.bin`, `.bmp`, `.epw`, `.gif`, …) | expected: T6 describe regenerates stdio (+ stdio-pdf, stdio-image after p12) |
+| 22 new `unused_qualifications` warnings | p9 generated qualified paths where the names are in scope (semio `ComposerEntry` ×17, binary `ArtifactDeclaration` under the feature-gated prelude, gif 89a codec types); p12's root re-export made the pdf codec line's path redundant | p9 emits the in-scope names (binary imports `ArtifactDeclaration`; p9 re-exports `STDIO_GIF89A_DOCUMENT_SCHEMA` beside the 89a codec it declares, p12 adds it only if absent); p12 shortens the pdf root codec line |
+| pdf ×10 `path-invalid … no child metadata`; semio kit `/types`, object `/transform` | `FromValue::edit_value_at_path`'s default edits only the root; these three codecs are hand-written | **p13**: value crate `edit_through_value` (edit the emitted value tree, decode back; re-exported by `pack::value`, `os_dsl::schema`, kernel root; serde_json-oracle unit law); the three codecs route path edits through it |
+| xlsx `*` text replay: bytes differ | `OpcPackage::relationships: HashMap` — per-instance order, one document had two encodings (strict/transitional passed by chance) | **p13**: `BTreeMap` (JSON/contract unchanged), docx/xlsx/pptx relationship diff helpers follow |
+| xml_any `publication-codec … no record for 'set-snapshot'` | the `set-snapshot` leaf (tag 7) joined `XmlMutation` but not its aggregate wire surfaces; every xml editor maps every edit to `SetSnapshot` | **p14**: protocol record, binary/text rosters, grammar roster, aggregate schema arm — all from the leaf descriptor |
+| xml_valid `publication-mismatch` | the family row writes a root without DOCTYPE; the valid subset (correctly) refuses it (§5.1), the refused edit is a no-op | p10: valid row = `<!DOCTYPE root><root/>` |
+| gif89a `interactive-job.catalog-authority` (schema_eq=false) | tool proofs declared `artifact_schema: "stdio.gif"` | p12: `stdio.gif.89a` |
+| pdf pack round trip; png `IHDR: zero dimension`; avi `reserved` `[]` vs `[0,0,0,0]` | new documents were not codec fixed points: pdf `Default` has no retained COS graph (decode always carries one), png 0×0, avi's writer emits `dwReserved[4]` | p12 `blank_pdf_snapshot` = `decode(encode(default))` for all 20 pdf apps; p11 `blank_png_snapshot` (1×1 white), avi `Default` reserved `[0; 4]` |
+| dwg ×2 `constraint-invalid … paperUcsName expected integer` | 16 optional handles projected `null`; contract + TS: optional non-null | p11: `skip_serializing_if` (region-guarded to `DwgHeaderRelations`) |
+| docx ×3 `publication-invalid … expected WordprocessingML document root` | per-subset fixture rows (precedence over the family row) rewrote the `w:` namespace | p10: rows retired → family row (empty `w:p`) |
+| ifc2x3 ×4 `no-op fixture path`; pptx save/reopen; semio brep `publication-mismatch` | rows addressed a field a new document omits (`edmPreamble`, p11), a typed slide without its parts, the `nextLabel` allocator (not in the brep diff) | p10: `/document/header/file_name/0`, `/opc/comment`, brep `/vertices` |
+| pdf rows | a typed-lane edit re-lowers the retained graph → the reopened `objects` differ | p10: `/declaredVersion` (keeps the graph canonical) |
+
+Order: p9 → p11 → p12 → p13 (shares the pdf 1.7 snapshot file with p12) · p14 independent · p10 last (rows address the fixed documents).
+Scratch reset 09:00 (resync + all six sets written, 0 problems); proof job **s11** = `lb2-scratch-proof.sh p9-s11` (catalog + dump,
+families descriptors, SDK builder `--test-threads 1`, schema/registry/contract libs, value `edit_through_value`, 20 roots' libs).
+- **s11** (09:28–09:33): SDK `builder::` **20/20** serially (the s8 reds `strict_artifact_identity_{mixed_channels_publish_nothing,
+  all_builder_channels_reject_before_publication}` are a PRE-EXISTING parallel race: their witness differences the registries
+  around a rejected build while the sibling `…_owned_tree_and_definition_channels_publish` publishes the same tree on another test
+  thread — both flip all-false → all-true within 0.02 s; not a p9 defect; follow-up: serialize the three laws); schema 29/29,
+  schema-registry 6/6, stdio contract 46/46 (the `schema-export` allow-list), value `edit_through_value` 1/1. catalog / families /
+  roots did not build: docx's edit-preparation memory bound called `relationships.capacity()` (a B-tree has none) → p13 counts
+  entries (13 files). Coordinator 09:1x: scratch build outputs deleted for disk (32 GiB) → s12 builds cold.
+- **s12** (10:25–10:36): **shipped_fleet 6/6 — laws d + e green** (every package alone hosts the runtime of what it opens, every
+  registered snapshot contract compiles in every package process); editor_catalog **74/90**; families `descriptor_is_fresh` 7/9 —
+  stdio-image and stdio-pdf stale = p12's intended `io.artifactSchema` change (describe in T6), office unchanged with xml hosted;
+  stdio lib descriptor stale (describe). Remaining 16, all understood (python-jsonschema oracle agrees on the contract ones):
+  - pdf ×10 `constraint-invalid … objects[0].value`: the 1.7 contract (+ TS twin + TS-embedded copy) describes `PdfObject`'s
+    `real`/`ref` arms as `{kind, value}` while `#[value(tag = "kind")]` flattens an object payload beside the tag (the derive's
+    documented rule) → p12 describes the declared encoding (`allOf` payload + tag; oracle: 0 violations on the new document).
+  - png: the writer emits interlace method 0 only → an `interlace` edit never saves → p10 edits `/pixels`.
+  - xml valid `inverse-mismatch`: the undo lands on the empty (invalid) document, which the subset refuses → p11
+    `blank_valid_xml_snapshot` (`<!DOCTYPE root><root/>`), p10 row edits text inside it.
+  - ifc 2x3 ×4 `$.schema: expected object`: the contract swapped `schema`/`document` (twins correct) → p11 swaps back; its
+    `Part21*` definitions (kind-tagged, camelCase — twins agree) describe an encoding the SHARED `step::part21` types (external
+    tagging, snake_case, also used by step) never produce → **open, not in these sets**: the step owner decides whether the shared
+    type follows the contract or ifc 2x3 `$ref`s a step-owned contract of the real projection.
+  - roots step broke mid-build: my 10:37 scratch resync removed sources under the running job (mine; s13 reruns it).
+
+- **s13/s14 + live baseline** (native lane `p9-live-baseline-roots-2`, the 12 affected root crates on the live tree): s14 editor_catalog
+  76/90 (pdf ×10 = U6 row 6b wire gap; ifc2x3 ×4 → p16), shipped_fleet 6/6; root libs 82 → 12 reds. Against the live baseline
+  (bmp 1, epw 2, pdf 1, png 1, pptx 1, zip 4 red today): mine were jpg/png `committed_json_is_canonical` ×24 + dwg ×2 + ifc ×1
+  (p11 now converts the 59 committed fixtures), pptx strict/transitional analyzer laws ×7 (p11 no longer changes pptx `Default` —
+  `blank_pptx_snapshot` for the six apps), ifc shadow-state keys, jpg/png optional-field laws (`InsertValue` for absent members),
+  png typed-source (replaced itself); U6's relayed items (png, epw set-cell, pptx honesty after the demo writer) are covered.
+  Pre-existing and NOT in my sets: bmp `ops_grammar` (set-snapshot grammar drift, p14's class), epw render, pdf kind roster, zip ×4.
+- **p15** (coordinator 11:4x, publish-all refused the 9 families: "component codec probe requires at least one declared artifact
+  kind"): hosted kinds end to end — `PluginManifest.hostedArtifactKinds` (framework manifest + TS projection, typegen 198),
+  `ArtifactDeclaration::hosted_kinds`, hub trusted-catalog pairing + `open_target_codec_package` (owner present, declared
+  dependency, exact codec; named refusals; bundle validation, load, manifest check, creation selection), publish script
+  (`trustedBootstrapHostedKindsV1`: a hosting package skips the probe, binds the owner's rows; a hosted pair without an owner
+  row opens nothing — the owner publishes ONE codec row per kind). Laws: shipped_fleet hosted-descriptor law; hub descriptor
+  open-target fixture case `hosted` + `hosted_open_targets_bind_the_owner_codec_or_are_refused_by_name`. Proof in scratch2
+  (scratch + 🌎️hub/gis/vcs, p15 applied; job `p15-s1`).
+- **p16** (coordinator: "you own the Part21 decision"): see the script docstring; IfcOpenShell 0.8.4 is installed → oracle over
+  the 43 committed IFC 2x3 fixtures (ids, types, argument counts, instance count, FILE_SCHEMA). Proof in scratch1 (job `p9-s16`).
+
 ### Session 14b
 
 Successor agent (2026-09-28 12:0x, after the usage cut + app restart). Guest freeze ON since 12:02:46 → every guest-linked item is a

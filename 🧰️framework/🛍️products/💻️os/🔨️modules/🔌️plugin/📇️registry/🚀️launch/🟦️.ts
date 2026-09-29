@@ -23,16 +23,16 @@ import type { PlaygroundEntry } from "../🎮️playground/🔎️discovery/🟦
 import { normalizeDevLaunchConfigurationNames, playgroundLaunchNamePrefix, taxonomyFolderSlug } from "./🏷️name-prefix/🟦️.ts";
 
 const SEED_REL_PATH = ".vscode/🧩️launch.seed.jsonc";
-/** @emoji 📄️ Repo-relative path of the generated output, shared with `📜️script.ts`'s freshness gate. */
+/** 📄️ Repo-relative path of the generated output, shared with `📜️script.ts`'s freshness gate. */
 export const LAUNCH_OUTPUT_REL_PATH = ".vscode/launch.json";
 const DEV_LAUNCHERS_MARKER =
   ',\n\n  // 🎮️devLaunchers — per-playground-variant dev-launcher metadata (not part of the generated\n  // output); see 🚀️launch/🟦️.ts readSeed() for the exact split contract this marker line supports.\n  "devLaunchers": ';
 
 //#region 🔖️DevLauncher
-/** @emoji 🧩️ One `serverReadyAction` shape with a `"{PORT}"` token substituted at render time. */
+/** 🧩️ One `serverReadyAction` shape with a `"{PORT}"` token substituted at render time. */
 type ServerReadyTemplate = { readonly pattern: string; readonly uriFormat: string };
 
-/** @emoji 👥️ Multi-user expansion template for one playground variant's `@generated:<variant>:users`
+/** 👥️ Multi-user expansion template for one playground variant's `@generated:<variant>:users`
  * placeholder: one launcher per registry `userPorts.react[]`/`userPorts.wgpu[]` slot (1-based `{N}`),
  * reusing the variant's own command/serverReadyAction and offsetting its `order`/`wgpuOrder` by
  * `0.01 * N`. `env` values may carry `"{N}"`, `"{PORT}"` and `"{EMAIL}"` tokens and are merged OVER
@@ -43,7 +43,7 @@ type DevLauncherUsersTemplate = {
   readonly env: Readonly<Record<string, string>>;
 };
 
-/** @emoji 🎮️ Hand-curated parts of one playground variant's `3_dev` launch entries that the plugin
+/** 🎮️ Hand-curated parts of one playground variant's `3_dev` launch entries that the plugin
  * registry cannot supply: display name and VS Code presentation order, plus any launcher-specific
  * `env` extras merged over the registry-owned base. Command, port, plugin/app/renderer env and the
  * `serverReadyAction` are all derived from the registry entry — a seed row can never drift from the
@@ -56,17 +56,17 @@ type DevLauncherEntry = {
   readonly users?: DevLauncherUsersTemplate;
 };
 
-/** @emoji 🌐️ The one `serverReadyAction` shape every playground dev server matches — Vite and the
+/** 🌐️ The one `serverReadyAction` shape every playground dev server matches — Vite and the
  * wgpu Trunk server both print `http://<host>:<port>`, with `0.0.0.0` in a devcontainer. */
 const DEV_SERVER_READY: ServerReadyTemplate = { pattern: "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})", uriFormat: "%s" };
 
-/** @emoji 🚀️ The `workspace:dev` invocation for one playground variant. `resolveFrameworkOsPlaygroundPlugin`
+/** 🚀️ The `workspace:dev` invocation for one playground variant. `resolveFrameworkOsPlaygroundPlugin`
  * matches the variant id (or an alias) as the leading segment, so the variant id is always accepted. */
 export function playgroundDevCommand(variant: string): string {
   return `bun nx run workspace:dev -- ${variant}`;
 }
 
-/** @emoji 🔌️ Registry-owned launch env for one variant+renderer. `SEMIO_PLUGIN` carries the **variant**,
+/** 🔌️ Registry-owned launch env for one variant+renderer. `SEMIO_PLUGIN` carries the **variant**,
  * exactly as `🧑‍💻dev/♻️activation/🌐️serve/🟦️.ts` and `🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts` read it, and
  * `S_OS_PORT` is the only port variable any dev server binds. */
 export function playgroundDevEnv(playground: PlaygroundEntry, renderer: "react" | "wgpu", port: number): Record<string, string> {
@@ -75,7 +75,7 @@ export function playgroundDevEnv(playground: PlaygroundEntry, renderer: "react" 
 //#endregion
 
 //#region 🔖️SeedSplit
-/** @emoji ✂️ Splits the seed file into the output skeleton (verbatim `configurations` text with
+/** ✂️ Splits the seed file into the output skeleton (verbatim `configurations` text with
  * `"@generated:<variant>:<renderer>"` placeholders) and the parsed `devLaunchers` table. Both live in
  * one JSONC document; `DEV_LAUNCHERS_MARKER` is the exact, generator-authored boundary between them. */
 function readSeed(repoRoot: string, readText?: (path: string) => string): { readonly skeleton: string; readonly devLaunchers: Readonly<Record<string, DevLauncherEntry>>; readonly projectLaunchers?: ProjectLauncherPolicy } {
@@ -105,7 +105,7 @@ function renderServerReadyAction(template: ServerReadyTemplate, port: number): {
   return { action: "openExternally", pattern: template.pattern.replaceAll("{PORT}", String(port)), uriFormat: template.uriFormat.replaceAll("{PORT}", String(port)) };
 }
 
-/** @emoji 🧱️ Builds one `3_dev` launch config object for a variant+renderer, matching the field order
+/** 🧱️ Builds one `3_dev` launch config object for a variant+renderer, matching the field order
  * and shape of every hand-authored playground launcher in `.vscode/launch.json` today. */
 function renderEntry(name: string, launcher: DevLauncherEntry, playground: PlaygroundEntry, renderer: "react" | "wgpu", port: number): object {
   const order = renderer === "react" ? launcher.order : launcher.wgpuOrder;
@@ -122,7 +122,7 @@ function renderEntry(name: string, launcher: DevLauncherEntry, playground: Playg
   };
 }
 
-/** @emoji ↔️ Re-indents a `JSON.stringify(obj, null, 2)` block (0-based) to sit at the seed's 4-space
+/** ↔️ Re-indents a `JSON.stringify(obj, null, 2)` block (0-based) to sit at the seed's 4-space
  * `configurations` array-item depth; only line 1 needs no shift since it replaces an inline placeholder. */
 function reindent(jsonText: string, extraSpaces: number): string {
   const pad = " ".repeat(extraSpaces);
@@ -132,12 +132,12 @@ function reindent(jsonText: string, extraSpaces: number): string {
     .join("\n");
 }
 
-/** @emoji 🔤️ Substitutes the `users` template's `"{N}"` / `"{PORT}"` / `"{EMAIL}"` tokens in `text`. */
+/** 🔤️ Substitutes the `users` template's `"{N}"` / `"{PORT}"` / `"{EMAIL}"` tokens in `text`. */
 function substituteUserTokens(text: string, n: number, port: number, email: string): string {
   return text.replaceAll("{N}", String(n)).replaceAll("{PORT}", String(port)).replaceAll("{EMAIL}", email);
 }
 
-/** @emoji 👥️ Renders one `users` launcher for user slot `n` (1-based) of one renderer, reusing the
+/** 👥️ Renders one `users` launcher for user slot `n` (1-based) of one renderer, reusing the
  * variant's own `command`/`serverReadyAction` and offsetting its base `order` by `0.01 * n`. */
 function renderUserEntry(users: DevLauncherUsersTemplate, playground: PlaygroundEntry, renderer: "react" | "wgpu", n: number, port: number, baseOrder: number, sra: ServerReadyTemplate): object {
   const email = substituteUserTokens(users.emailPattern, n, port, "");
@@ -160,7 +160,7 @@ function renderUserEntry(users: DevLauncherUsersTemplate, playground: Playground
   };
 }
 
-/** @emoji 👥️ Renders every launcher for one variant's `@generated:<variant>:users` placeholder: one
+/** 👥️ Renders every launcher for one variant's `@generated:<variant>:users` placeholder: one
  * per `playground.userPorts.react[]` slot, then one per `playground.userPorts.wgpu[]` slot (only when
  * the base launcher also declares `wgpuOrder`/`wgpuServerReadyAction`). */
 function renderUserEntries(launcher: DevLauncherEntry, playground: PlaygroundEntry): object[] {
@@ -175,7 +175,7 @@ function renderUserEntries(launcher: DevLauncherEntry, playground: PlaygroundEnt
   return entries;
 }
 
-/** @emoji 🧩️ Supplies registry-owned dev launcher metadata when a variant has no curated seed row, or
+/** 🧩️ Supplies registry-owned dev launcher metadata when a variant has no curated seed row, or
  * when a curated row covers only one of the two browser renderers. */
 function defaultDevLauncher(playground: PlaygroundEntry, order: number, repoRoot: string, playgrounds: readonly PlaygroundEntry[]): DevLauncherEntry {
   return { namePrefix: playgroundLaunchNamePrefix(playground, repoRoot, playgrounds), order, wgpuOrder: Math.round((order + 0.001) * 1000) / 1000 };
@@ -326,7 +326,7 @@ function renderProjectTargetLaunchers(launchText: string, projects: readonly Dec
 //#endregion
 
 //#region 🔖️Generate
-/** @emoji 🔒️ Every variant must own its launch name: the synthesis pass below adds a launcher only
+/** 🔒️ Every variant must own its launch name: the synthesis pass below adds a launcher only
  * when the skeleton does not already carry that name, so two variants resolving to the same
  * {@link playgroundLaunchNamePrefix} would leave the second one with NO dev launcher at all. Refuse
  * loudly here instead of emitting a `launch.json` that silently drops a playground. */
@@ -340,7 +340,7 @@ function assertDistinctLaunchNamePrefixes(playgrounds: readonly PlaygroundEntry[
   }
 }
 
-/** @emoji 🏗️ Renders the full `.vscode/launch.json` text: seed skeleton with every
+/** 🏗️ Renders the full `.vscode/launch.json` text: seed skeleton with every
  * `@generated:<variant>:<renderer>` placeholder substituted by a fresh, registry-ported entry. */
 export function generateLaunchJson(repoRoot: string, playgrounds: readonly PlaygroundEntry[], projectTargets: readonly DeclaredProjectTargets[], readText?: (path: string) => string): string {
   const { skeleton, devLaunchers, projectLaunchers } = readSeed(repoRoot, readText);

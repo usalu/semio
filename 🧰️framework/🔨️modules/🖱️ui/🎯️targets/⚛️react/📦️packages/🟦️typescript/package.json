@@ -42,6 +42,7 @@
     "react-i18next": "^16.5.2",
     "react-resizable-panels": "^4.2.1",
     "three": "^0.182.0",
+    "three-mesh-bvh": "^0.9.14",
     "xstate": "^5.25.0"
   },
   "devDependencies": {

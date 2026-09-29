@@ -33,7 +33,7 @@ class CheckScript extends BundleScript {
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    console.log(`[DEBUG] plugin-runner-oracle cases=${pluginTestRunnerSelfTests()}`);
+    console.log(`plugin-runner-oracle cases=${pluginTestRunnerSelfTests()}`);
     console.log(`artifact-admission-oracle cases=${artifactAdmissionOracle(this.repoRoot)} firstParty=39`);
     console.log(`completion-rejection-oracle assertions=${completionRejectionOracle(this.repoRoot)}`);
     console.log(`declared-verb-verdict-oracle cases=${declaredVerbVerdictOracle()}`);

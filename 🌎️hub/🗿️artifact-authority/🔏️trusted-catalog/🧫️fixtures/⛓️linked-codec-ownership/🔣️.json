@@ -3,9 +3,9 @@
   "cases": [
     {
       "id": "definition-only-kinds-are-unowned",
-      "declared": [["s.stdio.csv", "stdio.csv"], ["s.stdio.txt", "stdio.txt"], ["s.stdio.html", "stdio.html"]],
-      "linked": [{ "artifactKind": "s.stdio.csv", "artifactSchema": "stdio.csv", "packSchemaHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" }],
-      "unowned": ["s.stdio.html", "s.stdio.txt"]
+      "declared": [["s.fixture.linked", "fixture.linked"], ["s.fixture.definition-a", "fixture.definition-a"], ["s.fixture.definition-b", "fixture.definition-b"]],
+      "linked": [{ "artifactKind": "s.fixture.linked", "artifactSchema": "fixture.linked", "packSchemaHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" }],
+      "unowned": ["s.fixture.definition-a", "s.fixture.definition-b"]
     },
     {
       "id": "every-declared-kind-linked",

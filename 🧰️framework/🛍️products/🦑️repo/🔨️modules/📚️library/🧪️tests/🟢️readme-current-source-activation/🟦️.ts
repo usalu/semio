@@ -291,7 +291,7 @@ for (const row of vector.catalogCases) test("real catalog loader: " + row.id, ()
     if (index === vector.catalogCaseIndex) continue;
     const selected = discovery.semanticExactOwnedFileCurrentPreimageAuthority(result!, setup.taxonomy.semanticOwnedFileProjectionContracts[vector.contractId], revisionVector.revisions, { path: entry.sourcePath, nodeKind: "file", contentHash: entry.preimage.sha256, mode: 0o644, size: entry.preimage.size, expectations: [] });
     expect(selected.disposition, String(index)).toBe("catalog");
-    expect(selected.preimage, String(index)).toEqual(entry.preimage);
+    expect(selected.preimage, String(index)).toEqual<typeof entry.preimage>(entry.preimage);
   }
 });
 

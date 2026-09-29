@@ -15,23 +15,23 @@ import { glassClass, surfaceClass, veilClass } from "../../🔨️modules/🌈�
 // #region 🎈️Surface
 export type Level = "base" | "window" | "pane" | "panel" | "dialog" | "menu";
 
-/** @emoji 📚️ Every {@link Level}, ordered base..menu (Storybook/tests). */
+/** 📚️ Every {@link Level}, ordered base..menu (Storybook/tests). */
 export const LEVELS: readonly Level[] = ["base", "window", "pane", "panel", "dialog", "menu"] as const;
 
 const LevelContext = reactHostPort.createContext<Level>("base");
 
-/** @emoji 🎈️ Sets the current UI depth level for descendant chrome. */
+/** 🎈️ Sets the current UI depth level for descendant chrome. */
 export const LevelProvider: React.FC<{
   readonly level: Level;
   readonly children: React.ReactNode;
 }> = ({ level, children }) => <LevelContext.Provider value={level}>{children}</LevelContext.Provider>;
 
-/** @emoji 🪝️ Returns the nearest {@link LevelProvider} level. */
+/** 🪝️ Returns the nearest {@link LevelProvider} level. */
 export function useLevel(): Level {
   return reactHostPort.useContext(LevelContext);
 }
 
-/** @emoji 🎨️ Tailwind z-index class for a {@link Level}. */
+/** 🎨️ Tailwind z-index class for a {@link Level}. */
 export function getLevelZClass(level: Level): string {
   switch (level) {
     case "window":
@@ -49,17 +49,17 @@ export function getLevelZClass(level: Level): string {
   }
 }
 
-/** @emoji 🎨️ Opaque per-level fill — background-color only, no blur (see `[data-level]` cascade in 🎨️ui.css). */
+/** 🎨️ Opaque per-level fill — background-color only, no blur (see `[data-level]` cascade in 🎨️ui.css). */
 
-/** @emoji 🎨️ Whether a base-floor chrome row (navbar/footer/canvas/mode-body) must paint its own
+/** 🎨️ Whether a base-floor chrome row (navbar/footer/canvas/mode-body) must paint its own
  * {@link surfaceClass}, or stay transparent so Layout's one continuous base surface shows through.
  * Nested same-level paints are the "navbar ≠ canvas ≠ footer" bug class — one base floor, one fill. */
-/** @emoji 🎨️ Fullscreen scrim; host element must carry `data-level="dialog"` for correct tint. */
+/** 🎨️ Fullscreen scrim; host element must carry `data-level="dialog"` for correct tint. */
 
-/** @emoji 🪟️ Which fill a painted surface uses — maps 1:1 to {@link surfaceClass}/{@link glassClass}/{@link veilClass}. */
+/** 🪟️ Which fill a painted surface uses — maps 1:1 to {@link surfaceClass}/{@link glassClass}/{@link veilClass}. */
 export type SurfaceFill = "surface" | "glass" | "veil";
 
-/** @emoji 🎨️ Literal-safe fill lookup for a {@link SurfaceFill} (Tailwind's static scanner only finds complete literal class strings, never a `${}`-built name). */
+/** 🎨️ Literal-safe fill lookup for a {@link SurfaceFill} (Tailwind's static scanner only finds complete literal class strings, never a `${}`-built name). */
 export function surfaceFillClass(fill: SurfaceFill): string {
   switch (fill) {
     case "glass":
@@ -71,7 +71,7 @@ export function surfaceFillClass(fill: SurfaceFill): string {
   }
 }
 
-/** @emoji 🪟️ The nearest painted surface's level + fill, or `"none"` for a level root that intentionally defers painting to a descendant. */
+/** 🪟️ The nearest painted surface's level + fill, or `"none"` for a level root that intentionally defers painting to a descendant. */
 export interface SurfaceScopeValue {
   readonly level: Level;
   readonly fill: SurfaceFill | "none";
@@ -79,7 +79,7 @@ export interface SurfaceScopeValue {
 
 const SurfaceContext = reactHostPort.createContext<SurfaceScopeValue | null>(null);
 
-/** @emoji 🪟️ Opens a {@link LevelProvider} and records the level's fill for descendants — the "you
+/** 🪟️ Opens a {@link LevelProvider} and records the level's fill for descendants — the "you
  * are already inside a painted surface" signal that {@link Surface} uses to warn on accidental
  * double-painting. Prefer {@link Surface} for a DOM-backed level root; use `SurfaceScope` directly
  * only when the level root isn't a plain `<div>` (e.g. `WindowChrome`, which stamps `data-level`
@@ -94,7 +94,7 @@ export const SurfaceScope: React.FC<{
   </LevelProvider>
 );
 
-/** @emoji 🪝️ Returns the nearest {@link SurfaceScope}/{@link Surface} value, or `null` outside any. */
+/** 🪝️ Returns the nearest {@link SurfaceScope}/{@link Surface} value, or `null` outside any. */
 export function useSurface(): SurfaceScopeValue | null {
   return reactHostPort.useContext(SurfaceContext);
 }
@@ -105,7 +105,7 @@ export interface SurfaceProps extends Omit<React.HTMLAttributes<HTMLDivElement>,
   readonly className?: string;
 }
 
-/** @emoji 🪟️ The one reusable "level root" primitive: stamps `data-level`, paints exactly one
+/** 🪟️ The one reusable "level root" primitive: stamps `data-level`, paints exactly one
  * {@link SurfaceFill}, and opens a {@link SurfaceScope} for its children. This is the enforcement
  * mechanism for "one level = one appearance" — a component that needs a new painted surface uses
  * `Surface` (or `SurfaceScope` + the fill class, for `WindowChrome`-style non-div roots) instead of
@@ -133,7 +133,7 @@ const surfaceActiveRoot = ephemeralBox<HTMLElement | null>("framework.modules.ui
 const surfaceActiveSubscribers = ephemeralSet<() => void>("framework.modules.ui.elements.core.Surface.component.tsx.surfaceActiveSubscribers");
 const surfaceActiveListenersInstalled = ephemeralBox("framework.modules.ui.elements.core.Surface.component.tsx.surfaceActiveListenersInstalled", false);
 
-/** @emoji 🎯️ Drops introduction stamps on an activated surface so the pulse cannot outrank the active stroke. */
+/** 🎯️ Drops introduction stamps on an activated surface so the pulse cannot outrank the active stroke. */
 function clearIntroducedStamps(root: HTMLElement): void {
   if (root.getAttribute("data-introduced") === "true") root.removeAttribute("data-introduced");
   root.querySelectorAll('[data-introduced="true"]').forEach((el) => el.removeAttribute("data-introduced"));
@@ -146,7 +146,7 @@ export function setSurfaceActiveRoot(next: HTMLElement | null): void {
   surfaceActiveSubscribers.forEach((notify) => notify());
 }
 
-/** @emoji 🎯️ Silhouette gaps are holes onto the canvas, unless an explicit chrome chip is nested inside them. */
+/** 🎯️ Silhouette gaps are holes onto the canvas, unless an explicit chrome chip is nested inside them. */
 function isSurfaceActiveBackgroundTarget(target: EventTarget | null): boolean {
   if (!(target instanceof Element)) return false;
   const gap = target.closest<HTMLElement>('[data-window-silhouette-gap]');
@@ -155,7 +155,7 @@ function isSurfaceActiveBackgroundTarget(target: EventTarget | null): boolean {
   return !chip || !gap.contains(chip);
 }
 
-/** @emoji 🎯️ Treats the visual cutout as canvas even when an app's absolute canvas extends beneath it and becomes the DOM pointer target. */
+/** 🎯️ Treats the visual cutout as canvas even when an app's absolute canvas extends beneath it and becomes the DOM pointer target. */
 export function isSurfaceActiveBackgroundPointer(event: { readonly target: EventTarget | null; readonly clientX?: number; readonly clientY?: number }): boolean {
   if (isSurfaceActiveBackgroundTarget(event.target)) return true;
   if (typeof document === "undefined" || typeof event.clientX !== "number" || typeof event.clientY !== "number") return false;
@@ -201,7 +201,7 @@ export interface SurfaceActiveBindProps {
   readonly onFocusCapture: (event: React.FocusEvent) => void;
 }
 
-/** @emoji 🎯️ True when this surface root was the last panel, pane, window stack, or introduction step to receive pointer or keyboard focus. */
+/** 🎯️ True when this surface root was the last panel, pane, window stack, or introduction step to receive pointer or keyboard focus. */
 export function useSurfaceActive(ref: React.RefObject<HTMLElement | null>): readonly [boolean, SurfaceActiveBindProps] {
   const [, bump] = reactHostPort.useState(0);
   reactHostPort.useLayoutEffect(() => {

@@ -1,5 +1,5 @@
 /**
- * @emoji 🧭 Language-neutral guardrails for snapshot / fixture / asset naming in generation3d.
+ * 🧭 Language-neutral guardrails for snapshot / fixture / asset naming in generation3d.
  */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -29,6 +29,5 @@ export function generation3dSnapshotFixtureAssetSelfTests(): number {
     assert(!/\bFlowFixture\b/.test(source), "schema twins must use FlowHostSnapshot, not FlowFixture");
     assert(!/\bfixture:\s*FlowHostSnapshot/.test(source), "schema twins must use hostSnapshot field name");
   }
-  console.log("[DEBUG] Generation3d snapshot/fixture/asset terminology lint: 5 sources, 0 forbidden patterns");
   return sources.length;
 }

@@ -14,12 +14,12 @@ import { GripVerticalIcon, MoveIcon } from "../🔣️Icons/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🫳️DragAffordance
-/** @emoji data-hover-scope attr for DragHandle hover exclusion. */
+/** 🫥️ data-hover-scope attr for DragHandle hover exclusion. */
 export const HANDLE_HOVER_SCOPE_ATTR = "data-hover-scope";
 
 
 /**
- * @emoji 🫳️ Universal grip that starts a drag — pass `onPointerDown` for pointer-capture drags (and optionally the rest of {@link usePointerDrag}'s handlers), spread dnd-kit `attributes`/`listeners`, or use as a pure affordance on whole-surface draggables.
+ * 🫳️ Universal grip that starts a drag — pass `onPointerDown` for pointer-capture drags (and optionally the rest of {@link usePointerDrag}'s handlers), spread dnd-kit `attributes`/`listeners`, or use as a pure affordance on whole-surface draggables.
  * `emphasized` mirrors the ambient active/ready state of the element it belongs to.
  * Parent hover emphasis is CSS: `[data-hover-scope]:hover [data-slot="drag-handle"]` in `🎨️ui.css` — the grip paints its own muted color at rest and cannot inherit `hover:text-emphasized` from the label/icon beside it.
  */
@@ -66,7 +66,7 @@ export const DragHandle: React.FC<{
   );
 };
 
-/** @emoji 🎯️ Passive drop-zone fill — secondary accent, kept visually distinct from the stronger primary-accent indicator on the actively hovered target. */
+/** 🎯️ Passive drop-zone fill — secondary accent, kept visually distinct from the stronger primary-accent indicator on the actively hovered target. */
 
 
 

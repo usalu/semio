@@ -42,13 +42,13 @@ class TestScript extends BundleScript {
       for (const forbidden of boundaries.forbidden) assert.ok(!inputs.some(path => path.includes(forbidden)), `${entry} imports ${forbidden}`);
       const external = [...new Set(Object.values(bundle.metafile.outputs).flatMap((output: any) => output.imports).filter((item: any) => item.external && !item.path.startsWith("node:") && item.path !== "bun").map((item: any) => item.path.startsWith("@") ? item.path.split("/").slice(0, 2).join("/") : item.path.split("/")[0]))].sort();
       assert.deepEqual(external, boundaries.externalDependencies[entry], `${entry}: external imports`);
-      console.log(`[DEBUG] Report command ${entry}: ${inputs.length} production source files verified`);
+      console.log(`Report command ${entry}: ${inputs.length} production source files verified`);
     }
     const contract = JSON.parse(readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8")).generatorContracts["report-actor-network"];
     assert.equal(contract.target, `${project.name}:generate-actor-network`);
     assert.deepEqual(project.targets["generate-actor-network"].inputs.flatMap((input: any) => input.externalDependencies ?? []), ["d3-force"]);
     assert.deepEqual(contract.outputRoots.map((output: { path: string }) => `{workspaceRoot}/${output.path}`).sort(), [...project.targets["generate-actor-network"].outputs].sort());
-    console.log("[DEBUG] Report catalog, Nx output ownership and generator contract verified");
+    console.log("Report catalog, Nx output ownership and generator contract verified");
     for (const document of fixture.documents) {
       assert.equal(DOCUMENTS[document.id as keyof typeof DOCUMENTS], document.path);
       const root = dirname(join(ownerRoot, document.path));
@@ -73,7 +73,7 @@ class TestScript extends BundleScript {
       const bibliography = readFileSync(join(root, "📚️references.bib"), "utf8");
       const keys = new Set([...bibliography.matchAll(/@\w+\s*\{([^,\s]+)/g)].map((match) => match[1]!));
       for (const key of citations) assert.ok(keys.has(key), `missing ${document.id} citation: ${key}`);
-      console.log(`[DEBUG] report ${document.id}: ${visited.size} source documents resolved`);
+      console.log(`report ${document.id}: ${visited.size} source documents resolved`);
     }
     const data = actorNetworkData();
     assert.deepEqual({ nodes: data.nodes.length, edges: data.edges.length, programs: data.programs.length }, fixture.actorNetwork);
@@ -98,7 +98,7 @@ class TestScript extends BundleScript {
           }
           const content = text.join(" ").replace(/\s+/g, " ");
           for (const text of vector.text) assert.ok(content.includes(text), `${vector.id} is missing ${text}`);
-          console.log(`[DEBUG] Report ${vector.id}: independent PDF.js read ${pdf.numPages} pages and expected content`);
+          console.log(`Report ${vector.id}: independent PDF.js read ${pdf.numPages} pages and expected content`);
         } finally { await pdf.destroy(); }
       }
     }

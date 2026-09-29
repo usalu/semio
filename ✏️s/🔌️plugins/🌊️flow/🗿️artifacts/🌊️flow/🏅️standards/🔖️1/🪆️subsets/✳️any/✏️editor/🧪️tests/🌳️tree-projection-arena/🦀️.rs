@@ -69,5 +69,4 @@ fn flow_render_fixture_projection_retires_populated_and_rejected_pages() {
     let tree = saturated_rejected_fixture_tree(pages, capacity);
     assert_eq!(project_and_retire_fixture_tree(tree).unwrap_err(), probe["error"].as_str().unwrap());
     assert_eq!(semio_framework_ui_contract::close_built_node_page_one(), probe["terminalEmpty"].as_bool().unwrap());
-    eprintln!("[DEBUG] retained Flow fixture tree observation: two positive trees, two structural denials and {pages} saturated pages retired in {steps} counted turns");
 }

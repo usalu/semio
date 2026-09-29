@@ -136,7 +136,6 @@ fn instance_lifetime_published_patch_close_retains_exact_handback_until_terminal
     assert_eq!(serde_json::to_value(&remaining).unwrap(), fixture["publishedClose"]["remaining"]);
     assert_eq!(serde_json::to_value(complete).unwrap(), fixture["publishedClose"]["complete"]);
     assert!(owner.terminal_is_empty());
-    eprintln!("[DEBUG] published-close owner-transitions={} physical-turns={turns} semantic-bytes={bytes} grant=1", remaining.len());
     let registry = SURFACE_RECONCILE_HANDBACKS.lock().unwrap();
     let slot = &registry.slots[key.slot];
     assert!(slot.epoch != key.epoch || (!slot.reserved && slot.state.is_none()), "the exact handback was released, not queued and forgotten");
@@ -147,7 +146,7 @@ fn instance_lifetime_published_patch_close_retains_exact_handback_until_terminal
 #[test]
 fn fixed_runtime_owners_keep_bounded_state_off_the_stack() {
     let _guard = crate::surface_reconcile_registry_test_guard();
-    eprintln!("[DEBUG] canonical-owner-layout reconciler={} cursor={} retained={}", size_of::<SurfaceReconciler>(), size_of::<SurfaceReconcileCursor>(), size_of::<SurfaceReconcileRetained>());
+    eprintln!("canonical-owner-layout reconciler={} cursor={} retained={}", size_of::<SurfaceReconciler>(), size_of::<SurfaceReconcileCursor>(), size_of::<SurfaceReconcileRetained>());
     assert!(size_of::<SurfaceReconciler>() <= 1_024);
     assert!(size_of::<SurfaceReconcileCursor>() <= 48 * 1_024);
     assert!(size_of::<SurfaceReconcileRetained>() <= 64 * 1_024);
@@ -837,7 +836,7 @@ fn resident_aggregate_admits_every_reconcile_slot() {
     let document = ui_contract::UI_RESIDENT_DOCUMENT_BYTES;
     let admitted = SURFACE_RECONCILE_AGGREGATE_BYTES / document.max(1);
     eprintln!(
-        "[DEBUG] resident-admission aggregate={SURFACE_RECONCILE_AGGREGATE_BYTES}B fixed={fixed}B contract={}B floor={floor}B open={open}B page={}B flat={flat}B nodes={} ceiling={SURFACE_RECONCILE_SURFACE_BYTES}B document={document}B admitted={admitted} slots={SURFACE_RECONCILE_ADMISSION_SLOTS}",
+        "resident-admission aggregate={SURFACE_RECONCILE_AGGREGATE_BYTES}B fixed={fixed}B contract={}B floor={floor}B open={open}B page={}B flat={flat}B nodes={} ceiling={SURFACE_RECONCILE_SURFACE_BYTES}B document={document}B admitted={admitted} slots={SURFACE_RECONCILE_ADMISSION_SLOTS}",
         ui_contract::UiResidentPermit::contract_backing_bytes(),
         SURFACE_RECONCILE_PAGE_BYTES,
         SurfaceReconcileLimits::default().max_nodes,
@@ -998,7 +997,6 @@ fn four_section_full_window_tree_reconciles_under_the_surface_byte_ceiling() {
             match tree_window_law_reconcile(&current, tree_window_law_document(offset, rows_per_section)) {
                 Ok(admitted) => break admitted,
                 Err(SurfaceReconcileFault::Credits { usage, limits }) => {
-                    eprintln!("[DEBUG] flat-presented-node bytes={flat} refused rows_per_section={rows_per_section} nodes={}/{} items={}/{} surface_bytes={}/{}", usage.nodes, limits.max_nodes, usage.items, limits.max_items, usage.bytes, limits.max_bytes);
                     assert!(
                         usage.bytes <= limits.max_bytes,
                         "no window page may ever be refused for BYTES — the 8 MiB surface ceiling is not the binding constraint: {} of {}B",
@@ -1013,7 +1011,7 @@ fn four_section_full_window_tree_reconciles_under_the_surface_byte_ceiling() {
         };
         let rows = usage.nodes.saturating_sub(1 + TREE_WINDOW_LAW_SECTIONS);
         eprintln!(
-            "[DEBUG] flat-presented-node bytes={flat} rows={rows} nodes={} offset={offset} rows_per_section={rows_per_section} items={} surface_bytes={} per_node_bytes={} ceiling={SURFACE_RECONCILE_SURFACE_BYTES}",
+            "flat-presented-node bytes={flat} rows={rows} nodes={} offset={offset} rows_per_section={rows_per_section} items={} surface_bytes={} per_node_bytes={} ceiling={SURFACE_RECONCILE_SURFACE_BYTES}",
             usage.nodes,
             usage.items,
             usage.bytes,
@@ -1037,7 +1035,7 @@ fn four_section_full_window_tree_reconciles_under_the_surface_byte_ceiling() {
         current = retired;
     }
     eprintln!(
-        "[DEBUG] flat-presented-node bytes={flat} rows={materialised} pages={pages} declared_rows={} peak_surface_bytes={} peak_nodes={} peak_items={} total_surface_bytes={total_bytes} ceiling={SURFACE_RECONCILE_SURFACE_BYTES} document_nodes={} max_items={}",
+        "flat-presented-node bytes={flat} rows={materialised} pages={pages} declared_rows={} peak_surface_bytes={} peak_nodes={} peak_items={} total_surface_bytes={total_bytes} ceiling={SURFACE_RECONCILE_SURFACE_BYTES} document_nodes={} max_items={}",
         TREE_WINDOW_LAW_SECTIONS * TREE_WINDOW_LAW_SECTION_TOTAL,
         peak.bytes,
         peak.nodes,

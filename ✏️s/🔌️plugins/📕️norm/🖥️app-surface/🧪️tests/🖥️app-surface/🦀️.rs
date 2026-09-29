@@ -58,7 +58,6 @@ async fn check_surface<A: PluginApp>(app: &mut A, definition: &AppDefinition, fi
     if app.render(&"x".repeat(70_000), None, &view).await.is_ok() {
         return Err(format!("{} accepted an oversized surface identity", fixture.app_id));
     }
-    eprintln!("[DEBUG] Norm public surface {}: {} declared bodies, unknown fallback, oversized rejection", fixture.app_id, fixture.body_keys.len());
     Ok(fixture.body_keys.len())
 }
 
@@ -86,7 +85,6 @@ async fn norm_public_surfaces_render_all_declared_bodies() {
     assert_eq!(visited.len(), 30);
     assert_eq!(rendered, 120);
     assert!(plugin.create_app("s.norm.unknown@1/*#editor").is_none());
-    eprintln!("[DEBUG] Norm public surface fixture: 30 registered factories, 120 declared bodies, 30 unknown fallbacks, 30 oversized rejections, serde tree oracle");
 }
 
 //#region 🧵️RetainedCohort
@@ -211,6 +209,5 @@ async fn every_norm_editor_action_is_migrated_onto_the_shared_owned_factory() {
         semio_s_artifact_norm_iso16757 => (semio_s_artifact_norm_iso16757::editor::iso16757::Iso16757PlayApp, semio_s_artifact_norm_iso16757::viewer::iso16757::Iso16757Viewer),
         semio_s_artifact_norm_vdi3805 => (semio_s_artifact_norm_vdi3805::editor::vdi3805::Vdi3805PlayApp, semio_s_artifact_norm_vdi3805::viewer::vdi3805::Vdi3805Viewer),
     }
-    eprintln!("[DEBUG] Norm retained cohort: {identities} migrated identities across {} editors on one shared owned factory", fixture.apps.len());
 }
 //#endregion 🧵️RetainedCohort

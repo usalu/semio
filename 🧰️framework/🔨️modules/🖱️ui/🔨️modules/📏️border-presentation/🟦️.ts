@@ -5,12 +5,12 @@
 // #endregion 🧲️Header
 
 // #region 📏️BorderPresentation
-/** @emoji 📏️ Subtle normal control and divider stroke. */
+/** 📏️ Subtle normal control and divider stroke. */
 export const borderNormalClass = "!border-normal";
 
-/** @emoji 📏️ Normal bottom divider stroke. */
+/** 📏️ Normal bottom divider stroke. */
 export const borderNormalBottomClass = `border-b ${borderNormalClass}`;
 
-/** @emoji 📏️ Implicit element border color. */
+/** 📏️ Implicit element border color. */
 export const borderElementClass = "border-element";
 // #endregion 📏️BorderPresentation

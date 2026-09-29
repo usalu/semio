@@ -1,0 +1,92 @@
+    const TYPED_OPERATION_FAULT_BYTES: usize = 256;
+    /// 🧾️ Frames a bounded publication fault as `<code>\u{1f}<message>`. The `FaultCode` values the
+    /// contract freezes (`transaction.instance-busy`, `toolRun.busy`, `app.read-only`, …) are the whole
+    /// point of a refusal: erasing them at the publication boundary — which is what happened until this
+    /// framing landed — left every migrated dispatch answering `app.message` and no caller able to
+    /// branch on why it was refused. `0x1f` is the one byte a `FaultCode` can never contain.
+    const TYPED_OPERATION_FAULT_SEPARATOR: u8 = 0x1f;
+    const TYPED_OPERATION_FAULT_CODE_BYTES: usize = 64;
+    const TYPED_OPERATION_FAULT_PAGE_BYTES: usize = TYPED_OPERATION_FAULT_CODE_BYTES + 1 + TYPED_OPERATION_FAULT_BYTES;
+
+    /// 🧾️ Splits a Fault-lane page back into its exact frozen code and its detail. A page with no
+    /// separator predates the framing's producer and keeps the generic app-owned-output code.
+    pub(crate) fn decode_typed_operation_fault_page(bytes: &[u8]) -> (FaultCode, String) {
+        match bytes.iter().position(|byte| *byte == TYPED_OPERATION_FAULT_SEPARATOR) {
+            Some(index) if index != 0 => (FaultCode::new(String::from_utf8_lossy(&bytes[..index]).into_owned()), String::from_utf8_lossy(&bytes[index + 1..]).into_owned()),
+            Some(index) => (FaultCode::new("interactive-job.app-owned-output"), String::from_utf8_lossy(&bytes[index + 1..]).into_owned()),
+            None => (FaultCode::new("interactive-job.app-owned-output"), String::from_utf8_lossy(bytes).into_owned()),
+        }
+    }
+
+    struct ArtifactBoundedToolFault {
+        bytes: [u8; TYPED_OPERATION_FAULT_BYTES],
+        len: usize,
+        code: [u8; TYPED_OPERATION_FAULT_CODE_BYTES],
+        code_len: usize,
+    }
+
+    impl ArtifactBoundedToolFault {
+        /// 🧾️ Retains a terminal job fault's detail bytes (bounded) so the publication that follows
+        /// a cancelled lease reports the real cause instead of a generic cancellation.
+        fn from_payload(detail: &semio_framework_job::RetainedJobPayload) -> Self {
+            let mut bounded = Self { bytes: [0; TYPED_OPERATION_FAULT_BYTES], len: 0, code: [0; TYPED_OPERATION_FAULT_CODE_BYTES], code_len: 0 };
+            for page in 0..detail.page_count() {
+                let Some(bytes) = detail.page(page) else { break };
+                for byte in bytes {
+                    if bounded.len == bounded.bytes.len() {
+                        return bounded;
+                    }
+                    bounded.bytes[bounded.len] = *byte;
+                    bounded.len += 1;
+                }
+            }
+            bounded
+        }
+
+        fn from_fault(fault: &Fault) -> Self {
+            let mut bounded = Self { bytes: [0; TYPED_OPERATION_FAULT_BYTES], len: 0, code: [0; TYPED_OPERATION_FAULT_CODE_BYTES], code_len: 0 };
+            for scalar in fault.message.chars() {
+                let width = scalar.len_utf8();
+                if bounded.len.saturating_add(width) > bounded.bytes.len() {
+                    break;
+                }
+                scalar.encode_utf8(&mut bounded.bytes[bounded.len..bounded.len + width]);
+                bounded.len += width;
+            }
+            for scalar in fault.code.0.chars() {
+                let width = scalar.len_utf8();
+                if scalar == TYPED_OPERATION_FAULT_SEPARATOR as char || bounded.code_len.saturating_add(width) > bounded.code.len() {
+                    bounded.code_len = 0;
+                    break;
+                }
+                scalar.encode_utf8(&mut bounded.code[bounded.code_len..bounded.code_len + width]);
+                bounded.code_len += width;
+            }
+            bounded
+        }
+
+        fn into_fault(self) -> Fault {
+            let detail = String::from_utf8_lossy(&self.bytes[..self.len]).into_owned();
+            let code = (self.code_len != 0).then(|| FaultCode::new(String::from_utf8_lossy(&self.code[..self.code_len]).into_owned())).unwrap_or_else(|| FaultCode::new("interactive-job.app-owned-output"));
+            Fault::new(FaultOrigin::Framework, code, detail)
+        }
+
+        /// 🧾️ The Fault-lane page's own framing, `<code>\u{1f}<message>` — see
+        /// [`TYPED_OPERATION_FAULT_SEPARATOR`]. `as_bytes` stays the message alone, because it is the
+        /// bounded retained detail the language-neutral fault-bound oracle prices.
+        fn framed_page_bytes(&self, buffer: &mut [u8; TYPED_OPERATION_FAULT_PAGE_BYTES]) -> usize {
+            if self.code_len == 0 {
+                buffer[..self.len].copy_from_slice(&self.bytes[..self.len]);
+                return self.len;
+            }
+            buffer[..self.code_len].copy_from_slice(&self.code[..self.code_len]);
+            buffer[self.code_len] = TYPED_OPERATION_FAULT_SEPARATOR;
+            buffer[self.code_len + 1..self.code_len + 1 + self.len].copy_from_slice(&self.bytes[..self.len]);
+            self.code_len + 1 + self.len
+        }
+
+        fn as_bytes(&self) -> &[u8] {
+            &self.bytes[..self.len]
+        }
+    }
+

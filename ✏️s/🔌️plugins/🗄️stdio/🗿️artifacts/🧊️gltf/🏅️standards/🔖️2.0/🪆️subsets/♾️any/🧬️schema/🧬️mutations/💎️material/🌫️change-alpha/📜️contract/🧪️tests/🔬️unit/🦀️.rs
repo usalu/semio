@@ -25,5 +25,4 @@ fn canonical_vectors_execute_direct_mutation_and_codec_laws() {
         assert_eq!(mutation::validate(&payload, &direct).unwrap_err().code, "gltf.mutation.no-observable-change");
         assert_laws(&mutation::ChangeMaterialAlphaModeMutation::Apply(payload.clone()), &base, &expected);
     }
-    println!("[DEBUG] change_material_alpha_mode: {} canonical vectors verified through direct mutations, inverse restoration and the independent JSON oracle.", vectors.len());
 }

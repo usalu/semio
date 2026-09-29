@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, resolve } from "node:path";
 import { BundleScript } from "../../../🏃️process/🧭️routing/🟦️.ts";
-import { buildBudgetMs, runCmdStatus } from "../../../🏃️process/🟦️.ts";
+import { CARGO_RELAY_BUDGET_ENV, buildBudgetMs, cargoStreamingStatus, runCmdStatus } from "../../../🏃️process/🟦️.ts";
 import { runOwnedCommand } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
 import { buildCargoArtifacts } from "../🏗️native-build/🟦️.ts";
 import { validateNativeCargoArguments } from "../🎛️native-input/🟦️.ts";
@@ -13,6 +13,20 @@ import { validateNativeCargoArguments } from "../🎛️native-input/🟦️.ts"
  * described bytes are the shipped bytes. */
 export function pluginComponentRustcArgs(packageName: string, profile: string): string[] {
   return ["-p", packageName, "--lib", "--crate-type", "cdylib", "--target", "wasm32-wasip2", "--profile", profile, ...(process.env.SEMIO_PLUGIN_SYMBOLS === "1" ? ["--", "-C", "strip=none"] : [])];
+}
+
+/** 🌊️ `bun ⚡️caching/🦀️cargo/📜️script.ts relay <cargo args…>` — the relay [[runCmd]] routes every POSIX `cargo` through
+ * ([[cargoStreamingStatus]]): exits with cargo's status, 1 when cargo was stopped (budget, signal), after its forwarded output drained. */
+export class CargoRelayScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    const budgetMs = Number(process.env[CARGO_RELAY_BUDGET_ENV] ?? 0);
+    try {
+      process.exitCode = await cargoStreamingStatus(args, process.cwd(), process.env, Number.isFinite(budgetMs) ? budgetMs : 0);
+    } catch (error) {
+      console.error(error instanceof Error ? error.message : String(error));
+      process.exitCode = 1;
+    }
+  }
 }
 
 /** 🦀️ Routes native Cargo and component operations to their owned behaviors. */

@@ -11,7 +11,7 @@
 
 use crate::editor::writer::commands::set_camera;
 use crate::editor::writer::commands::set_editor_selection;
-use crate::editor::writer::commands::{commit_rename, format_document, open_document, set_active_example, set_fixture_json, set_snapshot, set_snapshot_json, set_text, text_edit};
+use crate::editor::writer::commands::{commit_rename, format_document, open_document, set_active_example, set_fixture_json, set_snapshot, set_snapshot_json, set_text, text_edit, text_splice};
 use crate::editor::writer::commands::{engagement_input, engagement_submit};
 use crate::editor::writer::commands::{lint_document, request_completions};
 use crate::editor::writer::commands::{set_font_px, set_line_height, set_tab_size, toggle_line_numbers};
@@ -227,6 +227,7 @@ semio_framework_plugin::app_commands! {
         "setEditorSetting" as "tab-size" => set_tab_size::SetTabSize,
         "engagementInput" as "engagement-input" => engagement_input::EngagementInput,
         "engagementSubmit" as "engagement-submit" => engagement_submit::EngagementSubmit,
+        "textSplice" as "text-splice" => text_splice::TextSplice,
     }
 }
 //#endregion 🔖️Commands
@@ -304,6 +305,7 @@ const WRITER_COMMAND_TOOL_IDS: &[&str] = &[
     "setEditorSetting",
     "engagementInput",
     "engagementSubmit",
+    "textSplice",
 ];
 const WRITER_COMMAND_PAYLOAD_SCHEMA: &str = "writer.writer.tool-command.v1";
 const MAX_WRITER_COMMAND_RAW_BYTES: usize = 4_096;
@@ -402,6 +404,14 @@ impl WriterCommandToolJob {
         match command {
             WriterCommand::TextEdit(payload) => emit = Emit::amend(vec![WriterMutation::EditText(crate::op::EditText { text: payload.text })], "writer-text-edit"),
             WriterCommand::SetText(payload) => emit = Emit::mutations(vec![WriterMutation::EditText(crate::op::EditText { text: payload.text })]),
+            WriterCommand::TextSplice(payload) => {
+                let view = self.view_state.as_ref().ok_or("Writer typing requires its concrete window context")?;
+                let selection = crate::WriterEditorSelection { start: payload.anchor, end: payload.caret, splice: payload.seq };
+                ephemeral.window_transient.push(
+                    main::transient::addressed(view, WriterMainWindowTransientMutation::SetEditorSelection(main::transient::SetEditorSelection { selection: Some(selection) })).map_err(|_| "Writer typing rejected its concrete window context")?,
+                );
+                emit = Emit::amend(vec![crate::op::splice_text(payload.splice())], "writer-text-edit");
+            }
             WriterCommand::SetCamera(payload) => {
                 let view = self.view_state.as_ref().ok_or("Writer camera change requires its concrete window context")?;
                 emit.window_config_mutations.push(main::config::addressed(view, WriterMainWindowConfigMutation::SetCamera(main::config::SetCamera { camera: payload.camera })).map_err(|_| "Writer camera change rejected its concrete window context")?);
@@ -416,7 +426,7 @@ impl WriterCommandToolJob {
             }
             WriterCommand::SetEditorSelection(payload) => {
                 let view = self.view_state.as_ref().ok_or("Writer selection requires its concrete window context")?;
-                let selection = crate::WriterEditorSelection { start: payload.start, end: payload.end };
+                let selection = crate::WriterEditorSelection { start: payload.start, end: payload.end, splice: payload.splice };
                 ephemeral.window_transient.push(
                     main::transient::addressed(view, WriterMainWindowTransientMutation::SetEditorSelection(main::transient::SetEditorSelection { selection: Some(selection) })).map_err(|_| "Writer selection rejected its concrete window context")?,
                 );
@@ -818,6 +828,7 @@ impl ArtifactOwnedToolJobFactory for WriterCommandJobFactory {
     const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = &[
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "textEdit", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setText", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "textSplice", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::WindowTransient] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setSnapshot", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "openDocument", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
@@ -861,13 +872,15 @@ fn writer_snapshot_retained_bytes(snapshot: &WriterSnapshot) -> usize {
 }
 
 fn admit_writer_artifact_mutation(mutation: &WriterMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-    let WriterMutation::EditText(payload) = mutation else {
-        return Err("Writer retained Artifact preparation only admits the exact EditText cohort".into());
+    let bytes = match mutation {
+        WriterMutation::EditText(payload) => payload.text.len(),
+        WriterMutation::SpliceText(payload) => payload.deleted.len() + payload.insert.len() + payload.before.len() + payload.after.len(),
+        _ => return Err("Writer retained Artifact preparation only admits the exact EditText and SpliceText cohort".into()),
     };
-    if payload.text.len() > MAX_WRITER_COMMAND_TEXT_BYTES {
-        return Err("Writer EditText exceeds its fixed retained preparation envelope".into());
+    if bytes > MAX_WRITER_COMMAND_TEXT_BYTES {
+        return Err("Writer text edit exceeds its fixed retained preparation envelope".into());
     }
-    Ok(store::ArtifactStoreOneItemFootprint::for_one_invertible_item(payload.text.len()))
+    Ok(store::ArtifactStoreOneItemFootprint::for_one_invertible_item(bytes))
 }
 
 fn prepare_writer_artifact(base: &WriterSnapshot, mutation: WriterMutation) -> Result<(WriterSnapshot, Vec<WriterMutation>, WriterMutation), String> {
@@ -1116,6 +1129,7 @@ impl ArtifactEditor for WriterPlayApp {
             "setEditorSetting",
             "engagementInput",
             "engagementSubmit",
+            "textSplice",
                     ]
     }
 
@@ -1185,7 +1199,17 @@ impl ArtifactEditor for WriterPlayApp {
             }
             "requestCompletions" => Ok(WriterCommand::RequestCompletions(request_completions::RequestCompletions {})),
             "lintDocument" => Ok(WriterCommand::LintDocument(lint_document::LintDocument {})),
-            "textSelect" => Ok(WriterCommand::SetEditorSelection(set_editor_selection::SetEditorSelection { start: number_arg(&["start"]).unwrap_or_default() as usize, end: number_arg(&["end"]).unwrap_or_default() as usize })),
+            "textSelect" => Ok(WriterCommand::SetEditorSelection(set_editor_selection::SetEditorSelection { start: number_arg(&["start"]).unwrap_or_default() as usize, end: number_arg(&["end"]).unwrap_or_default() as usize, splice: number_arg(&["splice"]).unwrap_or_default() as u64 })),
+            "textSplice" => Ok(WriterCommand::TextSplice(text_splice::TextSplice {
+                start: u32::try_from(number_arg(&["start"]).unwrap_or_default() as u64).map_err(|_| Fault::from("writer textSplice start exceeds u32"))?,
+                deleted: text_arg(&["deleted"]).unwrap_or_default(),
+                insert: text_arg(&["insert"]).unwrap_or_default(),
+                before: text_arg(&["before"]).unwrap_or_default(),
+                after: text_arg(&["after"]).unwrap_or_default(),
+                seq: number_arg(&["seq"]).unwrap_or_default() as u64,
+                anchor: number_arg(&["anchor"]).unwrap_or_default() as usize,
+                caret: number_arg(&["caret"]).unwrap_or_default() as usize,
+            })),
             "toggleLineNumbers" => Ok(WriterCommand::ToggleLineNumbers(toggle_line_numbers::ToggleLineNumbers {})),
             "setEditorSetting" => {
                 let value = number_arg(&["value"]).unwrap_or_default() as u32;
@@ -1387,6 +1411,9 @@ pub fn create_writer_app() -> semio_framework_plugin::AppDefinition {
             // 🙈️ Internal document operations — text edits (coalesced), aliases, camera, rename, engagement,
             // and dev-only whole-document JSON setters.
             .action_with(writer_hidden_operation("textEdit", LocalizedLabel::native("Edit Text", "Text bearbeiten"), "typography"))
+            // ✂️ The typing verb of a splice-typing host (`settingsJson.typing`): one range-text operation per typed run, relocated
+            // by its context, so two humans typing at once keep both runs (ticket 26/09/23 C12).
+            .action_with(writer_hidden_operation("textSplice", LocalizedLabel::native("Type Text", "Text tippen"), "typography"))
             // 🔧️ Palette-reachable Artifact-lane mutation: typing still uses hidden `textEdit`, but a
             // human (and the outcome-1 sweep) must be able to stage a whole-buffer replace from the
             // Actions rail. `formatDocument` stays the formatter and correctly no-ops on an already
@@ -1420,6 +1447,7 @@ pub fn create_writer_app() -> semio_framework_plugin::AppDefinition {
             .action_with(writer_hidden_view("setEditorSetting", LocalizedLabel::native("Set Editor Setting", "Editor-Einstellung festlegen"), "eye"))
             .action_with(writer_hidden_view("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), "hand"))
             .action_interactive_job("textEdit", InteractiveJobClassification::Migrated)
+            .action_interactive_job("textSplice", InteractiveJobClassification::Migrated)
             .action_interactive_job("setText", InteractiveJobClassification::Migrated)
             .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
             .action_interactive_job("requestCompletions", InteractiveJobClassification::Migrated)
@@ -1483,6 +1511,8 @@ pub fn create_writer_app() -> semio_framework_plugin::AppDefinition {
             .action_describe("setSnapshotJson", LocalizedLabel::native("Replaces the whole writer document with one parsed from the given document JSON; invalid JSON changes nothing.", "Ersetzt das gesamte Writer-Dokument durch eines, das aus dem angegebenen Dokument-JSON gelesen wird; ungültiges JSON ändert nichts."))
             .action_describe("setFixtureJson", LocalizedLabel::native("Loads a test fixture given as JSON as the whole writer document, replacing the current one; invalid JSON changes nothing.", "Lädt eine als JSON übergebene Test-Fixture als gesamtes Writer-Dokument und ersetzt das aktuelle; ungültiges JSON ändert nichts."))
             .action_audience("textEdit", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("textSplice", semio_framework_plugin::CapabilityAudience::Input)
+            .action_describe("textSplice", LocalizedLabel::native("Replaces one range of the text as its author saw it; the change lands between the text its author saw around it, even when others edited the text meanwhile.", "Ersetzt einen Textbereich so, wie ihn sein Autor sah; die Änderung landet zwischen dem Text, den der Autor darum herum sah, auch wenn andere den Text inzwischen bearbeitet haben."))
             .action_destructive("setText")
             .action_destructive("openDocument")
             .build_definition()
@@ -1495,6 +1525,9 @@ pub fn create_writer_app() -> semio_framework_plugin::AppDefinition {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 pub(crate) mod unit_tests;
+#[cfg(test)]
+#[path = "🧪️tests/✂️concurrent-typing/🦀️.rs"]
+mod concurrent_typing_tests;
 
 #[cfg(test)]
 #[path = "🧪️tests/🤖️agent-lane/🦀️.rs"]

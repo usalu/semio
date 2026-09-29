@@ -10,7 +10,7 @@ import { interactiveHoverClass } from "../🖱️interaction-presentation/🟦�
 // #endregion 🔌️Adapters
 
 // #region 📋️MenuItemPresentation
-/** @emoji 📋️ Shared hover, focus, and selection presentation for menu rows. */
+/** 📋️ Shared hover, focus, and selection presentation for menu rows. */
 export const menuListItemClassName = cn(
   "text-element",
   interactiveHoverClass,

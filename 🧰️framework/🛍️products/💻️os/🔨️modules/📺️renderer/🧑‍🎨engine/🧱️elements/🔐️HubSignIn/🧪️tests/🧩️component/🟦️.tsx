@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🔐️ Laws for the hub sign-in contract and pane (ticket
+/** 🔐️ Laws for the hub sign-in contract and pane (ticket
  * `26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END` slice AU2). Two independent oracles per shape: an
  * Ajv compile of the owned fixture schema and a `fast-deep-equal` comparison against the fixture,
  * so the source tables cannot drift from the contract without a red test. The transport is a fake

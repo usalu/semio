@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** @emoji 🏪 Runtime-installable extension store — unpack `.semio` packages, materialize for native/web, dev-server install + the
+/** 🏪 Runtime-installable extension store — unpack `.semio` packages, materialize for native/web, dev-server install + the
  * `extension-modules.watch` stream route. */
 import { createHash } from "node:crypto";
 import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, watch, writeFileSync } from "node:fs";
@@ -48,7 +48,7 @@ export type ExtensionManifestRecord = {
   readonly contributions?: readonly unknown[];
 };
 
-/** @emoji 📦 On-disk `.sxt` manifest (`🛂️manifest.semio` inside the zip), camelCase JSON matching `ExtensionPackageManifest`. */
+/** 📦 On-disk `.sxt` manifest (`🛂️manifest.semio` inside the zip), camelCase JSON matching `ExtensionPackageManifest`. */
 export type ExtensionPackageManifestRecord = {
   readonly extensionId: string;
   readonly directoryName: string;
@@ -122,7 +122,7 @@ function unwrapSemioEnvelope(bytes: Uint8Array): Uint8Array {
   return bytes.subarray(payloadStart);
 }
 
-/** @emoji 📨 Wraps deflate zip bytes in the Wave-1.A semio binary envelope (`os.extension.pack v1`). */
+/** 📨 Wraps deflate zip bytes in the Wave-1.A semio binary envelope (`os.extension.pack v1`). */
 export function wrapExtensionPackageEnvelope(zipBytes: Uint8Array): Uint8Array {
   const tokenBytes = new TextEncoder().encode(EXTENSION_PACKAGE_ENVELOPE_TOKEN);
   const out = new Uint8Array(SEMIO_BINARY_MAGIC.length + 4 + tokenBytes.length + zipBytes.length);
@@ -151,13 +151,13 @@ function buildExtensionZipPayload(manifest: ExtensionPackageManifestRecord, comp
   return encodeOwnedZip(files);
 }
 
-/** @emoji 📦 Packs manifest + wasip2 component bytes into a `.sxt` stream (semio envelope + deterministic deflate zip). */
+/** 📦 Packs manifest + wasip2 component bytes into a `.sxt` stream (semio envelope + deterministic deflate zip). */
 export function packExtensionPackage(input: { readonly manifest: ExtensionPackageManifestRecord; readonly componentWasm: Uint8Array; readonly assets?: ReadonlyMap<string, Uint8Array> }): Uint8Array {
   const zipBytes = buildExtensionZipPayload(input.manifest, input.componentWasm, input.assets ?? new Map());
   return wrapExtensionPackageEnvelope(zipBytes);
 }
 
-/** @emoji 🔓️ SHA-256 hex digest of the full `.sxt` bytes (matches install-store dedup). */
+/** 🔓️ SHA-256 hex digest of the full `.sxt` bytes (matches install-store dedup). */
 export function extensionPackageContentHash(bytes: Uint8Array): string {
   return packageContentHash(bytes);
 }
@@ -195,7 +195,7 @@ function decodeExtensionManifest(manifestBytes: Uint8Array): ExtensionManifestRe
   };
 }
 
-/** @emoji 📦 Unpacks a Wave-1.A extension package (semio envelope + deflate zip) into wasm bytes, manifest, and optional assets. */
+/** 📦 Unpacks a Wave-1.A extension package (semio envelope + deflate zip) into wasm bytes, manifest, and optional assets. */
 export function unpackExtensionPackage(bytes: Uint8Array): {
   readonly manifest: ExtensionManifestRecord;
   readonly wasmBytes: Uint8Array;
@@ -225,7 +225,7 @@ export function unpackExtensionPackage(bytes: Uint8Array): {
 //#endregion 🔖️Package
 
 //#region 🔖️Materializers
-/** @emoji 🦀 Native host materializer — keeps raw `component.wasm` on disk for wasmtime `Component::from_binary`. */
+/** 🦀 Native host materializer — keeps raw `component.wasm` on disk for wasmtime `Component::from_binary`. */
 export const nativeMaterialize: ExtensionMaterializer = async ({ wasmBytes, outDir, directoryName }) => {
   installationDirectoryEmoji(directoryName);
   mkdirSync(outDir, { recursive: true });
@@ -233,7 +233,7 @@ export const nativeMaterialize: ExtensionMaterializer = async ({ wasmBytes, outD
   return { moduleUrl: `${EXTENSION_STATIC_ROUTE}/${directoryName}/${EXTENSION_COMPONENT_FILE}` };
 };
 
-/** @emoji 🌐 Web materializer — jco transpile + bridge (see `🟦️.ts`). */
+/** 🌐 Web materializer — jco transpile + bridge (see `🟦️.ts`). */
 export const webMaterialize: ExtensionMaterializer = async ({ wasmBytes, assets, outDir, directoryName, materializeCtx }) => {
   installationDirectoryEmoji(directoryName);
   mkdirSync(outDir, { recursive: true });
@@ -289,7 +289,7 @@ function writeWatchMarker(installRoot: string, event: ExtensionSourceEvent): voi
   writeFileSync(join(installRoot, EXTENSION_WATCH_MARKER), `${JSON.stringify({ ...event, emittedAt: Date.now() })}\n`);
 }
 
-/** @emoji 🏪 Creates an extension store rooted at `installRoot`, using `materializer` for browser or native layouts. */
+/** 🏪 Creates an extension store rooted at `installRoot`, using `materializer` for browser or native layouts. */
 
 export function createExtensionStore(options: { readonly installRoot: string; readonly repoRoot: string; readonly materializer: ExtensionMaterializer }): ExtensionStore {
   const { installRoot, repoRoot, materializer } = options;
@@ -349,7 +349,7 @@ export function createExtensionStore(options: { readonly installRoot: string; re
   };
 }
 
-/** @emoji 🗂️ Default dev install directory beside `🔌️plugin-modules`. */
+/** 🗂️ Default dev install directory beside `🔌️plugin-modules`. */
 export function defaultExtensionInstallRoot(repoRoot: string): string {
   return join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules");
 }
@@ -365,7 +365,7 @@ function readRequestBody(req: { on(event: string, listener: (...args: unknown[])
 }
 
 //#region 🔌️ExtensionStoreVitePlugin
-/** @emoji 🔌 Vite middleware: `GET|POST|DELETE /🧩️extension-modules/install` plus the `extension-modules.watch` stream route
+/** 🔌 Vite middleware: `GET|POST|DELETE /🧩️extension-modules/install` plus the `extension-modules.watch` stream route
  * (snapshot of every installed extension on each fresh open, then `installed`/`uninstalled`) on the serve's stream channel,
  * which the serve owner passes as `streams` (the dev serves pass `devStreamMuxServer` from `🧑‍💻dev/🔌️vite-plugins`).
  * `pre`, like the static mount of the same `/🧩️extension-modules` route: the mount answers 404 for every path its install

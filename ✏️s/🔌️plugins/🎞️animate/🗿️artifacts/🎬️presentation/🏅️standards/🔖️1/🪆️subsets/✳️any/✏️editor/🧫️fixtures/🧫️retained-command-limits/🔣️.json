@@ -146,9 +146,11 @@
     },
     {
       "id": "exportVideoFromDeck",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "blocker": "Headless video rendering and whole-output export do not expose a resumable frame/encoder owner to the command job."
+      "disposition": "Migrated",
+      "lanes": [
+        "HostOnly"
+      ],
+      "blocker": ""
     }
   ],
   "boundaryCases": [

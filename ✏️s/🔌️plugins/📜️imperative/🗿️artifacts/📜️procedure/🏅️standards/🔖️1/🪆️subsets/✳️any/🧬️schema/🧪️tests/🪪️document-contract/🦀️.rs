@@ -26,5 +26,4 @@ fn procedure_document_contract_round_trips_children_and_rejects_foreign_owners()
     for row in fixture["invalidDiffs"].as_array().unwrap() {
         assert!(dsl::os_pack::json::from_json_str::<ProcedureDiff>(&row.to_string()).is_err());
     }
-    eprintln!("[DEBUG] Procedure JSON/text/Pack preserve flow/text child identities and reject inline content or foreign editor state");
 }

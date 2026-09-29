@@ -3,11 +3,11 @@
   "type": "object",
   "required": ["ownerBytes", "ownerItems", "ownerDepth", "turnBytes", "refusedTextBytes", "recognizedMutations"],
   "properties": {
-    "ownerBytes": { "type": "integer", "const": 2048 },
-    "ownerItems": { "type": "integer", "const": 128 },
+    "ownerBytes": { "type": "integer", "const": 1044480, "description": "The one-item store budget (1 MiB) less one turn: the largest document or mutation owner the one-item preparation copies." },
+    "ownerItems": { "type": "integer", "const": 65280, "description": "One measured owner item per 16 owned bytes." },
     "ownerDepth": { "type": "integer", "const": 32 },
     "turnBytes": { "type": "integer", "const": 4096 },
-    "refusedTextBytes": { "type": "integer", "minimum": 2049 },
+    "refusedTextBytes": { "type": "integer", "minimum": 1044481, "description": "Run text larger than one owner, refused typed without publication." },
     "recognizedMutations": {
       "type": "array",
       "minItems": 8,

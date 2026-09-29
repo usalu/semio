@@ -15,7 +15,7 @@
 
 //#region 🔖️Error
 pub mod error {
-    /// @emoji 🧯️ Opaque directory error — never wraps a backend driver's error type, so no `sqlx`/
+    /// 🧯️ Opaque directory error — never wraps a backend driver's error type, so no `sqlx`/
     /// `neo4rs`/`rusqlite` type ever crosses this crate's public API.
     #[derive(Debug)]
     pub enum DirectoryError {
@@ -48,7 +48,7 @@ pub mod model {
     pub use ::directory::os_directory::DocumentScope;
     use serde::{Deserialize, Serialize};
 
-    /// @emoji 🔗️ A revocable, expiring, anonymous read grant for exactly one space/document.
+    /// 🔗️ A revocable, expiring, anonymous read grant for exactly one space/document.
     /// Only its public selector and fixed digest are durable; the raw capability is returned once.
     #[derive(Clone, Debug, PartialEq)]
     pub struct ShareTokenRecord {
@@ -62,7 +62,7 @@ pub mod model {
         pub revoked_reason: Option<String>,
     }
 
-    /// @emoji 🙋️ A platform user — local password login and/or one linked SSO identity. Also the
+    /// 🙋️ A platform user — local password login and/or one linked SSO identity. Also the
     /// projection `user.created` folds into (see the module root's `//#region 🔖️Projections` on
     /// each backend).
     #[derive(Clone, Debug, PartialEq)]
@@ -76,7 +76,7 @@ pub mod model {
         pub created_at: i64,
     }
 
-    /// @emoji 🏛️ A space: the tenant/workspace unit that owns documents and memberships. `kind`
+    /// 🏛️ A space: the tenant/workspace unit that owns documents and memberships. `kind`
     /// (`"atelier"|"studio"|"archive"`) and `visibility` (`"private"|"public"`) mirror the
     /// wasm-facing `space` crate's `SpaceKind`/`SpaceVisibility` string-identically — this crate
     /// cannot depend on that crate (server-side binary vs wasm-facing kernel), so the two are kept
@@ -92,7 +92,7 @@ pub mod model {
         pub visibility: String,
     }
 
-    /// @emoji 🧑️‍🤝️‍🧑️ A space member's permission level, string-identical to the `space` crate's
+    /// 🧑️‍🤝️‍🧑️ A space member's permission level, string-identical to the `space` crate's
     /// `SpaceRole { Author, Spectator }` (`"author"`/`"spectator"`) — see `SpaceRecord`'s doc for
     /// why this crate re-declares rather than depends. Distinct from the wire-facing
     /// `directory::os_directory::DirectorySpaceRole` events/commands carry (see this module root's
@@ -120,7 +120,7 @@ pub mod model {
             }
         }
 
-        /// @emoji 🧢️ This role capped by `ceiling`: an author under a spectator ceiling is a spectator, and no
+        /// 🧢️ This role capped by `ceiling`: an author under a spectator ceiling is a spectator, and no
         /// ceiling ever raises a spectator.
         pub fn within(self, ceiling: SpaceRole) -> SpaceRole {
             match (self, ceiling) {
@@ -138,13 +138,13 @@ pub mod model {
         pub created_at: i64,
     }
 
-    /// @emoji 🧭️ How a trusted identity issuer created a durable session.
+    /// 🧭️ How a trusted identity issuer created a durable session.
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
     #[serde(rename_all = "kebab-case")]
     pub enum AuthSessionKind {
         External,
         DevelopmentLocal,
-        /// @emoji 🤖️ An AI agent acting under a credential a signed-in human delegated to it
+        /// 🤖️ An AI agent acting under a credential a signed-in human delegated to it
         /// (`AgentDelegationRecord`). The session belongs to the delegating user's account for
         /// membership and role, but the principal is the agent: its edits, its presence row and its
         /// per-actor undo history are all its own.
@@ -169,14 +169,14 @@ pub mod model {
             }
         }
 
-        /// @emoji 🤖️ Whether this session's principal is an agent rather than the human who owns
+        /// 🤖️ Whether this session's principal is an agent rather than the human who owns
         /// the account — the one question presence, attribution and undo ownership ask.
         pub fn is_agent(self) -> bool {
             matches!(self, Self::Agent)
         }
     }
 
-    /// @emoji 🍪️ A digest-only browser login session, distinct from a realtime connection.
+    /// 🍪️ A digest-only browser login session, distinct from a realtime connection.
     #[derive(Clone, Debug, PartialEq)]
     pub struct AuthSessionRecord {
         pub id: String,
@@ -195,13 +195,13 @@ pub mod model {
     }
 
     impl AuthSessionRecord {
-        /// @emoji 🎚️ Who this session asks a space-role question as ([`super::HubDirectory::principal_role`]).
+        /// 🎚️ Who this session asks a space-role question as ([`super::HubDirectory::principal_role`]).
         pub fn principal(&self) -> DirectoryPrincipalV1<'_> {
             DirectoryPrincipalV1 { user_id: &self.user_id, session_kind: self.session_kind, device_instance_id: &self.device_instance_id }
         }
     }
 
-    /// @emoji 🎚️ The authenticated principal of one space-role question: the session's account, its kind and its
+    /// 🎚️ The authenticated principal of one space-role question: the session's account, its kind and its
     /// device instance — for an [`AuthSessionKind::Agent`] session, the id of the delegation it was minted from.
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub struct DirectoryPrincipalV1<'a> {
@@ -210,19 +210,19 @@ pub mod model {
         pub device_instance_id: &'a str,
     }
 
-    /// @emoji 🧢️ What one session caps its account's membership roles at ([`super::HubDirectory::principal_ceiling`]).
+    /// 🧢️ What one session caps its account's membership roles at ([`super::HubDirectory::principal_ceiling`]).
     #[derive(Clone, Debug, PartialEq, Eq)]
     pub enum DirectoryPrincipalCeilingV1 {
-        /// @emoji 🙋️ A human session: its account's membership roles, uncapped.
+        /// 🙋️ A human session: its account's membership roles, uncapped.
         Account,
-        /// @emoji 🤖️ A live agent delegation: its one space only, at most its audience's role.
+        /// 🤖️ A live agent delegation: its one space only, at most its audience's role.
         Delegation { space_id: String, role: SpaceRole },
-        /// @emoji 🚫️ A revoked, expired, foreign or unknown delegation: no role anywhere.
+        /// 🚫️ A revoked, expired, foreign or unknown delegation: no role anywhere.
         Nothing,
     }
 
     impl DirectoryPrincipalCeilingV1 {
-        /// @emoji 🧢️ `membership` in `space_id` under this ceiling.
+        /// 🧢️ `membership` in `space_id` under this ceiling.
         pub fn cap(&self, space_id: &str, membership: Option<SpaceRole>) -> Option<SpaceRole> {
             match self {
                 Self::Account => membership,
@@ -232,13 +232,13 @@ pub mod model {
         }
     }
 
-    /// @emoji 🎁️ A newly issued session plus its one-time plaintext capability.
+    /// 🎁️ A newly issued session plus its one-time plaintext capability.
     pub struct IssuedAuthSession {
         pub record: AuthSessionRecord,
         pub capability: super::SessionCapability,
     }
 
-    /// @emoji 🧹️ Durable revocation identity returned before connection kicks are attempted.
+    /// 🧹️ Durable revocation identity returned before connection kicks are attempted.
     #[derive(Clone, Debug, PartialEq, Eq)]
     pub struct RevokedAuthSession {
         pub id: String,
@@ -246,7 +246,7 @@ pub mod model {
         pub revoked_at: i64,
     }
 
-    /// @emoji 🏭️ Validated input for digest-only session issuance.
+    /// 🏭️ Validated input for digest-only session issuance.
     #[derive(Clone, Debug, PartialEq, Eq)]
     pub struct AuthSessionIssue {
         pub user_id: String,
@@ -259,7 +259,7 @@ pub mod model {
         pub peer_class: String,
     }
 
-    /// @emoji 🔴️ A realtime document connection — the "session as live-features backend" record;
+    /// 🔴️ A realtime document connection — the "session as live-features backend" record;
     /// written by `bin.rs`'s wire-v2 WS handler on Hello/disconnect, not per-operation. Not
     /// event-sourced (contract's decider laws) — `space_id`/`surface` widen this record so the
     /// admin overview and presence roster can key/filter by them without joining back to `db`.
@@ -280,7 +280,7 @@ pub mod model {
         pub disconnected_at: Option<i64>,
     }
 
-    /// @emoji 🎟️ An outstanding (or revoked) space invite. Not event-sourced itself — only its
+    /// 🎟️ An outstanding (or revoked) space invite. Not event-sourced itself — only its
     /// `invite.redeemed` outcome is (contract's decider laws). Raw capability bytes are never
     /// retained in this read model or the event log.
     #[derive(Clone, Debug, PartialEq)]
@@ -298,7 +298,7 @@ pub mod model {
         pub accepted_event_id: Option<String>,
     }
 
-    /// @emoji 🤖️ An outstanding (or revoked) agent delegation: the scoped, revocable credential a
+    /// 🤖️ An outstanding (or revoked) agent delegation: the scoped, revocable credential a
     /// signed-in human hands to an AI agent so it can act inside ONE space as its own principal.
     ///
     /// Modelled on [`InviteRecord`] on purpose — same selector/secret-digest split, same
@@ -322,7 +322,7 @@ pub mod model {
         pub revoked_reason: Option<String>,
     }
 
-    /// @emoji 🎯️ The closed set of capability audiences one delegation admits. `Read` is the floor
+    /// 🎯️ The closed set of capability audiences one delegation admits. `Read` is the floor
     /// every delegation carries; `Edit` additionally admits document mutation. A delegation never
     /// carries administration authority — an agent can never invite, revoke, or delegate onward.
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -346,7 +346,7 @@ pub mod model {
             Self::ALL.into_iter().find(|audience| audience.as_str() == value)
         }
 
-        /// @emoji 🎚️ The space role an agent session under this audience is admitted with. `Read`
+        /// 🎚️ The space role an agent session under this audience is admitted with. `Read`
         /// is a spectator; `Edit` is an author — and never more, whatever the delegating human's
         /// own role is. `SpaceRole` has no administrative variant, so this is a ceiling by
         /// construction: no delegation can ever hand an agent authority the role vocabulary
@@ -359,13 +359,13 @@ pub mod model {
         }
     }
 
-    /// @emoji 🎁️ A newly created delegation plus its one-time plaintext capability.
+    /// 🎁️ A newly created delegation plus its one-time plaintext capability.
     pub struct IssuedAgentDelegation {
         pub record: AgentDelegationRecord,
         pub capability: super::AgentDelegationCapability,
     }
 
-    /// @emoji 📋️ One backend-projected delegation row for the delegation UI. Metadata only: the
+    /// 📋️ One backend-projected delegation row for the delegation UI. Metadata only: the
     /// selector and secret digest are structurally absent, not redacted later.
     #[derive(Clone, Debug, PartialEq, Eq)]
     pub struct AgentDelegationRow {
@@ -428,13 +428,13 @@ pub mod model {
         }
     }
 
-    /// @emoji 🎁️ A newly issued document share plus its one-time plaintext capability.
+    /// 🎁️ A newly issued document share plus its one-time plaintext capability.
     pub struct IssuedShareToken {
         pub record: ShareTokenRecord,
         pub capability: super::ShareCapability,
     }
 
-    /// @emoji 🪪️ Current durable status for an id-bound session socket subject: an active binding names the session's
+    /// 🪪️ Current durable status for an id-bound session socket subject: an active binding names the session's
     /// kind with its (ceiling-capped) role, because the declared policy grants an agent session other roles than a human's.
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub enum SocketSessionBindingStatus {
@@ -445,7 +445,7 @@ pub mod model {
         Unavailable,
     }
 
-    /// @emoji 🔗️ Current durable status for an id-and-selector-bound share socket subject.
+    /// 🔗️ Current durable status for an id-and-selector-bound share socket subject.
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub enum SocketShareBindingStatus {
         Active { expires_at_ms: i64 },
@@ -454,13 +454,13 @@ pub mod model {
         Unavailable,
     }
 
-    /// @emoji 🎁️ A newly issued invite plus its one-time plaintext capability.
+    /// 🎁️ A newly issued invite plus its one-time plaintext capability.
     pub struct IssuedInvite {
         pub record: InviteRecord,
         pub capability: super::InviteCapability,
     }
 
-    /// @emoji 🧾️ Privacy-minimized append-only authentication audit entry.
+    /// 🧾️ Privacy-minimized append-only authentication audit entry.
     #[derive(Clone, Debug, PartialEq, Eq)]
     pub struct AuthAuditRecord {
         pub id: String,
@@ -476,7 +476,7 @@ pub mod model {
         pub peer_class: String,
     }
 
-    /// @emoji 🧾️ One credential-lifecycle fact before the backend stamps its identity and time —
+    /// 🧾️ One credential-lifecycle fact before the backend stamps its identity and time —
     /// the durable record of a sign-in attempt or a credential change. `outcome_code` is
     /// `"success"` or `"failure"`; `reason_code` carries the refusal's public error code and never
     /// a secret, an address, or which half of the credential was wrong.
@@ -491,7 +491,7 @@ pub mod model {
         pub peer_class: String,
     }
 
-    /// @emoji 🧾️ One append-only administrator operation fact before backend sequence assignment.
+    /// 🧾️ One append-only administrator operation fact before backend sequence assignment.
     #[derive(Clone, Debug, PartialEq, Eq)]
     pub struct NewAdminOperationAuditRecord {
         pub request_id: String,
@@ -512,7 +512,7 @@ pub mod model {
         pub reason_code: Option<String>,
     }
 
-    /// @emoji 📜️ One durable, backend-ordered administrator operation audit fact.
+    /// 📜️ One durable, backend-ordered administrator operation audit fact.
     #[derive(Clone, Debug, PartialEq, Eq)]
     pub struct AdminOperationAuditRecord {
         pub sequence: u64,
@@ -821,7 +821,7 @@ pub const DEVICE_INSTANCE_MAX_BYTES: usize = 128;
 pub const AUTH_ASSERTION_MAX_BYTES: usize = 16 * 1024;
 pub const AUTH_TEXT_MAX_BYTES: usize = 256;
 
-/// @emoji 🔐️ Encodes capability bytes without a runtime dependency.
+/// 🔐️ Encodes capability bytes without a runtime dependency.
 /// 📐️ The stamp shape a directory database carries, so a future format is recognised rather than
 /// guessed at. Mirrors `🗄️stores/🦀️.rs`'s `STORE_FORMAT_SCHEMA` for the four filesystem stores.
 pub(crate) const DIRECTORY_FORMAT_SCHEMA: &str = "semio/hub/directory-format/v1";
@@ -904,7 +904,7 @@ pub enum CapabilityKind {
     Share,
     Invite,
     Socket,
-    /// @emoji 🤖️ The long-lived, scoped, revocable credential a signed-in human hands to an AI
+    /// 🤖️ The long-lived, scoped, revocable credential a signed-in human hands to an AI
     /// agent. It is never a session: it is exchanged for one at `POST /auth/agent-sessions`.
     AgentDelegation,
 }
@@ -1045,7 +1045,7 @@ impl HubCapability {
     }
 }
 
-/// @emoji ⏳️ Validates a bounded positive TTL and returns its overflow-safe millisecond window.
+/// ⏳️ Validates a bounded positive TTL and returns its overflow-safe millisecond window.
 pub fn capability_window(now: i64, ttl_secs: i64) -> DirectoryResult<(i64, i64)> {
     if !(1..=CAPABILITY_MAX_TTL_SECS).contains(&ttl_secs) {
         return Err(DirectoryError::Conflict(format!("capability ttl must be 1..={CAPABILITY_MAX_TTL_SECS}")));
@@ -1300,7 +1300,7 @@ pub(crate) fn prepare_invite(space_id: &str, role: SpaceRole, ttl_secs: i64, now
     Ok(IssuedInvite { record, capability })
 }
 
-/// @emoji 🤖️ Mints one agent delegation, bounds-checked. `agent_label` is what a human will read in
+/// 🤖️ Mints one agent delegation, bounds-checked. `agent_label` is what a human will read in
 /// the roster next to the robot badge, so it is bounded like every other auth text.
 pub fn prepare_agent_delegation(space_id: &str, delegating_user_id: &str, agent_label: &str, audience: AgentAudience, ttl_secs: i64, now: i64) -> DirectoryResult<IssuedAgentDelegation> {
     validate_bounded_auth_text(space_id, "agent delegation space", AUTH_TEXT_MAX_BYTES)?;
@@ -1324,11 +1324,11 @@ pub fn prepare_agent_delegation(space_id: &str, delegating_user_id: &str, agent_
     Ok(IssuedAgentDelegation { record, capability })
 }
 
-/// @emoji 🏷️ The longest agent label a delegation may carry — it rides the presence roster, whose
+/// 🏷️ The longest agent label a delegation may carry — it rides the presence roster, whose
 /// per-entry budget is the binding constraint.
 pub const AGENT_LABEL_MAX_BYTES: usize = 64;
 
-/// @emoji ⚖️ Why an agent-session exchange was refused, or that it may proceed. Every refusal that a
+/// ⚖️ Why an agent-session exchange was refused, or that it may proceed. Every refusal that a
 /// caller holding a *wrong* credential could observe collapses into `Denied`, exactly like the
 /// invite preflight, so a delegation id cannot be probed for existence. `Revoked` and `Expired` are
 /// only ever reported to a caller that already proved the matching secret.
@@ -1340,7 +1340,7 @@ pub enum AgentSessionPreflight {
     Denied,
 }
 
-/// @emoji ⚖️ The whole agent-session law, pure and clock-injected: the record must exist, the
+/// ⚖️ The whole agent-session law, pure and clock-injected: the record must exist, the
 /// presented capability must match its selector AND its secret digest in constant time, the
 /// delegation must not be revoked or expired, and the requested audience must be exactly the one
 /// the delegation was scoped to — an agent can never widen its own scope at exchange time.
@@ -1667,7 +1667,7 @@ pub(crate) fn visibility_to_str(visibility: DirectorySpaceVisibility) -> &'stati
     }
 }
 
-/// @emoji 🧬️ Rejects descriptors that cannot safely select and verify a cold-open codec.
+/// 🧬️ Rejects descriptors that cannot safely select and verify a cold-open codec.
 pub fn validate_document_descriptor(descriptor: &DocumentDescriptor) -> DirectoryResult<()> {
     fn present(value: &str, field: &str) -> DirectoryResult<()> {
         if value.trim().is_empty() { Err(DirectoryError::Conflict(format!("document descriptor {field} must not be empty"))) } else { Ok(()) }
@@ -2056,7 +2056,7 @@ fn now_ms() -> i64 {
     SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |d| d.as_millis() as i64)
 }
 
-/// @emoji ⏱️ A hybrid logical clock: wall-clock milliseconds plus a same-millisecond tiebreak
+/// ⏱️ A hybrid logical clock: wall-clock milliseconds plus a same-millisecond tiebreak
 /// counter, monotone across `tick()` calls regardless of how the OS clock jitters. One instance
 /// lives behind `DirectoryService`'s write lock (see `//#region 🔖️Service`) — the lock is what
 /// makes a `HubClock`'s stream of `tick()`s a total order across every command this hub instance
@@ -2072,7 +2072,7 @@ impl HubClock {
         Self::default()
     }
 
-    /// @emoji ⏭️ Advances the clock by one tick and returns its new `Hlc`. Same millisecond as the
+    /// ⏭️ Advances the clock by one tick and returns its new `Hlc`. Same millisecond as the
     /// last tick ⇒ the logical counter increments; a later millisecond ⇒ it resets to 0. Time never
     /// runs backward even if the OS clock does (the physical component only ever holds or advances).
     pub fn tick(&mut self) -> Hlc {
@@ -2087,7 +2087,7 @@ impl HubClock {
     }
 }
 
-/// @emoji ✉️ One decided-but-not-yet-persisted directory event: everything `decide` (see
+/// ✉️ One decided-but-not-yet-persisted directory event: everything `decide` (see
 /// `//#region 🔖️Decider`) can determine on its own. `append_events` (the `HubDirectory` trait,
 /// implemented once per backend) turns this into a full `DirectoryEvent` by assigning the
 /// backend-dense `seq`, minting a uuid v7 `id`, and stamping `recorded_at_ms`.
@@ -2142,7 +2142,7 @@ fn actor_user_id(actor: &DirectoryActor) -> DirectoryResult<&str> {
     }
 }
 
-/// @emoji 🧠️ Decides what a `DirectoryCommand` means: reads projections through `dir` (`get_space`,
+/// 🧠️ Decides what a `DirectoryCommand` means: reads projections through `dir` (`get_space`,
 /// `list_members`, `get_user_by_email`) and returns the events that would record it — it never
 /// writes to `dir`, with one deliberate exception: `create-invite`/`revoke-invite` are NOT
 /// event-sourced (contract's decider laws — only an invite's `invite.redeemed` outcome is an
@@ -2436,7 +2436,7 @@ pub fn replay_directory_command_receipt(record: &DirectoryCommandReceiptRecord) 
     DirectoryCommandReceiptV1::seal(record.request_id.clone(), record.command_sha256.clone(), outcome, Vec::new(), DirectoryCommandResultV1::None)
 }
 
-/// @emoji 🏭️ The hub's single directory writer. Every command is serialized behind one
+/// 🏭️ The hub's single directory writer. Every command is serialized behind one
 /// `tokio::sync::Mutex<HubClock>` (dense, gap-free `seq` — two concurrent commands can never
 /// interleave their `append_events` calls) and every persisted event (plus connection/presence
 /// messages the caller publishes directly) fans out on one `broadcast` channel every
@@ -2573,7 +2573,7 @@ impl DirectoryService {
         }
     }
 
-    /// @emoji 🏗️ `channel_capacity` sizes the broadcast buffer; a subscriber that falls more than
+    /// 🏗️ `channel_capacity` sizes the broadcast buffer; a subscriber that falls more than
     /// this many messages behind sees `RecvError::Lagged` and must resync via `events_since`
     /// (`?since=` replay, contract C2) — handled by `bin.rs`'s WS handler, not here.
     pub fn new(dir: Arc<HubDirectories>, channel_capacity: usize) -> Self {
@@ -2702,7 +2702,7 @@ impl DirectoryService {
         Ok(ArtifactCasSweepPosition { execute, observed_generation, after_generation, object_offset })
     }
 
-    /// @emoji ⚙️ The command pipeline: take the write lock → `decide` → `dir.append_events` →
+    /// ⚙️ The command pipeline: take the write lock → `decide` → `dir.append_events` →
     /// publish each persisted event on `tx` → release the lock. Authorization already happened in
     /// the caller (`bin.rs`); this trusts `actor` as given.
     pub async fn execute(&self, actor: DirectoryActor, command: DirectoryCommand) -> DirectoryResult<(Vec<DirectoryEvent>, Option<CommandResult>)> {
@@ -2950,7 +2950,7 @@ impl DirectoryService {
         Ok(committed)
     }
 
-    /// @emoji 📡️ A fresh receiver over every future published `DirectoryStreamMessage` (events,
+    /// 📡️ A fresh receiver over every future published `DirectoryStreamMessage` (events,
     /// connection phases, presence, heartbeats) — `bin.rs`'s `/directory/socket/v1` handler subscribes
     /// once per connection, then replays `events_since(?since=)` before switching to live receive
     /// (contract C2's "subscribe, then replay, gap-free").
@@ -2958,7 +2958,7 @@ impl DirectoryService {
         self.tx.subscribe()
     }
 
-    /// @emoji 📣️ Publishes a non-event stream message (connection open/close, presence roster,
+    /// 📣️ Publishes a non-event stream message (connection open/close, presence roster,
     /// heartbeat) — emitted by the connection/presence layer (`bin.rs`, lane 1-B), not by this
     /// crate's own event pipeline.
     pub fn publish(&self, message: DirectoryStreamMessage) {
@@ -3191,7 +3191,7 @@ impl<S: ArtifactChunkCasStorage> crate::artifact_authority::VerifiedCheckpointPu
 }
 //#endregion 🔖️Service
 
-/// @emoji 🧢️ The one tail of every backend's `socket_session_binding`: the session's membership role in the asked space
+/// 🧢️ The one tail of every backend's `socket_session_binding`: the session's membership role in the asked space
 /// under its principal's ceiling ([`HubDirectory::principal_ceiling`]); a space it holds no role in is `MembershipLost`.
 async fn capped_socket_session_binding<D: HubDirectory>(directory: &D, record: &AuthSessionRecord, space_id: Option<&str>, membership: Option<SpaceRole>) -> DirectoryResult<SocketSessionBindingStatus> {
     let Some(space_id) = space_id else { return Ok(SocketSessionBindingStatus::Active { role: None, expires_at_ms: record.expires_at, session_kind: record.session_kind }) };
@@ -3202,7 +3202,7 @@ async fn capped_socket_session_binding<D: HubDirectory>(directory: &D, record: &
 }
 
 //#region 🔖️Trait
-/// @emoji 🗄️ Backend-agnostic os-hub identity/tenancy directory. Implemented once per backend
+/// 🗄️ Backend-agnostic os-hub identity/tenancy directory. Implemented once per backend
 /// (sqlite/postgres/neo4j); `HubState` holds an `Arc<HubDirectories>` (see `//#region 🔖️Dispatch`
 /// below) so the directory backend is a deploy-time choice, not a compile-time one — independent of
 /// `db::Database`'s own storage backend choice (see `bin.rs`, `OS_HUB_DIRECTORY_BACKEND` vs
@@ -3226,7 +3226,7 @@ pub trait HubDirectory: Send + Sync + 'static {
 
     //#region Users
     async fn create_user(&self, email: &str, display_name: &str, password_hash: Option<&str>, sso_subject: Option<&str>, sso_provider: Option<&str>) -> DirectoryResult<UserRecord>;
-    /// @emoji 🔎️ Single-user lookup by id — the `member.upserted`/`invite.redeemed` projections
+    /// 🔎️ Single-user lookup by id — the `member.upserted`/`invite.redeemed` projections
     /// resolve `MemberView.email`/`display_name` through this, not through `get_user_by_email`.
     async fn get_user(&self, user_id: &str) -> DirectoryResult<Option<UserRecord>>;
     async fn get_user_by_email(&self, email: &str) -> DirectoryResult<Option<UserRecord>>;
@@ -3236,21 +3236,21 @@ pub trait HubDirectory: Send + Sync + 'static {
     //#endregion
 
     //#region Spaces
-    /// @emoji 🔎️ Single-space lookup by id — used by the hub handler to read `kind`/`visibility`
+    /// 🔎️ Single-space lookup by id — used by the hub handler to read `kind`/`visibility`
     /// (grant compilation, public-visibility fallback) without listing every space. Also `decide`'s
     /// (`//#region 🔖️Decider`) own "does this space exist" read.
     async fn get_space(&self, space_id: &str) -> DirectoryResult<Option<SpaceRecord>>;
     async fn list_spaces_for_user(&self, user_id: &str) -> DirectoryResult<Vec<(SpaceRecord, SpaceRole)>>;
     async fn list_spaces(&self, limit: i64, offset: i64) -> DirectoryResult<Vec<SpaceRecord>>;
     async fn list_admin_space_summaries_page(&self, space_id: Option<&str>, offset: usize, limit: usize) -> DirectoryResult<Vec<AdminSpaceSummaryRecord>>;
-    /// @emoji 🏘️ Every space `user_id` may list — each public space and each space it is a member of —
+    /// 🏘️ Every space `user_id` may list — each public space and each space it is a member of —
     /// with its role there and the counts of [`HubDirectory::list_admin_space_summaries_page`], ordered by
     /// id, in ONE backend round trip. `GET /directory/spaces` used to fold the whole directory event log
     /// and then query every visible space's documents (mounting each document for its frontier) and
     /// sessions one by one: 25–58 s for a member of 82 spaces on hub 7800 (ticket 26/09/23 WG8).
     async fn list_visible_space_summaries(&self, user_id: Option<&str>) -> DirectoryResult<Vec<(AdminSpaceSummaryRecord, Option<SpaceRole>)>>;
     async fn list_admin_space_members_page(&self, space_id: &str, offset: usize, limit: usize) -> DirectoryResult<Vec<(UserRecord, SpaceRole)>>;
-    /// @emoji 🧑️‍🤝️‍🧑️ The current member roster — `decide` reads this to enforce the atelier/
+    /// 🧑️‍🤝️‍🧑️ The current member roster — `decide` reads this to enforce the atelier/
     /// archive laws and to compute `archive-space`'s demote-every-author events.
     async fn list_members(&self, space_id: &str) -> DirectoryResult<Vec<(UserRecord, SpaceRole)>>;
     async fn get_role(&self, space_id: &str, user_id: &str) -> DirectoryResult<Option<SpaceRole>>;
@@ -3463,7 +3463,7 @@ pub trait HubDirectory: Send + Sync + 'static {
     //#endregion
 
     //#region SyncSessions
-    /// @emoji 🔴️ Widened over the pre-ticket signature with `space_id`/`surface` (contract's
+    /// 🔴️ Widened over the pre-ticket signature with `space_id`/`surface` (contract's
     /// presence scope is `(space_id, document_id, surface)`).
     async fn record_sync_session_open(
         &self,
@@ -3480,20 +3480,20 @@ pub trait HubDirectory: Send + Sync + 'static {
     ) -> DirectoryResult<SyncSessionRecord>;
     async fn record_sync_session_close(&self, sync_session_id: &str) -> DirectoryResult<()>;
     async fn list_sync_sessions_for_document(&self, document_id: &str) -> DirectoryResult<Vec<SyncSessionRecord>>;
-    /// @emoji 🟢️ Every still-open session, optionally scoped to one space — the admin connections
+    /// 🟢️ Every still-open session, optionally scoped to one space — the admin connections
     /// view and the per-space presence roster both read this instead of iterating documents.
     async fn list_active_sync_sessions_page(&self, space_id: Option<&str>, offset: usize, limit: usize) -> DirectoryResult<Vec<SyncSessionRecord>>;
     async fn list_active_sync_sessions(&self, space_id: Option<&str>, limit: usize) -> DirectoryResult<Vec<SyncSessionRecord>> {
         self.list_active_sync_sessions_page(space_id, 0, limit).await
     }
-    /// @emoji 🧹️ Marks every still-open session closed — called once at hub boot, before any real
+    /// 🧹️ Marks every still-open session closed — called once at hub boot, before any real
     /// connection lands, to clear crash residue from the previous process (a session that never got
     /// its `disconnected_at` because the hub was killed mid-connection).
     async fn close_all_sync_sessions(&self) -> DirectoryResult<()>;
     //#endregion
 
     //#region EventLog
-    /// @emoji ➕️ Persists `events` in one backend transaction: each gets a dense backend-assigned
+    /// ➕️ Persists `events` in one backend transaction: each gets a dense backend-assigned
     /// `seq` (contiguous with the current head, no gaps even under concurrent callers — callers are
     /// expected to already be serialized by `DirectoryService`'s write lock, but a backend MUST NOT
     /// rely on that alone for `seq` density since `rebuild_projections`/tests may call this
@@ -3510,13 +3510,13 @@ pub trait HubDirectory: Send + Sync + 'static {
     async fn append_decided_events(&self, events: &[NewDirectoryEvent]) -> DirectoryResult<DirectoryAppendOutcomeV1>;
     /// 🧷️ Commits the exact event page and its private administrator effect proof atomically.
     async fn append_decided_events_with_admin_effect(&self, events: &[NewDirectoryEvent], effect: &NewAdminOperationEffectReceiptV1) -> AdminEffectCommitV1<Vec<DirectoryEvent>>;
-    /// @emoji 📜️ Every event with `seq > since_seq`, ascending, capped at `limit` — backs both
+    /// 📜️ Every event with `seq > since_seq`, ascending, capped at `limit` — backs both
     /// `GET /directory/events?since=` and `/directory/socket/v1`'s post-subscribe replay (contract C2).
     async fn events_since(&self, since_seq: u64, limit: usize) -> DirectoryResult<Vec<DirectoryEvent>>;
-    /// @emoji 🔝️ The current log length (0 when empty) — `DirectoryStreamMessage::Heartbeat`'s
+    /// 🔝️ The current log length (0 when empty) — `DirectoryStreamMessage::Heartbeat`'s
     /// `head_seq` and the admin overview's `headSeq` both read this.
     async fn head_seq(&self) -> DirectoryResult<u64>;
-    /// @emoji 🔁️ Truncates every projection table and replays the whole log from `seq` 1 through
+    /// 🔁️ Truncates every projection table and replays the whole log from `seq` 1 through
     /// each event's projection (`//#region 🔖️Projections`) — returns the number of events replayed
     /// (which must equal `head_seq()` afterward). `POST /admin/api/directory/rebuild` (contract C2).
     async fn rebuild_projections(&self) -> DirectoryResult<u64>;

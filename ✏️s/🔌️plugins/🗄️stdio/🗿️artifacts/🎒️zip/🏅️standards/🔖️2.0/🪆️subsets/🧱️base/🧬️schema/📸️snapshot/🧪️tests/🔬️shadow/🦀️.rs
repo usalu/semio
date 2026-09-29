@@ -2,7 +2,7 @@ use super::*;
 
 #[semio_framework_async_macros::async_test]
 async fn complete_header_state_is_explicit_without_a_raw_archive_shadow_cache() {
-    let json = format!("{:?}", ZipSnapshot::default());
+    let json = format!("{:?}", ZipSnapshot { entries: vec![ZipEntry::default()], ..ZipSnapshot::default() });
     assert!(json.contains("metadata") && json.contains("compression_method") && json.contains("comment_utf8"));
     for forbidden in ["physical", "sourceBytes", "nativeArchive", "rawMetadata"] {
         assert!(!json.contains(forbidden), "snapshot contains forbidden shadow field {forbidden}");

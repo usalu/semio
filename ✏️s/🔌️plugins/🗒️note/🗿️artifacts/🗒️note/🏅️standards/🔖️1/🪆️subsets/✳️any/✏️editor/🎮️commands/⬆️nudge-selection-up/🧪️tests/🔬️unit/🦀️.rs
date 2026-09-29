@@ -6,7 +6,7 @@ use crate::NoteSnapshot;
 /// 🕹️ Selection is framework-owned `InteractionState`, resolved into `NoteDispatchCtx::selected_block_ids`
 /// by `ArtifactEditor::handle`/the retained tool. These laws drive the handlers with that resolved selection
 /// directly: the native app harness delivers an EMPTY `InteractionState` to a migrated verb's tool job
-/// (ticket 26/09/17/NOTE-PLUGIN-END-TO-END — proven with `[DEBUG]` instrumentation; the react shell delivers
+/// (ticket 26/09/17/NOTE-PLUGIN-END-TO-END — proven with `[TRACE]` instrumentation; the react shell delivers
 /// it correctly, see the ticket's `🐍️note-interact-probe.mjs` delete/undo steps), so a dispatch-level nudge law
 /// would assert the harness, not the command.
 fn selected_document() -> (NoteSnapshot, String) {

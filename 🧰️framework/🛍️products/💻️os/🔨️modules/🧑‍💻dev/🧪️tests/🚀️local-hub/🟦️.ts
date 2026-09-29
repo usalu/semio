@@ -1,4 +1,4 @@
-/** @emoji 🚀️ Laws for the development hub path over `🧫️fixtures/🚀️local-hub.json` (ticket 26/09/23 U5, coordinator rule 23):
+/** 🚀️ Laws for the development hub path over `🧫️fixtures/🚀️local-hub.json` (ticket 26/09/23 U5, coordinator rule 23):
  * a named hub is only joined — against a real fake hub that binds late, with `detect-port` as the oracle that nothing else
  * ever bound its port —; the default hub is started once behind an owner lease that racing PROCESSES claim exactly once; a
  * catalog the current hub cannot load is republished (with progress and cancel) instead of booted; strict Ajv over the owned

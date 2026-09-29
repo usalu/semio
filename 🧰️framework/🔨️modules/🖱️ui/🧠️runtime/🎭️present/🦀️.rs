@@ -1,4 +1,4 @@
-//! @emoji 🎭️ The `Present` trait and the keyed `ComponentTree` a presenter builds.
+//! 🎭️ The `Present` trait and the keyed `ComponentTree` a presenter builds.
 //!
 //! `TreeNode` is the contract crate's fixed-page `BuiltNode`; child shape is an admitted arena handle,
 //! never inline recursion. The retained producer below visits one field, child, or duplicate-key

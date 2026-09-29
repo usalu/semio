@@ -87,5 +87,4 @@ export function testBuiltTreeRetirementFixture(): void {
   assert.equal(typedDepths.length, fixture.payloadFields.length);
   for (const type of typedDepths) assert(native.includes(`<${type} as UiTypedRetire>::DEPTH`), `missing typed depth guard for ${type}`);
   assert(/while index < depths\.len\(\)\s*\{\s*assert!\(depths\[index\] <= typed::UI_TYPED_RETIREMENT_DEPTH\);\s*index \+= 1;\s*\}/u.test(native), "typed depth guards must exhaust the guarded depth array");
-  console.log(`[DEBUG] built-tree ownership source: 384-page chain, 9 typed fields, 30 exact extra bytes, ${hostile} denials; native closure and safe abandonment unverified`);
 }

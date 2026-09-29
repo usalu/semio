@@ -1,4 +1,4 @@
-//! @emoji 🎯️ Intent routing, revision guarding, and `DispatchOutcome`.
+//! 🎯️ Intent routing, revision guarding, and `DispatchOutcome`.
 //!
 //! A [`HandleIntent`] handler is the one place a [`ui_contract::UiIntent`] turns into local mutation
 //! plus a *description* of outward effects — it never submits a command or publishes presence

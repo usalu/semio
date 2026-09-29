@@ -32,7 +32,11 @@ import {
   THEME_CHROME_CONTRAST_PAIRS,
   resolveThemeAppearancePalettes,
   semioTheme,
+  type CssAnimationScopeLaw,
+  type CssClockRule,
+  type CssPaintRule,
   type UiTheme,
+  type WcagContrastGrade,
   wcagContrastGrade,
   WCAG_AA_CONTRAST,
   WCAG_AA_LARGE_CONTRAST,
@@ -173,7 +177,6 @@ describe("favicon delivery", () => {
       parse(markup).childNodes.forEach(visit);
       expect(icons.map(href => decodeURIComponent(new URL(href, "https://example.invalid").pathname))).toEqual([`/${authority.svg}`, `/${authority.ico}`]);
     }
-    console.log("[DEBUG] verified exact favicon identity, encoded HTTP and unchanged SVG/ICO content");
   });
 });
 
@@ -207,7 +210,6 @@ describe("declared HTML entry", () => {
         expect(readFileSync(join(output, path), "utf8")).toBe(readFileSync(join(output, fixture.entry), "utf8"));
       }
       expect(readFileSync(join(output, fixture.entry), "utf8")).toContain("runtime-kept");
-      console.log("[DEBUG] actual Vite build and preview served only the declared HTML output");
     } finally { await server.close(); }
   });
 });
@@ -250,7 +252,6 @@ describe("build output write authority", () => {
         }
       }
       expect(failures).toEqual([]);
-      console.log("[DEBUG] verified seven build adapters across no-write, write and default modes");
     } finally { rmSync(sandbox, { recursive: true, force: true }); }
   });
 });
@@ -339,7 +340,6 @@ describe("static-dir mount table", () => {
       }
     } finally { await ours.close(); await oracle.close(); rmSync(sandbox, { recursive: true, force: true }); }
     for (const refusal of fixture.refusals) expect(() => staticDirMountVitePlugins(sandbox, specs(refusal.mounts))).toThrow(refusal.error);
-    console.log(`[DEBUG] static-dir mount table: ${fixture.requests.length} requests match native Vite publicDir, build copy equals the union, ${fixture.refusals.length} double claim refused`);
   }, 60_000);
 });
 
@@ -470,8 +470,8 @@ describe("styling resolve", () => {
   });
 
   it("serializeCanvasThemeJson dark labelFill differs from light", () => {
-    const light = JSON.parse(serializeCanvasThemeJson("light")) as { labelFill: number[] };
-    const dark = JSON.parse(serializeCanvasThemeJson("dark")) as { labelFill: number[] };
+    const light = JSON.parse(serializeCanvasThemeJson("light")) as { labelFill: readonly number[] };
+    const dark = JSON.parse(serializeCanvasThemeJson("dark")) as { labelFill: readonly number[] };
     expect(light.labelFill).toEqual(STYLING_BOARD_PALETTES.light.labelFill);
     expect(dark.labelFill).toEqual(STYLING_BOARD_PALETTES.dark.labelFill);
     expect(dark.labelFill).not.toEqual(light.labelFill);
@@ -564,7 +564,7 @@ describe("styling resolve", () => {
       },
     });
     expect(calls).toHaveLength(1);
-    const parsed = JSON.parse(calls[0]!) as { labelFill: number[] };
+    const parsed = JSON.parse(calls[0]!) as { labelFill: readonly number[] };
     expect(parsed.labelFill).toEqual(STYLING_BOARD_PALETTES.light.labelFill);
   });
 });
@@ -608,7 +608,9 @@ describe("nested mesh source identity", () => {
         const response = await fetch(`http://127.0.0.1:${address.port}${meshAssetTransportUrl(entry.url, catalog)}`);
         expect(response.status).toBe(200);
         expect(response.headers.get("content-type")).toBe("model/gltf-binary");
-        expect(await response.text()).toBe(expected.get(entry.path));
+        const body = expected.get(entry.path);
+        if (body === undefined) throw new Error(`no expected body for ${entry.path}`);
+        expect(await response.text()).toBe(body);
       }
       expect((await fetch(`http://127.0.0.1:${address.port}/mesh/unregistered.glb`)).status).toBe(404);
       expect((await fetch(`http://127.0.0.1:${address.port}/mesh/💊️capsules/🪝️j/📐️source.3dm`)).status).toBe(404);
@@ -847,8 +849,20 @@ describe("presence palette", () => {
 describe("🔁️ border effect animation scope", () => {
   const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🔁️animation-scope/🔣️.json"), "utf8")) as {
     laws: readonly string[];
-    cases: readonly { name: string; css: string; expect: Record<string, unknown> }[];
-    stylesheet: { path: string; keyframesByProperty: Record<string, readonly string[]>; violations: readonly string[] };
+    cases: readonly {
+      name: string;
+      css: string;
+      expect: {
+        animatedCustomProperties: readonly string[];
+        keyframesByProperty: Readonly<Record<string, readonly string[]>>;
+        propertyInheritance: Readonly<Record<string, boolean>>;
+        rootClockSelectors: string[];
+        clocks: readonly CssClockRule[];
+        paints: readonly CssPaintRule[];
+        violations: readonly CssAnimationScopeLaw[];
+      };
+    }[];
+    stylesheet: { path: string; keyframesByProperty: Record<string, readonly string[]>; violations: readonly CssAnimationScopeLaw[] };
   };
   const squash = (selector: string) => selector.replace(/\s+/g, " ").trim();
 
@@ -954,7 +968,6 @@ describe("🔁️ border effect animation scope", () => {
     expect(cssAnimationScopeUnclockedPaints(scope).map((paint) => `${squash(paint.selector)} :: ${paint.property}`)).toEqual([]);
     expect(cssAnimationScopeViolations(scope)).toEqual(fixture.stylesheet.violations);
     expect(scope.paints.length).toBeGreaterThan(8);
-    console.info(`[DEBUG] 🔁️animation-scope: ${scope.animatedCustomProperties.length} animated properties, ${scope.clocks.length} clocks, ${scope.paints.length} paints, 0 root clocks`);
   });
 });
 
@@ -1097,7 +1110,7 @@ describe("custom theme contrast verdict", () => {
 describe("chrome text-on-surface contrast pairs", () => {
   const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/♿️chrome-contrast-pairs.json"), "utf8")) as {
     readonly palette: Record<string, Rgba8>;
-    readonly cases: Record<string, { readonly text: string; readonly surface: string; readonly counterpart: string; readonly ratio: number; readonly grade: string } | null>;
+    readonly cases: Record<string, { readonly text: string; readonly surface: string; readonly counterpart: string; readonly ratio: number; readonly grade: WcagContrastGrade } | null>;
   };
 
   it("names the worst pair every paint takes part in, and no pair for a border", () => {

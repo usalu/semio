@@ -99,7 +99,7 @@ async fn codec_retention_law() {
 //#endregion 🔖️CodecRetentionLaw
 
 //#region 🔖️ScratchFixtureGen
-/// 🧪️[DEBUG] one-shot scratch generator — writes real `encode_pack`/`encode_op` bytes to the
+/// 🧪️[TRACE] one-shot scratch generator — writes real `encode_pack`/`encode_op` bytes to the
 /// committed fixture paths. Run once via `--ignored`, then this region is deleted (never a
 /// permanent side-effecting test; CLAUDE.md bans migration scripts left behind).
 #[semio_framework_async_macros::async_test]
@@ -128,6 +128,5 @@ async fn zzz_generate_p2p1_fixtures() {
     let mut op_path = assets.clone();
     op_path.push("📡️example.spr.semio");
     std::fs::write(op_path, &op_bytes).unwrap();
-    eprintln!("[DEBUG] wrote {} pack bytes, {} spr bytes", pack_bytes.len(), op_bytes.len());
 }
 //#endregion 🔖️ScratchFixtureGen

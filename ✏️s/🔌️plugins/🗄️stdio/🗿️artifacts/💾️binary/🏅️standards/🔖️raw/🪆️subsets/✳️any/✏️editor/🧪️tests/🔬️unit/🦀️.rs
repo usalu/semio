@@ -22,8 +22,7 @@ async fn editor_declares_the_main_window() {
 async fn parse_hex_dump_round_trips_a_rendered_snapshot() {
     let document = BinarySnapshot { bytes: vec![0xde, 0xad, 0xbe, 0xef], ..BinarySnapshot::default() };
     let node = main::render(&document).expect("render");
-    let Component::Surface(props) = node.component else { panic!("expected a retained text surface") };
-    let scene: semio_framework_ui_scene::TextEditorScene = semio_framework_ui_scene::decode(&props).expect("decode text scene");
+    let scene: semio_framework_ui_scene::TextEditorScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(&node).expect("decode the text scene with its lanes");
     let parsed = parse_hex_dump(&scene.buffer).expect("well-formed hex dump must parse");
     assert_eq!(parsed, vec![0xde, 0xad, 0xbe, 0xef]);
 }

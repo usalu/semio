@@ -585,7 +585,7 @@ fn actor_kind_from_str(value: &str) -> DirectoryActorKind {
     }
 }
 
-/// @emoji 🗄️ SQLite-backed `HubDirectory`. One `rusqlite::Connection` behind a `Mutex` — see this
+/// 🗄️ SQLite-backed `HubDirectory`. One `rusqlite::Connection` behind a `Mutex` — see this
 /// module's own doc for why this isn't an async SQLite driver.
 pub struct SqliteDirectory {
     conn: Arc<Mutex<Connection>>,
@@ -644,7 +644,7 @@ impl SqliteDirectory {
         Ok(())
     }
 
-    /// @emoji 🔌️ Opens (creating if absent) the SQLite database at `path` and bootstraps the schema.
+    /// 🔌️ Opens (creating if absent) the SQLite database at `path` and bootstraps the schema.
     /// `path` may be `:memory:` for tests.
     pub async fn connect(path: &str) -> DirectoryResult<Self> {
         let conn = Connection::open(path).map_err(backend)?;
@@ -936,7 +936,7 @@ impl SqliteDirectory {
         Self::cas_project_release(tx, operation, space_id, document_id, checkpoint_id)
     }
 
-    /// @emoji 🌱️ Seeds a placeholder `seed` system user and a default `studio`/`private` space it
+    /// 🌱️ Seeds a placeholder `seed` system user and a default `studio`/`private` space it
     /// owns, through the event log (`user.created` + `space.created` + `member.upserted`) like any
     /// other write — the system user satisfies `hub_space.owner_user_id`'s foreign key until a real
     /// bootstrap admin claims ownership through `/admin` (HP-6). Document existence itself is

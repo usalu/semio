@@ -151,7 +151,6 @@ async fn add_widget_dispatches_one_typed_child_edit_without_repointing_parent_co
         assert_eq!(content, expected, "each inverse must restore the complete preceding child document in reverse insertion order");
     }
     close_registered_fixture_app(&mut *app);
-    eprintln!("[DEBUG] two acknowledged Flow child groups preserve parent identity and undo to the original child document");
 }
 
 #[semio_framework_async_macros::async_test]

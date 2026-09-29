@@ -1,4 +1,4 @@
-//! @emoji 🪟️ Hand-written Direct3D 12 backend for Windows.
+//! 🪟️ Hand-written Direct3D 12 backend for Windows.
 //!
 //! Implements [`ui_render::GraphicsBackend`] for this platform. Everything above it — the element
 //! pipeline, layout, `Scene::finish`, the `RenderPacket` — is platform-neutral and shared, so this

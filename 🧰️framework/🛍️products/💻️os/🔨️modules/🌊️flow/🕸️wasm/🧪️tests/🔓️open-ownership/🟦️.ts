@@ -37,5 +37,4 @@ export async function testFlowOpenOwnership(fixture: FlowOpenFailureFixture): Pr
   assert.deepEqual(uncertainBridge.closedSessionSlots, [1]);
   assert.equal(uncertainBridge.globalCloseCalls, fixture.uncertainTransport.globalCloseCalls);
   assert.equal(uncertainRuntime.terminalIsEmpty(), fixture.uncertainTransport.terminal);
-  console.log("[DEBUG] Flow open rejection released only its verified pre-admission entry; an uncertain admitted open remained owned through exact global terminal close");
 }

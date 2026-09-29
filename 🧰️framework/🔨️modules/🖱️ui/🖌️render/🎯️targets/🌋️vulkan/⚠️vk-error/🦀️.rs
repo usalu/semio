@@ -1,4 +1,4 @@
-//! @emoji ⚠️ `vk::Result` → `ui_render::BackendError` classification, kept as one pure function so
+//! ⚠️ `vk::Result` → `ui_render::BackendError` classification, kept as one pure function so
 //! every call site (`crate::backend`, `crate::resources`) reports errors the same way instead of
 //! hand-rolling a `match` per call site. Pure over a `vk::Result` value — testable without a device or
 //! loader (ticket TESTS section: "VkResult classification").

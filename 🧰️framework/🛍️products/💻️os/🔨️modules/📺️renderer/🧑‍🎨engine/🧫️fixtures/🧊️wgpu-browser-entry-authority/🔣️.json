@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "entries": [
-    { "id": "frame-worker", "sourceRelativePath": "🎞️frame-worker/🟦️.ts", "outputRelativePath": "🎞️frame-worker/🤖️generated/🟨️.js", "inclusion": "tracked" },
+    { "id": "frame-worker", "sourceRelativePath": "🎞️frame-worker/🟦️.ts", "outputRelativePath": "🎞️frame-worker/🤖️generated/🟨️.js", "inclusion": "ignored" },
     { "id": "browser-boot", "sourceRelativePath": "🚀️browser-boot/🟦️.ts", "outputRelativePath": "🚀️browser-boot/🤖️generated/🟨️.js", "inclusion": "ignored" }
   ],
   "browserImports": [

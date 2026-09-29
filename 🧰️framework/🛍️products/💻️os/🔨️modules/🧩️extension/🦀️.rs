@@ -2,7 +2,8 @@
 //! deterministic deflate zip (`🛂️manifest.semio` + `component.wasm` + optional `assets/`).
 
 use std::collections::BTreeMap;
-use std::io::{Cursor, Read, Seek, Write};
+
+use semio_framework_deflate::zip_archive::{ZipArchive, ZipArchiveError, ZipWriter};
 
 use crate::os_semio::{unwrap_binary, wrap_binary, Component, SemioEnvelope, SemioError};
 
@@ -12,8 +13,7 @@ use crate::os_semio::{unwrap_binary, wrap_binary, Component, SemioEnvelope, Semi
 pub enum ExtensionPackageError {
     Envelope(SemioError),
     UnexpectedEnvelope(String),
-    Zip(zip::result::ZipError),
-    Io(std::io::Error),
+    Zip(ZipArchiveError),
     ManifestJson(String),
     MissingEntry(String),
     InvalidPackageFormat(u16),
@@ -26,7 +26,6 @@ impl std::fmt::Display for ExtensionPackageError {
             Self::Envelope(error) => write!(formatter, "semio envelope error: {error}"),
             Self::UnexpectedEnvelope(envelope) => write!(formatter, "unexpected extension package envelope: {envelope}"),
             Self::Zip(error) => write!(formatter, "zip error: {error}"),
-            Self::Io(error) => write!(formatter, "io error: {error}"),
             Self::ManifestJson(error) => write!(formatter, "manifest json error: {error}"),
             Self::MissingEntry(entry) => write!(formatter, "missing zip entry: {entry}"),
             Self::InvalidPackageFormat(version) => write!(formatter, "invalid package format version: {version}"),
@@ -40,7 +39,6 @@ impl std::error::Error for ExtensionPackageError {
         match self {
             Self::Envelope(error) => Some(error),
             Self::Zip(error) => Some(error),
-            Self::Io(error) => Some(error),
             _ => None,
         }
     }
@@ -52,15 +50,12 @@ impl From<SemioError> for ExtensionPackageError {
     }
 }
 
-impl From<zip::result::ZipError> for ExtensionPackageError {
-    fn from(error: zip::result::ZipError) -> Self {
-        Self::Zip(error)
-    }
-}
-
-impl From<std::io::Error> for ExtensionPackageError {
-    fn from(error: std::io::Error) -> Self {
-        Self::Io(error)
+impl From<ZipArchiveError> for ExtensionPackageError {
+    fn from(error: ZipArchiveError) -> Self {
+        match error {
+            ZipArchiveError::MissingEntry(name) => Self::MissingEntry(name),
+            other => Self::Zip(other),
+        }
     }
 }
 
@@ -218,22 +213,8 @@ pub async fn extension_package_envelope() -> SemioEnvelope {
 //#endregion 🔖️Package
 
 //#region 🔖️Zip
-async fn zip_file_options() -> zip::write::SimpleFileOptions {
-    zip::write::SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated).last_modified_time(zip::DateTime::default())
-}
-
-async fn write_zip_file<W: Write + Seek>(writer: &mut zip::ZipWriter<W>, name: &str, bytes: &[u8], options: zip::write::SimpleFileOptions) -> Result<(), ExtensionPackageError> {
-    writer.start_file(name, options)?;
-    writer.write_all(bytes)?;
-    Ok(())
-}
-
-async fn read_zip_entry<R: Read + Seek>(archive: &mut zip::ZipArchive<R>, name: &str) -> Result<Vec<u8>, ExtensionPackageError> {
-    let mut file = archive.by_name(name).map_err(|_| ExtensionPackageError::MissingEntry(name.into()))?;
-    let mut bytes = Vec::new();
-    file.read_to_end(&mut bytes)?;
-    Ok(bytes)
-}
+/// 📏️ The largest single entry an `.sxt` package may inflate to (a wasip2 component with its assets stays far below).
+const MAX_PACKAGE_ENTRY_BYTES: usize = 256 * 1024 * 1024;
 
 async fn build_zip_payload(manifest: &ExtensionPackageManifest, component_wasm: &[u8], assets: &[(String, Vec<u8>)]) -> Result<Vec<u8>, ExtensionPackageError> {
     if component_wasm.is_empty() {
@@ -242,55 +223,36 @@ async fn build_zip_payload(manifest: &ExtensionPackageManifest, component_wasm: 
     if manifest.package_format != EXTENSION_PACKAGE_FORMAT {
         return Err(ExtensionPackageError::InvalidPackageFormat(manifest.package_format));
     }
-
-    let mut writer = zip::ZipWriter::new(Cursor::new(Vec::new()));
-    // 🪡️ `SimpleFileOptions` is `Copy` (zip 2.x `write.rs`); `options` is awaited exactly ONCE here
-    // and reused by value below — the original awaited the same future 3 times, E0382 (R10 residue #2).
-    let options = zip_file_options().await;
-    let manifest_bytes = crate::os_pack::json::to_string(&manifest.to_json()).into_bytes();
-    write_zip_file(&mut writer, MANIFEST_ENTRY, &manifest_bytes, options).await?;
-    write_zip_file(&mut writer, COMPONENT_ENTRY, component_wasm, options).await?;
-
+    let mut writer = ZipWriter::new();
+    writer.add(MANIFEST_ENTRY, crate::os_pack::json::to_string(&manifest.to_json()).as_bytes())?;
+    writer.add(COMPONENT_ENTRY, component_wasm)?;
     let mut sorted_assets: Vec<&(String, Vec<u8>)> = assets.iter().collect();
     sorted_assets.sort_by(|a, b| a.0.cmp(&b.0));
     for (name, bytes) in sorted_assets {
         let entry = if name.starts_with(ASSETS_PREFIX) { name.clone() } else { format!("{ASSETS_PREFIX}{name}") };
-        write_zip_file(&mut writer, &entry, bytes, options).await?;
+        writer.add(&entry, bytes)?;
     }
-
-    Ok(writer.finish()?.into_inner())
+    Ok(writer.finish()?)
 }
 
 async fn parse_zip_payload(payload: &[u8]) -> Result<ExtensionPackage, ExtensionPackageError> {
-    let mut archive = zip::ZipArchive::new(Cursor::new(payload))?;
-    let manifest_bytes = read_zip_entry(&mut archive, MANIFEST_ENTRY).await?;
+    let archive = ZipArchive::parse(payload)?;
+    let manifest_bytes = archive.read(MANIFEST_ENTRY, MAX_PACKAGE_ENTRY_BYTES)?;
     let manifest_json = crate::os_pack::json::parse_bytes(&manifest_bytes).map_err(|error| ExtensionPackageError::ManifestJson(error.to_string()))?;
     let manifest = ExtensionPackageManifest::from_json(&manifest_json).map_err(ExtensionPackageError::ManifestJson)?;
     if manifest.package_format != EXTENSION_PACKAGE_FORMAT {
         return Err(ExtensionPackageError::InvalidPackageFormat(manifest.package_format));
     }
-    let component_wasm = read_zip_entry(&mut archive, COMPONENT_ENTRY).await?;
+    let component_wasm = archive.read(COMPONENT_ENTRY, MAX_PACKAGE_ENTRY_BYTES)?;
     if component_wasm.is_empty() {
         return Err(ExtensionPackageError::EmptyComponent);
     }
-
     let mut assets = BTreeMap::new();
-    for index in 0..archive.len() {
-        let mut file = archive.by_index(index)?;
-        let name = file.name().to_string();
-        if name == MANIFEST_ENTRY || name == COMPONENT_ENTRY || name.ends_with('/') {
-            continue;
-        }
-        if let Some(relative) = name.strip_prefix(ASSETS_PREFIX) {
-            if relative.is_empty() {
-                continue;
-            }
-            let mut bytes = Vec::new();
-            file.read_to_end(&mut bytes)?;
-            assets.insert(relative.to_string(), bytes);
+    for entry in archive.entries() {
+        if let Some(relative) = entry.name.strip_prefix(ASSETS_PREFIX).filter(|relative| !relative.is_empty() && !entry.name.ends_with('/')) {
+            assets.insert(relative.to_string(), archive.read_entry(entry, MAX_PACKAGE_ENTRY_BYTES)?);
         }
     }
-
     Ok(ExtensionPackage { manifest, component_wasm, assets })
 }
 

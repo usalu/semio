@@ -1,13 +1,12 @@
 // #region 🧲️Header
-/** @emoji 🧮️ `@semio-tech/cad-js/spatial-kernel/preview` — kernel-agnostic pure-TS preview math and `Model` diff builders shared by every `SpatialKernel` (`🧠️semio`, `🧱️brepjs` oracle). Moved out of `🧱️brepjs/🟦️.ts` verbatim in ticket 26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME W4-A so the first-party kernel does not import brepjs to get it. */
+/** 🧮️ `@semio-tech/cad-js/spatial-kernel/preview` — kernel-agnostic pure-TS preview math and `Model` diff builders shared by every `SpatialKernel` (`🧠️semio`, `🧱️brepjs` oracle). Moved out of `🧱️brepjs/🟦️.ts` verbatim in ticket 26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME W4-A so the first-party kernel does not import brepjs to get it. */
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
 import { kernelGeometry, type EdgeCurve, type MeshTransfer, type Vec3 } from "@semio-tech/s-3d-js";
 export { kernelGeometry };
 import { Model } from "../📐️geometry/🟦️.ts";
-import { type ActionResult, executeActionCapability } from "../../../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️.ts";
-import type { ModelDiff, SpatialKernel, SpatialPreviewKernel } from "../🗺️spatial/🟦️.ts";
+import type { ModelDiff, SpatialPreviewKernel } from "../🗺️spatial/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🧱️kernelGeometry
@@ -41,7 +40,7 @@ type KernelGeomBuckets = {
 
 type ModelWithGeom = Model & { readonly geometry?: KernelGeomBuckets };
 
-/** @emoji 🧱️ Resolves kernel-private brep buckets (`model.geometry` on `Model`, else flat graph fields). */
+/** 🧱️ Resolves kernel-private brep buckets (`model.geometry` on `Model`, else flat graph fields). */
 export function geom(model: Model): KernelGeomBuckets {
   const g = (model as ModelWithGeom).geometry;
   if (g) return g;
@@ -54,38 +53,38 @@ export function vec3Add(a: Vec3, b: Vec3): Vec3 {
   return [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
 }
 
-/** @emoji 📏️ `a-b` component-wise for `Vec3`. */
+/** 📏️ `a-b` component-wise for `Vec3`. */
 export function vec3Sub(a: Vec3, b: Vec3): Vec3 {
   return [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
 }
 
-/** @emoji 📏️ Scales a `Vec3` by scalar `s`. */
+/** 📏️ Scales a `Vec3` by scalar `s`. */
 export function vec3Scale(a: Vec3, s: number): Vec3 {
   return [a[0] * s, a[1] * s, a[2] * s];
 }
 
-/** @emoji 📏️ Dot product of two `Vec3`. */
+/** 📏️ Dot product of two `Vec3`. */
 export function vec3Dot(a: Vec3, b: Vec3): number {
   return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 }
 
-/** @emoji 📏️ Cross product `a×b`. */
+/** 📏️ Cross product `a×b`. */
 export function vec3Cross(a: Vec3, b: Vec3): Vec3 {
   return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
 }
 
-/** @emoji 📏️ Euclidean length of `Vec3`. */
+/** 📏️ Euclidean length of `Vec3`. */
 export function vec3Length(a: Vec3): number {
   return Math.hypot(a[0], a[1], a[2]);
 }
 
-/** @emoji 📏️ Euclidean distance between two `Vec3`. */
+/** 📏️ Euclidean distance between two `Vec3`. */
 export function vec3Distance(a: Vec3, b: Vec3): number {
   return vec3Length(vec3Sub(b, a));
 }
 
-/** @emoji 📏️ Normalizes to unit length when non-zero; otherwise returns `[0,0,1]`. */
-/** @emoji ↕️ Rhino Move constraint: free 3D, Vertical (CPlane Z), Normal (along `cplaneNormal`). */
+/** 📏️ Normalizes to unit length when non-zero; otherwise returns `[0,0,1]`. */
+/** ↕️ Rhino Move constraint: free 3D, Vertical (CPlane Z), Normal (along `cplaneNormal`). */
 export function constrainMovePoint(from: Vec3, to: Vec3, mode: string, cplaneNormal: Vec3 = [0, 0, 1]): Vec3 {
   const m = mode === "vertical" || mode === "normal" ? mode : "free";
   if (m === "free") return to;
@@ -104,7 +103,7 @@ export function vec3Normalize(a: Vec3): Vec3 {
 // #endregion 🧮️Vec
 
 // #region 🌀️EdgeGeometry
-/** @emoji 🔵️ Plane frame for a circular arc through `start` and `end` about `center` (CCW in `u×v`). */
+/** 🔵️ Plane frame for a circular arc through `start` and `end` about `center` (CCW in `u×v`). */
 export interface ArcPlaneFrame {
   readonly center: Vec3;
   readonly radius: number;
@@ -113,7 +112,7 @@ export interface ArcPlaneFrame {
   readonly v: Vec3;
 }
 
-/** @emoji 🔵️ Builds arc plane basis; `null` when radius vanishes. */
+/** 🔵️ Builds arc plane basis; `null` when radius vanishes. */
 export function arcPlaneFrame(center: Vec3, start: Vec3, end: Vec3): ArcPlaneFrame | null {
   const rs = vec3Sub(start, center);
   const re = vec3Sub(end, center);
@@ -127,7 +126,7 @@ export function arcPlaneFrame(center: Vec3, start: Vec3, end: Vec3): ArcPlaneFra
   return { center, radius, normal, u, v };
 }
 
-/** @emoji 🔵️ Positive CCW sweep radians from `start` to `end` in the arc plane. */
+/** 🔵️ Positive CCW sweep radians from `start` to `end` in the arc plane. */
 export function arcSweepRadians(frame: ArcPlaneFrame, end: Vec3): number {
   const re = vec3Sub(end, frame.center);
   let sweep = Math.atan2(vec3Dot(re, frame.v), vec3Dot(re, frame.u));
@@ -136,7 +135,7 @@ export function arcSweepRadians(frame: ArcPlaneFrame, end: Vec3): number {
   return sweep;
 }
 
-/** @emoji 🔵️ Tessellates a circular arc through `start` and `end` about `center` (positive CCW sweep). */
+/** 🔵️ Tessellates a circular arc through `start` and `end` about `center` (positive CCW sweep). */
 export function arcSamplePoints(center: Vec3, start: Vec3, end: Vec3, segments = 32): readonly Vec3[] {
   const frame = arcPlaneFrame(center, start, end);
   if (!frame) return [start, end];
@@ -150,7 +149,7 @@ export function arcSamplePoints(center: Vec3, start: Vec3, end: Vec3, segments =
   return pts;
 }
 
-/** @emoji 🔵️ Plane frame from center and one on-circle point (Z-up fallback when chord is vertical). */
+/** 🔵️ Plane frame from center and one on-circle point (Z-up fallback when chord is vertical). */
 export function arcFrameFromRadiusPoint(center: Vec3, onCircle: Vec3): ArcPlaneFrame | null {
   const rs = vec3Sub(onCircle, center);
   const radius = vec3Length(rs);
@@ -163,7 +162,7 @@ export function arcFrameFromRadiusPoint(center: Vec3, onCircle: Vec3): ArcPlaneF
   return { center, radius, normal, u, v };
 }
 
-/** @emoji 🔵️ On-circle arc end from pick direction (same sweep as preview / `arcSamplePoints`, not raw cursor). */
+/** 🔵️ On-circle arc end from pick direction (same sweep as preview / `arcSamplePoints`, not raw cursor). */
 export function arcEndOnCircle(center: Vec3, start: Vec3, pick: Vec3): Vec3 {
   const frame = arcPlaneFrame(center, start, pick);
   if (!frame) return pick;
@@ -171,7 +170,7 @@ export function arcEndOnCircle(center: Vec3, start: Vec3, pick: Vec3): Vec3 {
   return vec3Add(frame.center, vec3Add(vec3Scale(frame.u, frame.radius * Math.cos(sweep)), vec3Scale(frame.v, frame.radius * Math.sin(sweep))));
 }
 
-/** @emoji 🔵️ End point on arc at `angleDeg` from `start` about `center`. */
+/** 🔵️ End point on arc at `angleDeg` from `start` about `center`. */
 export function arcEndFromAngle(center: Vec3, start: Vec3, angleDeg: number): Vec3 | null {
   const frame = arcFrameFromRadiusPoint(center, start);
   if (!frame) return null;
@@ -179,7 +178,7 @@ export function arcEndFromAngle(center: Vec3, start: Vec3, angleDeg: number): Ve
   return vec3Add(frame.center, vec3Add(vec3Scale(frame.u, frame.radius * Math.cos(radians)), vec3Scale(frame.v, frame.radius * Math.sin(radians))));
 }
 
-/** @emoji ⭕️ Tessellates a full circle on plane `normal` through `center`. */
+/** ⭕️ Tessellates a full circle on plane `normal` through `center`. */
 export function circleSamplePoints(center: Vec3, normal: Vec3, radius: number, segments = 64): readonly Vec3[] {
   const frame = arcFrameFromRadiusPoint(center, vec3Add(center, vec3Scale(vec3Normalize(normal), radius)));
   if (!frame) return [center];
@@ -192,7 +191,7 @@ export function circleSamplePoints(center: Vec3, normal: Vec3, radius: number, s
   return pts;
 }
 
-/** @emoji 🥚️ Tessellates an ellipse in the plane of `normal` / `majorAxis`. */
+/** 🥚️ Tessellates an ellipse in the plane of `normal` / `majorAxis`. */
 export function ellipseSamplePoints(center: Vec3, normal: Vec3, majorAxis: Vec3, majorRadius: number, minorRadius: number, segments = 64): readonly Vec3[] {
   const u = vec3Normalize(majorAxis);
   const v = vec3Normalize(vec3Cross(normal, u));
@@ -205,7 +204,7 @@ export function ellipseSamplePoints(center: Vec3, normal: Vec3, majorAxis: Vec3,
   return pts;
 }
 
-/** @emoji 📈️ Centripetal Catmull–Rom samples through `poles` (display / length estimate for nurbs curves). */
+/** 📈️ Centripetal Catmull–Rom samples through `poles` (display / length estimate for nurbs curves). */
 export function nurbsDisplaySamplePoints(poles: readonly Vec3[], segmentsPerSpan = 12): readonly Vec3[] {
   if (poles.length < 2) return poles;
   if (poles.length === 2) return poles;
@@ -232,14 +231,14 @@ export function nurbsDisplaySamplePoints(poles: readonly Vec3[], segmentsPerSpan
   return pts;
 }
 
-/** @emoji 📏️ Polyline length from sampled points. */
+/** 📏️ Polyline length from sampled points. */
 export function polylineLength(points: readonly Vec3[]): number {
   let len = 0;
   for (let i = 1; i < points.length; i++) len += vec3Distance(points[i - 1]!, points[i]!);
   return len;
 }
 
-/** @emoji 📏️ Curve length from edge curve + boundary vertices (tessellated where non-linear). */
+/** 📏️ Curve length from edge curve + boundary vertices (tessellated where non-linear). */
 export function edgeCurveLength(curve: EdgeCurve | undefined, ends: readonly Vec3[]): number {
   if (ends.length < 2) return 0;
   const c = curve ?? { kind: "line" as const };
@@ -258,7 +257,7 @@ export function edgeCurveLength(curve: EdgeCurve | undefined, ends: readonly Vec
   return vec3Distance(ends[0]!, ends[1]!);
 }
 
-/** @emoji 🔵️ Samples points along an edge (exact curve tessellation, not vertex chord). */
+/** 🔵️ Samples points along an edge (exact curve tessellation, not vertex chord). */
 export function edgeSamplePoints(vertices: Readonly<Record<string, VertexRecord>>, edge: EdgeRecord, segments = 32): readonly Vec3[] {
   const ends = edge.vertexIds.map((id) => vertices[String(id)]?.position).filter((p): p is Vec3 => Boolean(p));
   if (ends.length < 1) return ends;
@@ -279,14 +278,14 @@ export function edgeSamplePoints(vertices: Readonly<Record<string, VertexRecord>
   return ends.length >= 2 ? ends : ends;
 }
 
-/** @emoji ⭕️ Circle params from center and one on-circle point. */
+/** ⭕️ Circle params from center and one on-circle point. */
 export function circleFromCenterRadiusPoint(center: Vec3, radiusPoint: Vec3): { readonly center: Vec3; readonly normal: Vec3; readonly radius: number } | null {
   const frame = arcFrameFromRadiusPoint(center, radiusPoint);
   if (!frame) return null;
   return { center, normal: frame.normal, radius: frame.radius };
 }
 
-/** @emoji 📈️ Builds `EdgeCurve` nurbs from poles (`through` = interpolation points, else B-spline control points). */
+/** 📈️ Builds `EdgeCurve` nurbs from poles (`through` = interpolation points, else B-spline control points). */
 export function nurbsCurveFromPoles(poles: readonly Vec3[], through = false): EdgeCurve | null {
   if (poles.length < 2) return null;
   const degree = Math.min(3, poles.length - 1);
@@ -371,7 +370,7 @@ function orthonormalBasis(normal: Vec3): { readonly u: Vec3; readonly v: Vec3 } 
   return { u, v };
 }
 
-function faceNormalFromPoints(points: readonly Vec3[]): Vec3 | null {
+export function faceNormalFromPoints(points: readonly Vec3[]): Vec3 | null {
   if (points.length < 3) return null;
   for (let i = 2; i < points.length; i++) {
     const normal = vec3Cross(vec3Sub(points[i - 1]!, points[0]!), vec3Sub(points[i]!, points[0]!));
@@ -527,7 +526,7 @@ export function evaluateAnchorPosition(model: Model, anchor: AnchorRecord): Vec3
   return pointOnSolidAt(model, anchor.attachment.id, anchor.attachment.u, anchor.attachment.v, anchor.attachment.w) ?? anchor.position;
 }
 
-/** @emoji ⚓️ Resolves anchor placement on a model entity from a pick point. */
+/** ⚓️ Resolves anchor placement on a model entity from a pick point. */
 export function anchorPlacementFromEntity(model: Model, kind: AnchorAttachment["kind"], id: string, point: Vec3): { readonly position: Vec3; readonly attachment: AnchorAttachment } | null {
   if (kind === "vertex") {
     const vertex = geom(model).vertices[id];
@@ -600,7 +599,7 @@ export function meshFaceModelDiff(mesh: MeshTransfer, idTag: string): ModelDiff 
   };
 }
 
-/** @emoji 📦️ Full axis-aligned box model: 8 vertices, 12 edges, 6 wires, 6 faces, one shell, one solid. */
+/** 📦️ Full axis-aligned box model: 8 vertices, 12 edges, 6 wires, 6 faces, one shell, one solid. */
 export function boxModelDiff(input: { cornerA: Vec3; cornerB: Vec3; height: number }, solid: SolidRef): ModelDiff {
   const ax = Math.min(input.cornerA[0], input.cornerB[0]);
   const ay = Math.min(input.cornerA[1], input.cornerB[1]);
@@ -731,7 +730,7 @@ export function solidPrimitiveAabb(solid: SolidPrimitive): { readonly min: Vec3;
   };
 }
 
-/** @emoji 📐️ Axis-aligned bounds of a solid from shell vertices when present, else analytic `SolidPrimitive`. */
+/** 📐️ Axis-aligned bounds of a solid from shell vertices when present, else analytic `SolidPrimitive`. */
 export function modelObjectAabb(model: Model, solid: SolidRecord): { readonly min: Vec3; readonly max: Vec3 } | null {
   const points = derivedSolidPoints(model, solid);
   if (points.length === 0) return solid.solid ? solidPrimitiveAabb(solid.solid) : null;
@@ -758,7 +757,7 @@ export function modelObjectAabb(model: Model, solid: SolidRecord): { readonly mi
 
 type Aabb = { readonly min: Vec3; readonly max: Vec3 };
 
-/** @emoji 📐️ Eight corners of an axis-aligned box. */
+/** 📐️ Eight corners of an axis-aligned box. */
 export function aabbCornerPoints(min: Vec3, max: Vec3): readonly Vec3[] {
   return [
     [min[0], min[1], min[2]],
@@ -772,7 +771,7 @@ export function aabbCornerPoints(min: Vec3, max: Vec3): readonly Vec3[] {
   ];
 }
 
-/** @emoji 📐️ Overlap of two axis-aligned bounds (or `null`). */
+/** 📐️ Overlap of two axis-aligned bounds (or `null`). */
 export function aabbIntersect(a: Aabb, b: Aabb): Aabb | null {
   const min: Vec3 = [Math.max(a.min[0], b.min[0]), Math.max(a.min[1], b.min[1]), Math.max(a.min[2], b.min[2])];
   const max: Vec3 = [Math.min(a.max[0], b.max[0]), Math.min(a.max[1], b.max[1]), Math.min(a.max[2], b.max[2])];
@@ -780,7 +779,7 @@ export function aabbIntersect(a: Aabb, b: Aabb): Aabb | null {
   return { min, max };
 }
 
-function derivedFacePoints(model: Model, face: FaceRecord): readonly Vec3[] {
+export function derivedFacePoints(model: Model, face: FaceRecord): readonly Vec3[] {
   const points = face.wireIds.flatMap((wireId) => {
     const wire = geom(model).wires[wireId];
     return (wire?.edgeIds ?? []).flatMap((edgeId) => {
@@ -808,7 +807,7 @@ function derivedSolidPoints(model: Model, cell: SolidRecord): readonly Vec3[] {
   return [...new Map(points.map((p) => [p.join(","), p])).values()];
 }
 
-function aabbVolume(a: Aabb): number {
+export function aabbVolume(a: Aabb): number {
   return Math.max(0, a.max[0] - a.min[0]) * Math.max(0, a.max[1] - a.min[1]) * Math.max(0, a.max[2] - a.min[2]);
 }
 
@@ -833,7 +832,7 @@ function aabbUnionVolume(boxes: readonly Aabb[]): number {
   return Math.max(0, total);
 }
 
-/** @emoji 📐️ Exact volume of `solid ∩ ⋃ cutters` for axis-aligned bounds (shape-invariant part split). */
+/** 📐️ Exact volume of `solid ∩ ⋃ cutters` for axis-aligned bounds (shape-invariant part split). */
 export function aabbOverlapUnionVolume(cell: Aabb, cutters: readonly Aabb[]): number {
   const pieces: Aabb[] = [];
   for (const cutter of cutters) {
@@ -868,7 +867,7 @@ function aabbSubtractSingle(cell: Aabb, hole: Aabb, eps = 1e-9): Aabb[] {
   return out.filter((p) => aabbVolume(p) > eps);
 }
 
-/** @emoji 📐️ Axis-aligned pieces of `solid \\ ⋃(solid ∩ cutter)` (volumetric difference decomposition). */
+/** 📐️ Axis-aligned pieces of `solid \\ ⋃(solid ∩ cutter)` (volumetric difference decomposition). */
 export function aabbDifferencePieces(cell: Aabb, cutters: readonly Aabb[], volEps = 1e-6): Aabb[] {
   let pieces: Aabb[] = [cell];
   for (const cutter of cutters) {
@@ -880,7 +879,7 @@ export function aabbDifferencePieces(cell: Aabb, cutters: readonly Aabb[], volEp
   }
   return pieces;
 }
-function readVec3(v: unknown): Vec3 | null {
+export function readVec3(v: unknown): Vec3 | null {
   if (Array.isArray(v) && v.length === 3 && v.every((x) => typeof x === "number")) return v as unknown as Vec3;
   return null;
 }
@@ -890,7 +889,7 @@ function readVec3Array(v: unknown): readonly Vec3[] {
   return v.filter((p): p is Vec3 => Array.isArray(p) && p.length === 3 && p.every((x) => typeof x === "number"));
 }
 
-/** @emoji 📐️ Center and axis-aligned scale for a unit box from footprint corners and height. */
+/** 📐️ Center and axis-aligned scale for a unit box from footprint corners and height. */
 export function computeBoxPreviewLayout(cornerA: Vec3, cornerB: Vec3, height: number): { readonly position: Vec3; readonly scale: Vec3 } {
   const ax = Math.min(cornerA[0], cornerB[0]);
   const ay = Math.min(cornerA[1], cornerB[1]);
@@ -909,7 +908,7 @@ export function computeBoxPreviewLayout(cornerA: Vec3, cornerB: Vec3, height: nu
   };
 }
 
-/** @emoji 📦️ Axis-aligned bounds from points (optional padding). */
+/** 📦️ Axis-aligned bounds from points (optional padding). */
 export function aabbFromPoints(points: readonly Vec3[], pad = 0): Aabb | null {
   if (!points.length) return null;
   let minX = points[0]![0];
@@ -932,7 +931,7 @@ export function aabbFromPoints(points: readonly Vec3[], pad = 0): Aabb | null {
   };
 }
 
-/** @emoji 🖼️ Maps declarative previewKind + params to a point transform for model wireframes. */
+/** 🖼️ Maps declarative previewKind + params to a point transform for model wireframes. */
 export function transformPointsForPreviewKind(previewKind: string, params: Record<string, unknown>): (point: Vec3) => Vec3 {
   const identity = (point: Vec3) => point;
   const cursor = readVec3(params.cursor);
@@ -1013,7 +1012,7 @@ function kernelFacePoints(model: Model, face: FaceRecord): readonly Vec3[] {
   return [...new Map(pts.map((p) => [p.join(","), p])).values()];
 }
 
-/** @emoji 📍️ Face vertex centroid for preview primitive operations. */
+/** 📍️ Face vertex centroid for preview primitive operations. */
 export function faceCentroid(model: Model, face: FaceRecord): Vec3 | null {
   const pts = kernelFacePoints(model, face);
   if (!pts.length) return null;
@@ -1039,7 +1038,7 @@ function kernelFaceNormalFromId(faceId: string): Vec3 | null {
   return null;
 }
 
-/** @emoji 📐️ Unit face normal from surface or boundary winding. */
+/** 📐️ Unit face normal from surface or boundary winding. */
 export function faceNormal(model: Model, face: FaceRecord): Vec3 | null {
   if (face.surface?.kind === "plane") {
     const n = face.surface.normal;
@@ -1064,7 +1063,7 @@ export function faceNormal(model: Model, face: FaceRecord): Vec3 | null {
   return kernelFaceNormalFromId(String(face.id));
 }
 
-/** @emoji 🧱️ Face ids referenced by one solid shell graph. */
+/** 🧱️ Face ids referenced by one solid shell graph. */
 export function solidFaceIds(model: Model, solidId: string): readonly FaceRef[] {
   const g = geom(model);
   const solid = g.solids[solidId];
@@ -1103,7 +1102,7 @@ function kernelFacesAreContactPair(
   return sep <= maxSeparation;
 }
 
-/** @emoji 🧱️ Fuses stacked solids and returns external face ids plus hull solid ref. */
+/** 🧱️ Fuses stacked solids and returns external face ids plus hull solid ref. */
 export function fuseSolidsToExternalFaces(
   model: Model,
   solidRefs: readonly SolidRef[],
@@ -1139,7 +1138,7 @@ export function fuseSolidsToExternalFaces(
   return { hullSolid, externalFaces };
 }
 
-/** @emoji 📐️ Groups coplanar faces for merged object rows. */
+/** 📐️ Groups coplanar faces for merged object rows. */
 export function facePlaneGroupKey(normal: Vec3, centroid: Vec3): string {
   const ax = Math.abs(normal[0]);
   const ay = Math.abs(normal[1]);
@@ -1156,7 +1155,7 @@ export function facePlaneGroupKey(normal: Vec3, centroid: Vec3): string {
   return `y:${Math.round(centroid[1] * 1000)}:${sign}`;
 }
 
-/** @emoji 📏️ Projects `raw` onto the scalar axis; returns axis parameter `t` and closest point. */
+/** 📏️ Projects `raw` onto the scalar axis; returns axis parameter `t` and closest point. */
 export function projectPointOnScalarAxis(base: Vec3, axis: Vec3, raw: Vec3): { readonly projected: Vec3; readonly t: number } {
   const ax = axis[0];
   const ay = axis[1];
@@ -1172,7 +1171,7 @@ export function projectPointOnScalarAxis(base: Vec3, axis: Vec3, raw: Vec3): { r
   };
 }
 
-/** @emoji 📏️ Point at `height` along `axis` from `base` using signed axis parameter. */
+/** 📏️ Point at `height` along `axis` from `base` using signed axis parameter. */
 export function scalarTopOnAxis(base: Vec3, axis: Vec3, height: number, signedT: number): Vec3 {
   const ax = axis[0];
   const ay = axis[1];
@@ -1185,7 +1184,7 @@ export function scalarTopOnAxis(base: Vec3, axis: Vec3, height: number, signedT:
   return [base[0] + ux * height * sign, base[1] + uy * height * sign, base[2] + uz * height * sign];
 }
 
-/** @emoji 📏️ Clamps `target` to `length` units from `anchor` along the anchor→target ray. */
+/** 📏️ Clamps `target` to `length` units from `anchor` along the anchor→target ray. */
 export function clampPointAlongDirection(anchor: Vec3, target: Vec3, length: number): Vec3 {
   const dx = target[0] - anchor[0];
   const dy = target[1] - anchor[1];
@@ -1197,7 +1196,7 @@ export function clampPointAlongDirection(anchor: Vec3, target: Vec3, length: num
 }
 // #endregion 🧱️PrimitivePreviewGeometry
 
-/** @emoji 🔌️ Precise `SpatialPreviewKernel` (delegates to module functions). */
+/** 🔌️ Precise `SpatialPreviewKernel` (delegates to module functions). */
 export class PreciseSpatialKernelMath implements SpatialPreviewKernel {
   vec3Add = vec3Add;
   vec3Sub = vec3Sub;
@@ -1252,24 +1251,6 @@ export class PreciseSpatialKernelMath implements SpatialPreviewKernel {
   cos = Math.cos;
   sin = Math.sin;
   randomTag = (prefix: string) => `${prefix}-${crypto.randomUUID().slice(0, 8)}`;
-
-  executeAction(
-    actionId: string,
-    params: Record<string, unknown>,
-    args: Record<string, unknown>,
-    ctx: {
-      readonly model: Model;
-      readonly preview: SpatialPreviewKernel;
-      readonly activeModelDefinitionId?: string | null;
-    },
-  ): Promise<ActionResult> | ActionResult {
-    return executeActionCapability(actionId, params, args, {
-      kernel: this as unknown as SpatialKernel,
-      preview: ctx.preview,
-      model: ctx.model,
-      activeModelDefinitionId: ctx.activeModelDefinitionId,
-    }) as Promise<ActionResult> | ActionResult;
-  }
 }
 
 export const preciseSpatialKernelMath = new PreciseSpatialKernelMath();

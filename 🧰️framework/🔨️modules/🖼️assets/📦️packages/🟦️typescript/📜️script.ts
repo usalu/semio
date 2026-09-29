@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** @emoji 🧬️ Routes deterministic catalog, metabolism, and animated logo tasks. */
+/** 🧬️ Routes deterministic catalog, metabolism, and animated logo tasks. */
 import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { renderCatalogArtifacts } from "../../🔣️icons/🏗️builder/📽️projection/🟦️.ts";
 import { renderMetabolismArtifacts } from "../../🌱️metabolism/🏗️builder/📽️projection/🟦️.ts";

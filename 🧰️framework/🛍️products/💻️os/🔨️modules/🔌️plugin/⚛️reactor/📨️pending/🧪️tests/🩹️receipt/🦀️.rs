@@ -63,7 +63,6 @@ fn reactor_issued_patch_ack_and_rejection_match_neutral_exact_tuple() {
             close(&mut pending);
         }
     }
-    eprintln!("[DEBUG] exact issued patch ACK/rejection neutral cases=20");
 }
 
 #[test]
@@ -84,9 +83,10 @@ fn reactor_issued_parallel_patch_slots_and_duplicate_ack_remain_independent() {
     assert_eq!(pending.slots.iter().flatten().filter(|slot| slot.issued.is_some()).count(), 1);
     assert!(pending.apply_issued_rejection(first, "7:window", 2, |_| unreachable!()));
     close(&mut pending);
-    eprintln!("[DEBUG] parallel issued patch slots preserve independent exact receipts");
 }
 
+/// 🧾️ A handed-back patch is one the host was NEVER handed, so no receipt may be staged against it
+/// until a later turn takes it out again — and when that turn does, it re-borrows the SAME slot.
 #[test]
 fn reactor_uncommitted_patch_handback_preserves_exact_slot_and_retry() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🩹️receipt.json")).unwrap();
@@ -98,8 +98,6 @@ fn reactor_uncommitted_patch_handback_preserves_exact_slot_and_retry() {
     pending.stage_emission(old, std::iter::once(&patch)).unwrap();
     assert!(!pending.apply_issued_ack(old, "7:window", 2, 65536, |_| unreachable!()).unwrap());
     pending.hand_back_turn(patch).unwrap();
-    // 🧾️ A handed-back patch is one the host was NEVER handed, so no receipt may be staged against it
-    // until a later turn takes it out again — and when that turn does, it re-borrows the SAME slot.
     assert_eq!(pending.borrowed_sequences().count(), 0);
     let patch = pending.take_one(65536).unwrap().unwrap();
     assert_eq!(pending.borrowed_sequences().collect::<Vec<_>>(), sequence);
@@ -109,7 +107,6 @@ fn reactor_uncommitted_patch_handback_preserves_exact_slot_and_retry() {
     assert!(!pending.apply_issued_ack(old, "7:window", 2, 65536, |_| unreachable!()).unwrap());
     assert!(pending.apply_issued_ack(current, "7:window", 2, 65536, |_| unreachable!()).unwrap());
     close(&mut pending);
-    eprintln!("[DEBUG] unpublished exact patch survives failed output and retry without ghost ACK");
 }
 
 #[test]
@@ -140,5 +137,4 @@ fn reactor_acknowledged_patch_slots_retire_without_instance_close() {
             assert!(!pending.has_unpublished());
         }
     }
-    eprintln!("[DEBUG] acknowledged patch slots recycle beyond full capacity without instance close");
 }

@@ -152,7 +152,7 @@ pub fn lowpoly_sun_config(config: &LowpolyConfig) -> WorldSunConfig {
 //#endregion 🔖️Config
 
 //#region 🔖️ConfigMutations
-/// @emoji 🧮️ B1: `LowpolyConfig`'s operation enum — one variant per settled interaction (mirrors the
+/// 🧮️ B1: `LowpolyConfig`'s operation enum — one variant per settled interaction (mirrors the
 /// pre-B1 `LowpolyPlayRuntime` field writes), plus a generic `Snapshot` every variant's `backwards()`
 /// returns — mirrors `shooting_op::ShootingConfigOperation`'s identical pattern: a config-only dispatch
 /// is always a plain `Apply` (never `AmendLast`), so "undo this tick" = "restore the whole-config

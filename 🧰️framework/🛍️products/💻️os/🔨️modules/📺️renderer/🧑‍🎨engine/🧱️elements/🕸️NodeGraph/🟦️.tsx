@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/NodeGraph/component.tsx
-/** @emoji 🕸️ `NodeGraph` — the node-graph/flow program scene host: wasm dag-engine canvas surface,
+/** 🕸️ `NodeGraph` — the node-graph/flow program scene host: wasm dag-engine canvas surface,
  * the flow-engine (React Flow) canvas host, the catalogue double-click spotlight, label/slider/marquee
  * canvas overlays shared by both engines, and the SSR-safe `Diagram`-based fallback. */
 // #endregion 🧲️Header
@@ -283,7 +283,7 @@ function publishNodeGraphHover(
 //#region Parsing
 const DEFAULT_NODE_GRAPH_VIEWPORT: Viewport2d = { x: 0, y: 0, zoom: 1 };
 
-/** @emoji 🔎️ Resolves a flow host snapshot widget id to the workflow instance id it previews, used to open an app instance without depending on plugin-side selection state. */
+/** 🔎️ Resolves a flow host snapshot widget id to the workflow instance id it previews, used to open an app instance without depending on plugin-side selection state. */
 export function resolveHostSnapshotWidgetInstanceId(hostSnapshotJson: string | undefined, widgetId: string | undefined | null): string | undefined {
   if (!hostSnapshotJson || !widgetId) return undefined;
   try {
@@ -302,7 +302,7 @@ export interface CatalogueAppDragPayload {
   readonly label?: string;
 }
 
-/** @emoji 🎯️ Parses a catalogue drag payload; returns null for non-catalogue-app payloads (garbage/legacy descriptors). */
+/** 🎯️ Parses a catalogue drag payload; returns null for non-catalogue-app payloads (garbage/legacy descriptors). */
 export function parseCatalogueAppDragPayload(raw: string): CatalogueAppDragPayload | null {
   try {
     const parsed = JSON.parse(raw) as { readonly pluginId?: string; readonly appId?: string; readonly label?: string };
@@ -313,7 +313,7 @@ export function parseCatalogueAppDragPayload(raw: string): CatalogueAppDragPaylo
   }
 }
 
-/** @emoji 👻️ Builds the ghost widget descriptor shown while a catalogue app is dragged over the workflow. */
+/** 👻️ Builds the ghost widget descriptor shown while a catalogue app is dragged over the workflow. */
 export function catalogueGhostDescriptorJson(payload: CatalogueAppDragPayload): string {
   return JSON.stringify({ kind: "neuron", neuronKind: payload.label ?? payload.appId });
 }
@@ -344,7 +344,7 @@ export type FlowCatalogueSection = {
   readonly groups?: readonly FlowCatalogueGroup[];
 };
 
-/** @emoji 🧩️ Builds an addWidget/setGhostWidget descriptor JSON from a catalogue row. */
+/** 🧩️ Builds an addWidget/setGhostWidget descriptor JSON from a catalogue row. */
 export function flowCatalogueItemDescriptor(item: FlowCatalogueItem): string {
   const descriptor: Record<string, string> = { kind: item.kind };
   if (item.kind === "inputSlider") descriptor.label = item.name;
@@ -381,7 +381,7 @@ function scoreFlowCatalogueItem(item: FlowCatalogueItem, query: string, sectionT
   return null;
 }
 
-/** @emoji 🔎️ Ranks catalogue items for the double-click spotlight (exact/prefix/substring; neurons first). */
+/** 🔎️ Ranks catalogue items for the double-click spotlight (exact/prefix/substring; neurons first). */
 export function flowRankCatalogueSuggestions(sections: readonly FlowCatalogueSection[], query: string): FlowCatalogueItem[] {
   const scored: { item: FlowCatalogueItem; score: number }[] = [];
   const walkGroup = (group: FlowCatalogueGroup, sectionTitle: string) => {
@@ -408,7 +408,7 @@ export function flowRankCatalogueSuggestions(sections: readonly FlowCatalogueSec
   return scored.map((row) => row.item);
 }
 
-/** @emoji 🔍️ Scroll container classes for expanded flow spotlight suggestions. */
+/** 🔍️ Scroll container classes for expanded flow spotlight suggestions. */
 export function flowSpotlightSuggestionListScrollClass(expanded: boolean): string {
   return cn("min-h-0 overscroll-contain", expanded ? "overflow-y-auto max-h-[min(24rem,70vh)]" : "overflow-hidden");
 }
@@ -428,7 +428,7 @@ type FlowSpotlightState = {
   readonly world: { readonly x: number; readonly y: number };
 };
 
-/** @emoji 🔦️ Inline catalogue search opened by double-clicking empty flow canvas; hover/top match drives highlighted ghost preview. */
+/** 🔦️ Inline catalogue search opened by double-clicking empty flow canvas; hover/top match drives highlighted ghost preview. */
 function FlowSpotlight({
   state,
   sections,
@@ -1928,7 +1928,7 @@ export function parseDagSliderOverlays(stateJson: string): readonly DagSliderOve
   }
 }
 
-/** @emoji 🔬️ One graph surface's geometry read-back, published as `window.__semioFlowGraphProbe[surfaceId]`.
+/** 🔬️ One graph surface's geometry read-back, published as `window.__semioFlowGraphProbe[surfaceId]`.
  * `entity` is {@link dagIntroductionResolver}'s own resolver — `"node"`, `"handle"` (a port), `"edge"`
  * and `"slider"` all resolve to viewport pixels — so a scripted caller can aim a pointer gesture at a
  * node or a port on a canvas that paints itself and has no per-entity DOM. */
@@ -1946,7 +1946,7 @@ export type FlowGraphSurfaceProbe = {
   readonly rect: () => { readonly x: number; readonly y: number; readonly width: number; readonly height: number } | null;
 };
 
-/** @emoji 🎯️ The subset of `FlowWasmSession`/`FrameworkGraphSession` {@link dagIntroductionResolver} needs
+/** 🎯️ The subset of `FlowWasmSession`/`FrameworkGraphSession` {@link dagIntroductionResolver} needs
  * — factored out because both session interfaces expose the same overlay/entity JSON shape and both host
  * components (`FlowGraphCanvasHost`, `WasmGraphSurface`) register the identical resolver logic. */
 type DagIntroductionSession = {
@@ -1955,7 +1955,7 @@ type DagIntroductionSession = {
   readonly entityScreenJson?: (domain: string, id: string) => string | FlowTask<unknown>;
 };
 
-/** @emoji 🎯️ Builds the `IntroductionSurfaceResolver` for a dag-engine-backed graph surface. Reads the
+/** 🎯️ Builds the `IntroductionSurfaceResolver` for a dag-engine-backed graph surface. Reads the
  * session and container via refs (not React state) every call — cheap, and lets registration skip
  * re-running whenever the surface re-renders. `entity`'s `"slider"` domain resolves entirely from the
  * already-fetched `sliderOverlayStateJson()` (no Rust round trip); every other domain (`"node"`,
@@ -2050,7 +2050,7 @@ export function dagOverlayLabelFill(nodeId: string, ghost: boolean, hoveredId: s
   return "var(--color-muted-foreground)";
 }
 
-/** @emoji 🎨️ Resolves {@link dagOverlayLabelFill} to a Canvas2D-safe `#rrggbb` — CSS `var()` strings are not valid `fillStyle` values and silently paint as black. */
+/** 🎨️ Resolves {@link dagOverlayLabelFill} to a Canvas2D-safe `#rrggbb` — CSS `var()` strings are not valid `fillStyle` values and silently paint as black. */
 export function dagOverlayLabelFillHex(nodeId: string, ghost: boolean, hoveredId: string | null, chrome: { readonly selectedIds: Set<string>; readonly highlightedIds: Set<string> }, dimmedIds: readonly string[] = []): string {
   const expression = dagOverlayLabelFill(nodeId, ghost, hoveredId, chrome, dimmedIds);
   const appearanceFallback = currentStylingAppearanceName() === "dark" ? "light" : "dark";
@@ -2098,7 +2098,7 @@ export function resizeCanvasBackingStore(canvas: HTMLCanvasElement | null | unde
   return changed;
 }
 
-/** @emoji 🏷️ Paints the node captions over the engine canvas. Captions are centred on the MEASURED overlay
+/** 🏷️ Paints the node captions over the engine canvas. Captions are centred on the MEASURED overlay
  * size, never on the session's reported `width`/`height`: the overlay is painted when the session is handed
  * over — before the engine canvas is attached and sized — and on later scene or interaction changes only,
  * so a static graph kept the 1×1 size the session reported at hand-over and drew every caption half a
@@ -2179,7 +2179,7 @@ export function parseDagSelectionUnionBoundsScreen(json: string): DagSelectionBo
   }
 }
 
-/** @emoji 🧿️ Normalizes one selection-preview point from the rust `[[x,y],…]` wire format or `{x,y}` objects. */
+/** 🧿️ Normalizes one selection-preview point from the rust `[[x,y],…]` wire format or `{x,y}` objects. */
 function parseDagMarqueePoint(value: unknown): { readonly x: number; readonly y: number } | null {
   if (Array.isArray(value) && value.length >= 2 && typeof value[0] === "number" && typeof value[1] === "number" && Number.isFinite(value[0]) && Number.isFinite(value[1])) {
     return { x: value[0], y: value[1] };
@@ -2192,7 +2192,7 @@ function parseDagMarqueePoint(value: unknown): { readonly x: number; readonly y:
   return null;
 }
 
-/** @emoji 🧿️ Rectangle wire format is always four axis-aligned corners; anything else is a lasso path. */
+/** 🧿️ Rectangle wire format is always four axis-aligned corners; anything else is a lasso path. */
 function inferDagMarqueeMethod(points: readonly { readonly x: number; readonly y: number }[]): "lasso" | "rectangle" {
   if (points.length !== 4) return points.length >= 3 ? "lasso" : "rectangle";
   const xs = new Set(points.map((point) => point.x));
@@ -2200,7 +2200,7 @@ function inferDagMarqueeMethod(points: readonly { readonly x: number; readonly y
   return xs.size === 2 && ys.size === 2 ? "rectangle" : "lasso";
 }
 
-/** @emoji 🧿️ Builds the shared `SelectionMarquee` overlay from board preview points (`[[x,y],…]` from rust). */
+/** 🧿️ Builds the shared `SelectionMarquee` overlay from board preview points (`[[x,y],…]` from rust). */
 export function computeDagMarqueeOverlay(pointsJson: string, crossing: boolean, method?: string): DagMarqueeOverlay | null {
   let raw: unknown;
   try {
@@ -2396,7 +2396,7 @@ export function SelectionAlignChrome({ bounds, onAlign }: { readonly bounds: Dag
 //#region 🔖️flow-graph-canvas-host
 
 //#region Sync
-// @emoji 🎥️ The camera is NEVER copied from `scene.viewport` on a resync: live pan/zoom lives in the
+// 🎥️ The camera is NEVER copied from `scene.viewport` on a resync: live pan/zoom lives in the
 // FlowWasmSession (and plugin runtime via `nodeGraphViewport`), while `scene.viewport` often lags.
 // Applying it on hover/eval/edit-triggered synchronization would snap the camera; document
 // preserves the live camera so fixture content reloads never reset the view. The ONE moment a
@@ -3219,7 +3219,7 @@ export function FlowGraphCanvasHost({
    * render leaves the canvas blank until the NEXT render completes uncancelled, so a burst of
    * invalidations (mount, ResizeObserver, scene sync, theme sync — all of which arrive together)
    * repeatedly emptied a canvas the engine had in fact painted. Measured live: `render_frame` ran on
-   * every invalidation (`[DEBUG] dag draw lod=detail zoom=1.784` repeating) while `renderFlowCanvas`
+   * every invalidation (`[TRACE] dag draw lod=detail zoom=1.784` repeating) while `renderFlowCanvas`
    * ran exactly once for the whole session. So an in-flight render is left alone and a request that
    * arrives during one is remembered and re-issued when it settles — at most one extra frame, never a
    * dropped one. */

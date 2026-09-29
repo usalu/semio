@@ -14,7 +14,7 @@ async fn b44_measures_what_one_command_costs_per_document_size() {
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("nakagin switch");
     let nakagin = latency_census(&mut app, "nakagin").await;
     for row in [&forest, &nakagin] {
-        eprintln!("[DEBUG] b44.native {row}");
+        eprintln!("b44.native {row}");
     }
     assert!(nakagin.objects > forest.objects, "the switch must actually grow the document under measurement");
 }
@@ -57,7 +57,6 @@ fn a_pose_edit_reserializes_and_names_exactly_the_objects_that_moved() {
     assert_eq!(changed[0].get("id").and_then(Value::as_str), Some(victim.as_str()), "and it is the moved one");
     assert_eq!(parsed.get("count").and_then(Value::as_u64), Some(fixture.objects.len() as u64), "the delta declares the resulting instance count so a consumer can prove its own set matches");
     assert_eq!(parsed.get("base").and_then(Value::as_u64).map(|base| base + 1), parsed.get("revision").and_then(Value::as_u64), "the delta names the revision it applies to and the one it produces");
-    eprintln!("[DEBUG] b44.delta moved={victim} deltaBytes={} fullBytes={full_bytes} rebuilt={}", delta.len(), residency.rebuilt_records());
 }
 
 /// 🧾️ Wave B44 LAW: the incremental residency and the whole-set serializer are the same function. The
@@ -110,13 +109,12 @@ fn a_mutation_emits_o_changed_operations_whatever_the_document_size() {
     let mut deleted = large.clone();
     let removed = deleted.objects.remove(0).id;
     let delete_operations = puzzle3d_snapshot_mutations(&before, &crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&deleted));
-    eprintln!("[DEBUG] b44.emit objects={} deleteOperations={} removed={removed}", large.objects.len(), delete_operations.len());
+    eprintln!("b44.emit objects={} deleteOperations={} removed={removed}", large.objects.len(), delete_operations.len());
     assert_eq!(delete_operations.len(), 1, "deleting the FIRST of {} objects must emit one operation, not rewrite the tail", large.objects.len());
 
     let mut moved = large.clone();
     moved.objects[0].origin[1] += 2.75;
     let move_operations = puzzle3d_snapshot_mutations(&before, &crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&moved));
-    eprintln!("[DEBUG] b44.emit objects={} moveOperations={}", large.objects.len(), move_operations.len());
     assert_eq!(move_operations.len(), 1, "moving one of {} objects must emit one operation", large.objects.len());
 
     let mut both = large.clone();
@@ -138,7 +136,7 @@ async fn b44_measures_the_turns_one_mutation_settles_in() {
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("nakagin switch");
     let large_objects = object_count(&app);
     let large = mutation_turns(&mut app).await;
-    eprintln!("[DEBUG] b44.turns small={small_objects}objects/{small}turns large={large_objects}objects/{large}turns");
+    eprintln!("b44.turns small={small_objects}objects/{small}turns large={large_objects}objects/{large}turns");
     assert!(large_objects > small_objects, "the two measurements must differ in document size");
 }
 
@@ -327,10 +325,8 @@ async fn turn_census(app: &mut Puzzle3dApp, label: &'static str) -> Puzzle3dTurn
 async fn b54_measures_the_turns_and_units_one_mutation_costs_per_document_size() {
     let mut app = app().await;
     let small = turn_census(&mut app, "concrete-forest").await;
-    eprintln!("[DEBUG] b54.turns {small}");
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("nakagin switch");
     let nakagin = turn_census(&mut app, "nakagin").await;
-    eprintln!("[DEBUG] b54.turns {nakagin}");
     assert!(nakagin.objects > small.objects, "the two measurements must differ in document size: {} / {}", small.objects, nakagin.objects);
 }
 
@@ -361,7 +357,6 @@ async fn one_mutation_publishes_in_a_bounded_size_independent_number_of_host_tur
     let small = turn_census(&mut app, "concrete-forest").await;
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("nakagin switch");
     let large = turn_census(&mut app, "nakagin").await;
-    eprintln!("[DEBUG] b54.law.turns small={small} large={large}");
     assert!(large.objects >= 100, "the law needs a document where O(1) and O(n) differ; got {}", large.objects);
     for census in [&small, &large] {
         assert!(
@@ -400,7 +395,6 @@ fn a_pose_edit_invalidates_the_precompute_derivation_of_o_changed_objects() {
     let moved = scene_config(&moved_fixture).expect("the moved document builds an engine scene");
     let invalidation = crate::editor::puzzle3d::precompute::Puzzle3dSceneInvalidation::between(&base, &moved);
     let vortices = large.fixture.objects[11].vortices.len();
-    eprintln!("[DEBUG] b54.invalidation objects={} moved=1 stale={} pending={} topology={} plan={}", large.fixture.objects.len(), invalidation.stale.len(), invalidation.pending.len(), invalidation.topology, invalidation.plan);
     assert!(!invalidation.plan, "a pose edit changes no fill-plan member, so it must not fall back to the whole-scene rebuild");
     assert!(!invalidation.topology, "a pose edit adds and removes no object, so the fill preparation must not restart");
     assert_eq!(invalidation.stale.len(), vortices, "a pose edit invalidates exactly the moved object's own brush targets");
@@ -438,7 +432,6 @@ fn a_pose_edit_keeps_the_brush_candidates_of_every_object_it_did_not_touch() {
     moved.fixture.objects[11].origin[1] += 2.25;
     sync_precompute_session(&mut session, &moved);
     let kept = session.brush_candidate_cache_len();
-    eprintln!("[DEBUG] b54.cache objects={} warmed={warmed} kept={kept}", large.fixture.objects.len());
     assert!(kept + large.fixture.objects[11].vortices.len() >= warmed, "a pose edit on one of {} objects must keep every other object's resolved candidates: {warmed} → {kept}", large.fixture.objects.len());
 }
 //#endregion 🔖️B54TurnCensus

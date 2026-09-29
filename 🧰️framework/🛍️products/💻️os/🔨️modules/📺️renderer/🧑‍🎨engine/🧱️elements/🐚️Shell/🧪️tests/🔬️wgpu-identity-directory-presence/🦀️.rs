@@ -202,6 +202,9 @@ fn presence_rows_require_each_normalized_surface_and_preserve_hub_color() {
 /// `computeSyncPillState`/`syncPillText` test coverage (`📓️w3-a-report.md`). Since packet W4a the
 /// native-only `ArtifactSyncStatus` stops at `ShellState::sync_pill`, which answers the
 /// target-neutral `ShellSyncPill` both builds paint, so this drives the projection off a real shell.
+///
+/// 🎯️ A non-live remote takes priority over a nonzero pending count — the connection itself
+/// being degraded is the more urgent fact, mirroring the React twin's own priority order.
 #[test]
 fn sync_pill_text_covers_persisted_pending_and_every_remote_state() {
     let pill_for = |status: Option<ArtifactSyncStatus>, progress: Option<(u64, u64, u32, u32)>| {
@@ -216,8 +219,6 @@ fn sync_pill_text_covers_persisted_pending_and_every_remote_state() {
     assert_eq!(pill_for(Some(ArtifactSyncStatus { persisted: false, pending_mutations: 0, remote: RemoteState::Connecting, acknowledged_head: None }), None), "Remote: connecting");
     assert_eq!(pill_for(Some(ArtifactSyncStatus { persisted: false, pending_mutations: 0, remote: RemoteState::Backoff { retry_in_ms: 500 }, acknowledged_head: None }), None), "Remote: backoff");
     assert_eq!(pill_for(Some(ArtifactSyncStatus { persisted: false, pending_mutations: 0, remote: RemoteState::Detached, acknowledged_head: None }), None), "Remote: detached");
-    // 🎯️ A non-live remote takes priority over a nonzero pending count — the connection itself
-    // being degraded is the more urgent fact, mirroring the React twin's own priority order.
     assert_eq!(pill_for(Some(ArtifactSyncStatus { persisted: false, pending_mutations: 9, remote: RemoteState::Backoff { retry_in_ms: 500 }, acknowledged_head: None }), None), "Remote: backoff");
     assert_eq!(pill_for(None, Some((4, 8, 1, 2))), "Recovering 4/8 · 1/2");
 }
@@ -232,6 +233,10 @@ fn checkpoint_entry(seq: u64) -> semio_framework::kernel::HistoryEntry {
 }
 
 /// 🧪️ Verify item: "the fold merges upserts and resets the uncommitted count on a checkpoint".
+///
+/// 🎯️ A stale/duplicate reply (cursor no newer than tracked) changes nothing.
+///
+/// 🎯️ A fresh `ReadHistory` snapshot (`replace=true`) discards whatever was tracked before.
 #[test]
 fn fold_history_patch_merges_upserts_and_uncommitted_count_resets_on_checkpoint() {
     let mut entries = BTreeMap::new();
@@ -239,12 +244,10 @@ fn fold_history_patch_merges_upserts_and_uncommitted_count_resets_on_checkpoint(
     let patch1 = semio_framework::kernel::HistoryPatch { cursor: 2, upserts: vec![mutation_entry(1, true), mutation_entry(2, true)], ..Default::default() };
     assert!(fold_history_patch(&mut entries, &mut cursor, &patch1, false));
     assert_eq!(uncommitted_edit_count(&entries), 2);
-    // 🎯️ A stale/duplicate reply (cursor no newer than tracked) changes nothing.
     assert!(!fold_history_patch(&mut entries, &mut cursor, &patch1, false));
     let patch2 = semio_framework::kernel::HistoryPatch { cursor: 3, upserts: vec![checkpoint_entry(3)], current_checkpoint_id: Some("chk-1".into()), ..Default::default() };
     assert!(fold_history_patch(&mut entries, &mut cursor, &patch2, false));
     assert_eq!(uncommitted_edit_count(&entries), 0, "a commitCheckpoint history entry resets the count");
-    // 🎯️ A fresh `ReadHistory` snapshot (`replace=true`) discards whatever was tracked before.
     let snapshot = semio_framework::kernel::HistoryPatch { cursor: 1, upserts: vec![mutation_entry(1, true)], ..Default::default() };
     assert!(fold_history_patch(&mut entries, &mut cursor, &snapshot, true));
     assert_eq!(entries.len(), 1);
@@ -269,36 +272,45 @@ fn checkpoint_before_detach_fires_only_with_an_attached_document_and_pending_edi
 }
 
 /// 🧪️ Verify item: "auto-fires once per idle period" and "volume trigger".
+///
+/// 🎯️ No uncommitted edits: never fires, regardless of elapsed time.
+///
+/// 🎯️ Volume trigger — fires immediately once the threshold is reached, without waiting out
+/// the idle window (the edit just landed this instant: `now_ms == last_edit_at_ms`).
+///
+/// 🎯️ Below threshold, not yet idle long enough: does not fire.
+///
+/// 🎯️ Below threshold, idle window elapsed: fires exactly once per idle period.
+///
+/// 🎯️ The storm guard: already pending (a checkpoint for this idle period is in flight) never
+/// fires again, even past the threshold, until the caller observes count return to 0.
 #[test]
 fn auto_checkin_fires_on_idle_or_volume_and_never_twice_while_pending() {
-    // 🎯️ No uncommitted edits: never fires, regardless of elapsed time.
     assert!(!auto_checkin_should_fire(0, false, Some(0), 100_000, AUTO_CHECKIN_IDLE_MS, AUTO_CHECKIN_EDIT_THRESHOLD));
-    // 🎯️ Volume trigger — fires immediately once the threshold is reached, without waiting out
-    // the idle window (the edit just landed this instant: `now_ms == last_edit_at_ms`).
     assert!(auto_checkin_should_fire(AUTO_CHECKIN_EDIT_THRESHOLD, false, Some(1_000), 1_000, AUTO_CHECKIN_IDLE_MS, AUTO_CHECKIN_EDIT_THRESHOLD));
-    // 🎯️ Below threshold, not yet idle long enough: does not fire.
     assert!(!auto_checkin_should_fire(5, false, Some(1_000), 1_000 + AUTO_CHECKIN_IDLE_MS - 1, AUTO_CHECKIN_IDLE_MS, AUTO_CHECKIN_EDIT_THRESHOLD));
-    // 🎯️ Below threshold, idle window elapsed: fires exactly once per idle period.
     assert!(auto_checkin_should_fire(5, false, Some(1_000), 1_000 + AUTO_CHECKIN_IDLE_MS, AUTO_CHECKIN_IDLE_MS, AUTO_CHECKIN_EDIT_THRESHOLD));
-    // 🎯️ The storm guard: already pending (a checkpoint for this idle period is in flight) never
-    // fires again, even past the threshold, until the caller observes count return to 0.
     assert!(!auto_checkin_should_fire(AUTO_CHECKIN_EDIT_THRESHOLD, true, Some(1_000), 1_000 + AUTO_CHECKIN_IDLE_MS, AUTO_CHECKIN_IDLE_MS, AUTO_CHECKIN_EDIT_THRESHOLD));
 }
 
 /// 🧪️ Verify item: "TouchArtifact follows a checkpoint" — the pure decision
 /// `observe_invocation_history` uses to fire it.
+///
+/// 🎯️ We asked for a checkpoint, and a NEW checkpoint id landed — fire.
+///
+/// 🎯️ We asked for a checkpoint, but nothing changed (same id, e.g. a no-op reply) — no fire.
+///
+/// 🎯️ A checkpoint id changed, but THIS shell never dispatched one (a remote peer's checkpoint,
+/// or the session mounting with a pre-existing id) — must never fire our own TouchArtifact.
+///
+/// 🎯️ No checkpoint id at all yet — nothing landed.
 #[test]
 fn touch_artifact_follows_only_a_checkpoint_this_shell_itself_dispatched() {
-    // 🎯️ We asked for a checkpoint, and a NEW checkpoint id landed — fire.
     assert!(checkpoint_landed(None, Some("chk-1"), true));
     assert!(checkpoint_landed(Some("chk-1"), Some("chk-2"), true));
-    // 🎯️ We asked for a checkpoint, but nothing changed (same id, e.g. a no-op reply) — no fire.
     assert!(!checkpoint_landed(Some("chk-1"), Some("chk-1"), true));
-    // 🎯️ A checkpoint id changed, but THIS shell never dispatched one (a remote peer's checkpoint,
-    // or the session mounting with a pre-existing id) — must never fire our own TouchArtifact.
     assert!(!checkpoint_landed(None, Some("chk-1"), false));
     assert!(!checkpoint_landed(Some("chk-1"), Some("chk-2"), false));
-    // 🎯️ No checkpoint id at all yet — nothing landed.
     assert!(!checkpoint_landed(None, None, true));
 }
 //#endregion 🧪️CheckInTests

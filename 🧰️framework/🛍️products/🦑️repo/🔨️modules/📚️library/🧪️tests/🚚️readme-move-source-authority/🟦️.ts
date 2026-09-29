@@ -143,7 +143,7 @@ test("existing canonical plan digest binds authority while move operation identi
   for (const { api } of apis) for (const row of vector.cases) {
     const { expected, candidate } = scenario(row);
     expect(api.digest(candidate), row.id).toBe(candidate.planDigest);
-    expect(api.canonical(candidate), row.id).toBe(oracleJson(candidate));
+    expect<string>(api.canonical(candidate), row.id).toBe(oracleJson(candidate));
     expect(candidate.planDigest === expected.planDigest, row.id).toBe(row.freshAccepted);
   }
 });
@@ -252,7 +252,7 @@ test("actual selected-resume catch inverse-recovers typed move input drift but n
     try { outcome = run(error).state; } catch { }
     expect(outcome, compiler.name + ":" + row.id).toBe(row.expected);
     expect(calls, row.id).toEqual(row.expected === "rolled-back" ? ["persist", "rollback", "release"] : []);
-    expect(journal.state, row.id).toBe(row.expected === "rolled-back" ? "rolling-back" : "editing");
+    expect<string>(journal.state, row.id).toBe(row.expected === "rolled-back" ? "rolling-back" : "editing");
   }
 });
 

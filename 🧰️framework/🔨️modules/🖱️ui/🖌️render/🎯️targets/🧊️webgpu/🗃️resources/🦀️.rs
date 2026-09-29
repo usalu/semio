@@ -1,4 +1,4 @@
-//! @emoji 🗃️ GPU-side resource residency: [`ui_render::ResourceOp`] → textures/meshes/atlases, keyed
+//! 🗃️ GPU-side resource residency: [`ui_render::ResourceOp`] → textures/meshes/atlases, keyed
 //! directly by [`ui_render::TextureId`]/[`ui_render::MeshId`] — no more `String` key, no per-frame
 //! clone (`resource.rs`'s own docstring, ticket brief "what the typed-id change bought"). Replaces the
 //! wgpu target's string-keyed `RasterTextureTable`/`MeshGpuTable`/fixed `glyph_texture`/`icon_texture`.

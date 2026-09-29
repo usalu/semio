@@ -283,7 +283,6 @@ fn the_viewer_preview_status_obeys_the_shared_contract_in_every_state() {
             }
             None => assert!(status.get("fault").is_none(), "{}: a healthy status publishes no fault — {status}", state.id),
         }
-        eprintln!("[DEBUG] viewer status state={} published={published}", state.id);
     }
     assert_eq!(contract.evaluate_fault_code, semio_framework_os_flow::ExtensionEvaluateFault::CODE);
     assert_eq!(contract.address_miss_code, semio_framework_os_flow::FlowExtensionAddressMiss::CODE);
@@ -330,7 +329,6 @@ fn the_published_progress_ratio_is_monotone_and_advances_across_one_evaluation()
     assert!(ratios.last().copied().unwrap_or_default() > ratios.first().copied().unwrap_or_default(), "a monotone ratio that never moves is a bar that reads \"nothing yet\" and then \"done\": {ratios:?}");
     let waves: Vec<usize> = census.sequence.iter().filter(|step| !step.wave.is_empty()).map(|step| step.wave.len()).collect();
     assert_eq!(waves, vec![2, 1, 1], "four contributed nodes across three dependency levels cost THREE waves, not four hops");
-    eprintln!("[DEBUG] chain census ratios={ratios:?} nodesDone={nodes_done:?} waves={waves:?}");
 }
 
 /// ⚖️ LAW: a preview window rendered WITHOUT a retained session still publishes the whole contract —
@@ -364,7 +362,6 @@ async fn the_rendered_viewer_preview_scene_carries_the_status_contract() {
     for key in &fixture.status_contract.debug_keys {
         assert!(status["debug"].get(key).is_some(), "the rendered status must carry debug.{key}: {published}");
     }
-    eprintln!("[DEBUG] rendered viewer preview status={published}");
 }
 
 /// ⚖️ LAW: the verb the status names is the FRAMEWORK-RESERVED run abort, and the viewer earns it by
@@ -411,7 +408,6 @@ async fn a_viewer_kernel_release_dispatches_live_and_never_mutates_the_document(
     let receipt = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut *app, action_meta.instance_id).await.expect("the cancel settles through the retained ladder");
     assert!(!receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Fault), "the viewer kernel release faulted in the retained job ladder");
     assert_eq!(context::snapshot(&app), before, "a kernel release must not mutate the document");
-    eprintln!("[DEBUG] viewer kernel release settled lanes={:?} effects={}", receipt.lanes, receipt.effects.len());
     let _ = app.pending_effects(None).await;
 }
 
@@ -486,7 +482,6 @@ fn a_settled_chain_publishes_no_spinner_and_no_abort_however_stale_the_run_view_
     assert_eq!(settled_addressed["phase"], serde_json::json!("idle"), "a settled chain is idle");
     assert!((settled_addressed["progress"]["ratio"].as_f64().expect("ratio") - 1.0).abs() < 1e-9, "and complete");
     assert_eq!(settled_addressed["cancellable"], serde_json::json!(false), "and offers no abort for work that no longer exists: {settled_addressed}");
-    eprintln!("[DEBUG] settled-vs-stale-run status: {settled}");
     session.retire_cold();
     host.retire_cold();
 }

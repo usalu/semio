@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🧭️ When the shell's route effect applies a URI (🎫️ 26/09/23 C10): the neutral scenario corpus drives
+/** 🧭️ When the shell's route effect applies a URI (🎫️ 26/09/23 C10): the neutral scenario corpus drives
  * `createShellRouteLedgerV1` and an independent XState machine of the same rule step by step, a strict Ajv schema is the
  * oracle for the corpus' shape, and the shell's source is held to routing every application through the ledger. */
 // #endregion 🧲️Header

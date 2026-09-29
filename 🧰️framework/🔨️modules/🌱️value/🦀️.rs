@@ -23,7 +23,7 @@ pub use codec::{FromValue, ToValue, ValueEdit, ValueError, ValueShape};
 //#endregion 🔁️Codec
 
 //#region 🔖️Number
-/// @emoji 🔢️ A JSON-equivalent number that keeps the writer's-eye distinction a bare `f64` erases:
+/// 🔢️ A JSON-equivalent number that keeps the writer's-eye distinction a bare `f64` erases:
 /// an integer literal (`UInt`/`Int`) round-trips without a decimal point, `Float` always keeps one
 /// (or an exponent). Mirrors [`pack::json::Number`]'s shape exactly so the wire bridge between them
 /// (`🎒️pack/🔤️json/🦀️.rs`) is a straight variant-to-variant map, never a widen-then-guess. See
@@ -100,7 +100,7 @@ impl From<f64> for Number {
 //#endregion 🔖️Number
 
 //#region 🔖️Value
-/// @emoji 🌱️ Dynamic JSON-equivalent literal for schema-less fields (`Shape::Value`).
+/// 🌱️ Dynamic JSON-equivalent literal for schema-less fields (`Shape::Value`).
 #[derive(Clone, Debug, PartialEq)]
 pub enum DslValue {
     Null,
@@ -318,7 +318,7 @@ impl PartialEq<DslValue> for serde_json::Value {
 }
 
 //#region 🔖️Literal
-/// @emoji 🧾️ Builds a [`DslValue`] from a JSON-shaped literal — the first-party replacement for
+/// 🧾️ Builds a [`DslValue`] from a JSON-shaped literal — the first-party replacement for
 /// `serde_json::json!` + `DslValue::from` at every action-argument site. Grammar: `null`, `true`,
 /// `false`, `[ … ]`, `{ key: value, … }` (a key is a string literal or any expression convertible
 /// `Into<String>`, e.g. a `const`), and any other expression, converted through [`ToValue`] by method call
@@ -379,7 +379,7 @@ macro_rules! dsl_value {
 //#endregion 🔖️Literal
 
 //#region 🔖️SerDe
-/// @emoji 🔀️ Materializes a `ToValue` value into a `DslValue` tree — first-party analog of the
+/// 🔀️ Materializes a `ToValue` value into a `DslValue` tree — first-party analog of the
 /// former `serde::Serialize`-bound bridge, kept as `Result` for source compatibility with every
 /// existing `?`/`.map_err(...)`/`.unwrap_or(...)` call site even though `ToValue::to_value` itself
 /// is infallible. See
@@ -389,7 +389,7 @@ pub fn to_dsl_value<T: ToValue + ?Sized>(value: &T) -> Result<DslValue, String> 
     Ok(value.to_value())
 }
 
-/// @emoji 🔀️ Hydrates a `FromValue` value from a `DslValue` tree — first-party analog of the
+/// 🔀️ Hydrates a `FromValue` value from a `DslValue` tree — first-party analog of the
 /// former `serde::de::DeserializeOwned`-bound bridge.
 pub fn from_dsl_value<T: FromValue>(value: DslValue) -> Result<T, String> {
     T::from_value(value).map_err(|error| error.to_string())

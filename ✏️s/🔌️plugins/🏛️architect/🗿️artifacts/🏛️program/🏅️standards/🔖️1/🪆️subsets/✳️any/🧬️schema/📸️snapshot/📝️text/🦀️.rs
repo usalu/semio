@@ -12,7 +12,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 use crate::ProgramSnapshot;
 
-/// @emoji 📦️ The "Sample Clinic" default example, embedded at compile time as handcrafted
+/// 📦️ The "Sample Clinic" default example, embedded at compile time as handcrafted
 /// `.architect` DSL text — a static transcription of `sample_plugin()`, kept in sync with it by
 /// `architect_example_text_parses_to_sample_plugin_and_round_trips`. The app manifest's
 /// `.example("sample", ...)` still registers `sample_plugin()` serialized to JSON at runtime

@@ -18,7 +18,6 @@ fn fill_all_objects_preparation_requires_real_geometry() {
         let FillToolRunPhase::Preparing(preparation) = &mut job.phase else { panic!("preparation") };
         assert!(!Puzzle3dFillToolRunJob::prepare_one(preparation));
         assert!(Puzzle3dFillToolRunJob::prepare_one(preparation));
-        eprintln!("[DEBUG] all-objects mesh {url}: available={}", preparation.meshes.contains_key(url));
         assert_eq!(preparation.meshes.contains_key(url), case["expectedAvailable"].as_bool().expect("available"));
     }
 }

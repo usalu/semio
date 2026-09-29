@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🖼️ `@semio-tech/infinite-canvas-react-renderer` — React host for tile-based infinite canvases (WASM bridge supplied by leaf bundles). */
+/** 🖼️ `@semio-tech/infinite-canvas-react-renderer` — React host for tile-based infinite canvases (WASM bridge supplied by leaf bundles). */
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
@@ -23,7 +23,7 @@ export {
 // #region 🔖️EventBinding
 export type CanvasListenerTarget = Pick<EventTarget, "addEventListener" | "removeEventListener">;
 
-/** @emoji 🎧️ Tracks DOM listeners for deterministic teardown on canvas unmount. */
+/** 🎧️ Tracks DOM listeners for deterministic teardown on canvas unmount. */
 export class CanvasEventBindingController {
   private readonly cleanups: Array<() => void> = [];
 
@@ -42,7 +42,7 @@ export class CanvasEventBindingController {
 // #endregion 🔖️EventBinding
 
 // #region 🔖️CanvasWasmBridge
-/** @emoji 🌐️ Leaf bundles (e.g. puzzle/2d) implement this against their `cdylib` session type. */
+/** 🌐️ Leaf bundles (e.g. puzzle/2d) implement this against their `cdylib` session type. */
 export interface CanvasWasmBridge<Session> {
   ensureLoaded(): Promise<void>;
   createSession(): Session;
@@ -50,7 +50,7 @@ export interface CanvasWasmBridge<Session> {
 // #endregion 🔖️CanvasWasmBridge
 
 // #region 🔖️GraphWasmCanvas
-/** @emoji ⌨️ Modifier keys held during a pointer gesture (shift/ctrl/meta/alt). */
+/** ⌨️ Modifier keys held during a pointer gesture (shift/ctrl/meta/alt). */
 export type CanvasInputModifiers = {
   readonly shift: boolean;
   readonly ctrl: boolean;
@@ -58,14 +58,14 @@ export type CanvasInputModifiers = {
   readonly alt: boolean;
 };
 
-/** @emoji ⏳️ How long {@link GraphWasmCanvas} waits for a container that never reports a real layout
+/** ⏳️ How long {@link GraphWasmCanvas} waits for a container that never reports a real layout
  * size before attaching the GPU surface at whatever degenerate size it does report. */
 export const DEGENERATE_LAYOUT_ATTACH_MS = 2000;
 
-/** @emoji 🙈️ Frame period used while no animation clock is running. */
+/** 🙈️ Frame period used while no animation clock is running. */
 export const HIDDEN_DEMAND_FRAME_MS = 32;
 
-/** @emoji 🎞️ Schedules one canvas frame. A hidden/background tab — and any DOM host without an
+/** 🎞️ Schedules one canvas frame. A hidden/background tab — and any DOM host without an
  * animation clock, e.g. a jsdom test — never runs a frame callback, so an `requestAnimationFrame`-only
  * loop silently stops repainting there; that is the class of defect a blank node-graph window in a
  * hidden tab reduces to. Falls back to the timer clock, which keeps ticking while hidden. Shared by
@@ -79,7 +79,7 @@ export function scheduleDemandFrame(tick: () => void): { readonly cancel: () => 
   return { cancel: () => cancelAnimationFrame(frame) };
 }
 
-/** @emoji ⏱️ A render-on-demand frame clock for one canvas. `invalidate` marks the canvas dirty and paints it at the next
+/** ⏱️ A render-on-demand frame clock for one canvas. `invalidate` marks the canvas dirty and paints it at the next
  * frame (any number of invalidations before that frame coalesce into ONE paint); `paintNow` paints synchronously and
  * satisfies every invalidation that preceded it, so a pending frame paints nothing twice; `beginContinuous`/
  * `endContinuous` bracket genuinely continuous work (a gesture whose moves do not invalidate one by one). */
@@ -91,18 +91,18 @@ export type DemandFrameSchedulerV1 = {
   dispose(): void;
 };
 
-/** @emoji 🌗️ The trailing window of a surface whose wasm session eases its own state after an input (a flow graph's or a
+/** 🌗️ The trailing window of a surface whose wasm session eases its own state after an input (a flow graph's or a
  * tiled map's camera settling): it keeps painting this long after its last invalidation. */
 export const EASED_SURFACE_TRAILING_WINDOW_MS = 250;
 
-/** @emoji 🎚️ Options of {@link createDemandFrameScheduler}. `trailingWindowMs` is an EXPLICIT, bounded animation window:
+/** 🎚️ Options of {@link createDemandFrameScheduler}. `trailingWindowMs` is an EXPLICIT, bounded animation window:
  * a surface whose wasm session eases state on its own (a camera settling after a gesture) keeps painting that long after
  * its last invalidation. A surface without self-animating state declares none and paints exactly once per demand. */
 export type DemandFrameSchedulerOptionsV1 = {
   readonly trailingWindowMs?: number;
 };
 
-/** @emoji 🪶️ The one render-on-demand scheduler of every wasm canvas surface (flow node-graph, tiled-map,
+/** 🪶️ The one render-on-demand scheduler of every wasm canvas surface (flow node-graph, tiled-map,
  * {@link GraphWasmCanvas}); each of them used to run an unconditional animation-frame loop that held the tab at 60 fps
  * fully idle (REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT; ticket 26/09/23 S15 for {@link GraphWasmCanvas}). A frame paints
  * only when the canvas is dirty, a continuous reason is held, or an explicit trailing window runs; a synchronous
@@ -166,7 +166,7 @@ export function createDemandFrameScheduler(render: () => void, opts?: DemandFram
   };
 }
 
-/** @emoji 🎯️ The owner's handle on a canvas session: every call except `renderFrame` invalidates the canvas (painted once
+/** 🎯️ The owner's handle on a canvas session: every call except `renderFrame` invalidates the canvas (painted once
  * at the next frame, coalesced with every other call before it), and `renderFrame` paints at once and satisfies those
  * invalidations. So a canvas repaints exactly when its owner changed something (a scene sync, a caret, a theme, a camera),
  * never twice for one change, and an idle canvas paints nothing. It replaces an unconditional per-frame repaint that held
@@ -188,7 +188,7 @@ export function frameDemandingSessionV1<Session extends object>(session: Session
   });
 }
 
-/** @emoji 🕸️ Minimal WASM graph session surface (attach, resize, RAF, optional pointer). */
+/** 🕸️ Minimal WASM graph session surface (attach, resize, RAF, optional pointer). */
 export interface GraphWasmSession {
   attachCanvas(canvas: HTMLCanvasElement, logicalW: number, logicalH: number, dpr: number): Promise<unknown>;
   setSize(width: number, height: number, dpr: number): void;

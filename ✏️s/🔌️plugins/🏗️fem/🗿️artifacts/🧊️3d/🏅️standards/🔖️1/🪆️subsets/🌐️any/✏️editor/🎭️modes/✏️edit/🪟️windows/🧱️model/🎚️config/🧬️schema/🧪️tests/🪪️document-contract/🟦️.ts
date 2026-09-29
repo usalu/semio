@@ -30,5 +30,4 @@ export function testFem3dModelWindowConfigContract(): void {
   const patched = applyPatch(structuredClone(base), fixture.patch as Operation[], true).newDocument;
   assert(validate(patched), JSON.stringify(validate.errors));
   assert.deepEqual(parseFem3dModelWindowConfig(patched), patched);
-  console.log("[DEBUG] FEM 3D model exact window config agrees with Ajv and fast-json-patch vectors");
 }

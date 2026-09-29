@@ -44,7 +44,7 @@ use semio_framework_dispatch_macros::dyn_enum;
 use std::future::Future;
 
 //#region 🔖️Profile
-/// @emoji 🏗️ Which deployment shape the storage backends are opened in — the one instruction the
+/// 🏗️ Which deployment shape the storage backends are opened in — the one instruction the
 /// framework gives an instance's [`ServerInstance::open`](crate::gateway::ServerInstance::open),
 /// and the only thing it says about durability.
 ///
@@ -57,16 +57,16 @@ use std::future::Future;
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 pub enum StorageProfile {
-    /// @emoji 🫧️ Nothing survives the process: the shape a test, a scratch instance or a
+    /// 🫧️ Nothing survives the process: the shape a test, a scratch instance or a
     /// short-lived edge replica opens its roles in.
     Ephemeral,
-    /// @emoji 🏠️ Everything lives under one directory owned by one process: the deployment profile
+    /// 🏠️ Everything lives under one directory owned by one process: the deployment profile
     /// for hub, zentrale and a developer's laptop alike.
     Embedded { data_dir: String },
 }
 
 impl StorageProfile {
-    /// @emoji 📁️ The directory this profile owns, or `None` when it owns none. A backend that needs
+    /// 📁️ The directory this profile owns, or `None` when it owns none. A backend that needs
     /// a path asks here instead of matching, so adding a shape later is not a breaking match.
     pub fn data_dir(&self) -> Option<&str> {
         match self {
@@ -75,7 +75,7 @@ impl StorageProfile {
         }
     }
 
-    /// @emoji 💾️ Whether state opened in this profile is expected to outlive the process.
+    /// 💾️ Whether state opened in this profile is expected to outlive the process.
     pub fn is_durable(&self) -> bool {
         self.data_dir().is_some()
     }
@@ -83,22 +83,22 @@ impl StorageProfile {
 //#endregion 🔖️Profile
 
 //#region 🔖️Error
-/// @emoji 💥️ Every way a storage role can refuse. Deliberately small: a backend translates its own
+/// 💥️ Every way a storage role can refuse. Deliberately small: a backend translates its own
 /// driver errors into these, so an authority never matches on a driver type.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum StorageError {
-    /// @emoji 🕳️ The addressed entry does not exist.
+    /// 🕳️ The addressed entry does not exist.
     NotFound,
-    /// @emoji 🪜️ An append was not contiguous with the stream's current head — the writer is
+    /// 🪜️ An append was not contiguous with the stream's current head — the writer is
     /// working from a stale `last_seq` and must re-read before retrying.
     SequenceGap { expected: u64, got: u64 },
-    /// @emoji 🎟️ The caller's [`Lease`] was fenced out by a newer epoch; its writes must be
+    /// 🎟️ The caller's [`Lease`] was fenced out by a newer epoch; its writes must be
     /// abandoned, not retried.
     LeaseLost,
-    /// @emoji ⚔️ The write contradicts what is already stored (a re-bound idempotency key, a
+    /// ⚔️ The write contradicts what is already stored (a re-bound idempotency key, a
     /// backwards snapshot, a hash bound to different bytes).
     Conflict(String),
-    /// @emoji 🔌️ The backend itself failed — disk, permissions, corruption.
+    /// 🔌️ The backend itself failed — disk, permissions, corruption.
     Backend(String),
 }
 
@@ -118,46 +118,46 @@ impl std::error::Error for StorageError {}
 //#endregion 🔖️Error
 
 //#region 🔖️Authority
-/// @emoji 🔐️ Ownership of one actor, fenced by a monotonically increasing epoch. A holder that
+/// 🔐️ Ownership of one actor, fenced by a monotonically increasing epoch. A holder that
 /// loses the lease keeps its old epoch, which is how the store recognizes and rejects it.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Lease {
-    /// @emoji 🔢️ Bumped every time ownership moves to a different holder; never reused.
+    /// 🔢️ Bumped every time ownership moves to a different holder; never reused.
     pub epoch: u64,
-    /// @emoji 🙋️ Opaque identity of the node or worker holding the actor.
+    /// 🙋️ Opaque identity of the node or worker holding the actor.
     pub holder: String,
 }
 
-/// @emoji 📮️ One event queued for publication in the same write as the event itself, so a crash can
+/// 📮️ One event queued for publication in the same write as the event itself, so a crash can
 /// never leave state advanced but the world uninformed. Delivery is at-least-once on the wire and
 /// exactly-once against this queue: an entry leaves `pending` only once it is marked delivered.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct OutboxEntry {
-    /// @emoji 🆔️ Store-assigned, monotonically increasing queue position; also the delivery order.
+    /// 🆔️ Store-assigned, monotonically increasing queue position; also the delivery order.
     pub id: u64,
-    /// @emoji 🎭️ The actor whose turn produced the event.
+    /// 🎭️ The actor whose turn produced the event.
     pub actor: ActorKey,
-    /// @emoji 🏷️ Routing tag — the event's kind for a saga row, the effect's kind for an effect row.
+    /// 🏷️ Routing tag — the event's kind for a saga row, the effect's kind for an effect row.
     pub kind: String,
-    /// @emoji 📦️ The opaque body a publisher hands on.
+    /// 📦️ The opaque body a publisher hands on.
     pub payload: Vec<u8>,
-    /// @emoji 📚️ The durable fact, present for event-derived rows and absent for pure effects.
+    /// 📚️ The durable fact, present for event-derived rows and absent for pure effects.
     pub event: Option<EventRecord>,
-    /// @emoji ✅️ Whether a publisher has acknowledged this entry.
+    /// ✅️ Whether a publisher has acknowledged this entry.
     pub delivered: bool,
 }
 
 impl OutboxEntry {
-    /// @emoji 🌱️ An undelivered entry with a placeholder id — [`AuthorityStore::enqueue_outbox`]
+    /// 🌱️ An undelivered entry with a placeholder id — [`AuthorityStore::enqueue_outbox`]
     /// stamps the real one.
     pub fn pending(actor: ActorKey, event: EventRecord) -> Self {
         Self { id: 0, actor, kind: event.kind.clone(), payload: event.payload.clone(), event: Some(event), delivered: false }
     }
 }
 
-/// @emoji 🏛️ The authoritative state of a server: command inbox, per-actor event streams, snapshots,
+/// 🏛️ The authoritative state of a server: command inbox, per-actor event streams, snapshots,
 /// transactional outbox and actor leases. The one role whose data cannot be regenerated.
 /// **Send futures, declared not inferred.** Every method of this port returns
 /// `impl Future<..> + Send` instead of being written `async fn`, and that is structural, not a
@@ -170,49 +170,49 @@ impl OutboxEntry {
 /// over the future's `Output`, because two match arms cannot unify two distinct opaque futures.
 #[dyn_enum]
 pub trait AuthorityStore: Send + Sync {
-    /// @emoji 🔎️ The receipt already recorded for `key`, if this command was seen before. A retry
+    /// 🔎️ The receipt already recorded for `key`, if this command was seen before. A retry
     /// answers from here instead of re-executing.
     fn receipt(&self, key: &IdempotencyKey) -> impl Future<Output = Result<Option<CommandReceipt>, StorageError>> + Send;
 
-    /// @emoji 🧾️ Binds `key` to `receipt`. Recording the identical receipt again succeeds silently;
+    /// 🧾️ Binds `key` to `receipt`. Recording the identical receipt again succeeds silently;
     /// binding a key to a *different* receipt is a [`StorageError::Conflict`].
     fn record_receipt(&mut self, key: &IdempotencyKey, receipt: &CommandReceipt) -> impl Future<Output = Result<(), StorageError>> + Send;
 
-    /// @emoji ➕️ Appends `events` to `actor`'s stream and returns the new last sequence. Every event
+    /// ➕️ Appends `events` to `actor`'s stream and returns the new last sequence. Every event
     /// must carry `actor` as its stream and a sequence exactly one past its predecessor, starting at
     /// `last_seq + 1`; anything else is a [`StorageError::SequenceGap`] and nothing is written.
     fn append_events(&mut self, actor: &ActorKey, events: &[EventRecord], outbox: &[OutboxEntry]) -> impl Future<Output = Result<u64, StorageError>> + Send;
 
-    /// @emoji 📜️ Every event of `actor` with a sequence strictly greater than `since`, in order.
+    /// 📜️ Every event of `actor` with a sequence strictly greater than `since`, in order.
     fn events_since(&self, actor: &ActorKey, since: u64) -> impl Future<Output = Result<Vec<EventRecord>, StorageError>> + Send;
 
-    /// @emoji 🔚️ The highest sequence written for `actor`; `0` for an actor with no history.
+    /// 🔚️ The highest sequence written for `actor`; `0` for an actor with no history.
     fn last_seq(&self, actor: &ActorKey) -> impl Future<Output = Result<u64, StorageError>> + Send;
 
-    /// @emoji 📸️ Replaces `actor`'s replay accelerator. A snapshot older than the stored one is a
+    /// 📸️ Replaces `actor`'s replay accelerator. A snapshot older than the stored one is a
     /// [`StorageError::Conflict`] — snapshots only ever move forward.
     fn put_snapshot(&mut self, actor: &ActorKey, revision: Revision, bytes: Vec<u8>) -> impl Future<Output = Result<(), StorageError>> + Send;
 
-    /// @emoji 🖼️ The stored snapshot of `actor` and the revision it was taken at, if any.
+    /// 🖼️ The stored snapshot of `actor` and the revision it was taken at, if any.
     fn snapshot(&self, actor: &ActorKey) -> impl Future<Output = Result<Option<(Revision, Vec<u8>)>, StorageError>> + Send;
 
-    /// @emoji 📤️ Queues `entries` for publication, stamping each with the next queue id and marking
+    /// 📤️ Queues `entries` for publication, stamping each with the next queue id and marking
     /// it undelivered; the caller's `id` and `delivered` fields are ignored.
     fn enqueue_outbox(&mut self, entries: Vec<OutboxEntry>) -> impl Future<Output = Result<(), StorageError>> + Send;
 
-    /// @emoji 📥️ Up to `limit` undelivered entries in queue order.
+    /// 📥️ Up to `limit` undelivered entries in queue order.
     fn pending_outbox(&self, limit: usize) -> impl Future<Output = Result<Vec<OutboxEntry>, StorageError>> + Send;
 
-    /// @emoji 📬️ Acknowledges delivery of `ids`. Re-acknowledging is idempotent; an unknown id is a
+    /// 📬️ Acknowledges delivery of `ids`. Re-acknowledging is idempotent; an unknown id is a
     /// [`StorageError::NotFound`] and nothing is marked.
     fn mark_outbox_delivered(&mut self, ids: &[u64]) -> impl Future<Output = Result<(), StorageError>> + Send;
 
-    /// @emoji 🤝️ Takes ownership of `actor` for `holder`. Re-acquiring as the current holder renews
+    /// 🤝️ Takes ownership of `actor` for `holder`. Re-acquiring as the current holder renews
     /// at the same epoch; taking it from a different holder bumps the epoch, which fences the
     /// previous holder out for good.
     fn acquire_lease(&mut self, actor: &ActorKey, holder: &str) -> impl Future<Output = Result<Lease, StorageError>> + Send;
 
-    /// @emoji 🛡️ Whether `lease` is still the live lease on `actor`. A stale epoch answers `false`,
+    /// 🛡️ Whether `lease` is still the live lease on `actor`. A stale epoch answers `false`,
     /// and the caller must abandon its turn with [`StorageError::LeaseLost`].
     fn validate_lease(&self, actor: &ActorKey, lease: &Lease) -> impl Future<Output = bool> + Send;
 }
@@ -220,7 +220,7 @@ pub trait AuthorityStore: Send + Sync {
 //#endregion 🔖️Authority
 
 //#region 🔖️Projection
-/// @emoji 🔭️ Rebuildable read models, addressed by projection name and key. Nothing here is a source
+/// 🔭️ Rebuildable read models, addressed by projection name and key. Nothing here is a source
 /// of truth: [`ProjectionStore::clear`] plus a replay from sequence zero must reproduce it exactly,
 /// which is what makes a schema change a rebuild rather than a migration.
 ///
@@ -242,25 +242,25 @@ pub trait AuthorityStore: Send + Sync {
 /// over the future's `Output`, because two match arms cannot unify two distinct opaque futures.
 #[dyn_enum]
 pub trait ProjectionStore: Send + Sync {
-    /// @emoji ✍️ Writes `value` at `key` inside `projection`, replacing any previous value. A
+    /// ✍️ Writes `value` at `key` inside `projection`, replacing any previous value. A
     /// backend that could not durably record the write answers [`StorageError::Backend`] and leaves
     /// the read models exactly as they were — see the trait note on write outcomes.
     fn put(&mut self, projection: &str, key: &str, value: Vec<u8>) -> impl Future<Output = Result<(), StorageError>> + Send;
 
-    /// @emoji 📖️ The value stored at `key`, if the projection has one.
+    /// 📖️ The value stored at `key`, if the projection has one.
     fn get(&self, projection: &str, key: &str) -> impl Future<Output = Option<Vec<u8>>> + Send;
 
-    /// @emoji 📋️ Every entry of `projection` whose key starts with `prefix`, ascending by key —
+    /// 📋️ Every entry of `projection` whose key starts with `prefix`, ascending by key —
     /// ordering is part of the contract so a paged query is stable across backends.
     fn list(&self, projection: &str, prefix: &str) -> impl Future<Output = Vec<(String, Vec<u8>)>> + Send;
 
-    /// @emoji 🚩️ The last event sequence folded into `projection`; `0` when it has never been built.
+    /// 🚩️ The last event sequence folded into `projection`; `0` when it has never been built.
     fn checkpoint(&self, projection: &str) -> impl Future<Output = u64> + Send;
 
-    /// @emoji 🏁️ Records that `projection` now reflects everything up to `seq`.
+    /// 🏁️ Records that `projection` now reflects everything up to `seq`.
     fn set_checkpoint(&mut self, projection: &str, seq: u64) -> impl Future<Output = Result<(), StorageError>> + Send;
 
-    /// @emoji 🧹️ Drops every entry of `projection` and resets its checkpoint to zero, so the next
+    /// 🧹️ Drops every entry of `projection` and resets its checkpoint to zero, so the next
     /// fold rebuilds it from the beginning.
     fn clear(&mut self, projection: &str) -> impl Future<Output = Result<(), StorageError>> + Send;
 }
@@ -268,14 +268,14 @@ pub trait ProjectionStore: Send + Sync {
 //#endregion 🔖️Projection
 
 //#region 🔖️Blob
-/// @emoji #️⃣ The canonical content hash of `bytes`, computed with the same `blake3` primitive the
+/// #️⃣ The canonical content hash of `bytes`, computed with the same `blake3` primitive the
 /// replication format commits with — offered so a caller can address a blob without picking its own
 /// hash function, and so this crate needs no hashing dependency of its own.
 pub fn content_hash(bytes: &[u8]) -> ContentHash {
     ContentHash(Blake3Hasher.hash(bytes))
 }
 
-/// @emoji 🧱️ Immutable, content-addressed bytes. The caller supplies the hash (see [`content_hash`])
+/// 🧱️ Immutable, content-addressed bytes. The caller supplies the hash (see [`content_hash`])
 /// because the address is minted where the content is produced — an upload is verified once, at the
 /// edge, and every later reference is by hash alone. Identical content is stored once.
 /// **Send futures, declared not inferred.** Every method of this port returns
@@ -289,36 +289,36 @@ pub fn content_hash(bytes: &[u8]) -> ContentHash {
 /// over the future's `Output`, because two match arms cannot unify two distinct opaque futures.
 #[dyn_enum]
 pub trait BlobStore: Send + Sync {
-    /// @emoji 💾️ Stores `bytes` under `hash`. Storing identical content again succeeds silently;
+    /// 💾️ Stores `bytes` under `hash`. Storing identical content again succeeds silently;
     /// binding a hash to different bytes is a [`StorageError::Conflict`].
     fn put(&mut self, hash: ContentHash, bytes: &[u8]) -> impl Future<Output = Result<(), StorageError>> + Send;
 
-    /// @emoji 📦️ The bytes stored under `hash`, if any.
+    /// 📦️ The bytes stored under `hash`, if any.
     fn get(&self, hash: &ContentHash) -> impl Future<Output = Option<Vec<u8>>> + Send;
 
-    /// @emoji ❓️ Whether `hash` is already stored — the cheap half of an upload negotiation.
+    /// ❓️ Whether `hash` is already stored — the cheap half of an upload negotiation.
     fn has(&self, hash: &ContentHash) -> impl Future<Output = bool> + Send;
 }
 
 //#endregion 🔖️Blob
 
 //#region 🔖️Session
-/// @emoji 🪪️ One live authenticated session. Timestamps are supplied by the caller — this crate owns
+/// 🪪️ One live authenticated session. Timestamps are supplied by the caller — this crate owns
 /// no clock, so expiry is decided by whoever reads the record, never inside the store.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SessionRecord {
-    /// @emoji 🏷️ The session's identity, as presented by the client on every request.
+    /// 🏷️ The session's identity, as presented by the client on every request.
     pub id: SessionId,
-    /// @emoji 👤️ Who the session authenticates as.
+    /// 👤️ Who the session authenticates as.
     pub principal: Principal,
-    /// @emoji 📱️ The device the session was issued to, when the client identified one.
+    /// 📱️ The device the session was issued to, when the client identified one.
     pub device: Option<DeviceId>,
-    /// @emoji ⏱️ Wall-clock issue time in milliseconds, recorded by the caller.
+    /// ⏱️ Wall-clock issue time in milliseconds, recorded by the caller.
     pub issued_at_millis: u64,
 }
 
-/// @emoji 🎫️ Live authentication state. Deliberately not event-sourced: a revoked session must
+/// 🎫️ Live authentication state. Deliberately not event-sourced: a revoked session must
 /// vanish rather than survive as a replayable fact, and revocation must be immediate.
 ///
 /// **Every write answers, and here it is a security property.** `create`, `delete` and
@@ -338,19 +338,19 @@ pub struct SessionRecord {
 /// over the future's `Output`, because two match arms cannot unify two distinct opaque futures.
 #[dyn_enum]
 pub trait SessionStore: Send + Sync {
-    /// @emoji 🆕️ Stores `session`, replacing any record with the same id. A backend that could not
+    /// 🆕️ Stores `session`, replacing any record with the same id. A backend that could not
     /// record it answers [`StorageError::Backend`] and stores nothing, so a caller never hands out
     /// a session id the store does not hold.
     fn create(&mut self, session: SessionRecord) -> impl Future<Output = Result<(), StorageError>> + Send;
 
-    /// @emoji 🔑️ The session with `id`, if it is still live.
+    /// 🔑️ The session with `id`, if it is still live.
     fn get(&self, id: &SessionId) -> impl Future<Output = Option<SessionRecord>> + Send;
 
-    /// @emoji 🗑️ Removes `id`; a no-op if it is already gone. A removal the backend refused is a
+    /// 🗑️ Removes `id`; a no-op if it is already gone. A removal the backend refused is a
     /// [`StorageError::Backend`], never a silent success — the session still opens the door.
     fn delete(&mut self, id: &SessionId) -> impl Future<Output = Result<(), StorageError>> + Send;
 
-    /// @emoji 🚪️ Removes every session of `principal` and returns how many were removed — the
+    /// 🚪️ Removes every session of `principal` and returns how many were removed — the
     /// "sign out everywhere" primitive. Refusing on the first record it cannot remove is
     /// deliberate: a partial sign-out reported as a number is indistinguishable from a complete one.
     fn revoke_principal(&mut self, principal: &Principal) -> impl Future<Output = Result<usize, StorageError>> + Send;

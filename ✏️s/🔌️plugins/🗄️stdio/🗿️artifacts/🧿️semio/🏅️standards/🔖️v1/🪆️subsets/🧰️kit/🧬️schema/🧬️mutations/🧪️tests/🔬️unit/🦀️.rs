@@ -197,7 +197,7 @@ async fn add_remove_edit_design_round_trips() {
 
 #[semio_framework_async_macros::async_test]
 async fn semantic_kinds_cover_every_variant() {
-    assert_eq!(SemioKitMutation::kinds().len(), 15);
+    assert_eq!(SemioKitMutation::kinds().len(), 16);
     let mutation = SemioKitMutation::UnbindRepresentation(unbind_representation::UnbindRepresentation { index: 1 });
     assert_eq!(mutation.semantics().kind, "unbind-representation");
     assert_eq!(mutation.semantics().record, "UnboundRepresentation");

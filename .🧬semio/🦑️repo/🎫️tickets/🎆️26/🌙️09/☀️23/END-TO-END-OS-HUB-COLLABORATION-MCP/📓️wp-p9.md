@@ -166,6 +166,86 @@ Log 14c:
   Relayed L1 + coordinator; landing row added.
 - 23:5x L1 ack: P9 stays in T1; L1 asks P9 for its 14 laws once T1's native + wasm32 proof is green (command above).
 
+#### 14c — 2026-09-29: T6 set `p9-fail-closed` (agent lane fails closed)
+
+**Window 3 set / T6: p9-fail-closed** — `wp-p9/patches/p9-fail-closed.py --dry-run | --write` (stage `.🧬semio/🌐hub/s14-p9-stage-t6`,
+regen `wp-p9/p9-regen-t6.sh`; revert = L1's byte record `.🧬semio/🌐hub/s14-l1-backup/p9-fail-closed/`) — **crates:** semio-framework-plugin
+(all 8 files under `🔌️plugin`; behaviour reaches every plugin's agent lane). Status: **prepared, dry run clean 08:1x (20 hunks / 8 files)**,
+twins green, overlay law proof queued.
+
+- 08:0x resumed (usage cut + 4 kernel panics + the 01:14 external sweep; ALL-34 chain since 07:18 → guest freeze; my T1 set is
+  landed). S19 (📓️wp-s19.md, 14c Red 2): flow's `evaluate` settles on the agent lane `Settled{lanes:{}, host_effects:0}` while the
+  shell acts — `preview_addressed_action` refused only load-document/download/file-request/extension/task output and silently
+  dropped every other host effect, the job completion's ephemeral lanes and the app's ephemeral hook; `declared_verb_findings`
+  never counted "shell acts, agent silent". Confirmed on the live tree (T1 code, mine).
+- Design (fail closed): an agent transaction carries a command's document, config, draft and owned-child ops — nothing else.
+  `agent_lane_uncarried_lanes(&AgentLanePublication)` names every other non-empty lane once, in `AGENT_LANE_UNCARRIED_LANES`
+  order (17 lanes); all 46 kernel `Effect` variants are classified by an EXHAUSTIVE match (no wildcard: a new variant does not
+  compile until classified — flow's `DispatchAction` → "a follow-up dispatch", `Notify` → "a notice", shell-steering effects →
+  "a shell change", the rest of the host-request family → "a host request"). `preview_typed_command_job` now runs the app's
+  `ArtifactApp::ephemeral` hook over the same captured roots as the shell lane (window-transient from the hook = the shell's own
+  fault) and returns the hook's + completion's presence/transient/window-transient counts (the completion's `EphemeralEmit` was
+  discarded before). Any uncarried lane → `interactive-job.agent-lane-uncarried` (typed; the MCP host already maps it to
+  PLUGIN_UNAVAILABLE with an en + de remedy, `🌉️mcp/🔀️dispatch` `AGENT_LANE_UNCARRIED_REMEDY`). Decided against carrying
+  `Notify` as a report: the host would drop the extra field today, i.e. still silent.
+- Divergence rule: `shell_writes != agent_writes || (shell_acts && !agent_acts)` (was `agent_refused && shell_acts`); the agent
+  probe also counts `childGroups` as the `child` lane (a child-only write read as "agent writes nothing" before).
+- Laws: `⚖️declared-verb-verdicts.json` +2 cases (silent-where-shell-acts diverges; silent-where-shell-silent agrees), Rust floor
+  + AJV twin 28 → 31: twin **31/31**, red-check with the old twin rule fails exactly "an agent settling silently where the shell
+  acts diverges". New `🧫️fixtures/🤖️agent-lane-carriage.json` (8 cases, effects in the kernel's serde wire form) → Rust law
+  `agent_lane_carriage_matches_the_language_agnostic_fixture` + AJV twin `agentLaneCarriageOracle` (SDK `test` script prints it):
+  twin **8/8**; red-checks (3 fixture mutations) each fail with their case name. `p9-fmtcheck.py p9-fail-closed`: 176 added lines,
+  0 rustfmt-unstable. Scripts gained `P9_STAGE` (per-set stage root) and `p9-fmtcheck.py <set>`.
+- 08:1x relayed L1 (queued in T6 after LB2 p9/p11/p12; L1 keeps a byte record as revert path; T6 proof = full guest native +
+  wasm32) and the coordinator. Every-plugin coverage beyond the 8 surfaces with declared-verb/agent-lane laws = G12's MCP battery
+  after the next publish (verbs that settled silently now refuse by name).
+- 08:13 fresh overlay `.🧬semio/🌐hub/s14-p9-overlay` (78 760 cloned + 3 162 ignored inputs, 2 min), set applied into it (== stage),
+  private build dir seeded (APFS clone of build-fleet-b/debug). `overlay-t6-1` QUEUED 08:13:58 (4th: wg11, lb2, u6 ahead):
+  SDK + jack + puzzle 2d/3d/5d + writer + flow + architect program + reasoning wires, filters `agent_lane declared_verb
+  every_declared an_agent_names patch_nodes the_text_gesture_verbs` (capture `.🧬semio/🌐hub/s14-p9-logs/overlay-t6-1.txt`).
+- 08:43–08:54 `overlay-t6-1`: SDK 7/7, jack 6/6, writer 1/1, architect 2/2 green. Red: flow pin (divergences now
+  `[evaluate, focusSelection]` vs pinned 11 — the 9 child-editing verbs stop diverging because the agent probe now counts
+  `childGroups`: they were false divergences, child groups ride agent transactions since G10), puzzle 3d `addObjectKind` / 5d
+  `addNode` refused for "selection changes", 2d `createEdge` for "a notice", wires `addNode`/`addRelationship` (selection).
+  Pre-existing peer red, not P9: puzzle2d `every_declared_action_resolves_to_a_command` (S20's export/import + cancelTypedOperation
+  declared without a Puzzle2dCommand variant).
+- Design correction (no capability loss): a selection of what the command made and a notice only PRESENT the result to the
+  human who ran it. `AGENT_LANE_PRESENTATION_LANES = [a notice, selection changes]` are omitted beside carried operations; a
+  publication that carries nothing and only presents is the command's whole effect → `AgentLaneCarriage::NoEffect`, refused
+  `app.command.no-effect` with the app's own notice text ("action 'X' changes nothing here: <notice>"); everything else stays
+  `Uncarried` (`interactive-job.agent-lane-uncarried`). Fixture +5 cases (13; `carriedOps`, `presentation`, `verdict`), Rust law
+  + twin check lanes AND verdict; twin 13/13, red-checks fail with the mutated case's name.
+- 11:05–11:13 `overlay-t6-2` (presentation tier, before no-effect): puzzle 3d/5d `addObjectKind`/`addNode` pass; left: flow pin,
+  puzzle notice-only verbs (2d `createEdge`, 3d/5d `translateSelection` on the boot example: nothing selected → notice only),
+  wires (same). Set now also carries the test-only law updates it causes (atomic with the SDK change): puzzle 2d/3d/5d
+  agent-lane laws (no battery verb refused before its job ran; write verb writes; divergences pinned in `AGENT_LANE_DIVERGENCES`
+  with a shell+agent outcome dump) and flow's pin `[evaluate, focusSelection]` + `evaluate` refused `agent-lane-uncarried`
+  (replaces S19's planned 2-line flip; told the coordinator). 25 hunks / 12 files, dry run clean, 263 added lines rustfmt-stable.
+- 11:27 `overlay-t6-3` queued (5th): same crates/filters; the puzzle pins start empty — its failure dump gives the exact lists.
+  Relayed G12: map `app.command.no-effect` → PRECONDITION_FAILED + en/de remedy (host-only). `📓️t6-queue.md` row 9 updated.
+- 11:3x coordinator: G12 stopped → the gateway mapping is the HOST PART of my T6 set (producer + mapping land together); the
+  notice travels structured, not concatenated. Done: `agent_lane_no_effect_fault` → message "action 'X' changes nothing here",
+  each notice a `FaultCause { code: app.notice, message }` (S20's F1 `parameters` channel, T6 row 12, turns them into
+  `{action}`/`{notice}` placeholders; until then the gateway's `{code, message}` Fault does not read causes). `🌉️mcp/🔀️dispatch`:
+  `COMMAND_NO_EFFECT_FAULT_CODE` + `COMMAND_NO_EFFECT_REMEDY` (en + de) → non-retryable PRECONDITION_FAILED with
+  `{faultCode, remedy}`; `AGENT_LANE_PREVIEW_UNSUPPORTED_FAULT_CODE` + its arm removed (git grep: no raiser since T1; only
+  historical doc lines in the puzzle/writer law files); quick law `a_verb_whose_lane_an_agent_cannot_carry…` asserts the
+  no-effect mapping instead of the dead code. Set: **30 hunks / 14 files**, dry run clean; rustfmt: 3 flagged lines are the
+  two `map_fault` arms written in the file's existing (non-rustfmt) chain style, same as the neighbouring VIEWER arm.
+  os-mcp (`semio-framework-os-mcp` lib `a_verb_whose_lane`) joins the next overlay run.
+- 11:55–12:00 `overlay-t6-3`: SDK 4/4 (carriage 13 cases + verdicts 31 in Rust), flow **3/3 green** (pin `[evaluate,
+  focusSelection]`, `evaluate` refused `agent-lane-uncarried`), jack 5/5, writer, architect green. Measured pins (outcome dumps):
+  puzzle 2d `[createEdge]`, 3d + 5d `[translateSelection, rotateSelection, scaleSelection]` — on the boot example nothing is
+  selected, the shell answers with a notice alone, the agent lane refuses `app.command.no-effect`; every write verb (2d `addNode`,
+  3d `addObjectKind`, 5d `addPartKind`/`addNode`/`addBrushPart`) writes on both lanes, the selection it makes omitted. Wires still
+  diverged on `addNode`/`addRelationship`: they select what they made through `Effect::DispatchAction { action:
+  interactionSelect }` — the SDK's own inline interaction verb (`is_inline_interaction_verb`, folded in-reactor, never a host
+  dispatch) → classifier: an inline interaction verb is "selection changes" whichever effect carries it (fixture +2 cases → 15,
+  `interactionVerbs` == `INTERACTION_ACTION_IDS`; twin 15/15, red-checked). Puzzle laws pinned (each pinned verb asserted
+  `Refused app.command.no-effect`).
+- 12:19 `overlay-t6-4` queued (11th; lanes busy): same crates + `semio-framework-os-mcp` (`a_verb_whose_lane`, `map_fault`),
+  confirms the puzzle/wires pins and the host mapping. Set 30 hunks / 14 files, dry run clean.
+
 ### Log
 
 - 18:5x started; read AGENTS.md, preambles 14/13/12, `📓️fleet-14-agents.md` (no "CHAIN LAUNCHED" line yet), audit row 4.8 +

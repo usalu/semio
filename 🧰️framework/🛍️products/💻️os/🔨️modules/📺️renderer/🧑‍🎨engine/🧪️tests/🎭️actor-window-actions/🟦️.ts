@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🎭️ Scene-host actions of an actor-bound (hub) document reach its browser actor (🎫️ 26/09/23 C10): every window and
+/** 🎭️ Scene-host actions of an actor-bound (hub) document reach its browser actor (🎫️ 26/09/23 C10): every window and
  * panel an actor renders hands its component scene hosts (text editor, canvases, boards, 3D worlds) the shell's ONE input
  * funnel, whose actor branch forwards the action to the verified browser actor. A no-op handler stood there since
  * 26/09/09 and dropped every keystroke typed into a hub writer document without a trace (hub head stayed 0, measured on

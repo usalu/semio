@@ -3,7 +3,7 @@ use super::*;
 use crate::os_dsl::schema::{FieldSpec, JoinMode, ParseOptions, RecordLayout};
 
 //#region 🔖️Fixtures
-/// @emoji 🧬️ One field of most scalar `Shape` variants plus a nested `Record`, a `List`, a
+/// 🧬️ One field of most scalar `Shape` variants plus a nested `Record`, a `List`, a
 /// `Map`, and a `Tuple` — enough shape variety to exercise `RecordValueGen` and the round-trip
 /// laws without duplicating `pack_value`'s own exhaustive per-tag coverage.
 // 🚫️async: E4 fn-pointer slot — stored bare as `fn() -> RecordSpec` via `Shape::Record` below
@@ -32,7 +32,7 @@ fn mixed_spec() -> RecordSpec {
     )
 }
 
-/// @emoji 📷️ Simple scalar spec, small enough to print/parse deterministically for
+/// 📷️ Simple scalar spec, small enough to print/parse deterministically for
 /// `assert_dsl_pack_bidirectional`.
 fn camera_spec() -> RecordSpec {
     RecordSpec::new(Some("camera"), RecordLayout::Inline, vec![FieldSpec::new(0, "x", Shape::Float), FieldSpec::new(1, "y", Shape::Float), FieldSpec::new(2, "zoom", Shape::Float), FieldSpec::new(3, "label", Shape::Text).optional()])

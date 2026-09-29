@@ -139,6 +139,19 @@ impl SolidImporter for ProcessSolidImporter {
 }
 //#endregion 🔖️SolidCodecs
 
+/// 🗂️ The format row of one process export, read from the stdio codec crate that owns the format — never from the
+/// process-global format catalog, which only holds rows the plugins of the SAME guest registered (this guest registers
+/// none, so every export used to be refused as an unknown format kind).
+fn process_export_format(format_kind: &str) -> Result<semio_framework_plugin::io::FormatDescriptor, String> {
+    for rows in [semio_s_artifact_stdio_step::formats(), semio_s_artifact_stdio_obj::formats(), semio_s_artifact_stdio_stl::formats(), semio_s_artifact_stdio_gltf::formats()] {
+        let rows = rows.map_err(|error| format!("process export format rows: {error:?}"))?;
+        if let Some(row) = rows.into_iter().find(|row| row.kind_id == format_kind || row.short_id == format_kind || row.aliases.iter().any(|alias| alias == format_kind)) {
+            return Ok(row);
+        }
+    }
+    Err(format!("unknown process export format kind `{format_kind}`"))
+}
+
 /// 📤️ Encodes the replayed stock through `format`'s codec. STEP/OBJ/STL go through the
 /// `ProcessSolidExporter`-dispatched `SolidExporter` codecs (real B-Rep, exact where the format
 /// allows it); GLB goes through
@@ -157,7 +170,7 @@ pub fn export_process3d_model(scene: &ProcessWorkingScene, resolved_up_to: Optio
             return Ok(None);
         };
         let bytes = semio_framework_plugin::GlbExporter.export(&mesh)?;
-        let descriptor = semio_framework::format_descriptor("glb").map_err(|error| error.to_string())?.ok_or_else(|| "unknown process export format kind `glb`".to_string())?;
+        let descriptor = process_export_format("glb")?;
         let extension = descriptor.extensions.first().ok_or_else(|| "process export format kind `glb` has no extension claim".to_string())?;
         let mime_type = descriptor.mimes.first().cloned().ok_or_else(|| "process export format kind `glb` has no MIME claim".to_string())?;
         return Ok(Some(Process3dModelExport { filename: format!("process3d{extension}"), data: DslValue::String(base64_codec::base64_standard_encode(bytes)), mime_type, encoding: descriptor.is_binary.then(|| "base64".into()) }));
@@ -173,7 +186,7 @@ pub fn export_process3d_model(scene: &ProcessWorkingScene, resolved_up_to: Optio
     };
     let bytes = semio_framework_plugin::resolve_ready(exporter.export(session.kernel(), &[handle], PROCESS3D_TESSELLATION_TOLERANCE)).map_err(|error| error.to_string())?;
     let format_kind = semio_framework_plugin::resolve_ready(exporter.format_kind());
-    let descriptor = semio_framework::format_descriptor(format_kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown process export format kind `{format_kind}`"))?;
+    let descriptor = process_export_format(format_kind)?;
     let extension = descriptor.extensions.first().ok_or_else(|| format!("process export format kind `{format_kind}` has no extension claim"))?;
     let mime_type = descriptor.mimes.first().cloned().ok_or_else(|| format!("process export format kind `{format_kind}` has no MIME claim"))?;
     let data = if descriptor.is_binary { DslValue::String(base64_codec::base64_standard_encode(&bytes)) } else { DslValue::String(String::from_utf8(bytes).map_err(|error| error.to_string())?) };

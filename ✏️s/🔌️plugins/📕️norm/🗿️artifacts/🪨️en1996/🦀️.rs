@@ -279,7 +279,7 @@ pub mod part_2 {
 
 
 pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
-    app_surface::artifact_kind_spec("en1996", "EN 1996")
+    app_surface::artifact_kind_spec("en1996", "EN 1996", EN1996_DOCUMENT_SCHEMA)
 }
 
 /// 🪪️ This subset's canonical `(artifact_kind, standard, subset)` coordinate (ticket

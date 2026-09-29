@@ -168,5 +168,4 @@ export function testStdioOfficeSchemaContracts(repoRoot = getWorkspaceRoot()): v
   assert.throws(() => parsePptxSnapshot(invalidAttributeSnapshot));
   assert.throws(() => parsePptxDiff(invalidAttributeDiff));
   assert.throws(() => parsePptxSetSnapshotMutation(invalidAttributeReplacement));
-  console.log(`[DEBUG] Stdio Office schemas validated: snapshots=${cases.length * 2} diffs=${cases.length + 2} publicArtifacts=${publicCases.length * 3} optionalClears=${optionalClear.cases.length} xmlPropertyDiffs=${propertyNodes.length} sparseXml=${sparse.valid.length}/${sparse.invalid.length} docxAddresses=${addresses.valid.length}/${addresses.invalid.length} boundaryRoutes=3 attributeRefusals=3`);
 }

@@ -15,7 +15,7 @@ export { PLUGIN_BUILD_TARGETS };
 export type { PluginBuildTarget };
 
 // #region 🔖️ArtifactProbe
-/** @emoji 🔍️ HEAD-probes a plugin's module URL; `undefined` while probing, then true/false. Never blocks on a cargo build — a missing artifact just renders an instruction panel. */
+/** 🔍️ HEAD-probes a plugin's module URL; `undefined` while probing, then true/false. Never blocks on a cargo build — a missing artifact just renders an instruction panel. */
 function usePluginArtifactAvailable(moduleUrl: string): boolean | undefined {
   const [available, setAvailable] = useState<boolean | undefined>(undefined);
   useEffect(() => {
@@ -40,12 +40,12 @@ export type OsBootHostProps = {
   readonly locks?: FrameworkOsLocks;
 };
 
-/** @emoji 🖥️ One entry from `PLUGIN_BUILD_TARGETS` resolved to its dev-build module URL, mirroring `framework/os/dev/js/index.ts`. */
+/** 🖥️ One entry from `PLUGIN_BUILD_TARGETS` resolved to its dev-build module URL, mirroring `framework/os/dev/js/index.ts`. */
 function resolveTargetPlugin(pluginId: string): PluginBuildTarget | undefined {
   return PLUGIN_BUILD_TARGETS.find((t) => t.pluginId === pluginId);
 }
 
-/** @emoji 🖥️ Boots the real `FrameworkOsShell` filtered to one plugin — the app-boot story mechanism
+/** 🖥️ Boots the real `FrameworkOsShell` filtered to one plugin — the app-boot story mechanism
  * "filters for starting apps" refers to. Keyed by `plugin` so switching the Storybook `plugin` control
  * fully remounts the shell (plugin runtimes are module-singletons and must not be reused across boots). */
 export function OsBootHost({ plugin, appId, locks }: OsBootHostProps) {
@@ -97,7 +97,7 @@ type WgpuBootState = { readonly kind: "booting" } | { readonly kind: "unavailabl
 
 const WGPU_RENDERER_DIR_URL = "/renderer-modules/wgpu";
 
-/** @emoji 🔍️ Trunk hashes the wgpu bundle's filename per build (`semio-framework-renderer-wgpu-<hash>.js`);
+/** 🔍️ Trunk hashes the wgpu bundle's filename per build (`semio-framework-renderer-wgpu-<hash>.js`);
  * parse it out of the built `index.html`'s module script instead of hardcoding a hash that goes stale on
  * every rebuild. */
 async function resolveWgpuRendererModuleUrl(): Promise<string> {
@@ -116,7 +116,7 @@ function navigatorGpuUnavailableReason(): string | undefined {
   return undefined;
 }
 
-/** @emoji 🧊️ Boots the real `@semio-tech/framework-renderer-wgpu` raw-wgpu host for one registry program,
+/** 🧊️ Boots the real `@semio-tech/framework-renderer-wgpu` raw-wgpu host for one registry program,
  * with a graceful fallback when WebGPU itself is unavailable (headless CI Chromium without `--enable-unsafe-webgpu`,
  * Safari/Firefox, …) and when the plugin has no prebuilt artifact — mirrors {@link OsBootHost}'s artifact probe. */
 export function WgpuBootHost({ plugin }: WgpuBootHostProps) {

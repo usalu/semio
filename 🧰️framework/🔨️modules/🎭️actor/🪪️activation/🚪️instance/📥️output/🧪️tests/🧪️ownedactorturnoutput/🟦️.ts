@@ -41,7 +41,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(queue.closeStep(fixture.grant).kind).toBe("complete");
         expect(queue.reserve(fixture.grant).step.kind).toBe("rejected");
       }
-      console.log("[DEBUG] ActorOutputEmptyRetirement: 12 original admission prefixes physically detached; no returned-data release claim");
     });
 
     it("ActorOutputEmptyRetirement unlinks multiple original empty outputs and closes stale facades", async () => {

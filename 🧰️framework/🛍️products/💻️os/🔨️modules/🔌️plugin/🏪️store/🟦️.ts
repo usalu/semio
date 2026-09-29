@@ -86,7 +86,7 @@ function findEndHeader(bytes: Uint8Array): number {
 //#endregion 🧮️Primitives
 
 //#region 📦️Codec
-/** @emoji 📦️ Encodes deterministic UTF-8 ZIP/DEFLATE bytes for extension packages. */
+/** 📦️ Encodes deterministic UTF-8 ZIP/DEFLATE bytes for extension packages. */
 export function encodeOwnedZip(files: OwnedZipFiles): Uint8Array {
   if (files.size === 0 || files.size > MAX_ENTRY_COUNT) throw new Error("invalid extension zip entry count");
   const rows: {
@@ -152,7 +152,7 @@ export function encodeOwnedZip(files: OwnedZipFiles): Uint8Array {
   return output;
 }
 
-/** @emoji 🔓️ Decodes bounded UTF-8 ZIP entries using stored or raw-DEFLATE payloads. */
+/** 🔓️ Decodes bounded UTF-8 ZIP entries using stored or raw-DEFLATE payloads. */
 export function decodeOwnedZip(bytes: Uint8Array): Map<string, Uint8Array> {
   if (bytes.length < 22 || bytes.length > MAX_ZIP_BYTES) throw new Error("invalid extension zip encoded size");
   const endOffset = findEndHeader(bytes);

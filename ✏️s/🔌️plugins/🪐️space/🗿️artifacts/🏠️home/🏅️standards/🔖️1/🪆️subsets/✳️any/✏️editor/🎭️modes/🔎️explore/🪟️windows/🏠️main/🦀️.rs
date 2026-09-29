@@ -20,6 +20,7 @@
 //! app's controller. Local-only spaces stay open-only until promoted to a hub space.
 
 use crate::editor::home::config::HomeConfig;
+use crate::editor::home::transient::HomeDirectoryProjection;
 use crate::editor::home::terminology::SHomeLabels;
 use crate::editor::home::S_HOME_CONTROLLER_ID;
 use crate::HomeTableLabels;
@@ -36,6 +37,9 @@ pub const S_HOME_BODY: &str = TableWindowKit::KIND_ID;
 const S_HOME_EMPTY: &str = "s-home-empty";
 /// 🩹️ The two dead-line spacers' keys — see `window_content_dead_line_spacer`.
 const S_HOME_DEAD_LINE: [&str; 2] = ["s-home-dead-line-a", "s-home-dead-line-b"];
+/// 🧰️ The toolbar row above the table and its import button's frozen id.
+const S_HOME_TOOLBAR: &str = "s-home-toolbar";
+const S_HOME_IMPORT_STUDIO: &str = "s-home-import-studio";
 //#endregion 🔖️Constants
 
 //#region 🔖️Manifest
@@ -81,11 +85,16 @@ fn home_row_action(icon: IconName, label: semio_framework_plugin::LabelText, act
 /// caller's own current membership role is `author`. Hub origin alone is not a capability: a
 /// spectator reaching a control the server correctly rejects is exactly the role blindness this
 /// replaces. The pane it opens still renders solely from the server's own capability flags.
+/// Every local-origin row offers `deleteVirtualFileSystemNode` ("Remove from Home"): one Home config
+/// tombstone event that keeps the studio's document and is undone by its exact inverse.
 fn row_actions(labels: &SHomeLabels, row: &crate::HomeSpaceRow) -> semio_framework_plugin::UiAssemblyResult<Vec<semio_framework_plugin::RowAction>> {
     let mut actions = vec![home_row_action(IconName::FolderOpen, labels.action_open, "openSpace", &row.id)?];
     if row.data_class == "ephemeralLocalOnly" {
         actions.push(home_row_action(IconName::Cloud, labels.action_promote, "promoteToHubSpace", &row.id)?);
         actions.push(home_row_action(IconName::Save, labels.action_persist, "persistLocally", &row.id)?);
+    }
+    if row.origin == "local" {
+        actions.push(home_row_action(IconName::EyeOff, labels.action_remove, "deleteVirtualFileSystemNode", &row.id)?);
         return Ok(actions);
     }
     if row.origin == "hub" && row.role == Some(crate::DirectorySpaceRole::Author) {
@@ -145,19 +154,36 @@ fn window_content_dead_line_spacer(key: &str) -> semio_framework_plugin::UiAssem
     Ok(spacer)
 }
 
-fn create_space_button(actions: &SHomeLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let icon = fixed_text(IconName::Plus.as_str(), "ui.window.create-icon")?;
-    let action = ActionFactory::new(S_HOME_CONTROLLER_ID).action("createSpace", None)?;
-    let builder = semio_framework_ui_contract::button(fixed_label(actions.action_create, "ui.window.create-label")?)
-        .icon(icon)
-        .try_id("s-home-create-space")
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.create-id", "create button id admission failed"))?;
+fn toolbar_button(icon: IconName, label: semio_framework_plugin::LabelText, id: &str, action_id: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let action = ActionFactory::new(S_HOME_CONTROLLER_ID).action(action_id, None)?;
+    let builder = semio_framework_ui_contract::button(fixed_label(label, "ui.window.toolbar-label")?)
+        .icon(fixed_text(icon.as_str(), "ui.window.toolbar-icon")?)
+        .try_id(id)
+        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.toolbar-id", "toolbar button id admission failed"))?;
     let builder = match action.1 {
         Some(args) => builder.try_on_with(semio_framework_plugin::Trigger::Activate, action.0, args),
         None => builder.try_on(semio_framework_plugin::Trigger::Activate, action.0),
     }
-    .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.create-action", "create button action admission failed"))?;
-    builder.try_build().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.create", "create button admission failed"))
+    .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.toolbar-action", "toolbar button action admission failed"))?;
+    builder.try_build().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.toolbar", "toolbar button admission failed"))
+}
+
+/// 🧰️ The toolbar row above the table: `#s-home-create-space` (`createSpace`, which opens its dialog without a name)
+/// and `#s-home-import-studio` (`importSpace` without text, which asks the host to pick an `.os` studio file and runs
+/// the retained import job on the picked text). Both dispatch with no args through the same `onAction` path every row
+/// action uses.
+fn toolbar(actions: &SHomeLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let mut children: semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode> = semio_framework_plugin::UiFixedList::default();
+    for child in [toolbar_button(IconName::Plus, actions.action_create, "s-home-create-space", "createSpace")?, toolbar_button(IconName::Import, actions.action_import, S_HOME_IMPORT_STUDIO, "importSpace")?] {
+        children.try_push(child).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.toolbar-children", "fixed toolbar child admission failed"))?;
+    }
+    semio_framework_ui_contract::row()
+        .try_id(S_HOME_TOOLBAR)
+        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.toolbar-row-id", "toolbar row id admission failed"))?
+        .try_children(children)
+        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.toolbar-children", "fixed toolbar child admission failed"))?
+        .try_build()
+        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.toolbar-row", "toolbar row admission failed"))
 }
 
 /// 🔑️ **Every child of this stack carries an explicit key, and that is load-bearing.**
@@ -172,7 +198,7 @@ fn create_space_button(actions: &SHomeLabels) -> semio_framework_plugin::UiAssem
 fn render_rows_wrapped(rows: &[crate::HomeSpaceRow], table: &HomeTableLabels, actions: &SHomeLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let table_node = render_rows(rows, table, actions, windows)?;
     let mut children: semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode> = semio_framework_plugin::UiFixedList::default();
-    for child in [window_content_dead_line_spacer(S_HOME_DEAD_LINE[0])?, window_content_dead_line_spacer(S_HOME_DEAD_LINE[1])?, create_space_button(actions)?, table_node] {
+    for child in [window_content_dead_line_spacer(S_HOME_DEAD_LINE[0])?, window_content_dead_line_spacer(S_HOME_DEAD_LINE[1])?, toolbar(actions)?, table_node] {
         children.try_push(child).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.children", "fixed window child admission failed"))?;
     }
     semio_framework_ui_contract::column()
@@ -183,10 +209,9 @@ fn render_rows_wrapped(rows: &[crate::HomeSpaceRow], table: &HomeTableLabels, ac
         .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.build", "window admission failed"))
 }
 
-pub fn render(cfg: &HomeConfig, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(cfg: &HomeConfig, directory: &HomeDirectoryProjection, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let table = semio_framework_plugin::resolve_labels::<HomeTableLabels>(view_state);
     let actions = semio_framework_plugin::resolve_labels::<SHomeLabels>(view_state);
-    let directory = cfg.directory().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("s.home.directory-projection-malformed", "Home directory projection is invalid"))?;
     // 🪪️ SIGNED OUT IS A STATE, NOT A FAULT. Refusing here (`s.home.session-identity-required`) meant
     // the landing window of the whole product never published for anyone who was not already signed in
     // — which is the ordinary first paint of every hub-configured shell. The host then had an app that
@@ -202,7 +227,7 @@ pub fn render(cfg: &HomeConfig, view_state: &semio_framework_plugin::ViewModel) 
     // 🌉️ `crate::home_space_rows` is a plugin-root async fn (outside this lease); `render` must
     // stay sync (called synchronously by `HomeApp::render`) — bridged via `resolve_ready`.
     let rows = match crate::home_session_identity(view_state) {
-        Some(identity) => semio_framework_plugin::resolve_ready(crate::home_space_rows(&directory, &identity.user_id)),
+        Some(identity) => semio_framework_plugin::resolve_ready(crate::home_space_rows(directory.spaces(), &identity.user_id, &cfg.retired_local_studio_ids)),
         None => Vec::new(),
     };
     render_rows_wrapped(&rows, table, actions, &TreeWindows::for_body(view_state, S_HOME_BODY))

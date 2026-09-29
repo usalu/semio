@@ -25,7 +25,6 @@ async fn all_non_stdio_grammars_reject_each_others_shipped_fixtures() {
             continue;
         }
         let Some(fixture_text) = pilot_resolve::read_example_text(&facet.artifact_rel, facet.standard.as_deref(), ".dsl.semio").await else {
-            eprintln!("[DEBUG] soft-skip {}.fixture: no .dsl.semio under 📚️examples (🖼️assets-first walk)", facet.label);
             continue;
         };
         if soft_skip_missing(&format!("{}.fixture", facet.label), &fixture_text).await {

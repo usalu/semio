@@ -1,4 +1,4 @@
-//! @emoji 🗃️ Typed generational resource ids, residency states and the `ResourceOp` upload/evict stream.
+//! 🗃️ Typed generational resource ids, residency states and the `ResourceOp` upload/evict stream.
 //!
 //! Replaces the wgpu target's string-keyed tables (`raster_instances: Vec<(String, UiInstance)>`,
 //! which cloned a `String` per instance per frame — a correctness hazard and a per-frame allocation)

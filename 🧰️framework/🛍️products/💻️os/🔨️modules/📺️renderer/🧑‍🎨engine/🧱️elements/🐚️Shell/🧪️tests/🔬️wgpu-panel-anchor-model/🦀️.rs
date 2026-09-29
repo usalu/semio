@@ -129,7 +129,6 @@ fn host_panel_action_is_claimed_before_guest_and_preserves_the_session_roster_an
     assert_eq!(restored_panel.active_spawned_id, after.active_spawned_id);
     assert!(shell.anchor_open(PanelAnchor::BottomLeft), "a Display-group leaf reveals the bottom-left anchor");
     assert_eq!(shell.anchor_state(PanelAnchor::BottomLeft).active_tab(), Some("home-library"));
-    eprintln!("[DEBUG] native host panel action stayed in session ownership, rejected invalid claimed routes before the missing guest, and restored DirectoryHomeProjection state");
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -287,7 +286,6 @@ fn default_dock_matches_the_shared_react_fixture() {
         assert_eq!(actual_ids, expected_ids, "🧭️ anchor {} must carry the fixture's tabs in the fixture's order", anchor.as_str());
     }
     assert_eq!(skeleton, expected, "🧭️ the whole skeleton, branch children included, must match the fixture");
-    eprintln!("[DEBUG] wgpu default dock matched the shared React default-dock fixture across all 8 anchors");
 }
 
 /// 🧭️ The command palette is a REAL `bottom-middle` anchor now, not a Settings tab — the packet's
@@ -345,6 +343,9 @@ fn two_open_anchors_in_one_column_split_its_band() {
 
 /// 🧭️ The live per-anchor geometry: only OPEN anchors claim a band, so opening the second anchor of a
 /// column halves the first rather than leaving it full height and overlapped.
+///
+/// 📐️ The chrome-hosted root remains in the navbar/footer. The floating child panel grows into
+/// the overhang but omits that already-owned root row.
 #[test]
 fn anchor_rect_bands_only_the_open_anchors_of_a_column() {
     let theme = Theme::default();
@@ -352,8 +353,6 @@ fn anchor_rect_bands_only_the_open_anchors_of_a_column() {
     let mut shell = fixture_dock_shell();
     shell.toggle_anchor(PanelAnchor::TopLeft);
     let alone = shell.anchor_rect(PanelAnchor::TopLeft, body, &theme);
-    // 📐️ The chrome-hosted root remains in the navbar/footer. The floating child panel grows into
-    // the overhang but omits that already-owned root row.
     assert_eq!(alone.h, body.h + (theme.navbar_height + theme.control_height) * 0.5 - theme.control_height);
     shell.toggle_anchor(PanelAnchor::BottomLeft);
     let shared = shell.anchor_rect(PanelAnchor::TopLeft, body, &theme);
@@ -592,7 +591,6 @@ fn dock_override_round_trips_through_the_os_shell_config_document() {
     let back = DockTabMoveTarget { anchor: PanelAnchor::TopRight, parent_path: Vec::new(), index: 0 };
     assert!(shell.move_dock_tab("fixture.details", &back));
     assert!(shell.dock_override.is_none(), "a dock back at its computed default persists no override");
-    eprintln!("[DEBUG] dock override round-tripped through semio.os.config's dockLayouts layers and cleared at the default");
 }
 
 /// 🗄️ The per-anchor chrome round trip: visibility, size and active path survive a reload, and an
@@ -722,7 +720,6 @@ fn every_shell_owned_leaf_projects_into_retained_records() {
             assert_eq!(record.id, ui_contract::UiNodeId(index as u64 + 1), "🧾️ records are parent-first and densely numbered");
         }
     }
-    eprintln!("[DEBUG] wgpu shell-owned panel leaves all project into retained records");
 }
 
 /// 🧾️ The assembler refuses a node it cannot project instead of silently dropping it, so a builder
@@ -858,7 +855,6 @@ fn the_mobile_panel_flattens_every_anchor_in_anchor_order() {
     let ids: Vec<String> = shell.mobile_panel_tabs().into_iter().map(|tab| tab.id).collect();
     let expected: Vec<String> = fixture["mobilePanelTabs"]["ids"].as_array().expect("fixture mobile ids").iter().map(|id| id.as_str().expect("id").to_string()).collect();
     assert_eq!(ids, expected, "📱️ the flattened order is the fixture's");
-    eprintln!("[DEBUG] wgpu mobile panel flattened {} tabs across all 8 anchors", ids.len());
 }
 
 /// 📱️ The mobile panel's remembered path reconciles onto the flattened list and drills a branch to its
@@ -926,7 +922,6 @@ fn execute_is_disabled_until_every_required_argument_is_staged() {
         Some((command_address_stable_key(&entry.address), entry.definition.category.clone(), arg.id.clone(), value))
     });
     let Some((key, category, arg_id, value)) = entry else {
-        eprintln!("[DEBUG] no os command declares a required argument — gate exercised by the assembler only");
         return;
     };
     shell.expanded_command_id = Some(key.clone());
@@ -1197,7 +1192,6 @@ fn navbar_bands_match_the_react_chrome_band_fixture() {
     }
     assert!(shell.navbar_trailing_tab_row_item(expected_trailing.len()).is_none());
     assert!(!expected_leading.is_empty() && !expected_trailing.is_empty(), "🧭️ the fixture app populates both navbar bands");
-    eprintln!("[DEBUG] navbar leading={expected_leading:?} trailing(paint order)={expected_trailing:?}");
 }
 
 /// 📑️ Footer bands follow React's measured placement: edge bands hug their edge and the centered
@@ -1243,6 +1237,5 @@ fn footer_bands_match_the_react_chrome_band_fixture() {
         let (left, right) = (&window[0], &window[1]);
         assert!(left.2.x + left.2.w <= right.2.x + 0.01, "📑️ footer chips never overlap: {} then {}", left.1, right.1);
     }
-    eprintln!("[DEBUG] footer bands {:?}", rows.iter().map(|(anchor, id, rect)| (anchor.as_str(), id.as_str(), rect.x, rect.w)).collect::<Vec<_>>());
 }
 //#endregion 🧭️ChromeBandFixture

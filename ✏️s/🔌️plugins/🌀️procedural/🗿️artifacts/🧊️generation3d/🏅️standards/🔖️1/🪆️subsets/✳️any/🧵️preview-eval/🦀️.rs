@@ -152,7 +152,7 @@ fn hop_effect(action: &str, window_id: &str, window_kind_id: &str) -> Effect {
 /// `unknown kind`, the error dictionary is never cached, and the next tick recomputes the identical
 /// miss. The pre-contribution chain therefore used to re-arm itself forever — and because every
 /// settle drives a host `refreshUi`, the spin also starved the very push that would have fixed it
-/// (45 s of live console with zero `[DEBUG] contributions …` lines). The ONE thing that resumes
+/// (45 s of live console with zero `[TRACE] contributions …` lines). The ONE thing that resumes
 /// this chain is `setContributions`, whose route invalidates the retained session against the moved
 /// registry generation and re-arms one tick per attached preview window
 /// (`📓️contributions-rearm-2026-09-10.md`, ticket 26/09/09/PROCEDURAL-3D-END-TO-END).

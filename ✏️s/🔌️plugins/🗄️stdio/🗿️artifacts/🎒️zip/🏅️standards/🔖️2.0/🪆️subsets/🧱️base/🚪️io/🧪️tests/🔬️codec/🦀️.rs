@@ -74,7 +74,7 @@ fn build_raw_zip(entries: Vec<RawZipEntry>, archive_comment: &[u8]) -> Vec<u8> {
         let mut cen = Vec::new();
         cen.extend_from_slice(&u32_le(SIG_CENTRAL));
         cen.extend_from_slice(&u16_le(if e.force_zip64_sentinel { 45 } else { 20 }));
-        cen.extend_from_slice(&u16_le(20));
+        cen.extend_from_slice(&u16_le(if e.force_zip64_sentinel { 45 } else { 20 }));
         cen.extend_from_slice(&u16_le(e.flags));
         cen.extend_from_slice(&u16_le(e.method));
         cen.extend_from_slice(&u16_le(0x1234));
@@ -399,10 +399,11 @@ fn serialization_validation_refuses_stale_or_unencodable_header_state() {
     let mut entry = ZipEntry { name: "plain.txt".into(), data: Vec::new(), ..Default::default() };
     entry.metadata.local.flags = 0;
     entry.metadata.central.flags = 0;
-    entry.name = "δ.txt".into();
+    entry.name = "λ.txt".into();
     let snapshot = ZipSnapshot { entries: vec![entry.clone()], ..Default::default() };
     assert!(matches!(encode_zip(&snapshot), Err(ZipError::Utf8 { .. })));
 
+    entry.name = "δ.txt".into();
     entry.metadata.local.extra_fields.push(ZipExtraField { id: EXTRA_UNICODE_PATH, data: vec![1] });
     entry.metadata.local.unicode_path_legacy_name = Some(b"plain.txt".to_vec());
     let stale = ZipSnapshot { entries: vec![entry], ..Default::default() };
@@ -510,7 +511,6 @@ async fn deterministic_logical_round_trip() {
         }
     }
     assert_eq!(parts, opc.parts.iter().map(|part| part.path.clone()).collect::<Vec<_>>());
-    eprintln!("[DEBUG] OPC save/reopen preserved {} content parts in authored order", parts.len());
 }
 
 #[test]

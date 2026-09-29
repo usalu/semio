@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 
 TREE = Path("/Users/ueli/Documents/semio")
-STAGE = TREE / ".🧬semio/🌐hub/s14-p9-stage"
+STAGE = TREE / os.environ.get("P9_STAGE", ".🧬semio/🌐hub/s14-p9-stage")
 name, doc_file = sys.argv[1], Path(sys.argv[2])
 files = sys.argv[3:]
 MERGE = int(os.environ.get("P9_MERGE", "3"))

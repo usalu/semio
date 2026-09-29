@@ -42,10 +42,12 @@ Feature: Simulate the committed ANSI/ASHRAE 140 §5.2 case models and compare th
      them, and the Rust host has no skip channel — a missing registration, a panic and an error are
      all results — so registering them would only manufacture guaranteed reds. They come back the
      moment a reference exists.
-  4. The window is stated as the whole-assembly simple-glazing pair the standard publishes
-     (U = 3.0 W/(m²·K), SHGC 0.787), which both producers consume identically. The residual gap to a
-     layer-by-layer EnergyPlus window (2.740 / 0.760) is a known, documented cooling offset of about
-     +5.7…+8.1 %, which is why the cooling tolerance below is 10 % rather than 20 %.
+  4. The window is the two-pane layered stack every fenestration binds through
+     `glazing_construction_id`; the whole-assembly pair the standard publishes (U = 3.0 W/(m²·K),
+     SHGC 0.787) is only the fenestration's fallback while no stack is bound. The engine and the oracle
+     translation both consume that stack, and the translation reproduces the committed
+     `🔮️energyplus.json` of 600/600FF/900/900FF exactly. The cooling tolerance below stays 10 % per the
+     contract.
 
   Tolerances (from `📓️bestest-contract.md` and its 2026-09-06 amendment): annual heating within 20 %
   and annual cooling within 10 % relative of the translated EnergyPlus run; peaks within 25 %;

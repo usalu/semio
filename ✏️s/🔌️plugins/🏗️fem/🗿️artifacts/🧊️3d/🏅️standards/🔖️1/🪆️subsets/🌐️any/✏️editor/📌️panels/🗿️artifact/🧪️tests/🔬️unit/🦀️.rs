@@ -415,7 +415,6 @@ async fn a_house_sized_first_paint_keeps_the_whole_body_inside_the_record_arena(
     let document = house();
     let tree = render(&document, &Fem3dInteractionSnapshot::default(), english(), &TreeWindows::unhosted()).expect("a House-sized document still assembles");
     let nodes = body_nodes(&tree);
-    println!("[DEBUG] fem3d-house first-paint body_nodes={nodes}");
     assert!(nodes <= semio_framework_ui_contract::UI_DOCUMENT_NODES, "the House body reconciles: {nodes} > {}", semio_framework_ui_contract::UI_DOCUMENT_NODES);
     for (suffix, total) in SECTION_SUFFIXES.into_iter().zip(section_totals(&document)) {
         assert_eq!(extent_of(section_node(&tree, suffix)), total, "section {suffix} still stamps its full extent, seated or starved");
@@ -453,7 +452,6 @@ async fn a_house_sized_body_honours_every_capped_host_window() {
     }
     assert_eq!(window_of(section_node(&tree, "nodes")), TreeWindow { row_extent: Default::default(), total: 63, offset: 0 });
     let nodes = body_nodes(&tree);
-    println!("[DEBUG] fem3d-house hosted body_nodes={nodes}");
     assert!(nodes <= semio_framework_ui_contract::UI_DOCUMENT_NODES, "the House body reconciles under a full host request set: {nodes} > {}", semio_framework_ui_contract::UI_DOCUMENT_NODES);
 }
 

@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/🤖️AgentDelegations/component.tsx
-/** @emoji 🤖️ `🤖️AgentDelegations` — the human-facing half of M6's delegated agent credential: give an
+/** 🤖️ `🤖️AgentDelegations` — the human-facing half of M6's delegated agent credential: give an
  * AI agent its own scoped, revocable access to the space that is open, download its credential file
  * exactly once, see what is outstanding and when each delegation was last used, and withdraw one
  * behind a confirmation. Purely presentational: every mutation leaves as an intent callback and

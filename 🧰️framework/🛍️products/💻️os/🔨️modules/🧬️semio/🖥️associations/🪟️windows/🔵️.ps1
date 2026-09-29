@@ -1,4 +1,4 @@
-﻿# @emoji 🪟 Registers `.semio` ProgId and `application/vnd.semio` for the current user.
+﻿# 🪟 Registers `.semio` ProgId and `application/vnd.semio` for the current user.
 $progId = "Semio.Document"
 $ext = ".semio"
 New-Item -Path "HKCU:\Software\Classes\$ext" -Force | Out-Null

@@ -1,0 +1,11 @@
+{
+ "extends": "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-sh2-overlay/tsconfig.json",
+ "compilerOptions": { "noEmit": true, "incremental": false },
+ "include": [],
+ "files": [
+  "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-sh2-overlay/✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/📜️script.ts",
+  "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-sh2-overlay/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧬️schema/📇️directory-projection/🧪️tests/🔬️unit/🟦️.ts",
+  "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-sh2-overlay/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🟦️.ts",
+  "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-sh2-overlay/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🟦️.ts"
+ ]
+}

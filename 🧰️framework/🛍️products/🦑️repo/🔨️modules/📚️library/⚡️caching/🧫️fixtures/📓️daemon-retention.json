@@ -2,6 +2,6 @@
   "limitBytes": 8388608,
   "retainBytes": 65536,
   "cycles": 3,
-  "tail": "[DEBUG] preserved diagnostic 🧬️ tail\n",
-  "append": "[DEBUG] original append descriptor remains live\n"
+  "tail": "preserved diagnostic 🧬️ tail\n",
+  "append": "original append descriptor remains live\n"
 }

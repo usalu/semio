@@ -19,10 +19,10 @@ import { playPageOrigins } from "../../🔨️modules/📦️site/📄pages/🟦
 const playDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const repoRoot = path.resolve(playDir, "../..");
 
-/** @emoji 🚫️ Keep wasm-pack engine packages out of Vite's dep optimizer — their `pkg/` entries are produced by `buildEngineWasm`. */
+/** 🚫️ Keep wasm-pack engine packages out of Vite's dep optimizer — their `pkg/` entries are produced by `buildEngineWasm`. */
 const FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE = ["@semio-tech/framework-surface-rs", "@semio-tech/framework-editor-rs", "@semio-tech/framework-surface-node-graph-rs", "@semio-tech/framework-surface-board-2d-rs", "@semio-tech/flow-core"];
 
-/** @emoji 🎡️ Static assets every pane declares (meshes, map tiles, CAD examples). */
+/** 🎡️ Static assets every pane declares (meshes, map tiles, CAD examples). */
 const resolvedPlaygroundAssets = PLAY_RUNTIME_TARGETS.flatMap(target => target.assets);
 const { extensionModuleDirNames } = playRuntimeModuleLayout();
 

@@ -34,7 +34,6 @@ async fn stdio_document_contract_shared_geometry_matches_independent_oracle() {
             other => panic!("unknown geometry fixture type {other}"),
         }
     }
-    eprintln!("[DEBUG] Shared Semio geometry matched {} neutral vectors and independent Serde admission", cases.len());
 }
 
 #[semio_framework_async_macros::async_test]

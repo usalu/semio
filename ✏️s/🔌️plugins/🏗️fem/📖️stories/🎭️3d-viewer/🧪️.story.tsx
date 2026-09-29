@@ -27,7 +27,7 @@ import { buildFem3dSceneNode, fem3dStoryStateFor, fem3dStructuralInstances, fem3
 const FEM3D_VIEW_BODY_KEY = "fem3d.view.model";
 const FEM3D_VIEW_CONTROLLER_ID = "fem3d-view";
 
-/** @emoji 🕳️ What the runtime viewer window actually hands `world3d_scene` before the `live_visual` lease is applied. */
+/** 🕳️ What the runtime viewer window actually hands `world3d_scene` before the `live_visual` lease is applied. */
 const FEM3D_RUNTIME_EMPTY_SCENE_PARTS = { meshesJson: "[]", instancesJson: "[]" };
 
 function Fem3dViewerStoryHost({ initialExampleId, locale }: { readonly initialExampleId: string; readonly locale: FemStoryLocale }): ReactElement {

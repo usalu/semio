@@ -78,7 +78,7 @@ test("mutation source-file facts vectors are closed and cover the registered sou
   expect(vectorRoles).toEqual(new Set([...allRoles, "generated"]));
   const nfd = vectors.cases.find((row) => row.id === "documentation-nfd")!;
   expect(nfd.sourcePath).not.toBe(nfd.sourcePath.normalize("NFC"));
-  expect(sourceFileFactReference([nfd], taxonomy)).toEqual([nfd.expected]);
+  expect(sourceFileFactReference([nfd], taxonomy)).toEqual<readonly (typeof nfd.expected)[]>([nfd.expected]);
 });
 
 test("mutation source-file facts reference oracle has strict standalone types", () => {

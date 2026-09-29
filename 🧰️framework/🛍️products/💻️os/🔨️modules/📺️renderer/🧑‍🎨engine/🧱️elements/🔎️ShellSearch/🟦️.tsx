@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/🔎️ShellSearch/component.tsx
-/** @emoji 🔎️ `🔎️ShellSearch` — the OS shell's two fuzzy-search command surfaces: `UISearch` (the global
+/** 🔎️ `🔎️ShellSearch` — the OS shell's two fuzzy-search command surfaces: `UISearch` (the global
  * command palette over an arbitrary `UISearchItem[]`) and `UIFind`/`UIFindProvider` (an in-document
  * find-in-content surface a window registers `UIFindItem[]` into via `useUIFind`). Both share one
  * owned fuzzy-ranked grouped-results layout on top of `CommandDialog`.

@@ -503,7 +503,6 @@ async fn query_ownership_runtime_publishes_transient_result_without_document_edi
     app.close();
     let (generation, rendered) = outcome.expect("owned query runtime");
     assert!(rendered.contains("table"));
-    eprintln!("[DEBUG] query result reached results-window transient generation {generation}, rendered as a table, preserved the document, and retired the app");
 }
 
 async fn drive_query_ownership_operations(app: &mut VcsArtifactApp<EditorApp<TrinityJackPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>) -> Result<(u64, u64, u64), String> {
@@ -644,7 +643,6 @@ async fn jack_graph_window_config_query_ownership_isolates_two_editor_result_pai
         assert!(state.query_execution_id.is_none() && state.result.is_none() && state.query_error.is_none());
     }
     reopened.close();
-    eprintln!("[DEBUG] two editor/result pairs kept query source and output isolated; reload restored only the authored editor configs and reset both results transients");
 }
 
 /// 🎫️ Slice B3b (ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END). Every retained WINDOW-CONFIG

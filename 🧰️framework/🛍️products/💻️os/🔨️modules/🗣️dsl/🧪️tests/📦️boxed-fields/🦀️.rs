@@ -46,7 +46,6 @@ fn boxed_dsl_fields_match_neutral_values_and_serde() {
     assert_eq!(DslField::to_value(&restored), value);
     assert_eq!(serde_json::to_value(&restored).expect("serde restored record"), vectors["record"]);
     assert_eq!(restored, reference);
-    println!("[DEBUG] Boxed scalar and record values match the neutral serde oracle and retain inner errors");
 }
 
 #[test]
@@ -73,5 +72,4 @@ fn boxed_dsl_operation_matches_unboxed_text_and_binary() {
     assert_eq!(BoxedFieldOperation::from_named_record(&boxed_key, &parsed).expect("boxed text round trip"), boxed);
     let BoxedFieldOperation::Replace { config } = boxed;
     assert_eq!(serde_json::to_value(config).expect("serde operation payload"), vectors["record"]);
-    println!("[DEBUG] Boxed and inline operations share text and binary bytes with the neutral record oracle");
 }

@@ -12,7 +12,7 @@ use std::collections::HashMap;
 use std::path::Path;
 
 //#region 🔖️Registry
-/// @emoji 🧬️ Demonstration-only schema: no keyword, three keyed scalar fields — mirrors `pack`
+/// 🧬️ Demonstration-only schema: no keyword, three keyed scalar fields — mirrors `pack`
 /// facade's own `sample_spec` test fixture so a pack file built by any wave-0 crate's tests
 /// round-trips through this CLI unmodified.
 fn sample_spec() -> crate::os_dsl::schema::RecordSpec {
@@ -27,7 +27,7 @@ fn sample_spec() -> crate::os_dsl::schema::RecordSpec {
     )
 }
 
-/// @emoji 🧬️ Demonstration-only schema exercising a keyword and a `List` shape, distinct from
+/// 🧬️ Demonstration-only schema exercising a keyword and a `List` shape, distinct from
 /// `sample_spec` — e.g. `note title="Todo" body="write the CLI" tags=[ "wave0" "pack" ]`.
 fn note_spec() -> crate::os_dsl::schema::RecordSpec {
     crate::os_dsl::schema::RecordSpec::new(
@@ -41,7 +41,7 @@ fn note_spec() -> crate::os_dsl::schema::RecordSpec {
     )
 }
 
-/// @emoji 📇️ Closed set of the two demonstration schema entries the built-in registry knows.
+/// 📇️ Closed set of the two demonstration schema entries the built-in registry knows.
 /// Enum dispatch keeps the registry closed set explicit while each schema constructor remains a
 /// synchronous, allocation-only function.
 #[derive(Clone, Copy)]
@@ -59,7 +59,7 @@ impl SchemaKind {
     }
 }
 
-/// @emoji 📇️ The built-in `--schema <name>` registry — permanently a fixed 2-entry demonstration
+/// 📇️ The built-in `--schema <name>` registry — permanently a fixed 2-entry demonstration
 /// table. Ownership boundary (not a stub, verified structurally, not just by convention): the
 /// `pack`/`spr`/`semio` binaries here all compile from `semio-framework-os-kernel`
 /// (`🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml`), whose `[dependencies]` list
@@ -87,21 +87,21 @@ fn registry_names() -> String {
     names.join(", ")
 }
 
-/// @emoji 🔎️ W1 foundation of the DSL registry unification (design ruling B-R3): a schema resolver
+/// 🔎️ W1 foundation of the DSL registry unification (design ruling B-R3): a schema resolver
 /// this crate's CLI functions (`to-dsl`/`from-dsl`/`diff --schema`) can be driven through, so they
 /// stop being schema-blind without `pack_cli` itself taking on any app dependency — the trait, not an
 /// implementation, lives here; the real fan-in implementation is the NEW `dsl_registry` crate
 /// (`🗣️dsl/📇️registry`), which depends on the app `🗣️dsl` crates this crate deliberately does not.
 pub trait SchemaResolver {
     async fn resolve(&self, schema: &str) -> Option<crate::os_dsl::schema::RecordSpec>;
-    /// @emoji 📇️ Every schema name this resolver knows, for help/error text — default empty so a
+    /// 📇️ Every schema name this resolver knows, for help/error text — default empty so a
     /// resolver that only cares about `resolve` doesn't have to implement it.
     async fn names(&self) -> Vec<String> {
         Vec::new()
     }
 }
 
-/// @emoji 🧬️ The crate's own fixed 2-entry demonstration table (`sample_spec`/`note_spec`), wrapped
+/// 🧬️ The crate's own fixed 2-entry demonstration table (`sample_spec`/`note_spec`), wrapped
 /// as a `SchemaResolver` — what every CLI subcommand resolves through by default when no external
 /// resolver is supplied. `main_impl`'s public behavior is unchanged: this is a refactor of
 /// `resolve_schema`'s prior free-function body into the new trait shape, not a behavior change.
@@ -124,7 +124,7 @@ async fn resolve_schema(name: &str) -> Option<crate::os_dsl::schema::RecordSpec>
 //#endregion 🔖️Registry
 
 //#region 🔖️Args
-/// @emoji ✂️ Splits argv-style slices into positionals and `--flag value` / `--flag=value`
+/// ✂️ Splits argv-style slices into positionals and `--flag value` / `--flag=value`
 /// pairs; a trailing bare `--flag` with nothing after it maps to an empty-string value.
 async fn parse_args(args: &[String]) -> (Vec<String>, HashMap<String, String>) {
     let mut positional = Vec::new();
@@ -197,7 +197,7 @@ async fn print_manifest(manifest: &crate::os_pack::Manifest, footer: &crate::os_
 //#endregion 🔖️Format
 
 //#region 🔖️Inspect
-/// @emoji 🔍️ `pack inspect <file>` — prints header/footer/manifest/segment-span text; never
+/// 🔍️ `pack inspect <file>` — prints header/footer/manifest/segment-span text; never
 /// panics on corrupt input, degrading to a forward-scan recovery summary if the manifest fails
 /// to load.
 async fn cmd_inspect(rest: &[String]) -> i32 {
@@ -265,7 +265,7 @@ async fn cmd_inspect(rest: &[String]) -> i32 {
 //#endregion 🔖️Inspect
 
 //#region 🔖️Verify
-/// @emoji 🛡️ `pack verify <file> [--level=trusted|standard|full]` — opens the manifest, reads
+/// 🛡️ `pack verify <file> [--level=trusted|standard|full]` — opens the manifest, reads
 /// the document body, and reads every chunk at the requested `VerificationLevel`; prints `OK`/
 /// `FAIL: <reason>` and never panics on corrupt input.
 async fn cmd_verify(rest: &[String]) -> i32 {
@@ -312,7 +312,7 @@ async fn cmd_verify(rest: &[String]) -> i32 {
 //#endregion 🔖️Verify
 
 //#region 🔖️Hash
-/// @emoji #⃣ `pack hash <file>` — prints the footer's `content_hash` hex, reading only the
+/// #⃣ `pack hash <file>` — prints the footer's `content_hash` hex, reading only the
 /// trailing footer bytes via `crate::os_pack::content_hash`.
 async fn cmd_hash(rest: &[String]) -> i32 {
     let (positional, _flags) = parse_args(rest).await;
@@ -341,7 +341,7 @@ async fn cmd_hash(rest: &[String]) -> i32 {
 //#endregion 🔖️Hash
 
 //#region 🔖️ToDsl
-/// @emoji 📤️ `pack to-dsl <file> --schema <name>` — decodes against a registry spec and prints
+/// 📤️ `pack to-dsl <file> --schema <name>` — decodes against a registry spec and prints
 /// canonical `Document`-mode DSL text to stdout.
 async fn cmd_to_dsl(rest: &[String]) -> i32 {
     let (positional, flags) = parse_args(rest).await;
@@ -386,7 +386,7 @@ async fn cmd_to_dsl(rest: &[String]) -> i32 {
 //#endregion 🔖️ToDsl
 
 //#region 🔖️FromDsl
-/// @emoji 📥️ `pack from-dsl <file> --schema <name> --out <file>` — parses `<file>`'s DSL text
+/// 📥️ `pack from-dsl <file> --schema <name> --out <file>` — parses `<file>`'s DSL text
 /// against a registry spec and encodes+writes the resulting pack file atomically to `--out`.
 async fn cmd_from_dsl(rest: &[String]) -> i32 {
     let (positional, flags) = parse_args(rest).await;
@@ -441,7 +441,7 @@ async fn cmd_from_dsl(rest: &[String]) -> i32 {
 //#endregion 🔖️FromDsl
 
 //#region 🔖️Diff
-/// @emoji 🌳️ Field-by-field diff of two decoded records; `+`/`-`/`~` prefix additions,
+/// 🌳️ Field-by-field diff of two decoded records; `+`/`-`/`~` prefix additions,
 /// removals, and changes, keyed by field id ascending.
 async fn diff_records(a: &crate::os_dsl::schema::RecordValue, b: &crate::os_dsl::schema::RecordValue) -> Vec<String> {
     let mut ids: Vec<u16> = a.fields.keys().chain(b.fields.keys()).copied().collect();
@@ -460,7 +460,7 @@ async fn diff_records(a: &crate::os_dsl::schema::RecordValue, b: &crate::os_dsl:
     lines
 }
 
-/// @emoji 🌗️ `pack diff <file-a> <file-b> [--schema <name>]` — structural `RecordValue` diff
+/// 🌗️ `pack diff <file-a> <file-b> [--schema <name>]` — structural `RecordValue` diff
 /// when `--schema` resolves, else a raw content-hash/length/first-mismatch summary. Exit code
 /// `0` when identical, `1` when they differ, `2` on a usage/resolution error.
 async fn cmd_diff(rest: &[String]) -> i32 {
@@ -555,7 +555,7 @@ async fn print_help() {
     println!("  wave 2. inspect/verify/hash never need a schema (self-describing decode).");
 }
 
-/// @emoji 🚪️ The CLI's single testable entry point — `main` is a thin `std::process::exit`
+/// 🚪️ The CLI's single testable entry point — `main` is a thin `std::process::exit`
 /// wrapper around this. Never panics on malformed input; every subcommand handler maps errors
 /// to a printed message and a non-zero exit code instead.
 pub async fn main_impl(args: &[String]) -> i32 {

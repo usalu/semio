@@ -7,7 +7,7 @@
   "limits": {
     "rawBytes": 131072,
     "checkpointBytes": 512,
-    "scalarBytes": 4096,
+    "configValueBytes": 4096,
     "configBaseBytes": 1048576,
     "commandStepBytes": 1048576,
     "storeStepBytes": 1048576,
@@ -19,7 +19,15 @@
       "id": "applyDirectoryEventPage",
       "disposition": "Migrated",
       "lanes": [
-        "Config"
+        "Transient"
+      ],
+      "blocker": ""
+    },
+    {
+      "id": "applyLocalCatalogDocument",
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
       ],
       "blocker": ""
     },
@@ -33,15 +41,19 @@
     },
     {
       "id": "bindSpaceFile",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "blocker": "filesystem binding and studio port registration still execute in one direct handler"
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
     },
     {
       "id": "importSpace",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "blocker": "payload decode and authored document import still execute in one direct handler"
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
     },
     {
       "id": "openSpace",
@@ -61,9 +73,11 @@
     },
     {
       "id": "deleteVirtualFileSystemNode",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "blocker": "filesystem deletion still executes in one direct handler"
+      "disposition": "Migrated",
+      "lanes": [
+        "Config"
+      ],
+      "blocker": ""
     },
     {
       "id": "goHome",

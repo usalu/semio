@@ -1,5 +1,4 @@
 use super::*;
-use semio_framework_plugin::Component;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_a_table_window() {
@@ -16,8 +15,7 @@ async fn render_splits_header_from_data_rows() {
         records: vec![crate::CsvRecord { fields: vec![crate::CsvField { value: "name".into(), quoted: false }] }, crate::CsvRecord { fields: vec![crate::CsvField { value: "ada".into(), quoted: false }] }],
     };
     let node = render(&document).expect("render");
-    let Component::Surface(props) = node.component else { panic!("expected a retained table surface") };
-    let scene: semio_framework_ui_scene::TableScene = semio_framework_ui_scene::decode(&props).expect("decode table scene");
+    let scene: semio_framework_ui_scene::TableScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(&node).expect("decode the table scene with its lanes");
     // 📊️ `TableWindowKit` contract: `columnsJson` is `{id, label}` records, `rowsJson` is
     // `{id, <column id>: cell}` records keyed by column position.
     let columns: Vec<serde_json::Value> = serde_json::from_str(&scene.columns_json).expect("columns json");

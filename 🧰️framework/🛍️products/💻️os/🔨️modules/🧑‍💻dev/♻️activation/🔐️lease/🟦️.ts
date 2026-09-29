@@ -30,7 +30,7 @@ function pluginBuildLeasePath(variant: string): string {
   return join(pluginBuildLeaseDir(), `plugin-build-${variant}.json`);
 }
 
-/** @emoji 💀️ True when `pid` no longer exists on this machine (cross-platform: `process.kill(pid, 0)`
+/** 💀️ True when `pid` no longer exists on this machine (cross-platform: `process.kill(pid, 0)`
  * is a liveness probe on POSIX and Windows alike, never an actual kill). */
 function isPidAlive(pid: number): boolean {
   try {
@@ -49,7 +49,7 @@ function readPluginBuildLease(path: string): PluginBuildLease | undefined {
   }
 }
 
-/** @emoji 🔐️ Claims the plugin-build lease for `variant`: atomically creates the lease file (`wx` —
+/** 🔐️ Claims the plugin-build lease for `variant`: atomically creates the lease file (`wx` —
  * fails with `EEXIST` when another live holder exists) or takes over a stale one (dead `pid`) in
  * place. Returns `"holder"` for this process, or the live `"follower"` lease otherwise. */
 function acquirePluginBuildLease(variant: string, port: number): { readonly role: "holder" } | { readonly role: "follower"; readonly lease: PluginBuildLease } {
@@ -75,7 +75,7 @@ function acquirePluginBuildLease(variant: string, port: number): { readonly role
   }
 }
 
-/** @emoji ✅️ Flips `registryReady` once the holder's registry catalog + engine wasm are on disk. No-op
+/** ✅️ Flips `registryReady` once the holder's registry catalog + engine wasm are on disk. No-op
  * if this process no longer owns the lease (lost to a stale-takeover race). */
 function markPluginBuildLeaseReady(variant: string): void {
   const path = pluginBuildLeasePath(variant);
@@ -84,7 +84,7 @@ function markPluginBuildLeaseReady(variant: string): void {
   writeFileSync(path, JSON.stringify({ ...lease, registryReady: true } satisfies PluginBuildLease, null, 2));
 }
 
-/** @emoji 🕰️ Follower-side wait for the holder's `registryReady` flag, capped at
+/** 🕰️ Follower-side wait for the holder's `registryReady` flag, capped at
  * `PLUGIN_BUILD_LEASE_READY_TIMEOUT_MS`. Returns `true` when the holder is ready, when the lease file
  * vanishes (holder released/finished), or when its `pid` dies mid-wait — either way nothing is left to
  * wait on.
@@ -108,7 +108,7 @@ async function waitForPluginBuildLeaseReady(variant: string, deadlineMs: number)
   return false;
 }
 
-/** @emoji 🧾️ Whether the shared build outputs a follower intends to serve are actually on disk — the
+/** 🧾️ Whether the shared build outputs a follower intends to serve are actually on disk — the
  * generated playground catalog plus a non-empty `🔌️plugin-modules/`. Checked instead of trusting the
  * lease flag alone, so a follower never serves an empty module directory just because some other
  * process claimed readiness. */
@@ -120,7 +120,7 @@ function pluginBuildOutputsPresent(): boolean {
   }
 }
 
-/** @emoji 🪓️ Forcibly takes the lease for this process after a follower gave up waiting, so it can do
+/** 🪓️ Forcibly takes the lease for this process after a follower gave up waiting, so it can do
  * the build itself. Best-effort: losing the ensuing `wx` race just means somebody else holds it and we
  * build anyway, which is wasteful but always correct. */
 function takeOverPluginBuildLease(variant: string, port: number): void {
@@ -138,7 +138,7 @@ function takeOverPluginBuildLease(variant: string, port: number): void {
   }
 }
 
-/** @emoji 🔓️ Releases this process's own plugin-build lease (no-op if it was never the holder, or lost
+/** 🔓️ Releases this process's own plugin-build lease (no-op if it was never the holder, or lost
  * the lease to a stale-takeover race) — called from `exit`/`SIGINT` so the next `dev` process for the
  * same variant can immediately claim the lease instead of waiting out a dead holder's timeout. */
 function releasePluginBuildLease(variant: string): void {

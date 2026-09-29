@@ -3,15 +3,17 @@
 //! example with the invocations of `🧫️fixtures/⚖️declared-verb-examples.json`.
 
 use super::*;
-use semio_framework_plugin::artifact_app_laws::{assert_declared_verbs_honour_their_declarations, declared_verb_agent_divergences};
+use semio_framework_plugin::artifact_app_laws::{assert_declared_verbs_honour_their_declarations, declared_verb_agent_divergences, DeclaredVerbOutcome};
 
 /// ⚖️ LAW: all 28 declared verbs honour their declarations, probed with the first-party extensions installed (their
 /// operators give `add` the ports `connectMediaPorts` wires). The agent lane refuses by name every verb that edits the
 /// composed content child — an agent transaction carries parent operations only, so a child group is
 /// `interactive-job.agent-lane-uncarried` until the MCP gateway commits owned children (routed to G10, ticket
-/// 26/09/23 `wp-p8.md` § routed) — `evaluate`, whose host-only job the agent lane cannot preview, and
-/// `focusSelection`, which frames the camera of the main window the agent address does not name. The list is pinned so
-/// a carrier that lands turns this law red until the pin is removed.
+/// 26/09/23 `wp-p8.md` § routed) — and `focusSelection`, which frames the camera of the main window the agent address
+/// does not name. The list is pinned so a carrier that lands turns this law red until the pin is removed. `evaluate` left
+/// it when the agent lane began previewing plugin-owned jobs (P9, 2026-09-28): the preview settles its host-only job but
+/// neither carries nor refuses the host effects the shell lane requests, and a silent agent lane does not count as a
+/// divergence — pinned below (shell acts, agent settles silent) until the fail-closed preview restores it to the list.
 #[semio_framework_async_macros::async_test]
 async fn every_declared_flow_verb_honours_its_declaration() {
     crate::editor::flow::unit_tests::context::install_first_party_light_flow_extensions_for_tests();
@@ -19,9 +21,12 @@ async fn every_declared_flow_verb_honours_its_declaration() {
     assert_eq!(probes.len(), 28, "declared verbs");
     assert_eq!(
         declared_verb_agent_divergences(&probes),
-        ["addWidget", "removeWidget", "duplicateWidget", "disconnect", "connectMediaPorts", "moveMediaNode", "reorganize", "patchFlowWidgets", "renameFlowWidget", "setActiveExample", "evaluate", "focusSelection"],
+        ["addWidget", "removeWidget", "duplicateWidget", "disconnect", "connectMediaPorts", "moveMediaNode", "reorganize", "patchFlowWidgets", "renameFlowWidget", "setActiveExample", "focusSelection"],
         "agent-lane divergences"
     );
+    let evaluate = probes.iter().find(|probe| probe.verb == "evaluate").expect("evaluate is a declared verb");
+    assert!(evaluate.windows.iter().all(|window| matches!(&window.staged, DeclaredVerbOutcome::Settled(effect) if !effect.is_silent())), "evaluate acts on the shell lane: {:?}", evaluate.windows.iter().map(|window| &window.staged).collect::<Vec<_>>());
+    assert!(matches!(&evaluate.agent, Some(DeclaredVerbOutcome::Settled(effect)) if effect.is_silent()), "the agent lane settles evaluate without its host effects: {:?}", evaluate.agent);
 }
 
 /// ⚖️ LAW: the content child is the one scene. After a child edit (`addWidget`) the window renders the new widget and

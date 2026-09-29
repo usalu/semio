@@ -17,13 +17,13 @@
  * render time, long after both modules have finished loading — so only this symbol needed to move early.
  */
 declare const uiLabelBrand: unique symbol;
-/** @emoji 🎗️ A display-ready, locale-resolved string. Component text props (`label`, `title`,
+/** 🎗️ A display-ready, locale-resolved string. Component text props (`label`, `title`,
  * `placeholder`, …) should require this instead of `string`, so a hardcoded literal
  * (`label="Close"`) fails to typecheck — only `useLabel`/`useIdLabel` (chrome/product
  * translation lookups) or {@link uiDataLabel} (explicit runtime data) can produce one. */
 export type UiLabel = string & { readonly [uiLabelBrand]: true };
 
-/** @emoji 📊️ Genuine runtime data (file names, counts, user content) rendered as a label. Passing a
+/** 📊️ Genuine runtime data (file names, counts, user content) rendered as a label. Passing a
  * string literal here is a gate violation — see the chrome-i18n lint's `uiDataLabel` literal check. */
 export const uiDataLabel = (value: string): UiLabel => value as UiLabel;
 //#endregion 🎗️UiLabel

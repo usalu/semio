@@ -305,7 +305,7 @@ impl ArtifactCommandWork<EditorApp<ReasoningWiresPlayApp>> for WiresWindowDragWo
 
     fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<ReasoningWiresPlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<ReasoningWiresPlayApp>>, Fault> {
         #[cfg(test)]
-        eprintln!("[DEBUG] Wires retained work tool={} visited={} node={} field={} consumed={}", self.tool_id, self.visited, self.node_cursor, self.field_cursor, self.consumed);
+        eprintln!("[TRACE] Wires retained work tool={} visited={} node={} field={} consumed={}", self.tool_id, self.visited, self.node_cursor, self.field_cursor, self.consumed);
         if self.consumed || self.visited >= WIRES_RETAINED_WORK_ITEMS {
             return Err(Fault::from("wires-window-drag-work-capacity"));
         }

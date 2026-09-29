@@ -48,15 +48,15 @@ describe("stable wasm package wrappers", () => {
       expect(json(row.ownerPath), row.ownerPath).toEqual(row.manifest);
       const payload = json(row.payloadManifestPath);
       expect(payload.name, row.id).toBe(row.packageName);
-      expect(payload.type, row.id).toBe("module");
+      expect<string>(payload.type, row.id).toBe("module");
       expect(payload.main, row.id).toBe(row.module);
       expect(payload.module, row.id).toBe(row.module);
       expect(payload.types, row.id).toBe(row.types);
-      expect(payload.files, row.id).toEqual([row.wasm, row.module, row.types, row.wasmTypes]);
+      expect<readonly string[]>(payload.files, row.id).toEqual([row.wasm, row.module, row.types, row.wasmTypes]);
       const project = json(row.projectPath);
       expect(project.name, row.id).toBe(row.projectName);
       expect(project.targets[row.producerTarget].options.command, row.id).toBe(row.producerCommand);
-      expect(project.targets[row.producerTarget].outputs, row.id).toEqual([row.producerOutput]);
+      expect<readonly string[]>(project.targets[row.producerTarget].outputs, row.id).toEqual([row.producerOutput]);
     }
   });
 

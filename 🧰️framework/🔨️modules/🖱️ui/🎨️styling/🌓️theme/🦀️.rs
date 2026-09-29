@@ -1,6 +1,6 @@
     use super::generated::{BoardPalette, CanvasPalette, ChromePalette, MapPalette, BOARD_DARK, BOARD_LIGHT, CANVAS_DARK, CANVAS_LIGHT, CHROME_DARK, CHROME_LIGHT, MAP_DARK, MAP_LIGHT};
 
-    /// @emoji 🎨️ Active appearance (light/dark) for canvas hosts.
+    /// 🎨️ Active appearance (light/dark) for canvas hosts.
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub enum AppearanceName {
         Light,

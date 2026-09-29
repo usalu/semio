@@ -5,7 +5,7 @@ fn doc_view<'a>(history: &'a HistoryView, doc_snapshot: &'a SHomeSnapshot) -> Ar
     ArtifactView::new(doc_snapshot, history)
 }
 
-fn hub_config(space_id: &str) -> HomeConfig {
+fn hub_row(space_id: &str) -> store::os_directory::DirectorySpace {
     let event = store::os_directory::DirectoryEvent {
         seq: 1,
         id: "evt-1".into(),
@@ -22,43 +22,34 @@ fn hub_config(space_id: &str) -> HomeConfig {
         },
         recorded_at_ms: 1000,
     };
-    let model = store::os_directory::fold(store::os_directory::DirectoryReadModel::default(), &event);
-    HomeConfig {
-        directory_json: crate::editor::home::config::directory_to_json(&model),
-        ..HomeConfig::default()
-    }
+    store::os_directory::fold(store::os_directory::DirectoryReadModel::default(), &event).spaces.remove(space_id).expect("folded hub row")
+}
+
+fn share(payload: ShareSpace, hub_row: Option<&store::os_directory::DirectorySpace>) -> Emit<SHomeMutation, HomeConfigMutation> {
+    let history = HistoryView::empty();
+    let doc_snapshot = SHomeSnapshot::default();
+    let doc = doc_view(&history, &doc_snapshot);
+    let config = HomeConfig::default();
+    handle_with_row(&payload, &doc, &ConfigView { snapshot: &config, window: None }, hub_row).expect("handle")
 }
 
 #[semio_framework_async_macros::async_test]
 async fn empty_email_opens_the_share_dialog() {
-    let history = HistoryView::empty();
-    let doc_snapshot = SHomeSnapshot::default();
-    let doc = doc_view(&history, &doc_snapshot);
-    let config = hub_config("sp-1");
-    let cfg = ConfigView { snapshot: &config, window: None };
-    let emit = handle(&ShareSpace { space_id: "sp-1".into(), email: String::new(), role: String::new() }, &doc, &cfg).expect("handle");
+    let row = hub_row("sp-1");
+    let emit = share(ShareSpace { space_id: "sp-1".into(), email: String::new(), role: String::new() }, Some(&row));
     assert!(matches!(emit.effects.as_slice(), [Effect::OpenDialog { dialog_id, .. }] if dialog_id == "shareSpace"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn ephemeral_local_only_blocks_share_with_accessible_notice() {
-    let history = HistoryView::empty();
-    let doc_snapshot = SHomeSnapshot::default();
-    let doc = doc_view(&history, &doc_snapshot);
-    let config = HomeConfig::default();
-    let cfg = ConfigView { snapshot: &config, window: None };
-    let emit = handle(&ShareSpace { space_id: "draft-1".into(), email: String::new(), role: String::new() }, &doc, &cfg).expect("handle");
+    let emit = share(ShareSpace { space_id: "draft-1".into(), email: String::new(), role: String::new() }, None);
     assert!(matches!(emit.effects.as_slice(), [Effect::OpenDialog { dialog_id, .. }] if dialog_id == "ephemeralShareBlocked"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn email_and_role_relay_upsert_member() {
-    let history = HistoryView::empty();
-    let doc_snapshot = SHomeSnapshot::default();
-    let doc = doc_view(&history, &doc_snapshot);
-    let config = hub_config("sp-1");
-    let cfg = ConfigView { snapshot: &config, window: None };
-    let emit = handle(&ShareSpace { space_id: "sp-1".into(), email: "ada@semio.dev".into(), role: "author".into() }, &doc, &cfg).expect("handle");
+    let row = hub_row("sp-1");
+    let emit = share(ShareSpace { space_id: "sp-1".into(), email: "ada@semio.dev".into(), role: "author".into() }, Some(&row));
     let (action_id, args) = emit
         .effects
         .iter()
@@ -75,12 +66,8 @@ async fn email_and_role_relay_upsert_member() {
 
 #[semio_framework_async_macros::async_test]
 async fn blank_role_defaults_to_spectator() {
-    let history = HistoryView::empty();
-    let doc_snapshot = SHomeSnapshot::default();
-    let doc = doc_view(&history, &doc_snapshot);
-    let config = hub_config("sp-1");
-    let cfg = ConfigView { snapshot: &config, window: None };
-    let emit = handle(&ShareSpace { space_id: "sp-1".into(), email: "ada@semio.dev".into(), role: String::new() }, &doc, &cfg).expect("handle");
+    let row = hub_row("sp-1");
+    let emit = share(ShareSpace { space_id: "sp-1".into(), email: "ada@semio.dev".into(), role: String::new() }, Some(&row));
     let args = emit
         .effects
         .iter()
@@ -91,4 +78,15 @@ async fn blank_role_defaults_to_spectator() {
         .expect("args");
     let args_value: pack::JsonValue = pack::json_from_dsl_value(&args);
     assert_eq!(args_value["role"], "spectator");
+}
+
+/// 🚫️ The direct lane cannot tell a hub space from a local one: it refuses by name instead of guessing.
+#[test]
+fn the_direct_lane_refuses_by_name() {
+    let history = HistoryView::empty();
+    let doc_snapshot = SHomeSnapshot::default();
+    let doc = doc_view(&history, &doc_snapshot);
+    let config = HomeConfig::default();
+    let refused = handle(&ShareSpace { space_id: "sp-1".into(), email: String::new(), role: String::new() }, &doc, &ConfigView { snapshot: &config, window: None });
+    assert!(matches!(refused, Err(fault) if fault.code.0.as_str() == "s.home.share-space.requires-retained-job"));
 }

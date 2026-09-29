@@ -105,7 +105,7 @@ async fn commit_rename_renames_all_spans_at_the_config_selection() {
     let (start, _) = occurrences[0];
     // 🎯️ `CommitRename` reads the rename target from the exact main-window transient selection — set it via
     // a real selection command first (mirrors what the editor surface does before offering rename).
-    dispatch(&mut app, WriterCommand::SetEditorSelection(crate::editor::writer::commands::set_editor_selection::SetEditorSelection { start, end: start })).await;
+    dispatch(&mut app, WriterCommand::SetEditorSelection(crate::editor::writer::commands::set_editor_selection::SetEditorSelection { start, end: start, splice: 0 })).await;
     let result = crate::editor::writer::unit_tests::context::dispatch(&mut app, WriterCommand::CommitRename(commit_rename::CommitRename { text: "piece".into() })).await;
     // 🧾️ Mounted dispatch — see the note on `format_artifact_reformats_jack_query`.
     assert!(result.mutations.is_empty(), "a mounted dispatch publishes through its receipt lanes, not result.mutations: {:?}", result.mutations);

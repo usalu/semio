@@ -1,4 +1,4 @@
-//! @emoji 🧵️ Builds every `wgpu::RenderPipeline` this backend needs from `ui_render`'s canonical
+//! 🧵️ Builds every `wgpu::RenderPipeline` this backend needs from `ui_render`'s canonical
 //! [`ui_render::PipelineSpec`] + WGSL (`ui_render::ALL_SHADERS`), so the shader source is shared with
 //! the other three hand-written backends instead of duplicated here (ticket brief, `backend-webgpu`).
 //! The handful of `wgpu::BindGroupLayout`s are still hand-built (not derived from `BindGroupSpec`

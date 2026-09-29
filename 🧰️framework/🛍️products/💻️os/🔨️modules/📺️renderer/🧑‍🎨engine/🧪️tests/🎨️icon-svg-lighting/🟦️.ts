@@ -1,4 +1,4 @@
-/** @emoji 🎨️ Actual Three SVGRenderer oracle for IconRender's SVG face-lighting profile. */
+/** 🎨️ Actual Three SVGRenderer oracle for IconRender's SVG face-lighting profile. */
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";

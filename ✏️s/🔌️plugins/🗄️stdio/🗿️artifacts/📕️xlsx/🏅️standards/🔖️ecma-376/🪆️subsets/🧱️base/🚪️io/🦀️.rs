@@ -65,6 +65,9 @@ pub const REL_TYPE_OFFICE_DOCUMENT_STRICT: &str = "http://purl.oclc.org/ooxml/of
 /// it, any Strict document using shared strings would hard-fail decode with an out-of-range
 /// shared-string index (the shared-strings part would never be found).
 pub const REL_TYPE_SHARED_STRINGS_STRICT: &str = "http://purl.oclc.org/ooxml/officeDocument/relationships/sharedStrings";
+/// 🏅️ Strict's `worksheet` relationship TYPE — the workbook-owned pointer that gives a part its worksheet role in a Strict
+/// package, same rationale as the two Strict relationship types above.
+pub const REL_TYPE_WORKSHEET_STRICT: &str = "http://purl.oclc.org/ooxml/officeDocument/relationships/worksheet";
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn attr(name: &str, value: &str) -> semio_s_artifact_stdio_xml::schema::snapshot::XmlAttr {

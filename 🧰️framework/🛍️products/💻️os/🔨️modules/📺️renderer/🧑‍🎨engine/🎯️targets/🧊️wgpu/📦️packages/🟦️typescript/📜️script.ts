@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** @emoji 🧊️ `@semio-tech/framework-renderer-wgpu` task router. */
+/** 🧊️ `@semio-tech/framework-renderer-wgpu` task router. */
 import { strict as assert } from "node:assert";
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -22,6 +22,7 @@ import { checkBrowserBoot, renderBrowserEntry } from "../../⚙️browser-build/
 import { checkFrameWorker, generateFrameWorker, renderFrameWorker } from "../../🎞️frame-worker/🏗️builder/🟦️.ts";
 
 import { runNativeBinary } from "../../⌨️native-entrypoint/📜️script.ts";
+import { runHubCollaborationCli } from "../../🧪️tests/🤝️hub-collaboration/🟦️.ts";
 import { nativeRuntimeDirectory } from "../../⌨️native-entrypoint/📦️modules/🟦️.ts";
 
 const repoRoot = getWorkspaceRoot();
@@ -269,7 +270,7 @@ function normalizedPresenceRowsOracle(): number {
   return markers.length + 1;
 }
 
-/** @emoji 👥️ Checks normalized WGPU surface/color projection without invoking Cargo. */
+/** 👥️ Checks normalized WGPU surface/color projection without invoking Cargo. */
 class NormalizedPresenceRowsSourceCheckScript extends BundleScript {
   run(segments: string[]): void {
     if (segments.length) throw new Error("normalized-presence-rows-source-check accepts no arguments");
@@ -277,7 +278,7 @@ class NormalizedPresenceRowsSourceCheckScript extends BundleScript {
   }
 }
 
-/** @emoji 🎨️ Runs the exact normalized WGPU surface/color row law. */
+/** 🎨️ Runs the exact normalized WGPU surface/color row law. */
 class NormalizedPresenceRowsNativeCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("normalized-presence-rows-native-check accepts no arguments");
@@ -296,11 +297,11 @@ class NormalizedPresenceRowsNativeCheckScript extends BundleScript {
   }
 }
 
-/** @emoji 🔑️ One hub principal a live law signs in as, and the environment prefix that names it
+/** 🔑️ One hub principal a live law signs in as, and the environment prefix that names it
  * (`<prefix>_EMAIL`, `<prefix>_PASSWORD`). */
 type LiveHubPrincipal = { readonly prefix: string; readonly email: string; readonly displayName: string };
 
-/** @emoji 🌍️ Runs `body` with a live credential-sign-in hub: the one named by `SEMIO_HUB_LIVE_ORIGIN`
+/** 🌍️ Runs `body` with a live credential-sign-in hub: the one named by `SEMIO_HUB_LIVE_ORIGIN`
  * (every principal's `<prefix>_EMAIL`/`_PASSWORD` must then be set too), or a fresh hub booted from the
  * staged `os-hub:build-dev` binary with each principal provisioned through `os-hub credential set`,
  * torn down and its data root deleted afterwards (the `os-hub:live-sign-in-check` recipe). */
@@ -342,7 +343,17 @@ async function withLiveHub(principals: readonly LiveHubPrincipal[], body: (env: 
   return env.SEMIO_HUB_LIVE_ORIGIN;
 }
 
-/** @emoji 🧪️ Runs one ignored live law of this crate, exactly, under the crate's exhaustive budget. */
+/** 📦️ Stages a completed plugin release component as the native runtime (the `native-entrypoint` publish verb, no
+ * compilation; release because the 88 MB dev block2d component exceeds the 64 MiB execution-target component bound) and answers
+ * the directory the native live laws mount it from (`SEMIO_PLUGIN_MODULES`). */
+function stageNativeRuntime(variant: string, profile: "dev" | "release"): string {
+  const publisher = join(import.meta.dir, "../../⌨️native-entrypoint/📦️modules/📜️script.ts");
+  const published = spawnSync(process.execPath, [publisher, "publish", variant, profile], { cwd: repoRoot, encoding: "utf8" });
+  if (published.status !== 0) throw new Error(`native ${variant} runtime publish failed: ${published.stderr}${published.stdout}`);
+  return nativeRuntimeDirectory(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript"), variant, profile);
+}
+
+/** 🧪️ Runs one ignored live law of this crate, exactly, under the crate's exhaustive budget. */
 async function runLiveLaw(law: string, env: Record<string, string>): Promise<void> {
   await runTestBudgeted("cargo", ["test", "-p", crateName, "--lib", "--", law, "--exact", "--ignored", "--show-output"], {
     cwd: repoRoot,
@@ -352,7 +363,7 @@ async function runLiveLaw(law: string, env: Record<string, string>): Promise<voi
   });
 }
 
-/** @emoji 🤝️ Drives the wgpu shell's whole hub lane against a live hub through its own native
+/** 🤝️ Drives the wgpu shell's whole hub lane against a live hub through its own native
  * transport: `/hub` → add connection → credential sign-in → create space → the space in the retained
  * workspace tree (en + de) → open space → sign out, as one principal of {@link withLiveHub}'s hub. */
 class HubLiveJourneyCheckScript extends BundleScript {
@@ -364,7 +375,7 @@ class HubLiveJourneyCheckScript extends BundleScript {
   }
 }
 
-/** @emoji 🌱️ The wgpu shell's artifact-creation door against a live hub: sign in, create and open a space,
+/** 🌱️ The wgpu shell's artifact-creation door against a live hub: sign in, create and open a space,
  * the door loads the space's selected current catalog, the first kind is created and named, and the
  * creation reaches `Ready` with a hub-minted artifact id — as one principal of {@link withLiveHub}'s hub,
  * which must carry a ready trusted catalog. */
@@ -377,7 +388,7 @@ class HubLiveCreationCheckScript extends BundleScript {
   }
 }
 
-/** @emoji 👥️ Two native wgpu shells as two hub users on one block2d hub document: sign-in, shared
+/** 👥️ Two native wgpu shells as two hub users on one block2d hub document: sign-in, shared
  * space, roster, the guest mounted natively through the `os.open-artifact` relay, the document socket,
  * presence, each actor's edit crossing to the other, per-actor undo and a severed-then-healed network
  * for the second actor. Stages the completed block2d release component as the native runtime first
@@ -387,11 +398,7 @@ class HubLiveCreationCheckScript extends BundleScript {
 class HubLiveCollaborationCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("hub-live-collaboration-check accepts no arguments");
-    const variant = "block2d", profile = "release";
-    const publisher = join(import.meta.dir, "../../⌨️native-entrypoint/📦️modules/📜️script.ts");
-    const published = spawnSync(process.execPath, [publisher, "publish", variant, profile], { cwd: repoRoot, encoding: "utf8" });
-    if (published.status !== 0) throw new Error(`native ${variant} runtime publish failed: ${published.stderr}${published.stdout}`);
-    const modules = nativeRuntimeDirectory(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript"), variant, profile);
+    const variant = "block2d", modules = stageNativeRuntime(variant, "release");
     const law = "shell::hub_projection_workspace_tests::two_live_wgpu_shells_collaborate_on_one_hub_document";
     const origin = await withLiveHub(
       [
@@ -404,7 +411,18 @@ class HubLiveCollaborationCheckScript extends BundleScript {
   }
 }
 
-/** @emoji ⏯️ One native wgpu shell mounts the staged block2d guest on the native kernel thread with no
+/** 🤝️ Two humans — and a delegated AI agent — collaborate on ONE hub document through the wgpu shells: one journey per
+ * run (`--journey wasm32|wasm32-react|wasm32-native|native-react|native-react-cursors|cursors|agent-pixels --hub <url>
+ * [--serve <url>] [--react-serve <url>] [--locale en|de]`), one acceptance record `<check>-<locale>`; an omitted serve is started
+ * and stopped by the run itself, native journeys mount the staged block2d release runtime. Humans only from
+ * `SEMIO_TWO_HUMAN_USER{1,2}_{EMAIL,PASSWORD}`. See {@link runHubCollaborationCli}. */
+class HubCollaborationAcceptanceScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    await runHubCollaborationCli(repoRoot, join(import.meta.dir, "../../🤖️generated/🤝️hub-collaboration"), segments, { nativeModules: () => stageNativeRuntime("block2d", "release") });
+  }
+}
+
+/** ⏯️ One native wgpu shell mounts the staged block2d guest on the native kernel thread with no
  * hub: every surface it opens is admitted, an authored verb settles and lands in the guest's ledger once,
  * undo reverts it, redo applies it again, and the selection and clipboard verbs settle (four laws; undo,
  * redo and select-all drive live framework reserved tool jobs). Stages the completed block2d release
@@ -413,11 +431,7 @@ class HubLiveCollaborationCheckScript extends BundleScript {
 class NativeGuestJourneyCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("native-guest-journey-check accepts no arguments");
-    const variant = "block2d", profile = "release";
-    const publisher = join(import.meta.dir, "../../⌨️native-entrypoint/📦️modules/📜️script.ts");
-    const published = spawnSync(process.execPath, [publisher, "publish", variant, profile], { cwd: repoRoot, encoding: "utf8" });
-    if (published.status !== 0) throw new Error(`native ${variant} runtime publish failed: ${published.stderr}${published.stdout}`);
-    const modules = nativeRuntimeDirectory(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript"), variant, profile);
+    const variant = "block2d", profile = "release", modules = stageNativeRuntime(variant, profile);
     const laws = [
       "a_native_guest_mounts_and_settles_an_authored_edit_without_a_hub",
       "a_native_guest_undoes_its_authored_edit_without_a_hub",
@@ -429,14 +443,14 @@ class NativeGuestJourneyCheckScript extends BundleScript {
   }
 }
 
-/** @emoji 🧵️ Runs the browser Worker transport protocol without invoking Cargo. */
+/** 🧵️ Runs the browser Worker transport protocol without invoking Cargo. */
 class BrowserWorkerTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     await runVitest(this.root, ["🧪️tests/📨️browser-frame-transport/🟦️.ts", "🧪️tests/🎮️browser-interactive-job-port/🟦️.ts", "🧪️tests/🔢️frame-generation-hold/🟦️.ts", "🧪️tests/🎯️presented-input-authority/🟦️.ts", "🧪️tests/⏱️wgpu-ui-turn-budget/🟦️.ts", "🧪️tests/⏱️wgpu-worker-step-budget/🟦️.ts", "🧪️tests/🔬️wgpu-extension-dispatch/🟦️.ts", "🧪️tests/🗄️wgpu-host-storage-door/🟦️.ts", "🧪️tests/🕰️wgpu-host-temporal-door/🟦️.ts", "🧪️tests/🔌️wgpu-socket-door/🟦️.ts", "🧪️tests/🔖️wgpu-readiness-beacon/🟦️.ts", "🧪️tests/🖱️wheel-application-point/🟦️.ts", ...segments], "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 
-/** @emoji 🧾️ Runs the deterministic in-memory frame-worker owner contract at `long` or above — importing
+/** 🧾️ Runs the deterministic in-memory frame-worker owner contract at `long` or above — importing
  * its four independent oracles (the TypeScript compiler, Ajv, emoji-regex and the discovery taxonomy)
  * costs ~14 s on an idle machine before a single case runs, and the cases themselves render two full
  * browser bundles, so the suite cannot honestly sit at the fundamental or quick budget. */
@@ -447,7 +461,7 @@ class PreviewGeneratedTestScript extends BundleScript {
   }
 }
 
-/** @emoji 🧵️ Bundles both browser isolates without invoking Cargo or Trunk. */
+/** 🧵️ Bundles both browser isolates without invoking Cargo or Trunk. */
 class BrowserWorkerCheckScript extends BundleScript {
   async run(_segments: string[]): Promise<void> {
     await checkBrowserBoot(this.root);
@@ -455,7 +469,7 @@ class BrowserWorkerCheckScript extends BundleScript {
   }
 }
 
-/** @emoji 🧵️ Generates only the deterministic browser frame-worker artifact. */
+/** 🧵️ Generates only the deterministic browser frame-worker artifact. */
 class GenerateFrameWorkerScript extends BundleScript {
   async run(): Promise<void> {
     await generateFrameWorker(this.root);
@@ -472,7 +486,7 @@ class PreviewGeneratedScript extends BundleScript {
   }
 }
 
-/** @emoji ✅️ Checks the frame-worker bytes without invoking any renderer build. */
+/** ✅️ Checks the frame-worker bytes without invoking any renderer build. */
 class CheckFrameWorkerScript extends BundleScript {
   async run(): Promise<void> {
     await checkFrameWorker(this.root);
@@ -532,6 +546,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("hub-live-journey-check", HubLiveJourneyCheckScript)
   .register("hub-live-creation-check", HubLiveCreationCheckScript)
   .register("hub-live-collaboration-check", HubLiveCollaborationCheckScript)
+  .register("hub-collaboration-acceptance", HubCollaborationAcceptanceScript)
   .register("native-guest-journey-check", NativeGuestJourneyCheckScript)
   .register("test-browser-worker", BrowserWorkerTestScript)
   .register("test-preview-generated", PreviewGeneratedTestScript)

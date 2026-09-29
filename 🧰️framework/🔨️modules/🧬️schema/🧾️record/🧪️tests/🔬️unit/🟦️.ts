@@ -28,5 +28,4 @@ export function testSchemaRecordOracle(): void {
   assert.equal(reads, 0);
   const dictionary = Object.assign(Object.create(null), { name: "plain" });
   assert.equal(parseSchemaRecord(dictionary, vectors.keys), dictionary);
-  console.log("[DEBUG] Shared schema record parser agrees with 11 Ajv vectors and rejects non-JSON ownership/accessors without evaluation");
 }

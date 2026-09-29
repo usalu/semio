@@ -7,7 +7,7 @@ use crate::kernel::*;
 use protocol::{Identified, Patchable};
 
 // #region 🔖️PatchHelpers
-/// @emoji 🩹️ Per-field patch application (`apply_row`) and full-snapshot forward-diff
+/// 🩹️ Per-field patch application (`apply_row`) and full-snapshot forward-diff
 /// (`diff_row`) — the frozen `protocol::Patchable` contract splits `vcs::Patchable`'s single
 /// mutate-and-return-inverse `apply_patch` into a mutate-only `apply_patch` plus a separate
 /// `diff_patch(&self, other)` that computes the patch turning `self` into `other`; `diff_row`

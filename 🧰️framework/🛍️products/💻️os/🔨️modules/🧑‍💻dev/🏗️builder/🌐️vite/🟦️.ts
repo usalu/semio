@@ -20,7 +20,7 @@ const playDir = path.resolve(configDir, "../..");
 const repoRoot = path.resolve(playDir, "../../../../..");
 export default defineOwnedBuildConfigFactory(async ({ command }): Promise<OwnedBuildConfig> => {
 
-/** @emoji 📦️ Config-shaped graph: heavy owners load through opaque dynamic imports so Vite's native
+/** 📦️ Config-shaped graph: heavy owners load through opaque dynamic imports so Vite's native
  * config parse/watch set stays inside the declared module bound (see fixtures config-graph). */
 const { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioViteProductionBuild, staticDirMountVitePlugins, staticDirVitePlugin, semioAssetsVitePlugin, semioServeCloseVitePlugin } = await import(['../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite', '🟦️.ts'].join("/"));
 const { resolveShellBrandById } = await import(['../../🏷️brand', '🟦️.ts'].join("/"));
@@ -58,7 +58,7 @@ const distributionRollupOutput = {
 /** 🔌️ Keeps lazy engine imports out of eager optimization; selected playground metadata owns compilation prerequisites. */
 const FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE = ["@semio-tech/framework-surface-node-graph-rs", "@semio-tech/framework-surface-board-2d-rs", "@semio-tech/framework-editor-rs", "@semio-tech/flow-core"];
 
-/** @emoji 📦️ Maps a registry `engines` crate path (e.g. `framework/module/surface/tiled-map/rs`) to its wasm-pack
+/** 📦️ Maps a registry `engines` crate path (e.g. `framework/module/surface/tiled-map/rs`) to its wasm-pack
  * npm package name — read from the crate's own sibling `package.json`, not derived from its path, so a
  * crate keeps optimizing correctly across restructures/moves without touching this file. */
 function engineNpmPackage(cratePath: string): string {
@@ -72,22 +72,22 @@ function engineNpmPackage(cratePath: string): string {
 
 const registryEngineOptimizeDepsExclude = [...new Set(PLAYGROUND_BUILD_TARGETS.filter((target) => target.variant === plugin).flatMap((target) => target.engines))].map(engineNpmPackage);
 
-/** @emoji 🗄️ Isolates dependency-optimizer state for concurrent playground variants, renderers and
+/** 🗄️ Isolates dependency-optimizer state for concurrent playground variants, renderers and
  * profiles under the ONE shared cache root, so disk is bounded by build history rather than by
  * `node_modules`. The profile belongs in the key: a `dev` and a `release` serve of the same variant run
  * side by side, and sharing one `deps/` directory means whichever re-optimizes last rewrites the modules
  * the other has already handed to a browser. */
 const playgroundCacheDir = repoCacheDirectory(repoRoot, "vite", "os-dev", `${plugin}-${renderer}-${profile}`);
 
-/** @emoji 🚫️ Keeps Node-only browser automation packages outside Vite's browser dependency optimizer. */
+/** 🚫️ Keeps Node-only browser automation packages outside Vite's browser dependency optimizer. */
 const nodeOnlyOptimizeDepsExclude = ["playwright", "playwright-core", "chromium-bidi", "fsevents"];
 
-/** @emoji 🗂️ The active playground's declared asset needs — every playground's assets when unfiltered
+/** 🗂️ The active playground's declared asset needs — every playground's assets when unfiltered
  * (the "s" studio hub can open any app, so it needs every app's dev-time asset routes available), else
  * just the resolved variant's own `assets` row. */
 const resolvedPlaygroundAssets = isHostPlaygroundFilter(plugin) ? PLAYGROUND_BUILD_TARGETS.flatMap((target) => target.assets) : (PLAYGROUND_BUILD_TARGETS.find((target) => target.variant === plugin)?.assets ?? []);
 
-/** @emoji 🔌️ The wasm plugin crate(s) a production build's `dist/🔌️plugin-modules/` needs to actually ship
+/** 🔌️ The wasm plugin crate(s) a production build's `dist/🔌️plugin-modules/` needs to actually ship
  * — the "s" studio hub can open any app so it needs every built plugin crate; a single-variant build
  * (e.g. the Aggregator's "aggregator" → `puzzle`) needs only its own, plus the shared `🪞️vendor` shim
  * dependencies. Unknown identities are rejected before selecting physical copy roots. */
@@ -103,7 +103,7 @@ const extensionIds = new Set(EXTENSION_TARGETS.map((target) => target.pluginId))
 const productionComponents = command === "build" ? selectProductionBrowserComponents((await import(pathToFileURL(sessionPath).href)).PLAYGROUND_SESSION, plugin, resolvedPluginId, [...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS]) : undefined;
 const pluginModuleDirNames = [PREVIEW2_VENDOR_RELATIVE, MODULE_SHARD_DIRECTORY, ...(activated?.plugins ?? []).filter((row) => !extensionIds.has(row.pluginId)).map((row) => moduleDirectoryName(row.pluginId))];
 
-/** @emoji 🔎️ The components the activation-receipt watcher checks for staleness — every declared build
+/** 🔎️ The components the activation-receipt watcher checks for staleness — every declared build
  * target, with the owner tree whose newest source mtime decides whether the staged module is behind
  * (`<cratePath>/../..`, the same owner root `stagePluginDescriptor` publishes descriptors from). */
 const activationComponents = [...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS].map((target) => ({

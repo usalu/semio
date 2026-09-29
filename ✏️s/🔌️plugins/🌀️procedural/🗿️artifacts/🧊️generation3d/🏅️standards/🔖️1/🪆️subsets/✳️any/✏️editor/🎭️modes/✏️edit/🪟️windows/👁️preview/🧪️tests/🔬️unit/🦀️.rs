@@ -76,7 +76,6 @@ async fn the_demonstrator_boot_example_renders_a_non_empty_preview_scene() {
     let receipt = context::settle(&mut app).await;
     assert!(!receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Fault), "the boot example switch published a fault lane");
     let run = context::drive_preview_run(&mut app, &flow_view, &receipt.effects).await;
-    eprintln!("[DEBUG] demonstrator boot run: hops={} windows={:?} answered={} state={:?}", run.hops, run.hop_windows, run.answered, run.state);
     assert!(run.hop_windows.iter().any(|window| window == GENERATION_3D_PLAY_WINDOW_PREVIEW), "the boot run never evaluated the preview window, got {:?}", run.hop_windows);
     let scene = preview_scene(&context::render_with_view(&mut app, GENERATION_3D_PLAY_BODY_PREVIEW, &preview_view).await);
     assert_ne!(scene.meshes_json, "[]", "the demonstrator's boot example must paint non-empty preview meshes");

@@ -12,7 +12,7 @@ import { glassClass, LEVELS, LevelProvider, useLevel, type Level } from "@semio-
 import { galleryPageStyle } from "../🧭️coordination/🟦️.tsx";
 
 //#region 🔖️Variants
-/** @emoji 🌈️ Busy backdrop every glass swatch sits over — a flat background would make blur/saturate differences invisible. */
+/** 🌈️ Busy backdrop every glass swatch sits over — a flat background would make blur/saturate differences invisible. */
 const BACKDROP_STYLE = {
   backgroundImage: "conic-gradient(from 0deg, #ff344f, #fa9500, #fccf05, #7eb77f, #34d1bf, #ff344f)",
   backgroundSize: "48px 48px",
@@ -22,7 +22,7 @@ const BACKDROP_STYLE = {
 //#endregion 🔖️Variants
 
 //#region 🔖️LevelGlassSwatch
-/** @emoji 🪟️ Reads the level from context via `useLevel()` (falling back to `"base"` per its own contract) rather than taking it as a prop — this is what a real consumer nested under `LevelProvider` does. */
+/** 🪟️ Reads the level from context via `useLevel()` (falling back to `"base"` per its own contract) rather than taking it as a prop — this is what a real consumer nested under `LevelProvider` does. */
 function LevelGlassReader(): ReactElement {
   const level = useLevel();
   return (
@@ -33,7 +33,7 @@ function LevelGlassReader(): ReactElement {
   );
 }
 
-/** @emoji 🪟️ One `LevelProvider` boundary + a reader nested inside — demonstrates the provider/hook contract, not just the class lookup table. */
+/** 🪟️ One `LevelProvider` boundary + a reader nested inside — demonstrates the provider/hook contract, not just the class lookup table. */
 function LevelGlassSwatch({ level }: { readonly level: Level }): ReactElement {
   return (
     <LevelProvider level={level}>
@@ -99,7 +99,7 @@ export const PaneLevel: Story = {
   ),
 };
 
-/** @emoji 🪝️ Outside any `LevelProvider`, `useLevel()` falls back to `"base"` per its own docstring contract. */
+/** 🪝️ Outside any `LevelProvider`, `useLevel()` falls back to `"base"` per its own docstring contract. */
 export const DefaultLevelFallback: Story = {
   render: () => (
     <div style={galleryPageStyle}>

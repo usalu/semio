@@ -134,5 +134,4 @@ fn invalid_blend_edits_are_rejected_without_changing_the_document() {
         assert_eq!(delta.apply(&original).is_ok(), accepted, "{mode}");
         if !accepted { assert_eq!(document, original); }
     }
-    eprintln!("[DEBUG] semantic blend edits and raw field diffs reject invalid modes atomically");
 }

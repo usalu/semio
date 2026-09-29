@@ -36,7 +36,7 @@ function useWindowMeasureDraft<T>(published: T): readonly [T, (next: T) => void]
   return [live === null ? published : live.value, (next: T) => setDraft(next === published ? null : { value: next, published })];
 }
 
-/** @emoji 🕰️ The value the PROGRAM last published for a rail control, exposed on the DOM beside the possibly
+/** 🕰️ The value the PROGRAM last published for a rail control, exposed on the DOM beside the possibly
  * optimistic value the control RENDERS. Nothing outside React could tell the two apart: {@link
  * useWindowMeasureDraft} moves the rendered state first and holds it for the whole round trip (0.7 s idle,
  * seconds on a busy app), a combobox trigger carries no value of its own at all, and so
@@ -45,7 +45,7 @@ function useWindowMeasureDraft<T>(published: T): readonly [T, (next: T) => void]
  * assistive technology, a tutorial, an end-to-end probe — can see whether a gesture has actually landed. */
 const PUBLISHED_VALUE_ATTRIBUTE = "data-published-value";
 
-/** @emoji 🔽️ A measures-rail select. A measure with no `label` renders no visible tree-row label either, so the combobox carries its own accessible name rather than reaching assistive technology as an unnamed control. */
+/** 🔽️ A measures-rail select. A measure with no `label` renders no visible tree-row label either, so the combobox carries its own accessible name rather than reaching assistive technology as an unnamed control. */
 export function WindowMeasureSelect({ measure, onAction }: { readonly measure: Extract<WindowMeasure, { kind: "select" }>; readonly onAction: (action: ActionDescriptor) => unknown }) {
   const [value, setValue] = useWindowMeasureDraft(measure.value);
   return (
@@ -71,7 +71,7 @@ export function WindowMeasureSelect({ measure, onAction }: { readonly measure: E
   );
 }
 
-/** @emoji ☑️ A measures-rail toggle, showing the state the user asked for until the program publishes it. */
+/** ☑️ A measures-rail toggle, showing the state the user asked for until the program publishes it. */
 export function WindowMeasureToggle({ measure, onAction }: { readonly measure: Extract<WindowMeasure, { kind: "toggle" }>; readonly onAction: (action: ActionDescriptor) => unknown }) {
   const label = uiDataLabel(measure.label ?? measure.text ?? measure.id);
   const [pressed, setPressed] = useWindowMeasureDraft(measure.pressed);
@@ -91,7 +91,7 @@ export function WindowMeasureToggle({ measure, onAction }: { readonly measure: E
 }
 
 /**
- * @emoji 🔢️ A measures-rail number entry — unbounded unless the measure declares `min`/`max`.
+ * 🔢️ A measures-rail number entry — unbounded unless the measure declares `min`/`max`.
  *
  * Typing and stepper clicks move a DRAFT only; the action dispatches once the entry commits (blur,
  * Enter, or the release of a `+`/`−` press — `Stepper` funnels all three through `onPointerUp`), so a

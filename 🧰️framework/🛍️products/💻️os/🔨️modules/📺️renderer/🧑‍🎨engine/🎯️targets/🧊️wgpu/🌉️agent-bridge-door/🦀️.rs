@@ -79,6 +79,9 @@ impl AgentBridgeTransport {
 
     /// 🎬️ One bounded turn: advance the ladder, then move whatever bytes are ready in both
     /// directions. Answers whether anything the chrome renders changed.
+    ///
+    /// 🧯️ A refused dial is a closed socket as far as the ladder is concerned, so
+    /// the next turn arms the backoff rather than hammering the gateway.
     pub fn pump(&mut self, state: &mut AgentBridgeState, shell_session_id: &str, principal_actor: &str, now_ms: f64) -> bool {
         let mut changed = false;
         match self.dialer.turn(state, self.socket_state(), now_ms) {
@@ -93,8 +96,6 @@ impl AgentBridgeTransport {
                     Ok(socket) => self.socket = Some(socket),
                     Err(error) => {
                         state.last_error = Some(error);
-                        // 🧯️ A refused dial is a closed socket as far as the ladder is concerned, so
-                        // the next turn arms the backoff rather than hammering the gateway.
                         state.note_socket_closed();
                     }
                 }
@@ -283,6 +284,8 @@ fn drive_native_agent_socket(pool: semio_framework_async::WorkerPool, lane: Agen
 
 #[cfg(not(target_arch = "wasm32"))]
 impl AgentBridgeSocket {
+    /// 🔌️ The dial itself BLOCKS (one bounded `connect_timeout` per resolved address), so it runs
+    /// on `Lane::Io` and nowhere near the render thread; the driver re-arms from inside it.
     fn open(url: &str, protocols: &[String; 2]) -> Result<Self, String> {
         use semio_framework_async::{CancelToken, Lane, OperationContext, TraceId};
         let lane: AgentBridgeLaneHandle = std::sync::Arc::new(std::sync::Mutex::new(crate::socket_door::SocketLane::new()));
@@ -291,8 +294,6 @@ impl AgentBridgeSocket {
         let (url, protocols) = (url.to_string(), protocols.to_vec());
         let pool = crate::renderer_worker_pool();
         let dial_pool = pool.clone();
-        // 🔌️ The dial itself BLOCKS (one bounded `connect_timeout` per resolved address), so it runs
-        // on `Lane::Io` and nowhere near the render thread; the driver re-arms from inside it.
         pool.submit(
             Lane::Io,
             Box::new(move || {

@@ -124,7 +124,7 @@ pub fn retained_command_ingress_occupancy() -> usize {
 }
 
 thread_local! {
-    /// 🐞️ `[DEBUG]` more-work streak trace: (current streak, total more-work turns) — temporary, ticket 26/09/02/PUZZLE-3D-END-TO-END.
+    /// 🐞️ `[TRACE]` more-work streak trace: (current streak, total more-work turns) — temporary, ticket 26/09/02/PUZZLE-3D-END-TO-END.
     static MORE_WORK_TRACE: RefCell<(u64, u64)> = const { RefCell::new((0, 0)) };
     /// 🧮️ Largest guest linear-memory reading this actor has witnessed, in bytes.
     static GUEST_MEMORY_WITNESS: Cell<usize> = const { Cell::new(0) };
@@ -248,7 +248,7 @@ fn trace_turn_phase_retention(phase: &str) {
     }
     let retained = semio_framework_trace::retained_heap_bytes();
     let previous = TURN_PHASE_RETENTION.replace(retained);
-    trace_guest_line(&format!("[DEBUG] turn phase {phase}: retained {retained} B, delta {}", retained - previous));
+    trace_guest_line(&format!("[TRACE] turn phase {phase}: retained {retained} B, delta {}", retained - previous));
 }
 
 /// 🗣️ One diagnostic line, out where it can actually be read. A `wasm32-wasip2` guest's `stderr` is
@@ -289,7 +289,7 @@ fn trace_guest_memory_pressure() {
     if semio_framework_trace::runtime_diagnostics_enabled() {
         let (events, events_bytes) = TURN_EVENTS.get();
         trace_guest_line(&format!(
-            "[DEBUG] guest linear memory turn={turn} bytes={bytes} delta={delta} percent={} events={events} eventsBytes={events_bytes} elapsed_us={}",
+            "[TRACE] guest linear memory turn={turn} bytes={bytes} delta={delta} percent={} events={events} eventsBytes={events_bytes} elapsed_us={}",
             semio_framework_trace::guest_linear_memory_percent(bytes),
             guest_turn_executing_us().map(|us| us.to_string()).unwrap_or_else(|| "unmeasured".into())
         ));
@@ -569,6 +569,175 @@ fn plugin_exchange_boxed<'a, PA: crate::app::PluginApp>(
     Box::pin(crate::plugin_runtime::plugin_exchange(runtime, instance_id, command))
 }
 
+/// ↩️ One `Effect::Respond` per inbound `Event::Request` this turn served — kept apart from the
+/// document-backbone effects so the answer's ordering against them is explicit rather than
+/// incidental (answers trail, so a request that also wrote the document publishes the write first).
+///
+/// 🚪️ A close-cleanup verdict names ONE already-retired lifetime, so it may not kill the turn that
+/// every OTHER instance in this actor shares.
+///
+/// 🐛️ It did: `?` here turned instance 5's `plugin.internal.zero-progress` into a shard worker fault
+/// for the whole turn, the host trapped the actor, and instance 6 — a sibling pane mid-boot in the
+/// same shard — went to Plugin Recovery with it (six-pane demonstrator boot, ticket 26/08/28). The
+/// instance whose cleanup faulted is already gone and has already left quarantine; what is left is a
+/// diagnostic, not a live window's crash.
+///
+/// 🌡️ One fair live-maintenance step per turn — and a burst while the stepped instance reports
+/// displaced-owner pressure, bounded by the turn's retirement deadline. A results-window
+/// playback (a coalesced window-config amend per frame, three displaced owners each) outran the
+/// single step's one owner per 26-stage rotation and saturated its 1 024-slot queue after
+/// ~340 frames (ticket 26/09/16/FEM-3D-INTERACTIVE-FEATURE-COMPLETE).
+///
+/// 🎯️ M1 (ticket 26/08/17 `design-unified.md`): decodes the pack-encoded
+/// `ui_contract::UiIntent`, drops it if it targets a tree the user can no longer see (the
+/// revision guard, at the reconciler that owns the revision — `PATCHES.revision`,
+/// `ui_runtime::is_stale_intent` imported rather than reimplemented), and otherwise
+/// batches it per instance for the dispatch pass below (mirrors `app_commands`'
+/// batch-then-dispatch shape). Real dispatch replaces the prior packet's "decode-and-
+/// mark-dirty" interim — see `📓️terra-sdk-wire-report.md`'s M1 section for the full route.
+///
+/// 🔁️ Two delivery shapes share one id space. A `RequestRegistry::request` id parks a
+/// future and is woken by `resolve`; a `request_continuation` id parks NOTHING and is
+/// answered by redispatching its `response_action` into the owning app instance with the
+/// outcome merged onto the original request object. Before this branch existed the second
+/// shape did not: a plugin that wanted an extension result had to hand-mint a `RequestId`,
+/// which owns no registry slot, so `resolve` silently dropped every extension outcome.
+///
+/// 📄️ A host answer larger than one `GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES` page arrives
+/// as PROLOGUE pages here and its terminal page rides the `Event::Completed` above, so
+/// `Event::Completed` stays THE one completion door for a `req` and this arm never needs
+/// a second dispatch site in the turn generator. A continuation claims its own pages;
+/// everything else falls through to the parked-future accumulator.
+///
+/// 🐛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (sdk-async): used to discard every
+/// non-final chunk outright (`if done { resolve(req, Ok(bytes)) }` — every earlier
+/// `bytes` was simply dropped on the floor, silent data loss for any multi-chunk
+/// response). `append_chunk` accumulates instead; `cap` is the owning instance's
+/// `QuotaSchema.message_bytes` (default 64 MiB when unset/unknown — matches
+/// `instance_task_quota`'s own `unwrap_or` fallback idiom above).
+///
+/// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (J1, design-abi.md §4): a job spawned
+/// through `host::jobs::spawn` (`🌐host/🦀️.rs`) allocates its `job` id from
+/// THE SAME `RequestRegistry` counter as every other awaitable `host::*` call — the
+/// `Effect::SpawnJob{job, ..}` this actor emitted carried `job == req.0` — so
+/// `Event::JobCompleted{job, result}` resolves the identical parked `RequestFuture`
+/// an `Event::Completed{req, result}` would, closing the "no `req`-per-job
+/// correlation table yet" gap `📓️terra-M5-report.md` §4 named (no separate table
+/// needed: the request id already IS the job id).
+///
+/// 📥️ The inbound half of the `request`/`respond` seam (`📜️.wit`'s `request-event`,
+/// "every 'someone else calls INTO this actor' seam is now one inbound `request`,
+/// answered with the `respond` effect within a bounded number of turns"). This actor's
+/// installed `ExtensionBundle` is the ONE capability table that answers it, so the
+/// request is served inline and answered on the SAME turn — an extension handler is a
+/// pure `Fn(&[u8]) -> Result<Vec<u8>, Fault>` with nothing to await. An actor with no
+/// bundle answers the bundle's own typed refusal (`extension.inactive`/
+/// `extension.missing`), never silence: dropping the event stranded every caller's
+/// parked request forever (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+///
+/// 📥️ A page that names a different command on THIS instance is the host saying it has
+/// moved on: it drives one command per instance at a time, so the owner retained here can
+/// no longer have a driver. It is superseded into the retiring lane (see
+/// `COMMAND_INGRESS_RETIRING_SLOT`) and the host is asked for this page once more, which
+/// the now-free live lane admits on the next turn. A page for ANOTHER instance is genuine
+/// backpressure — that owner's host driver is still live — and waits as it always did.
+///
+/// 📥️ Taken only when it IS the assembly this page belongs to. An `if let` on a bare
+/// `retained.take()` dropped every other owner shape on the floor — the page went with it,
+/// the turn still answered `Idle`, and the host's drain then spun its whole continuation
+/// ceiling asking a reactor that no longer owned anything.
+///
+/// 📥️ The terminal arm this chain never had: a page that matches no admission shape is a
+/// page nobody owns, and it says so by name instead of leaving the turn `Idle` with the
+/// page silently gone.
+///
+/// 🎯️ M1: surviving intents dispatch through the SAME `route_app_frame`/effects/events plumbing
+/// as `app_commands` above, immediately after it (so a mutation an app command made this turn is
+/// already visible to the intent's own dispatch) — via the NEW `plugin_dispatch_intents`, which
+/// routes through the app's EXISTING typed command path (`PluginApp::handle_intent_frame` →
+/// `ArtifactApp::command_from_intent` → `dispatch_typed_command_inner`), never a parallel path.
+/// Each handled batch's surfaces feed the retained render set so the reply patch — the next `UiPatch`
+/// revision bump — is produced in this SAME turn (design decision: no new reply channel).
+///
+/// 🚫️async: E5 executor bridge — `plugin_dispatch_intents` stays genuinely `async fn`; safe to
+/// resolve synchronously here for the same reason as `plugin_exchange` above.
+///
+/// 🌳️ Deduped per instance — several intents on the same surface this turn must not queue a
+/// redundant re-render (the second `diff()` would return `None` anyway, but there is no reason
+/// to pay for it).
+///
+/// 🧹️ The SECOND publication retirement of this turn, and the one that matters for the crossing
+/// count: the first ran before the events, so every `Event::PatchAck` this turn carried left its
+/// slot `Acknowledged` with nothing to retire it until the NEXT turn — one host round trip per
+/// published surface whose only work was freeing a slot (the `<n>:ea---` half of the two-state
+/// ping-pong, `📓️reactor-reconcile-spin-2026-09-14.md` §1). Bounded by the same units and the same
+/// wall deadline as the first run, so a turn cut short still answers `MoreWork` through
+/// `PendingPatchAuthority::has_retiring` and finishes on the next one.
+///
+/// 👥️ M2 (ticket 26/08/17 `design-unified.md`): `now_ms` is read ONCE for both `record_peer`'s
+/// expiry stamping below and `PRESENCE.expire` at the end of this turn — a single wall-clock
+/// reading per poll, not one per presence update.
+///
+/// 🕹️ A refused commit THROWS AWAY the tree this turn just rendered and leaves the
+/// surface at its previous revision, which the host then reads back as `unchanged` —
+/// indistinguishable from a healthy refresh. It is the one exit on this path that can
+/// lose a render the host explicitly asked for, so it is recorded as a shell fault
+/// naming the surface rather than a `let _ =` (ticket 26/09/02/PUZZLE-3D-END-TO-END
+/// wave B46 §8.1, wave B48 §3). Not a turn-fatal `?`: a commit refused because the
+/// instance is closing is an ordinary teardown race, and faulting the whole turn for
+/// it would break the close ladder.
+///
+/// 🕹️ A surface whose previous reconcile is still in flight cannot be re-rendered now, so the
+/// dirty render is DEFERRED — and a deferred ring with no room left would drop it, which is a
+/// render the host asked for that no later turn ever performs. That is exactly the shape of
+/// "the guest never re-publishes its selection lane after a pick" (ticket
+/// 26/09/02/PUZZLE-3D-END-TO-END wave B46 §8.1: `interactionSelect` settles, no verdict is
+/// recorded, and `data-guest-selection-json` stays `selectedIds:[]` for 150 s), so it is a
+/// typed fault naming the surface rather than a `let _ =`.
+///
+/// 🎟️ A refusal by one of the PROCESS-WIDE reconcile tables is not the ordinary "previous
+/// reconcile still in flight" race the defer ring exists for: it says this surface cannot be
+/// admitted at all until some other surface hands credit back, and while the reservation was
+/// priced at the per-surface CEILING that was structural — three surfaces of a thirteen-surface
+/// session, refused/deferred/re-dirtied for ever with `effects=0` (ticket
+/// 26/09/02/PUZZLE-3D-END-TO-END wave B56 §1.1, wave B58). Priced by its own body it should
+/// never happen, so it is reported by NAME, once per refusal, instead of deferring in silence.
+///
+/// 🚫️async: E5 executor bridge (× 2) — `LocalExecutor::{run_until_idle,has_ready}` stay
+/// genuinely `async fn` (its own doc: "run_until_idle handles Pending without ever yielding
+/// its own future" — matches `⚛️reactor/💼️jobs`'s identical use of this exact bridge).
+///
+/// 🧵️ The COLD executor's own slice of the same hold: every `AsyncTask` `spawn_task` admitted
+/// lives on `TASK_EXECUTOR`, and until the task lane became a product lane nothing but a native
+/// fixture ever polled it — a spawned task would have parked forever inside a real guest. Its
+/// answer is "some task is still alive", ready or parked, so it is folded into `more_work` the
+/// same way `REACTOR_EXECUTOR`'s is.
+///
+/// 🔁️ The process-pool pump stays gated on the REACTOR executor alone. `TASK_EXECUTOR`'s answer
+/// is "some task is still alive", ready OR PARKED, so folding it in here stopped pumping the
+/// pool for as long as any task was parked on a host round trip — which starved every
+/// interactive job step behind it (measured 2026-09-22: a command page set never reached its
+/// terminal ingress status in 512 turns).
+///
+/// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): resumed `AsyncTask` follow-
+/// ups (and any replayed `task_restarts` from a `restore` before this turn) — AFTER
+/// `run_until_idle` so a task that resolved just now is redispatched the SAME turn, not the
+/// next one. A resume can itself spawn more tasks (`dispatch_emit` runs for real), so the
+/// executor may have fresh ready work by the time this returns — folded into `more_work` below
+/// rather than requiring a second `run_until_idle` pass this turn (the next `poll` picks it up).
+///
+/// 🔒️ `typed_operation_scan.contended` is deliberately NOT folded in. A busy instance lock is not
+/// an answer of "there is runnable work", it is "another owner is mid-step and I could not look" —
+/// and the guest is single-threaded, so on wasm it can only ever be a reader inside this very turn.
+/// Answering `MoreWork` for it turned every concurrent read into a host turn round trip that
+/// produced nothing: 12 of 512 idle generation3d turns, measured 2026-09-10. Every owner that can
+/// hold that lock is itself either a reactor executor task (`executor_pending`), a task resume
+/// (`resumes`), an ingress command (`command_ingress`) or a lifecycle step (`lifecycle`), each of
+/// which already arms this turn on its own account. See `📓️idle-turns-2026-09-10.md`.
+///
+/// 👥️ M2: once per poll — expire ages-out peer marks, then flush drains every key touched since
+/// the last flush into one coalesced `PresenceUpdate` each (free burst coalescing: a hover storm
+/// between polls still costs exactly one update per `(surface, node_key)`).
 #[expect(clippy::result_large_err, reason = "Patch reservation and publication callbacks return the original fixed surface or patch owner on refusal; these transfers must not allocate an error wrapper.")]
 async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
     runtime: &crate::plugin_runtime::PluginRuntime<PA>,
@@ -626,9 +795,6 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
     }
     let mut close_instances: Vec<u32> = events.iter().filter_map(|event| if let Event::InstanceClose(request) = event { Some(request.lifetime.instance_id) } else { None }).collect();
     let mut document_backbone_effects = Vec::new();
-    // ↩️ One `Effect::Respond` per inbound `Event::Request` this turn served — kept apart from the
-    // document-backbone effects so the answer's ordering against them is explicit rather than
-    // incidental (answers trail, so a request that also wrote the document publishes the write first).
     let mut inbound_request_effects: Vec<Effect> = Vec::new();
     trace_turn_phase_retention("lifecycle");
     let retirement_deadline = std::time::Instant::now() + std::time::Duration::from_millis(u64::from(budget.deadline_ms));
@@ -669,27 +835,14 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
             break;
         }
     }
-    // 🚪️ A close-cleanup verdict names ONE already-retired lifetime, so it may not kill the turn that
-    // every OTHER instance in this actor shares.
-    //
-    // 🐛️ It did: `?` here turned instance 5's `plugin.internal.zero-progress` into a shard worker fault
-    // for the whole turn, the host trapped the actor, and instance 6 — a sibling pane mid-boot in the
-    // same shard — went to Plugin Recovery with it (six-pane demonstrator boot, ticket 26/08/28). The
-    // instance whose cleanup faulted is already gone and has already left quarantine; what is left is a
-    // diagnostic, not a live window's crash.
     let close_cleanup_work = match crate::plugin_runtime::plugin_step_close_cleanup(runtime) {
         Ok(work) => work,
         Err(fault) if crate::plugin_runtime::runtime_cleanup_fault_is_instance_scoped(fault.code.0.as_str()) => {
-            trace_guest_line(&format!("[DEBUG] close cleanup fault contained to its own retired lifetime: {} {}", fault.code.0.as_str(), fault.message));
+            trace_guest_line(&format!("[TRACE] close cleanup fault contained to its own retired lifetime: {} {}", fault.code.0.as_str(), fault.message));
             true
         }
         Err(fault) => return Err(fault),
     };
-    // 🌡️ One fair live-maintenance step per turn — and a burst while the stepped instance reports
-    // displaced-owner pressure, bounded by the turn's retirement deadline. A results-window
-    // playback (a coalesced window-config amend per frame, three displaced owners each) outran the
-    // single step's one owner per 26-stage rotation and saturated its 1 024-slot queue after
-    // ~340 frames (ticket 26/09/16/FEM-3D-INTERACTIVE-FEATURE-COMPLETE).
     for step in 0..crate::plugin_runtime::LIVE_CLEANUP_PRESSURE_STEPS_PER_TURN {
         let _ = crate::plugin_runtime::plugin_step_live_cleanup(runtime)?;
         if !crate::plugin_runtime::plugin_live_cleanup_under_pressure(runtime) || (step % PATCH_CLOSE_DEADLINE_STRIDE == 0 && std::time::Instant::now() >= retirement_deadline) {
@@ -722,13 +875,6 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
             Event::ColdDocumentPairPage(_) => {
                 return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.cold-pair-page-event-bypass"), "cold document pair page must use poll_kernel's dedicated owner argument"));
             }
-            // 🎯️ M1 (ticket 26/08/17 `design-unified.md`): decodes the pack-encoded
-            // `ui_contract::UiIntent`, drops it if it targets a tree the user can no longer see (the
-            // revision guard, at the reconciler that owns the revision — `PATCHES.revision`,
-            // `ui_runtime::is_stale_intent` imported rather than reimplemented), and otherwise
-            // batches it per instance for the dispatch pass below (mirrors `app_commands`'
-            // batch-then-dispatch shape). Real dispatch replaces the prior packet's "decode-and-
-            // mark-dirty" interim — see `📓️terra-sdk-wire-report.md`'s M1 section for the full route.
             Event::UiIntent { instance, intent } => {
                 let numeric_instance = instance.0.parse::<u32>().map_err(|_| reactor_close_fault("invalid intent instance"))?;
                 native_close_key(runtime, numeric_instance)?;
@@ -776,12 +922,6 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                 }
                 with_pending_patches(|pending| pending.borrow_mut().apply_issued_rejection(receipt, &surface, revision, |generation| PATCHES.with(|patches| patches.mark_rejected(&surface, generation))));
             }
-            // 🔁️ Two delivery shapes share one id space. A `RequestRegistry::request` id parks a
-            // future and is woken by `resolve`; a `request_continuation` id parks NOTHING and is
-            // answered by redispatching its `response_action` into the owning app instance with the
-            // outcome merged onto the original request object. Before this branch existed the second
-            // shape did not: a plugin that wanted an extension result had to hand-mint a `RequestId`,
-            // which owns no registry slot, so `resolve` silently dropped every extension outcome.
             Event::Completed { req, result } => {
                 let outcome = crate::host::outcome_to_result(result);
                 match take_extension_response(req, outcome) {
@@ -801,25 +941,14 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                             }
                         }
                     }
-                    Ok(_) => eprintln!("[DEBUG] continuation resolve dropped req={} — owning instance has no acknowledged live lifetime", req.0),
+                    Ok(_) => eprintln!("[TRACE] continuation resolve dropped req={} — owning instance has no acknowledged live lifetime", req.0),
                     Err(unclaimed) => REGISTRY.with(|registry| registry.resolve(req, unclaimed)),
                 }
             }
-            // 📄️ A host answer larger than one `GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES` page arrives
-            // as PROLOGUE pages here and its terminal page rides the `Event::Completed` above, so
-            // `Event::Completed` stays THE one completion door for a `req` and this arm never needs
-            // a second dispatch site in the turn generator. A continuation claims its own pages;
-            // everything else falls through to the parked-future accumulator.
             Event::HttpChunk { req, bytes, done } => {
                 if append_extension_response_page(req, &bytes) {
                     continue;
                 }
-                // 🐛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (sdk-async): used to discard every
-                // non-final chunk outright (`if done { resolve(req, Ok(bytes)) }` — every earlier
-                // `bytes` was simply dropped on the floor, silent data loss for any multi-chunk
-                // response). `append_chunk` accumulates instead; `cap` is the owning instance's
-                // `QuotaSchema.message_bytes` (default 64 MiB when unset/unknown — matches
-                // `instance_task_quota`'s own `unwrap_or` fallback idiom above).
                 REGISTRY.with(|registry| {
                     let cap = registry.instance_of(req).and_then(|instance| INSTANCE_METADATA.with(|metadata| metadata.borrow().get(instance).and_then(|entry| entry.quota.message_bytes))).unwrap_or(64 * 1024 * 1024) as usize;
                     registry.append_chunk(req, &bytes, done, cap);
@@ -831,14 +960,6 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                 }
             }
             Event::JobCompleted { job, result } => {
-                // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (J1, design-abi.md §4): a job spawned
-                // through `host::jobs::spawn` (`🌐host/🦀️.rs`) allocates its `job` id from
-                // THE SAME `RequestRegistry` counter as every other awaitable `host::*` call — the
-                // `Effect::SpawnJob{job, ..}` this actor emitted carried `job == req.0` — so
-                // `Event::JobCompleted{job, result}` resolves the identical parked `RequestFuture`
-                // an `Event::Completed{req, result}` would, closing the "no `req`-per-job
-                // correlation table yet" gap `📓️terra-M5-report.md` §4 named (no separate table
-                // needed: the request id already IS the job id).
                 let instance = JOB_RENDER_BINDINGS.with(|bindings| bindings.borrow().accepted(job).map(|binding| binding.instance));
                 if let Some(binding) = JOB_RENDER_BINDINGS.with(|bindings| bindings.borrow_mut().complete(job)) {
                     dirty_background_surfaces(runtime, binding.instance, &mut dirty).await?;
@@ -885,15 +1006,6 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                 TASK_EXECUTOR.with(|executor| executor.wake(id));
             }
             Event::Wake => {}
-            // 📥️ The inbound half of the `request`/`respond` seam (`📜️.wit`'s `request-event`,
-            // "every 'someone else calls INTO this actor' seam is now one inbound `request`,
-            // answered with the `respond` effect within a bounded number of turns"). This actor's
-            // installed `ExtensionBundle` is the ONE capability table that answers it, so the
-            // request is served inline and answered on the SAME turn — an extension handler is a
-            // pure `Fn(&[u8]) -> Result<Vec<u8>, Fault>` with nothing to await. An actor with no
-            // bundle answers the bundle's own typed refusal (`extension.inactive`/
-            // `extension.missing`), never silence: dropping the event stranded every caller's
-            // parked request forever (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
             Event::Request { req, capability, payload, .. } => {
                 let result = match crate::plugin_runtime::extension_invoke(&capability, &payload).await {
                     Ok(answer) => semio_framework::kernel::RequestOutcome::Ok(answer),
@@ -1088,12 +1200,6 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
         {
             command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: b"plugin.command-page-invalid".to_vec() };
         } else if retained.as_ref().is_some_and(|owner| !same_command_cursor(&command_ingress_owner_cursor(owner), &cursor)) {
-            // 📥️ A page that names a different command on THIS instance is the host saying it has
-            // moved on: it drives one command per instance at a time, so the owner retained here can
-            // no longer have a driver. It is superseded into the retiring lane (see
-            // `COMMAND_INGRESS_RETIRING_SLOT`) and the host is asked for this page once more, which
-            // the now-free live lane admits on the next turn. A page for ANOTHER instance is genuine
-            // backpressure — that owner's host driver is still live — and waits as it always did.
             if retained.as_ref().is_some_and(|owner| command_ingress_owner_cursor(owner).instance == cursor.instance) && retiring_command_ingress_is_free() {
                 park_retiring_command_ingress(retained_key.expect("a retained owner holds its exact lifetime"), retained.take().expect("the superseded owner was retained"));
             }
@@ -1175,10 +1281,6 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                 Err(fault) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: dsl::encode_fault_bytes(&fault) },
             }
         } else if let Some(CommandIngressOwner::GenericAssembly { cursor: active, mut pages }) = ({
-            // 📥️ Taken only when it IS the assembly this page belongs to. An `if let` on a bare
-            // `retained.take()` dropped every other owner shape on the floor — the page went with it,
-            // the turn still answered `Idle`, and the host's drain then spun its whole continuation
-            // ceiling asking a reactor that no longer owned anything.
             match retained {
                 Some(CommandIngressOwner::GenericAssembly { .. }) => retained.take(),
                 _ => None,
@@ -1217,9 +1319,6 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                 }
             }
         } else {
-            // 📥️ The terminal arm this chain never had: a page that matches no admission shape is a
-            // page nobody owns, and it says so by name instead of leaving the turn `Idle` with the
-            // page silently gone.
             command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: b"plugin.command-page-unowned".to_vec() };
         }
     }
@@ -1229,18 +1328,9 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
             ingress.borrow_mut()[COMMAND_INGRESS_LIVE_SLOT] = Some(RetainedCommandIngress { key: retained_key.expect("admitted command retains its exact lifetime"), state: retained });
         });
     }
-    // 🎯️ M1: surviving intents dispatch through the SAME `route_app_frame`/effects/events plumbing
-    // as `app_commands` above, immediately after it (so a mutation an app command made this turn is
-    // already visible to the intent's own dispatch) — via the NEW `plugin_dispatch_intents`, which
-    // routes through the app's EXISTING typed command path (`PluginApp::handle_intent_frame` →
-    // `ArtifactApp::command_from_intent` → `dispatch_typed_command_inner`), never a parallel path.
-    // Each handled batch's surfaces feed the retained render set so the reply patch — the next `UiPatch`
-    // revision bump — is produced in this SAME turn (design decision: no new reply channel).
     let intent_batches = std::mem::take(&mut dirty.intents);
     for DirtyIntentBatch { instance, intents } in intent_batches {
         native_close_key(runtime, instance)?;
-        // 🚫️async: E5 executor bridge — `plugin_dispatch_intents` stays genuinely `async fn`; safe to
-        // resolve synchronously here for the same reason as `plugin_exchange` above.
         match crate::plugin_runtime::plugin_dispatch_intents(runtime, instance, &intents).await {
             Ok(output) => {
                 for frame_bytes in output.frames {
@@ -1259,9 +1349,6 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
             }
             Err(fault) => effects.push(shell_fault_effect(instance, &fault)),
         }
-        // 🌳️ Deduped per instance — several intents on the same surface this turn must not queue a
-        // redundant re-render (the second `diff()` would return `None` anyway, but there is no reason
-        // to pay for it).
         let mut surfaces: semio_framework_ui_contract::UiFixedList<semio_framework_ui_contract::UiText> = semio_framework_ui_contract::UiFixedList::default();
         for intent in &intents {
             if surfaces.iter().any(|surface| surface == &intent.surface.0) {
@@ -1279,13 +1366,6 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
         }
     }
 
-    // 🧹️ The SECOND publication retirement of this turn, and the one that matters for the crossing
-    // count: the first ran before the events, so every `Event::PatchAck` this turn carried left its
-    // slot `Acknowledged` with nothing to retire it until the NEXT turn — one host round trip per
-    // published surface whose only work was freeing a slot (the `<n>:ea---` half of the two-state
-    // ping-pong, `📓️reactor-reconcile-spin-2026-09-14.md` §1). Bounded by the same units and the same
-    // wall deadline as the first run, so a turn cut short still answers `MoreWork` through
-    // `PendingPatchAuthority::has_retiring` and finishes on the next one.
     for unit in 0..PATCH_CLOSE_UNITS_PER_TURN {
         if unit > 0 && unit % PATCH_CLOSE_DEADLINE_STRIDE == 0 && std::time::Instant::now() >= retirement_deadline {
             break;
@@ -1302,9 +1382,6 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
         route_exchange_output(instance, output, &mut effects);
     }
 
-    // 👥️ M2 (ticket 26/08/17 `design-unified.md`): `now_ms` is read ONCE for both `record_peer`'s
-    // expiry stamping below and `PRESENCE.expire` at the end of this turn — a single wall-clock
-    // reading per poll, not one per presence update.
     trace_turn_phase_retention("continuation");
     let now_ms = u64::try_from(crate::host::now_ms().await).unwrap_or(0);
 
@@ -1322,14 +1399,6 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
         match mounted {
             Ok(grant) => match crate::plugin_runtime::plugin_render_surface(runtime, instance, &surface_key).await {
                 Ok((tree, presence)) => {
-                    // 🕹️ A refused commit THROWS AWAY the tree this turn just rendered and leaves the
-                    // surface at its previous revision, which the host then reads back as `unchanged` —
-                    // indistinguishable from a healthy refresh. It is the one exit on this path that can
-                    // lose a render the host explicitly asked for, so it is recorded as a shell fault
-                    // naming the surface rather than a `let _ =` (ticket 26/09/02/PUZZLE-3D-END-TO-END
-                    // wave B46 §8.1, wave B48 §3). Not a turn-fatal `?`: a commit refused because the
-                    // instance is closing is an ordinary teardown race, and faulting the whole turn for
-                    // it would break the close ladder.
                     if grant.commit_source(tree.root).is_err() {
                         effects.push(shell_fault_effect(
                             instance,
@@ -1358,21 +1427,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                     effects.push(shell_fault_effect(instance, &fault));
                 }
             },
-            // 🕹️ A surface whose previous reconcile is still in flight cannot be re-rendered now, so the
-            // dirty render is DEFERRED — and a deferred ring with no room left would drop it, which is a
-            // render the host asked for that no later turn ever performs. That is exactly the shape of
-            // "the guest never re-publishes its selection lane after a pick" (ticket
-            // 26/09/02/PUZZLE-3D-END-TO-END wave B46 §8.1: `interactionSelect` settles, no verdict is
-            // recorded, and `data-guest-selection-json` stays `selectedIds:[]` for 150 s), so it is a
-            // typed fault naming the surface rather than a `let _ =`.
             Err(surface) => {
-                // 🎟️ A refusal by one of the PROCESS-WIDE reconcile tables is not the ordinary "previous
-                // reconcile still in flight" race the defer ring exists for: it says this surface cannot be
-                // admitted at all until some other surface hands credit back, and while the reservation was
-                // priced at the per-surface CEILING that was structural — three surfaces of a thirteen-surface
-                // session, refused/deferred/re-dirtied for ever with `effects=0` (ticket
-                // 26/09/02/PUZZLE-3D-END-TO-END wave B56 §1.1, wave B58). Priced by its own body it should
-                // never happen, so it is reported by NAME, once per refusal, instead of deferring in silence.
                 if let Some(reason) = PATCHES.with(|patches| patches.take_unreported_reserve_refusal()).filter(|reason| reason.starts_with("registry-")) {
                     effects.push(shell_fault_effect(
                         instance,
@@ -1403,47 +1458,20 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
         effects.push(shell_fault_effect(instance, &semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new(SURFACE_RENDER_FAULT_CODE), message)));
     }
 
-    // 🚫️async: E5 executor bridge (× 2) — `LocalExecutor::{run_until_idle,has_ready}` stay
-    // genuinely `async fn` (its own doc: "run_until_idle handles Pending without ever yielding
-    // its own future" — matches `⚛️reactor/💼️jobs`'s identical use of this exact bridge).
     let executor_deadline_work = REACTOR_EXECUTOR.with(|executor| executor.run_until_deadline(64, 256 * 1_024, std::time::Instant::now() + std::time::Duration::from_millis(REACTOR_TURN_EXECUTOR_HOLD_MS)));
-    // 🧵️ The COLD executor's own slice of the same hold: every `AsyncTask` `spawn_task` admitted
-    // lives on `TASK_EXECUTOR`, and until the task lane became a product lane nothing but a native
-    // fixture ever polled it — a spawned task would have parked forever inside a real guest. Its
-    // answer is "some task is still alive", ready or parked, so it is folded into `more_work` the
-    // same way `REACTOR_EXECUTOR`'s is.
     let task_executor_work = TASK_EXECUTOR.with(|executor| executor.run_until_deadline(64, std::time::Instant::now() + std::time::Duration::from_millis(REACTOR_TURN_EXECUTOR_HOLD_MS)));
-    // 🔁️ The process-pool pump stays gated on the REACTOR executor alone. `TASK_EXECUTOR`'s answer
-    // is "some task is still alive", ready OR PARKED, so folding it in here stopped pumping the
-    // pool for as long as any task was parked on a host round trip — which starved every
-    // interactive job step behind it (measured 2026-09-22: a command page set never reached its
-    // terminal ingress status in 512 turns).
     let process_pool_work = !executor_deadline_work && pump_process_worker_pool();
     let more_work = executor_deadline_work || task_executor_work || process_pool_work;
     for effect in REGISTRY.with(|registry| registry.drain()) {
         push_admitted_effect(&mut effects, 0, effect);
     }
 
-    // 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): resumed `AsyncTask` follow-
-    // ups (and any replayed `task_restarts` from a `restore` before this turn) — AFTER
-    // `run_until_idle` so a task that resolved just now is redispatched the SAME turn, not the
-    // next one. A resume can itself spawn more tasks (`dispatch_emit` runs for real), so the
-    // executor may have fresh ready work by the time this returns — folded into `more_work` below
-    // rather than requiring a second `run_until_idle` pass this turn (the next `poll` picks it up).
     let resumes_remain = drain_task_resumes(runtime, &mut effects, 64);
     effects.extend(crate::plugin_runtime::plugin_drain_document_backbones(runtime)?);
     let executor_pending = REACTOR_EXECUTOR.with(|executor| executor.has_pending()) || TASK_EXECUTOR.with(|executor| executor.has_pending());
     let command_ingress_pending = COMMAND_INGRESS.with(|ingress| ingress.borrow().iter().any(Option::is_some));
     let lifecycle_work = runtime.guest_lifetimes.borrow().has_work();
     let ui_retirement_work = close_late_ui_retirement()?;
-    // 🔒️ `typed_operation_scan.contended` is deliberately NOT folded in. A busy instance lock is not
-    // an answer of "there is runnable work", it is "another owner is mid-step and I could not look" —
-    // and the guest is single-threaded, so on wasm it can only ever be a reader inside this very turn.
-    // Answering `MoreWork` for it turned every concurrent read into a host turn round trip that
-    // produced nothing: 12 of 512 idle generation3d turns, measured 2026-09-10. Every owner that can
-    // hold that lock is itself either a reactor executor task (`executor_pending`), a task resume
-    // (`resumes`), an ingress command (`command_ingress`) or a lifecycle step (`lifecycle`), each of
-    // which already arms this turn on its own account. See `📓️idle-turns-2026-09-10.md`.
     let more_work = more_work || close_cleanup_work || typed_operation_scan.runnable || reconcile_work || resumes_remain || executor_pending || command_ingress_pending || lifecycle_work || ui_retirement_work;
     LAST_MORE_WORK_SOURCES.set(TurnMoreWorkSources {
         executor_deadline: executor_deadline_work,
@@ -1469,23 +1497,20 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
         }
         if more_work {
             trace_guest_line(&format!(
-                "[DEBUG] reactor more-work streak={streak} seen={seen} sources={:?} contended={typed_operation_contended} effects={} patches=[{}] pending=[{}]",
+                "[TRACE] reactor more-work streak={streak} seen={seen} sources={:?} contended={typed_operation_contended} effects={} patches=[{}] pending=[{}]",
                 LAST_MORE_WORK_SOURCES.get().names(),
                 effects.len(),
                 PATCHES.with(patches::PatchTracker::debug_state),
                 with_pending_patches(|pending| pending.borrow().debug_state())
             ));
         } else if trace.0 > 0 {
-            trace_guest_line(&format!("[DEBUG] reactor more-work streak ended after {} turns (seen={seen})", trace.0));
+            trace_guest_line(&format!("[TRACE] reactor more-work streak ended after {} turns (seen={seen})", trace.0));
         }
         *trace = (streak, seen);
     });
 
     let lifecycle_receipt = focus.map(|instance| runtime.guest_lifetimes.borrow_mut().prepare_turn(instance)).transpose()?.flatten();
     let (ui_patches, ui_patch_receipt) = fill_turn_patch_page(runtime, turn_patch_budget_bytes(budget))?;
-    // 👥️ M2: once per poll — expire ages-out peer marks, then flush drains every key touched since
-    // the last flush into one coalesced `PresenceUpdate` each (free burst coalescing: a hover storm
-    // between polls still costs exactly one update per `(surface, node_key)`).
     let presence = PRESENCE.with(|hub| {
         let mut hub = hub.borrow_mut();
         hub.expire(now_ms);
@@ -1816,6 +1841,10 @@ pub const fn more_work_drive_budget_ms(grant_wall_ms: u64, guest_turn_cost_ms: u
 /// 3. **the hold** — the turn's own wall deadline, re-read every 64 opportunities, unchanged.
 ///
 /// See `📓️reactor-reconcile-spin-2026-09-14.md` §1-§3.
+///
+/// 🩹️ `take_ready_patch_into` already committed this output to its closing
+/// lifecycle; there is no `return_ready_patch` any more, so losing this
+/// capacity race simply drops the extracted page instead of re-queueing it.
 pub(crate) fn drive_reconcile_within(patches: &patches::PatchTracker, opportunities: usize, deadline: std::time::Instant) -> Result<usize, &'static str> {
     let mut spent = 0usize;
     for opportunity in 0..opportunities {
@@ -1838,9 +1867,6 @@ pub(crate) fn drive_reconcile_within(patches: &patches::PatchTracker, opportunit
                 if patches.take_ready_patch_into(key, generation, &mut target, semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES)? {
                     extracted = true;
                     if let Some(patch) = target {
-                        // 🩹️ `take_ready_patch_into` already committed this output to its closing
-                        // lifecycle; there is no `return_ready_patch` any more, so losing this
-                        // capacity race simply drops the extracted page instead of re-queueing it.
                         match with_pending_patches(|pending| pending.borrow_mut().push_reconcile(patch)) {
                             Ok(()) => {}
                             Err(_dropped) => {}
@@ -1925,22 +1951,24 @@ use super::pending::{parse_surface_instance, with_state as with_pending_patches}
 /// `AppFrame::UiSnapshotEnd` has no consumer yet in this wave (patches apply incrementally, no
 /// snapshot-boundary bookkeeping); everything else → `Effect::SendMessage` to the shell, matching
 /// design-abi.md §2's table verbatim.
+///
+/// 🚫️async: E5 executor bridge (× 3) — `protocol::{decode,encode}_app_frame` (`📡️spr/**`, out
+/// of `path_scope`) and `store::pack_rt::decode_wire_value` stay genuinely `async fn`; safe to
+/// resolve synchronously for the same reason as this file's other WIT-boundary bridges.
+///
+/// 🎯️ `sdk-flip` (26/08/20): `protocol::AppFrame::UiPatch` still carries the PRE-flip shape
+/// (`kind: String`, `ops` pack-encoding the old `kernel::PatchOp`) — its crate, `📡️spr/**`, is
+/// FORBIDDEN to this packet, so the frame struct itself is untouched. `kind` is bound but
+/// dropped (the new `UiPatch` has no such field); `ops` decodes into `UiPatchOp` on the
+/// OPTIMISTIC assumption the sender re-encodes with the new op set too — genuinely stale
+/// until whichever packet updates `📡️spr/🧵️channel` re-frames this variant to match (flagged
+/// in `📓️terra-wit-flip-report.md`'s consumer inventory; not fixed here, out of `OWNS`).
 #[expect(clippy::result_large_err, reason = "A rejected external patch is returned intact by its fixed pending-queue callback.")]
 fn route_app_frame(instance: u32, frame_bytes: &[u8], effects: &mut Vec<Effect>) {
-    // 🚫️async: E5 executor bridge (× 3) — `protocol::{decode,encode}_app_frame` (`📡️spr/**`, out
-    // of `path_scope`) and `store::pack_rt::decode_wire_value` stay genuinely `async fn`; safe to
-    // resolve synchronously for the same reason as this file's other WIT-boundary bridges.
     let Ok(frame) = semio_framework::io::resolve_ready(protocol::decode_app_frame(frame_bytes)) else {
         return;
     };
     match frame {
-        // 🎯️ `sdk-flip` (26/08/20): `protocol::AppFrame::UiPatch` still carries the PRE-flip shape
-        // (`kind: String`, `ops` pack-encoding the old `kernel::PatchOp`) — its crate, `📡️spr/**`, is
-        // FORBIDDEN to this packet, so the frame struct itself is untouched. `kind` is bound but
-        // dropped (the new `UiPatch` has no such field); `ops` decodes into `UiPatchOp` on the
-        // OPTIMISTIC assumption the sender re-encodes with the new op set too — genuinely stale
-        // until whichever packet updates `📡️spr/🧵️channel` re-frames this variant to match (flagged
-        // in `📓️terra-wit-flip-report.md`'s consumer inventory; not fixed here, out of `OWNS`).
         protocol::AppFrame::UiPatch { surface, kind: _, revision, base_revision, ops, .. } => {
             let Ok(ops_value) = store::pack_rt::decode_wire_value(&ops) else { return };
             let Ok(ops) = serde_json::from_value::<ui_contract::UiPatchOps>(ops_value.into()) else { return };
@@ -1973,6 +2001,9 @@ fn route_app_frame(instance: u32, frame_bytes: &[u8], effects: &mut Vec<Effect>)
 ///
 /// Returns whether entries remain queued (the round cap was hit) — folded into `poll`'s
 /// `turn-status::more-work` so a saturated resume queue is never silently dropped.
+///
+/// 🚫️async: E5 executor bridge — `plugin_resume_task` stays genuinely `async fn`; see
+/// `poll`'s `plugin_exchange` call for the same safety argument.
 pub fn drain_task_resumes<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, effects: &mut Vec<Effect>, max_rounds: u32) -> bool {
     for _ in 0..max_rounds {
         let Some(resume) = TASK_RESUMES.with(|resumes| resumes.borrow_mut().pop()) else {
@@ -1990,8 +2021,6 @@ pub fn drain_task_resumes<PA: crate::app::PluginApp>(runtime: &crate::plugin_run
             TaskResumeOutcome::Command(bytes) => crate::plugin_runtime::TaskResumeInput::Command(bytes),
             TaskResumeOutcome::Emit { artifact_ops, config_ops, draft_ops } => crate::plugin_runtime::TaskResumeInput::Emit { artifact_ops, config_ops, draft_ops },
         };
-        // 🚫️async: E5 executor bridge — `plugin_resume_task` stays genuinely `async fn`; see
-        // `poll`'s `plugin_exchange` call for the same safety argument.
         let output = semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_resume_task(runtime, resume.instance, &resume.meta, input));
         for frame_bytes in output.frames {
             route_app_frame(resume.instance, &frame_bytes, effects);

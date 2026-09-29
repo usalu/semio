@@ -1,4 +1,4 @@
-//! @emoji 🧑‍🍳️ `dsl_family_recipe` — the recipe family notation kit, shared by `process3d`,
+//! 🧑‍🍳️ `dsl_family_recipe` — the recipe family notation kit, shared by `process3d`,
 //! `playbook`, and `shome`: ordered typed-call steps, `name: target(args)` — e.g.
 //! `step-1: state.set(counter 0)`. Deliberately NOT built on `crate::os_dsl::schema::RecordLayout::Call`:
 //! that layout fixes both the separator (`=`) and the call target (`RecordSpec.keyword`) at spec-
@@ -10,7 +10,7 @@
 use crate::os_dsl::{lex, Limits, TextError, TextSpan, TokenKind};
 
 //#region 🔖️Step
-/// @emoji 🪜️ One recipe step: `name: target(arg1 arg2 ...)`. Arguments are positional only in
+/// 🪜️ One recipe step: `name: target(arg1 arg2 ...)`. Arguments are positional only in
 /// this v1 (bare `Ident`/`Int`/`Float`/`Text` tokens, printed as their own text) — `key=value`
 /// keyed arguments are not yet supported (a real, documented gap, not silently dropped).
 #[derive(Clone, Debug, PartialEq)]
@@ -59,7 +59,7 @@ async fn arg_text(token: &crate::os_dsl::SpannedToken) -> Result<String, TextErr
     }
 }
 
-/// @emoji 🔌️ Parses one standalone recipe step: `name: target(arg1 arg2)`. `target` may be a
+/// 🔌️ Parses one standalone recipe step: `name: target(arg1 arg2)`. `target` may be a
 /// dotted call path (`state.set`) since `.` is `dsl_core` ident-continue — it lexes as one `Ident`.
 pub async fn parse_step_text(text: &str) -> Result<RecipeStep, TextError> {
     let limits = Limits::default();
@@ -84,7 +84,7 @@ pub async fn parse_step_text(text: &str) -> Result<RecipeStep, TextError> {
     Ok(RecipeStep { name, target, args })
 }
 
-/// @emoji 🖨️ Canonical printer — the inverse of [`parse_step_text`]: `name: target(arg1 arg2)`.
+/// 🖨️ Canonical printer — the inverse of [`parse_step_text`]: `name: target(arg1 arg2)`.
 pub async fn print_step(step: &RecipeStep) -> String {
     format!("{}: {}({})", step.name, step.target, step.args.join(" "))
 }

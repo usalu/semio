@@ -111,7 +111,7 @@ async fn add_remove_mark_of_an_absent_run_has_an_empty_inverse() {
 
 #[semio_framework_async_macros::async_test]
 async fn semantic_kinds_cover_every_variant() {
-    assert_eq!(SemioTextMutation::kinds().len(), 7);
+    assert_eq!(SemioTextMutation::kinds().len(), 8);
     let mutation = SemioTextMutation::RemoveRun(remove_run::RemoveRun { index: 2 });
     assert_eq!(mutation.semantics().kind, "remove-run");
     assert_eq!(mutation.semantics().record, "RemovedRun");

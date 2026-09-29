@@ -69,7 +69,6 @@ fn window_action_context_nested_menu_actions_preserve_the_clicked_window() {
         let actual: Value = serde_json::from_str(&dsl::json::from_dsl_value(items[0].children[0].action.as_ref().unwrap().args.as_ref().unwrap()).to_string()).unwrap();
         assert_eq!(actual, case["expected"]);
     }
-    eprintln!("[DEBUG] nested native context-menu actions retained the clicked window through activation");
 }
 
 #[test]
@@ -97,7 +96,6 @@ fn window_action_context_fallback_uses_the_clicked_window_kind() {
     let action = menu.items.iter().find_map(|item| item.action.as_ref().filter(|action| action.action == "right-action")).expect("clicked window contributes its own fallback actions");
     assert_eq!(action.args.as_ref().and_then(|args| args.get("windowId")).and_then(DslValue::as_str), Some(right));
     assert!(!menu.items.iter().any(|item| item.action.as_ref().is_some_and(|action| action.action == "left-action")));
-    eprintln!("[DEBUG] native fallback menu used the clicked window kind while another window remained active");
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -985,6 +983,9 @@ fn apply_os_command_set_theme_id_updates_active_theme() {
     assert_eq!(shell.chrome_build.preferences.theme_id, "semio");
 }
 
+/// 🗂️ One section per distinct `CommandDefinition.category`: fullscreen is in window,
+/// appearance contains setAppearance/setThemeId, layout contains setDriver/resetDock, and
+/// language contains setLocale/setTerminology, and general contains the route-owned Hub opener.
 #[test]
 fn build_command_panel_ui_groups_rows_under_category_headers() {
     let mut shell = test_shell_state();
@@ -992,9 +993,6 @@ fn build_command_panel_ui_groups_rows_under_category_headers() {
     let UiNode::Tree(panel) = shell.build_command_panel_ui() else {
         panic!("expected a Tree root");
     };
-    // 🗂️ One section per distinct `CommandDefinition.category`: fullscreen is in window,
-    // appearance contains setAppearance/setThemeId, layout contains setDriver/resetDock, and
-    // language contains setLocale/setTerminology, and general contains the route-owned Hub opener.
     assert_eq!(panel.sections.len(), 5);
     assert!(panel.sections.iter().flat_map(|section| &section.items).all(|row| row.action.is_some()), "every command is an actionable Tree row");
 }

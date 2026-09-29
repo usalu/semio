@@ -1,4 +1,4 @@
-//! @emoji 🖼️ `FrameSnapshot`, `FrameEngine` and the presented/building swap.
+//! 🖼️ `FrameSnapshot`, `FrameEngine` and the presented/building swap.
 //!
 //! `build_frame` runs compose → layout → prepaint → paint → `Scene::finish` → commit as **one
 //! synchronous run-to-completion transaction** (ruling U1). "Atomic swap" does not need `Arc`/`Mutex`

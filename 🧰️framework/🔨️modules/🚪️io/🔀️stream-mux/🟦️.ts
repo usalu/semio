@@ -12,7 +12,7 @@
  */
 import contract from "./🧬️schema/🔣️.json" with { type: "json" };
 
-/** @emoji 📏️ The bounds the frame contract declares (read from the schema's `Bounds` consts — no second source). */
+/** 📏️ The bounds the frame contract declares (read from the schema's `Bounds` consts — no second source). */
 export type StreamMuxBoundsV1 = {
   readonly subprotocol: string;
   readonly maxFrameBytes: number;
@@ -32,27 +32,27 @@ export type StreamMuxBoundsV1 = {
   readonly lingerMs: number;
 };
 
-/** @emoji 📐️ {@link StreamMuxBoundsV1} as declared by `semio.io.stream-mux/v1`. */
+/** 📐️ {@link StreamMuxBoundsV1} as declared by `semio.io.stream-mux/v1`. */
 export const STREAM_MUX_BOUNDS_V1: StreamMuxBoundsV1 = Object.freeze(
   Object.fromEntries(Object.entries(contract.$defs.Bounds.properties).map(([name, spec]) => [name, (spec as { readonly const: string | number }).const])) as StreamMuxBoundsV1,
 );
 
-/** @emoji 🧾️ Any JSON value a route carries. */
+/** 🧾️ Any JSON value a route carries. */
 export type StreamMuxJsonV1 = null | boolean | number | string | readonly StreamMuxJsonV1[] | { readonly [key: string]: StreamMuxJsonV1 };
 
-/** @emoji ⏮️ Where a reader left off: the server epoch and the last sequence number it received. */
+/** ⏮️ Where a reader left off: the server epoch and the last sequence number it received. */
 export type StreamMuxResumeV1 = { readonly epoch: string; readonly seq: number };
 
-/** @emoji 📤️ Frames a reader sends. */
+/** 📤️ Frames a reader sends. */
 export type StreamMuxClientFrameV1 =
   | { readonly kind: "open"; readonly stream: number; readonly route: string; readonly key: string; readonly resume: StreamMuxResumeV1 | null; readonly credit: number }
   | { readonly kind: "grant"; readonly stream: number; readonly credit: number }
   | { readonly kind: "cancel"; readonly stream: number };
 
-/** @emoji 🏁️ Why a stream ended. */
+/** 🏁️ Why a stream ended. */
 export type StreamMuxEndReasonV1 = "done" | "cancelled" | "refused" | "failed";
 
-/** @emoji 📥️ Frames the server sends. */
+/** 📥️ Frames the server sends. */
 export type StreamMuxServerFrameV1 =
   | { readonly kind: "hello"; readonly version: 1; readonly epoch: string; readonly beatMs: number }
   | { readonly kind: "opened"; readonly stream: number; readonly mode: "fresh" | "resumed"; readonly epoch: string; readonly seq: number }
@@ -61,10 +61,10 @@ export type StreamMuxServerFrameV1 =
   | { readonly kind: "end"; readonly stream: number; readonly reason: StreamMuxEndReasonV1; readonly detail: string }
   | { readonly kind: "beat"; readonly at: number };
 
-/** @emoji 🚫️ Why a frame was refused (the schema's `Refusal` enum). */
+/** 🚫️ Why a frame was refused (the schema's `Refusal` enum). */
 export type StreamMuxRefusalV1 = "too-large" | "malformed-json" | "not-an-object" | "unknown-kind" | "unknown-field" | "missing-field" | "invalid-field";
 
-/** @emoji ⚖️ A decoded frame or the refusal that stopped it. */
+/** ⚖️ A decoded frame or the refusal that stopped it. */
 export type StreamMuxDecodedV1<F> = { readonly ok: true; readonly frame: F } | { readonly ok: false; readonly refusal: StreamMuxRefusalV1; readonly field: string | null };
 //#endregion 🔀️StreamMux
 
@@ -136,17 +136,17 @@ function decodeFrame<F>(textFrame: string, shapes: Readonly<Record<string, reado
   return { ok: true, frame: frame as F };
 }
 
-/** @emoji 🛂️ Decodes and validates one reader frame (exact fields, schema ranges, byte bound). */
+/** 🛂️ Decodes and validates one reader frame (exact fields, schema ranges, byte bound). */
 export function decodeStreamMuxClientFrameV1(textFrame: string): StreamMuxDecodedV1<StreamMuxClientFrameV1> {
   return decodeFrame<StreamMuxClientFrameV1>(textFrame, CLIENT_SHAPES);
 }
 
-/** @emoji 🛃️ Decodes and validates one server frame (exact fields, schema ranges, byte bound). */
+/** 🛃️ Decodes and validates one server frame (exact fields, schema ranges, byte bound). */
 export function decodeStreamMuxServerFrameV1(textFrame: string): StreamMuxDecodedV1<StreamMuxServerFrameV1> {
   return decodeFrame<StreamMuxServerFrameV1>(textFrame, SERVER_SHAPES);
 }
 
-/** @emoji 🖨️ Canonical text of a frame: `kind` first, then the fields in contract order, no whitespace. */
+/** 🖨️ Canonical text of a frame: `kind` first, then the fields in contract order, no whitespace. */
 export function encodeStreamMuxFrameV1(frame: StreamMuxClientFrameV1 | StreamMuxServerFrameV1): string {
   const shape = (Object.hasOwn(CLIENT_SHAPES, frame.kind) ? CLIENT_SHAPES : SERVER_SHAPES)[frame.kind];
   const ordered: Record<string, unknown> = { kind: frame.kind };
@@ -155,7 +155,7 @@ export function encodeStreamMuxFrameV1(frame: StreamMuxClientFrameV1 | StreamMux
   return JSON.stringify(ordered);
 }
 
-/** @emoji ✂️ Clips a detail or note to the contract's code-point bound. */
+/** ✂️ Clips a detail or note to the contract's code-point bound. */
 export function clipStreamMuxDetailV1(value: string): string {
   if (value.length <= STREAM_MUX_BOUNDS_V1.maxDetailLength) return value;
   return [...value].slice(0, STREAM_MUX_BOUNDS_V1.maxDetailLength).join("");
@@ -163,34 +163,34 @@ export function clipStreamMuxDetailV1(value: string): string {
 //#endregion 🧬️Codec
 
 //#region 🖥️Server
-/** @emoji 🔌️ The server's view of one accepted WebSocket (whatever runtime socket backs it). */
+/** 🔌️ The server's view of one accepted WebSocket (whatever runtime socket backs it). */
 export interface StreamMuxSocketV1 {
   send(frame: string): void;
   bufferedAmount(): number;
   close(code: number, reason: string): void;
 }
 
-/** @emoji ⏲️ Timers the server and channel run on (injectable for deterministic laws). */
+/** ⏲️ Timers the server and channel run on (injectable for deterministic laws). */
 export interface StreamMuxTimersV1 {
   now(): number;
   setTimeout(run: () => void, ms: number): unknown;
   clearTimeout(handle: unknown): void;
 }
 
-/** @emoji 🕰️ The platform's own timers. */
+/** 🕰️ The platform's own timers. */
 export const PLATFORM_STREAM_MUX_TIMERS_V1: StreamMuxTimersV1 = {
   now: () => Date.now(),
   setTimeout: (run, ms) => globalThis.setTimeout(run, ms),
   clearTimeout: (handle) => globalThis.clearTimeout(handle as ReturnType<typeof globalThis.setTimeout>),
 };
 
-/** @emoji 🧵️ What a job route's work sees: its cancellation and its progress lane. */
+/** 🧵️ What a job route's work sees: its cancellation and its progress lane. */
 export interface StreamMuxJobV1 {
   readonly signal: AbortSignal;
   progress(done: number, total: number | null, note: string): void;
 }
 
-/** @emoji 🛣️ One named route. A watch route has a `snapshot` (sent on every fresh open), an optional `coalesce` key and an
+/** 🛣️ One named route. A watch route has a `snapshot` (sent on every fresh open), an optional `coalesce` key and an
  * optional `source` (the live producer of one key: started with its route instance, stopped when the instance retires); a job
  * route has `run` (started by its first reader of a key, cancelled when its last reader cancels or its grace expires). */
 export interface StreamMuxRouteV1 {
@@ -228,13 +228,13 @@ type ServerStream = {
 };
 type ServerConnection = { readonly socket: StreamMuxSocketV1; readonly streams: Map<number, ServerStream>; retry: unknown; closed: boolean };
 
-/** @emoji 🔗️ One accepted channel: feed it every received text frame, and tell it when the socket closed. */
+/** 🔗️ One accepted channel: feed it every received text frame, and tell it when the socket closed. */
 export interface StreamMuxConnectionV1 {
   receive(frame: string): void;
   closed(): void;
 }
 
-/** @emoji 🖥️ The server half: named routes, route instances with resumable event rings, and every accepted channel. */
+/** 🖥️ The server half: named routes, route instances with resumable event rings, and every accepted channel. */
 export class StreamMuxServerV1 {
   readonly epoch: string;
   private readonly timers: StreamMuxTimersV1;
@@ -249,7 +249,7 @@ export class StreamMuxServerV1 {
     this.epoch = options.epoch ?? randomEpoch();
   }
 
-  /** @emoji 🪧️ Registers a route; answers its unregistration (every open stream of it ends `refused`). */
+  /** 🪧️ Registers a route; answers its unregistration (every open stream of it ends `refused`). */
   route(name: string, route: StreamMuxRouteV1): () => void {
     if (!ROUTE_PATTERN.test(name)) throw new Error(`stream-mux: invalid route name ${name}`);
     if (this.routes.has(name)) throw new Error(`stream-mux: route ${name} is already registered`);
@@ -261,7 +261,7 @@ export class StreamMuxServerV1 {
     };
   }
 
-  /** @emoji 📣️ Publishes one event to every reader of `route`/`key` and retains it for resuming readers. Every publish takes the
+  /** 📣️ Publishes one event to every reader of `route`/`key` and retains it for resuming readers. Every publish takes the
    * next sequence number of the epoch, read or not, so a reader that resumes across an unobserved event starts fresh. */
   publish(name: string, key: string, data: StreamMuxJsonV1): void {
     this.head += 1;
@@ -271,14 +271,14 @@ export class StreamMuxServerV1 {
     for (const reader of instance.readers) this.enqueue(reader, this.head, data);
   }
 
-  /** @emoji 🔢️ How many channels and streams are live (diagnostics and laws). */
+  /** 🔢️ How many channels and streams are live (diagnostics and laws). */
   census(): { readonly channels: number; readonly streams: number; readonly instances: number } {
     let streams = 0;
     for (const connection of this.connections) streams += connection.streams.size;
     return { channels: this.connections.size, streams, instances: this.instances.size };
   }
 
-  /** @emoji 🤝️ Accepts one channel: sends `hello` and answers the receive/close entry points. */
+  /** 🤝️ Accepts one channel: sends `hello` and answers the receive/close entry points. */
   connect(socket: StreamMuxSocketV1): StreamMuxConnectionV1 {
     const connection: ServerConnection = { socket, streams: new Map(), retry: null, closed: false };
     this.connections.add(connection);
@@ -290,7 +290,7 @@ export class StreamMuxServerV1 {
     };
   }
 
-  /** @emoji 🧹️ Ends every channel and job (server shutdown). */
+  /** 🧹️ Ends every channel and job (server shutdown). */
   close(): void {
     for (const connection of [...this.connections]) {
       connection.socket.close(1001, "server-closing");
@@ -533,7 +533,7 @@ function randomEpoch(): string {
 //#endregion 🖥️Server
 
 //#region 📡️Reader
-/** @emoji 🎧️ What a reader of one stream handles. `opened("fresh")` voids every earlier state of the stream (a snapshot
+/** 🎧️ What a reader of one stream handles. `opened("fresh")` voids every earlier state of the stream (a snapshot
  * follows when the route has one); `data` may return a promise — its credit is returned only when it settles (backpressure). */
 export interface StreamMuxHandlersV1 {
   readonly opened?: (mode: "fresh" | "resumed") => void;
@@ -542,26 +542,26 @@ export interface StreamMuxHandlersV1 {
   readonly end?: (reason: StreamMuxEndReasonV1, detail: string) => void;
 }
 
-/** @emoji 🎟️ One open stream; `close()` cancels it (idempotent). */
+/** 🎟️ One open stream; `close()` cancels it (idempotent). */
 export interface StreamMuxSubscriptionV1 {
   close(): void;
 }
 
-/** @emoji 📡️ Anything that opens streams: the page's channel, or a worker's port onto it. */
+/** 📡️ Anything that opens streams: the page's channel, or a worker's port onto it. */
 export interface StreamMuxEndpointV1 {
   open(route: string, key: string, handlers: StreamMuxHandlersV1, options?: { readonly credit?: number; readonly signal?: AbortSignal }): StreamMuxSubscriptionV1;
 }
 
-/** @emoji 🔇️ An endpoint that never opens anything (no WebSocket in this runtime). */
+/** 🔇️ An endpoint that never opens anything (no WebSocket in this runtime). */
 export const SILENT_STREAM_MUX_ENDPOINT_V1: StreamMuxEndpointV1 = { open: () => ({ close: () => undefined }) };
 
-/** @emoji 👂️ One route of `endpoint` as a plain subscription: every data value of the stream goes to `listener`; answers the
+/** 👂️ One route of `endpoint` as a plain subscription: every data value of the stream goes to `listener`; answers the
  * close. The shape a source owner hands a kernel plugin source (the kernel's `PluginSourceWatch`). */
 export function streamMuxWatchV1(endpoint: StreamMuxEndpointV1, route: string, key = ""): (listener: (data: StreamMuxJsonV1) => void) => () => void {
   return (listener) => endpoint.open(route, key, { data: (data) => listener(data) }).close;
 }
 
-/** @emoji 🪣️ Delivers server frames of one stream to its handlers and returns credit as handlers finish. */
+/** 🪣️ Delivers server frames of one stream to its handlers and returns credit as handlers finish. */
 class ReaderCore {
   readonly handlers: StreamMuxHandlersV1;
   readonly window: number;
@@ -611,18 +611,18 @@ const creditOf = (credit: number | undefined): number => Math.max(1, Math.min(ST
 //#endregion 📡️Reader
 
 //#region 🛰️Channel
-/** @emoji ⛓️ One live link of a channel (a WebSocket, or a test double). */
+/** ⛓️ One live link of a channel (a WebSocket, or a test double). */
 export interface StreamMuxLinkV1 {
   send(frame: string): void;
   close(): void;
 }
 
-/** @emoji 🛰️ How a channel opens links. */
+/** 🛰️ How a channel opens links. */
 export interface StreamMuxTransportV1 {
   connect(events: { readonly open: () => void; readonly message: (frame: string) => void; readonly closed: () => void }): StreamMuxLinkV1;
 }
 
-/** @emoji 🌐️ The WebSocket transport (subprotocol `semio.stream-mux.v1`); a link whose socket negotiates anything else closes. */
+/** 🌐️ The WebSocket transport (subprotocol `semio.stream-mux.v1`); a link whose socket negotiates anything else closes. */
 export function webSocketStreamMuxTransportV1(url: string): StreamMuxTransportV1 {
   return {
     connect(events) {
@@ -652,11 +652,11 @@ export function webSocketStreamMuxTransportV1(url: string): StreamMuxTransportV1
   };
 }
 
-/** @emoji 🧺️ Receives the frames of one channel-side stream (a page subscription or a bridged port stream). */
+/** 🧺️ Receives the frames of one channel-side stream (a page subscription or a bridged port stream). */
 type ChannelSink = { deliver(frame: StreamMuxServerFrameV1): void };
 type ChannelStream = { readonly id: number; readonly route: string; readonly key: string; readonly sink: ChannelSink; available: number; epoch: string | null; seq: number };
 
-/** @emoji 📶️ The page's ONE channel to its origin: every stream of the page (and of its workers, through {@link attachPort})
+/** 📶️ The page's ONE channel to its origin: every stream of the page (and of its workers, through {@link attachPort})
  * rides it; a lost link reconnects with jittered backoff and reopens every stream from where it left off. */
 export class StreamMuxChannelV1 implements StreamMuxEndpointV1 {
   private readonly transport: StreamMuxTransportV1;
@@ -676,7 +676,7 @@ export class StreamMuxChannelV1 implements StreamMuxEndpointV1 {
     this.timers = timers;
   }
 
-  /** @emoji 📊️ Link state and live streams (diagnostics and laws); `links` counts every link this channel opened. */
+  /** 📊️ Link state and live streams (diagnostics and laws); `links` counts every link this channel opened. */
   census(): { readonly open: boolean; readonly streams: number; readonly links: number } {
     return { open: this.linkOpen, streams: this.streams.size, links: this.links };
   }
@@ -701,7 +701,7 @@ export class StreamMuxChannelV1 implements StreamMuxEndpointV1 {
     return { close };
   }
 
-  /** @emoji 🌉️ Bridges a worker's port onto this channel: the port speaks the same client frames with its own stream ids and
+  /** 🌉️ Bridges a worker's port onto this channel: the port speaks the same client frames with its own stream ids and
    * receives the server frames re-addressed to them. Answers the detach that cancels every stream the port opened. */
   attachPort(port: MessagePort): () => void {
     const local = new Map<number, ChannelStream>();
@@ -741,7 +741,7 @@ export class StreamMuxChannelV1 implements StreamMuxEndpointV1 {
     return detach;
   }
 
-  /** @emoji 🚪️ Cancels every stream and closes the link for good. */
+  /** 🚪️ Cancels every stream and closes the link for good. */
   close(): void {
     for (const stream of [...this.streams.values()]) this.cancel(stream);
     this.shut();
@@ -869,7 +869,7 @@ export class StreamMuxChannelV1 implements StreamMuxEndpointV1 {
   }
 }
 
-/** @emoji 🧷️ A worker's endpoint onto the page channel through a transferred `MessagePort` (see {@link StreamMuxChannelV1.attachPort}). */
+/** 🧷️ A worker's endpoint onto the page channel through a transferred `MessagePort` (see {@link StreamMuxChannelV1.attachPort}). */
 export class StreamMuxPortEndpointV1 implements StreamMuxEndpointV1 {
   private readonly port: MessagePort;
   private readonly readers = new Map<number, ReaderCore>();
@@ -913,7 +913,7 @@ export class StreamMuxPortEndpointV1 implements StreamMuxEndpointV1 {
 
 const pageChannels = new Map<string, StreamMuxChannelV1>();
 
-/** @emoji 📄️ The page's channel to its own origin at `path` (one per path per page); a runtime without `WebSocket` or a page
+/** 📄️ The page's channel to its own origin at `path` (one per path per page); a runtime without `WebSocket` or a page
  * location gets {@link SILENT_STREAM_MUX_ENDPOINT_V1}. */
 export function pageStreamMuxChannelV1(path: string): StreamMuxChannelV1 | typeof SILENT_STREAM_MUX_ENDPOINT_V1 {
   const location = (globalThis as { readonly location?: { readonly protocol: string; readonly host: string } }).location;

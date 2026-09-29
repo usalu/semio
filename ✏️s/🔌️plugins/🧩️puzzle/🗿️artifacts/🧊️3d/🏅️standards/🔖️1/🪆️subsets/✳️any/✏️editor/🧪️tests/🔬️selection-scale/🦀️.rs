@@ -31,7 +31,6 @@ async fn a_pick_by_id_on_the_flagship_document_persists_and_reaches_inspection()
     let world = render_body(&mut app, main::BODY_KEY).await;
     let selected = selection_of(&world);
     let ids: Vec<String> = selected.get("ids").and_then(Value::as_array).map(|ids| ids.iter().filter_map(Value::as_str).map(str::to_string).collect()).unwrap_or_default();
-    eprintln!("[DEBUG] b46.pick objects={objects} picked={victim} worldSelected={ids:?}");
     assert!(ids.contains(&victim), "the world lane of a {objects}-object document must carry the picked id; got {ids:?}");
 
     let inspection = render_panel_body(&mut app, inspection::BODY_KEY, Some(main::WINDOW_KIND_ID)).await;
@@ -65,7 +64,6 @@ async fn a_pick_reaches_the_world_body_of_every_window_instance_the_host_refresh
             let world = render_window_refresh(&mut app, main::BODY_KEY, window).await;
             let selected = selection_of(&world);
             let ids: Vec<String> = selected.get("ids").and_then(Value::as_array).map(|ids| ids.iter().filter_map(Value::as_str).map(str::to_string).collect()).unwrap_or_default();
-            eprintln!("[DEBUG] b48.worldLane example={example} objects={objects} window={window} picked={victim} ids={ids:?}");
             assert!(ids.contains(&victim), "the world body the host refreshes for {window} on the {objects}-object {example} document must carry the picked id; got {ids:?}");
             assert_eq!(selected.get("activeObjectId").and_then(Value::as_str), Some(victim.as_str()), "and must name it as the active object, which is what the pane's gumball anchors on");
         }
@@ -98,7 +96,6 @@ async fn one_pick_builds_the_interaction_topology_once_whatever_the_document_siz
     select_id(&mut app, crate::editor::puzzle3d::PUZZLE3D_GRANULARITY_OBJECT, &large_victim).await.expect("a pick on the large document dispatches");
     let large_builds = builds() - before_large;
 
-    eprintln!("[DEBUG] b46.topology small={small_objects}objects/{small_builds}builds large={large_objects}objects/{large_builds}builds");
     assert!(large_objects > small_objects, "the two measurements must differ in document size");
     assert_eq!(small_builds, large_builds, "a pick's topology work must not grow with the document");
     assert_eq!(large_builds, 1, "one pick builds the app interaction topology exactly once");
@@ -133,7 +130,7 @@ async fn the_flagship_outliner_panel_body_windows_its_object_rows() {
     let rows = mentions(&body, &first);
     let paged = mentions(&body, ".objects.more");
     let stamped = stamps_window_total(&body, objects as u64);
-    eprintln!("[DEBUG] b46.panelBody objects={objects} firstRowPresent={rows} continuation={paged} stampsTotal={stamped} bytes={}", to_json_string(&body).len());
+    eprintln!("b46.panelBody objects={objects} firstRowPresent={rows} continuation={paged} stampsTotal={stamped} bytes={}", to_json_string(&body).len());
     assert!(rows, "the outliner panel body of a {objects}-object document must present its first object row");
     assert!(stamped, "and must stamp the objects section's full window total ({objects})");
     assert!(!paged, "and must never close a section with a continuation row again");

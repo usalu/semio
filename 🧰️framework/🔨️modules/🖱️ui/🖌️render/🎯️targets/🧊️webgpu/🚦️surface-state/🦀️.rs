@@ -1,4 +1,4 @@
-//! @emoji 🚦️ Pure surface/device state machine: zero-size parking, [`DeviceStatus`] transitions, and
+//! 🚦️ Pure surface/device state machine: zero-size parking, [`DeviceStatus`] transitions, and
 //! the scene-phase classification a [`ui_render::DrawBatch`] falls into. No `wgpu::` type appears in
 //! this file — every fn here is exercised by `#[cfg(test)]` without a device, per this packet's brief.
 

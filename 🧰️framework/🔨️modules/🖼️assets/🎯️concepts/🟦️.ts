@@ -1,8 +1,8 @@
-/** @emoji 🎯️ Canonical concept → catalog icon assignments — each distinct meaning maps to exactly one icon. */
+/** 🎯️ Canonical concept → catalog icon assignments — each distinct meaning maps to exactly one icon. */
 import type { IconName } from "../🔣️icons/🤖️generated/🖼️icons/🟦️.ts";
 
 // #region FrameworkIconConcepts
-/** @emoji 🧰️ Domain-neutral icon concepts owned by the framework itself (chrome, generic graph shapes,
+/** 🧰️ Domain-neutral icon concepts owned by the framework itself (chrome, generic graph shapes,
  * projection kinds, generic tools, generic utilities) — none of these name a specific plugin/app. */
 export const ICON_CONCEPT_ASSIGNMENTS = {
   "chrome.delete": "trash-2",
@@ -49,7 +49,7 @@ export const ICON_CONCEPT_ASSIGNMENTS = {
 export type IconConceptId = keyof typeof ICON_CONCEPT_ASSIGNMENTS;
 // #endregion FrameworkIconConcepts
 
-/** @emoji 🔍️ Ensures no two distinct concepts share the same icon id. */
+/** 🔍️ Ensures no two distinct concepts share the same icon id. */
 export function assertUniqueIconConceptAssignments(assignments: Record<string, IconName> = ICON_CONCEPT_ASSIGNMENTS): void {
   const iconToConcepts = new Map<IconName, string[]>();
   for (const [concept, icon] of Object.entries(assignments)) {

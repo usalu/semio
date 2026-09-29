@@ -143,7 +143,6 @@ fn no_operator_in_the_catalogue_declares_one_port_id_on_both_sides() {
         checked += 1;
     }
     assert!(offenders.is_empty(), "these operators name one port id on both sides, so \"{{nodeId}}@{{portId}}\" is ambiguous for them: {offenders:#?}");
-    println!("[DEBUG] port-side law checked {checked} first-party operators");
 }
 
 #[test]
@@ -527,7 +526,6 @@ fn the_chain_ledger_is_live_at_a_hop_boundary_and_its_census_only_grows() {
     let done = session.preview_chain_status();
     assert!(!done.working && done.in_flight == 0, "a settled chain owes nothing again");
     assert!((done.ratio() - 1.0).abs() < 1e-9, "a settled chain reports complete");
-    eprintln!("[DEBUG] flow chain ledger: parked={parked:?} ratios={ratios:?} settled={done:?}");
     session.retire_cold();
     host.retire_cold();
 }
@@ -985,7 +983,6 @@ fn a_gesture_that_changed_nothing_answers_no_operations_and_no_fixture_commit() 
     host.pointer_down_screen(sx, sy, 0, false, false, false, false);
     host.pointer_up_screen(sx, sy, false, false, false);
     let (operations, fixture_changed) = gesture_answer(&mut host);
-    println!("[DEBUG] quiet click answer operations={operations} hostSnapshotChanged={fixture_changed}");
     assert_eq!(operations, 0, "a click that wired nothing journals no narrow operation");
     assert!(!fixture_changed, "a click that moved no widget, no synapse and no layout owes no fixture commit");
     let positions_after: Vec<(String, f64, f64)> = host.dag.host_snapshot.nodes.iter().map(|node| (node.id.clone(), node.x, node.y)).collect();
@@ -1006,7 +1003,6 @@ fn a_drag_that_moved_a_node_answers_a_fixture_commit() {
     host.pointer_move_screen(sx + 60.0, sy + 40.0, false, false, false);
     host.pointer_up_screen(sx + 60.0, sy + 40.0, false, false, false);
     let (operations, fixture_changed) = gesture_answer(&mut host);
-    println!("[DEBUG] node drag answer operations={operations} hostSnapshotChanged={fixture_changed}");
     assert_eq!(operations, 0, "the screen path journals wires only, so a move is not a narrow operation");
     assert!(fixture_changed, "a drag that moved a node owes the fixture commit that carries it");
     host.retire_cold();
@@ -2760,7 +2756,6 @@ fn the_node_census_advances_as_a_chain_walks_and_never_calls_a_recomputed_node_s
     let hop2 = build_flow_status_json(&host, &after_second);
     let census = [census_nodes_done(&armed), census_nodes_done(&hop1), census_nodes_done(&hop2)];
     assert!(census[0] < census[1] && census[1] < census[2], "the census must GROW every hop, not merely refuse to shrink: {census:?}");
-    eprintln!("[DEBUG] flow node census nodes_done per hop: {census:?}");
     host.retire_cold();
 }
 
@@ -2774,7 +2769,6 @@ fn a_coalesced_tick_parks_a_whole_wave_and_paints_every_member_computing() {
     assert_eq!(parked, ["left", "right"], "both ready contributed nodes park on the SAME hop");
     let census = census_entries(&build_flow_status_json(&host, &remaining));
     assert_eq!(census, [("add".to_string(), "ok".to_string()), ("left".to_string(), "computing".to_string()), ("preview".to_string(), "ok".to_string()), ("right".to_string(), "computing".to_string()), ("slider".to_string(), "ok".to_string())]);
-    eprintln!("[DEBUG] flow wave census: parked={parked:?} census={census:?}");
     host.retire_cold();
 }
 
@@ -2802,7 +2796,7 @@ fn cancelling_a_coalesced_wave_retires_every_parked_answer_and_late_settles_arm_
     let rearms = (0..3).filter(|_| session.settle_window_extension("preview-1")).count();
     assert_eq!(rearms, 0, "every answer still crossing when the cancel landed arms nothing");
     assert!(!session.window_tick_is_armed("preview-1"), "a cancelled window stays unarmed");
-    eprintln!("[DEBUG] wave cancel: retiredTessellations={retired} rearms={rearms}");
+    eprintln!("wave cancel: retiredTessellations={retired} rearms={rearms}");
     session.retire_cold();
 }
 
@@ -2838,7 +2832,6 @@ fn an_inline_continuation_is_admitted_exactly_where_the_run_job_would_have_dispa
     session.begin_window_tick("preview-1");
     session.note_window_tick_outcome("preview-1", false);
     assert!(!session.inline_continuation_admitted("preview-1", None, None), "a finished window owes nothing to continue");
-    eprintln!("[DEBUG] inline continuation admission walked one two-wide wave");
     session.retire_cold();
 }
 
@@ -2863,7 +2856,6 @@ fn a_cancelled_chain_is_never_continued_inline_by_an_answer_that_was_already_cro
         assert!(!session.inline_continuation_admitted("preview-1", None, None), "an answer that was already crossing may not continue a cancelled chain");
     }
     assert!(!session.window_tick_is_armed("preview-1"), "and it armed nothing either");
-    eprintln!("[DEBUG] cancelled chain refused 2 inline continuations");
     session.retire_cold();
 }
 
@@ -2890,7 +2882,6 @@ fn every_dag_walk_of_one_guest_turn_shares_one_wall_deadline_and_a_spent_turn_pa
     let own_turn = flow_eval_tick_budget(None).deadline_us();
     assert_ne!(own_turn, Some(turn_started_us + FLOW_EVAL_TICK_ELAPSED_CEILING_US), "a walk that opens its own turn gets its own allowance");
     assert!(FLOW_EVAL_INLINE_CONTINUATION_RESERVE_US > 0 && FLOW_EVAL_INLINE_CONTINUATION_RESERVE_US < FLOW_EVAL_TICK_ELAPSED_CEILING_US, "the reserve is a slice of the allowance, not all of it and not none of it");
-    eprintln!("[DEBUG] turn deadline: ceiling={FLOW_EVAL_TICK_ELAPSED_CEILING_US}us reserve={FLOW_EVAL_INLINE_CONTINUATION_RESERVE_US}us ownTurnDeadline={own_turn:?}");
 }
 
 /// ⚖️ LAW: a chain that has settled its own census says so, and a chain that has published no census
@@ -2921,5 +2912,4 @@ fn a_settled_chain_census_outranks_a_lagging_run_view_and_an_empty_one_does_not(
 
     let overshoot = PreviewChainStatus { nodes_done: 9, nodes_total: 7, in_flight: 0, working: false };
     assert!(overshoot.settled(), "a census that counted more than it declared is settled, never unsettled");
-    eprintln!("[DEBUG] chain settled: working={} half={} censusFree={} done={}", working.settled(), half.settled(), census_free.settled(), done.settled());
 }

@@ -73,5 +73,4 @@ fn retained_record_observation_uses_the_existing_framing_state_without_authority
             }
         }
     }
-    println!("[DEBUG] retained record observation: 11 neutral rows x3 grants; constant-state scalar metadata, unchanged position, empty/compressed/trailer/cancel/error, no commit or input authority");
 }

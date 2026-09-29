@@ -32,9 +32,9 @@ use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError
 use semio_framework_plugin::app::{Dialect, InteractionView};
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppDefinition, AppOperationContext, ArtifactEditor, ArtifactKindSpec, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppDefinition, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract,
     ArtifactToolPublicationLane, ArtifactView, CommandDefinition, ConfigView, DomainTopology, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, IconName, InteractionDefinition, InteractionRef,
-    InteractionTopology, InteractiveJobClassification, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec,
+    InteractionTopology, InteractiveJobClassification, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec,
     TopologyNode,
 };
 use store::EngineHandles;
@@ -1261,20 +1261,7 @@ pub fn create_forms_app() -> AppDefinition {
     Editor::builder(crate::FORMS_DIALECT)
         .command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) })
             .document(["semio", "forms"])
-            .artifact_kind(ArtifactKindSpec {
-                id: "form.dictionary".into(),
-                label: semio_framework_plugin::LocalizedLabel::native("Form Dictionary", "Formularwörterbuch"),
-                source_format: "form.dictionary".into(),
-                component_kind: "forms".into(),
-                dimension: "data".into(),
-                media_capability: OsMediaCapability::MeshOnly,
-                media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
-                schema: "form.dictionary".into(),
-                export_formats: vec![],
-                import_formats: vec![],
-                    export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
-    })
+            .artifact_kind(crate::artifact_kind())
             .icon_id("forms")
             .mode_def(blueprint::definition())
             .mode_def(fill::definition())

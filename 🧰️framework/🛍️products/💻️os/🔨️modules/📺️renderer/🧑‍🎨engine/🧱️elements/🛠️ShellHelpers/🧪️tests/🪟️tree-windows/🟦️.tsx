@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🪟️ The host's half of the virtualised panel tree (🎫️ 26/09/16
+/** 🪟️ The host's half of the virtualised panel tree (🎫️ 26/09/16
  * ARTIFACT-TREE-VIRTUALISED-STREAMING, 📓️design-virtualised-tree.md §6.3): the refresh scheduler's
  * three timing rules, and `uiNodeToTreePanelConfig` handing host-owned expansion to the guest tree. */
 // #endregion 🧲️Header

@@ -25,7 +25,8 @@
         "forwardAllArgs": true
       },
       "dependsOn": [
-        "@semio-tech/framework-os-scale-fixture:build-wasm"
+        "@semio-tech/framework-os-scale-fixture:build-wasm",
+        "@semio-tech/framework-os-dev:generate-scale-fixture"
       ]
     },
     "inference-proposal-conversion-check": {
@@ -70,7 +71,8 @@
         "cwd": "{projectRoot}"
       },
       "dependsOn": [
-        "@semio-tech/framework-os-scale-fixture:build-wasm"
+        "@semio-tech/framework-os-scale-fixture:build-wasm",
+        "@semio-tech/framework-os-dev:generate-scale-fixture"
       ],
       "outputs": []
     }

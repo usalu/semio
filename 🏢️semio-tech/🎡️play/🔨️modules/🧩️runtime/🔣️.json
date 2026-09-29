@@ -110,6 +110,139 @@
       ]
     },
     {
+      "id": "images",
+      "label": "Images",
+      "panes": [
+        { "variant": "stdio-png", "label": "PNG", "tagline": "Edit PNG images", "description": "Open PNG 1.2 images and edit every decoded chunk and pixel field.", "icon": "image", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-jpg", "label": "JPEG", "tagline": "Edit JPEG photos", "description": "Open JFIF 1.01 JPEG photos and edit their decoded segments field by field.", "icon": "camera", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-jpg-baseline", "label": "Baseline JPEG", "tagline": "Edit baseline JPEG photos", "description": "Edit JPEG photos restricted to the baseline sequential process.", "icon": "camera", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-bmp", "label": "BMP", "tagline": "Edit bitmap images", "description": "Open Windows BMP v3 bitmaps and edit their header and pixel data.", "icon": "file-image", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-tiff", "label": "TIFF", "tagline": "Edit TIFF images", "description": "Open TIFF 6.0 images and edit their image file directories and tags.", "icon": "file-image", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-tiff-baseline", "label": "Baseline TIFF", "tagline": "Edit baseline TIFF images", "description": "Edit TIFF images restricted to the baseline tag set.", "icon": "file-image", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-gif-87a", "label": "GIF 87a", "tagline": "Edit GIF 87a images", "description": "Open GIF 87a images and edit their frames and color tables.", "icon": "image", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-gif-89a", "label": "GIF 89a", "tagline": "Edit GIF 89a images", "description": "Open GIF 89a images and edit frames, color tables and extensions.", "icon": "image", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-svg", "label": "SVG", "tagline": "Edit vector graphics", "description": "Open SVG 1.1 vector graphics and edit their elements and attributes.", "icon": "pen-tool", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-svg-basic", "label": "SVG Basic", "tagline": "Edit SVG Basic graphics", "description": "Edit SVG 1.1 graphics restricted to the SVG Basic profile.", "icon": "pen-tool", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-svg-tiny", "label": "SVG Tiny", "tagline": "Edit SVG Tiny graphics", "description": "Edit SVG 1.1 graphics restricted to the SVG Tiny profile.", "icon": "pen-tool", "example": "demo", "exampleLabel": "Demo" }
+      ]
+    },
+    {
+      "id": "audio-video",
+      "label": "Audio & Video",
+      "panes": [
+        { "variant": "stdio-mp4", "label": "MP4", "tagline": "Edit MP4 videos", "description": "Open ISO base media MP4 files and edit their boxes and tracks.", "icon": "file-video", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-mp3", "label": "MP3", "tagline": "Edit MP3 audio", "description": "Open MPEG-1 Layer III audio and edit its frames and tags.", "icon": "play", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-wav", "label": "WAV", "tagline": "Edit WAV audio", "description": "Open RIFF PCM wave audio and edit its format and sample chunks.", "icon": "play", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-avi", "label": "AVI", "tagline": "Edit AVI videos", "description": "Open AVI 1.0 videos and edit their RIFF chunks and stream headers.", "icon": "file-video", "example": "demo", "exampleLabel": "Demo" }
+      ]
+    },
+    {
+      "id": "cad-exchange",
+      "label": "CAD Exchange",
+      "panes": [
+        { "variant": "stdio-step", "label": "STEP", "tagline": "Edit STEP models", "description": "Open ISO 10303 AP214 STEP exchange files and edit their entities.", "icon": "cad-shape", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-step-cc1", "label": "STEP CC1", "tagline": "Edit STEP CC1 models", "description": "Edit STEP AP214 files restricted to conformance class 1.", "icon": "cad-shape", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-step-cc2", "label": "STEP CC2", "tagline": "Edit STEP CC2 models", "description": "Edit STEP AP214 files restricted to conformance class 2.", "icon": "cad-shape", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-step-cc3", "label": "STEP CC3", "tagline": "Edit STEP CC3 models", "description": "Edit STEP AP214 files restricted to conformance class 3.", "icon": "cad-shape", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-step-cc4", "label": "STEP CC4", "tagline": "Edit STEP CC4 models", "description": "Edit STEP AP214 files restricted to conformance class 4.", "icon": "cad-shape", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-step-cc5", "label": "STEP CC5", "tagline": "Edit STEP CC5 models", "description": "Edit STEP AP214 files restricted to conformance class 5.", "icon": "cad-shape", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-step-cc6", "label": "STEP CC6", "tagline": "Edit STEP CC6 models", "description": "Edit STEP AP214 files restricted to conformance class 6.", "icon": "cad-shape", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-dxf", "label": "DXF", "tagline": "Edit DXF drawings", "description": "Open R12 DXF drawings and edit their sections, tables and entities.", "icon": "draw", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-dwg-ac1018", "label": "DWG AC1018", "tagline": "Edit DWG AC1018 drawings", "description": "Open DWG drawings of format version AC1018 and edit their objects.", "icon": "draw", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-dwg-ac1024", "label": "DWG AC1024", "tagline": "Edit DWG AC1024 drawings", "description": "Open DWG drawings of format version AC1024 and edit their objects.", "icon": "draw", "example": "demo", "exampleLabel": "Demo" }
+      ]
+    },
+    {
+      "id": "bim",
+      "label": "BIM",
+      "panes": [
+        { "variant": "stdio-ifc-2x3", "label": "IFC 2x3", "tagline": "Edit IFC 2x3 models", "description": "Open IFC 2x3 building models and edit their entities.", "icon": "building", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-ifc-2x3-cobie", "label": "IFC COBie", "tagline": "Edit COBie handover models", "description": "Edit IFC 2x3 models restricted to the COBie handover view.", "icon": "building", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-ifc-2x3-cv20", "label": "IFC Coordination View", "tagline": "Edit coordination models", "description": "Edit IFC 2x3 models restricted to Coordination View 2.0.", "icon": "building", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-ifc-2x3-sav", "label": "IFC Structural Analysis View", "tagline": "Edit structural analysis models", "description": "Edit IFC 2x3 models restricted to the Structural Analysis View.", "icon": "building", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-ifc-4", "label": "IFC 4", "tagline": "Edit IFC 4 models", "description": "Open IFC 4 building models and edit their entities.", "icon": "building", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-bcf", "label": "BCF", "tagline": "Edit BIM issues", "description": "Open BIM Collaboration Format 2.1 archives and edit topics, comments and viewpoints.", "icon": "message-square", "example": "demo", "exampleLabel": "Demo" }
+      ]
+    },
+    {
+      "id": "meshes",
+      "label": "Meshes & Point Clouds",
+      "panes": [
+        { "variant": "stdio-gltf", "label": "glTF", "tagline": "Edit glTF scenes", "description": "Open glTF 2.0 scenes and edit nodes, meshes, materials and animations.", "icon": "scene-3d", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-obj", "label": "OBJ", "tagline": "Edit OBJ meshes", "description": "Open Wavefront OBJ meshes and edit their vertices, faces and groups.", "icon": "box", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-stl", "label": "STL", "tagline": "Edit STL meshes", "description": "Open ASCII STL meshes and edit their facets.", "icon": "triangle", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-ply", "label": "PLY", "tagline": "Edit PLY meshes", "description": "Open PLY 1.0 polygon files and edit their elements and properties.", "icon": "hexagon", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-las", "label": "LAS", "tagline": "Edit point clouds", "description": "Open LAS 1.0 point clouds and edit their header, records and points.", "icon": "terrain-3d", "example": "demo", "exampleLabel": "Demo" }
+      ]
+    },
+    {
+      "id": "pdf",
+      "label": "PDF",
+      "panes": [
+        { "variant": "stdio-pdf-1-4-a", "label": "PDF/A (1.4)", "tagline": "Edit archival PDFs", "description": "Edit PDF 1.4 documents restricted to the PDF/A archival profile.", "icon": "document-report" },
+        { "variant": "stdio-pdf-1-4", "label": "PDF 1.4", "tagline": "Edit PDF 1.4 documents", "description": "Open PDF 1.4 documents and edit their objects and pages.", "icon": "document-report" },
+        { "variant": "stdio-pdf-1-4-x", "label": "PDF/X (1.4)", "tagline": "Edit print-exchange PDFs", "description": "Edit PDF 1.4 documents restricted to the PDF/X print exchange profile.", "icon": "document-report" },
+        { "variant": "stdio-pdf-1-7-a", "label": "PDF/A (1.7)", "tagline": "Edit archival PDFs", "description": "Edit PDF 1.7 documents restricted to the PDF/A archival profile.", "icon": "document-report" },
+        { "variant": "stdio-pdf-1-7", "label": "PDF 1.7", "tagline": "Edit PDF 1.7 documents", "description": "Open PDF 1.7 documents and edit their objects and pages.", "icon": "document-report" },
+        { "variant": "stdio-pdf-1-7-e", "label": "PDF/E", "tagline": "Edit engineering PDFs", "description": "Edit PDF 1.7 documents restricted to the PDF/E engineering profile.", "icon": "document-report" },
+        { "variant": "stdio-pdf-1-7-h", "label": "PDF/H", "tagline": "Edit healthcare PDFs", "description": "Edit PDF 1.7 documents restricted to the PDF/H healthcare profile.", "icon": "document-report" },
+        { "variant": "stdio-pdf-1-7-ua", "label": "PDF/UA", "tagline": "Edit accessible PDFs", "description": "Edit PDF 1.7 documents restricted to the PDF/UA accessibility profile.", "icon": "document-report" },
+        { "variant": "stdio-pdf-1-7-vt", "label": "PDF/VT", "tagline": "Edit variable-print PDFs", "description": "Edit PDF 1.7 documents restricted to the PDF/VT variable printing profile.", "icon": "document-report" },
+        { "variant": "stdio-pdf-1-7-x", "label": "PDF/X (1.7)", "tagline": "Edit print-exchange PDFs", "description": "Edit PDF 1.7 documents restricted to the PDF/X print exchange profile.", "icon": "document-report" }
+      ]
+    },
+    {
+      "id": "office",
+      "label": "Office",
+      "panes": [
+        { "variant": "stdio-docx", "label": "Word Document", "tagline": "Edit word-processing documents", "description": "Open ECMA-376 docx documents and edit their parts and paragraphs.", "icon": "file-text" },
+        { "variant": "stdio-docx-strict", "label": "Word Document (Strict)", "tagline": "Edit strict docx documents", "description": "Edit docx documents restricted to the ECMA-376 strict conformance class.", "icon": "file-text" },
+        { "variant": "stdio-docx-transitional", "label": "Word Document (Transitional)", "tagline": "Edit transitional docx documents", "description": "Edit docx documents under the ECMA-376 transitional conformance class.", "icon": "file-text" },
+        { "variant": "stdio-pptx", "label": "Presentation", "tagline": "Edit presentations", "description": "Open ECMA-376 pptx presentations and edit their parts and slides.", "icon": "monitor" },
+        { "variant": "stdio-pptx-strict", "label": "Presentation (Strict)", "tagline": "Edit strict pptx presentations", "description": "Edit pptx presentations restricted to the ECMA-376 strict conformance class.", "icon": "monitor" },
+        { "variant": "stdio-pptx-transitional", "label": "Presentation (Transitional)", "tagline": "Edit transitional pptx presentations", "description": "Edit pptx presentations under the ECMA-376 transitional conformance class.", "icon": "monitor" },
+        { "variant": "stdio-xlsx", "label": "Spreadsheet", "tagline": "Edit spreadsheets", "description": "Open ECMA-376 xlsx workbooks and edit their parts and cells.", "icon": "file-spreadsheet" },
+        { "variant": "stdio-xlsx-strict", "label": "Spreadsheet (Strict)", "tagline": "Edit strict xlsx workbooks", "description": "Edit xlsx workbooks restricted to the ECMA-376 strict conformance class.", "icon": "file-spreadsheet" },
+        { "variant": "stdio-xlsx-transitional", "label": "Spreadsheet (Transitional)", "tagline": "Edit transitional xlsx workbooks", "description": "Edit xlsx workbooks under the ECMA-376 transitional conformance class.", "icon": "file-spreadsheet" }
+      ]
+    },
+    {
+      "id": "semio-files",
+      "label": "Semio Files",
+      "panes": [
+        { "variant": "stdio-semio-brep", "label": "Semio B-Rep", "tagline": "Edit semio solids", "description": "Edit semio v1 files that carry a boundary-representation solid.", "icon": "cad-shape" },
+        { "variant": "stdio-semio-drawing", "label": "Semio Drawing", "tagline": "Edit semio drawings", "description": "Edit semio v1 files that carry a drawing.", "icon": "draw", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-semio-graph", "label": "Semio Graph", "tagline": "Edit semio graphs", "description": "Edit semio v1 files that carry a graph.", "icon": "network", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-semio-kit", "label": "Semio Kit", "tagline": "Edit semio kits", "description": "Edit semio v1 files that carry a kit of types and designs.", "icon": "component", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-semio-mesh", "label": "Semio Mesh", "tagline": "Edit semio meshes", "description": "Edit semio v1 files that carry a mesh.", "icon": "triangle" },
+        { "variant": "stdio-semio-object", "label": "Semio Object", "tagline": "Edit semio objects", "description": "Edit semio v1 files that carry an object.", "icon": "box", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-semio-table", "label": "Semio Table", "tagline": "Edit semio tables", "description": "Edit semio v1 files that carry a table.", "icon": "table-2", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-semio-text", "label": "Semio Text", "tagline": "Edit semio text", "description": "Edit semio v1 files that carry plain text.", "icon": "type", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-semio-animation", "label": "Semio Animation", "tagline": "Edit semio animations", "description": "Edit semio v1 files that carry an animation document.", "icon": "animate", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-semio", "label": "Semio File", "tagline": "Edit semio files", "description": "Open semio v1 files of any content and edit their documents.", "icon": "box", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-semio-audio", "label": "Semio Audio", "tagline": "Edit semio audio", "description": "Edit semio v1 files that carry an audio document.", "icon": "play", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-semio-cad", "label": "Semio CAD", "tagline": "Edit semio CAD models", "description": "Edit semio v1 files that carry a CAD model.", "icon": "cad-shape", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-semio-document", "label": "Semio Document", "tagline": "Edit semio documents", "description": "Edit semio v1 files that carry a text document.", "icon": "file-text", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-semio-flow", "label": "Semio Flow", "tagline": "Edit semio flows", "description": "Edit semio v1 files that carry a flow graph.", "icon": "flow", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-semio-image", "label": "Semio Image", "tagline": "Edit semio images", "description": "Edit semio v1 files that carry an image.", "icon": "image", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-semio-model", "label": "Semio Model", "tagline": "Edit semio models", "description": "Edit semio v1 files that carry a model.", "icon": "building", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-semio-presentation", "label": "Semio Presentation", "tagline": "Edit semio presentations", "description": "Edit semio v1 files that carry a presentation.", "icon": "monitor", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-semio-value", "label": "Semio Value", "tagline": "Edit semio values", "description": "Edit semio v1 files that carry a structured value.", "icon": "hash", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-semio-video", "label": "Semio Video", "tagline": "Edit semio videos", "description": "Edit semio v1 files that carry a video.", "icon": "file-video", "example": "demo", "exampleLabel": "Demo" }
+      ]
+    },
+    {
+      "id": "binary",
+      "label": "Binary & Archives",
+      "panes": [
+        { "variant": "stdio-binary", "label": "Binary", "tagline": "Edit raw bytes", "description": "Open any file as raw bytes and edit them.", "icon": "hard-drive" },
+        { "variant": "stdio-deflate", "label": "zlib", "tagline": "Edit zlib streams", "description": "Open RFC 1950 zlib streams and edit their decompressed payload.", "icon": "file-archive" },
+        { "variant": "stdio-zip", "label": "ZIP", "tagline": "Edit ZIP archives", "description": "Open ZIP 2.0 archives and edit their entries.", "icon": "file-archive" },
+        { "variant": "stdio-zip-iso21320", "label": "ZIP (ISO/IEC 21320-1)", "tagline": "Edit document container archives", "description": "Edit ZIP archives restricted to the ISO/IEC 21320-1 document container profile.", "icon": "file-archive" },
+        { "variant": "stdio-epw", "label": "EPW Weather", "tagline": "Edit weather files", "description": "Open EnergyPlus EPW weather files and edit their header and hourly records.", "icon": "sun" }
+      ]
+    },
+    {
       "id": "media",
       "label": "Media",
       "panes": [

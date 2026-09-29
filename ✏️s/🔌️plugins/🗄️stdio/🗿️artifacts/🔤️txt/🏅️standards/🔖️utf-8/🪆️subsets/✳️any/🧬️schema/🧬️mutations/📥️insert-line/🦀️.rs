@@ -31,19 +31,19 @@ impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for InsertLineMutat
 
     fn diff(&self, base: &TxtSnapshot) -> protocol::MutationOutcome<TxtDiff> {
         if let Some(reason) = native_snapshot_error(base) {
-            return protocol::MutationOutcome::error("mutation.invariant", reason, Vec::<String>::new());
+            return protocol::MutationOutcome::fatal("mutation.invariant", reason, Vec::<String>::new());
         }
         let at = txt_u32_to_usize(self.index).unwrap_or(base.lines.len()).min(base.lines.len());
         let last_empty = if at == base.lines.len() { self.text.is_empty() } else { base.lines.last().is_some_and(|line| line.is_empty()) };
         if let Some(reason) = native_shape_error(base.lines.len() + 1, last_empty, base.trailing_newline, base.line_ending) {
-            return protocol::MutationOutcome::error("mutation.invariant", reason, Vec::<String>::new());
+            return protocol::MutationOutcome::fatal("mutation.invariant", reason, Vec::<String>::new());
         }
         if let Some(reason) = native_text_error(&self.text, base.line_ending, at < base.lines.len() || base.trailing_newline) {
-            return protocol::MutationOutcome::error("mutation.invariant", reason, Vec::<String>::new());
+            return protocol::MutationOutcome::fatal("mutation.invariant", reason, Vec::<String>::new());
         }
         if at == base.lines.len() {
             if let Some(reason) = base.lines.last().and_then(|line| native_text_error(line, base.line_ending, true)) {
-                return protocol::MutationOutcome::error("mutation.invariant", reason, Vec::<String>::new());
+                return protocol::MutationOutcome::fatal("mutation.invariant", reason, Vec::<String>::new());
             }
         }
         protocol::MutationOutcome::new(TxtDiff { lines: Some(TxtLinesDiff { removed: vec![], modified: vec![], added: vec![TxtLineAdded { index: at, text: self.text.clone() }] }), ..Default::default() })

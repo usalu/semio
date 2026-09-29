@@ -25,7 +25,7 @@ import type { InlineConfig } from "vite";
 type DistributionBundlePlan = { readonly manifest: DistributionManifest; readonly files: ReadonlyMap<string, Uint8Array> };
 
 /** 📣️ Reports local progress while keeping the machine-readable preview channel exact. */
-function distributionProgress(message: string): void { if (process.env.SEMIO_GENERATOR_PREVIEW !== "1") console.error(`[DEBUG] ${message}`); }
+function distributionProgress(message: string): void { if (process.env.SEMIO_GENERATOR_PREVIEW !== "1") console.error(`[TRACE] ${message}`); }
 
 /** 🗺️ Enumerates only the bounded bundle root and refuses unknown children before publication. */
 function distributionExistingPaths(layout: DistributionLayout, destination: string, previous: DistributionManifest | null): string[] {
@@ -71,7 +71,7 @@ async function distributionPreflight(plan: DistributionBundlePlan, layout: Distr
 }
 
 /** 🏗️ Runs the real compiler without copy hooks, capturing main and worker input byte witnesses. */
-/** @emoji 🔁 The one crossing between the owned build contract and the build tool that consumes it.
+/** 🔁 The one crossing between the owned build contract and the build tool that consumes it.
  * `🏗️builder/🌐️vite` states the production configuration in the tool-independent owned shapes of
  * `🛠️build-tooling` — readonly arrays, structural server and plugin hooks — which is exactly why the
  * tool's own mutable declarations cannot be reached by assignment. The two descriptions cover the

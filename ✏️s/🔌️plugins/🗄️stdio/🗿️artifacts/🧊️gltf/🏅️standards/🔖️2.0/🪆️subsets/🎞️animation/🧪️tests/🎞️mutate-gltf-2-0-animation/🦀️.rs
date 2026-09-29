@@ -105,7 +105,7 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::{parse_gltf_document, serialize_gltf_document};
-    use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::mutations::{create_animation, delete_animation, move_animation, reorder_animations};
+    use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::mutations::{create_animation, delete_animation, gltf_inverse_restored_document, move_animation, reorder_animations};
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
     use semio_s_plugin_stdio_test_oracle::artifacts::gltf::standards::v2_0::subsets::any::project_gltf;
 
@@ -145,16 +145,6 @@ mod subject {
         }
     }
 
-    /// ↩️ `delete-animation`'s own inverse, restoring `document/animations` DIRECTLY from `before` —
-    /// the exact typed values this snapshot already holds, not a same-shaped substitute a second
-    /// `create-animation` call could only approximate (its own payload carries no field content —
-    /// see the feature file's own doc comment). Mirrors `../../../♾️any/🔮️oracles/🦀️.rs`'s
-    /// `undo_delete_animation` on the independent-reader side.
-    fn undo_delete_animation(before: &GltfSnapshot, mutated: &GltfSnapshot) -> GltfSnapshot {
-        let mut restored = mutated.clone();
-        restored.document.animations = before.document.animations.clone();
-        restored
-    }
     //#endregion 🔖️Dispatch
 
     //#region 🔖️Handlers
@@ -181,24 +171,15 @@ mod subject {
         Ok(Outcome::with_raw(bytes, projection).artifact("actual-gltf", &path, "model/gltf+json"))
     }
 
+    /// ↩️ The production inverse, never a hand-written one: `gltf_inverse_restored_document` applies the row's mutation and
+    /// replays that mutation's OWN computed `inverse(base)` through the production codec, and three's GLTFLoader then
+    /// judges the restored document against the committed `⬅️before.gltf`.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let spec = ctx.doc_json()?;
         let kind = spec.str("kind");
         let input = mutable_input(ctx, &kind)?;
-        let before = parse_gltf_document(&input)?;
         let empty = Json::Object(Vec::new());
-        let params = spec.get("params").unwrap_or(&empty);
-        let mutated = apply_kind(&before, &kind, params)?;
-        let restored = if kind == "delete-animation" {
-            undo_delete_animation(&before, &mutated)
-        } else {
-            let inverse = super::inverse_spec(&kind);
-            let inverse_kind = inverse.str("kind");
-            let inverse_empty = Json::Object(Vec::new());
-            let inverse_params = inverse.get("params").unwrap_or(&inverse_empty);
-            apply_kind(&mutated, &inverse_kind, inverse_params)?
-        };
-        let bytes = serialize_gltf_document(&restored);
+        let bytes = gltf_inverse_restored_document(&input, &kind, &spec.get("params").unwrap_or(&empty).to_string())?;
         let projection = project_gltf(&bytes)?;
         actual(ctx, bytes, projection)
     }

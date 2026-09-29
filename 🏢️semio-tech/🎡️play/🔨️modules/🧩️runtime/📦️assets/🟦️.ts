@@ -6,7 +6,7 @@ import { PREVIEW2_VENDOR_RELATIVE } from "../../../../../🧰️framework/🛍�
 import type { BrowserArtifactSource } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/🟦️.ts";
 import type { PlaygroundAssetSpec } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
 
-/** @emoji 🎡️ Selects only immutable component, browser-support and font outputs for play. */
+/** 🎡️ Selects only immutable component, browser-support and font outputs for play. */
 export function playRuntimeAssetSources(workspace: string, profile: "dev" | "release"): readonly BrowserArtifactSource[] {
   if (!["dev", "release"].includes(profile)) throw new Error(`Unknown play profile: ${profile}`);
   const moduleRoot = join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist", profile, "🔌️plugin-modules");
@@ -23,7 +23,7 @@ export function playRuntimeAssetSources(workspace: string, profile: "dev" | "rel
   ];
 }
 
-/** @emoji 🗺️ The dev serve's route table: exactly the sources {@link playRuntimeAssetSources} copies for a
+/** 🗺️ The dev serve's route table: exactly the sources {@link playRuntimeAssetSources} copies for a
  * release, mounted in place, with each extension served from its activated install directory. One root per
  * route (`staticDirMountVitePlugins` refuses a second claim): the staging `🪞️vendor` directory mounted beside
  * the font pack on the same route shadowed `🔤️guestslim-typst-fonts.bin` with a 404 on every pane. */

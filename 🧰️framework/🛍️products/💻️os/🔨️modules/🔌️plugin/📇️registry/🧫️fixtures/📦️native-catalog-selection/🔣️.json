@@ -7,7 +7,7 @@
       "packageId": "semio:stdio",
       "version": "0.1.0",
       "dependencies": [],
-      "receiptCount": 26
+      "receiptCount": 29
     },
     {
       "pluginId": "vcs",
@@ -87,7 +87,7 @@
     {
       "pluginId": "stdio",
       "packageId": "semio:stdio",
-      "receiptCount": 26
+      "receiptCount": 29
     },
     {
       "pluginId": "vcs",
@@ -109,7 +109,7 @@
       "expectedCalls": [
         "semio:stdio"
       ],
-      "expectedReceiptCount": 26
+      "expectedReceiptCount": 29
     },
     {
       "id": "stdio-vcs-dependency-first",
@@ -120,7 +120,7 @@
         "semio:stdio",
         "semio:vcs"
       ],
-      "expectedReceiptCount": 27
+      "expectedReceiptCount": 30
     },
     {
       "id": "unknown-profile",
@@ -277,7 +277,7 @@
         "semio:stdio",
         "semio:gis"
       ],
-      "expectedReceiptCount": 28
+      "expectedReceiptCount": 31
     },
     {
       "id": "stdio-gis-vcs-dependency-first",
@@ -289,7 +289,7 @@
         "semio:gis",
         "semio:vcs"
       ],
-      "expectedReceiptCount": 29
+      "expectedReceiptCount": 32
     },
     {
       "id": "stdio-gis-vcs-selected-provider-failure",

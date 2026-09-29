@@ -344,7 +344,7 @@ test("reviewed fixture gate registration matches its package route and both laun
 afterAll(() => {
   const identities = [...observations].map(([path, before]) => {
     const value = input(root, path), after = { sha256: value.sha256, size: value.size, mode: value.mode };
-    expect(value.bytes, path).toEqual(before.bytes);
+    expect(value.bytes, path).toEqual<typeof before.bytes>(before.bytes);
     return { path, before: { sha256: before.sha256, size: before.size, mode: before.mode }, after };
   });
   if (owner) put(owner, "📊️summary/🔣️.json", JSON.stringify({ schemaVersion: 1, contract: vector.contract, outcomes, identities }, null, 2) + "\n");

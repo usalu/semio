@@ -161,7 +161,7 @@ impl<G: WalWriterGuard> WalWriterTable<G> {
         Ok(WalWriterPermit { key, document: document.clone(), release: signal.map(release::WalWriterSignalReservation::commit) })
     }
 
-    /// @emoji ⏭️ A successor for the same document completes the release its dropped predecessor
+    /// ⏭️ A successor for the same document completes the release its dropped predecessor
     /// already requested, in the same table turn, instead of racing the backend's retirement hook:
     /// a dropped engine's writer is therefore retired deterministically before any reopen. Returns
     /// `false` while a live, pinned, faulted or multi-step predecessor still holds the document.

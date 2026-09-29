@@ -126,8 +126,7 @@
    },
    "note": "nx:run-commands, cache false, cwd package dir; env SEMIO_TWO_HUMAN_USER{1,2}_{EMAIL,PASSWORD}; self-provisions the journey's wgpu release serve (and the React s dev serve when --react-serve is absent) via ensureDevServe (WG11 13:0x); native-react-cursors is its own journey",
    "cache": false,
-   "forwardAllArgs": true,
-   "hold": "WG11 harness landing (T3, wg11-harness-land.py) adds the script verb; applied by R10 after L1 reports it landed"
+   "forwardAllArgs": true
   },
   {
    "from": "C13",
@@ -422,8 +421,7 @@
      "hub"
     ],
     "browsers": 1
-   },
-   "hold": "WG11 harness landing (T3, wg11-harness-land.py) adds the script verb; applied by R10 after L1 reports it landed"
+   }
   },
   {
    "from": "WG11",
@@ -461,8 +459,7 @@
      "hub"
     ],
     "browsers": 1
-   },
-   "hold": "WG11 harness landing (T3, wg11-harness-land.py) adds the script verb; applied by R10 after L1 reports it landed"
+   }
   },
   {
    "from": "WG11",
@@ -499,8 +496,7 @@
      "localServe"
     ],
     "browsers": 1
-   },
-   "hold": "WG11 harness landing (T3, wg11-harness-land.py) adds the script verb; applied by R10 after L1 reports it landed"
+   }
   },
   {
    "from": "WG11",
@@ -534,8 +530,7 @@
      "hub"
     ],
     "browsers": 1
-   },
-   "hold": "WG11 harness landing (T3, wg11-harness-land.py) adds the script verb; applied by R10 after L1 reports it landed"
+   }
   },
   {
    "from": "WG11",
@@ -572,8 +567,7 @@
      "localServe"
     ],
     "browsers": 1
-   },
-   "hold": "WG11 harness landing (T3, wg11-harness-land.py) adds the script verb; applied by R10 after L1 reports it landed"
+   }
   },
   {
    "from": "WG11",
@@ -610,8 +604,7 @@
      "localServe"
     ],
     "browsers": 1
-   },
-   "hold": "WG11 harness landing (T3, wg11-harness-land.py) adds the script verb; applied by R10 after L1 reports it landed"
+   }
   },
   {
    "from": "WG11",
@@ -645,8 +638,7 @@
      "hub"
     ],
     "browsers": 1
-   },
-   "hold": "WG11 harness landing (T3, wg11-harness-land.py) adds the script verb; applied by R10 after L1 reports it landed"
+   }
   },
   {
    "from": "WG11",
@@ -681,8 +673,7 @@
      "hub"
     ],
     "browsers": 1
-   },
-   "hold": "WG11 harness landing (T3, wg11-harness-land.py) adds the script verb; applied by R10 after L1 reports it landed"
+   }
   },
   {
    "from": "G12",

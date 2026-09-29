@@ -1,5 +1,5 @@
 // #region 🕹️Interaction
-/** @emoji 🕹️ Handcrafted TS parity of `🦀️.rs`'s `InteractionDefinition` family and pure
+/** 🕹️ Handcrafted TS parity of `🦀️.rs`'s `InteractionDefinition` family and pure
  * hover/selection state machine (`nextSelection`/`nextHover`/`validateState`) — the exact machine
  * Tree/React consume in wave 2, replacing Tree's private `getTreeNextSelectionState`. Plain readonly
  * types/functions only, no external runtime libraries; same semantics, same field names (camelCase

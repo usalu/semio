@@ -53,7 +53,7 @@ fn empty_catalog() -> Arc<Catalog> {
 /// latency.
 ///
 /// 🪲️ Widened from 5s to 20s after real flakiness investigation (not a blind bump): with
-/// `[DEBUG]` tracing temporarily attached, 9 of 10 runs delivered `RemoteMutations` in well
+/// `[TRACE]` tracing temporarily attached, 9 of 10 runs delivered `RemoteMutations` in well
 /// under 1s; the 1 observed failure timed out waiting on `shell_events.recv()` specifically
 /// (the disk-write wait above never once timed out) on a machine `ps aux` showed running
 /// several DOZEN concurrent `cargo`/`rustc` processes from unrelated sibling tickets at the

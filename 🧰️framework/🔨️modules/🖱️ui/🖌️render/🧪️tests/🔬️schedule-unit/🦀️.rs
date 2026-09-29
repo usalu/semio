@@ -15,7 +15,6 @@ fn replaceable_deadlines_match_the_shared_timer_contract() {
                 assert_eq!(scheduler.next_deadline().map(|deadline| deadline.due), step["nextMs"].as_f64().map(|milliseconds| milliseconds / 1000.0), "{}: {step}", row["id"]);
             }
         }
-        eprintln!("[DEBUG] replaceable deadline contract {}", row["id"]);
     }
 }
 

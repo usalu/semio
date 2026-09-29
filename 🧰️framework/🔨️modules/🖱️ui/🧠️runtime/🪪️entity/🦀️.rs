@@ -1,4 +1,4 @@
-//! @emoji 🪪️ Generational entity store, `Entity<T>`/`WeakEntity<T>`, and the mutation lease.
+//! 🪪️ Generational entity store, `Entity<T>`/`WeakEntity<T>`, and the mutation lease.
 //!
 //! `Entity<T>` is a cheap `Clone` handle into [`EntityStore`], deliberately **not** `Send`/`Sync` —
 //! this runtime is single-owner and runs inside single-threaded wasm guests and native hosts alike.

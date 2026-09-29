@@ -1,0 +1,12 @@
+{
+  "documents": [
+    {
+      "documentId": "studio-imported",
+      "schema": "s.space",
+      "name": "Imported Studio",
+      "storage": "file",
+      "target": "/Users/ada/Documents/imported.os",
+      "admittedAtMs": 1790500000000
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🧪️ Focused segmented-download drain tests with fake producers and sinks. */
+/** 🧪️ Focused segmented-download drain tests with fake producers and sinks. */
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters

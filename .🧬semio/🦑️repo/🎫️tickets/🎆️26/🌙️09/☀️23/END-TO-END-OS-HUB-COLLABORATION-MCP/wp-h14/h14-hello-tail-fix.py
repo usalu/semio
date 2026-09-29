@@ -26,7 +26,7 @@ def edit(old, new, label, path=PATH):
     states.append("replace")
 
 
-edit("""/// @emoji 🧭️ Where a hello tail's next frame starts reading: the segment holding the first command it has not emitted, how
+edit("""/// 🧭️ Where a hello tail's next frame starts reading: the segment holding the first command it has not emitted, how
 /// many commands and transactions precede that segment, how far the chain has hashed and the replica has received, where
 /// the tail ends (the server frontier the welcome announced), and the chain over every hashed command.
 struct DatabaseSyncHelloTailCursor {
@@ -37,7 +37,7 @@ struct DatabaseSyncHelloTailCursor {
     emitted_head_seq: u64,
     end_head_seq: u64,
     chain: semio_framework_hash::Hasher,
-}""", """/// @emoji 🧭️ Where a hello tail's next frame starts reading: the segment holding the first command it has not emitted (`None`
+}""", """/// 🧭️ Where a hello tail's next frame starts reading: the segment holding the first command it has not emitted (`None`
 /// until a page read the document's first retained segment), how many commands and transactions precede that segment, how
 /// far the chain has hashed and the replica has received, where the tail ends (the head and commit sequence of the server
 /// frontier the welcome announced), and the chain over every hashed command.

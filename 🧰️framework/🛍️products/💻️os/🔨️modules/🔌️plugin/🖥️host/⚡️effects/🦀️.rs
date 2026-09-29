@@ -81,7 +81,7 @@ struct ActorRecord {
 pub struct ActorScopeRegistry(Arc<Mutex<HashMap<u64, ActorRecord>>>);
 
 impl ActorScopeRegistry {
-    // 🚫️async: E1 pure constructor consumed by `impl Default` (external trait, sync-only) — R9.
+    /// 🚫️async: E1 pure constructor consumed by `impl Default` (external trait, sync-only) — R9.
     pub fn new() -> Self {
         Self(Arc::new(Mutex::new(HashMap::new())))
     }
@@ -90,9 +90,9 @@ impl ActorScopeRegistry {
     /// ignored, see [`addressed_actor_id`]) at `generation`, opening a fresh child scope under
     /// `package_scope`. Must be called before any of this actor's effects are dispatched, and again
     /// on every restart with the bumped generation.
-    // 🔀️ dedyn-emit-runtime, O1/R3: generic over `R: HostAsyncRuntime` (Send-ness derived
-    // structurally at each caller's own concrete `R`, never a bound on this fn) rather than `&dyn
-    // HostAsyncRuntime` — mirrors `db_storage`'s `R: HostAsyncRuntime` holders.
+    /// 🔀️ dedyn-emit-runtime, O1/R3: generic over `R: HostAsyncRuntime` (Send-ness derived
+    /// structurally at each caller's own concrete `R`, never a bound on this fn) rather than `&dyn
+    /// HostAsyncRuntime` — mirrors `db_storage`'s `R: HostAsyncRuntime` holders.
     pub async fn activate<R: HostAsyncRuntime>(&self, runtime: &R, actor: u64, generation: u16, package_scope: &ScopeHandle) -> ScopeHandle {
         let scope = runtime.open_scope(ScopeOwner::Actor(actor), Some(package_scope)).await;
         self.0.lock().expect("ActorScopeRegistry mutex poisoned").insert(actor, ActorRecord { scope: scope.clone(), generation });
@@ -139,7 +139,7 @@ async fn addressed_actor_id(actor_stable: u64, generation: u16) -> RuntimeActorI
 pub struct CapabilityRevocationRegistry(Arc<Mutex<HashMap<CapabilityTokenId, Vec<CancelToken>>>>);
 
 impl CapabilityRevocationRegistry {
-    // 🚫️async: E1 pure constructor consumed by `impl Default` (external trait, sync-only) — R9.
+    /// 🚫️async: E1 pure constructor consumed by `impl Default` (external trait, sync-only) — R9.
     pub fn new() -> Self {
         Self(Arc::new(Mutex::new(HashMap::new())))
     }
@@ -299,14 +299,15 @@ impl<I: EnvelopeInjector> EnvelopeCompletionSink<I> {
     /// buffered entry's generation against the CURRENT registry value (not just at `complete`-time)
     /// so an entry that went stale WHILE buffered (the actor restarted before it was ever flushed)
     /// is still dropped rather than misdelivered to the new incarnation.
+    ///
+    /// 🚫️async: R10 residue shape 2 — a future is consumed by a single `.await`; the codemod's
+    /// insert-await pass had this awaited twice inside the loop below (E0382). Awaited once here.
     pub async fn flush(&self, actor: u64) {
         let Some(scope) = self.actors.scope_for(actor).await else { return };
         if !scope.cancel.is_live().await {
             return;
         }
         let topic = completion_topic(actor);
-        // 🚫️async: R10 residue shape 2 — a future is consumed by a single `.await`; the codemod's
-        // insert-await pass had this awaited twice inside the loop below (E0382). Awaited once here.
         let current_generation = self.actors.generation_of(actor).await;
         for wire in self.events.drain(&topic, semio_framework_actor::ActorId(actor)).await {
             let (lane, event_bytes) = decode_mailbox_entry(&wire).await;
@@ -320,17 +321,18 @@ impl<I: EnvelopeInjector> EnvelopeCompletionSink<I> {
 }
 
 impl<I: EnvelopeInjector> CompletionSink for EnvelopeCompletionSink<I> {
-    // 🚫️async: E1 — `semio_framework_os_services::CompletionSink::complete` is declared sync
-    // (`🛎️services/🦀️.rs:1539`), outside this packet's `🔌️plugin/🖥️host` path_scope to
-    // change. Everything this body needs (`generation_of`, `ensure_subscribed`, `send_message`,
-    // `flush`) is genuinely `async` (the last transitively through the generic `I: EnvelopeInjector`,
-    // which per this file's own R11(a) note has exactly one implementor today, a recording test
-    // double with no real I/O) — a textbook E5 sync/async bridge, block_on'd as one unit.
+    /// 🚫️async: E1 — `semio_framework_os_services::CompletionSink::complete` is declared sync
+    /// (`🛎️services/🦀️.rs:1539`), outside this packet's `🔌️plugin/🖥️host` path_scope to
+    /// change. Everything this body needs (`generation_of`, `ensure_subscribed`, `send_message`,
+    /// `flush`) is genuinely `async` (the last transitively through the generic `I: EnvelopeInjector`,
+    /// which per this file's own R11(a) note has exactly one implementor today, a recording test
+    /// double with no real I/O) — a textbook E5 sync/async bridge, block_on'd as one unit.
+    ///
+    /// 🛑️ Generation gate — snapshotted at dispatch time (`OperationContext.generation`),
+    /// checked here at delivery time: a stale generation (the actor restarted since this
+    /// operation was dispatched) is dropped, never delivered or even buffered.
     fn complete(&self, actor: u64, generation: u16, event_bytes: Vec<u8>, lane: u8) {
         semio_framework_async::block_on(async {
-            // 🛑️ Generation gate — snapshotted at dispatch time (`OperationContext.generation`),
-            // checked here at delivery time: a stale generation (the actor restarted since this
-            // operation was dispatched) is dropped, never delivered or even buffered.
             if self.actors.generation_of(actor).await != Some(generation) {
                 return;
             }
@@ -911,8 +913,8 @@ impl<I: EnvelopeInjector + 'static, R: HostAsyncRuntime + 'static> AsyncEffectEx
         report
     }
 
+    /// 🚫️async: R10 residue shape 2 — `now_ms`/`cancel` each awaited ONCE here, at binding.
     async fn derive_ctx(&self, dispatch: &EffectDispatchContext, scope: &ScopeHandle, effect_deadline_ms: Option<u64>) -> OperationContext {
-        // 🚫️async: R10 residue shape 2 — `now_ms`/`cancel` each awaited ONCE here, at binding.
         let now_ms = self.services.runtime.now_ms().await;
         let generation = self.actors.generation_of(dispatch.actor).await.unwrap_or(0);
         let cancel = scope.cancel.child().await;
@@ -925,11 +927,16 @@ impl<I: EnvelopeInjector + 'static, R: HostAsyncRuntime + 'static> AsyncEffectEx
     /// ⚡️ Classifies and dispatches every effect in `effects` on behalf of `dispatch`. Cheap and
     /// synchronous itself — one `HostAsyncRuntime::spawn_scoped` call (or a direct, non-blocking
     /// `EventRouter` call) per effect, never an `.await` on the real work.
+    ///
+    /// 🚧️ Dispatching effects for an actor that was never (or no longer) activated is a
+    /// caller bug, not a runtime fault — nothing to spawn into, so every effect is honestly
+    /// reported as skipped rather than silently accepted.
+    ///
+    /// 🧵️ Stays with the shard loop — never moved here (mission's own instruction).
+    ///
+    /// 🐚️ Everything else is a UI/shell effect out of this executor's scope.
     pub async fn execute(&self, dispatch: &EffectDispatchContext, effects: &[Effect]) -> EffectDispatchReport {
         let Some(scope) = self.actors.scope_for(dispatch.actor).await else {
-            // 🚧️ Dispatching effects for an actor that was never (or no longer) activated is a
-            // caller bug, not a runtime fault — nothing to spawn into, so every effect is honestly
-            // reported as skipped rather than silently accepted.
             return EffectDispatchReport::default();
         };
         let mut report = EffectDispatchReport::default();
@@ -1030,11 +1037,9 @@ impl<I: EnvelopeInjector + 'static, R: HostAsyncRuntime + 'static> AsyncEffectEx
                     report.dispatched += 1;
                 }
                 Effect::SpawnJob { .. } | Effect::CancelJob { .. } => {
-                    // 🧵️ Stays with the shard loop — never moved here (mission's own instruction).
                     report.shard_owned += 1;
                 }
                 _ => {
-                    // 🐚️ Everything else is a UI/shell effect out of this executor's scope.
                     report.shell_owned += 1;
                 }
             }
@@ -1042,15 +1047,15 @@ impl<I: EnvelopeInjector + 'static, R: HostAsyncRuntime + 'static> AsyncEffectEx
         report
     }
 
+    /// 🐛️ `scope_for_task` is a SEPARATE clone from `scope` below — `async move` moves every
+    /// variable it references (including one only ever used as `&scope`) into the future, so
+    /// reusing the bare `scope` parameter here would leave nothing for `spawn_scoped(&scope, ..)`
+    /// at the bottom of this function to borrow.
     async fn dispatch_http(&self, ctx: OperationContext, scope: ScopeHandle, package: PackageId, actor_id: RuntimeActorId, req: RequestId, request: ServiceHttpRequest) {
         let runtime = self.services.runtime.clone();
         let http = self.services.http.clone();
         let sink = self.sink.clone();
         let ctx_for_task = ctx.clone();
-        // 🐛️ `scope_for_task` is a SEPARATE clone from `scope` below — `async move` moves every
-        // variable it references (including one only ever used as `&scope`) into the future, so
-        // reusing the bare `scope` parameter here would leave nothing for `spawn_scoped(&scope, ..)`
-        // at the bottom of this function to borrow.
         let scope_for_task = scope.clone();
         let fut: HostFuture<()> = Box::pin(async move {
             if ctx_for_task.cancel.is_cancelled().await {
@@ -1100,6 +1105,20 @@ impl<I: EnvelopeInjector + 'static, R: HostAsyncRuntime + 'static> AsyncEffectEx
     /// honest gaps: this is a real, confirmed os-services API gap, not a shortcut taken here). This
     /// executor instead reserves the quota slot via `arm`, then sleeps and fires the completion
     /// itself via `runtime.sleep_until`, so the guest-chosen `id` is preserved exactly.
+    ///
+    /// 🩹️ terra-shard-lane: the `resolve_ready` bridge this comment used to document
+    /// was a workaround for a `🛎️services` `TimerWheel::arm`/`disarm`/`armed_count`
+    /// bug (holding a `std::sync::MutexGuard<WheelCore>` across their OWN internal
+    /// `.await`, breaking `HostFuture<()>: Send`) — sol R9-reverted all three to sync
+    /// (matching their already-tagged siblings `pop_expired`/`next_expiry_ms`) and
+    /// removed the guard-across-await shape at its root. Plain `.await` now compiles
+    /// (verified: no E0277), so the bridge is gone — one fewer E5 exception in this
+    /// crate.
+    ///
+    /// 🕳️ `Effect::SetTimer` carries no `req: RequestId` to answer — there is no
+    /// `Event::Completed` to emit for a quota-exceeded arm. Honest gap: a future
+    /// `design-abi.md` revision could add one; until then this is silently refused,
+    /// mirroring `WheelCore::arm`'s own "leaves the wheel completely untouched" contract.
     async fn dispatch_set_timer(&self, ctx: OperationContext, scope: ScopeHandle, package: PackageId, guest_timer_id: u64, after_ms: u64, repeat: bool) {
         let runtime = self.services.runtime.clone();
         let wheel = self.services.timers.clone();
@@ -1123,24 +1142,11 @@ impl<I: EnvelopeInjector + 'static, R: HostAsyncRuntime + 'static> AsyncEffectEx
                             None => break,
                         }
                     }
-                    // 🩹️ terra-shard-lane: the `resolve_ready` bridge this comment used to document
-                    // was a workaround for a `🛎️services` `TimerWheel::arm`/`disarm`/`armed_count`
-                    // bug (holding a `std::sync::MutexGuard<WheelCore>` across their OWN internal
-                    // `.await`, breaking `HostFuture<()>: Send`) — sol R9-reverted all three to sync
-                    // (matching their already-tagged siblings `pop_expired`/`next_expiry_ms`) and
-                    // removed the guard-across-await shape at its root. Plain `.await` now compiles
-                    // (verified: no E0277), so the bridge is gone — one fewer E5 exception in this
-                    // crate.
                     wheel.disarm(timer_id).await;
                 });
                 self.services.runtime.spawn_scoped(&scope, ctx, fut).await;
             }
-            Err(TimerError::QuotaExceeded { .. }) => {
-                // 🕳️ `Effect::SetTimer` carries no `req: RequestId` to answer — there is no
-                // `Event::Completed` to emit for a quota-exceeded arm. Honest gap: a future
-                // `design-abi.md` revision could add one; until then this is silently refused,
-                // mirroring `WheelCore::arm`'s own "leaves the wheel completely untouched" contract.
-            }
+            Err(TimerError::QuotaExceeded { .. }) => {}
         }
     }
 
@@ -1153,29 +1159,30 @@ impl<I: EnvelopeInjector + 'static, R: HostAsyncRuntime + 'static> AsyncEffectEx
         }
     }
 
+    /// 🚫️async: R13/R14 corollary — `let _ = <async call>;` suppressed the lint while
+    /// silently dropping this call's future: `Effect::SendMessage` to a `Backbone`
+    /// target never actually reached `BackboneRegistry::send` (capability check, lookup,
+    /// transport dispatch — none of it ran), so the guest↔store sync bridge this whole
+    /// module's doc comment describes stayed as broken as the deleted process-global
+    /// channel it replaced. The `Result` still discards (no `RequestId` to answer with a
+    /// completion for this effect), only the future is now actually driven.
+    ///
+    /// 🕳️ Honest gap: there is no `PluginInstanceId -> ActorId` directory in this
+    /// module (that mapping lives with the instance directory this packet does not
+    /// own) — `send_message` below is a documented no-op until that lookup exists.
+    ///
+    /// 🕳️ Same class of gap: these targets need an id -> ActorId directory this
+    /// executor does not own. See the packet report's honest gaps.
     async fn dispatch_send_message(&self, dispatch: &EffectDispatchContext, target: &MessageEndpoint, payload: &[u8]) {
         match target {
             MessageEndpoint::Backbone { uri } => {
-                // 🚫️async: R13/R14 corollary — `let _ = <async call>;` suppressed the lint while
-                // silently dropping this call's future: `Effect::SendMessage` to a `Backbone`
-                // target never actually reached `BackboneRegistry::send` (capability check, lookup,
-                // transport dispatch — none of it ran), so the guest↔store sync bridge this whole
-                // module's doc comment describes stayed as broken as the deleted process-global
-                // channel it replaced. The `Result` still discards (no `RequestId` to answer with a
-                // completion for this effect), only the future is now actually driven.
                 let _ = self.backbone.send(dispatch.actor, uri, payload).await;
             }
             MessageEndpoint::PluginInstance { id } => {
                 let topic = Topic(format!("__message__:{}", id.0));
-                // 🕳️ Honest gap: there is no `PluginInstanceId -> ActorId` directory in this
-                // module (that mapping lives with the instance directory this packet does not
-                // own) — `send_message` below is a documented no-op until that lookup exists.
                 let _ = topic;
             }
-            MessageEndpoint::Shell { .. } | MessageEndpoint::Extension { .. } | MessageEndpoint::Topic { .. } => {
-                // 🕳️ Same class of gap: these targets need an id -> ActorId directory this
-                // executor does not own. See the packet report's honest gaps.
-            }
+            MessageEndpoint::Shell { .. } | MessageEndpoint::Extension { .. } | MessageEndpoint::Topic { .. } => {}
         }
     }
 
@@ -1187,14 +1194,14 @@ impl<I: EnvelopeInjector + 'static, R: HostAsyncRuntime + 'static> AsyncEffectEx
         }
     }
 
+    /// 🐛️ Same reasoning as `dispatch_http`'s own `scope_for_task` — a separate clone so the
+    /// bare `scope` below survives the `async move` block for `spawn_scoped(&scope, ..)`.
     async fn dispatch_router_effect(&self, ctx: OperationContext, scope: ScopeHandle, req: RequestId, effect: RouterEffect) {
         let runtime = self.services.runtime.clone();
         let compute = self.services.compute.clone();
         let sink = self.sink.clone();
         let handler = self.router_handler.clone();
         let ctx_for_task = ctx.clone();
-        // 🐛️ Same reasoning as `dispatch_http`'s own `scope_for_task` — a separate clone so the
-        // bare `scope` below survives the `async move` block for `spawn_scoped(&scope, ..)`.
         let scope_for_task = scope.clone();
         let fut: HostFuture<()> = Box::pin(async move {
             if ctx_for_task.cancel.is_cancelled().await {
@@ -1233,10 +1240,10 @@ enum StorageOp {
 }
 
 impl StorageOp {
-    // 🚫️async: E1 — `StorageScheduler::submit`'s `work` parameter is a plain sync
-    // `FnOnce() -> Result<Vec<u8>, io::Error> + Send + 'static` closure (`🛎️services`, R4 clause 3:
-    // deliberately bounded-blocking, not async) — `run` is called from inside that sync closure, and
-    // `byte_hint` is pure with no suspension point, so both stay sync. See R9.
+    /// 🚫️async: E1 — `StorageScheduler::submit`'s `work` parameter is a plain sync
+    /// `FnOnce() -> Result<Vec<u8>, io::Error> + Send + 'static` closure (`🛎️services`, R4 clause 3:
+    /// deliberately bounded-blocking, not async) — `run` is called from inside that sync closure, and
+    /// `byte_hint` is pure with no suspension point, so both stay sync. See R9.
     fn byte_hint(&self) -> u64 {
         match self {
             StorageOp::Read { key } => key.len() as u64,

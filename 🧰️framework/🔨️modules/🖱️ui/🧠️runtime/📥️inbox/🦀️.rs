@@ -1,4 +1,4 @@
-//! @emoji 📥️ The bounded, coalescing `ProjectionInbox`.
+//! 📥️ The bounded, coalescing `ProjectionInbox`.
 //!
 //! 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md. Every `fn`
 //! below is plain sync by owner ruling U1.

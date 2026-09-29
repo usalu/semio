@@ -32,5 +32,4 @@ fn cad_document_contract_round_trips_exact_child_identities() {
     assert!(crate::cad_model_child_from_uri("model-a", "model-b!s.stdio.semio@v1/model").is_err());
     assert!(crate::cad_model_child_from_uri("model-a", "model-a!s.stdio.semio@v1/drawing").is_err());
     assert!(crate::cad_drawing_child_from_uri("drawing-a", "drawing-a!s.stdio.semio@v1/drawing").is_ok());
-    eprintln!("[DEBUG] CAD JSON/text/Pack preserve exact model/drawing children and reject document-owned pane selection");
 }

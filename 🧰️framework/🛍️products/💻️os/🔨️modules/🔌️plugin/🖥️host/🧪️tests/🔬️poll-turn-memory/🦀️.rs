@@ -31,6 +31,9 @@ fn wasm_host_serial() -> std::sync::MutexGuard<'static, ()> {
 /// turns that answered `MoreWork`)`. Acknowledges every lifecycle receipt the guest publishes, the
 /// way a real host does — an open the host never acknowledges is retained state the guest re-offers
 /// forever, and measuring "idle" against it measures the missing ACK instead.
+///
+/// 🔬️ Attribution knob: drives a DIFFERENT async-lifted export the same number of times, so a
+/// per-call cost of the shared component-async machinery separates from the reactor turn itself.
 async fn drive_idle_poll_turns(component: &std::path::Path, turns: usize) -> (usize, Vec<usize>, Vec<usize>) {
     let bytes = std::fs::read(component).unwrap_or_else(|error| panic!("read {}: {error}", component.display()));
     let runtime = WasmtimeRuntime::new(SharedEngineConfig::default()).await.expect("engine builds");
@@ -57,14 +60,11 @@ async fn drive_idle_poll_turns(component: &std::path::Path, turns: usize) -> (us
     let mut readings = Vec::with_capacity(turns);
     let mut acks: Vec<Event> = Vec::new();
     let mut hot = 0_usize;
-    // 🔬️ Attribution knob: drives a DIFFERENT async-lifted export the same number of times, so a
-    // per-call cost of the shared component-async machinery separates from the reactor turn itself.
     if std::env::var("SEMIO_POLL_TURN_LEAK_EXPORT").as_deref() == Ok("checkpoint") {
         for _ in 0..turns {
             runtime.checkpoint(&mut instance).await.expect("checkpoint export");
             readings.push(instance.guest_linear_memory_bytes().expect("a wasmtime instance owns linear memory"));
         }
-        eprintln!("[DEBUG] drove {turns} checkpoint exports instead of poll turns");
         return (instantiated, readings, Vec::new());
     }
     let mut hot_turns = Vec::new();
@@ -83,14 +83,14 @@ async fn drive_idle_poll_turns(component: &std::path::Path, turns: usize) -> (us
                     acks.push(Event::InstanceLifecycleAck(semio_framework::kernel::ActorInstanceLifecycleAck { receipt }));
                 }
                 if turn < 4 || turn % 64 == 0 {
-                    eprintln!("[DEBUG] turn {turn} result: status={:?} effects={} patches={} presence={} receipt={:?}", result.status, result.effects.len(), result.ui_patches.len(), result.presence.len(), result.lifecycle_receipt.is_some());
+                    eprintln!("turn {turn} result: status={:?} effects={} patches={} presence={} receipt={:?}", result.status, result.effects.len(), result.ui_patches.len(), result.presence.len(), result.lifecycle_receipt.is_some());
                 }
             }
             Err(fault) => panic!("poll turn {turn} faulted: {fault:?}"),
         }
         readings.push(instance.guest_linear_memory_bytes().expect("a wasmtime instance owns linear memory"));
     }
-    eprintln!("[DEBUG] {hot} of {turns} turns answered MoreWork, at {hot_turns:?}");
+    eprintln!("{hot} of {turns} turns answered MoreWork, at {hot_turns:?}");
     (instantiated, readings, hot_turns)
 }
 
@@ -111,7 +111,7 @@ fn staged_actor_component() -> Option<std::path::PathBuf> {
 }
 
 /// ⚖️ LAW: the guest's own runtime diagnostics are REACHABLE from a wasm host — a real
-/// `wasm32-wasip2` component, booted with the host's diagnostics armed, prints the same `[DEBUG]`
+/// `wasm32-wasip2` component, booted with the host's diagnostics armed, prints the same `[TRACE]`
 /// lines the native in-process suites print, through `wasi:cli/environment` and `wasi:cli/stderr`.
 ///
 /// 🐛️ Regression guard for `📓️audit-guest-tick-cost-2026-09-12.md` §0: the browser's
@@ -128,19 +128,18 @@ fn staged_actor_component() -> Option<std::path::PathBuf> {
 async fn an_armed_host_reaches_the_guests_own_runtime_diagnostics() {
     let _serial = wasm_host_serial();
     let Some(component) = staged_actor_component() else {
-        eprintln!("[DEBUG] no staged wasm32-wasip2 actor component — build one with `cargo build -p semio-s-plugin-procedural --target wasm32-wasip2 --profile wasm-dev`");
         return;
     };
     let turns: usize = std::env::var("SEMIO_POLL_TURN_DIAGNOSTICS_TURNS").ok().and_then(|value| value.parse().ok()).unwrap_or(24);
     let silent = drive_diagnostics_turns(&component, turns, false).await;
     let armed = drive_diagnostics_turns(&component, turns, true).await;
-    eprintln!("[DEBUG] guest stderr: disarmed={:?} armed={} bytes", silent.as_ref().map(String::len), armed.as_deref().map(str::len).unwrap_or(0));
+    eprintln!("guest stderr: disarmed={:?} armed={} bytes", silent.as_ref().map(String::len), armed.as_deref().map(str::len).unwrap_or(0));
     for line in armed.as_deref().unwrap_or_default().lines().take(16) {
-        eprintln!("[DEBUG] guest said: {line}");
+        eprintln!("guest said: {line}");
     }
     assert_eq!(silent.as_deref(), None, "a host with diagnostics OFF must hand the guest no environment and no stderr sink at all, got {silent:?}");
     let armed = armed.expect("an armed host retains the guest's stderr");
-    assert!(armed.contains("[DEBUG]"), "an armed host must reach the guest's own `[DEBUG]` trace sites; the component printed {} bytes and none of them were a trace line:\n{armed}", armed.len());
+    assert!(armed.contains("[TRACE]"), "an armed host must reach the guest's own `[TRACE]` trace sites; the component printed {} bytes and none of them were a trace line:\n{armed}", armed.len());
 }
 
 /// 🩺️ Boots the staged component with the process-wide diagnostics switch forced to `armed`, drives
@@ -183,7 +182,6 @@ async fn drive_diagnostics_turns(component: &std::path::Path, turns: usize, arme
 async fn the_poll_export_keeps_guest_linear_memory_flat_across_turns() {
     let _serial = wasm_host_serial();
     let Some(component) = staged_actor_component() else {
-        eprintln!("[DEBUG] no staged wasm32-wasip2 actor component — build one with `cargo build -p semio-s-plugin-procedural --target wasm32-wasip2 --profile wasm-dev`");
         return;
     };
     let turns: usize = std::env::var("SEMIO_POLL_TURN_LEAK_TURNS").ok().and_then(|value| value.parse().ok()).unwrap_or(512);
@@ -192,9 +190,9 @@ async fn the_poll_export_keeps_guest_linear_memory_flat_across_turns() {
     let last = *readings.last().expect("at least one turn");
     let settled_turn = readings.len() / 4;
     let per_turn = (last - settled) as f64 / (readings.len() - settled_turn) as f64;
-    eprintln!("[DEBUG] guest linear memory: instantiate={instantiated} B, turn {settled_turn}={settled} B, turn {}={last} B, {per_turn:.1} B/turn", readings.len() - 1);
+    eprintln!("guest linear memory: instantiate={instantiated} B, turn {settled_turn}={settled} B, turn {}={last} B, {per_turn:.1} B/turn", readings.len() - 1);
     for (turn, reading) in readings.iter().enumerate().filter(|(turn, _)| turn % (readings.len() / 16).max(1) == 0) {
-        eprintln!("[DEBUG] turn {turn}: {reading} B");
+        eprintln!("turn {turn}: {reading} B");
     }
     let still_hot: Vec<usize> = hot_turns.iter().copied().filter(|turn| *turn >= SETTLE_TURNS).collect();
     assert!(still_hot.is_empty(), "the guest answered MoreWork on {} turns past its open, at {still_hot:?} — an idle actor must answer Idle; every MoreWork is a host turn round trip that produced nothing", still_hot.len());

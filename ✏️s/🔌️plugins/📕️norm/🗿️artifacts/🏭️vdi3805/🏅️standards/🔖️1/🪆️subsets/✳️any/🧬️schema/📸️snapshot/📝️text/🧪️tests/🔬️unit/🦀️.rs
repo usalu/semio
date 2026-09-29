@@ -37,7 +37,6 @@ async fn regenerate_example_dsl_assets_when_env_set() {
         std::fs::write(ok_dir.join("🗣️.dsl.semio"), encode_vdi3805_dsl(&conforming_blatt_dataset(*sheet))).expect("write ok blatt");
         std::fs::write(bad_dir.join("🗣️.dsl.semio"), encode_vdi3805_dsl(&nonconforming_blatt_dataset(*sheet))).expect("write bad blatt");
     }
-    eprintln!("[DEBUG] regenerated {} and {} plus {} assessed Blätter", demo.display(), non.display(), ASSESSED_BLATT_SHEETS.len());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -87,9 +86,7 @@ async fn regenerate_mutation_fixtures_when_env_set() {
             std::fs::write(&diff_path, &diff_canon).expect("write diff");
             std::fs::write(&after_path, &after_canon).expect("write after");
             regenerated += 1;
-            eprintln!("[DEBUG] regenerated fixture {}", case_dir.display());
         }
     }
-    eprintln!("[DEBUG] regenerated {regenerated} mutation fixtures");
     assert!(regenerated > 0, "expected to regenerate at least one fixture");
 }

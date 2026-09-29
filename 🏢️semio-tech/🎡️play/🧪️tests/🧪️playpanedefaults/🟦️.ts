@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
-/** @emoji 🛂️ The committed descriptor of the plugin that owns `cratePath`, or `null` when the plugin ships
+/** 🛂️ The committed descriptor of the plugin that owns `cratePath`, or `null` when the plugin ships
  * none. Read once per plugin: a descriptor carries every example's whole `artifactJson`, so puzzle's
  * alone is 4.8 MB and the 58 panes share 31 plugins. */
 function pluginDescriptorReader(repoRoot: string): (cratePath: string) => any | null {
@@ -13,20 +13,20 @@ function pluginDescriptorReader(repoRoot: string): (cratePath: string) => any | 
   };
 }
 
-/** @emoji 📚️ Plugins whose examples never reach a navbar picker, so a pane of theirs boots its app's own
+/** 📚️ Plugins whose examples never reach a navbar picker, so a pane of theirs boots its app's own
  * default document: the framework's own `NAVBAR_EXAMPLE_PICKER_EXEMPT_PLUGIN_IDS`. `stdio` used to be
  * exempt there because only one of its nine shipped editor apps published an example; all nine publish
  * one now (ticket 26/09/19 `📓️stdio-examples.md`), so it is exempt nowhere. */
 const EXAMPLE_PICKER_EXEMPT_PLUGIN_IDS: readonly string[] = ["demonstrator"];
 
-/** @emoji 🕳️ The only plugins that commit no descriptor at all, so no manifest states which examples
+/** 🕳️ The only plugins that commit no descriptor at all, so no manifest states which examples
  * their apps publish and a pane of theirs can only be checked against the example DIRECTORIES on disk —
  * plugin-wide, never per dialect. Named so that ANY OTHER plugin losing its descriptor fails this gate
  * instead of silently dropping out of it; which of these two actually has a pane is the pane catalog's
  * business, so the assertion is a subset, not an equality. */
 const PLUGINS_WITHOUT_A_COMMITTED_DESCRIPTOR: readonly string[] = ["playbook"];
 
-/** @emoji 📚️ Every authored example id under a plugin, read from the `📚️examples/<emoji-id>/🟦️.ts`
+/** 📚️ Every authored example id under a plugin, read from the `📚️examples/<emoji-id>/🟦️.ts`
  * directories its artifacts own — the fallback source for a plugin that commits no descriptor.
  * A `📚️examples` node under a SURFACE (`✏️editor`, `👁️viewer`) holds recorded interaction sessions,
  * not documents: the subset declaration's `examples()` only ever names the nodes directly under the
@@ -51,7 +51,7 @@ function diskExampleIds(repoRoot: string, pluginRoot: string): readonly string[]
   return [...found];
 }
 
-/** @emoji 🦀️ Whether a plugin's editor Rust declares the navbar picker's action at all — the only
+/** 🦀️ Whether a plugin's editor Rust declares the navbar picker's action at all — the only
  * source left for a plugin that commits no descriptor, read from the handwritten
  * `ActionDefinition::new("setActiveExample", …)` every declaring editor spells out verbatim. */
 function declaresSetActiveExampleInRust(repoRoot: string, pluginRoot: string): boolean {
@@ -66,7 +66,7 @@ function declaresSetActiveExampleInRust(repoRoot: string, pluginRoot: string): b
   return walk(join(repoRoot, pluginRoot, "🗿️artifacts"), 0);
 }
 
-/** @emoji 🚧️ Panes whose boot app publishes examples but declares no `setActiveExample`, so
+/** 🚧️ Panes whose boot app publishes examples but declares no `setActiveExample`, so
  * `appSwitchesExamples` gates `exampleOptions` to `[]`, the navbar picker is hidden and
  * `resolveBootExampleId` never announces a boot example: the pane opens the app's genesis document
  * and the curated `example` stays INERT until the plugin declares the action. Each entry names the
@@ -89,7 +89,7 @@ const PANES_WHOSE_APP_CANNOT_SWITCH_EXAMPLES: Readonly<Record<string, string>> =
   "trinity-rewriting": "trinity — committed descriptor predates the action its editor Rust already declares",
 };
 
-/** @emoji 🏷️ The navbar example picker renders `label.native.en` — authored prose, NEVER the example id
+/** 🏷️ The navbar example picker renders `label.native.en` — authored prose, NEVER the example id
  * spelled out: wfc3d's curated `tower-stack` renders "Tower With A Cantilever" and gis2d's `demo` renders
  * "Reuse Map". A boot check that word-matches the kebab-case id against the picker's trigger text therefore
  * reports "wrong default example" for a pane booting exactly the curated one — the two false positives of
@@ -106,7 +106,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   type Published = { readonly source: "descriptor" | "disk"; readonly appId: string | null; readonly ids: readonly string[]; readonly labels: Readonly<Record<string, string>>; readonly switches: boolean };
   const resolved = new Map<number, Published>();
 
-  /** @emoji 📚️ Exactly what the pane's navbar example picker would offer, restated against the ONE
+  /** 📚️ Exactly what the pane's navbar example picker would offer, restated against the ONE
    * coordinate function both sides share (`dialectCoordinate`) so this gate needs neither a wasm boot
    * nor the renderer's module graph:
    * — the app the shell boots is `resolveBootPrimaryAppV1(apps, undefined, row.app, undefined)`, which with
@@ -165,7 +165,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(unlabelled).toEqual([]);
     });
 
-    /** @emoji 🏷️ The acceptance suite asserts the pane's navbar trigger renders exactly the catalog's
+    /** 🏷️ The acceptance suite asserts the pane's navbar trigger renders exactly the catalog's
      * `exampleLabel` (`🧪️tests/🎭️acceptance/🟦️.ts`), which only means something while that text is the
      * descriptor's own `label.native.en`. Pinned here rather than resolved in the browser test because a
      * Playwright worker reading 31 plugin descriptors — puzzle's alone is 4.8 MB — to learn one string per

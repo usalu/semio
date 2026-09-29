@@ -1,6 +1,6 @@
 // #region 🧲️Header
 /// <reference types="vite/client" />
-/** @emoji 🎨️ `@semio-tech/ui-styling` centralizes palette CSS, theme tokens and the shared typography preset for ui consumers.
+/** 🎨️ `@semio-tech/ui-styling` centralizes palette CSS, theme tokens and the shared typography preset for ui consumers.
  * Browser-only by construction: this barrel is served to the browser through `📦️packages/🟦️typescript/🟦️.ts`, so it MUST NOT
  * reach `../💨️tailwind/🟦️.ts` (the build-time Tailwind config, whose `@tailwindcss/typography` → `@tailwindcss/node` →
  * `@tailwindcss/oxide` closure ends at a `.node` binary Vite's dependency optimizer cannot load). Build tooling imports the
@@ -40,7 +40,7 @@ if (import.meta.vitest) {
 
 //#region 🔖️sizing
 //#region 🔑️SizeVars
-/** @emoji 🔑️ Canonical DOM size CSS variable names. */
+/** 🔑️ Canonical DOM size CSS variable names. */
 export const STYLING_SIZE_VAR = {
   uiSpacing: "--ui-spacing",
   spacingSingle: "--spacing-single",
@@ -68,35 +68,35 @@ export const STYLING_SIZE_VAR = {
   strokeHairline: "--stroke-hairline",
 } as const;
 
-/** @emoji 🔑️ Returns a `var(--…)` reference for a DOM size token. */
+/** 🔑️ Returns a `var(--…)` reference for a DOM size token. */
 export function sizeVar(key: keyof typeof STYLING_SIZE_VAR): string {
   return `var(${STYLING_SIZE_VAR[key]})`;
 }
 
-/** @emoji 📐️ DOM layout metrics and root-rem authority from the canonical styling contract. */
+/** 📐️ DOM layout metrics and root-rem authority from the canonical styling contract. */
 export const STYLING_DOM = STYLING_METRICS.dom;
 
-/** @emoji 🔑️ Compact-mode reference root (px) for headless layout math. */
+/** 🔑️ Compact-mode reference root (px) for headless layout math. */
 export const STYLING_COMPACT_ROOT_PX = STYLING_DOM.rootRemPx;
 
 const COMPACT_UI_SPACING_REM = 0.2;
 
-/** @emoji 📐️ Converts a ui-spacing multiplier to rem length. */
+/** 📐️ Converts a ui-spacing multiplier to rem length. */
 export function uiSpacingRem(multiplier: number): string {
   return `${multiplier * COMPACT_UI_SPACING_REM}rem`;
 }
 
-/** @emoji 📐️ Converts a ui-spacing multiplier to px at the compact reference root. */
+/** 📐️ Converts a ui-spacing multiplier to px at the compact reference root. */
 export function uiSpacingPx(multiplier: number, rootPx = STYLING_COMPACT_ROOT_PX): number {
   return multiplier * COMPACT_UI_SPACING_REM * rootPx;
 }
 
-/** @emoji 📐️ Resolves a DOM metric key to px at the compact reference root. */
+/** 📐️ Resolves a DOM metric key to px at the compact reference root. */
 export function domSizePx(key: Exclude<keyof typeof STYLING_DOM, "rootRemPx">, rootPx = STYLING_COMPACT_ROOT_PX): number {
   return uiSpacingPx(STYLING_DOM[key], rootPx);
 }
 
-/** @emoji 📐️ Reads a resolved CSS size variable from the document (browser only). */
+/** 📐️ Reads a resolved CSS size variable from the document (browser only). */
 export function readSizeVarPx(varName: string, element?: Element | null): number {
   if (typeof document === "undefined") {
     return 0;
@@ -110,30 +110,30 @@ export function readSizeVarPx(varName: string, element?: Element | null): number
 
 //#region 🔖️resolve
 //#region 🔑️TokenRefs
-/** @emoji 🔑️ Builds a primitive palette CSS variable reference (`var(--color-<key>)`). */
+/** 🔑️ Builds a primitive palette CSS variable reference (`var(--color-<key>)`). */
 export function tokenVar(key: StylingTokenKey | string): string {
   return `var(--color-${key.replaceAll("_", "-")})`;
 }
 
-/** @emoji 🔑️ Builds a semantic UI CSS variable reference (`var(--<name>)`). */
+/** 🔑️ Builds a semantic UI CSS variable reference (`var(--<name>)`). */
 export function semanticVar(name: string): string {
   const trimmed = name.startsWith("--") ? name.slice(2) : name;
   return `var(--${trimmed})`;
 }
 
-/** @emoji 🔑️ Builds a Tailwind `@theme inline` color alias (`var(--color-<name>)`). */
+/** 🔑️ Builds a Tailwind `@theme inline` color alias (`var(--color-<name>)`). */
 export function themeColorVar(name: string): string {
   return `var(--color-${name.replaceAll("_", "-")})`;
 }
 
-/** @emoji 🧭️ Permanent X/Y/Z paints for gumball and view/projection gizmos — primary / secondary / tertiary, never active/hover chrome. */
+/** 🧭️ Permanent X/Y/Z paints for gumball and view/projection gizmos — primary / secondary / tertiary, never active/hover chrome. */
 export const SPATIAL_AXIS_COLOR_REFS = {
   x: tokenVar("primary"),
   y: tokenVar("secondary"),
   z: tokenVar("tertiary"),
 } as const;
 
-/** @emoji 🧭️ Resolved `#rrggbb` axis paints for spatial manipulators and navigation cubes. */
+/** 🧭️ Resolved `#rrggbb` axis paints for spatial manipulators and navigation cubes. */
 export function resolveSpatialAxisColors(): { readonly x: string; readonly y: string; readonly z: string } {
   return {
     x: resolveColorHex(SPATIAL_AXIS_COLOR_REFS.x, "primary"),
@@ -142,7 +142,7 @@ export function resolveSpatialAxisColors(): { readonly x: string; readonly y: st
   };
 }
 
-/** @emoji 🔑️ Returns the canonical hex for a palette token key (headless-safe). */
+/** 🔑️ Returns the canonical hex for a palette token key (headless-safe). */
 export function tokenHex(key: StylingTokenKey | string): string {
   return STYLING_TOKENS[key as StylingTokenKey] ?? STYLING_TOKENS.gray;
 }
@@ -152,7 +152,7 @@ export function tokenHex(key: StylingTokenKey | string): string {
 const _resolveCache = ephemeralMap<string, string>("framework.modules.ui.styling.packages.typescript.index.ts._resolveCache");
 const _readableForegroundCache = ephemeralMap<string, string>("framework.modules.ui.styling.packages.typescript.index.ts._readableForegroundCache");
 
-/** @emoji 🔄️ Clears the color resolve cache (theme switches / tests). */
+/** 🔄️ Clears the color resolve cache (theme switches / tests). */
 export function clearColorResolveCache(): void {
   _resolveCache.clear();
   _readableForegroundCache.clear();
@@ -188,7 +188,7 @@ function rgbToHex(r: number, g: number, b: number): string {
   return `#${clamp(r).toString(16).padStart(2, "0")}${clamp(g).toString(16).padStart(2, "0")}${clamp(b).toString(16).padStart(2, "0")}`;
 }
 
-/** @emoji 🎨️ Linear sRGB blend between two palette token keys (headless color-mix approximation). */
+/** 🎨️ Linear sRGB blend between two palette token keys (headless color-mix approximation). */
 export function blendTokenHex(keyA: StylingTokenKey | string, keyB: StylingTokenKey | string, ratioA: number): string {
   const a = normalizeHex(tokenHex(keyA));
   const b = normalizeHex(tokenHex(keyB));
@@ -323,7 +323,7 @@ function resolvePaintExpressionHex(trimmed: string, fallback: string, onResolved
   return fallback;
 }
 
-/** @emoji 🎨️ Resolves a CSS color expression or hex literal to `#rrggbb`, using palette fallback in headless mode. */
+/** 🎨️ Resolves a CSS color expression or hex literal to `#rrggbb`, using palette fallback in headless mode. */
 export function resolveColorHex(ref: string, fallbackKey: StylingTokenKey | string = "gray"): string {
   const cacheKey = `${currentStylingAppearanceName()}|${ref}|${fallbackKey}`;
   const cached = _resolveCache.get(cacheKey);
@@ -336,13 +336,13 @@ export function resolveColorHex(ref: string, fallbackKey: StylingTokenKey | stri
   });
 }
 
-/** @emoji 🎨️ Resolves a semantic CSS custom property (e.g. `--foreground`) to `#rrggbb`. */
+/** 🎨️ Resolves a semantic CSS custom property (e.g. `--foreground`) to `#rrggbb`. */
 export function resolveSemanticColorHex(cssVar: string, fallbackKey: StylingTokenKey | string = "gray"): string {
   const name = cssVar.startsWith("--") ? cssVar : `--${cssVar}`;
   return resolveBackgroundColorHex(`var(${name})`, fallbackKey);
 }
 
-/** @emoji 🎨️ Resolves a CSS background-color expression to `#rrggbb`. */
+/** 🎨️ Resolves a CSS background-color expression to `#rrggbb`. */
 export function resolveBackgroundColorHex(ref: string, fallbackKey: StylingTokenKey | string = "gray"): string {
   const cacheKey = `bg|${currentStylingAppearanceName()}|${ref}|${fallbackKey}`;
   const cached = _resolveCache.get(cacheKey);
@@ -355,20 +355,20 @@ export function resolveBackgroundColorHex(ref: string, fallbackKey: StylingToken
   });
 }
 
-/** @emoji 🎨️ Resolves a CSS color expression to RGBA8888 for canvas WASM theme payloads. */
+/** 🎨️ Resolves a CSS color expression to RGBA8888 for canvas WASM theme payloads. */
 export function resolveColorRgba(ref: string, fallbackKey: StylingTokenKey | string = "gray", alpha = 255): [number, number, number, number] {
   const hex = normalizeHex(resolveColorHex(ref, fallbackKey));
   const a = hex.length === 9 ? Number.parseInt(hex.slice(7, 9), 16) : alpha;
   return [hexChannel(hex, 1), hexChannel(hex, 3), hexChannel(hex, 5), a];
 }
 
-/** @emoji 🎨️ Converts `#rrggbb` to a Three.js-friendly hex number (`0xrrggbb`). */
+/** 🎨️ Converts `#rrggbb` to a Three.js-friendly hex number (`0xrrggbb`). */
 export function hexToThreeColor(hex: string): number {
   const norm = normalizeHex(hex);
   return Number.parseInt(norm.slice(1, 7), 16);
 }
 
-/** @emoji 🎨️ Resolves a CSS color expression to a Three.js-friendly hex number. */
+/** 🎨️ Resolves a CSS color expression to a Three.js-friendly hex number. */
 export function resolveThreeColor(ref: string, fallbackKey: StylingTokenKey | string = "gray"): number {
   return hexToThreeColor(resolveColorHex(ref, fallbackKey));
 }
@@ -378,7 +378,7 @@ function srgbChannelToLinear(channel: number): number {
   return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
 }
 
-/** @emoji 🌓️ WCAG relative luminance for a resolved `#rrggbb` color (0 = black, 1 = white). */
+/** 🌓️ WCAG relative luminance for a resolved `#rrggbb` color (0 = black, 1 = white). */
 export function relativeLuminance(hex: string): number {
   const norm = normalizeHex(hex);
   const r = srgbChannelToLinear(hexChannel(norm, 1));
@@ -479,7 +479,7 @@ export function themePaintContrastPairs(palette: Readonly<Record<string, Rgba8>>
     .sort((a, b) => a.ratio - b.ratio);
 }
 
-/** @emoji 🏷️ Picks a readable palette foreground hex for text on the given background color expression. */
+/** 🏷️ Picks a readable palette foreground hex for text on the given background color expression. */
 export function readableForegroundHex(backgroundRef: string, lightKey: StylingTokenKey | string = "light", darkKey: StylingTokenKey | string = "dark"): string {
   const cacheKey = `${backgroundRef}|${lightKey}|${darkKey}`;
   const cached = _readableForegroundCache.get(cacheKey);
@@ -495,7 +495,7 @@ export function readableForegroundHex(backgroundRef: string, lightKey: StylingTo
 const _stylingAppearanceRoot = ephemeralBox<HTMLElement | null>("framework.modules.ui.styling.packages.typescript.index.ts._stylingAppearanceRoot", null);
 const _stylingAppearanceRootSubscribers = ephemeralSet<() => void>("framework.modules.ui.styling.packages.typescript.index.ts._stylingAppearanceRootSubscribers");
 
-/** @emoji 🌓️ Registers the element that carries the active appearance class and the appearance's
+/** 🌓️ Registers the element that carries the active appearance class and the appearance's
  * `--base`/`--foreground` values — a mounted shell's own `.semio-scope` root, NOT `documentElement`.
  * `applyElementsSurfaceChromeAppearanceDom` paints `.dark` on that root and leaves `documentElement`
  * on the light palette, so every canvas/WASM surface that resolves paints through this module read the
@@ -513,7 +513,7 @@ export function setStylingAppearanceRoot(root: HTMLElement | null): void {
   }
 }
 
-/** @emoji 🌓️ Notifies when the appearance root changes, so a canvas surface that mounted before the
+/** 🌓️ Notifies when the appearance root changes, so a canvas surface that mounted before the
  * shell registered its `.semio-scope` root re-observes and re-resolves instead of keeping the paints it
  * resolved against `documentElement`'s light palette. Returns an unsubscribe function. */
 export function subscribeStylingAppearanceRoot(callback: () => void): () => void {
@@ -523,7 +523,7 @@ export function subscribeStylingAppearanceRoot(callback: () => void): () => void
   };
 }
 
-/** @emoji 🌓️ Unregisters `root` — and ONLY `root`. A page whose `documentElement` lease is released
+/** 🌓️ Unregisters `root` — and ONLY `root`. A page whose `documentElement` lease is released
  * moments after a shell registered its own `.semio-scope` root must not drag the live registration down
  * with it, which an unconditional `setStylingAppearanceRoot(null)` did (measured: the flow canvas
  * re-resolved the light palette ~40 s after the shell had already gone dark). */
@@ -533,7 +533,7 @@ export function clearStylingAppearanceRoot(root: HTMLElement): void {
   }
 }
 
-/** @emoji 🌓️ The registered appearance root while it is still in the document, else `documentElement`. */
+/** 🌓️ The registered appearance root while it is still in the document, else `documentElement`. */
 export function stylingAppearanceRootElement(): HTMLElement | null {
   if (typeof document === "undefined") {
     return null;
@@ -542,7 +542,7 @@ export function stylingAppearanceRootElement(): HTMLElement | null {
   return registered?.isConnected ? registered : document.documentElement;
 }
 
-/** @emoji 🌓️ Resolves the active styling appearance name from the registered appearance root. */
+/** 🌓️ Resolves the active styling appearance name from the registered appearance root. */
 export function currentStylingAppearanceName(): StylingAppearanceName {
   if (stylingAppearanceRootElement()?.classList.contains("dark")) {
     return "dark";
@@ -550,13 +550,13 @@ export function currentStylingAppearanceName(): StylingAppearanceName {
   return "light";
 }
 
-/** @emoji 🖼️ Serializes active theme icon overrides for hosts that rasterize catalog icons at runtime. */
+/** 🖼️ Serializes active theme icon overrides for hosts that rasterize catalog icons at runtime. */
 export function serializeThemeIconOverridesJson(): string | undefined {
   const icons = activeUiTheme().icons;
   return icons ? JSON.stringify(icons) : undefined;
 }
 
-/** @emoji 🎨️ Serializes the active theme's board palette paints for DAG/flow canvas WASM (`CanvasPalette` JSON). Falls back to the baked semio palette before a theme is set. */
+/** 🎨️ Serializes the active theme's board palette paints for DAG/flow canvas WASM (`CanvasPalette` JSON). Falls back to the baked semio palette before a theme is set. */
 export function serializeCanvasThemeJson(appearanceName: StylingAppearanceName = currentStylingAppearanceName()): string {
   if (_activeUiTheme.current) {
     return JSON.stringify(resolveThemeAppearancePalettes(_activeUiTheme.current, appearanceName).board);
@@ -564,12 +564,12 @@ export function serializeCanvasThemeJson(appearanceName: StylingAppearanceName =
   return JSON.stringify(STYLING_BOARD_PALETTES[appearanceName]);
 }
 
-/** @emoji 🎨️ WASM session surface that accepts serialized canvas theme JSON. */
+/** 🎨️ WASM session surface that accepts serialized canvas theme JSON. */
 export interface CanvasThemeSession {
   setCanvasThemeJson(json: string): void;
 }
 
-/** @emoji 🌓️ Pushes the active theme's canvas palette into a canvas WASM session. */
+/** 🌓️ Pushes the active theme's canvas palette into a canvas WASM session. */
 export function syncSessionCanvasTheme(session: CanvasThemeSession | null | undefined): void {
   if (!session) return;
   try {
@@ -591,7 +591,7 @@ if (import.meta.vitest) {
 
 //#region 🔖️theme
 //#region 🔑️Premades
-/** @emoji 🎨️ The default "semio" theme, built from 🔣️.json at generate time. */
+/** 🎨️ The default "semio" theme, built from 🔣️.json at generate time. */
 export function semioTheme(): UiTheme {
   return STYLING_SEMIO_THEME as unknown as UiTheme;
 }
@@ -625,12 +625,12 @@ const _activeUiThemeSubscribers = ephemeralSet<(theme: UiTheme) => void>("framew
  * "the page", for the single page-owning shell / `setActiveUiTheme` callers). */
 export const _appliedThemeCssPropsByRoot = ephemeralMap<HTMLElement, Set<string>>("framework.modules.ui.styling.packages.typescript.index.ts._appliedThemeCssPropsByRoot");
 
-/** @emoji 🎨️ The currently active theme (defaults to semio before any theme is set). */
+/** 🎨️ The currently active theme (defaults to semio before any theme is set). */
 export function activeUiTheme(): UiTheme {
   return _activeUiTheme.current ?? semioTheme();
 }
 
-/** @emoji 🎨️ Registers a callback invoked whenever the active theme changes. Returns an unsubscribe function. */
+/** 🎨️ Registers a callback invoked whenever the active theme changes. Returns an unsubscribe function. */
 export function subscribeActiveUiTheme(callback: (theme: UiTheme) => void): () => void {
   _activeUiThemeSubscribers.add(callback);
   return () => _activeUiThemeSubscribers.delete(callback);
@@ -641,7 +641,7 @@ function setCssVar(root: HTMLElement, appliedNames: Set<string>, name: string, v
   appliedNames.add(name);
 }
 
-/** @emoji 🎨️ Applies a theme's colors/spacing/fonts/strokes/glass metrics as inline CSS var overrides on
+/** 🎨️ Applies a theme's colors/spacing/fonts/strokes/glass metrics as inline CSS var overrides on
  * `root`, clearing any previous overrides *this function* applied to that same root first. Applied
  * unconditionally (even for a pristine semio theme, whose values equal the generated CSS defaults) so a
  * semio-based *draft* with edits — which still carries `id: "semio"` until saved — is never mistaken for
@@ -693,7 +693,7 @@ export function applyUiThemeToRoot(root: HTMLElement, theme: UiTheme): void {
   clearColorResolveCache();
 }
 
-/** @emoji 🎨️ Removes every CSS var {@link applyUiThemeToRoot} applied to `root` and forgets its registry
+/** 🎨️ Removes every CSS var {@link applyUiThemeToRoot} applied to `root` and forgets its registry
  * entry — call on a shell's unmount so a later, unrelated element reused at the same DOM position never
  * inherits a stale theme's inline overrides. */
 export function clearUiThemeFromRoot(root: HTMLElement): void {
@@ -706,7 +706,7 @@ export function clearUiThemeFromRoot(root: HTMLElement): void {
   _appliedThemeCssPropsByRoot.delete(root);
 }
 
-/** @emoji 🎨️ Applies a theme's colors/spacing/fonts/strokes/glass metrics as inline `documentElement` CSS
+/** 🎨️ Applies a theme's colors/spacing/fonts/strokes/glass metrics as inline `documentElement` CSS
  * var overrides — the page-owning case of {@link applyUiThemeToRoot}. */
 export function applyUiThemeToDocument(theme: UiTheme): void {
   if (typeof document === "undefined") {
@@ -715,7 +715,7 @@ export function applyUiThemeToDocument(theme: UiTheme): void {
   applyUiThemeToRoot(document.documentElement, theme);
 }
 
-/** @emoji 🎨️ Sets the *page-global* active theme, applies it to `document.documentElement`, and notifies
+/** 🎨️ Sets the *page-global* active theme, applies it to `document.documentElement`, and notifies
  * subscribers — for the single page-owning shell (`ShellScope.ownsPage`) or a standalone (non-shell) host.
  * A co-mounted, non-page-owning shell must call {@link applyUiThemeToRoot} on its own root instead, or it
  * would fight every other mounted shell over the same document-wide tokens. */
@@ -768,11 +768,11 @@ export interface IconRenderMaterial {
   readonly roughness?: number;
   readonly emissive?: string;
   readonly emissiveIntensity?: number;
-  /** @emoji ✏️ GLB mesh edge outline color for SVG/PNG icon shots (`none`/`transparent` disables outlines). */
+  /** ✏️ GLB mesh edge outline color for SVG/PNG icon shots (`none`/`transparent` disables outlines). */
   readonly stroke?: string;
 }
 
-/** @emoji 🎯️ Frames the loaded asset before rendering: the camera keeps its viewing direction and zoom,
+/** 🎯️ Frames the loaded asset before rendering: the camera keeps its viewing direction and zoom,
  * re-targets the asset's bounding-sphere centre and backs off so the sphere fits the frame with `padding`
  * (the icon twin of the world-3d fit lane, so an icon shows what a centred scene shows). */
 export interface IconRenderFit {
@@ -806,7 +806,7 @@ export interface IconRenderPort {
 //#endregion 🔖️icon-render-port
 
 //#region 🧭️ElementState
-/** @emoji 🧭️ The one shared, compile-time-enforced state model every rendered UI element carries:
+/** 🧭️ The one shared, compile-time-enforced state model every rendered UI element carries:
  * `state` × `status` × `hover` × `selected`. Mirrors the Rust `UiState`/`UiStatus`/`UiPresence`
  * model in `ui_wgpu` (see `framework/ui/wgpu/rs/lib.rs`'s 🔖️Presence region) — string-literal unions here,
  * since this package has no dependency on the Rust crate or its generated bindings. `Hidden` makes
@@ -814,7 +814,7 @@ export interface IconRenderPort {
 export const UI_STATES = ["introducing", "celebrating", "previewed", "normal", "disabled", "hidden"] as const;
 export type UiState = (typeof UI_STATES)[number];
 
-/** @emoji 🧭️ The activity lifecycle of a UI element, orthogonal to {@link UiState} and composable with it. */
+/** 🧭️ The activity lifecycle of a UI element, orthogonal to {@link UiState} and composable with it. */
 export const UI_STATUSES = ["waiting", "loading", "idle", "finished"] as const;
 export type UiStatus = (typeof UI_STATUSES)[number];
 
@@ -827,17 +827,17 @@ export interface UiElementState {
 
 const DEFAULT_UI_ELEMENT_STATE: UiElementState = { state: "normal", status: "idle", hover: false, selected: false };
 
-/** @emoji 🧭️ Fills in every axis with its default (`normal`/`idle`/`false`/`false`) — the one place that convention lives. */
+/** 🧭️ Fills in every axis with its default (`normal`/`idle`/`false`/`false`) — the one place that convention lives. */
 export function resolveElementState(partial?: Partial<UiElementState>): UiElementState {
   return { ...DEFAULT_UI_ELEMENT_STATE, ...partial };
 }
 
-/** @emoji 🙈️ `true` only for `state === "hidden"` — callers must not render/lay out/hit-test the element. */
+/** 🙈️ `true` only for `state === "hidden"` — callers must not render/lay out/hit-test the element. */
 export function elementStateHidden(s: Pick<UiElementState, "state">): boolean {
   return s.state === "hidden";
 }
 
-/** @emoji 🧭️ The one function that emits the shared `data-ui-*` attribute vocabulary every element's
+/** 🧭️ The one function that emits the shared `data-ui-*` attribute vocabulary every element's
  * markup carries. Two axes carry a SECOND attribute alongside `data-ui-state`/`data-ui-status`:
  * `introducing` also stamps `data-introduced="true"` — the exact attribute `UIIntroduction`'s
  * tour-driven reveal already stamps imperatively (see `framework/ui/js/react/index.tsx`), so an authored
@@ -874,7 +874,7 @@ export function elementStateAttributes(s: UiElementState): UiElementStateAttribu
   return attrs;
 }
 
-/** @emoji 🎨️ The shared precedence resolver for renderers that can't use CSS/data-attributes at all
+/** 🎨️ The shared precedence resolver for renderers that can't use CSS/data-attributes at all
  * (3D fills, canvas emissive channels — `Orb`/`Geometry`/world-mesh materials): collapses the four
  * axes to a single fill "kind" a caller maps to its own color table. Precedence, most to least
  * specific: `disabled` > `celebrated` > `selected` > `previewed` > `hovered` > `neutral`. `hidden`
@@ -894,13 +894,13 @@ export function resolveElementFillKind(s: UiElementState): ElementFillKind | nul
 //#endregion 🧭️ElementState
 
 //#region 🔁️AnimationScope
-/** @emoji ⏱️ One rule that starts CSS animations, addressed by its resolved selector path. */
+/** ⏱️ One rule that starts CSS animations, addressed by its resolved selector path. */
 export interface CssClockRule {
   selector: string;
   keyframes: readonly string[];
 }
 
-/** @emoji 🖌️ One rule that PAINTS with animated custom properties — reads them from a declaration whose
+/** 🖌️ One rule that PAINTS with animated custom properties — reads them from a declaration whose
  * own property is not itself a custom property, directly or through a custom-property chain. A rule that
  * only forwards the value into another custom property is not a paint and owns no clock. */
 export interface CssPaintRule {
@@ -908,7 +908,7 @@ export interface CssPaintRule {
   properties: readonly string[];
 }
 
-/** @emoji 🔬️ What {@link analyzeCssAnimationScope} reads out of one stylesheet. */
+/** 🔬️ What {@link analyzeCssAnimationScope} reads out of one stylesheet. */
 export interface CssAnimationScope {
   animatedCustomProperties: readonly string[];
   keyframesByProperty: Readonly<Record<string, readonly string[]>>;
@@ -918,7 +918,7 @@ export interface CssAnimationScope {
   rootClocks: readonly CssClockRule[];
 }
 
-/** @emoji 🌳️ Selectors that address the document root, whose animated inherited custom properties
+/** 🌳️ Selectors that address the document root, whose animated inherited custom properties
  * re-resolve every element's computed style on every frame. */
 const CSS_DOCUMENT_ROOT_SELECTORS = new Set([":root", "html", ":root:root", "html:root"]);
 
@@ -989,7 +989,7 @@ function cssAnimationNames(value: string): readonly string[] {
   return value.split(",").flatMap((layer) => layer.replace(/!important/g, " ").split(/\s+/).filter((token) => /^[A-Za-z_-][\w-]*$/.test(token) && !nonNames.has(token) && !token.startsWith("--") && !token.startsWith("cubic-bezier") && !token.startsWith("steps")));
 }
 
-/** @emoji 🔬️ Reads a stylesheet's animation scope: which custom properties any `@keyframes` animates,
+/** 🔬️ Reads a stylesheet's animation scope: which custom properties any `@keyframes` animates,
  * how each is registered, which rules start those clocks, and which rules paint with them.
  *
  * Exists because the cost of a CSS animation is the size of the style invalidation it causes, not the
@@ -1066,7 +1066,7 @@ export function analyzeCssAnimationScope(css: string): CssAnimationScope {
     rootClocks: clocks.filter((clock) => clock.selector.split(" ").every((part) => CSS_DOCUMENT_ROOT_SELECTORS.has(part.trim()))),
   };
 }
-/** @emoji ⚖️ The three laws of {@link analyzeCssAnimationScope}, in the order the fixture states them.
+/** ⚖️ The three laws of {@link analyzeCssAnimationScope}, in the order the fixture states them.
  * `no-document-root-clock` — no rule whose whole selector path addresses the document root may start an
  * animation; `animated-custom-properties-are-non-inherited` — a property any `@keyframes` animates must be
  * registered `inherits: false`, so its frames invalidate one element instead of the whole document;
@@ -1075,7 +1075,7 @@ export function analyzeCssAnimationScope(css: string): CssAnimationScope {
 export const CSS_ANIMATION_SCOPE_LAWS = ["no-document-root-clock", "animated-custom-properties-are-non-inherited", "every-paint-owns-its-clock"] as const;
 export type CssAnimationScopeLaw = (typeof CSS_ANIMATION_SCOPE_LAWS)[number];
 
-/** @emoji ⚖️ Names which of {@link CSS_ANIMATION_SCOPE_LAWS} a stylesheet's scope breaks, in law order. */
+/** ⚖️ Names which of {@link CSS_ANIMATION_SCOPE_LAWS} a stylesheet's scope breaks, in law order. */
 export function cssAnimationScopeViolations(scope: CssAnimationScope): readonly CssAnimationScopeLaw[] {
   const animated = new Set(scope.animatedCustomProperties);
   const started = new Map<string, Set<string>>();
@@ -1088,7 +1088,7 @@ export function cssAnimationScopeViolations(scope: CssAnimationScope): readonly 
   return broken;
 }
 
-/** @emoji 🖌️ Every paint that does not start the clock its animated property needs, named with the
+/** 🖌️ Every paint that does not start the clock its animated property needs, named with the
  * keyframes it is missing — the actionable half of `every-paint-owns-its-clock`. */
 export function cssAnimationScopeUnclockedPaints(scope: CssAnimationScope): readonly { selector: string; property: string; keyframes: readonly string[] }[] {
   const started = new Map<string, Set<string>>();

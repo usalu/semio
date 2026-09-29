@@ -63,11 +63,13 @@ async fn registered_shape_draft_publishes_once_refuses_stale_and_undoes_redoes()
     use crate::schema::snapshot::PptxSlide;
     use semio_framework_plugin::{artifact_app_laws, EditorApp, PluginApp};
 
-    let mut original = PptxSnapshot::default();
-    original.presentation.slides.push(PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("before")], position: Default::default() }] });
+    let mut authored = PptxSnapshot::default();
+    authored.presentation.slides.push(PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("before")], position: Default::default() }] });
     let mut app = artifact_app_laws::new_registered_app::<EditorApp<PptxEditor>, _>(async { semio_framework_plugin::App { definition: create_pptx_editor(), examples: Vec::new() } }).await;
-    let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&original, STDIO_PPTX_DOCUMENT_SCHEMA) else { panic!("PPTX fixture produces a document load") };
+    let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&authored, STDIO_PPTX_DOCUMENT_SCHEMA) else { panic!("PPTX fixture produces a document load") };
     app.load_document_pack(&store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.unwrap();
+    let original = app.snapshot().unwrap().clone();
+    assert_eq!(original.presentation, authored.presentation, "the host opens the authored presentation as its canonical package");
     let meta = artifact_app_laws::meta("local");
     let arguments = |revision: String, text: &str| {
         dsl::DslValue::object([("page".into(), dsl::DslValue::float(0.0)), ("item".into(), dsl::DslValue::float(0.0)), ("revision".into(), dsl::DslValue::String(revision)), ("text".into(), dsl::DslValue::String(text.into()))])

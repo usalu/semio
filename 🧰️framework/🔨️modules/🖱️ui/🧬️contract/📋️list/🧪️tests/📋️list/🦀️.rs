@@ -74,7 +74,6 @@ fn retained_fixed_list_pages_preserve_order_without_all_n_allocation() {
         released += usize::from(step.released_allocation_bytes != 0);
     }
     assert_eq!(released, allocations);
-    eprintln!("[DEBUG] fixed-list-pages items=600 allocations={allocations} releases={released} maximum-allocation={grant} wire-order=true");
 }
 
 #[test]
@@ -97,7 +96,6 @@ fn retained_fixed_list_pages_refuse_oversized_payload_without_losing_owner() {
     while !values.terminal_is_empty() {
         values.release_empty_page(usize::MAX).unwrap();
     }
-    eprintln!("[DEBUG] fixed-list-oversized source-retained=true allocated-after-refusal={before} placed=false");
 }
 
 #[test]
@@ -129,7 +127,6 @@ fn retained_fixed_list_pages_admit_binding_sized_payloads_and_safe_mutable_itera
     while !values.terminal_is_empty() {
         values.release_empty_page(usize::MAX).unwrap();
     }
-    eprintln!("[DEBUG] fixed-list-binding-pages items=32 bytes-per-placement=2072 total-with-metadata={allocated} safe-mutable-iteration=true");
 }
 #[test]
 fn retained_fixed_list_pages_zero_zst_and_empty_tail_reuse_preserve_exact_storage() {
@@ -189,6 +186,5 @@ fn retained_fixed_list_pages_zero_zst_and_empty_tail_reuse_preserve_exact_storag
     while !values.terminal_is_empty() {
         values.release_empty_page(usize::MAX).unwrap();
     }
-    eprintln!("[DEBUG] fixed-list-edges zero=true zst=7 retained-prefix=512 empty-tail-released=true reuse=true");
 }
 //#endregion 🧪️PagedStorageLaws

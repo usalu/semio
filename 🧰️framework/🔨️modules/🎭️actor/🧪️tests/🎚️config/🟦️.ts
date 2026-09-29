@@ -7,7 +7,7 @@ const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
 
-/** @emoji 🧪️ Vitest for `@semio-tech/framework-actor` (inline `import.meta.vitest`). */
+/** 🧪️ Vitest for `@semio-tech/framework-actor` (inline `import.meta.vitest`). */
 export default {
   root: testRoot,
   resolve: {

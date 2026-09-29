@@ -1,0 +1,23 @@
+        "translate" => {
+            let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard.translate(&arg_handle(&args, "shape")?, arg_vec3(&args, "offset")?).map(handle_result).map_err(BrepModuleError::from)
+        }
+        "rotate" => {
+            let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard.rotate(&arg_handle(&args, "shape")?, arg_vec3(&args, "axis")?, arg_f64(&args, "angle")?).map(handle_result).map_err(BrepModuleError::from)
+        }
+        "rotateAbout" => {
+            let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard
+                .rotate_about(&arg_handle(&args, "shape")?, arg_vec3(&args, "origin")?, arg_vec3(&args, "axis")?, arg_f64(&args, "angle")?)
+                .map(handle_result)
+                .map_err(BrepModuleError::from)
+        }
+        "scale" => {
+            let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard.scale(&arg_handle(&args, "shape")?, arg_f64(&args, "factor")?, arg_vec3(&args, "center")?).map(handle_result).map_err(BrepModuleError::from)
+        }
+        "mirror" => {
+            let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard.mirror(&arg_handle(&args, "shape")?, arg_vec3(&args, "origin")?, arg_vec3(&args, "normal")?).map(handle_result).map_err(BrepModuleError::from)
+        }

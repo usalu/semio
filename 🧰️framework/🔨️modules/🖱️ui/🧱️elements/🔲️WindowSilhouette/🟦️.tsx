@@ -24,7 +24,7 @@ export interface WindowSilhouetteAxisRect {
   readonly bottom: number;
 }
 
-/** @emoji 🖱️ Primary column plus fused submenu wings measured in stack coordinates. */
+/** 🖱️ Primary column plus fused submenu wings measured in stack coordinates. */
 export interface WindowSilhouetteContextMenuFusion {
   readonly primary: WindowSilhouetteAxisRect;
   readonly wings: readonly WindowSilhouetteAxisRect[];
@@ -170,7 +170,7 @@ function windowSilhouetteRightEdgeAtY(rects: readonly WindowSilhouetteAxisRect[]
   return right;
 }
 
-/** @emoji 🖱️ Stepped rectilinear outline for a fused context menu (primary column + wing columns). */
+/** 🖱️ Stepped rectilinear outline for a fused context menu (primary column + wing columns). */
 export function windowSilhouetteOutlineWithContextMenuFusion(metrics: WindowSilhouetteMetrics, inset = WINDOW_SILHOUETTE_PATH_INSET): WindowSilhouettePoint[] {
   const fusion = metrics.contextMenuFusion;
   if (!fusion?.wings.length) return windowSilhouetteOutline(metrics, inset);

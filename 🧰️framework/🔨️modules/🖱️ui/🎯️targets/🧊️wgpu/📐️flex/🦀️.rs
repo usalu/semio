@@ -51,9 +51,11 @@ pub(crate) enum LayoutNodeKind {
     },
     /// 🌳️ A `Tree`, measured from its own spec through `layout`'s shared row geometry rather than
     /// from arena children — a tree's rows carry no children of their own, so aggregating them
-    /// measured a whole tree as the sum of its rows' padding.
+    /// measured a whole tree as the sum of its rows' padding. `header` is a table's column header
+    /// band, reserved ahead of its rows (`0` for a tree).
     Tree {
         height: f32,
+        header: f32,
         reversed: bool,
     },
     TreeSection {
@@ -81,6 +83,13 @@ pub(crate) enum LayoutNodeKind {
     /// rows in a bounded scene band.
     TreeDetail {
         height: f32,
+    },
+    /// 📊️ One table row: its materialised cell children flow along the inline axis in equal columns — the grid
+    /// `layout::table_column_rect` gives the header and the painted cells — between the leading gap and the trailing
+    /// `actions` column its row actions paint in.
+    TableRow {
+        height: f32,
+        actions: f32,
     },
     /// 🎛️ A value-carrying control: one control row tall on its own, so a container that sizes its
     /// children by intrinsic height (a `Section`) never collapses it to zero.
@@ -310,6 +319,19 @@ fn flow_for(kind: LayoutNodeKind, parent_kind: Option<LayoutNodeKind>, authored:
         let content = if matches!(kind, LayoutNodeKind::Stack { .. }) { flow_for(kind, None, authored, metrics) } else { FlowStyle::default() };
         return FlowStyle { absolute: true, inset, width: Dim::Length(metrics.control_width), height: Dim::Length(control_height), ..content };
     }
+    if matches!(parent_kind, Some(LayoutNodeKind::TableRow { .. })) {
+        let mut cell = flow_for(kind, None, authored, metrics);
+        cell.absolute = false;
+        cell.grow = 1.0;
+        cell.shrink = 1.0;
+        cell.width = Dim::Length(0.0);
+        cell.min_width = 0.0;
+        cell.height = match kind {
+            LayoutNodeKind::Control { height, .. } => Dim::Length(height),
+            _ => Dim::Fill,
+        };
+        return cell;
+    }
     let band = |height: f32, header: f32, reverse: bool| FlowStyle {
         height: Dim::Length(height),
         shrink: 0.0,
@@ -327,7 +349,7 @@ fn flow_for(kind: LayoutNodeKind, parent_kind: Option<LayoutNodeKind>, authored:
         },
         LayoutNodeKind::Field { top, bottom } => FlowStyle { padding: EdgePx { top, bottom, ..EdgePx::default() }, ..FlowStyle::default() },
         LayoutNodeKind::Section { gap, top, bottom } => FlowStyle { gap_main: gap, padding: EdgePx { top, bottom, ..EdgePx::default() }, ..FlowStyle::default() },
-        LayoutNodeKind::Tree { height, reversed } => band(height, 0.0, reversed),
+        LayoutNodeKind::Tree { height, header, reversed } => band(height, header, reversed),
         LayoutNodeKind::TreeSection { header, height, reversed, .. } => band(height, header, reversed),
         LayoutNodeKind::TreeHeaderToolbar { header, reversed } => {
             let inset = if reversed { [None, Some(metrics.gap), Some(0.0), None] } else { [Some(0.0), Some(metrics.gap), None, None] };
@@ -340,6 +362,10 @@ fn flow_for(kind: LayoutNodeKind, parent_kind: Option<LayoutNodeKind>, authored:
         }
         LayoutNodeKind::TreeRow { row, height, reversed, .. } => band(height, row, reversed),
         LayoutNodeKind::TreeDetail { height } => FlowStyle { width: Dim::Fill, height: Dim::Length(height), shrink: 0.0, ..FlowStyle::default() },
+        LayoutNodeKind::TableRow { height, actions } => {
+            let (left, right) = if metrics.inline.is_rtl() { (actions, metrics.gap) } else { (metrics.gap, actions) };
+            FlowStyle { row: true, reverse: metrics.inline.is_rtl(), gap_main: metrics.gap, align: Align::Center, height: Dim::Length(height), shrink: 0.0, padding: EdgePx { left, right, ..EdgePx::default() }, clips: true, ..FlowStyle::default() }
+        }
         LayoutNodeKind::Control { height, label_padding } => {
             let mut flow = authored.map_or_else(FlowStyle::default, flow_from_spec);
             flow.min_height = height;

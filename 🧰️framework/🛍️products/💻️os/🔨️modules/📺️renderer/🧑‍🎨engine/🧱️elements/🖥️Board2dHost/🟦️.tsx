@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/🖥️Board2dHost/component.tsx
-/** @emoji 🧩️ `🖥️Board2dHost` — board-2d `ComponentSceneHost`: drives the board wasm session (fixture
+/** 🧩️ `🖥️Board2dHost` — board-2d `ComponentSceneHost`: drives the board wasm session (fixture
  * sync, coalesced event drain/flush, marquee/pick pointer routing, catalogue fixture-drop preview),
  * plus the cross-pane live-mirror peer registry that keeps a triptych of panes on the same
  * `controllerId` in sync during a gesture without a plugin round trip. Reuses `World3dHost`'s
@@ -56,7 +56,7 @@ type Puzzle2dFixtureDropPayload = {
 //#endregion Types
 
 //#region Parsing
-/** @emoji 🩺️ The document vitals this host publishes as `data-board-*` attributes on its container — node/edge counts
+/** 🩺️ The document vitals this host publishes as `data-board-*` attributes on its container — node/edge counts
  * and every node's world position — so a headless probe (and the shell's own tests) can read what the guest last
  * painted without a guest round trip, the board twin of `World3dHost`'s `data-instances-json`. */
 function board2dVitals(fixtureJson: string): { readonly nodes: number; readonly edges: number; readonly handles: number; readonly positionsJson: string } {
@@ -74,7 +74,7 @@ function board2dVitals(fixtureJson: string): { readonly nodes: number; readonly 
   }
 }
 
-/** @emoji 🗂️ The kind ids this board knows, by the engine's own hover domain (`resolveElementKindHover`
+/** 🗂️ The kind ids this board knows, by the engine's own hover domain (`resolveElementKindHover`
  * answers `"node" | "handle" | "edge" | "wire"`). Read straight off the scene's kind catalogs, so the
  * host hard-codes no panel's id scheme and no owning plugin. */
 export function board2dKindDomainById(glyphCatalogsJson: string): ReadonlyMap<string, string> {
@@ -103,7 +103,7 @@ export function board2dKindDomainById(glyphCatalogsJson: string): ReadonlyMap<st
   return out;
 }
 
-/** @emoji 🖱️ Resolves a hovered chrome element's DOM id to `(domain, kindId)`. A catalogue row is named
+/** 🖱️ Resolves a hovered chrome element's DOM id to `(domain, kindId)`. A catalogue row is named
  * `<sectionId>.<kindId>` (puzzle 2d: `puzzle2d-play-kinds.nodes.beam`), so the trailing dot segment — or
  * the whole id, for a bare-kind row like puzzle 3d's — is the candidate, and it counts only when this
  * board's OWN catalogs know it. That keeps the host generic: no panel id prefix, no plugin name. */
@@ -116,7 +116,7 @@ export function board2dKindHoverFromElementId(elementId: string | null | undefin
   return null;
 }
 
-/** @emoji 🩺️ The board's boot/sync verdict as one probe row — whether the last fixture parsed, how big it
+/** 🩺️ The board's boot/sync verdict as one probe row — whether the last fixture parsed, how big it
  * was, why it was refused, how many drained rows are still waiting for a flush, and which guest scene
  * revision this pane last applied. The board twin of `World3dHost`'s `data-status-json`. */
 export type Board2dStatus = {
@@ -164,7 +164,7 @@ export function parsePuzzle2dCatalogueDragPayload(encoded: string | null | undef
     return null;
   }
 }
-/** @emoji 🕹️ Reads `Board2dScene.transformFlags` (`{"move":boolean,"rotate":boolean}`); anything missing
+/** 🕹️ Reads `Board2dScene.transformFlags` (`{"move":boolean,"rotate":boolean}`); anything missing
  * or malformed leaves both handles on rather than silently disarming the gumball. */
 export function parseBoard2dTransformFlags(encoded: string | null | undefined): { readonly move: boolean; readonly rotate: boolean } {
   if (!encoded) return { move: true, rotate: true };
@@ -175,7 +175,7 @@ export function parseBoard2dTransformFlags(encoded: string | null | undefined): 
     return { move: true, rotate: true };
   }
 }
-/** @emoji 🖍️ Reads `Board2dScene.areaBrushSize` (`{"width":number,"height":number}`). A missing or
+/** 🖍️ Reads `Board2dScene.areaBrushSize` (`{"width":number,"height":number}`). A missing or
  * malformed payload answers `0`, which the engine reads as "keep the extent you have" — an area brush
  * that silently collapsed to a zero-area rectangle would paint regions no fill placement can satisfy. */
 export function parseBoard2dAreaBrushSize(encoded: string | null | undefined): { readonly width: number; readonly height: number } {
@@ -187,7 +187,7 @@ export function parseBoard2dAreaBrushSize(encoded: string | null | undefined): {
     return { width: 0, height: 0 };
   }
 }
-/** @emoji 🐁️ Classifies every entity id the fixture carries into the `vortex`-domain granularity a
+/** 🐁️ Classifies every entity id the fixture carries into the `vortex`-domain granularity a
  * pick or hover reports it under — the client twin of the guest's `puzzle2d_selection_targets`. A
  * `node:handle` id nested under a node is a `handle`, an id in `edges` is an `edge`, everything else
  * (including an id the document does not carry yet) is a `node`, so a just-painted entity is never
@@ -207,13 +207,13 @@ export function board2dGranularityById(fixtureJson: string): ReadonlyMap<string,
   return byId;
 }
 
-/** @emoji 🐁️ The `interactionHover` wire shape — mirrors `world3dHoverActionArgs`, so one id and one
+/** 🐁️ The `interactionHover` wire shape — mirrors `world3dHoverActionArgs`, so one id and one
  * granularity is all a board pointermove costs. An empty `targets` clears the domain's hover. */
 export function board2dHoverActionArgs(domainId: string, granularity: string, id: string | null | undefined) {
   return { domainId, channel: "pointer", targets: JSON.stringify(id ? [{ granularity, id }] : []) };
 }
 
-/** @emoji 🐁️ The LAST `hover` row of a drained batch — the engine's live answer; `undefined` when the
+/** 🐁️ The LAST `hover` row of a drained batch — the engine's live answer; `undefined` when the
  * batch carries none (leave the current hover alone), `null` when the pointer left every entity. */
 export function latestBoard2dHoverId(rows: readonly BoardEventRow[]): string | null | undefined {
   let hovered: string | null | undefined;
@@ -225,7 +225,7 @@ export function latestBoard2dHoverId(rows: readonly BoardEventRow[]): string | n
   return hovered;
 }
 
-/** @emoji 💡️ One placement candidate row of the handle-suggestions popup. */
+/** 💡️ One placement candidate row of the handle-suggestions popup. */
 export type Board2dSuggestionCandidate = {
   readonly index: number;
   /** 🔦️ The candidate's key in the board's `toolRunTrace` lane — hovering its row focuses exactly that placement.
@@ -237,7 +237,7 @@ export type Board2dSuggestionCandidate = {
   readonly color?: string;
 };
 
-/** @emoji 💡️ The open handle-suggestions popup the guest published, or `null` when this board has none.
+/** 💡️ The open handle-suggestions popup the guest published, or `null` when this board has none.
  * `pending` means the slot has not resolved yet; an empty `candidates` on a resolved slot is the polite
  * refusal a document with no free handle (Nakagin) gives. */
 export type Board2dSuggestionMenu = {
@@ -277,14 +277,14 @@ export function parseBoard2dSuggestionMenu(encoded: string | null | undefined): 
   }
 }
 
-/** @emoji 🪟️ True when THIS pane owns the open popup — a menu naming no window is owned by whichever
+/** 🪟️ True when THIS pane owns the open popup — a menu naming no window is owned by whichever
  * pane renders it, exactly like `worldSuggestionMenuOwnsWindow`. */
 export function board2dSuggestionMenuOwnsWindow(menu: Board2dSuggestionMenu | null, windowInstanceId: string | undefined): boolean {
   if (!menu?.open) return false;
   return !menu.windowId || menu.windowId === windowInstanceId;
 }
 
-/** @emoji 💡️ The popup's rows: hovering one PREVIEWS it (`hoverSuggestion`), clicking one places it
+/** 💡️ The popup's rows: hovering one PREVIEWS it (`hoverSuggestion`), clicking one places it
  * (`acceptSuggestion`). `closeOnSelect={false}` plus these two actions is what makes the preview a
  * "just looking" state distinct from the commit. */
 export function board2dSuggestionMenuItems(menu: Board2dSuggestionMenu, labels: { readonly checkingPlacement: string; readonly noPlacement: string }): ContextMenuItemSpec[] {
@@ -310,7 +310,7 @@ export function board2dSuggestionMenuItems(menu: Board2dSuggestionMenu, labels: 
 const PUZZLE2D_TRANSIENT_EVENT_NAMES = new Set(["preselect", "brushPreview", "linkCompatibleNodes", "linkTargetRing", "transformPreview", "hover"]);
 const PUZZLE2D_FLUSH_NOW_EVENT_NAMES = new Set(["select", "preselectCancel", "brushCandidates", "brushPlace", "edgeCreate", "edgeDelete", "nodeDelete", "nodeRotate", "regionCreate", "regionMove", "regionResize"]);
 
-/** @emoji 📬️ Drops transient rows, coalesces `camera` to its latest value and `nodeMove` to one row per id (unless a `nodeDragEnd` follows), and flags whether the buffer should flush immediately. */
+/** 📬️ Drops transient rows, coalesces `camera` to its latest value and `nodeMove` to one row per id (unless a `nodeDragEnd` follows), and flags whether the buffer should flush immediately. */
 export function coalesceBoard2dEvents(rows: readonly BoardEventRow[]): { readonly flushNow: boolean; readonly eventsJson: string } {
   const hasDragEnd = rows.some((row) => row.name === "nodeDragEnd");
   let flushNow = false;
@@ -343,7 +343,7 @@ export function coalesceBoard2dEvents(rows: readonly BoardEventRow[]): { readonl
   return { flushNow, eventsJson: JSON.stringify(coalesced) };
 }
 
-/** @emoji 🐢️ Live cross-pane mirror payload extracted from a batch of freshly-drained rows — positions/selection/preselect only, everything else (camera, brush/link chrome, hover) stays pane-local. */
+/** 🐢️ Live cross-pane mirror payload extracted from a batch of freshly-drained rows — positions/selection/preselect only, everything else (camera, brush/link chrome, hover) stays pane-local. */
 export type Puzzle2dLiveMirrorMutations = {
   readonly positions: readonly { readonly id: string; readonly x: number; readonly y: number }[];
   readonly selectionIds: readonly string[] | null;
@@ -356,7 +356,7 @@ function stringArray(value: unknown): readonly string[] {
 }
 
 /**
- * @emoji 🐢️ Classifies a batch of raw board-event rows (as seen straight off `drainEventsJson`, before
+ * 🐢️ Classifies a batch of raw board-event rows (as seen straight off `drainEventsJson`, before
  * the transient-event filter/coalescer runs) into the subset worth mirroring imperatively into sibling
  * panes: latest node position per id (from `nodeMove` frames and/or a terminal `nodeDragEnd`), and the
  * live selection/preselect state (`select`/`preselectCancel` commit or restore selection and clear
@@ -422,7 +422,7 @@ function puzzle2dEntityFlag(entity: Record<string, unknown> | undefined, key: "h
   return Boolean(entity && entity[key] === true);
 }
 
-/** @emoji 🖱️ Right-click menu for the current selection: Hide/Show, Lock/Unlock, Duplicate, Select same kind, Zoom to selection, Delete — mirrors the premigration canvas context menu. */
+/** 🖱️ Right-click menu for the current selection: Hide/Show, Lock/Unlock, Duplicate, Select same kind, Zoom to selection, Delete — mirrors the premigration canvas context menu. */
 //#endregion SelectionMenu
 
 //#region FixtureDrop
@@ -433,7 +433,7 @@ function finitePositive(value: number | undefined): number | undefined {
   return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : undefined;
 }
 
-/** @emoji 👻️ Builds a world-space fixture-drop preview so every peer pane shares the same ghost (screen coords would desync under different cameras). A part row that names only its kind still paints: a circle falls back to the 5d default radius and a rectangle to that diameter. */
+/** 👻️ Builds a world-space fixture-drop preview so every peer pane shares the same ghost (screen coords would desync under different cameras). A part row that names only its kind still paints: a circle falls back to the 5d default radius and a rectangle to that diameter. */
 export function puzzle2dFixtureDropPreviewJson(payload: Puzzle2dFixtureDropPayload, worldX: number, worldY: number): string {
   const rectangle = payload.shape === "rectangle";
   return JSON.stringify({
@@ -450,14 +450,14 @@ export function puzzle2dFixtureDropPreviewJson(payload: Puzzle2dFixtureDropPaylo
 
 export type BoardCatalogueDropRect = { readonly left: number; readonly top: number; readonly right: number; readonly bottom: number };
 
-/** @emoji 🎯️ True when a client point sits inside a board pane's viewport box. */
+/** 🎯️ True when a client point sits inside a board pane's viewport box. */
 export function boardCatalogueDropPointOverRect(clientX: number, clientY: number, rect: BoardCatalogueDropRect): boolean {
   return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
 }
 
 const boardCatalogueDropHostHitTests = new Map<string, { readonly controllerId: string; readonly hitTest: (clientX: number, clientY: number) => boolean }>();
 
-/** @emoji 🎯️ Registers a board pane's hit-test so one pane does not clear the shared ghost while the pointer is over a sibling pane of the same controller. */
+/** 🎯️ Registers a board pane's hit-test so one pane does not clear the shared ghost while the pointer is over a sibling pane of the same controller. */
 export function registerBoardCatalogueDropHost(controllerId: string, hostId: string, hitTest: (clientX: number, clientY: number) => boolean): () => void {
   const key = `${controllerId}\0${hostId}`;
   boardCatalogueDropHostHitTests.set(key, { controllerId, hitTest });
@@ -466,7 +466,7 @@ export function registerBoardCatalogueDropHost(controllerId: string, hostId: str
   };
 }
 
-/** @emoji 🎯️ True when any registered board pane of `controllerId` contains the client point. */
+/** 🎯️ True when any registered board pane of `controllerId` contains the client point. */
 export function boardCatalogueDropHostContainsPoint(controllerId: string, clientX: number, clientY: number): boolean {
   for (const entry of boardCatalogueDropHostHitTests.values()) {
     if (entry.controllerId !== controllerId) continue;
@@ -475,7 +475,7 @@ export function boardCatalogueDropHostContainsPoint(controllerId: string, client
   return false;
 }
 
-/** @emoji 📐️ Inverse of the canonical `screenX = (worldX - camera.x) * zoom + width / 2` transform shared across board renderers. */
+/** 📐️ Inverse of the canonical `screenX = (worldX - camera.x) * zoom + width / 2` transform shared across board renderers. */
 export function puzzle2dScreenToWorld(cameraJson: string, containerSize: { readonly w: number; readonly h: number }, screen: { readonly x: number; readonly y: number }): { readonly x: number; readonly y: number } | null {
   const camera = parseBoardCamera(cameraJson);
   if (!camera) return null;
@@ -486,7 +486,7 @@ export function puzzle2dScreenToWorld(cameraJson: string, containerSize: { reado
   };
 }
 
-/** @emoji 📐️ The canonical `screenX = (worldX - camera.x) * zoom + width / 2` transform shared across
+/** 📐️ The canonical `screenX = (worldX - camera.x) * zoom + width / 2` transform shared across
  * board renderers — the missing inverse of {@link puzzle2dScreenToWorld}, needed for demonstration
  * targeting (a world point/entity → the viewport pixel a ghost cursor animates to). */
 export function puzzle2dWorldToScreen(cameraJson: string, containerSize: { readonly w: number; readonly h: number }, world: { readonly x: number; readonly y: number }): { readonly x: number; readonly y: number } | null {
@@ -499,12 +499,12 @@ export function puzzle2dWorldToScreen(cameraJson: string, containerSize: { reado
   };
 }
 
-/** @emoji 🤏️ The zoom bounds a board camera may never leave — the SAME `ZOOM_MIN`/`ZOOM_MAX` the Rust
+/** 🤏️ The zoom bounds a board camera may never leave — the SAME `ZOOM_MIN`/`ZOOM_MAX` the Rust
  * engine's `clamp_zoom` applies (`♾️infinite/🖼️canvas/🦀️.rs`), read from the generated styling token
  * table so a pinch and a wheel can never disagree about the ceiling. */
 export const BOARD_2D_ZOOM_BOUNDS = { min: STYLING_METRICS.camera.zoomMin, max: STYLING_METRICS.camera.zoomMax } as const;
 
-/** @emoji 🤏️ Applies one two-finger step to the board camera carried by `cameraJson`, returning the pose
+/** 🤏️ Applies one two-finger step to the board camera carried by `cameraJson`, returning the pose
  * the host writes back silently. Pure: the whole pinch law is `🕹️interaction/👆️gesture`'s
  * {@link applyPinchToCamera} plus this surface's own bounds — nothing here is board-specific except
  * where the camera is read from. `null` when the camera JSON is unreadable. */
@@ -516,7 +516,7 @@ export function board2dPinchCamera(cameraJson: string, step: Parameters<typeof a
 //#endregion FixtureDrop
 
 //#region Sync
-/** @emoji 🔁️ Applies one scene sync through the demand handle: its calls invalidate the canvas, so every sync of one React
+/** 🔁️ Applies one scene sync through the demand handle: its calls invalidate the canvas, so every sync of one React
  * commit paints ONE coalesced frame instead of one synchronous full repaint each (ticket 26/09/23 F1: one scene update
  * repainted a board up to 16 times). */
 function applyToSession(session: Board2dWasmSession | null, action: (session: Board2dWasmSession) => void): void {
@@ -528,7 +528,7 @@ function applyToSession(session: Board2dWasmSession | null, action: (session: Bo
   }
 }
 
-/** @emoji 🔁️ Re-parses the fixture and silently re-applies selection/camera, since `parseFixtureJson` resets both to the fixture's own defaults. */
+/** 🔁️ Re-parses the fixture and silently re-applies selection/camera, since `parseFixtureJson` resets both to the fixture's own defaults. */
 function applyFixtureToSession(session: Board2dWasmSession, scene: Board2dScene): boolean {
   const parsed = session.parseFixtureJson(scene.fixtureJson);
   if (!parsed) {
@@ -582,7 +582,7 @@ export function endPuzzle2dPeerGesture(scope: BoardPeerScope, controllerId: stri
   if (owner?.surfaceId === surfaceId && owner.peer === peer) scope.gestures.delete(controllerId);
 }
 
-/** @emoji 🙅️ True when a *different* pane owns the live gesture for this controller — the caller should defer applying an echoed scene. */
+/** 🙅️ True when a *different* pane owns the live gesture for this controller — the caller should defer applying an echoed scene. */
 export function puzzle2dPeerOwnsGesture(scope: BoardPeerScope, controllerId: string, surfaceId: string): boolean {
   const owner = scope.gestures.get(controllerId);
   return owner !== undefined && owner.surfaceId !== surfaceId;
@@ -616,7 +616,7 @@ export function notifyPuzzle2dPeersGestureEnded(scope: BoardPeerScope, controlle
   }
 }
 
-/** @emoji 👻️ Pushes a world-space catalogue fixture-drop ghost into every pane of `controllerId` (including the source). */
+/** 👻️ Pushes a world-space catalogue fixture-drop ghost into every pane of `controllerId` (including the source). */
 export function pushPuzzle2dFixtureDropPreview(scope: BoardPeerScope, controllerId: string, previewJson: string | null): void {
   const peers = scope.peers.get(controllerId);
   if (!peers) return;
@@ -679,7 +679,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
     [peerScope, node.controllerId, node.surfaceId, onAction],
   );
 
-  /** @emoji 🏁️ `dispatch`'s awaitable twin — the only shape {@link createCoalescingActionDispatcher}'s
+  /** 🏁️ `dispatch`'s awaitable twin — the only shape {@link createCoalescingActionDispatcher}'s
    * "at most one round trip outstanding" gate can actually arm, since `dispatch` throws `onAction`'s
    * promise away (World3dHost wave B33: 72 hover turns enqueued by one 70-move storm, 11 settled). */
   const dispatchSettled = useCallback(
@@ -687,7 +687,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
     [node.controllerId, node.surfaceId, onAction],
   );
 
-  /** @emoji 💡️ The popup is a per-window surface, so the verbs that open, preview, place or close it
+  /** 💡️ The popup is a per-window surface, so the verbs that open, preview, place or close it
    * carry the exact window instance they belong to — a sibling pane must not adopt another pane's menu. */
   const dispatchSuggestion = useCallback(
     (action: string, args?: Record<string, unknown>) => {
@@ -702,7 +702,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
   const mapSuggestionMenu = useMapContextMenuSpecs(dispatchSuggestion);
   const shellContextMenuFallback = useShellContextMenuFallback();
 
-  /** @emoji 🩺️ Republishes the live probe vitals straight onto the container, the way
+  /** 🩺️ Republishes the live probe vitals straight onto the container, the way
    * `data-board-fixture-parsed` already is: a gumball drag and a marquee update these every frame, and
    * routing that through React state would re-render the whole pane on each pointer move. */
   const publishBoardVitals = useCallback((): void => {
@@ -726,7 +726,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
   const publishBoardVitalsRef = useRef(publishBoardVitals);
   publishBoardVitalsRef.current = publishBoardVitals;
 
-  /** @emoji 🎞️ Coalesces renderFrame() to at most one per animation frame, no matter how many raw pointer/wheel events fire in
+  /** 🎞️ Coalesces renderFrame() to at most one per animation frame, no matter how many raw pointer/wheel events fire in
    * between, through the one shared demand scheduler — the paint also republishes the probe vitals. */
   const scheduleRender = useCallback((): void => {
     vitalsPendingRef.current = true;
@@ -816,7 +816,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
   const granularityByIdRef = useRef(granularityById);
   granularityByIdRef.current = granularityById;
   const interactionDomainId = scene?.domainId;
-  /** @emoji 🩺️ Imperative mirror of the painted hover — no React state, so a pointermove never re-renders the host. */
+  /** 🩺️ Imperative mirror of the painted hover — no React state, so a pointermove never re-renders the host. */
   const publishHoverPaint = useCallback((id: string | null) => {
     const container = containerRef.current;
     if (!container) return;
@@ -824,7 +824,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
     else container.setAttribute("data-board-hover-paint-id", id);
   }, []);
 
-  /** @emoji 🖱️ Transitive KIND hover: pointing at a catalogue kind row anywhere in the chrome paints every
+  /** 🖱️ Transitive KIND hover: pointing at a catalogue kind row anywhere in the chrome paints every
    * node/handle/edge of that kind on EVERY board pane, the 2d twin of puzzle 3d's `hoveredKindId`. The
    * engine already owns the whole mechanism (`set_hovered_kind_silent` → `ids_matching_kind_hover` →
    * `hovered_style_kind`); nothing called it, which is why 2B had to leave the catalogue rows unbound.
@@ -858,7 +858,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
       paint(null);
     };
   }, [sessionEpoch]);
-  /** @emoji 🐁️ At most one `interactionHover` round trip outstanding, the rest coalesced onto the latest
+  /** 🐁️ At most one `interactionHover` round trip outstanding, the rest coalesced onto the latest
    * target — the board twin of `World3dHost`'s `dispatchInstanceHover`. An app declaring no interaction
    * domain publishes nothing rather than dispatching a verb no window kind owns. */
   const dispatchBoardHover = useMemo(
@@ -921,7 +921,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
     dispatchBufferedEvents();
   }, [drainIntoBuffer, dispatchBufferedEvents]);
 
-  /** @emoji 🩺️ Records one fixture-apply verdict into the status vitals and republishes them, so a
+  /** 🩺️ Records one fixture-apply verdict into the status vitals and republishes them, so a
    * refused fixture names itself in the DOM instead of only in the console. */
   const recordFixtureVerdict = useCallback(
     (applied: Board2dScene, parsed: boolean): void => {
@@ -946,7 +946,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
     [peerScope, node.controllerId, node.surfaceId, recordFixtureVerdict],
   );
 
-  /** @emoji 🐢️ Mirror of `applyPendingFixtureIfReady` for the selection-only echo — a peer-owned gesture defers the plugin's `selectionJson` so it doesn't clobber a mirrored preselect highlight mid-marquee. */
+  /** 🐢️ Mirror of `applyPendingFixtureIfReady` for the selection-only echo — a peer-owned gesture defers the plugin's `selectionJson` so it doesn't clobber a mirrored preselect highlight mid-marquee. */
   const applyPendingSelectionIfReady = useCallback(
     (session: Board2dWasmSession): void => {
       const pendingSelectionJson = pendingSelectionJsonRef.current;
@@ -974,7 +974,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
   };
 
   /**
-   * @emoji 🫧️ Call when a gesture on this pane ends, right before flushing. Drains first so we know
+   * 🫧️ Call when a gesture on this pane ends, right before flushing. Drains first so we know
    * whether a commit is about to go out; if so, drops any pending fixture/selection stashed mid-gesture
    * instead of applying it — that stashed snapshot is stale (typically from an early mid-gesture flush,
    * e.g. the `select` event a node-drag's pointerdown pushes) and the flush response due back in a moment
@@ -997,7 +997,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
     [applyPendingFixtureIfReady, applyPendingSelectionIfReady, drainIntoBuffer],
   );
 
-  /** @emoji 🐁️ Marks a wheel-zoom gesture in flight so scene-driven camera echoes (which lag several ticks behind during a fast scroll) don't fight the live local zoom — mirrors `defersDescriptorSyncFromJs` for pan/drag, which the engine doesn't track for wheel. */
+  /** 🐁️ Marks a wheel-zoom gesture in flight so scene-driven camera echoes (which lag several ticks behind during a fast scroll) don't fight the live local zoom — mirrors `defersDescriptorSyncFromJs` for pan/drag, which the engine doesn't track for wheel. */
   const beginCameraInteraction = useCallback((): void => {
     cameraInteractionActiveRef.current = true;
     if (cameraSettleTimeoutRef.current) clearTimeout(cameraSettleTimeoutRef.current);
@@ -1322,7 +1322,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
       return { x: clientX - rect.left, y: clientY - rect.top };
     };
 
-    /** @emoji 🤏️ Abandons the single-pointer lane the moment a SECOND contact lands: the marquee/pick
+    /** 🤏️ Abandons the single-pointer lane the moment a SECOND contact lands: the marquee/pick
      * gesture the first finger started must not keep growing under a pinch, and its pointer capture must
      * not swallow the second finger's moves. */
     const yieldToPinch = (session: Board2dWasmSession, point: { x: number; y: number }): void => {
@@ -1429,7 +1429,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
       notifyPuzzle2dPeersGestureEnded(peerScope, node.controllerId, node.surfaceId, flushed);
     };
 
-    /** @emoji 🐁️ Wheel-zoom stays instant locally (WASM renders every tick via `scheduleRender`); only the React-visible camera echo and event flush are deferred until the gesture settles via `beginCameraInteraction`'s timeout. */
+    /** 🐁️ Wheel-zoom stays instant locally (WASM renders every tick via `scheduleRender`); only the React-visible camera echo and event flush are deferred until the gesture settles via `beginCameraInteraction`'s timeout. */
     const onWheel = (event: WheelEvent): void => {
       event.preventDefault();
       event.stopPropagation();

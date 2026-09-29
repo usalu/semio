@@ -1158,6 +1158,12 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     }
 
     /// ⏯️ Host-driven routing of the §2.5 actions: applied to the ledger now, never queued behind the run.
+    ///
+    /// 🧯️ A rejection REPAINTS the panel. The panel's buttons carry the run identity captured when
+    /// the panel last rendered, and a settings change bumps the live generation — so a stale press
+    /// was rejected, published `UiDirtyScope::None`, and therefore left the same stale identity on
+    /// the button: every later press was silently rejected too, forever. Measured 2026-09-17 on a
+    /// ◻️2d fill that stayed `Paused · Searching an open handle (2/5)` for 30 s after Abort.
     pub(crate) async fn dispatch_tool_run_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
         let outcome = self.apply_tool_run_action(action, args, meta).await?;
         let output = match outcome {
@@ -1167,11 +1173,6 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         let ui_scope = match outcome {
             ToolRunActionOutcome::Applied(ToolRunEffect::SpawnJob) => UiDirtyScope::Full,
             ToolRunActionOutcome::Applied(_) => self.tool_runs.dirty_scope(),
-            // 🧯️ A rejection REPAINTS the panel. The panel's buttons carry the run identity captured when
-            // the panel last rendered, and a settings change bumps the live generation — so a stale press
-            // was rejected, published `UiDirtyScope::None`, and therefore left the same stale identity on
-            // the button: every later press was silently rejected too, forever. Measured 2026-09-17 on a
-            // ◻️2d fill that stayed `Paused · Searching an open handle (2/5)` for 30 s after Abort.
             ToolRunActionOutcome::Rejected(_) => self.tool_runs.dirty_scope(),
         };
         let mut result = Self::empty_result(action, meta, Vec::new(), Vec::new(), ui_scope).await;
@@ -1189,6 +1190,11 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     }
 
     /// ⚖️ [`Self::apply_tool_run_action`] on the run the action addresses: its `runId`, else the primary run.
+    ///
+    /// 🛑️ An abort is idempotent in the generation: it ends the run whatever that run was last
+    /// reconfigured to, exactly as `Dismiss` above already ignores generation entirely. Checking
+    /// the button's captured generation made Abort unreachable after any settings change — the
+    /// one control whose whole job is to get out of a run it cannot otherwise leave.
     async fn apply_selected_tool_run_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta) -> Result<ToolRunActionOutcome, Fault> {
         let Some(action) = ToolRunAction::from_id(action) else {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("toolRun.unknown-action"), format!("'{action}' is not a tool run action")));
@@ -1215,10 +1221,6 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             (ToolRunAction::Step, Some(generation)) => ToolRunEvent::Step { run, generation },
             (ToolRunAction::Finalize, Some(generation)) => ToolRunEvent::Finalize { run, generation },
             (ToolRunAction::Abort, Some(generation)) => {
-                // 🛑️ An abort is idempotent in the generation: it ends the run whatever that run was last
-                // reconfigured to, exactly as `Dismiss` above already ignores generation entirely. Checking
-                // the button's captured generation made Abort unreachable after any settings change — the
-                // one control whose whole job is to get out of a run it cannot otherwise leave.
                 let generation = self.tool_runs.slot().filter(|slot| slot.run == run).map_or(generation, |slot| slot.generation);
                 let publishing = selected_entry!(self.tool_runs).and_then(|entry| entry.finalize.as_ref()).is_some_and(|finalize| {
                     finalize.published
@@ -1829,6 +1831,8 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         Ok(())
     }
 
+    /// ♻️ Each folded op leaves the root it was prepared against returned to the Store; reclaim it before the
+    /// next fold, or a large finalize keeps one whole document per op (see `reclaim_document_snapshot_read_returns`).
     async fn publish_tool_run(&mut self, deadline: u64) -> Result<(), Fault> {
         let entry = selected_entry_mut!(self.tool_runs).expect("finalizing slot");
         let (run, generation) = (entry.slot.run, entry.slot.generation);
@@ -1853,8 +1857,6 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             }
         }
         loop {
-            // ♻️ Each folded op leaves the root it was prepared against returned to the Store; reclaim it before the
-            // next fold, or a large finalize keeps one whole document per op (see `reclaim_document_snapshot_read_returns`).
             if !self.reclaim_document_snapshot_read_returns(PUBLICATION_SNAPSHOT_READ_RECLAIM_STEPS)? {
                 if semio_framework_job::default_now_us().is_none_or(|now| now >= deadline) {
                     return Ok(());
@@ -1892,6 +1894,9 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         }
     }
 
+    /// 🎨️ The finalize SUCCEEDED, so the provisional ops are released — but the run's payload is
+    /// its result, not provisional work, and its declared windows keep rendering it once the run
+    /// is `Finalized`. See `ToolRunLedger::release_provisional`.
     fn close_tool_run_publication(&mut self) -> Result<(), Fault> {
         let entry = selected_entry_mut!(self.tool_runs).expect("finalizing slot");
         let (run, generation) = (entry.slot.run, entry.slot.generation);
@@ -1908,9 +1913,6 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         if self.apply_tool_run_driver_event(ToolRunEvent::PublicationComplete { run, generation }) == Some(ToolRunEffect::ReleaseProvisional) {
             let store_generation = self.store.generation();
             let head = self.store.snapshot_owner();
-            // 🎨️ The finalize SUCCEEDED, so the provisional ops are released — but the run's payload is
-            // its result, not provisional work, and its declared windows keep rendering it once the run
-            // is `Finalized`. See `ToolRunLedger::release_provisional`.
             self.tool_runs.release_provisional(true);
             let entry = selected_entry_mut!(self.tool_runs).expect("finalized slot");
             entry.replace_base(head);
@@ -2031,6 +2033,12 @@ fn tool_run_panel_ready_group(tool_id: &str, controller_id: &str, locale: Locale
 
 /// 🪧️ One run's panel group (§2.6): polite status, progressbar, real buttons with `aria-keyshortcuts` addressing the
 /// run by id, step log (live off) and a keyboard-navigable trace list; every id is scoped `framework.toolRun.<run>.`.
+///
+/// 👁️ The throttle belongs to the ANNOUNCEMENT, never to the text. Publishing the last ANNOUNCED
+/// string froze the visible pill at whatever stage the run was in when it was first announced:
+/// a `Finalized` run still read `Evaluating nodes (1/2)` on 6021 at 18:28 while its own progress
+/// bar had moved on (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). A sighted reader is watching the
+/// same string a reader hears, so the string is always current and only `live` is rationed.
 fn tool_run_panel_group<A: ArtifactApp>(entry: &mut ToolRunEntry<A>, controller_id: &str, locale: Locale, label: &str) -> UiAssemblyResult<BuiltNode> {
     let error = ui_assembly_error;
     let scope = semio_framework_tool_run::tool_run_panel_group_id(entry.slot.run);
@@ -2039,11 +2047,6 @@ fn tool_run_panel_group<A: ArtifactApp>(entry: &mut ToolRunEntry<A>, controller_
     let stage_label = entry.definition.stage(entry.stage).map_or_else(String::new, |stage| stage.label.resolve(Terminology::Native, locale).to_string());
     let status = format!("{} · {stage_label} ({}/{stage_count})", tool_run_state_label(state).text(locale), usize::from(entry.stage) + 1);
     let now_ms = semio_framework_job::default_now_ms().unwrap_or(0);
-    // 👁️ The throttle belongs to the ANNOUNCEMENT, never to the text. Publishing the last ANNOUNCED
-    // string froze the visible pill at whatever stage the run was in when it was first announced:
-    // a `Finalized` run still read `Evaluating nodes (1/2)` on 6021 at 18:28 while its own progress
-    // bar had moved on (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). A sighted reader is watching the
-    // same string a reader hears, so the string is always current and only `live` is rationed.
     let announce = match entry.announced.as_ref() {
         Some((announced_state, at, announced)) => *announced_state != state || (*announced != status && now_ms.saturating_sub(*at) >= TOOL_RUN_STATUS_ANNOUNCE_INTERVAL_MS),
         None => true,

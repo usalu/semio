@@ -71,5 +71,4 @@ export function testJackGraphWindowConfigOracle(): void {
   assert.deepEqual(reloadedEditors, editors);
   assert(Object.values(resetResults).every((state) => validateResults(state)));
   assert.notDeepEqual(results["results-left"], results["results-right"]);
-  console.log("[DEBUG] Jack window ownership oracle: independent graph settings, editor query sources, results outputs, generations, persisted source reload, and transient reset");
 }

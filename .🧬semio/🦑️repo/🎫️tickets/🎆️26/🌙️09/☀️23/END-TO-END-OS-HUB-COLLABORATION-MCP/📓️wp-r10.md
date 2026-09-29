@@ -15,7 +15,13 @@ Successor agent (2026-09-28 21:0x, wave B at WINDOW 3 OPEN). Train T0 (taxonomy 
 | C1 | Pending wave-B relays into the window-3 input | DONE — program-matrix / interaction-latency / boot-budget reducers + Panel `🧩️component` (live dirs, refresh scope += ui Panel); S18 `🗂️set-named-layout`, SH2 route-B dirs, Z4 `🔁️lifecycle` (prepared-set dirs, simulation root); WG11 target + 8 checks HELD (verb lands in T3) | §14c log 21:0x |
 | C2 | T0 serial landing (taxonomy → discovery → targets → seed → render → plan) | DONE 21:30 — every step probe + boot green; registry check rc 0; launch laws 7/7; plan 63 checks, 66/66 targets declared; "T0 DONE" sent | landing rows 21:19–21:30 |
 | C3 | `three-mesh-bvh` behind the ui module (relay) | LANDED 21:46 (host TS) — ui re-export, r3f routed, policy owner row, census fixture; manifests → T4 via extended `three-manifests.py` | landing row 21:46 |
-| C4 | Held follow-ups | WG11 `hub-collaboration-acceptance` target + 8 plan checks after `wg11-harness-land.py` (T3); `st2-apply.py --part r10` (T2) and T5 codemods when L1 asks | — |
+| C5 | New-dir registration pass (coordinator 00:0x / 02:5x) | LANDED 03:31 in L1's slot (probe-only, rule 25) — 11 names for the 14 dirs landed since T0, re-probe 0 unresolved; registry check + boot ride the st2-r10 step; C12/AV2/WG11 prepared dirs parked until their T3 sets land | landing row 03:31 |
+| C6 | T2 `st2-r10` | WRITTEN 03:45 (L1 handoff) — set applied + `🏘️composition` children registered + launch.json re-rendered (1 419); verify (registry check + launch laws + boot) after L1's post-describe generate; was: READY — `st2-apply --dry-run --part r10` clean on the live post-T1 tree and over the candidate taxonomy; runner step `st2-r10` (backup + `.r10-manifest.json` revert, new-unresolved diff → taxonomy, render, launch laws, registry check, boot after lanes idle) | §14c log 02:5x |
+| C7 | T3 new-dir pass + WG11 held rows | LANDED 04:48 / 04:52 — 42 names (175/183 T3 dirs; 8 left under unresolved live ancestors), WG11 target + 8 checks (plan 71, targets 74/74, launch 1 420, laws 7/7) | landing rows 04:48, 04:52 |
+| C8 | T4 new-dir pass | LANDED 05:49 — 13 names (table-row-grid, row-capacity, `🖌️raster` + `🎥️video`, gltf `🧊️mutate-gltf-2-0` + 7 scenarios); left only `🐳️containers/🔁️lifecycle`; my T4 laws after L1 reports T4 green | landing row 05:49 |
+| C9 | T5 text codemods | WRITTEN 06:55 — `[DEBUG]`→`[TRACE]` (1 931 / 641 + 87 prints restored), comment-hoist wave 1 (1 333 / 127), `@emoji` (9 155 / 814; NUL-sentinel bug fixed); gates debug-tags + at-emoji PASS; compile = L1's combined proof | landing row 06:55 |
+| C10 | T4 R10 laws | DONE — frozen-lockfile dry run rc 0, literal-external oracle conflicts 6 → 2, toolchain 2 → 0; zip_archive 6/6, raster law 1/1, surface 258/258 | landing rows 06:10, 07:12 |
+| C4 | Held follow-ups | ~~WG11 target + 8 plan checks~~ (done 04:52); `st2-apply.py --part r10` (T2) and T5 codemods when L1 asks | — |
 
 #### Session 14c log
 
@@ -44,6 +50,47 @@ Successor agent (2026-09-28 21:0x, wave B at WINDOW 3 OPEN). Train T0 (taxonomy 
   (0 in r3f/ui), source-census 26/26, `verify interface-owners` PASS (0 / 6 146, oracle agrees), dependency self-test clean, boot PASS,
   matrix lowpoly + cad en 2/2. `three-manifests.py` (T4, L1) now also drops it from r3f and declares `^0.9.14` in the ui target (lock
   blocks textual); scratch apply idempotent. fem already declares three / three-mesh-bvh / manifold as devDependencies (probes).
+- 00:0x–02:5x (usage cut 00:1x, reboot, 4 kernel panics, 01:14 sweep in between). Sweep deleted `wp-r10/generated/` (kinds inputs,
+  window3 backups, T5 dry-run outputs) → every input/output/backup of the window-3 tooling now lives in `.🧬semio/🌐hub/s14-r10-state/`
+  (`window3-apply.ts` STATE + `KINDS()` = every `tax-kinds-*.json` there; `window3-run.sh`, `debug-trace.ts`, `comment-hoist.ts`).
+  T0's revert backups are gone (T0 green, landed; the landing rows name every change).
+- **New dirs since T0** (HEAD 27d829d8a5 vs dfe2687f7d + untracked; `s14-r10-state/s14c-new-dirs-since-t0.txt`), live kinds probe
+  (`probe-s14c-new-live.json`): unresolved and registered by the pass = writer + puzzle 2d/5d/3d `🧪️tests/🤖️agent-lane` (P9), writer
+  `🧫️fixtures/🔁️hub-tail-after-check-in`, stdio contract `🎟️details-arena-headroom` (tests / editing fixtures / editing schema) +
+  `📊️table-arena-headroom` (tests / fixtures) (LB2 T1), `🔏️hash/🧪️tests/🧮️blake3`, plugin `🧪️tests/🤖️agent-lane-preview` (P9),
+  `🏪️store/👷️worker/🚑️actor-recovery` + `💻️os/🧪️tests/🚑️actor-recovery` (S18) → **11 names** (members-of-tests 6, -fixtures 3,
+  -schema 1, members-of-members-of-members-of-modules 1); validator 0, additive, 0 new conflicts. Already resolved: forms mode lanes
+  (W4), Panel `🧩️component` + dev reducers (T0), hub `🚦️rate-limit-refusal-v1` (H13 registered it after T0). G12's scoped offers and
+  `select` fixture cases edit existing files (no new dir).
+- Prepared-set dirs (simulation, `taxonomy-planned.py` now generic: `--set`, `--tree`, `--placeholder`, live diff built in) — PARKED
+  for T3 per coordinator (`s14-r10-state/pending-t3-kinds-s14c-planned.json`): C12 `🎬️scene/{,🧪️tests,🧫️fixtures,🧬️schema}/✂️text-splice`,
+  AV2 kernel `🎞️video-render-program` / `🧵️video-render-job` (tests + fixtures), raster `🎥️video/🧪️tests/🎞️ffmpeg-decode`, WG11
+  `📇️directory/🔌️client/🤖️agent-delegations`. `🖌️raster/🎥️video` itself stays unresolved (live `🖌️raster` is unresolved).
+  FINDING (relayed, coordinator restored them from HEAD): 52 tracked ticket files were missing (wp-c12 19, wp-av2 4, wp-en2 29).
+- T2 `st2-r10`: dry run clean on the live post-T1 tree (9 edits, 9 new `📋️project.json`, `🧩️composition` → `🏘️composition`) and in a
+  scratch root over the candidate taxonomy. Runner rule-25 aware: registry check + boot wait until every lane lock is gone and load
+  < 32; `--probe-only` + `verify` split for landings during busy lanes.
+- 03:31 new-dir pass LANDED in L1's slot (landing row 03:31). 03:4x **st2-r10 WRITTEN** (landing row 03:45): the move left
+  `🏘️composition/{🏃️commands,🏗️build}` unresolved → new `members-of-composition` (ST2 confirmed 03:5x: right kind, the gap was its r10
+  transform). Registry check red only "catalog is stale" (expected until L1 describes the 9 families and regenerates) → `verify` after
+  L1's T2 generate. One `plugin-registry:generate` run of mine (rc 0) touched only the gitignored `🤖️generated/` outputs.
+- 04:35 T2 verify: registry check stale (T3 sets were being written 04:28–04:37: `media.video-render`, `flow.extension`) → new read-only
+  `wp-r10/registry-check-probe.ts` (the check's gates without the stale early exit): launch fresh, playground + sessions 0, plugin
+  taxonomy tree 0 (areas clean), descriptor gate 4 errors = T3's (space verbs reclassified by SH2, animate JSON/pack) → regenerated by
+  the next chain's rebuild-all per L1 (`s14-r10-logs/registry-check-probe-1.txt`).
+- 04:4x T3 new-dir pass (183 new dirs, 22 scopes, 3 register passes against the growing candidate; 51 → 23 → 8 unresolved; the 8 sit
+  under unresolved live ancestors) LANDED 04:48 in L1's slot; 04:52 WG11 held target + 8 checks released (verb present).
+  Open for later: boot + registry check when lanes are idle (rule 25); the post-T4 pass for the pre-existing unresolved dirs
+  (146 in config/ShellHost/host tests/space home/caching + the 8 above + forms `✍️fill`).
+- 05:49 T4 new-dir pass (13 names incl. `🖌️raster`/`🎥️video` + gltf `🧊️mutate-gltf-2-0` + 7 scenarios; only `🐳️containers/🔁️lifecycle`
+  left). 06:0x T4 laws partial (frozen lockfile rc 0; literal-external conflicts 6 → 2). 06:4x–06:55 **T5 WRITTEN**: codemod traps
+  handled — (a) deleted test prints that emptied a block (`if let Err(error) = … { }`, `for … { }`, else/match arms) or orphaned a
+  binding → restored tag-less (`t5-restore-emptied.py`, 87 lines; heuristic ±30-line window, so L1's compile may still show a few
+  `unused variable` warnings); (b) `@emoji` codemod's `\u0000` sentinel cut every line holding a raw NUL (5 host TSX files: ShellHost,
+  PluginRuntime, NodeGraph, Interpreter, AgentDelegations test) → fixed (cut only on picked lines), restored, re-applied, all 9 155
+  changed lines proven token-only; (c) comment-hoist is not idempotent on a second pass (it would re-hoist nested items' `///`) →
+  ONE pass only. rustfmt: clean files stay clean (7 width-only re-formats).
+
 
 ### Session 14b
 

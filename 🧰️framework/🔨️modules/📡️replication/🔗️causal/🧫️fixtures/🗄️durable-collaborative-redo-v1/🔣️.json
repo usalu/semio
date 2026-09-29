@@ -47,7 +47,8 @@
           "a2",
           "b2"
         ],
-        "redo": []
+        "redo": [],
+        "refused": []
       }
     },
     {
@@ -70,7 +71,8 @@
         ],
         "redo": [
           "a2"
-        ]
+        ],
+        "refused": []
       }
     },
     {
@@ -93,7 +95,8 @@
         "redo": [
           "a2",
           "b2"
-        ]
+        ],
+        "refused": []
       }
     },
     {
@@ -116,7 +119,8 @@
           "a2",
           "b2",
           "a1"
-        ]
+        ],
+        "refused": []
       }
     },
     {
@@ -134,7 +138,8 @@
           "a2",
           "b2",
           "a1"
-        ]
+        ],
+        "refused": []
       }
     },
     {
@@ -152,7 +157,8 @@
           "a2",
           "b2",
           "a1"
-        ]
+        ],
+        "refused": []
       }
     },
     {
@@ -175,7 +181,8 @@
         "redo": [
           "a2",
           "b2"
-        ]
+        ],
+        "refused": []
       }
     },
     {
@@ -198,7 +205,8 @@
         ],
         "redo": [
           "a2"
-        ]
+        ],
+        "refused": []
       }
     },
     {
@@ -220,7 +228,8 @@
           "a2",
           "b2"
         ],
-        "redo": []
+        "redo": [],
+        "refused": []
       }
     },
     {
@@ -237,7 +246,120 @@
           "a2",
           "b2"
         ],
-        "redo": []
+        "redo": [],
+        "refused": []
+      }
+    },
+    {
+      "kind": "revert",
+      "id": "t-b-undo-a1-foreign",
+      "actor": "author-b",
+      "mutationIds": [
+        "op-a1"
+      ],
+      "logicalMs": 30
+    },
+    {
+      "kind": "expect",
+      "label": "b-cannot-undo-a",
+      "expect": {
+        "applied": [
+          "a1",
+          "b1",
+          "a2",
+          "b2"
+        ],
+        "redo": [],
+        "refused": [
+          "t-b-undo-a1-foreign"
+        ]
+      }
+    },
+    {
+      "kind": "revert",
+      "id": "t-b-undo-mixed",
+      "actor": "author-b",
+      "mutationIds": [
+        "op-b1",
+        "op-a2"
+      ],
+      "logicalMs": 31
+    },
+    {
+      "kind": "expect",
+      "label": "a-mixed-revert-is-refused-whole",
+      "expect": {
+        "applied": [
+          "a1",
+          "b1",
+          "a2",
+          "b2"
+        ],
+        "redo": [],
+        "refused": [
+          "t-b-undo-a1-foreign",
+          "t-b-undo-mixed"
+        ]
+      }
+    },
+    {
+      "kind": "revert",
+      "id": "t-a-undo-a2-late",
+      "actor": "author-a",
+      "mutationIds": [
+        "op-a2"
+      ],
+      "logicalMs": 32
+    },
+    {
+      "kind": "reinstate",
+      "id": "t-b-redo-a2-foreign",
+      "actor": "author-b",
+      "mutationIds": [
+        "op-a2"
+      ],
+      "logicalMs": 33
+    },
+    {
+      "kind": "expect",
+      "label": "b-cannot-redo-a",
+      "expect": {
+        "applied": [
+          "a1",
+          "b1",
+          "b2"
+        ],
+        "redo": [
+          "a2"
+        ],
+        "refused": [
+          "t-b-undo-a1-foreign",
+          "t-b-undo-mixed",
+          "t-b-redo-a2-foreign"
+        ]
+      }
+    },
+    {
+      "kind": "hub-restart",
+      "label": "refusals-survive-hub-restart"
+    },
+    {
+      "kind": "expect",
+      "label": "refusals-converged",
+      "expect": {
+        "applied": [
+          "a1",
+          "b1",
+          "b2"
+        ],
+        "redo": [
+          "a2"
+        ],
+        "refused": [
+          "t-b-undo-a1-foreign",
+          "t-b-undo-mixed",
+          "t-b-redo-a2-foreign"
+        ]
       }
     }
   ],
@@ -247,6 +369,7 @@
     "durable-collaborative-redo",
     "survives-client-reload",
     "survives-hub-restart",
-    "peers-observe-same-fold"
+    "peers-observe-same-fold",
+    "foreign-transition-refused"
   ]
 }

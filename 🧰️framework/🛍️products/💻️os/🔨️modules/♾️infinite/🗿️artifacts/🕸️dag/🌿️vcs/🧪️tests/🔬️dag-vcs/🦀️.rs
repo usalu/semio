@@ -349,5 +349,4 @@ fn dag_demo_ownership_matches_neutral_graph_identity() {
     assert_eq!(encoded["schema"], expected["schema"]);
     assert_eq!(encoded["nodes"].as_array().unwrap().iter().map(|node| node["id"].clone()).collect::<Vec<_>>(), *expected["nodeIds"].as_array().unwrap());
     assert_eq!(encoded["edges"].as_array().unwrap().iter().map(|edge| edge["id"].clone()).collect::<Vec<_>>(), *expected["edgeIds"].as_array().unwrap());
-    println!("[DEBUG] framework DAG demo owns five nodes and four edges; native codecs agree with the independent JSON identity fixture");
 }

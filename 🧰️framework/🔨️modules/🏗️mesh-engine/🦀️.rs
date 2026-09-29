@@ -409,7 +409,7 @@ pub fn mesh_from_kind(kind: &str) -> MeshData {
     }
 }
 
-/** @emoji 🔩️ Builds mesh data from indexed brep tessellation buffers. */
+/** 🔩️ Builds mesh data from indexed brep tessellation buffers. */
 pub fn mesh_from_indexed(positions: &[f32], normals: &[f32], indices: &[u32]) -> MeshData {
     let mut mesh = MeshData { positions: positions.to_vec(), normals: normals.to_vec(), indices: indices.to_vec(), ..MeshData::default() };
     if mesh.normals.is_empty() && !mesh.positions.is_empty() {
@@ -418,7 +418,7 @@ pub fn mesh_from_indexed(positions: &[f32], normals: &[f32], indices: &[u32]) ->
     mesh
 }
 
-/** @emoji 🧩️ Like `mesh_from_indexed`, but also stamps `face_ids` per triangle from `(face id, triangle start, triangle count)`
+/** 🧩️ Like `mesh_from_indexed`, but also stamps `face_ids` per triangle from `(face id, triangle start, triangle count)`
  * groups — lets a picked triangle resolve back to the brep face it came from. Plain tuples (not the kernel's `FaceGroup`)
  * so this crate doesn't need to depend on the kernel engine crate; callers convert their own group type. */
 pub fn mesh_from_indexed_with_face_groups(positions: &[f32], normals: &[f32], indices: &[u32], face_groups: &[(u32, u32, u32)]) -> MeshData {

@@ -74,7 +74,6 @@ test("prepared fill sampling matches shared cases and independent SVG pixels",as
     }
     expect(fill).toEqual(entry.fill);
   }
-  console.error(`[DEBUG] prepared fill sampler compared ${compared} samples with independent SVG raster pixels`);
 });
 
 test("prepared fills own source stops and reject nonfinite paint or sample coordinates",()=>{
@@ -109,5 +108,4 @@ test("inserting a gradient stop preserves independently rasterized appearance",a
       compared++;
     }
   }
-  console.error(`[DEBUG] inserted stops preserved ${compared} independent SVG raster images`);
 });

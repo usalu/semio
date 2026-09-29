@@ -29,7 +29,6 @@ fn viewport_ownership_dsl_and_pack_preserve_shared_native_records() {
         count += 1;
     }
     assert_eq!(count, 4);
-    eprintln!("[DEBUG] Four shared viewport records round-tripped through inline text, document text and Pack without an app wrapper");
 }
 
 #[test]
@@ -46,5 +45,4 @@ fn viewport_ownership_dsl_rejects_invalid_pose_and_foreign_fields() {
     let FieldValue::Record(mut record) = DslField::to_value(&pose) else { unreachable!() };
     record.fields.insert(1, FieldValue::Tuple(vec![FieldValue::Float(1.0), FieldValue::Float(2.0)]));
     assert!(<Viewport3dOrbit as DslField>::from_value(&FieldValue::Record(record)).is_err());
-    eprintln!("[DEBUG] Shared viewport DSL binding rejected invalid zoom, vector arity and foreign record ownership");
 }

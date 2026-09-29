@@ -67,5 +67,4 @@ fn canonical_import_vectors_preserve_document_identity_and_answers() {
             assert_eq!(result.title, expected.title);
         }
     }
-    println!("[DEBUG] Canonical Forms import accepted saved documents and rejected malformed or ambiguous input");
 }

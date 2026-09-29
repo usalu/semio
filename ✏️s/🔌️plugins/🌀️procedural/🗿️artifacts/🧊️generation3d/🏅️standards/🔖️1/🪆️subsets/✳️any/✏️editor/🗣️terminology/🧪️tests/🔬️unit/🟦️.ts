@@ -1,5 +1,5 @@
 /**
- * @emoji 🗣️ The TypeScript half of the generation3d i18n laws, answering the very same
+ * 🗣️ The TypeScript half of the generation3d i18n laws, answering the very same
  * `🧫️fixtures/🗣️terminology.json` roster the Rust `🔬️unit/🦀️.rs` laws answer against
  * `Generation3dLabels`' own consts.
  *

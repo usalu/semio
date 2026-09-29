@@ -38,7 +38,7 @@ interface RingProps extends ElementProps {
 }
 
 // #region 🔮️RingMarker
-/** @emoji 🔮️ Private circular position marker for a Ring. */
+/** 🔮️ Private circular position marker for a Ring. */
 interface RingMarkerProps {
   id: string;
   t: number;

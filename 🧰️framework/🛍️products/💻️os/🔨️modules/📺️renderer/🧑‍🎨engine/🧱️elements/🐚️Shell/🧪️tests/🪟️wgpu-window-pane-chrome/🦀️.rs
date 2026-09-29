@@ -146,7 +146,6 @@ fn pane_chip_rects_band_a_two_pane_split_at_reacts_anchor_insets() {
                 assert!(pair[0].1.x + pair[0].1.w <= pair[1].1.x + 0.01, "📐️ {window_id}: {:?} and {:?} never overlap", pair[0].0, pair[1].0);
             }
         }
-        eprintln!("[DEBUG] pane {window_id} body={:?} chips={:?}", body, rows.iter().map(|(chip, rect)| (format!("{chip:?}"), rect.x.round(), rect.y.round(), rect.w.round())).collect::<Vec<_>>());
     }
 }
 
@@ -154,6 +153,15 @@ fn pane_chip_rects_band_a_two_pane_split_at_reacts_anchor_insets() {
 /// `Utilities` always (its toggle disabled when the window derives no utility bar) and the projection
 /// pane only from inside a world surface. `Projection` is ENABLED wherever it mounts — see
 /// `🧭️wgpu-navbar-footer-parity/🦀️.rs`'s hit-target law for why.
+///
+/// 🎬️ React mounts these two `Pane`s only when their PROP is defined, and both props are
+/// `undefined` for an empty payload — an unmounted pane is not a disabled one, so the bare
+/// fixture (no engagement, no panel-eligible action) must carry neither chip, and the same
+/// pane with a payload must carry both, enabled.
+///
+/// 🧰️ The Actions chip's OTHER half of React's `engagement || actionPane`: a kind that declares a
+/// panel-eligible action mounts it with no engagement payload at all, and the Search chip — which
+/// reads only the engagement — still does not.
 #[test]
 fn pane_chips_mount_exactly_where_react_mounts_them() {
     let fixture = pane_fixture();
@@ -170,10 +178,6 @@ fn pane_chips_mount_exactly_where_react_mounts_them() {
                 assert!(folded, "🪟️ every pane rail starts folded, as React's `useState(true)` does");
                 assert!(!disabled || declared["disabledWithoutBody"].as_bool().unwrap_or(false), "🪟️ only a chip the fixture allows to lose its body is ever disabled");
             }
-            // 🎬️ React mounts these two `Pane`s only when their PROP is defined, and both props are
-            // `undefined` for an empty payload — an unmounted pane is not a disabled one, so the bare
-            // fixture (no engagement, no panel-eligible action) must carry neither chip, and the same
-            // pane with a payload must carry both, enabled.
             rule @ ("withEngagementOrActionPane" | "withSearchSpec") => {
                 assert!(entry.is_none(), "🎬️ a pane with no engagement and no panel-eligible action mounts no {rule} chip");
                 let (_, folded, disabled) = engaged_chips.iter().find(|(candidate, _, _)| *candidate == chip).copied().unwrap_or_else(|| panic!("🎬️ a pane whose engagement carries a status line AND a typed line mounts the {rule} chip"));
@@ -182,9 +186,6 @@ fn pane_chips_mount_exactly_where_react_mounts_them() {
             _ => assert!(entry.is_none(), "🪟️ a pane with no world surface mounts no projection chip"),
         }
     }
-    // 🧰️ The Actions chip's OTHER half of React's `engagement || actionPane`: a kind that declares a
-    // panel-eligible action mounts it with no engagement payload at all, and the Search chip — which
-    // reads only the engagement — still does not.
     let action_only = super::window_actions_search_pane_tests::actions_shell();
     let action_chips = action_only.window_pane_chips("pane-top");
     assert!(action_chips.iter().any(|(chip, _, _)| *chip == WindowPaneChip::Actions), "🧰️ `actionPane` alone mounts the Actions pane");
@@ -205,6 +206,8 @@ fn pane_chips_mount_exactly_where_react_mounts_them() {
 ///
 /// 🩸️ Nothing painted this chip with a LABEL at all: the pre-parity renderer drew a bare `settings-2`
 /// square, which is why the rail read as a stray icon against React's `Window Options`.
+///
+/// 🎯️ Deferred to `pane_overlay_hits` — see `ShellChromeFramePhase::PaneOverlayHits`.
 #[test]
 fn the_window_options_chip_registers_both_sides_of_its_fold() {
     let theme = Theme::light();
@@ -220,7 +223,6 @@ fn the_window_options_chip_registers_both_sides_of_its_fold() {
                 break;
             }
         }
-        // 🎯️ Deferred to `pane_overlay_hits` — see `ShellChromeFramePhase::PaneOverlayHits`.
         (shell.pane_overlay_hits.iter().filter_map(|hit| hit.control_id.clone()).collect::<Vec<_>>(), draw.glass_regions.len())
     };
     let mut shell = engaged_pane_shell();
@@ -288,6 +290,12 @@ fn each_pane_chip_dispatches_its_own_window_state() {
 /// `addObjectKind` and left every fold closed (`🗑️generated/parity-run-12/steps.json` steps 9-10) —
 /// the press never reaches the chip there, and on this renderer it did
 /// (`📓️w12d-pane-chip-ids-and-projection-toggle.md` §1).
+///
+/// 🎯️ The window's own body row is already registered when the chips are flushed, so a chip
+/// outranks the surface it floats on.
+///
+/// 📑️ The docked panels are walked AFTER this phase, so the very same point answers the PANEL —
+/// React's `z-panel: 30` over `z-pane: 20`.
 #[test]
 fn a_pane_chips_hit_row_is_flushed_after_its_window_body_and_before_the_panels_that_occlude_it() {
     let theme = Theme::light();
@@ -308,8 +316,6 @@ fn a_pane_chips_hit_row_is_flushed_after_its_window_body_and_before_the_panels_t
     assert!(deferred.iter().any(|id| id == &WindowPaneChip::Actions.control_id("pane-top", true)), "🪟️ the Actions chip's row is held for its own registration phase: {deferred:?}");
     assert!(shell.pane_overlay_hits.iter().all(|hit| hit.kind == HitKind::Toggle && hit.rect.w > 0.0), "🪟️ and it is a complete row, not a placeholder");
 
-    // 🎯️ The window's own body row is already registered when the chips are flushed, so a chip
-    // outranks the surface it floats on.
     let body = HitTarget { rect: window, event: None, control_id: Some("pane-top".into()), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None };
     input.register_hit(body);
     let mut frame = ShellChromeFrameCursor { phase: ShellChromeFramePhase::PaneOverlayHits, setup: 0, child: ShellChromeChildCursor::default(), ..ShellChromeFrameCursor::default() };
@@ -332,8 +338,6 @@ fn a_pane_chips_hit_row_is_flushed_after_its_window_body_and_before_the_panels_t
     let frame_rows: Vec<HitTarget<ActionDescriptor>> = input.staged_hits().to_vec();
     input.publish_hits();
     assert_eq!(input.hit_at(centre.0, centre.1).and_then(|hit| hit.control_id.clone()), Some(WindowPaneChip::Actions.control_id("pane-top", true)), "🪟️ and a point on the chip answers the chip, not the body under it");
-    // 📑️ The docked panels are walked AFTER this phase, so the very same point answers the PANEL —
-    // React's `z-panel: 30` over `z-pane: 20`.
     for row in frame_rows {
         input.register_hit(row);
     }
@@ -421,7 +425,6 @@ fn the_footer_carries_no_utility_rail() {
             "🔚️ the shell's utility roster no longer carries the framework sync leaves either"
         );
     }
-    eprintln!("[DEBUG] footer hits {ids:?}");
 }
 
 /// 🏷️ **The cap-label pin.** A pane's cap reads the authored INSTANCE title (`Top`, `Perspective`),
@@ -550,7 +553,6 @@ fn an_unfolded_pane_utility_rail_paints_inside_its_own_pane() {
         assert!(rect.x + rect.w <= body.x + body.w, "🧰️ {id} stays inside its own pane");
         assert!((rect.y + rect.h - (body.y + body.h - theme.panel_inset)).abs() < 0.01, "🧰️ {id} rides the pane's bottom row");
     }
-    eprintln!("[DEBUG] pane {window_id} utility rail {painted:?}");
 }
 
 /// 🎛️ **The fold-independence law.** One chip press flips ONE fold. React gives every `Pane` its own

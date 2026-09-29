@@ -31,17 +31,17 @@ import { stubFetch } from "../../../../../🧪️tests/🌐️fetch-stub/🟦️
 import { BrowserAssetCancellationCursor, assertBrowserAssetResponseContinuation } from "../../🎯️targets/🧊️wgpu/🎞️frame-worker/🧩️asset-cancellation/🟦️.ts";
 import { browserAssetFailureDisposition } from "../../🎯️targets/🧊️wgpu/🎞️frame-worker/🧩️asset-failure/🟦️.ts";
 
-/** @emoji 🧭️ One resolved boot descriptor for a fixture transport — the shared resolver, never a hand
+/** 🧭️ One resolved boot descriptor for a fixture transport — the shared resolver, never a hand
  * rolled literal, so these fixtures cannot drift from the shape the three real doors produce
  * (`🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts`). */
 function testBootDescriptor(variant: string): WgpuBootDescriptor {
   return resolveWgpuBootDescriptor({ defaultVariant: variant });
 }
 
-/** @emoji 🌓️ The appearance a realm that read nothing publishes — React's own no-window default. */
+/** 🌓️ The appearance a realm that read nothing publishes — React's own no-window default. */
 const TEST_HOST_APPEARANCE: WgpuHostAppearance = { preference: "", systemDark: false };
 const TEST_HOST_PLATFORM = "MacIntel";
-/** @emoji 🗄️ The storage snapshot a realm that persisted nothing publishes. */
+/** 🗄️ The storage snapshot a realm that persisted nothing publishes. */
 const TEST_HOST_STORAGE: WgpuHostStorageSnapshot = {};
 
 class FakeWorker implements BrowserFrameWorkerPort {
@@ -909,7 +909,7 @@ describe("browser frame worker transport", () => {
     expect(workerSource).toContain("publishWorld3dAcceptedFrameDiagnostic(input.generation)");
     expect(workerSource).toContain("json === lastWorld3dAcceptedFrameDiagnostic");
     expect(workerSource).toContain('channel: "world3d-accepted-frame"');
-    expect(bootSource).toContain("[DEBUG] wgpu ${channel} generation=${generation} frame=${frameSequence} ${json}");
+    expect(bootSource).toContain("[TRACE] wgpu ${channel} generation=${generation} frame=${frameSequence} ${json}");
   });
 
   it("carries the page realm's platform read across the boot seam", () => {
@@ -1015,7 +1015,7 @@ describe("browser frame worker transport", () => {
 
 type VirtualTimer = { readonly id: number; readonly callback: () => void; readonly dueAtMs: number };
 
-/** @emoji ⏱️ A virtual clock + timer queue, so a 120 s boot is decided in microseconds and the watchdog's
+/** ⏱️ A virtual clock + timer queue, so a 120 s boot is decided in microseconds and the watchdog's
  * verdict is a function of the timeline rather than of how loaded the machine running the suite is. */
 function bootHarness(tongue: "en" | "de" = "en") {
   const worker = new FakeWorker();
@@ -1154,7 +1154,7 @@ describe("wgpu boot liveness watchdog", () => {
 });
 
 describe("wgpu boot liveness watchdog, replayed on a third-party clock", () => {
-  /** @emoji 🧪️ The same 120 s timeline decided by vitest's own fake timers (`@sinonjs/fake-timers`) driving
+  /** 🧪️ The same 120 s timeline decided by vitest's own fake timers (`@sinonjs/fake-timers`) driving
    * the real `setTimeout`/`clearTimeout`, instead of this file's hand-rolled queue — an INDEPENDENT clock
    * implementation reaching the same verdicts, so a bug in the harness cannot pass for a passing law. */
   it("survives a declared 120 s phase and dies on 60 s of undeclared silence under vitest's fake timers", () => {

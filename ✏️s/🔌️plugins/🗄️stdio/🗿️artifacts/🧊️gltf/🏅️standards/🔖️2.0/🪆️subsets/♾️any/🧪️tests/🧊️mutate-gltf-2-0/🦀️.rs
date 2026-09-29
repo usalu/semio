@@ -1,13 +1,12 @@
-//! 🦀️ glTF 2.0 mutation case — Rust adapter. Covers the 7 kinds `GLTF_MUTATION_LEAF_DESCRIPTORS`
-//! (`../../🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🦀️.rs`) registers today —
-//! `mutate-<kind>`/`inverse-<kind>` each, plus one identity round trip. The oracle performs every
-//! kind by independent GLB-container and JSON-tree manipulation (`../../🏅️standards/🔖️2.0/
-//! 🪆️subsets/♾️any/🦀️oracle.rs`, using `json` 0.12 as the JSON layer only, never this
-//! subset's own codec or descriptors); the subject fully parses into `GltfSnapshot` via `decode_glb`
-//! and re-serializes with `encode_glb` alone (no byte pass-through), dispatching through each real
-//! leaf's own `DESCRIPTOR` function pointers directly rather than the full envelope/registry layer.
-//! Both results are read back by the INDEPENDENT `project_gltf` reader before the `semantic-gltf-v1`
-//! profile compares them.
+//! 🦀️ glTF 2.0 mutation case — Rust adapter over the real 284 KB, 271-node `base.glb` export. Covers 7 kinds of the
+//! `GltfMutation` vocabulary (`../../🧬️schema/🧬️mutations/🦀️.rs`) — `mutate-<kind>`/`inverse-<kind>` each, plus one
+//! identity round trip. The judging oracle is the TypeScript reader (`🟦️.ts`, three's GLTFLoader over the committed
+//! afters); this file hosts the cross-semio SUPPLEMENT `json-rust-gltf-2-0-mutate` — every kind performed by independent
+//! GLB-container and JSON-tree manipulation (`semio_s_plugin_stdio_test_oracle`, `json` 0.12 as the JSON layer only,
+//! never this subset's own codec) — and the SUBJECT: it decodes the GLB into `GltfSnapshot`, applies the row's
+//! production mutation (and, for an inverse row, that mutation's own computed inverse) through the subset's test
+//! bridges, re-encodes with `encode_glb` alone (no byte pass-through) and hands the result to the
+//! `gltf-2-0-three-compare-v1` pipeline as its `actual-gltf` artifact.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::gltf::standards::v2_0::subsets::any::{oracle_apply_mutation, project_gltf, round_trip, undo_create_scene};
@@ -116,77 +115,40 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::{decode_glb, encode_glb};
-    use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::mutations::{
-        bind_node_child, bind_scene_root_node, change_material_alpha_mode, change_material_double_sided, create_scene, unbind_node_child, unbind_scene_root_node, GltfMutationLeafDescriptor,
-    };
-    use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
+    use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::mutations::{gltf_inverse_restored_document, gltf_mutated_document};
     use semio_s_plugin_stdio_test_oracle::artifacts::gltf::standards::v2_0::subsets::any::project_gltf;
 
-    //#region 🔖️DescriptorLookup
-    /// 🧭️ The real descriptor for one catalog kind — the same 7 `DESCRIPTOR` consts
-    /// `GLTF_MUTATION_LEAF_DESCRIPTORS` assembles, addressed directly rather than through the full
-    /// command-id/phase/envelope registry (`../../🏅️standards/🔖️2.0/🪆️subsets/♾️any/🔨️modules/
-    /// 🧬️schema/🧬️mutations/🦀️.rs`), which this thin per-kind dispatch does not need.
-    fn descriptor_for_kind(kind: &str) -> Option<GltfMutationLeafDescriptor> {
-        match kind {
-            "bind-node-child" => Some(bind_node_child::DESCRIPTOR),
-            "bind-scene-root-node" => Some(bind_scene_root_node::DESCRIPTOR),
-            "change-material-alpha-mode" => Some(change_material_alpha_mode::DESCRIPTOR),
-            "change-material-double-sided" => Some(change_material_double_sided::DESCRIPTOR),
-            "create-scene" => Some(create_scene::DESCRIPTOR),
-            "unbind-node-child" => Some(unbind_node_child::DESCRIPTOR),
-            "unbind-scene-root-node" => Some(unbind_scene_root_node::DESCRIPTOR),
-            _ => None,
-        }
-    }
-    //#endregion 🔖️DescriptorLookup
-
-    //#region 🔖️Codec
-    /// 📐️ Full parse → typed descriptor plan/apply → re-serialize from the model alone — the
-    /// no-byte-pass-through rule this wave exists to enforce. `payload` is the mutation spec's own
-    /// `params`, serialized straight to bytes: every one of the 7 leaves' payload struct field names
-    /// (`parent`/`child`/`position`, `scene`/`node`/`position`, `material`/`alphaMode`,
-    /// `material`/`doubleSided`) already matches the feature file's own `params` shape exactly, so no
-    /// per-kind field translation is needed here.
-    fn apply_and_encode(before: &GltfSnapshot, kind: &str, payload: &[u8]) -> Result<(Vec<u8>, GltfSnapshot), String> {
-        let descriptor = descriptor_for_kind(kind).ok_or_else(|| format!("unrecognised mutation kind {kind:?}"))?;
-        let plan = (descriptor.plan)(payload, before).map_err(|error| error.to_string())?;
-        let applied = (descriptor.apply_diff)(&plan.diff_payload, before).map_err(|error| error.to_string())?;
-        let bytes = encode_glb(&applied.snapshot)?;
-        Ok((bytes, applied.snapshot))
-    }
-    //#endregion 🔖️Codec
-
     //#region 🔖️Handlers
+    /// 📐️ Full GLB parse → the row's production mutation (`GltfMutation` through `Mutation::diff(..).apply_to`) → GLB
+    /// re-encoded from the model alone; bit-identical output would be a byte pass-through.
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
-        let before = decode_glb(&input)?;
         let spec = ctx.doc_json()?;
-        let kind = spec.str("kind");
         let empty = Json::Object(Vec::new());
-        let payload = spec.get("params").unwrap_or(&empty).to_string().into_bytes();
-        let (bytes, _) = apply_and_encode(&before, &kind, &payload)?;
+        let bytes = gltf_mutated_document(&input, &spec.str("kind"), &spec.get("params").unwrap_or(&empty).to_string())?;
         if bytes == input {
             return Err("byte pass-through: output is bit-identical to the input".to_string());
         }
         let projection = project_gltf(&bytes)?;
-        Ok(Outcome::with_raw(bytes, projection))
+        actual(ctx, bytes, projection)
     }
 
+    /// 📦️ The produced GLB as the `actual-gltf` artifact the `gltf-2-0-three-compare-v1` pipeline reads.
+    fn actual(ctx: &Context, bytes: Vec<u8>, projection: Json) -> Result<Outcome, String> {
+        let path = ctx.artifact("actual-gltf", "actual.glb")?;
+        std::fs::write(&path, &bytes).map_err(|error| error.to_string())?;
+        Ok(Outcome::with_raw(bytes, projection).artifact("actual-gltf", &path, "model/gltf-binary"))
+    }
+
+    /// ↩️ The production inverse, never a hand-written one: the row's mutation, then that mutation's OWN computed
+    /// `inverse(base)` replayed in order.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
-        let before = decode_glb(&input)?;
         let spec = ctx.doc_json()?;
-        let kind = spec.str("kind");
         let empty = Json::Object(Vec::new());
-        let payload = spec.get("params").unwrap_or(&empty).to_string().into_bytes();
-        let descriptor = descriptor_for_kind(&kind).ok_or_else(|| format!("unrecognised mutation kind {kind:?}"))?;
-        let plan = (descriptor.plan)(&payload, &before).map_err(|error| error.to_string())?;
-        let after = (descriptor.apply_diff)(&plan.diff_payload, &before).map_err(|error| error.to_string())?.snapshot;
-        let restored = (descriptor.apply_inverse)(&plan.inverse_payload, &after).map_err(|error| error.to_string())?.snapshot;
-        let bytes = encode_glb(&restored)?;
+        let bytes = gltf_inverse_restored_document(&input, &spec.str("kind"), &spec.get("params").unwrap_or(&empty).to_string())?;
         let projection = project_gltf(&bytes)?;
-        Ok(Outcome::with_raw(bytes, projection))
+        actual(ctx, bytes, projection)
     }
 
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
@@ -197,7 +159,7 @@ mod subject {
             return Err("byte pass-through: output is bit-identical to the input".to_string());
         }
         let projection = project_gltf(&bytes)?;
-        Ok(Outcome::with_raw(bytes, projection))
+        actual(ctx, bytes, projection)
     }
     //#endregion 🔖️Handlers
 }

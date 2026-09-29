@@ -63,7 +63,6 @@ export async function registerRetryableLifecycleDeadlineTests(
         observed.push(row.id);
       }
       expect(observed).toEqual(fixture.cases.map((row) => row.id));
-      console.log(`[DEBUG] retryable lifecycle deadline: generated-worker verdicts replayed cases=${observed.length}`);
     });
 
     it("carries the retryable verdict onto the grafted main-thread rejection and nowhere else", () => {

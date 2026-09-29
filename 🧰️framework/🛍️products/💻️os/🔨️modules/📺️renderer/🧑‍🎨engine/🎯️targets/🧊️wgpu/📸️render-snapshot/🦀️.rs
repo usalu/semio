@@ -20,7 +20,7 @@ pub struct RenderSnapshot {
 }
 
 impl RenderSnapshot {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    /// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new(revision: u64, cursor: CursorRequest, accepted_cursor: SemioCursor, accepted_theme_dark: bool, ime: Option<ImeDirective>) -> Self {
         Self { revision, cursor, accepted_cursor, accepted_theme_dark, ime }
     }
@@ -53,7 +53,7 @@ pub struct RenderSnapshotSink {
 }
 
 impl RenderSnapshotSink {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    /// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new(seed: RenderSnapshot) -> Self {
         Self { current: Mutex::new(Arc::new(seed)), next_revision: AtomicU64::new(1) }
     }
@@ -61,7 +61,7 @@ impl RenderSnapshotSink {
     /// 🔢️ The revision the NEXT [`Self::publish`] call should stamp — a builder reads this, builds
     /// against it, and passes the same value into the `RenderSnapshot` it constructs, so revisions are
     /// assigned by the sink (one source of truth) rather than guessed by each caller.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    /// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn next_revision(&self) -> Option<u64> {
         loop {
             let current = self.next_revision.load(Ordering::Acquire);
@@ -79,7 +79,7 @@ impl RenderSnapshotSink {
     /// neither can itself panic) would be a genuine bug elsewhere; unwrapping it here matches this
     /// crate's existing convention for other single-purpose locks (`ResponseSlot`'s own `.lock().expect(..)`
     /// in `kernel_runtime`).
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    /// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn acquire(&self) -> Arc<RenderSnapshot> {
         self.current.lock().expect("render snapshot sink lock").clone()
     }
@@ -89,7 +89,7 @@ impl RenderSnapshotSink {
     /// out via `acquire` stays valid for exactly as long as that caller holds it (ordinary `Arc` refcount
     /// semantics — this is precisely what made the AtomicPtr version's manual refcounting redundant AND
     /// unsafe at the same time).
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    /// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn publish(&self, snapshot: RenderSnapshot) {
         *self.current.lock().expect("render snapshot sink lock") = Arc::new(snapshot);
     }

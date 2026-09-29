@@ -22,22 +22,22 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** @emoji 🖥️ Studio host program through the wgpu renderer instead of the React renderer. */
+/** 🖥️ Studio host program through the wgpu renderer instead of the React renderer. */
 export const Studio: Story = {
   args: { plugin: "s" } satisfies WgpuBootHostProps,
 };
 
-/** @emoji 🧩️ Puzzle program through the wgpu renderer. */
+/** 🧩️ Puzzle program through the wgpu renderer. */
 export const Puzzle: Story = {
   args: { plugin: "puzzle" } satisfies WgpuBootHostProps,
 };
 
-/** @emoji 🚫️ A registry pluginId with no prebuilt web artifact — exercises the artifact-missing panel deterministically offline. */
+/** 🚫️ A registry pluginId with no prebuilt web artifact — exercises the artifact-missing panel deterministically offline. */
 export const ArtifactMissing: Story = {
   args: { plugin: "architect" } satisfies WgpuBootHostProps,
 };
 
-/** @emoji 🪟️ Fixed-size, high-contrast floor for inspecting the native WGPU window silhouette and its real cutouts. */
+/** 🪟️ Fixed-size, high-contrast floor for inspecting the native WGPU window silhouette and its real cutouts. */
 export const GlassContent: Story = {
   args: { plugin: "s" } satisfies WgpuBootHostProps,
   render: (args) => (

@@ -265,8 +265,8 @@ describe("Energy historical source coordinates", () => {
       const bytes = document(row), content = bytes.toString(), actual = frozenCoordinateEvidenceCoordinates(row.registration.path, bytes, contracts)!;
       const prior = frozenCoordinateEvidenceCoordinates(row.registration.path, bytes, { historical: row.registration })!;
       const coordinates = expected[row.id]!.coordinates.map((declaration) => oracle(content, declaration.pointer)).sort((left, right) => left.start - right.start);
-      expect(actual, row.id).toEqual(coordinates);
-      expect(prior).toEqual(coordinates.filter((coordinate) => row.registration.coordinates.some((declaration: { pointer: string }) => declaration.pointer === coordinate.pointer)));
+      expect(actual, row.id).toEqual<typeof coordinates>(coordinates);
+      expect(prior).toEqual<typeof coordinates>(coordinates.filter((coordinate) => row.registration.coordinates.some((declaration: { pointer: string }) => declaration.pointer === coordinate.pointer)));
       for (const addition of row.energy) {
         expect(valuePin(oracle(content, addition.declaration.pointer))).toEqual(addition.coordinate);
         expect(valuePin(actual.find((coordinate) => coordinate.pointer === addition.declaration.pointer)!)).toEqual(addition.coordinate);
@@ -312,7 +312,7 @@ describe("Energy historical source coordinates", () => {
     const selected = oracle(content, scenario.selectedPointer), neighbor = oracle(content, scenario.unownedPointer);
     expect(selected.value).toBe(neighbor.value);
     expect(selected.start).not.toBe(neighbor.start);
-    expect(frozenCoordinateEvidenceCoordinates(contract.path, bytes, { exact: contract })).toEqual([selected]);
+    expect(frozenCoordinateEvidenceCoordinates(contract.path, bytes, { exact: contract })).toEqual<readonly (typeof selected)[]>([selected]);
     expect(frozenCoordinateEvidenceCoordinates("🔣️neighbor.json", bytes, { exact: contract })).toBeNull();
   });
 

@@ -6,7 +6,7 @@ import { TABLE_SCENE_LANES, tableSceneFromLanes } from "../../🟦️.ts";
 
 test("table carriers match their language-neutral schema", () => {
   expect(new Ajv().compile(schema)(fixture)).toBe(true);
-  expect(TABLE_SCENE_LANES).toEqual(fixture.lanes);
+  expect(TABLE_SCENE_LANES).toEqual<typeof fixture.lanes>(fixture.lanes);
 });
 
 test("large tables retain every row and Unicode cell through paged carriers", () => {

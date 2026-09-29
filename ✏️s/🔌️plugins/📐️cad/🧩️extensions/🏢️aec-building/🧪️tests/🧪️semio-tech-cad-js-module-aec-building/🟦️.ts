@@ -1,6 +1,8 @@
-type TestSource = { readonly directory: string; readonly url: string };
+import type { AecBuildingTestDependencies } from "../../🟦️.ts";
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+type TestSource = { readonly url: string };
+
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: AecBuildingTestDependencies, source: TestSource): Promise<void> {
   const { AEC_BUILDING_MODEL_DEFINITION_ID, typologyFromStepLayer } = dependencies;
 
   const { describe, expect, it } = vitest;

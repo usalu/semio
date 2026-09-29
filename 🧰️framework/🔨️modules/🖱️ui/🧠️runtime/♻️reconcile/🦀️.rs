@@ -1,4 +1,4 @@
-//! @emoji ♻️ Keyed reconciliation of a [`crate::ComponentTree`] into a minimal transactional
+//! ♻️ Keyed reconciliation of a [`crate::ComponentTree`] into a minimal transactional
 //! [`ui_contract::UiPatch`] — the conversion from the builder-side, id-less, recursive tree
 //! [`crate::present`] produces into the flat, id-keyed [`ui_contract`] document every renderer reads.
 //!

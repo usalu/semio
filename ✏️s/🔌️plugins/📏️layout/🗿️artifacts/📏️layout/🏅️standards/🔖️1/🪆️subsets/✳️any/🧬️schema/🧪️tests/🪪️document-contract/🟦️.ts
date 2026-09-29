@@ -46,5 +46,4 @@ export function testLayoutDocumentContractOracle(): void {
   const wrongIdentity = structuredClone(document);
   wrongIdentity.backgroundDrawing.handle.target.artifactId = "wrong";
   assert.throws(() => parseLayoutArtifact(wrongIdentity), /childId must equal target.artifactId/);
-  console.log("[DEBUG] Layout document contract preserved drawing content and exact child/link authority");
 }

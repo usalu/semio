@@ -20,7 +20,6 @@ async fn sample_descriptor(generation: u64, parent: Option<u64>) -> SnapshotDesc
         epoch: 1,
         chain_hash: [generation as u8; 32],
         protocol_version: 1,
-        vcs_head: Some("ck-abcdef".to_string()),
         base_pack_hash: Some(ContentHash([9u8; 32])),
         roots: vec![ContentHash([1u8; 32]), ContentHash([2u8; 32])],
         new_pages: vec![],
@@ -39,13 +38,22 @@ async fn descriptor_encode_decode_round_trips_all_fields() {
 #[semio_framework_async_macros::async_test]
 async fn descriptor_encode_decode_round_trips_none_optionals() {
     let mut descriptor = sample_descriptor(0, None).await;
-    descriptor.vcs_head = None;
     descriptor.base_pack_hash = None;
     descriptor.roots.clear();
     let bytes = descriptor.encode().await;
     let decoded = SnapshotDescriptor::decode(&bytes).await.unwrap();
     assert_eq!(decoded, descriptor);
     assert_eq!(decoded.frontier().await.head_seq, 0);
+}
+
+/// 🔢️ The descriptor bytes carry their format version first; a descriptor of any other version is refused, never
+/// misread.
+#[semio_framework_async_macros::async_test]
+async fn a_descriptor_of_another_format_version_is_refused() {
+    let mut bytes = sample_descriptor(1, None).await.encode().await;
+    assert_eq!(bytes[0], DESCRIPTOR_FORMAT_VERSION);
+    bytes[0] = DESCRIPTOR_FORMAT_VERSION - 1;
+    assert!(matches!(SnapshotDescriptor::decode(&bytes).await, Err(DbError::Corrupt(_))), "a foreign descriptor version is refused");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -179,7 +187,7 @@ async fn open_latest_rejects_truncated_buffer() {
 
 //#region 🔖️Manager
 async fn body(head_seq: u64) -> SnapshotBody {
-    SnapshotBody { head_seq, commit_seq: head_seq, epoch: 0, chain_hash: [0u8; 32], protocol_version: 1, vcs_head: None, base_pack_hash: None, roots: vec![], created_at_ms: head_seq * 1000 }
+    SnapshotBody { head_seq, commit_seq: head_seq, epoch: 0, chain_hash: [0u8; 32], protocol_version: 1, base_pack_hash: None, roots: vec![], created_at_ms: head_seq * 1000 }
 }
 
 #[semio_framework_async_macros::async_test]

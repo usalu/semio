@@ -1,5 +1,5 @@
 // #region 🧱️Header
-/** @emoji 🧩 `@semio-tech/puzzle-5d-react` — compose flat+volume fixtures into a 5d model and flatten for sketchpad topology. */
+/** 🧩 `@semio-tech/puzzle-5d-react` — compose flat+volume fixtures into a 5d model and flatten for sketchpad topology. */
 // #endregion 🧱️Header
 
 //#region 🔖️Types

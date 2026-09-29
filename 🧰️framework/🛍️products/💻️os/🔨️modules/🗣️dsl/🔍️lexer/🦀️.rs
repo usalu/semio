@@ -5,7 +5,7 @@ use crate::os_dsl::token::*;
 use crate::os_dsl::trust::Sanitized;
 
 //#region 🔖️Dialect
-/// @emoji 🎛️ How a quoted-string region decodes its escapes once the lexer commits to using
+/// 🎛️ How a quoted-string region decodes its escapes once the lexer commits to using
 /// `quote` as its delimiter — the P2-M1 generalized string/text mechanism serving json's
 /// `\uXXXX`, csv's `""`, and step's `''`-doubling uniformly instead of four bespoke fixes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -24,14 +24,14 @@ pub enum StringEscape {
     Doubled,
 }
 
-/// @emoji 🔤️ One configured quote delimiter + the escape scheme active while scanning it.
+/// 🔤️ One configured quote delimiter + the escape scheme active while scanning it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct StringMode {
     pub quote: char,
     pub escape: StringEscape,
 }
 
-/// @emoji 💬️ Per-grammar comment syntax — `#`-to-EOL is the shared default; a grammar dialect
+/// 💬️ Per-grammar comment syntax — `#`-to-EOL is the shared default; a grammar dialect
 /// header can swap/disable the line marker or add a block form. Exists because STEP/IFC's `#` is
 /// the entity-reference sigil (`#123=...`), not a comment — it directly collides with the shared
 /// lexer's old hardcoded-global `#`-comment rule.
@@ -47,7 +47,7 @@ impl Default for CommentDialect {
     }
 }
 
-/// @emoji 🧬️ Full per-grammar lexer configuration. `Default` reproduces the fixed alphabet exactly
+/// 🧬️ Full per-grammar lexer configuration. `Default` reproduces the fixed alphabet exactly
 /// as it existed before P2-M1 (single `"`-delimited `Raw` string, `#`-to-EOL comment, no block
 /// comment) — every grammar that doesn't declare `string`/`comment` header directives is
 /// unaffected, byte-for-byte, by this type's existence (the plan's "extension-only" gate).
@@ -66,7 +66,7 @@ impl LexOptions {
     }
 }
 
-/// @emoji 🔓️ Decodes one backslash escape unit starting at `chars[j] == '\\'` under
+/// 🔓️ Decodes one backslash escape unit starting at `chars[j] == '\\'` under
 /// [`StringEscape::Backslash`] — JSON's scheme (RFC 8259 §7) incl. `\uXXXX` surrogate-pair
 /// combination. Returns the decoded text plus the index just past the consumed escape, or `None`
 /// if `chars[j..]` isn't a recognized escape (caller decides raw-fallback vs. strict error).
@@ -114,7 +114,7 @@ fn read_hex4(chars: &[char], start: usize) -> Option<(u32, usize)> {
     u32::from_str_radix(&text, 16).ok().map(|v| (v, start + 4))
 }
 
-/// @emoji 🔎️ True iff `chars[i..]` begins with `needle`'s chars — the multi-char-marker match
+/// 🔎️ True iff `chars[i..]` begins with `needle`'s chars — the multi-char-marker match
 /// used by both configurable comment forms (line marker, block open/close).
 fn chars_start_with(chars: &[char], i: usize, needle: &str) -> bool {
     let needle_chars: Vec<char> = needle.chars().collect();
@@ -136,7 +136,7 @@ fn is_ident_continue(c: char) -> bool {
     c.is_alphanumeric() || matches!(c, '_' | '-' | '.' | '/')
 }
 
-/// @emoji ➡️ Fused edge arrow `-id:Kind>` or `-id-` (not `->` / `--`).
+/// ➡️ Fused edge arrow `-id:Kind>` or `-id-` (not `->` / `--`).
 fn lex_fused_edge_arrow(chars: &[char], i: usize) -> Option<(usize, String)> {
     if chars.get(i) != Some(&'-') {
         return None;
@@ -180,7 +180,7 @@ fn lex_fused_edge_arrow(chars: &[char], i: usize) -> Option<(usize, String)> {
     None
 }
 
-/// @emoji 🔬️ Grammar-independent lexer for the fixed token alphabet shared by every DSL grammar
+/// 🔬️ Grammar-independent lexer for the fixed token alphabet shared by every DSL grammar
 /// declared on this engine. `forgiving = true` never fails (malformed regions become `Error`
 /// tokens instead), which is what editor/completion mode needs; `forgiving = false` is strict
 /// parse mode and returns the first lexical error. The fixed-alphabet default entry point — every
@@ -190,7 +190,7 @@ pub fn lex(text: &str, limits: &Limits, forgiving: bool) -> Result<Vec<SpannedTo
     lex_with(text, limits, forgiving, &LexOptions::default())
 }
 
-/// @emoji 🎛️ P2-M1: same lexer, parameterized by a per-grammar [`LexOptions`] (string quote+escape
+/// 🎛️ P2-M1: same lexer, parameterized by a per-grammar [`LexOptions`] (string quote+escape
 /// modes, comment syntax). `lex` is the fixed-default entry point every pre-M1 caller still uses.
 pub fn lex_with(text: &str, limits: &Limits, forgiving: bool, opts: &LexOptions) -> Result<Vec<SpannedToken>, TextError> {
     limits.check_bytes(text.len())?;
@@ -689,7 +689,7 @@ pub fn lex_with(text: &str, limits: &Limits, forgiving: bool, opts: &LexOptions)
     }
 }
 
-/// @emoji 🎨️ Maps lexed tokens to editor highlighting classes. `keywords` is the live set of
+/// 🎨️ Maps lexed tokens to editor highlighting classes. `keywords` is the live set of
 /// idents that are structural keywords in the current grammar context (schema-declared).
 pub fn token_classes(tokens: &[SpannedToken], keywords: &[&str]) -> Vec<(TokenClass, TextSpan)> {
     tokens
@@ -736,7 +736,7 @@ pub fn token_classes(tokens: &[SpannedToken], keywords: &[&str]) -> Vec<(TokenCl
         })
         .collect()
 }
-/// @emoji 🪪️ True iff `s` lexes (strict) as exactly one `Ident` token whose text equals `s` —
+/// 🪪️ True iff `s` lexes (strict) as exactly one `Ident` token whose text equals `s` —
 /// i.e. `s` is safe to print bare (unquoted) wherever `Shape::Text` is expected. Excludes the
 /// reserved literal idents (`_`/`true`/`false`/`null`/`nan`/`inf`) and anything number-shaped
 /// (those lex as `Int`/`Float`/`Placeholder`, not `Ident`, so they're already excluded by

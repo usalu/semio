@@ -235,7 +235,6 @@ async fn wal_recovery_aborts_only_incomplete_active_transactions_idempotently() 
         let receipt = submit_one(&storage, &mut reopened, WalRecord::Command(retained(b"after-recovery").await), DurabilityClass::Fsync, 3).await;
         assert_eq!(receipt.tx_id, next);
         reopened.close().await.unwrap();
-        eprintln!("[DEBUG] active WAL recovery appended exactly one durable abort and preserved byte identity on reopen: {name}");
     }
 }
 
@@ -284,7 +283,7 @@ async fn wal_recovery_abort_fsync_survives_two_independent_filesystem_reopens() 
             wal.close().await.unwrap();
             filesystem.close().await.unwrap();
         }
-        eprintln!("[DEBUG] one durable WAL abort survived independent filesystem retirement and reopen, preserving the next transaction id: {name}");
+        eprintln!("one durable WAL abort survived independent filesystem retirement and reopen, preserving the next transaction id: {name}");
     }
 }
 
@@ -356,7 +355,7 @@ async fn wal_recovery_abort_faults_retry_without_duplicate_abort() {
             assert_eq!(report.recovered_abort_tx_id, None);
             assert_eq!(segment_bytes(&facet, &document, 0).await, repaired);
             wal.close().await.unwrap();
-            eprintln!("[DEBUG] WAL abort fault retired owners and reopened idempotently: {}, tail={tail}, fail_tail_sync={fail_tail_sync}", case["name"]);
+            eprintln!("WAL abort fault retired owners and reopened idempotently: {}, tail={tail}, fail_tail_sync={fail_tail_sync}", case["name"]);
         }
     }
 }
@@ -456,7 +455,6 @@ async fn wal_recovery_abort_cancellation_has_one_durable_boundary() {
         assert_eq!(segment_bytes(&storage, &document, 0).await, repaired);
         reopened.close().await.unwrap();
         assert_no_committed_transaction(&storage, &document).await;
-        eprintln!("[DEBUG] WAL abort recovery rejected pre-boundary cancellation without writes and completed admitted Fsync, cancel_on_truncate={cancel_on_truncate}");
     }
 }
 
@@ -513,7 +511,7 @@ async fn wal_recovery_abort_capacity_exact_and_plus_one_preserves_source() {
             assert_eq!(segment_bytes(&storage, &document, 0).await, before);
             assert_eq!(storage.segment_state(&document, 0).await.unwrap(), db_storage::WalSegmentState::Active);
         }
-        eprintln!("[DEBUG] WAL abort recovery exact retained capacity plus {extra} had the expected byte-preserving disposition");
+        eprintln!("WAL abort recovery exact retained capacity plus {extra} had the expected byte-preserving disposition");
     }
 }
 
@@ -1019,7 +1017,6 @@ async fn wal_capacity_preflight_matches_neutral_memory_and_filesystem_boundaries
     wal.close().await.unwrap();
     let (mut wal, _) = ArtifactWal::open(&storage, document, GroupCommitPolicy::default(), 0).await.unwrap();
     wal.close().await.unwrap();
-    println!("[DEBUG] WAL capacity: Memory and filesystem Fsync/grouped submissions rotate before overflow, reject one-over without effects and reopen the exact maximum");
 }
 
 async fn recovery_seed(storage: &MemoryStorage, document: &ArtifactId) -> ArtifactWal {
@@ -1097,7 +1094,6 @@ async fn wal_recovery_preserves_neutral_committed_prefixes() {
         assert!(replay_summaries(&storage, &document).await.contains(&ReplaySummary::Commit(next_tx, 1)));
         wal.close().await.unwrap();
     }
-    println!("[DEBUG] WAL recovery: 4 independent CRC page-alignment copies and 18 neutral cuts preserve exact bytes, reopen idempotence, sequence and subsequent transaction ids");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1213,14 +1209,13 @@ async fn wal_recovery_matches_neutral_lifecycle_without_prefix_replacement() {
             }
         }
     }
-    println!("[DEBUG] WAL recovery: 18 neutral lifecycle rows cover rotation gaps, compaction boundaries, invalid partial headers, sealed damage, identity/chain forgery and exhausted ids without replacement");
 }
 
 //#region 🔖️RecordKinds
 #[semio_framework_async_macros::async_test]
-async fn record_kinds_fill_the_extension_range_uniquely() {
-    let kinds = [WAL_SEGMENT_HEADER, WAL_TX_BEGIN, WAL_TX_COMMIT, WAL_TX_ABORT, WAL_COMMAND, WAL_PAYLOAD, WAL_DIFF, WAL_INVERSE, WAL_EVENT, WAL_OUTBOX, WAL_FRONTIER, WAL_VCS_REF, WAL_SNAPSHOT_PUB, WAL_INDEX_CKPT, WAL_LEASE, WAL_MIGRATION];
-    assert_eq!(kinds.len(), 16);
+async fn record_kinds_are_distinct_members_of_the_extension_range() {
+    let kinds = [WAL_SEGMENT_HEADER, WAL_TX_BEGIN, WAL_TX_COMMIT, WAL_TX_ABORT, WAL_COMMAND, WAL_PAYLOAD, WAL_DIFF, WAL_INVERSE, WAL_EVENT, WAL_OUTBOX, WAL_FRONTIER, WAL_SNAPSHOT_PUB, WAL_INDEX_CKPT, WAL_LEASE, WAL_MIGRATION];
+    assert_eq!(kinds.len(), 15);
     let mut sorted = kinds.to_vec();
     sorted.sort_unstable();
     sorted.dedup();
@@ -1255,7 +1250,6 @@ async fn wal_record_round_trips_every_kind_through_encode_decode() {
         WalRecord::Event(retained(b"event-bytes").await),
         WalRecord::Outbox(retained(b"outbox-bytes").await),
         WalRecord::Frontier(sample_frontier(&document).await),
-        WalRecord::VcsRef(db_storage::DbIoText::try_from_str("ck-abc123").unwrap()),
         WalRecord::SnapshotPub { generation: 4, frontier: sample_frontier(&document).await },
         WalRecord::IndexCkpt { run_ids: run_ids(&[1, 2, 3, 100]) },
         WalRecord::Lease { resource: db_storage::DbIoText::try_from_str("shard-0").unwrap(), holder: db_storage::DbIoText::try_from_str("node-a").unwrap(), fence: 9, expires_at_ms: 12345 },
@@ -1294,7 +1288,7 @@ async fn identity_payload_transform_round_trips_without_changing_bytes() {
     while decrypted.close_step().unwrap().is_some() {}
 }
 
-/// @emoji 🔐️ A reversing "cipher" — enough to prove a caller can thread a non-identity
+/// 🔐️ A reversing "cipher" — enough to prove a caller can thread a non-identity
 /// `PayloadTransform` through `WalPayloadRef::Inline` end-to-end via this crate's own
 /// encode/decode, without `db_wal` itself needing to know encryption happened.
 struct ReversingTransform;
@@ -1617,6 +1611,5 @@ async fn artifact_wal_open_rejection_retains_exact_writer_for_close_or_same_owne
     assert_eq!(report.segments_seen, 1);
     wal.close().await.unwrap();
     storage.acquire_writer(&document).await.unwrap().release().await.unwrap();
-    eprintln!("[DEBUG] WAL open rejection retained exact permit for same-owner retry and exact release for terminal close");
 }
 //#endregion 🔖️Segment + ArtifactWal

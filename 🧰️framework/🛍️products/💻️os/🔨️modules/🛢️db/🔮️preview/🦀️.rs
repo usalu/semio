@@ -35,7 +35,7 @@ use protocol::MutationEnvelope;
 use std::collections::HashMap;
 
 //#region 🔖️Identity
-/// @emoji 🪪️ A preview's identity: `pv-<document>-<store-local sequence>`, assigned by
+/// 🪪️ A preview's identity: `pv-<document>-<store-local sequence>`, assigned by
 /// `PreviewStore::publish`. Deliberately derived from the store's own monotonic sequence rather
 /// than a random/uuid source (none is a workspace dependency) — stable, collision-free within one
 /// document actor's lifetime, and trivially reproducible in tests.
@@ -48,7 +48,7 @@ impl std::fmt::Display for PreviewId {
     }
 }
 
-/// @emoji 🗝️ The coalescing unit: at most one `Active` preview may exist per `(actor, key)` pair
+/// 🗝️ The coalescing unit: at most one `Active` preview may exist per `(actor, key)` pair
 /// in a document at any time — publishing a second one immediately supersedes the first. `key` is
 /// the caller's own namespacing (e.g. `"cursor"`, `"selection"`, `"drag:shape-7"`); this crate
 /// never interprets it.
@@ -60,34 +60,34 @@ struct PreviewKey {
 //#endregion 🔖️Identity
 
 //#region 🔖️Lifecycle
-/// @emoji 🔄️ A preview's lifecycle state. Exactly one non-terminal state (`Active`); every other
+/// 🔄️ A preview's lifecycle state. Exactly one non-terminal state (`Active`); every other
 /// variant is terminal — once left, `Active` is never re-entered (see `validate_transition`).
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum PreviewState {
-    /// @emoji 🌫️ Live and visible to `Consistency::PreviewAugmented`/`Speculative` readers.
+    /// 🌫️ Live and visible to `Consistency::PreviewAugmented`/`Speculative` readers.
     Active,
-    /// @emoji 🥈️ Displaced by a newer preview from the same `(actor, key)` (coalescing), by
+    /// 🥈️ Displaced by a newer preview from the same `(actor, key)` (coalescing), by
     /// admission-budget eviction, or by a conflicting command landing during `reconcile`
     /// (the "stale" half of "rebase-or-stale").
     Superseded,
-    /// @emoji 🙅️ The authoring actor explicitly pulled it back.
+    /// 🙅️ The authoring actor explicitly pulled it back.
     Withdrawn,
-    /// @emoji ✅️ The speculative content became real: the actor's actual command landed and
+    /// ✅️ The speculative content became real: the actor's actual command landed and
     /// `PreviewStore::commit` was called for this id.
     Committed,
-    /// @emoji 🚫️ The server explicitly rejected it (e.g. failed a cheap admission check upstream).
+    /// 🚫️ The server explicitly rejected it (e.g. failed a cheap admission check upstream).
     Rejected,
-    /// @emoji ⌛️ Its TTL elapsed before either commit or an explicit terminal transition.
+    /// ⌛️ Its TTL elapsed before either commit or an explicit terminal transition.
     Expired,
 }
 
 impl PreviewState {
-    /// @emoji 🏁️ True for every variant except `Active`.
+    /// 🏁️ True for every variant except `Active`.
     pub fn is_terminal(self) -> bool {
         !matches!(self, PreviewState::Active)
     }
 
-    /// @emoji ✅️ The only legal transition shape: `Active` -> any terminal state. A terminal state
+    /// ✅️ The only legal transition shape: `Active` -> any terminal state. A terminal state
     /// is a dead end (matches the contract's one-way arrow `Active→{Superseded, Withdrawn,
     /// Committed, Rejected, Expired}`).
     fn validate_transition(self, to: PreviewState) -> Result<(), DbError> {
@@ -101,7 +101,7 @@ impl PreviewState {
 //#endregion 🔖️Lifecycle
 
 //#region 🔖️Budgets
-/// @emoji 🎛️ Admission ceilings for one document's preview population — checked (never bypassed)
+/// 🎛️ Admission ceilings for one document's preview population — checked (never bypassed)
 /// before a new preview is admitted; a breach evicts the globally-oldest `Active` preview rather
 /// than rejecting the publish, mirroring `Priority::Preview`'s "shed-previews-first,
 /// never block a higher lane" admission law (a preview publish is itself the lowest-priority
@@ -116,7 +116,7 @@ pub struct PreviewBudgets {
 }
 
 impl PreviewBudgets {
-    /// @emoji 🏗️ Derives budgets from `limits.max_preview_ttl_ms` (the family-wide TTL ceiling)
+    /// 🏗️ Derives budgets from `limits.max_preview_ttl_ms` (the family-wide TTL ceiling)
     /// plus this crate's own choice of population caps (the contract fixes the TTL ceiling only;
     /// per-document/per-actor active-preview caps are `db_preview`'s own well-justified choice —
     /// generous enough for real collaborative-cursor/drag-ghost workloads, tight enough that a
@@ -136,7 +136,7 @@ impl Default for PreviewBudgets {
 //#endregion 🔖️Budgets
 
 //#region 🔖️Preview
-/// @emoji 🌫️ One ephemeral overlay: identity, the frontier it was computed against, its opaque
+/// 🌫️ One ephemeral overlay: identity, the frontier it was computed against, its opaque
 /// payload, what it touched, and its lifecycle state. `envelope` is carried verbatim — per the
 /// contract, no crate below `db_artifact` interprets operation semantics, so this crate never
 /// looks inside `diff`/`inverse`, only at the envelope's stable identity/actor/timestamp fields.
@@ -161,7 +161,7 @@ impl Preview {
     }
 }
 
-/// @emoji 📮️ `PreviewStore::publish`'s argument: everything needed to admit one new preview.
+/// 📮️ `PreviewStore::publish`'s argument: everything needed to admit one new preview.
 pub struct PublishPreviewRequest {
     pub document: ArtifactId,
     pub actor: ActorId,
@@ -169,40 +169,40 @@ pub struct PublishPreviewRequest {
     pub base: Frontier,
     pub envelope: MutationEnvelope,
     pub touched: TouchedSet,
-    /// @emoji ⏳️ `None` uses `PreviewBudgets::default_ttl_ms`; either way the result is capped at
+    /// ⏳️ `None` uses `PreviewBudgets::default_ttl_ms`; either way the result is capped at
     /// `PreviewBudgets::max_ttl_ms`.
     pub ttl_ms: Option<u64>,
     pub now_ms: u64,
 }
 
-/// @emoji 🛬️ One command that landed (was durably committed elsewhere, e.g. by `db_artifact`'s
+/// 🛬️ One command that landed (was durably committed elsewhere, e.g. by `db_artifact`'s
 /// pipeline) — `PreviewStore::reconcile`'s argument, the trigger for the rebase-or-stale law.
 pub struct LandedCommand {
     pub frontier: Frontier,
     pub touched: TouchedSet,
 }
 
-/// @emoji 📊️ What one `reconcile` call did to the store's `Active` previews.
+/// 📊️ What one `reconcile` call did to the store's `Active` previews.
 #[derive(Default, Debug)]
 pub struct ReconcileOutcome {
-    /// @emoji 🧗️ Previews whose `base` was advanced to the landed frontier (no conflict) —
+    /// 🧗️ Previews whose `base` was advanced to the landed frontier (no conflict) —
     /// remained `Active`.
     pub rebased: Vec<PreviewId>,
-    /// @emoji 🥈️ Previews whose touched regions conflicted with the landed command — transitioned
+    /// 🥈️ Previews whose touched regions conflicted with the landed command — transitioned
     /// to `Superseded`.
     pub superseded: Vec<PreviewId>,
 }
 //#endregion 🔖️Preview
 
 //#region 🔖️Reconcile
-/// @emoji 🧩️ Extension seam for conflict detection between a preview's touched regions and a
+/// 🧩️ Extension seam for conflict detection between a preview's touched regions and a
 /// landed command's — see the module doc's design-choice note on why this exists instead of a
 /// hard `db_conflict` dependency today. Swappable via `PreviewStore::reconcile_with`.
 pub trait ConflictOracle {
     fn conflicts(&self, preview_touched: &TouchedSet, landed_touched: &TouchedSet) -> bool;
 }
 
-/// @emoji 🎯️ A lightweight oracle: plain touched-region intersection (any write on either side
+/// 🎯️ A lightweight oracle: plain touched-region intersection (any write on either side
 /// that intersects the other side's region), via `db_state::TouchedSet::conflicts_with` directly
 /// — no bloom prefilter, no `db_conflict::CommandKindMatrix` override. Kept for callers that want
 /// to bypass `db_conflict` entirely (e.g. a hot path with a tiny touched set where the bloom
@@ -216,7 +216,7 @@ impl ConflictOracle for TouchedRegionOracle {
     }
 }
 
-/// @emoji 🔌️ The default `ConflictOracle`, backed by the real `db_conflict::ConflictDetector` now
+/// 🔌️ The default `ConflictOracle`, backed by the real `db_conflict::ConflictDetector` now
 /// that `db_conflict` is complete. `db_preview` never sees a landed command's declared
 /// `CommandKind` (per the contract, no crate below `db_artifact` interprets operation semantics,
 /// and a `Preview`/`LandedCommand` here carry only opaque envelopes + touched sets) — so this
@@ -233,7 +233,7 @@ pub struct DbConflictOracle {
 }
 
 impl DbConflictOracle {
-    /// @emoji 🏗️ Builds an oracle around a caller-supplied detector (e.g. one configured with a
+    /// 🏗️ Builds an oracle around a caller-supplied detector (e.g. one configured with a
     /// `db_conflict::CommandKindMatrix`, though this crate never populates one of its own).
     // 🚫️async: E1 pure constructor consumed by `impl Default`, itself E1 — see R9
     pub fn new(detector: db_conflict::ConflictDetector) -> Self {
@@ -247,7 +247,7 @@ impl Default for DbConflictOracle {
     }
 }
 
-/// @emoji 🏷️ The uniform, caller-invisible `CommandKind`/actor/id tags `DbConflictOracle` stamps
+/// 🏷️ The uniform, caller-invisible `CommandKind`/actor/id tags `DbConflictOracle` stamps
 /// onto the synthetic `db_conflict::CommandTouch` pair it builds per `conflicts` call — distinct
 /// per side so `db_conflict`'s own `CommandTouch::order_key` tiebreak never collides, but constant
 /// across calls so behavior is deterministic and independent of the real preview/landed identities.
@@ -270,7 +270,7 @@ impl ConflictOracle for DbConflictOracle {
 //#endregion 🔖️Reconcile
 
 //#region 🔖️Store
-/// @emoji 🗄️ One document's live preview population: admission (coalescing + budgets),
+/// 🗄️ One document's live preview population: admission (coalescing + budgets),
 /// lifecycle transitions, TTL sweep, and frontier-advance reconciliation. Owned by the document
 /// actor alongside its durable state — never persisted, never itself a `db_wal`/`db_storage`
 /// participant.
@@ -295,7 +295,7 @@ impl PreviewStore {
         &self.budgets
     }
 
-    /// @emoji 🔢️ Total previews ever recorded (every lifecycle state), not just `Active` ones.
+    /// 🔢️ Total previews ever recorded (every lifecycle state), not just `Active` ones.
     pub fn len(&self) -> usize {
         self.previews.len()
     }
@@ -304,7 +304,7 @@ impl PreviewStore {
         self.previews.is_empty()
     }
 
-    /// @emoji 🌫️ How many `Active` previews the document currently carries.
+    /// 🌫️ How many `Active` previews the document currently carries.
     pub fn active_len(&self) -> usize {
         self.active_index.len()
     }
@@ -313,13 +313,13 @@ impl PreviewStore {
         self.previews.get(id)
     }
 
-    /// @emoji 🔎️ The current coalesced `Active` preview for `(actor, key)`, if any.
+    /// 🔎️ The current coalesced `Active` preview for `(actor, key)`, if any.
     pub fn active_for_key(&self, actor: &ActorId, key: &str) -> Option<&Preview> {
         let preview_key = PreviewKey { actor: actor.clone(), key: key.to_string() };
         self.active_index.get(&preview_key).and_then(|id| self.previews.get(id))
     }
 
-    /// @emoji 📜️ Every `Active` preview, oldest-arrival-first — the shape `Consistency::
+    /// 📜️ Every `Active` preview, oldest-arrival-first — the shape `Consistency::
     /// PreviewAugmented` query resolution layers onto canonical state, in publish order.
     pub fn list_active(&self) -> Vec<&Preview> {
         let mut items: Vec<&Preview> = self.previews.values().filter(|preview| preview.is_active()).collect();
@@ -328,7 +328,7 @@ impl PreviewStore {
     }
 
     //#region 🔖️Publish
-    /// @emoji 📮️ Admits one new preview: validates it belongs to this store's document, checks the
+    /// 📮️ Admits one new preview: validates it belongs to this store's document, checks the
     /// touched-region budget, supersedes any existing `Active` preview under the same `(actor,
     /// key)` (coalescing), evicts under population-budget pressure if needed, then inserts.
     pub fn publish(&mut self, request: PublishPreviewRequest) -> Result<PreviewId, DbError> {
@@ -366,7 +366,7 @@ impl PreviewStore {
         Ok(id)
     }
 
-    /// @emoji 🥈️ Marks `id` `Superseded` unconditionally, bypassing `validate_transition`. Private
+    /// 🥈️ Marks `id` `Superseded` unconditionally, bypassing `validate_transition`. Private
     /// and only ever called against an id read straight out of `active_index`, which by
     /// construction only ever names an `Active` preview — the invariant `validate_transition`
     /// would otherwise re-check.
@@ -391,7 +391,7 @@ impl PreviewStore {
         self.evict_oldest_active(None)
     }
 
-    /// @emoji ✂️ Supersedes the globally-oldest (by publish sequence) `Active` preview, optionally
+    /// ✂️ Supersedes the globally-oldest (by publish sequence) `Active` preview, optionally
     /// restricted to `only_actor` — the "shed-previews-first" admission law applied to this
     /// crate's own population budget.
     fn evict_oldest_active(&mut self, only_actor: Option<&ActorId>) -> Option<PreviewId> {
@@ -405,17 +405,17 @@ impl PreviewStore {
     //#endregion 🔖️Publish
 
     //#region 🔖️Transitions
-    /// @emoji 🙅️ The authoring actor pulls `id` back.
+    /// 🙅️ The authoring actor pulls `id` back.
     pub fn withdraw(&mut self, id: &PreviewId) -> Result<(), DbError> {
         self.transition(id, PreviewState::Withdrawn)
     }
 
-    /// @emoji ✅️ `id`'s speculative content became real (the actor's actual command landed).
+    /// ✅️ `id`'s speculative content became real (the actor's actual command landed).
     pub fn commit(&mut self, id: &PreviewId) -> Result<(), DbError> {
         self.transition(id, PreviewState::Committed)
     }
 
-    /// @emoji 🚫️ The server explicitly rejects `id`.
+    /// 🚫️ The server explicitly rejects `id`.
     pub fn reject(&mut self, id: &PreviewId) -> Result<(), DbError> {
         self.transition(id, PreviewState::Rejected)
     }
@@ -428,7 +428,7 @@ impl PreviewStore {
         Ok(())
     }
 
-    /// @emoji 🧹️ Removes every id in `ids` from `active_index`, but only where it is still the
+    /// 🧹️ Removes every id in `ids` from `active_index`, but only where it is still the
     /// current occupant of its `(actor, key)` slot (a later coalescing publish may have already
     /// overwritten the slot with a different id, which must not be evicted here).
     fn purge_active_index(&mut self, ids: &[PreviewId]) {
@@ -444,7 +444,7 @@ impl PreviewStore {
     //#endregion 🔖️Transitions
 
     //#region 🔖️Ttl
-    /// @emoji ⌛️ Transitions every `Active` preview whose `expires_at_ms <= now_ms` to `Expired`,
+    /// ⌛️ Transitions every `Active` preview whose `expires_at_ms <= now_ms` to `Expired`,
     /// returning the ids that were swept. Idempotent: previews already terminal are untouched.
     pub fn sweep_expired(&mut self, now_ms: u64) -> Vec<PreviewId> {
         let expired: Vec<PreviewId> = self
@@ -462,13 +462,13 @@ impl PreviewStore {
     //#endregion 🔖️Ttl
 
     //#region 🔖️Reconcile
-    /// @emoji 🧗️ `reconcile` using the default `DbConflictOracle` (real `db_conflict`-backed
+    /// 🧗️ `reconcile` using the default `DbConflictOracle` (real `db_conflict`-backed
     /// touched-region detection) — see `reconcile_with`.
     pub fn reconcile(&mut self, landed: &LandedCommand) -> ReconcileOutcome {
         self.reconcile_with(landed, &DbConflictOracle::default())
     }
 
-    /// @emoji ⚖️ The rebase-or-stale law: for every `Active` preview whose `base` is behind
+    /// ⚖️ The rebase-or-stale law: for every `Active` preview whose `base` is behind
     /// `landed.frontier`, either it conflicts with what landed (`oracle.conflicts`) and becomes
     /// `Superseded` ("stale"), or it doesn't and its `base` is advanced to `landed.frontier`
     /// ("rebase") while it stays `Active`. Previews already at or ahead of `landed.frontier` are

@@ -105,5 +105,14 @@
         }
       ]
     }
+  ],
+  "subjectFeatures": [
+    {
+      "implementation": "rust",
+      "features": [
+        "component-app-assembly"
+      ],
+      "rationale": "🧩️ The Home surfaces and their transient lane (`✏️editor/🫧️transient`) are built only under `component-app-assembly` (the plugin-guest surface); the subject host enables it so the `🫧️mutate-s-home-1-any-editor-transient` case drives the real lane bridge instead of a copy."
+    }
   ]
 }

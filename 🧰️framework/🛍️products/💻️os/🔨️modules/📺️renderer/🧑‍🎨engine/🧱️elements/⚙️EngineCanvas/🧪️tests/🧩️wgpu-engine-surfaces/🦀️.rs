@@ -508,6 +508,12 @@ fn world3d_preview_window_attaches_the_world_engine_and_paints_the_tessellated_s
 /// bounded string credits (`INTERACTION_TARGETS_OPEN`, `🌍️world/🦀️.rs:6343`), so the law parses it.
 ///
 /// ⚖️ A pick reports the scene's interaction granularity, matching the shared React gesture oracle.
+///
+/// 🎯️ Aim through the fixture camera's own target — the centre of the prism's base face, the one
+/// point guaranteed both inside the solid and inside the 45° frustum.
+///
+/// 🖱️ A left press opens the marquee gesture and the RELEASE is what picks — the same
+/// press-then-click contract React's World3dHost binds, so the lane drives both halves.
 fn world3d_pointer_down_law(surface_id: &str) {
     let fixture = fixture();
     let scene = world3d_preview_scene_with_selection(surface_id, &fixture, json!({ "method": "pick", "mode": "replace", "ids": [] }).to_string());
@@ -515,12 +521,8 @@ fn world3d_pointer_down_law(surface_id: &str) {
     let mut states = attach_and_settle_world3d(&scene, bounds, surface_id).world3d_states;
     let state = states.get_mut(surface_id).expect("attached world state");
 
-    // 🎯️ Aim through the fixture camera's own target — the centre of the prism's base face, the one
-    // point guaranteed both inside the solid and inside the 45° frustum.
     let camera = state.orbit.to_camera();
     let screen = ui_wgpu::wgpu::project_point(camera.view_proj(bounds.w, bounds.h), ui_wgpu::wgpu::Vec3::ZERO, bounds.w, bounds.h).expect("the camera target projects");
-    // 🖱️ A left press opens the marquee gesture and the RELEASE is what picks — the same
-    // press-then-click contract React's World3dHost binds, so the lane drives both halves.
     let mut actions = publish_world3d_intent(state, WorldInteractionIntent::pointer_button(screen[0], screen[1], true, 0, &PointerModifiers::default()));
     actions.extend(publish_world3d_intent(state, WorldInteractionIntent::pointer_button(screen[0], screen[1], false, 0, &PointerModifiers::default())));
     drop_world3d_states(states);
@@ -548,6 +550,9 @@ fn world3d_pointer_down_emits_the_graph_domain_selection_react_dispatches() {
 /// 🪟️ `windowId`, never `surfaceId` — `worldCameraSetCameraDispatchArgs` addresses the WINDOW
 /// instance, and the guest camera value has no `fov` member: React sends `{position, target,
 /// zoom, up?}` and a stray key fails the whole `camera` deserialization.
+///
+/// 🖱️ Orbit is `button == 2 && (alt || meta)` — the same chord React's World3dHost binds; a bare
+/// right-drag pans instead, and a plain left-drag is a marquee, not a camera move.
 fn world3d_orbit_and_wheel_law(surface_id: &str) {
     let fixture = fixture();
     let scene = world3d_preview_scene(surface_id, &fixture);
@@ -571,8 +576,6 @@ fn world3d_orbit_and_wheel_law(surface_id: &str) {
     let moved = (0..3).any(|axis| (after[axis] - before[axis]).abs() > 1.0e-4);
     assert!(moved, "the wheel actually moved the orbit camera the action reports: {before:?} -> {after:?}");
 
-    // 🖱️ Orbit is `button == 2 && (alt || meta)` — the same chord React's World3dHost binds; a bare
-    // right-drag pans instead, and a plain left-drag is a marquee, not a camera move.
     let dragged = publish_world3d_intent(state, WorldInteractionIntent::pointer_move(420.0, 320.0, 20.0, 20.0, true, 2, &PointerModifiers { alt: true, ..PointerModifiers::default() }));
     let orbited = dragged.iter().find(|action| action.action == "setCamera").expect("an orbit drag publishes setCamera");
     let orbit_args = orbited.args.clone().expect("orbit camera args");
@@ -1060,7 +1063,6 @@ fn retained_map_same_host_sibling_rebase_retires_engine_interaction_owner() {
     let gesture_retired = crate::scenes::retire_tiled_map_scene_identity(&accepted);
     let gesture_live = crate::scenes::tiled_map_drag_active(&accepted.host_id);
     let duplicate_retired = retire_map_interaction_owner(&presented);
-    eprintln!("[DEBUG] Map presented={:?} accepted={:?} engineRetired={engine_retired} gestureRetired={gesture_retired}", presented.node, accepted.node);
     for host in hosts {
         drop_engine_surface(&host);
     }
@@ -1104,6 +1106,11 @@ fn map_tile_url_substitutes_the_same_three_placeholders_react_does() {
 /// `procedural-preview` sat at `state-meshes=3 state-instances=0 state-draws=0` forever, three
 /// `step=Stale` lines after `world3d delivery applied`, with the React twin showing the tessellated
 /// column (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w14b-generation3d-labels-preview-layout.md`).
+///
+/// 1️⃣ The first paint STAGES the mesh-wire bridge; this drive seals its lease.
+///
+/// 2️⃣ …and only THEN does the producer republish a document lane, which bumps the revision.
+///    The reference plane is `hidden`, so this is a pure revision bump and never a re-framing.
 #[test]
 fn a_revision_bump_while_the_bridge_lease_is_in_flight_still_publishes_the_draws() {
     let fixture = fixture();
@@ -1111,13 +1118,10 @@ fn a_revision_bump_while_the_bridge_lease_is_in_flight_still_publishes_the_draws
     let scene = world3d_preview_scene(surface_id, &fixture);
     let bounds = Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 };
 
-    // 1️⃣ The first paint STAGES the mesh-wire bridge; this drive seals its lease.
     let mut frame = paint_scene(&scene, bounds, crate::scenes::AdmittedSurfaceMap::default());
     assert!(frame.world3d_states.contains_key(surface_id), "the first painted frame constructs the World3d host");
     drive_world3d_ladder(frame.world3d_states.get_mut(surface_id).expect("attached world state"));
 
-    // 2️⃣ …and only THEN does the producer republish a document lane, which bumps the revision.
-    //    The reference plane is `hidden`, so this is a pure revision bump and never a re-framing.
     let mut moved = world3d_preview_scene(surface_id, &fixture);
     moved.world_3d.as_mut().expect("world scene").references_json = Some(json!([{ "id": "plan", "origin": [0.0, 0.0, 0.0], "widthWorld": 4.0, "hidden": true }]).to_string());
 

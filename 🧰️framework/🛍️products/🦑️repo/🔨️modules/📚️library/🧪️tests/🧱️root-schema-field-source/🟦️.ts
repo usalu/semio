@@ -72,7 +72,7 @@ test("resolves every schema-field owner through its exact semantic context", () 
   for (const owner of fixture.owners) {
     expect(semanticDirectoryKindId(owner.directoryName, taxonomy, { parentKindId: owner.parentKindId }), owner.path).toBe(owner.kindId);
     expect(owner.path.split("/").at(-1)).toBe("🟦️.ts");
-    expect(namedDeclarations(resolve(repoRoot, owner.path))).toEqual(owner.declarations);
+    expect(namedDeclarations(resolve(repoRoot, owner.path))).toEqual<readonly string[]>(owner.declarations);
   }
 });
 

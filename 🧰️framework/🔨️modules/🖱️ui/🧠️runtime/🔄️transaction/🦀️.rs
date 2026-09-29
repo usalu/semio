@@ -1,4 +1,4 @@
-//! @emoji 🔄️ The frame transaction: drain, dispatch, flush, present, reconcile, collect.
+//! 🔄️ The frame transaction: drain, dispatch, flush, present, reconcile, collect.
 //!
 //! [`FrameTransaction::step`] is the persistent scheduler-bounded state machine that ties every
 //! landed sibling into one atomically published frame: `crate::EntityStore` for state and mutation leasing, `crate::DependencyTracker` for

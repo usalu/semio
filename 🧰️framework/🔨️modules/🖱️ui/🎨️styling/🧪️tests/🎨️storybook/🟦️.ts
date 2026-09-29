@@ -12,7 +12,7 @@ function significantConsoleErrors(messages: string[]): string[] {
   return messages.filter((text) => !/Failed to load resource:.*\b404\b/i.test(text));
 }
 
-/** @emoji 🧪️ Navigates to `iframe.html?id=…` and asserts the story actually mounted — a 200 status alone doesn't prove this since `iframe.html` is a static shell that renders its "couldn't find story" fallback with the same HTTP status. */
+/** 🧪️ Navigates to `iframe.html?id=…` and asserts the story actually mounted — a 200 status alone doesn't prove this since `iframe.html` is a static shell that renders its "couldn't find story" fallback with the same HTTP status. */
 async function expectStylingStory(page: Page, storyId: string): Promise<void> {
   const pageErrors: Error[] = [];
   const consoleErrors: string[] = [];

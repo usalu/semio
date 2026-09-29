@@ -448,7 +448,6 @@ fn a_surfaces_second_document_reaches_the_arena_and_a_constant_generation_never_
     assert!(ingest_once(&mut refused, "constant", &law, &ids, constant[0], first_revision, None), "its first document is admitted");
     assert!(!ingest_once(&mut refused, "constant", &law, &survivors, constant[1], second_revision, Some(&addition)), "a repeat generation is never ADMITTED — `document_status` answers Published and the ingress is skipped");
     assert!(!arena_keys(&refused, "constant").contains(&added_key), "…so the arena keeps the first tree, which is exactly what 6118 painted");
-    eprintln!("[DEBUG] ingress generations minted={minted_first}/{minted_second} constant={constant:?}");
 }
 
 /// ⚖️ LAW: the ingress-generation rule itself — held still while a surface's own revision holds

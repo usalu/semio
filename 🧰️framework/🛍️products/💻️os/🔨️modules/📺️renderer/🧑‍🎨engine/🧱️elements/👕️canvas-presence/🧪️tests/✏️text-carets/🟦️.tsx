@@ -1,4 +1,4 @@
-/** @emoji ✏️ Text peer carets (collab STEP 14, writer): from the shared `✏️text-carets` fixture, `TextPeerCaretsOverlayV1`
+/** ✏️ Text peer carets (collab STEP 14, writer): from the shared `✏️text-carets` fixture, `TextPeerCaretsOverlayV1`
  * paints exactly one caret per OTHER actor that published a `space: "text"` view of this window, at its WORLD caret projected
  * through the viewer's own camera, with the localized accessible name (en + de); its own caret, another window and a
  * canvas-space view paint nothing. */

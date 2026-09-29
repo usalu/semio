@@ -230,7 +230,6 @@ fn window_config_retained_pack_load_current_registry_identity_and_reopen_baselin
             assert_eq!(keyed_packs(reopened.packs().await.expect("packs after malformed load")), restored_bytes, "malformed load leaves existing owners unchanged and the absent target unmaterialized");
             close_retained_load_registry(&mut reopened);
         }));
-        eprintln!("[DEBUG] Window retained-load baseline: owners=2 packs=3 sameKind=2 crossKind=1 malformedAtomic=1 stackBytes=2097152");
     });
 }
 
@@ -263,7 +262,6 @@ fn window_config_retained_pack_load_round_trips_a_saved_camera_with_history() {
             assert_eq!(keyed_packs(reopened.packs().await.expect("reopened camera packs")), saved_bytes, "the saved camera Pack+SPR bytes survive reopen");
             close_retained_load_registry(&mut reopened);
         }));
-        eprintln!("[DEBUG] Window retained-load saved camera: restored=true history=true");
     });
 }
 
@@ -299,7 +297,6 @@ fn window_config_retained_pack_load_refuses_exhausted_turn_bounds_and_over_bound
             assert!(reopened.snapshot(RetainedLoadOwnerA::WINDOW_KIND_ID, "left").is_some());
             close_retained_load_registry(&mut reopened);
         }));
-        eprintln!("[DEBUG] Window retained-load bound: exhausted=typed overBound=typed retired=true");
     });
 }
 

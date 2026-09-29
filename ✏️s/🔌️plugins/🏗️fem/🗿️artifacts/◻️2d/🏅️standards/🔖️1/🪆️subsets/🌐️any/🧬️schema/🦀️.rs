@@ -178,7 +178,7 @@ pub fn default_fem2d_snapshot() -> crate::Fem2dSnapshot {
     match <crate::Fem2dSnapshot as store::ArtifactDsl>::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::FEM2D_EXAMPLE_TEXT) {
         Ok(snapshot) => {
             eprintln!(
-                "[DEBUG] fem2d boot snapshot: loaded the bundled example — nodes={} elements={} regions={} materials={} sections={} supports={} loadCases={} combinations={}",
+                "[TRACE] fem2d boot snapshot: loaded the bundled example — nodes={} elements={} regions={} materials={} sections={} supports={} loadCases={} combinations={}",
                 snapshot.nodes.len(),
                 snapshot.elements.len(),
                 snapshot.regions.len(),
@@ -191,7 +191,7 @@ pub fn default_fem2d_snapshot() -> crate::Fem2dSnapshot {
             snapshot
         }
         Err(error) => {
-            eprintln!("[DEBUG] fem2d boot snapshot: the bundled example failed to parse, falling back to the empty document — {error}");
+            eprintln!("[TRACE] fem2d boot snapshot: the bundled example failed to parse, falling back to the empty document — {error}");
             empty_fem2d_snapshot()
         }
     }

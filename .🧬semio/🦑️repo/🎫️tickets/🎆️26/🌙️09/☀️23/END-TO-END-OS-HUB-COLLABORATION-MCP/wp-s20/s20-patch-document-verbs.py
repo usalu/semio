@@ -265,20 +265,38 @@ def regex_hunks(text_by_file: dict[str, str]) -> list[str]:
     return notes
 
 
+
+#: 🏁️ Set-level landing markers `(repo path, text)` — `None` = the set deletes that file. All present → the set is
+#: landed and nothing is applied (per-hunk checks alone cannot see an insert whose text a later codemod reworded).
+LANDED = [('🧰️framework/🔨️modules/🛂️manifest/🦀️.rs', 'pub const IMPORT_ARTIFACT_DOCUMENT_ACTION_ID: &str = "importArtifactDocument";')]
+
+
+def landed_guard() -> bool:
+    """🏁️ True when every landing marker is in the tree; a partial landing is a conflict, never a second write."""
+    tree = Path("/Users/ueli/Documents/semio")
+    present = [(not (tree / rel).exists()) if marker is None else ((tree / rel).exists() and marker in (tree / rel).read_text()) for rel, marker in LANDED]
+    if all(present):
+        print("landed: every set marker is in the tree — nothing to apply")
+        return True
+    if any(present):
+        raise SystemExit(f"CONFLICT: set partially landed (markers {present}) — nothing written")
+    return False
+
+
 def main() -> None:
+    if landed_guard():
+        return
     files = {rel for _, rel, _, _ in hunks()}
     text_by_file = {rel: (ROOT / rel).read_text() for rel in files}
     original = dict(text_by_file)
     notes = []
     for name, rel, old, new in hunks():
         text = text_by_file[rel]
-        if old and text.count(old) == 1:
+        if (new and text.count(new) == 1 and (old not in text or old in new)) or (not new and old not in text):
+            notes.append(f"applied   {name}")
+        elif old and text.count(old) == 1:
             text_by_file[rel] = text.replace(old, new)
             notes.append(f"apply     {name}")
-        elif new and new in text and (old not in text or old in new):
-            notes.append(f"applied   {name}")
-        elif not new and old not in text:
-            notes.append(f"applied   {name}")
         else:
             notes.append(f"CONFLICT  {name}: anchor found {text.count(old)}×")
     notes += regex_hunks(text_by_file)

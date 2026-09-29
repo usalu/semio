@@ -41,10 +41,9 @@ async fn settle_archive(app: &mut super::unit_tests::context::DrawingApp, operat
         if round % 1 == 0 {
             let pack = app.document_pack().await.map(|files| files.pack.len()).unwrap_or(0);
             let current = app.snapshot().map(|snapshot| snapshot.encode_pack().len()).unwrap_or(0);
-            eprintln!("[DEBUG] archive poll round={round} {line} initial_pack={pack} current_pack={current}");
+            eprintln!("archive poll round={round} {line} initial_pack={pack} current_pack={current}");
         }
         if line != last {
-            eprintln!("[DEBUG] archive poll round={round} {line}");
             last = line;
         }
         if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {

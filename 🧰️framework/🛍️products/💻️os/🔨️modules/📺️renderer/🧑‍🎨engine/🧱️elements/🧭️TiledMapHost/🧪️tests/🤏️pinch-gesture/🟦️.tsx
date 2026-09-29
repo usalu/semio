@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🤏️ Mounted `TiledMapHost` multi-touch laws: a second contact retires the marquee,
+/** 🤏️ Mounted `TiledMapHost` multi-touch laws: a second contact retires the marquee,
  * live camera changes stay local, the last lift publishes once, and the recognizer admits a fresh
  * successor contact. The coordinates and expected camera are shared with the native renderer. */
 // #endregion 🧲️Header

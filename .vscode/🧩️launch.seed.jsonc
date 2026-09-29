@@ -3389,11 +3389,22 @@
       "name": "⚖️gate🗄️stdio✏️catalog🦀️",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/stdio-plugin:test -- --features full-app-catalog --test editor_catalog",
+      "command": "bun nx run @semio-tech/stdio-plugin:test -- --test editor_catalog",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
         "order": 407.91
+      }
+    },
+    {
+      "name": "⚖️gate🗄️stdio🚢️shipped-fleet🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/stdio-plugin:test -- --test shipped_fleet",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 407.915
       }
     },
     {
@@ -3471,28 +3482,6 @@
       "presentation": {
         "group": "4_gate",
         "order": 407.98
-      }
-    },
-    {
-      "name": "⚖️gate🗄️stdio✏️shipping🟦️",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/stdio-plugin:test -- editor-shipping-contract",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_gate",
-        "order": 407.99
-      }
-    },
-    {
-      "name": "⚖️gate🗄️stdio✏️catalog🌐️",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/stdio-plugin:editor-component-check -- --full-catalog",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_gate",
-        "order": 407.995
       }
     },
     {

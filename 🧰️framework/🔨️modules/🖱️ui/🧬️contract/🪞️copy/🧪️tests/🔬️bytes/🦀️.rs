@@ -44,7 +44,6 @@ fn retained_component_copy_separates_allocation_child_work_and_exact_root_return
     let mut returned = UiComponentCopy::new(candidate);
     close(&mut returned, 64);
     assert_eq!(allocated, 32768);
-    eprintln!("[DEBUG] component-copy-transfers allocation=32768 child-work<=4096 exact-root-grant={} separately-returned=true", size_of::<Component>());
 }
 fn semantic(component: &Option<Component>) -> usize {
     match component {
@@ -84,7 +83,6 @@ fn retained_component_copy_byte_candidate_cancel_reports_every_initialized_byte(
             assert_eq!(actual, expected);
         }
     }
-    eprintln!("[DEBUG] component-byte-cancel frontiers=10 grants=1,64,4096 initialized-prefix-exact=true");
 }
 
 #[test]
@@ -98,6 +96,5 @@ fn retained_component_copy_overallocated_backing_error_retains_exact_owner() {
     assert_eq!(owner.owned.byte_candidate.len(), 0);
     assert_eq!(serde_json::to_value(owner.source().unwrap()).unwrap(), serde_json::to_value(source()).unwrap());
     assert_eq!(close(&mut owner, 1), 7);
-    eprintln!("[DEBUG] component-byte-overcapacity actual={} initialized=0 retained-error=true exact-close=true", fault.allocated_bytes);
 }
 //#endregion 🧪️ByteCandidateOwnership

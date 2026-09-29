@@ -219,7 +219,7 @@ pub(crate) mod context {
     
     /// 🩺️ `dispatch` for an app command, with the publication ladder's own census traced on stderr: every
     /// power-of-two turn and every 30 s it prints the turn, wall time, the framework's per-ladder unit census
-    /// since dispatch, and the lanes of every result page presented so far. Temporary `[DEBUG]` capture for
+    /// since dispatch, and the lanes of every result page presented so far. Temporary `[TRACE]` capture for
     /// the `capsule-dream` switch (`📓️block-puzzle.md` §11), which names WHICH lane spends its units.
     pub fn dispatch_traced(app: &mut Puzzle5dApp, action: &str, args: Option<&Value>, window_id: Option<&str>) -> Result<InvocationResult, Fault> {
         let action_meta = action_meta(action, args, window_id);
@@ -234,7 +234,7 @@ pub(crate) mod context {
         for turn in 1..=1_048_576_u64 {
             if !app.has_pending_typed_operations() {
                 drain_settled(app, &mut result, &mut fault)?;
-                eprintln!("[DEBUG] {action} settled turn={turn} ms={} census={} pages={lanes:?} fault={fault:?}", started.elapsed().as_millis(), semio_framework_plugin::app::typed_operation_unit_census() - base);
+                eprintln!("{action} settled turn={turn} ms={} census={} pages={lanes:?} fault={fault:?}", started.elapsed().as_millis(), semio_framework_plugin::app::typed_operation_unit_census() - base);
                 return fault.map_or(Ok(result), Err);
             }
             PluginApp::maintenance_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)?;
@@ -242,7 +242,7 @@ pub(crate) mod context {
             while let Some(page) = app.take_typed_operation_result_page(1) {
                 *lanes.entry(format!("{:?}", page.lane)).or_default() += 1;
                 if page.lane == semio_framework_plugin::app::TypedOperationResultLane::Fault {
-                    eprintln!("[DEBUG] {action} FAULT page operation={} turn={turn} ms={} census={} pages={lanes:?} fault={}", page.token.operation, started.elapsed().as_millis(), semio_framework_plugin::app::typed_operation_unit_census() - base, String::from_utf8_lossy(page.bytes()));
+                    eprintln!("{action} FAULT page operation={} turn={turn} ms={} census={} pages={lanes:?} fault={}", page.token.operation, started.elapsed().as_millis(), semio_framework_plugin::app::typed_operation_unit_census() - base, String::from_utf8_lossy(page.bytes()));
                     fault.get_or_insert_with(|| Fault::from(String::from_utf8_lossy(page.bytes()).into_owned()));
                 }
                 app.acknowledge_typed_operation_result(page.token)?;
@@ -251,7 +251,7 @@ pub(crate) mod context {
             drain_settled(app, &mut result, &mut fault)?;
             if turn == next_turn || last_print.elapsed().as_secs() >= 30 {
                 let now = semio_framework_plugin::app::typed_operation_unit_census();
-                eprintln!("[DEBUG] {action} turn={turn} ms={} total={} window={} pages={lanes:?} pending={}", started.elapsed().as_millis(), now - base, now - last_census, app.has_pending_typed_operations());
+                eprintln!("{action} turn={turn} ms={} total={} window={} pages={lanes:?} pending={}", started.elapsed().as_millis(), now - base, now - last_census, app.has_pending_typed_operations());
                 last_census = now;
                 last_print = std::time::Instant::now();
                 if turn == next_turn {
@@ -1045,7 +1045,6 @@ async fn exact_window_cameras_isolate_render_and_reload_without_document_or_app_
     assert_eq!(render_window(&mut reopened, board2d::BODY_KEY, window_b), board_b);
     close_app(&mut reopened);
     close_app(&mut app);
-    eprintln!("[DEBUG] two Puzzle 5D board windows published and rendered independent cameras, preserved document and app config, reloaded both exact persisted partitions, and closed their registered apps");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1075,7 +1074,6 @@ async fn exact_window_transient_isolated_abort_and_reload_reset_through_register
     drop((transient_a, transient_b, aborted, reset));
     close_app(&mut reopened);
     close_app(&mut app);
-    eprintln!("[DEBUG] Puzzle 5D transient engagement stayed exact-window isolated, abort cleared only its owner, reload reset ephemeral state, and both registered apps reached close");
 }
 
 #[semio_framework_async_macros::async_test]

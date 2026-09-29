@@ -114,7 +114,7 @@ function normalizeCommandText(value: string): string {
     .replace(/\s+/g, " ");
 }
 
-/** @emoji 🧮️ Produces a stable owned command match score without browser layout or third-party state. */
+/** 🧮️ Produces a stable owned command match score without browser layout or third-party state. */
 export function rankCommandValue(value: string, search: string, keywords: readonly string[] = []): number {
   const query = normalizeCommandText(search);
   if (!query) return 1;
@@ -150,7 +150,7 @@ export function rankCommandValue(value: string, search: string, keywords: readon
 // #endregion 🔎️Ranking
 
 // #region 🪆️Command
-/** @emoji ⌨️ Owns command filtering, active-descendant navigation, and exact-once activation. */
+/** ⌨️ Owns command filtering, active-descendant navigation, and exact-once activation. */
 function Command({ className, value, defaultValue = "", onValueChange, shouldFilter = true, filter = rankCommandValue, loop = false, onKeyDown, children, ...props }: CommandProps) {
   const generatedId = React.useId().replaceAll(":", "");
   const listId = `${props.id ?? `command-${generatedId}`}-list`;
@@ -253,7 +253,7 @@ function Command({ className, value, defaultValue = "", onValueChange, shouldFil
   );
 }
 
-/** @emoji 🪟️ Composes Command strictly inside the repository-owned modal boundary. */
+/** 🪟️ Composes Command strictly inside the repository-owned modal boundary. */
 function CommandDialog({ title, description, children, className, showCloseButton = true, shouldFilter, ...props }: CommandDialogProps) {
   const commandPaletteLabel = useLabel("ui.common.commandPalette");
   const searchForCommandLabel = useLabel("ui.common.searchForCommand");
@@ -275,7 +275,7 @@ function CommandDialog({ title, description, children, className, showCloseButto
   );
 }
 
-/** @emoji 🔍️ Owns the command query while preserving authoritative controlled input state. */
+/** 🔍️ Owns the command query while preserving authoritative controlled input state. */
 const CommandInput = React.forwardRef<HTMLInputElement, CommandInputProps>(function CommandInput({ className, value, defaultValue = "", onValueChange, onChange, onCompositionStart, onCompositionEnd, ...props }, ref) {
   const context = useCommandContext("CommandInput");
   const controlled = value !== undefined;
@@ -314,19 +314,19 @@ const CommandInput = React.forwardRef<HTMLInputElement, CommandInputProps>(funct
   );
 });
 
-/** @emoji 📜️ Supplies the owned listbox boundary associated with CommandInput. */
+/** 📜️ Supplies the owned listbox boundary associated with CommandInput. */
 const CommandList = React.forwardRef<HTMLDivElement, CommandListProps>(function CommandList({ className, ...props }, ref) {
   const context = useCommandContext("CommandList");
   return <div {...props} ref={ref} id={context.listId} role="listbox" data-slot="command-list" className={cn("max-h-layout-command scroll-py-single overflow-x-hidden overflow-y-auto", className)} />;
 });
 
-/** @emoji 🕳️ Stays mounted as a live status and is hidden whenever at least one result remains. */
+/** 🕳️ Stays mounted as a live status and is hidden whenever at least one result remains. */
 const CommandEmpty = React.forwardRef<HTMLDivElement, CommandEmptyProps>(function CommandEmpty({ className, hidden, ...props }, ref) {
   const context = useCommandContext("CommandEmpty");
   return <div {...props} ref={ref} role="status" aria-live="polite" data-slot="command-empty" className={cn("py-medium text-center text-sm", className)} hidden={hidden || context.visibleItems.length > 0} />;
 });
 
-/** @emoji 🗂️ Groups command options and hides, rather than unmounts, empty result groups. */
+/** 🗂️ Groups command options and hides, rather than unmounts, empty result groups. */
 const CommandGroup = React.forwardRef<HTMLDivElement, CommandGroupProps>(function CommandGroup({ className, heading, children, hidden, forceMount = false, ...props }, ref) {
   const context = useCommandContext("CommandGroup");
   const generatedId = React.useId().replaceAll(":", "");
@@ -363,7 +363,7 @@ const CommandGroup = React.forwardRef<HTMLDivElement, CommandGroupProps>(functio
 let commandItemOrder = 0;
 const EMPTY_COMMAND_KEYWORDS: readonly string[] = [];
 
-/** @emoji 🎯️ Owns one stable option identity and activates it once per accepted gesture. */
+/** 🎯️ Owns one stable option identity and activates it once per accepted gesture. */
 const CommandItem = React.forwardRef<HTMLDivElement, CommandItemProps>(function CommandItem(
   { className, value, keywords = EMPTY_COMMAND_KEYWORDS, disabled = false, forceMount = false, hidden = false, onSelect, onClick, onPointerDown, onPointerMove, children, id, ...props },
   forwardedRef,
@@ -429,7 +429,7 @@ const CommandItem = React.forwardRef<HTMLDivElement, CommandItemProps>(function 
   );
 });
 
-/** @emoji ⌘️ Renders decorative shortcut text without entering the option focus model. */
+/** ⌘️ Renders decorative shortcut text without entering the option focus model. */
 const CommandShortcut = React.forwardRef<HTMLSpanElement, CommandShortcutProps>(function CommandShortcut({ className, ...props }, ref) {
   return <span {...props} ref={ref} aria-hidden="true" data-slot="command-shortcut" className={cn("text-muted-foreground ms-auto text-xs tracking-widest", className)} />;
 });

@@ -52,7 +52,7 @@ import { resolveCatalogFilterPluginId } from "../📋️plan/🟦️.ts";
 
 //#endregion 🪶️PluginSizeMeasurement
 
-/** @emoji 👀️ A plugin crate's edits alone don't cover every source that feeds its build: multi-crate
+/** 👀️ A plugin crate's edits alone don't cover every source that feeds its build: multi-crate
  * app families (e.g. `fem/plugin/rs` depending on `fem/2d/rs`/`fem/3d/rs`/`fem/core/rs`, or an
  * example fixture under `fem/2d/example`) live as SIBLING directories under the same top-level app
  * folder, not inside the plugin crate itself. Watching just `target.cratePath` misses them, so a
@@ -73,7 +73,7 @@ function pluginWatchRoot(target: PluginRegistryEntry): string {
   return join(repoRoot, topLevel);
 }
 
-/** @emoji 👀️ Rebuilds each of `targets` on source change — one `fs.watch` per crate (see
+/** 👀️ Rebuilds each of `targets` on source change — one `fs.watch` per crate (see
  * `pluginWatchRoot`) feeding a single dirty-set queue that drains serially. Two crates edited in quick
  * succession (or one crate touched again before its own rebuild finishes) used to fire overlapping
  * `void buildPlugin(...)` calls that raced each other against the same `target/` cargo lock; the dirty

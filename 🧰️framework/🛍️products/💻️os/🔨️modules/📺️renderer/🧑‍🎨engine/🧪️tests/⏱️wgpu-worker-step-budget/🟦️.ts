@@ -34,7 +34,7 @@ const TwoKindFrameTurnScheduler = FrameTurnScheduler as unknown as new (
   assetDecodeStep: () => boolean,
 ) => TwoKindFrameTurnScheduler;
 
-/** @emoji 🔥️ A genuinely EXECUTING span — the only thing the ceiling is allowed to charge for. */
+/** 🔥️ A genuinely EXECUTING span — the only thing the ceiling is allowed to charge for. */
 function spinMs(milliseconds: number): void {
   const until = performance.now() + milliseconds;
   while (performance.now() < until) {
@@ -42,7 +42,7 @@ function spinMs(milliseconds: number): void {
   }
 }
 
-/** @emoji 🧵️ One frame-Worker boot step, driven the way `🎞️frame-worker/🟦️.ts` drives one: priced on the
+/** 🧵️ One frame-Worker boot step, driven the way `🎞️frame-worker/🟦️.ts` drives one: priced on the
  * executing clock, admitted to the ledger, yielded after when the ledger says the Worker is running long,
  * and NEVER able to end the boot. */
 async function workerBootStep<T>(ledger: TurnLedger, clock: TurnClock, stage: string, run: () => T, yields: string[]): Promise<T> {

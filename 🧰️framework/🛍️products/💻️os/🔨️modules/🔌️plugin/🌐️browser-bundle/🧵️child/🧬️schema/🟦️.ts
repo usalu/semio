@@ -145,7 +145,8 @@ export function boundChildText(value: string, limit: number): string {
 }
 
 /** 🩻️ Names one guest failure: the phase it happened in, the export path it was reached through, and
- * the guest error's own class and message, each bounded. It carries no bytes, no module URL and no
+ * the guest error's own class and message — a component-model error's typed `payload` when it has one (its `.message` is only
+ * "[object Object] (see error.payload)") — each bounded. It carries no bytes, no module URL and no
  * host object — only what the guest itself said about why it refused. */
 export function childRejectionReason(phase: BrowserActorChildRejectionPhase, path: readonly unknown[], error: unknown): BrowserActorChildRejectionV1 {
   const text = (read: () => unknown): string | null => {
@@ -158,7 +159,11 @@ export function childRejectionReason(phase: BrowserActorChildRejectionPhase, pat
   };
   const route = path.filter((name): name is string => typeof name === "string").join("/");
   const errorClass = text(() => (error as Error)?.name) || text(() => (error as { constructor?: { name?: unknown } })?.constructor?.name) || typeof error;
-  const message = text(() => (error as Error)?.message) ?? text(() => String(error)) ?? "";
+  const payload = text(() => {
+    const value = (error as { payload?: unknown })?.payload;
+    return value === undefined ? undefined : JSON.stringify(value, (_key, item: unknown) => (typeof item === "bigint" ? item.toString() : item instanceof Uint8Array ? `<${item.byteLength} bytes>` : item));
+  });
+  const message = payload ?? text(() => (error as Error)?.message) ?? text(() => String(error)) ?? "";
   return Object.freeze({
     phase,
     path: boundChildText(route, BROWSER_ACTOR_CHILD_REJECTION_LIMITS.pathBytes),

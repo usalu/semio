@@ -1,0 +1,554 @@
+{
+  "schema": "semio.hub.catalog-selection-preflight/v1",
+  "cases": [
+    {
+      "id": "owned-kind-accepted",
+      "profileId": "local-note-open-v1",
+      "packages": [
+        {
+          "pluginId": "note",
+          "componentPackageId": "semio:note",
+          "outputName": "semio_s_plugin_note.wasm",
+          "linkedCodecRegistry": null,
+          "linkedCodecRegistryPresent": false,
+          "descriptor": {
+            "manifest": {
+              "pluginId": "note",
+              "apps": [
+                {
+                  "id": "s.note.note@1/*#editor",
+                  "artifactKinds": [
+                    {
+                      "id": "s.note.note",
+                      "schema": "note.document"
+                    }
+                  ]
+                },
+                {
+                  "id": "s.note.note@1/*#viewer",
+                  "artifactKinds": []
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "findings": []
+    },
+    {
+      "id": "plugin-level-kind-accepted",
+      "profileId": "local-gis-open-v1",
+      "packages": [
+        {
+          "pluginId": "gis",
+          "componentPackageId": "semio:gis",
+          "outputName": "semio_s_plugin_gis.wasm",
+          "linkedCodecRegistry": "✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🔣️.json",
+          "linkedCodecRegistryPresent": true,
+          "descriptor": {
+            "manifest": {
+              "pluginId": "gis",
+              "apps": [
+                {
+                  "id": "s.gis.gis@1/*#editor",
+                  "artifactKinds": []
+                },
+                {
+                  "id": "s.gis.gis@1/*#viewer",
+                  "artifactKinds": []
+                }
+              ],
+              "artifactKinds": [
+                {
+                  "id": "s.gis.gismap",
+                  "schema": "gis.map"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "findings": []
+    },
+    {
+      "id": "hosted-package-refused",
+      "profileId": "local-stdio-stdio-pdf-open-v1",
+      "packages": [
+        {
+          "pluginId": "stdio",
+          "componentPackageId": "semio:stdio",
+          "outputName": "semio_s_plugin_stdio.wasm",
+          "linkedCodecRegistry": "✏️s/🔌️plugins/🗄️stdio/📇️registry/📜️native-codec-factories.json",
+          "linkedCodecRegistryPresent": true,
+          "descriptor": {
+            "manifest": {
+              "pluginId": "stdio",
+              "apps": [
+                {
+                  "id": "s.stdio.stdio@1/*#editor",
+                  "artifactKinds": []
+                },
+                {
+                  "id": "s.stdio.stdio@1/*#viewer",
+                  "artifactKinds": []
+                }
+              ],
+              "artifactKinds": []
+            }
+          }
+        },
+        {
+          "pluginId": "stdio-pdf",
+          "componentPackageId": "semio:stdio-pdf",
+          "outputName": "semio_s_plugin_stdio-pdf.wasm",
+          "linkedCodecRegistry": null,
+          "linkedCodecRegistryPresent": false,
+          "descriptor": {
+            "manifest": {
+              "pluginId": "stdio-pdf",
+              "apps": [
+                {
+                  "id": "s.stdio-pdf.stdio-pdf@1/*#editor",
+                  "artifactKinds": []
+                },
+                {
+                  "id": "s.stdio-pdf.stdio-pdf@1/*#viewer",
+                  "artifactKinds": []
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "findings": [
+        "stdio-pdf: declares no artifact kind"
+      ]
+    },
+    {
+      "id": "linked-registry-missing-refused",
+      "profileId": "local-gis-open-v1",
+      "packages": [
+        {
+          "pluginId": "gis",
+          "componentPackageId": "semio:gis",
+          "outputName": "semio_s_plugin_gis.wasm",
+          "linkedCodecRegistry": "✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🔣️.json",
+          "linkedCodecRegistryPresent": false,
+          "descriptor": {
+            "manifest": {
+              "pluginId": "gis",
+              "apps": [
+                {
+                  "id": "s.gis.gis@1/*#editor",
+                  "artifactKinds": []
+                },
+                {
+                  "id": "s.gis.gis@1/*#viewer",
+                  "artifactKinds": []
+                }
+              ],
+              "artifactKinds": []
+            }
+          }
+        }
+      ],
+      "findings": [
+        "gis: linked codec registry"
+      ]
+    },
+    {
+      "id": "profile-over-identity-bound-refused",
+      "profileId": "local-abcdefgh-abcdefgh-abcdefgh-abcdefgh-abcdefgh-abcdefgh-abcdefgh-abcdefgh-abcdefgh-abcdefgh-abcdefgh-abcdefgh-abcdefgh-abcdefgh-abcdefgh-abcdefgh-abcdefgh-abcdefgh-abcdefgh-abcdefgh-abcdefgh-abcdefgh-abcdefgh-abcdefgh-abcdefgh-abcdefgh-abcdefgh-abcdefgh-open-v1",
+      "packages": [
+        {
+          "pluginId": "note",
+          "componentPackageId": "semio:note",
+          "outputName": "semio_s_plugin_note.wasm",
+          "linkedCodecRegistry": null,
+          "linkedCodecRegistryPresent": false,
+          "descriptor": {
+            "manifest": {
+              "pluginId": "note",
+              "apps": [
+                {
+                  "id": "s.note.note@1/*#editor",
+                  "artifactKinds": [
+                    {
+                      "id": "s.note.note",
+                      "schema": "note.document"
+                    }
+                  ]
+                },
+                {
+                  "id": "s.note.note@1/*#viewer",
+                  "artifactKinds": []
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "findings": [
+        "profile id"
+      ]
+    },
+    {
+      "id": "profile-at-identity-bound-accepted",
+      "profileId": "local-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-open-v1",
+      "packages": [
+        {
+          "pluginId": "note",
+          "componentPackageId": "semio:note",
+          "outputName": "semio_s_plugin_note.wasm",
+          "linkedCodecRegistry": null,
+          "linkedCodecRegistryPresent": false,
+          "descriptor": {
+            "manifest": {
+              "pluginId": "note",
+              "apps": [
+                {
+                  "id": "s.note.note@1/*#editor",
+                  "artifactKinds": [
+                    {
+                      "id": "s.note.note",
+                      "schema": "note.document"
+                    }
+                  ]
+                },
+                {
+                  "id": "s.note.note@1/*#viewer",
+                  "artifactKinds": []
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "findings": []
+    },
+    {
+      "id": "profile-not-a-local-name-refused",
+      "profileId": "catalog-all",
+      "packages": [
+        {
+          "pluginId": "note",
+          "componentPackageId": "semio:note",
+          "outputName": "semio_s_plugin_note.wasm",
+          "linkedCodecRegistry": null,
+          "linkedCodecRegistryPresent": false,
+          "descriptor": {
+            "manifest": {
+              "pluginId": "note",
+              "apps": [
+                {
+                  "id": "s.note.note@1/*#editor",
+                  "artifactKinds": [
+                    {
+                      "id": "s.note.note",
+                      "schema": "note.document"
+                    }
+                  ]
+                },
+                {
+                  "id": "s.note.note@1/*#viewer",
+                  "artifactKinds": []
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "findings": [
+        "profile id"
+      ]
+    },
+    {
+      "id": "unbounded-kind-schema-refused",
+      "profileId": "local-note-open-v1",
+      "packages": [
+        {
+          "pluginId": "note",
+          "componentPackageId": "semio:note",
+          "outputName": "semio_s_plugin_note.wasm",
+          "linkedCodecRegistry": null,
+          "linkedCodecRegistryPresent": false,
+          "descriptor": {
+            "manifest": {
+              "pluginId": "note",
+              "apps": [
+                {
+                  "id": "s.note.note@1/*#editor",
+                  "artifactKinds": [
+                    {
+                      "id": "s.note.note",
+                      "schema": "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"
+                    }
+                  ]
+                },
+                {
+                  "id": "s.note.note@1/*#viewer",
+                  "artifactKinds": []
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "findings": [
+        "note: artifact kind"
+      ]
+    },
+    {
+      "id": "padded-package-identity-refused",
+      "profileId": "local-note-open-v1",
+      "packages": [
+        {
+          "pluginId": "note",
+          "componentPackageId": " semio:note",
+          "outputName": "semio_s_plugin_note.wasm",
+          "linkedCodecRegistry": null,
+          "linkedCodecRegistryPresent": false,
+          "descriptor": {
+            "manifest": {
+              "pluginId": "note",
+              "apps": [
+                {
+                  "id": "s.note.note@1/*#editor",
+                  "artifactKinds": [
+                    {
+                      "id": "s.note.note",
+                      "schema": "note.document"
+                    }
+                  ]
+                },
+                {
+                  "id": "s.note.note@1/*#viewer",
+                  "artifactKinds": []
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "findings": [
+        "note: componentPackageId"
+      ]
+    },
+    {
+      "id": "every-finding-reported-at-once",
+      "profileId": "catalog-all",
+      "packages": [
+        {
+          "pluginId": "stdio-pdf",
+          "componentPackageId": "semio:stdio-pdf",
+          "outputName": "semio_s_plugin_stdio-pdf.wasm",
+          "linkedCodecRegistry": null,
+          "linkedCodecRegistryPresent": false,
+          "descriptor": {
+            "manifest": {
+              "pluginId": "stdio-pdf",
+              "apps": [
+                {
+                  "id": "s.stdio-pdf.stdio-pdf@1/*#editor",
+                  "artifactKinds": []
+                },
+                {
+                  "id": "s.stdio-pdf.stdio-pdf@1/*#viewer",
+                  "artifactKinds": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "pluginId": "stdio-image",
+          "componentPackageId": "semio:stdio-image",
+          "outputName": "semio_s_plugin_stdio-image.wasm",
+          "linkedCodecRegistry": null,
+          "linkedCodecRegistryPresent": false,
+          "descriptor": {
+            "manifest": {
+              "pluginId": "stdio-image",
+              "apps": [
+                {
+                  "id": "s.stdio-image.stdio-image@1/*#editor",
+                  "artifactKinds": []
+                },
+                {
+                  "id": "s.stdio-image.stdio-image@1/*#viewer",
+                  "artifactKinds": []
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "findings": [
+        "profile id",
+        "stdio-pdf: declares no artifact kind",
+        "stdio-image: declares no artifact kind"
+      ]
+    },
+    {
+      "id": "cross-package-owned-kind-refused",
+      "profileId": "local-gis-demonstrator-open-v1",
+      "packages": [
+        {
+          "pluginId": "gis",
+          "componentPackageId": "semio:gis",
+          "outputName": "semio_s_plugin_gis.wasm",
+          "linkedCodecRegistry": "✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🔣️.json",
+          "linkedCodecRegistryPresent": true,
+          "descriptor": {
+            "manifest": {
+              "pluginId": "gis",
+              "apps": [
+                {
+                  "id": "s.gis.x@1/*#editor",
+                  "role": "editor",
+                  "dialect": {
+                    "artifactKind": "s.gis.x"
+                  },
+                  "io": {
+                    "artifactSchema": "gis.map"
+                  },
+                  "artifactKinds": []
+                },
+                {
+                  "id": "s.gis.x@1/*#viewer",
+                  "role": "viewer",
+                  "io": {
+                    "artifactSchema": "gis.map"
+                  },
+                  "artifactKinds": []
+                }
+              ],
+              "artifactKinds": [
+                {
+                  "id": "s.gis.gismap",
+                  "schema": "gis.map"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "pluginId": "demonstrator",
+          "componentPackageId": "semio:demonstrator",
+          "outputName": "semio_s_plugin_demonstrator.wasm",
+          "linkedCodecRegistry": null,
+          "linkedCodecRegistryPresent": false,
+          "descriptor": {
+            "manifest": {
+              "pluginId": "demonstrator",
+              "apps": [
+                {
+                  "id": "s.demonstrator.x@1/*#editor",
+                  "role": "editor",
+                  "dialect": {
+                    "artifactKind": "s.gis.gismap"
+                  },
+                  "io": {
+                    "artifactSchema": "gis.map"
+                  },
+                  "artifactKinds": [
+                    {
+                      "id": "s.gis.gismap",
+                      "schema": "gis.map"
+                    }
+                  ]
+                },
+                {
+                  "id": "s.demonstrator.x@1/*#viewer",
+                  "role": "viewer",
+                  "io": {
+                    "artifactSchema": "gis.map"
+                  },
+                  "artifactKinds": []
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "findings": [
+        "artifact kind s.gis.gismap is owned by editors of gis and demonstrator"
+      ]
+    },
+    {
+      "id": "shared-unowned-kind-accepted",
+      "profileId": "local-block-sourcing-open-v1",
+      "packages": [
+        {
+          "pluginId": "block",
+          "componentPackageId": "semio:block",
+          "outputName": "semio_s_plugin_block.wasm",
+          "linkedCodecRegistry": null,
+          "linkedCodecRegistryPresent": false,
+          "descriptor": {
+            "manifest": {
+              "pluginId": "block",
+              "apps": [
+                {
+                  "id": "s.block.block2d@1/*#editor",
+                  "role": "editor",
+                  "dialect": {
+                    "artifactKind": "s.block.block2d"
+                  },
+                  "io": {
+                    "artifactSchema": "block.2d"
+                  },
+                  "artifactKinds": [
+                    {
+                      "id": "2d.block",
+                      "schema": "block.2d"
+                    },
+                    {
+                      "id": "kit.catalog",
+                      "schema": "kit.catalog"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "pluginId": "sourcing",
+          "componentPackageId": "semio:sourcing",
+          "outputName": "semio_s_plugin_sourcing.wasm",
+          "linkedCodecRegistry": null,
+          "linkedCodecRegistryPresent": false,
+          "descriptor": {
+            "manifest": {
+              "pluginId": "sourcing",
+              "apps": [
+                {
+                  "id": "s.sourcing.curation@1/*#editor",
+                  "role": "editor",
+                  "dialect": {
+                    "artifactKind": "s.sourcing.curation"
+                  },
+                  "io": {
+                    "artifactSchema": "sourcing.curation/v1"
+                  },
+                  "artifactKinds": [
+                    {
+                      "id": "catalogue.sourcing",
+                      "schema": "sourcing.curation/v1"
+                    },
+                    {
+                      "id": "kit.catalog",
+                      "schema": "kit.catalog"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "findings": []
+    }
+  ]
+}

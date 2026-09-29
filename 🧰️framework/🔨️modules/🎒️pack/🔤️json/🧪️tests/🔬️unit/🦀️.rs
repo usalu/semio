@@ -474,7 +474,6 @@ fn differential_parse_matches_serde_json_on_arbitrary_values() {
         assert!(values_match(&mine, &theirs), "case {case}: structural mismatch; text={text}\nmine={mine:?}\ntheirs={theirs:?}");
         checked += 1;
     }
-    eprintln!("[DEBUG] [differential] parse: {checked} generated documents matched serde_json");
 }
 
 #[test]
@@ -489,7 +488,6 @@ fn differential_cross_parse_serde_json_writer_output() {
         assert!(values_match(&mine, &theirs), "case {case}: structural mismatch; text={text}");
         checked += 1;
     }
-    eprintln!("[DEBUG] [differential] cross-parse: {checked} serde_json-written documents matched");
 }
 
 fn to_serde_json(value: &Value) -> serde_json::Value {
@@ -603,7 +601,6 @@ fn write_float_matches_serde_json_byte_for_byte() {
         checked += 1;
     }
     assert!(mismatches.is_empty(), "{} of {checked} floats mismatched serde_json byte-for-byte:\n{}", mismatches.len(), mismatches.join("\n"));
-    eprintln!("[DEBUG] [float-parity] {checked} f64 values matched serde_json byte-for-byte (edge cases + LCG sweep)");
 }
 
 /// 🔬️ The two real production call sites this parity result unblocks
@@ -623,6 +620,5 @@ fn realistic_payloads_byte_match_serde_json() {
         assert_eq!(mine, theirs, "realistic-payload float mismatch for {value:e}");
         checked += 1;
     }
-    eprintln!("[DEBUG] [float-parity] {checked} realistic-payload-shaped floats matched serde_json byte-for-byte");
 }
 //#endregion 🔖️FloatParity

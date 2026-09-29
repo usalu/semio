@@ -77,7 +77,6 @@ fn retained_engine_hit_provenance_reaches_each_dedicated_pointer_and_wheel_route
         shell.retained_hit_windows.insert(control, ("unrelated-window".into(), bounds));
         assert_eq!(shell.pointer_owner_at(x, y, &input, &theme), PointerHitOwner::Chrome, "{} forged owner {surface}", case["name"]);
     }
-    println!("[DEBUG] retained Graph, Map and Board hits reached only their live surface owner's dedicated ingress");
 }
 
 fn law() -> Value {

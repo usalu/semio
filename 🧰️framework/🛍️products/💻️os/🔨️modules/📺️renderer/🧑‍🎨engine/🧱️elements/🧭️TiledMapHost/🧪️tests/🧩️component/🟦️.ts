@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/TiledMapHost/component.test.ts
-/** @emoji 🧪️ Pure-logic tests for `TiledMapHost`'s tile-refresh perf primitives (ticket
+/** 🧪️ Pure-logic tests for `TiledMapHost`'s tile-refresh perf primitives (ticket
  * 26/08/29/GIS-MAP-END-TO-END): the byte-budgeted LRU (`createByteLru`), the bounded miss-key set
  * (`createBoundedSet`), the leading+trailing refresh debounce (`createLeadingTrailingDebounce`), and
  * `MapRenderer`'s `hasTile`-guarded upload path. Included in the React renderer's long test suite. */

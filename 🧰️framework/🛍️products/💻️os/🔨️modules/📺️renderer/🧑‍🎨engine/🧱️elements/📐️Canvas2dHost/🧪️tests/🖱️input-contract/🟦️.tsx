@@ -1,4 +1,4 @@
-/** @emoji 🖱️ Mounted Canvas2d input oracle: the real host owns catalogue DOM events while the
+/** 🖱️ Mounted Canvas2d input oracle: the real host owns catalogue DOM events while the
  * installed infinite-canvas session seam owns pointer/cancel/double-click events. Both must publish
  * the shared language-neutral fixture without changing MIME text, coordinates, or modifiers. */
 import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";

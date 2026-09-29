@@ -48,7 +48,9 @@
       "status": "declared"
     }
   ],
-  "codecs": [],
+  "codecs": [
+    { "id": "s.stdio.tsv.standard.iana.codec.native-document.v1", "status": "implemented", "from": "s.stdio.tsv.standard.iana.dialect.source", "to": "s.stdio.tsv.standard.iana.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.tsv.v1", "artifact_kind": "s.stdio.tsv", "artifact_schema": "stdio.tsv", "extension": "tsv", "pack_schema_hash": "8c65ab63508c1db68d9b9d67dd8482a604a71b5f8966fb4046967e5ec3a4f989", "runtime_capability_id": "s.stdio.tsv.standard.iana.codec.codec-stdio-tsv-extension-tsv.v1" } }
+  ],
   "mutations": [],
   "inferences": [],
   "resources": [
@@ -81,7 +83,34 @@
       "fixtures": []
     }
   ],
-  "runtime_capabilities": [],
+  "runtime_capabilities": [
+    {
+      "id": "s.stdio.tsv.standard.iana.codec.codec-stdio-tsv-extension-tsv.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec-extension:9:stdio.tsv:tsv|codec:stdio.tsv",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.tsv"
+        },
+        {
+          "namespace": "codec-extension",
+          "value": "9:stdio.tsv:tsv"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.tsv.schema.schema-s-stdio-tsv.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.tsv",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.tsv"
+        }
+      ]
+    }
+  ],
   "support_ledger": {
     "normative_source": null,
     "publication_date": null,

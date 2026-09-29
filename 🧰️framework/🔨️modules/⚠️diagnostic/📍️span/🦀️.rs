@@ -4,7 +4,7 @@
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Span
-/// @emoji 📍️ 1-based line/column position with a length, covering a run of source text.
+/// 📍️ 1-based line/column position with a length, covering a run of source text.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TextSpan {

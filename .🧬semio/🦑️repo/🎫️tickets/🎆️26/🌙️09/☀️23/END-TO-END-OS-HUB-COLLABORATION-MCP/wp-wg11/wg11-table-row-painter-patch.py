@@ -1143,7 +1143,7 @@ fn taffy_lays_the_editable_rows_cells_where_the_grid_does() {
             &leaves,
         )
         .expect("taffy row");
-    solver.compute_layout(row, taffy::geometry::Size::MAX_CONTENT).expect("taffy solves the row");
+    solver.compute_layout(row, taffy::geometry::Size { width: taffy::style::AvailableSpace::MaxContent, height: taffy::style::AvailableSpace::MaxContent }).expect("taffy solves the row");
     for (cell, leaf) in cells.iter().zip(leaves) {
         let solved = solver.layout(leaf).expect("taffy layout");
         assert!(

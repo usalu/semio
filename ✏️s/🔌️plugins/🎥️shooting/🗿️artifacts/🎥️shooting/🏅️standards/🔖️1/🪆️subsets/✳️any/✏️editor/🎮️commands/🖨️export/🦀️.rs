@@ -9,7 +9,7 @@ use crate::editor::shooting::ShootingDispatchCtx;
 use crate::op::ShootingMutation;
 use crate::standards::v1::subsets::any::schema::shooting_icon_render_request_json;
 use crate::{ShootingShot, ShootingSnapshot};
-use semio_framework_plugin::{ArtifactView, ConfigView, DslValue, Effect, Emit, Fault, IconRenderExportItem};
+use semio_framework_plugin::{ArtifactView, ConfigView, DslValue, Effect, Emit, Fault, FaultCode, FaultOrigin, IconRenderExportItem};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Export
@@ -29,7 +29,7 @@ fn export(all: bool, doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<
             return Ok(Emit::effect(Effect::IconRenderExport { items }));
         }
     }
-    Ok(Emit::default())
+    Err(Fault::new(FaultOrigin::App, FaultCode::new("shooting.export.nothing-to-export"), if all { "Choose an asset with at least one shot before exporting." } else { "Choose an asset and a shot before exporting." }))
 }
 //#endregion 🔖️Export
 

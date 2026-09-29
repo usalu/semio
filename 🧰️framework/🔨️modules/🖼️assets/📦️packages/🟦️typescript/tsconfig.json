@@ -12,8 +12,10 @@
 //along with this program.  If not, see <https://www.gnu.org/licenses/>.
 {
   "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../../../../tsconfig.json",
   "compilerOptions": {
-    "esModuleInterop": true,
-    "resolveJsonModule": true
-  }
+    "tsBuildInfoFile": "../../../../../node_modules/.cache/tsconfig.assets.tsbuildinfo",
+    "types": ["bun", "node"]
+  },
+  "include": ["🟦️.ts", "📜️script.ts"]
 }

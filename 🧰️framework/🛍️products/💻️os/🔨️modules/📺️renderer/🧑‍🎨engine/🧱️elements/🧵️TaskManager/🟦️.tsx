@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/🧵️TaskManager/component.tsx
-/** @emoji 🧵️ `🧵️TaskManager` — the design of record's `🧵️task-manager` pane: one row per LIVE actor
+/** 🧵️ `🧵️TaskManager` — the design of record's `🧵️task-manager` pane: one row per LIVE actor
  * (id, package, lane, status/failure stage, p95 wall time, mailbox length, shard, turns, traps,
  * restarts) with suspend/resume/cancel actions. Ticket `26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-
  * RUNTIME` packet T1.
@@ -48,6 +48,8 @@ import { Button, Table, registerUiTranslationBundles, useLabel, type IconName, t
 import { type ActionDescriptor } from "@semio-tech/framework";
 import { type ActivationRegistry, type RuntimeMetricsSnapshot } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
 import { type SpawnedJobRowV1 } from "../🔌️PluginRuntime/💼️job-ledger/🟦️.ts";
+import { type VideoRenderJobRow } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
+import { videoRenderExportTaskIdV1, videoRenderExportTextV1 } from "../🎥️VideoRenderHost/🟦️.ts";
 import { type AgentConversationEntry } from "../🔗️AgentBridge/🟦️.tsx";
 // #endregion 🔌️Adapters
 
@@ -172,6 +174,7 @@ export const taskManagerUiLabel = registerUiTranslationBundles({
               toolCall: { label: { normal: "Agent tool call", beginner: "Assistant action" } },
               toolRun: { label: { normal: "Tool run", beginner: "Tool at work" } },
               documentTransfer: { label: { normal: "Document import", beginner: "Opening a file" } },
+              export: { label: { normal: "Media export", beginner: "Exporting" } },
             },
             running: { label: { normal: "Running", beginner: "Working" } },
             suspended: { label: { normal: "Suspended", beginner: "Paused" } },
@@ -241,6 +244,7 @@ export const taskManagerUiLabel = registerUiTranslationBundles({
               toolCall: { label: { normal: "Werkzeugaufruf des Agenten", beginner: "Aktion des Assistenten" } },
               toolRun: { label: { normal: "Werkzeuglauf", beginner: "Werkzeug arbeitet" } },
               documentTransfer: { label: { normal: "Dokumentimport", beginner: "Datei wird geöffnet" } },
+              export: { label: { normal: "Medienexport", beginner: "Wird exportiert" } },
             },
             running: { label: { normal: "Läuft", beginner: "In Arbeit" } },
             suspended: { label: { normal: "Angehalten", beginner: "Pausiert" } },
@@ -418,7 +422,7 @@ function metricText(value: number | null): string {
   return value === null ? TASK_MANAGER_UNOBSERVED_METRIC : String(value);
 }
 
-/** @emoji 🧵️ Directly-mountable React view of `TaskManagerRow[]` — for a standalone dialog/pane
+/** 🧵️ Directly-mountable React view of `TaskManagerRow[]` — for a standalone dialog/pane
  * context (same "typed props in, typed callback out" shape as `🤖️AgentApprovals`), independent of the
  * scene-commit path above. Renders through the SAME `@semio-tech/ui-react` `Table` primitive
  * `Table/🟦️.tsx`'s `TableHost` uses, so it inherits that component's table semantics/
@@ -516,8 +520,9 @@ export function useRuntimeMetricsRows(registry: ActivationRegistry | null | unde
 
 //#region 🔖️RunningTasks
 /** 🛣️ Where a running task comes from: a guest's spawned job, a plugin installation, a tool call the connected agent
- * is executing, a program's tool run (Fill, Generate, Reconstruct…), or a document archive the shell is importing. */
-export type TaskManagerTaskLaneV1 = "job" | "activation" | "toolCall" | "toolRun" | "documentTransfer";
+ * is executing, a program's tool run (Fill, Generate, Reconstruct…), a document archive the shell is importing, or a
+ * host media export (a rendered video). */
+export type TaskManagerTaskLaneV1 = "job" | "activation" | "toolCall" | "toolRun" | "documentTransfer" | "export";
 
 /** 📈️ Progress a task states itself: `completed` of `total` (`null` = open-ended) in its own words. */
 export interface TaskManagerTaskProgressV1 {
@@ -567,6 +572,22 @@ export function toolCallTasksV1(conversation: readonly AgentConversationEntry[])
   return conversation.flatMap((entry): TaskManagerTaskV1[] =>
     entry.kind === "toolCall" && (entry.state === "running" || entry.state === "cancelling") ? [{ id: `tool:${entry.id}`, lane: "toolCall", title: entry.toolName, owner: "", startedAtMs: entry.atMs, steps: null, progress: null, suspendable: false, state: entry.state }] : [],
   );
+}
+
+/** 🎥️ Every host video render job in flight as a task (the rows are the job ledger's fold): its file is what it is doing,
+ * its plugin who asked for it, frames its progress (worded in `locale`). */
+export function videoRenderExportTasksV1(rows: readonly VideoRenderJobRow[], locale: string): readonly TaskManagerTaskV1[] {
+  return rows.map((row) => ({
+    id: videoRenderExportTaskIdV1(row.job),
+    lane: "export",
+    title: row.filename,
+    owner: row.owner,
+    startedAtMs: row.startedAtMs,
+    steps: null,
+    progress: { completed: row.completed, total: row.frames, text: videoRenderExportTextV1("progress", locale, { completed: row.completed, total: row.frames }) },
+    suspendable: false,
+    state: row.cancelling ? "cancelling" : "running",
+  }));
 }
 
 /** 📥️ One document archive import in flight: the file, the program it opens in, when it began and the load's own
@@ -628,6 +649,7 @@ function TaskManagerTaskRow({ task, nowMs, controls }: { readonly task: TaskMana
     toolCall: useLabel(taskManagerUiLabel("os.taskManager.tasks.lanes.toolCall")),
     toolRun: useLabel(taskManagerUiLabel("os.taskManager.tasks.lanes.toolRun")),
     documentTransfer: useLabel(taskManagerUiLabel("os.taskManager.tasks.lanes.documentTransfer")),
+    export: useLabel(taskManagerUiLabel("os.taskManager.tasks.lanes.export")),
   };
   const seconds = String(taskManagerElapsedSecondsV1(task.startedAtMs, nowMs));
   const withSteps = useLabel(taskManagerUiLabel("os.taskManager.tasks.progressSteps"), { steps: String(task.steps ?? 0), seconds });
@@ -693,7 +715,7 @@ function TaskManagerTaskRow({ task, nowMs, controls }: { readonly task: TaskMana
   );
 }
 
-/** @emoji 🏃️ Every task running right now, with its progress, a cancel control per task and suspend/resume for a suspendable one. A tick once a
+/** 🏃️ Every task running right now, with its progress, a cancel control per task and suspend/resume for a suspendable one. A tick once a
  * second keeps the elapsed time honest while anything runs, and costs nothing while the list is empty. */
 export function TaskManagerTasksPanel({ tasks, controls }: { readonly tasks: readonly TaskManagerTaskV1[]; readonly controls: TaskManagerTaskControlsV1 }): ReactElement {
   const title = useLabel(taskManagerUiLabel("os.taskManager.tasks.title"));
@@ -723,7 +745,7 @@ export function TaskManagerTasksPanel({ tasks, controls }: { readonly tasks: rea
   );
 }
 
-/** @emoji 🧵️ The mounted `os.task-manager` window: running tasks (spawned jobs, plugin installations, agent tool calls,
+/** 🧵️ The mounted `os.task-manager` window: running tasks (spawned jobs, plugin installations, agent tool calls,
  * the focused program's tool runs — progress, cancel, and suspend/resume where the task can be held) above the live actor
  * table (suspend/resume/cancel through {@link createTaskManagerDispatcher}). Everything is read from `sources` on every
  * notification. */
@@ -745,7 +767,7 @@ export function TaskManagerWindow({ sources }: { readonly sources: TaskManagerSo
 //#endregion 🔖️RunningTasks
 
 //#region 🔖️LiveDispatch
-/** @emoji 🎬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T1 follow-up, K1 landed): the REAL dispatch
+/** 🎬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T1 follow-up, K1 landed): the REAL dispatch
  * path for the three row actions — `ActivationRegistry.suspend`/`resume`/`cancel` (the last one new
  * in this follow-up), which call straight through to a real `ShardClient`, the same live round-trip
  * `activate()` already proved out. This is genuinely reachable on web TODAY: build an

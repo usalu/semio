@@ -1,4 +1,4 @@
-//! @emoji 📮️ The non-blocking bounded `CommandGateway` and its `CommandSink` seam to the actor world.
+//! 📮️ The non-blocking bounded `CommandGateway` and its `CommandSink` seam to the actor world.
 //!
 //! 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md. Every `fn`
 //! below is plain sync by owner ruling U1.

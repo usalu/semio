@@ -1,4 +1,4 @@
-//! @emoji 🗃️ GPU-side residency for `ui_render::resource::ResourceOp` — the Metal counterpart of the
+//! 🗃️ GPU-side residency for `ui_render::resource::ResourceOp` — the Metal counterpart of the
 //! wgpu target's `RasterTextureTable`/`MeshGpuTable`, keyed by the typed generational ids
 //! (`TextureId`/`MeshId`/`AtlasId`) rather than interned strings, since `ui_render::ResourceRegistry`
 //! already did the interning.

@@ -7,7 +7,7 @@ const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 
 const root = resolve(resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🦀️rust"), "../..");
 
-/** @emoji 🧪️ Vitest for the styling projection's inline `import.meta.vitest` contract. */
+/** 🧪️ Vitest for the styling projection's inline `import.meta.vitest` contract. */
 export default {
   root: testRoot,
   resolve: {

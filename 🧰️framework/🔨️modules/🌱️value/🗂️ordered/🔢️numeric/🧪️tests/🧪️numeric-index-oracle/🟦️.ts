@@ -348,7 +348,6 @@ export class TestScript extends BundleScript {
     const program = ts.createProgram([`${import.meta.dir}/../../🟦️.ts`], { strict: true, noEmit: true, target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, types: [], lib: ["lib.es2022.d.ts"] });
     const diagnostics = ts.getPreEmitDiagnostics(program);
     assert.equal(diagnostics.length, 0, ts.formatDiagnosticsWithColorAndContext(diagnostics, { getCanonicalFileName: (name) => name, getCurrentDirectory: () => import.meta.dir, getNewLine: () => "\n" }));
-    console.log(`[DEBUG] Numeric-index laws=${laws} lifecycle=${lifecycle} ordinals=${ordinals} stress=${stress} references=${references.length} invalidIds=5 nativeLaws=${native.laws} nativeOperations=${native.operations} nativeCancellations=${native.cancellations} nativeConcurrency=${native.concurrency} oracle=Immer+Map+NodeAssert grants=256,4096 strictTS=0`);
   }
 }
 //#endregion 🧪️NumericIndexTests

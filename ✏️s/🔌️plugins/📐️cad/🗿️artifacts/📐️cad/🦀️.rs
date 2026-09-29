@@ -55,12 +55,12 @@ impl CadPaneId {
     }
 }
 
-/// @emoji 🧩️ Fixed per-pane composed `s.stdio.semio.model` child slot — one of the four fields the
+/// 🧩️ Fixed per-pane composed `s.stdio.semio.model` child slot — one of the four fields the
 /// derived `ArtifactSchema` on `CadSnapshot` classifies as a `#[child(...)]` slot. Kept as a plain
 /// helper alias so accessor functions below read uniformly across all four panes.
 pub type CadModelChild = store::ArtifactChild<SemioModelSnapshot>;
 
-/// @emoji 📐️ Composed `s.stdio.semio.drawing` child — cad's forward-declared "engineering assembly"
+/// 📐️ Composed `s.stdio.semio.drawing` child — cad's forward-declared "engineering assembly"
 /// composition slot (design-full-plan.md §4: `cad | engineering assembly | model, drawing`). Empty
 /// today (cad carries no persisted 2D drawing content yet); real cardinality grows via
 /// `create-drawing`/`delete-drawing` once a caller actually attaches one.
@@ -402,7 +402,7 @@ pub struct CadNode {
     pub kind: String,
 }
 
-/// @emoji 🧩️ Reads the fixed per-pane `s.stdio.semio.model` CHILD HANDLE (`child_id`/`target` only —
+/// 🧩️ Reads the fixed per-pane `s.stdio.semio.model` CHILD HANDLE (`child_id`/`target` only —
 /// never the resolved content; a child is its own document, resolving it is a host/composition
 /// concern, never something a pure `CadSnapshot` accessor can do — see `🔖️Composition` in
 /// `🏪️store/🦀️.rs`).

@@ -134,9 +134,9 @@ export function createShardCommandIngressPages(input: {
   readonly seq: bigint;
   readonly command: Uint8Array;
 }): readonly ShardCommandIngressPage[] {
-  if (input.command.length === 0) throw new Error("[DEBUG] command ingress cannot encode an empty command");
+  if (input.command.length === 0) throw new Error("command ingress cannot encode an empty command");
   const pageCount = Math.ceil(input.command.length / ACTOR_BYTE_PAGE_BYTES);
-  if (pageCount > SHARD_COMMAND_MAXIMUM_PAGES) throw new Error(`[DEBUG] command ingress exceeds ${SHARD_COMMAND_MAXIMUM_PAGES} pages`);
+  if (pageCount > SHARD_COMMAND_MAXIMUM_PAGES) throw new Error(`command ingress exceeds ${SHARD_COMMAND_MAXIMUM_PAGES} pages`);
   const pages: ShardCommandIngressPage[] = [];
   for (let pageIndex = 0; pageIndex < pageCount; pageIndex += 1) {
     const start = pageIndex * ACTOR_BYTE_PAGE_BYTES;
@@ -709,7 +709,7 @@ export function assertShardJspiAvailable(scope: ShardJspiScope = globalThis as S
 /** 🩺️ Rebuilds a worker-side failure as a main-thread `Error` that still carries the worker's own
  * stack. Without this the only frame a caller ever sees is `handleMessage`, because the structured
  * clone across `postMessage` cannot carry an `Error` — which is exactly why the collaboration e2e's
- * `Maximum call stack size exceeded` was undiagnosable. The `[DEBUG] ` line is deliberate, permanent
+ * `Maximum call stack size exceeded` was undiagnosable. The `[TRACE] ` line is deliberate, permanent
  * diagnostic infrastructure the e2e log parses; it is not leftover scaffolding. */
 function graftWorkerStack(actorId: string, reason: string, stack: string | undefined, kind: string | undefined, framesBytes: number | undefined, retryableLifecycle?: boolean): Error {
   const error = new Error(reason);
@@ -1071,7 +1071,7 @@ export class ShardClient {
   constructor(options: ShardClientOptions) {
     try { Reflect.apply(residentCapacity(), options.residentLedger, []); } catch { throw new Error("actor-resident.invalid-ledger"); }
     this.#residentLedger = options.residentLedger;
-    if (options.shardCount < 1) throw new Error("[DEBUG] ShardClient requires shardCount >= 1");
+    if (options.shardCount < 1) throw new Error("ShardClient requires shardCount >= 1");
     this.createWorker = options.createWorker;
     this.now = options.now ?? (() => Date.now());
     this.heartbeatTimeoutMs = options.heartbeatTimeoutMs ?? SHARD_LIVENESS_POLICY.heartbeatTimeoutMs;
@@ -1591,7 +1591,7 @@ export class ShardClient {
         return index;
       }
     }
-    throw new Error(`[DEBUG] ShardClient.leaseExclusive(${actorId}): no free exclusive shard (${this.exclusiveIndices.size} reserved, all leased)`);
+    throw new Error(`ShardClient.leaseExclusive(${actorId}): no free exclusive shard (${this.exclusiveIndices.size} reserved, all leased)`);
   }
 
   /** ◀️ Returns `actorId` to the round-robin pool — its NEXT `activate()`/`turn()` targets whichever
@@ -2170,7 +2170,7 @@ export class ShardClient {
    * per-actor serialization, not this transport's job, per design's "runs one turn at a time per
    * actor"), so it is rejected rather than silently queued. */
   async turn(actorId: string, events: readonly ShardEventEnvelope[], budget: ShardBudget, commandPage?: ShardCommandIngressPage): Promise<unknown> {
-    if (!this.actorShard.has(actorId)) throw new Error(`[DEBUG] ShardClient.turn(${actorId}): not activated on any shard`);
+    if (!this.actorShard.has(actorId)) throw new Error(`ShardClient.turn(${actorId}): not activated on any shard`);
     return this.captureActorActivation(actorId).turn(events, budget, commandPage);
   }
 
@@ -2283,7 +2283,7 @@ export class ShardClient {
 
   private requireShard(actorId: string): ShardSlot {
     const index = this.actorShard.get(actorId);
-    if (index === undefined) throw new Error(`[DEBUG] ShardClient: actor ${actorId} is not activated on any shard`);
+    if (index === undefined) throw new Error(`ShardClient: actor ${actorId} is not activated on any shard`);
     return this.shards[index]!;
   }
   //#endregion 📮️Requests
@@ -2549,7 +2549,7 @@ export class ShardClient {
    * valid once the caller re-`activate()`s (from checkpoint) on the rebuilt shard. */
   terminate(index: number, detail?: string): readonly string[] {
     const slot = this.shards[index];
-    if (!slot) throw new Error(`[DEBUG] ShardClient.terminate: no shard ${index}`);
+    if (!slot) throw new Error(`ShardClient.terminate: no shard ${index}`);
     const actorIds = [...slot.actorIds];
     this.failShard(slot, new Error(detail ?? `shard ${index} terminated`));
     slot.worker.terminate();
@@ -2562,7 +2562,7 @@ export class ShardClient {
    * clears the routing entries for whoever was there rather than silently leaving them dangling. */
   rebuild(index: number): void {
     const old = this.shards[index];
-    if (!old) throw new Error(`[DEBUG] ShardClient.rebuild: no shard ${index}`);
+    if (!old) throw new Error(`ShardClient.rebuild: no shard ${index}`);
     for (const actorId of old.actorIds) this.actorShard.delete(actorId);
     this.shards[index] = this.spawnShard(index);
   }

@@ -242,13 +242,13 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
         )
     }
 
+    /// 📍️ Coordinate/direction/dimension/range literals are fixed-arity tuples of floats; their
+    /// elements carry no element shape of their own, so name it here rather than leave every
+    /// component shapeless.
     fn child_element(expected: &ExpectedValue) -> ExpectedValue {
         let shape = match expected.shape.as_ref() {
             Some(store::mounted_pack_rt::Shape::Tuple(inner, _)) | Some(store::mounted_pack_rt::Shape::List(inner)) | Some(store::mounted_pack_rt::Shape::Map(inner)) => Some(inner.as_ref().clone()),
             Some(store::mounted_pack_rt::Shape::Table(spec)) => Some(store::mounted_pack_rt::Shape::Record(*spec)),
-            // 📍️ Coordinate/direction/dimension/range literals are fixed-arity tuples of floats; their
-            // elements carry no element shape of their own, so name it here rather than leave every
-            // component shapeless.
             Some(store::mounted_pack_rt::Shape::Coord(_)) | Some(store::mounted_pack_rt::Shape::Dir) | Some(store::mounted_pack_rt::Shape::Dim(_)) | Some(store::mounted_pack_rt::Shape::Range) => Some(store::mounted_pack_rt::Shape::Float),
             _ => None,
         };

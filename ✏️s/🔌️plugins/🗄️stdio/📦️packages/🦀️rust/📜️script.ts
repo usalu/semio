@@ -438,7 +438,7 @@ class FlowRetainedDecodeScript extends BundleScript {
     };
     for (const row of fixture.valid) { assert.deepEqual(decode(row.hex), row.snapshot, row.id); assert.equal(encode(row.snapshot).toString("hex"), row.hex, row.id); }
     for (const row of fixture.invalid) assert.throws(() => decode(row.hex), (error: Error) => error.message === row.reason, row.id);
-    console.log(`[DEBUG] Flow retained decoder independent oracle: ${fixture.valid.length} exact wire snapshots, ${fixture.invalid.length} hostile denials; third-party LEB128 and AJV agree`);
+    console.log(`Flow retained decoder independent oracle: ${fixture.valid.length} exact wire snapshots, ${fixture.invalid.length} hostile denials; third-party LEB128 and AJV agree`);
     const lifecycle = JSON.parse(readFileSync(join(base, "🧫️fixtures/♻️lifecycle/🔣️.json"), "utf8"));
     const validateLifecycle = ajv.compile(schema.$defs.FlowRetainedSnapshotLifecycle);
     assert(validateLifecycle(lifecycle), ajv.errorsText(validateLifecycle.errors));
@@ -461,7 +461,7 @@ class FlowRetainedDecodeScript extends BundleScript {
     assert.equal(identityBytes, lifecycle.request.identityBytes);
     assert.equal(typedBytes, lifecycle.multiPage.snapshotRetiredBytes);
     assert.equal(inputBytes + identityBytes + typedBytes, lifecycle.multiPage.totalRetiredBytes);
-    console.log(`[DEBUG] Flow lifecycle independent oracle: ${lifecycle.admission.length} exact admission states, ${lifecycle.multiPage.inputPages} input pages, ${lifecycle.multiPage.totalRetiredBytes} retained bytes; third-party encoding and strict AJV agree`);
+    console.log(`Flow lifecycle independent oracle: ${lifecycle.admission.length} exact admission states, ${lifecycle.multiPage.inputPages} input pages, ${lifecycle.multiPage.totalRetiredBytes} retained bytes; third-party encoding and strict AJV agree`);
     const source = readFileSync(join(base, "🧪️tests/💾️binary/🦀️.rs"), "utf8");
     assert(source.includes("semio_flow_retained_snapshot_matches_neutral_wire_and_retains_failures"));
     assert(source.includes("semio_flow_retained_snapshot_rejects_retired_requests_and_closes_exact_bytes"), "retained Flow lifecycle native law is absent");
@@ -625,7 +625,7 @@ class SubsetDirectoryWiringScript extends BundleScript {
     if (mode === "generate") for (const [path, content] of stale) writeFileSync(path, content);
     const remaining = stdioWalkText(stdioRoot).filter((path) => [...readFileSync(path, "utf8").matchAll(/🗿️artifacts\/([^/\s"'`]+)\/🏅️standards\/([^/\s"'`]+)\/🪆️subsets\/([^/\s"'`]+)/gu)].some((match) => artifactDirectorySemanticKey(match[1]!) === fixture.artifact && artifactDirectorySemanticKey(match[2]!) === fixture.standard && artifactDirectorySemanticKey(match[3]!) === fixture.subset && match[3] !== selection.directory));
     if (remaining.length > 0) throw new Error(`subset-directory-wiring ${fixture.subset} left stale identity in ${relative(repoRoot, remaining[0]!)}`);
-    console.log(`[DEBUG] Stdio subset directory oracle: ${fixture.cases.length} schema-valid accepted/stale/missing/ambiguous cases`);
+    console.log(`Stdio subset directory oracle: ${fixture.cases.length} schema-valid accepted/stale/missing/ambiguous cases`);
     console.log(`[stdio] subset-directory-wiring ${mode}: ${fixture.artifact}/${fixture.subset}=${selection.directory}; ${stale.length} files ${mode === "generate" ? "regenerated" : "stale"}`);
   }
 }
@@ -684,7 +684,7 @@ type HomeIoSurfaceFixture = {
   readonly directArtifacts: readonly ["csv", "json", "xlsx", "zip"];
   readonly sharedCodecs: readonly ["binary", "deflate", "txt", "xml"];
   readonly fullArtifactCount: 36;
-  readonly nativeCodecCount: 26;
+  readonly nativeCodecCount: 29;
   readonly surfaceCases: readonly { readonly id: string; readonly selected: readonly string[]; readonly catalog: number; readonly apps: boolean; readonly exports: boolean }[];
 };
 
@@ -831,8 +831,10 @@ class HomeIoSurfaceScript extends BundleScript {
   }
 }
 
-/** 🧪️ Checks the neutral editor acceptance fixture with an independent JSON Schema validator. */
-async function testEditorCatalogContract(packageRoot: string, shipping = false): Promise<void> {
+/** 🧪️ Checks the neutral editor acceptance fixture with an independent JSON Schema validator: every stdio editor ships in
+ * exactly one stdio package (the stdio component or one `🧩️extensions` family), the packages together ship every catalogue
+ * format, and every editor owns exactly one launchable playground row across them. */
+async function testEditorCatalogContract(packageRoot: string): Promise<void> {
   const root = resolve(packageRoot, "../..");
   const fixture = JSON.parse(readFileSync(join(root, "🧫️fixtures/✏️editor-catalog/🔣️.json"), "utf8")) as { editorCount: number; formatCount: number; editorApps: string[]; actions: { id: string }[] };
   const schema = JSON.parse(readFileSync(join(root, "🧬️schema/✏️editor-catalog/🔣️.json"), "utf8"));
@@ -843,60 +845,100 @@ async function testEditorCatalogContract(packageRoot: string, shipping = false):
   const rust = readFileSync(join(root, "🧪️tests/✏️editor-catalog/🦀️.rs"), "utf8");
   const roots = [...rust.matchAll(/^    \([a-z0-9_]+, semio_s_artifact_stdio_/gm)].length;
   if (roots !== fixture.editorCount) throw new Error(`editor catalogue expects ${fixture.editorCount} editors; native acceptance covers ${roots}`);
-  const manifest = Bun.TOML.parse(readFileSync(join(packageRoot, "Cargo.toml"), "utf8")) as { features: Record<string, string[]>; package: { metadata: { semio: { playground: { app: string }[] } } } };
+  const formats = new Map<string, string>();
+  const apps = new Map<string, string>();
+  for (const { id, manifest } of stdioPackageManifests(root)) {
+    for (const format of stdioPackageEditorFormats(manifest)) {
+      if (formats.has(format)) throw new Error(`${format} editors ship in both ${formats.get(format)} and ${id}`);
+      formats.set(format, id);
+    }
+    for (const row of manifest.package.metadata.semio.playground ?? []) {
+      if (apps.has(row.app)) throw new Error(`${row.app} has playground rows in both ${apps.get(row.app)} and ${id}`);
+      apps.set(row.app, id);
+    }
+  }
+  if (formats.size !== fixture.formatCount) throw new Error(`the stdio packages ship editors for ${formats.size}/${fixture.formatCount} formats`);
+  if (fixture.editorApps.length !== fixture.editorCount) throw new Error("editor fixture count differs from its app identities");
+  if (!isDeepStrictEqual([...apps.keys()].sort(), [...fixture.editorApps].sort())) throw new Error("each editor needs exactly one launchable playground across the stdio packages");
+  console.log(`🧾️ editor catalogue fixture validated: ${roots} editors in ${new Set(apps.values()).size} packages, ${fixture.actions.length} edit operations`);
+}
+
+/** 📦️ Every stdio package manifest, parsed by Bun's TOML reader independently of the Rust census law's row scan: the
+ * stdio component's own and one per family component under `🧩️extensions`. */
+function stdioPackageManifests(root: string): { readonly id: string; readonly manifest: StdioPackageManifest }[] {
+  const families = readdirSync(join(root, "🧩️extensions"), { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => join(root, "🧩️extensions", entry.name, "📦️packages/🦀️rust/Cargo.toml"));
+  return [join(root, "📦️packages/🦀️rust/Cargo.toml"), ...families.sort()].map((path) => {
+    const manifest = Bun.TOML.parse(readFileSync(path, "utf8")) as StdioPackageManifest;
+    return { id: manifest.package.metadata.component.package.slice("semio:".length), manifest };
+  });
+}
+
+/** 🧩️ The stdio formats whose editors one package's default build assembles: `component-app-assembly` reached through its
+ * default feature closure (the stdio component) or requested on the artifact dependency itself (a family component). */
+function stdioPackageEditorFormats(manifest: StdioPackageManifest): readonly string[] {
   const selected = new Set<string>();
-  const pending = [shipping ? "default" : "full-app-catalog"];
+  const pending = ["default"];
   while (pending.length) {
     const feature = pending.pop()!;
     if (selected.has(feature)) continue;
     selected.add(feature);
-    pending.push(...(manifest.features[feature] ?? []));
+    pending.push(...(manifest.features?.[feature] ?? []));
   }
-  const editorFormats = [...selected].filter((feature) => feature.startsWith("semio-s-artifact-stdio-") && feature.endsWith("/component-app-assembly"));
-  if (editorFormats.length !== fixture.formatCount) throw new Error(`${shipping ? "shipped component" : "native catalog"} exposes editors for ${editorFormats.length}/${fixture.formatCount} formats`);
-  if (fixture.editorApps.length !== fixture.editorCount) throw new Error("editor fixture count differs from its app identities");
-  if (shipping && !isDeepStrictEqual(manifest.package.metadata.semio.playground.map((row) => row.app).sort(), [...fixture.editorApps].sort())) throw new Error("each editor needs its own launchable playground");
-  console.log(`[DEBUG] ${shipping ? "shipped" : "native"} editor catalogue fixture validated: ${roots} editors, ${fixture.actions.length} edit operations`);
+  const prefix = "semio-s-artifact-stdio-";
+  const viaFeatures = [...selected].filter((feature) => feature.startsWith(prefix) && feature.endsWith("/component-app-assembly")).map((feature) => feature.slice(prefix.length, -"/component-app-assembly".length));
+  const viaDependencies = Object.entries(manifest.dependencies ?? {}).filter(([name, spec]) => name.startsWith(prefix) && typeof spec === "object" && (spec.features ?? []).includes("component-app-assembly")).map(([name]) => name.slice(prefix.length));
+  return [...new Set([...viaFeatures, ...viaDependencies])];
 }
+
+/** 📜️ The Cargo manifest fields the editor catalogue contract reads from a stdio package. */
+type StdioPackageManifest = {
+  readonly features?: Record<string, string[]>;
+  readonly dependencies?: Record<string, string | { readonly features?: readonly string[] }>;
+  readonly package: { readonly name: string; readonly metadata: { readonly component: { readonly package: string }; readonly semio: { readonly playground?: readonly { readonly app: string }[] } } };
+};
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await testEditorCatalogContract(this.root, rest[0] === "editor-shipping-contract");
-    if (rest[0] === "editor-catalog-contract" || rest[0] === "editor-shipping-contract") return;
+    await testEditorCatalogContract(this.root);
+    if (rest[0] === "editor-catalog-contract") return;
     await runCatalogRootContractTests(this.root);
     if (rest[0] === "catalog-root-contract") return;
     await runCargoTestBudgeted([PACKAGE_NAME], this.repoRoot, rest);
   }
 }
 
-/** 🧩️ Verifies the complete editor component against the native WebAssembly parser. */
+/** 🧩️ Links every stdio package's own component (stdio and each `🧩️extensions` family) with the release component
+ * profile, extracts its core module with JCO and validates it against the native WebAssembly parser and the component
+ * function ceiling — the measured bound each family's bounded fleet must stay under. Each package's link runs within its
+ * own build budget: one release link is the unit a deadline bounds. */
 class EditorComponentCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const fullCatalog = segments[0] === "--full-catalog";
-    const args = fullCatalog ? segments.slice(1) : segments;
-    await testEditorCatalogContract(this.root, !fullCatalog);
-    const outputRoot = args[0] ?? join(cargoTargetDirectory(this.repoRoot), fullCatalog ? "stdio-editor-full-catalog" : "stdio-editor-component");
-    if (args.length > 1 || !isAbsolute(outputRoot)) throw new Error("editor-component-check accepts [--full-catalog] and one absolute output directory");
+    await testEditorCatalogContract(this.root);
+    const outputRoot = segments[0] ?? join(cargoTargetDirectory(this.repoRoot), "stdio-editor-components");
+    if (segments.length > 1 || !isAbsolute(outputRoot)) throw new Error("editor-component-check accepts one absolute output directory");
     mkdirSync(outputRoot, { recursive: true });
-    const started = Date.now();
     let interrupted = false;
     const interrupt = (): void => { interrupted = true; };
     process.on("SIGINT", interrupt);
     process.on("SIGTERM", interrupt);
-    const control: CatalogControl = { cancelled: () => interrupted, remainingMs: () => Math.max(0, (buildBudgetMs() || CATALOG_DEADLINE_MS) - (Date.now() - started)) };
-    const env = devToolingEnv(fullCatalog ? { CARGO_TARGET_DIR: join(outputRoot, "target"), CARGO_BUILD_BUILD_DIR: join(outputRoot, "build"), CARGO_INCREMENTAL: "0", RUSTC_WRAPPER: "", RUSTC_WORKSPACE_WRAPPER: "" } : {});
+    const env = devToolingEnv({});
+    const jco = resolveWorkspaceBin("@bytecodealliance/jco", this.repoRoot);
+    if (!jco) throw new Error("missing workspace component tooling");
     try {
-      const features = fullCatalog ? ["--features", "full-app-catalog"] : [];
-      await runControlled("cargo", ["rustc", "-p", PACKAGE_NAME, "--profile", COMPONENT_PROFILE, "--lib", "--crate-type", "cdylib", "--target", "wasm32-wasip2", ...features], this.repoRoot, env, control);
-      const raw = join(cargoTargetDirectory(this.repoRoot, env), "wasm32-wasip2", COMPONENT_PROFILE, WASM_OUT);
-      const jco = resolveWorkspaceBin("@bytecodealliance/jco", this.repoRoot);
-      if (!jco) throw new Error("missing workspace component tooling");
-      console.log("[DEBUG] complete editor component linked; validating the extracted module");
-      await runControlled("node", [jco, "transpile", raw, "-o", outputRoot, "--name", "semio_s_plugin_stdio", "--map", "semio:framework/pure=./pure.js", "--map", "semio:framework/host-async=./host-async.js"], this.repoRoot, env, control);
-      const core = readFileSync(join(outputRoot, "semio_s_plugin_stdio.core.wasm"));
-      const structure = assertComponentizableCore(core);
-      console.log(`[DEBUG] complete editor component validated: ${JSON.stringify({ ...structure, coreBytes: core.byteLength })}`);
+      const packages = stdioPackageManifests(resolve(this.root, "../.."));
+      for (const [index, { id, manifest }] of packages.entries()) {
+        const started = Date.now();
+        const control: CatalogControl = { cancelled: () => interrupted, remainingMs: () => Math.max(0, (buildBudgetMs() || CATALOG_DEADLINE_MS) - (Date.now() - started)) };
+        const lib = manifest.package.name.replaceAll("-", "_");
+        await runControlled("cargo", ["rustc", "-p", manifest.package.name, "--profile", COMPONENT_PROFILE, "--lib", "--crate-type", "cdylib", "--target", "wasm32-wasip2"], this.repoRoot, env, control);
+        const out = join(outputRoot, id);
+        mkdirSync(out, { recursive: true });
+        await runControlled("node", [jco, "transpile", join(cargoTargetDirectory(this.repoRoot, env), "wasm32-wasip2", COMPONENT_PROFILE, `${lib}.wasm`), "-o", out, "--name", lib, "--map", "semio:framework/pure=./pure.js", "--map", "semio:framework/host-async=./host-async.js"], this.repoRoot, env, control);
+        const core = readFileSync(join(out, `${lib}.core.wasm`));
+        const structure = assertComponentizableCore(core);
+        console.log(`🧩️ ${index + 1}/${packages.length} ${id} component validated: ${JSON.stringify({ ...structure, coreBytes: core.byteLength })}`);
+      }
     } finally {
       process.off("SIGINT", interrupt);
       process.off("SIGTERM", interrupt);

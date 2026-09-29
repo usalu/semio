@@ -17,10 +17,14 @@ fn replace_scene_owner(snapshot: &mut EquationSnapshot, scene: Arc<EquationWorki
     snapshot.computed.set_local_owner(scene);
 }
 
+/// 🪪️ `artifact_kind().schema` IS `MATH_DOCUMENT_SCHEMA`: a document kind has ONE schema identity — the hub's codec rows, document-open targets and genesis, the MCP workspace
+/// store and host-media contributions all key on it (ticket 26/09/23 W4: a distinct "media schema" left the package without a
+/// codec owner, so the trusted catalog refused it). The former media string was the kind id
+/// itself (`computation.equation`), which stays.
 #[semio_framework_async_macros::async_test]
-async fn artifact_kind_keeps_the_media_schema_distinct_from_the_store_schema() {
-    assert_eq!(artifact_kind().schema, "computation.equation");
-    assert_eq!(MATH_DOCUMENT_SCHEMA, "semio.equation/v1");
+async fn artifact_kind_names_the_store_schema() {
+    assert_eq!(artifact_kind().schema, MATH_DOCUMENT_SCHEMA);
+    assert_eq!(artifact_kind().source_format, "semio.equation/v1");
 }
 
 #[semio_framework_async_macros::async_test]

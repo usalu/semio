@@ -365,3 +365,31 @@ Successor agent (2026-09-28 16:5x, after the 14:37 usage cut + app restart; chai
   coordinator: C12's `wp-c12/seed/c12-seed-history-patch.py` (one store rule `seed_edit_operation`, 9 initializers + 2 hydrations)
   is the set — I reviewed it (approve; amendment: the law should initialize the MIXED shape — local + remote edits + transitions)
   and wrote no competing patch.
+- 07:5x **H14 finding → decision REMOVE (coordinator approved 08:0x):** the `🗿️artifact` commit's vcs step returned errors after the
+  durable WAL write and before the receipt was remembered, while claiming best effort; the default `vcs` feature had no production
+  consumer (the hub builds kernel-db with `default-features = false`; `Profile::Prod` ran `NullVersionGraph` = `Unimplemented` per
+  commit). Clean end state = the version graph leaves kernel-db entirely (the kernel's own `🌿️vcs` algebra is untouched).
+- 08:28–08:40 **LANDED (window land2, hub + native lanes held; set `.🧬semio/🌐hub/s14-h13-work/vcs-removal/`, runner
+  `wp-h13/h13-land-vcs-removal.sh`):** kernel-db `vcs` feature + `semio-framework-dispatch-macros` dep (Cargo.lock edge) removed;
+  `🕸️version-graph` deleted (its `Emit`/`EmitEvent`/`EmitField`/`NullEmit` observability seam moved into `👁️observe` + re-exported);
+  engine `vcs_integration` + `VersionGraphs` + `Database::checkpoint_document` + the shutdown `VersionGraph` phase/block/witness removed;
+  `ArtifactEngine`/`ArtifactEngineConfig`/runner types no longer generic; the commit's vcs step is gone (a durable WAL write is the
+  commit); snapshot descriptor `DESCRIPTOR_FORMAT_VERSION` 2 without `vcs_head` (v1 roots must be fresh); WAL `VcsRef` (0x4B) gone.
+  Proofs: TS gates before/after = no new failure (`database-shutdown-check` GREEN with the new 3-phase `ShutdownV1` fixture/schema;
+  the other 7 db source gates were already red on the tree and stay identical), DB CLI census probe 4/4 + live 0 failures;
+  kernel-db `check --locked` default + `--all-features` (lib + tests) EXIT 0; kernel-db lib `--features sqlite` **726 passed / 1
+  failed** = `throughput_tests::sqlite_commits_and_reopen_storms…` (load-bound, fs twin passed; the same law failed at 21:46 before
+  the change) — incl. the declared-batch law (now PASS after the result flattening), `a_descriptor_of_another_format_version_is_refused`,
+  the moved Emit laws, `database_shutdown_cancellation_preserves_exact_retry_owners`, the un-gated durable-group recovery law;
+  `semio-hub check --locked --all-features --lib --bins --tests` EXIT 0; **`os-hub:build-dev` EXIT 0** (4 m 4 s).
+- 08:46–08:48 **LANDED (window land3, `wp-h13/h13-land-vcs-warnings.sh`):** the warnings the removal left (engine `to_core_actor_id`
+  + `ActorId` import, hash-codec test imports, qualifications the removed glob re-export had required) → kernel-db warnings lib
+  30→28 / lib test 197→185 (all features 50→48 / 222→210); touched laws 29/29 PASS; semio-hub check EXIT 0.
+- **Window-4 follow-up (prepared, frozen files):** `vcs-removal-w4.patch` — taxonomy `members-of-members-of-modules` loses
+  `🕸️version-graph`; `🛎️services` comment no longer cites the version graph. Dry-run clean 08:2x.
+- Pre-existing (not caused by the removal, recorded for the kernel-db backlog): kernel verbs `wal-committed-compaction-check` and
+  `document-mount-single-flight-check` fail on stale source asserts; `verify interactivity` p1q-b1-b6/p1w/p1x/p1y/p1z are red on
+  stale source audits; full `verify interactivity` aborts on a symlink under `🌎️hub/📦️packages/🦀️rust/🗑️generated/test-artifacts/`.
+- 08:48 **hold 17 — transport-refill kernel law (L1 T1a) PASS:** `cargo test -p semio-framework-os-kernel --locked --lib --features
+  sync,ureq -- an_exhausted_directory_byte_budget_names_itself_and_refills_on_the_pools_own_turn` → 1 passed (log
+  `.🧬semio/🌐hub/s14-h13-logs/hold17-refill-law.txt`); with the os-mcp TS oracle 5/5 (22:2x) the refill set is proven on both sides.

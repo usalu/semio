@@ -359,7 +359,7 @@ async fn example_announcements_keep_live_maintenance_within_its_contract() {
     for id in [set_active_example::BLOCK2D_EXAMPLE_LEFT, set_active_example::BLOCK2D_EXAMPLE_RIGHT, set_active_example::BLOCK2D_EXAMPLE_LEFT] {
         context::dispatch(&mut app, Block2dCommand::SetActiveExample(set_active_example::SetActiveExample { id: id.into() })).await;
         let turns = drain(&mut app, id);
-        eprintln!("[DEBUG] block2d {id}: live maintenance settled in {turns} turns");
+        eprintln!("block2d {id}: live maintenance settled in {turns} turns");
     }
     assert_eq!(app.snapshot().expect("snapshot").node_kind.id, "Hexagonal Cut Concrete Forest Left");
 }

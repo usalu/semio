@@ -163,5 +163,4 @@ export function testViewport3dProjectionValues(): void {
   const recalled = jsonPatch.applyPatch(structuredClone(retained), fixture.retention.recallCurvilinear as Patch, true).newDocument;
   assert.deepEqual(deriveActiveProjection(parseViewport3dProjectionPreferences(recalled)), fixture.retention.expected);
   assert.deepEqual(defaults, fixture.defaultPreferences);
-  console.log(`[DEBUG] Shared viewport projection values matched Ajv, fast-json-patch, Three.js finite matrices, ${combinations} mode-orientation pairs including outside-control active values, ${fixture.derivations.length} derivations, and strict rejection laws`);
 }

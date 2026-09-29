@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 👆️ Pure multi-touch gesture math for every viewport surface — `pointerId`-keyed pointer
+/** 👆️ Pure multi-touch gesture math for every viewport surface — `pointerId`-keyed pointer
  * tracking plus the pinch (scale ⊗ translation ⊗ rotation) a two-finger gesture carries.
  *
  * Domain-neutral and renderer-neutral on purpose: `🖥️Board2dHost` drives a WASM board session,

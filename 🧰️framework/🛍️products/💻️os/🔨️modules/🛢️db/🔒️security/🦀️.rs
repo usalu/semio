@@ -24,7 +24,7 @@
 //! functions, `redact_fields`, `check_tenant`) is also usable standalone, since a deployment may
 //! wire only a subset (e.g. no signing, no per-tenant budgets).
 use crate::*;
-/// @emoji 🏢️ A tenant's identity — the isolation unit `check_tenant` gates on. Kept as its own
+/// 🏢️ A tenant's identity — the isolation unit `check_tenant` gates on. Kept as its own
 /// newtype (distinct from `protocol::ActorId`/`ActorId`) since one tenant spans many
 /// actors and a `Principal` always belongs to exactly one.
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
@@ -48,7 +48,7 @@ impl From<String> for TenantId {
     }
 }
 
-/// @emoji 🪪️ The authenticated caller a `SecurityGate` decision is made against: which actor,
+/// 🪪️ The authenticated caller a `SecurityGate` decision is made against: which actor,
 /// which tenant they belong to, and which roles `RoleBasedPolicy` grants are matched against.
 /// Deliberately carries `protocol::ActorId` (not `ActorId`) — see module doc: this crate
 /// authorizes the same actor identity that flows through `protocol::MutationEnvelope`.
@@ -60,20 +60,20 @@ pub struct Principal {
 }
 
 impl Principal {
-    /// @emoji 🆕️ Builds a principal from its three parts.
+    /// 🆕️ Builds a principal from its three parts.
     // 🚫️async: E1 pure constructor, used inside a sync `Fn(&ActorId) -> Principal` closure slot — see R9
     pub fn new(actor: protocol::ActorId, tenant: TenantId, roles: Vec<String>) -> Self {
         Self { actor, tenant, roles }
     }
 
-    /// @emoji 🔎️ True iff `self` holds `role` (exact string match — role names are this
+    /// 🔎️ True iff `self` holds `role` (exact string match — role names are this
     /// deployment's own vocabulary, not this crate's concern).
     pub fn has_role(&self, role: &str) -> bool {
         self.roles.iter().any(|r| r == role)
     }
 }
 
-/// @emoji 🚧️ Tenant isolation: succeeds only if `principal` belongs to `resource_tenant`. Kept as
+/// 🚧️ Tenant isolation: succeeds only if `principal` belongs to `resource_tenant`. Kept as
 /// a standalone check (not folded into `RoleBasedPolicy`) since it is a hard boundary that must
 /// hold regardless of any role grant — a policy misconfiguration must never leak across tenants.
 pub fn check_tenant(principal: &Principal, resource_tenant: &TenantId) -> Result<(), DbError> {
@@ -86,7 +86,7 @@ pub fn check_tenant(principal: &Principal, resource_tenant: &TenantId) -> Result
 //#endregion 🔖️Identity
 
 //#region 🔖️Scope
-/// @emoji 🎯️ What action a scope check is being made for. Kept as one flat set applicable to
+/// 🎯️ What action a scope check is being made for. Kept as one flat set applicable to
 /// every `AuthzScope` variant (rather than a per-scope action vocabulary) — the resource
 /// granularity already lives in `AuthzScope`, so `Action` only needs to answer "read, mutate, or
 /// administer this resource".
@@ -97,7 +97,7 @@ pub enum Action {
     Admin,
 }
 
-/// @emoji 🗺️ The seven authz granularities the contract names: whole database, one document, one
+/// 🗺️ The seven authz granularities the contract names: whole database, one document, one
 /// command kind within a document, one object, one field of one object, a document's historical
 /// view, and a document's preview (speculative) view.
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -112,7 +112,7 @@ pub enum AuthzScope {
 }
 
 impl AuthzScope {
-    /// @emoji 🧵️ Renders this scope as a canonical path-segment sequence, matched against
+    /// 🧵️ Renders this scope as a canonical path-segment sequence, matched against
     /// `Grant::pattern` by `pattern_matches`. Every non-`Database` scope is nested under
     /// `["db", "document", <id>, ...]` so a `**` grant rooted at a document (e.g.
     /// `["db", "document", "doc-1", "**"]`) covers every scope kind under that one document.
@@ -138,7 +138,7 @@ impl AuthzScope {
         }
     }
 
-    /// @emoji 📄️ The document this scope is nested under, or `None` for `AuthzScope::Database`.
+    /// 📄️ The document this scope is nested under, or `None` for `AuthzScope::Database`.
     pub async fn document(&self) -> Option<&protocol::ArtifactId> {
         match self {
             AuthzScope::Database => None,
@@ -151,14 +151,14 @@ impl AuthzScope {
 //#endregion 🔖️Scope
 
 //#region 🔖️Policy
-/// @emoji ⚖️ Whether a matching `Grant` permits or forbids the action.
+/// ⚖️ Whether a matching `Grant` permits or forbids the action.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Effect {
     Allow,
     Deny,
 }
 
-/// @emoji 🧑️‍⚖️ The result of `RoleBasedPolicy::evaluate`: either the action is allowed, or it is
+/// 🧑️‍⚖️ The result of `RoleBasedPolicy::evaluate`: either the action is allowed, or it is
 /// denied with a human-readable reason (surfaced to `DbError::Unauthorized` and to the audit
 /// trail).
 #[derive(Clone, PartialEq, Debug)]
@@ -173,7 +173,7 @@ impl Decision {
         matches!(self, Decision::Allow)
     }
 
-    /// @emoji 🔀️ Collapses the decision into the family's standard `Result` shape.
+    /// 🔀️ Collapses the decision into the family's standard `Result` shape.
     pub async fn into_result(self) -> Result<(), DbError> {
         match self {
             Decision::Allow => Ok(()),
@@ -182,7 +182,7 @@ impl Decision {
     }
 }
 
-/// @emoji 📜️ One role-scoped rule: if `role` is among the principal's roles, `action` is in
+/// 📜️ One role-scoped rule: if `role` is among the principal's roles, `action` is in
 /// `actions`, and `pattern` matches the scope's `segments()`, this grant applies with `effect`.
 #[derive(Clone, Debug)]
 pub struct Grant {
@@ -193,13 +193,13 @@ pub struct Grant {
 }
 
 impl Grant {
-    /// @emoji ✅️ An allow rule. `pattern` segments may be `"*"` (matches exactly one segment) or
+    /// ✅️ An allow rule. `pattern` segments may be `"*"` (matches exactly one segment) or
     /// a trailing `"**"` (matches the remainder, zero or more segments — see `pattern_matches`).
     pub fn allow(role: impl Into<String>, pattern: &[&str], actions: &[Action]) -> Self {
         Self { role: role.into(), pattern: pattern.iter().map(|s| s.to_string()).collect(), actions: actions.iter().copied().collect(), effect: Effect::Allow }
     }
 
-    /// @emoji 🚫️ A deny rule — see `RoleBasedPolicy::evaluate`: any matching deny short-circuits
+    /// 🚫️ A deny rule — see `RoleBasedPolicy::evaluate`: any matching deny short-circuits
     /// to `Decision::Deny` regardless of any allow grant, matched or not yet evaluated.
     // 🚫️async: E1 pure constructor consumed synchronously by `impl Default` — see R9
     pub fn deny(role: impl Into<String>, pattern: &[&str], actions: &[Action]) -> Self {
@@ -207,7 +207,7 @@ impl Grant {
     }
 }
 
-/// @emoji 🧩️ Matches a `Grant::pattern` against a scope's `segments()`. `"*"` matches exactly one
+/// 🧩️ Matches a `Grant::pattern` against a scope's `segments()`. `"*"` matches exactly one
 /// segment; `"**"` — only valid as the LAST pattern segment, this crate's own choice for a simple,
 /// unambiguous matcher — matches every remaining segment (including zero). Any other pattern
 /// segment must match the corresponding scope segment exactly.
@@ -224,7 +224,7 @@ fn pattern_matches(pattern: &[String], segments: &[String]) -> bool {
     pattern.len() == segments.len()
 }
 
-/// @emoji 🛡️ A default-deny role-based policy engine: a scope/action is allowed only if at least
+/// 🛡️ A default-deny role-based policy engine: a scope/action is allowed only if at least
 /// one `Grant` explicitly allows it and no `Grant` explicitly denies it (deny always wins).
 #[derive(Clone, Debug, Default)]
 pub struct RoleBasedPolicy {
@@ -239,14 +239,14 @@ impl RoleBasedPolicy {
         Self::default()
     }
 
-    /// @emoji ➕️ Adds one grant (builder-style).
+    /// ➕️ Adds one grant (builder-style).
     // 🚫️async: E1 pure builder, used as a bare `Iterator::fold` fn-pointer accumulator — see R9
     pub fn with_grant(mut self, grant: Grant) -> Self {
         self.grants.push(grant);
         self
     }
 
-    /// @emoji ⚖️ Evaluates every grant whose `role` the principal holds and whose `actions`
+    /// ⚖️ Evaluates every grant whose `role` the principal holds and whose `actions`
     /// contains `action`, matching `pattern` against `scope.segments()`. A matching `Deny`
     /// short-circuits immediately; otherwise the result is `Allow` iff at least one matching
     /// `Allow` grant was found, `Deny` (default-deny) otherwise.
@@ -273,7 +273,7 @@ impl RoleBasedPolicy {
 //#endregion 🔖️Policy
 
 //#region 🔖️Signing
-/// @emoji ✍️ A detached signature over a 32-byte message, plus the scheme/key it was produced
+/// ✍️ A detached signature over a 32-byte message, plus the scheme/key it was produced
 /// with — the shape `protocol::Signer`/`protocol::SignatureVerifier` exchange, packaged so
 /// callers don't have to carry the three fields separately.
 #[derive(Clone, PartialEq, Debug)]
@@ -283,7 +283,7 @@ pub struct Signature {
     pub bytes: Vec<u8>,
 }
 
-/// @emoji 🔀️ Maps `protocol::ProtocolError` (the error type `Signer`/`SignatureVerifier` return)
+/// 🔀️ Maps `protocol::ProtocolError` (the error type `Signer`/`SignatureVerifier` return)
 /// onto this family's `DbError` by category, mirroring `db_core`'s `From<pack::PackError>`.
 // 🚫️async: E4 fn-pointer slot
 fn map_protocol_error(err: protocol::ProtocolError) -> DbError {
@@ -295,7 +295,7 @@ fn map_protocol_error(err: protocol::ProtocolError) -> DbError {
     }
 }
 
-/// @emoji ✍️ Signs `message` (typically a commit/frontier `chain_hash`) with an injected
+/// ✍️ Signs `message` (typically a commit/frontier `chain_hash`) with an injected
 /// `Signer` — this crate never picks a concrete scheme, matching the contract's "signatures via
 /// injected `Signer`/`Verifier` traits" wording.
 // 🔀️ `signer: &impl protocol::Signer` (was `&dyn`) — `Signer` is an OPEN extension point (its own
@@ -307,7 +307,7 @@ pub async fn sign_message(signer: &impl protocol::Signer, message: &[u8; 32]) ->
     Ok(Signature { scheme: signer.scheme().await.to_string(), key_id: signer.key_id().await.to_string(), bytes })
 }
 
-/// @emoji ✅️ Verifies `signature` over `message` with an injected `SignatureVerifier`. Distinct
+/// ✅️ Verifies `signature` over `message` with an injected `SignatureVerifier`. Distinct
 /// from a raw `bool` return: a cryptographically-valid-but-false verification and a
 /// verifier-internal error both surface as `Err`, but with different `DbError` variants, so a
 /// caller can tell "rejected" from "verifier broken" without inspecting a string.
@@ -323,7 +323,7 @@ pub async fn verify_signature(verifier: &impl protocol::SignatureVerifier, signa
 //#endregion 🔖️Signing
 
 //#region 🔖️Replay
-/// @emoji 🩹️ A bounded, per-actor sliding-time-window replay guard: rejects an `MutationId` a
+/// 🩹️ A bounded, per-actor sliding-time-window replay guard: rejects an `MutationId` a
 /// given actor has already submitted within `window_ms`. Deliberately NOT a permanent ledger —
 /// bounded by both `window_ms` (time) and `capacity_per_actor` (space, oldest-evicted-first) so
 /// memory never grows unboundedly under a hostile or buggy high-volume actor; durable dedupe
@@ -343,7 +343,7 @@ impl ReplayGuard {
         Self { window_ms, capacity_per_actor, order: std::collections::HashMap::new(), seen: std::collections::HashMap::new() }
     }
 
-    /// @emoji 🔍️ Evicts `actor`'s entries older than `window_ms` relative to `physical_ms`, then
+    /// 🔍️ Evicts `actor`'s entries older than `window_ms` relative to `physical_ms`, then
     /// rejects with `DbError::Conflict` if `mutation_id` is still tracked. Records nothing: an
     /// operation is tracked only once its command committed ([`Self::record`]), so a batch refused
     /// after admission (a transient refusal, a policy rejection) is resent without tripping the guard.
@@ -363,7 +363,7 @@ impl ReplayGuard {
         Ok(())
     }
 
-    /// @emoji 📌️ Tracks one committed operation of `actor` at `physical_ms`, evicting the oldest
+    /// 📌️ Tracks one committed operation of `actor` at `physical_ms`, evicting the oldest
     /// entry first if `capacity_per_actor` would be exceeded; an operation already tracked stays
     /// as it is.
     pub fn record(&mut self, actor: &protocol::ActorId, mutation_id: &protocol::MutationId, physical_ms: u64) {
@@ -384,7 +384,7 @@ impl ReplayGuard {
 //#endregion 🔖️Replay
 
 //#region 🔖️Budget
-/// @emoji 🪙️ A single token bucket: `capacity` tokens, refilling at `refill_per_sec` tokens/sec,
+/// 🪙️ A single token bucket: `capacity` tokens, refilling at `refill_per_sec` tokens/sec,
 /// lazily caught up to `now_ms` on every `try_consume` call (no background timer needed).
 #[derive(Clone, Debug)]
 struct TokenBucket {
@@ -412,7 +412,7 @@ impl TokenBucket {
     }
 }
 
-/// @emoji 🛡️ DoS budgets: one token bucket per string key (actor id, tenant id, command kind —
+/// 🛡️ DoS budgets: one token bucket per string key (actor id, tenant id, command kind —
 /// whatever granularity the caller wants to rate-limit at; this crate is deliberately
 /// key-agnostic). Every unseen key gets a fresh bucket at full `capacity` on first use.
 #[derive(Clone, Debug)]
@@ -427,7 +427,7 @@ impl BudgetRegistry {
         Self { capacity, refill_per_sec, buckets: std::collections::HashMap::new() }
     }
 
-    /// @emoji 🎟️ Attempts to consume `cost` tokens from `key`'s bucket at `now_ms`. Returns
+    /// 🎟️ Attempts to consume `cost` tokens from `key`'s bucket at `now_ms`. Returns
     /// `DbError::LimitExceeded` if the bucket doesn't have enough tokens yet.
     // 🚫️async: E1 pure accessor, `TokenBucket`'s own methods are sync — see R9
     pub fn try_consume(&mut self, key: &str, cost: u32, now_ms: u64) -> Result<(), DbError> {
@@ -443,14 +443,14 @@ impl BudgetRegistry {
 //#endregion 🔖️Budget
 
 //#region 🔖️Redaction
-/// @emoji 🛡️ A depth ceiling for `redact_fields`'s recursion. Not a contract number — this
+/// 🛡️ A depth ceiling for `redact_fields`'s recursion. Not a contract number — this
 /// crate's own hardening choice, mirroring `check_len`'s "validate before allocating"
 /// spirit for the recursive case: an adversarially-deep JSON payload could otherwise blow the
 /// stack before any redaction decision is even made, so depth beyond the ceiling is redacted
 /// outright (deny-by-default) rather than passed through unredacted or allowed to recurse further.
 const MAX_REDACT_DEPTH: usize = 64;
 
-/// @emoji 🕳️ The marker `redact_fields` substitutes for a denied subtree — an object tagged
+/// 🕳️ The marker `redact_fields` substitutes for a denied subtree — an object tagged
 /// `{"$redacted": true}` rather than `null`, so a caller can tell "hidden" from "genuinely null".
 async fn redacted_marker() -> serde_json::Value {
     let mut object = serde_json::Map::new();
@@ -458,7 +458,7 @@ async fn redacted_marker() -> serde_json::Value {
     serde_json::Value::Object(object)
 }
 
-/// @emoji 🫥️ Structurally walks `value` (an object's JSON payload — e.g.
+/// 🫥️ Structurally walks `value` (an object's JSON payload — e.g.
 /// `protocol::ArtifactDiff.payload`), replacing every dotted field path the `policy` denies
 /// `Action::Read` on (scoped as `AuthzScope::Field { document, object_id, field: <path> }`) with
 /// `redacted_marker()`. Only walks JSON objects (arrays are left as opaque leaves — this crate's
@@ -495,11 +495,10 @@ async fn redact_fields_at(policy: &RoleBasedPolicy, principal: &Principal, docum
 //#endregion 🔖️Redaction
 
 //#region 🔖️Audit
-/// @emoji 📣️ Emits a `security.authz_allowed`/`security.authz_denied` `EmitEvent` for
+/// 📣️ Emits a `security.authz_allowed`/`security.authz_denied` `EmitEvent` for
 /// one policy decision, via the family's shared `Emit` seam (see `Emit`'s doc for why this crate
 /// stays generic over `E: Emit` rather than depending on `db_observe` directly — dedyn-emit-runtime,
-/// O1/R11(a): a caller-supplied, stored implementation is trivially generic, exactly like
-/// `db_artifact::ArtifactEngineConfig`'s own `V: VersionGraph` param).
+/// O1/R11(a): a caller-supplied, stored implementation is trivially generic).
 pub async fn audit_decision<E: Emit>(emit: &E, principal: &Principal, scope: &AuthzScope, action: Action, decision: &Decision) {
     let name = if decision.is_allowed() { "security.authz_allowed" } else { "security.authz_denied" };
     let mut event = EmitEvent::new(name)
@@ -516,14 +515,14 @@ pub async fn audit_decision<E: Emit>(emit: &E, principal: &Principal, scope: &Au
     emit.emit(event).await;
 }
 
-/// @emoji 📣️ Emits a `security.replay_rejected` event — `SecurityGate::admit_commands` calls this
+/// 📣️ Emits a `security.replay_rejected` event — `SecurityGate::admit_commands` calls this
 /// when `ReplayGuard` rejects an operation, so a replay attempt is auditable even though it never
 /// reaches a `Decision`.
 pub async fn audit_replay_rejected<E: Emit>(emit: &E, actor: &protocol::ActorId, mutation_id: &protocol::MutationId, document: &protocol::ArtifactId) {
     emit.emit(EmitEvent::new("security.replay_rejected").with_document(ArtifactId::from(document.0.clone())).field("actor", EmitField::Text(actor.0.clone())).field("mutation_id", EmitField::Text(mutation_id.0.clone()))).await;
 }
 
-/// @emoji 📣️ Emits a `security.budget_exceeded` event — `SecurityGate::admit_commands` calls this
+/// 📣️ Emits a `security.budget_exceeded` event — `SecurityGate::admit_commands` calls this
 /// when `BudgetRegistry` rejects a submission.
 pub async fn audit_budget_exceeded<E: Emit>(emit: &E, key: &str, document: &protocol::ArtifactId) {
     emit.emit(EmitEvent::new("security.budget_exceeded").with_document(ArtifactId::from(document.0.clone())).field("key", EmitField::Text(key.to_string()))).await;
@@ -531,7 +530,7 @@ pub async fn audit_budget_exceeded<E: Emit>(emit: &E, key: &str, document: &prot
 //#endregion 🔖️Audit
 
 //#region 🔖️Gate
-/// @emoji 🔓️ Recovers a `Mutex`'s inner value even if a prior holder panicked while holding it —
+/// 🔓️ Recovers a `Mutex`'s inner value even if a prior holder panicked while holding it —
 /// mirrors `db_observe`'s `lock` helper: a security check must never itself become a source of
 /// panic-under-panic for the actor code that calls into it, often mid-crash-handling.
 // 🚫️async: E1 pure accessor (no suspension) — see R9
@@ -539,7 +538,7 @@ fn lock<T>(mutex: &std::sync::Mutex<T>) -> std::sync::MutexGuard<'_, T> {
     mutex.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
 }
 
-/// @emoji 🚪️ The composition root: everything `db_artifact`'s pipeline needs from this crate for
+/// 🚪️ The composition root: everything `db_artifact`'s pipeline needs from this crate for
 /// its "admit → dedupe → ... → authz" stages, bundled behind one type. Every piece
 /// (`RoleBasedPolicy`, `ReplayGuard`, `BudgetRegistry`, `Emit`) is independently usable —
 /// `SecurityGate` is a convenience, not the only entry point.
@@ -560,7 +559,7 @@ impl<E: Emit + 'static> SecurityGate<E> {
         Self { policy, replay: std::sync::Mutex::new(replay), budgets: std::sync::Mutex::new(budgets), emit }
     }
 
-    /// @emoji ⚖️ Evaluates `scope`/`action` against the gate's policy, audits the decision, and
+    /// ⚖️ Evaluates `scope`/`action` against the gate's policy, audits the decision, and
     /// collapses it into a `Result` — the single authz entry point every scope granularity (db,
     /// document, command-kind, object, field, historical, preview) shares.
     pub async fn authorize(&self, principal: &Principal, scope: &AuthzScope, action: Action) -> Result<(), DbError> {
@@ -569,7 +568,7 @@ impl<E: Emit + 'static> SecurityGate<E> {
         decision.into_result().await
     }
 
-    /// @emoji ✅️ The admit/dedupe/authz stages for one command batch of `principal`: tenant
+    /// ✅️ The admit/dedupe/authz stages for one command batch of `principal`: tenant
     /// isolation, then `Action::Write` authz on `AuthzScope::CommandKind`, then the DoS budget (keyed
     /// by `principal.actor`, charged one token per command for the whole batch at once — never
     /// partially — so a budget whose capacity is at least a declared-legal batch never refuses one
@@ -598,7 +597,7 @@ impl<E: Emit + 'static> SecurityGate<E> {
         Ok(())
     }
 
-    /// @emoji 📌️ Tracks `commands` in the replay guard as committed at `physical_ms` — called once
+    /// 📌️ Tracks `commands` in the replay guard as committed at `physical_ms` — called once
     /// their batch committed, never at admission.
     pub fn record_committed(&self, commands: &[(&protocol::ActorId, &protocol::MutationId)], physical_ms: u64) {
         let mut replay = lock(&self.replay);
@@ -607,7 +606,7 @@ impl<E: Emit + 'static> SecurityGate<E> {
         }
     }
 
-    /// @emoji 🫥️ Convenience forward to the free `redact_fields` function using the gate's own
+    /// 🫥️ Convenience forward to the free `redact_fields` function using the gate's own
     /// policy.
     pub async fn redact(&self, principal: &Principal, document: &protocol::ArtifactId, object_id: &str, value: &serde_json::Value) -> serde_json::Value {
         redact_fields(&self.policy, principal, document, object_id, value).await

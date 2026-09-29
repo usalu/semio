@@ -58,7 +58,6 @@ export function testPublicationRetirementAuthorityOracle(): void {
   assert.equal(reBegin.refreshedAuthorityBeginAccepted, true, "refreshing the authority re-admits the same window");
   assert.equal(reBegin.refreshedGenerationExceedsCaptured, true);
   assert.ok(reBegin.capturedRevision < reBegin.supersedingRevision && reBegin.supersedingRevision < reBegin.rejectedRevision && reBegin.rejectedRevision < reBegin.reBeginRevision, "the re-begin fixture revisions are ordered");
-  console.log(`[DEBUG] publication retirement authority: ${lanes.length} lanes, ${lanes.length - lenient.length} fatal on rejection, refreshed re-begin accepted=${reBegin.refreshedAuthorityBeginAccepted}`);
 }
 
 if (import.meta.main) testPublicationRetirementAuthorityOracle();

@@ -1,7 +1,7 @@
 /// <reference types="vitest/importMeta" />
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/📃️UiDocumentStore/component.tsx
-/** @emoji 🗄️ `📃️UiDocumentStore` — the per-surface retained store for the semantic UI contract
+/** 🗄️ `📃️UiDocumentStore` — the per-surface retained store for the semantic UI contract
  * (`semio-framework-ui-contract`). Holds `{ revision, root, nodes: Map<UiNodeId, UiNodeRecord> }` and
  * applies a `UiPatch` **transactionally**: every op lands on a draft copy first, the draft is
  * validated against the same invariants the Rust `validate_snapshot`/`apply_patch` (`🦀️limits.rs`)
@@ -379,7 +379,7 @@ export function applyUiPatch(state: UiDocumentState, patch: UiPatch, limits: UiD
 //#endregion 🔖️Apply
 
 //#region 🔖️Reconcile
-/** @emoji 🧬️ Mints one flat retained snapshot from an authored {@link BuiltNode} tree. Node ids are DFS-local to this full-body reconciliation; patch-time transition hints intentionally start empty. */
+/** 🧬️ Mints one flat retained snapshot from an authored {@link BuiltNode} tree. Node ids are DFS-local to this full-body reconciliation; patch-time transition hints intentionally start empty. */
 export function builtNodeToSnapshot(surface: SurfaceId, root: BuiltNode, revision: UiRevision = 0, layoutEpoch: bigint = 0n): UiSnapshot {
   const nodes: UiNodeRecord[] = [];
   let nextId = 1;

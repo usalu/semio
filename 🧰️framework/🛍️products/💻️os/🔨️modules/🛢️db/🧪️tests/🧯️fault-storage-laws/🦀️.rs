@@ -311,7 +311,7 @@ async fn law_overlay_structural_sharing() {
 //#endregion 🔖️Laws
 
 //#region 🔖️exhaustive
-/// @emoji 🐌️ Genuinely slower, exhaustive-only corruption fuzzing — real db_wal recovery driven
+/// 🐌️ Genuinely slower, exhaustive-only corruption fuzzing — real db_wal recovery driven
 /// through `pack_corruption`'s truncation/bit-flip corruption harness (its documented precedent,
 /// per this crate's own module doc), proving `db_wal::replay_document` never panics on a
 /// corrupted WAL segment, only ever returns an `Err` (or, rarely, coincidentally still decodes).

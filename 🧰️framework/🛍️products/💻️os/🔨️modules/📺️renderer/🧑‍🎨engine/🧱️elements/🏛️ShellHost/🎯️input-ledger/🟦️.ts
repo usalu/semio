@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/ShellHost/input-ledger/component.ts
-/** @emoji 🎯️ The Input Causality Ledger — every host input (a pointer gesture, a utility or tool toggle,
+/** 🎯️ The Input Causality Ledger — every host input (a pointer gesture, a utility or tool toggle,
  * a ribbon action, a guest follow-up) is ONE ledger entry with provenance, and every entry reaches a
  * typed terminal outcome: `applied`, `superseded` or `refused(reason)`. No React, no shell imports, so
  * every law here runs over a fixture without the shell's element graph (the same separation
@@ -81,7 +81,8 @@ export type InputRefusalReasonV1 =
   | "view-state-unresolved"
   | "mutation-rejected"
   | "dispatch-failed"
-  | "not-applied";
+  | "not-applied"
+  | "catching-up";
 
 export type InputOutcomeV1 =
   | Readonly<{ kind: "applied"; inputSeq: number }>
@@ -103,6 +104,7 @@ export const INPUT_REFUSAL_RETRYABLE_V1: Readonly<Record<InputRefusalReasonV1, b
   "mutation-rejected": false,
   "dispatch-failed": true,
   "not-applied": true,
+  "catching-up": true,
 };
 
 /** 🔇️ Reasons a USER-origin refusal is shown as a shell notice. A guest echo that lost a CAS race is logged,
@@ -120,6 +122,7 @@ export const INPUT_REFUSAL_NOTIFIED_V1: Readonly<Record<InputRefusalReasonV1, bo
   "mutation-rejected": true,
   "dispatch-failed": true,
   "not-applied": true,
+  "catching-up": true,
 };
 
 export function inputAppliedV1(inputSeq: number): InputOutcomeV1 {
@@ -136,7 +139,7 @@ export function inputRefusedV1(inputSeq: number, reason: InputRefusalReasonV1, d
     : { kind: "refused", inputSeq, reason, retryable: INPUT_REFUSAL_RETRYABLE_V1[reason], detail };
 }
 
-/** 🗣️ One plain console line per refusal — never `[DEBUG]`-gated, so a swallowed click is greppable. */
+/** 🗣️ One plain console line per refusal — never `[TRACE]`-gated, so a swallowed click is greppable. */
 export function inputRefusalTextV1(action: string, outcome: Extract<InputOutcomeV1, { kind: "refused" }>, provenance: InputProvenanceV1): string {
   const where = provenance.windowId === null ? "" : ` window=${provenance.windowId}`;
   const cause = provenance.causedBy === null ? "" : ` causedBy=#${provenance.causedBy}`;
@@ -208,6 +211,7 @@ function freshRefusalCounts(): Record<InputRefusalReasonV1, number> {
     "mutation-rejected": 0,
     "dispatch-failed": 0,
     "not-applied": 0,
+    "catching-up": 0,
   };
 }
 
@@ -354,6 +358,7 @@ export const INPUT_REFUSAL_LABELS_V1: Readonly<Record<InputRefusalReasonV1, Inpu
   "mutation-rejected": { en: "The change was rejected.", de: "Die Änderung wurde abgelehnt." },
   "dispatch-failed": { en: "The input could not be delivered.", de: "Die Eingabe konnte nicht zugestellt werden." },
   "not-applied": { en: "Not applied — the document is reopening. Try again.", de: "Nicht angewendet — das Dokument wird neu geöffnet. Bitte erneut versuchen." },
+  "catching-up": { en: "Not applied — the document is still catching up with the hub. Try again in a moment.", de: "Nicht angewendet — das Dokument gleicht sich noch mit dem Hub ab. Bitte gleich erneut versuchen." },
 };
 export function inputRefusalNoticeTextV1(reason: InputRefusalReasonV1, locale: string): string {
   const label = INPUT_REFUSAL_LABELS_V1[reason];

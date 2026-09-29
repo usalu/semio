@@ -23,7 +23,7 @@ import { resolveCatalogFilterPluginId } from "../../../🔌️plugin/🏗️buil
 
 
 
-/** @emoji 🩺️ Reads one component's staged module directory into the pure facts
+/** 🩺️ Reads one component's staged module directory into the pure facts
  * {@link preparedComponentVerdict} decides on — the ONE disk reader the preparation pass and the
  * activation receipt share, so "prepared" means the same thing in both. A crate that never compiled
  * leaves no directory, and an unreadable descriptor is a fact here, never a thrown error. */
@@ -41,7 +41,7 @@ export function stagedComponentFacts(moduleRoot: string, pluginId: string): Prep
   };
 }
 
-/** @emoji 🔎️ Collects one variant's staged-module freshness facts out of the ONE staging root: the
+/** 🔎️ Collects one variant's staged-module freshness facts out of the ONE staging root: the
  * activation receipt names what was activated, each component's owner tree supplies the newest source
  * mtime, and the extension install root supplies the published package hash. Read-only and asynchronous — it never builds,
  * never writes, and never blocks a serve (bounded: {@link SOURCE_FRESHNESS_COMPONENT_CONCURRENCY} components at once, `signal` cancels); its whole job is that a served module which is behind its own
@@ -87,7 +87,7 @@ export async function collectStagedModuleFacts(options: {
   }, options.signal);
 }
 
-/** @emoji 📣️ Prints one `[stale]` line per component whose served bytes are behind, each naming the exact
+/** 📣️ Prints one `[stale]` line per component whose served bytes are behind, each naming the exact
  * Nx target that fixes it. Called at serve start and again on every activation-receipt change, so a
  * restage that lands while the server runs retires its own warning. */
 export function reportStagedModuleFreshness(variant: string, renderer: "react" | "wgpu", profile: "dev" | "release", facts: readonly StagedModuleFacts[]): readonly StagedModuleVerdict[] {
@@ -98,7 +98,7 @@ export function reportStagedModuleFreshness(variant: string, renderer: "react" |
   return verdicts;
 }
 
-/** @emoji 🔎️ Serve-start freshness pass over the one staging root — never throws: a dev server that
+/** 🔎️ Serve-start freshness pass over the one staging root — never throws: a dev server that
  * refuses to start over a stale module is worse than one that says which module is stale. */
 async function reportServeStagedModuleFreshness(variant: string, renderer: "react" | "wgpu", profile: "dev" | "release", runtime: string, receipt?: { readonly plugins: readonly { readonly pluginId: string; readonly artifactSha256: string }[] }): Promise<void> {
   try {

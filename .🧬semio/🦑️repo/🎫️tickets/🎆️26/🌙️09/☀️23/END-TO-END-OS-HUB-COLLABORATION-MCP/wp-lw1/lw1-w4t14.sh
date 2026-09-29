@@ -1,0 +1,9 @@
+#!/bin/zsh
+# ⚖️ LW1 → W4/T14 laws (T3-late w4-kind-specs, w4-codec-gate, t14-kind-choices) on the live tree in T14's form
+# (kindsets-proof.sh laws step: kind identity + every artifact_kind_names_the_store_schema) + the artifactKindChoices vitest;
+# R10's cheap post-T5 re-check `bun install --frozen-lockfile --dry-run`.
+R=/Users/ueli/Documents/semio
+export RUST_MIN_STACK=33554432
+cargo test --offline --no-fail-fast -p semio-framework -p semio-framework-plugin-describe -p semio-s-artifact-fem-2d -p semio-s-artifact-fem-3d -p semio-s-artifact-flow-flow -p semio-s-artifact-forms-forms -p semio-s-artifact-imperative-procedure -p semio-s-artifact-lowpoly-lowpoly -p semio-s-artifact-mathematical-equation -p semio-s-artifact-norm-din16798 -p semio-s-artifact-norm-din18599 -p semio-s-artifact-norm-din4108 -p semio-s-artifact-norm-en1990 -p semio-s-artifact-norm-en1991 -p semio-s-artifact-norm-en1992 -p semio-s-artifact-norm-en1993 -p semio-s-artifact-norm-en1994 -p semio-s-artifact-norm-en1995 -p semio-s-artifact-norm-en1996 -p semio-s-artifact-norm-en1997 -p semio-s-artifact-norm-en1998 -p semio-s-artifact-norm-en1999 -p semio-s-artifact-norm-iso16757 -p semio-s-artifact-norm-vdi3805 -p semio-s-artifact-shooting-shooting -p semio-s-artifact-sourcing-curation -p semio-s-artifact-trinity-rewriting -p semio-s-plugin-fem -p semio-s-plugin-norm  -p semio-s-artifact-demonstrator-playground --features semio-s-artifact-fem-2d/component-app-assembly,semio-s-artifact-fem-3d/component-app-assembly,semio-s-artifact-trinity-rewriting/component-app-assembly --lib -- artifact_kind kind_identity; echo "LW1-STEP kind-laws rc=$?"
+cd "$R" && bunx vitest run --config "$R/.🧬semio/🌐hub/s14-t14-logs/s14c-manifest-vitest.config.ts" --reporter=verbose; echo "LW1-STEP kind-choices-vitest rc=$?"
+cd "$R" && bun install --frozen-lockfile --dry-run; echo "LW1-STEP r10-frozen-lockfile-dry rc=$?"

@@ -22,5 +22,4 @@ fn canonical_vectors_execute_direct_mutation_and_codec_laws() {
             }
         }
     }
-    println!("[DEBUG] delete_scene: {} canonical vectors verified through direct mutations, inverse restoration and the independent JSON oracle.", vectors.len());
 }

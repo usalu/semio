@@ -62,7 +62,6 @@ fn wal_writer_table_matches_neutral_exact_scope_and_aba_rejection() {
             assert_eq!(disposition(result), step["expected"].as_str().unwrap(), "{step}");
         }
         assert!(table.terminal_is_empty());
-        eprintln!("[DEBUG] fixed WAL writer table matched exact neutral ownership and stale-generation decisions: {}", row["name"]);
     }
 }
 
@@ -92,7 +91,6 @@ fn wal_writer_table_capacity_recycles_slots_without_reusing_generations() {
     assert_eq!(retired, WAL_WRITER_CAPACITY * 2);
     assert!(table.terminal_is_empty());
     assert!(matches!(table.validate(fresh.key(), backend(0), fresh.document()), Err(DbError::Fenced { .. })));
-    eprintln!("[DEBUG] WAL writer slots rejected capacity+1, preserved guards, recycled without ABA, and retired {WAL_WRITER_CAPACITY} guards in {retired} opportunities");
 }
 
 #[derive(Debug)]
@@ -144,7 +142,6 @@ fn wal_writer_release_retains_pinned_operation_and_faulted_guard() {
     assert!(table.terminal_is_empty());
     assert_eq!(serde_json::to_value(trace).unwrap(), fixture["guardRetirement"]["terminal"]);
     assert!(matches!(table.pin_operation(key, backend(0), &document, operation), Err(DbError::Fenced { .. })));
-    eprintln!("[DEBUG] WAL writer release retained the in-flight operation, fenced new work, preserved a faulted guard, and waited for its terminal close witness");
 }
 
 #[test]
@@ -170,7 +167,6 @@ fn wal_writer_table_close_advances_other_guards_while_first_operation_is_pinned(
         let _ = table.close_step().unwrap();
     }
     assert!(table.terminal_is_empty());
-    eprintln!("[DEBUG] bounded WAL writer close retired the later guard while the first operation stayed pinned, then retired the final owner");
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -224,5 +220,4 @@ fn wal_writer_file_lock_excludes_independent_instances_and_processes() {
     assert!(matches!(WalFileWriterGuard::try_acquire(&path), Err(DbError::Conflict(_))));
     while second.close_step().unwrap() {}
     assert!(second.terminal_is_empty());
-    eprintln!("[DEBUG] native WAL sidecar lock excluded independent handles and a separate process, then reacquired after terminal close without unlinking");
 }

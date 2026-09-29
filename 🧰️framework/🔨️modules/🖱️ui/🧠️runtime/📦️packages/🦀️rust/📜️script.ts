@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** @emoji ⚙️ Runs the `semio-framework-ui-runtime` test suite and the guest-target compile gates.
+/** ⚙️ Runs the `semio-framework-ui-runtime` test suite and the guest-target compile gates.
  *
  * The wasm gates are the point of this crate: the contract is what `wasm32-wasip2` plugin components
  * and `wasm32-unknown-unknown` browser renderers both speak, so a dependency that fails either target
@@ -27,21 +27,21 @@ class TreeRetirementScript extends BundleScript {
         "runtime_tree_retirement_rejected_close_preserves_source_until_handback_admission",
       ] }],
     });
-    console.log(`[DEBUG] runtime-tree exact native laws:${receipts.reduce((sum, receipt) => sum + receipt.assertions, 0)} executed`);
+    console.log(`runtime-tree exact native laws:${receipts.reduce((sum, receipt) => sum + receipt.assertions, 0)} executed`);
   }
 }
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    console.log(`[DEBUG] surface-ownership-oracle checks=${surfaceOwnershipSelfTests()}`);
+    console.log(`surface-ownership-oracle checks=${surfaceOwnershipSelfTests()}`);
     await runCargoTestBudgeted([], packageRoot, ["--all-features", ...rest]);
   }
 }
 //#endregion 🔖️test
 
 //#region 🔖️check-wasm
-/** @emoji 🌐️ Both guest flavours: wasip2 (plugin components) and unknown-unknown (browser renderers). */
+/** 🌐️ Both guest flavours: wasip2 (plugin components) and unknown-unknown (browser renderers). */
 class CheckWasmScript extends BundleScript {
   run(): void {
     const check = (args: string[]) => runCmd("cargo", ["check", "-p", "semio-framework-ui-runtime", ...args], { cwd: packageRoot, budgetMs: buildBudgetMs() });

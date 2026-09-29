@@ -128,7 +128,7 @@ async fn missing_start_directive_is_an_error() {
     assert!(err.message.contains("start"), "unexpected message: {}", err.message);
 }
 
-/// @emoji 🪞️ This crate's own format description parses under the parser it defines — the
+/// 🪞️ This crate's own format description parses under the parser it defines — the
 /// self-hosting proof the architecture plan calls for.
 #[semio_framework_async_macros::async_test]
 async fn self_hosting_grammar_grammar_parses_and_round_trips() {

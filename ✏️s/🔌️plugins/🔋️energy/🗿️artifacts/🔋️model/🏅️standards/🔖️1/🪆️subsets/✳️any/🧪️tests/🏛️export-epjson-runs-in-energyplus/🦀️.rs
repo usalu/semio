@@ -38,9 +38,9 @@ const ACCOUNTED: &[&str] = &["600", "900"];
 mod subject {
     use semio_repo_test_host::{Context, Json, Outcome};
 
-    /// 📏️ Both sides of this comparison are EnergyPlus 25.2.0 reading the same simple glazing, so
-    /// the band is 3 % rather than the sibling case's 10 %: the documented glazing offset is common
-    /// to both and cannot show up here as a difference.
+    /// 📏️ Both sides of this comparison are EnergyPlus 25.2.0 reading the same two-pane window stack,
+    /// so the band is 3 % rather than the sibling case's 10 %: that case's simple-glazing offset does
+    /// not arise here.
     const ANNUAL_TOLERANCE: f64 = 0.03;
     /// 📏️ Free-float cases are judged on temperature, in kelvin.
     const FREE_FLOAT_TOLERANCE_K: f64 = 0.5;

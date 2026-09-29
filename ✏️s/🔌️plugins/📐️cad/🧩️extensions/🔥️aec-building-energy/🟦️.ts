@@ -1,5 +1,5 @@
 // #region 🧭️Header
-/** @emoji ⚡️ `@semio-tech/cad-js-module-aec-building-energy` — energy stat, property, and STEP import profile. */
+/** ⚡️ `@semio-tech/cad-js-module-aec-building-energy` — energy stat, property, and STEP import profile. */
 // #endregion 🧭️Header
 
 import { core } from "@semio-tech/cad-js";
@@ -62,7 +62,7 @@ async function computeHeatedVolumeProperty(ctx: PropertyComputeContext): Promise
 // #endregion 📐️PropertyComputer
 
 // #region 📦️Register
-/** @emoji 📦️ Registers energy stat, property, and STEP import profile on the core engine. */
+/** 📦️ Registers energy stat, property, and STEP import profile on the core engine. */
 export function register(): void {
   registerStatComputer(ENERGY_DEMAND_STAT_ID, computeEnergyDemandStat);
   registerPropertyComputer(ENERGY_HEATEDVOLUME_PROPERTY_ID, computeHeatedVolumeProperty);
@@ -77,8 +77,16 @@ export function register(): void {
 // #endregion 📦️Register
 
 // #region 🧪️Tests
+/** 🎒️ The values this module hands its extracted suite `./🧪️tests/🧪️semio-tech-cad-js-module-aec-building-energy/🟦️.ts`. */
+export type AecBuildingEnergyTestDependencies = {
+  readonly AEC_BUILDING_ENERGY_MODEL_DEFINITION_ID: typeof AEC_BUILDING_ENERGY_MODEL_DEFINITION_ID;
+  readonly ENERGY_DEMAND_STAT_ID: typeof ENERGY_DEMAND_STAT_ID;
+  readonly core: typeof core;
+  readonly solidRef: typeof solidRef;
+};
+
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️semio-tech-cad-js-module-aec-building-energy/🟦️.ts");
-  await registerTests1(import.meta.vitest, { AEC_BUILDING_ENERGY_MODEL_DEFINITION_ID, ENERGY_DEMAND_STAT_ID, core, solidRef }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { AEC_BUILDING_ENERGY_MODEL_DEFINITION_ID, ENERGY_DEMAND_STAT_ID, core, solidRef }, { url: import.meta.url });
 }
 // #endregion 🧪️Tests

@@ -5,7 +5,7 @@ import { appBreadcrumb, resolveAppBreadcrumb } from "@semio-tech/framework-rende
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../../..");
 
-/** @emoji 🏷️ Demonstrator pane shells must resolve reuse terminology to Entwerfen-mit-Bestand chrome, never `semio`. */
+/** 🏷️ Demonstrator pane shells must resolve reuse terminology to Entwerfen-mit-Bestand chrome, never `semio`. */
 const DEMONSTRATOR_PANE_NAVBAR_LABELS: Record<string, string> = {
   "s.procedural.generation3d@1/*#editor": "Entwerfen mit Bestand · Generator",
   "s.cad.cad@1/*#editor": "Entwerfen mit Bestand · Koordinator",

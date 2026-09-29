@@ -22,7 +22,7 @@ function allAssetArtifacts(): readonly AssetArtifact[] {
   return [...renderCatalogArtifacts("all"), ...renderMetabolismArtifacts()];
 }
 
-/** @emoji 📋️ Exposes every deterministic asset output as a stable owner-relative manifest. */
+/** 📋️ Exposes every deterministic asset output as a stable owner-relative manifest. */
 export function assetOutputManifest(): readonly string[] {
   return allAssetArtifacts().map((artifact) => relative(assetsRoot(), artifact.path)).sort();
 }
@@ -103,7 +103,7 @@ export function publishAssetArtifacts(): number {
   return artifacts.length;
 }
 
-/** @emoji ✅️ Checks all language renderers, output membership, and external shortcode parity without writes. */
+/** ✅️ Checks all language renderers, output membership, and external shortcode parity without writes. */
 export function checkAssetArtifacts(): void {
   const artifacts = allAssetArtifacts();
   validateAssetOutputManifest(artifacts);

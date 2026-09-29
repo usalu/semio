@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/IconRenderHost/component.tsx
-/** @emoji 🖼️ `IconRenderHost` — renders an icon-render scene: offscreen GLB shot preview inside a shot
+/** 🖼️ `IconRenderHost` — renders an icon-render scene: offscreen GLB shot preview inside a shot
  * frame, see https://threejs.org/docs/#examples/en/renderers/SVGRenderer. */
 // #endregion 🧲️Header
 

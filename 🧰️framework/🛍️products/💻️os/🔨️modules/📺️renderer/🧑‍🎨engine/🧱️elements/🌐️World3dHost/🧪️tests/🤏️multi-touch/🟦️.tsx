@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🤏️ `🌐️World3dHost` multi-touch law: a SECOND contact hands the viewport to the orbit rig's own
+/** 🤏️ `🌐️World3dHost` multi-touch law: a SECOND contact hands the viewport to the orbit rig's own
  * two-finger gesture (`TOUCH.DOLLY_PAN`), so the host's single-pointer lane — marquee, pick, engagement —
  * must go quiet for the whole gesture instead of growing a marquee under the pinch, and must not replay
  * the release as a click. Driven with real `PointerEvent`s; only the WebGL seam is replaced, exactly as in

@@ -46,7 +46,6 @@ fn viewport_ownership_neutral_admission_and_serde_round_trip() {
             }
         }
     }
-    eprintln!("[DEBUG] Shared viewport native admission matched all 20 neutral cases through Serde, FromValue, and independent Serde values");
 }
 
 #[test]
@@ -75,5 +74,4 @@ fn viewport_ownership_rejects_nonfinite_and_duplicate_fields() {
     assert!(Viewport2d::from_value(duplicate).is_err());
     assert!(serde_json::from_str::<Viewport2d>(r#"{"x":0,"x":1,"y":0,"zoom":1}"#).is_err());
     assert!(serde_json::from_str::<Viewport3dOrbit>(r#"{"position":[0,0,1],"position":[1,0,0],"target":[0,0,0],"zoom":1}"#).is_err());
-    eprintln!("[DEBUG] Shared viewport native decode rejected nonfinite fields and duplicate field authority");
 }

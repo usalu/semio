@@ -219,7 +219,7 @@ fn retained_wire_decoder_and_third_party_serde_have_command_parity() {
         WriterCommand::SetCamera(set_camera::SetCamera { camera: crate::WriterCamera { x: 1.0, y: 2.0, zoom: 3.0 } }),
         WriterCommand::RequestCompletions(request_completions::RequestCompletions {}),
         WriterCommand::LintDocument(lint_document::LintDocument {}),
-        WriterCommand::SetEditorSelection(set_editor_selection::SetEditorSelection { start: 1, end: 2 }),
+        WriterCommand::SetEditorSelection(set_editor_selection::SetEditorSelection { start: 1, end: 2, splice: 0 }),
         WriterCommand::ToggleLineNumbers(toggle_line_numbers::ToggleLineNumbers {}),
         WriterCommand::SetFontPx(set_font_px::SetFontPx { value: 14 }),
         WriterCommand::SetLineHeight(set_line_height::SetLineHeight { value: 20 }),
@@ -509,13 +509,14 @@ async fn every_printed_op_line_starts_with_the_rows_declared_wire_keyword() {
         ("camera", WriterCommand::SetCamera(set_camera::SetCamera { camera: crate::WriterCamera::default() })),
         ("request-completions", WriterCommand::RequestCompletions(request_completions::RequestCompletions {})),
         ("lint-document", WriterCommand::LintDocument(lint_document::LintDocument {})),
-        ("editor-selection", WriterCommand::SetEditorSelection(set_editor_selection::SetEditorSelection { start: 0, end: 1 })),
+        ("editor-selection", WriterCommand::SetEditorSelection(set_editor_selection::SetEditorSelection { start: 0, end: 1, splice: 0 })),
         ("toggle-line-numbers", WriterCommand::ToggleLineNumbers(toggle_line_numbers::ToggleLineNumbers {})),
         ("font-px", WriterCommand::SetFontPx(set_font_px::SetFontPx { value: 16 })),
         ("line-height", WriterCommand::SetLineHeight(set_line_height::SetLineHeight { value: 24 })),
         ("tab-size", WriterCommand::SetTabSize(set_tab_size::SetTabSize { value: 4 })),
         ("engagement-input", WriterCommand::EngagementInput(engagement_input::EngagementInput { value: "x".into() })),
         ("engagement-submit", WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: Some("x".into()) })),
+        ("text-splice", WriterCommand::TextSplice(text_splice::TextSplice { start: 0, deleted: String::new(), insert: "x".into(), before: String::new(), after: String::new(), seq: 1, anchor: 1, caret: 1 })),
     ];
     for (expected_keyword, command) in expectations {
         let printed = protocol::OpText::print_op(&command);
@@ -543,13 +544,14 @@ pub(super) fn every_command() -> Vec<WriterCommand> {
         WriterCommand::SetCamera(set_camera::SetCamera { camera: crate::WriterCamera { x: 1.0, y: 2.0, zoom: 1.5 } }),
         WriterCommand::RequestCompletions(request_completions::RequestCompletions {}),
         WriterCommand::LintDocument(lint_document::LintDocument {}),
-        WriterCommand::SetEditorSelection(set_editor_selection::SetEditorSelection { start: 3, end: 7 }),
+        WriterCommand::SetEditorSelection(set_editor_selection::SetEditorSelection { start: 3, end: 7, splice: 0 }),
         WriterCommand::ToggleLineNumbers(toggle_line_numbers::ToggleLineNumbers {}),
         WriterCommand::SetFontPx(set_font_px::SetFontPx { value: 16 }),
         WriterCommand::SetLineHeight(set_line_height::SetLineHeight { value: 24 }),
         WriterCommand::SetTabSize(set_tab_size::SetTabSize { value: 4 }),
         WriterCommand::EngagementInput(engagement_input::EngagementInput { value: "format".into() }),
         WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: None }),
+        WriterCommand::TextSplice(text_splice::TextSplice { start: 5, deleted: String::new(), insert: "!".into(), before: "hello".into(), after: String::new(), seq: 1, anchor: 6, caret: 6 }),
     ]
 }
 

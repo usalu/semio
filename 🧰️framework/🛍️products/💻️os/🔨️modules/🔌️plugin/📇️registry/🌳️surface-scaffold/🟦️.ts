@@ -21,20 +21,20 @@ import { SCHEMA_FACET_DIR, WINDOW_EMPTY_FACET_FILENAME, listDirs } from "../🗿
  */
 export const SURFACE_SCAFFOLD_TICKET_PATH = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET";
 
-/** @emoji 🚧️ Marker every scaffolded component leaf carries; scanned for by the completeness policy. */
+/** 🚧️ Marker every scaffolded component leaf carries; scanned for by the completeness policy. */
 export const SCAFFOLD_MARKER = "SCAFFOLD";
 
-/** @emoji 🎭️ Default mode dir a freshly scaffolded surface gets — mirrors the pre-existing `🎛️apps`
+/** 🎭️ Default mode dir a freshly scaffolded surface gets — mirrors the pre-existing `🎛️apps`
  * convention (`✏️edit` for editors) onto the read-only side (`👁️view` for viewers). Not taxonomy
  * vocabulary (see the region docstring). */
 export const SURFACE_DEFAULT_MODE_DIRNAME: Readonly<Record<string, string>> = { viewer: "👁️view", editor: "✏️edit" };
 
-/** @emoji 🪟️ Default window dir a freshly scaffolded mode gets — one obviously-generic placeholder
+/** 🪟️ Default window dir a freshly scaffolded mode gets — one obviously-generic placeholder
  * window, replaced by real, per-subset window ids as the owning W2 packet fills the scaffold in. */
 export const SURFACE_DEFAULT_WINDOW_DIRNAME = "🪟️main";
 
 
-/** @emoji 🧹️ Drops every non-ASCII codepoint (emoji + variation selectors) — `"📐️cad"` -> `"cad"` — so a
+/** 🧹️ Drops every non-ASCII codepoint (emoji + variation selectors) — `"📐️cad"` -> `"cad"` — so a
  * bare CLI id (typed without emoji) can match the real on-disk directory name. Mirrors root
  * `📜️script.ts`'s `policyStripEmoji`; duplicated here because the two scripts are separate bundles with
  * no shared import path for this one-line helper. */
@@ -43,7 +43,7 @@ export function surfaceStripEmoji(segment: string): string {
 }
 
 
-/** @emoji 🔎️ Resolves a bare CLI id to the real emoji-prefixed child directory name of `parentAbs`. */
+/** 🔎️ Resolves a bare CLI id to the real emoji-prefixed child directory name of `parentAbs`. */
 export function surfaceResolveChildDir(parentAbs: string, wantStripped: string): string | undefined {
   if (!existsSync(parentAbs)) return undefined;
   for (const name of readdirSync(parentAbs)) {
@@ -54,7 +54,7 @@ export function surfaceResolveChildDir(parentAbs: string, wantStripped: string):
 }
 
 
-/** @emoji 🧭️ Resolves `<plugin> <kind> <standard> <subset>` CLI args to the subset's repo-relative path,
+/** 🧭️ Resolves `<plugin> <kind> <standard> <subset>` CLI args to the subset's repo-relative path,
  * throwing a precise error naming the failing segment rather than silently creating the wrong tree.
  * `subsetArg === taxonomy.subsetAnyId` (`"*"`) is accepted as an alias for `subsetAnyDirName`
  * (`"✳️any"`), mirroring the taxonomy's own alias. */
@@ -84,7 +84,7 @@ export function resolveSubsetRel(repoRoot: string, pluginArg: string, kindArg: s
 }
 
 
-/** @emoji 🪆️ Every subset dir across every plugin area whose `🧬️schema` facet is present — the "owned"
+/** 🪆️ Every subset dir across every plugin area whose `🧬️schema` facet is present — the "owned"
  * predicate this ticket freezes (contract §6): schema presence alone, independent of `🚪️io`, because
  * the 286-surface target (143 subsets × 2 roles) only holds when every schema-bearing subset counts,
  * including any subset that has no `🚪️io` yet. */
@@ -186,7 +186,7 @@ export function reportSurfaceScaffoldResult(label: string, result: SurfaceScaffo
 }
 
 
-/** @emoji 🌊️ `new surface --all`: walks every owned subset on disk and scaffolds whatever surface is
+/** 🌊️ `new surface --all`: walks every owned subset on disk and scaffolds whatever surface is
  * missing, idempotently. Reports surface-granularity totals (subset × role pairs touched) alongside
  * the raw file count, so a dry-run answers "how many of the 286 surfaces still need scaffolding". */
 export function runSurfaceScaffoldAll(repoRoot: string, dryRun: boolean): void {
@@ -208,7 +208,7 @@ export function runSurfaceScaffoldAll(repoRoot: string, dryRun: boolean): void {
 }
 
 
-/** @emoji 🚪️ `new surface` CLI: single surface (`<plugin> <kind> <standard> <subset> <role>`) or batch
+/** 🚪️ `new surface` CLI: single surface (`<plugin> <kind> <standard> <subset> <role>`) or batch
  * (`--all [--dry-run]`). Registered as `bun ./📜️script.ts new surface …` via `ScriptRouter`. */
 export class NewScript extends BundleScript {
   run(segments: string[]): void {

@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/AgentPresence/component.tsx
-/** @emoji 🟢️ `AgentPresence` — small status indicator for the connected agent: connected/working/
+/** 🟢️ `AgentPresence` — small status indicator for the connected agent: connected/working/
  * idle/disconnected plus the current invocation label, driven by `AgentBridge`'s `agentPresence`
  * frames. Ticket `26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY` packet P10.
  */

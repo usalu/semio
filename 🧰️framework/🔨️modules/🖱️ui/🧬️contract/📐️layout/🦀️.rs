@@ -1,4 +1,4 @@
-//! @emoji 📐️ The renderer-neutral `LayoutSpec` vocabulary and the `WindowLayout` shell model.
+//! 📐️ The renderer-neutral `LayoutSpec` vocabulary and the `WindowLayout` shell model.
 //!
 //! ⚠️ SCAFFOLD — owned by packet `contract-layout`. Replace this placeholder wholesale; keep the region
 //! structure and the U1 sync rule (no `async fn` in this crate).

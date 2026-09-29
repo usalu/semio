@@ -381,16 +381,16 @@ pub(crate) mod fixture {
         assert!(crate::plugin_runtime::plugin_artifact_pack_schema_hash(&runtime, "semio.testkit.nobody/v1").await.is_err(), "no owner is refused");
     }
 
+    /// 🎯️ Force a preflight failure by construction: standard "2"'s subset gets standard
+    /// "1"/"any"'s schema id, but with DIFFERENT facet content — `schema_descriptor` alone
+    /// would build byte-identical (harmlessly idempotent) descriptors for the same id, so
+    /// the `rust` leaf is perturbed to make the two genuinely conflict. Every OTHER field
+    /// (dialect, io, surfaces) stays standard "2"'s own — `preflight_artifact_schema_
+    /// descriptors`'s internal batch dedup rejects two DIFFERENT descriptors sharing one id
+    /// before anything commits.
     #[semio_framework_async_macros::async_test]
     async fn a_conflicting_declaration_leaves_zero_rows_behind() {
         let mut invalid = build_declaration();
-        // 🎯️ Force a preflight failure by construction: standard "2"'s subset gets standard
-        // "1"/"any"'s schema id, but with DIFFERENT facet content — `schema_descriptor` alone
-        // would build byte-identical (harmlessly idempotent) descriptors for the same id, so
-        // the `rust` leaf is perturbed to make the two genuinely conflict. Every OTHER field
-        // (dialect, io, surfaces) stays standard "2"'s own — `preflight_artifact_schema_
-        // descriptors`'s internal batch dedup rejects two DIFFERENT descriptors sharing one id
-        // before anything commits.
         let mut conflicting = schema_descriptor("s.testkit.w1c-fixture@1/*");
         conflicting.artifact.rust = "// a different, conflicting facet body";
         invalid.standards[1].subsets[0].schema.descriptor = conflicting;

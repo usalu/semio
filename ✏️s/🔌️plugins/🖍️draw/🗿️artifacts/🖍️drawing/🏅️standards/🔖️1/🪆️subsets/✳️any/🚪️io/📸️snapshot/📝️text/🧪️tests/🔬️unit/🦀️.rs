@@ -96,7 +96,6 @@ async fn dsl_rejects_invalid_stroke_caps_and_joins() {
     for (from, to) in [("cap=butt", "cap=miter"), ("cap=butt", "cap=Round"), ("join=miter", "join=butt")] {
         assert!(parse_dsl(&SEMIO_DRAW_EXAMPLE_TEXT.replace(from, to)).is_err(), "{to}");
     }
-    eprintln!("[DEBUG] Draw demo accepts all line caps and rejects invalid stroke enum tokens");
 }
 
 #[semio_framework_async_macros::async_test]

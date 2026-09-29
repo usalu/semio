@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🧭️ `@semio-tech/cad-js` — CAD domain module facet. See `cad/AGENTS.md`. */
+/** 🧭️ `@semio-tech/cad-js` — CAD domain module facet. See `cad/AGENTS.md`. */
 import { ephemeralBox, ephemeralMap, ephemeralWeakMap } from "@semio-tech/framework";
 import type { ArcPlaneFrame, EdgeCurve, EdgeGroup, EdgeInfo, FaceGroup, FaceInfo, MeshTransfer, Vec3 } from "@semio-tech/s-3d-js";
 import { emptyMeshTransfer, kernelGeometry, solidRef } from "@semio-tech/s-3d-js";
@@ -16,13 +16,13 @@ import type { InteractionRuntime } from "../🗿️artifact/🟦️.ts";
 
 // #region 📦️🎬️actions
 // #region 🧮️ActionRegistry
-/** @emoji 🧩️ Serializable context patch applied after pure box geometry actions (`set` keys merged; `del` removes top-level context keys). */
+/** 🧩️ Serializable context patch applied after pure box geometry actions (`set` keys merged; `del` removes top-level context keys). */
 export interface ActionContextPatch {
   readonly set?: Record<string, unknown>;
   readonly del?: readonly string[];
 }
 
-/** @emoji 🧩️ Pure action output: model `diff` is the committed geometry; optional `data` is auxiliary; `patch` updates session context only. */
+/** 🧩️ Pure action output: model `diff` is the committed geometry; optional `data` is auxiliary; `patch` updates session context only. */
 export interface ActionResult<TData = unknown> {
   readonly diff?: ModelDiff;
   readonly data?: TData;
@@ -62,7 +62,7 @@ export interface ActionSpec {
   readonly steps: readonly ActionStepSpec[];
 }
 
-/** @emoji 🧩️ Registerable spatial action spec (`id` is stable registry key). */
+/** 🧩️ Registerable spatial action spec (`id` is stable registry key). */
 export interface ActionDef<TParams = Record<string, unknown>, TData = unknown> {
   readonly id: string;
   readonly label?: string;
@@ -96,7 +96,7 @@ function isActionStepSpec(raw: unknown): raw is ActionStepSpec {
   return false;
 }
 
-/** @emoji 🧾️ Parses a data-only `spatial.action/v1` document. */
+/** 🧾️ Parses a data-only `spatial.action/v1` document. */
 export function parseActionSpec(raw: unknown): ActionSpec | null {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
   const r = structuredClone(raw) as Record<string, unknown>;
@@ -117,7 +117,7 @@ export function parseActionSpec(raw: unknown): ActionSpec | null {
   return r as unknown as ActionSpec;
 }
 
-/** @emoji 📚️ Lists data-only model-definition action assets. */
+/** 📚️ Lists data-only model-definition action assets. */
 export function listModelDefinitionActionSpecs(): readonly ActionSpec[] {
   return modelDefinitionActionCatalog()
     .map((raw) => parseActionSpec(raw))
@@ -492,22 +492,22 @@ export class DeclarativeActionRuntime {
   }
 }
 
-/** @emoji 🧭️ Immutable map of registered data-only `ActionSpec` entries (model-definitions + host overrides). */
+/** 🧭️ Immutable map of registered data-only `ActionSpec` entries (model-definitions + host overrides). */
 export type ActionRegistry = ReadonlyMap<string, ActionDef>;
 
-/** @emoji 🧭️ Registers one action definition; returns a new registry (immutable update). */
+/** 🧭️ Registers one action definition; returns a new registry (immutable update). */
 export function registerActionDef(registry: ActionRegistry, def: ActionDef): ActionRegistry {
   const next = new Map(registry);
   next.set(def.id, def);
   return next;
 }
 
-/** @emoji 🧭️ Lists registered action definitions in stable id order. */
+/** 🧭️ Lists registered action definitions in stable id order. */
 export function listActionDefs(registry: ActionRegistry): readonly ActionDef[] {
   return [...registry.values()].sort((a, b) => a.id.localeCompare(b.id));
 }
 
-/** @emoji 🧩️ Runs a registered action (`selection.apply`, geometry actions, …) without an interaction session. */
+/** 🧩️ Runs a registered action (`selection.apply`, geometry actions, …) without an interaction session. */
 export async function runRegisteredAction(
   registry: ActionRegistry,
   id: string,
@@ -530,7 +530,7 @@ export async function runRegisteredAction(
   throw new Error(`Unknown action: ${id}`);
 }
 
-/** @emoji 🧭️ Shipped model-definition actions plus capability-backed fallbacks. */
+/** 🧭️ Shipped model-definition actions plus capability-backed fallbacks. */
 export function modelDefinitionActionRegistry(): ActionRegistry {
   const map = new Map<string, ActionDef>();
   for (const spec of shippedActionCatalog()) map.set(spec.id, { id: spec.id, label: spec.label, spec });
@@ -545,7 +545,7 @@ export function modelDefinitionActionRegistry(): ActionRegistry {
   return map;
 }
 
-/** @emoji 📍️ Centroid of a face boundary for measure/annotation anchors. */
+/** 📍️ Centroid of a face boundary for measure/annotation anchors. */
 function faceAnnotationCentroid(model: Model, face: FaceRecord): Vec3 | null {
   const pts: Vec3[] = [];
   for (const wid of face.wireIds) {
@@ -569,12 +569,12 @@ function faceAnnotationCentroid(model: Model, face: FaceRecord): Vec3 | null {
   return [x / n, y / n, z / n];
 }
 
-/** @emoji 📏️ Measure and selection commands do not enter document undo history. */
+/** 📏️ Measure and selection commands do not enter document undo history. */
 export function interactionRecordsDocumentHistory(interactionId: string): boolean {
   return !interactionId.startsWith("measure.") && !interactionId.startsWith("selection.");
 }
 
-/** @emoji 🎯️ Collects vertex ids reachable from transform/edit selection targets. */
+/** 🎯️ Collects vertex ids reachable from transform/edit selection targets. */
 export function collectTargetVertices(model: Model, targets: readonly SelectionTarget[]): Set<string> {
   const out = new Set<string>();
   const walk = (kind: ModelEntityKind, id: string) => {
@@ -604,7 +604,7 @@ export function collectTargetVertices(model: Model, targets: readonly SelectionT
   return out;
 }
 
-/** @emoji 🎯️ Collects edge ids when topology (edge/wire/face/…) is selected; excludes vertex-only picks. */
+/** 🎯️ Collects edge ids when topology (edge/wire/face/…) is selected; excludes vertex-only picks. */
 export function collectTargetEdges(model: Model, targets: readonly SelectionTarget[]): Set<string> {
   const out = new Set<string>();
   const walk = (kind: ModelEntityKind, id: string) => {
@@ -628,7 +628,7 @@ export function collectTargetEdges(model: Model, targets: readonly SelectionTarg
   return out;
 }
 
-/** @emoji 📦️ Center of the axis-aligned bounds of all vertices in `targets`. */
+/** 📦️ Center of the axis-aligned bounds of all vertices in `targets`. */
 export function selectionTargetsCenter(model: Model, targets: readonly SelectionTarget[], preview: SpatialPreviewKernel): Vec3 | null {
   const pts: Vec3[] = [];
   for (const vid of collectTargetVertices(model, targets)) {
@@ -644,7 +644,7 @@ export function selectionTargetsCenter(model: Model, targets: readonly Selection
   return [(box.min[0] + box.max[0]) / 2, (box.min[1] + box.max[1]) / 2, (box.min[2] + box.max[2]) / 2];
 }
 
-/** @emoji 🎛️ CAD play gumball visibility groups (same shape as ui UnifiedGumball config). */
+/** 🎛️ CAD play gumball visibility groups (same shape as ui UnifiedGumball config). */
 export interface CadGumballConfig {
   readonly moveAxes?: boolean;
   readonly movePlanes?: boolean;
@@ -660,10 +660,10 @@ export interface CadGumballConfig {
   readonly size?: number;
 }
 
-/** @emoji 🎛️ Toggle keys for CAD play gumball window measures. */
+/** 🎛️ Toggle keys for CAD play gumball window measures. */
 export type CadGumballGroupKey = keyof Pick<CadGumballConfig, "moveAxes" | "movePlanes" | "rotate" | "scaleAxes" | "scalePlanes" | "scaleUniform">;
 
-/** @emoji 🎛️ Ordered gumball group toggles for CAD play window measures. */
+/** 🎛️ Ordered gumball group toggles for CAD play window measures. */
 export const CAD_GUMBALL_GROUPS: readonly { readonly key: CadGumballGroupKey; readonly label: string }[] = [
   { key: "moveAxes", label: "Move Axes" },
   { key: "movePlanes", label: "Move Planes" },
@@ -673,7 +673,7 @@ export const CAD_GUMBALL_GROUPS: readonly { readonly key: CadGumballGroupKey; re
   { key: "scaleUniform", label: "Scale Uniform" },
 ];
 
-/** @emoji 🎛️ Default CAD play gumball state (hidden until a group is enabled). */
+/** 🎛️ Default CAD play gumball state (hidden until a group is enabled). */
 export const CAD_GUMBALL_HIDDEN: CadGumballConfig = {
   moveAxes: false,
   movePlanes: false,
@@ -683,13 +683,13 @@ export const CAD_GUMBALL_HIDDEN: CadGumballConfig = {
   scaleUniform: false,
 };
 
-/** @emoji 🎛️ True when at least one gumball handle group is enabled. */
+/** 🎛️ True when at least one gumball handle group is enabled. */
 export function cadGumballConfigVisible(config: CadGumballConfig | null | undefined): boolean {
   if (!config) return false;
   return config.moveAxes !== false || config.movePlanes !== false || config.rotate !== false || config.scaleAxes !== false || config.scalePlanes !== false || config.scaleUniform !== false;
 }
 
-/** @emoji ✋️ True when `targets` resolve to at least one model vertex. */
+/** ✋️ True when `targets` resolve to at least one model vertex. */
 export function selectionTargetsHaveTransformableVertices(model: Model, targets: readonly SelectionTarget[]): boolean {
   return collectTargetVertices(model, targets).size > 0;
 }
@@ -707,7 +707,7 @@ function modelDiffTransformNurbsPolesOnEdges(model: Model, edgeIds: Iterable<str
   return edgeMods.length ? { edges: { modified: edgeMods } } : EMPTY_MODEL_DIFF;
 }
 
-/** @emoji 🎛️ Applies `mapPoint` to vertices and nurbs poles on topology-selected edges. */
+/** 🎛️ Applies `mapPoint` to vertices and nurbs poles on topology-selected edges. */
 export function selectionTargetsPointTransformDiff(model: Model, targets: readonly SelectionTarget[], mapPoint: (point: Vec3) => Vec3): ModelDiff {
   const vertexIds = collectTargetVertices(model, targets);
   const modified: VertexRecordDiff[] = [];
@@ -729,10 +729,10 @@ function vertexPositionsTransformDiff(model: Model, targets: readonly SelectionT
 }
 
 // #region 📍️InteractionPointBinding
-/** @emoji 📍️ Optional geometry snap stored beside a committed interaction point. */
+/** 📍️ Optional geometry snap stored beside a committed interaction point. */
 export type InteractionPointSnap = { readonly kind: string; readonly id: string };
 
-/** @emoji 📍️ Reads parallel `pointSnaps` rows aligned with `context.points`. */
+/** 📍️ Reads parallel `pointSnaps` rows aligned with `context.points`. */
 export function readInteractionPointSnaps(context: Record<string, unknown>): readonly (InteractionPointSnap | null)[] {
   const raw = context.pointSnaps;
   if (!Array.isArray(raw)) return [];
@@ -755,7 +755,7 @@ function vec3Eq(a: Vec3, b: Vec3): boolean {
   return a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
 }
 
-/** @emoji 📍️ Replaces interaction points bound to moved vertices with live model positions. */
+/** 📍️ Replaces interaction points bound to moved vertices with live model positions. */
 export function resolveLiveInteractionPoints(model: Model, points: readonly Vec3[], snaps: readonly (InteractionPointSnap | null)[]): readonly Vec3[] {
   if (!snaps.length) return points;
   return points.map((point, index) => {
@@ -766,7 +766,7 @@ export function resolveLiveInteractionPoints(model: Model, points: readonly Vec3
   });
 }
 
-/** @emoji 📍️ Shallow context copy with `points` resolved from bound vertex snaps. */
+/** 📍️ Shallow context copy with `points` resolved from bound vertex snaps. */
 export function withResolvedInteractionPointsContext(model: Model, context: Record<string, unknown>): Record<string, unknown> {
   const points = context.points;
   if (!Array.isArray(points)) return context;
@@ -812,7 +812,7 @@ function selectionTargetKey(target: SelectionTarget): string {
   return `${target.kind}:${target.id}`;
 }
 
-/** @emoji ⌨️ Keyboard modifiers carried on pointer/selection `InteractionEvent`s. */
+/** ⌨️ Keyboard modifiers carried on pointer/selection `InteractionEvent`s. */
 interface InteractionEventModifiers {
   readonly shift?: boolean;
   readonly ctrl?: boolean;
@@ -852,22 +852,22 @@ function selectionTargetsWithMode(current: readonly SelectionTarget[], next: rea
   return dedupedNext;
 }
 
-/** @emoji 🪪️ Kernel geometry + extension view `object` kinds used by selection commands. */
+/** 🪪️ Kernel geometry + extension view `object` kinds used by selection commands. */
 export const ALL_MODEL_SELECTION_KINDS: readonly ModelEntityKind[] = ["anchor", "vertex", "edge", "wire", "face", "solid", "object", "geometry", "attribute"];
 
 const MODEL_SELECTION_KIND_ORDER = new Map<ModelEntityKind, number>(ALL_MODEL_SELECTION_KINDS.map((kind, index) => [kind, index]));
 
-/** @emoji 🪪️ model-definition selection command operation id (`selection.apply` param). */
+/** 🪪️ model-definition selection command operation id (`selection.apply` param). */
 export type SelectionApplyOperation = "selectAll" | "deselectAll" | "invert" | "selectKinds";
 
-/** @emoji 🪪️ Headless `selection.apply` / interaction commit input. */
+/** 🪪️ Headless `selection.apply` / interaction commit input. */
 export interface SelectionApplyParams {
   readonly operation: SelectionApplyOperation;
   readonly seedTargets?: readonly SelectionTarget[];
   readonly kinds?: readonly ModelEntityKind[];
 }
 
-/** @emoji 🪪️ model-definition selection command interaction row (`selection.*` registry). */
+/** 🪪️ model-definition selection command interaction row (`selection.*` registry). */
 export type SelectionOperationInteractionDef = {
   readonly id: string;
   readonly label: string;
@@ -880,18 +880,18 @@ function toSelectionTarget(kind: ModelEntityKind, id: string): SelectionTarget {
   return { kind, id, editable: kind !== "object" };
 }
 
-/** @emoji 🪪️ Parses `context.targets` or action patch targets into validated `SelectionTarget` rows. */
+/** 🪪️ Parses `context.targets` or action patch targets into validated `SelectionTarget` rows. */
 export function selectionTargetsFromContext(ctx: Record<string, unknown>): readonly SelectionTarget[] {
   return parseSelectionTargetsFromUnknown(ctx.targets);
 }
 
-/** @emoji 🪪️ Reads `targets` from an `selection.apply` action result patch. */
+/** 🪪️ Reads `targets` from an `selection.apply` action result patch. */
 export function selectionTargetsFromActionResult(result: ActionResult): readonly SelectionTarget[] {
   return parseSelectionTargetsFromUnknown(result.patch?.set?.targets);
 }
 
 let modelEntityKindSetCache: ReadonlySet<string> | null = null;
-/** @emoji 🪪️ Selectable entity kinds, resolved lazily so the geometry import cycle is settled before the first read. */
+/** 🪪️ Selectable entity kinds, resolved lazily so the geometry import cycle is settled before the first read. */
 function modelEntityKindSet(): ReadonlySet<string> {
   return (modelEntityKindSetCache ??= new Set<string>([...PRIMITIVE_MODEL_ENTITY_KINDS, "object", "geometry", "attribute"]));
 }
@@ -934,7 +934,7 @@ function sortSelectionTargets(targets: readonly SelectionTarget[]): SelectionTar
   });
 }
 
-/** @emoji 🎯️ Primary selection row for attribute editing (primitive first, then typology object). */
+/** 🎯️ Primary selection row for attribute editing (primitive first, then typology object). */
 export function primaryAttributeSelectionTarget(selection: readonly SelectionTarget[]): SelectionTarget | null {
   if (!selection.length) return null;
   for (const row of selection) {
@@ -943,7 +943,7 @@ export function primaryAttributeSelectionTarget(selection: readonly SelectionTar
   return selection.find((row) => row.kind === "object") ?? selection[0] ?? null;
 }
 
-/** @emoji 🪪️ Collects stable `SelectionTarget` rows for kernel `kinds` scoped to the active model definition. */
+/** 🪪️ Collects stable `SelectionTarget` rows for kernel `kinds` scoped to the active model definition. */
 export function collectGeometrySelectionTargets(model: Model, kinds: readonly ModelEntityKind[], activeModelDefinitionId?: string | null): SelectionTarget[] {
   const mdId = activeModelDefinitionId ?? defaultModelDefinitionId();
   const scopeKinds = kinds.length > 0 ? kinds : modelDefinitionSelectionEntityKinds(mdId);
@@ -992,7 +992,7 @@ export function collectGeometrySelectionTargets(model: Model, kinds: readonly Mo
   return sortSelectionTargets(out);
 }
 
-/** @emoji 🪪️ Applies `selectAll` / `deselectAll` / `invert` / `selectKinds` to `current` against `model`. */
+/** 🪪️ Applies `selectAll` / `deselectAll` / `invert` / `selectKinds` to `current` against `model`. */
 export function applySelectionOperation(operation: SelectionApplyOperation, current: readonly SelectionTarget[], model: Model, kinds: readonly ModelEntityKind[], activeModelDefinitionId?: string | null): SelectionTarget[] {
   if (operation === "deselectAll") return [];
   const mdId = activeModelDefinitionId ?? defaultModelDefinitionId();
@@ -1003,14 +1003,14 @@ export function applySelectionOperation(operation: SelectionApplyOperation, curr
   return universe.filter((target) => !cur.has(selectionTargetKey(target)));
 }
 
-/** @emoji 🪪️ Shared selection command core used by `selection.apply` and headless callers. */
+/** 🪪️ Shared selection command core used by `selection.apply` and headless callers. */
 export function executeSelectionApply(params: SelectionApplyParams, ctx: { readonly model: Model; readonly activeModelDefinitionId?: string | null }): SelectionTarget[] {
   const seed = params.seedTargets ?? [];
   const kinds = params.operation === "selectKinds" ? [...(params.kinds ?? [])] : params.operation === "invert" || params.operation === "selectAll" ? [...ALL_MODEL_SELECTION_KINDS] : [];
   return applySelectionOperation(params.operation, seed, ctx.model, kinds, ctx.activeModelDefinitionId ?? null);
 }
 
-/** @emoji 🪪️ Runs `selection.apply` headless via `ActionRegistry` (no interaction session). */
+/** 🪪️ Runs `selection.apply` headless via `ActionRegistry` (no interaction session). */
 export async function runSelectionApply(
   params: SelectionApplyParams,
   ctx: {
@@ -1037,12 +1037,12 @@ export async function runSelectionApply(
   return selectionTargetsFromActionResult(result);
 }
 
-/** @emoji 🪪️ Standard `selection.apply` / `selection.*` construct `CALL` result (`YIELD targets` / `data.targets`). */
+/** 🪪️ Standard `selection.apply` / `selection.*` construct `CALL` result (`YIELD targets` / `data.targets`). */
 export function selectionCommandActionResult(targets: readonly SelectionTarget[]): ActionResult {
   return { patch: { set: { targets: [...targets] } }, diff: EMPTY_MODEL_DIFF, data: { targets } };
 }
 
-/** @emoji 🪪️ True when `actionId` is a `selection.*` construct or action (`selection.apply`, `selection.selectAll`, …). */
+/** 🪪️ True when `actionId` is a `selection.*` construct or action (`selection.apply`, `selection.selectAll`, …). */
 export function isSelectionConstructActionId(actionId: string): boolean {
   return actionId.startsWith("selection.");
 }
@@ -1056,27 +1056,27 @@ function selectionApplyParamsFromRecord(params: Record<string, unknown>): Select
 }
 
 // #region 🔍️ConstructQuery
-/** @emoji 🔍️ One named column in a `construct` result row. */
+/** 🔍️ One named column in a `construct` result row. */
 export type ConstructQueryRow = Readonly<Record<string, unknown>>;
 
-/** @emoji 🔍️ `construct` runner output (`rows` for MATCH; CALL modeling yields `diff` geometry when present). */
+/** 🔍️ `construct` runner output (`rows` for MATCH; CALL modeling yields `diff` geometry when present). */
 export interface ConstructQueryResult {
   readonly rows: readonly ConstructQueryRow[];
   readonly data?: unknown;
   readonly diff?: ModelDiff;
 }
 
-/** @emoji 🔍️ Host wiring for `InteractionRuntime.query` (`@semio-tech/cad-js/query` supplies the default runner). */
+/** 🔍️ Host wiring for `InteractionRuntime.query` (`@semio-tech/cad-js/query` supplies the default runner). */
 export interface ConstructQueryContext {
   readonly model: Model;
   readonly kernel: SpatialKernel;
   readonly actions: ActionRegistry;
   readonly activeModelDefinitionId?: string | null;
-  /** @emoji 🪪️ Default `seedTargets` for `CALL selection.*` when the call omits `seedTargets`. */
+  /** 🪪️ Default `seedTargets` for `CALL selection.*` when the call omits `seedTargets`. */
   readonly selectionTargets?: readonly SelectionTarget[];
 }
 
-/** @emoji 🔍️ Async bridge so core never imports `@semio-tech/cad-js/query`. */
+/** 🔍️ Async bridge so core never imports `@semio-tech/cad-js/query`. */
 export type ConstructRunner = (text: string, ctx: ConstructQueryContext) => Promise<ConstructQueryResult>;
 // #endregion 🔍️ConstructQuery
 
@@ -1089,7 +1089,7 @@ function listFinalInteractionStates(spec: InteractionSpec): string[] {
   return spec.machine.states.filter((s) => s.final).map((s) => s.name);
 }
 
-/** @emoji 📞️ Pauses host statechart until nested interaction completes or aborts. */
+/** 📞️ Pauses host statechart until nested interaction completes or aborts. */
 export interface InteractionChildCallSpec {
   readonly interactionId: string;
   readonly inputs?: Record<string, Expr>;
@@ -1098,20 +1098,20 @@ export interface InteractionChildCallSpec {
   readonly rollback: { readonly state: string; readonly context: Record<string, unknown> };
 }
 
-/** @emoji 🎭️ Result of `StateEngine.send` / `applyTransition` (`transient` skips interaction-local undo). */
+/** 🎭️ Result of `StateEngine.send` / `applyTransition` (`transient` skips interaction-local undo). */
 export interface StateEngineSendResult {
   readonly ok: boolean;
   readonly transient?: boolean;
   readonly childCall?: InteractionChildCallSpec;
 }
 
-/** @emoji 🎭️ `applyTransition` output: next factory state + disambiguation index for XState routing. */
+/** 🎭️ `applyTransition` output: next factory state + disambiguation index for XState routing. */
 export interface ApplyTransitionResult extends StateEngineSendResult {
   readonly nextState: string;
   readonly branchIndex: number;
 }
 
-/** @emoji 🎭️ Pluggable state backend for `InteractionRuntime` (pure TS, XState, …). */
+/** 🎭️ Pluggable state backend for `InteractionRuntime` (pure TS, XState, …). */
 export interface StateEngine {
   getState(): string;
   getContext(): Record<string, unknown>;
@@ -1120,7 +1120,7 @@ export interface StateEngine {
   send(event: InteractionEvent, kernel?: SpatialKernel, model?: Model, actions?: ActionRegistry, preview?: SpatialPreviewKernel, activeModelDefinitionId?: string | null): Promise<StateEngineSendResult>;
 }
 
-/** @emoji 🎭️ Instantiates a `StateEngine` for a compiled `InteractionSpec`. */
+/** 🎭️ Instantiates a `StateEngine` for a compiled `InteractionSpec`. */
 export interface StateEngineProvider {
   readonly id: string;
   create(spec: InteractionSpec): StateEngine;
@@ -1130,7 +1130,7 @@ function lookupGuard(spec: InteractionSpec, name: string): Expr | undefined {
   return spec.guards?.find((g) => g.name === name)?.expr;
 }
 
-/** @emoji 🎬️ Applies one declarative transition `EffectSpec` (async kernel queries + registered `ActionRegistry` calls). */
+/** 🎬️ Applies one declarative transition `EffectSpec` (async kernel queries + registered `ActionRegistry` calls). */
 export async function applyEffectAsync(
   a: EffectSpec,
   ctx: Record<string, unknown>,
@@ -1186,7 +1186,7 @@ export async function applyEffectAsync(
   }
 }
 
-/** @emoji 🎬️ First matching transition for `event` from `state`; mutates `context` in place. */
+/** 🎬️ First matching transition for `event` from `state`; mutates `context` in place. */
 export async function applyTransition(
   spec: InteractionSpec,
   state: string,
@@ -1243,7 +1243,7 @@ export async function applyTransition(
   return { ok: false, nextState: state, branchIndex: -1 };
 }
 
-/** @emoji ⌨️ Resolved spatial host hints (defaults disable ground picking). */
+/** ⌨️ Resolved spatial host hints (defaults disable ground picking). */
 export interface InteractionSpatialResolved {
   readonly spatialGroundPick: boolean;
   readonly pickDisabledStates: readonly string[];
@@ -1255,7 +1255,7 @@ export interface InteractionSpatialResolved {
   readonly scalarEntry: readonly InteractionScalarEntrySpec[];
 }
 
-/** @emoji ⌨️ Merges `spec.interaction` with safe defaults for hosts and `InteractionSpatialView`. */
+/** ⌨️ Merges `spec.interaction` with safe defaults for hosts and `InteractionSpatialView`. */
 export function mergeInteractionSpatial(spec: InteractionSpec): InteractionSpatialResolved {
   const i = spec.interaction;
   const basePickDisabled = [...new Set([spec.machine.initial, "ready", ...listFinalInteractionStates(spec)])];
@@ -1271,12 +1271,12 @@ export function mergeInteractionSpatial(spec: InteractionSpec): InteractionSpati
   };
 }
 
-/** @emoji 📏️ Resolved direct-distance entry config for `state` (from `interaction.lengthEntry`). */
+/** 📏️ Resolved direct-distance entry config for `state` (from `interaction.lengthEntry`). */
 export function interactionLengthEntryForState(spec: InteractionSpec, state: string): InteractionLengthEntrySpec | null {
   return mergeInteractionSpatial(spec).lengthEntry.find((row) => row.state === state) ?? null;
 }
 
-/** @emoji 🔢️ Resolved live scalar entry config for `state` (from `interaction.scalarEntry`). */
+/** 🔢️ Resolved live scalar entry config for `state` (from `interaction.scalarEntry`). */
 export function interactionScalarEntryForState(spec: InteractionSpec, state: string): InteractionScalarEntrySpec | null {
   return mergeInteractionSpatial(spec).scalarEntry.find((row) => row.state === state) ?? null;
 }
@@ -1303,7 +1303,7 @@ function defaultEngagementControlKind(entry: InteractionEngagementEntryControl, 
   return "stepper";
 }
 
-/** @emoji 🎛️ Resolves declarative engagement control params for `state` (length/scalar entry + context value). */
+/** 🎛️ Resolves declarative engagement control params for `state` (length/scalar entry + context value). */
 export function interactionControlForState(spec: InteractionSpec, state: string, context: Record<string, unknown> = {}): ResolvedInteractionEngagementControl | null {
   const scalar = interactionScalarEntryForState(spec, state);
   if (scalar) {
@@ -1364,12 +1364,12 @@ export function interactionControlForState(spec: InteractionSpec, state: string,
   return { kind: "stepper", label, value, min, max: length.max, step, unit };
 }
 
-/** @emoji 🔢️ True when `state` accepts live REPL numeric entry (length or scalar). */
+/** 🔢️ True when `state` accepts live REPL numeric entry (length or scalar). */
 export function interactionInNumericEntryState(spec: InteractionSpec, state: string): boolean {
   return interactionLengthEntryForState(spec, state) !== null || interactionScalarEntryForState(spec, state) !== null;
 }
 
-/** @emoji 🔢️ Parses REPL `cmdLine` as a live numeric value (`null` = empty, `undefined` = invalid). */
+/** 🔢️ Parses REPL `cmdLine` as a live numeric value (`null` = empty, `undefined` = invalid). */
 export function parseNumericCommandLine(cmdLine: string): number | null | undefined {
   const t = cmdLine.trim();
   if (!t) return null;
@@ -1379,7 +1379,7 @@ export function parseNumericCommandLine(cmdLine: string): number | null | undefi
   return v;
 }
 
-/** @emoji 📏️ Live distance along a length-entry anchor→cursor axis (extrusion rod, rubber band). */
+/** 📏️ Live distance along a length-entry anchor→cursor axis (extrusion rod, rubber band). */
 export function interactionLengthEntryLiveDistance(ctx: Record<string, unknown>, entry: InteractionLengthEntrySpec): number | null {
   const anchor = readInteractionContextVec3(ctx, entry.anchor);
   const cursor = readInteractionContextVec3(ctx, entry.field);
@@ -1395,7 +1395,7 @@ export function interactionLengthEntryLiveDistance(ctx: Record<string, unknown>,
   return distance > 1e-9 ? distance : null;
 }
 
-/** @emoji 🔢️ Explicit length/height lock from context (`set.length` / `set.height`), not live rubber-band distance. */
+/** 🔢️ Explicit length/height lock from context (`set.length` / `set.height`), not live rubber-band distance. */
 export function interactionNumericEntryExplicitLockValue(spec: InteractionSpec, state: string, ctx: Record<string, unknown>): number | null {
   const lengthEntry = interactionLengthEntryForState(spec, state);
   if (lengthEntry) {
@@ -1410,7 +1410,7 @@ export function interactionNumericEntryExplicitLockValue(spec: InteractionSpec, 
   return null;
 }
 
-/** @emoji 🔢️ Locked numeric value from context when live entry already applied. */
+/** 🔢️ Locked numeric value from context when live entry already applied. */
 export function interactionNumericEntryLockedValue(spec: InteractionSpec, state: string, ctx: Record<string, unknown>): number | null {
   const lengthEntry = interactionLengthEntryForState(spec, state);
   if (lengthEntry) {
@@ -1429,7 +1429,7 @@ export function interactionNumericEntryLockedValue(spec: InteractionSpec, state:
   return null;
 }
 
-/** @emoji 🔢️ `set.length` / `set.height` event to apply a numeric value in the active entry state. */
+/** 🔢️ `set.length` / `set.height` event to apply a numeric value in the active entry state. */
 export function interactionNumericEntryApplyEvent(spec: InteractionSpec, state: string, value: number): InteractionEvent | null {
   const lengthEntry = interactionLengthEntryForState(spec, state);
   if (lengthEntry) return { kind: "set.length", value, modifiers: {} };
@@ -1449,7 +1449,7 @@ function lengthEntryCommitPoint(ctx: Record<string, unknown>, entry: Interaction
   return preview.clampPointAlongDirection(anchor, raw, lock);
 }
 
-/** @emoji 🔢️ Commit event after numeric entry (Enter/Space): `pointer.down` with clamped point or `confirm`. */
+/** 🔢️ Commit event after numeric entry (Enter/Space): `pointer.down` with clamped point or `confirm`. */
 export function interactionNumericEntryCommitEvent(spec: InteractionSpec, state: string, ctx: Record<string, unknown>, preview: SpatialPreviewKernel): InteractionEvent | null {
   const lengthEntry = interactionLengthEntryForState(spec, state);
   const scalarEntry = interactionScalarEntryForState(spec, state);
@@ -1472,7 +1472,7 @@ export function interactionNumericEntryCommitEvent(spec: InteractionSpec, state:
   return null;
 }
 
-/** @emoji ✅️ Whether `state` has a passable `confirm` transition (non-selection finalize). */
+/** ✅️ Whether `state` has a passable `confirm` transition (non-selection finalize). */
 export function interactionCanFinalizeStep(spec: InteractionSpec, state: string, ctx: Record<string, unknown>, preview: SpatialPreviewKernel): boolean {
   const handler = spec.machine.states.find((s) => s.name === state)?.on?.find((h) => h.event === "confirm");
   if (!handler) return false;
@@ -1486,7 +1486,7 @@ export function interactionCanFinalizeStep(spec: InteractionSpec, state: string,
   return false;
 }
 
-/** @emoji ✅️ Enter/Space finalize: `confirm` when available, else length-entry `pointer.down`. */
+/** ✅️ Enter/Space finalize: `confirm` when available, else length-entry `pointer.down`. */
 export function interactionStepFinalizeEvent(spec: InteractionSpec, state: string, ctx: Record<string, unknown>, preview: SpatialPreviewKernel): InteractionEvent | null {
   if (interactionCanFinalizeStep(spec, state, ctx, preview)) return { kind: "confirm", modifiers: {} };
   return interactionNumericEntryCommitEvent(spec, state, ctx, preview);
@@ -1499,7 +1499,7 @@ const CURSOR_RAW_CTX = "__cursorRaw";
 
 const DEFAULT_SCALAR_AXIS: Vec3 = [0, 0, 1];
 
-/** @emoji 📏️ Axis base for scalar rubber-band (`axisAnchor` XY + `axisFloor` Z). */
+/** 📏️ Axis base for scalar rubber-band (`axisAnchor` XY + `axisFloor` Z). */
 export function scalarEntryAxisBase(ctx: Record<string, unknown>, entry: InteractionScalarEntrySpec): Vec3 | null {
   if (!entry.axisAnchor) return null;
   const anchor = readInteractionContextVec3(ctx, entry.axisAnchor);
@@ -1510,7 +1510,7 @@ export function scalarEntryAxisBase(ctx: Record<string, unknown>, entry: Interac
   return [anchor[0], anchor[1], floorZ];
 }
 
-/** @emoji 📏️ Projects `raw` onto the scalar axis; returns axis parameter `t` and closest point. */
+/** 📏️ Projects `raw` onto the scalar axis; returns axis parameter `t` and closest point. */
 export function projectPointOnScalarAxis(base: Vec3, axis: Vec3, raw: Vec3, preview: SpatialPreviewKernel): { readonly projected: Vec3; readonly t: number } {
   return preview.projectPointOnScalarAxis(base, axis, raw);
 }
@@ -1530,7 +1530,7 @@ function scalarHeightFromAxisT(t: number): number {
   return Math.max(0.01, Math.abs(t));
 }
 
-/** @emoji 📏️ Parses a dotted `context` path into `PathSegment`s (`points.@last` = last array element). */
+/** 📏️ Parses a dotted `context` path into `PathSegment`s (`points.@last` = last array element). */
 export function parseInteractionContextPath(path: string): readonly PathSegment[] {
   const parts = path.split(".").filter((p) => p.length > 0);
   const segs: PathSegment[] = [];
@@ -1560,7 +1560,7 @@ function readContextPathValue(root: Record<string, unknown>, segments: readonly 
   return cur;
 }
 
-/** @emoji 📏️ Reads a `Vec3` from `context` at dotted `path` (supports `points.@last`). */
+/** 📏️ Reads a `Vec3` from `context` at dotted `path` (supports `points.@last`). */
 export function readInteractionContextVec3(ctx: Record<string, unknown>, path: string): Vec3 | null {
   const raw = readContextPathValue(ctx, parseInteractionContextPath(path));
   if (!Array.isArray(raw) || raw.length < 3) return null;
@@ -1571,12 +1571,12 @@ export function readInteractionContextVec3(ctx: Record<string, unknown>, path: s
   return [x, y, z];
 }
 
-/** @emoji 📏️ Writes a `Vec3` into `context` at dotted `path`. */
+/** 📏️ Writes a `Vec3` into `context` at dotted `path`. */
 export function writeInteractionContextVec3(ctx: Record<string, unknown>, path: string, value: Vec3): void {
   writePathSegments(ctx, parseInteractionContextPath(path), value);
 }
 
-/** @emoji 📏️ Clamps `target` to `length` units from `anchor` along the anchor→target ray. */
+/** 📏️ Clamps `target` to `length` units from `anchor` along the anchor→target ray. */
 export function clampPointAlongDirection(anchor: Vec3, target: Vec3, length: number, preview: SpatialPreviewKernel): Vec3 {
   return preview.clampPointAlongDirection(anchor, target, length);
 }
@@ -1609,7 +1609,7 @@ function clearInteractionLengthEntryFields(ctx: Record<string, unknown>): void {
   delete ctx[CURSOR_RAW_CTX];
 }
 
-/** @emoji ⌨️ One host-triggerable transition row for palette + command input (see `TransitionSpec.key`). */
+/** ⌨️ One host-triggerable transition row for palette + command input (see `TransitionSpec.key`). */
 const HOST_KEYBIND_EXCLUDED_KINDS = new Set(["pointer.move", "pointer.down", "selection.changed"]);
 
 export interface InteractionKeybindRow {
@@ -1618,7 +1618,7 @@ export interface InteractionKeybindRow {
   readonly label: string;
 }
 
-/** @emoji ⌨️ Lists keyed transitions for the active state (excludes pointer + selection). */
+/** ⌨️ Lists keyed transitions for the active state (excludes pointer + selection). */
 export function listKeyedInteractionTransitions(spec: InteractionSpec, state: string): readonly InteractionKeybindRow[] {
   const st = findState(spec, state);
   if (!st?.on) return [];
@@ -1637,14 +1637,14 @@ export function listKeyedInteractionTransitions(spec: InteractionSpec, state: st
   return out;
 }
 
-/** @emoji ⎋️ Hard-aborts the active interaction session when `capabilities.canCancel`. */
+/** ⎋️ Hard-aborts the active interaction session when `capabilities.canCancel`. */
 export function abortActiveInteractionSession(rt: InteractionRuntime): boolean {
   if (!rt.getSnapshot().capabilities.canCancel) return false;
   rt.cancel();
   return true;
 }
 
-/** @emoji 🎬️ Minimal async statechart runner for `InteractionSpec.machine`. */
+/** 🎬️ Minimal async statechart runner for `InteractionSpec.machine`. */
 export class StatechartRuntime implements StateEngine {
   private state: string;
   private context: Record<string, unknown>;
@@ -1667,13 +1667,13 @@ export class StatechartRuntime implements StateEngine {
     this.context = initialContextForSpec(this.spec);
   }
 
-  /** @emoji 🎬️ Restores a prior `state` + `context` snapshot (interaction-local undo). */
+  /** 🎬️ Restores a prior `state` + `context` snapshot (interaction-local undo). */
   restore(state: string, context: Record<string, unknown>): void {
     this.state = state;
     this.context = context;
   }
 
-  /** @emoji 🎬️ Applies one external event; returns whether a transition fired. */
+  /** 🎬️ Applies one external event; returns whether a transition fired. */
   async send(event: InteractionEvent, kernel?: SpatialKernel, model?: Model, actions?: ActionRegistry, preview?: SpatialPreviewKernel, activeModelDefinitionId?: string | null): Promise<StateEngineSendResult> {
     const r = await applyTransition(this.spec, this.state, this.context, event, kernel, actions, model, preview, activeModelDefinitionId ?? null);
     if (!r.ok) return { ok: false };
@@ -1683,7 +1683,7 @@ export class StatechartRuntime implements StateEngine {
   }
 }
 
-/** @emoji 🎭️ Default in-process engine (no XState); same semantics as `applyTransition`. */
+/** 🎭️ Default in-process engine (no XState); same semantics as `applyTransition`. */
 export const pureTsStateEngineProvider: StateEngineProvider = {
   id: "pure-ts",
   create(spec: InteractionSpec): StateEngine {
@@ -1693,7 +1693,7 @@ export const pureTsStateEngineProvider: StateEngineProvider = {
 // #endregion 🎬️Statechart
 
 // #region 🖼️Display
-/** @emoji 🖼️ Resolved display primitive for renderer adapters. */
+/** 🖼️ Resolved display primitive for renderer adapters. */
 export interface DisplayItem {
   readonly kind: string;
   readonly id: string;
@@ -1701,13 +1701,13 @@ export interface DisplayItem {
   readonly params?: Record<string, unknown>;
 }
 
-/** @emoji 🖼️ Renderer-neutral snapshot slice consumed by `@semio-tech/cad-js/renderer`. */
+/** 🖼️ Renderer-neutral snapshot slice consumed by `@semio-tech/cad-js/renderer`. */
 export interface DisplayModel {
   readonly prompt?: string;
   readonly items: readonly DisplayItem[];
 }
 
-/** @emoji 🖼️ Instantiates `display.states[state]` templates using current `context`. */
+/** 🖼️ Instantiates `display.states[state]` templates using current `context`. */
 export function resolveDisplay(spec: InteractionSpec, state: string, context: Record<string, unknown>, preview: SpatialPreviewKernel, model?: Model): DisplayModel {
   const env: ExprEnv = { context: model ? withResolvedInteractionPointsContext(model, context) : context, preview };
   const section = spec.display?.states?.find((s) => s.state === state);
@@ -1874,13 +1874,17 @@ export function resolveDisplay(spec: InteractionSpec, state: string, context: Re
 // #endregion 📦️🎬️actions
 
 // #region 🧪️Tests
-import { buildBoxInteractionSpec } from "../🗿️artifact/🟦️.ts";
 
 const __actionsTestRuntime = import.meta.vitest ? await import("../🏃️runtime/🟦️.ts") : null;
-const __actionsTestKernel = import.meta.vitest ? await import("../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️.ts") : null;
+
+/** 🎒️ The values this module hands its extracted suite `./🧪️tests/🧪️semio-tech-cad-js-core-box-display-committed/🟦️.ts`. */
+export type ActionsTestDependencies = {
+  readonly __actionsTestRuntime: typeof __actionsTestRuntime;
+  readonly resolveDisplay: typeof resolveDisplay;
+};
 
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️semio-tech-cad-js-core-box-display-committed/🟦️.ts");
-  await registerTests1(import.meta.vitest, { __actionsTestKernel, __actionsTestRuntime, buildBoxInteractionSpec, resolveDisplay }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { __actionsTestRuntime, resolveDisplay }, { url: import.meta.url });
 }
 // #endregion 🧪️Tests

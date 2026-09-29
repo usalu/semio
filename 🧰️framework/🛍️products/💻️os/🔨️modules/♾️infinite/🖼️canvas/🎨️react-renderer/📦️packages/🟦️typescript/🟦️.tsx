@@ -1,2 +1,2 @@
-/** @emoji 📦️ package glue (reexports only). */
+/** 📦️ package glue (reexports only). */
 export * from "../../🟦️.tsx";

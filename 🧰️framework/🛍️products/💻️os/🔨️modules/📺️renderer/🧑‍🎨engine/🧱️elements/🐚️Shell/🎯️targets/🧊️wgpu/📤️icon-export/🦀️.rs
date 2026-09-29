@@ -80,7 +80,7 @@ impl IconExportBatch {
 
     fn fail(&mut self, fault: String) {
         if self.item_fault.is_none() {
-            ShellState::debug_log(&format!("[DEBUG] wgpu icon export refused name={} reason={fault}", self.filename));
+            ShellState::debug_log(&format!("[TRACE] wgpu icon export refused name={} reason={fault}", self.filename));
             self.item_fault = Some(fault);
         }
         self.bytes = None;
@@ -149,7 +149,7 @@ impl IconExportBatch {
                 match answer {
                     Ok(true) => {
                         self.completed += 1;
-                        ShellState::debug_log(&format!("[DEBUG] wgpu icon export delivered name={} completed={}/{}", self.filename, self.completed, self.total));
+                        ShellState::debug_log(&format!("[TRACE] wgpu icon export delivered name={} completed={}/{}", self.filename, self.completed, self.total));
                     }
                     Ok(false) => self.cancel(),
                     Err(fault) => { self.item_fault = Some(fault); }

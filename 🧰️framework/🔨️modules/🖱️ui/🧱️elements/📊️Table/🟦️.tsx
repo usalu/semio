@@ -24,10 +24,10 @@ import { DragHandle } from "../🧱️DragHandle/🟦️.tsx";
 // Sortable, hierarchical data table with drag-drop support.
 // Consumers MUST provide columns and data arrays.
 
-/** @emoji 📊️ Private interactive table-row presentation. */
+/** 📊️ Private interactive table-row presentation. */
 const tableRowInteractiveClass = cn("text-element", interactiveControlTransitionClass, interactiveHoverClass);
 
-/** @emoji 📊️ Private selected table-row presentation. */
+/** 📊️ Private selected table-row presentation. */
 const tableRowSelectedClass = interactiveActiveFillClass;
 
 /**
@@ -35,12 +35,12 @@ const tableRowSelectedClass = interactiveActiveFillClass;
  **/
 export type SortDirection = "asc" | "desc";
 
-/** @emoji 🔀️ The direction a header click requests: an unsorted or descending column sorts ascending, an ascending one flips to descending. */
+/** 🔀️ The direction a header click requests: an unsorted or descending column sorts ascending, an ascending one flips to descending. */
 export function tableSortNextDirectionV1(columnId: string, sortColumn: string | undefined, sortDirection: SortDirection | undefined): SortDirection {
   return sortColumn === columnId && sortDirection === "asc" ? "desc" : "asc";
 }
 
-/** @emoji ♿️ The `aria-sort` a header announces for the table's active sort. */
+/** ♿️ The `aria-sort` a header announces for the table's active sort. */
 export function tableSortAriaV1(columnId: string, sortColumn: string | undefined, sortDirection: SortDirection | undefined): "ascending" | "descending" | undefined {
   if (sortColumn !== columnId) return undefined;
   return sortDirection === "desc" ? "descending" : "ascending";
@@ -76,11 +76,11 @@ export interface HierarchicalRowData {
  **/
 export interface DragDropConfig {
   enabled?: boolean;
-  /** @emoji ⏱️ Delay (ms) before pointer drag activates so double-click can reach the row. */
+  /** ⏱️ Delay (ms) before pointer drag activates so double-click can reach the row. */
   pointerActivationDelayMs?: number;
-  /** @emoji ↔ Pointer movement tolerance (px) while waiting for {@link DragDropConfig.pointerActivationDelayMs}. */
+  /** ↔ Pointer movement tolerance (px) while waiting for {@link DragDropConfig.pointerActivationDelayMs}. */
   pointerActivationTolerancePx?: number;
-  /** @emoji ↔ Immediate drag after pointer movement (px); ignored when {@link DragDropConfig.pointerActivationDelayMs} is set. */
+  /** ↔ Immediate drag after pointer movement (px); ignored when {@link DragDropConfig.pointerActivationDelayMs} is set. */
   pointerActivationDistancePx?: number;
   onDragStart?: (rowId: string) => void;
   onDragEnd?: (event: { active: string; over: string | null }) => void;
@@ -120,7 +120,7 @@ export interface TableProps<T = unknown> {
   onToggleRow?: (rowId: string) => void;
   renderDocumentControls?: (row: T & HierarchicalRowData) => React.ReactNode;
   dragDrop?: DragDropConfig;
-  /** @emoji 🖱️ Native (cross-window) HTML5 drag attributes for a row — for `declarativeTreeDragController`-style dataTransfer drags; independent of {@link TableProps.dragDrop}'s dnd-kit reordering. */
+  /** 🖱️ Native (cross-window) HTML5 drag attributes for a row — for `declarativeTreeDragController`-style dataTransfer drags; independent of {@link TableProps.dragDrop}'s dnd-kit reordering. */
   rowDragProps?: (row: T, index: number) => React.HTMLAttributes<HTMLTableRowElement>;
   wrapperComponent?: React.ComponentType<{ children: React.ReactNode }>;
 }
@@ -142,7 +142,7 @@ interface TableDraggableRowProps<T> {
   onRowMouseLeave?: (row: T, index: number) => void;
 }
 
-/** @emoji 🖱 Native HTML5 table-row drag that honors the UI driver (handle vs surface). */
+/** 🖱 Native HTML5 table-row drag that honors the UI driver (handle vs surface). */
 function TableHtml5DragRow<T>({
   row,
   rowId,

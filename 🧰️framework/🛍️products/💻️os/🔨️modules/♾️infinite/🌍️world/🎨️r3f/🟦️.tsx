@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🌍️ `@semio-tech/infinite-world-r3f` — generic r3f infinite-world engine: layers, chunking, view radius, pooling, precision, LOD/grid, mesh borders. */
+/** 🌍️ `@semio-tech/infinite-world-r3f` — generic r3f infinite-world engine: layers, chunking, view radius, pooling, precision, LOD/grid, mesh borders. */
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
@@ -95,7 +95,7 @@ export interface LodMeshEntry {
   readonly url: string;
 }
 
-/** @emoji 📐️ Orbit view projection mode for display templates. */
+/** 📐️ Orbit view projection mode for display templates. */
 export type OrbitCameraProjection = "orthographic" | "perspective";
 
 export interface WorldCameraState {
@@ -104,14 +104,14 @@ export interface WorldCameraState {
   readonly zoom: number;
   readonly up?: Vec3;
   readonly projection?: OrbitCameraProjection;
-  /** @emoji 📐️ Full classical-projection taxonomy spec (Parallel/Perspective families); see {@link WorldProjectionSpec}. */
+  /** 📐️ Full classical-projection taxonomy spec (Parallel/Perspective families); see {@link WorldProjectionSpec}. */
   readonly projectionSpec?: WorldProjectionSpec;
 }
 
-/** @emoji 🧭️ A camera-navigation gesture {@link classifyWorldNavigationGestures} can detect on an orbit control. */
+/** 🧭️ A camera-navigation gesture {@link classifyWorldNavigationGestures} can detect on an orbit control. */
 export type WorldNavigationGesture = "pan" | "zoom" | "orbit";
 
-/** @emoji 📸️ The subset of camera state {@link classifyWorldNavigationGestures} diffs before/after a gesture. */
+/** 📸️ The subset of camera state {@link classifyWorldNavigationGestures} diffs before/after a gesture. */
 export interface WorldNavigationSnapshot {
   readonly position: Vec3;
   readonly target: Vec3;
@@ -119,7 +119,7 @@ export interface WorldNavigationSnapshot {
   readonly projection: OrbitCameraProjection;
 }
 
-/** @emoji 📏️ Ratios/angle above which a camera-state delta counts as that gesture, tunable per caller. */
+/** 📏️ Ratios/angle above which a camera-state delta counts as that gesture, tunable per caller. */
 export interface WorldNavigationThresholds {
   readonly panRatio: number;
   readonly zoomRatio: number;
@@ -140,7 +140,7 @@ function worldNavigationVec3Direction(from: Vec3, to: Vec3): Vec3 {
   return length > 1e-9 ? [dx / length, dy / length, dz / length] : [0, 0, 0];
 }
 
-/** @emoji 🧭️ Classifies which navigation gestures a camera movement performed by diffing before/after
+/** 🧭️ Classifies which navigation gestures a camera movement performed by diffing before/after
  * snapshots — pan (the orbit target moved), zoom (orthographic zoom factor or perspective dolly distance
  * changed), orbit (the camera's direction around the target rotated). A single drag may perform more than
  * one (e.g. a drag that pans while also slightly orbiting), so this returns a set, not one verdict. */
@@ -171,16 +171,16 @@ export function classifyWorldNavigationGestures(
 
 export type SceneListenerTarget = Pick<EventTarget, "addEventListener" | "removeEventListener">;
 
-/** @emoji 👁️ Persisted per-entity hide/lock flags shared by CAD and puzzle 3d. */
+/** 👁️ Persisted per-entity hide/lock flags shared by CAD and puzzle 3d. */
 export interface WorldEntityFlags {
   readonly hidden?: boolean;
   readonly locked?: boolean;
 }
 
-/** @emoji 🔒️ Opacity scale applied when an entity is locked but still rendered. */
+/** 🔒️ Opacity scale applied when an entity is locked but still rendered. */
 export const WORLD_LOCKED_OPACITY_SCALE = 0.35;
 
-/** @emoji 🔒️ Desaturation factor applied when an entity is locked but still rendered. */
+/** 🔒️ Desaturation factor applied when an entity is locked but still rendered. */
 export const WORLD_LOCKED_DESATURATION = 0.55;
 
 export interface WorldEntityRenderModeInput {
@@ -196,25 +196,25 @@ export interface WorldEntityRenderMode {
   readonly showSelectedOutline: boolean;
 }
 
-/** @emoji 👁️ Whether an entity participates in canvas pick, hover, and edit interactions.
+/** 👁️ Whether an entity participates in canvas pick, hover, and edit interactions.
  * Locked entities must not absorb raycasts — a click is equivalent to clicking the background
  * (deselect / pass-through to whatever is behind). */
 export function worldEntitySelectable(flags: WorldEntityFlags | undefined): boolean {
   return flags?.hidden !== true && flags?.locked !== true;
 }
 
-/** @emoji 🔎️ Whether an entity can appear in details/tree selection while locked.
+/** 🔎️ Whether an entity can appear in details/tree selection while locked.
  * Canvas pointer picking still uses {@link worldEntitySelectable} so locked clicks deselect like background. */
 export function worldEntityInspectable(flags: WorldEntityFlags | undefined): boolean {
   return flags?.hidden !== true;
 }
 
-/** @emoji 👁️ Whether an entity should be drawn in the 3d scene. */
+/** 👁️ Whether an entity should be drawn in the 3d scene. */
 export function worldEntityRendered(flags: WorldEntityFlags | undefined, revealed = false): boolean {
   return flags?.hidden !== true || revealed;
 }
 
-/** @emoji 👁️ Resolves hover/dim/outline behavior for hidden-reveal and locked entities. */
+/** 👁️ Resolves hover/dim/outline behavior for hidden-reveal and locked entities. */
 export function worldEntityRenderMode(flags: WorldEntityFlags | undefined, input: WorldEntityRenderModeInput = {}): WorldEntityRenderMode {
   const revealed = input.revealed === true;
   const hovered = input.hovered === true;
@@ -230,7 +230,7 @@ export function worldEntityRenderMode(flags: WorldEntityFlags | undefined, input
 // #endregion 🔖️Types
 
 // #region 🔖️EventBinding
-/** @emoji 🎧️ Tracks DOM listeners for deterministic teardown on world unmount. */
+/** 🎧️ Tracks DOM listeners for deterministic teardown on world unmount. */
 export class WorldEventBindingController {
   private readonly cleanups: Array<() => void> = [];
 
@@ -251,27 +251,27 @@ export class WorldEventBindingController {
 // #region 🧭️Precision
 const _mCadToThree = new Matrix4();
 
-/** @emoji 🧭️ Identity matrix: CAD Z-up and Three.js scene share the same frame. */
+/** 🧭️ Identity matrix: CAD Z-up and Three.js scene share the same frame. */
 export function cadToThreeMatrix(): Matrix4 {
   return _mCadToThree.identity();
 }
 
-/** @emoji 🧭️ Maps a CAD fixture point to Three.js world coordinates (identity in z-up scenes). */
+/** 🧭️ Maps a CAD fixture point to Three.js world coordinates (identity in z-up scenes). */
 export function cadVec3ToThree(v: Vec3): Vec3 {
   return [v[0], v[1], v[2]];
 }
 
-/** @emoji 🧭️ Maps a Three.js point back to CAD fixture coordinates (identity in z-up scenes). */
+/** 🧭️ Maps a Three.js point back to CAD fixture coordinates (identity in z-up scenes). */
 export function threeVec3ToCad(v: { readonly x: number; readonly y: number; readonly z: number }): Vec3 {
   return [v.x, v.y, v.z];
 }
 
-/** @emoji 🧭️ Maps a CAD fixture quaternion to Three.js (identity in z-up scenes). */
+/** 🧭️ Maps a CAD fixture quaternion to Three.js (identity in z-up scenes). */
 export function cadQuatToThree(q: Quat): Quat {
   return [q[0], q[1], q[2], q[3]];
 }
 
-/** @emoji 🧭️ Maps a Three.js quaternion back to CAD fixture coordinates (identity in z-up scenes). */
+/** 🧭️ Maps a Three.js quaternion back to CAD fixture coordinates (identity in z-up scenes). */
 export function threeQuatToCad(q: Quaternion): Quat {
   return [q.x, q.y, q.z, q.w];
 }
@@ -285,7 +285,7 @@ function vec3Add(a: Vec3, b: Vec3): Vec3 {
   return [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
 }
 
-/** @emoji 🧭️ Maps object-local CAD offset to Three.js parent-group coordinates. */
+/** 🧭️ Maps object-local CAD offset to Three.js parent-group coordinates. */
 export function cadObjectLocalToThreeGroupLocal(local: Vec3, originCad: Vec3, orientationCad: Quat | undefined): Vec3 {
   const q = orientationCad ?? ([0, 0, 0, 1] as Quat);
   const worldCad = vec3Add(originCad, quatRotateVec(q, local));
@@ -296,7 +296,7 @@ export function cadObjectLocalToThreeGroupLocal(local: Vec3, originCad: Vec3, or
   return [out.x, out.y, out.z];
 }
 
-/** @emoji 🧭️ Maps object-local CAD direction to a unit vector in the parent Three.js group. */
+/** 🧭️ Maps object-local CAD direction to a unit vector in the parent Three.js group. */
 export function cadObjectLocalDirectionToThreeGroupLocal(localDir: Vec3, originCad: Vec3, orientationCad: Quat | undefined): Vec3 {
   const tip = cadObjectLocalToThreeGroupLocal(localDir, originCad, orientationCad);
   const base = cadObjectLocalToThreeGroupLocal([0, 0, 0], originCad, orientationCad);
@@ -309,10 +309,10 @@ export function cadObjectLocalDirectionToThreeGroupLocal(localDir: Vec3, originC
   return [d.x, d.y, d.z];
 }
 
-/** @emoji 🧭️ +90° X: glTF Y-up mesh → CAD object-local Z-up inside the pose group. */
+/** 🧭️ +90° X: glTF Y-up mesh → CAD object-local Z-up inside the pose group. */
 export const GLB_MESH_FRAME_ROTATION_X = Math.PI / 2;
 
-/** @emoji 🎯️ Rebases world positions near the camera to reduce floating-point jitter at large coordinates. */
+/** 🎯️ Rebases world positions near the camera to reduce floating-point jitter at large coordinates. */
 export function floatingOriginRebase(worldCad: Vec3, anchorCad: Vec3): Vec3 {
   return [worldCad[0] - anchorCad[0], worldCad[1] - anchorCad[1], worldCad[2] - anchorCad[2]];
 }
@@ -320,14 +320,14 @@ export function floatingOriginRebase(worldCad: Vec3, anchorCad: Vec3): Vec3 {
 // #endregion 🧭️Precision
 
 // #region Collision
-/** @emoji 🧊️ One mesh BVH part in pose-local coordinates (GLB frame rotation baked in). */
+/** 🧊️ One mesh BVH part in pose-local coordinates (GLB frame rotation baked in). */
 export interface CollisionMeshPart {
   readonly geometry: BufferGeometry;
   readonly bvh: MeshBVH;
   readonly localMatrix: Matrix4;
 }
 
-/** @emoji 🧊️ Mesh-backed collision volume built from a GLB root. */
+/** 🧊️ Mesh-backed collision volume built from a GLB root. */
 export interface CollisionBody {
   readonly parts: readonly CollisionMeshPart[];
   readonly localBounds: Box3;
@@ -353,7 +353,7 @@ const _collisionVc = new Vector3();
 const _collisionNormal = new Vector3();
 const _collisionToPoint = new Vector3();
 
-/** @emoji 🧊️ Builds a {@link CollisionBody} from a GLB root in pose-local space (includes {@link GLB_MESH_FRAME_ROTATION_X}). */
+/** 🧊️ Builds a {@link CollisionBody} from a GLB root in pose-local space (includes {@link GLB_MESH_FRAME_ROTATION_X}). */
 export function collisionBodyFromObject(root: Object3D): CollisionBody | null {
   const poseLocal = new Group();
   const frame = new Group();
@@ -403,7 +403,7 @@ export function collisionBodyFromObject(root: Object3D): CollisionBody | null {
   return { parts, localBounds };
 }
 
-/** @emoji 📦️ World-space AABB for a posed {@link CollisionBody}. */
+/** 📦️ World-space AABB for a posed {@link CollisionBody}. */
 export function collisionBodyWorldBounds(body: CollisionBody, worldMatrix: Matrix4, target = new Box3()): Box3 {
   target.copy(body.localBounds).applyMatrix4(worldMatrix);
   return target;
@@ -459,7 +459,7 @@ function collisionBodiesContainmentOverlap(a: CollisionBody, worldA: Matrix4, b:
   return collisionPointInsideBody(a, _collisionInvA, _collisionPoint) && collisionPointInsideBody(b, _collisionInvB, _collisionPoint);
 }
 
-/** @emoji 💥️ True when two posed {@link CollisionBody} instances have intersecting mesh geometry. */
+/** 💥️ True when two posed {@link CollisionBody} instances have intersecting mesh geometry. */
 export function bodiesIntersect(a: CollisionBody, worldA: Matrix4, b: CollisionBody, worldB: Matrix4): boolean {
   collisionBodyWorldBounds(a, worldA, _collisionBoxA);
   collisionBodyWorldBounds(b, worldB, _collisionBoxB);
@@ -483,7 +483,7 @@ export interface SolidOverlapVolumeOptions {
   readonly sampleCount?: number;
 }
 
-/** @emoji 📐️ Estimates solid overlap volume (m3) between two posed {@link CollisionBody} instances. */
+/** 📐️ Estimates solid overlap volume (m3) between two posed {@link CollisionBody} instances. */
 export function solidOverlapVolume(a: CollisionBody, worldA: Matrix4, b: CollisionBody, worldB: Matrix4, opts?: SolidOverlapVolumeOptions): number {
   collisionBodyWorldBounds(a, worldA, _collisionBoxA);
   collisionBodyWorldBounds(b, worldB, _collisionBoxB);
@@ -514,15 +514,15 @@ export function solidOverlapVolume(a: CollisionBody, worldA: Matrix4, b: Collisi
 // #endregion Collision
 
 // #region 🎨️MeshBorder
-/** @emoji 📏️ UI normal border token for infinite-world mesh edge strokes ({@link borderNormalClass}). */
+/** 📏️ UI normal border token for infinite-world mesh edge strokes ({@link borderNormalClass}). */
 export const WORLD_MESH_BORDER_CSS = semanticVar("border-normal-color");
 
-/** @emoji 📏️ Marks {@link LineSegments} added by {@link applyWorldMeshEdgeBorders}. */
+/** 📏️ Marks {@link LineSegments} added by {@link applyWorldMeshEdgeBorders}. */
 export const WORLD_MESH_OUTLINE_USER_DATA_KEY = "__worldMeshBorderOutline";
 
 let worldMeshBorderColorCache: string | null = null;
 
-/** @emoji 📏️ Resolves {@link WORLD_MESH_BORDER_CSS} to an sRGB color string for Three.js materials. */
+/** 📏️ Resolves {@link WORLD_MESH_BORDER_CSS} to an sRGB color string for Three.js materials. */
 export function worldMeshBorderColor(): string {
   if (worldMeshBorderColorCache) {
     return worldMeshBorderColorCache;
@@ -531,13 +531,13 @@ export function worldMeshBorderColor(): string {
   return worldMeshBorderColorCache;
 }
 
-/** @emoji 🔄️ Clears cached mesh border color (tests or theme switches). */
+/** 🔄️ Clears cached mesh border color (tests or theme switches). */
 export function resetWorldMeshBorderColorCache(): void {
   worldMeshBorderColorCache = null;
   clearColorResolveCache();
 }
 
-/** @emoji 📏️ Edge-segment outline for one mesh geometry using the UI normal border color. */
+/** 📏️ Edge-segment outline for one mesh geometry using the UI normal border color. */
 export function createWorldMeshEdgeOutline(geometry: BufferGeometry, borderColor?: string): LineSegments {
   const color = borderColor ?? worldMeshBorderColor();
   const outline = new LineSegments(new EdgesGeometry(geometry), new LineBasicMaterial({ color: new Color(resolveColorHex(color, "gray")) }));
@@ -546,7 +546,7 @@ export function createWorldMeshEdgeOutline(geometry: BufferGeometry, borderColor
   return outline;
 }
 
-/** @emoji 📏️ Adds normal-border edge outlines to every mesh under `root` (idempotent per mesh). */
+/** 📏️ Adds normal-border edge outlines to every mesh under `root` (idempotent per mesh). */
 export function applyWorldMeshEdgeBorders(root: Object3D, borderColor?: string): void {
   const color = borderColor ?? worldMeshBorderColor();
   root.traverse((object) => {
@@ -563,7 +563,7 @@ export function applyWorldMeshEdgeBorders(root: Object3D, borderColor?: string):
 // #endregion 🎨️MeshBorder
 
 // #region 🧱️Chunking
-/** @emoji 🧱️ Stable chunk bucket key for a world-space origin. */
+/** 🧱️ Stable chunk bucket key for a world-space origin. */
 export function chunkKey(origin: Vec3, chunkSize: number): string {
   const ix = Math.floor(origin[0] / chunkSize);
   const iy = Math.floor(origin[1] / chunkSize);
@@ -577,12 +577,12 @@ function setEquals(a: ReadonlySet<string>, b: ReadonlySet<string>): boolean {
   return true;
 }
 
-/** @emoji 📏️ Chunk bounding radius in world units (half-space diagonal of a cube chunk). */
+/** 📏️ Chunk bounding radius in world units (half-space diagonal of a cube chunk). */
 export function chunkBoundsRadius(chunkSize: number): number {
   return chunkSize * 0.866;
 }
 
-/** @emoji 👁️ Distance-only chunk visibility with enter/exit hysteresis (avoids frustum-edge flicker). */
+/** 👁️ Distance-only chunk visibility with enter/exit hysteresis (avoids frustum-edge flicker). */
 export function chunkDistanceVisible(args: { readonly camPos: Vector3; readonly chunkCenter: Vector3; readonly chunkSize: number; readonly maxDist: number; readonly wasVisible: boolean }): boolean {
   const boundsR = chunkBoundsRadius(args.chunkSize);
   const dist = args.camPos.distanceTo(args.chunkCenter);
@@ -593,7 +593,7 @@ export function chunkDistanceVisible(args: { readonly camPos: Vector3; readonly 
   return false;
 }
 
-/** @emoji 👁️ Tracks which chunk keys are within view radius (per-frame, hysteresis). */
+/** 👁️ Tracks which chunk keys are within view radius (per-frame, hysteresis). */
 export function useVisibleChunkKeys(chunkKeys: Iterable<string>, chunkSize: number, maxDist: number): ReadonlySet<string> {
   const { camera } = useThree();
   const centerTmp = reactHostPort.useMemo(() => new Vector3(), []);
@@ -621,7 +621,7 @@ export function useVisibleChunkKeys(chunkKeys: Iterable<string>, chunkSize: numb
   return visible;
 }
 
-/** @emoji 🧩️ Splits scene children with `origin` into chunked vs unchunked buckets. */
+/** 🧩️ Splits scene children with `origin` into chunked vs unchunked buckets. */
 export function splitChunkedSceneChildren(children: ReactNode): { chunked: ReactNode[]; rest: ReactNode[] } {
   const chunked: ReactNode[] = [];
   const rest: ReactNode[] = [];
@@ -632,7 +632,7 @@ export function splitChunkedSceneChildren(children: ReactNode): { chunked: React
   return { chunked, rest };
 }
 
-/** @emoji 🧱️ Renders origin-tagged children grouped by {@link chunkKey} with view-radius visibility. */
+/** 🧱️ Renders origin-tagged children grouped by {@link chunkKey} with view-radius visibility. */
 export function WorldChunks(props: { readonly chunkSize: number; readonly maxDistance: number; readonly children: ReactNode }): ReactElement {
   const buckets = reactHostPort.useMemo(() => {
     const map = new Map<string, ReactNode[]>();
@@ -660,7 +660,7 @@ export function WorldChunks(props: { readonly chunkSize: number; readonly maxDis
   );
 }
 
-/** @emoji 🧩️ Chunked scene subtree + unchunked sibling group (view-radius streaming). */
+/** 🧩️ Chunked scene subtree + unchunked sibling group (view-radius streaming). */
 export function WorldChunkedSceneChildren(props: { readonly chunkSize: number; readonly maxDistance: number; readonly children: ReactNode; readonly unchunkedDataAttr?: string }): ReactElement {
   const { chunked, rest } = reactHostPort.useMemo(() => splitChunkedSceneChildren(props.children), [props.children]);
   const attr = props.unchunkedDataAttr ?? "data-world-unchunked";
@@ -682,14 +682,14 @@ export interface ViewRadiusLayerProps {
   readonly children: ReactNode;
 }
 
-/** @emoji 👁️ View-radius layer: alias for {@link WorldChunkedSceneChildren} in the layer stack. */
+/** 👁️ View-radius layer: alias for {@link WorldChunkedSceneChildren} in the layer stack. */
 export function ViewRadiusLayer(props: ViewRadiusLayerProps): ReactElement {
   return <WorldChunkedSceneChildren chunkSize={props.chunkSize} maxDistance={props.maxDistance} children={props.children} />;
 }
 // #endregion 👁️ViewRadius
 
 // #region 🏊️Pool
-/** @emoji 🏊️ Generic refcount pool for asset keys (caller supplies template factory). */
+/** 🏊️ Generic refcount pool for asset keys (caller supplies template factory). */
 export function createRefCountPool<TKey extends string>(): {
   acquire(key: TKey): void;
   release(key: TKey): void;
@@ -719,7 +719,7 @@ export function createRefCountPool<TKey extends string>(): {
   };
 }
 
-/** @emoji 🏊️ Template cache with refcount (style variants keyed by caller); `TValue` defaults to {@link Object3D} but any pooled disposable (e.g. `BufferGeometry`) works. */
+/** 🏊️ Template cache with refcount (style variants keyed by caller); `TValue` defaults to {@link Object3D} but any pooled disposable (e.g. `BufferGeometry`) works. */
 export function createTemplatePool<TKey extends string, TValue = Object3D>(): {
   acquire(key: TKey): void;
   release(key: TKey): void;
@@ -773,7 +773,7 @@ export function createTemplatePool<TKey extends string, TValue = Object3D>(): {
   };
 }
 
-/** @emoji 🔌️ Port for leaf bundles that load assets (e.g. GLTF via drei). */
+/** 🔌️ Port for leaf bundles that load assets (e.g. GLTF via drei). */
 export interface AssetPoolPort {
   clear(url: string): void;
 }
@@ -791,27 +791,27 @@ export const WORLD_LOD_GRID_BASE_LOD = 2;
 export const WORLD_LOD_GRID_MIN_FADE_CELLS = 24;
 export const WORLD_LOD_GRID_FADE_HEIGHT_FACTOR = 32;
 export const WORLD_LOD_GRID_FADE_STRENGTH = 1.5;
-/** @emoji 🌫️ Multiplier on the live frustum radius so the procedural grid plane always overfills the viewport (including corners) with near-uniform opacity under {@link WORLD_LOD_GRID_FADE_STRENGTH}. */
+/** 🌫️ Multiplier on the live frustum radius so the procedural grid plane always overfills the viewport (including corners) with near-uniform opacity under {@link WORLD_LOD_GRID_FADE_STRENGTH}. */
 export const WORLD_LOD_GRID_COVERAGE_MARGIN = 32;
 export const WORLD_ORBIT_CAMERA_MIN_FAR = 524_288;
 export const WORLD_ORBIT_CAMERA_FAR_DISTANCE_FACTOR = 1024;
-/** @emoji 📶️ Reference perspective FOV (°) used to map orthographic zoom onto an equivalent orbit distance for automatic LOD / grid banding — matches the default three-point FOV. */
+/** 📶️ Reference perspective FOV (°) used to map orthographic zoom onto an equivalent orbit distance for automatic LOD / grid banding — matches the default three-point FOV. */
 export const WORLD_LOD_REFERENCE_FOV_DEG = 50;
 
-/** @emoji 📶️ Maps orbit camera distance to scene LOD (`distance / reference`). */
+/** 📶️ Maps orbit camera distance to scene LOD (`distance / reference`). */
 export function lodFromCameraDistance(distance: number, reference: number): number {
   const d = Math.max(distance, 1e-6);
   const ref = Math.max(reference, 1e-6);
   return d / ref;
 }
 
-/** @emoji 📶️ Orbit distance that drives automatic LOD — perspective uses eye→target; orthographic maps `zoom` through {@link worldProjectionMatchedPerspectiveDistance} so scroll (which changes zoom, not dolly) still retunes the grid. */
+/** 📶️ Orbit distance that drives automatic LOD — perspective uses eye→target; orthographic maps `zoom` through {@link worldProjectionMatchedPerspectiveDistance} so scroll (which changes zoom, not dolly) still retunes the grid. */
 export function lodOrbitDistanceForCamera(camera: Camera, orbitDistance: number, viewportHeight: number): number {
   if (!worldCameraIsOrthographic(camera)) return Math.max(orbitDistance, 1e-6);
   return worldProjectionMatchedPerspectiveDistance(WORLD_LOD_REFERENCE_FOV_DEG, worldCameraZoom(camera), viewportHeight);
 }
 
-/** @emoji 📶️ Picks the closest available LOD; on log-distance ties prefers the smaller (more detailed) LOD. */
+/** 📶️ Picks the closest available LOD; on log-distance ties prefers the smaller (more detailed) LOD. */
 export function pickClosestLod(available: readonly number[], desired: number): number | null {
   if (!available.length || !Number.isFinite(desired) || desired <= 0) return null;
   let best = available[0]!;
@@ -828,7 +828,7 @@ export function pickClosestLod(available: readonly number[], desired: number): n
   return best;
 }
 
-/** @emoji 🎨️ Resolves a mesh URL from per-LOD entries with {@link pickClosestLod}. */
+/** 🎨️ Resolves a mesh URL from per-LOD entries with {@link pickClosestLod}. */
 export function pickClosestMeshUrl(entries: readonly LodMeshEntry[] | undefined, desired: number, fallback?: string): string | undefined {
   if (!entries?.length) return fallback;
   const lods = entries.map((e) => e.lod).filter((lod) => Number.isFinite(lod) && lod > 0);
@@ -838,12 +838,12 @@ export function pickClosestMeshUrl(entries: readonly LodMeshEntry[] | undefined,
   return match?.url ?? fallback;
 }
 
-/** @emoji 📶️ Formats scene LOD for host readouts. */
+/** 📶️ Formats scene LOD for host readouts. */
 export function formatLod(lod: number): string {
   return Number.isFinite(lod) ? lod.toFixed(2) : "—";
 }
 
-/** @emoji 📶️ Maps a linear slider position to log-spaced scene LOD. */
+/** 📶️ Maps a linear slider position to log-spaced scene LOD. */
 export function lodFromSliderValue(slider: number, range: { readonly min: number; readonly max: number } = DEFAULT_LOD_RANGE): number {
   const t = Math.max(0, Math.min(1, (slider - WORLD_LOD_SLIDER_MIN) / (WORLD_LOD_SLIDER_MAX - WORLD_LOD_SLIDER_MIN)));
   const logMin = Math.log(range.min);
@@ -851,7 +851,7 @@ export function lodFromSliderValue(slider: number, range: { readonly min: number
   return Math.exp(logMin + t * (logMax - logMin));
 }
 
-/** @emoji 📶️ Maps scene LOD to a linear slider position. */
+/** 📶️ Maps scene LOD to a linear slider position. */
 export function sliderValueFromLod(lod: number, range: { readonly min: number; readonly max: number } = DEFAULT_LOD_RANGE): number {
   const clamped = Math.max(range.min, Math.min(range.max, lod));
   const logMin = Math.log(range.min);
@@ -860,7 +860,7 @@ export function sliderValueFromLod(lod: number, range: { readonly min: number; r
   return Math.round(WORLD_LOD_SLIDER_MIN + t * (WORLD_LOD_SLIDER_MAX - WORLD_LOD_SLIDER_MIN));
 }
 
-/** @emoji 📐️ Sparse, unbounded LOD grid step using the configured spacing and regular 1–2.5–5 multipliers. */
+/** 📐️ Sparse, unbounded LOD grid step using the configured spacing and regular 1–2.5–5 multipliers. */
 export function lodGridStepWorld(lod: number, gridFactor: number): number | null {
   if (!Number.isFinite(lod) || lod <= 0 || !Number.isFinite(gridFactor) || gridFactor <= 0) return null;
   const targetMultiplier = Math.max(1, lod / WORLD_LOD_GRID_BASE_LOD);
@@ -870,7 +870,7 @@ export function lodGridStepWorld(lod: number, gridFactor: number): number | null
   return gridFactor * quantum * magnitude;
 }
 
-/** @emoji 🌫️ World-space radius of the camera frustum on the grid plane — orthographic uses zoomed pixel extent; perspective uses FOV × height above the plane. */
+/** 🌫️ World-space radius of the camera frustum on the grid plane — orthographic uses zoomed pixel extent; perspective uses FOV × height above the plane. */
 export function cameraGridVisibleRadius(camera: Camera, planeZ: number, viewport: { readonly width: number; readonly height: number }): number {
   const width = Math.max(viewport.width, 1);
   const height = Math.max(viewport.height, 1);
@@ -885,7 +885,7 @@ export function cameraGridVisibleRadius(camera: Camera, planeZ: number, viewport
   return Math.hypot(halfWidth, halfHeight);
 }
 
-/** @emoji 🌫️ Stable world-space fade radius for the procedural grid that always overfills the live viewport so ortho/persp zoom never reveals a hard plane edge. */
+/** 🌫️ Stable world-space fade radius for the procedural grid that always overfills the live viewport so ortho/persp zoom never reveals a hard plane edge. */
 export function cameraGridFadeDistance(camera: Camera, planeZ: number, stepWorld: number, viewport?: { readonly width: number; readonly height: number }): number {
   const coverage =
     viewport != null
@@ -899,7 +899,7 @@ export function cameraGridFadeDistance(camera: Camera, planeZ: number, stepWorld
   return Math.max(coverage, Math.min(fade, Math.max(farCap, coverage)));
 }
 
-/** @emoji 📷️ Quantized far clipping distance that follows arbitrarily large orbit distances. */
+/** 📷️ Quantized far clipping distance that follows arbitrarily large orbit distances. */
 export function adaptiveOrbitCameraFar(distance: number): number {
   const target = Math.max(WORLD_ORBIT_CAMERA_MIN_FAR, Math.max(0, distance) * WORLD_ORBIT_CAMERA_FAR_DISTANCE_FACTOR);
   return 2 ** Math.ceil(Math.log2(target));
@@ -916,7 +916,7 @@ export interface LodContextValue {
 
 const LodContext = reactHostPort.createContext<LodContextValue | null>(null);
 
-/** @emoji 📶️ Reads the live scene LOD band and grid snap step from world context. */
+/** 📶️ Reads the live scene LOD band and grid snap step from world context. */
 export function useLod(): LodContextValue {
   const v = reactHostPort.useContext(LodContext);
   if (!v) throw new Error("World LOD context missing");
@@ -933,7 +933,7 @@ interface LodRuntimeCells {
 
 const worldRaycastNone: Object3D["raycast"] = () => undefined;
 
-/** @emoji 📐️ Sparse procedural world grid that follows the camera and fades without a finite edge. */
+/** 📐️ Sparse procedural world grid that follows the camera and fades without a finite edge. */
 export function WorldLodGridHelper(props: { readonly gridDatum?: Vec3 }): ReactElement | null {
   const lod = useLod();
   const camera = useThree((s) => s.camera);
@@ -1050,7 +1050,7 @@ export interface WorldLodBridgeProps {
   readonly onLodChange?: (lod: number) => void;
 }
 
-/** @emoji 📶️ LOD runtime bridge: context + optional {@link WorldLodGridHelper}. */
+/** 📶️ LOD runtime bridge: context + optional {@link WorldLodGridHelper}. */
 export function WorldLodBridge(props: WorldLodBridgeProps): ReactElement {
   const tmpWorld = reactHostPort.useMemo(() => new Vector3(), []);
   const lodRuntimeRef = reactHostPort.useRef<LodRuntimeCells>({
@@ -1107,7 +1107,7 @@ export function WorldLodBridge(props: WorldLodBridgeProps): ReactElement {
   );
 }
 
-/** @emoji 📐️ Grid layer slot for {@link WorldLayerStack}. */
+/** 📐️ Grid layer slot for {@link WorldLayerStack}. */
 export function GridLayer(props: { readonly gridDatum?: Vec3 }): ReactElement | null {
   return <WorldLodGridHelper gridDatum={props.gridDatum} />;
 }
@@ -1122,7 +1122,7 @@ export interface WorldLayerProps {
   readonly children: ReactNode;
 }
 
-/** @emoji 🗂️ Ordered scene layer; renders in-place so React context (providers) stays valid. */
+/** 🗂️ Ordered scene layer; renders in-place so React context (providers) stays valid. */
 export function WorldLayer(props: WorldLayerProps): ReactElement {
   reactHostPort.useContext(WorldLayerStackContext);
   return (
@@ -1132,17 +1132,17 @@ export function WorldLayer(props: WorldLayerProps): ReactElement {
   );
 }
 
-/** @emoji 🗂️ Root for {@link WorldLayer} children inside {@link WorldCanvas}. */
+/** 🗂️ Root for {@link WorldLayer} children inside {@link WorldCanvas}. */
 export function WorldLayerStack(props: { readonly children: ReactNode }): ReactElement {
   return <WorldLayerStackContext.Provider value={true}>{props.children}</WorldLayerStackContext.Provider>;
 }
 // #endregion 🗂️LayerStack
 
 // #region 📷️OrbitCameraView
-/** @emoji 🧭️ Standard orbit orthographic-style view ids for Z-up CAD scenes. */
+/** 🧭️ Standard orbit orthographic-style view ids for Z-up CAD scenes. */
 export type OrbitCameraViewId = "top" | "bottom" | "front" | "back" | "right" | "left" | "north" | "south" | "east" | "west" | "isometricNe" | "isometricNw" | "isometricSe" | "isometricSw" | "perspective" | "twoPointPerspective";
 
-/** @emoji 📡️ Command name products should handle to apply {@link OrbitCameraViewId} presets. */
+/** 📡️ Command name products should handle to apply {@link OrbitCameraViewId} presets. */
 export const ORBIT_CAMERA_VIEW_COMMAND = "setOrbitCameraView";
 
 const ORBIT_CAMERA_VIEW_LABELS: Record<OrbitCameraViewId, string> = {
@@ -1205,7 +1205,7 @@ function vec3Dot(a: Vec3, b: Vec3): number {
   return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 }
 
-/** @emoji 🧭️ Nudges axis-aligned view directions off the orbit up vector to avoid gimbal lock. */
+/** 🧭️ Nudges axis-aligned view directions off the orbit up vector to avoid gimbal lock. */
 export function stabilizeOrbitViewDirection(direction: Vec3, up: Vec3 = [0, 0, 1]): Vec3 {
   const unit = vec3Normalize(direction);
   if (Math.abs(vec3Dot(unit, up)) < 0.995) {
@@ -1214,7 +1214,7 @@ export function stabilizeOrbitViewDirection(direction: Vec3, up: Vec3 = [0, 0, 1
   return vec3Normalize([unit[0] + ORBIT_CAMERA_VIEW_EPSILON, unit[1] + 0.02, unit[2]]);
 }
 
-/** @emoji 📏️ Distance from orbit position to target; falls back when degenerate. */
+/** 📏️ Distance from orbit position to target; falls back when degenerate. */
 export function orbitCameraDistance(state: WorldCameraState, fallback = 600): number {
   const dx = state.position[0] - state.target[0];
   const dy = state.position[1] - state.target[1];
@@ -1232,7 +1232,7 @@ export interface ComputeOrbitCameraViewOptions {
 
 const ORBIT_CAMERA_Z_UP: Vec3 = [0, 0, 1];
 
-/** @emoji 📐️ Maps a view id to orthographic vs perspective projection. */
+/** 📐️ Maps a view id to orthographic vs perspective projection. */
 export function orbitCameraProjectionForView(view: OrbitCameraViewId): OrbitCameraProjection {
   return view === "perspective" || view === "twoPointPerspective" ? "perspective" : "orthographic";
 }
@@ -1246,7 +1246,7 @@ const ORBIT_CAMERA_TEMPLATE_BRANCH_VIEWS: Record<string, OrbitCameraViewId> = {
   isometry: "isometricNe",
 };
 
-/** @emoji 🪟️ Maps a display-tree window template id to an {@link OrbitCameraViewId}. */
+/** 🪟️ Maps a display-tree window template id to an {@link OrbitCameraViewId}. */
 export function resolveOrbitCameraViewFromTemplateId(templateId: string): OrbitCameraViewId | null {
   if ((ORBIT_CAMERA_VIEW_IDS as readonly string[]).includes(templateId)) {
     return templateId as OrbitCameraViewId;
@@ -1261,7 +1261,7 @@ function orbitCameraZoomForProjection(projection: OrbitCameraProjection, zoom?: 
   return zoom ?? 1;
 }
 
-/** @emoji 🔎️ Duck-typed camera zoom — `instanceof Three*Camera` fails across duplicate `three` package copies. */
+/** 🔎️ Duck-typed camera zoom — `instanceof Three*Camera` fails across duplicate `three` package copies. */
 export function worldCameraZoom(camera: Camera): number {
   const zoomable = camera as Camera & { readonly isPerspectiveCamera?: boolean; readonly isOrthographicCamera?: boolean; zoom?: number };
   if ((zoomable.isPerspectiveCamera || zoomable.isOrthographicCamera) && typeof zoomable.zoom === "number") {
@@ -1270,18 +1270,18 @@ export function worldCameraZoom(camera: Camera): number {
   return 1;
 }
 
-/** @emoji 🔎️ Duck-typed orthographic check — same duplicate-`three` constraint as {@link worldCameraZoom}. */
+/** 🔎️ Duck-typed orthographic check — same duplicate-`three` constraint as {@link worldCameraZoom}. */
 export function worldCameraIsOrthographic(camera: Camera): boolean {
   return (camera as Camera & { readonly isOrthographicCamera?: boolean }).isOrthographicCamera === true;
 }
 
-/** @emoji 🔎️ Duck-typed live perspective FOV — `undefined` for orthographic cameras, same duplicate-`three` constraint as {@link worldCameraZoom}. */
+/** 🔎️ Duck-typed live perspective FOV — `undefined` for orthographic cameras, same duplicate-`three` constraint as {@link worldCameraZoom}. */
 export function worldCameraFov(camera: Camera): number | undefined {
   const perspective = camera as Camera & { readonly isPerspectiveCamera?: boolean; readonly fov?: number };
   return perspective.isPerspectiveCamera && typeof perspective.fov === "number" ? perspective.fov : undefined;
 }
 
-/** @emoji 🔎️ Zoom carried through a projection gizmo snap — preserves live parallel zoom; maps perspective's unit zoom onto the orthographic default. */
+/** 🔎️ Zoom carried through a projection gizmo snap — preserves live parallel zoom; maps perspective's unit zoom onto the orthographic default. */
 export function worldProjectionSnapZoom(pendingSpec: WorldProjectionSpec, currentZoom: number, currentIsOrthographic: boolean): number {
   const family = worldProjectionFamily(pendingSpec);
   if (family === "parallel") {
@@ -1290,7 +1290,7 @@ export function worldProjectionSnapZoom(pendingSpec: WorldProjectionSpec, curren
   return orbitCameraZoomForProjection("perspective", currentZoom);
 }
 
-/** @emoji 📷️ Computes a Z-up orbit camera state for a named view around `target`. */
+/** 📷️ Computes a Z-up orbit camera state for a named view around `target`. */
 export function computeOrbitCameraViewState(view: OrbitCameraViewId, options: ComputeOrbitCameraViewOptions): WorldCameraState {
   const distance = options.distance ?? 600;
   const target = options.target;
@@ -1347,7 +1347,7 @@ function applyWorldCameraState(camera: Camera, state: WorldCameraState, controls
   }
 }
 
-/** @emoji 🧭️ Maps a CAD viewport gizmo axis click to a named orbit view (Z-up). */
+/** 🧭️ Maps a CAD viewport gizmo axis click to a named orbit view (Z-up). */
 export function resolveOrbitGizmoViewFromDirection(direction: { readonly x: number; readonly y: number; readonly z: number }): OrbitCameraViewId {
   const spec = resolveProjectionGizmoSpec(resolveProjectionGizmoHitFromDirection(direction));
   return worldProjectionSpecToOrbitView(spec) ?? "top";
@@ -1363,12 +1363,12 @@ function lerpVec3(a: Vec3, b: Vec3, t: number): Vec3 {
   return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
 }
 
-/** @emoji 📐️ Keeps orbit pose while swapping orthographic vs perspective zoom defaults. */
+/** 📐️ Keeps orbit pose while swapping orthographic vs perspective zoom defaults. */
 export function applyOrbitProjectionToCameraState(state: WorldCameraState, projection: OrbitCameraProjection): WorldCameraState {
   return { ...state, projection, zoom: orbitCameraZoomForProjection(projection, state.zoom) };
 }
 
-/** @emoji 🎞️ Live projection-matrix morph driven by {@link WorldProjectionSnapDriver} — read by {@link WorldProjectionMatrixDriver} and
+/** 🎞️ Live projection-matrix morph driven by {@link WorldProjectionSnapDriver} — read by {@link WorldProjectionMatrixDriver} and
  * {@link WorldCurvilinearPass} so their per-frame effects ramp with the same tween instead of popping on remount. */
 export interface WorldProjectionMorphState {
   readonly fromSpec: WorldProjectionSpec | undefined;
@@ -1390,7 +1390,7 @@ export interface WorldOrbitViewSnapGateContextValue {
 
 const WorldOrbitViewSnapGateContext = reactHostPort.createContext<WorldOrbitViewSnapGateContextValue | null>(null);
 
-/** @emoji 🧭️ Enables {@link useWorldOrbitViewSnapGate} for orbit controls during gizmo view snaps. */
+/** 🧭️ Enables {@link useWorldOrbitViewSnapGate} for orbit controls during gizmo view snaps. */
 export function WorldOrbitViewSnapGateProvider(props: { readonly children?: ReactNode }): ReactElement {
   const [snapGate, setSnapGate] = reactHostPort.useState(false);
   const morphRef = reactHostPort.useRef<WorldProjectionMorphState | null>(null);
@@ -1398,7 +1398,7 @@ export function WorldOrbitViewSnapGateProvider(props: { readonly children?: Reac
   return <WorldOrbitViewSnapGateContext.Provider value={value}>{props.children}</WorldOrbitViewSnapGateContext.Provider>;
 }
 
-/** @emoji 🧭️ Reads the active gizmo view-snap gate for {@link WorldOrbitGated}. */
+/** 🧭️ Reads the active gizmo view-snap gate for {@link WorldOrbitGated}. */
 export function useWorldOrbitViewSnapGate(): WorldOrbitViewSnapGateContextValue {
   return reactHostPort.useContext(WorldOrbitViewSnapGateContext) ?? { snapGate: false, setSnapGate: () => {}, morphRef: WORLD_PROJECTION_MORPH_FALLBACK_REF };
 }
@@ -1500,7 +1500,7 @@ function WorldOrbitViewGizmoViewportAxis(props: { readonly scale: [number, numbe
   );
 }
 
-/** @emoji 📏️ Thin shaft from the gizmo origin to a corner hit (matches axis shafts for the eight diagonals). */
+/** 📏️ Thin shaft from the gizmo origin to a corner hit (matches axis shafts for the eight diagonals). */
 function WorldProjectionGizmoCornerShaft(props: { readonly to: readonly [number, number, number]; readonly color: string; readonly opacity?: number }): ReactElement {
   const quaternion = reactHostPort.useMemo(() => {
     const dir = new Vector3(props.to[0], props.to[1], props.to[2]);
@@ -1579,7 +1579,7 @@ function WorldProjectionGizmoHitHead(props: {
   );
 }
 
-/** @emoji 🎯️ Navigation cube with face, corner, and center hit targets for projection snapping. */
+/** 🎯️ Navigation cube with face, corner, and center hit targets for projection snapping. */
 function WorldProjectionGizmoViewport(props: WorldProjectionGizmoViewportProps): ReactElement {
   const invalidate = useThree((state) => state.invalidate);
   const [hoveredHit, setHoveredHit] = reactHostPort.useState<ProjectionGizmoHit | null>(null);
@@ -1644,7 +1644,7 @@ function WorldProjectionGizmoViewport(props: WorldProjectionGizmoViewportProps):
 }
 //#endregion 🧭️WorldOrbitViewGizmoViewport
 
-/** @emoji 🎯️ Emits every navigation-cube selection so an unchanged spec can still restore a camera moved by orbit controls. */
+/** 🎯️ Emits every navigation-cube selection so an unchanged spec can still restore a camera moved by orbit controls. */
 function dispatchProjectionGizmoHit(hit: ProjectionGizmoHit, currentSpec: WorldProjectionSpec | undefined, onSpecSelect: (spec: WorldProjectionSpec) => void, onViewSelect?: (view: OrbitCameraViewId) => void): void {
   const spec = resolveProjectionGizmoSpec(hit, currentSpec);
   onSpecSelect(spec);
@@ -1654,7 +1654,7 @@ function dispatchProjectionGizmoHit(hit: ProjectionGizmoHit, currentSpec: WorldP
   }
 }
 
-/** @emoji 🧭️ CAD Z-up viewport navigation cube (faces / corners / center) anchored bottom-right above the folded projection pane. */
+/** 🧭️ CAD Z-up viewport navigation cube (faces / corners / center) anchored bottom-right above the folded projection pane. */
 export function WorldOrbitViewGizmo(props: WorldOrbitViewGizmoProps): ReactElement | null {
   const { size } = useThree();
   const [axisColors, setAxisColors] = reactHostPort.useState(() => resolveSpatialAxisColors());
@@ -1703,7 +1703,7 @@ interface WorldProjectionSnapAnim {
   holding: boolean;
 }
 
-/** @emoji 🎞️ Interpolates the orbit camera to a {@link WorldProjectionSpec} when `pendingSpec` is set — morphs pose AND the
+/** 🎞️ Interpolates the orbit camera to a {@link WorldProjectionSpec} when `pendingSpec` is set — morphs pose AND the
  * projection matrix itself (via {@link worldProjectionGoalMatrix} / {@link worldProjectionMorphMatrix}) over the same 280ms
  * tween, so perspective↔orthographic, FOV, oblique shear and two-point shift all interpolate instead of popping at remount. */
 export function WorldProjectionSnapDriver(props: WorldProjectionSnapDriverProps): null {
@@ -1814,7 +1814,7 @@ export interface WorldOrbitViewSnapDriverProps {
   readonly onViewSnap?: (view: OrbitCameraViewId, state: WorldCameraState) => void;
 }
 
-/** @emoji 🎞️ Interpolates the orbit camera to a named view when `pendingView` is set. */
+/** 🎞️ Interpolates the orbit camera to a named view when `pendingView` is set. */
 export function WorldOrbitViewSnapDriver(props: WorldOrbitViewSnapDriverProps): ReactElement {
   const pendingViewRef = reactHostPort.useRef<OrbitCameraViewId | null>(null);
   reactHostPort.useEffect(() => {
@@ -1851,12 +1851,12 @@ export interface WorldOrbitViewControlsProps {
   readonly onProjectionChange?: (projection: OrbitCameraProjection) => void;
   readonly onViewSnap?: (view: OrbitCameraViewId, state: WorldCameraState) => void;
   readonly onSpecSnap?: (spec: WorldProjectionSpec, state: WorldCameraState) => void;
-  /** @emoji 🎞️ Reports the unified pane-or-gizmo pending spec so the host can pre-mount {@link WorldProjectionRig}'s
+  /** 🎞️ Reports the unified pane-or-gizmo pending spec so the host can pre-mount {@link WorldProjectionRig}'s
    * curvilinear pass before the camera remount (see `pendingSpec` there). */
   readonly onPendingSpecChange?: (spec: WorldProjectionSpec | null) => void;
 }
 
-/** @emoji 🧭️ Bundles {@link WorldOrbitViewGizmo} and {@link WorldProjectionSnapDriver}. */
+/** 🧭️ Bundles {@link WorldOrbitViewGizmo} and {@link WorldProjectionSnapDriver}. */
 export function WorldOrbitViewControls(props: WorldOrbitViewControlsProps): ReactElement {
   const [internalPendingSpec, setInternalPendingSpec] = reactHostPort.useState<WorldProjectionSpec | null>(null);
   const pendingSpec = props.externalPendingSpec ?? internalPendingSpec;
@@ -1894,7 +1894,7 @@ export interface WorldProjectionModeOption {
   readonly active: boolean;
 }
 
-/** @emoji 🔀️ Non-spatial mode variants that sit beside the template tree (kept for callers that still want a flat list).
+/** 🔀️ Non-spatial mode variants that sit beside the template tree (kept for callers that still want a flat list).
  * Prefer {@link createWorldProjectionTemplates} / {@link WorldProjectionKindSwitch} for the canonical taxonomy. */
 export function worldProjectionModeOptions(spec: WorldProjectionSpec): readonly WorldProjectionModeOption[] {
   const mode = spec.mode;
@@ -1937,7 +1937,7 @@ export function worldProjectionModeOptions(spec: WorldProjectionSpec): readonly 
   }
 }
 
-/** @emoji 🌲️ Template-tree node id for the active *mode* (orientation is gizmo-owned and does not change selection). */
+/** 🌲️ Template-tree node id for the active *mode* (orientation is gizmo-owned and does not change selection). */
 export function worldProjectionTemplateSelectionId(spec: WorldProjectionSpec): string {
   switch (spec.mode.kind) {
     case "orthographic":
@@ -1957,7 +1957,7 @@ export function worldProjectionTemplateSelectionId(spec: WorldProjectionSpec): s
   }
 }
 
-/** @emoji 🌲️ Applies a template-tree *mode* while preserving the current gizmo orientation. */
+/** 🌲️ Applies a template-tree *mode* while preserving the current gizmo orientation. */
 export function worldProjectionTemplateApplySpec(templateSpec: WorldProjectionSpec, currentSpec?: WorldProjectionSpec): WorldProjectionSpec {
   return {
     mode: templateSpec.mode,
@@ -1965,7 +1965,7 @@ export function worldProjectionTemplateApplySpec(templateSpec: WorldProjectionSp
   };
 }
 
-/** @emoji 🌲️ Maps {@link createWorldProjectionTemplates} into selectable {@link TreeDataItem}s for the live projection pane.
+/** 🌲️ Maps {@link createWorldProjectionTemplates} into selectable {@link TreeDataItem}s for the live projection pane.
  * `id` is the OWNING pane's element id: `TreeSection`/`TreeItem` render their item id as the row's DOM `id`, and one
  * world surface is mounted per open window instance, so a bare `template.id` puts `orthographic` (and every sibling)
  * in the document once per pane. Every row id is therefore a {@link childElementId} of the pane. */
@@ -1981,16 +1981,16 @@ export function worldProjectionSwitchTreeItems(id: string, templates: readonly W
 }
 
 export interface WorldProjectionKindSwitchProps {
-  /** @emoji 🪪️ Element id of the pane this switch is mounted in — qualifies every row id per window instance. */
+  /** 🪪️ Element id of the pane this switch is mounted in — qualifies every row id per window instance. */
   readonly id: string;
   readonly spec: WorldProjectionSpec;
   readonly onSpecChange: (spec: WorldProjectionSpec) => void;
   readonly className?: string;
-  /** @emoji 🪟️ `"pane"` (default) renders a transparent tree inside {@link Pane} body — same silhouette as window options. `"ribbon"` keeps {@link floatingRibbonSurfaceClass} for standalone window-level overlays. */
+  /** 🪟️ `"pane"` (default) renders a transparent tree inside {@link Pane} body — same silhouette as window options. `"ribbon"` keeps {@link floatingRibbonSurfaceClass} for standalone window-level overlays. */
   readonly surface?: "pane" | "ribbon";
 }
 
-/** @emoji 🌲️ Projection-mode switcher — same Parallel/Perspective taxonomy as {@link createWorldProjectionTemplates}; cube owns spatial angles. */
+/** 🌲️ Projection-mode switcher — same Parallel/Perspective taxonomy as {@link createWorldProjectionTemplates}; cube owns spatial angles. */
 export function WorldProjectionKindSwitch(props: WorldProjectionKindSwitchProps): ReactElement {
   const surface = props.surface ?? "pane";
   const shellClass =
@@ -2010,7 +2010,7 @@ export function WorldProjectionKindSwitch(props: WorldProjectionKindSwitchProps)
 }
 
 export interface WorldOrbitProjectionSwitchProps {
-  /** @emoji 🪪️ Element id of the pane this switch is mounted in — see {@link WorldProjectionKindSwitchProps.id}. */
+  /** 🪪️ Element id of the pane this switch is mounted in — see {@link WorldProjectionKindSwitchProps.id}. */
   readonly id: string;
   readonly projection: OrbitCameraProjection;
   readonly onProjectionChange: (projection: OrbitCameraProjection) => void;
@@ -2019,7 +2019,7 @@ export interface WorldOrbitProjectionSwitchProps {
   readonly onSpecChange?: (spec: WorldProjectionSpec) => void;
 }
 
-/** @emoji 🔀️ Orthographic / perspective toggle, or full {@link WorldProjectionKindSwitch} when `spec` is provided. */
+/** 🔀️ Orthographic / perspective toggle, or full {@link WorldProjectionKindSwitch} when `spec` is provided. */
 export function WorldOrbitProjectionSwitch(props: WorldOrbitProjectionSwitchProps): ReactElement {
   if (props.spec && props.onSpecChange) {
     return <WorldProjectionKindSwitch id={props.id} spec={props.spec} onSpecChange={props.onSpecChange} className={props.className} />;
@@ -2061,7 +2061,7 @@ function orbitCameraViewTemplateBranch(controllerId: string, command: string, id
   return { id, label, controllerId, command, args: { view }, children };
 }
 
-/** @emoji 🪟️ Builds the orthographic/perspective window-template tree for the display panel. */
+/** 🪟️ Builds the orthographic/perspective window-template tree for the display panel. */
 export function createOrbitCameraViewTemplates(config: CreateOrbitCameraViewTemplatesConfig): readonly OrbitCameraViewTemplateDescriptor[] {
   const command = config.command ?? ORBIT_CAMERA_VIEW_COMMAND;
   if (config.views) {
@@ -2110,7 +2110,7 @@ function orbitLayoutSingle(view: OrbitCameraViewId, group: string): OrbitCameraV
   };
 }
 
-/** @emoji 🧭️ Catalog of reusable orbit-view window arrangements for named layouts. */
+/** 🧭️ Catalog of reusable orbit-view window arrangements for named layouts. */
 export function createOrbitCameraViewLayoutDescriptors(): readonly OrbitCameraViewLayoutDescriptor[] {
   const singles2d = (["top", "bottom", "front", "back", "right", "left"] as const).map((view) => orbitLayoutSingle(view, "2D"));
   const singles3d = (["isometricNe", "isometricNw", "isometricSe", "isometricSw", "perspective", "twoPointPerspective"] as const).map((view) => orbitLayoutSingle(view, "3D"));
@@ -2202,7 +2202,7 @@ export function createOrbitCameraViewLayoutDescriptors(): readonly OrbitCameraVi
   ];
 }
 
-/** @emoji 📷️ Applies an orbit view preset when `seedKey` changes (owned-camera canvases). */
+/** 📷️ Applies an orbit view preset when `seedKey` changes (owned-camera canvases). */
 export function WorldOrbitCameraViewApplier(props: { readonly view: OrbitCameraViewId; readonly seedKey: string | number; readonly projectionOverride?: OrbitCameraProjection }): ReactElement {
   const { camera } = useThree();
   const controls = useThree((s) => s.controls as OrbitControlsTarget | null);
@@ -2217,7 +2217,7 @@ export function WorldOrbitCameraViewApplier(props: { readonly view: OrbitCameraV
   return <WorldOrbitCameraViewRig state={state} seedKey={props.seedKey} />;
 }
 
-/** @emoji 📷️ Seeds orbit camera + target when `seedKey` changes (fixture presets, display templates). */
+/** 📷️ Seeds orbit camera + target when `seedKey` changes (fixture presets, display templates). */
 export function OrbitCameraViewSeed(props: { readonly camera: Camera | null; readonly state: WorldCameraState; readonly seedKey: string | number }): null {
   const controls = useThree((s) => s.controls as OrbitControlsTarget | null);
   const lastSeedKey = reactHostPort.useRef<string | number | null>(null);
@@ -2232,7 +2232,7 @@ export function OrbitCameraViewSeed(props: { readonly camera: Camera | null; rea
   return null;
 }
 
-/** @emoji 📷️ Mounts perspective/orthographic camera + seeds orbit state for display templates. */
+/** 📷️ Mounts perspective/orthographic camera + seeds orbit state for display templates. */
 export function WorldOrbitCameraViewRig(props: { readonly state: WorldCameraState; readonly seedKey: string | number; readonly onCamera?: (camera: Camera | null) => void; readonly perspectiveFov?: number }): ReactElement {
   const projection = props.state.projection ?? "perspective";
   const up = cadVec3ToThree(props.state.up ?? ORBIT_CAMERA_Z_UP);
@@ -2249,12 +2249,12 @@ export function WorldOrbitCameraViewRig(props: { readonly state: WorldCameraStat
   );
 }
 
-/** @emoji 🔑️ Stable apply token for {@link WorldOrbitCameraViewRigSeed}; keyed by seed + projection, not camera uuid remounts. */
+/** 🔑️ Stable apply token for {@link WorldOrbitCameraViewRigSeed}; keyed by seed + projection, not camera uuid remounts. */
 export function orbitCameraViewRigApplyToken(seedKey: string | number, projection: OrbitCameraProjection = "perspective"): string {
   return `${seedKey}:${projection}`;
 }
 
-/** @emoji 🔑️ Whether a seed, camera, or controls identity needs the owned pose applied. */
+/** 🔑️ Whether a seed, camera, or controls identity needs the owned pose applied. */
 export function shouldApplyOrbitCameraViewRigSeed(
   lastToken: string | null,
   nextToken: string,
@@ -2302,7 +2302,7 @@ function WorldOrbitCameraViewRigSeed(props: { readonly state: WorldCameraState; 
 // #endregion 📷️OrbitCameraView
 
 // #region 📐️WorldProjection
-/** @emoji 📐️ Parallel vs. perspective camera family a {@link WorldProjectionSpec} belongs to. */
+/** 📐️ Parallel vs. perspective camera family a {@link WorldProjectionSpec} belongs to. */
 export type WorldProjectionFamily = "parallel" | "perspective";
 
 export type WorldOrthographicViewId = "plan" | "top" | "bottom" | "front" | "back" | "left" | "right";
@@ -2312,13 +2312,13 @@ export type WorldAxonometricHemisphere = "upper" | "lower";
 export type WorldObliqueVariant = "cabinet" | "cavalier" | "military";
 export type WorldCurvilinearMapping = "fisheye" | "panini";
 
-/** @emoji 🧭️ Spatial look the navigation cube owns — cardinal faces, axonometric corners, or free 3D. */
+/** 🧭️ Spatial look the navigation cube owns — cardinal faces, axonometric corners, or free 3D. */
 export type WorldProjectionOrientation =
   | { readonly type: "cardinal"; readonly view: WorldOrthographicViewId }
   | { readonly type: "corner"; readonly quadrant: WorldAxonometricQuadrant; readonly hemisphere?: WorldAxonometricHemisphere }
   | { readonly type: "free" };
 
-/** @emoji 📐️ Projection *mode* the pane owns (kind + non-spatial params). Composes with {@link WorldProjectionOrientation}. */
+/** 📐️ Projection *mode* the pane owns (kind + non-spatial params). Composes with {@link WorldProjectionOrientation}. */
 export type WorldProjectionMode =
   | { readonly kind: "orthographic" }
   | { readonly kind: "axonometric"; readonly variant: WorldAxonometricVariant; readonly angleA: number; readonly angleB: number }
@@ -2328,7 +2328,7 @@ export type WorldProjectionMode =
   | { readonly kind: "threePoint"; readonly fov: number }
   | { readonly kind: "curvilinear"; readonly fov: number; readonly strength: number; readonly mapping: WorldCurvilinearMapping };
 
-/** @emoji 📐️ Full classical projection taxonomy as mode ⊗ orientation — every mode works with every gizmo view.
+/** 📐️ Full classical projection taxonomy as mode ⊗ orientation — every mode works with every gizmo view.
  * See https://en.wikipedia.org/wiki/Axonometric_projection and https://en.wikipedia.org/wiki/Oblique_projection. */
 export type WorldProjectionSpec = {
   readonly mode: WorldProjectionMode;
@@ -2337,27 +2337,27 @@ export type WorldProjectionSpec = {
 
 export type WorldProjectionKind = WorldProjectionMode["kind"];
 
-/** @emoji 📡️ Command name products handle to apply a {@link WorldProjectionSpec}. */
+/** 📡️ Command name products handle to apply a {@link WorldProjectionSpec}. */
 export const WORLD_PROJECTION_COMMAND = "setProjection";
 
-/** @emoji 📐️ Kind discriminator for a composed {@link WorldProjectionSpec}. */
+/** 📐️ Kind discriminator for a composed {@link WorldProjectionSpec}. */
 export function worldProjectionModeKind(spec: WorldProjectionSpec): WorldProjectionKind {
   return spec.mode.kind;
 }
 
-/** @emoji 📐️ Perspective FOV when the active mode carries one. */
+/** 📐️ Perspective FOV when the active mode carries one. */
 export function worldProjectionModeFov(spec: WorldProjectionSpec): number | undefined {
   const mode = spec.mode;
   return mode.kind === "onePoint" || mode.kind === "twoPoint" || mode.kind === "threePoint" || mode.kind === "curvilinear" ? mode.fov : undefined;
 }
 
-/** @emoji 📐️ Effective `PerspectiveCamera.fov` for a spec — curvilinear is capped at 160° (matches {@link WorldCurvilinearPass}'s capture), others default 50°. */
+/** 📐️ Effective `PerspectiveCamera.fov` for a spec — curvilinear is capped at 160° (matches {@link WorldCurvilinearPass}'s capture), others default 50°. */
 export function worldProjectionPerspectiveFov(spec: WorldProjectionSpec): number {
   const fov = worldProjectionModeFov(spec);
   return spec.mode.kind === "curvilinear" ? Math.min(fov ?? 120, 160) : (fov ?? 50);
 }
 
-/** @emoji 📐️ Parallel family = orthographic camera (Orthographic/Axonometric/Oblique); everything else is perspective. */
+/** 📐️ Parallel family = orthographic camera (Orthographic/Axonometric/Oblique); everything else is perspective. */
 export function worldProjectionFamily(spec: WorldProjectionSpec | undefined): WorldProjectionFamily {
   if (!spec) {
     return "perspective";
@@ -2366,7 +2366,7 @@ export function worldProjectionFamily(spec: WorldProjectionSpec | undefined): Wo
   return kind === "orthographic" || kind === "axonometric" || kind === "oblique" ? "parallel" : "perspective";
 }
 
-/** @emoji 📐️ Baseline mode + default orientation for a freshly-selected projection kind. */
+/** 📐️ Baseline mode + default orientation for a freshly-selected projection kind. */
 export function worldProjectionDefaults(kind: WorldProjectionKind): WorldProjectionSpec {
   switch (kind) {
     case "orthographic":
@@ -2387,11 +2387,11 @@ export function worldProjectionDefaults(kind: WorldProjectionKind): WorldProject
 }
 
 const WORLD_PROJECTION_DEFAULT_DISTANCE = 600;
-/** @emoji 📷️ Fallback canvas size when framing a projection before the live viewport is known. */
+/** 📷️ Fallback canvas size when framing a projection before the live viewport is known. */
 const WORLD_PROJECTION_FRAME_FALLBACK_VIEWPORT = 640;
-/** @emoji 📷️ Default padding around content when framing a projection pane. */
+/** 📷️ Default padding around content when framing a projection pane. */
 const WORLD_PROJECTION_FRAME_PADDING = 1.35;
-/** @emoji 🖼️ Authored width for a reference plane that omits `widthWorld`. */
+/** 🖼️ Authored width for a reference plane that omits `widthWorld`. */
 export const WORLD_REFERENCE_DEFAULT_WIDTH = 10;
 
 export type WorldSceneContentBounds = {
@@ -2399,7 +2399,7 @@ export type WorldSceneContentBounds = {
   readonly halfExtent: Vec3;
 };
 
-/** @emoji 📷️ Axis-aligned bounds of instances and visible reference planes, for framing projection panes. */
+/** 📷️ Axis-aligned bounds of instances and visible reference planes, for framing projection panes. */
 export function worldSceneContentBounds(
   instances: readonly { readonly position?: Vec3; readonly x?: number; readonly y?: number; readonly z?: number }[],
   references: readonly { readonly origin: Vec3; readonly widthWorld?: number; readonly hidden?: boolean }[] = [],
@@ -2438,14 +2438,14 @@ export function worldSceneContentBounds(
   };
 }
 
-/** @emoji 📷️ Stable key for {@link WorldSceneContentBounds} — used to re-frame projection panes when fill (or any edit) expands the scene. */
+/** 📷️ Stable key for {@link WorldSceneContentBounds} — used to re-frame projection panes when fill (or any edit) expands the scene. */
 export function worldSceneContentBoundsKey(bounds: WorldSceneContentBounds | null | undefined): string | null {
   if (!bounds) return null;
   const round = (value: number) => Math.round(value * 1e3) / 1e3;
   return `${round(bounds.center[0])},${round(bounds.center[1])},${round(bounds.center[2])}:${round(bounds.halfExtent[0])},${round(bounds.halfExtent[1])},${round(bounds.halfExtent[2])}`;
 }
 
-/** @emoji 📷️ Cardinal face look direction (Z-up CAD). */
+/** 📷️ Cardinal face look direction (Z-up CAD). */
 export function worldProjectionCardinalLook(view: WorldOrthographicViewId): { readonly dir: Vec3; readonly up: Vec3 } {
   switch (view) {
     case "bottom":
@@ -2463,7 +2463,7 @@ export function worldProjectionCardinalLook(view: WorldOrthographicViewId): { re
   }
 }
 
-/** @emoji 📷️ Corner look from axonometric elevation/azimuth (also used as spatial corner for non-axo modes). */
+/** 📷️ Corner look from axonometric elevation/azimuth (also used as spatial corner for non-axo modes). */
 export function worldProjectionCornerLook(
   quadrant: WorldAxonometricQuadrant,
   hemisphere: WorldAxonometricHemisphere | undefined,
@@ -2481,7 +2481,7 @@ export function worldProjectionCornerLook(
   return { dir, up: hemi === "lower" ? [0, 0, -1] : [0, 0, 1] };
 }
 
-/** @emoji 📷️ Resolves look direction from mode ⊗ orientation — every orientation works with every mode. */
+/** 📷️ Resolves look direction from mode ⊗ orientation — every orientation works with every mode. */
 export function worldProjectionOrientationLook(spec: WorldProjectionSpec): { readonly dir: Vec3; readonly up: Vec3 } {
   const { mode, orientation } = spec;
   switch (orientation.type) {
@@ -2511,7 +2511,7 @@ export function worldProjectionOrientationLook(spec: WorldProjectionSpec): { rea
   }
 }
 
-/** @emoji 📷️ Half-width/height of `bounds` in the projection's view plane (CAD axes). */
+/** 📷️ Half-width/height of `bounds` in the projection's view plane (CAD axes). */
 export function worldProjectionViewHalfExtent(spec: WorldProjectionSpec, bounds: WorldSceneContentBounds): { readonly halfWidth: number; readonly halfHeight: number } {
   const [hx, hy, hz] = bounds.halfExtent;
   if (spec.orientation.type === "cardinal") {
@@ -2533,7 +2533,7 @@ export function worldProjectionViewHalfExtent(spec: WorldProjectionSpec, bounds:
   return { halfWidth: span, halfHeight: span };
 }
 
-/** @emoji 📷️ Orthographic zoom that fits content in a drei/R3F pixel-sized frustum (`left = -width/2`, …). */
+/** 📷️ Orthographic zoom that fits content in a drei/R3F pixel-sized frustum (`left = -width/2`, …). */
 export function worldProjectionOrthoZoom(halfWidth: number, halfHeight: number, viewportWidth: number, viewportHeight: number, padding = WORLD_PROJECTION_FRAME_PADDING): number {
   const paddedHalfW = Math.max(halfWidth * padding, 0.5);
   const paddedHalfH = Math.max(halfHeight * padding, 0.5);
@@ -2542,7 +2542,7 @@ export function worldProjectionOrthoZoom(halfWidth: number, halfHeight: number, 
   return Math.max(Math.min(zoomX, zoomY), 1e-3);
 }
 
-/** @emoji 📷️ Frames a projection to scene content — centers the target and sets viewport-aware orthographic zoom. */
+/** 📷️ Frames a projection to scene content — centers the target and sets viewport-aware orthographic zoom. */
 export function frameWorldProjectionPose(
   spec: WorldProjectionSpec,
   bounds: WorldSceneContentBounds,
@@ -2560,7 +2560,7 @@ export function frameWorldProjectionPose(
   return computeWorldProjectionPose(spec, { target: bounds.center, distance, zoom });
 }
 
-/** @emoji 📷️ Computes a Z-up camera pose for mode ⊗ orientation — look from orientation, camera family from mode. */
+/** 📷️ Computes a Z-up camera pose for mode ⊗ orientation — look from orientation, camera family from mode. */
 export function computeWorldProjectionPose(spec: WorldProjectionSpec, options: { readonly target: Vec3; readonly distance?: number; readonly zoom?: number }): WorldCameraState {
   const distance = options.distance ?? WORLD_PROJECTION_DEFAULT_DISTANCE;
   const target = options.target;
@@ -2577,7 +2577,7 @@ export function computeWorldProjectionPose(spec: WorldProjectionSpec, options: {
   };
 }
 
-/** @emoji 🔒️ Orbit-interaction constraints implied by a projection — drafting-locked orientations and modes disable rotation; two-point keeps the horizon level when free. */
+/** 🔒️ Orbit-interaction constraints implied by a projection — drafting-locked orientations and modes disable rotation; two-point keeps the horizon level when free. */
 export function worldProjectionOrbitConstraints(spec: WorldProjectionSpec | undefined): { readonly rotate: boolean; readonly minPolar?: number; readonly maxPolar?: number } {
   if (!spec) {
     return { rotate: true };
@@ -2594,7 +2594,7 @@ export function worldProjectionOrbitConstraints(spec: WorldProjectionSpec | unde
   return { rotate: true };
 }
 
-/** @emoji 🎛️ Drafting plane from cardinal orientation — `undefined` for corner/free 3D. */
+/** 🎛️ Drafting plane from cardinal orientation — `undefined` for corner/free 3D. */
 export function worldProjectionGumballPlane(spec: WorldProjectionSpec | undefined): GumballPlaneId | undefined {
   if (!spec || spec.orientation.type !== "cardinal") return undefined;
   switch (spec.orientation.view) {
@@ -2609,7 +2609,7 @@ export function worldProjectionGumballPlane(spec: WorldProjectionSpec | undefine
   }
 }
 
-/** @emoji 🎛️ Drafting plane for a legacy {@link OrbitCameraViewId} preset (CAD panes that still seed via orbit views). */
+/** 🎛️ Drafting plane for a legacy {@link OrbitCameraViewId} preset (CAD panes that still seed via orbit views). */
 export function orbitCameraViewGumballPlane(view: OrbitCameraViewId | undefined): GumballPlaneId | undefined {
   if (!view) return undefined;
   switch (view) {
@@ -2631,14 +2631,14 @@ export function orbitCameraViewGumballPlane(view: OrbitCameraViewId | undefined)
   }
 }
 
-/** @emoji 📷️ Applies a projection kind/variant switch, keeping the current pose when the caller supplies one
+/** 📷️ Applies a projection kind/variant switch, keeping the current pose when the caller supplies one
  * (pure parameter tweaks like angle/depth/fov never move the camera — only the matrix driver re-shears). */
 export function applyWorldProjectionToCameraState(state: WorldCameraState, spec: WorldProjectionSpec): WorldCameraState {
   const family = worldProjectionFamily(spec);
   return { ...state, projection: family === "parallel" ? "orthographic" : "perspective", projectionSpec: spec, zoom: family === "parallel" ? (state.zoom === 1 ? 50 : state.zoom) : state.zoom };
 }
 
-/** @emoji 🧭️ Structural equality for {@link WorldProjectionOrientation}. */
+/** 🧭️ Structural equality for {@link WorldProjectionOrientation}. */
 export function worldProjectionOrientationsEqual(a: WorldProjectionOrientation, b: WorldProjectionOrientation): boolean {
   return JSON.stringify(a) === JSON.stringify(b);
 }
@@ -2647,18 +2647,18 @@ function halfFovTan(fovDeg: number): number {
   return Math.tan((fovDeg * Math.PI) / 360);
 }
 
-/** @emoji 📐️ Orthographic zoom (pixels-per-world-unit in a drei pixel frustum) reproducing a perspective camera's apparent
+/** 📐️ Orthographic zoom (pixels-per-world-unit in a drei pixel frustum) reproducing a perspective camera's apparent
  * scale at `distance` from the target, so a persp→ortho snap doesn't jump to the legacy zoom-50 default. */
 export function worldProjectionMatchedOrthoZoom(fovDeg: number, distance: number, viewportHeight: number): number {
   return viewportHeight / (2 * Math.max(distance, ORBIT_CAMERA_VIEW_EPSILON) * halfFovTan(fovDeg));
 }
 
-/** @emoji 📐️ Perspective orbit distance reproducing an orthographic zoom's apparent scale — inverse of {@link worldProjectionMatchedOrthoZoom}; used by automatic LOD so ortho scroll retunes the grid. */
+/** 📐️ Perspective orbit distance reproducing an orthographic zoom's apparent scale — inverse of {@link worldProjectionMatchedOrthoZoom}; used by automatic LOD so ortho scroll retunes the grid. */
 export function worldProjectionMatchedPerspectiveDistance(fovDeg: number, zoom: number, viewportHeight: number): number {
   return Math.max(viewportHeight, 1) / (2 * Math.max(zoom, 1e-6) * halfFovTan(fovDeg));
 }
 
-/** @emoji 🪞️ Oblique receding-axis shear matrix — extracted from {@link WorldProjectionMatrixDriver} so
+/** 🪞️ Oblique receding-axis shear matrix — extracted from {@link WorldProjectionMatrixDriver} so
  * {@link worldProjectionGoalMatrix} and the live per-frame shear share one formula; `strength` ramps the shear 0→1. */
 export function worldObliqueShearMatrix(mode: Extract<WorldProjectionMode, { kind: "oblique" }>, strength = 1): Matrix4 {
   const angle = mode.angle * (Math.PI / 180);
@@ -2670,7 +2670,7 @@ export function worldObliqueShearMatrix(mode: Extract<WorldProjectionMode, { kin
   return shear;
 }
 
-/** @emoji 📐️ Destination projection matrix for `spec` at the live viewport size — the "goal" a projection-matrix morph
+/** 📐️ Destination projection matrix for `spec` at the live viewport size — the "goal" a projection-matrix morph
  * lerps toward each frame. Built from real three.js camera classes so it matches exactly what mounting that camera would
  * produce (drei's `OrthographicCamera`/`PerspectiveCamera` seed left/right/top/bottom or aspect the same way). */
 export function worldProjectionGoalMatrix(spec: WorldProjectionSpec, options: { readonly zoom: number; readonly fov?: number; readonly viewport: { readonly width: number; readonly height: number }; readonly near?: number; readonly far?: number }): Matrix4 {
@@ -2695,7 +2695,7 @@ export function worldProjectionGoalMatrix(spec: WorldProjectionSpec, options: { 
   return matrix;
 }
 
-/** @emoji 🎞️ Element-wise projection-matrix lerp — valid across every pair this engine morphs between: persp↔ortho
+/** 🎞️ Element-wise projection-matrix lerp — valid across every pair this engine morphs between: persp↔ortho
  * lerps the w-row (`-z ↔ 1`, the standard projective blend), persp↔persp is cot-space FOV interpolation, and
  * oblique-shear/two-point-shift elements ramp linearly since they're already linear terms of the base matrix. */
 export function worldProjectionMorphMatrix(from: Matrix4, to: Matrix4, t: number): Matrix4 {
@@ -2706,7 +2706,7 @@ export function worldProjectionMorphMatrix(from: Matrix4, to: Matrix4, t: number
   return result;
 }
 
-/** @emoji 🎞️ Destination pose for a projection snap — preserves eye exactly when only mode changes (matches
+/** 🎞️ Destination pose for a projection snap — preserves eye exactly when only mode changes (matches
  * {@link applyWorldProjectionToCameraState}'s "pure parameter tweaks never move the camera" invariant); re-looks only
  * when orientation changes. When `live.viewport` is supplied, a persp→ortho mode-only switch picks a zoom that matches
  * the live apparent scale via {@link worldProjectionMatchedOrthoZoom} instead of the legacy zoom-50 default — this only
@@ -2750,7 +2750,7 @@ export function worldProjectionTransitionPose(
   return computeWorldProjectionPose(pendingSpec, { target: live.target, distance, zoom });
 }
 
-/** @emoji 🧭️ Maps a projection-gizmo face to an orthographic view id. */
+/** 🧭️ Maps a projection-gizmo face to an orthographic view id. */
 export function projectionGizmoFaceToOrthographicView(axis: "x" | "y" | "z", sign: 1 | -1): WorldOrthographicViewId {
   if (axis === "x") {
     return sign > 0 ? "right" : "left";
@@ -2761,7 +2761,7 @@ export function projectionGizmoFaceToOrthographicView(axis: "x" | "y" | "z", sig
   return sign > 0 ? "top" : "bottom";
 }
 
-/** @emoji 🧭️ Resolves a navigation-cube hit into orientation only — never changes projection mode.
+/** 🧭️ Resolves a navigation-cube hit into orientation only — never changes projection mode.
  * Faces → cardinal views; corners → quadrant/hemisphere; center → free 3D. */
 export function resolveProjectionGizmoSpec(hit: ProjectionGizmoHit, currentSpec?: WorldProjectionSpec): WorldProjectionSpec {
   const base = currentSpec ?? worldProjectionDefaults("threePoint");
@@ -2775,7 +2775,7 @@ export function resolveProjectionGizmoSpec(hit: ProjectionGizmoHit, currentSpec?
   }
 }
 
-/** @emoji 🧭️ Maps a direction vector to a navigation-cube hit (face, corner, or center). */
+/** 🧭️ Maps a direction vector to a navigation-cube hit (face, corner, or center). */
 export function resolveProjectionGizmoHitFromDirection(direction: { readonly x: number; readonly y: number; readonly z: number }): ProjectionGizmoHit {
   const absX = Math.abs(direction.x);
   const absY = Math.abs(direction.y);
@@ -2798,7 +2798,7 @@ export function resolveProjectionGizmoHitFromDirection(direction: { readonly x: 
   return { type: "face", axis: dominant.axis, sign: dominant.sign };
 }
 
-/** @emoji 🧭️ Converts a legacy {@link OrbitCameraViewId} into a {@link WorldProjectionSpec}. */
+/** 🧭️ Converts a legacy {@link OrbitCameraViewId} into a {@link WorldProjectionSpec}. */
 export function orbitViewToWorldProjectionSpec(view: OrbitCameraViewId): WorldProjectionSpec {
   switch (view) {
     case "top":
@@ -2832,7 +2832,7 @@ export function orbitViewToWorldProjectionSpec(view: OrbitCameraViewId): WorldPr
   }
 }
 
-/** @emoji 🧭️ Best-effort reverse of {@link orbitViewToWorldProjectionSpec} for legacy orbit callbacks. */
+/** 🧭️ Best-effort reverse of {@link orbitViewToWorldProjectionSpec} for legacy orbit callbacks. */
 export function worldProjectionSpecToOrbitView(spec: WorldProjectionSpec): OrbitCameraViewId | null {
   if (spec.orientation.type === "cardinal") {
     return spec.orientation.view === "plan" ? "top" : spec.orientation.view;
@@ -2853,7 +2853,7 @@ export function worldProjectionSpecToOrbitView(spec: WorldProjectionSpec): Orbit
   return "perspective";
 }
 
-/** @emoji 🔀️ Switches projection *mode* while preserving gizmo orientation (and FOV when possible). */
+/** 🔀️ Switches projection *mode* while preserving gizmo orientation (and FOV when possible). */
 export function worldProjectionKindSwitchSpec(kind: WorldProjectionKind, currentSpec?: WorldProjectionSpec): WorldProjectionSpec {
   const next = worldProjectionDefaults(kind);
   const orientation = currentSpec?.orientation ?? next.orientation;
@@ -2885,7 +2885,7 @@ export function worldProjectionKindSwitchSpec(kind: WorldProjectionKind, current
   return { mode: next.mode, orientation };
 }
 
-/** @emoji 📷️ Mounts the camera for a {@link WorldProjectionSpec} and the matrix/curvilinear post-processing it needs. */
+/** 📷️ Mounts the camera for a {@link WorldProjectionSpec} and the matrix/curvilinear post-processing it needs. */
 export function WorldProjectionRig(props: { readonly spec: WorldProjectionSpec; readonly state: WorldCameraState; readonly seedKey: string | number; readonly onCamera?: (camera: Camera | null) => void; readonly pendingSpec?: WorldProjectionSpec | null }): ReactElement {
   const family = worldProjectionFamily(props.spec);
   const up = cadVec3ToThree(props.state.up ?? ORBIT_CAMERA_Z_UP);
@@ -2908,7 +2908,7 @@ export function WorldProjectionRig(props: { readonly spec: WorldProjectionSpec; 
   );
 }
 
-/** @emoji 📷️ Applies a projection preset when `seedKey` changes (owned-camera canvases) — mirrors {@link WorldOrbitCameraViewApplier}. */
+/** 📷️ Applies a projection preset when `seedKey` changes (owned-camera canvases) — mirrors {@link WorldOrbitCameraViewApplier}. */
 export function WorldProjectionApplier(props: { readonly spec: WorldProjectionSpec; readonly seedKey: string | number }): ReactElement {
   const { camera } = useThree();
   const controls = useThree((s) => s.controls as OrbitControlsTarget | null);
@@ -2922,7 +2922,7 @@ export function WorldProjectionApplier(props: { readonly spec: WorldProjectionSp
   return <WorldProjectionRig spec={props.spec} state={state} seedKey={props.seedKey} />;
 }
 
-/** @emoji 🪞️ Post-multiplies the oblique receding-axis shear or two-point vertical lens-shift onto the active
+/** 🪞️ Post-multiplies the oblique receding-axis shear or two-point vertical lens-shift onto the active
  * camera's projection matrix every frame (after recomputing the pristine matrix, so resize/zoom never compounds
  * the shear) and refreshes `projectionMatrixInverse` — required because r3f raycasting/picking reads the inverse.
  * Defers to {@link WorldProjectionSnapDriver} while a projection morph is in flight (`morphRef.current`), since the
@@ -2947,7 +2947,7 @@ function WorldProjectionMatrixDriver(props: { readonly mode: Extract<WorldProjec
   return null;
 }
 
-/** @emoji 🐟️ Remaps a pointer NDC coordinate through the inverse curvilinear radius mapping so raycasting against
+/** 🐟️ Remaps a pointer NDC coordinate through the inverse curvilinear radius mapping so raycasting against
  * the exact (undistorted) capture-space render stays pixel-accurate under fisheye/panini distortion. */
 export function worldCurvilinearUnproject(ndc: readonly [number, number], mode: Extract<WorldProjectionMode, { kind: "curvilinear" }>, aspect = 1): readonly [number, number] {
   const halfFov = (Math.min(mode.fov, 160) * (Math.PI / 180)) / 2;
@@ -2971,7 +2971,7 @@ const WORLD_CURVILINEAR_VERTEX_SHADER = `
   }
 `;
 
-/** @emoji 🐟️ Fisheye/panini remap blit — samples the linear capture and applies Three's output color-space convert. */
+/** 🐟️ Fisheye/panini remap blit — samples the linear capture and applies Three's output color-space convert. */
 export const WORLD_CURVILINEAR_FRAGMENT_SHADER = `
   uniform sampler2D tCapture;
   uniform float uFov;
@@ -3003,7 +3003,7 @@ export const WORLD_CURVILINEAR_FRAGMENT_SHADER = `
   }
 `;
 
-/** @emoji 🐟️ Capture-target defaults for the curvilinear blit: linear working-space storage, linear filtering
+/** 🐟️ Capture-target defaults for the curvilinear blit: linear working-space storage, linear filtering
  * (fisheye UV warp must interpolate), half-float precision (same as pmndrs/drei `RenderCubeTexture`), sized by the
  * caller at drawing-buffer resolution. Not drei `<Fisheye>` — that component portals children into a cubemap sphere
  * and has no FOV/strength/panini; our taxonomy needs a sibling planar remap pass instead. */
@@ -3015,7 +3015,7 @@ export const WORLD_CURVILINEAR_CAPTURE_TARGET_OPTIONS = {
   colorSpace: LinearSRGBColorSpace,
 } as const;
 
-/** @emoji 🐟️ Wide-FOV planar capture (capped at 160°, exact and material-agnostic below full 180°) remapped through
+/** 🐟️ Wide-FOV planar capture (capped at 160°, exact and material-agnostic below full 180°) remapped through
  * a fullscreen fisheye/panini shader — chosen over pmndrs/drei `<Fisheye>` / a 6-face cubemap unwrap because it needs
  * one extra render target instead of six, keeps orbit/gizmo chrome undistorted as siblings, supports strength+panini,
  * and the taxonomy never promises >=180° coverage. */
@@ -3113,7 +3113,7 @@ function worldProjectionTemplateBranch(controllerId: string, command: string, id
   return { id, label, iconId, controllerId, command, args: { spec }, children };
 }
 
-/** @emoji 🪟️ Builds the projection-mode taxonomy tree (no Top/Front — those are gizmo orientations):
+/** 🪟️ Builds the projection-mode taxonomy tree (no Top/Front — those are gizmo orientations):
  * `Parallel > Orthographic | Axonometric (Isometric/Dimetric/Trimetric) | Oblique (Cabinet/Cavalier/Military)`
  * and `Perspective > 1-Point/2-Point/3-Point/Curvilinear`. */
 export function createWorldProjectionTemplates(config: CreateWorldProjectionTemplatesConfig): readonly WorldProjectionTemplateDescriptor[] {
@@ -3174,13 +3174,13 @@ export function createWorldProjectionTemplates(config: CreateWorldProjectionTemp
 
 const WORLD_PROJECTION_TEMPLATE_PREFIX = "world-projection:";
 
-/** @emoji 🪟️ Encodes a {@link WorldProjectionSpec} into a `WindowTemplateDropPayload.templateId` string,
+/** 🪟️ Encodes a {@link WorldProjectionSpec} into a `WindowTemplateDropPayload.templateId` string,
  * for the Display "Windows" drag palette to seed a freshly-opened pane's initial camera. */
 export function encodeWorldProjectionTemplateId(spec: WorldProjectionSpec): string {
   return `${WORLD_PROJECTION_TEMPLATE_PREFIX}${JSON.stringify(spec)}`;
 }
 
-/** @emoji 🪟️ Inverse of {@link encodeWorldProjectionTemplateId}; `null` for anything else (including `undefined`). */
+/** 🪟️ Inverse of {@link encodeWorldProjectionTemplateId}; `null` for anything else (including `undefined`). */
 export function decodeWorldProjectionTemplateId(templateId: string | undefined): WorldProjectionSpec | null {
   if (!templateId || !templateId.startsWith(WORLD_PROJECTION_TEMPLATE_PREFIX)) {
     return null;
@@ -3197,7 +3197,7 @@ const WORLD_ORTHOGRAPHIC_VIEW_LABELS: Record<WorldOrthographicViewId, string> = 
 const WORLD_AXONOMETRIC_VARIANT_LABELS: Record<WorldAxonometricVariant, string> = { isometric: "Isometric", dimetric: "Dimetric", trimetric: "Trimetric" };
 const WORLD_OBLIQUE_VARIANT_LABELS: Record<WorldObliqueVariant, string> = { cabinet: "Cabinet", cavalier: "Cavalier", military: "Military" };
 
-/** @emoji 🧭️ Short label for a gizmo orientation. */
+/** 🧭️ Short label for a gizmo orientation. */
 export function worldProjectionOrientationLabel(orientation: WorldProjectionOrientation): string {
   switch (orientation.type) {
     case "cardinal":
@@ -3211,7 +3211,7 @@ export function worldProjectionOrientationLabel(orientation: WorldProjectionOrie
   }
 }
 
-/** @emoji 📐️ Mode label matching {@link createWorldProjectionTemplates} leaves. */
+/** 📐️ Mode label matching {@link createWorldProjectionTemplates} leaves. */
 export function worldProjectionModeLabel(mode: WorldProjectionMode): string {
   switch (mode.kind) {
     case "orthographic":
@@ -3231,12 +3231,12 @@ export function worldProjectionModeLabel(mode: WorldProjectionMode): string {
   }
 }
 
-/** @emoji 🪟️ Window title for a live projection — matches {@link createWorldProjectionTemplates} mode labels. */
+/** 🪟️ Window title for a live projection — matches {@link createWorldProjectionTemplates} mode labels. */
 export function worldProjectionSpecLabel(spec: WorldProjectionSpec): string {
   return worldProjectionModeLabel(spec.mode);
 }
 
-/** @emoji 🖼️ Catalog icon for a live projection — matches {@link createWorldProjectionTemplates} icons. */
+/** 🖼️ Catalog icon for a live projection — matches {@link createWorldProjectionTemplates} icons. */
 export function worldProjectionSpecIconId(spec: WorldProjectionSpec): string {
   switch (spec.mode.kind) {
     case "orthographic":
@@ -3274,7 +3274,7 @@ export function worldProjectionSpecIconId(spec: WorldProjectionSpec): string {
 // #endregion 📐️WorldProjection
 
 // #region 🖱️OrbitMouseBindings
-/** @emoji 🖱️ Orbit-controls instance with mutable mouse button map. */
+/** 🖱️ Orbit-controls instance with mutable mouse button map. */
 export type WorldOrbitControlsBinding = {
   readonly mouseButtons: { LEFT?: number | null; MIDDLE?: number | null; RIGHT?: number | null };
   readonly target?: Vector3;
@@ -3283,7 +3283,7 @@ export type WorldOrbitControlsBinding = {
 };
 
 /**
- * @emoji 🎯️ The target a camera report is allowed to use — the orbit controls' OWN, or nothing.
+ * 🎯️ The target a camera report is allowed to use — the orbit controls' OWN, or nothing.
  *
  * A camera report says where the USER left the camera, so it may only ever carry a target some
  * controls object actually holds. `WorldOrbitGated.reportCamera` used to answer
@@ -3300,7 +3300,7 @@ export function worldCameraReportTargetV1(controls: WorldOrbitControlsBinding | 
   return { x: target.x, y: target.y, z: target.z };
 }
 
-/** @emoji 🖱️ Default orbit mouse map: middle always pans; Alt+right orbits when rotation is enabled. */
+/** 🖱️ Default orbit mouse map: middle always pans; Alt+right orbits when rotation is enabled. */
 export function resolveWorldOrbitMouseButtonsIdle(_projection: OrbitCameraProjection = "perspective", _rotateEnabled = true): {
   readonly LEFT: number | null;
   readonly MIDDLE: number;
@@ -3309,7 +3309,7 @@ export function resolveWorldOrbitMouseButtonsIdle(_projection: OrbitCameraProjec
   return { LEFT: null, MIDDLE: MOUSE.PAN, RIGHT: null };
 }
 
-/** @emoji 🖱️ Resets orbit mouse buttons to {@link resolveWorldOrbitMouseButtonsIdle}. */
+/** 🖱️ Resets orbit mouse buttons to {@link resolveWorldOrbitMouseButtonsIdle}. */
 export function applyWorldOrbitMouseButtonsIdle(controls: WorldOrbitControlsBinding, projection: OrbitCameraProjection = "perspective", rotateEnabled = true): void {
   const idle = resolveWorldOrbitMouseButtonsIdle(projection, rotateEnabled);
   controls.mouseButtons.LEFT = idle.LEFT;
@@ -3318,7 +3318,7 @@ export function applyWorldOrbitMouseButtonsIdle(controls: WorldOrbitControlsBind
   controls.update?.();
 }
 
-/** @emoji 🖱️ Maps right-button modifiers: plain right → context menu, Shift+right → pan, Alt+right → orbit. */
+/** 🖱️ Maps right-button modifiers: plain right → context menu, Shift+right → pan, Alt+right → orbit. */
 export function resolveWorldOrbitRightMouseAction(event: Pick<PointerEvent, "button" | "altKey" | "shiftKey">, _projection: OrbitCameraProjection = "perspective"): number | null {
   if (event.button !== 2) {
     return null;
@@ -3341,12 +3341,12 @@ export interface WorldOrbitRightMouseBindingsOptions {
   readonly dragThresholdPx?: number;
 }
 
-/** @emoji 🖱️ False from `onRightPointerDown` fully suppresses orbit's own button assignment for that gesture (e.g. Alt+right-click over a vortex opens a suggestion popup instead of orbiting). */
+/** 🖱️ False from `onRightPointerDown` fully suppresses orbit's own button assignment for that gesture (e.g. Alt+right-click over a vortex opens a suggestion popup instead of orbiting). */
 export function shouldAssignWorldOrbitRightMouse(event: PointerEvent, onRightPointerDown?: (event: PointerEvent) => boolean): boolean {
   return onRightPointerDown?.(event) !== false;
 }
 
-/** @emoji 🖱️ Binds projection-aware Alt+right and Shift+right actions while leaving plain right click for context menus. */
+/** 🖱️ Binds projection-aware Alt+right and Shift+right actions while leaving plain right click for context menus. */
 export function useWorldOrbitRightMouseBindings(controls: WorldOrbitControlsBinding | null, domElement: HTMLElement | undefined, options?: WorldOrbitRightMouseBindingsOptions): void {
   const projection = options?.projection ?? "perspective";
   const rotateEnabled = options?.rotateEnabled ?? true;
@@ -3416,7 +3416,7 @@ export function useWorldOrbitRightMouseBindings(controls: WorldOrbitControlsBind
 // #region 🎬️WorldCanvas
 type OrbitControlsBinding = WorldOrbitControlsBinding;
 
-/** @emoji 🎞️ Kicks demand-frameloop renders across mount + orbit/grid setup frames and whenever the
+/** 🎞️ Kicks demand-frameloop renders across mount + orbit/grid setup frames and whenever the
  * store reports a pending invalidate (async GLB/texture commits after the initial kick). */
 export function DemandFrameloopKick(): null {
   const invalidate = useThree((state) => state.invalidate);
@@ -3462,20 +3462,20 @@ export interface WorldOrbitGatedProps {
   readonly camera?: ThreePerspectiveCamera | null;
   readonly zoom?: number;
   readonly projection?: OrbitCameraProjection;
-  /** @emoji 🔒️ Rotation/polar-angle limits implied by the active {@link WorldProjectionSpec}; see {@link worldProjectionOrbitConstraints}. */
+  /** 🔒️ Rotation/polar-angle limits implied by the active {@link WorldProjectionSpec}; see {@link worldProjectionOrbitConstraints}. */
   readonly constraints?: { readonly rotate: boolean; readonly minPolar?: number; readonly maxPolar?: number };
   readonly onCamera?: (state: WorldCameraState) => void;
   readonly controlsGate?: boolean;
   readonly onCameraNavigate?: (active: boolean) => void;
   readonly controlsKey?: string | number;
   readonly onRightPointerDown?: (event: PointerEvent) => boolean;
-  /** @emoji 🧭️ Reports which gestures (pan/zoom/orbit) a drag/scroll performed, classified between `start` and `end`. */
+  /** 🧭️ Reports which gestures (pan/zoom/orbit) a drag/scroll performed, classified between `start` and `end`. */
   readonly onNavigationGestures?: (gestures: readonly WorldNavigationGesture[]) => void;
 }
 
 const WORLD_ORBIT_CONSTRAINTS_DEFAULT: NonNullable<WorldOrbitGatedProps["constraints"]> = { rotate: true };
 
-/** @emoji 🖱️ The element a world canvas actually RECEIVES pointer and wheel events on.
+/** 🖱️ The element a world canvas actually RECEIVES pointer and wheel events on.
  *
  * A `<Canvas eventSource={…}>` hands its own events to that source element and stamps
  * `pointer-events: none` on the canvas itself (`@react-three/fiber` `events.connected`, and
@@ -3492,7 +3492,7 @@ export function useWorldPointerTarget(): HTMLElement {
   return (connected instanceof HTMLElement ? connected : gl.domElement) as HTMLElement;
 }
 
-/** @emoji 🤏️ Applies one shared-recognizer pinch step to a Three orbit rig through the renderer-neutral
+/** 🤏️ Applies one shared-recognizer pinch step to a Three orbit rig through the renderer-neutral
  * {@link applyPinchToOrbit} law: target-centred dolly (perspective) or zoom factor (orthographic), plus
  * the centroid pan in the camera plane, inside the controls' own distance/zoom limits. */
 function applyWorldOrbitPinch(controls: ThreeOrbitControls, camera: Camera, step: PinchStep, viewportHeight: number): void {
@@ -3516,7 +3516,7 @@ function applyWorldOrbitPinch(controls: ThreeOrbitControls, camera: Camera, step
 }
 
 /**
- * @emoji 🛰️ Canvas-local Three orbit-control binding that never crosses the optional Drei runtime boundary.
+ * 🛰️ Canvas-local Three orbit-control binding that never crosses the optional Drei runtime boundary.
  *
  * Two-finger touch is NOT Three's: the shared `👆️gesture` {@link GestureRecognizer} listens in the capture
  * phase on the same pointer target, so it sees the second contact before `OrbitControls` does, suspends
@@ -3619,7 +3619,7 @@ function WorldOrbitControlsBridge({
   return null;
 }
 
-/** @emoji 🛰️ Orbit controls with injectable gate (specializations disable during drag/tools). */
+/** 🛰️ Orbit controls with injectable gate (specializations disable during drag/tools). */
 export function WorldOrbitGated(props: WorldOrbitGatedProps): ReactElement | null {
   const sceneCamera = useThree((state) => state.camera);
   const pointerTarget = useWorldPointerTarget();
@@ -3698,7 +3698,7 @@ export function WorldOrbitGated(props: WorldOrbitGatedProps): ReactElement | nul
   );
 }
 
-/** @emoji 🔄️ Keeps demand frameloop alive while the camera moves. */
+/** 🔄️ Keeps demand frameloop alive while the camera moves. */
 export function WorldCameraInvalidator(): null {
   const { controls, camera } = useThree();
   const lastPos = reactHostPort.useRef(new Vector3());
@@ -3773,7 +3773,7 @@ const WORLD_CANVAS_STYLE: CSSProperties = { height: "100%", width: "100%" };
 const WORLD_CANVAS_DEFAULT_DPR: [number, number] = [1, 2];
 const WORLD_CANVAS_DEFAULT_GL = { antialias: true };
 
-/** @emoji 🌍️ Generic infinite-world r3f canvas shell (`frameloop="demand"`).
+/** 🌍️ Generic infinite-world r3f canvas shell (`frameloop="demand"`).
  *
  * 🎯️ The canvas is mounted into — and binds its DOM events to — a wrapper element this shell names
  * itself, never r3f's private inner div. Left to itself, `<Canvas>` connects its handlers to that
@@ -3895,14 +3895,14 @@ export { Canvas, PerspectiveCamera, useFrame, useThree, Vector3 };
 // #endregion 🎬️WorldCanvas
 
 // #region 🖼️Reference
-/** @emoji 🖼️ Persisted media source for a world reference plane. */
+/** 🖼️ Persisted media source for a world reference plane. */
 export interface WorldReferenceSource {
   readonly url: string;
   readonly mediaKind: import("@semio-tech/ui-react").ReferenceMediaKind;
   readonly page?: number;
 }
 
-/** @emoji 🖼️ Serializable world reference plane on the infinite grid. */
+/** 🖼️ Serializable world reference plane on the infinite grid. */
 export interface WorldReferenceProps extends WorldEntityFlags {
   readonly id: string;
   readonly source: WorldReferenceSource;
@@ -3915,7 +3915,7 @@ export interface WorldReferenceProps extends WorldEntityFlags {
   readonly relocateActive?: boolean;
 }
 
-/** @emoji 🖼️ Gumball relocate commit for a world reference plane. */
+/** 🖼️ Gumball relocate commit for a world reference plane. */
 export interface WorldReferenceRelocatePayload {
   readonly referenceId: string;
   readonly mode: "translate" | "rotate" | "scale";
@@ -3934,7 +3934,7 @@ export interface WorldReferenceAppearance {
   readonly outlineColor: string | null;
 }
 
-/** @emoji 🖼️ Resolves hover/selection fill, content opacity, and border for reference planes. */
+/** 🖼️ Resolves hover/selection fill, content opacity, and border for reference planes. */
 export function worldReferenceAppearance(renderMode: Pick<WorldEntityRenderMode, "asHover" | "showSelectedOutline">, baseOpacity: number): WorldReferenceAppearance {
   if (renderMode.showSelectedOutline) {
     return {
@@ -3957,7 +3957,7 @@ export function worldReferenceAppearance(renderMode: Pick<WorldEntityRenderMode,
   };
 }
 
-/** @emoji 🖼️ Applies CAD pose fields onto a reference group node. */
+/** 🖼️ Applies CAD pose fields onto a reference group node. */
 export function applyWorldReferencePose(group: Group, reference: Pick<WorldReferenceProps, "origin" | "orientation" | "scale">): void {
   const position = cadVec3ToThree(reference.origin);
   group.position.set(position[0], position[1], position[2]);
@@ -3973,7 +3973,7 @@ export function mountWorldReferencePose(group: Group | null, reference: Pick<Wor
   return group;
 }
 
-/** @emoji 🖼️ Writes a gumball pose back onto persisted reference props. */
+/** 🖼️ Writes a gumball pose back onto persisted reference props. */
 export function applyWorldReferenceTransform(reference: WorldReferenceProps, after: GumballPose): WorldReferenceProps {
   return {
     ...reference,
@@ -3985,12 +3985,12 @@ export function applyWorldReferenceTransform(reference: WorldReferenceProps, aft
 
 const WORLD_REFERENCE_DEFAULT_QUAT: Quat = [0, 0, 0, 1];
 
-/** @emoji 🖼️ Resolves reference orientation with CAD default identity quaternion. */
+/** 🖼️ Resolves reference orientation with CAD default identity quaternion. */
 export function worldReferenceOrientation(reference: Pick<WorldReferenceProps, "orientation">): Quat {
   return reference.orientation ?? WORLD_REFERENCE_DEFAULT_QUAT;
 }
 
-/** @emoji 🖼️ Expands reference scale to a uniform XYZ tuple. */
+/** 🖼️ Expands reference scale to a uniform XYZ tuple. */
 export function worldReferenceScaleVec(scale: number | Vec3 | undefined): Vec3 {
   if (typeof scale === "number") {
     return [scale, scale, scale];
@@ -4001,7 +4001,7 @@ export function worldReferenceScaleVec(scale: number | Vec3 | undefined): Vec3 {
   return [1, 1, 1];
 }
 
-/** @emoji 🧭️ Converts a CAD quaternion to tilt Euler degrees (roll, pitch, yaw). */
+/** 🧭️ Converts a CAD quaternion to tilt Euler degrees (roll, pitch, yaw). */
 export function worldQuatToEulerDegrees(quat: Quat): Vec3 {
   const [x, y, z, w] = quat;
   const sinRoll = 2 * (w * x + y * z);
@@ -4016,7 +4016,7 @@ export function worldQuatToEulerDegrees(quat: Quat): Vec3 {
   return [roll * radToDeg, pitch * radToDeg, yaw * radToDeg];
 }
 
-/** @emoji 🧭️ Converts tilt Euler degrees (roll, pitch, yaw) to a CAD quaternion. */
+/** 🧭️ Converts tilt Euler degrees (roll, pitch, yaw) to a CAD quaternion. */
 export function worldEulerDegreesToQuat(euler: readonly [number, number, number]): Quat {
   const degToRad = Math.PI / 180;
   const roll = euler[0] * degToRad;
@@ -4031,7 +4031,7 @@ export function worldEulerDegreesToQuat(euler: readonly [number, number, number]
   return [sr * cp * cy - cr * sp * sy, cr * sp * cy + sr * cp * sy, cr * cp * sy - sr * sp * cy, cr * cp * cy + sr * sp * sy];
 }
 
-/** @emoji 🖼️ Applies a declarative inspector patch to one reference plane. */
+/** 🖼️ Applies a declarative inspector patch to one reference plane. */
 export function patchWorldReferenceProps(reference: WorldReferenceProps, field: "origin" | "rotation" | "scale" | "scaleUniform" | "widthWorld" | "opacity", value: unknown): WorldReferenceProps | null {
   const patch: { -readonly [K in keyof Omit<WorldReferenceProps, "id">]?: WorldReferenceProps[K] } = {};
   if (field === "origin" && Array.isArray(value) && value.length === 3) {
@@ -4216,7 +4216,7 @@ const WorldReferencePlaneItem = reactHostPort.memo(function WorldReferencePlaneI
   );
 });
 
-/** @emoji 🖼️ Renders persisted world reference planes for CAD and puzzle 3d hosts. */
+/** 🖼️ Renders persisted world reference planes for CAD and puzzle 3d hosts. */
 export function WorldReferenceLayer(props: {
   readonly references: readonly WorldReferenceProps[];
   readonly selectedIds?: ReadonlySet<string>;
@@ -4257,7 +4257,7 @@ export function WorldReferenceLayer(props: {
 // #endregion 🖼️Reference
 
 // #region 🧊️Volume
-/** @emoji 🧊️ Serializable oriented target volume box for fill constraints. */
+/** 🧊️ Serializable oriented target volume box for fill constraints. */
 export interface WorldVolumeProps extends WorldEntityFlags {
   readonly id: string;
   readonly origin: Vec3;
@@ -4269,7 +4269,7 @@ export interface WorldVolumeProps extends WorldEntityFlags {
   readonly relocateActive?: boolean;
 }
 
-/** @emoji 🧊️ Gumball relocate commit for a world target volume. */
+/** 🧊️ Gumball relocate commit for a world target volume. */
 export interface WorldVolumeRelocatePayload {
   readonly volumeId: string;
   readonly mode: "translate" | "rotate" | "scale";
@@ -4290,7 +4290,7 @@ function worldVolumeScaleVec(scale: number | Vec3 | undefined): Vec3 {
   return [1, 1, 1];
 }
 
-/** @emoji 🧊️ Applies CAD pose fields onto a volume group node. */
+/** 🧊️ Applies CAD pose fields onto a volume group node. */
 export function applyWorldVolumePose(group: Group, volume: Pick<WorldVolumeProps, "origin" | "orientation" | "scale">): void {
   const position = cadVec3ToThree(volume.origin);
   group.position.set(position[0], position[1], position[2]);
@@ -4300,7 +4300,7 @@ export function applyWorldVolumePose(group: Group, volume: Pick<WorldVolumeProps
   group.scale.set(scale[0], scale[1], scale[2]);
 }
 
-/** @emoji 🧊️ Writes a gumball pose back onto persisted volume props. */
+/** 🧊️ Writes a gumball pose back onto persisted volume props. */
 export function applyWorldVolumeTransform(volume: WorldVolumeProps, after: GumballPose): WorldVolumeProps {
   return {
     ...volume,
@@ -4315,7 +4315,7 @@ const _worldVolumeInverse = new Matrix4();
 const _worldVolumeCorner = new Vector3();
 const _worldVolumeLocal = new Vector3();
 
-/** @emoji 🧊️ True when every corner of a world AABB lies inside any oriented volume (union). */
+/** 🧊️ True when every corner of a world AABB lies inside any oriented volume (union). */
 export function worldVolumesContainAabb(volumes: readonly WorldVolumeProps[], aabbMin: Vec3, aabbMax: Vec3, epsilon = 1e-3): boolean {
   if (!volumes.length) {
     return true;
@@ -4448,7 +4448,7 @@ const WorldVolumeBoxItem = reactHostPort.memo(function WorldVolumeBoxItem(props:
   );
 });
 
-/** @emoji 🧊️ Renders persisted target volume boxes for puzzle 3d fill constraints. */
+/** 🧊️ Renders persisted target volume boxes for puzzle 3d fill constraints. */
 export function WorldVolumeLayer(props: {
   readonly volumes: readonly WorldVolumeProps[];
   readonly selectedIds?: ReadonlySet<string>;

@@ -49,9 +49,9 @@ fn render_rows(rows: &[crate::HomeSpaceRow], labels: &HomeTableLabels, windows: 
 }
 
 /// 👁️ No `SHomeSnapshot` argument: exactly like the editor's own main-window render, Home's table rows
-/// are derived entirely from `HomeConfig.directory` + the live studio catalog, never from the artifact
-/// document itself — see `HomeApp::handle`'s doc comment in the editor for the same observation.
-pub fn render(directory: &store::os_directory::DirectoryReadModel, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+/// are derived entirely from the folded hub directory rows (`hub_spaces`, in id order, from the app transient) + the live
+/// studio catalog, never from the artifact document itself.
+pub fn render<'a>(hub_spaces: impl IntoIterator<Item = &'a store::os_directory::DirectorySpace>, retired_local_studio_ids: &[String], view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let labels = semio_framework_plugin::resolve_labels::<HomeTableLabels>(view_state);
     // 🌉️ `crate::home_space_rows` is a plugin-root async fn (outside this lease); `render` must
     // stay sync (called synchronously by `HomeViewer::render`) — bridged via `resolve_ready`.
@@ -59,7 +59,7 @@ pub fn render(directory: &store::os_directory::DirectoryReadModel, view_state: &
     // reasoning. A signed-out human owns no spaces, so this publishes the same table empty instead of
     // declining to render the product's landing window.
     let rows = match crate::home_session_identity(view_state) {
-        Some(identity) => semio_framework_plugin::resolve_ready(crate::home_space_rows(directory, &identity.user_id)),
+        Some(identity) => semio_framework_plugin::resolve_ready(crate::home_space_rows(hub_spaces, &identity.user_id, retired_local_studio_ids)),
         None => Vec::new(),
     };
     render_rows(&rows, labels, &TreeWindows::for_body(view_state, S_HOME_VIEW_BODY))

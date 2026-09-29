@@ -9,7 +9,7 @@ use crate::SHomeSnapshot;
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation, HOME_DIRECTORY_PAGE_BYTES};
 use crate::editor::home::transient::{ApplyDirectoryPage, DirectoryPageAdmission, DirectoryProjectionReceiptV1, HomeDirectoryProjection, HomeTransient, HomeTransientMutation};
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
-use semio_framework_plugin::{AppEvent, ArtifactApp, ArtifactView, ConfigView, Emit, EphemeralEmit, Fault};
+use semio_framework_plugin::{AppEvent, ArtifactApp, ArtifactView, ConfigView, Emit, EphemeralEmit, Fault, FaultOrigin};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
@@ -24,7 +24,7 @@ pub struct ApplyDirectoryEventPage {
 /// 🚫️ The direct lane never lands a page: without the retained route there is no transient item and no receipt, and the
 /// host's feed would re-offer the page for ever.
 pub fn handle(_payload: &ApplyDirectoryEventPage, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
-    Err(Fault::from("s.home.directory-event-page.requires-retained-job"))
+    Err(Fault::new(FaultOrigin::App, "s.home.directory-event-page.requires-retained-job", "a directory page lands only as the retained job"))
 }
 
 /// 📬️ The whole answer to one sealed page against the projection a job captured: the typed terminal receipt, and the one
@@ -36,7 +36,7 @@ pub struct DirectoryPageAnswer {
 
 /// 📬️ Judges one canonical page against `directory` without folding it; the fold happens once, as the transient item.
 pub fn directory_page_answer(page_json: &str, directory: &HomeDirectoryProjection) -> Result<DirectoryPageAnswer, Fault> {
-    let page = store::os_directory::DirectoryEventPageV1::parse_canonical_json(page_json).map_err(|_| Fault::from("s.home.directory-event-page-invalid"))?;
+    let page = store::os_directory::DirectoryEventPageV1::parse_canonical_json(page_json).map_err(|_| Fault::new(FaultOrigin::App, "s.home.directory-event-page-invalid", "the page is not a canonical sealed directory page"))?;
     let item = match directory.admit_page(&page)? {
         DirectoryPageAdmission::Held => None,
         DirectoryPageAdmission::Fold => Some(ApplyDirectoryPage { page_json: page_json.to_owned() }.into()),
@@ -77,12 +77,12 @@ where
 
     fn step(&mut self, input: &ArtifactCommandInputs<'_, A>) -> Result<ArtifactCommandWorkStep<A>, Fault> {
         if self.consumed {
-            return Err(Fault::from("space-home-directory-page-work-repeated"));
+            return Err(Fault::new(FaultOrigin::App, "s.home.directory-event-page.work-repeated", "a directory page work steps once"));
         }
         self.consumed = true;
-        let context = input.context.ok_or_else(|| Fault::from("s.home.directory-event-page.context-missing"))?;
-        context.view_state.as_ref().and_then(crate::home_session_identity).ok_or_else(|| Fault::from("s.home.session-identity-required"))?;
-        let page_json = (self.page_json)(input.command).ok_or_else(|| Fault::from("s.home.directory-event-page-input-missing"))?;
+        let context = input.context.ok_or_else(|| Fault::new(FaultOrigin::App, "s.home.directory-event-page.context-missing", "a directory page needs the job's captured transient projection"))?;
+        context.view_state.as_ref().and_then(crate::home_session_identity).ok_or_else(|| Fault::new(FaultOrigin::App, "s.home.session-identity-required", "a directory page needs a signed-in session"))?;
+        let page_json = (self.page_json)(input.command).ok_or_else(|| Fault::new(FaultOrigin::App, "s.home.directory-event-page-input-missing", "the command carries no page"))?;
         let answer = directory_page_answer(page_json, context.transient.directory())?;
         let event = AppEvent { kind: DirectoryProjectionReceiptV1::SCHEMA.into(), payload: protocol::ToValue::to_value(&answer.receipt) };
         let emit = Emit { events: vec![event], ..Default::default() };

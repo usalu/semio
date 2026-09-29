@@ -35,5 +35,4 @@ test("isolation snapshot and diff guards agree with the shared schema",()=>{
     expect(validate(layer)).toBe(false);expect(()=>parseDrawingLayerNode(layer)).toThrow();
   }
   expect(()=>parseDrawingLayerPatch({isolation:"true"})).toThrow();
-  console.error("[DEBUG] group isolation schema, snapshot/diff guards, and immutable mutation agree");
 });

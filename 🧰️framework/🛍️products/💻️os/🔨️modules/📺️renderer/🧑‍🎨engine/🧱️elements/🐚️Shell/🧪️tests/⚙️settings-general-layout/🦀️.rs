@@ -554,3 +554,21 @@ fn locale_and_terminology_changes_require_one_full_guest_refresh_and_settle() {
         assert!(!shell.chrome_present.maintenance.pending(), "{action} must not schedule a duplicate shell-only locale publication lane");
     }
 }
+
+/// 🧵️ LAW (ticket 26/09/23 session 14b, WG11 — live gate step 8 overflowed libtest's 2 MiB thread in debug): a shell turn's state machine
+/// lives on the heap, so a framework setting dispatch — `dispatch_action` → `note_shell_setting_command` → `dispatch_action` again for the
+/// history note — completes on a 1 MiB thread (the Windows main-thread default) in a debug build. Red before: `dispatch_action`'s own
+/// poll frame was 841 KB, nested twice.
+#[test]
+fn a_framework_setting_dispatch_completes_on_a_one_mebibyte_thread() {
+    let completed = std::thread::Builder::new()
+        .stack_size(1024 * 1024)
+        .spawn(|| {
+            let mut shell = ShellState::new(Vec::new(), String::new());
+            shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app: super::command_registry_tests::test_app(Vec::new(), Vec::new()), view_state: ViewModel::default() });
+            semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: "setAppearance".into(), args: crate::action_args_json!({ "value": "dark" }) })).map(|()| shell.appearance_id.clone())
+        })
+        .expect("a 1 MiB shell thread starts")
+        .join();
+    assert_eq!(completed.ok().and_then(Result::ok).as_deref(), Some("dark"), "the setting dispatch completes and applies without overflowing a 1 MiB stack");
+}

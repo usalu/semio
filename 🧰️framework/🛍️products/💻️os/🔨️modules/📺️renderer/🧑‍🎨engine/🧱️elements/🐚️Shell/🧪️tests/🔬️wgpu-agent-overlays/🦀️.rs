@@ -312,6 +312,7 @@ fn a_resolved_approval_reports_its_own_decision_state() {
     assert_eq!(row_attributes(&chat_feed_rows(&shell)[0]).get("data-agent-chat-state").map(String::as_str), Some("resolved"));
 }
 
+/// 🔚️ The LAST painted row is the newest entry, which is what a bottom-pinned feed shows.
 #[test]
 fn the_feed_paints_the_newest_window_the_way_reacts_auto_scrolled_list_shows_it() {
     let mut shell = ShellState::new(Vec::new(), String::new());
@@ -321,7 +322,6 @@ fn the_feed_paints_the_newest_window_the_way_reacts_auto_scrolled_list_shows_it(
     let rows = chat_feed_rows(&shell);
     assert_eq!(rows.len(), AGENT_CHAT_VISIBLE_ENTRIES, "the window is bounded, not the conversation");
     assert_eq!(shell.chrome_build.agent.conversation.len(), AGENT_CHAT_VISIBLE_ENTRIES + 6, "nothing is discarded, only unpainted");
-    // 🔚️ The LAST painted row is the newest entry, which is what a bottom-pinned feed shows.
     let UiNode::Stack(last) = rows.last().expect("a row") else { panic!("a row is a stack") };
     assert_eq!(last.id.as_deref(), Some(format!("framework.chat.entry.toolCall.inv_{}", AGENT_CHAT_VISIBLE_ENTRIES + 5).as_str()));
 }

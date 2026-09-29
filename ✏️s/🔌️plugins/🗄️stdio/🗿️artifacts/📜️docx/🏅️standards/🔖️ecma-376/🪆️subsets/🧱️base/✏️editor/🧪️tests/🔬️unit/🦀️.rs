@@ -73,7 +73,7 @@ fn retained_work_refuses_an_unpaged_large_owner_without_publication() {
 
     let snapshot = snapshot_with_blocks(vec![DocxBlock::paragraph("before")]);
     let target = run(&snapshot);
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📬️preparation/🧫️fixtures/🧵️admission/🔣️.json")).expect("language-neutral admission fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📬️preparation/🧫️fixtures/🧵️admission/🔣️.json")).expect("language-neutral admission fixture");
     let command = semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(DocxEditorCommand::SetPage { address: target.address, text: "x".repeat(fixture["refusedTextBytes"].as_u64().expect("refused text bytes") as usize) });
     let config = NoConfig::default();
     let history = semio_framework_plugin::HistoryView::empty();
@@ -97,7 +97,7 @@ fn canonical_preparation_recognizes_and_encodes_every_addressed_xml_mutation() {
     use semio_framework_plugin::plugin_app_close_prelude::store::ArtifactCanonicalJson;
     use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📬️preparation/🧫️fixtures/🧵️admission/🔣️.json")).expect("language-neutral admission fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📬️preparation/🧫️fixtures/🧵️admission/🔣️.json")).expect("language-neutral admission fixture");
     let address = run(&snapshot_with_blocks(vec![DocxBlock::paragraph("before")])).address;
     let node = XmlNode::Text { text: "payload β".into() };
     let mutations = vec![
@@ -129,23 +129,23 @@ async fn registered_canonical_page_edit_publishes_once_and_undoes_redoes() {
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&original, STDIO_DOCX_DOCUMENT_SCHEMA) else { panic!("DOCX fixture produces a document load") };
     app.load_document_pack(&store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.unwrap();
     let opened = app.snapshot().expect("opened DOCX fixture").clone();
-    let original_address = run(app.snapshot().unwrap()).address;
+    let original_address = run(&app.snapshot().unwrap()).address;
     let meta = artifact_app_laws::meta("local");
 
     app.handle_action("set-page", Some(&arguments(&original_address, "after")), &meta).await.unwrap();
     artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id).await.unwrap();
-    assert_eq!(run(app.snapshot().unwrap()).text, "after");
+    assert_eq!(run(&app.snapshot().unwrap()).text, "after");
 
-    let current_address = run(app.snapshot().unwrap()).address;
+    let current_address = run(&app.snapshot().unwrap()).address;
     app.handle_action("set-page", Some(&arguments(&current_address, "after")), &meta).await.unwrap();
     artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id).await.unwrap();
     artifact_app_laws::settle_history_verb(&mut app, "undo", meta.instance_id).await;
-    assert_eq!(app.snapshot().unwrap(), &opened);
+    assert_eq!(app.snapshot().unwrap(), opened);
     artifact_app_laws::settle_history_verb(&mut app, "redo", meta.instance_id).await;
-    assert_eq!(run(app.snapshot().unwrap()).text, "after");
+    assert_eq!(run(&app.snapshot().unwrap()).text, "after");
 
     app.handle_action("set-page", Some(&arguments(&original_address, "refused")), &meta).await.unwrap();
     assert!(artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id).await.is_err());
-    assert_eq!(run(app.snapshot().unwrap()).text, "after");
+    assert_eq!(run(&app.snapshot().unwrap()).text, "after");
     artifact_app_laws::close_registered_fixture_app(&mut app);
 }

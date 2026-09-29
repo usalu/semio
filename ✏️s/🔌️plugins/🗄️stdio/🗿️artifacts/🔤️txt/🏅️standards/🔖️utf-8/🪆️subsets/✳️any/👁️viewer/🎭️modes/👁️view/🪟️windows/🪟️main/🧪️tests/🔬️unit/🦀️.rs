@@ -1,6 +1,24 @@
 use super::*;
 use semio_framework_plugin::Component;
 
+/// 🚚️ Decodes the text surface and re-attaches every lane its carrier children hold (`SceneDoc::merge_lane`).
+fn merged_scene(node: &BuiltNode) -> semio_framework_ui_scene::TextEditorScene {
+    let Component::Surface(props) = &node.component else { panic!("expected a retained text surface") };
+    let mut scene: semio_framework_ui_scene::TextEditorScene = semio_framework_ui_scene::decode(props).expect("decode text scene");
+    for carrier in &node.children {
+        let mut payload = String::new();
+        let mut frontier = vec![carrier];
+        while let Some(child) = frontier.pop() {
+            if let Component::Text(text) = &child.component {
+                payload.push_str(&text.packed_payload());
+            }
+            frontier.extend(child.children.iter().rev());
+        }
+        semio_framework_ui_scene::SceneDoc::merge_lane(&mut scene, carrier.key.as_str(), payload);
+    }
+    scene
+}
+
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_a_text_window() {
     let def = definition();
@@ -12,7 +30,5 @@ async fn definition_declares_a_text_window() {
 async fn render_joins_lines_with_the_line_ending() {
     let document = TxtSnapshot { schema: "stdio.txt".into(), lines: vec!["a".into(), "b".into()], trailing_newline: false, line_ending: Default::default() };
     let node = render(&document).expect("render");
-    let Component::Surface(props) = node.component else { panic!("expected a retained text surface") };
-    let scene: semio_framework_ui_scene::TextEditorScene = semio_framework_ui_scene::decode(&props).expect("decode text scene");
-    assert_eq!(scene.buffer, "a\nb");
+    assert_eq!(merged_scene(&node).buffer, "a\nb");
 }

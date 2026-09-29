@@ -17,6 +17,8 @@ fn packed_answer(json: &str) -> Vec<u8> {
 
 /// 🎯️ A drained `Emit::extension_invocations` entry allocates a REAL registry slot and queues
 /// exactly one `Effect::InvokeExtension` whose `req` is that slot's id — never a literal.
+///
+/// 🧹️ Leave the shared per-thread registry as this test found it.
 #[semio_framework_async_macros::async_test]
 async fn a_queued_invocation_allocates_a_registry_slot_and_one_effect() {
     let drained_before = REGISTRY.with(|registry| registry.drain()).len();
@@ -32,7 +34,6 @@ async fn a_queued_invocation_allocates_a_registry_slot_and_one_effect() {
         }
         other => panic!("expected an InvokeExtension effect, got {other:?}"),
     }
-    // 🧹️ Leave the shared per-thread registry as this test found it.
     assert!(take_extension_response(req, Ok(Vec::new())).is_ok());
 }
 

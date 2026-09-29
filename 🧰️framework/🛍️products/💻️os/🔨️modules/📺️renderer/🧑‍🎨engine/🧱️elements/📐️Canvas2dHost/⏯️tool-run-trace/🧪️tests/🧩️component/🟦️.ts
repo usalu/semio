@@ -1,4 +1,4 @@
-/** @emoji 🧪️ Laws of the canvas-2d tool run trace: one fill per resident placement record, batched per
+/** 🧪️ Laws of the canvas-2d tool run trace: one fill per resident placement record, batched per
  * `(shape, verdict)`, at the camera transform the host's `worldToScreenLogical` defines, faded by age and
  * with exactly one highlighted newest `testing` record. The ledger `ToolRunTraceStore` is the oracle. */
 import { describe, expect, it } from "vitest";

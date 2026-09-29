@@ -1,4 +1,4 @@
-//! @emoji 🕸️ Actual-read dependency tracking — which entities a surface truly read while presenting.
+//! 🕸️ Actual-read dependency tracking — which entities a surface truly read while presenting.
 //!
 //! This is *actual*-read tracking, not declared-dependency tracking: a presenter never lists what it
 //! depends on. Instead, [`DependencyTracker::begin`] opens a scope, every [`crate::PresentCx::read`]

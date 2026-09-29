@@ -58,11 +58,11 @@ use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
 
-/// @emoji 📊️ One process-wide typed DB I/O task depth signal.
+/// 📊️ One process-wide typed DB I/O task depth signal.
 static BLOCKING_QUEUE: semio_framework_trace::QueueCounter = semio_framework_trace::QueueCounter::new();
 
 //#region 🔖️Limits
-/// @emoji 🛡️ Ceiling on any single blob this crate reads into memory in one call (one WAL read
+/// 🛡️ Ceiling on any single blob this crate reads into memory in one call (one WAL read
 /// range, one snapshot generation, one payload, one index run, one lease record) — validated via
 /// `check_len` BEFORE the read buffer is allocated, mirroring `pack_core`'s stated
 /// invariant. This crate's own choice (the contract doesn't fix a number): generous enough for a
@@ -136,7 +136,7 @@ std::thread_local! {
 #[cfg(test)]
 static DB_IO_LEDGER_NEXT_OWNER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
 
-/// @emoji 🏷️ Attributes every DB I/O operation and backend owner this thread reserves to one
+/// 🏷️ Attributes every DB I/O operation and backend owner this thread reserves to one
 /// census owner until the guard drops. The ledger admits against the process budget either way;
 /// the owner only scopes [`db_io_ledger_census`], so concurrent owners in one process observe
 /// their own credit instead of each other's.
@@ -166,7 +166,7 @@ impl Drop for DbIoLedgerOwner {
     }
 }
 
-/// @emoji 🧮️ The live credit and live ledger slots attributed to one census owner.
+/// 🧮️ The live credit and live ledger slots attributed to one census owner.
 #[cfg(test)]
 pub(crate) fn db_io_ledger_census(owner: u64) -> (DbIoCredit, usize) {
     let ledger = db_io_operation_ledger().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -207,7 +207,7 @@ fn db_io_operation_slot(ledger: &DbIoOperationLedger, operation: u64) -> Option<
     ledger.slots.iter().position(|slot| slot.operation == operation && slot.generation != 0)
 }
 
-/// @emoji 🎟️ The ledger slot a live operation occupies: unique among every operation alive at once,
+/// 🎟️ The ledger slot a live operation occupies: unique among every operation alive at once,
 /// so a backend keying per-operation cursor state by it can never hand one operation's cursor to
 /// another (an `operation % capacity` key collided as soon as operations ran concurrently).
 pub(crate) fn db_io_operation_owner_slot(operation: u64) -> Result<usize, DbError> {
@@ -236,7 +236,7 @@ fn db_io_operation_reserve(initial: DbIoCredit) -> Result<u64, DbError> {
     Ok(operation)
 }
 
-/// @emoji ⚖️ The process-budget admission predicate of one backend owner against `occupied` credit.
+/// ⚖️ The process-budget admission predicate of one backend owner against `occupied` credit.
 fn db_io_backend_owner_admits(occupied: DbIoCredit, initial: DbIoCredit) -> bool {
     occupied.checked_add(initial).is_some_and(|totals| db_io_credit_within_limits(totals, true))
 }
@@ -272,7 +272,7 @@ fn db_io_operation_add(operation: u64, credit: DbIoCredit) -> Result<(), DbError
     Ok(())
 }
 
-/// @emoji 🧱️ Grows a backend owner's own heap credit; only the process budget bounds a backend,
+/// 🧱️ Grows a backend owner's own heap credit; only the process budget bounds a backend,
 /// never the per-operation budget of a single task.
 fn db_io_backend_owner_add(operation: u64, credit: DbIoCredit) -> Result<(), DbError> {
     let mut ledger = db_io_operation_ledger().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -601,7 +601,7 @@ fn db_io_preflight_page_checkout(state: &DbIoPageArenaState, count: usize) -> Re
     Ok(())
 }
 
-/// @emoji ✍️ Retained writer backed only by exact fixed arena page leases.
+/// ✍️ Retained writer backed only by exact fixed arena page leases.
 pub struct DbIoPageWriter {
     operation: u64,
     pages: [Option<DbIoPageLease>; DB_IO_OPERATION_PAGES],
@@ -621,7 +621,7 @@ pub struct DbIoPageWriterRejected {
     writer: Option<DbIoPageWriter>,
 }
 
-/// @emoji 🧵 One retained unused-page retirement opportunity per poll before writer publication.
+/// 🧵 One retained unused-page retirement opportunity per poll before writer publication.
 pub struct DbIoPageWriterSeal {
     writer: Option<DbIoPageWriter>,
 }
@@ -720,7 +720,7 @@ impl DbIoPageWriter {
         }
     }
 
-    /// @emoji 🪡 One retained validation, unused-page retirement, or atomic transition-and-publication opportunity.
+    /// 🪡 One retained validation, unused-page retirement, or atomic transition-and-publication opportunity.
     pub fn seal_retained_step(&mut self) -> Result<Option<DbIoPages>, DbError> {
         match self.seal_phase {
             0 if self.reserved > self.seal_visible => {
@@ -897,7 +897,7 @@ impl DbIoPageWriterRejected {
     }
 }
 
-/// @emoji 📥 One-fragment-per-poll copy into already checked-out fixed pages.
+/// 📥 One-fragment-per-poll copy into already checked-out fixed pages.
 pub struct DbIoPageCopy<'a> {
     source: &'a [u8],
     cursor: usize,
@@ -922,7 +922,7 @@ pub fn db_io_copy_pages(source: &[u8]) -> Result<DbIoPageCopy<'_>, DbError> {
     Ok(DbIoPageCopy { source, cursor: 0, writer: Some(writer) })
 }
 
-/// @emoji 🎟️ Pre-admitted capacity for one external-driver allocation owned by an aggregate operation.
+/// 🎟️ Pre-admitted capacity for one external-driver allocation owned by an aggregate operation.
 pub struct DbIoDriverReservation {
     operation: u64,
     credit: DbIoCredit,
@@ -969,7 +969,7 @@ impl Drop for DbIoDriverReservation {
     }
 }
 
-/// @emoji 🏷️ Exact fixed post-admission artifact identity retained without a heap string.
+/// 🏷️ Exact fixed post-admission artifact identity retained without a heap string.
 pub struct DbIoArtifactId {
     value: DbIoText,
     driver: Option<ArtifactId>,
@@ -1048,7 +1048,7 @@ impl Drop for DbIoArtifactId {
     }
 }
 
-/// @emoji 🧳 Retained external allocation with one page-content or backing-release close opportunity.
+/// 🧳 Retained external allocation with one page-content or backing-release close opportunity.
 pub struct DbIoExternalBytes {
     value: Option<Vec<u8>>,
     phase: u8,
@@ -1106,7 +1106,7 @@ impl Drop for DbIoExternalBytes {
     }
 }
 
-/// @emoji 🪜 Retained external-driver byte conversion with one observed owner/page/close opportunity per poll.
+/// 🪜 Retained external-driver byte conversion with one observed owner/page/close opportunity per poll.
 pub struct DbIoObservedBytesWrite<'a> {
     reservation: Option<DbIoDriverReservation>,
     source: Option<DbIoExternalBytes>,
@@ -1121,7 +1121,7 @@ pub fn db_io_write_observed_bytes(reservation: DbIoDriverReservation, source: Ve
     DbIoObservedBytesWrite { reservation: Some(reservation), source: Some(DbIoExternalBytes::new(source)), output, cursor: 0, limit, phase: 0 }
 }
 
-/// @emoji 🧷 Retained ranged external-driver transfer with the same exact close authority.
+/// 🧷 Retained ranged external-driver transfer with the same exact close authority.
 pub fn db_io_write_observed_bytes_range(reservation: DbIoDriverReservation, source: Vec<u8>, offset: usize, length: usize, output: &mut DbIoPageWriter) -> Result<DbIoObservedBytesWrite<'_>, DbError> {
     let limit = offset.checked_add(length).ok_or(DbError::LimitExceeded("DB I/O observed-byte range"))?;
     if limit > source.len() {
@@ -1182,7 +1182,7 @@ pub fn db_io_hash_pages(source: &DbIoPages) -> DbIoPageHash<'_> {
     DbIoPageHash { source, cursor: 0, hasher: semio_framework_hash::Hasher::new() }
 }
 
-/// @emoji 🔢 Persisted one-scalar transfer and one-owner close authority for driver lists.
+/// 🔢 Persisted one-scalar transfer and one-owner close authority for driver lists.
 pub struct DbIoListTransfer<'a> {
     source: Option<DbIoU64List>,
     output: &'a mut DbIoU64List,
@@ -1336,7 +1336,7 @@ struct DbIoPlatformArena {
 static DB_IO_PLATFORM_ARENA: std::sync::Mutex<DbIoPlatformArena> =
     std::sync::Mutex::new(DbIoPlatformArena { slots: [DbIoPlatformSlot { generation: 0, occupied: false }; DB_IO_PLATFORM_BUFFERS], retired: [None; DB_IO_PLATFORM_RETIREMENT_SLOTS], retired_read: 0, retired_len: 0, next_generation: 1 });
 
-/// @emoji 🧩 Explicit contiguous platform-call buffer backed by a fixed process slot.
+/// 🧩 Explicit contiguous platform-call buffer backed by a fixed process slot.
 pub struct DbIoPlatformBuffer {
     slot: u8,
     generation: u64,
@@ -1352,12 +1352,12 @@ pub struct DbIoPlatformCopy<'a> {
     owner: Option<DbIoPlatformBuffer>,
 }
 
-/// @emoji 🚪 One retained prepared-platform close opportunity per poll.
+/// 🚪 One retained prepared-platform close opportunity per poll.
 pub struct DbIoPlatformClose {
     owner: Option<DbIoPlatformBuffer>,
 }
 
-/// @emoji 🪡 One retained prepared-platform slice fragment per poll.
+/// 🪡 One retained prepared-platform slice fragment per poll.
 #[cfg(feature = "neo4j")]
 pub(crate) struct DbIoPlatformSlicesCopy<'a> {
     first: &'a [u8],
@@ -1560,7 +1560,7 @@ impl Future for DbIoPlatformCopy<'_> {
     }
 }
 
-/// @emoji 📄 Exact ordered fixed-page leases with a zero-copy movable range cursor.
+/// 📄 Exact ordered fixed-page leases with a zero-copy movable range cursor.
 #[derive(Debug)]
 pub struct DbIoPages {
     operation: u64,
@@ -1857,10 +1857,10 @@ pub fn db_io_page_maintenance_step() -> Result<Option<usize>, DbError> {
 
 const DB_IO_TEXT_BYTES: usize = 1024;
 
-/// @emoji 📋️ The exact capacity of one [`DbIoU64List`]: a backend list longer than this is refused.
+/// 📋️ The exact capacity of one [`DbIoU64List`]: a backend list longer than this is refused.
 pub const DB_IO_LIST_ITEMS: usize = 4096;
 
-/// @emoji 🔤 Fixed repository-owned path, document, key or fault text.
+/// 🔤 Fixed repository-owned path, document, key or fault text.
 #[derive(Clone, PartialEq, Eq)]
 pub struct DbIoText {
     bytes: [u8; DB_IO_TEXT_BYTES],
@@ -1902,7 +1902,7 @@ impl DbIoText {
     }
 }
 
-/// @emoji 🔤 Converts one pre-admitted external-driver string into fixed repository text.
+/// 🔤 Converts one pre-admitted external-driver string into fixed repository text.
 pub async fn db_io_copy_observed_text(mut reservation: DbIoDriverReservation, source: String) -> Result<DbIoText, DbError> {
     let mut source = DbIoExternalBytes::new(source.into_bytes());
     reservation.observe_capacity(source.capacity()?)?;
@@ -1933,7 +1933,7 @@ impl std::fmt::Debug for DbIoText {
     }
 }
 
-/// @emoji 🔢 Bounded heap-backed typed list result with incremental close ownership.
+/// 🔢 Bounded heap-backed typed list result with incremental close ownership.
 pub struct DbIoU64List {
     values: Option<Box<[u64]>>,
     len: u16,
@@ -1979,7 +1979,7 @@ impl DbIoU64List {
         self.values.as_deref().map_or(&[], |values| &values[..usize::from(self.len)])
     }
 
-    /// @emoji 🔢️ Orders the listed values ascending in place, for a backend whose enumeration has no order.
+    /// 🔢️ Orders the listed values ascending in place, for a backend whose enumeration has no order.
     pub(crate) fn sort_ascending(&mut self) {
         let len = usize::from(self.len);
         if let Some(values) = self.values.as_deref_mut() {
@@ -2094,7 +2094,7 @@ impl Drop for DbIoU64List {
     }
 }
 
-/// @emoji 🧭 Repository-owned backend identity; external driver values never cross this boundary.
+/// 🧭 Repository-owned backend identity; external driver values never cross this boundary.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum DbIoBackendControl {
     Memory { slot: u16, generation: u64 },
@@ -2113,14 +2113,14 @@ pub enum DbIoBackendKind {
     Neo4j,
 }
 
-/// @emoji 🚦️ Persisted lifecycle state of one WAL segment.
+/// 🚦️ Persisted lifecycle state of one WAL segment.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum WalSegmentState {
     Active,
     Sealed,
 }
 
-/// @emoji 🗂️ Schema-first database I/O task owner.
+/// 🗂️ Schema-first database I/O task owner.
 pub enum DbIoTask {
     BackendOpen { backend: DbIoBackendControl, path: DbIoText },
     WalWriterAcquire { backend: DbIoBackendControl, document: DbIoText },
@@ -2157,7 +2157,7 @@ pub enum DbIoTask {
     BackendClose { backend: DbIoBackendControl },
 }
 
-/// @emoji 📬 Exact typed database I/O terminal result.
+/// 📬 Exact typed database I/O terminal result.
 pub enum DbIoResult {
     Unit,
     WalWriter(WalWriterPermit),
@@ -2246,7 +2246,7 @@ pub enum DbIoTaskPhase {
 }
 
 //#region 🔖️DbIoCensus
-/// @emoji 🏷️ One [`DbIoTask`] variant, as the process-wide [`db_io_census`] counts it: the cost model
+/// 🏷️ One [`DbIoTask`] variant, as the process-wide [`db_io_census`] counts it: the cost model
 /// of every storage call in typed tasks and in executor steps (one worker-pool turn each).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum DbIoTaskKind {
@@ -2339,7 +2339,7 @@ fn db_io_census_admission_wait(kind: DbIoTaskKind, waited: std::time::Duration, 
     }
 }
 
-/// @emoji 🧮️ A reading of the process-wide DB I/O census: typed tasks submitted, executor steps
+/// 🧮️ A reading of the process-wide DB I/O census: typed tasks submitted, executor steps
 /// driven and worker-pool turns spent per [`DbIoTaskKind`] since the process started, plus the
 /// admission waits of [`submit_db_io_task_admitted`] (backend opens count as `BackendOpen`): waits
 /// begun, microseconds waited, and waits that ended in the refusal. Two readings subtract to the exact
@@ -2403,7 +2403,7 @@ impl DbIoCensusV1 {
         self.admission_refusals.iter().sum()
     }
 
-    /// @emoji ➖️ What happened between `earlier` and this reading.
+    /// ➖️ What happened between `earlier` and this reading.
     pub fn since(&self, earlier: &DbIoCensusV1) -> DbIoCensusV1 {
         DbIoCensusV1 {
             tasks: std::array::from_fn(|kind| self.tasks[kind].saturating_sub(earlier.tasks[kind])),
@@ -2415,7 +2415,7 @@ impl DbIoCensusV1 {
         }
     }
 
-    /// @emoji 🧾️ `kind=tasks/steps/turns` for every kind that saw I/O, followed by
+    /// 🧾️ `kind=tasks/steps/turns` for every kind that saw I/O, followed by
     /// `waits/µs/refusals` for every kind that waited for admission, for law output and captures.
     pub fn describe(&self) -> String {
         DbIoTaskKind::ALL
@@ -2430,7 +2430,7 @@ impl DbIoCensusV1 {
     }
 }
 
-/// @emoji 🧮️ Reads the process-wide DB I/O census.
+/// 🧮️ Reads the process-wide DB I/O census.
 pub fn db_io_census() -> DbIoCensusV1 {
     DbIoCensusV1 {
         tasks: std::array::from_fn(|kind| DB_IO_CENSUS_TASKS[kind].load(std::sync::atomic::Ordering::Relaxed)),
@@ -2754,7 +2754,7 @@ pub type DbIoAsyncDriverOutput = (Box<dyn DbIoTaskExecutor>, DbIoTask, Result<Db
 
 pub type DbIoAsyncDriverFuture = Pin<Box<dyn Future<Output = DbIoAsyncDriverOutput> + Send + 'static>>;
 
-/// @emoji 🧵️ The one seam where a driver bound to a foreign executor may be polled.
+/// 🧵️ The one seam where a driver bound to a foreign executor may be polled.
 ///
 /// `Lane::Io` of the process [`WorkerPool`] is plain `std::thread`s with no foreign runtime context
 /// of any kind — that is the whole point of `semio_framework_async` ("No `tokio` in this crate").
@@ -2780,7 +2780,7 @@ pub enum DbIoWriterReleaseStep {
     Idle,
 }
 
-/// @emoji 🔌 Platform drivers implement one typed, resumable task step behind repository owners.
+/// 🔌 Platform drivers implement one typed, resumable task step behind repository owners.
 pub trait DbIoTaskExecutor: Send + Sync {
     fn supports_writer_authority(&self) -> bool {
         false
@@ -3745,7 +3745,7 @@ fn db_io_backend_close_step(control: DbIoBackendControl, context: &mut std::task
     Ok(true)
 }
 
-/// @emoji 🪦️ One retirement turn of a close-requested backend, run only inside its own pre-admitted
+/// 🪦️ One retirement turn of a close-requested backend, run only inside its own pre-admitted
 /// maintenance hook, so a dropped or closed backend can never lose its retirement request.
 pub(super) fn db_io_backend_retirement_turn(control: DbIoBackendControl, context: &mut std::task::Context<'_>) -> DbIoBackendRetirementTurn {
     let (slot, generation) = db_io_backend_parts(control);
@@ -3807,7 +3807,7 @@ pub enum DbIoFaultKind {
     Stale,
 }
 
-/// @emoji 🧩 Bounded storage-error taxonomy retained independently from runner provenance.
+/// 🧩 Bounded storage-error taxonomy retained independently from runner provenance.
 ///
 /// DbError::Rejected is an artifact-engine outcome above this storage executor boundary; a
 /// backend returning it violates the layer contract and is retained as Internal.
@@ -4225,7 +4225,7 @@ fn db_io_task_closable(owner: &DbIoTaskSlot) -> bool {
     !running && !awaiting_owner
 }
 
-/// @emoji 🧺️ One bounded batch of the task close ring, run by a backend's maintenance hook. Reports
+/// 🧺️ One bounded batch of the task close ring, run by a backend's maintenance hook. Reports
 /// whether a closable task remains; running or owner-held tasks resume the hook through their wakers.
 pub(super) fn db_io_task_retirement_batch() -> bool {
     for _ in 0..DB_IO_OPERATION_ITEMS {
@@ -4338,12 +4338,12 @@ fn db_io_retry_maintenance_step() -> bool {
     true
 }
 
-/// @emoji ⏱️ How long one worker-pool turn keeps driving the same task's resumable steps (one page,
+/// ⏱️ How long one worker-pool turn keeps driving the same task's resumable steps (one page,
 /// one list item, one seal opportunity each) before it yields the worker: every step used to be its
 /// own pool job, so a single index-run read cost ~35 pool turns and a whole commit ~14 000.
 const DB_IO_EXECUTOR_TURN_MICROS: u64 = 2_000;
 
-/// @emoji 🧮️ The most resumable steps one worker-pool turn drives, whatever the clock says.
+/// 🧮️ The most resumable steps one worker-pool turn drives, whatever the clock says.
 const DB_IO_EXECUTOR_TURN_STEPS: usize = 4 * DB_IO_OPERATION_PAGES;
 
 fn db_io_cancel_requested(handle: DbIoTaskHandle) -> bool {
@@ -4606,7 +4606,7 @@ pub struct DbIoTaskOperation {
     resolved: bool,
 }
 
-/// @emoji 🎟️ Generation-qualified terminal lease retained by its aggregate operation.
+/// 🎟️ Generation-qualified terminal lease retained by its aggregate operation.
 pub struct DbIoResultLease {
     handle: DbIoTaskHandle,
     retained_credit: DbIoCredit,
@@ -4823,7 +4823,7 @@ fn db_io_result_handback(handback: DbIoResultHandback) -> Result<(), DbError> {
     db_io_enqueue_close(handback.handle)
 }
 
-/// @emoji 🌐️ Exact task/backend lease driven by an async-native platform executor after Lane::Io admission.
+/// 🌐️ Exact task/backend lease driven by an async-native platform executor after Lane::Io admission.
 pub struct DbIoAsyncTaskLease {
     handle: DbIoTaskHandle,
     backend: DbIoBackendControl,
@@ -4979,7 +4979,7 @@ const DB_IO_BACKEND_CONTROLS_EXHAUSTED: &str = "db I/O backend control capacity 
 const DB_IO_BACKEND_ROLLBACK_EXHAUSTED: &str = "DB I/O backend rollback capacity exhausted";
 const DB_IO_BACKEND_CREDIT_EXHAUSTED: &str = "DB I/O backend process credit exhausted";
 const DB_IO_ADMISSION_WAITERS: usize = 256;
-/// @emoji ⏳️ How long [`submit_db_io_task_admitted`] waits for DB I/O admission before it answers the refusal: long
+/// ⏳️ How long [`submit_db_io_task_admitted`] waits for DB I/O admission before it answers the refusal: long
 /// enough to ride out a burst (an operation holds its capacity for milliseconds to seconds), and well inside the hub's
 /// 30 s document-socket frame deadline, so a capacity that never frees (resident values) still reaches its writer as
 /// a refusal instead of a closed socket.
@@ -4989,7 +4989,7 @@ static DB_IO_ADMISSION_EPOCH: std::sync::atomic::AtomicU64 = std::sync::atomic::
 static DB_IO_ADMISSION_WAITING: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
 static DB_IO_ADMISSION_WAITER_TABLE: std::sync::Mutex<AdmissionWaiters<DB_IO_ADMISSION_WAITERS>> = std::sync::Mutex::new(AdmissionWaiters::new());
 
-/// @emoji 🚦️ Whether `error` only says a fixed DB I/O capacity is momentarily taken — the task arena, the process
+/// 🚦️ Whether `error` only says a fixed DB I/O capacity is momentarily taken — the task arena, the process
 /// credit ledger, the page arena, a backend's pending operations, or an async-native backend's one in-flight
 /// operation — so the same task is admitted once something is released.
 fn db_io_admission_saturated(error: &DbError) -> bool {
@@ -5000,14 +5000,14 @@ fn db_io_admission_saturated(error: &DbError) -> bool {
     }
 }
 
-/// @emoji 🚦️ Whether registering a backend was refused only because a fixed backend capacity is momentarily taken
+/// 🚦️ Whether registering a backend was refused only because a fixed backend capacity is momentarily taken
 /// (the control registry, the rollback registry, the backend process credit) — so a fresh registration succeeds
 /// once a retiring backend releases its share.
 fn db_io_backend_admission_saturated(error: &DbError) -> bool {
     matches!(error, DbError::Unavailable(message) if [DB_IO_BACKEND_CONTROLS_EXHAUSTED, DB_IO_BACKEND_ROLLBACK_EXHAUSTED, DB_IO_BACKEND_CREDIT_EXHAUSTED].contains(&message.as_str()))
 }
 
-/// @emoji 📣️ Records that DB I/O capacity was released and wakes every task waiting for admission (none: two atomics).
+/// 📣️ Records that DB I/O capacity was released and wakes every task waiting for admission (none: two atomics).
 fn db_io_admission_released() {
     DB_IO_ADMISSION_EPOCH.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
     if DB_IO_ADMISSION_WAITING.load(std::sync::atomic::Ordering::Acquire) == 0 {
@@ -5017,7 +5017,7 @@ fn db_io_admission_released() {
     wakers.into_iter().flatten().for_each(std::task::Waker::wake);
 }
 
-/// @emoji ⏳️ Resolves once DB I/O capacity has been released since `epoch` (registered before it re-checks, so no
+/// ⏳️ Resolves once DB I/O capacity has been released since `epoch` (registered before it re-checks, so no
 /// release between a refused submission and this wait is lost), or at `deadline_ms` on `pool`'s clock — the wait is
 /// bounded by the pool's timer, not by the next release, so a capacity that never frees still ends in its refusal.
 struct DbIoAdmissionReleased {
@@ -5072,7 +5072,7 @@ impl Drop for DbIoAdmissionReleased {
     }
 }
 
-/// @emoji 🚦️ Submits `task`, waiting (at most [`DB_IO_ADMISSION_WAIT_MS`]) while a fixed DB I/O capacity is taken
+/// 🚦️ Submits `task`, waiting (at most [`DB_IO_ADMISSION_WAIT_MS`]) while a fixed DB I/O capacity is taken
 /// instead of answering the refusal: a postgres or neo4j backend runs one async-native operation at a time, so the
 /// second concurrent write of a busy hub used to be refused (`async-native backend operation capacity exhausted`, the
 /// growth e2e's 24 documents on postgres, g18), and the process ledger refused writes while other documents held
@@ -5108,14 +5108,14 @@ pub async fn submit_db_io_task_admitted(mut task: DbIoTask) -> Result<DbIoTaskOp
     outcome
 }
 
-/// @emoji 🕰️ The worker pool (and so the clock) serving `control`'s backend while it is registered.
+/// 🕰️ The worker pool (and so the clock) serving `control`'s backend while it is registered.
 fn db_io_backend_pool(control: DbIoBackendControl) -> Option<Arc<WorkerPool>> {
     let (slot, generation) = db_io_backend_parts(control);
     let registry = db_io_backend_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     registry.slots.get(usize::from(slot)).filter(|owner| owner.generation == generation).and_then(|owner| owner.pool.clone())
 }
 
-/// @emoji 🚪️ Opens one storage backend with `open`, waiting (at most [`DB_IO_ADMISSION_WAIT_MS`] on `pool`'s clock) while
+/// 🚪️ Opens one storage backend with `open`, waiting (at most [`DB_IO_ADMISSION_WAIT_MS`] on `pool`'s clock) while
 /// the process's fixed backend capacity — the control registry, the rollback registry, the backend process credit — is
 /// taken by backends still retiring, instead of refusing. Every storage facade opens through it: in a shared test process
 /// dozens of laws open and retire backends at once, and a refused open failed an unrelated law ("db I/O backend control
@@ -5394,7 +5394,7 @@ fn db_io_maintenance_turn(cursor: &std::sync::atomic::AtomicUsize, mut opportuni
     Ok(false)
 }
 
-/// @emoji 🧹 One fixed mounted DB I/O retry, page, platform or terminal-close opportunity.
+/// 🧹 One fixed mounted DB I/O retry, page, platform or terminal-close opportunity.
 pub fn db_io_maintenance_step() -> Result<bool, DbError> {
     db_io_maintenance_turn(&DB_IO_MAINTENANCE_CURSOR, |class| match class {
         0 => db_io_lost_owner_close_step(),
@@ -5670,7 +5670,7 @@ pub fn db_io_test_pool() -> Arc<WorkerPool> {
     POOL.get_or_init(|| Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 2)))).clone()
 }
 
-/// @emoji ✅️ Test-only sync/async bridge. 🚫️async: E5 executor bridge — poll-once: every future
+/// ✅️ Test-only sync/async bridge. 🚫️async: E5 executor bridge — poll-once: every future
 /// this crate's own backends (`MemoryStorage`, and `FsStorage`/`DbBackend` driven by
 /// `semio_framework_async::testkit::ManualRuntime`, whose `run_blocking` executes synchronously)
 /// hand back is already `Ready` the instant it's first polled — there is no real async wait
@@ -5690,17 +5690,17 @@ async fn block_on_ready<T>(fut: impl Future<Output = Result<T, DbError>>) -> Res
 //#endregion 🔖️RetainedDbIo
 
 //#region 🔖️Capabilities
-/// @emoji 🎚️ What a concrete `DbStorage` backend actually supports — negotiated once at
+/// 🎚️ What a concrete `DbStorage` backend actually supports — negotiated once at
 /// `Database::open` and folded into `DbCapabilities` alongside enabled Cargo features.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct StorageCapabilities {
-    /// @emoji 💾️ True iff data written through this backend survives a process restart.
+    /// 💾️ True iff data written through this backend survives a process restart.
     pub durable: bool,
-    /// @emoji 🥇️ The strongest `DurabilityClass` this backend can actually deliver on `sync`.
+    /// 🥇️ The strongest `DurabilityClass` this backend can actually deliver on `sync`.
     pub max_durability: DurabilityClass,
-    /// @emoji 🔒️ True iff `WalStorage::sync`/equivalent can force data to physical storage.
+    /// 🔒️ True iff `WalStorage::sync`/equivalent can force data to physical storage.
     pub supports_fsync: bool,
-    /// @emoji ✅️ True iff `CatalogStorage::cas_root`/`LeaseStorage` provide real compare-and-swap
+    /// ✅️ True iff `CatalogStorage::cas_root`/`LeaseStorage` provide real compare-and-swap
     /// fencing (as opposed to a backend that could only ever serve a single writer).
     pub supports_cas: bool,
 }
@@ -5712,7 +5712,7 @@ pub(crate) mod writer;
 pub use writer::release::{WalWriterRelease, WalWriterReleaseFailure};
 pub use writer::{WalWriterKey, WalWriterPermit};
 
-/// @emoji 📜️ Raw, per-document, per-segment append-only byte storage — `db_wal` frames its own
+/// 📜️ Raw, per-document, per-segment append-only byte storage — `db_wal` frames its own
 /// `.spr` records on top of what this trait stores; this trait never interprets a byte written
 /// through it. A document's WAL is a sequence of segments identified by a dense `u64` index.
 /// At most one segment is active; a transient all-sealed sequence is valid while its owner is
@@ -5720,117 +5720,117 @@ pub use writer::{WalWriterKey, WalWriterPermit};
 pub trait WalStorage: Send + Sync {
     /// 🔐️ Acquires exclusive document ownership before inventory, recovery, or mutation.
     async fn acquire_writer(&self, document: &ArtifactId) -> Result<WalWriterPermit, DbError>;
-    /// @emoji 🆕️ Creates a new, empty, unsealed segment `index` for `document`. Errors
+    /// 🆕️ Creates a new, empty, unsealed segment `index` for `document`. Errors
     /// `AlreadyExists` if `index` already exists for `document`.
     async fn create_segment(&self, writer: &WalWriterPermit, index: u64) -> Result<(), DbError>;
 
-    /// @emoji ➕️ Appends `bytes` to the active segment `index`, returning the segment's new total
+    /// ➕️ Appends `bytes` to the active segment `index`, returning the segment's new total
     /// length. Errors `NotFound` if the segment doesn't exist, `InvalidArgument` if it is sealed.
     async fn append(&self, writer: &WalWriterPermit, index: u64, bytes: DbIoPages) -> Result<u64, DbError>;
 
-    /// @emoji 🔒️ Forces everything appended to segment `index` so far to the durability level
+    /// 🔒️ Forces everything appended to segment `index` so far to the durability level
     /// implied by `class` — a no-op for `Memory`/`Os` (per `DurabilityClass`'s own
     /// doc: `Os` only promises "handed to the OS", not `fsync`ed), a real flush-to-disk for
     /// `Fsync`/`Quorum` (replication itself is `db_cluster`'s concern, not this trait's).
     async fn sync(&self, writer: &WalWriterPermit, index: u64, class: DurabilityClass) -> Result<(), DbError>;
 
-    /// @emoji 🏁️ Marks segment `index` sealed: no further `append`/`truncate_tail` may target it.
+    /// 🏁️ Marks segment `index` sealed: no further `append`/`truncate_tail` may target it.
     /// Errors `NotFound` if the segment doesn't exist. Idempotent if already sealed.
     async fn seal(&self, writer: &WalWriterPermit, index: u64) -> Result<(), DbError>;
 
-    /// @emoji 📖️ Reads `range` of segment `index`'s bytes. Errors `NotFound` if the segment
+    /// 📖️ Reads `range` of segment `index`'s bytes. Errors `NotFound` if the segment
     /// doesn't exist, `InvalidArgument` if `range` extends past the segment's current length.
     async fn read(&self, document: &ArtifactId, index: u64, range: ByteRange) -> Result<DbIoPages, DbError>;
 
-    /// @emoji 📏️ The current length in bytes of segment `index`.
+    /// 📏️ The current length in bytes of segment `index`.
     async fn segment_len(&self, document: &ArtifactId, index: u64) -> Result<u64, DbError>;
 
-    /// @emoji 🚦️ Observes whether segment `index` accepts writes, without mutating storage.
+    /// 🚦️ Observes whether segment `index` accepts writes, without mutating storage.
     async fn segment_state(&self, document: &ArtifactId, index: u64) -> Result<WalSegmentState, DbError>;
 
-    /// @emoji 📋️ Every segment index that exists for `document`, ascending. Empty (not an error)
+    /// 📋️ Every segment index that exists for `document`, ascending. Empty (not an error)
     /// if `document` has no WAL yet.
     async fn list_segments(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError>;
 
-    /// @emoji ✂️ Truncates the ACTIVE (unsealed) segment `index` down to `new_len` bytes — the
+    /// ✂️ Truncates the ACTIVE (unsealed) segment `index` down to `new_len` bytes — the
     /// crash-recovery primitive for discarding a torn/uncommitted tail write. Errors
     /// `InvalidArgument` if the segment is sealed or if `new_len` exceeds its current length
     /// (this trait never extends a segment via truncation).
     async fn truncate_tail(&self, writer: &WalWriterPermit, index: u64, new_len: u64) -> Result<(), DbError>;
 
-    /// @emoji 🗑️ Deletes segment `index` entirely (both its bytes and seal marker), e.g. after
+    /// 🗑️ Deletes segment `index` entirely (both its bytes and seal marker), e.g. after
     /// `db_compact` has folded it into a later generation. Idempotent if already absent.
     async fn delete_segment(&self, writer: &WalWriterPermit, index: u64) -> Result<(), DbError>;
 }
 //#endregion 🔖️WalStorage
 
 //#region 🔖️SnapshotStorage
-/// @emoji 📸️ Storage for whole snapshot generations — `db_snapshot` hands this trait complete
+/// 📸️ Storage for whole snapshot generations — `db_snapshot` hands this trait complete
 /// `.spk` pack-file bytes (pages in `KIND_CHUNK`, descriptor in `KIND_SNAPSHOT`) per generation;
 /// this trait never parses them, it only persists and retrieves them by `(document, generation)`.
 pub trait SnapshotStorage: Send + Sync {
-    /// @emoji 🪪️ Identity of the concrete storage that owns these generations: two facades over the
+    /// 🪪️ Identity of the concrete storage that owns these generations: two facades over the
     /// same backend report the same scope, so publication exclusion is per backend and document,
     /// never process-wide per document name.
     fn publication_scope(&self) -> usize;
 
-    /// @emoji ✍️ Durably writes `bytes` as generation `generation` of `document`'s snapshot
+    /// ✍️ Durably writes `bytes` as generation `generation` of `document`'s snapshot
     /// history. Overwrites if the same `(document, generation)` is written twice (the caller's
     /// responsibility to pick a fresh generation number per the contract's
     /// `Footer.prev_footer_offset` incremental-generation chain).
     async fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: DbIoPages) -> Result<(), DbError>;
 
-    /// @emoji 📖️ Reads generation `generation`'s complete bytes. Errors `NotFound` if absent.
+    /// 📖️ Reads generation `generation`'s complete bytes. Errors `NotFound` if absent.
     async fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<DbIoPages, DbError>;
 
-    /// @emoji 🥇️ The highest generation number stored for `document`, or `None` if it has no
+    /// 🥇️ The highest generation number stored for `document`, or `None` if it has no
     /// snapshot yet.
     async fn latest_generation(&self, document: &ArtifactId) -> Result<Option<u64>, DbError>;
 
-    /// @emoji 📋️ Every generation number stored for `document`, ascending.
+    /// 📋️ Every generation number stored for `document`, ascending.
     async fn list_generations(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError>;
 
-    /// @emoji 🗑️ Deletes generation `generation`, e.g. once `db_compact`'s retention policy
+    /// 🗑️ Deletes generation `generation`, e.g. once `db_compact`'s retention policy
     /// supersedes it. Idempotent if already absent.
     async fn delete_generation(&self, document: &ArtifactId, generation: u64) -> Result<(), DbError>;
 }
 //#endregion 🔖️SnapshotStorage
 
 //#region 🔖️PayloadStorage
-/// @emoji 🫙️ Content-addressed blob storage (blake3 CAS), shared across every document — large
+/// 🫙️ Content-addressed blob storage (blake3 CAS), shared across every document — large
 /// command/payload bytes referenced from a WAL record or a snapshot page are stored once here and
 /// referenced by `ContentHash` everywhere else, so identical payloads never duplicate on disk.
 pub trait PayloadStorage: Send + Sync {
-    /// @emoji ➕️ Stores `bytes` (if not already present — `put` is idempotent under content
+    /// ➕️ Stores `bytes` (if not already present — `put` is idempotent under content
     /// equality) and returns its `blake3` `ContentHash`.
     async fn put(&self, bytes: DbIoPages) -> Result<ContentHash, DbError>;
 
-    /// @emoji 📖️ Reads the payload stored under `hash`. Errors `NotFound` if absent.
+    /// 📖️ Reads the payload stored under `hash`. Errors `NotFound` if absent.
     async fn get(&self, hash: &ContentHash) -> Result<DbIoPages, DbError>;
 
-    /// @emoji ❓️ True iff a payload is stored under `hash`, without reading it.
+    /// ❓️ True iff a payload is stored under `hash`, without reading it.
     async fn contains(&self, hash: &ContentHash) -> Result<bool, DbError>;
 
-    /// @emoji 🗑️ Deletes the payload stored under `hash` — `db_compact`'s ref-traced payload GC.
+    /// 🗑️ Deletes the payload stored under `hash` — `db_compact`'s ref-traced payload GC.
     /// Idempotent if already absent.
     async fn delete(&self, hash: &ContentHash) -> Result<(), DbError>;
 
-    /// @emoji 📏️ The byte length of the payload stored under `hash`, without reading it. Errors
+    /// 📏️ The byte length of the payload stored under `hash`, without reading it. Errors
     /// `NotFound` if absent.
     async fn len(&self, hash: &ContentHash) -> Result<u64, DbError>;
 }
 //#endregion 🔖️PayloadStorage
 
 //#region 🔖️CatalogStorage
-/// @emoji 🗂️ The single catalog root blob (the family's document directory: names, ids,
+/// 🗂️ The single catalog root blob (the family's document directory: names, ids,
 /// metadata — opaque to this crate) with compare-and-swap-by-epoch writes: the split-brain gate
 /// per `EpochFence`'s doc. Exactly one root exists per `DbStorage` instance.
 pub trait CatalogStorage: Send + Sync {
-    /// @emoji 📖️ The current root bytes and the `EpochFence` they were written under, or `None`
+    /// 📖️ The current root bytes and the `EpochFence` they were written under, or `None`
     /// if `cas_root` has never succeeded yet (a fresh, empty `DbStorage`).
     async fn read_root(&self) -> Result<Option<(DbIoPages, EpochFence)>, DbError>;
 
-    /// @emoji ✅️ Compare-and-swap: succeeds only if `expected` matches the epoch of the currently
+    /// ✅️ Compare-and-swap: succeeds only if `expected` matches the epoch of the currently
     /// stored root (or `EpochFence::INITIAL` if no root has ever been written), in which case the
     /// root becomes `new_bytes` under the next epoch (`expected.next()`), which is returned.
     /// Fails `DbError::Fenced` on any mismatch — a writer that lost leadership never silently
@@ -5840,58 +5840,58 @@ pub trait CatalogStorage: Send + Sync {
 //#endregion 🔖️CatalogStorage
 
 //#region 🔖️IndexStorage
-/// @emoji 🔍️ Storage for `db_index`'s immutable sorted runs (LSM-lite) — opaque per-document,
+/// 🔍️ Storage for `db_index`'s immutable sorted runs (LSM-lite) — opaque per-document,
 /// per-run byte blobs; this trait has no opinion on what's inside a run.
 pub trait IndexStorage: Send + Sync {
-    /// @emoji ✍️ Durably writes `bytes` as run `run_id` of `document`'s index. Overwrites if the
+    /// ✍️ Durably writes `bytes` as run `run_id` of `document`'s index. Overwrites if the
     /// same `(document, run_id)` is written twice.
     async fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: DbIoPages) -> Result<(), DbError>;
 
-    /// @emoji 📖️ Reads run `run_id`'s complete bytes. Errors `NotFound` if absent.
+    /// 📖️ Reads run `run_id`'s complete bytes. Errors `NotFound` if absent.
     async fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<DbIoPages, DbError>;
 
-    /// @emoji 📋️ Every run id stored for `document`, ascending.
+    /// 📋️ Every run id stored for `document`, ascending.
     async fn list_runs(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError>;
 
-    /// @emoji 🗑️ Deletes run `run_id`, e.g. after `db_index`'s merge policy folds it into a
+    /// 🗑️ Deletes run `run_id`, e.g. after `db_index`'s merge policy folds it into a
     /// larger run. Idempotent if already absent.
     async fn delete_run(&self, document: &ArtifactId, run_id: u64) -> Result<(), DbError>;
 }
 //#endregion 🔖️IndexStorage
 
 //#region 🔖️LeaseStorage
-/// @emoji ⏳️ Named, TTL'd, fenced ownership leases — `db_cluster`'s shard-ownership + epoch
+/// ⏳️ Named, TTL'd, fenced ownership leases — `db_cluster`'s shard-ownership + epoch
 /// failover primitive. A lease is keyed by an opaque `resource` string (e.g. a shard id); at most
 /// one `holder` may hold a given resource's lease at a time, and every successful hand-off (a
 /// fresh `acquire` after the previous holder's lease expired) bumps the resource's `EpochFence` so
 /// a stale former holder's writes are fenced out by `CatalogStorage`-style checks downstream.
 pub trait LeaseStorage: Send + Sync {
-    /// @emoji 🤝️ Acquires (or idempotently re-acquires, if `holder` already holds an unexpired
+    /// 🤝️ Acquires (or idempotently re-acquires, if `holder` already holds an unexpired
     /// lease on `resource`) `resource` for `holder`, valid until `now_ms + ttl_ms`. Returns the
     /// resource's current `EpochFence` — unchanged on re-acquire by the same holder, bumped
     /// (`.next()`) on a genuine hand-off from an expired or absent lease. Errors `Conflict` if
     /// another holder's lease on `resource` has not yet expired.
     async fn acquire(&self, resource: &str, holder: &str, ttl_ms: u64, now_ms: u64) -> Result<EpochFence, DbError>;
 
-    /// @emoji ♻️ Extends `holder`'s existing, unexpired lease on `resource` to `now_ms + ttl_ms`.
+    /// ♻️ Extends `holder`'s existing, unexpired lease on `resource` to `now_ms + ttl_ms`.
     /// `fence` must match the lease's current `EpochFence` (`DbError::Fenced` otherwise) and
     /// `holder` must match the current holder (`DbError::Unauthorized` otherwise). Errors
     /// `NotFound`/`Unavailable` if no lease (or an already-expired one) exists on `resource`.
     async fn renew(&self, resource: &str, holder: &str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> Result<(), DbError>;
 
-    /// @emoji 🕊️ Voluntarily releases `holder`'s lease on `resource` early (`fence` and `holder`
+    /// 🕊️ Voluntarily releases `holder`'s lease on `resource` early (`fence` and `holder`
     /// must match, same rules as `renew`), immediately freeing `resource` for another `acquire`
     /// (which will still bump the epoch, since a hand-off occurred).
     async fn release(&self, resource: &str, holder: &str, fence: EpochFence) -> Result<(), DbError>;
 
-    /// @emoji 👀️ The current unexpired lease on `resource` as of `now_ms`, or `None` if unheld or
+    /// 👀️ The current unexpired lease on `resource` as of `now_ms`, or `None` if unheld or
     /// expired (an expired lease is reported as absent, never as stale data).
     async fn current(&self, resource: &str, now_ms: u64) -> Result<Option<LeaseInfo>, DbError>;
 }
 //#endregion 🔖️LeaseStorage
 
 //#region 🔖️DbBackend
-/// @emoji 🧰️ The umbrella storage substrate handle `db_engine`/the `db` facade hold as
+/// 🧰️ The umbrella storage substrate handle `db_engine`/the `db` facade hold as
 /// `Arc<DbBackend>` (selected at `Database::open`, never compile-time-only per the contract).
 /// Replaces the old `Arc<dyn DbStorage>` seam per ruling **O1** (drop dyn dispatch): every
 /// former `&dyn WalStorage`/etc. accessor becomes a concrete facet-ref enum
@@ -5916,7 +5916,7 @@ pub enum DbBackend {
 }
 
 impl DbBackend {
-    /// @emoji 🔀️ This backend's [`WalRef`] facet — replaces the old `&dyn WalStorage`.
+    /// 🔀️ This backend's [`WalRef`] facet — replaces the old `&dyn WalStorage`.
     pub async fn wal(&self) -> WalRef<'_> {
         match self {
             Self::Memory(s) => WalRef::Memory(s),
@@ -5933,8 +5933,8 @@ impl DbBackend {
         }
     }
 
-    /// @emoji 🔀️ This backend's [`SnapshotRef`] facet — replaces the old `&dyn SnapshotStorage`.
-    /// @emoji 🪪️ The publication scope of this backend's snapshot facet, available without a facet.
+    /// 🔀️ This backend's [`SnapshotRef`] facet — replaces the old `&dyn SnapshotStorage`.
+    /// 🪪️ The publication scope of this backend's snapshot facet, available without a facet.
     pub fn publication_scope(&self) -> usize {
         match self {
             Self::Memory(s) => s.publication_scope(),
@@ -5967,7 +5967,7 @@ impl DbBackend {
         }
     }
 
-    /// @emoji 🔀️ This backend's [`PayloadRef`] facet — replaces the old `&dyn PayloadStorage`.
+    /// 🔀️ This backend's [`PayloadRef`] facet — replaces the old `&dyn PayloadStorage`.
     pub async fn payload(&self) -> PayloadRef<'_> {
         match self {
             Self::Memory(s) => PayloadRef::Memory(s),
@@ -5984,7 +5984,7 @@ impl DbBackend {
         }
     }
 
-    /// @emoji 🔀️ This backend's [`CatalogRef`] facet — replaces the old `&dyn CatalogStorage`.
+    /// 🔀️ This backend's [`CatalogRef`] facet — replaces the old `&dyn CatalogStorage`.
     pub async fn catalog(&self) -> CatalogRef<'_> {
         match self {
             Self::Memory(s) => CatalogRef::Memory(s),
@@ -6001,7 +6001,7 @@ impl DbBackend {
         }
     }
 
-    /// @emoji 🔀️ This backend's [`IndexRef`] facet — replaces the old `&dyn IndexStorage`.
+    /// 🔀️ This backend's [`IndexRef`] facet — replaces the old `&dyn IndexStorage`.
     pub async fn index(&self) -> IndexRef<'_> {
         match self {
             Self::Memory(s) => IndexRef::Memory(s),
@@ -6018,7 +6018,7 @@ impl DbBackend {
         }
     }
 
-    /// @emoji 🔀️ This backend's [`LeaseRef`] facet — replaces the old `&dyn LeaseStorage`.
+    /// 🔀️ This backend's [`LeaseRef`] facet — replaces the old `&dyn LeaseStorage`.
     pub async fn lease(&self) -> LeaseRef<'_> {
         match self {
             Self::Memory(s) => LeaseRef::Memory(s),
@@ -6035,7 +6035,7 @@ impl DbBackend {
         }
     }
 
-    /// @emoji 🎚️ What this concrete backend actually supports.
+    /// 🎚️ What this concrete backend actually supports.
     pub async fn capabilities(&self) -> StorageCapabilities {
         match self {
             Self::Memory(s) => s.capabilities().await,
@@ -6055,7 +6055,7 @@ impl DbBackend {
         }
     }
 
-    /// @emoji 🔚️ Closes the concrete backend: every retained WAL writer is released on the backend
+    /// 🔚️ Closes the concrete backend: every retained WAL writer is released on the backend
     /// itself (Postgres advisory unlock, Neo4j lease release, SQLite/filesystem writer table) and the
     /// driver is torn down before this resolves, so a process that awaits it before exiting leaves no
     /// cross-process writer fence behind. Contract: `🔐️writer/🧬️schema/🔣️.json#/$defs/WalWriterFenceV1`.
@@ -6078,7 +6078,7 @@ impl DbBackend {
 //#endregion 🔖️DbBackend
 
 //#region 🔖️WalRef
-/// @emoji 🔀️ [`DbBackend::wal`]'s return shape — the enum that replaces
+/// 🔀️ [`DbBackend::wal`]'s return shape — the enum that replaces
 /// `&dyn WalStorage` per ruling **O1**.
 pub enum WalRef<'a> {
     Memory(&'a MemoryStorage),
@@ -6274,7 +6274,7 @@ impl<'a> WalStorage for WalRef<'a> {
 //#endregion 🔖️WalRef
 
 //#region 🔖️SnapshotRef
-/// @emoji 🔀️ [`DbBackend::snapshot`]'s return shape — the enum that replaces
+/// 🔀️ [`DbBackend::snapshot`]'s return shape — the enum that replaces
 /// `&dyn SnapshotStorage` per ruling **O1**.
 pub enum SnapshotRef<'a> {
     Memory(&'a MemoryStorage),
@@ -6390,7 +6390,7 @@ impl<'a> SnapshotStorage for SnapshotRef<'a> {
 //#endregion 🔖️SnapshotRef
 
 //#region 🔖️PayloadRef
-/// @emoji 🔀️ [`DbBackend::payload`]'s return shape — the enum that replaces
+/// 🔀️ [`DbBackend::payload`]'s return shape — the enum that replaces
 /// `&dyn PayloadStorage` per ruling **O1**.
 pub enum PayloadRef<'a> {
     Memory(&'a MemoryStorage),
@@ -6490,7 +6490,7 @@ impl<'a> PayloadStorage for PayloadRef<'a> {
 //#endregion 🔖️PayloadRef
 
 //#region 🔖️CatalogRef
-/// @emoji 🔀️ [`DbBackend::catalog`]'s return shape — the enum that replaces
+/// 🔀️ [`DbBackend::catalog`]'s return shape — the enum that replaces
 /// `&dyn CatalogStorage` per ruling **O1**.
 pub enum CatalogRef<'a> {
     Memory(&'a MemoryStorage),
@@ -6545,7 +6545,7 @@ impl<'a> CatalogStorage for CatalogRef<'a> {
 //#endregion 🔖️CatalogRef
 
 //#region 🔖️IndexRef
-/// @emoji 🔀️ [`DbBackend::index`]'s return shape — the enum that replaces
+/// 🔀️ [`DbBackend::index`]'s return shape — the enum that replaces
 /// `&dyn IndexStorage` per ruling **O1**.
 pub enum IndexRef<'a> {
     Memory(&'a MemoryStorage),
@@ -6629,7 +6629,7 @@ impl<'a> IndexStorage for IndexRef<'a> {
 //#endregion 🔖️IndexRef
 
 //#region 🔖️LeaseRef
-/// @emoji 🔀️ [`DbBackend::lease`]'s return shape — the enum that replaces
+/// 🔀️ [`DbBackend::lease`]'s return shape — the enum that replaces
 /// `&dyn LeaseStorage` per ruling **O1**.
 pub enum LeaseRef<'a> {
     Memory(&'a MemoryStorage),
@@ -6713,7 +6713,7 @@ impl<'a> LeaseStorage for LeaseRef<'a> {
 //#endregion 🔖️LeaseRef
 
 //#region 🔖️Memory
-/// @emoji 🧠️ One in-process, non-durable segment of a document's WAL — `bytes` plus whether
+/// 🧠️ One in-process, non-durable segment of a document's WAL — `bytes` plus whether
 /// `seal` has been called on it. Its chunk table is heap backing of the live segment only: a
 /// segment charges [`memory_wal_segment_credit`] to its backend when it is created and returns
 /// it when its retirement empties the slot, so an idle memory backend does not pre-pay the chunk
@@ -6730,12 +6730,12 @@ impl MemWalSegment {
     }
 }
 
-/// @emoji 🧾️ Exact heap credit of one live memory WAL segment's chunk table.
+/// 🧾️ Exact heap credit of one live memory WAL segment's chunk table.
 const fn memory_wal_segment_credit() -> DbIoCredit {
     DbIoCredit { pages: 0, bytes: (DB_IO_OPERATION_ITEMS * size_of::<Option<DbIoPages>>()) as u64, items: 1, controls: 0 }
 }
 
-/// @emoji 🧠️ A pure in-memory `DbStorage`: every store is a `Mutex`-guarded map, nothing ever
+/// 🧠️ A pure in-memory `DbStorage`: every store is a `Mutex`-guarded map, nothing ever
 /// touches a filesystem. Not durable (`capabilities().durable == false`) — the backend for unit
 /// tests and `db_fault_testing`'s deterministic simulation runtime, never for a real deployment. Every
 /// trait method body below is synchronous (no real I/O to await), so it is simply wrapped in an
@@ -6880,7 +6880,7 @@ impl MemoryDbIoExecutor {
         Ok(false)
     }
 
-    /// @emoji 🧹️ One explicit memory-backend owner/page retirement opportunity.
+    /// 🧹️ One explicit memory-backend owner/page retirement opportunity.
     pub fn close_backend_step(&self) -> Result<bool, DbError> {
         if let Some(cursor) = lock(&self.operations).iter_mut().find(|cursor| cursor.is_some()) {
             *cursor = None;
@@ -7001,7 +7001,7 @@ fn memory_page_owner_close_step(owners: &mut [Option<MemoryPageOwner>]) -> Resul
     Ok(true)
 }
 
-/// @emoji 🩹️ Recovers a `Mutex` guard from a poisoned lock instead of panicking — a single
+/// 🩹️ Recovers a `Mutex` guard from a poisoned lock instead of panicking — a single
 /// panicking mailbox/actor elsewhere in the family must not turn every other document's storage
 /// access into a cascading panic.
 // 🚫️async: E1 pure accessor (no suspension) — see R9
@@ -7570,13 +7570,13 @@ fn memory_output(bytes: u64) -> Result<DbIoPageWriter, DbError> {
 }
 
 impl MemoryStorage {
-    /// @emoji 🧠️ Opens one memory backend through [`open_db_io_backend_admitted`] (waits while the process's backend
+    /// 🧠️ Opens one memory backend through [`open_db_io_backend_admitted`] (waits while the process's backend
     /// capacity is taken by backends still retiring).
     pub async fn new(pool: Arc<WorkerPool>) -> Result<Self, DbStorageOpenRejected> {
         open_db_io_backend_admitted(&pool, || Self::open_once(pool.clone())).await
     }
 
-    /// @emoji 🎯️ One memory backend open attempt, refused at once when the backend capacity is taken.
+    /// 🎯️ One memory backend open attempt, refused at once when the backend capacity is taken.
     pub(crate) async fn open_once(pool: Arc<WorkerPool>) -> Result<Self, DbStorageOpenRejected> {
         let rollback = DbIoBackendRollbackReservation::try_reserve()?;
         let pool_use = pool.acquire_use().map_err(|error| DbError::Unavailable(format!("memory DB I/O backend WorkerPool use rejected: {error:?}")))?;
@@ -7840,7 +7840,7 @@ impl LeaseStorage for MemoryStorage {
 //#endregion 🔖️Memory
 
 //#region 🔖️Fs
-/// @emoji 📁️ The zero-touch default `DbStorage`: pure files under a root directory, no new C
+/// 📁️ The zero-touch default `DbStorage`: pure files under a root directory, no new C
 /// dependency (see module doc for the wasm32/native-only gating rationale). Layout under `root`:
 /// `wal/<doc>/segment-<index>.bin` (+ `.sealed` marker once sealed), `snapshot/<doc>/gen-<n>.pack`,
 /// `payload/<hash[0..2]>/<hash>.bin` (blake3 CAS, two-hex-char sharding), `catalog/root.bin`
@@ -7862,7 +7862,7 @@ mod fs_storage {
     use std::path::{Path, PathBuf};
     use std::sync::{Arc, Mutex};
 
-    /// @emoji 🚨️ Wraps a `std::io::Error` into `DbError::Io` — the only place `std::io::Error` is
+    /// 🚨️ Wraps a `std::io::Error` into `DbError::Io` — the only place `std::io::Error` is
     /// allowed to appear, per the contract's no-`std::io::Error`-in-public-signatures rule.
     #[allow(clippy::needless_pass_by_value)] // used as a `map_err` callback, which passes the error by value
                                              // 🚫️async: E4 fn-pointer slot
@@ -7898,7 +7898,7 @@ mod fs_storage {
         state: Mutex<FsLifecycleState>,
     }
 
-    /// @emoji 🚰️ One drive write-cache flush that every concurrent durable file sync of this root
+    /// 🚰️ One drive write-cache flush that every concurrent durable file sync of this root
     /// shares. On Apple platforms a durable sync is the file's own `fsync` (its pages reach the
     /// drive) followed by a device-wide `F_FULLFSYNC` (the drive's cache reaches the media): a flush
     /// that starts after a member's `fsync` returned covers that member, so two dozen documents
@@ -7916,12 +7916,12 @@ mod fs_storage {
         flushing: bool,
     }
 
-    /// @emoji 📁️ How many directories one executor remembers as durable before it forgets them all
+    /// 📁️ How many directories one executor remembers as durable before it forgets them all
     /// and walks their ancestors again: a document owns four (wal, index, snapshot, payload), so the
     /// bound covers every document a hub keeps mounted.
     const FS_DURABLE_DIRECTORIES: usize = 4_096;
 
-    /// @emoji 📁️ Directories this executor already made durable (created, every ancestor's entry
+    /// 📁️ Directories this executor already made durable (created, every ancestor's entry
     /// synced): a WAL sync or run replacement in one of them skips the whole-ancestry fsync walk,
     /// which cost one directory fsync per path component on every durable write.
     #[derive(Default)]
@@ -7989,7 +7989,7 @@ mod fs_storage {
         file.sync_all().map_err(io_err)
     }
 
-    /// @emoji 💾️ Makes `file`'s bytes durable on the medium (see `FsFullSyncGroup`); elsewhere the
+    /// 💾️ Makes `file`'s bytes durable on the medium (see `FsFullSyncGroup`); elsewhere the
     /// platform's own full `fsync`.
     fn durable_file_sync(file: &std::fs::File, lifecycle: &FsLifecycle) -> Result<(), DbError> {
         #[cfg(target_vendor = "apple")]
@@ -8129,7 +8129,7 @@ mod fs_storage {
     #[cfg(test)]
     include!("🧪️tests/🔬️fs-storage-directory-durability/🦀️.rs");
 
-    /// @emoji 🧭️ Maps a `std::io::Error` to `DbError::NotFound(missing())` when it's a missing-file
+    /// 🧭️ Maps a `std::io::Error` to `DbError::NotFound(missing())` when it's a missing-file
     /// error, or `DbError::Io` otherwise — used everywhere an open/read/stat is expected to find a
     /// caller-addressed blob that might legitimately not exist yet.
     // 🚫️async: E1 pure accessor called from sync `.map_err(|err| open_err(...))` closures — see R9
@@ -8141,7 +8141,7 @@ mod fs_storage {
         }
     }
 
-    /// @emoji 🛡️ Rejects a path component that could escape `root` (empty, `.`, `..`, or
+    /// 🛡️ Rejects a path component that could escape `root` (empty, `.`, `..`, or
     /// containing a path separator/NUL) — every document id, resource name, etc. that becomes a
     /// filesystem path component is validated through this before use.
     fn safe_component(raw: &str) -> Result<&str, DbError> {
@@ -8837,7 +8837,7 @@ mod fs_storage {
         }
     }
 
-    /// @emoji 📁️ The zero-touch default `DbStorage` backend — see module doc for the on-disk
+    /// 📁️ The zero-touch default `DbStorage` backend — see module doc for the on-disk
     /// layout. `catalog_lock`/`lease_lock` serialize this-process's compare-and-swap operations;
     /// see `CatalogStorage`/`LeaseStorage` impls below for why a bare read-verify-write over
     /// `write_atomic` isn't itself enough across OS processes (documented extension seam). `pool`
@@ -8850,7 +8850,7 @@ mod fs_storage {
     }
 
     impl FsStorage {
-        /// @emoji 🚀️ Opens (creating if absent) a `FsStorage` rooted at `root`, dispatching every
+        /// 🚀️ Opens (creating if absent) a `FsStorage` rooted at `root`, dispatching every
         /// subsequent trait call's blocking body through the typed task owner onto `pool`'s
         /// `Lane::Io`. The constructor's directory creation uses that same retained authority;
         /// callers never prepare the root synchronously or through a pool-less fallback.
@@ -8858,7 +8858,7 @@ mod fs_storage {
             super::open_db_io_backend_admitted(&pool, || Self::open_once(pool.clone(), root)).await
         }
 
-        /// @emoji 🎯️ One filesystem backend open attempt, refused at once when the backend capacity is taken.
+        /// 🎯️ One filesystem backend open attempt, refused at once when the backend capacity is taken.
         async fn open_once(pool: Arc<WorkerPool>, root: &Path) -> Result<Self, DbStorageOpenRejected> {
             let root = root.to_str().ok_or_else(|| DbError::InvalidArgument("filesystem storage root is not UTF-8".to_string())).and_then(DbIoText::try_from_str)?;
             let rollback = DbIoBackendRollbackReservation::try_reserve()?;
@@ -8884,7 +8884,7 @@ mod fs_storage {
             result
         }
 
-        /// @emoji 🎚️ Always durable, `fsync`-capable, CAS-capable — the on-disk default.
+        /// 🎚️ Always durable, `fsync`-capable, CAS-capable — the on-disk default.
         pub async fn capabilities(&self) -> StorageCapabilities {
             StorageCapabilities { durable: true, max_durability: DurabilityClass::Fsync, supports_fsync: true, supports_cas: true }
         }
@@ -9029,7 +9029,7 @@ mod fs_storage {
         }
     }
 
-    /// @emoji 📖️ The blocking body behind `CatalogStorage::read_root` — factored out so
+    /// 📖️ The blocking body behind `CatalogStorage::read_root` — factored out so
     /// `cas_root` can reuse it under `catalog_lock` without recursive task submission.
     // 🚫️async: E1 pure-shaped typed-task accessor.
     fn read_root_fence(root: &Path) -> Result<Option<EpochFence>, DbError> {

@@ -30,7 +30,7 @@ export type { IconName };
 // #endregion 🔌️Adapters
 
 // #region 🔖️Icon
-/** @emoji 📐️ Named size tokens for {@link Icon}. */
+/** 📐️ Named size tokens for {@link Icon}. */
 export type IconSizeToken = "tiny" | "small" | "base" | "large";
 
 const ICON_SIZE_PX: Record<IconSizeToken, number> = {
@@ -40,7 +40,7 @@ const ICON_SIZE_PX: Record<IconSizeToken, number> = {
   large: domSizePx("iconLargeUiSpacing"),
 };
 
-/** @emoji 📐️ Resolves {@link Icon} `size` to pixel dimensions. */
+/** 📐️ Resolves {@link Icon} `size` to pixel dimensions. */
 export function resolveIconSizePx(size?: number | IconSizeToken): number {
   if (size === undefined) return ICON_SIZE_PX.base;
   if (typeof size === "number") return size;
@@ -49,7 +49,7 @@ export function resolveIconSizePx(size?: number | IconSizeToken): number {
 
 // #region 🖼️IconCodec
 
-/** @emoji 🖼️ Canonical structured icon payload shared across canvases and UI chrome. */
+/** 🖼️ Canonical structured icon payload shared across canvases and UI chrome. */
 export type Icon =
   | { readonly kind: "url"; readonly url: string }
   | { readonly kind: "shortcode"; readonly code: string }
@@ -62,7 +62,7 @@ export type Icon =
   | { readonly kind: "themed"; readonly key: MetabolismIconName }
   | { readonly kind: "node"; readonly node: React.ReactNode };
 
-/** @emoji 🎛️ Shared icon editor tab buckets aligned with {@link Icon}. */
+/** 🎛️ Shared icon editor tab buckets aligned with {@link Icon}. */
 export type IconSelectorMode = "url" | "shortcode" | "data" | "emoji" | "math" | "text" | "vector";
 
 function isRasterDataUrlPayloadForIcon(s: string): boolean {
@@ -95,7 +95,7 @@ function looksLikeBareEmojiForIcon(s: string): boolean {
   return /\p{Extended_Pictographic}/u.test(s.trim());
 }
 
-/** @emoji 🔤️ Decodes a canonical icon string into a structured {@link Icon}. */
+/** 🔤️ Decodes a canonical icon string into a structured {@link Icon}. */
 export function decodeIcon(encoded: string): Icon | undefined {
   const t = encoded.trim();
   if (t === "") {
@@ -151,7 +151,7 @@ export function decodeIcon(encoded: string): Icon | undefined {
   return undefined;
 }
 
-/** @emoji 🔤️ Encodes a structured {@link Icon} into the canonical wire string. */
+/** 🔤️ Encodes a structured {@link Icon} into the canonical wire string. */
 export function encodeIcon(icon: Icon): string {
   switch (icon.kind) {
     case "url":
@@ -177,7 +177,7 @@ export function encodeIcon(icon: Icon): string {
   }
 }
 
-/** @emoji 🧭️ Picks an {@link IconSelectorMode} tab for a stored icon string. */
+/** 🧭️ Picks an {@link IconSelectorMode} tab for a stored icon string. */
 export function classifyIconSelectorMode(raw: string): IconSelectorMode {
   const icon = decodeIcon(raw);
   if (!icon) {
@@ -248,7 +248,7 @@ async function fetchIconUrlAsDataUrl(url: string): Promise<string | undefined> {
   }
 }
 
-/** @emoji 🌐️ Prefetches `url:`/`http(s)` icons in board JSON to inline `data:` payloads before WASM sync. */
+/** 🌐️ Prefetches `url:`/`http(s)` icons in board JSON to inline `data:` payloads before WASM sync. */
 export async function resolveIconUrlsInBoardJson(json: string): Promise<string> {
   let root: unknown;
   try {
@@ -304,10 +304,10 @@ export async function resolveIconUrlsInBoardJson(json: string): Promise<string> 
   return JSON.stringify(root);
 }
 
-/** @emoji 🖼️ Icon payload: canonical union, vendored catalog name, or legacy shorthand. */
+/** 🖼️ Icon payload: canonical union, vendored catalog name, or legacy shorthand. */
 export type IconSource = Icon | IconName | { readonly name: IconName } | { readonly svg: string } | { readonly url: string } | { readonly node: React.ReactNode };
 
-/** @emoji 🎛️ Required icon slot for chrome controls (buttons, toggles, actions). */
+/** 🎛️ Required icon slot for chrome controls (buttons, toggles, actions). */
 export type ControlIcon = IconSource | React.ReactElement;
 
 function isIconSource(value: ControlIcon): value is IconSource {
@@ -326,12 +326,12 @@ function useThemeIcons(): UiTheme["icons"] {
   );
 }
 
-/** @emoji 🖼️ Resolves catalog icon SVG for the active theme. */
+/** 🖼️ Resolves catalog icon SVG for the active theme. */
 export function resolveCatalogIconSvg(name: IconName, icons: UiTheme["icons"] = activeUiTheme().icons): string {
   return resolveCatalogIconSvgFromTheme(name, icons);
 }
 
-/** @emoji 🖼️ Resolves metabolism icon SVG for the active theme. */
+/** 🖼️ Resolves metabolism icon SVG for the active theme. */
 export function resolveMetabolismIconSvg(name: MetabolismIconName, icons: UiTheme["icons"] = activeUiTheme().icons): string {
   return resolveMetabolismIconSvgFromTheme(name, icons);
 }
@@ -415,7 +415,7 @@ function coerceIconSource(source: IconSource): Icon {
   return { kind: "catalog", key: source.name };
 }
 
-/** @emoji 🎛️ Renders a control icon or a visible missing-icon placeholder. */
+/** 🎛️ Renders a control icon or a visible missing-icon placeholder. */
 export function renderControlIcon(icon: ControlIcon | undefined | null | false, size: number | IconSizeToken = "small"): React.ReactNode {
   if (icon === undefined || icon === null || icon === false) {
     return <span data-missing-icon data-icon-kind="missing" className="inline-flex size-small shrink-0 rounded-sm bg-destructive/30" aria-hidden />;
@@ -431,14 +431,14 @@ export interface IconProps {
   title?: UiLabel;
 }
 
-/** @emoji 🖼️ Raw vendored SVG markup for an icon name, or `undefined` when the name is not a vendored {@link IconName}. */
+/** 🖼️ Raw vendored SVG markup for an icon name, or `undefined` when the name is not a vendored {@link IconName}. */
 export function iconSvgMarkup(name: IconName): string {
   return resolveCatalogIconSvg(name);
 }
 
 const ICON_MASK_CACHE = ephemeralMap<string, string>("framework.modules.ui.elements.Icons.component.tsx.ICON_MASK_CACHE");
 
-/** @emoji 🩻️ Alpha-mask image for an icon's own resolved SVG — lets CSS paint gradients (e.g. the celebrate conic) through the glyph instead of behind it. `currentColor` is baked to opaque black because a mask image renders in its own context and only its alpha channel is read. */
+/** 🩻️ Alpha-mask image for an icon's own resolved SVG — lets CSS paint gradients (e.g. the celebrate conic) through the glyph instead of behind it. `currentColor` is baked to opaque black because a mask image renders in its own context and only its alpha channel is read. */
 export function iconMaskImage(svgMarkup: string): string {
   const cached = ICON_MASK_CACHE.get(svgMarkup);
   if (cached) return cached;
@@ -466,7 +466,7 @@ function iconBoxClassName(size: number | IconSizeToken, className?: string): str
   return cn(typeof size === "string" ? ICON_SIZE_CLASS[size] : undefined, className);
 }
 
-/** @emoji 🖼️ Renders canonical icons without depending on an external icon library. */
+/** 🖼️ Renders canonical icons without depending on an external icon library. */
 export function Icon({ icon, size = "base", className, title }: IconProps): React.ReactElement {
   const themeIcons = useThemeIcons();
   const boxStyle = iconBoxStyle(size);
@@ -531,7 +531,7 @@ export function Icon({ icon, size = "base", className, title }: IconProps): Reac
 
 // #endregion 🖼️IconCodec
 
-/** @emoji 🔗️ Binds a built-in {@link IconName} for APIs expecting `ComponentType<{ size?: number }>`. */
+/** 🔗️ Binds a built-in {@link IconName} for APIs expecting `ComponentType<{ size?: number }>`. */
 export function createIconComponent(name: IconName): React.ComponentType<{ size?: number; className?: string }> {
   return function BoundIcon({ size = 16, className }: { size?: number; className?: string }) {
     return <Icon icon={name} size={size} className={className} />;

@@ -1,4 +1,4 @@
-/** @emoji 🧪️ The framework ToolRun panel the plugin runtime renders for a running run (`🔌️plugin/🧫️fixtures/⏯️tool-run/
+/** 🧪️ The framework ToolRun panel the plugin runtime renders for a running run (`🔌️plugin/🧫️fixtures/⏯️tool-run/
  * 🪧️panel-running.json`, pinned by the Rust `tool_run_panel_of_a_running_run_is_the_shell_fixture` law) mounts through the
  * shell's panel-tab path: a labelled run group, a real progressbar, keyboard-reachable buttons that dispatch the run's own
  * actions, and the reveal rule that opens the panel when a run starts. dom-testing-library's role queries and

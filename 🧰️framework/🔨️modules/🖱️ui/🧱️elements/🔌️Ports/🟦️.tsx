@@ -59,7 +59,7 @@ export interface ReactHostPort {
   readonly createContext: typeof React.createContext;
 }
 
-/** @emoji 🔌️ Default host port — inject a test double via {@link setReactHostPort} before render. */
+/** 🔌️ Default host port — inject a test double via {@link setReactHostPort} before render. */
 export let reactHostPort: ReactHostPort = {
   createElement: React.createElement,
   useState: React.useState,
@@ -79,7 +79,7 @@ export let reactHostPort: ReactHostPort = {
   createContext: React.createContext,
 };
 
-/** @emoji 🔌️ ESM importers cannot assign an imported `export let` binding directly, so this is the only
+/** 🔌️ ESM importers cannot assign an imported `export let` binding directly, so this is the only
  * way to swap {@link reactHostPort} from outside this module (the barrel's `configureHostPorts` calls
  * this instead of a direct assignment). Returns the previously-installed port. */
 export function setReactHostPort(port: ReactHostPort): ReactHostPort {
@@ -97,7 +97,7 @@ export const SCENE_THREE_BINDINGS = Object.freeze({ Box3, BoxGeometry, BufferAtt
 /** 🧊️ The shape of {@link SCENE_THREE_BINDINGS}: what a test double of the scene port's `three` member provides. */
 export type SceneThreeBindings = typeof SCENE_THREE_BINDINGS;
 
-/** @emoji 🧊️ Scene host surface for puzzle/cad R3F + three.js (implemented by 🔌️Adapters). */
+/** 🧊️ Scene host surface for puzzle/cad R3F + three.js (implemented by 🔌️Adapters). */
 export interface SceneHostPort {
   readonly fiber: {
     readonly canvas: typeof ThreeCanvas;
@@ -124,7 +124,7 @@ export interface SceneHostPort {
   readonly three: SceneThreeBindings;
 }
 
-/** @emoji 🔌️ Default scene host port wired to fiber/drei/three adapters — inject a test double via
+/** 🔌️ Default scene host port wired to fiber/drei/three adapters — inject a test double via
  * {@link setSceneHostPort} before render. */
 export let sceneHostPort: SceneHostPort = {
   fiber: {
@@ -152,7 +152,7 @@ export let sceneHostPort: SceneHostPort = {
   three: SCENE_THREE_BINDINGS,
 };
 
-/** @emoji 🔌️ ESM importers cannot assign an imported `export let` binding directly, so this is the only
+/** 🔌️ ESM importers cannot assign an imported `export let` binding directly, so this is the only
  * way to swap {@link sceneHostPort} from outside this module (the barrel's `configureHostPorts` calls
  * this instead of a direct assignment). Returns the previously-installed port. */
 export function setSceneHostPort(port: SceneHostPort): SceneHostPort {
@@ -161,27 +161,27 @@ export function setSceneHostPort(port: SceneHostPort): SceneHostPort {
   return previous;
 }
 
-/** @emoji Flow host surface for diagram runtime. */
+/** 🌊️ Flow host surface for diagram runtime. */
 export interface FlowHostPort {
   readonly flow: typeof ReactFlow;
   readonly provider: typeof ReactFlowProvider;
 }
 
-/** @emoji Default diagram host port wired to @xyflow/react. */
+/** 🔗️ Default diagram host port wired to @xyflow/react. */
 export let flowHostPort: FlowHostPort = {
   flow: ReactFlow,
   provider: ReactFlowProvider,
 };
 
-/** @emoji ESM-safe setter for flowHostPort. */
+/** 🪝️ ESM-safe setter for flowHostPort. */
 export function setFlowHostPort(port: FlowHostPort): FlowHostPort {
   const previous = flowHostPort;
   flowHostPort = port;
   return previous;
 }
 
-/** @emoji JSX alias for diagram flow host. */
+/** 🏷️ JSX alias for diagram flow host. */
 export const HostReactFlow = flowHostPort.flow;
-/** @emoji JSX alias for diagram flow provider. */
+/** 🔖️ JSX alias for diagram flow provider. */
 export const HostReactFlowProvider = flowHostPort.provider;
 //#endregion 🔌️Ports

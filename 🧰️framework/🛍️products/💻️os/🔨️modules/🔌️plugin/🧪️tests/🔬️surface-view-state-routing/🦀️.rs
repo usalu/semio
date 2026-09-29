@@ -79,6 +79,13 @@ async fn surface_routing_render(runtime: &super::PluginRuntime<VcsArtifactApp<Te
 /// rendered against the alias's. B23 §3 named this as the one hop no testkit render helper
 /// (`render_body`/`render_panel_body`/`render_window_refresh`/`render_window`/`render_composite`)
 /// can reach, because every one of them calls `PluginApp::render` with a hand-built `ViewModel`.
+///
+/// 🕹️ The pick's own stamping pass already queued its presence; draining it here makes every
+/// assertion below about the presence THAT surface's render produced.
+///
+/// 🧹 The reserved pick parks its worker-session retirement PROCESS-globally (maintenance stage
+/// 23); left behind it pollutes the heap `a_settled_reactor_turn_retains_nothing_the_guest_cannot_afford`
+/// measures — the same rule `close_fixture_app_to_terminal_emptiness` states for every fixture app.
 #[semio_framework_async_macros::async_test]
 async fn every_mounted_surface_renders_against_its_own_view_state_while_one_pick_reaches_every_body() {
     let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🪟️surfaces/🧫️fixtures/🪟️surface-view-state-routing/🔣️.json")).expect("surface view-state routing fixture");
@@ -87,12 +94,7 @@ async fn every_mounted_surface_renders_against_its_own_view_state_while_one_pick
     let mut app = VcsArtifactApp::with_registry(TestApp::<false>::default(), surface_routing_registry().await).await;
     reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": domain, "merge": "replace", "method": "pick" }), node_key))).await;
     assert_eq!(app.interaction_state().await.selection.get(domain).map(|selection| selection.ids.clone()), Some(vec![node_key.to_string()]), "the browser-shaped pick must be persisted before any surface renders");
-    // 🕹️ The pick's own stamping pass already queued its presence; draining it here makes every
-    // assertion below about the presence THAT surface's render produced.
     drop(PluginApp::take_pending_presence(&mut app).await);
-    // 🧹 The reserved pick parks its worker-session retirement PROCESS-globally (maintenance stage
-    // 23); left behind it pollutes the heap `a_settled_reactor_turn_retains_nothing_the_guest_cannot_afford`
-    // measures — the same rule `close_fixture_app_to_terminal_emptiness` states for every fixture app.
     for _ in 0..(MAINTENANCE_STAGES as usize * ARTIFACT_LIVE_OUTPUT_SLOTS) {
         if !semio_framework_job::worker_job_retirements_are_parked() {
             break;
@@ -138,6 +140,5 @@ async fn every_mounted_surface_renders_against_its_own_view_state_while_one_pick
         };
         surface_routing_render(&runtime, id, &rebound, node_key).await;
     }
-    eprintln!("[DEBUG] three mounted surfaces each rendered against their own view state, one pick reached every body, and a host refresh rebound every surface without losing its identity");
 }
 //#endregion 🪟️SurfaceViewStateRouting

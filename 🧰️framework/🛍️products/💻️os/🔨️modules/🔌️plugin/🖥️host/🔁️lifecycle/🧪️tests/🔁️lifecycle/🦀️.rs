@@ -44,7 +44,6 @@ fn structured_guest_fault_survives_wit_owned_and_async_channels() {
             assert_eq!(retryable_lifecycle_turn(&received, &events), expected);
         }
     }
-    eprintln!("[DEBUG] structured guest fault transports=3 neutral-cases=10");
 }
 
 #[test]

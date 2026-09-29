@@ -8,7 +8,7 @@ const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
 const repoRoot = resolve(root, "../../../../../../..");
 
-/** @emoji 🧪️ Vitest for `@semio-tech/framework-os-shell` (inline `import.meta.vitest`). */
+/** 🧪️ Vitest for `@semio-tech/framework-os-shell` (inline `import.meta.vitest`). */
 export default defineConfig({
   root: testRoot,
   cacheDir: repoCacheDirectory(repoRoot, "vite", "os-shell"),

@@ -257,6 +257,8 @@ fn ink_block_bounds_from_points() {
 }
 
 //#region InkCanvasPaintTests
+/// 🎨️ `bg-background/90` in `ink-canvas-host.tsx` — the card's fill must resolve to
+/// `theme.background`, not `theme.panel` (the app-chrome surface token).
 #[test]
 fn item_card_background_uses_the_background_token_not_panel() {
     let block = json!({
@@ -302,8 +304,6 @@ fn item_card_background_uses_the_background_token_not_panel() {
         let inner = Rect::new(0.0, 0.0, 400.0, 300.0);
         draw_ink_item(&mut ctx, &scene, &block, camera, inner, &doc, false, false);
     }
-    // 🎨️ `bg-background/90` in `ink-canvas-host.tsx` — the card's fill must resolve to
-    // `theme.background`, not `theme.panel` (the app-chrome surface token).
     let expected = theme.background.with_alpha(0.9);
     let colors: Vec<[f32; 4]> = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).map(|i| i.color).collect();
     assert!(colors.contains(&[expected.r, expected.g, expected.b, expected.a]), "expected an item card fill at theme.background@0.9, got {colors:?}");

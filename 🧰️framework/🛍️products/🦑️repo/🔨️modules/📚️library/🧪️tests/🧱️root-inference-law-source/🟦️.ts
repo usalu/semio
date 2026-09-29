@@ -127,7 +127,7 @@ test("validates the portable inference-law ownership contract", () => {
   expect(new Set(fixture.owners.map((owner) => owner.path)).size).toBe(12);
 });
 
-test("resolves and typechecks every anonymous owner", { timeout: 30_000 }, () => {
+test("resolves and typechecks every anonymous owner", () => {
   const taxonomy = loadTaxonomy();
   for (const context of fixture.contexts) expect(semanticDirectoryKindId(context.directoryName, taxonomy, { parentKindId: context.parentKindId }), JSON.stringify(context)).toBe(context.kindId);
   const paths = fixture.owners.map((owner) => resolve(repoRoot, owner.path));
@@ -149,7 +149,7 @@ test("resolves and typechecks every anonymous owner", { timeout: 30_000 }, () =>
   expect(
     paths.flatMap((path: string) => [...program.getSyntacticDiagnostics(program.getSourceFile(path)), ...program.getSemanticDiagnostics(program.getSourceFile(path))]).map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")),
   ).toEqual([]);
-});
+}, { timeout: 30_000 });
 
 test("removes root bodies, binds consumers, and keeps an acyclic owner graph", () => {
   const moved = new Set(fixture.owners.flatMap((owner) => owner.declarations));
@@ -194,6 +194,8 @@ test("walks source without following links and preserves unavailable evidence", 
   expect(policyWalkRelFileSources("/repo", ["✏️s"], () => true, undefined, unreadable).issues).toEqual([{ path: "✏️s/blocked", state: "unreadable" }]);
   const linked = virtualOperations({ linked: { kind: "symlink" }, "linked/nested/🦀️.rs": { kind: "file" } });
   expect(policyWalkRelFileSources("/repo", ["linked/nested"], () => true, undefined, linked)).toEqual({ files: [], issues: [{ path: "linked/nested", state: "symlink" }] });
+  const generated = virtualOperations({ "✏️s/a/🦀️.rs": { kind: "file" }, "✏️s/🗑️generated/run/linked": { kind: "symlink" }, "✏️s/🗑️generated/run/🦀️.rs": { kind: "file" }, "✏️s/⚡️cache": { kind: "symlink" }, "✏️s/b": { kind: "symlink" } });
+  expect(policyWalkRelFileSources("/repo", ["✏️s"], () => true, undefined, generated)).toEqual({ files: ["✏️s/a/🦀️.rs"], issues: [{ path: "✏️s/b", state: "symlink" }] });
   expect(policyLineOfIndex("first\nsecond", 6)).toBe(2);
 });
 
@@ -214,6 +216,10 @@ test("rejects linked ancestors and native unreadable directories", async () => {
       throw error;
     }
     expect(policyWalkRelFileSources(root, ["linked/nested"], () => true)).toEqual({ files: [], issues: [{ path: "linked/nested", state: "symlink" }] });
+    mkdirSync(resolve(root, "source", "🗑️generated", "run"), { recursive: true });
+    writeFileSync(resolve(root, "source", "🦀️.rs"), "pub fn authored() {}\n");
+    symlinkSync(resolve(root, "source", "🗑️generated"), resolve(root, "source", "🗑️generated", "run", "linked-ancestor"), process.platform === "win32" ? "junction" : "dir");
+    expect(policyWalkRelFileSources(root, ["source"], () => true)).toEqual({ files: ["source/🦀️.rs"], issues: [] });
     mkdirSync(blocked);
     if (process.platform !== "win32") {
       chmodSync(blocked, 0);
@@ -226,7 +232,7 @@ test("rejects linked ancestors and native unreadable directories", async () => {
   }
 });
 
-test("preserves inference family assembly derivation emoji and state laws", { timeout: 30_000 }, async () => {
+test("preserves inference family assembly derivation emoji and state laws", async () => {
   const [{ policyInferenceFamilyBreaches }, { policyDiscoverInferenceFamilies }, { policyInferenceEmojiUniquenessBreaches }, { policyInferenceAssemblyCoverageBreaches, policyInferenceNormalizeToken }, { policyDerivedMarkerLeakBreaches }] =
     await Promise.all([
       import("../../🧬️schema/💡️inference/⚖️laws/📋️aggregate/🟦️.ts"),
@@ -252,9 +258,9 @@ test("preserves inference family assembly derivation emoji and state laws", { ti
     "✏️s/plugin/🧬️schema/💡️inferences/value/🦀️.rs": { kind: "file", text: "#[derived] pub fn value() {}" },
   });
   expect(policyDerivedMarkerLeakBreaches("/repo", state)).toEqual([expect.objectContaining({ kind: "inference-migration/state-leak", line: 1 })]);
-});
+}, { timeout: 30_000 });
 
-test("reports invalid and unreadable inference source instead of false clean", { timeout: 30_000 }, async () => {
+test("reports invalid and unreadable inference source instead of false clean", async () => {
   const { policyInferenceFamilyBreaches } = await import("../../🧬️schema/💡️inference/⚖️laws/📋️aggregate/🟦️.ts");
   const missingNodes = validFamily(),
     missingRootLeaf = Object.keys(missingNodes).find((path) => path.startsWith(`${familyRel}/`) && !path.slice(familyRel.length + 1).includes("/") && !path.endsWith("🦀️.rs"))!;
@@ -269,7 +275,7 @@ test("reports invalid and unreadable inference source instead of false clean", {
   );
   expect(policyInferenceFamilyBreaches("/repo", invalid)).toEqual(expect.arrayContaining([expect.objectContaining({ kind: "inference-migration/slug-leaf-presence" }), expect.objectContaining({ kind: "inference-migration/impl-presence" })]));
   expect(policyInferenceFamilyBreaches("/repo", virtualOperations({ "✏️s/🔌️plugins": { kind: "directory", unreadable: true } }))).toEqual([expect.objectContaining({ kind: "inference-migration/source-unreadable", scope: "✏️s/🔌️plugins" })]);
-});
+}, { timeout: 30_000 });
 
 test("retains native source data and registers one Bun Nx launch route", () => {
   const sources = fixture.sourceData.map((path: string) => readFileSync(resolve(repoRoot, path), "utf8"));

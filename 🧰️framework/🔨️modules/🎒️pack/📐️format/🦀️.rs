@@ -15,33 +15,33 @@ use crate::{crc32c, read_varint_u64, write_varint_u64, ByteRange, ChunkId, Codec
 use std::mem::size_of;
 
 //#region 🔖️Header
-/// @emoji 🧲️ The 8-byte magic every `.spk` pack file begins with.
+/// 🧲️ The 8-byte magic every `.spk` pack file begins with.
 pub const MAGIC: [u8; 8] = [0x89, b'S', b'P', b'K', 0x0D, 0x0A, 0x1A, 0x0A];
-/// @emoji 📏️ Fixed wire size of the header, in bytes.
+/// 📏️ Fixed wire size of the header, in bytes.
 pub const HEADER_SIZE: usize = 32;
-/// @emoji 🔢️ The container format version this crate writes and reads.
+/// 🔢️ The container format version this crate writes and reads.
 pub const FORMAT_VERSION_MAJOR: u16 = 1;
-/// @emoji 🔢️ The container format minor version this crate writes.
+/// 🔢️ The container format minor version this crate writes.
 pub const FORMAT_VERSION_MINOR: u16 = 0;
 
-/// @emoji 🗜️ Required flag bit: at least one segment/chunk in this file uses compression.
+/// 🗜️ Required flag bit: at least one segment/chunk in this file uses compression.
 pub const REQUIRED_COMPRESSED: u32 = 1 << 0;
-/// @emoji 🧱️ Required flag bit: this file contains a chunk table.
+/// 🧱️ Required flag bit: this file contains a chunk table.
 pub const REQUIRED_CHUNKED: u32 = 1 << 1;
-/// @emoji 🔒️ Required flag bit: reserved for encryption, never set by this crate.
+/// 🔒️ Required flag bit: reserved for encryption, never set by this crate.
 pub const REQUIRED_ENCRYPTED: u32 = 1 << 2;
-/// @emoji ⛓️ Required flag bit: reserved for footer chaining.
+/// ⛓️ Required flag bit: reserved for footer chaining.
 pub const REQUIRED_FOOTER_CHAIN: u32 = 1 << 3;
 const REQUIRED_KNOWN_MASK: u32 = REQUIRED_COMPRESSED | REQUIRED_CHUNKED | REQUIRED_ENCRYPTED | REQUIRED_FOOTER_CHAIN;
 
-/// @emoji 🧮️ Optional flag bit: the document body was encoded in canonical form.
+/// 🧮️ Optional flag bit: the document body was encoded in canonical form.
 pub const OPTIONAL_CANONICAL: u32 = 1 << 0;
-/// @emoji 🌊️ Optional flag bit: the file was produced by a streaming writer.
+/// 🌊️ Optional flag bit: the file was produced by a streaming writer.
 pub const OPTIONAL_STREAMED: u32 = 1 << 1;
-/// @emoji 🧬️ Optional flag bit: a schema segment is present.
+/// 🧬️ Optional flag bit: a schema segment is present.
 pub const OPTIONAL_HAS_SCHEMA: u32 = 1 << 2;
 
-/// @emoji 🪪️ The fixed 32-byte superblock header: magic, version, feature flags, self-CRC.
+/// 🪪️ The fixed 32-byte superblock header: magic, version, feature flags, self-CRC.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Header {
     pub version_major: u16,
@@ -51,7 +51,7 @@ pub struct Header {
 }
 
 impl Header {
-    /// @emoji ✍️ Serializes to the exact 32-byte wire form, computing `header_crc32` over
+    /// ✍️ Serializes to the exact 32-byte wire form, computing `header_crc32` over
     /// bytes `0..20` and zeroing the 8 reserved bytes.
     // 🧮️ Every helper this fn calls (`crc32c`, `PackSink::write_all`) is a first-party `async fn`
     // one hop away in `semio-framework-replication`, which this packet does not own; R9 rule 3
@@ -69,7 +69,7 @@ impl Header {
         buf
     }
 
-    /// @emoji 📖️ Parses and validates a 32-byte header: magic, self-CRC, and that
+    /// 📖️ Parses and validates a 32-byte header: magic, self-CRC, and that
     /// `required_flags` sets no bit outside the known `0..=3` range.
     async fn parse(bytes: &[u8]) -> Result<Self, PackError> {
         if bytes.len() < HEADER_SIZE {
@@ -100,14 +100,14 @@ impl Header {
 //#endregion 🔖️Header
 
 //#region 🔖️Footer
-/// @emoji 🧲️ The 8-byte magic the footer begins with.
+/// 🧲️ The 8-byte magic the footer begins with.
 pub const FOOTER_MAGIC: [u8; 8] = *b"SPKFOOT1";
-/// @emoji 📏️ Fixed wire size of the footer, in bytes, at the end of the file.
+/// 📏️ Fixed wire size of the footer, in bytes, at the end of the file.
 /// See the module doc for why this is 84, not the contract prose's arithmetically-inconsistent
 /// "80" (the prose sum omits the trailing `footer_crc32` field's own 4 bytes).
 pub const FOOTER_SIZE: usize = 84;
 
-/// @emoji 🪶️ The fixed-size trailer every pack file ends with — the single root of trust a
+/// 🪶️ The fixed-size trailer every pack file ends with — the single root of trust a
 /// reader locates by seeking to `file_len - FOOTER_SIZE`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Footer {
@@ -122,7 +122,7 @@ pub struct Footer {
 }
 
 impl Footer {
-    /// @emoji ✍️ Serializes to the exact 84-byte wire form, computing `footer_crc32` over the
+    /// ✍️ Serializes to the exact 84-byte wire form, computing `footer_crc32` over the
     /// preceding 80 bytes.
     // 🧮️ Same R9-rule-3 reasoning as `Header::write_bytes` above — `crc32c` is a pure but
     // externally-owned `async fn`, so this fn propagates `async` rather than fighting it.
@@ -142,7 +142,7 @@ impl Footer {
         buf
     }
 
-    /// @emoji 📖️ Parses and validates an 84-byte footer: magic and self-CRC over the first 80
+    /// 📖️ Parses and validates an 84-byte footer: magic and self-CRC over the first 80
     /// bytes. Does not cross-check `file_len` against an actual source — callers that have one
     /// should do so themselves (see `PackFile::open_superblock`).
     async fn parse(bytes: &[u8]) -> Result<Self, PackError> {
@@ -172,7 +172,7 @@ impl Footer {
 //#endregion 🔖️Footer
 
 //#region 🔖️Segment
-/// @emoji 📦️ The fully-encoded wire bytes of one framed segment, plus the byte offsets within
+/// 📦️ The fully-encoded wire bytes of one framed segment, plus the byte offsets within
 /// them a writer needs to record chunk-table/manifest-span metadata without re-parsing.
 struct EncodedSegment {
     bytes: Vec<u8>,
@@ -203,7 +203,7 @@ fn retained_varint_len(value: u64) -> usize {
     retained_varint(value, &mut output).len()
 }
 
-/// @emoji 🧵️ Resolves `CodecId` to this crate's codec implementations for compression.
+/// 🧵️ Resolves `CodecId` to this crate's codec implementations for compression.
 async fn codec_compress(codec: CodecId, raw: &[u8]) -> Result<Vec<u8>, PackError> {
     match codec.0 {
         0 => Ok(raw.to_vec()),
@@ -212,7 +212,7 @@ async fn codec_compress(codec: CodecId, raw: &[u8]) -> Result<Vec<u8>, PackError
     }
 }
 
-/// @emoji 🧵️ Resolves `CodecId` to this crate's codec implementations for decompression.
+/// 🧵️ Resolves `CodecId` to this crate's codec implementations for decompression.
 async fn codec_decompress(codec: CodecId, stored: &[u8], raw_len: u64, limit: u64) -> Result<Vec<u8>, PackError> {
     match codec.0 {
         0 => NoCompression.decompress(stored, raw_len, limit),
@@ -221,7 +221,7 @@ async fn codec_decompress(codec: CodecId, stored: &[u8], raw_len: u64, limit: u6
     }
 }
 
-/// @emoji 🖇️ Frames `payload` as a segment per the contract's byte layout: `kind, flags,
+/// 🖇️ Frames `payload` as a segment per the contract's byte layout: `kind, flags,
 /// seg_len, [raw_len], payload, crc32`. Compresses first when `codec` is non-identity.
 async fn encode_segment(kind: u8, codec: CodecId, payload: &[u8]) -> Result<EncodedSegment, PackError> {
     let compressed = codec.0 != 0;
@@ -242,23 +242,23 @@ async fn encode_segment(kind: u8, codec: CodecId, payload: &[u8]) -> Result<Enco
     Ok(EncodedSegment { bytes: buf, #[cfg(test)] header_len, #[cfg(test)] stored_len: stored.len() })
 }
 
-/// @emoji 👓️ A decoded, CRC-checked, decompressed segment plus enough position bookkeeping for
+/// 👓️ A decoded, CRC-checked, decompressed segment plus enough position bookkeeping for
 /// callers walking a sequence of segments.
 struct DecodedSegment {
     kind: u8,
     payload: Vec<u8>,
-    /// @emoji ➡️ Total wire bytes consumed by this segment (frame header + stored payload + crc).
+    /// ➡️ Total wire bytes consumed by this segment (frame header + stored payload + crc).
     consumed: u64,
 }
 
-/// @emoji 1⃣ Bounds-checked single-byte read at an absolute file offset.
+/// 1⃣ Bounds-checked single-byte read at an absolute file offset.
 async fn read_u8_at<S: PackSource>(source: &S, offset: u64) -> Result<u8, PackError> {
     let mut buf = [0u8; 1];
     source.read_exact_at(offset, &mut buf).await?;
     Ok(buf[0])
 }
 
-/// @emoji 🔢️ Reads one LEB128 varint starting at an absolute file offset, one byte at a time so
+/// 🔢️ Reads one LEB128 varint starting at an absolute file offset, one byte at a time so
 /// it never over-reads past a legitimately short remaining file. Returns `(value, bytes_consumed)`.
 async fn read_varint_u64_at<S: PackSource>(source: &S, offset: u64) -> Result<(u64, u64), PackError> {
     let mut tmp: Vec<u8> = Vec::with_capacity(10);
@@ -279,7 +279,7 @@ async fn read_varint_u64_at<S: PackSource>(source: &S, offset: u64) -> Result<(u
     Ok((value, i))
 }
 
-/// @emoji 🚪️ Decodes one framed segment starting at an absolute file offset: reads and
+/// 🚪️ Decodes one framed segment starting at an absolute file offset: reads and
 /// bounds-checks `kind, flags, seg_len, [raw_len]`, validates lengths against
 /// `limits.max_segment_len` **before** allocating the payload buffer, then optionally verifies
 /// the frame's CRC-32C and decompresses. Unknown `kind` values are decoded and returned as-is —
@@ -335,7 +335,7 @@ async fn decode_segment_at<S: PackSource>(source: &S, offset: u64, limits: &Pack
 //#endregion 🔖️Segment
 
 //#region 🔖️Symbols
-/// @emoji ✍️ Serializes a symbol table: `count varint, then count × (len varint, utf8 bytes)`.
+/// ✍️ Serializes a symbol table: `count varint, then count × (len varint, utf8 bytes)`.
 /// Exposed so callers (e.g. `pack_value`) can build a `KIND_SYMBOLS` segment payload for
 /// `PackWriter::write_segment` without re-implementing this crate's wire format.
 pub async fn encode_symbols(symbols: &[String]) -> Vec<u8> {
@@ -349,7 +349,7 @@ pub async fn encode_symbols(symbols: &[String]) -> Vec<u8> {
     buf
 }
 
-/// @emoji 📖️ Parses a symbol table, rejecting a count over `limits.max_symbols` before
+/// 📖️ Parses a symbol table, rejecting a count over `limits.max_symbols` before
 /// allocating the output `Vec`.
 async fn decode_symbols(payload: &[u8], limits: &PackLimits) -> Result<Vec<String>, PackError> {
     let mut pos = 0usize;
@@ -372,7 +372,7 @@ async fn decode_symbols(payload: &[u8], limits: &PackLimits) -> Result<Vec<Strin
 //#endregion 🔖️Symbols
 
 //#region 🔖️ChunkTable
-/// @emoji 🧱️ One row of the chunk table: where a chunk's (possibly compressed) payload lives
+/// 🧱️ One row of the chunk table: where a chunk's (possibly compressed) payload lives
 /// and how to verify it. `crc32` covers the stored (on-disk) bytes; `blake3` covers the raw
 /// (decompressed) content — the former is cheap and always checked at `Standard`+, the latter is
 /// the content-identity hash only checked at `Full`.
@@ -385,7 +385,7 @@ struct ChunkTableEntry {
     blake3: [u8; 32],
 }
 
-/// @emoji 📖️ Parses the chunk table, rejecting a count over `limits.max_items` or an entry
+/// 📖️ Parses the chunk table, rejecting a count over `limits.max_items` or an entry
 /// length over `limits.max_segment_len` before allocating.
 async fn decode_chunk_table(payload: &[u8], limits: &PackLimits) -> Result<Vec<ChunkTableEntry>, PackError> {
     let mut pos = 0usize;
@@ -419,7 +419,7 @@ async fn decode_chunk_table(payload: &[u8], limits: &PackLimits) -> Result<Vec<C
 //#endregion 🔖️ChunkTable
 
 //#region 🔖️Manifest
-/// @emoji 🗺️ The manifest: spans and counts describing every other segment in the file.
+/// 🗺️ The manifest: spans and counts describing every other segment in the file.
 /// `schema_name` round-trips through the symbol table as a symref on the wire (see
 /// `PackWriter::finish`/`PackFile::open_manifest`) but is resolved to a plain `String` here for
 /// callers' convenience.
@@ -438,7 +438,7 @@ pub struct Manifest {
     pub symbol_count: u64,
 }
 
-/// @emoji 🗺️ The wire-level manifest fields before `schema_symref` has been resolved against a
+/// 🗺️ The wire-level manifest fields before `schema_symref` has been resolved against a
 /// symbol table (on decode) or after it has been resolved to a symref (on encode).
 struct RawManifest {
     schema_symref: u64,
@@ -465,7 +465,7 @@ async fn read_span(payload: &[u8], pos: &mut usize) -> Result<ByteRange, PackErr
     Ok(ByteRange { offset, len })
 }
 
-/// @emoji ✍️ Serializes the manifest segment payload per the contract's field order.
+/// ✍️ Serializes the manifest segment payload per the contract's field order.
 async fn encode_manifest_bytes(schema_symref: u64, manifest: &Manifest) -> Vec<u8> {
     let mut buf = Vec::new();
     write_varint_u64(&mut buf, schema_symref);
@@ -482,7 +482,7 @@ async fn encode_manifest_bytes(schema_symref: u64, manifest: &Manifest) -> Vec<u
     buf
 }
 
-/// @emoji 📖️ Parses the manifest segment payload. Trailing bytes beyond the known fields are
+/// 📖️ Parses the manifest segment payload. Trailing bytes beyond the known fields are
 /// silently ignored (additive-evolution slot), never an error.
 async fn parse_raw_manifest(payload: &[u8]) -> Result<RawManifest, PackError> {
     let mut pos = 0usize;
@@ -527,7 +527,7 @@ fn resolve_manifest(raw: &RawManifest, symbols: &[String]) -> Result<Manifest, P
 //#endregion 🔖️Manifest
 
 //#region 🔖️Verify
-/// @emoji 🛡️ How much a read verifies as it goes: `Trusted` skips all checksums (fastest,
+/// 🛡️ How much a read verifies as it goes: `Trusted` skips all checksums (fastest,
 /// for already-verified local data), `Standard` (default) verifies every segment's CRC-32C as
 /// it's read, `Full` additionally re-hashes chunk/document content against the blake3 hashes in
 /// the chunk table and footer.
@@ -552,7 +552,7 @@ impl VerificationLevel {
 //#endregion 🔖️Verify
 
 //#region 🔖️Writer
-/// @emoji ⚙️ Header flags and the codec to compress every segment/chunk with when building a
+/// ⚙️ Header flags and the codec to compress every segment/chunk with when building a
 /// pack file. `REQUIRED_COMPRESSED` is set automatically in the written header whenever `codec`
 /// is non-identity, so callers only need to set it themselves for other reasons (e.g. signaling
 /// intent before any segment is written).
@@ -563,7 +563,7 @@ pub struct WriteOptions {
     pub codec: CodecId,
 }
 
-/// @emoji ✒️ Sequential pack file builder. Write segments/chunks in any order, then `finish`
+/// ✒️ Sequential pack file builder. Write segments/chunks in any order, then `finish`
 /// with a `Manifest` — `finish` fills in `symbols_span`/`chunk_table_span`/`chunk_count`/
 /// `symbol_count` authoritatively from what was actually written (the caller-supplied values in
 /// those fields are ignored), and resolves `manifest.schema_name` to a symref against the last
@@ -643,7 +643,7 @@ impl<'a, S: PackSink> PackIdentitySegment<'a, S> {
 }
 
 impl<S: PackSink> PackWriter<S> {
-    /// @emoji 🚀️ Writes the 32-byte header and returns a writer positioned right after it.
+    /// 🚀️ Writes the 32-byte header and returns a writer positioned right after it.
     pub async fn begin(mut sink: S, options: &WriteOptions) -> Result<Self, PackError> {
         let mut required_flags = options.required_flags;
         if options.codec.0 != 0 {
@@ -658,7 +658,7 @@ impl<S: PackSink> PackWriter<S> {
         Ok(Self { sink, options: WriteOptions { required_flags, optional_flags: options.optional_flags, codec: options.codec }, chunks: Vec::new(), symbols: Vec::new(), symbols_span: None, document_hasher: semio_framework_hash::Hasher::new() })
     }
 
-    /// @emoji 📍️ Current absolute write position — the offset the next segment/chunk will start
+    /// 📍️ Current absolute write position — the offset the next segment/chunk will start
     /// at. Callers building a `Manifest` (e.g. `doc_span`/`field_index_span`) call this before
     /// and after their own `write_segment` calls to record spans this writer doesn't track
     /// automatically.
@@ -691,7 +691,7 @@ impl<S: PackSink> PackWriter<S> {
         Ok(PackIdentitySegment { owner: self, kind, payload_len, written: 0, crc })
     }
 
-    /// @emoji 🧱️ Opens one `KIND_CHUNK` segment written RAW, whatever codec the pack as a whole
+    /// 🧱️ Opens one `KIND_CHUNK` segment written RAW, whatever codec the pack as a whole
     /// uses. A chunk is framed with its own `flags = 0`, so a reader takes its codec from the
     /// segment, not from the pack — and the chunk table indexes each chunk by absolute payload
     /// offset plus a content hash over the stored bytes, which only lines up while those bytes are
@@ -725,7 +725,7 @@ impl<S: PackSink> PackWriter<S> {
         Ok(PackIdentityChunk { owner: self, payload_offset: base + fixed.len() as u64 + count as u64, payload_len, written: 0, segment_crc, payload_crc: crate::codec::Crc32cCursor::new(), hash: semio_framework_hash::Hasher::new() })
     }
 
-    /// @emoji 🖇️ Frames, compresses (per `options.codec`), CRCs, and writes one segment. A
+    /// 🖇️ Frames, compresses (per `options.codec`), CRCs, and writes one segment. A
     /// `KIND_SYMBOLS` segment is parsed and remembered for `schema_name` resolution in `finish`;
     /// a `KIND_DOCUMENT` segment's raw bytes are folded into the running content-hash used for
     /// the footer.
@@ -748,7 +748,7 @@ impl<S: PackSink> PackWriter<S> {
         Ok(())
     }
 
-    /// @emoji 🧱️ Writes a `KIND_CHUNK` segment and records its offset/lengths/hashes for the
+    /// 🧱️ Writes a `KIND_CHUNK` segment and records its offset/lengths/hashes for the
     /// chunk table `finish` will emit.
     #[cfg(test)]
     pub async fn write_chunk(&mut self, payload: &[u8]) -> Result<ChunkId, PackError> {
@@ -769,7 +769,7 @@ impl<S: PackSink> PackWriter<S> {
         Ok(id)
     }
 
-    /// @emoji 🏁️ Writes the chunk table (if any chunks were written), the manifest, an `End`
+    /// 🏁️ Writes the chunk table (if any chunks were written), the manifest, an `End`
     /// segment, then the footer — and returns the underlying sink.
     pub async fn finish(mut self, manifest: &Manifest) -> Result<S, PackError> {
         let chunk_count = self.chunks.len() as u64;
@@ -845,14 +845,14 @@ impl<S: PackSink> PackWriter<S> {
 //#endregion 🔖️Writer
 
 //#region 🔖️Reader
-/// @emoji 🪪️ The two fixed-size, always-present anchors of a pack file.
+/// 🪪️ The two fixed-size, always-present anchors of a pack file.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Superblock {
     pub header: Header,
     pub footer: Footer,
 }
 
-/// @emoji 📂️ Random-access pack file reader with three progressively-deeper open levels:
+/// 📂️ Random-access pack file reader with three progressively-deeper open levels:
 /// `open_superblock` (header+footer only), `open_manifest` (+manifest+symbols+chunk table),
 /// and `body_bytes`/`read_chunk` (full content, decompressed and optionally content-hash
 /// verified).
@@ -865,7 +865,7 @@ pub struct PackFile<S: PackSource> {
     chunk_table: Vec<ChunkTableEntry>,
 }
 
-/// @emoji 🧩️ Retained identity-chunk reader that advances by one caller-owned fragment.
+/// 🧩️ Retained identity-chunk reader that advances by one caller-owned fragment.
 pub struct PackIdentityChunkCursor<'file, S: PackSource> {
     source: &'file S,
     entry: ChunkTableEntry,
@@ -917,7 +917,7 @@ impl<'file, S: PackSource> PackIdentityChunkCursor<'file, S> {
 }
 
 impl<S: PackSource> PackFile<S> {
-    /// @emoji 1⃣ Level 1: parses and CRC-validates the header and footer only, and cross-checks
+    /// 1⃣ Level 1: parses and CRC-validates the header and footer only, and cross-checks
     /// the footer's `file_len` against the actual source length.
     pub async fn open_superblock(source: S, limits: &PackLimits) -> Result<Self, PackError> {
         let len = source.len().await;
@@ -936,7 +936,7 @@ impl<S: PackSource> PackFile<S> {
         Ok(Self { source, limits: limits.clone(), superblock: Superblock { header, footer }, manifest: None, symbols: Vec::new(), chunk_table: Vec::new() })
     }
 
-    /// @emoji 2⃣ Level 2: `open_superblock` plus decoding the manifest, its symbol table (used
+    /// 2⃣ Level 2: `open_superblock` plus decoding the manifest, its symbol table (used
     /// to resolve `manifest().schema_name`), and the chunk table (if present).
     pub async fn open_manifest(source: S, limits: &PackLimits, verification: VerificationLevel) -> Result<Self, PackError> {
         let mut this = Self::open_superblock(source, limits).await?;
@@ -982,7 +982,7 @@ impl<S: PackSource> PackFile<S> {
         self.manifest.as_ref()
     }
 
-    /// @emoji 🔤️ Resolves a symref (index into the symbol table loaded by `open_manifest`).
+    /// 🔤️ Resolves a symref (index into the symbol table loaded by `open_manifest`).
     pub fn symbol(&self, symref: u64) -> Result<&str, PackError> {
         self.symbols.get(symref as usize).map(String::as_str).ok_or(PackError::Malformed { what: "symref", offset: symref, detail: "symref out of range".to_string() })
     }
@@ -991,13 +991,13 @@ impl<S: PackSource> PackFile<S> {
         self.chunk_table.len() as u64
     }
 
-    /// @emoji 📏️ The `(offset, stored_len)` range of a chunk's on-disk (possibly compressed)
+    /// 📏️ The `(offset, stored_len)` range of a chunk's on-disk (possibly compressed)
     /// payload bytes — suitable for a range-fetch (see `pack_http`) without decoding.
     pub fn chunk_range(&self, id: ChunkId) -> Result<ByteRange, PackError> {
         self.chunk_table.get(id.0 as usize).map(|entry| ByteRange { offset: entry.offset, len: entry.stored_len }).ok_or(PackError::Malformed { what: "chunk_id", offset: id.0 as u64, detail: "unknown chunk id".to_string() })
     }
 
-    /// @emoji 🧩️ Opens an identity chunk without allocating or materializing its payload.
+    /// 🧩️ Opens an identity chunk without allocating or materializing its payload.
     pub fn identity_chunk_cursor(&self, id: ChunkId, verification: VerificationLevel) -> Result<PackIdentityChunkCursor<'_, S>, PackError> {
         let entry = self.chunk_table.get(id.0 as usize).cloned().ok_or(PackError::Malformed { what: "chunk_id", offset: id.0 as u64, detail: "unknown chunk id".to_string() })?;
         if entry.stored_len != entry.raw_len {
@@ -1009,7 +1009,7 @@ impl<S: PackSource> PackFile<S> {
         Ok(PackIdentityChunkCursor { source: &self.source, entry, verification, offset: 0, crc: crate::codec::Crc32cCursor::new(), hash: semio_framework_hash::Hasher::new(), terminal: false })
     }
 
-    /// @emoji 3⃣ Level 3: reads, optionally CRC-verifies (`Standard`+) and decompresses one
+    /// 3⃣ Level 3: reads, optionally CRC-verifies (`Standard`+) and decompresses one
     /// chunk; at `Full` also verifies its blake3 content hash.
     pub async fn read_chunk(&self, id: ChunkId, verification: VerificationLevel) -> Result<Vec<u8>, PackError> {
         let entry = self.chunk_table.get(id.0 as usize).ok_or(PackError::Malformed { what: "chunk_id", offset: id.0 as u64, detail: "unknown chunk id".to_string() })?;
@@ -1044,7 +1044,7 @@ impl<S: PackSource> PackFile<S> {
         Ok(raw)
     }
 
-    /// @emoji 📄️ Level 3: reads and concatenates the `doc_frame_count` `KIND_DOCUMENT` segments
+    /// 📄️ Level 3: reads and concatenates the `doc_frame_count` `KIND_DOCUMENT` segments
     /// starting at `manifest().doc_span.offset`; at `Full` also verifies the result's blake3
     /// hash against the footer's `content_hash`.
     pub async fn body_bytes(&self, verification: VerificationLevel) -> Result<Vec<u8>, PackError> {
@@ -1071,13 +1071,13 @@ impl<S: PackSource> PackFile<S> {
         Ok(out)
     }
 
-    /// @emoji #⃣ The footer's content hash — no decode needed.
+    /// #⃣ The footer's content hash — no decode needed.
     pub fn content_hash(&self) -> ContentHash {
         self.superblock.footer.content_hash
     }
 }
 
-/// @emoji 🔎️ Standalone helper (used by `crate::content_hash`) that reads and parses only the
+/// 🔎️ Standalone helper (used by `crate::content_hash`) that reads and parses only the
 /// last `FOOTER_SIZE` bytes of `source`, without touching the header or any segment.
 pub async fn read_footer_only<S: PackSource>(source: &S) -> Result<Footer, PackError> {
     let len = source.len().await;
@@ -3328,7 +3328,7 @@ mod retained_pack_source_laws;
 //#endregion 🔖️Reader
 
 //#region 🔖️Recover
-/// @emoji 🩹️ What a forward-scan recovery pass managed to salvage.
+/// 🩹️ What a forward-scan recovery pass managed to salvage.
 #[derive(Clone, Debug)]
 pub struct RecoveryReport {
     pub segments_recovered: u64,
@@ -3336,7 +3336,7 @@ pub struct RecoveryReport {
     pub manifest: Option<Manifest>,
 }
 
-/// @emoji 🩺️ Forward-scans from byte `HEADER_SIZE` (right after the header), CRC-validating and
+/// 🩺️ Forward-scans from byte `HEADER_SIZE` (right after the header), CRC-validating and
 /// accumulating one segment at a time until the first invalid/truncated segment, a `KIND_END`
 /// segment, or end of file — whichever comes first. Unrecognized segment kinds are accumulated,
 /// not rejected. If a `KIND_MANIFEST` and (when its `schema_name` is non-empty) a matching

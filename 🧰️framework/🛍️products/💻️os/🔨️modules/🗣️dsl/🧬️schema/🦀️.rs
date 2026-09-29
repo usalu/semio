@@ -27,7 +27,7 @@ pub enum RecordLayout {
     Call,
 }
 
-/// @emoji 🧩️ What one field's value looks like, textually. Covers all 16 grammar-shape
+/// 🧩️ What one field's value looks like, textually. Covers all 16 grammar-shape
 /// primitives found across the 32 hand-rolled implementations this engine replaces.
 #[derive(Clone, Debug)]
 pub enum Shape {
@@ -168,7 +168,7 @@ impl FieldSpec {
         self
     }
 
-    /// @emoji 📛️ Marks this field as the one printed before `=` / parsed as the assignment target
+    /// 📛️ Marks this field as the one printed before `=` / parsed as the assignment target
     /// in a `RecordLayout::Call` spec. See [`RecordLayout::Call`].
     // 🚫️async: E1 pure spec builder consumed by E4 fn-pointer slots (Shape::Record) and derive-macro output — see R9
     pub fn call_name(mut self) -> Self {
@@ -190,7 +190,7 @@ impl RecordSpec {
         Self { keyword: keyword.map(|k| k.to_string()), layout, fields }
     }
 
-    /// @emoji 🏗️ Same as [`Self::new`] but takes an already-owned keyword — what
+    /// 🏗️ Same as [`Self::new`] but takes an already-owned keyword — what
     /// `dsl_derive`-generated code builds from a spliced `String` literal.
     // 🚫️async: E1 pure spec builder consumed by E4 fn-pointer slots (Shape::Record) and derive-macro output — see R9
     pub fn new_owned(keyword: Option<String>, layout: RecordLayout, fields: Vec<FieldSpec>) -> Self {
@@ -210,7 +210,7 @@ pub struct GrammarSpec {
 // args); THIS is the fallback for `app_commands!` payload structs whose only declared shape is a
 // `RecordSpec` (`#[derive(dsl::DslRecord)]`) — the catalog compiler tags whatever it emits from here
 // `x-semio-confidence: "payload"`, not this module's concern.
-/// @emoji 📐️ JSON Schema 2020-12 for one `Shape` leaf/node — recurses through `Tuple`/`List`/
+/// 📐️ JSON Schema 2020-12 for one `Shape` leaf/node — recurses through `Tuple`/`List`/
 /// `Record`/`Block`/`Statements`/`Map`/`Table`. `Quantity`/`Angle` carry their unit as
 /// `x-semio-unit`; `Ref(kind)` carries the referenced entity kind as `x-semio-ref`; every shape with
 /// no native JSON Schema vocabulary (`Bytes64`/`Wire`/`Coord`/`Dir`/`Dim`/`Range`/`Count`/`Expr`/
@@ -282,7 +282,7 @@ pub fn shape_json_schema(shape: &Shape) -> crate::os_pack::json::Value {
     }
 }
 
-/// @emoji 📐️ JSON Schema 2020-12 object for one `RecordSpec` — one property per `FieldSpec.key`
+/// 📐️ JSON Schema 2020-12 object for one `RecordSpec` — one property per `FieldSpec.key`
 /// (positional-only fields, whose `key` is empty, are omitted — no name to key a JSON object
 /// property on), `flatten`ed nested-record fields splice their own fields into THIS SAME properties
 /// map rather than nesting, mirroring what `flatten` means at parse/print altitude. `required` lists
@@ -343,7 +343,7 @@ mod json_schema_tests;
 /// any call site where both traits are in scope.
 pub use protocol::value::{from_dsl_value, ordered, to_dsl_value, DslValue, FromValue, Number, ToValue, ValueEdit, ValueError, ValueShape};
 
-/// @emoji 🕸️ One endpoint (and optional edge) of a wire-literal.
+/// 🕸️ One endpoint (and optional edge) of a wire-literal.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct WireNode {
     pub id: String,
@@ -351,7 +351,7 @@ pub struct WireNode {
     pub port: Option<String>,
 }
 
-/// @emoji 🏷️ Optional id/kind label on a wire edge (`-[e1:Connection]->` / fused `-e1:Connection>`).
+/// 🏷️ Optional id/kind label on a wire edge (`-[e1:Connection]->` / fused `-e1:Connection>`).
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct WireEdgeLabel {
     pub id: Option<String>,
@@ -373,7 +373,7 @@ pub struct WireValue {
     pub properties: DslValue,
 }
 
-/// @emoji 🌳️ The parsed representation of one field's value — what a typed binder converts
+/// 🌳️ The parsed representation of one field's value — what a typed binder converts
 /// to/from a concrete Rust value. Doubles as this v1 engine's "Cst": simplified (semantic, not a
 /// full lossless syntax tree) but sufficient for round-tripping, diagnostics, and highlighting;
 /// a real green/red tree can replace it later behind the same `parse`/`Writer` API.
@@ -412,12 +412,12 @@ impl RecordValue {
     }
 }
 
-/// @emoji 🌳️ Alias naming the parse product per the engine's design vocabulary.
+/// 🌳️ Alias naming the parse product per the engine's design vocabulary.
 pub type Cst = RecordValue;
 //#endregion 🔖️Value
 
 //#region 🔖️Expr
-/// @emoji ➕️ Arithmetic operators `Shape::Expr` supports — standard left-associative precedence
+/// ➕️ Arithmetic operators `Shape::Expr` supports — standard left-associative precedence
 /// (`*`/`/` bind tighter than `+`/`-`), plus a call form for named functions (`min(a, b)`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ExprOp {
@@ -449,7 +449,7 @@ impl ExprOp {
     }
 }
 
-/// @emoji 🧮️ The parsed body of a `Shape::Expr` field — a small formula AST, e.g.
+/// 🧮️ The parsed body of a `Shape::Expr` field — a small formula AST, e.g.
 /// `1.35*G + 1.5*Q` parses to `Binary(Add, Binary(Mul, Num(1.35), Var("G")), Binary(Mul,
 /// Num(1.5), Var("Q")))`. Deliberately NOT a general-purpose scripting language (no assignment, no
 /// control flow, no boolean logic) — it's a formula literal, one notch above a bare number.
@@ -522,7 +522,7 @@ impl Cursor {
         }
     }
 
-    /// @emoji 🔎️ Whether the next token is an `Ident` that is followed by `=` — the LL(2)
+    /// 🔎️ Whether the next token is an `Ident` that is followed by `=` — the LL(2)
     /// lookahead that makes the grammar newline-insensitive: a bare ident followed by `=` is
     /// always a `key=value` attribute, never the start of a new statement.
     fn at_attr_key(&self) -> Option<String> {
@@ -551,7 +551,7 @@ impl Default for ParseOptions {
     }
 }
 
-/// @emoji ✂️ The structural seam between lexing and parsing: everything downstream of a token
+/// ✂️ The structural seam between lexing and parsing: everything downstream of a token
 /// vector is grammar-only and needs no raw source bytes (the parser is token-only — no shape
 /// still consumes verbatim source text the way the deleted `RawLines` shape once did). Exists so
 /// a caller that already has tokens (e.g. an incremental relexer) can skip `parse`'s own lex pass.
@@ -635,7 +635,7 @@ fn parse_scalar(cursor: &mut Cursor, shape: &Shape) -> Result<FieldValue, TextEr
     }
 }
 
-/// @emoji 🧮️ Precedence-climbing entry point for `Shape::Expr`'s body (called with the caller's
+/// 🧮️ Precedence-climbing entry point for `Shape::Expr`'s body (called with the caller's
 /// outer `(`/`)` already consumed). `min_prec` is the lowest operator precedence this call is
 /// willing to keep consuming at — the standard technique for turning a flat token stream into a
 /// precedence-correct tree without a separate tokenize-then-shunting-yard pass.
@@ -644,7 +644,7 @@ fn parse_expr(cursor: &mut Cursor, min_prec: u8) -> Result<ExprValue, TextError>
     parse_expr_continue(cursor, min_prec, lhs)
 }
 
-/// @emoji 🧮️ The loop body of `parse_expr`, factored out so the glued-negative-number case below
+/// 🧮️ The loop body of `parse_expr`, factored out so the glued-negative-number case below
 /// can re-enter it with an ALREADY-PARSED left operand instead of calling `parse_expr_unary` again
 /// (which would re-consume nothing, since the token was already consumed to build that operand).
 fn parse_expr_continue(cursor: &mut Cursor, min_prec: u8, mut lhs: ExprValue) -> Result<ExprValue, TextError> {
@@ -729,7 +729,7 @@ fn parse_expr_primary(cursor: &mut Cursor) -> Result<ExprValue, TextError> {
     }
 }
 
-/// @emoji 🧮️ Standalone entry point for parsing a bare expression body (no surrounding `(`/`)`,
+/// 🧮️ Standalone entry point for parsing a bare expression body (no surrounding `(`/`)`,
 /// unlike `Shape::Expr`'s own field-value grammar) — what `pack_value`'s decoder calls to turn the
 /// canonical string it stored back into an `ExprValue`, since decode has no `Cursor` of its own.
 pub fn parse_expr_text(text: &str) -> Result<ExprValue, TextError> {
@@ -740,7 +740,7 @@ pub fn parse_expr_text(text: &str) -> Result<ExprValue, TextError> {
     Ok(value)
 }
 
-/// @emoji 🎨️ Canonical `Shape::Expr` printer. Parenthesizes the minimum necessary to guarantee
+/// 🎨️ Canonical `Shape::Expr` printer. Parenthesizes the minimum necessary to guarantee
 /// `parse_expr(print_expr(e)) == e` for EVERY tree shape (not just canonically-left-nested ones):
 /// a `Binary` right operand is parenthesized whenever its own precedence isn't STRICTLY higher
 /// than the parent's (so even a commutative `a+(b+c)` keeps its parens — losing them would
@@ -779,7 +779,7 @@ fn print_expr_prec(expr: &ExprValue, min_prec: u8) -> String {
     }
 }
 
-/// @emoji 📛️ `Shape::Text`'s own body, factored out so `Shape::Ref` (identical grammar, distinct
+/// 📛️ `Shape::Text`'s own body, factored out so `Shape::Ref` (identical grammar, distinct
 /// type only) can share it without a redundant match arm duplicating both branches.
 fn parse_scalar_text(cursor: &mut Cursor) -> Result<FieldValue, TextError> {
     match cursor.peek().kind {
@@ -796,7 +796,7 @@ fn parse_scalar_text(cursor: &mut Cursor) -> Result<FieldValue, TextError> {
     }
 }
 
-/// @emoji 🗣️ `Shape::Embed`'s parse: a `Fence` token (Document mode — see `dsl_core`'s lexer for
+/// 🗣️ `Shape::Embed`'s parse: a `Fence` token (Document mode — see `dsl_core`'s lexer for
 /// the `lang\u{0}content` encoding) with an empty or matching lang tag, OR anything
 /// `parse_scalar_text` already accepts (Inline mode's escaped-quoted fallback) — both converge on
 /// the same `FieldValue::Text`, which is what makes Document/Inline renders agree.
@@ -829,7 +829,7 @@ fn parse_field_shape(cursor: &mut Cursor, field: &FieldSpec, spec: &RecordSpec, 
     parse_shape(cursor, &field.shape, depth)
 }
 
-/// @emoji 📐️ Shared parse for `Shape::Quantity`/`Shape::Angle`: a number, optionally followed by a
+/// 📐️ Shared parse for `Shape::Quantity`/`Shape::Angle`: a number, optionally followed by a
 /// GLUED (no whitespace between — the lexer already ends a numeric token exactly where the next
 /// `Ident` token begins for input like `210GPa`) unit-symbol ident. No suffix means the number is
 /// already expressed in `declared`'s unit; a suffix converts, erroring if the dimensions differ.
@@ -852,7 +852,7 @@ fn parse_quantity(cursor: &mut Cursor, declared: &'static crate::os_dsl::UnitSpe
     }
 }
 
-/// @emoji 🔢️ Reads one `Float|Int` token as `f64` — the plain-number leaf `Shape::Coord`/`Dir`/
+/// 🔢️ Reads one `Float|Int` token as `f64` — the plain-number leaf `Shape::Coord`/`Dir`/
 /// `Dim`/`Range` semio_compose_rs from (unlike `parse_quantity`, no unit-suffix consumption: these shapes'
 /// components are always dimensionless numbers or already-declared-unit numbers).
 fn parse_plain_number(cursor: &mut Cursor) -> Result<f64, TextError> {
@@ -863,7 +863,7 @@ fn parse_plain_number(cursor: &mut Cursor) -> Result<f64, TextError> {
     parse_f64(&token.text.as_str()).map_err(|e| TextError::new(e, token.span))
 }
 
-/// @emoji 📍️ Shared body for `Shape::Coord`/`Shape::Dir`: a fixed-arity comma-separated run of
+/// 📍️ Shared body for `Shape::Coord`/`Shape::Dir`: a fixed-arity comma-separated run of
 /// plain numbers, with no delimiter of its own (the caller already consumed the `@`/`^` sigil).
 fn parse_fixed_number_tuple(cursor: &mut Cursor, arity: usize, what: &str) -> Result<FieldValue, TextError> {
     let mut items = Vec::with_capacity(arity);
@@ -880,7 +880,7 @@ fn parse_fixed_number_tuple(cursor: &mut Cursor, arity: usize, what: &str) -> Re
     Ok(FieldValue::Tuple(items))
 }
 
-/// @emoji 📏️ `Shape::Dim`'s `WxHxD` grammar: the FIRST number is an ordinary `Float|Int` token;
+/// 📏️ `Shape::Dim`'s `WxHxD` grammar: the FIRST number is an ordinary `Float|Int` token;
 /// every number after it is glued (no whitespace, no comma) onto an `x`-prefixed ident — the
 /// lexer has no notion of a bare `x` operator (digits/`.` are ident-continue, so `x0.12x0.24`
 /// lexes as ONE `Ident` token), so this splits that single glued token on `x` itself rather than
@@ -1103,7 +1103,7 @@ fn parse_dsl_value(cursor: &mut Cursor, depth: usize) -> Result<DslValue, TextEr
     }
 }
 
-/// @emoji 🕸️ Parses one wire literal. `<-` is accepted sugar only: normalized here by swapping
+/// 🕸️ Parses one wire literal. `<-` is accepted sugar only: normalized here by swapping
 /// the two endpoints, so the stored `WireValue` (and everything reprinted from it) only ever
 /// holds `->`/`--` or fused labeled arrows — `b<-a` and `a->b` parse to the identical value.
 fn parse_wire(cursor: &mut Cursor) -> Result<WireValue, TextError> {
@@ -1179,7 +1179,7 @@ fn parse_wire(cursor: &mut Cursor) -> Result<WireValue, TextError> {
     Ok(WireValue { from, edge, edge_label, properties })
 }
 
-/// @emoji 🔌️ Small public entry point other crates (the graph wire module, trinity) can call
+/// 🔌️ Small public entry point other crates (the graph wire module, trinity) can call
 /// directly to lex + parse one standalone wire literal, without needing a `RecordSpec` around it.
 pub fn parse_wire_text(text: &str) -> Result<WireValue, TextError> {
     let limits = Limits::default();
@@ -1205,7 +1205,7 @@ fn parse_wire_node(cursor: &mut Cursor) -> Result<WireNode, TextError> {
     Ok(WireNode { id, kind, port })
 }
 
-/// @emoji 🧾️ Parses one record: its own leading keyword if `spec.keyword` declares one (the
+/// 🧾️ Parses one record: its own leading keyword if `spec.keyword` declares one (the
 /// `Statements` dispatcher only peeks to choose a variant — consuming it is always this
 /// function's job, so a spec is self-contained regardless of whether it's reached via `parse`
 /// directly, `Shape::Record`, or a `Statements` variant), positional fields in declaration order,
@@ -1227,7 +1227,7 @@ fn parse_record_body(cursor: &mut Cursor, spec: &RecordSpec, depth: usize) -> Re
     parse_record_fields(cursor, spec, depth)
 }
 
-/// @emoji 📛️ Parses a `RecordLayout::Call` record: `<name> = <keyword>(args)`. The parenthesized
+/// 📛️ Parses a `RecordLayout::Call` record: `<name> = <keyword>(args)`. The parenthesized
 /// argument list is parsed by the exact same [`parse_record_fields`] loop every other layout uses
 /// — it naturally stops at the first token that matches neither a positional slot nor a known
 /// key (here, always `)`), so no special "bounded sub-cursor" is needed to keep it from reading
@@ -1248,7 +1248,7 @@ fn parse_call_record(cursor: &mut Cursor, spec: &RecordSpec, depth: usize) -> Re
     Ok(record)
 }
 
-/// @emoji 🧾️ Parses a record's fields: positional fields in declaration order, then order-
+/// 🧾️ Parses a record's fields: positional fields in declaration order, then order-
 /// independent `key=value` attributes (LL(2): an `Ident` followed by `=` is always a key), until a
 /// token that is neither a known key nor an unfilled positional slot — which ends the record (it
 /// belongs to whatever comes next: a new statement, a closing brace/paren, or EOF). Excludes any
@@ -1355,7 +1355,7 @@ fn can_start_positional(cursor: &Cursor, shape: &Shape) -> bool {
 }
 
 //#region 🔖️Table
-/// @emoji 🚧️ Which shapes have a fixed/bounded token extent and may therefore be a `Table`
+/// 🚧️ Which shapes have a fixed/bounded token extent and may therefore be a `Table`
 /// column: an unbounded `Tuple` (`len: None`, comma-separated until... forever) and `Statements`
 /// (repeats until a non-matching keyword) both need an external delimiter to know where they end
 /// — fine inside `[ ]`/`{ }` brackets, fatal inside a table row where the ONLY thing marking a
@@ -1366,7 +1366,7 @@ fn shape_is_self_delimiting(shape: &Shape) -> bool {
     !matches!(shape, Shape::Statements(_) | Shape::Tuple(_, None))
 }
 
-/// @emoji 🚧️ Spec-build-time validation for a `Table`'s element `RecordSpec` — called wherever a
+/// 🚧️ Spec-build-time validation for a `Table`'s element `RecordSpec` — called wherever a
 /// `Shape::Table(spec_fn)` is first evaluated (both parse paths, and printing), since `spec_fn` is
 /// a lazy pointer rather than an eagerly-built value there is no earlier moment to check it at.
 fn validate_table_columns(spec: &RecordSpec) -> Result<(), TextError> {
@@ -1378,7 +1378,7 @@ fn validate_table_columns(spec: &RecordSpec) -> Result<(), TextError> {
     Ok(())
 }
 
-/// @emoji 🏷️ UPPERCASE schema type tag for a `Shape` — what a `Table` header prints per column
+/// 🏷️ UPPERCASE schema type tag for a `Shape` — what a `Table` header prints per column
 /// (`id:TEXT`), per the unified syntax law (`UPPERCASE` for engine shapes, `PascalCase` reserved
 /// for technology-declared domain kinds).
 // 🚫️async: E1 pure, inlined directly into `format!` args at both call sites (Display, not Future) — see R9
@@ -1413,7 +1413,7 @@ pub fn shape_type_name(shape: &Shape) -> &'static str {
     }
 }
 
-/// @emoji 📊️ Parses the bare SoA form of a `Table` field: `[col:TYPE ...] { v11 v12 ...  v21 v22
+/// 📊️ Parses the bare SoA form of a `Table` field: `[col:TYPE ...] { v11 v12 ...  v21 v22
 /// ... }`, cursor positioned right after the field's own keyword has already been consumed. The
 /// header names columns (in the order values then appear per row); a `:TYPE` suffix is accepted
 /// but not required to resolve a column (it's a human/printer-facing tag, not load-bearing for
@@ -1460,7 +1460,7 @@ fn parse_table_soa(cursor: &mut Cursor, spec_fn: fn() -> RecordSpec, depth: usiz
     Ok(FieldValue::List(rows))
 }
 
-/// @emoji 🧱️ Reads one table cell's value. Every table-safe shape is bounded by its own bracket or
+/// 🧱️ Reads one table cell's value. Every table-safe shape is bounded by its own bracket or
 /// a fixed token count (`validate_table_columns`/`shape_is_self_delimiting`) — EXCEPT a bare
 /// `Shape::Record` column, which prints as a flat run of `key=value` tokens with no bracket of its
 /// own (a table row has no `field=` prefix to give it one, unlike a Record-shaped field elsewhere).
@@ -1480,7 +1480,7 @@ fn parse_table_cell(cursor: &mut Cursor, shape: &Shape, depth: usize) -> Result<
     parse_shape(cursor, shape, depth)
 }
 
-/// @emoji 📋️ The AoS-list form for a `Table` value reached anywhere other than a record's own
+/// 📋️ The AoS-list form for a `Table` value reached anywhere other than a record's own
 /// leading keyword-prefixed field: `[ {row-fields} {row-fields} ... ]`. Each row is brace-wrapped
 /// for the same reason a `Shape::Record` table COLUMN is (`parse_table_cell` above) — a table row
 /// type is commonly declared with no keyword of its own (a header already gives every row its
@@ -1502,7 +1502,7 @@ fn parse_table_list(cursor: &mut Cursor, spec_fn: fn() -> RecordSpec, depth: usi
     Ok(FieldValue::List(items))
 }
 
-/// @emoji 📋️ Prints the braced AoS-list form `parse_table_list` reads back. Ordinary `[ ]` spacing
+/// 📋️ Prints the braced AoS-list form `parse_table_list` reads back. Ordinary `[ ]` spacing
 /// (a space just inside, per the general list rule — NOT the header's own tight-glued exception).
 fn print_table_list(spec_fn: fn() -> RecordSpec, items: &[FieldValue], writer: &mut Writer) {
     writer.atom("[");
@@ -1566,12 +1566,12 @@ pub enum JoinMode {
     Inline,
 }
 
-/// @emoji ✍️ A chunk tree that renders in either join mode — the structural half of the newline
+/// ✍️ A chunk tree that renders in either join mode — the structural half of the newline
 /// law. `atom` asserts its argument contains no raw `\n` (Document mode still separates atoms with
 /// synthesized whitespace, never embeds one inside an atom), so `render(Inline)` joining every
 /// chunk with a single space can never produce an embedded newline.
 ///
-/// @emoji 📏️ Canonical spacing rules (both join modes, structurally guaranteed — never hand-tuned
+/// 📏️ Canonical spacing rules (both join modes, structurally guaranteed — never hand-tuned
 /// per callsite): never a space adjacent to `=` (`key=[ a b ]`, not `key= [ a b ]` — the printer
 /// achieves this by pushing a bare `key=` atom, calling [`Writer::glue`], then printing the
 /// value); exactly one space between sibling atoms; exactly one space just inside `[ ]`/`{ }` when
@@ -1590,11 +1590,11 @@ enum Chunk {
     OpenBlock,
     CloseBlock,
     NewRecord,
-    /// @emoji 🧲️ One-shot marker: the very next `Atom`/`OpenBlock` chunk renders with NO
+    /// 🧲️ One-shot marker: the very next `Atom`/`OpenBlock` chunk renders with NO
     /// preceding separator (space in Inline mode, space-or-newline-continuation in Document mode)
     /// — consumed by that one chunk, then normal spacing resumes. See [`Writer::glue`].
     Glue,
-    /// @emoji 📜️ `Shape::Embed`'s payload — the one chunk kind whose Document and Inline renders
+    /// 📜️ `Shape::Embed`'s payload — the one chunk kind whose Document and Inline renders
     /// genuinely differ in FORM (fenced block vs. escaped quoted string), not just spacing.
     Verbatim {
         lang: String,
@@ -1631,7 +1631,7 @@ impl Writer {
         self.chunks.push(Chunk::NewRecord);
     }
 
-    /// @emoji 🧲️ Fuses the next pushed chunk onto whatever precedes it, with no separator, in
+    /// 🧲️ Fuses the next pushed chunk onto whatever precedes it, with no separator, in
     /// BOTH join modes — the mechanism behind every `key=value`/`key=[...]`/`key={...}` fusion in
     /// this printer. Replaces the old approach of mutating an already-pushed atom's string in
     /// place (which only worked for single-atom scalar values): `glue()` composes with arbitrarily
@@ -1641,7 +1641,7 @@ impl Writer {
         self.chunks.push(Chunk::Glue);
     }
 
-    /// @emoji 📜️ Pushes a `Shape::Embed` payload — content MAY contain raw newlines (unlike
+    /// 📜️ Pushes a `Shape::Embed` payload — content MAY contain raw newlines (unlike
     /// [`Self::atom`], which forbids them), since Document mode renders it as a fence.
     pub fn verbatim(&mut self, lang: &str, content: &str) {
         self.chunks.push(Chunk::Verbatim { lang: lang.to_string(), content: content.to_string() });
@@ -1754,7 +1754,7 @@ impl Writer {
     }
 }
 
-/// @emoji 🥇️ Field print order within one record — NOT declaration order: keyword, then
+/// 🥇️ Field print order within one record — NOT declaration order: keyword, then
 /// positionals (unchanged), then keyed fields grouped scalar-before-composite-before-table-
 /// before-statements, ties broken by original declaration order (a stable sort over an
 /// already-declaration-order slice achieves this for free). Metadata/scalars land before large
@@ -1801,7 +1801,7 @@ pub fn print_record(value: &RecordValue, spec: &RecordSpec, writer: &mut Writer)
     print_record_fields(value, spec, writer);
 }
 
-/// @emoji 📛️ Prints a `RecordLayout::Call` record: `<name> = <keyword>(args)`. The argument list
+/// 📛️ Prints a `RecordLayout::Call` record: `<name> = <keyword>(args)`. The argument list
 /// is built by [`print_record_fields`] — the exact same field-printing logic every other layout
 /// uses — rendered to its own `JoinMode::Inline` string and glued onto the keyword inside parens,
 /// so a positional/keyed field prints identically here as it would under `Inline` layout.
@@ -1826,7 +1826,7 @@ fn print_call_record(value: &RecordValue, spec: &RecordSpec, writer: &mut Writer
     writer.atom(format!("({args_text})"));
 }
 
-/// @emoji 🖨️ Prints a record's fields: positional bare in declaration order, then order-
+/// 🖨️ Prints a record's fields: positional bare in declaration order, then order-
 /// independent `key=value` attributes. Excludes any field marked `call_name()` — see
 /// [`parse_record_fields`]'s matching doc comment for why.
 fn print_record_fields(value: &RecordValue, spec: &RecordSpec, writer: &mut Writer) {
@@ -1906,7 +1906,7 @@ fn print_record_fields(value: &RecordValue, spec: &RecordSpec, writer: &mut Writ
     }
 }
 
-/// @emoji 🧲️ `key=` was just pushed by the caller — glue the value onto it with no separator,
+/// 🧲️ `key=` was just pushed by the caller — glue the value onto it with no separator,
 /// then print it normally (composed, not string-spliced, so this handles arbitrarily structured
 /// values exactly like a bare `print_shape` call would).
 fn print_key_value(field: &FieldSpec, value: &FieldValue, writer: &mut Writer) {
@@ -1944,7 +1944,7 @@ fn scalar_to_text(value: &FieldValue) -> String {
     }
 }
 
-/// @emoji 🔢️ Renders one `FieldValue::Tuple` element as bare text for the `Coord`/`Dir`/`Dim`/
+/// 🔢️ Renders one `FieldValue::Tuple` element as bare text for the `Coord`/`Dir`/`Dim`/
 /// `Range` printers above — every element of those tuples is always `FieldValue::Float` by
 /// construction (their parsers only ever push `FieldValue::Float`), so this panics rather than
 /// falling back on a malformed value, matching the rest of this module's "trust the parser built
@@ -2061,7 +2061,7 @@ pub fn print_shape(value: &FieldValue, shape: &Shape, writer: &mut Writer) {
     }
 }
 
-/// @emoji 📊️ Always prints the compact SoA form — this (not the parser, which still accepts the
+/// 📊️ Always prints the compact SoA form — this (not the parser, which still accepts the
 /// verbose AoS form too) is what makes `canonicalize` migrate old AoS documents to SoA
 /// automatically. Header `[ ]` is glued tight on both sides (`[id:TEXT x:NUM]`); rows have no
 /// separator, one row per line in Document mode purely for readability (`new_record` is a no-op
@@ -2089,7 +2089,7 @@ fn print_table(spec_fn: fn() -> RecordSpec, items: &[FieldValue], writer: &mut W
     writer.close_block();
 }
 
-/// @emoji 🧱️ Prints one table cell's value. See `parse_table_cell` for why a bare `Shape::Record`
+/// 🧱️ Prints one table cell's value. See `parse_table_cell` for why a bare `Shape::Record`
 /// column is brace-wrapped here — `{ }` glued tight on both sides, the same technique the header's
 /// own `[ ]` uses, so bracing never disturbs the "no space just inside" canonical spacing rule for
 /// a one-shot wrapper — and every other shape is left to the ordinary `print_shape`, already
@@ -2153,7 +2153,7 @@ fn print_wire(wire: &WireValue, writer: &mut Writer) {
     }
 }
 
-/// @emoji 🔁️ Prints `value` against `spec` in the given join mode — the top-level entry point
+/// 🔁️ Prints `value` against `spec` in the given join mode — the top-level entry point
 /// `dsl_derive`-generated code calls from `ArtifactDsl::print_dsl`/`OpText::print_op`.
 pub fn print(value: &RecordValue, spec: &RecordSpec, mode: JoinMode) -> String {
     let mut writer = Writer::new();
@@ -2163,7 +2163,7 @@ pub fn print(value: &RecordValue, spec: &RecordSpec, mode: JoinMode) -> String {
 //#endregion 🔖️Writer
 
 //#region 🔖️Canonicalize
-/// @emoji ♻️ `canonicalize(canonicalize(x)) == canonicalize(x)`: reprints whatever `parse`
+/// ♻️ `canonicalize(canonicalize(x)) == canonicalize(x)`: reprints whatever `parse`
 /// produces from `text`, which is the fixpoint every technology's `print_dsl` output must already
 /// be at (the round-trip law), so this doubles as the idempotence check.
 pub fn canonicalize(text: &str, spec: &RecordSpec, opts: &ParseOptions) -> Result<String, TextError> {
@@ -2173,7 +2173,7 @@ pub fn canonicalize(text: &str, spec: &RecordSpec, opts: &ParseOptions) -> Resul
 //#endregion 🔖️Canonicalize
 
 //#region 🔖️Language
-/// @emoji 🎨️ Generic editor surface over any `RecordSpec` — the generalization of
+/// 🎨️ Generic editor surface over any `RecordSpec` — the generalization of
 /// `math::graph::dsl`'s hand-rolled `LanguageService`.
 pub struct LanguageService<'g> {
     pub spec: &'g RecordSpec,
@@ -2210,7 +2210,7 @@ impl<'g> LanguageService<'g> {
         }
     }
 
-    /// @emoji 💡️ Completions at `offset`: every key not yet used in the record enclosing the
+    /// 💡️ Completions at `offset`: every key not yet used in the record enclosing the
     /// cursor, plus every keyword reachable from the root. A simple, always-available baseline —
     /// full context-sensitive narrowing is a natural follow-up once `Cst` gains node addressing.
     pub fn completions(&self, _text: &str, _offset: usize) -> Vec<CompletionItem> {
@@ -2233,7 +2233,7 @@ fn collect_keywords(spec: &RecordSpec, out: &mut Vec<String>, seen: &mut HashSet
     }
 }
 
-/// @emoji 🔁️ `seen` guards against a genuinely self-referential `Statements` table (a recursive
+/// 🔁️ `seen` guards against a genuinely self-referential `Statements` table (a recursive
 /// block tree whose own variant list contains itself): each `spec_fn()` call is only expanded the
 /// first time its keyword is reached, so the keyword set — which is always finite, even when the
 /// grammar's real nesting isn't — is collected exactly once instead of infinitely. `seen_records`

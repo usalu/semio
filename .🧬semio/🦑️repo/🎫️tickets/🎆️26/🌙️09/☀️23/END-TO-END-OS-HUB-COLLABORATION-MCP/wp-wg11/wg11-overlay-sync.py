@@ -5,6 +5,7 @@ or mtime differ; files the tree no longer has are removed from the overlay. Usag
 """
 import ctypes
 import os
+import re
 import subprocess
 from concurrent.futures import ThreadPoolExecutor
 
@@ -37,13 +38,18 @@ def clone(rel: str) -> int:
     return 1
 
 
+GENERATED_INPUT = re.compile(r"(\.rs$|/🤖️generated/)")
+SKIPPED = re.compile(r"(node_modules/|/target/|/dist/|/🧑‍💻dev/🤖️generated/)")
+
+
 def listed(*args: str) -> list[str]:
     out = subprocess.run(["git", "ls-files", "-z", *args], cwd=ROOT, capture_output=True, check=True).stdout.decode("utf-8")
     return [path for path in out.split("\0") if path and not path.startswith(".🧬semio/") and not path.startswith(".tmp-ticket")]
 
 
 def main() -> None:
-    files = sorted(set(listed()) | set(listed("--others", "--exclude-standard")))
+    generated = [path for path in listed("--others", "--ignored", "--exclude-standard", "--", "🧰️framework") if GENERATED_INPUT.search(path) and not SKIPPED.search(path)]
+    files = sorted(set(listed()) | set(listed("--others", "--exclude-standard")) | set(generated))
     with ThreadPoolExecutor(max_workers=8) as pool:
         cloned = sum(pool.map(clone, files))
     wanted = set(files)

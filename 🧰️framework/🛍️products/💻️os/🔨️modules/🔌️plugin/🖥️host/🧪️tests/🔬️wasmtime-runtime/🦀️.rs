@@ -62,11 +62,11 @@ fn a_real_trap_keeps_its_whole_source_chain_not_its_first_line() {
     assert!(message.contains("wasm backtrace"), "and the backtrace is still carried: {message}");
 }
 
+/// ⏱️ The regression this ratchets: `step_job` used to arm the store from `RELAY_JOB_BUDGET`,
+/// whose `deadline_ms` is `USER_VISIBLE_LANE_WALL_US / 1_000`: a two-millisecond hard kill per
+/// crossing.
 #[test]
 fn the_host_watchdog_is_not_the_guests_cooperative_grant() {
-    // ⏱️ The regression this ratchets: `step_job` used to arm the store from `RELAY_JOB_BUDGET`,
-    // whose `deadline_ms` is `USER_VISIBLE_LANE_WALL_US / 1_000`: a two-millisecond hard kill per
-    // crossing.
     assert_eq!(RELAY_JOB_BUDGET.deadline_ms as u64, semio_framework_job::USER_VISIBLE_LANE_WALL_US / 1_000, "the guest's grant stays the cooperative slice it always was");
     assert!(
         GUEST_JOB_WATCHDOG_MS >= RELAY_JOB_BUDGET.deadline_ms as u64 * 1_000,

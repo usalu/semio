@@ -70,7 +70,6 @@ mod cooperative_tests {
         pool.shutdown();
         assert_eq!(pool.occupancy(), 0);
         assert_eq!(pool.request_maintenance(ticket), Err(WorkerMaintenanceError::Shutdown));
-        eprintln!("[DEBUG] cooperative maintenance waited for host pumps, used Io DRR and one work permit, coalesced duplicate wakes, and consumed no queued closure");
     }
 
     #[test]
@@ -106,7 +105,6 @@ mod cooperative_tests {
         }
         pool.shutdown();
         assert_eq!(pool.occupancy(), 0);
-        eprintln!("[DEBUG] cooperative Io DRR matched the same alternating job/hook order and returned every worker permit");
     }
 
     include!("../../🤝️cooperative/🦀️.rs");

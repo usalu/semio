@@ -1232,6 +1232,7 @@ pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
             // 🔌️ The computed-results output artifact (`results:out`'s `kind_id`, see
             // `fem2d_io` above) — deliberately a different `media_type`
             // (`Computation`×`Value`) than the PORT's wire-level `Data`×`Value`.
+            .artifact_kind(crate::document_artifact_kind())
             .artifact_kind(crate::computation_artifact_kind())
             .icon_id("fem-app")
             .mode(edit::MODE_ID, LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")

@@ -45,7 +45,6 @@ fn retained_pending_patch_closes_all_native_component_payloads_and_exact_surface
             assert!(owner.get().is_none() && owner.source_mut().is_err());
         }
     }
-    eprintln!("[DEBUG] pending-whole-patch components=18 close-grants=1,64,4096 exact-surface-bytes=4 no-close-allocation=true");
 }
 
 #[test]
@@ -77,6 +76,6 @@ fn retained_pending_patch_keeps_empty_backing_and_partial_owner_through_unwind()
     assert!(owner.terminal_is_empty());
     *owner.source_mut().unwrap() = Some(exact);
     assert_eq!(close(&mut owner, 64), 4);
-    eprintln!("[DEBUG] pending-whole-patch unwind-frontiers=6 empty-reserved-backing-retired=true exact-handoff=true owner-bytes={}", size_of::<UiPendingPatch>());
+    eprintln!("pending-whole-patch unwind-frontiers=6 empty-reserved-backing-retired=true exact-handoff=true owner-bytes={}", size_of::<UiPendingPatch>());
 }
 //#endregion 🧪️WholePatchRetirement

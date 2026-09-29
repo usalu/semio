@@ -1710,11 +1710,12 @@ export function sameExecutionTargetV1(current: DocumentExecutionTargetLeaseField
 
 /** 🌐️ Complete localized execution-target status vocabulary. No code carries an origin, URL, path,
  * receipt, grant, digest or user identity; EN and DE are both explicit with no default language. */
-export type DocumentExecutionTargetStatusCodeV1 = "verifying" | "retrying" | "integrity-failed" | "stale" | "cancelled" | "renderer-unavailable" | "link-expired" | "access-revoked";
+export type DocumentExecutionTargetStatusCodeV1 = "verifying" | "retrying" | "catching-up" | "integrity-failed" | "stale" | "cancelled" | "renderer-unavailable" | "link-expired" | "access-revoked";
 
 export const DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1: Readonly<Record<DocumentExecutionTargetStatusCodeV1, Readonly<Record<"en" | "de", string>>>> = Object.freeze({
   verifying: Object.freeze({ en: "Verifying document component…", de: "Dokumentkomponente wird überprüft…" }),
   retrying: Object.freeze({ en: "The hub is busy. Asking again for the document component…", de: "Der Hub ist ausgelastet. Die Dokumentkomponente wird erneut angefragt…" }),
+  "catching-up": Object.freeze({ en: "Catching up with the hub…", de: "Gleiche mit dem Hub ab…" }),
   "integrity-failed": Object.freeze({ en: "The document component could not be verified. Reopen the document.", de: "Die Dokumentkomponente konnte nicht verifiziert werden. Öffnen Sie das Dokument erneut." }),
   stale: Object.freeze({ en: "The document target changed. Reopen the document.", de: "Das Dokumentziel wurde geändert. Öffnen Sie das Dokument erneut." }),
   cancelled: Object.freeze({ en: "Opening the document was cancelled.", de: "Das Öffnen des Dokuments wurde abgebrochen." }),
@@ -1726,7 +1727,7 @@ export const DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1: Readonly<Record<DocumentE
 /** 🔊️ ARIA live-region politeness for one execution-target status: progress and a retry of a declared transient answer
  * announce (the opening still runs and can be cancelled), every terminal integrity/stale/renderer outcome asserts. */
 export function documentExecutionTargetStatusRoleV1(code: DocumentExecutionTargetStatusCodeV1): "status" | "alert" {
-  return code === "verifying" || code === "retrying" ? "status" : "alert";
+  return code === "verifying" || code === "retrying" || code === "catching-up" ? "status" : "alert";
 }
 
 /** 🪜️ Every stage one execution-target install passes through. The first five are the owner's own
@@ -1755,9 +1756,11 @@ export type DocumentExecutionTargetProgressStageV1 =
   | "actor-cold"
   | "actor-view"
   | "actor-ready"
-  | "canonical-pair";
+  | "canonical-pair"
+  | "catch-up";
 
-/** 📈️ Bounded install progress. It never carries bytes, paths, receipts or full digests. */
+/** 📈️ Bounded install progress. It never carries bytes, paths, receipts or full digests. For the `catch-up` stage the two counts
+ * are hub tail messages (delivered / retained), not bytes. */
 export interface DocumentExecutionTargetProgressV1 {
   stage: DocumentExecutionTargetProgressStageV1;
   completedBytes: number;
@@ -2715,6 +2718,17 @@ export function admitCanonicalCheckpointPairV1(pair: CanonicalCheckpointPairV1, 
   const frontier = pair.baselineFrontier;
   if (frontier.documentId !== baseline.documentId || frontier.headEditOrdinal !== baseline.headEditOrdinal || frontier.headEditId !== baseline.headEditId || frontier.lastCommitSeq !== baseline.lastCommitSeq || canonicalCheckpointPairHexV1(frontier.chainHash) !== canonicalCheckpointPairHexV1(baseline.chainHash)) throw new Error("canonical-checkpoint-pair.baseline");
   if (canonicalCheckpointPairHexV1(pair.aggregateSha256) !== expected.aggregateSha256) throw new Error("canonical-checkpoint-pair.aggregate");
+}
+
+/** 🛟️ Admits a decoded pair only as exactly the checkpoint a hub `RebootstrapRequired` control names — the twin of the kernel's
+ * `CanonicalCheckpointPairV1::admit_rebootstrap` (the control carries no aggregate; the digests prove the bytes). */
+export function admitCanonicalCheckpointPairForRebootstrapV1(pair: CanonicalCheckpointPairV1, control: { readonly scope: DocumentScope; readonly checkpointId: ArtifactHash; readonly descriptorDigestV1: ArtifactHash; readonly baselineFrontier: ArtifactFrontier }): void {
+  if (pair.scope.spaceId !== control.scope.spaceId || pair.scope.documentId !== control.scope.documentId) throw new Error("canonical-checkpoint-pair.scope");
+  if (canonicalCheckpointPairHexV1(pair.activeCheckpointId) !== canonicalCheckpointPairHexV1(control.checkpointId)) throw new Error("canonical-checkpoint-pair.checkpoint");
+  if (canonicalCheckpointPairHexV1(pair.descriptorDigestV1) !== canonicalCheckpointPairHexV1(control.descriptorDigestV1)) throw new Error("canonical-checkpoint-pair.descriptor");
+  const frontier = pair.baselineFrontier;
+  const baseline = control.baselineFrontier;
+  if (frontier.documentId !== baseline.documentId || frontier.headEditOrdinal !== baseline.headEditOrdinal || frontier.headEditId !== baseline.headEditId || frontier.lastCommitSeq !== baseline.lastCommitSeq || canonicalCheckpointPairHexV1(frontier.chainHash) !== canonicalCheckpointPairHexV1(baseline.chainHash)) throw new Error("canonical-checkpoint-pair.baseline");
 }
 //#endregion 🪢️CanonicalCheckpointPair
 

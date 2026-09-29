@@ -1,5 +1,5 @@
 import { PLAYGROUND_LOCKED_EXAMPLE_ENV } from "./🔒️preferences/🟦️.ts";
-/** @emoji 🎮️ Playground identity for the whole repository: the generated OS playground catalog, the
+/** 🎮️ Playground identity for the whole repository: the generated OS playground catalog, the
  * dev/test port table every host binds, and the locked-example Vite define. Split out of
  * `📦️packages/🟦️typescript/🟦️.ts` so a consumer that only needs a port (the styling package's dev
  * servers, and through them `⚙️vite.config.ts`) never drags the repository library's `🔍️discovery`
@@ -31,7 +31,7 @@ type PlaygroundPortSpec = {
   readonly env: string;
 };
 
-/** @emoji 🔌️ Builds the playground port table from the declared workspaces' `semio.app` manifests plus non-app hosts. */
+/** 🔌️ Builds the playground port table from the declared workspaces' `semio.app` manifests plus non-app hosts. */
 function buildPlaygroundPortsFromManifests(): Record<string, PlaygroundPortSpec> {
   const ports: Record<string, PlaygroundPortSpec> = {
     storybook: { dev: 6010, env: "STORYBOOK_PORT" },
@@ -67,37 +67,37 @@ export const PLAYGROUND_PORTS: Record<string, PlaygroundPortSpec> = new Proxy({}
   },
 });
 
-/** @emoji 🔌️ Local dev port for a playground host. */
+/** 🔌️ Local dev port for a playground host. */
 export function playgroundDevPort(kind: PlaygroundHostKind): number {
   const spec = resolvePlaygroundPorts()[kind];
   if (!spec) throw new Error(`unknown playground host kind: ${kind}`);
   return spec.dev;
 }
 
-/** @emoji 🔌️ String dev port (vite `--port`, nx `env`). */
+/** 🔌️ String dev port (vite `--port`, nx `env`). */
 export function playgroundDevPortString(kind: PlaygroundHostKind): string {
   return String(playgroundDevPort(kind));
 }
 
-/** @emoji 🧪️ Vitest/playwright port when set; otherwise `undefined`. */
+/** 🧪️ Vitest/playwright port when set; otherwise `undefined`. */
 export function playgroundTestPort(kind: PlaygroundHostKind): number | undefined {
   return resolvePlaygroundPorts()[kind]?.test;
 }
 
-/** @emoji 🧪️ String test port for nx `env` / playwright. */
+/** 🧪️ String test port for nx `env` / playwright. */
 export function playgroundTestPortString(kind: PlaygroundHostKind): string | undefined {
   const port = playgroundTestPort(kind);
   return port === undefined ? undefined : String(port);
 }
 
-/** @emoji 🔌️ Process env var holding the dev port override. */
+/** 🔌️ Process env var holding the dev port override. */
 export function playgroundPortEnv(kind: PlaygroundHostKind): string {
   const spec = resolvePlaygroundPorts()[kind];
   if (!spec) throw new Error(`unknown playground host kind: ${kind}`);
   return spec.env;
 }
 
-/** @emoji 🚧️ Every assigned playground dev + test port (for strict binding). */
+/** 🚧️ Every assigned playground dev + test port (for strict binding). */
 export function allPlaygroundReservedPorts(): ReadonlySet<number> {
   const ports = new Set<number>();
   for (const spec of Object.values(resolvePlaygroundPorts())) {
@@ -107,24 +107,24 @@ export function allPlaygroundReservedPorts(): ReadonlySet<number> {
   return ports;
 }
 
-/** @emoji 🔌️ OS hub service dev port. 8787, not 6070 — 6070 is the `s` react playground's port,
+/** 🔌️ OS hub service dev port. 8787, not 6070 — 6070 is the `s` react playground's port,
  * see `✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/Cargo.toml` `[[package.metadata.semio.playground]]`. */
 export const OS_HUB_PORT = 8787;
 
-/** @emoji 🔌️ Process env var for {@link OS_HUB_PORT}. */
+/** 🔌️ Process env var for {@link OS_HUB_PORT}. */
 export const OS_HUB_PORT_ENV = "OS_HUB_PORT";
 
-/** @emoji 🔒️ Process env var locking a playground to one example (hides navbar dropdown). */
+/** 🔒️ Process env var locking a playground to one example (hides navbar dropdown). */
 export { PLAYGROUND_LOCKED_EXAMPLE_ENV } from "./🔒️preferences/🟦️.ts";
 
-/** @emoji 🔒️ Locked example id from process env, if any. */
+/** 🔒️ Locked example id from process env, if any. */
 export function playgroundLockedExampleIdFromEnv(env: NodeJS.ProcessEnv = process.env): string | undefined {
   const raw = env[PLAYGROUND_LOCKED_EXAMPLE_ENV]?.trim();
   return raw || undefined;
 }
 
 
-/** @emoji 🔌️ Vite `define` entries for playground play bundles. */
+/** 🔌️ Vite `define` entries for playground play bundles. */
 export function playgroundPlayViteDefine(extra: Record<string, string> = {}): Record<string, string> {
   return {
     "import.meta.env.PLAYGROUND_LOCKED_EXAMPLE_ID": JSON.stringify(playgroundLockedExampleIdFromEnv() ?? ""),

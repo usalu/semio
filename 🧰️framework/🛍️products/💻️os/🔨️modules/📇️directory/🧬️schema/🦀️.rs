@@ -1925,10 +1925,14 @@ pub fn same_lease_fields_v1(left: &DocumentExecutionTargetLeaseFieldsV1, right: 
 #[value(rename_all = "kebab-case")]
 pub enum DocumentExecutionTargetStatusCodeV1 {
     Verifying,
+    Retrying,
+    CatchingUp,
     IntegrityFailed,
     Stale,
     Cancelled,
     RendererUnavailable,
+    LinkExpired,
+    AccessRevoked,
 }
 
 impl DocumentExecutionTargetStatusCodeV1 {
@@ -1937,6 +1941,10 @@ impl DocumentExecutionTargetStatusCodeV1 {
         match (self, locale) {
             (Self::Verifying, DocumentExecutionTargetLocaleV1::En) => "Verifying document component…",
             (Self::Verifying, DocumentExecutionTargetLocaleV1::De) => "Dokumentkomponente wird überprüft…",
+            (Self::Retrying, DocumentExecutionTargetLocaleV1::En) => "The hub is busy. Asking again for the document component…",
+            (Self::Retrying, DocumentExecutionTargetLocaleV1::De) => "Der Hub ist ausgelastet. Die Dokumentkomponente wird erneut angefragt…",
+            (Self::CatchingUp, DocumentExecutionTargetLocaleV1::En) => "Catching up with the hub…",
+            (Self::CatchingUp, DocumentExecutionTargetLocaleV1::De) => "Gleiche mit dem Hub ab…",
             (Self::IntegrityFailed, DocumentExecutionTargetLocaleV1::En) => "The document component could not be verified. Reopen the document.",
             (Self::IntegrityFailed, DocumentExecutionTargetLocaleV1::De) => "Die Dokumentkomponente konnte nicht verifiziert werden. Öffnen Sie das Dokument erneut.",
             (Self::Stale, DocumentExecutionTargetLocaleV1::En) => "The document target changed. Reopen the document.",
@@ -1945,13 +1953,17 @@ impl DocumentExecutionTargetStatusCodeV1 {
             (Self::Cancelled, DocumentExecutionTargetLocaleV1::De) => "Das Öffnen des Dokuments wurde abgebrochen.",
             (Self::RendererUnavailable, DocumentExecutionTargetLocaleV1::En) => "The verified document component is ready, but this renderer is unavailable.",
             (Self::RendererUnavailable, DocumentExecutionTargetLocaleV1::De) => "Die überprüfte Dokumentkomponente ist bereit, aber dieser Renderer ist nicht verfügbar.",
+            (Self::LinkExpired, DocumentExecutionTargetLocaleV1::En) => "The connection was lost for too long. Reconnect to keep editing this document.",
+            (Self::LinkExpired, DocumentExecutionTargetLocaleV1::De) => "Die Verbindung war zu lange unterbrochen. Verbinden Sie sich erneut, um dieses Dokument weiter zu bearbeiten.",
+            (Self::AccessRevoked, DocumentExecutionTargetLocaleV1::En) => "Your access to this document was removed.",
+            (Self::AccessRevoked, DocumentExecutionTargetLocaleV1::De) => "Ihr Zugriff auf dieses Dokument wurde entfernt.",
         }
     }
 
     /// 🔊 Progress announces; every terminal outcome asserts.
     pub const fn aria_role(self) -> &'static str {
         match self {
-            Self::Verifying => "status",
+            Self::Verifying | Self::Retrying | Self::CatchingUp => "status",
             _ => "alert",
         }
     }

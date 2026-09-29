@@ -1,6 +1,5 @@
 
 use super::*;
-use crate::editor::home::config::DirectoryProjectionReceiptV1;
 use protocol::Mutation as _;
 
 fn seal(mut page: store::os_directory::DirectoryEventPageV1) -> store::os_directory::DirectoryEventPageV1 {
@@ -8,11 +7,11 @@ fn seal(mut page: store::os_directory::DirectoryEventPageV1) -> store::os_direct
     page
 }
 
-fn dispatch(config: &HomeConfig, page: &store::os_directory::DirectoryEventPageV1) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
-    let history = semio_framework_plugin::HistoryView::empty();
-    let document = SHomeSnapshot::default();
-    let view = ArtifactView::new(&document, &history);
-    handle(&ApplyDirectoryEventPage { page_json: pack::to_json_string(page) }, &view, &ConfigView { snapshot: config, window: None })
+/// 📬️ The page route's answer against `transient`, with its one item (if any) folded the way the transient lane folds it.
+fn answer(transient: &HomeTransient, page: &store::os_directory::DirectoryEventPageV1) -> Result<(DirectoryProjectionReceiptV1, Option<HomeTransient>), Fault> {
+    let answer = directory_page_answer(&pack::to_json_string(page), transient.directory())?;
+    let next = answer.item.map(|item| item.diff(transient).diff().clone());
+    Ok((answer.receipt, next))
 }
 
 #[semio_framework_async_macros::async_test]
@@ -28,23 +27,17 @@ async fn sealed_page_replaces_projection_once_and_rejects_races() {
         events: Vec::new(),
         receipt_sha256: String::new(),
     });
-    let initial = HomeConfig::default();
-    let emitted = dispatch(&initial, &first).expect("first sealed page");
-    assert_eq!(emitted.config_mutations.len(), 1);
-    assert!(emitted.artifact_mutations.is_empty());
-    let current = emitted.config_mutations[0].diff(&initial).diff().clone();
-    assert_eq!(current.directory().expect("projection").cursor, 5, "invisible raw holes advance the resume frontier");
-    assert_eq!(current.directory_session_binding_sha256, binding);
-    assert_eq!(current.directory_authorization_generation, 7);
-    assert_eq!(current.directory_receipt_sha256, first.receipt_sha256);
-    let duplicate = dispatch(&current, &first).expect("idempotent replay");
-    assert!(duplicate.config_mutations.is_empty());
-    assert_eq!(duplicate.events.len(), 1, "an already-published frontier returns the same terminal receipt without another edit");
-    let duplicate_receipt: DirectoryProjectionReceiptV1 = protocol::FromValue::from_value(duplicate.events[0].payload.clone()).expect("typed duplicate receipt");
-    assert_eq!(duplicate_receipt, current.directory_projection_receipt().expect("current receipt"));
+    let initial = HomeTransient::default();
+    let (receipt, next) = answer(&initial, &first).expect("first sealed page");
+    let current = next.expect("the first page is one transient item");
+    assert_eq!(current.directory().cursor(), 5, "invisible raw holes advance the resume frontier");
+    assert_eq!(receipt, current.directory().receipt().expect("current receipt"));
+    let (duplicate_receipt, duplicate) = answer(&current, &first).expect("idempotent replay");
+    assert!(duplicate.is_none(), "an already-held frontier folds nothing");
+    assert_eq!(duplicate_receipt, current.directory().receipt().expect("current receipt"), "an already-held frontier returns the same terminal receipt");
 
     let raced = seal(store::os_directory::DirectoryEventPageV1 { after_seq_exclusive: 3, through_seq_inclusive: 6, receipt_sha256: String::new(), ..first.clone() });
-    assert!(dispatch(&current, &raced).is_err(), "a same-authority page that does not continue the held frontier cannot replace the projection");
+    assert!(answer(&current, &raced).is_err(), "a same-authority page that does not continue the held frontier cannot replace the projection");
 
     let event = store::os_directory::DirectoryEvent {
         seq: 7,
@@ -72,16 +65,14 @@ async fn sealed_page_replaces_projection_once_and_rejects_races() {
         events: vec![event],
         receipt_sha256: String::new(),
     });
-    let emitted = dispatch(&current, &second).expect("ordered successor page");
-    assert_eq!(emitted.events.len(), 1);
-    let receipt: DirectoryProjectionReceiptV1 = protocol::FromValue::from_value(emitted.events[0].payload.clone()).expect("typed projection receipt");
+    let (receipt, advanced) = answer(&current, &second).expect("ordered successor page");
+    let advanced = advanced.expect("an ordered successor is one transient item");
     assert_eq!(receipt.schema, DirectoryProjectionReceiptV1::SCHEMA);
     assert_eq!(receipt.through_seq_inclusive, 7);
     assert_eq!(receipt.receipt_sha256, second.receipt_sha256);
-    let advanced = emitted.config_mutations[0].diff(&current).diff().clone();
-    let projection = advanced.directory().expect("advanced projection");
-    assert_eq!(projection.cursor, 7);
-    assert!(projection.spaces.contains_key("space-1"));
+    assert_eq!(advanced.directory().cursor(), 7);
+    assert!(advanced.directory().space("space-1").is_some());
+    assert_eq!(current.directory().space_count(), 0, "the captured root the successor was folded from never changes");
 
     let replacement = seal(store::os_directory::DirectoryEventPageV1 {
         schema: "semio.directory.event-page.v1".into(),
@@ -93,18 +84,27 @@ async fn sealed_page_replaces_projection_once_and_rejects_races() {
         events: Vec::new(),
         receipt_sha256: String::new(),
     });
-    let emitted = dispatch(&advanced, &replacement).expect("new authority rebootstrap");
-    let replaced = emitted.config_mutations[0].diff(&advanced).diff().clone();
-    assert_eq!(replaced.directory().expect("replaced projection").cursor, 0);
-    assert!(replaced.directory().expect("replaced projection").spaces.is_empty());
+    let replaced = answer(&advanced, &replacement).expect("new authority rebootstrap").1.expect("a new authority rebuilds");
+    assert_eq!(replaced.directory().cursor(), 0);
+    assert_eq!(replaced.directory().space_count(), 0);
 
     let origin_replay = seal(store::os_directory::DirectoryEventPageV1 { after_seq_exclusive: 0, through_seq_inclusive: 4, has_more: true, events: Vec::new(), receipt_sha256: String::new(), ..second.clone() });
-    let emitted = dispatch(&advanced, &origin_replay).expect("a same-authority replay from the origin rebuilds the projection");
-    let rebuilt = emitted.config_mutations[0].diff(&advanced).diff().clone();
-    assert_eq!(rebuilt.directory().expect("rebuilt projection").cursor, 4, "the rebuild restarts at the replayed page's frontier");
-    assert!(rebuilt.directory().expect("rebuilt projection").spaces.is_empty(), "nothing folded before the origin replay survives it");
+    let rebuilt = answer(&advanced, &origin_replay).expect("a same-authority replay from the origin rebuilds the projection").1.expect("an origin replay is one item");
+    assert_eq!(rebuilt.directory().cursor(), 4, "the rebuild restarts at the replayed page's frontier");
+    assert_eq!(rebuilt.directory().space_count(), 0, "nothing folded before the origin replay survives it");
 
     let mut forged = second;
     forged.receipt_sha256 = "c".repeat(64);
-    assert!(dispatch(&current, &forged).is_err(), "forged receipt is terminally rejected");
+    assert!(answer(&current, &forged).is_err(), "forged receipt is terminally rejected");
+}
+
+/// 🚫️ The direct lane never lands a page: no transient item, no receipt, a named refusal.
+#[test]
+fn the_direct_lane_refuses_by_name() {
+    let history = semio_framework_plugin::HistoryView::empty();
+    let document = SHomeSnapshot::default();
+    let view = ArtifactView::new(&document, &history);
+    let config = HomeConfig::default();
+    let refused = handle(&ApplyDirectoryEventPage { page_json: String::new() }, &view, &ConfigView { snapshot: &config, window: None });
+    assert!(matches!(refused, Err(fault) if fault.code.0.as_str() == "s.home.directory-event-page.requires-retained-job"));
 }

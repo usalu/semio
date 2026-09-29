@@ -122,7 +122,6 @@ impl ArtifactCommandWork<EditorApp<DocxEditor>> for DocxSetPageWork {
             return Err(Fault::from("stdio.docx.set-page.command-mismatch"));
         };
         if !self.validated {
-            preparation::snapshot_is_admitted(input.snapshot).map_err(|message| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.docx.set-page.paged-owner-required"), message))?;
             let Some(_) = build_set_page_mutation(input.snapshot, address, text)? else {
                 self.complete = true;
                 return Ok(ArtifactCommandWorkStep::Complete(Emit::default()));

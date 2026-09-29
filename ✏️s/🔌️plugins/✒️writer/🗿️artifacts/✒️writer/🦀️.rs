@@ -351,6 +351,23 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-text/📝️text/🦀️.rs"]
                             pub mod text;
                         }
+                        #[path = "."]
+                        pub mod splice_text {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️splice-text/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️splice-text/💾️binary/🦀️.rs"]
+                            pub mod binary;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️splice-text/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️splice-text/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️splice-text/🧪️tests/⚠️warns-that-an-already-removed-run-leaves-the-brief-unchanged/🦀️.rs"]
+                            mod tests_warns_that_an_already_removed_run_leaves_the_brief_unchanged;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️splice-text/📝️text/🦀️.rs"]
+                            pub mod text;
+                        }
                     }
                 }
                 #[path = "."]
@@ -637,6 +654,8 @@ pub mod editor {
             pub mod set_text;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📝️text-edit/🦀️.rs"]
             pub mod text_edit;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✂️text-splice/🦀️.rs"]
+            pub mod text_splice;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔢️toggle-line-numbers/🦀️.rs"]
             pub mod toggle_line_numbers;
         }

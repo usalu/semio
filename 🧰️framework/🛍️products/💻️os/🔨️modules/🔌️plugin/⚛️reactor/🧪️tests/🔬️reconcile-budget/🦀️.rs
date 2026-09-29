@@ -8,6 +8,11 @@ fn patch_frame_limit_does_not_limit_internal_reconciliation_steps() {
     assert_eq!(reconcile_step_opportunities(0), 1);
 }
 
+/// ✅️ The task stage terminates on `cancel_instance_tasks_step`'s OWN witness, never on its
+/// cursor: the production executor answers `Complete` without advancing the cursor once its
+/// sweep has nothing left to visit, so a cursor-bound condition looped forever and no native
+/// close ever reached `Retired` (26/09/09/PROCEDURAL-3D-END-TO-END). Production coverage lives
+/// in `✏️s/🔌️plugins/🌀️procedural/🧪️tests/🚪️close-ladder/🦀️.rs`, which links a non-test framework.
 #[test]
 fn reactor_close_drains_requests_resumes_tasks_timers_and_metadata_in_bounded_steps() {
     let instance = 991u32;
@@ -25,11 +30,6 @@ fn reactor_close_drains_requests_resumes_tasks_timers_and_metadata_in_bounded_st
         assert!(steps < 8_192, "fixed close cursor must terminate within its structural capacities");
     }
     assert!(steps > REACTOR_TASK_SLOTS + REACTOR_TIMER_SLOTS, "request, resume, task, timer, and metadata owners must retire across distinct opportunities");
-    // ✅️ The task stage terminates on `cancel_instance_tasks_step`'s OWN witness, never on its
-    // cursor: the production executor answers `Complete` without advancing the cursor once its
-    // sweep has nothing left to visit, so a cursor-bound condition looped forever and no native
-    // close ever reached `Retired` (26/09/09/PROCEDURAL-3D-END-TO-END). Production coverage lives
-    // in `✏️s/🔌️plugins/🌀️procedural/🧪️tests/🚪️close-ladder/🦀️.rs`, which links a non-test framework.
     assert!(REACTOR_CLOSES.with(|closes| closes.borrow().slots.get(ReactorCloseRegistry::index(instance)).is_some_and(|state| state.tasks_complete)), "the terminal reactor close must carry the task sweep's own completion witness");
     assert!(reserve_reactor_close(instance_lifetime::NativeCloseKey::fixture(instance, 2)).is_err(), "terminal receipt holds its exact slot until ACK");
     release_reactor_close(key).expect("final exact receipt release");
@@ -142,7 +142,6 @@ fn a_nakagin_scale_world_publication_reconciles_and_retires_within_a_handful_of_
     assert!(dripped_units > 512, "this patch must be document-scaled for the bound below to mean anything; observed {dripped_units} retirement units");
     assert!(dripped_turns > 64, "the pre-W-S2 pacing is what this law guards against; it must stay visibly expensive, observed {dripped_turns} turns");
     assert!(granted_turns <= 8, "one world-3d publication must retire inside a handful of reactor turns; observed {granted_turns} turns over {granted_units} units against {dripped_turns} turns at one item per unit and 8 units per turn");
-    eprintln!("[DEBUG] nakagin publication reconciled in {reconcile_turns} turns ({reconcile_steps} steps) and retires in {granted_turns} turns / {granted_units} units, against {dripped_turns} turns / {dripped_units} units at the pre-W-S2 pacing");
 }
 
 /// 🌍️ Mounts one Nakagin-scale world surface on its OWN tracker and publishes it, leaving the
@@ -253,7 +252,6 @@ fn a_retired_surface_publication_leaves_its_slot_reservable_for_the_next_dirty_r
             }
         }
     };
-    eprintln!("[DEBUG] b48.reservable surface={surface} steps={steps}");
     grant.cancel();
     assert!(tracker.reserve_mounted(id, key).is_ok(), "a cancelled reservation releases the slot for the render that follows it: {}", tracker.debug_state());
 }

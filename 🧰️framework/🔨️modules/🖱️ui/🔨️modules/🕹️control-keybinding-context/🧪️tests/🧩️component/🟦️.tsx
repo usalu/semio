@@ -17,7 +17,7 @@ interface HotkeyHarnessProps {
   readonly options?: ControlKeybindingOptions;
 }
 
-/** @emoji 🧪️ Mounts the owned listener beside a representative form field. */
+/** 🧪️ Mounts the owned listener beside a representative form field. */
 function HotkeyHarness({ callback, keys, options }: HotkeyHarnessProps) {
   useHotkeys(keys, callback, options);
   return <input aria-label="field" />;

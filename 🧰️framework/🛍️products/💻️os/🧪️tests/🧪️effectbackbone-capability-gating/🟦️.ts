@@ -271,7 +271,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const kernelUrl = new URL("../../../../../🔨️modules/🎠️kernel/🦀️.rs", source.url);
       const testSource = readFileSync(kernelUrl, "utf8");
       const enumMatch = testSource.match(/pub enum MessageEndpoint \{([\s\S]*?)\n\}/);
-      expect(enumMatch).not.toBeNull(); // [DEBUG] `pub enum MessageEndpoint { ... }` shape not found — Rust source changed, update this test's regex
+      expect(enumMatch).not.toBeNull(); // [TRACE] `pub enum MessageEndpoint { ... }` shape not found — Rust source changed, update this test's regex
       const rustVariants = parseRustVariants(enumMatch![1]!);
       expect(rustVariants.map((variant) => variant.name)).toEqual(MESSAGE_ENDPOINT_VARIANT_FIELDS.map((variant) => variant.kind));
       for (const rustVariant of rustVariants) {
@@ -286,7 +286,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const kernelUrl = new URL("../../../../../🔨️modules/🎠️kernel/🦀️.rs", source.url);
       const testSource = readFileSync(kernelUrl, "utf8");
       const variantMatch = testSource.match(/\bSendMessage\s*\{([^{}]*)\}/);
-      expect(variantMatch).not.toBeNull(); // [DEBUG] `SendMessage { ... }` not found — Rust `Effect::SendMessage` changed, update this test
+      expect(variantMatch).not.toBeNull(); // [TRACE] `SendMessage { ... }` not found — Rust `Effect::SendMessage` changed, update this test
       expect(parseFieldList(variantMatch![1]!)).toEqual(["target", "payload"]);
     });
 
@@ -295,7 +295,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const kernelUrl = new URL("../../../../../🔨️modules/🎠️kernel/🦀️.rs", source.url);
       const testSource = readFileSync(kernelUrl, "utf8");
       const variantMatch = testSource.match(/\bMessage\s*\{([^{}]*)\}/);
-      expect(variantMatch).not.toBeNull(); // [DEBUG] `Message { ... }` not found — Rust `Event::Message` changed, update this test
+      expect(variantMatch).not.toBeNull(); // [TRACE] `Message { ... }` not found — Rust `Event::Message` changed, update this test
       expect(parseFieldList(variantMatch![1]!)).toEqual(["source", "payload"]);
     });
   });

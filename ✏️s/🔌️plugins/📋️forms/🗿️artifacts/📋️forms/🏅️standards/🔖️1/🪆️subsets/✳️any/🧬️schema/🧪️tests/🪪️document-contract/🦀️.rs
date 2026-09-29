@@ -28,7 +28,6 @@ fn forms_document_contract_exact_json_and_sparse_edits() {
         let after = diff.apply(&before).expect("valid sparse change");
         assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&after)).unwrap(), case["after"], "{}", case["name"]);
     }
-    println!("[DEBUG] Forms native JSON and sparse deltas match neutral independent JSON values");
 }
 
 #[test]
@@ -40,7 +39,6 @@ fn forms_document_contract_native_codec_identity() {
     assert_eq!(decoded, snapshot);
     let bytes = snapshot.encode_pack();
     assert_eq!(FormsSnapshot::decode_pack(&bytes).expect("Pack decode"), snapshot);
-    println!("[DEBUG] Forms native text and Pack retain exact canonical child identities");
 }
 
 #[test]
@@ -52,7 +50,6 @@ fn forms_document_contract_distinct_child_owners_and_typed_refusal() {
     let diff = FormsDiff { structure: Some(child), ..Default::default() };
     assert!(diff.apply(&before).is_err());
     assert_eq!(before, FormsSnapshot::default());
-    println!("[DEBUG] Forms typed invalid child replacement leaves parent unchanged");
 }
 
 #[test]
@@ -62,7 +59,6 @@ fn forms_document_contract_rejects_foreign_text_envelope() {
     for header in vectors()["invalidTextEnvelopes"].as_array().unwrap() {
         assert!(FormsSnapshot::parse_dsl(&format!("{}\n{body}", header.as_str().unwrap())).is_err());
     }
-    println!("[DEBUG] Forms rejects foreign text owner, component and version");
 }
 
 #[test]
@@ -73,5 +69,4 @@ fn forms_document_contract_rejects_foreign_pack_identity() {
         let envelope = store::semio_format::parse_preamble_line(header.as_str().unwrap()).unwrap();
         assert!(FormsSnapshot::decode_pack(&store::semio_format::wrap_binary(&envelope, &body)).is_err(), "{header}");
     }
-    println!("[DEBUG] Forms rejects foreign Pack owner, component and version");
 }

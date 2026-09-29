@@ -1,0 +1,69 @@
+{
+ "schema": "semio.video-render.program.v1",
+ "capability": "media.video-render",
+ "valid": [
+  {
+   "id": "still-deck",
+   "program": { "schema": "semio.video-render.program.v1", "width": 64, "height": 48, "fps": 30, "background": [0.04, 0.05, 0.07, 1], "paths": [], "images": [], "scenes": [ { "ops": [] } ], "timeline": [ { "scene": 0, "frames": 7 } ] },
+   "frameCount": 7,
+   "durationMs": 233
+  },
+  {
+   "id": "square-then-stroke",
+   "program": {
+    "schema": "semio.video-render.program.v1", "width": 32, "height": 16, "fps": 24, "background": [0, 0, 0, 1],
+    "paths": [ { "verbs": "MLLLZ", "points": [4, 4, 12, 4, 12, 12, 4, 12] }, { "verbs": "MQC", "points": [0, 0, 8, 8, 16, 0, 20, 4, 24, 4, 28, 0] } ],
+    "images": [],
+    "scenes": [
+     { "ops": [ { "kind": "fill", "path": 0, "transform": [1, 0, 0, 1, 0, 0], "color": [1, 0, 0, 1] } ] },
+     { "ops": [ { "kind": "fill", "path": 0, "transform": [1, 0, 0, 1, 16, 0], "color": [1, 0, 0, 1] }, { "kind": "stroke", "path": 1, "transform": [1, 0, 0, 1, 0, 2], "color": [0, 1, 0, 0.5], "width": 2 } ] }
+    ],
+    "timeline": [ { "scene": 0, "frames": 12 }, { "scene": 1, "frames": 12 }, { "scene": 0, "frames": 1 } ]
+   },
+   "frameCount": 25,
+   "durationMs": 1042
+  },
+  {
+   "id": "tile-slides",
+   "program": {
+    "schema": "semio.video-render.program.v1", "width": 48, "height": 32, "fps": 12, "background": [0.1, 0.1, 0.1, 1],
+    "paths": [ { "verbs": "MLLLZ", "points": [0, 0, 1, 0, 1, 1, 0, 1] } ],
+    "images": [ { "url": "/🖼️assets/🖼️images/🏙️architecture/🏘️habitat-67.png" } ],
+    "scenes": [
+     { "ops": [ { "kind": "image", "image": 0, "crop": [0, 0, 1, 1], "transform": [48, 0, 0, 32, 0, 0], "opacity": 1 }, { "kind": "stroke", "path": 0, "transform": [24, 0, 0, 16, 0, 0], "color": [1, 1, 1, 1], "width": 0.05 } ] },
+     { "ops": [ { "kind": "image", "image": 0, "crop": [0, 0, 0.5, 0.5], "transform": [48, 0, 0, 32, 0, 0], "opacity": 1 } ] },
+     { "ops": [ { "kind": "image", "image": 0, "crop": [0.5, 0.5, 0.5, 0.5], "transform": [48, 0, 0, 32, 0, 0], "opacity": 0.75 } ] }
+    ],
+    "timeline": [ { "scene": 0, "frames": 6 }, { "scene": 1, "frames": 4 }, { "scene": 2, "frames": 4 } ]
+   },
+   "frameCount": 14,
+   "durationMs": 1167
+  }
+ ],
+ "invalid": [
+  { "id": "wrong-schema", "error": "schema", "patch": { "schema": "semio.video-render.program.v0" } },
+  { "id": "odd-width", "error": "dimensions", "patch": { "width": 63 } },
+  { "id": "too-tall", "error": "dimensions", "patch": { "height": 4098 } },
+  { "id": "zero-fps", "error": "frameRate", "patch": { "fps": 0 } },
+  { "id": "too-fast", "error": "frameRate", "patch": { "fps": 121 } },
+  { "id": "no-frames", "error": "empty", "patch": { "timeline": [] } },
+  { "id": "too-long", "error": "tooLong", "patch": { "timeline": [ { "scene": 0, "frames": 36001 } ] } },
+  { "id": "unknown-scene", "error": "timeline", "patch": { "timeline": [ { "scene": 3, "frames": 1 } ] } },
+  { "id": "zero-frame-run", "error": "timeline", "patch": { "timeline": [ { "scene": 0, "frames": 1 }, { "scene": 1, "frames": 0 } ] } },
+  { "id": "points-short", "error": "pathVerbs", "patch": { "paths": [ { "verbs": "ML", "points": [0, 0, 1] } ] } },
+  { "id": "unknown-verb", "error": "pathVerbs", "patch": { "paths": [ { "verbs": "MX", "points": [0, 0, 1, 1] } ] } },
+  { "id": "starts-without-move", "error": "pathVerbs", "patch": { "paths": [ { "verbs": "LZ", "points": [0, 0] } ] } },
+  { "id": "foreign-origin-image", "error": "imageUrl", "patch": { "images": [ { "url": "https://example.com/figure.png" } ] } },
+  { "id": "protocol-relative-image", "error": "imageUrl", "patch": { "images": [ { "url": "//example.com/figure.png" } ] } },
+  { "id": "non-image-data-url", "error": "imageUrl", "patch": { "images": [ { "url": "data:text/html,<p>" } ] } },
+  { "id": "unknown-path", "error": "pathIndex", "patch": { "scenes": [ { "ops": [ { "kind": "fill", "path": 9, "transform": [1, 0, 0, 1, 0, 0], "color": [1, 1, 1, 1] } ] }, { "ops": [] }, { "ops": [] } ] } },
+  { "id": "unknown-image", "error": "imageIndex", "patch": { "scenes": [ { "ops": [ { "kind": "image", "image": 1, "crop": [0, 0, 1, 1], "transform": [1, 0, 0, 1, 0, 0], "opacity": 1 } ] }, { "ops": [] }, { "ops": [] } ] } },
+  { "id": "colour-over-one", "error": "paint", "patch": { "scenes": [ { "ops": [ { "kind": "fill", "path": 0, "transform": [1, 0, 0, 1, 0, 0], "color": [1.5, 1, 1, 1] } ] }, { "ops": [] }, { "ops": [] } ] } },
+  { "id": "negative-stroke", "error": "paint", "patch": { "scenes": [ { "ops": [ { "kind": "stroke", "path": 0, "transform": [1, 0, 0, 1, 0, 0], "color": [1, 1, 1, 1], "width": -1 } ] }, { "ops": [] }, { "ops": [] } ] } },
+  { "id": "crop-outside-picture", "error": "paint", "patch": { "scenes": [ { "ops": [ { "kind": "image", "image": 0, "crop": [0.5, 0, 0.75, 1], "transform": [1, 0, 0, 1, 0, 0], "opacity": 1 } ] }, { "ops": [] }, { "ops": [] } ] } },
+  { "id": "empty-crop", "error": "paint", "patch": { "scenes": [ { "ops": [ { "kind": "image", "image": 0, "crop": [0, 0, 0, 1], "transform": [1, 0, 0, 1, 0, 0], "opacity": 1 } ] }, { "ops": [] }, { "ops": [] } ] } },
+  { "id": "opacity-over-one", "error": "paint", "patch": { "scenes": [ { "ops": [ { "kind": "image", "image": 0, "crop": [0, 0, 1, 1], "transform": [1, 0, 0, 1, 0, 0], "opacity": 2 } ] }, { "ops": [] }, { "ops": [] } ] } },
+  { "id": "background-over-one", "error": "paint", "patch": { "background": [0, 0, 2, 1] } }
+ ],
+ "invalidBase": "tile-slides"
+}

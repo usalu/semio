@@ -19,7 +19,7 @@
 use std::collections::BTreeMap;
 
 //#region 🔖️Lane
-/// @emoji 🛣️ Which logical channel a wire frame travels on: `Command` for causally-ordered,
+/// 🛣️ Which logical channel a wire frame travels on: `Command` for causally-ordered,
 /// durable operation batches; `Preview` for ephemeral, best-effort UI-state broadcast.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Lane {
@@ -43,7 +43,7 @@ impl Lane {
 //#endregion 🔖️Lane
 
 //#region 🔖️ClientFrame
-/// @emoji 📨️ One frame a client sends to the semio_hub.
+/// 📨️ One frame a client sends to the semio_hub.
 #[derive(Clone, Debug, PartialEq)]
 pub enum ClientFrame {
     SocketHelloV1 { wire_version: u32, protocol_version: u32, schema: String, pack_schema_hash: [u8; 32], resume_token: Option<String>, frontier: Option<crate::causal::FrontierSummary> },
@@ -57,7 +57,7 @@ pub enum ClientFrame {
 //#endregion 🔖️ClientFrame
 
 //#region 🔖️ServerFrame
-/// @emoji 🚀️ How a `ServerFrame::Welcome` seeds a freshly (re)connected client's local state.
+/// 🚀️ How a `ServerFrame::Welcome` seeds a freshly (re)connected client's local state.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Bootstrap {
     None,
@@ -72,14 +72,14 @@ pub const ARTIFACT_BOOTSTRAP_MAX_TOTAL_BYTES: u64 = 64 * 1024 * 1024;
 pub const ARTIFACT_BOOTSTRAP_MAX_CHUNKS: u32 = 16 * 1024;
 pub const REBOOTSTRAP_SCOPE_MAX_BYTES: usize = 256;
 
-/// @emoji 🧩️ The indivisible canonical artifact payload: pack state plus SPR history.
+/// 🧩️ The indivisible canonical artifact payload: pack state plus SPR history.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ArtifactBootstrapPair {
     pub pack: Vec<u8>,
     pub spr: Vec<u8>,
 }
 
-/// @emoji 📦️ Descriptor-bound metadata and optional inline pair for one public artifact bootstrap.
+/// 📦️ Descriptor-bound metadata and optional inline pair for one public artifact bootstrap.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ArtifactBootstrap {
     pub format_version: u32,
@@ -98,7 +98,7 @@ pub struct ArtifactBootstrap {
     pub inline: Option<ArtifactBootstrapPair>,
 }
 
-/// @emoji 🛟️ Storage-key-free checkpoint identity sent before a lagged live stream closes.
+/// 🛟️ Storage-key-free checkpoint identity sent before a lagged live stream closes.
 #[derive(Clone, Debug, PartialEq)]
 pub struct RebootstrapRequired {
     pub space_id: String,
@@ -123,7 +123,7 @@ fn validate_rebootstrap_required(control: &RebootstrapRequired) -> Result<(), cr
     Ok(())
 }
 
-/// @emoji 🛡️ Caller-selected assembly ceilings, always constrained by the wire chunk maximum.
+/// 🛡️ Caller-selected assembly ceilings, always constrained by the wire chunk maximum.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ArtifactBootstrapLimits {
     pub max_total_bytes: u64,
@@ -137,7 +137,7 @@ impl Default for ArtifactBootstrapLimits {
     }
 }
 
-/// @emoji 📈️ Observable transfer progress; byte and chunk counts never decrease within one assembler.
+/// 📈️ Observable transfer progress; byte and chunk counts never decrease within one assembler.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ArtifactBootstrapProgress {
     pub received_bytes: u64,
@@ -146,7 +146,7 @@ pub struct ArtifactBootstrapProgress {
     pub total_chunks: u32,
 }
 
-/// @emoji ⏱️ Host-provided cancellation, monotonic clock, and progress boundary.
+/// ⏱️ Host-provided cancellation, monotonic clock, and progress boundary.
 pub trait ArtifactBootstrapControl {
     fn is_cancelled(&mut self) -> bool;
     fn now_ms(&mut self) -> u64;
@@ -159,7 +159,7 @@ enum ArtifactBootstrapStorage {
     Chunked(Vec<u8>),
 }
 
-/// @emoji 🧱️ Bounded, cancellable staging owner that yields a pair only after complete integrity validation.
+/// 🧱️ Bounded, cancellable staging owner that yields a pair only after complete integrity validation.
 #[derive(Debug)]
 pub struct ArtifactBootstrapAssembler {
     bootstrap: ArtifactBootstrap,
@@ -233,7 +233,7 @@ fn validate_artifact_bootstrap(bootstrap: &ArtifactBootstrap, limits: ArtifactBo
     Ok(total)
 }
 
-/// @emoji 🔗️ SHA-256 over the exact declared `pack || spr` content stream.
+/// 🔗️ SHA-256 over the exact declared `pack || spr` content stream.
 pub fn artifact_bootstrap_aggregate_hash(pack: &[u8], spr: &[u8]) -> [u8; 32] {
     let mut hash = semio_framework_hash::Sha256::new();
     hash.update(pack);
@@ -242,7 +242,7 @@ pub fn artifact_bootstrap_aggregate_hash(pack: &[u8], spr: &[u8]) -> [u8; 32] {
 }
 
 impl ArtifactBootstrapAssembler {
-    /// @emoji 🆕️ Validates metadata and reserves no more than the caller's explicit budget.
+    /// 🆕️ Validates metadata and reserves no more than the caller's explicit budget.
     pub fn new(mut bootstrap: ArtifactBootstrap, expected_descriptor_hash: [u8; 32], limits: ArtifactBootstrapLimits, deadline_ms: Option<u64>, control: &mut impl ArtifactBootstrapControl) -> Result<Self, crate::ProtocolError> {
         let total = validate_artifact_bootstrap(&bootstrap, limits)?;
         if !artifact_bootstrap_nonzero(&expected_descriptor_hash) || bootstrap.descriptor_hash != expected_descriptor_hash {
@@ -282,7 +282,7 @@ impl ArtifactBootstrapAssembler {
         Ok(assembler)
     }
 
-    /// @emoji 💾️ Exact payload allocation debit currently owned by the assembler.
+    /// 💾️ Exact payload allocation debit currently owned by the assembler.
     pub fn retained_bytes(&self) -> usize {
         match self.storage.as_ref() {
             Some(ArtifactBootstrapStorage::Inline(pair)) => pair.pack.capacity().saturating_add(pair.spr.capacity()),
@@ -291,12 +291,12 @@ impl ArtifactBootstrapAssembler {
         }
     }
 
-    /// @emoji 📈️ Current monotonic progress snapshot.
+    /// 📈️ Current monotonic progress snapshot.
     pub fn progress(&self) -> ArtifactBootstrapProgress {
         ArtifactBootstrapProgress { received_bytes: self.received_bytes, total_bytes: self.bootstrap.pack_length + self.bootstrap.spr_length, received_chunks: self.next_index, total_chunks: self.bootstrap.chunk_count }
     }
 
-    /// @emoji 🧹️ Drops all staged bytes without producing a completion value.
+    /// 🧹️ Drops all staged bytes without producing a completion value.
     pub fn abort(&mut self) {
         self.storage = None;
     }
@@ -319,7 +319,7 @@ impl ArtifactBootstrapAssembler {
         Ok(())
     }
 
-    /// @emoji 🧩️ Appends exactly the next descriptor-bound, nonempty bounded chunk.
+    /// 🧩️ Appends exactly the next descriptor-bound, nonempty bounded chunk.
     pub fn push(&mut self, descriptor_hash: [u8; 32], index: u32, bytes: &[u8], control: &mut impl ArtifactBootstrapControl) -> Result<ArtifactBootstrapProgress, crate::ProtocolError> {
         self.guard(control)?;
         if self.inline {
@@ -352,7 +352,7 @@ impl ArtifactBootstrapAssembler {
         Ok(progress)
     }
 
-    /// @emoji ✅️ Verifies completion and all hashes, transfers ownership of the pair, then retires staging.
+    /// ✅️ Verifies completion and all hashes, transfers ownership of the pair, then retires staging.
     pub fn finish(&mut self, done: Option<([u8; 32], u32)>, control: &mut impl ArtifactBootstrapControl) -> Result<ArtifactBootstrapPair, crate::ProtocolError> {
         self.guard(control)?;
         if !self.inline {
@@ -399,7 +399,7 @@ impl ArtifactBootstrapAssembler {
     }
 }
 
-/// @emoji ⚖️ How the semio_hub resolved one submitted operation against concurrent history.
+/// ⚖️ How the semio_hub resolved one submitted operation against concurrent history.
 #[derive(Clone, Debug, PartialEq)]
 pub enum ApplyOutcome {
     Accepted,
@@ -419,7 +419,7 @@ pub enum ApplyOutcome {
     },
 }
 
-/// @emoji 🪜️ One stage of a submitted batch's lifecycle, from `Received` to `Applied`.
+/// 🪜️ One stage of a submitted batch's lifecycle, from `Received` to `Applied`.
 #[derive(Clone, Debug, PartialEq)]
 pub enum AckStage {
     Received,
@@ -430,7 +430,7 @@ pub enum AckStage {
 
 pub const SNAPSHOT_CHUNK_BACKING_BYTES: usize = 4 * 1024;
 
-/// @emoji 🧱️ One fixed-capacity snapshot frame backing whose owned allocation can never exceed one wire page.
+/// 🧱️ One fixed-capacity snapshot frame backing whose owned allocation can never exceed one wire page.
 #[derive(Clone)]
 pub struct SnapshotChunkBytes {
     backing: Option<Box<[u8; SNAPSHOT_CHUNK_BACKING_BYTES]>>,
@@ -438,12 +438,12 @@ pub struct SnapshotChunkBytes {
 }
 
 impl SnapshotChunkBytes {
-    /// @emoji 🆕️ Allocates exactly one fixed snapshot backing.
+    /// 🆕️ Allocates exactly one fixed snapshot backing.
     pub fn allocate_fixed() -> Self {
         Self { backing: Some(Box::new([0; SNAPSHOT_CHUNK_BACKING_BYTES])), len: 0 }
     }
 
-    /// @emoji 📥️ Copies one bounded source into a fixed snapshot backing.
+    /// 📥️ Copies one bounded source into a fixed snapshot backing.
     pub fn try_from_slice(source: &[u8]) -> Option<Self> {
         if source.len() > SNAPSHOT_CHUNK_BACKING_BYTES {
             return None;
@@ -452,7 +452,7 @@ impl SnapshotChunkBytes {
         owner.try_extend_from_slice(source).then_some(owner)
     }
 
-    /// @emoji ➕️ Appends bytes only while the fixed backing can retain the complete source.
+    /// ➕️ Appends bytes only while the fixed backing can retain the complete source.
     pub fn try_extend_from_slice(&mut self, source: &[u8]) -> bool {
         let start = usize::from(self.len);
         let Some(end) = start.checked_add(source.len()).filter(|end| *end <= SNAPSHOT_CHUNK_BACKING_BYTES) else { return false };
@@ -462,27 +462,27 @@ impl SnapshotChunkBytes {
         true
     }
 
-    /// @emoji 📏️ Returns the initialized snapshot byte count.
+    /// 📏️ Returns the initialized snapshot byte count.
     pub fn len(&self) -> usize {
         usize::from(self.len)
     }
 
-    /// @emoji 🩹️ Reports whether the initialized snapshot range is empty.
+    /// 🩹️ Reports whether the initialized snapshot range is empty.
     pub fn is_empty(&self) -> bool {
         self.len == 0
     }
 
-    /// @emoji 🧩️ Borrows the initialized snapshot byte range.
+    /// 🧩️ Borrows the initialized snapshot byte range.
     pub fn as_slice(&self) -> &[u8] {
         self.backing.as_ref().map_or(&[], |backing| &backing[..usize::from(self.len)])
     }
 
-    /// @emoji 🧮️ Returns the exact retained fixed backing debit.
+    /// 🧮️ Returns the exact retained fixed backing debit.
     pub fn backing_bytes(&self) -> usize {
         self.backing.as_ref().map_or(0, |backing| size_of_val(backing.as_ref()))
     }
 
-    /// @emoji 🧹️ Retires the single fixed backing in one explicit close opportunity.
+    /// 🧹️ Retires the single fixed backing in one explicit close opportunity.
     pub fn close_one(&mut self) -> bool {
         if self.backing.take().is_none() {
             return false;
@@ -491,7 +491,7 @@ impl SnapshotChunkBytes {
         true
     }
 
-    /// @emoji 🏁️ Reports whether the fixed backing owner has been retired.
+    /// 🏁️ Reports whether the fixed backing owner has been retired.
     pub fn terminal_is_empty(&self) -> bool {
         self.backing.is_none()
     }
@@ -511,10 +511,10 @@ impl PartialEq for SnapshotChunkBytes {
 
 impl Eq for SnapshotChunkBytes {}
 
-/// @emoji 🧱️ Artifact-bootstrap name for the same fixed-capacity wire backing, without changing private snapshot bytes.
+/// 🧱️ Artifact-bootstrap name for the same fixed-capacity wire backing, without changing private snapshot bytes.
 pub type ArtifactBootstrapChunkBytes = SnapshotChunkBytes;
 
-/// @emoji 📬️ One frame the semio_hub sends to a client.
+/// 📬️ One frame the semio_hub sends to a client.
 #[derive(Clone, Debug, PartialEq)]
 pub enum ServerFrame {
     Welcome {
@@ -556,7 +556,7 @@ pub enum ServerFrame {
         code: String,
         message: String,
     },
-    /// @emoji 🎨️ The hub's one-time session assignment for this connection: `color` is the
+    /// 🎨️ The hub's one-time session assignment for this connection: `color` is the
     /// hub-assigned palette index (`HubState.session_colors`, §C7.3), leased per `(space, actor)` and
     /// stamped by the client actor onto every outbound `PresencePeer` (never filled by a shell). Sent
     /// exactly once per connection, after `Welcome` (and its follow-up bootstrap frames) and before
@@ -848,7 +848,7 @@ async fn read_vec_ack_stage(bytes: &[u8], pos: &mut usize) -> Result<Vec<AckStag
 }
 //#endregion 🔖️NestedEnums
 
-/// @emoji 📤️ Encodes one `ClientFrame` on the given `Lane`: `lane u8 | tag u8 | fields`.
+/// 📤️ Encodes one `ClientFrame` on the given `Lane`: `lane u8 | tag u8 | fields`.
 pub async fn encode_client_frame(frame: &ClientFrame, lane: Lane) -> Vec<u8> {
     let mut out = Vec::new();
     out.push(lane.to_byte().await);
@@ -890,7 +890,7 @@ pub async fn encode_client_frame(frame: &ClientFrame, lane: Lane) -> Vec<u8> {
     out
 }
 
-/// @emoji 📥️ Decodes one `ClientFrame`, returning the `Lane` it was tagged with.
+/// 📥️ Decodes one `ClientFrame`, returning the `Lane` it was tagged with.
 pub async fn decode_client_frame(bytes: &[u8]) -> Result<(Lane, ClientFrame), crate::ProtocolError> {
     let lane_byte = match bytes.first() {
         Some(b) => *b,
@@ -926,7 +926,7 @@ pub async fn decode_client_frame(bytes: &[u8]) -> Result<(Lane, ClientFrame), cr
     Ok((lane, frame))
 }
 
-/// @emoji 📤️ Encodes one `ServerFrame` on the given `Lane`: `lane u8 | tag u8 | fields`.
+/// 📤️ Encodes one `ServerFrame` on the given `Lane`: `lane u8 | tag u8 | fields`.
 pub async fn encode_server_frame(frame: &ServerFrame, lane: Lane) -> Vec<u8> {
     let mut out = Vec::new();
     out.push(lane.to_byte().await);
@@ -1028,7 +1028,7 @@ fn read_artifact_bootstrap_chunk_bytes(bytes: &[u8], pos: &mut usize) -> Result<
     Ok(bytes)
 }
 
-/// @emoji 📥️ Decodes one `ServerFrame`, returning the `Lane` it was tagged with.
+/// 📥️ Decodes one `ServerFrame`, returning the `Lane` it was tagged with.
 pub async fn decode_server_frame(bytes: &[u8]) -> Result<(Lane, ServerFrame), crate::ProtocolError> {
     let lane_byte = match bytes.first() {
         Some(b) => *b,
@@ -1103,7 +1103,7 @@ mod tests;
 // replaced by `views: Vec<PresenceWindowView>` (one entry per open window/surface, artifact-scope,
 // matched by `space`) plus `ui: Option<PresenceUi>` (app-scope `data-ui-path` hover/focus/press).
 //#region 🔖️PresenceView
-/// @emoji 🪟️ One open window/surface's live view for a document — camera/pan-zoom plus in-view
+/// 🪟️ One open window/surface's live view for a document — camera/pan-zoom plus in-view
 /// pointer, broadcast so peers can render each other's viewport rectangles / camera frustums /
 /// cursor markers. `window_id` disambiguates multiple windows viewing the same space; `space` is
 /// the coordinate-space id the surface host reports (`"world"`/`"canvas"`/`"geo"`, or an app-declared
@@ -1113,9 +1113,9 @@ pub struct PresenceWindowView {
     pub window_id: String,
     pub space: String,
     pub kind: PresenceViewKind,
-    /// @emoji 📐️ The reporting surface's pixel size — needed to draw a peer's viewport rectangle.
+    /// 📐️ The reporting surface's pixel size — needed to draw a peer's viewport rectangle.
     pub size: [f64; 2],
-    /// @emoji 📍️ In view coordinates: world point (Orbit), `[x, y, 0]` canvas point (Canvas),
+    /// 📍️ In view coordinates: world point (Orbit), `[x, y, 0]` canvas point (Canvas),
     /// `[lng, lat, 0]` (Geo).
     pub pointer: Option<[f64; 3]>,
     /// World-space ray origin for 3D presence (Orbit); absent for canvas/geo.
@@ -1174,7 +1174,7 @@ impl crate::value::FromValue for PresenceWindowView {
     }
 }
 
-/// @emoji 🎥️ A peer's live camera/pan-zoom, tagged by surface family.
+/// 🎥️ A peer's live camera/pan-zoom, tagged by surface family.
 #[derive(Clone, Debug, PartialEq)]
 pub enum PresenceViewKind {
     Canvas { x: f64, y: f64, zoom: f64 },
@@ -1245,7 +1245,7 @@ impl crate::value::FromValue for PresenceViewKind {
     }
 }
 
-/// @emoji 🖱️ A peer's live `data-ui-path` hover/focus/press state (APP scope) — the grammar
+/// 🖱️ A peer's live `data-ui-path` hover/focus/press state (APP scope) — the grammar
 /// `type[idx]#id/...`.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct PresenceUi {
@@ -1355,7 +1355,7 @@ async fn encode_presence_ui(ui: &PresenceUi, out: &mut Vec<u8>) {
 // presence_pack`) is deleted: `PresencePeer::to_value`/`from_value` above inline the identical
 // base64-string encoding directly, and nothing else referenced this module.
 
-/// @emoji 📡️ Presence roster entry broadcast to every peer connected to a document.
+/// 📡️ Presence roster entry broadcast to every peer connected to a document.
 ///
 /// `presence_pack` carries the app's typed `ArtifactApp::Presence` encoded through `ArtifactPack`.
 /// When serialised for `ViewModel.presence_peers_json`, that pack is base64-encoded under the
@@ -1366,40 +1366,40 @@ pub struct PresencePeer {
     pub actor: String,
     pub connected_at_ms: i64,
     pub label: Option<String>,
-    /// @emoji 👥️ App-typed presence encoded as `ArtifactPack` bytes (flag bit 1 on the wire, APP scope).
+    /// 👥️ App-typed presence encoded as `ArtifactPack` bytes (flag bit 1 on the wire, APP scope).
     pub presence_pack: Option<Vec<u8>>,
-    /// @emoji 🪪️ Authenticated hub user id, when this peer connected with an `AuthSession` rather than an anonymous share token.
+    /// 🪪️ Authenticated hub user id, when this peer connected with an `AuthSession` rather than an anonymous share token.
     pub user_id: Option<String>,
-    /// @emoji 🎚️ The peer's resolved studio role (`"owner"`/`"member"`/`"viewer"`), present alongside `user_id`.
+    /// 🎚️ The peer's resolved studio role (`"owner"`/`"member"`/`"viewer"`), present alongside `user_id`.
     pub role: Option<String>,
-    /// @emoji 👻️ Serialized preview of an in-flight drag (opaque JSON, schema owned by the dragging app, APP scope).
+    /// 👻️ Serialized preview of an in-flight drag (opaque JSON, schema owned by the dragging app, APP scope).
     pub drag_ghost_json: Option<String>,
-    /// @emoji 🕹️ This peer's live selection+hover roster (ARTIFACT scope), mirrored from local
+    /// 🕹️ This peer's live selection+hover roster (ARTIFACT scope), mirrored from local
     /// `InteractionState` — see `assemble_presence_interaction` below. `None` for peers on apps that
     /// declare no interaction domains.
     pub interaction: Option<PresenceInteraction>,
-    /// @emoji 🎨️ Hub-assigned palette index, normalized at authenticated presence ingress.
+    /// 🎨️ Hub-assigned palette index, normalized at authenticated presence ingress.
     pub color: Option<u8>,
-    /// @emoji 🪟️ Canonical plan-bound surface id, normalized by the Hub.
+    /// 🪟️ Canonical plan-bound surface id, normalized by the Hub.
     pub surface: Option<String>,
-    /// @emoji 🪟️ Every open window/surface's live camera + in-view pointer (ARTIFACT scope), matched
+    /// 🪟️ Every open window/surface's live camera + in-view pointer (ARTIFACT scope), matched
     /// by `space`. Empty when the peer has no open windows for this document.
     pub views: Vec<PresenceWindowView>,
-    /// @emoji 🖱️ Live `data-ui-path` hover/focus/press state (APP scope).
+    /// 🖱️ Live `data-ui-path` hover/focus/press state (APP scope).
     pub ui: Option<PresenceUi>,
-    /// @emoji ⏯️ Summary of this peer's non-terminal or just-settled tool run (ARTIFACT scope), never provisional geometry.
+    /// ⏯️ Summary of this peer's non-terminal or just-settled tool run (ARTIFACT scope), never provisional geometry.
     pub tool_run: Option<PresenceToolRun>,
-    /// @emoji 🤖️ What kind of principal this peer is. `None` means the peer never declared one and a
+    /// 🤖️ What kind of principal this peer is. `None` means the peer never declared one and a
     /// reader must treat it as [`PresencePrincipalKind::Human`] — the pre-agent wire shape. Like
     /// `user_id`/`role`/`color` this is an *admitted* field: the hub overwrites whatever a client
     /// sends with the kind it authenticated, so a human session can never claim to be an agent and
     /// an agent session can never hide behind a human.
     pub principal_kind: Option<PresencePrincipalKind>,
-    /// @emoji 🛠️ Active editor tool/utility id (ARTIFACT scope). Distinct from `tool_run`.
+    /// 🛠️ Active editor tool/utility id (ARTIFACT scope). Distinct from `tool_run`.
     pub active_tool: Option<String>,
 }
 
-/// @emoji 🤖️ Which kind of principal holds a presence slot. An `Agent` peer is an AI agent acting
+/// 🤖️ Which kind of principal holds a presence slot. An `Agent` peer is an AI agent acting
 /// under a credential a human delegated to it (`hub.auth`'s `AgentDelegationRecord`); it is a
 /// principal in its own right, never the delegating human, so a roster shows it as its own row.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -1411,7 +1411,7 @@ pub enum PresencePrincipalKind {
 impl PresencePrincipalKind {
     pub const ALL: [PresencePrincipalKind; 2] = [Self::Human, Self::Agent];
 
-    /// @emoji 🔤️ The camelCase wire spelling, shared by the binary tag's ordinal and the JSON value.
+    /// 🔤️ The camelCase wire spelling, shared by the binary tag's ordinal and the JSON value.
     pub fn wire_name(self) -> &'static str {
         match self {
             Self::Human => "human",
@@ -1419,13 +1419,13 @@ impl PresencePrincipalKind {
         }
     }
 
-    /// @emoji 🔡️ Inverse of [`Self::wire_name`].
+    /// 🔡️ Inverse of [`Self::wire_name`].
     pub fn from_wire_name(name: &str) -> Option<Self> {
         Self::ALL.into_iter().find(|kind| kind.wire_name() == name)
     }
 }
 
-/// @emoji ⏳️ Lifecycle state of a peer's tool run, spelled like `ToolRunState` in the tool run contract §2.2.
+/// ⏳️ Lifecycle state of a peer's tool run, spelled like `ToolRunState` in the tool run contract §2.2.
 ///
 /// Duplicated rather than imported: `semio-framework-tool-run` layers above this replication kernel.
 /// The binary tag is the declaration order and the JSON value is the camelCase wire name.
@@ -1445,7 +1445,7 @@ pub enum PresenceToolRunState {
 impl PresenceToolRunState {
     pub const ALL: [PresenceToolRunState; 9] = [Self::Starting, Self::Running, Self::Paused, Self::Complete, Self::Finalizing, Self::Finalized, Self::Aborting, Self::Aborted, Self::Faulted];
 
-    /// @emoji 🔤️ The camelCase wire spelling shared with `ToolRunState`.
+    /// 🔤️ The camelCase wire spelling shared with `ToolRunState`.
     pub fn wire_name(self) -> &'static str {
         match self {
             Self::Starting => "starting",
@@ -1460,13 +1460,13 @@ impl PresenceToolRunState {
         }
     }
 
-    /// @emoji 🔡️ Inverse of [`Self::wire_name`].
+    /// 🔡️ Inverse of [`Self::wire_name`].
     pub fn from_wire_name(name: &str) -> Option<Self> {
         Self::ALL.into_iter().find(|state| state.wire_name() == name)
     }
 }
 
-/// @emoji 📶️ Ephemeral shared progress summary of a peer's tool run ("Alice · Fill · 42 %").
+/// 📶️ Ephemeral shared progress summary of a peer's tool run ("Alice · Fill · 42 %").
 ///
 /// `stage` indexes the tool's declared stages, `total` absent means indeterminate, and the percentage
 /// is derived by the renderer. `completed <= total` whenever `total` is present.
@@ -1650,7 +1650,7 @@ impl crate::value::FromValue for PresencePeer {
     }
 }
 
-/// @emoji 🎯️ Binary `PresencePeer` codec: `actor str | flags varint_u64 | connected_at_ms varint |
+/// 🎯️ Binary `PresencePeer` codec: `actor str | flags varint_u64 | connected_at_ms varint |
 /// fields present per bitmask, strictly in bit order`. `protocol_wire::ClientFrame::Presence`/
 /// `ServerFrame::Presence` carry the resulting bytes opaquely (that crate has no dependency on this
 /// one) — this is the encode/decode pair store_sync calls on either side of the wire.
@@ -1752,7 +1752,7 @@ pub async fn encode_presence_peer(peer: &PresencePeer) -> Vec<u8> {
     out
 }
 
-/// @emoji ⏯️ Appends one `PresenceToolRun` body — the exact bytes a `PresencePeer` carries under flag bit 10.
+/// ⏯️ Appends one `PresenceToolRun` body — the exact bytes a `PresencePeer` carries under flag bit 10.
 /// `pub` so a guest's `AppFrame::Ephemeral` can publish its run summary in the same encoding the heartbeat
 /// assembly re-embeds (contract `📋️tool-run-contract.md` §3.4).
 pub fn encode_presence_tool_run(tool_run: &PresenceToolRun, out: &mut Vec<u8>) {
@@ -1766,7 +1766,7 @@ pub fn encode_presence_tool_run(tool_run: &PresenceToolRun, out: &mut Vec<u8>) {
     }
 }
 
-/// @emoji 🛡️ Fixed hostile-input ceilings shared with the TypeScript presence decoder.
+/// 🛡️ Fixed hostile-input ceilings shared with the TypeScript presence decoder.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct PresencePeerWireLimitsV1 {
     pub maximum_entry_bytes: usize,
@@ -1950,7 +1950,7 @@ impl<'a> PresencePeerReader<'a> {
     }
 }
 
-/// @emoji 🎞️ Exact inverse of [`encode_presence_tool_run`] over a standalone body: the peer decoder's limits
+/// 🎞️ Exact inverse of [`encode_presence_tool_run`] over a standalone body: the peer decoder's limits
 /// (state tag, `u16` stage, exact-integer units, `completed ≤ total`) and no trailing bytes.
 pub fn decode_presence_tool_run(bytes: &[u8]) -> Result<PresenceToolRun, crate::ProtocolError> {
     let limits = PRESENCE_PEER_WIRE_LIMITS_V1;
@@ -1961,7 +1961,7 @@ pub fn decode_presence_tool_run(bytes: &[u8]) -> Result<PresenceToolRun, crate::
     Ok(tool_run)
 }
 
-/// @emoji 🎯️ Exact, allocation-bounded inverse of [`encode_presence_peer`]. Unknown flags,
+/// 🎯️ Exact, allocation-bounded inverse of [`encode_presence_peer`]. Unknown flags,
 /// noncanonical varints, non-finite view values, hostile collection counts, and trailing bytes are
 /// rejected before a peer can cross a network authority boundary.
 pub async fn decode_presence_peer(bytes: &[u8]) -> Result<PresencePeer, crate::ProtocolError> {
@@ -3056,7 +3056,7 @@ async fn decode_presence_domain(bytes: &[u8], pos: &mut usize) -> Result<Presenc
     Ok(PresenceDomain { domain: crate::read_str(bytes, pos)?, granularity: crate::read_str(bytes, pos)?, selected: read_vec_str(bytes, pos).await?, hovered: read_vec_str(bytes, pos).await? })
 }
 
-/// @emoji 🎯️ Encodes one `PresenceInteraction` — `pub` (ticket 26/08/17/SHARED-PRESENCE-SESSION-
+/// 🎯️ Encodes one `PresenceInteraction` — `pub` (ticket 26/08/17/SHARED-PRESENCE-SESSION-
 /// COLORS-AND-UNIVERSAL-ARTIFACT-CREATION C7.4): guests never enable the kernel's `sync` feature, and
 /// `VcsArtifactApp` (the plugin ABI's presence adoption path) must be able to call this directly.
 pub async fn encode_presence_interaction(interaction: &PresenceInteraction, out: &mut Vec<u8>) {
@@ -3067,7 +3067,7 @@ pub async fn encode_presence_interaction(interaction: &PresenceInteraction, out:
     }
 }
 
-/// @emoji 🎯️ Inverse of [`encode_presence_interaction`] — see its doc for why this is `pub`.
+/// 🎯️ Inverse of [`encode_presence_interaction`] — see its doc for why this is `pub`.
 pub async fn decode_presence_interaction(bytes: &[u8], pos: &mut usize) -> Result<PresenceInteraction, crate::ProtocolError> {
     let app_id = crate::read_str(bytes, pos)?;
     let count = crate::wire::read_varint_u64(bytes, pos)?;
@@ -3080,7 +3080,7 @@ pub async fn decode_presence_interaction(bytes: &[u8], pos: &mut usize) -> Resul
 //#endregion 🔖️PresenceInteractionCodec
 
 //#region 🔖️Assemble
-/// @emoji 📡️ Assembles `PresencePeer.interaction` from local `InteractionState` plus each domain's
+/// 📡️ Assembles `PresencePeer.interaction` from local `InteractionState` plus each domain's
 /// declared hover/selection behavior — the ONE place this logic lives, so every app broadcasts
 /// selection+hover with ZERO app-side code (call this wherever a `PresenceHeartbeat`'s `peer` is
 /// built, right before `presence_to_bytes`/`encode_presence_peer`, at the same cadence cursor updates

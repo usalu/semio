@@ -195,7 +195,6 @@ fn every_object_kind_row_binds_activate_to_add_object_kind_with_its_own_kind_id(
             .unwrap_or_else(|| panic!("object kind row {} args carry no objectKind", row.key.as_str()));
         let ui::UiValue::Text(text) = kind else { panic!("objectKind arg is not text: {kind:?}") };
         assert_eq!(text.as_str(), row.key.as_str(), "the row must ask for the kind it renders");
-        eprintln!("[DEBUG] catalogue row activate row={} kind={}", row.key.as_str(), text.as_str());
     }
     drop(node);
     drain();
@@ -226,7 +225,6 @@ fn the_catalogue_opens_its_object_kinds_and_folds_the_template_catalogs() {
     }
     let objects = node.children.iter().find(|section| section.key.as_str() == "puzzle3d-play-kinds.objects").expect("objects section");
     assert!(!objects.children.is_empty(), "an opened objects section must carry at least one kind row on the first paint");
-    eprintln!("[DEBUG] catalogue default-open objects={:?} rows={}", open_state("puzzle3d-play-kinds.objects"), objects.children.len());
     drop(node);
     drain();
 }
@@ -270,7 +268,6 @@ fn the_default_concrete_forest_catalogue_declares_kinds_with_resolvable_mesh_url
         };
         assert_eq!(index.resolve(&probe), Some(url.as_str()), "an instance of {kind_id} must resolve its kind's representation url");
         assert!(lane.iter().any(|published| published == &url), "{kind_id}'s mesh {url} must reach the world mesh lane, else its candidates read mesh-unavailable");
-        eprintln!("[DEBUG] concrete-forest catalogue kind={kind_id} url={url}");
     }
 }
 
@@ -296,7 +293,6 @@ fn the_default_concrete_forest_catalogue_renders_a_draggable_row_for_every_kind(
         let payload: Value = json::parse(encoded).expect("drag payload json");
         assert_eq!(payload.get("objectKind").and_then(Value::as_str), Some(row.key.as_str()), "the drag payload must name the kind its row renders");
         assert!(payload.get("meshUrl").and_then(Value::as_str).filter(|url| !url.is_empty()).is_some(), "catalogue row {} carries no meshUrl for the drop preview", row.key.as_str());
-        eprintln!("[DEBUG] concrete-forest catalogue row={} payload={encoded}", row.key.as_str());
     }
     drop(node);
     drain();

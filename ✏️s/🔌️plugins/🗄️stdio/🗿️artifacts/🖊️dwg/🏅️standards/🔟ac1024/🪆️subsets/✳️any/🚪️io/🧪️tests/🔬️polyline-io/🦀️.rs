@@ -15,5 +15,4 @@ fn artifact_polyline_io_round_trips_layers_vertices_and_closure() {
     let (svg, width, height) = dwg_drawing_to_svg(&drawing).unwrap();
     assert!(svg.contains("<path"));
     assert!(width > 0 && height > 0);
-    println!("[DEBUG] Artifact polyline I/O: {} bytes, {} layers, {} entities", bytes.len(), drawing.layers.len(), drawing.entities.len());
 }

@@ -14,7 +14,7 @@ import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.t
 // #region RibbonZone
 interface RibbonZoneProps extends React.ComponentProps<"div"> {
   children: React.ReactNode;
-  /** @emoji 📏️ Lets intrinsically tall ribbon content define the row height while retaining the standard minimum. */
+  /** 📏️ Lets intrinsically tall ribbon content define the row height while retaining the standard minimum. */
   variableHeight?: boolean;
 }
 
@@ -59,16 +59,16 @@ export { RibbonDivider, RibbonGroup, RibbonItem, RibbonZone };
 
 // A ribbon is a chrome strip that grows by stacked rows — one per tree level — instead of staying a single line.
 
-/** @emoji 🎀️ `inline` keeps every row on one horizontal line (footer drill-down); `up`/`down` stack rows vertically, growing away from the base row. */
+/** 🎀️ `inline` keeps every row on one horizontal line (footer drill-down); `up`/`down` stack rows vertically, growing away from the base row. */
 export type RibbonDirection = "inline" | "up" | "down";
 
-/** @emoji 🎀️ One row of a {@link Ribbon}, ordered base-first (index 0 = root/base level). */
+/** 🎀️ One row of a {@link Ribbon}, ordered base-first (index 0 = root/base level). */
 export interface RibbonRow {
   readonly key: React.Key;
   readonly content: React.ReactNode;
 }
 
-/** @emoji 🎀️ Props for {@link Ribbon}. */
+/** 🎀️ Props for {@link Ribbon}. */
 export interface RibbonProps {
   readonly id?: string;
   readonly direction: RibbonDirection;
@@ -76,7 +76,7 @@ export interface RibbonProps {
   readonly className?: string;
 }
 
-/** @emoji 🎀️ Chrome strip that grows by stacked rows — one per tree level. `up` stacks rows above the base (window utility bar); `down` stacks rows below the base (nested panel tabs); `inline` keeps the current horizontal drill-down (footer). */
+/** 🎀️ Chrome strip that grows by stacked rows — one per tree level. `up` stacks rows above the base (window utility bar); `down` stacks rows below the base (nested panel tabs); `inline` keeps the current horizontal drill-down (footer). */
 function Ribbon({ id, direction, rows, className }: RibbonProps) {
   if (direction === "inline") {
     return (

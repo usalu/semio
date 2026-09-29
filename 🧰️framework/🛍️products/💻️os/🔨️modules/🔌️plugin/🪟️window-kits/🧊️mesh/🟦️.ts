@@ -1,6 +1,6 @@
 // #region 🧊️MeshWindowKit
 /// <reference types="vitest/importMeta" />
-/** @emoji 🧊️ `@semio-tech/plugin-window-kits` — TS twin of Rust `MeshWindowKit` (`framework.window.mesh`). */
+/** 🧊️ `@semio-tech/plugin-window-kits` — TS twin of Rust `MeshWindowKit` (`framework.window.mesh`). */
 import type { UiComponentSceneNode, World3dScene } from "@semio-tech/framework";
 
 /** 🆔️ Frozen kind id — twin of Rust `MeshWindowKit::KIND_ID`. */

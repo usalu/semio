@@ -153,7 +153,7 @@ pub fn tree_item_with_icon(
 /// `import_stdio_kinds` remain the live source of truth for this artifact's real format list.
 pub fn shooting_io() -> AppIo {
     AppIo {
-        artifact_schema: "shooting.scene".into(),
+        artifact_schema: crate::SHOOTING_DOCUMENT_SCHEMA.into(),
         artifact_media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
         ports: vec![shooting_photos_out_port()],
         export_formats: vec![],

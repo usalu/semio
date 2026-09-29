@@ -662,7 +662,6 @@ fn adversarial_feature_match_and_track_worker_steps_stay_fuel_bounded() {
 fn debug_probe_synthetic_orbit() {
     let scene = <crate::RemodelingSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::synthetic_orbit::PRIMARY_TEXT).expect("parses");
     let params = crate::editor::remodeling::engine::build_engine_params(&scene.params, &scene.calibration);
-    eprintln!("[DEBUG] params focal={} feat={} ratio={} mutual={} window={} voxel={} trunc={} sfm={:?} dense={:?} mesh={:?}", params.assumed_focal_ratio, params.target_feature_count, params.match_ratio, params.match_mutual, params.sequential_window, params.tsdf_voxel_size, params.tsdf_truncation, params.sfm, params.dense, params.mesh);
     let mut engine = ReconstructionEngine::new(&params);
     for (index, (_, bytes)) in crate::examples::synthetic_orbit::FRAMES.iter().enumerate() {
         let image = crate::editor::remodeling::decode_still_image("image/png", bytes).expect("decodes");
@@ -674,7 +673,6 @@ fn debug_probe_synthetic_orbit() {
         let status = engine.advance(1);
         units += 1;
         if engine.stage() != last {
-            eprintln!("[DEBUG] {:?} -> {:?} after {units} units", last, engine.stage());
             match last {
                 EngineStage::ExtractingFeatures => {
                     let variant = std::env::var("PROBE_FEATURES").unwrap_or_default();
@@ -696,18 +694,17 @@ fn debug_probe_synthetic_orbit() {
                     }
                 }
                 EngineStage::MatchingFeatures => {
-                    eprintln!("[DEBUG] tracks {}", engine.tracks.as_ref().map_or(0, |t| t.tracks.len()));
-                    eprintln!("[DEBUG] pairs {:?}", engine.pairwise_matches.iter().map(|(a, b, m)| (*a, *b, m.len())).collect::<Vec<_>>());
+                    eprintln!("tracks {}", engine.tracks.as_ref().map_or(0, |t| t.tracks.len()));
+                    eprintln!("pairs {:?}", engine.pairwise_matches.iter().map(|(a, b, m)| (*a, *b, m.len())).collect::<Vec<_>>());
                 }
                 EngineStage::BundleAdjusting => {
                     let r = engine.reconstruction.as_ref().unwrap();
-                    eprintln!("[DEBUG] cameras {:?} points {}", r.cameras.iter().map(|c| c.0).collect::<Vec<_>>(), r.points.len());
+                    eprintln!("cameras {:?} points {}", r.cameras.iter().map(|c| c.0).collect::<Vec<_>>(), r.points.len());
                 }
                 EngineStage::FusingVolume => {
                     let cloud = engine.dense_positions();
                     let mut lo = [f64::INFINITY; 3]; let mut hi = [f64::NEG_INFINITY; 3];
                     for p in cloud { for a in 0..3 { lo[a] = lo[a].min(p[a]); hi[a] = hi[a].max(p[a]); } }
-                    eprintln!("[DEBUG] dense {} lo {lo:?} hi {hi:?} depthmaps {}", cloud.len(), engine.depth_maps.len());
                 }
                 _ => {}
             }
@@ -715,9 +712,9 @@ fn debug_probe_synthetic_orbit() {
         }
         match status {
             EngineStatus::Working { .. } => {}
-            EngineStatus::Done => { eprintln!("[DEBUG] done mesh {:?}", engine.mesh_data.as_ref().map(|m| (m.positions.len()/3, m.indices.len()/3))); break; }
+            EngineStatus::Done => { eprintln!("[TRACE] done mesh {:?}", engine.mesh_data.as_ref().map(|m| (m.positions.len()/3, m.indices.len()/3))); break; }
             EngineStatus::Failed(msg) => {
-                eprintln!("[DEBUG] failed {msg} mesh so far {}/{}", engine.mesh_pipeline.as_ref().map_or(0, |p| p.mesh().positions.len()), engine.mesh_pipeline.as_ref().map_or(0, |p| p.mesh().triangles.len()));
+                eprintln!("failed {msg} mesh so far {}/{}", engine.mesh_pipeline.as_ref().map_or(0, |p| p.mesh().positions.len()), engine.mesh_pipeline.as_ref().map_or(0, |p| p.mesh().triangles.len()));
                 break;
             }
         }

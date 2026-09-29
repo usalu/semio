@@ -16,7 +16,7 @@ describe("pixel editing contract", () => {
     const result = await editImage(input, fixture.operation as PixelOperation, { selection: "selection" in fixture ? Uint8Array.from(fixture.selection!) : undefined });
     expect([...result.pixels]).toEqual(fixture.expected);
     expect([...input.pixels]).toEqual(source.pixels);
-    if("width" in fixture) expect([result.width,result.height]).toEqual([fixture.width,fixture.height]);
+    if("width" in fixture && fixture.width !== undefined && fixture.height !== undefined) expect([result.width,result.height]).toEqual([fixture.width,fixture.height]);
   });
   for (const fixture of fixtures.selections) test(fixture.name, () => {
     expect([...selectionMask("width" in fixture ? fixture.width! : 2, "height" in fixture ? fixture.height! : 2, fixture.shape as SelectionShape)]).toEqual(fixture.expected);
@@ -204,11 +204,12 @@ test("selection combination bounds work and cancellation never publishes",async(
 
 test("selection row grants match the shared contract and SVG oracle",async()=>{
   const f=fixtures.selectionRasterization;
-  const validate=new Ajv().addSchema(schema).compile({$ref:schema.$id+"#/$defs/SelectionRasterization"});
-  expect(validate({width:f.width,height:f.height,shape:f.shape})).toBe(true);
-  const job=new PixelSelectionJob(f.width,f.height,f.shape as SelectionShape);expect(()=>job.result()).toThrow();
+  const validate=new Ajv().addSchema(schema).compile<{width:number;height:number;shape:SelectionShape}>({$ref:schema.$id+"#/$defs/SelectionRasterization"});
+  const input={width:f.width,height:f.height,shape:f.shape};
+  if(!validate(input))throw new Error(JSON.stringify(validate.errors));
+  const job=new PixelSelectionJob(input.width,input.height,input.shape);expect(()=>job.result()).toThrow();
   for(let i=0;i<f.grants.length;i++){const progress=job.advance(f.grants[i]);expect(progress).toEqual({completed:f.completed[i],total:f.height,done:f.completed[i]===f.height});if(!progress.done)expect(()=>job.result()).toThrow();}
   const oracle=await sharp(Buffer.from(f.svg)).ensureAlpha().extractChannel(3).raw().toBuffer();expect([...oracle]).toEqual(f.expected);expect([...job.result()]).toEqual([...oracle]);
-  for(const rows of f.cancelAfterRows){const job=new PixelSelectionJob(f.width,f.height,f.shape as SelectionShape);if(rows)job.advance(rows);job.cancel();expect(()=>job.result()).toThrow();expect(()=>job.advance(1)).toThrow();}
-  for(const rows of f.invalidGrants){const job=new PixelSelectionJob(f.width,f.height,f.shape as SelectionShape);expect(()=>job.advance(rows)).toThrow();expect(job.advance(1).completed).toBe(1);}
+  for(const rows of f.cancelAfterRows){const job=new PixelSelectionJob(input.width,input.height,input.shape);if(rows)job.advance(rows);job.cancel();expect(()=>job.result()).toThrow();expect(()=>job.advance(1)).toThrow();}
+  for(const rows of f.invalidGrants){const job=new PixelSelectionJob(input.width,input.height,input.shape);expect(()=>job.advance(rows)).toThrow();expect(job.advance(1).completed).toBe(1);}
 });

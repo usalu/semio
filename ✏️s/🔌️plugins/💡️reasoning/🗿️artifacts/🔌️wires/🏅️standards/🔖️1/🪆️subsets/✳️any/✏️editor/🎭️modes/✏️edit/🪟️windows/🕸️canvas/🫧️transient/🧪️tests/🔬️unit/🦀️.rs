@@ -128,11 +128,10 @@ async fn wires_pointer_move_uses_only_the_captured_canvas_and_publishes_document
     }
     .await;
     if let Err(error) = &result {
-        eprintln!("[DEBUG] Wires pointer move runtime failure before close: {error}");
+        eprintln!("Wires pointer move runtime failure before close: {error}");
     }
     artifact_app_laws::close_registered_fixture_app(&mut app);
     result.expect("captured-canvas document gesture");
-    eprintln!("[DEBUG] Wires pointer move: five neutral gesture steps isolate exact canvas previews, publish once, and undo in one step");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -222,11 +221,10 @@ async fn wires_pointer_move_document_replacement_clears_only_successful_reload_p
     }
     .await;
     if let Err(error) = &result {
-        eprintln!("[DEBUG] Wires document replacement runtime failure before close: {error}");
+        eprintln!("Wires document replacement runtime failure before close: {error}");
     }
     artifact_app_laws::close_registered_fixture_app(&mut app);
     result.expect("Wires document replacement ownership");
-    eprintln!("[DEBUG] Wires reload: valid pack/text clear exact-window previews, malformed pack preserves them, and camera config survives");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -283,11 +281,10 @@ async fn wires_pointer_move_pending_release_cancels_and_retires_with_small_or_ze
     }
     .await;
     if let Err(error) = &result {
-        eprintln!("[DEBUG] Wires cancellation runtime failure before close: {error}");
+        eprintln!("Wires cancellation runtime failure before close: {error}");
     }
     artifact_app_laws::close_registered_fixture_app(&mut app);
     result.expect("bounded Wires publication cancellation");
-    eprintln!("[DEBUG] Wires cancellation: zero/small grants leave release pending and app close reaches terminal-empty ownership");
 }
 
 //#region 🔖️ConfigTests
@@ -363,11 +360,10 @@ async fn wires_window_transient_retained_pointer_lifecycle_is_partitioned() {
     }
     .await;
     if let Err(error) = &result {
-        eprintln!("[DEBUG] Wires window transient runtime failure before close: {error}");
+        eprintln!("Wires window transient runtime failure before close: {error}");
     }
     artifact_app_laws::close_registered_fixture_app(&mut app);
     result.expect("concrete canvas transient ownership");
-    eprintln!("[DEBUG] Wires retained pointer lifecycle advanced only its concrete canvas and preserved document/config envelopes");
 }
 
 //#region 🧵️BatchedSamplesAndCancel
@@ -458,11 +454,10 @@ async fn wires_batched_move_lands_on_its_last_sample_and_a_cancel_moves_nothing(
     }
     .await;
     if let Err(error) = &result {
-        eprintln!("[DEBUG] Wires batched gesture runtime failure before close: {error}");
+        eprintln!("Wires batched gesture runtime failure before close: {error}");
     }
     artifact_app_laws::close_registered_fixture_app(&mut app);
     result.expect("Wires batched move and cancelled release");
-    eprintln!("[DEBUG] Wires batched move: one batch lands on its last sample like separate moves; a cancel clears the drag and moves nothing");
 }
 
 /// 🧵️ LAW: a legacy one-per-event wire (no `samples`, no `cancelled`) decodes as one sample at

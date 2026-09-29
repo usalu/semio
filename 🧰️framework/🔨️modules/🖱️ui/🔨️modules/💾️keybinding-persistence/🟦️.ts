@@ -25,7 +25,7 @@ function parseUiKeybindingOverrides(json: unknown): Record<string, string> {
   return out;
 }
 
-/** @emoji 💾️ Reads user keybinding overrides from storage. */
+/** 💾️ Reads user keybinding overrides from storage. */
 export function readStoredUiKeybindingOverrides(storage: StoragePort): Record<string, string> {
   const raw = storage.get(UI_KEYBINDING_OVERRIDES_STORAGE_KEY);
   if (!raw) return {};
@@ -36,7 +36,7 @@ export function readStoredUiKeybindingOverrides(storage: StoragePort): Record<st
   }
 }
 
-/** @emoji 💾️ Persists user keybinding overrides. */
+/** 💾️ Persists user keybinding overrides. */
 export function writeStoredUiKeybindingOverrides(storage: StoragePort, overrides: Record<string, string>): void {
   storage.set(UI_KEYBINDING_OVERRIDES_STORAGE_KEY, JSON.stringify(overrides));
 }

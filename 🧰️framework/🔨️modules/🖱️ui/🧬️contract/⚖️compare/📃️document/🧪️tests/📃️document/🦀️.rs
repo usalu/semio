@@ -91,7 +91,6 @@ fn retained_document_component_compare_reads_exact_lease_without_copy_and_preser
             close_document(&mut keeper);
         }
     }
-    eprintln!("[DEBUG] document-component-read variants=18 grants=1,64,4096 old-root-copy=false wire-order=41,9 exact-close=true");
 }
 
 #[test]
@@ -133,7 +132,7 @@ fn retained_document_component_compare_rejects_exact_owners_before_admission_or_
     close(&mut owner, 64);
     close_document(&mut keeper);
     assert_eq!(equal, Some(false));
-    eprintln!("[DEBUG] document-component-admission required={required} rejected-root-pointer-exact=true foreign-ordinal-denied=true");
+    eprintln!("document-component-admission required={required} rejected-root-pointer-exact=true foreign-ordinal-denied=true");
 }
 
 #[test]
@@ -182,7 +181,6 @@ fn retained_document_component_compare_cancel_and_contention_keep_live_document_
     close(&mut owner, 64);
     assert!(keeper.header().is_ok());
     close_document(&mut keeper);
-    eprintln!("[DEBUG] document-component-cancel frontiers=7 grants=1,64,4096 contention-retains=true live-document-wait=false");
 }
 #[test]
 fn retained_document_component_compare_final_reads_transfer_exact_root_to_one_retirement_owner() {
@@ -224,6 +222,5 @@ fn retained_document_component_compare_final_reads_transfer_exact_root_to_one_re
         let arena = UI_DOCUMENT_ARENA.lock().unwrap();
         assert!(arena.slot(handle).is_none());
     }
-    eprintln!("[DEBUG] document-component-final-read modes=sole,concurrent-pair,queued-alias exact-final-owner=true");
 }
 //#endregion 🧪️DocumentComparison

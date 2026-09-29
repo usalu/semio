@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🎪️ Entwerfen mit Bestand demonstrator landing — general introduction, eight live app panes, glass name overlay. */
+/** 🎪️ Entwerfen mit Bestand demonstrator landing — general introduction, eight live app panes, glass name overlay. */
 // #endregion 🧲️Header
 
 import { createUiErrorBoundary, mountUiRoot, useUiCallback as useCallback, useUiEffect as useEffect, useUiMemo as useMemo, useUiRef as useRef, useUiState as useState, type UiNode } from "@semio-tech/ui-react/runtime";
@@ -41,11 +41,11 @@ bootstrapElementsSurfaceChromeDocument(readStoredUiChromeAppearance(demonstrator
 // first render so the landing page's own chrome (Skip/Back/Next/Done) never flashes English.
 initUiLocaleSync(DEMONSTRATOR_LOCALE);
 
-/** @emoji 📱️ Touch-first viewports use the vertical snap list even when wider than {@link UI_MOBILE_MEDIA_QUERY}. */
+/** 📱️ Touch-first viewports use the vertical snap list even when wider than {@link UI_MOBILE_MEDIA_QUERY}. */
 const DEMONSTRATOR_TOUCH_LIST_MEDIA_QUERY = `${UI_MOBILE_MEDIA_QUERY} and (hover: none) and (pointer: coarse)`;
 
 //#region 🎪️DemonstratorGridGeometry
-/** @emoji 🔢️ Columns and rows of the demonstrator preview grid; the strip spans `columns * 100vw` by `rows * 100vh`. */
+/** 🔢️ Columns and rows of the demonstrator preview grid; the strip spans `columns * 100vw` by `rows * 100vh`. */
 const DEMONSTRATOR_GRID_COLUMNS = 4;
 const DEMONSTRATOR_GRID_ROWS = 2;
 
@@ -67,22 +67,22 @@ function paneIdFromLocationHash(): string | null {
   return DEMONSTRATOR_PANES.some((pane) => pane.id === raw) ? raw : null;
 }
 
-/** @emoji 🧭️ Horizontal (vw) and vertical (vh) scroll offset into the demonstrator grid. */
+/** 🧭️ Horizontal (vw) and vertical (vh) scroll offset into the demonstrator grid. */
 type ScrollOffset = { readonly x: number; readonly y: number };
 
-/** @emoji 🧭️ Largest scroll offset that still keeps the last column and row flush with the viewport edge. */
+/** 🧭️ Largest scroll offset that still keeps the last column and row flush with the viewport edge. */
 const DEMONSTRATOR_MAX_SCROLL: ScrollOffset = { x: (DEMONSTRATOR_GRID_COLUMNS - 1) * 100, y: (DEMONSTRATOR_GRID_ROWS - 1) * 100 };
 
-/** @emoji 🎞 Programmatic pane pin / focus glide duration — one rAF timeline owns the transform; never pair this with a CSS `transition` on the same property. */
+/** 🎞 Programmatic pane pin / focus glide duration — one rAF timeline owns the transform; never pair this with a CSS `transition` on the same property. */
 const DEMONSTRATOR_SCROLL_GLIDE_MS = 500;
 
-/** @emoji 🎞 Exponential follow factor while the cursor freely pans the overview. */
+/** 🎞 Exponential follow factor while the cursor freely pans the overview. */
 const DEMONSTRATOR_SCROLL_FOLLOW_LERP = 0.12;
 
-/** @emoji 🎞 Settle epsilon (vw/vh) for the free-pan follow loop. */
+/** 🎞 Settle epsilon (vw/vh) for the free-pan follow loop. */
 const DEMONSTRATOR_SCROLL_FOLLOW_EPSILON = 0.01;
 
-/** @emoji 🎞 Either free-pan follow (exponential) or a timed ease-in-out glide to a pane — mutually exclusive so the grid never fights itself. */
+/** 🎞 Either free-pan follow (exponential) or a timed ease-in-out glide to a pane — mutually exclusive so the grid never fights itself. */
 type ScrollDrive =
   | { readonly mode: "follow" }
   | {
@@ -93,12 +93,12 @@ type ScrollDrive =
       readonly durationMs: number;
     };
 
-/** @emoji 🎞 Cubic ease-in-out for focus / hover pin glides. */
+/** 🎞 Cubic ease-in-out for focus / hover pin glides. */
 function easeInOutCubic(t: number): number {
   return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
 }
 
-/** @emoji 🧭️ Scroll offset that brings the given pane fully into the viewport. */
+/** 🧭️ Scroll offset that brings the given pane fully into the viewport. */
 function scrollOffsetForPaneIndex(paneIndex: number): ScrollOffset {
   return {
     x: Math.min(DEMONSTRATOR_MAX_SCROLL.x, Math.max(0, paneColumn(paneIndex) * 100)),
@@ -106,14 +106,14 @@ function scrollOffsetForPaneIndex(paneIndex: number): ScrollOffset {
   };
 }
 
-/** @emoji 🧭️ Linear blend of two scroll offsets. */
+/** 🧭️ Linear blend of two scroll offsets. */
 function lerpScrollOffset(from: ScrollOffset, to: ScrollOffset, t: number): ScrollOffset {
   return { x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t };
 }
 
 type PaneAxisBounds = { readonly start: number; readonly end: number; readonly visible: boolean };
 
-/** @emoji 📐 Maps one axis of a grid cell into the current viewport after scrolling (percent of that axis). */
+/** 📐 Maps one axis of a grid cell into the current viewport after scrolling (percent of that axis). */
 function paneAxisBounds(cellIndex: number, scrollPercent: number): PaneAxisBounds {
   const cellStart = cellIndex * 100 - scrollPercent;
   const start = Math.max(0, cellStart);
@@ -125,7 +125,7 @@ type TintSegmentPx = { readonly top: number; readonly left: number; readonly wid
 
 type RevealRectPx = { readonly top: number; readonly left: number; readonly width: number; readonly height: number };
 
-/** @emoji 👁 Visible on-screen bounds of a grid pane — the region that stays untinted while its card is hovered. */
+/** 👁 Visible on-screen bounds of a grid pane — the region that stays untinted while its card is hovered. */
 function demonstratorPaneRevealRect(paneIndex: number, scrollOffset: ScrollOffset): RevealRectPx {
   const horizontal = paneAxisBounds(paneColumn(paneIndex), scrollOffset.x);
   const vertical = paneAxisBounds(paneRow(paneIndex), scrollOffset.y);
@@ -139,7 +139,7 @@ function demonstratorPaneRevealRect(paneIndex: number, scrollOffset: ScrollOffse
   return { top, left, width: Math.max(0, right - left), height: Math.max(0, bottom - top) };
 }
 
-/** @emoji 🪟️ Full-viewport veil pieces; optional rectangular cutout leaves the hovered app pane untinted. */
+/** 🪟️ Full-viewport veil pieces; optional rectangular cutout leaves the hovered app pane untinted. */
 function demonstratorTintSegmentsPx(revealRect: RevealRectPx | null): readonly TintSegmentPx[] {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
@@ -159,15 +159,15 @@ function demonstratorTintSegmentsPx(revealRect: RevealRectPx | null): readonly T
 //#endregion 🎪️DemonstratorGridGeometry
 
 //#region 📱️DemonstratorMobileList
-/** @emoji 🌫️ Touch overview keeps a full veil over each live pane — settled sections stay blurred so background apps never read clearly through the card. */
+/** 🌫️ Touch overview keeps a full veil over each live pane — settled sections stay blurred so background apps never read clearly through the card. */
 const DEMONSTRATOR_MOBILE_OVERVIEW_VEIL_OPACITY = 1;
 //#endregion 📱️DemonstratorMobileList
 
 //#region 🎪️DemonstratorPaneBoot
-/** @emoji ⏱️ Keeps each background shell's 30-second plugin-load budget isolated from the next boot. */
+/** ⏱️ Keeps each background shell's 30-second plugin-load budget isolated from the next boot. */
 const DEMONSTRATOR_PANE_BOOT_INTERVAL_MS = 35_000;
 
-/** @emoji 🐢️ Boots panes one at a time (hash-target pane first, if any) instead of all eight simultaneously —
+/** 🐢️ Boots panes one at a time (hash-target pane first, if any) instead of all eight simultaneously —
  * eight live WASM plugin boots at once would make the very first paint of the page janky. `promote` lets a
  * hover/focus jump a not-yet-booted pane to the front, since the user is about to look at it right now. */
 function useSequentialPaneBoot(
@@ -202,7 +202,7 @@ function useSequentialPaneBoot(
 //#endregion 🎪️DemonstratorPaneBoot
 
 //#region 🎪️DemonstratorSuspension
-/** @emoji 🎪️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT: a booted pane that's fully offscreen or the
+/** 🎪️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT: a booted pane that's fully offscreen or the
  * tab is backgrounded releases its live shell (plugin worker, WASM instances, WebGL contexts — see
  * the framework's teardown-on-unmount path) and shows a static poster instead, revived instantly on
  * hover/focus. Only PRISTINE panes (never interacted with) are ever suspended: the framework's
@@ -224,7 +224,7 @@ const DEMONSTRATOR_SUSPENSION_POLICY = {
   sweepIntervalMs: 5_000,
 } as const;
 
-/** @emoji 🖼️ Composites every canvas inside a pane's container into one offscreen 2D canvas and
+/** 🖼️ Composites every canvas inside a pane's container into one offscreen 2D canvas and
  * returns it as a data URL — must run synchronously (not after a `requestAnimationFrame`, by which
  * point a `preserveDrawingBuffer: false` WebGL backbuffer may already be cleared). Returns `null`
  * when the pane has no canvases yet or every one samples blank; callers fall back to the existing
@@ -258,7 +258,7 @@ function capturePanePoster(container: HTMLElement): string | null {
   }
 }
 
-/** @emoji 🎪️ Tracks which booted panes are pristine (never interacted with), suspended (poster shown,
+/** 🎪️ Tracks which booted panes are pristine (never interacted with), suspended (poster shown,
  * live shell released), and their captured posters — plus the sweep that suspends eligible panes on
  * the {@link DEMONSTRATOR_SUSPENSION_POLICY} schedule. `focusedId` and (while nothing is focused) the
  * most-recently-focused pane are always exempt, matching the policy's `keepLiveCount: 1`. */
@@ -347,7 +347,7 @@ function usePaneSuspension(bootedIds: ReadonlySet<string>, focusedId: string | n
 //#endregion 🎪️DemonstratorSuspension
 
 //#region 🎪️PaneErrorBoundary
-/** @emoji 🛟️ One pane crashing (a plugin boot failure, a render error) must never take down the other five
+/** 🛟️ One pane crashing (a plugin boot failure, a render error) must never take down the other five
  * or the landing chrome around them — React error boundaries are the only mechanism that can catch a
  * render-phase throw, and they must be class components. */
 type PaneErrorBoundaryProps = { readonly paneLabel: string; readonly children: UiNode };
@@ -371,7 +371,7 @@ const PaneErrorBoundary = createUiErrorBoundary<PaneErrorBoundaryProps, PaneErro
 //#endregion 🎪️PaneErrorBoundary
 
 //#region 🎪️DemonstratorPane
-/** @emoji 🎪️ One grid cell: either the brand-logo placeholder (not booted yet) or the live shell, wrapped
+/** 🎪️ One grid cell: either the brand-logo placeholder (not booted yet) or the live shell, wrapped
  * `inert` while not focused so it never steals pointer/keyboard/focus from whichever pane IS focused (or
  * from the overview's own hover cards) — the shell still renders and animates underneath, just inertly. */
 function DemonstratorPane({
@@ -474,7 +474,7 @@ function DemonstratorLanding() {
   const scrollTargetRef = useRef<ScrollOffset>(initialFocusId ? scrollOffsetForPaneIndex(paneIndexById(initialFocusId)) : { x: 0, y: 0 });
   const scrollCurrentRef = useRef<ScrollOffset>(scrollTargetRef.current);
   const scrollDriveRef = useRef<ScrollDrive>({ mode: "follow" });
-  /** @emoji 🎞 Bumped on every drive change so a stale follow `setScrollOffset` cannot paint after a glide has taken ownership. */
+  /** 🎞 Bumped on every drive change so a stale follow `setScrollOffset` cannot paint after a glide has taken ownership. */
   const scrollEpochRef = useRef(0);
   const [scrollOffset, setScrollOffset] = useState<ScrollOffset>(scrollTargetRef.current);
   const listScrollRef = useRef<HTMLDivElement>(null);

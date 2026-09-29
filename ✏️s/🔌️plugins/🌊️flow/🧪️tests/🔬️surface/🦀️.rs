@@ -54,7 +54,7 @@ async fn flow_actual_surface_factories_close_all_owners_under_neutral_grants() {
             assert!(matches!(app.close_step(0, 0).unwrap(), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }));
             assert!(app.close_terminal_is_empty());
             assert!(matches!(app.close_step(items, bytes).unwrap(), PluginCloseStep::Complete));
-            eprintln!("[DEBUG] actual Flow surface={} bytes={} closed all stores and app-instance owners", definition.id, bytes);
+            eprintln!("actual Flow surface={} bytes={} closed all stores and app-instance owners", definition.id, bytes);
         }
     }
 }

@@ -8,7 +8,7 @@ export function taxonomyFolderSlug(folderName: string): string {
   return folderName.replace(/^(?:[0-9#*]\uFE0F?\u20E3|\p{Extended_Pictographic}|\p{Emoji_Presentation}|\p{Emoji_Modifier}|\uFE0F|\u200D)+/u, "");
 }
 
-/** @emoji 📂 Resolves the owning plugin directory (`✏️s/🔌️plugins/…`) from a crate path. */
+/** 📂 Resolves the owning plugin directory (`✏️s/🔌️plugins/…`) from a crate path. */
 export function pluginRootFromCratePath(cratePath: string): string {
   const parts = cratePath.split("/");
   const pluginsIndex = parts.indexOf("🔌️plugins");
@@ -22,7 +22,7 @@ function listArtifactFolderNames(pluginRoot: string, repoRoot: string): readonly
   return readdirSync(directory).filter((name) => name.length > 0 && !name.startsWith("."));
 }
 
-/** @emoji 🔍️ An EXACT taxonomy slug beats a suffix one: `🗄️stdio` holds both the artifact folder
+/** 🔍️ An EXACT taxonomy slug beats a suffix one: `🗄️stdio` holds both the artifact folder
  * `🧾️json` and the unrelated config leaf `🔣️.json`, and a suffix-first lookup picked whichever
  * `readdir` happened to yield first. */
 function findArtifactFolder(folders: readonly string[], slug: string): string | undefined {
@@ -33,7 +33,7 @@ function findArtifactFolder(folders: readonly string[], slug: string): string | 
   );
 }
 
-/** @emoji 🧬️ Splits a pinned app id `s.<plugin>.<artifact>@<standard>/<subset>#<role>` into the
+/** 🧬️ Splits a pinned app id `s.<plugin>.<artifact>@<standard>/<subset>#<role>` into the
  * three taxonomy coordinates its launch name is built from. */
 function appDialect(app: string | undefined): { readonly artifact: string; readonly standard: string; readonly subset: string } | undefined {
   const match = app?.match(/^s\.[^.]+\.([^@]+)@([^/]+)\/([^#]+)#/);
@@ -57,7 +57,7 @@ function findSubsetFolder(pluginRoot: string, artifactFolder: string, standard: 
   return readdirSync(subsets).find((folder) => taxonomyFolderSlug(folder).toLowerCase() === subset.toLowerCase());
 }
 
-/** @emoji 🧲️ Joins the plugin folder with the artifact folder it pins. A plugin named after its one
+/** 🧲️ Joins the plugin folder with the artifact folder it pins. A plugin named after its one
  * artifact reads as `🗒️note`, not `🗒️note🗒️note` — but that collapse may only fire when the plugin
  * publishes a SINGLE playground row, because the bare plugin folder is also what a plugin-level row
  * (one naming no `app`, e.g. `🪐️space`'s studio host `s`) resolves to; collapsing a sibling onto it
@@ -76,7 +76,7 @@ function prefixForHostedApp(app: string, playgrounds: readonly PlaygroundEntry[]
 }
 
 /**
- * @emoji 🏷️ Builds the `🛠️dev…` middle segment from plugin deployment folders and artifact taxonomy
+ * 🏷️ Builds the `🛠️dev…` middle segment from plugin deployment folders and artifact taxonomy
  * paths: `<plugin folder><artifact folder>[<standard folder>]<subset folder>`, each segment a real taxonomy folder name.
  *
  * 🔒️ INJECTIVE over playground variants — `🚀️launch/🟦️.ts` names every launcher after this prefix and
@@ -135,7 +135,7 @@ export function playgroundLaunchNamePrefix(playground: PlaygroundEntry, repoRoot
   return withArtifact(findArtifactFolder(artifactFolders, playground.variant));
 }
 
-/** @emoji ✂️ Keeps the renderer marker and the `👤️<slot>` multi-user discriminator after the
+/** ✂️ Keeps the renderer marker and the `👤️<slot>` multi-user discriminator after the
  * playground-specific prefix in a `3_dev` launch name. The user slot is part of a row's identity
  * exactly like the renderer is — dropping it collapses the two-user collaboration rows onto the
  * single-user one. */
@@ -150,7 +150,7 @@ export function devLaunchNameSuffix(name: string): string | undefined {
   return undefined;
 }
 
-/** @emoji 🎯️ Resolves a playground variant id from standard dev/native launch commands. */
+/** 🎯️ Resolves a playground variant id from standard dev/native launch commands. */
 export function devLaunchVariantFromCommand(command: string | undefined, playgrounds: readonly PlaygroundEntry[]): string | undefined {
   if (!command) return undefined;
   const variants = new Set(playgrounds.map((row) => row.variant));
@@ -163,7 +163,7 @@ export function devLaunchVariantFromCommand(command: string | undefined, playgro
   return undefined;
 }
 
-/** @emoji 🔄 Rewrites `3_dev` launch names whose command maps to a playground row so emojis match
+/** 🔄 Rewrites `3_dev` launch names whose command maps to a playground row so emojis match
  * taxonomy folders. A rename that would land on a name another row already carries is skipped: a
  * fixture row (`…🧩️concrete🌲️forest⚛️react`) normalizes onto its own plain sibling, and a stale-emoji
  * name a dev can still tell apart beats two indistinguishable rows in the Run panel. */

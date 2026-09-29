@@ -155,9 +155,9 @@ async fn committed_diff_is_canonical() {
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "set-snapshot/retitles-and-lowers-the-title-placeholder: committed diff JSON is not canonical");
     assert_eq!(
-        serde_json::from_str::<serde_json::Value>(DIFF).expect("diff reparses").pointer("/presentation/slides/modified/0/diff/shapes/modified/0/diff/kind").and_then(serde_json::Value::as_str),
+        serde_json::from_str::<serde_json::Value>(DIFF).expect("diff reparses").pointer("/presentation/slides/modified/0/diff/shapes/modified/0/diff/shapeKind").and_then(serde_json::Value::as_str),
         Some("placeholder"),
-        "set-snapshot/retitles-and-lowers-the-title-placeholder: PptxShapeDiff is tagged `kind` — the SNAPSHOT enum's own tag is `shapeKind`, and mixing the two up is exactly the collision this artifact renamed around"
+        "set-snapshot/retitles-and-lowers-the-title-placeholder: PptxShapeDiff is tagged `shapeKind` like the SNAPSHOT enum — `kind` is the Placeholder's own field, and an internal tag named `kind` would collide with it"
     );
 }
 

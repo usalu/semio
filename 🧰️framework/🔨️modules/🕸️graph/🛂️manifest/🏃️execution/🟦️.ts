@@ -36,7 +36,7 @@ export class PreviewGeneratedScript extends BundleScript {
   }
 }
 
-/** @emoji ✅️ Checks exact graph catalog bytes and output membership without rewriting artifacts. */
+/** ✅️ Checks exact graph catalog bytes and output membership without rewriting artifacts. */
 export class CheckGeneratedScript extends BundleScript {
   run(): void {
     const root = getWorkspaceRoot();

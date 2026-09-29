@@ -12,7 +12,6 @@ extern crate semio_framework_os_kernel as pack;
 pub use semio_framework_pack::corruption_testing as pack_corruption;
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as vcs;
 
 pub use crate as db_core;
 pub use crate as db;
@@ -66,15 +65,11 @@ pub mod db_durability;
 #[path = "../../🎚️policy/🦀️.rs"]
 pub mod db_policy;
 
-#[path = "../../🕸️version-graph/🦀️.rs"]
-pub mod db_version_graph;
-
 pub use db_durability::Frontier;
 pub use db_durability::*;
 pub use db_ids::{check_len, ActorId, ArtifactId, DbError, DbLimits, GenerationId};
 pub use db_policy::*;
 pub use db_policy::{DbCapabilities, DbConfig, Priority, Profile};
-pub use db_version_graph::*;
 
 #[path = "../../🎭️actor/🦀️.rs"]
 pub mod db_actor;
@@ -84,6 +79,7 @@ pub mod db_security;
 
 #[path = "../../👁️observe/🦀️.rs"]
 pub mod db_observe;
+pub use db_observe::{Emit, EmitEvent, EmitField, NullEmit};
 
 #[cfg(test)]
 #[path = "../../🧪️tests/🧯️fault-storage/🦀️.rs"]

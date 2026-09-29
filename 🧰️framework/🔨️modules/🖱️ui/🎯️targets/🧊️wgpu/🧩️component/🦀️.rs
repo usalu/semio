@@ -1193,7 +1193,7 @@ pub mod layout {
         pub utility_options: UiFixedList<&'a WindowMeasure, WINDOW_MEASURE_PARTITION_CAPACITY>,
     }
 
-    /// @emoji 🎯️ Splits a window's top-level measures into `(general, utility_options)`.
+    /// 🎯️ Splits a window's top-level measures into `(general, utility_options)`.
     ///
     /// A top-level [`WindowMeasure::Group`] tagged with `active_utility_id: Some(id)` is *utility-scoped chrome*:
     /// its **children** land in `utility_options` **only** when `id == active_utility_id`, and the tagged wrapper
@@ -1578,7 +1578,7 @@ pub mod utilities {
     }
 
     //#region 🔖️DeriveUtilityNodes
-    /// @emoji 🧰️ A resolved utility ready to be laid out into the utility bar. `framework_core` maps its
+    /// 🧰️ A resolved utility ready to be laid out into the utility bar. `framework_core` maps its
     /// `UtilityDefinition` onto this before calling `derive_utility_nodes` — `ui_wgpu` can't reference
     /// `framework_core::UtilityDefinition` directly (that crate depends on `ui_wgpu`, not the reverse).
     #[derive(Clone, Debug, PartialEq)]
@@ -1590,7 +1590,7 @@ pub mod utilities {
         pub category: Option<UtilityCategory>,
     }
 
-    /// @emoji 🧰 Derives the utility bar `UtilityNode` tree from resolved utilities and the host-owned active utility id.
+    /// 🧰 Derives the utility bar `UtilityNode` tree from resolved utilities and the host-owned active utility id.
     /// Each utility becomes a `Toggle` whose `pressed` reflects `active_utility_id == Some(id)` and whose
     /// `on_change` dispatches `setActiveUtility { utilityId }` against `controller_id`. Utilities sharing a `group`
     /// collapse into one `Collection` (placed where the group first appears, in utility order); ungrouped
@@ -2122,7 +2122,7 @@ pub mod ui {
         pub menu: Option<UiMenuRef>,
     }
 
-    /** @emoji 🌿️ A nestable labeled container of `UiNode` children — the declarative-tree mechanism for
+    /** 🌿️ A nestable labeled container of `UiNode` children — the declarative-tree mechanism for
      * subtrees like `Origin > X/Y/Z`: `ui_declarative_child_to_tree_item` expands a `Group` into a
      * `UiTreeItemNode` whose `items` are its recursively-converted children, so depth composes to any
      * level (`Plane > Origin > X/Y/Z`). Unlike `UiSectionNode` (top-level tree sections only, see
@@ -2387,7 +2387,7 @@ pub mod ui {
     }
 
     impl UiTreeItemAction {
-        /** @emoji 📍️ Row actions paint on the tree header; menu actions belong in the row context menu. */
+        /** 📍️ Row actions paint on the tree header; menu actions belong in the row context menu. */
         pub fn placement(&self) -> UiTreeActionPlacement {
             self.placement.clone().unwrap_or_default()
         }
@@ -2506,7 +2506,7 @@ pub mod ui {
     }
 
     impl UiTreeItemNode {
-        /** @emoji 🌳️ Builds a tree item with optional extensions unset. */
+        /** 🌳️ Builds a tree item with optional extensions unset. */
         pub fn base(id: impl Into<String>, label: impl Into<Label>) -> Self {
             Self {
                 id: id.into(),
@@ -2705,7 +2705,7 @@ pub mod ui {
         })
     }
 
-    /** @emoji 🔢️ Builds an editable number-stepper field row, computing the mixed/uniform display from
+    /** 🔢️ Builds an editable number-stepper field row, computing the mixed/uniform display from
      * `values` via {@link ui_inspector_mixed_number}. `action` is cloned into both `onAbsolute` (typed
      * entry, dispatched with `{value}` merged into `args`) and `onDelta` (nudge buttons, `{delta}`) —
      * callers' patch handlers branch on whichever key the dispatched action actually carries. */
@@ -2724,7 +2724,7 @@ pub mod ui {
         })
     }
 
-    /** @emoji 🔘️ Builds an editable boolean toggle field row, computing the mixed/uniform display from
+    /** 🔘️ Builds an editable boolean toggle field row, computing the mixed/uniform display from
      * `values` via {@link ui_inspector_mixed_toggle}. */
     pub fn ui_inspector_toggle_field(id: impl Into<String>, label: impl Into<Label>, icon_id: impl Into<IconName>, values: &[bool], action: ActionDescriptor) -> UiNode {
         let id = id.into();
@@ -2741,7 +2741,7 @@ pub mod ui {
         })
     }
 
-    /** @emoji 📐️ Builds a nested `Origin`-style group: a parent tree item labeled `label` containing
+    /** 📐️ Builds a nested `Origin`-style group: a parent tree item labeled `label` containing
      * three {@link ui_inspector_stepper_field} children (`X`/`Y`/`Z`), each computing its own per-axis
      * mixed state independently — a multi-selection that agrees on X but not Y shows only Y as "Mixed".
      * `axis_action(axis)` builds the per-axis `ActionDescriptor`; callers typically merge
@@ -3086,7 +3086,7 @@ pub mod ui {
         world3d_snapshot_admit_page, world3d_snapshot_begin, world3d_snapshot_begin_close, world3d_snapshot_claim_draw_permit, world3d_snapshot_close_step, world3d_snapshot_seal, world3d_snapshot_terminal_is_empty, world3d_snapshot_with_page,
         world3d_snapshot_write_terminal_is_empty, BlockListScene, Board2dScene, Canvas2dFraming, Canvas2dRejectedSnapshotPage, Canvas2dScene, Canvas2dSnapshotDescriptor, Canvas2dSnapshotFault, Canvas2dSnapshotLease, Canvas2dSnapshotPage,
         Canvas2dSnapshotWriteToken, DiffViewScene, EventFeedScene, GraphTimelineScene, IconRenderScene, InkCanvasInteractionDomain, InkCanvasScene, NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphHover, NodeGraphInteractionDomain,
-        NodeGraphNodeRecord, NodeGraphOperatorChannelRecord, NodeGraphOperatorRecord, NodeGraphOperatorVariadicRecord, NodeGraphPortRecord, NodeGraphScene, Paint2dScene, SceneDoc, TableScene, TextEditorScene, TiledMapScene, VirtualFileSystemScene,
+        NodeGraphNodeRecord, NodeGraphOperatorChannelRecord, NodeGraphOperatorRecord, NodeGraphOperatorVariadicRecord, NodeGraphPortRecord, NodeGraphScene, Paint2dScene, SceneDoc, TableScene, TextEditorScene, TextSplice, LocatedTextSplice, AppliedTextSplice, TEXT_SPLICE_CONTEXT_SCALARS, TiledMapScene, VirtualFileSystemScene,
         World3dPresentation, World3dPresentationClear, World3dRejectedSnapshotPage, World3dScene, World3dSnapshotDescriptor, World3dSnapshotDrawPermit, World3dSnapshotFault, World3dSnapshotItem, World3dSnapshotLease, World3dSnapshotPage,
         World3dSnapshotPageKind, World3dSnapshotSpan, World3dSnapshotWriteToken, WORLD3D_SNAPSHOT_PAGE_CAPACITY, WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY,
     };
@@ -3257,13 +3257,13 @@ pub mod ui {
     }
     //#endregion 🔖️TableCells
 
-    /* @emoji 🖼️ Paint-2d scene: WASM `RasterSession` sync channels for the composite/navigator windows, see framework/surface/paint/rs/lib.rs. */
+    /* 🖼️ Paint-2d scene: WASM `RasterSession` sync channels for the composite/navigator windows, see framework/surface/paint/rs/lib.rs. */
     // 🎬️ `Paint2dScene`, `IconRenderScene`, `VirtualFileSystemScene`, `TiledMapScene` (+ its default
     // fns and `base()`), `Board2dScene` (+ its default fns and `base()`), `InkCanvasScene` (+ its
     // default fn and `base()`), `GraphTimelineScene`, `DiffViewScene`, and `EventFeedScene` all moved
     // to `semio-framework-ui-scene` (see the re-export above).
 
-    /** @emoji 🧩️ A palette entry for a block kind insertable into a [`BlockListScene`], contributed
+    /** 🧩️ A palette entry for a block kind insertable into a [`BlockListScene`], contributed
      * either by the host app's own built-ins or by a `"playbook.blockKind"` topic contribution. */
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
@@ -3511,7 +3511,7 @@ pub mod ui {
     // `ActionDescriptor` into `settings_json` via `serde_json`, so they legitimately belong on this
     // side of the boundary the same way `TableCell`/`table_row_json` do.
 
-    /** @emoji 📖️ Builds a read-only JSON viewer text-editor scene: a pretty-printed JSON buffer,
+    /** 📖️ Builds a read-only JSON viewer text-editor scene: a pretty-printed JSON buffer,
      * `"json"` language, and `settingsJson` set to `{"readOnly":true}`. */
     pub fn text_editor_json_view(json_pretty: String) -> TextEditorScene {
         let mut scene = TextEditorScene::base(json_pretty, Some("json".into()), None);
@@ -3519,7 +3519,7 @@ pub mod ui {
         scene
     }
 
-    /** @emoji ⌨️ Builds an editable code-input text-editor scene wired to a host settings-change
+    /** ⌨️ Builds an editable code-input text-editor scene wired to a host settings-change
      * action: `settingsJson` carries `{"readOnly":false,"onEditSettings":<ActionDescriptor>}`, fired
      * by the renderer when the user edits editor settings (font size, tab width, ...) via its own
      * chrome. */
@@ -3530,7 +3530,7 @@ pub mod ui {
     }
 
     //#region 🔖️SceneActions
-    /** @emoji 🎮️ Renderer-to-plugin action names for node-graph surfaces. */
+    /** 🎮️ Renderer-to-plugin action names for node-graph surfaces. */
     pub mod node_graph_actions {
         pub const SELECT: &str = "nodeGraphSelect";
         pub const HOVER: &str = "nodeGraphHover";
@@ -3539,7 +3539,7 @@ pub mod ui {
         pub const SPOTLIGHT_COMMIT: &str = "spotlightCommit";
     }
 
-    /** @emoji ✍️ Renderer-to-plugin action names for text-editor surfaces. */
+    /** ✍️ Renderer-to-plugin action names for text-editor surfaces. */
     pub mod text_editor_actions {
         pub const EDIT: &str = "textEdit";
         pub const SELECT: &str = "textSelect";
@@ -3549,17 +3549,17 @@ pub mod ui {
         pub const FORMAT_DOCUMENT: &str = "formatDocument";
     }
 
-    /** @emoji 🧩️ Renderer-to-plugin action names for 2D board surfaces. */
+    /** 🧩️ Renderer-to-plugin action names for 2D board surfaces. */
     pub mod board2d_actions {
         pub const APPLY_BOARD_EVENTS: &str = "applyBoardEvents";
     }
 
-    /** @emoji 🖊️ Renderer-to-plugin action names for ink canvas surfaces. */
+    /** 🖊️ Renderer-to-plugin action names for ink canvas surfaces. */
     pub mod ink_canvas_actions {
         pub const APPLY_EVENTS: &str = "inkApplyEvents";
     }
 
-    /** @emoji 🗺️ Renderer-to-plugin action names for tiled map surfaces. */
+    /** 🗺️ Renderer-to-plugin action names for tiled map surfaces. */
     pub mod tiled_map_actions {
         pub const SET_CAMERA: &str = "setCamera";
         pub const SET_FEATURE_SELECTION: &str = "setFeatureSelection";
@@ -3580,12 +3580,12 @@ pub mod ui {
         UiNode::Stack(UiStackNode { menu: None, direction: "vertical".into(), gap: Some("standard".into()), padding: None, id: None, presence: UiPresence::default(), activate: None, children, drop_action: None, drop_overlay: None })
     }
 
-    /** @emoji 🖼️ Builds an image node rendering a source URL or path. */
+    /** 🖼️ Builds an image node rendering a source URL or path. */
     pub fn ui_image(id: impl Into<String>, src: impl Into<String>, alt: Option<Label>) -> UiNode {
         UiNode::Image(UiImageNode { menu: None, id: id.into(), src: src.into(), alt, presence: UiPresence::default() })
     }
 
-    /** @emoji 🎛️ Extracts the control payload of a {@link UiNode} when it is a control variant. */
+    /** 🎛️ Extracts the control payload of a {@link UiNode} when it is a control variant. */
     pub fn ui_node_to_control(node: &UiNode) -> Option<UiControlNode> {
         match node {
             UiNode::Input(input) => Some(UiControlNode::Input(input.clone())),
@@ -3601,7 +3601,7 @@ pub mod ui {
         }
     }
 
-    /** @emoji 🎛️ Wraps a {@link UiControlNode} back into its matching {@link UiNode} control variant (inverse of {@link ui_node_to_control}). */
+    /** 🎛️ Wraps a {@link UiControlNode} back into its matching {@link UiNode} control variant (inverse of {@link ui_node_to_control}). */
     pub fn ui_control_to_node(control: UiControlNode) -> UiNode {
         match control {
             UiControlNode::Input(input) => UiNode::Input(input),
@@ -3628,7 +3628,7 @@ pub mod ui {
         UiNode::Text(UiTextNode { menu: None, value: value.into(), emphasize: None, data_attributes: None, presence: UiPresence::default() })
     }
 
-    /** @emoji 🔌️ Renders a contributing program body inline at this tree position. */
+    /** 🔌️ Renders a contributing program body inline at this tree position. */
     pub fn ui_external_slot(plugin_id: impl Into<String>, app_id: impl Into<String>, body_key: impl Into<String>, params_json: impl Into<String>) -> UiNode {
         UiNode::ExternalSlot(UiExternalSlotNode { menu: None, plugin_id: plugin_id.into(), app_id: app_id.into(), body_key: body_key.into(), params_json: params_json.into(), host_status: None, presence: UiPresence::default() })
     }
@@ -3786,7 +3786,7 @@ pub mod ui {
     }
 
     //#region 🔖️StatusBuilders
-    /** @emoji 🗂️ Builds an empty-state placeholder: a centered title, optional description text, and an
+    /** 🗂️ Builds an empty-state placeholder: a centered title, optional description text, and an
      * optional call-to-action button. */
     pub fn ui_empty_state(id: &str, title: Label, description: Option<Label>, action: Option<UiButtonNode>) -> UiNode {
         let mut children = vec![UiNode::Text(UiTextNode { menu: None, value: title, emphasize: Some(true), data_attributes: None, presence: UiPresence::default() })];
@@ -3810,7 +3810,7 @@ pub mod ui {
         })
     }
 
-    /** @emoji ⚠️ Builds an error-state placeholder: an emphasized message and an optional retry button. */
+    /** ⚠️ Builds an error-state placeholder: an emphasized message and an optional retry button. */
     pub fn ui_error_state(id: &str, message: Label, retry: Option<ActionDescriptor>) -> UiNode {
         let mut children = vec![UiNode::Text(UiTextNode { menu: None, value: message, emphasize: Some(true), data_attributes: None, presence: UiPresence::default() })];
         if let Some(retry) = retry {
@@ -3840,7 +3840,7 @@ pub mod ui {
         })
     }
 
-    /** @emoji 🩺️ Builds a plugin-recovery panel: bilingual (en/de) crash copy plus three fixed actions —
+    /** 🩺️ Builds a plugin-recovery panel: bilingual (en/de) crash copy plus three fixed actions —
      * restart the app (`recovery.restartApp`), disable the offending program (`recovery.disablePlugin`), or
      * open diagnostics (`recovery.showDiagnostics`). `quarantined` swaps in the host-auto-disabled copy. */
     pub fn ui_recovery_panel(plugin_id: &str, quarantined: bool, is_de: bool) -> UiNode {
@@ -3899,7 +3899,7 @@ pub mod ui {
         })
     }
 
-    /** @emoji 📥️ Builds a drop-zone `Stack` for importing files: `drop_overlay` supplies the hover-state
+    /** 📥️ Builds a drop-zone `Stack` for importing files: `drop_overlay` supplies the hover-state
      * title/hint/accept copy, `drop_action` fires once the drop completes. */
     pub fn ui_import_drop_zone(id: &str, title: Label, hint: Label, accept: Option<&str>, drop_action: ActionDescriptor) -> UiNode {
         UiNode::Stack(UiStackNode {

@@ -1,9 +1,15 @@
 # Windows Clone
 
-Git for Windows creates directories with `CreateDirectoryW`, which rejects a path of 248 UTF-16 code units or more when `core.longpaths` is off. Files fail at 260. The reported clone root `C:\git\semio` (12 code units) makes a directory fail at relative length 235 and a file fail at relative length 247.
+`git pull` of `0ed485479f5` still contains the `🔬️program-unit` directory. That directory is 256 UTF-16 code units at `C:\git\semio`. Git for Windows rejects a directory at 248 (`CreateDirectoryW`, `MAX_PATH - 12`) and a file at 260.
 
-Removed 53 tracked paths under this ticket that cross that line. They are payload and splice copies of source trees, nested under the ticket folder. The product tree itself stays under the limit at this clone root (longest directory 243).
+Removed 20 tracked ticket payload and splice copies:
 
-After removal the index has no illegal path. The longest remaining directory is 247 and the longest remaining file is 259, so `C:\git\semio` fits with no spare characters. A longer clone root still fails.
+- 9 directories at 248 or more, including `🔬️program-unit`
+- 6 directories at 247, one code unit under that cutoff
+- 5 directories at 244–246 in the same splice tree
 
-These deletions are staged. `git pull` on Windows keeps failing until this change is committed and pushed, because `3b2f1181d27` still contains the long paths.
+No reserved device names, trailing dots or spaces, illegal characters, or path segments over 255 code units are in the tree. The longest remaining directory is a product path at 243. The longest remaining file is 252.
+
+The `unable to rmdir '♻️mit-bestand/🔎️recherche'` line is a warning. Pull continues past it. The fatal error is the long directory.
+
+These deletions are staged. `0ed485479f5` on the remote still has the long paths, so Windows `git pull` keeps failing until this change is committed and pushed.

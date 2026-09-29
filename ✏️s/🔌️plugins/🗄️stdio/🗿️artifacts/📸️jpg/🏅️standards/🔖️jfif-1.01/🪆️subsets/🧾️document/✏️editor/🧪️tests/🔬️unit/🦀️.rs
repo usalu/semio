@@ -1,5 +1,11 @@
 use super::*;
 
+/// 🧬️ Registers the document schema jpg's declaration contributes — the contract every snapshot edit validates against;
+/// a fixture editor runs without the plugin assembly that publishes it.
+fn register_document_schema() {
+    framework_schema::register_artifact_schema_descriptors(vec![crate::standards::v_jfif_1_01::subsets::document::schema::jpg_artifact_schema_descriptor()]).expect("the jpg document schema registers");
+}
+
 #[semio_framework_async_macros::async_test]
 async fn create_editor_builds_a_definition_for_the_editor_role() {
     let def = create_jpg_any_editor();
@@ -14,6 +20,7 @@ async fn editor_dialect_matches_the_artifact_coordinate() {
 
 #[test]
 fn large_raster_quality_edit_uses_compact_native_event() {
+    register_document_schema();
     let mut snapshot = JpgSnapshot::default();
     snapshot.pixels = vec![7; 2 * 1_024 * 1_024];
     let event = editing::SnapshotEditEvent::SetValue { path: "/reEncodeQuality".into(), value: dsl::DslValue::Number(dsl::Number::UInt(75)) };
@@ -42,6 +49,7 @@ fn large_raster_quality_edit_uses_compact_native_event() {
 
 #[test]
 fn payload_detail_edits_publish_the_exact_requested_value() {
+    register_document_schema();
     let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🧫️fixtures/🔣️.json"))).unwrap();
     let mut snapshot = JpgSnapshot::default();
     snapshot.pixels = vec![7, 9];

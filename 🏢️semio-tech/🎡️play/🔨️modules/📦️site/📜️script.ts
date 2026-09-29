@@ -6,7 +6,7 @@ import { prefetchPlayMapTiles } from "./🗺️map-tiles/🟦️.ts";
 import { PLAY_HOST } from "../🧩️runtime/🟦️.ts";
 import { publishPlayPages } from "./📄pages/🟦️.ts";
 
-/** @emoji 🎡️ Publishes play as one static site using prerequisites selected by the outer Nx graph. */
+/** 🎡️ Publishes play as one static site using prerequisites selected by the outer Nx graph. */
 class BuildScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("The play build accepts no compiler arguments");

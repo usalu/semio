@@ -20,11 +20,11 @@ import { currentStylingAppearanceName, STYLING_PRESENCE_PALETTES } from "@semio-
 // (lanes 2-C/2-D/3-A) pass the caller-supplied `id` `s-presence-peers`; this element does not talk to
 // the hub or the directory read model itself — it only renders whatever `peers` it is given.
 
-/** @emoji 🧮️ Default visible-avatar cap before the "+N" overflow chip takes over — mirrored by the Rust
+/** 🧮️ Default visible-avatar cap before the "+N" overflow chip takes over — mirrored by the Rust
  * twin's `PRESENCE_BAR_DEFAULT_MAX` (`🧊️component.rs`) so both shells collapse at the same roster size. */
 export const PRESENCE_BAR_DEFAULT_MAX = 5;
 
-/** @emoji 🎭️ A peer's editing/viewing stance on the shared `(space, document, surface)` — mirrors the
+/** 🎭️ A peer's editing/viewing stance on the shared `(space, document, surface)` — mirrors the
  * hub's `SpaceRole` vocabulary (contract freeze §C1). */
 export type PresenceRole = "author" | "spectator";
 
@@ -58,17 +58,17 @@ export interface PresenceBarProps {
 }
 
 //#region 🔖️Palette
-/** @emoji 🌓️ Selects which of `STYLING_PRESENCE_PALETTES`'s `light`/`dark` base `{s, l}` {@link presenceColor} resolves against. */
+/** 🌓️ Selects which of `STYLING_PRESENCE_PALETTES`'s `light`/`dark` base `{s, l}` {@link presenceColor} resolves against. */
 export type PresenceAppearance = "light" | "dark";
 
-/** @emoji 🎨️ Resolved HSL triple — `h` in degrees `[0, 360)`, `s`/`l` in `[0, 1]`. */
+/** 🎨️ Resolved HSL triple — `h` in degrees `[0, 360)`, `s`/`l` in `[0, 1]`. */
 export interface PresenceHsl {
   readonly h: number;
   readonly s: number;
   readonly l: number;
 }
 
-/** @emoji 🎨️ Deterministic per-session palette color for a hub-assigned index (contract freeze §C7.5):
+/** 🎨️ Deterministic per-session palette color for a hub-assigned index (contract freeze §C7.5):
  * `index % 12` selects one of the 12 base hues (`STYLING_PRESENCE_PALETTES.hues`); `Math.floor(index / 12)`
  * (`k`) desaturates by `0.25` once the roster wraps past two full cycles and alternates lightness by
  * `±0.14` every other cycle (lighter in `"light"`, darker in `"dark"`). Byte-identical to the Rust twin
@@ -84,14 +84,14 @@ export function presenceColor(index: number, appearance: PresenceAppearance): Pr
   return { h, s, l };
 }
 
-/** @emoji 🎨️ CSS custom-property reference for a peer's base-cycle palette index (`index % 12`) — only
+/** 🎨️ CSS custom-property reference for a peer's base-cycle palette index (`index % 12`) — only
  * meaningful when `Math.floor(index / 12) === 0`; callers past the first cycle render {@link presenceColor}'s
  * HSL inline instead (contract freeze §C7.5). */
 export function presenceCssVar(index: number): string {
   return `var(--presence-${index % 12})`;
 }
 
-/** @emoji 🎨️ Resolves a peer's ring/border color: the `--presence-N` CSS var for the base cycle, or an
+/** 🎨️ Resolves a peer's ring/border color: the `--presence-N` CSS var for the base cycle, or an
  * inline `hsl()` literal past it — the {@link presenceColor}/{@link presenceCssVar} split from contract
  * freeze §C7.5. A peer with no `color` renders index 0. */
 function presenceStyleColor(color: number | undefined, appearance: PresenceAppearance): string {

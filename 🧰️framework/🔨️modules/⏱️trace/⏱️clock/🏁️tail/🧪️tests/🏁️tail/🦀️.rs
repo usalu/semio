@@ -65,7 +65,6 @@ fn watchdog_tail_uses_the_original_guard_for_admission_and_terminal() {
         assert_eq!(terminal.generation(), generation);
         assert_eq!(INDEX.with(Cell::get), 4);
         assert_eq!(SAMPLE_AT_TERMINAL.with(Cell::get), Some(samples_before + 1));
-        eprintln!("[DEBUG] watchdog-tail case={} admissionFault={} terminalFault={} elapsed={:?}", row["name"], admission_verdict.is_fault(), terminal.is_fault(), terminal.elapsed_us());
     }
 }
 

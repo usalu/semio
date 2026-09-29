@@ -39,7 +39,7 @@ function select(compiler: typeof compilers[number], path: string, supported: rea
   const output = operation(path, content, input) as readonly Token[];
   expect([sourceCalls, unsupportedCalls]).toEqual([1, 1]);
   expect(output).not.toBe(supported);
-  expect(output.slice(0, supported.length)).toEqual(supported);
+  expect(output.slice(0, supported.length)).toEqual<typeof supported>(supported);
   for (const row of output) expect(supported.includes(row) || unsupported.includes(row)).toBe(true);
   return { output, coverageCalls };
 }

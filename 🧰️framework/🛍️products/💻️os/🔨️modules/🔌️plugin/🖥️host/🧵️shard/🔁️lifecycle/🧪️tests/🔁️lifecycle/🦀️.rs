@@ -54,7 +54,6 @@ async fn neutral_retry_order_uses_the_production_selector() {
         assert_eq!(serde_json::json!(actual), trace["expected"], "{}", trace["id"]);
         assert_eq!(shard.pending_interactive.bytes, 0);
     }
-    eprintln!("[DEBUG] retained lifecycle neutral selector traces=4");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -82,7 +81,6 @@ async fn retry_keeps_exact_event_budget_credit_and_one_peer_order() {
     assert_eq!(turns[0].2, turns[3].2);
     assert_eq!(outbound.lock().unwrap().len(), 3);
     assert_eq!((shard.pending_interactive.len, shard.pending_interactive.bytes), (0, 0));
-    eprintln!("[DEBUG] retained lifecycle order=A1,B1,A1,A2 exact-input=1 exact-budget=1 credit=606->0");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -111,7 +109,6 @@ async fn retry_refuses_replacement_and_stale_queue_cannot_reach_same_id_successo
     }
     assert_eq!(mock.observed_events(ActorId(1)).await, vec![event(1), event(3)]);
     assert_eq!(shard.pending_interactive.bytes, 0);
-    eprintln!("[DEBUG] retained lifecycle duplicate-refused=1 stale-successor-calls=0");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -129,7 +126,6 @@ async fn cancellation_revokes_retry_before_another_guest_call() {
     }
     assert_eq!(mock.observed_events(ActorId(1)).await, vec![event(1)]);
     assert_eq!((shard.pending_interactive.len, shard.pending_interactive.bytes), (0, 0));
-    eprintln!("[DEBUG] retained lifecycle cancellation guest-retry-calls=0 credit=0");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -144,7 +140,6 @@ async fn retry_occupies_the_original_fixed_lane_capacity() {
     assert_eq!((shard.pending_interactive.len, shard.pending_interactive.bytes), (256, SHARD_DEFERRED_BYTES));
     assert_eq!(shard.pending_interactive.can_admit(1, 0), Err(AdmissionLimit::Items));
     assert_eq!(shard.pending_interactive.can_admit(0, 1), Err(AdmissionLimit::Bytes));
-    eprintln!("[DEBUG] retained lifecycle fixed-capacity items=256 bytes=16777216");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -163,7 +158,6 @@ async fn terminal_faults_never_create_a_lifecycle_retry() {
         assert_eq!(outbound.lock().unwrap().len(), 1);
         assert_eq!(shard.pending_interactive.bytes, 0);
     }
-    eprintln!("[DEBUG] retained lifecycle terminal-guest-faults=2 hidden-credit=0");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -181,5 +175,4 @@ async fn unknown_transport_actors_never_allocate_host_bookkeeping() {
     assert!(mock.observed_turns.lock().unwrap().is_empty());
     assert_eq!(outbound.lock().unwrap().len() as u64, count);
     assert_eq!(shard.pending_interactive.bytes + shard.pending_background.bytes, 0);
-    eprintln!("[DEBUG] unknown actor grants=256 allocated-host-entries=0 guest-calls=0");
 }

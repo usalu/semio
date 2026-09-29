@@ -5,6 +5,8 @@
 pub struct WriterEditorSelection {
     pub start: usize,
     pub end: usize,
+    /// ✂️ The last `textSplice` `seq` of this window's host that this window applied (0: none).
+    pub splice: u64,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslArtifact)]

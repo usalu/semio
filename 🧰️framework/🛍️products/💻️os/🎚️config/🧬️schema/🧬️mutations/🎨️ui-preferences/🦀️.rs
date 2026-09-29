@@ -71,6 +71,8 @@ pub mod set_keybinding_override;
 pub mod set_layout;
 #[path = "../🗣️set-locale/🦀️.rs"]
 pub mod set_locale;
+#[path = "../🗂️set-named-layout/🦀️.rs"]
+pub mod set_named_layout;
 #[path = "../📖️set-terminology/🦀️.rs"]
 pub mod set_terminology;
 #[path = "../🖼️set-theme/🦀️.rs"]
@@ -83,6 +85,7 @@ pub use set_driver::*;
 pub use set_keybinding_override::*;
 pub use set_layout::*;
 pub use set_locale::*;
+pub use set_named_layout::*;
 pub use set_terminology::*;
 pub use set_theme::*;
 

@@ -1,4 +1,4 @@
-//! @emoji 🏗️ Ergonomic semantic builders (`ui::stack()`, `ui::button()`) — wasip2-safe, no engine.
+//! 🏗️ Ergonomic semantic builders (`ui::stack()`, `ui::button()`) — wasip2-safe, no engine.
 //!
 //! 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md. Every `fn`
 //! below is plain sync by owner ruling U1.

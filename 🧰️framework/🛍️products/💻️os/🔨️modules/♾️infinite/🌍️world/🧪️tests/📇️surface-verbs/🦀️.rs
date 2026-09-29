@@ -60,6 +60,9 @@ fn selected_surface(window_kind_id: &str, action_ids: &[String]) -> World3dState
     state
 }
 
+/// 🔍️ The pre-fix shape, re-derived from the same fixture: the gumball was offered on every
+/// World3d surface and every handle could commit. A case that answers `false` is what makes
+/// this fixture discriminating rather than merely agreeing.
 #[test]
 fn a_surface_offers_a_gumball_only_when_its_window_kind_declares_a_transform_verb() {
     let mut discriminating = 0;
@@ -79,13 +82,9 @@ fn a_surface_offers_a_gumball_only_when_its_window_kind_declares_a_transform_ver
         }
         assert_eq!(unique, expected_handle_verbs(&case), "{name}: a handle is offered iff its own verb is declared");
 
-        // 🔍️ The pre-fix shape, re-derived from the same fixture: the gumball was offered on every
-        // World3d surface and every handle could commit. A case that answers `false` is what makes
-        // this fixture discriminating rather than merely agreeing.
         if !offers {
             discriminating += 1;
         }
-        println!("[DEBUG] surface-verbs {name}: offers={offers} handles={unique:?} declared={action_ids:?}");
     }
     assert!(discriminating >= 2, "the fixture pins at least two surfaces the pre-fix shape got wrong");
 }
@@ -126,6 +125,5 @@ fn a_primary_press_enters_gumball_pick_only_on_a_surface_that_declares_one() {
         }
         let entered = state.interaction_census().contains("active=GumballPick");
         assert_eq!(entered, case["offersGumball"].as_bool().expect("offersGumball"), "{name}: {}", state.interaction_census());
-        println!("[DEBUG] surface-verbs {name}: gumball-pick={entered} after {turns} turns");
     }
 }

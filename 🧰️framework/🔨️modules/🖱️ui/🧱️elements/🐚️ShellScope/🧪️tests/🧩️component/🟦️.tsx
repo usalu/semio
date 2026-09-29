@@ -13,7 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "../../../🗨️Popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../🔽️Select/🟦️.tsx";
 import { ShellScopeProvider, createShellScope } from "../../🟦️.tsx";
 
-/** @emoji 🎚️ Minimal surface of the third-party `color` package used as the independent WCAG oracle.
+/** 🎚️ Minimal surface of the third-party `color` package used as the independent WCAG oracle.
  * Loaded through a non-literal specifier because the package ships no type declarations. */
 interface ThirdPartyColor {
   contrast(other: ThirdPartyColor): number;
@@ -24,18 +24,18 @@ const { default: Color } = (await import(thirdPartyColorSpecifier)) as { default
 // #endregion 🔌️Adapters
 
 // #region 🎨️TokenOracle
-/** @emoji 📂️ Absolute path of a repo file beside this test — vite serves the module under an `/@fs`
+/** 📂️ Absolute path of a repo file beside this test — vite serves the module under an `/@fs`
  * prefix in jsdom, which `fileURLToPath` keeps verbatim, so it is stripped back off here. */
 function sourcePath(relative: string): string {
   return fileURLToPath(new URL(relative, import.meta.url)).replace(/^\/@fs(?=\/)/, "");
 }
 
-/** @emoji 📖️ Reads one of the two shipped stylesheets that own every floating-surface token. */
+/** 📖️ Reads one of the two shipped stylesheets that own every floating-surface token. */
 function styleSheet(name: "palette" | "ui"): string {
   return readFileSync(sourcePath(name === "palette" ? "../../../../🎨️styling/🎨️palette/🎨️.css" : "../../../../🎨️styling/🖌️ui/🎨️.css"), "utf8");
 }
 
-/** @emoji 🧱️ Body of the first `{ … }` block whose header matches and whose body mentions `must`. */
+/** 🧱️ Body of the first `{ … }` block whose header matches and whose body mentions `must`. */
 function cssBlock(css: string, header: string, must: string): string {
   for (let cursor = css.indexOf(header); cursor >= 0; cursor = css.indexOf(header, cursor + 1)) {
     const open = css.indexOf("{", cursor + header.length - 1);
@@ -52,28 +52,28 @@ function cssBlock(css: string, header: string, must: string): string {
   throw new Error(`no ${header} block containing ${must}`);
 }
 
-/** @emoji 🔎️ Declared value of `property` inside a block body. */
+/** 🔎️ Declared value of `property` inside a block body. */
 function declaration(body: string, property: string): string {
   const match = new RegExp(`(?:^|[;{\\s])${property}:\\s*([^;]+);`).exec(body);
   if (!match) throw new Error(`no ${property} declaration`);
   return match[1]!.trim();
 }
 
-/** @emoji 🔢️ Multiplier `k` out of a `calc(… k * var(--…-step))` declaration. */
+/** 🔢️ Multiplier `k` out of a `calc(… k * var(--…-step))` declaration. */
 function stepMultiplier(value: string): number {
   const match = /([0-9.]+)\s*\*\s*var\(/.exec(value);
   if (!match) throw new Error(`no step multiplier in ${value}`);
   return Number(match[1]);
 }
 
-/** @emoji 🌈️ Named `--color-*` hexes of the generated palette. */
+/** 🌈️ Named `--color-*` hexes of the generated palette. */
 function paletteColors(): Record<string, string> {
   const colors: Record<string, string> = {};
   for (const match of styleSheet("palette").matchAll(/--color-([a-z0-9-]+):\s*(#[0-9a-fA-F]{6});/g)) colors[match[1]!] = match[2]!;
   return colors;
 }
 
-/** @emoji 🔗️ Follows a `var(--x)` chain through the palette to a literal hex. */
+/** 🔗️ Follows a `var(--x)` chain through the palette to a literal hex. */
 function resolveColor(value: string, colors: Record<string, string>, aliases: Record<string, string>): string {
   let current = value.trim();
   for (let hop = 0; hop < 8; hop++) {
@@ -114,7 +114,7 @@ const toGamma = (channel: number): number => (channel <= 0.0031308 ? channel * 1
 const channels = (hex: string): number[] => [1, 3, 5].map((offset) => Number.parseInt(hex.slice(offset, offset + 2), 16) / 255);
 const toHex = (rgb: number[]): string => `#${rgb.map((channel) => Math.round(Math.min(1, Math.max(0, channel)) * 255).toString(16).padStart(2, "0")).join("")}`;
 
-/** @emoji 🧪️ Owned `color-mix(in oklab, a, b p)` — the browser-side formula every level block uses. */
+/** 🧪️ Owned `color-mix(in oklab, a, b p)` — the browser-side formula every level block uses. */
 function oklabMix(a: string, b: string, fraction: number): string {
   const labA = apply(LMS_TO_OKLAB, apply(SRGB_TO_LMS, channels(a).map(toLinear)).map(Math.cbrt));
   const labB = apply(LMS_TO_OKLAB, apply(SRGB_TO_LMS, channels(b).map(toLinear)).map(Math.cbrt));
@@ -122,7 +122,7 @@ function oklabMix(a: string, b: string, fraction: number): string {
   return toHex(apply(LMS_TO_SRGB, apply(OKLAB_TO_LMS, mixed).map((value) => value ** 3)).map(toGamma));
 }
 
-/** @emoji 🫥️ Composites a translucent fill over an opaque ground. */
+/** 🫥️ Composites a translucent fill over an opaque ground. */
 function composite(fill: string, ground: string, alpha: number): string {
   const front = channels(fill);
   return toHex(channels(ground).map((back, index) => front[index]! * alpha + back * (1 - alpha)));
@@ -137,7 +137,7 @@ interface FloatingSurfacePaint {
   readonly contrast: number;
 }
 
-/** @emoji 🗨️ Resolves what a `data-level="menu"` floating surface actually paints in one appearance,
+/** 🗨️ Resolves what a `data-level="menu"` floating surface actually paints in one appearance,
  * straight out of the shipped stylesheets: the glass fill composited over the shell ground it floats
  * over, and the `--color-popover-foreground` text on top of it. */
 function floatingSurfacePaint(appearance: "light" | "dark"): FloatingSurfacePaint {
@@ -171,7 +171,7 @@ interface ScopedShell {
   dispose(): void;
 }
 
-/** @emoji 🐚️ Mounts the exact DOM `FrameworkOsShell` builds: a `.semio-scope` root carrying the
+/** 🐚️ Mounts the exact DOM `FrameworkOsShell` builds: a `.semio-scope` root carrying the
  * appearance class, its app subtree, and the portal layer as the root's last child. */
 function scopedShell(shellId: string, appearance: "light" | "dark"): ScopedShell {
   const root = document.createElement("div");

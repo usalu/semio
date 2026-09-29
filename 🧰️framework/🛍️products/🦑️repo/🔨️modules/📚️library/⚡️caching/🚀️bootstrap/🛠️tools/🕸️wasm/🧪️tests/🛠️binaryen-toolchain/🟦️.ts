@@ -35,7 +35,7 @@ export async function testBinaryenToolchain(workspace: string, output?: string):
     let requests = 0;
     try {
       const controller = new AbortController(); controller.abort();
-      globalThis.fetch = (async () => { requests++; return new Response("invalid archive"); }) as typeof fetch;
+      globalThis.fetch = Object.assign(async (): Promise<Response> => { requests++; return new Response("invalid archive"); }, { preconnect: previous.preconnect });
       await assert.rejects(prepareBinaryen(temporary, controller.signal), /abort/i);
       assert.equal(requests, 0);
       await assert.rejects(prepareBinaryen(temporary, new AbortController().signal), /checksum/);

@@ -2,7 +2,7 @@
 /// <reference types="vitest/importMeta" />
 // @vitest-environment jsdom
 // #region 🧲️Header
-/** @emoji 🎬️ `@semio-tech/cad-js/renderer` — CAD renderer (R3F) with {@link InteractionRepl} host props/`on*` callbacks, {@link InteractionCanvas}, and {@link InteractionSpatialView}. See `cad/asset/modelDefinition/spatial.shape/interaction/📦️box.json`. */
+/** 🎬️ `@semio-tech/cad-js/renderer` — CAD renderer (R3F) with {@link InteractionRepl} host props/`on*` callbacks, {@link InteractionCanvas}, and {@link InteractionSpatialView}. See `cad/asset/modelDefinition/spatial.shape/interaction/📦️box.json`. */
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
@@ -231,7 +231,7 @@ export type { SpatialComputeMode };
 import { PreciseSpatialKernelMath, faceNormal, preciseSpatialKernelMath } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧮️preview/🟦️.ts";
 
 // #region ⚡️R3FPreviewKernel
-/** @emoji ⚡️ Fast approximate `SpatialPreviewKernel` for live R3F previews (lower tessellation). */
+/** ⚡️ Fast approximate `SpatialPreviewKernel` for live R3F previews (lower tessellation). */
 export class R3FPreviewKernel extends PreciseSpatialKernelMath {
   override arcSamplePoints = (center: Vec3, start: Vec3, end: Vec3, segments = 12): readonly Vec3[] => preciseSpatialKernelMath.arcSamplePoints(center, start, end, segments);
 
@@ -242,12 +242,12 @@ export class R3FPreviewKernel extends PreciseSpatialKernelMath {
   override nurbsDisplaySamplePoints = (poles: readonly Vec3[], segmentsPerSpan = 6): readonly Vec3[] => preciseSpatialKernelMath.nurbsDisplaySamplePoints(poles, segmentsPerSpan);
 }
 
-/** @emoji ⚡️ Default fast preview kernel for play and R3F hosts. */
+/** ⚡️ Default fast preview kernel for play and R3F hosts. */
 export const r3fPreviewKernel = new R3FPreviewKernel();
 
 const scenePreviewKernelRef: { current: SpatialPreviewKernel } = { current: r3fPreviewKernel };
 
-/** @emoji ⚡️ Binds the active scene preview kernel (fast vs precise) for R3F wireframe helpers. */
+/** ⚡️ Binds the active scene preview kernel (fast vs precise) for R3F wireframe helpers. */
 export function bindScenePreviewKernel(kernel: SpatialPreviewKernel): void {
   scenePreviewKernelRef.current = kernel;
 }
@@ -258,7 +258,7 @@ function scenePreview(): SpatialPreviewKernel {
 // #endregion ⚡️R3FPreviewKernel
 
 // #region 🎬️WorkerClient
-/** @emoji 🧩️ Binary search `faceGroups` by triangle index (playground `ShapeRenderer` pattern). */
+/** 🧩️ Binary search `faceGroups` by triangle index (playground `ShapeRenderer` pattern). */
 export function findFaceGroupAt(groups: readonly FaceGroup[], triangleIndex: number): FaceGroup | null {
   const indexBufferOffset = triangleIndex * 3;
   let lo = 0;
@@ -273,7 +273,7 @@ export function findFaceGroupAt(groups: readonly FaceGroup[], triangleIndex: num
   return null;
 }
 
-/** @emoji 🎞️ Debounced `SpatialKernel.tessellate` for R3F hosts (worker-backed brepjs). */
+/** 🎞️ Debounced `SpatialKernel.tessellate` for R3F hosts (worker-backed brepjs). */
 export function useTessellation(kernel: SpatialKernel | null, solid: ReturnType<typeof solidRef> | null, tolerance: number): MeshTransfer | null {
   const [mesh, setMesh] = reactHostPort.useState<MeshTransfer | null>(null);
   const rafRef = reactHostPort.useRef(0);
@@ -291,7 +291,7 @@ export function useTessellation(kernel: SpatialKernel | null, solid: ReturnType<
   return mesh;
 }
 
-/** @emoji 📦️ Lists `SolidRef` ids present on a model graph (document solids for tessellation). */
+/** 📦️ Lists `SolidRef` ids present on a model graph (document solids for tessellation). */
 export function listModelSolidRefs(model: Model | ModelJson | null): readonly SolidRef[] {
   if (!model) return [];
   const graph = model instanceof Model ? model : parseModelJson(model);
@@ -299,7 +299,7 @@ export function listModelSolidRefs(model: Model | ModelJson | null): readonly So
   return Object.keys(graph.solids).map((id) => solidRef(id));
 }
 
-/** @emoji 🔑️ Stable React key from mesh buffer fingerprints (avoids stale geometry reuse). */
+/** 🔑️ Stable React key from mesh buffer fingerprints (avoids stale geometry reuse). */
 export function meshTransferContentKey(mesh: MeshTransfer, fallback = 0): string {
   const p = mesh.position;
   if (p.length === 0) return `empty-${fallback}`;
@@ -328,7 +328,7 @@ export function isRenderableMeshTransfer(mesh: MeshTransfer): boolean {
   return true;
 }
 
-/** @emoji 🎞️ Tessellates every model solid through `SpatialKernel.tessellate` (worker-backed). */
+/** 🎞️ Tessellates every model solid through `SpatialKernel.tessellate` (worker-backed). */
 export function useDocumentMeshes(kernel: SpatialKernel | null, model: Model, tolerance: number, keepPreviousWhileLoading = false): readonly { readonly solid: SolidRef; readonly mesh: MeshTransfer }[] {
   const [meshes, setMeshes] = reactHostPort.useState<readonly { readonly solid: SolidRef; readonly mesh: MeshTransfer }[]>([]);
   const revision = model.revision;
@@ -369,7 +369,7 @@ export function useDocumentMeshes(kernel: SpatialKernel | null, model: Model, to
   return meshes;
 }
 
-/** @emoji 📐️ Axis-aligned bounds of all mesh positions (for camera auto-fit). */
+/** 📐️ Axis-aligned bounds of all mesh positions (for camera auto-fit). */
 export function boundsFromMeshTransfers(meshes: readonly MeshTransfer[]): { readonly center: Vec3; readonly radius: number } | null {
   if (meshes.length === 0) return null;
   let minX = Infinity;
@@ -406,7 +406,7 @@ export function boundsFromMeshTransfers(meshes: readonly MeshTransfer[]): { read
   return { center: [cx, cy, cz], radius: Math.max(radius, 0.5) };
 }
 
-/** @emoji 📐️ Axis-aligned bounds of geometry vertex positions (factory / REPL geometry auto-fit). */
+/** 📐️ Axis-aligned bounds of geometry vertex positions (factory / REPL geometry auto-fit). */
 export function boundsFromSpatialPickGeometry(geometry: SpatialPickGeometry | null | undefined): { readonly center: Vec3; readonly radius: number } | null {
   if (!geometry) return null;
   const buckets = geometryBuckets(geometry);
@@ -449,7 +449,7 @@ function mergeSpatialSceneBounds(a: { readonly center: Vec3; readonly radius: nu
 // #endregion 🎬️WorkerClient
 
 // #region 🪩️ArchivedFootprints
-/** @emoji 📦️ Footprint of a finished axis-aligned box for persistent REPL overlays. */
+/** 📦️ Footprint of a finished axis-aligned box for persistent REPL overlays. */
 export interface ArchivedBoxLayout {
   readonly cornerA: Vec3;
   readonly cornerB: Vec3;
@@ -460,7 +460,7 @@ function isVec3Record(v: unknown): v is Vec3 {
   return Array.isArray(v) && v.length === 3 && v.every((x) => typeof x === "number");
 }
 
-/** @emoji 📦️ Reads `origin`/`corner`/`height` from post-commit interaction context when present. */
+/** 📦️ Reads `origin`/`corner`/`height` from post-commit interaction context when present. */
 export function tryArchivedBoxFromContext(ctx: Record<string, unknown>): ArchivedBoxLayout | null {
   const o = ctx.origin;
   const c = ctx.corner;
@@ -471,18 +471,18 @@ export function tryArchivedBoxFromContext(ctx: Record<string, unknown>): Archive
   return { cornerA: o, cornerB: c, height: hz };
 }
 
-/** @emoji 🧊️ True when committed kernel solids own the scene (footprint box previews would duplicate meshes). */
+/** 🧊️ True when committed kernel solids own the scene (footprint box previews would duplicate meshes). */
 export function modelHasCommittedSolidsForDisplay(model: Model | null | undefined): boolean {
   return listModelSolidRefs(model ?? null).length > 0;
 }
 
-/** @emoji 🧊️ True when typology objects expose standalone surface primitives for factory face shading. */
+/** 🧊️ True when typology objects expose standalone surface primitives for factory face shading. */
 export function modelHasFactoryFaceDisplay(model: Model | null | undefined, modelDefinitionId: string): boolean {
   if (!model) return false;
   return visibleFaceRefsForModelDefinition(model, modelDefinitionId).size > 0;
 }
 
-/** @emoji 📦️ Drops axis-aligned footprint `box-preview` display items when kernel solids are present. */
+/** 📦️ Drops axis-aligned footprint `box-preview` display items when kernel solids are present. */
 export function filterFootprintBoxPreviewDisplayItems(display: DisplayModel, model: Model | null | undefined): DisplayModel {
   if (!modelHasCommittedSolidsForDisplay(model)) return display;
   const items = display.items.filter((item) => item.kind !== "box-preview");
@@ -500,7 +500,7 @@ function mergeDisplayWithArchivedBoxes(base: DisplayModel, archived: readonly Ar
   return { ...base, items: [...extra, ...base.items] };
 }
 
-/** @emoji 📦️ True when a history entry should leave a persistent box footprint overlay (not transforms). */
+/** 📦️ True when a history entry should leave a persistent box footprint overlay (not transforms). */
 export function historyEntryArchivesBoxFootprint(interactionId: string): boolean {
   if (interactionId.startsWith("transform.")) return false;
   if (interactionId.startsWith("selection.")) return false;
@@ -528,12 +528,12 @@ function replBaseDisplayForHistory(snapshot: InteractionSnapshot): DisplayModel 
 // #endregion 🪩️ArchivedFootprints
 
 // #region 📐️Layout
-/** @emoji 📐️ Center and axis-aligned scale for a unit `BoxGeometry` from two XY footprint corners and height. */
+/** 📐️ Center and axis-aligned scale for a unit `BoxGeometry` from two XY footprint corners and height. */
 export function computeBoxPreviewLayout(cornerA: Vec3, cornerB: Vec3, height: number, preview: SpatialPreviewKernel = scenePreview()): { readonly position: Vec3; readonly scale: Vec3 } {
   return preview.computeBoxPreviewLayout(cornerA, cornerB, height);
 }
 
-/** @emoji 🟦️ Center and radius for the live sphere preview while the radius point is moving. */
+/** 🟦️ Center and radius for the live sphere preview while the radius point is moving. */
 export function computeSpherePreviewLayout(center: Vec3 | null, cursor: Vec3 | null): { readonly position: Vec3; readonly radius: number } | null {
   if (!center || !cursor) return null;
   const radius = Math.hypot(cursor[0] - center[0], cursor[1] - center[1], cursor[2] - center[2]);
@@ -554,12 +554,12 @@ function readVec3Array(v: unknown): readonly Vec3[] {
   return v.filter(isVec3Record) as readonly Vec3[];
 }
 
-/** @emoji 📦️ Axis-aligned bounds for geometry highlight wireframes. */
+/** 📦️ Axis-aligned bounds for geometry highlight wireframes. */
 export function bboxFromPoints(points: readonly Vec3[], preview: SpatialPreviewKernel = scenePreview()): { readonly min: Vec3; readonly max: Vec3 } | null {
   return preview.aabbFromPoints(points);
 }
 
-/** @emoji 📦️ Twelve edges of an axis-aligned box for preview line rendering. */
+/** 📦️ Twelve edges of an axis-aligned box for preview line rendering. */
 export function bboxWireSegments(min: Vec3, max: Vec3): readonly (readonly [Vec3, Vec3])[] {
   const [x0, y0, z0] = min;
   const [x1, y1, z1] = max;
@@ -603,12 +603,12 @@ function parseDisplaySelectionTargets(v: unknown): readonly { readonly kind: Mod
   return out;
 }
 
-/** @emoji 🖼️ Maps declarative `previewKind` + params to a point transform for geometry wireframes. */
+/** 🖼️ Maps declarative `previewKind` + params to a point transform for geometry wireframes. */
 export function transformPointsForPreviewKind(previewKind: string, params: Record<string, unknown>, preview: SpatialPreviewKernel = scenePreview()): (point: Vec3) => Vec3 {
   return preview.transformPointsForPreviewKind(previewKind, params);
 }
 
-/** @emoji 🖼️ Active geometry point transform from move/copy/mirror/rotate/scale preview display items. */
+/** 🖼️ Active geometry point transform from move/copy/mirror/rotate/scale preview display items. */
 export function geometryPreviewTransformFromDisplay(model: DisplayModel): ((point: Vec3) => Vec3) | null {
   for (const item of model.items) {
     if (item.kind !== "preview" || !item.params) continue;
@@ -647,7 +647,7 @@ const raycastNone: ThreeObject3D["raycast"] = () => undefined;
 // #region 🧲️GeometryTargets
 export type SpatialPickKind = "pointer.down" | "pointer.move";
 
-/** @emoji 🎯️ Primitive and object pick kinds for renderer feedback (maps to kernel geometry via {@link SpatialPickTarget.geometryKind}). */
+/** 🎯️ Primitive and object pick kinds for renderer feedback (maps to kernel geometry via {@link SpatialPickTarget.geometryKind}). */
 export type SpatialGeometryPickTargetKind = "object" | "face" | "edge" | "vertex";
 
 export type SpatialPickTargetKind = SpatialGeometryPickTargetKind;
@@ -713,10 +713,10 @@ function kernelGeometryKindForObjectPick(kind: SpatialGeometryPickTargetKind, ge
   return "solid";
 }
 
-/** @emoji 👁️ Per-kind on/off map for visibility filters or selection/hover gates (`false` disables). */
+/** 👁️ Per-kind on/off map for visibility filters or selection/hover gates (`false` disables). */
 export type SpatialPickKindToggles = Partial<Record<SpatialPickTargetKind, boolean>>;
 
-/** @emoji 👁️ Per-typology on/off map for play chrome (`false` disables show or selection). */
+/** 👁️ Per-typology on/off map for play chrome (`false` disables show or selection). */
 export type SpatialTypologyToggles = Partial<Record<string, boolean>>;
 
 export interface SpatialPickTarget {
@@ -724,9 +724,9 @@ export interface SpatialPickTarget {
   readonly id: string;
   readonly point: Vec3;
   readonly points?: readonly Vec3[];
-  /** @emoji 🧭️ Kernel-private geometry entity kind for primitive picks (e.g. `wire` vs `edge`). */
+  /** 🧭️ Kernel-private geometry entity kind for primitive picks (e.g. `wire` vs `edge`). */
   readonly geometryKind?: ModelEntityKind;
-  /** @emoji 🏷️ Typology id when the target belongs to a model-definition object row. */
+  /** 🏷️ Typology id when the target belongs to a model-definition object row. */
   readonly typologyId?: string;
 }
 
@@ -756,7 +756,7 @@ export function spatialPickTargetKey(target: SpatialPickTarget): string {
   return `${target.kind}:${target.id}`;
 }
 
-/** @emoji 🪪️ Stable hover/selection key for a {@link SelectionTarget} (primitive kinds use entity kind + id). */
+/** 🪪️ Stable hover/selection key for a {@link SelectionTarget} (primitive kinds use entity kind + id). */
 export function selectionTargetHoverKey(target: SelectionTarget): string {
   return `${target.kind}:${target.id}`;
 }
@@ -765,32 +765,32 @@ function spatialSelectionTargetKey(target: SelectionTarget): string {
   return selectionTargetHoverKey(target);
 }
 
-/** @emoji 👁️ Default all geometry pick kinds enabled (visibility + selection). */
+/** 👁️ Default all geometry pick kinds enabled (visibility + selection). */
 export function defaultSpatialPickKindToggles(): Record<SpatialPickTargetKind, boolean> {
   return Object.fromEntries(SPATIAL_PICK_TARGET_KINDS.map((kind) => [kind, true])) as Record<SpatialPickTargetKind, boolean>;
 }
 
-/** @emoji 👁️ Filters pick targets by visibility (show/hide highlights); does not affect ray pick or selection. */
+/** 👁️ Filters pick targets by visibility (show/hide highlights); does not affect ray pick or selection. */
 export function filterSpatialPickTargetsForVisibility(targets: readonly SpatialPickTarget[], filterKindToggles: SpatialPickKindToggles = {}): SpatialPickTarget[] {
   return targets.filter((target) => filterKindToggles[target.kind] !== false);
 }
 
-/** @emoji 👁️ Reads persisted hide/lock flags from a model document for a pick-target entity id. */
+/** 👁️ Reads persisted hide/lock flags from a model document for a pick-target entity id. */
 export function spatialEntityFlagsForModelEntity(model: Model | null | undefined, entityId: string): SpatialEntityFlags {
   return model?.metadata.getEntityFlags(entityId) ?? {};
 }
 
-/** @emoji 👁️ Excludes hidden/locked entities from canvas pick and selection. */
+/** 👁️ Excludes hidden/locked entities from canvas pick and selection. */
 export function filterSpatialPickTargetsForEntityFlags(targets: readonly SpatialPickTarget[], flagsForId: (entityId: string) => SpatialEntityFlags): SpatialPickTarget[] {
   return targets.filter((target) => worldEntitySelectable(flagsForId(target.id)));
 }
 
-/** @emoji 👁️ Drops locked/hidden entities from committed selection targets. */
+/** 👁️ Drops locked/hidden entities from committed selection targets. */
 export function pruneSelectionTargetsForEntityFlags(targets: readonly SelectionTarget[], flagsForId: (entityId: string) => SpatialEntityFlags): SelectionTarget[] {
   return targets.filter((target) => worldEntitySelectable(flagsForId(target.id)));
 }
 
-/** @emoji 👁️ Effective pick kinds must be both visible and enabled for selection/hover. */
+/** 👁️ Effective pick kinds must be both visible and enabled for selection/hover. */
 export function intersectSpatialPickKindToggles(visibleKindToggles: SpatialPickKindToggles = {}, selectionKindToggles: SpatialPickKindToggles = {}): SpatialPickKindToggles {
   const merged: SpatialPickKindToggles = {};
   for (const kind of SPATIAL_PICK_TARGET_KINDS) {
@@ -799,7 +799,7 @@ export function intersectSpatialPickKindToggles(visibleKindToggles: SpatialPickK
   return merged;
 }
 
-/** @emoji 👁️ Maps active model-definition entity kinds to renderer pick-kind toggles. */
+/** 👁️ Maps active model-definition entity kinds to renderer pick-kind toggles. */
 export function modelDefinitionPickTargetKinds(modelDefinitionId: string | null): readonly SpatialPickTargetKind[] {
   const entityKinds = modelDefinitionSelectionEntityKinds(modelDefinitionId ?? defaultModelDefinitionId());
   const out = new Set<SpatialPickTargetKind>();
@@ -813,25 +813,25 @@ export function modelDefinitionPickTargetKinds(modelDefinitionId: string | null)
   return isShapeModelDefinition(modelDefinitionId) ? SPATIAL_PICK_TARGET_KINDS : ["object"];
 }
 
-/** @emoji 👁️ Default visibility/selection toggles for kinds allowed by the active model definition. */
+/** 👁️ Default visibility/selection toggles for kinds allowed by the active model definition. */
 export function defaultSpatialPickKindTogglesForModelDefinition(modelDefinitionId: string | null): Record<SpatialPickTargetKind, boolean> {
   const allowed = new Set(modelDefinitionPickTargetKinds(modelDefinitionId));
   return Object.fromEntries(SPATIAL_PICK_TARGET_KINDS.map((kind) => [kind, allowed.has(kind)])) as Record<SpatialPickTargetKind, boolean>;
 }
 
-/** @emoji 👁️ Typology ids declared on the active model definition (sorted). */
+/** 👁️ Typology ids declared on the active model definition (sorted). */
 export function modelDefinitionTypologyIds(modelDefinitionId: string | null): readonly string[] {
   return listTypologiesForModelDefinition(modelDefinitionId ?? defaultModelDefinitionId())
     .map((row) => row.id)
     .sort((a, b) => a.localeCompare(b));
 }
 
-/** @emoji 👁️ Default all typologies on the active model definition enabled for show/selection. */
+/** 👁️ Default all typologies on the active model definition enabled for show/selection. */
 export function defaultSpatialTypologyTogglesForModelDefinition(modelDefinitionId: string | null): Record<string, boolean> {
   return Object.fromEntries(modelDefinitionTypologyIds(modelDefinitionId).map((id) => [id, true]));
 }
 
-/** @emoji 🏷️ Short typology label for play chrome (`Base Plate` → `BasePlate`). */
+/** 🏷️ Short typology label for play chrome (`Base Plate` → `BasePlate`). */
 export function spatialTypologyToggleLabel(typologyId: string, label?: string): string {
   if (label?.trim()) return typologyObjectPascalFromLabel(label);
   const tail = typologyId.split(".").pop() ?? typologyId;
@@ -843,12 +843,12 @@ function typologyToggleAllowsTarget(target: SpatialPickTarget, toggles: SpatialT
   return typologyIds.some((id) => toggles[id] !== false);
 }
 
-/** @emoji 👁️ Filters pick targets by typology show/selection toggles. */
+/** 👁️ Filters pick targets by typology show/selection toggles. */
 export function filterSpatialPickTargetsForTypologyToggles(targets: readonly SpatialPickTarget[], toggles: SpatialTypologyToggles, typologyIds: readonly string[]): SpatialPickTarget[] {
   return targets.filter((target) => typologyToggleAllowsTarget(target, toggles, typologyIds));
 }
 
-/** @emoji 👁️ Derives per-kind toggles from typology-filtered targets (scene layers + legacy gates). */
+/** 👁️ Derives per-kind toggles from typology-filtered targets (scene layers + legacy gates). */
 export function spatialPickKindTogglesFromTypologyFilteredTargets(modelDefinitionId: string | null, visibleTargets: readonly SpatialPickTarget[]): SpatialPickKindToggles {
   const allowed = new Set(modelDefinitionPickTargetKinds(modelDefinitionId));
   const merged: SpatialPickKindToggles = {};
@@ -858,7 +858,7 @@ export function spatialPickKindTogglesFromTypologyFilteredTargets(modelDefinitio
   return merged;
 }
 
-/** @emoji 👁️ Scene-layer pick-kind toggles from model definition + primitive show toggles (not typology pick targets). */
+/** 👁️ Scene-layer pick-kind toggles from model definition + primitive show toggles (not typology pick targets). */
 export function spatialSceneKindTogglesForModelDefinition(modelDefinitionId: string | null, primitiveToggles: SpatialPrimitiveToggles = defaultSpatialPrimitiveToggles()): SpatialPickKindToggles {
   const toggles = defaultSpatialPickKindTogglesForModelDefinition(modelDefinitionId);
   if (primitiveToggles.vertex === false && primitiveToggles.anchor === false) toggles.vertex = false;
@@ -868,21 +868,21 @@ export function spatialSceneKindTogglesForModelDefinition(modelDefinitionId: str
   return toggles;
 }
 
-/** @emoji 👁️ Per-primitive on/off map for play chrome (`false` disables show or filter). */
+/** 👁️ Per-primitive on/off map for play chrome (`false` disables show or filter). */
 export type SpatialPrimitiveToggles = Partial<Record<ModelEntityKind, boolean>>;
 
-/** @emoji 🧱️ Factory primitive kinds toggled in play (anchor → solid). */
+/** 🧱️ Factory primitive kinds toggled in play (anchor → solid). */
 export const SPATIAL_PRIMITIVE_KINDS: readonly ModelEntityKind[] = PRIMITIVE_MODEL_ENTITY_KINDS;
 
-/** @emoji 👁️ Default all factory primitive kinds enabled for show/filter. */
+/** 👁️ Default all factory primitive kinds enabled for show/filter. */
 export function defaultSpatialPrimitiveToggles(): Record<ModelEntityKind, boolean> {
   return Object.fromEntries(SPATIAL_PRIMITIVE_KINDS.map((kind) => [kind, true])) as Record<ModelEntityKind, boolean>;
 }
 
-/** @emoji ☑️ Aggregate enabled state for a fixed-key boolean toggle map (`false` = off). */
+/** ☑️ Aggregate enabled state for a fixed-key boolean toggle map (`false` = off). */
 export type SpatialToggleGroupState = "all" | "none" | "partial";
 
-/** @emoji ☑️ Returns whether every key is on, every key is off, or the group is mixed. */
+/** ☑️ Returns whether every key is on, every key is off, or the group is mixed. */
 export function spatialToggleGroupState(keys: readonly string[], toggles: Readonly<Record<string, boolean | undefined>>): SpatialToggleGroupState {
   if (keys.length === 0) return "none";
   let on = 0;
@@ -894,24 +894,24 @@ export function spatialToggleGroupState(keys: readonly string[], toggles: Readon
   return "partial";
 }
 
-/** @emoji ☑️ Sets every key in a chrome toggle group on or off. */
+/** ☑️ Sets every key in a chrome toggle group on or off. */
 export function spatialToggleGroupFill<T extends string>(keys: readonly T[], enabled: boolean): Record<T, boolean> {
   return Object.fromEntries(keys.map((key) => [key, enabled])) as Record<T, boolean>;
 }
 
-/** @emoji ☑️ Maps a chrome group aggregate onto the owned native checkbox state. */
+/** ☑️ Maps a chrome group aggregate onto the owned native checkbox state. */
 export function spatialToggleCheckboxState(state: SpatialToggleGroupState): CheckboxState {
   if (state === "partial") return "indeterminate";
   return state === "all";
 }
 
-/** @emoji 🧭️ Resolves the primitive entity kind for a pick target (typology object rows → `null`). */
+/** 🧭️ Resolves the primitive entity kind for a pick target (typology object rows → `null`). */
 export function pickTargetPrimitiveKind(target: SpatialPickTarget): ModelEntityKind | null {
   if (target.kind === "object" && !target.geometryKind) return null;
   return target.geometryKind ?? kernelGeometryKindForObjectPick(target.kind as SpatialGeometryPickTargetKind, target.geometryKind);
 }
 
-/** @emoji 👁️ Filters pick targets by primitive show/filter toggles (typology object rows pass through). */
+/** 👁️ Filters pick targets by primitive show/filter toggles (typology object rows pass through). */
 export function filterSpatialPickTargetsForPrimitiveToggles(targets: readonly SpatialPickTarget[], toggles: SpatialPrimitiveToggles): SpatialPickTarget[] {
   return targets.filter((target) => {
     const primitive = pickTargetPrimitiveKind(target);
@@ -920,7 +920,7 @@ export function filterSpatialPickTargetsForPrimitiveToggles(targets: readonly Sp
   });
 }
 
-/** @emoji 👁️ Resolves which scene layers stay visible for geometry edit vs typology object picking. */
+/** 👁️ Resolves which scene layers stay visible for geometry edit vs typology object picking. */
 export function resolveSpatialSceneVisibility(
   activeModelDefinitionId: string | null,
   filterKindToggles: SpatialPickKindToggles = {},
@@ -949,7 +949,7 @@ function spatialPickKindsForActiveView(activeModelDefinitionId: string | null): 
   return new Set(modelDefinitionPickTargetKinds(activeModelDefinitionId));
 }
 
-/** @emoji 👁️ Keeps pick targets allowed by the active model definition (primitives + typology objects). */
+/** 👁️ Keeps pick targets allowed by the active model definition (primitives + typology objects). */
 export function filterSpatialPickTargetsForActiveView(targets: readonly SpatialPickTarget[], activeModelDefinitionId: string | null): SpatialPickTarget[] {
   const mdId = activeModelDefinitionId ?? defaultModelDefinitionId();
   const allowedPickKinds = spatialPickKindsForActiveView(mdId);
@@ -976,7 +976,7 @@ function asRecordBucket<T extends { id: string }>(x: readonly T[] | Record<strin
   return Array.isArray(x) ? recordsById(x) : (x as Record<string, T>);
 }
 
-/** @emoji 🧲️ Normalizes `ModelJson` array buckets to the record shape used by interaction math. */
+/** 🧲️ Normalizes `ModelJson` array buckets to the record shape used by interaction math. */
 function geometryBuckets(g: SpatialPickGeometry): {
   readonly anchors: Record<string, AnchorRecord>;
   readonly vertices: Record<string, VertexRecord>;
@@ -1022,14 +1022,14 @@ function geometryEdgePoints(vertices: Record<string, VertexRecord>, edge: EdgeRe
   return scenePreview().edgeSamplePoints(vertices, edge, 32);
 }
 
-/** @emoji 📍️ NURBS poles on an edge (control points or through-points per `curve.through`). */
+/** 📍️ NURBS poles on an edge (control points or through-points per `curve.through`). */
 export function nurbsPolesFromEdge(edge: EdgeRecord): readonly Vec3[] | null {
   const curve = edge.curve;
   if (curve?.kind !== "nurbs" || curve.poles.length < 2) return null;
   return curve.poles;
 }
 
-/** @emoji 📍️ NURBS poles for edge/wire pick highlights when selected or hovered. */
+/** 📍️ NURBS poles for edge/wire pick highlights when selected or hovered. */
 export function geometryEntityNurbsPoles(buckets: ReturnType<typeof geometryBuckets>, kind: ModelEntityKind, id: string): readonly Vec3[] {
   if (kind === "edge" && buckets.edges[id]) {
     return nurbsPolesFromEdge(buckets.edges[id]!) ?? [];
@@ -1093,7 +1093,7 @@ function geometryEntityPointsForPickTarget(buckets: ReturnType<typeof geometryBu
   return geometryEntityPoints(buckets, geometryKind, target.id);
 }
 
-/** @emoji 📐️ Consecutive segment pairs along a sampled edge polyline. */
+/** 📐️ Consecutive segment pairs along a sampled edge polyline. */
 export function polylineWireSegments(points: readonly Vec3[]): readonly (readonly [Vec3, Vec3])[] {
   if (points.length < 2) return [];
   const out: (readonly [Vec3, Vec3])[] = [];
@@ -1111,7 +1111,7 @@ function geometryWireEdgeSegments(vertices: Record<string, VertexRecord>, edges:
   return out;
 }
 
-/** @emoji 📐️ Geometry wire segments for previews (edges/wires/faces), bbox fallback for aggregates. */
+/** 📐️ Geometry wire segments for previews (edges/wires/faces), bbox fallback for aggregates. */
 export function geometryEntityWireSegments(buckets: ReturnType<typeof geometryBuckets>, kind: ModelEntityKind, id: string): readonly (readonly [Vec3, Vec3])[] {
   if (kind === "edge" && buckets.edges[id]) {
     return geometryWireEdgeSegments(buckets.vertices, buckets.edges, { id, edgeIds: [id] } as unknown as WireRecord);
@@ -1135,7 +1135,7 @@ export function geometryEntityWireSegments(buckets: ReturnType<typeof geometryBu
   return bb ? bboxWireSegments(bb.min, bb.max) : [];
 }
 
-/** @emoji 📐️ All B-rep edge segments for factory geometry wireframe display. */
+/** 📐️ All B-rep edge segments for factory geometry wireframe display. */
 export function collectGeometryEdgeSegments(buckets: ReturnType<typeof geometryBuckets>): readonly (readonly [Vec3, Vec3])[] {
   const out: (readonly [Vec3, Vec3])[] = [];
   for (const edge of geometryRecords(buckets.edges)) {
@@ -1144,7 +1144,7 @@ export function collectGeometryEdgeSegments(buckets: ReturnType<typeof geometryB
   return out;
 }
 
-/** @emoji 📐️ B-rep edge segments limited to revealed factory-geometry members. */
+/** 📐️ B-rep edge segments limited to revealed factory-geometry members. */
 export function collectGeometryEdgeSegmentsForMembers(buckets: ReturnType<typeof geometryBuckets>, revealedMemberKeys: ReadonlySet<string>): readonly (readonly [Vec3, Vec3])[] {
   const out: (readonly [Vec3, Vec3])[] = [];
   for (const edge of geometryRecords(buckets.edges)) {
@@ -1220,7 +1220,7 @@ export function buildGeometryTypologyIndex(model: Model, modelDefinitionId: stri
   return out;
 }
 
-/** @emoji 🧭️ Maps factory geometry member keys (`vertex:v0`, `solid:s0`, …) to owning object ids for reveal gating. */
+/** 🧭️ Maps factory geometry member keys (`vertex:v0`, `solid:s0`, …) to owning object ids for reveal gating. */
 export function buildGeometryObjectIndex(model: Model, modelDefinitionId: string): ReadonlyMap<string, string> {
   const buckets = geometryBuckets(model);
   const out = new Map<string, string>();
@@ -1333,7 +1333,7 @@ function appendPrimitiveSpatialPickTargets(
   }
 }
 
-/** @emoji 🧲️ Builds renderer-side snap/select targets from factory geometry and typology object rows. */
+/** 🧲️ Builds renderer-side snap/select targets from factory geometry and typology object rows. */
 export function createSpatialPickTargets(geometry: SpatialPickGeometry | null | undefined, activeModelDefinitionId?: string | null): readonly SpatialPickTarget[] {
   if (!geometry) return [];
   const buckets = geometryBuckets(geometry);
@@ -1364,7 +1364,7 @@ export function filterSpatialPickTargets(targets: readonly SpatialPickTarget[], 
   });
 }
 
-/** @emoji 🧲️ Creates a statechart event carrying snapped point plus selected geometry metadata. */
+/** 🧲️ Creates a statechart event carrying snapped point plus selected geometry metadata. */
 export function createSpatialPickEvent(kind: SpatialPickKind, point: Vec3, target: SpatialPickTarget | null, modifiers: InteractionEvent["modifiers"] = {}): InteractionEvent {
   const geometryKind = target?.kind === "object" && !target.geometryKind ? "object" : target ? kernelGeometryKindForObjectPick(target.kind as SpatialGeometryPickTargetKind, target.geometryKind) : undefined;
   return target && geometryKind
@@ -1760,18 +1760,18 @@ function defaultDisplayItemNode(item: DisplayItem, geometry?: SpatialPickGeometr
 }
 
 // #region 🎨️HostCustomization
-/** @emoji 🖼️ Host hook that renders one resolved `DisplayItem` inside `<InteractionDisplay>`. */
+/** 🖼️ Host hook that renders one resolved `DisplayItem` inside `<InteractionDisplay>`. */
 export type SpatialDisplayItemRenderer = (item: DisplayItem, geometry: SpatialPickGeometry | null | undefined, defaultRender: () => ReactNode) => ReactNode;
 
 const spatialDisplayItemRenderers = ephemeralMap<string, SpatialDisplayItemRenderer>("s.plugins.cad.modules.renderer.component.tsx.spatialDisplayItemRenderers");
 
-/** @emoji 🖼️ Registers a custom display kind; returns unregister. Libraries extend without forking the package. */
+/** 🖼️ Registers a custom display kind; returns unregister. Libraries extend without forking the package. */
 export function registerSpatialDisplayItemKind(kind: string, render: SpatialDisplayItemRenderer): () => void {
   spatialDisplayItemRenderers.set(kind, render);
   return () => spatialDisplayItemRenderers.delete(kind);
 }
 
-/** @emoji 🖼️ Looks up a host-registered display kind renderer. */
+/** 🖼️ Looks up a host-registered display kind renderer. */
 export function getSpatialDisplayItemKindRenderer(kind: string): SpatialDisplayItemRenderer | undefined {
   return spatialDisplayItemRenderers.get(kind);
 }
@@ -1783,7 +1783,7 @@ function renderDisplayItem(item: DisplayItem, geometry: SpatialPickGeometry | nu
 }
 
 //#region 🔖️TransformGumball
-/** @emoji 📐️ World-space gumball matrix snapshot (Three.js compose order). */
+/** 📐️ World-space gumball matrix snapshot (Three.js compose order). */
 export interface GumballMatrixSnapshot {
   readonly position: Vec3;
   readonly quaternion: readonly [number, number, number, number];
@@ -1809,7 +1809,7 @@ function gumballPoseToMatrixSnapshot(pose: GumballPose | GumballMatrixSnapshot):
   };
 }
 
-/** @emoji 🎛️ Applies a gumball world-matrix delta to vertices and nurbs poles on topology-selected targets. */
+/** 🎛️ Applies a gumball world-matrix delta to vertices and nurbs poles on topology-selected targets. */
 export function transformGumballMatrixDiff(model: Model, targets: readonly SelectionTarget[], before: GumballMatrixSnapshot, after: GumballMatrixSnapshot, pivot?: Vec3): ModelDiff {
   const pivotPoint = pivot ?? before.position;
   const pivotV = new THREE.Vector3(pivotPoint[0], pivotPoint[1], pivotPoint[2]);
@@ -1828,7 +1828,7 @@ export function transformGumballMatrixDiff(model: Model, targets: readonly Selec
   });
 }
 
-/** @emoji 🎛️ R3F gumball for multi-target primitive transforms (pivot at selection bbox center). */
+/** 🎛️ R3F gumball for multi-target primitive transforms (pivot at selection bbox center). */
 export function SpatialTransformGumball(props: {
   readonly config: CadGumballConfig;
   readonly model: Model;
@@ -1910,7 +1910,7 @@ export function SpatialTransformGumball(props: {
 }
 //#endregion 🔖️TransformGumball
 
-/** @emoji 🪩️ Optional scene slots for host overlays (gizmos, annotations, alternate lighting). */
+/** 🪩️ Optional scene slots for host overlays (gizmos, annotations, alternate lighting). */
 export interface InteractionSpatialViewSlots {
   readonly beforeScene?: ReactNode;
   readonly afterDisplay?: ReactNode;
@@ -1919,7 +1919,7 @@ export interface InteractionSpatialViewSlots {
   readonly environment?: ReactNode;
 }
 
-/** @emoji 🎨️ Theme tokens for default scene chrome (hosts override per product). */
+/** 🎨️ Theme tokens for default scene chrome (hosts override per product). */
 export interface InteractionSpatialViewTheme {
   readonly background?: string;
   readonly ambientIntensity?: number;
@@ -1942,7 +1942,7 @@ export const defaultInteractionSpatialViewTheme: InteractionSpatialViewTheme = {
 // #endregion 🎨️HostCustomization
 
 // #region 🎨️SpatialSceneColors
-/** @emoji 🎨️ Resolved product palette for spatial canvas materials (no ad-hoc hex in hosts). */
+/** 🎨️ Resolved product palette for spatial canvas materials (no ad-hoc hex in hosts). */
 export interface SpatialSceneColorPalette {
   readonly canvas: string;
   readonly accent: string;
@@ -2021,7 +2021,7 @@ function readSpatialCssColor(variable: string, fallbackKey: string): string {
 
 const spatialSceneColorCache = ephemeralBox<SpatialSceneColorPalette | null>("s.plugins.cad.modules.renderer.component.tsx.spatialSceneColorCache", null);
 
-/** @emoji 🎨️ Reads `--canvas`, `--accent`, and selection tokens for Three.js materials. */
+/** 🎨️ Reads `--canvas`, `--accent`, and selection tokens for Three.js materials. */
 export function spatialSceneColors(): SpatialSceneColorPalette {
   if (spatialSceneColorCache.current) return spatialSceneColorCache.current;
   const accent = readSpatialCssColor("--accent", "tertiary");
@@ -2068,7 +2068,7 @@ export function spatialSceneColors(): SpatialSceneColorPalette {
   return spatialSceneColorCache.current;
 }
 
-/** @emoji 🔄️ Clears cached CSS palette (tests or theme switches). */
+/** 🔄️ Clears cached CSS palette (tests or theme switches). */
 export function resetSpatialSceneColorCache(): void {
   spatialSceneColorCache.current = null;
   clearColorResolveCache();
@@ -2083,7 +2083,7 @@ const cadFieldClass = "h-medium w-full bg-transparent text-element";
 const ENUM_FIELD_NONE_VALUE = "__none__";
 // #endregion 🎨️SpatialSceneColors
 
-/** @emoji 🖼️ Maps `DisplayModel.items` to R3F nodes (must live under `<Canvas>`). */
+/** 🖼️ Maps `DisplayModel.items` to R3F nodes (must live under `<Canvas>`). */
 export function InteractionDisplay({ model, geometry, renderItem }: { readonly model: DisplayModel; readonly geometry?: SpatialPickGeometry | null; readonly renderItem?: SpatialDisplayItemRenderer }): ReactNode {
   return (
     <group>
@@ -2105,7 +2105,7 @@ function pointerModifiers(event: ThreeEvent<PointerEvent>) {
   };
 }
 
-/** @emoji 🖱️ Ground hit-test on the **XY** working plane at fixed world **Z** (= spatial footprint plane; factory height is world Z). */
+/** 🖱️ Ground hit-test on the **XY** working plane at fixed world **Z** (= spatial footprint plane; factory height is world Z). */
 export interface GroundPickPlaneProps {
   readonly planeZ?: number;
   readonly enabled?: boolean;
@@ -2153,7 +2153,7 @@ function vec3FromSnapshotContext(ctx: Record<string, unknown>, key: string): Vec
 
 const HEIGHT_DRAG_PLANE_X_OFFSET = 0.06;
 
-/** @emoji 📍️ Projects `ray` onto the infinite world-Z line through `origin` (Z may be negative). */
+/** 📍️ Projects `ray` onto the infinite world-Z line through `origin` (Z may be negative). */
 export function projectRayToVerticalZLine(ray: ThreeRay, origin: Vec3): Vec3 {
   const [ox, oy, oz] = origin;
   const ro = ray.origin;
@@ -2170,7 +2170,7 @@ export function projectRayToVerticalZLine(ray: ThreeRay, origin: Vec3): Vec3 {
   return [ox, oy, z];
 }
 
-/** @emoji 📍️ Intersects `ray` with the YZ plane at fixed world X. */
+/** 📍️ Intersects `ray` with the YZ plane at fixed world X. */
 export function projectRayToYzPlaneAtX(ray: ThreeRay, planeX: number): Vec3 | null {
   const plane = new THREE.Plane(new THREE.Vector3(1, 0, 0), -planeX);
   const hit = new THREE.Vector3();
@@ -2186,7 +2186,7 @@ function pointerRayFromClient(client: { readonly x: number; readonly y: number }
 
 type SpatialConstrainedPointerMode = "vertical-z" | "height-yz";
 
-/** @emoji 🖱️ Canvas raycast cursor constraint (vertical Z rod or YZ height wall) independent of pick-mesh hit. */
+/** 🖱️ Canvas raycast cursor constraint (vertical Z rod or YZ height wall) independent of pick-mesh hit. */
 function SpatialConstrainedPointerBridge({
   mode,
   origin,
@@ -2230,7 +2230,7 @@ function SpatialConstrainedPointerBridge({
   return null;
 }
 
-/** @emoji 🖱️ YZ wall at the second corner so `pointer.move` changes world Z (factory height uses |Δz|). */
+/** 🖱️ YZ wall at the second corner so `pointer.move` changes world Z (factory height uses |Δz|). */
 function HeightDragSurface({ origin, corner }: { readonly origin: Vec3; readonly corner: Vec3 }): ReactNode {
   const z0 = origin[2];
   const zSpan = 10;
@@ -2245,7 +2245,7 @@ function HeightDragSurface({ origin, corner }: { readonly origin: Vec3; readonly
   );
 }
 
-/** @emoji 🖱️ Z-aligned rod at `origin` (visual only; cursor projection is {@link SpatialConstrainedPointerBridge}). */
+/** 🖱️ Z-aligned rod at `origin` (visual only; cursor projection is {@link SpatialConstrainedPointerBridge}). */
 function VerticalZDragRod({ origin }: { readonly origin: Vec3 }): ReactNode {
   const h = 22;
   return (
@@ -2256,7 +2256,7 @@ function VerticalZDragRod({ origin }: { readonly origin: Vec3 }): ReactNode {
   );
 }
 
-/** @emoji 🎮️ Maps R3F pointer events to `InteractionEvent` envelopes (point + modifiers). */
+/** 🎮️ Maps R3F pointer events to `InteractionEvent` envelopes (point + modifiers). */
 export function createR3FInteractionAdapter() {
   const toPoint = (event: ThreeEvent<PointerEvent>): Vec3 => [event.point.x, event.point.y, event.point.z];
   return {
@@ -2433,12 +2433,12 @@ function spatialPickTargetsFromRay(ray: ThreeRay, targets: readonly SpatialPickT
     .map((hit) => hit.target);
 }
 
-/** @emoji 🎨️ Maps a resolved typology style to committed-mesh material props. */
+/** 🎨️ Maps a resolved typology style to committed-mesh material props. */
 export function typologyStyleToMaterialProps(style: ResolvedTypologyStyle): { readonly color: string; readonly emissive: string; readonly opacity: number } {
   return { color: style.color, emissive: style.color, opacity: style.opacity };
 }
 
-/** @emoji 🎨️ Resolves per-solid typology display style from model geometry membership. */
+/** 🎨️ Resolves per-solid typology display style from model geometry membership. */
 export function createSolidTypologyStyleResolver(model: Model, modelDefinitionId: string): (solid: SolidRef) => ResolvedTypologyStyle | undefined {
   const index = buildGeometryTypologyIndex(model, modelDefinitionId);
   return (solid) => {
@@ -2493,27 +2493,27 @@ function pinnedPickTargetKeys(keys: ReadonlySet<string>): ReadonlySet<string> {
   return out;
 }
 
-/** @emoji 🪪️ Expands a hover/selection key across geometry pick aliases (`solid:foo` ↔ `object:foo`). */
+/** 🪪️ Expands a hover/selection key across geometry pick aliases (`solid:foo` ↔ `object:foo`). */
 export function spatialHoverKeyAliases(key: string | null | undefined): ReadonlySet<string> {
   if (!key) return new Set();
   return pinnedPickTargetKeys(new Set([key]));
 }
 
-/** @emoji 🪪️ True when a canvas pick key matches a shared hover/selection key (including aliases). */
+/** 🪪️ True when a canvas pick key matches a shared hover/selection key (including aliases). */
 export function spatialHoverKeysMatch(left: string | null | undefined, right: string | null | undefined): boolean {
   if (!left || !right) return false;
   if (left === right) return true;
   return spatialHoverKeyAliases(left).has(right);
 }
 
-/** @emoji 🪪️ Stable factory-geometry member key for object-reveal lookup. */
+/** 🪪️ Stable factory-geometry member key for object-reveal lookup. */
 export function spatialPickTargetMemberKey(target: SpatialPickTarget): string {
   if (target.kind === "object" && !target.geometryKind) return `object:${target.id}`;
   const geometryKind = target.geometryKind ?? kernelGeometryKindForObjectPick(target.kind as SpatialGeometryPickTargetKind, target.geometryKind);
   return `${geometryKind}:${target.id}`;
 }
 
-/** @emoji 👁️ Object ids whose factory primitives should draw (hover/selection on object or its topology). */
+/** 👁️ Object ids whose factory primitives should draw (hover/selection on object or its topology). */
 export function revealedObjectIdsFromPickKeys(objectIndex: ReadonlyMap<string, string>, hoveredTargetKey: string | null | undefined, selectedTargetKeys: ReadonlySet<string> = new Set()): ReadonlySet<string> {
   const revealed = new Set<string>();
   const consider = (key: string | null | undefined): void => {
@@ -2534,7 +2534,7 @@ function spatialPickTargetObjectRevealed(target: SpatialPickTarget, objectIndex:
   return ownerId !== undefined && revealedObjectIds.has(ownerId);
 }
 
-/** @emoji 🖱️ Maps a document {@link SelectionTarget} to the canvas hover key (typology object when possible). */
+/** 🖱️ Maps a document {@link SelectionTarget} to the canvas hover key (typology object when possible). */
 export function canvasHoverKeyForSelectionTarget(model: Model, modelDefinitionId: string, target: SelectionTarget): string {
   if (target.kind === "object") return selectionTargetHoverKey(target);
   for (const row of listModelObjectsForModelDefinition(model, modelDefinitionId)) {
@@ -2562,24 +2562,24 @@ function spatialSelectionTarget(target: SpatialPickTarget): SelectionTarget {
   return { kind: geometryKind, id: target.id, editable: true };
 }
 
-/** @emoji 🎯️ Host geometry picking when browse is idle, session finished, or interaction defers picks (`pickDisabledStates`). */
+/** 🎯️ Host geometry picking when browse is idle, session finished, or interaction defers picks (`pickDisabledStates`). */
 export function replHostGeometryPickingEnabled(interactionId: string, spec: InteractionSpec, state: string): boolean {
   if (!interactionId) return true;
   if (!isInteractionSessionActive(spec, state)) return true;
   return mergeInteractionSpatial(spec).pickDisabledStates.includes(state);
 }
 
-/** @emoji 👁️ Pick-target overlay visible whenever the active model definition uses factory geometry picking. */
+/** 👁️ Pick-target overlay visible whenever the active model definition uses factory geometry picking. */
 export function replGeometryPickLayerVisible(modelDefinitionId: string | null): boolean {
   return modelDefinitionUsesGeometryPicking(modelDefinitionId ?? defaultModelDefinitionId());
 }
 
-/** @emoji 🖱️ Returns the closest pick target eligible for hover highlighting along a ray. */
+/** 🖱️ Returns the closest pick target eligible for hover highlighting along a ray. */
 export function pickHoverTargetFromRay(ray: ThreeRay, targets: readonly SpatialPickTarget[], hoverKindToggles: SpatialPickKindToggles = {}): SpatialPickTarget | null {
   return spatialPickTargetsFromRay(ray, targets, [], hoverKindToggles)[0] ?? null;
 }
 
-/** @emoji 📌️ Renders visibility-enabled pick highlights plus pinned hover/selection targets. */
+/** 📌️ Renders visibility-enabled pick highlights plus pinned hover/selection targets. */
 export function resolveSpatialPickTargetsToRender(
   viewTargets: readonly SpatialPickTarget[],
   filterKindToggles: SpatialPickKindToggles = {},
@@ -2615,7 +2615,7 @@ export function resolveSpatialPickTargetsToRender(
   return out;
 }
 
-/** @emoji 👁️ Visual-only pick-target highlight; hit-testing is handled by `SpatialPickRayCatcher`. */
+/** 👁️ Visual-only pick-target highlight; hit-testing is handled by `SpatialPickRayCatcher`. */
 function SpatialPickTargetNode({
   target,
   geometry = null,
@@ -2704,7 +2704,7 @@ function SpatialPickTargetNode({
   );
 }
 
-/** @emoji 🧵️ Draws all geometry edges for imported factory geometry (one batched `lineSegments`). */
+/** 🧵️ Draws all geometry edges for imported factory geometry (one batched `lineSegments`). */
 function GeometryFactoryWireframeLayer({ geometry, visible = true, revealedMemberKeys }: { readonly geometry?: SpatialPickGeometry | null; readonly visible?: boolean; readonly revealedMemberKeys?: ReadonlySet<string> | null }): ReactNode {
   const segments = reactHostPort.useMemo(() => {
     if (!geometry) return [] as readonly (readonly [Vec3, Vec3])[];
@@ -2738,7 +2738,7 @@ function GeometryFactoryWireframeLayer({ geometry, visible = true, revealedMembe
   );
 }
 
-/** @emoji 🧲️ Renders optional factory geometry as pickable snap/select targets. */
+/** 🧲️ Renders optional factory geometry as pickable snap/select targets. */
 //#region 🧲️SpatialPickGeometryLayer
 export function SpatialPickGeometryLayer({
   geometry,
@@ -2761,7 +2761,7 @@ export function SpatialPickGeometryLayer({
   readonly geometryPreviewTransform?: ((point: Vec3) => Vec3) | null;
   readonly selectionAccept?: readonly ModelEntityKind[];
   readonly selectionKindToggles?: SpatialPickKindToggles;
-  /** @emoji 👁️ Which kinds are drawn as pick-target highlights (independent of selection). */
+  /** 👁️ Which kinds are drawn as pick-target highlights (independent of selection). */
   readonly filterKindToggles?: SpatialPickKindToggles;
   readonly hoveredTargetKey?: string | null;
   readonly selectedTargetKey?: string | null;
@@ -2825,7 +2825,7 @@ export function SpatialPickGeometryLayer({
   );
 }
 
-/** @emoji 🖱️ Invisible pick proxy for a spatial target (visual highlight is on {@link SpatialPickTargetNode}). */
+/** 🖱️ Invisible pick proxy for a spatial target (visual highlight is on {@link SpatialPickTargetNode}). */
 function SpatialPickHitTarget({
   target,
   geometryPreviewTransform = null,
@@ -2940,7 +2940,7 @@ vec3 applyTypologyPattern(vec3 baseColor, vec3 worldPos, vec3 surfaceNormal) {
 }
 `;
 
-/** @emoji 🎨️ Builds or reuses a shaded material with optional procedural typology pattern. */
+/** 🎨️ Builds or reuses a shaded material with optional procedural typology pattern. */
 export function createTypologyStyledMaterial(style: ResolvedTypologyStyle): ThreeMeshStandardMaterial {
   const key = typologyStyleCacheKey(style);
   const cached = typologyPatternMaterialCache.get(key);
@@ -2985,12 +2985,12 @@ const CAD_WORLD_CHUNK_SIZE = 256;
 const CAD_WORLD_MAX_DISTANCE = 8000;
 const cadMeshGeometryPool = createTemplatePool<string, ThreeBufferGeometry>();
 
-/** @emoji 📍️ Chunk anchor at mesh bounds center for view-radius streaming. */
+/** 📍️ Chunk anchor at mesh bounds center for view-radius streaming. */
 export function meshTransferOrigin(mesh: MeshTransfer): Vec3 {
   return boundsFromMeshTransfers([mesh])?.center ?? [0, 0, 0];
 }
 
-/** @emoji 👁️ Options for object-scoped committed mesh visibility. */
+/** 👁️ Options for object-scoped committed mesh visibility. */
 export interface CommittedMeshVisibilityOptions {
   readonly flagsForId?: (entityId: string) => SpatialEntityFlags;
   readonly typologyToggles?: SpatialTypologyToggles;
@@ -3033,7 +3033,7 @@ function orderedWireBoundaryPoints(vertices: Readonly<Record<string, VertexRecor
   return points;
 }
 
-/** @emoji 🧊️ Builds a shaded planar face mesh from factory topology (energy/structure surface primitives). */
+/** 🧊️ Builds a shaded planar face mesh from factory topology (energy/structure surface primitives). */
 export function buildPlanarFaceMeshTransfer(model: Model, faceId: string): MeshTransfer | null {
   const buckets = geometryBuckets(model);
   const face = buckets.faces[faceId];
@@ -3074,7 +3074,7 @@ export function buildPlanarFaceMeshTransfer(model: Model, faceId: string): MeshT
   };
 }
 
-/** @emoji 👁️ Solid ids eligible for committed mesh draw under a model definition (object-scoped). */
+/** 👁️ Solid ids eligible for committed mesh draw under a model definition (object-scoped). */
 export function visibleSolidRefsForModelDefinition(model: Model, modelDefinitionId: string, options: CommittedMeshVisibilityOptions = {}): ReadonlySet<string> {
   const flagsForId = options.flagsForId ?? ((): SpatialEntityFlags => ({}));
   const typologyToggles = options.typologyToggles ?? {};
@@ -3100,7 +3100,7 @@ export function visibleSolidRefsForModelDefinition(model: Model, modelDefinition
   return out;
 }
 
-/** @emoji 👁️ Face ids eligible for factory surface shading under a model definition (typology surface primitives only). */
+/** 👁️ Face ids eligible for factory surface shading under a model definition (typology surface primitives only). */
 export function visibleFaceRefsForModelDefinition(model: Model, modelDefinitionId: string, options: CommittedMeshVisibilityOptions = {}): ReadonlySet<string> {
   const flagsForId = options.flagsForId ?? ((): SpatialEntityFlags => ({}));
   const typologyToggles = options.typologyToggles ?? {};
@@ -3124,7 +3124,7 @@ export interface FactoryFaceMeshRow {
   readonly style?: ResolvedTypologyStyle;
 }
 
-/** @emoji 🧊️ Lists planar face meshes for typology-owned surface primitives (energy/structure panes). */
+/** 🧊️ Lists planar face meshes for typology-owned surface primitives (energy/structure panes). */
 export function listFactoryFaceMeshesForModelDefinition(model: Model, modelDefinitionId: string, options: CommittedMeshVisibilityOptions = {}): readonly FactoryFaceMeshRow[] {
   const allowed = visibleFaceRefsForModelDefinition(model, modelDefinitionId, options);
   if (allowed.size === 0) return [];
@@ -3139,7 +3139,7 @@ export function listFactoryFaceMeshesForModelDefinition(model: Model, modelDefin
   return rows;
 }
 
-/** @emoji 👁️ Filters tessellated committed meshes to visible object-owned solids. */
+/** 👁️ Filters tessellated committed meshes to visible object-owned solids. */
 export function filterCommittedMeshesForModelDefinition(
   model: Model,
   modelDefinitionId: string,
@@ -3151,7 +3151,7 @@ export function filterCommittedMeshesForModelDefinition(
   return meshes.filter((row) => allowed.has(String(row.solid)));
 }
 
-/** @emoji 👁️ Resolves hide/lock flags including object ownership for factory geometry members. */
+/** 👁️ Resolves hide/lock flags including object ownership for factory geometry members. */
 export function resolveSpatialEntityFlags(model: Model, modelDefinitionId: string, entityId: string): SpatialEntityFlags {
   const direct = model.getEntityFlags(entityId);
   if (direct.hidden === true || direct.locked === true) return direct;
@@ -3164,7 +3164,7 @@ export function resolveSpatialEntityFlags(model: Model, modelDefinitionId: strin
   return { ...direct, ...(ownerFlags.hidden === true ? { hidden: true } : {}), ...(ownerFlags.locked === true ? { locked: true } : {}) };
 }
 
-/** @emoji 🧊️ Builds a Three.js `BufferGeometry` from a kernel `MeshTransfer` (face groups preserved). */
+/** 🧊️ Builds a Three.js `BufferGeometry` from a kernel `MeshTransfer` (face groups preserved). */
 export function buildBufferGeometryFromMeshTransfer(data: MeshTransfer): ThreeBufferGeometry {
   const geo = new THREE.BufferGeometry();
   if (!isRenderableMeshTransfer(data)) return geo;
@@ -3175,7 +3175,7 @@ export function buildBufferGeometryFromMeshTransfer(data: MeshTransfer): ThreeBu
   return geo;
 }
 
-/** @emoji 🎯️ Maps a picked triangle index to B-Rep `FaceInfo` via grouped buffer ranges. */
+/** 🎯️ Maps a picked triangle index to B-Rep `FaceInfo` via grouped buffer ranges. */
 export function resolveFaceInfoFromTriangleIndex(mesh: MeshTransfer, triangleIndex: number | null | undefined): FaceInfo | null {
   if (triangleIndex === null || triangleIndex === undefined) return null;
   const group = findFaceGroupAt(mesh.faceGroups, triangleIndex);
@@ -3183,7 +3183,7 @@ export function resolveFaceInfoFromTriangleIndex(mesh: MeshTransfer, triangleInd
   return mesh.faceInfos.find((info: FaceInfo) => info.entityId === group.entityId) ?? null;
 }
 
-/** @emoji ➖️ B-Rep edge overlay from `MeshTransfer.edges` (kernel `meshEdges`, not triangle edges). */
+/** ➖️ B-Rep edge overlay from `MeshTransfer.edges` (kernel `meshEdges`, not triangle edges). */
 function CommittedEdgeOverlay({ data, visible = true, edgeColor }: { readonly data: MeshTransfer; readonly visible?: boolean; readonly edgeColor?: string }): ReactNode {
   const geometry = reactHostPort.useMemo(() => {
     const geo = new THREE.BufferGeometry();
@@ -3199,7 +3199,7 @@ function CommittedEdgeOverlay({ data, visible = true, edgeColor }: { readonly da
   );
 }
 
-/** @emoji 🎨️ Resolves face material properties (color, emissive, intensity, opacity, transparent) for committed solid meshes, handling selection and hover states. */
+/** 🎨️ Resolves face material properties (color, emissive, intensity, opacity, transparent) for committed solid meshes, handling selection and hover states. */
 export function resolveCommittedMeshMaterialProps(
   style: ResolvedTypologyStyle | undefined,
   defaultColor: string | undefined,
@@ -3271,7 +3271,7 @@ export interface TessellatedCommitMeshProps {
 
 export const COMMITTED_MESH_FACE_OPACITY = 0.72;
 
-/** @emoji 🧊️ Shaded B-Rep mesh + edge overlay; optional face picking via `faceIndex`. */
+/** 🧊️ Shaded B-Rep mesh + edge overlay; optional face picking via `faceIndex`. */
 export function TessellatedCommitMesh({
   mesh: data,
   style,
@@ -3378,7 +3378,7 @@ function ChunkedCommitMeshRow(
   return <TessellatedCommitMesh {...meshProps} />;
 }
 
-/** @emoji 🧊️ Renders typology-owned planar face surfaces (energy/structure surface primitives). */
+/** 🧊️ Renders typology-owned planar face surfaces (energy/structure surface primitives). */
 export function FactoryFaceSurfaceLayer({ faces, modelRevision, visible = true }: { readonly faces: readonly FactoryFaceMeshRow[]; readonly modelRevision?: number; readonly visible?: boolean }): ReactNode {
   if (!visible || faces.length === 0) return null;
   const rev = modelRevision ?? 0;
@@ -3399,7 +3399,7 @@ export function FactoryFaceSurfaceLayer({ faces, modelRevision, visible = true }
   );
 }
 
-/** @emoji 🧊️ Renders all committed document solids tessellated by the active kernel. */
+/** 🧊️ Renders all committed document solids tessellated by the active kernel. */
 export function CommittedMeshLayer({
   meshes,
   modelRevision,
@@ -3453,13 +3453,13 @@ export function CommittedMeshLayer({
 // #endregion 🧊️CommittedMesh
 
 // #region 🪝️Hooks
-/** @emoji 🪝️ Memoized `createInteractionRuntime` for React hosts. */
+/** 🪝️ Memoized `createInteractionRuntime` for React hosts. */
 export function useInteractionRuntime(spec: InteractionSpec, opts: InteractionRuntimeOptions): InteractionRuntime {
   const specId = spec.id;
   return reactHostPort.useMemo(() => createInteractionRuntime(spec, opts), [spec, specId, opts]);
 }
 
-/** @emoji 🪝️ Subscribes to `InteractionRuntime` revision updates for React hosts. */
+/** 🪝️ Subscribes to `InteractionRuntime` revision updates for React hosts. */
 export function useInteractionSnapshot(rt: InteractionRuntime): InteractionSnapshot {
   return reactHostPort.useSyncExternalStore(
     (cb) => rt.subscribe(cb),
@@ -3468,12 +3468,12 @@ export function useInteractionSnapshot(rt: InteractionRuntime): InteractionSnaps
   );
 }
 
-/** @emoji 🎛️ Resolves functional or literal host-state updates (testable without React). */
+/** 🎛️ Resolves functional or literal host-state updates (testable without React). */
 export function resolveHostStateNext<T>(value: T, next: T | ((prev: T) => T)): T {
   return typeof next === "function" ? (next as (prev: T) => T)(value) : next;
 }
 
-/** @emoji 🎛️ Controlled-or-uncontrolled state slice for embeddable spatial hosts. */
+/** 🎛️ Controlled-or-uncontrolled state slice for embeddable spatial hosts. */
 export function useHostState<T>(controlled: T | undefined, onChange: ((value: T) => void) | undefined, initial: T | (() => T)): readonly [T, (next: T | ((prev: T) => T)) => void] {
   const [internal, setInternal] = reactHostPort.useState(initial);
   const isControlled = controlled !== undefined;
@@ -3506,7 +3506,7 @@ export const CAD_WORLD_FORWARD: Vec3 = [0, 1, 0];
 
 export const CAD_WORLD_UP: Vec3 = [0, 0, 1];
 
-/** @emoji 🧭️ Overrides Three.js' Y-up defaults with the CAD world frame. */
+/** 🧭️ Overrides Three.js' Y-up defaults with the CAD world frame. */
 export function applyCadWorldCoordinateSystem(camera: ThreeCamera, scene: ThreeScene): void {
   camera.up.set(CAD_WORLD_UP[0], CAD_WORLD_UP[1], CAD_WORLD_UP[2]);
   scene.up.set(CAD_WORLD_UP[0], CAD_WORLD_UP[1], CAD_WORLD_UP[2]);
@@ -3521,10 +3521,10 @@ function InteractionCadWorldCoordinateSystem(): null {
 export interface InteractionCanvasProps {
   readonly children: ReactNode;
   readonly onCanvasReady?: (binding: { readonly camera: ThreeCamera; readonly domElement: HTMLCanvasElement }) => void;
-  /** @emoji 🎞️ `always` while an interaction session runs; `demand` when idle for GPU savings. */
+  /** 🎞️ `always` while an interaction session runs; `demand` when idle for GPU savings. */
   readonly frameloop?: "always" | "demand";
   readonly background?: string;
-  /** @emoji 📷️ When true, children own the default camera (display view templates); omit canvas-owned perspective. */
+  /** 📷️ When true, children own the default camera (display view templates); omit canvas-owned perspective. */
   readonly managedCamera?: boolean;
   readonly cameraPosition?: Vec3;
   readonly cameraFov?: number;
@@ -3547,7 +3547,7 @@ export interface InteractionCanvasProps {
   readonly overlay?: ReactNode;
 }
 
-/** @emoji 📡️ Host event callbacks accepted by {@link InteractionCanvas}. */
+/** 📡️ Host event callbacks accepted by {@link InteractionCanvas}. */
 export type InteractionCanvasHostCallbacks = Pick<
   InteractionCanvasProps,
   "onCanvasReady" | "onPointerDown" | "onPointerMove" | "onPointerUp" | "onPointerLeave" | "onPointerCancel" | "onWheel" | "onContextMenu" | "onDoubleClick" | "onLostPointerCapture"
@@ -3560,7 +3560,7 @@ export function spatialAutoFitShouldRun(behavior: SpatialAutoFitBehavior, key: s
   return behavior === "changes" || !hasApplied;
 }
 
-/** @emoji 🛰️ Frames the camera to fit committed meshes and/or factory geometry (playground auto-fit). */
+/** 🛰️ Frames the camera to fit committed meshes and/or factory geometry (playground auto-fit). */
 export function SpatialAutoFit({
   meshes,
   geometry = null,
@@ -3606,7 +3606,7 @@ export function applySpatialAutoFitCamera(camera: ThreeCamera, bounds: { readonl
   }
 }
 
-/** @emoji 🧊️ Invalidates the canvas when committed meshes first become available (demand frameloop / async tessellation). */
+/** 🧊️ Invalidates the canvas when committed meshes first become available (demand frameloop / async tessellation). */
 function CommittedMeshesReadyInvalidate({ meshes }: { readonly meshes: readonly MeshTransfer[] }): null {
   const invalidate = useThree((state) => state.invalidate);
   const prevCount = reactHostPort.useRef(0);
@@ -3619,7 +3619,7 @@ function CommittedMeshesReadyInvalidate({ meshes }: { readonly meshes: readonly 
   return null;
 }
 
-/** @emoji 🔄️ Invalidates demand frameloop when host-driven scene visuals change. */
+/** 🔄️ Invalidates demand frameloop when host-driven scene visuals change. */
 function InvalidateOnRevision({ revision }: { readonly revision: string | number }): null {
   const invalidate = useThree((state) => state.invalidate);
   reactHostPort.useEffect(() => {
@@ -3628,7 +3628,7 @@ function InvalidateOnRevision({ revision }: { readonly revision: string | number
   return null;
 }
 
-/** @emoji 🎯️ Redraws when host selection pick keys change (demand frameloop). */
+/** 🎯️ Redraws when host selection pick keys change (demand frameloop). */
 function InteractionSelectionInvalidateBridge({ selectionKey }: { readonly selectionKey: string }): null {
   const invalidate = useThree((state) => state.invalidate);
   reactHostPort.useEffect(() => {
@@ -3637,7 +3637,7 @@ function InteractionSelectionInvalidateBridge({ selectionKey }: { readonly selec
   return null;
 }
 
-/** @emoji 🪩️ Root infinite-world canvas for factory viewports ({@link WorldCanvas}, z-up). */
+/** 🪩️ Root infinite-world canvas for factory viewports ({@link WorldCanvas}, z-up). */
 export function InteractionCanvas({
   children,
   onCanvasReady,
@@ -3700,7 +3700,7 @@ export interface InteractionSpatialViewProps {
   readonly previewKernel?: SpatialPreviewKernel;
   readonly snapshot: InteractionSnapshot;
   readonly onGroundPick?: (point: Vec3, event: InteractionEvent) => void;
-  /** @emoji 🖱️ `pointer.move` hits ground (XY at fixed Z); height slab passes full 3D. */
+  /** 🖱️ `pointer.move` hits ground (XY at fixed Z); height slab passes full 3D. */
   readonly onScenePointerMove?: (point: Vec3, event: InteractionEvent) => void;
   readonly onInteractionEvent?: (event: InteractionEvent) => void;
   readonly pickEnabled?: boolean;
@@ -3708,19 +3708,19 @@ export interface InteractionSpatialViewProps {
   readonly committedMeshes?: readonly { readonly solid: SolidRef; readonly mesh: MeshTransfer }[];
   readonly factoryFaceMeshes?: readonly FactoryFaceMeshRow[];
   readonly geometry?: SpatialPickGeometry | null;
-  /** @emoji 🧲️ Pick-target source; defaults to `geometry` (use spatial.shape geometry when the active model is typology-only). */
+  /** 🧲️ Pick-target source; defaults to `geometry` (use spatial.shape geometry when the active model is typology-only). */
   readonly pickGeometry?: SpatialPickGeometry | null;
   readonly activeModelDefinitionId?: string | null;
   readonly modelDefinitionRevision?: number;
-  /** @emoji 🖼️ When set, drives `InteractionDisplay` instead of `snapshot.display` (e.g. merged archived footprints). */
+  /** 🖼️ When set, drives `InteractionDisplay` instead of `snapshot.display` (e.g. merged archived footprints). */
   readonly displayModel?: DisplayModel;
   readonly renderDisplayItem?: SpatialDisplayItemRenderer;
   readonly selectionAccept?: readonly ModelEntityKind[];
   readonly filterKindToggles?: SpatialPickKindToggles;
-  /** @emoji 👁️ Committed mesh / factory wireframe visibility; defaults to {@link spatialSceneKindTogglesForModelDefinition}. */
+  /** 👁️ Committed mesh / factory wireframe visibility; defaults to {@link spatialSceneKindTogglesForModelDefinition}. */
   readonly sceneKindToggles?: SpatialPickKindToggles;
   readonly selectionKindToggles?: SpatialPickKindToggles;
-  /** @emoji 🖱️ Hover raycast kind filter; defaults to `selectionKindToggles` when omitted. */
+  /** 🖱️ Hover raycast kind filter; defaults to `selectionKindToggles` when omitted. */
   readonly hoverKindToggles?: SpatialPickKindToggles;
   readonly hoveredTargetKey?: string | null;
   readonly selectedTargetKey?: string | null;
@@ -3733,14 +3733,14 @@ export interface InteractionSpatialViewProps {
   readonly onSnapshotStateChange?: (state: string) => void;
   readonly onSnapshotRevisionChange?: (revision: number) => void;
   readonly onPickEnabledChange?: (enabled: boolean) => void;
-  /** @emoji 🧲️ When false, skips pick-target meshes (during active interaction sessions). */
+  /** 🧲️ When false, skips pick-target meshes (during active interaction sessions). */
   readonly showPickLayer?: boolean;
   readonly committedMeshPickable?: boolean;
   readonly autoFitMeshes?: boolean;
   readonly autoFitBehavior?: SpatialAutoFitBehavior;
   readonly theme?: InteractionSpatialViewTheme;
   readonly slots?: InteractionSpatialViewSlots;
-  /** @emoji 🎛️ When set with targets, shows a gumball at the selection centroid (utility bar move/rotate/scale). */
+  /** 🎛️ When set with targets, shows a gumball at the selection centroid (utility bar move/rotate/scale). */
   readonly transformGumballConfig?: CadGumballConfig | null;
   readonly transformGumballTargets?: readonly SelectionTarget[];
   readonly onTransformGumballCommit?: (diff: ModelDiff) => void;
@@ -3757,7 +3757,7 @@ export interface InteractionSpatialViewProps {
   readonly onOrbitProjectionChange?: (projection: OrbitCameraProjection) => void;
   readonly onProjectionSpecChange?: (spec: WorldProjectionSpec) => void;
   readonly onOrbitCameraChange?: (state: import("@semio-tech/infinite-world-r3f").WorldCameraState) => void;
-  /** @emoji 🖼️ Grid reference planes persisted beside the CAD model. */
+  /** 🖼️ Grid reference planes persisted beside the CAD model. */
   readonly worldReferences?: readonly WorldReferenceProps[];
   readonly selectedReferenceIds?: ReadonlySet<string>;
   readonly hoveredReferenceId?: string | null;
@@ -3768,19 +3768,19 @@ export interface InteractionSpatialViewProps {
   readonly onReferenceRelocate?: (payload: WorldReferenceRelocatePayload) => void;
 }
 
-/** @emoji 📡️ Host event callbacks accepted by {@link InteractionSpatialView}. */
+/** 📡️ Host event callbacks accepted by {@link InteractionSpatialView}. */
 export type InteractionSpatialViewHostCallbacks = Pick<
   InteractionSpatialViewProps,
   "onGroundPick" | "onScenePointerMove" | "onInteractionEvent" | "onSelectionRequest" | "onCameraNavigate" | "onCommittedFacePointerDown" | "onCommittedFacePointerMove" | "onSnapshotStateChange" | "onSnapshotRevisionChange" | "onPickEnabledChange"
 >;
 
-/** @emoji 🖱️ Ground-plane picking is action input and must stay independent from host geometry selection. */
+/** 🖱️ Ground-plane picking is action input and must stay independent from host geometry selection. */
 export function interactionSpatialGroundPickPlaneEnabled(snapshot: Pick<InteractionSnapshot, "spatialInteraction" | "state">, pickEnabled: boolean): boolean {
   const si = snapshot.spatialInteraction;
   return pickEnabled !== false && si.spatialGroundPick && !si.pickDisabledStates.includes(snapshot.state);
 }
 
-/** @emoji 🪩️ Lights, orbit controls, ground picking, factory overlays, optional committed mesh. */
+/** 🪩️ Lights, orbit controls, ground picking, factory overlays, optional committed mesh. */
 export function InteractionSpatialView({
   previewKernel = r3fPreviewKernel,
   snapshot,
@@ -4045,7 +4045,7 @@ export function InteractionSpatialView({
 // #endregion 🪩️Canvas
 
 // #region 🪩️Repl
-/** @emoji ☑️ Master checkbox for a chrome toggle group (supports indeterminate partial state). */
+/** ☑️ Master checkbox for a chrome toggle group (supports indeterminate partial state). */
 function SpatialChromeMasterToggle({ state, onEnabledChange, ariaLabel }: { readonly state: SpatialToggleGroupState; readonly onEnabledChange: (enabled: boolean) => void; readonly ariaLabel: string }): ReactNode {
   return <Checkbox aria-label={ariaLabel} checked={spatialToggleCheckboxState(state)} onChange={(event) => onEnabledChange(event.target.checked)} />;
 }
@@ -4070,7 +4070,7 @@ function replActionTextWithoutSpaces(text: string): string {
   return text.replace(/\s+/g, "");
 }
 
-/** @emoji ⌨️ Normalizes REPL action text: engagement uses PascalCase; aside REPL strips whitespace only. */
+/** ⌨️ Normalizes REPL action text: engagement uses PascalCase; aside REPL strips whitespace only. */
 export function replNormalizeActionText(text: string, engagementMode?: boolean): string {
   return engagementMode ? normalizeEngagementActionText(text) : replActionTextWithoutSpaces(text);
 }
@@ -4104,7 +4104,7 @@ function replBuildDispatchEvent(row: InteractionKeybindRow, opts: { readonly int
   return { kind: row.eventKind, modifiers: {} };
 }
 
-/** @emoji 📏️ Parses REPL `cmdLine` as a live direct-distance value (`null` = empty, `undefined` = not numeric). */
+/** 📏️ Parses REPL `cmdLine` as a live direct-distance value (`null` = empty, `undefined` = not numeric). */
 export function replLengthEntryLiveValue(cmdLine: string): number | null | undefined {
   return parseNumericCommandLine(cmdLine);
 }
@@ -4175,7 +4175,7 @@ export function replFilterSuggestions(query: string, all: readonly ReplSuggestio
     .map((row) => row.s);
 }
 
-/** @emoji ⌨️ Inline completion suffix for the active suggestion (longest prefix match on key, label, or detail). */
+/** ⌨️ Inline completion suffix for the active suggestion (longest prefix match on key, label, or detail). */
 export function replCompletionSuffix(query: string, suggestion: ReplSuggestion | undefined): string {
   if (!query.trim() || !suggestion) return "";
   const q = query;
@@ -4189,7 +4189,7 @@ export function replCompletionSuffix(query: string, suggestion: ReplSuggestion |
   return best;
 }
 
-/** @emoji ⌨️ First non-empty inline completion suffix across ranked matches. */
+/** ⌨️ First non-empty inline completion suffix across ranked matches. */
 export function replActiveCompletionSuffix(query: string, matches: readonly ReplSuggestion[], index: number): string {
   if (!query.trim() || !matches.length) return "";
   const order = [matches[Math.min(index, matches.length - 1)]!, ...matches];
@@ -4235,7 +4235,7 @@ function replInteractionIdOnSpace(query: string, matches: readonly ReplSuggestio
   return replInteractionSuggestionOnSpace(query, matches, all)?.interactionId ?? null;
 }
 
-/** @emoji ⌨️ True when the event target is already a text field (skip REPL global key capture). */
+/** ⌨️ True when the event target is already a text field (skip REPL global key capture). */
 export function replIsQueryTypingTarget(t: EventTarget | null): boolean {
   return isUiTypingTarget(t);
 }
@@ -4280,7 +4280,7 @@ function replSelectionAccepted(accept: readonly ModelEntityKind[], selection: re
   return selection.filter((target) => accept.includes(target.kind));
 }
 
-/** @emoji 🪪️ Reads validated `context.targets` for interaction highlight sync. */
+/** 🪪️ Reads validated `context.targets` for interaction highlight sync. */
 export function replInteractionSelectionFromContext(ctx: Record<string, unknown>): readonly SelectionTarget[] {
   const raw = ctx.targets;
   if (!Array.isArray(raw)) return [];
@@ -4289,7 +4289,7 @@ export function replInteractionSelectionFromContext(ctx: Record<string, unknown>
   });
 }
 
-/** @emoji 🪪️ Shallow equality for ordered selection target lists. */
+/** 🪪️ Shallow equality for ordered selection target lists. */
 export function replSelectionTargetsEqual(a: readonly SelectionTarget[], b: readonly SelectionTarget[]): boolean {
   if (a.length !== b.length) return false;
   for (let i = 0; i < a.length; i++) {
@@ -4305,37 +4305,37 @@ function replApplySelectionPick(current: readonly SelectionTarget[], picked: rea
   return mergeSelectionTargets(current, picked, spatialSelectionModeFromModifiers(modeModifiers));
 }
 
-/** @emoji 🗂️ Renderer highlight targets keyed by model definition id. */
+/** 🗂️ Renderer highlight targets keyed by model definition id. */
 export type SpatialRendererSelectionByModel = Readonly<Record<string, readonly SelectionTarget[]>>;
 
-/** @emoji 🗂️ Interaction pick targets keyed by interaction state id (session-local). */
+/** 🗂️ Interaction pick targets keyed by interaction state id (session-local). */
 export type SpatialInteractionSelectionByState = Readonly<Record<string, readonly SelectionTarget[]>>;
 
-/** @emoji 🪪️ Reads renderer selection for one model definition (empty when unset). */
+/** 🪪️ Reads renderer selection for one model definition (empty when unset). */
 export function replRendererSelectionTargets(byModel: SpatialRendererSelectionByModel, modelDefinitionId: string): readonly SelectionTarget[] {
   return byModel[modelDefinitionId] ?? [];
 }
 
-/** @emoji 🪪️ Updates renderer selection for one model definition without touching other models. */
+/** 🪪️ Updates renderer selection for one model definition without touching other models. */
 export function replWithRendererSelectionTargets(byModel: SpatialRendererSelectionByModel, modelDefinitionId: string, targets: readonly SelectionTarget[]): SpatialRendererSelectionByModel {
   const prev = byModel[modelDefinitionId] ?? [];
   if (replSelectionTargetsEqual(prev, targets)) return byModel;
   return { ...byModel, [modelDefinitionId]: [...targets] };
 }
 
-/** @emoji 🪪️ Reads interaction selection for one state (empty when unset). */
+/** 🪪️ Reads interaction selection for one state (empty when unset). */
 export function replInteractionSelectionTargets(byState: SpatialInteractionSelectionByState, stateId: string): readonly SelectionTarget[] {
   return byState[stateId] ?? [];
 }
 
-/** @emoji 🪪️ Updates interaction selection for one state without touching other states. */
+/** 🪪️ Updates interaction selection for one state without touching other states. */
 export function replWithInteractionSelectionTargets(byState: SpatialInteractionSelectionByState, stateId: string, targets: readonly SelectionTarget[]): SpatialInteractionSelectionByState {
   const prev = byState[stateId] ?? [];
   if (replSelectionTargetsEqual(prev, targets)) return byState;
   return { ...byState, [stateId]: [...targets] };
 }
 
-/** @emoji 🪪️ Removes in-view targets of a pick kind when its selection toggle is turned off. */
+/** 🪪️ Removes in-view targets of a pick kind when its selection toggle is turned off. */
 export function replPruneSelectionByKind(selection: readonly SelectionTarget[], activeModelDefinitionId: string | null, kind: SpatialPickTargetKind): SelectionTarget[] {
   if (!spatialPickKindsForActiveView(activeModelDefinitionId).has(kind)) return [...selection];
   if (kind === "object") {
@@ -4345,7 +4345,7 @@ export function replPruneSelectionByKind(selection: readonly SelectionTarget[], 
   return selection.filter((target) => !geometryKinds.includes(target.kind) && selectionTargetPickKind(target) !== kind);
 }
 
-/** @emoji 🪪️ Removes in-view selection rows for a factory primitive kind when its filter toggle is turned off. */
+/** 🪪️ Removes in-view selection rows for a factory primitive kind when its filter toggle is turned off. */
 export function replPruneSelectionByPrimitive(selection: readonly SelectionTarget[], primitiveKind: ModelEntityKind): SelectionTarget[] {
   return selection.filter((target) => {
     if (target.kind === "object" && target.editable === false) return true;
@@ -4353,7 +4353,7 @@ export function replPruneSelectionByPrimitive(selection: readonly SelectionTarge
   });
 }
 
-/** @emoji 🪪️ Removes in-view selection rows for a typology when its selection toggle is turned off. */
+/** 🪪️ Removes in-view selection rows for a typology when its selection toggle is turned off. */
 export function replPruneSelectionByTypology(selection: readonly SelectionTarget[], model: Model, activeModelDefinitionId: string | null, typologyId: string): SelectionTarget[] {
   const typologyIds = modelDefinitionTypologyIds(activeModelDefinitionId);
   if (!typologyIds.includes(typologyId)) return [...selection];
@@ -4368,7 +4368,7 @@ export function replPruneSelectionByTypology(selection: readonly SelectionTarget
   });
 }
 
-/** @emoji 🪪️ Picks the highlight layer: interaction state selection while active, else renderer selection for the active model. */
+/** 🪪️ Picks the highlight layer: interaction state selection while active, else renderer selection for the active model. */
 export function replDisplayedSelectionTargets(
   interactionActive: boolean,
   activeModelDefinitionId: string | null,
@@ -4381,7 +4381,7 @@ export function replDisplayedSelectionTargets(
   return replRendererSelectionTargets(rendererByModel, mdId);
 }
 
-/** @emoji 🪪️ Merges a pick into the active renderer model or interaction state selection slice. */
+/** 🪪️ Merges a pick into the active renderer model or interaction state selection slice. */
 export function replMergeSelectionPickInView(
   interactionActive: boolean,
   activeModelDefinitionId: string | null,
@@ -4396,7 +4396,7 @@ export function replMergeSelectionPickInView(
   return replApplySelectionPick(current, picked, modifiers);
 }
 
-/** @emoji 🪪️ Applies archived interaction result to renderer selection for the active model when `archiveContext.targets` is set (including `[]`). */
+/** 🪪️ Applies archived interaction result to renderer selection for the active model when `archiveContext.targets` is set (including `[]`). */
 export function replFinalizeSelection(rendererByModel: SpatialRendererSelectionByModel, activeModelDefinitionId: string | null, result: InteractionSnapshot["lastResponse"]): SpatialRendererSelectionByModel {
   const ctx = result?.archiveContext;
   const mdId = activeModelDefinitionId ?? defaultModelDefinitionId();
@@ -4405,12 +4405,12 @@ export function replFinalizeSelection(rendererByModel: SpatialRendererSelectionB
   return replWithRendererSelectionTargets(rendererByModel, mdId, targets);
 }
 
-/** @emoji 🪩️ Memoized `DocumentHistory` for REPL hosts. */
+/** 🪩️ Memoized `DocumentHistory` for REPL hosts. */
 export function useDocumentHistory(): DocumentHistory {
   return reactHostPort.useMemo(() => new DocumentHistory(), []);
 }
 
-/** @emoji 🪩️ Labels + capability mirror for undo/redo chrome (uses `InteractionSnapshot.capabilities`). */
+/** 🪩️ Labels + capability mirror for undo/redo chrome (uses `InteractionSnapshot.capabilities`). */
 export function getReplHistoryPresentation(spec: InteractionSpec, snap: InteractionSnapshot, history: DocumentHistory): { readonly canUndo: boolean; readonly canRedo: boolean; readonly undoLabel: string; readonly redoLabel: string } {
   const active = isInteractionSessionActive(spec, snap.state);
   const u = history.peekUndo()?.label ?? "";
@@ -4423,13 +4423,13 @@ export function getReplHistoryPresentation(spec: InteractionSpec, snap: Interact
   };
 }
 
-/** @emoji 🪩️ Subscribes to runtime revisions and derives REPL undo/redo labels. */
+/** 🪩️ Subscribes to runtime revisions and derives REPL undo/redo labels. */
 export function useReplHistoryState(rt: InteractionRuntime, spec: InteractionSpec, history: DocumentHistory) {
   const snap = useInteractionSnapshot(rt);
   return reactHostPort.useMemo(() => getReplHistoryPresentation(spec, snap, history), [spec, snap, history]);
 }
 
-/** @emoji 🎛️ Optional controlled chrome state for {@link InteractionRepl}. */
+/** 🎛️ Optional controlled chrome state for {@link InteractionRepl}. */
 export interface InteractionReplHostValues {
   readonly cmdLine?: string;
   readonly activeSuggestionIndex?: number;
@@ -4449,7 +4449,7 @@ export interface InteractionReplHostValues {
   readonly lastFinalizedInteractionId?: string;
 }
 
-/** @emoji 📡️ Optional `on*` host callbacks for {@link InteractionRepl}. */
+/** 📡️ Optional `on*` host callbacks for {@link InteractionRepl}. */
 export interface InteractionReplHostCallbacks {
   readonly onCmdLineChange?: (value: string) => void;
   readonly onActiveSuggestionIndexChange?: (index: number) => void;
@@ -4480,35 +4480,35 @@ export interface InteractionReplHostCallbacks {
   readonly onUndo?: () => void;
   readonly onRedo?: () => void;
   readonly onSnapshotChange?: (snapshot: InteractionSnapshot) => void;
-  /** @emoji 💬️ Publishes the window engagement spec (or `null`) whenever the interaction state changes; the host renders it in the {@link Window} engagement slot. */
+  /** 💬️ Publishes the window engagement spec (or `null`) whenever the interaction state changes; the host renders it in the {@link Window} engagement slot. */
   readonly onEngagementChange?: (engagement: EngagementSpec | null) => void;
-  /** @emoji 🔎️ Publishes the window search spec (or `null`) whenever the interaction state changes; the host renders it in the {@link Window} search slot. */
+  /** 🔎️ Publishes the window search spec (or `null`) whenever the interaction state changes; the host renders it in the {@link Window} search slot. */
   readonly onSearchChange?: (search: SearchSpec | null) => void;
   readonly onEscape?: () => void;
-  /** @emoji 🗑️ Delete/Backspace when deletable selection exists; return true when handled. */
+  /** 🗑️ Delete/Backspace when deletable selection exists; return true when handled. */
   readonly onDeleteSelection?: () => boolean;
   readonly onApplyTransformation?: (spec: TransformationSpec) => void;
-  /** @emoji 🧲️ Geometry used for pick targets (defaults to `geometry`; use spatial.shape geometry when the active model is typology-only). */
+  /** 🧲️ Geometry used for pick targets (defaults to `geometry`; use spatial.shape geometry when the active model is typology-only). */
   readonly pickGeometry?: SpatialPickGeometry | null;
   readonly onDocumentModelChange?: (model: Model) => void;
 }
 
-/** @emoji 📐️ Layout and partial canvas/spatial-view overrides for {@link InteractionRepl}. */
+/** 📐️ Layout and partial canvas/spatial-view overrides for {@link InteractionRepl}. */
 export interface InteractionReplLayoutProps {
   readonly rootStyle?: CSSProperties;
   readonly asideStyle?: CSSProperties;
   readonly showAside?: boolean;
-  /** @emoji 💬️ Builds the window {@link EngagementSpec} (interaction options/status/control) and {@link SearchSpec} (action input/possibles), published via {@link InteractionReplHostCallbacks.onEngagementChange} and {@link InteractionReplHostCallbacks.onSearchChange}. */
+  /** 💬️ Builds the window {@link EngagementSpec} (interaction options/status/control) and {@link SearchSpec} (action input/possibles), published via {@link InteractionReplHostCallbacks.onEngagementChange} and {@link InteractionReplHostCallbacks.onSearchChange}. */
   readonly showEngagement?: boolean;
-  /** @emoji 📐️ Size the REPL to its host instead of the viewport (`100vh`); stacks aside under the canvas. */
+  /** 📐️ Size the REPL to its host instead of the viewport (`100vh`); stacks aside under the canvas. */
   readonly fillHost?: boolean;
-  /** @emoji ⌨️ Registers document-level REPL key capture; disable on inactive hosts (e.g. CAD play quad panes). */
+  /** ⌨️ Registers document-level REPL key capture; disable on inactive hosts (e.g. CAD play quad panes). */
   readonly captureGlobalKeys?: boolean;
-  /** @emoji 🙈️ Hides model-definition and transformation dropdowns (e.g. play hosts them in `asideExtra`). */
+  /** 🙈️ Hides model-definition and transformation dropdowns (e.g. play hosts them in `asideExtra`). */
   readonly hideModelDefinitionControls?: boolean;
   readonly frameloop?: InteractionCanvasProps["frameloop"];
   readonly canvas?: Omit<InteractionCanvasProps, "children">;
-  /** @emoji 🖼️ Spread after REPL wiring; overrides win (use for theme/slots/face handlers, not session pick state). */
+  /** 🖼️ Spread after REPL wiring; overrides win (use for theme/slots/face handlers, not session pick state). */
   readonly spatialView?: Omit<
     InteractionSpatialViewProps,
     | "snapshot"
@@ -4533,7 +4533,7 @@ export interface InteractionReplLayoutProps {
   >;
 }
 
-/** @emoji 🎛️ Default uncontrolled chrome for {@link InteractionRepl}. */
+/** 🎛️ Default uncontrolled chrome for {@link InteractionRepl}. */
 export function defaultInteractionReplChromeState(): Required<
   Pick<
     InteractionReplHostValues,
@@ -4585,7 +4585,7 @@ export interface InteractionReplProps extends InteractionReplHostValues, Interac
   readonly geometry: SpatialPickGeometry | null;
   readonly asideExtra?: ReactNode;
   readonly archivedBoxLayouts?: readonly ArchivedBoxLayout[];
-  /** @emoji 🔁️ When host bumps this positive counter for the same interaction, `cancel()` then `start` without remounting GL. */
+  /** 🔁️ When host bumps this positive counter for the same interaction, `cancel()` then `start` without remounting GL. */
   readonly sessionRestartNonce?: number;
   readonly viewTheme?: InteractionSpatialViewTheme;
   readonly viewSlots?: InteractionSpatialViewSlots;
@@ -4594,7 +4594,7 @@ export interface InteractionReplProps extends InteractionReplHostValues, Interac
   readonly autoFitBehavior?: SpatialAutoFitBehavior;
   readonly committedMeshesKeepPrevious?: boolean;
   readonly tessellationTolerance?: number;
-  /** @emoji 🎛️ Utility bar gumball mode; hidden while an interaction session is active. */
+  /** 🎛️ Utility bar gumball mode; hidden while an interaction session is active. */
   readonly transformGumballConfig?: CadGumballConfig | null;
   readonly onTransformGumballCommit?: (diff: ModelDiff) => void;
   readonly worldReferences?: readonly WorldReferenceProps[];
@@ -4607,7 +4607,7 @@ export interface InteractionReplProps extends InteractionReplHostValues, Interac
   readonly onReferenceRelocate?: (payload: WorldReferenceRelocatePayload) => void;
 }
 
-/** @emoji 💬️ One interaction a window can start from the floating pane while idle. */
+/** 💬️ One interaction a window can start from the floating pane while idle. */
 export interface InteractionReplEngagementInteraction {
   readonly id: string;
   readonly key: string;
@@ -4621,7 +4621,7 @@ function engagementRingOptionNumericValue(optionId: string): number | null {
   return Number.isFinite(value) ? value : null;
 }
 
-/** @emoji 🎛️ Maps {@link ResolvedInteractionEngagementControl} to a live {@link EngagementControl}. */
+/** 🎛️ Maps {@link ResolvedInteractionEngagementControl} to a live {@link EngagementControl}. */
 export function buildEngagementControlFromResolved(
   resolved: ResolvedInteractionEngagementControl,
   handlers: {
@@ -4670,7 +4670,7 @@ export function buildEngagementControlFromResolved(
   };
 }
 
-/** @emoji 💬️ Inputs for {@link buildInteractionReplEngagement} (interaction state + callbacks for the floating pane). */
+/** 💬️ Inputs for {@link buildInteractionReplEngagement} (interaction state + callbacks for the floating pane). */
 export interface InteractionReplEngagementInputs {
   readonly showEngagement: boolean;
   readonly boundInteractionSession: boolean;
@@ -4691,7 +4691,7 @@ export interface InteractionReplEngagementInputs {
   readonly onAbort?: () => void;
 }
 
-/** @emoji 🏷️ Omits machine ids from action suggestion sublines (keeps short shortcut keys). */
+/** 🏷️ Omits machine ids from action suggestion sublines (keeps short shortcut keys). */
 export function replUserFacingSuggestionDetail(detail: string): string | undefined {
   const trimmed = detail.trim();
   if (!trimmed) return undefined;
@@ -4701,7 +4701,7 @@ export function replUserFacingSuggestionDetail(detail: string): string | undefin
   return undefined;
 }
 
-/** @emoji 💬️ Builds the compact window {@link EngagementSpec}: an active session lists its transitions as options, plus state/selection/response status. */
+/** 💬️ Builds the compact window {@link EngagementSpec}: an active session lists its transitions as options, plus state/selection/response status. */
 export function buildInteractionReplEngagement(inputs: InteractionReplEngagementInputs): EngagementSpec | null {
   if (!inputs.showEngagement) return null;
   const options = inputs.boundInteractionSession
@@ -4735,7 +4735,7 @@ export function buildInteractionReplEngagement(inputs: InteractionReplEngagement
   };
 }
 
-/** @emoji 🔎️ Builds the top-middle window {@link SearchSpec}: idle exposes an action input to start an interaction, an active session accepts step values; both offer autocomplete possibles. */
+/** 🔎️ Builds the top-middle window {@link SearchSpec}: idle exposes an action input to start an interaction, an active session accepts step values; both offer autocomplete possibles. */
 export function buildInteractionReplSearch(inputs: InteractionReplEngagementInputs): SearchSpec | null {
   if (!inputs.showEngagement) return null;
   const input =
@@ -4770,11 +4770,11 @@ export function buildInteractionReplSearch(inputs: InteractionReplEngagementInpu
   };
 }
 
-/** @emoji 🪪️ Element id of the CAD editor's projection pane — dot-separated camelCase, the grammar `Pane`'s own
+/** 🪪️ Element id of the CAD editor's projection pane — dot-separated camelCase, the grammar `Pane`'s own
  * `assertElementId` demands and `childElementId` extends for the two fold controls it derives. */
 const CAD_ORBIT_PROJECTION_PANE_ID = "cad.orbitProjection";
 
-/** @emoji 🔀️ Portals the world's projection-kind switch into the enclosing window's pane host (see `usePaneSlot`). Defaults to bottom-right under the navigation cube; the unfolded pane grows over it. Falls back to a local overlay when no pane host is available. */
+/** 🔀️ Portals the world's projection-kind switch into the enclosing window's pane host (see `usePaneSlot`). Defaults to bottom-right under the navigation cube; the unfolded pane grows over it. Falls back to a local overlay when no pane host is available. */
 function WorldOrbitProjectionSwitchPane({ spec, onSpecChange }: { readonly spec: WorldProjectionSpec; readonly onSpecChange: (spec: WorldProjectionSpec) => void }) {
   const [anchor, setAnchor] = reactHostPort.useState<Anchor>("bottom-right");
   const [folded, setFolded] = reactHostPort.useState(true);
@@ -4804,7 +4804,7 @@ function WorldOrbitProjectionSwitchPane({ spec, onSpecChange }: { readonly spec:
   );
 }
 
-/** @emoji 🪩️ Full spatial REPL: canvas, interaction palette, history controls, last response. */
+/** 🪩️ Full spatial REPL: canvas, interaction palette, history controls, last response. */
 export function InteractionRepl({
   interactionId,
   spec,
@@ -6480,7 +6480,7 @@ export function InteractionRepl({
   );
 }
 
-/** @emoji ­ƒ╝️´©Å Canvas-only {@link InteractionRepl} (no model-definition aside); full host props and `on*` callbacks. */
+/** 🪟️ Canvas-only {@link InteractionRepl} (no model-definition aside); full host props and `on*` callbacks. */
 export function InteractionReplViewport(props: InteractionReplProps): ReactNode {
   return <InteractionRepl {...props} showAside={false} fillHost />;
 }
@@ -6493,7 +6493,7 @@ export interface SelectionAttributesPaneProps {
   readonly onModelChange: (model: Model) => void;
 }
 
-/** @emoji 🏷️ Edits {@link Model.metadata} fields for the primary selection using active model-definition attribute assets. */
+/** 🏷️ Edits {@link Model.metadata} fields for the primary selection using active model-definition attribute assets. */
 export function SelectionAttributesPane({ model, activeModelDefinitionId, selection, selectionCount, onModelChange }: SelectionAttributesPaneProps): ReactNode {
   const target = reactHostPort.useMemo(() => primaryAttributeSelectionTarget(selection), [selection]);
   const definitions = reactHostPort.useMemo(() => (target ? listAttributeDefinitionsForModelDefinitionEntity(activeModelDefinitionId, target.kind) : []), [activeModelDefinitionId, target]);
@@ -6625,7 +6625,7 @@ export interface SelectionPropertiesPaneProps {
   readonly selectionCount?: number;
 }
 
-/** @emoji 📐️ Displays derived property values for the primary object selection using scoped property definitions. */
+/** 📐️ Displays derived property values for the primary object selection using scoped property definitions. */
 export interface ModelStatsPaneProps {
   readonly model: Model;
   readonly kernel: SpatialKernel;
@@ -6634,7 +6634,7 @@ export interface ModelStatsPaneProps {
   readonly selectionCount?: number;
 }
 
-/** @emoji 📊️ Displays live model-definition stats for whole-model and selection scopes. */
+/** 📊️ Displays live model-definition stats for whole-model and selection scopes. */
 export function ModelStatsPane({ model, kernel, activeModelDefinitionId, selection, selectionCount }: ModelStatsPaneProps): ReactNode {
   const definitions = reactHostPort.useMemo(() => listStatDefinitionsForModelDefinition(activeModelDefinitionId), [activeModelDefinitionId]);
   const selectionObjects = reactHostPort.useMemo(() => {
@@ -6760,7 +6760,100 @@ export function SelectionPropertiesPane({ model, kernel, activeModelDefinitionId
 const __cadRendererTestRuntime = import.meta.vitest ? await import("../🏃️runtime/🟦️.ts") : null;
 const __cadRendererTestKernel = import.meta.vitest ? await import("../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️.ts") : null;
 
+/** 🎒️ The values this module hands its extracted suite `./🧪️tests/🧪️repluserfacingsuggestiondetail/🟦️.tsx`. */
+export type RendererTestDependencies = {
+  readonly CAD_WORLD_FORWARD: typeof CAD_WORLD_FORWARD;
+  readonly CAD_WORLD_UP: typeof CAD_WORLD_UP;
+  readonly COMMITTED_MESH_FACE_OPACITY: typeof COMMITTED_MESH_FACE_OPACITY;
+  readonly Model: typeof Model;
+  readonly THREE: typeof THREE;
+  readonly WINDOW_SEARCH_USER: typeof WINDOW_SEARCH_USER;
+  readonly __cadRendererTestKernel: typeof __cadRendererTestKernel;
+  readonly __cadRendererTestRuntime: typeof __cadRendererTestRuntime;
+  readonly applyCadWorldCoordinateSystem: typeof applyCadWorldCoordinateSystem;
+  readonly applyModelDiff: typeof applyModelDiff;
+  readonly buildGeometryObjectIndex: typeof buildGeometryObjectIndex;
+  readonly buildInteractionReplEngagement: typeof buildInteractionReplEngagement;
+  readonly buildInteractionReplSearch: typeof buildInteractionReplSearch;
+  readonly buildPlanarFaceMeshTransfer: typeof buildPlanarFaceMeshTransfer;
+  readonly canvasHoverKeyForSelectionTarget: typeof canvasHoverKeyForSelectionTarget;
+  readonly collectGeometryEdgeSegments: typeof collectGeometryEdgeSegments;
+  readonly createSolidTypologyStyleResolver: typeof createSolidTypologyStyleResolver;
+  readonly createSpatialPickEvent: typeof createSpatialPickEvent;
+  readonly createSpatialPickTargets: typeof createSpatialPickTargets;
+  readonly createTypologyStyledMaterial: typeof createTypologyStyledMaterial;
+  readonly defaultInteractionReplChromeState: typeof defaultInteractionReplChromeState;
+  readonly defaultInteractionSpatialViewTheme: typeof defaultInteractionSpatialViewTheme;
+  readonly defaultModelDefinitionId: typeof defaultModelDefinitionId;
+  readonly defaultSpatialPrimitiveToggles: typeof defaultSpatialPrimitiveToggles;
+  readonly defaultSpatialTypologyTogglesForModelDefinition: typeof defaultSpatialTypologyTogglesForModelDefinition;
+  readonly emptyMeshTransfer: typeof emptyMeshTransfer;
+  readonly ensureTypologyObjectFromCreateDiff: typeof ensureTypologyObjectFromCreateDiff;
+  readonly filterCommittedMeshesForModelDefinition: typeof filterCommittedMeshesForModelDefinition;
+  readonly filterFootprintBoxPreviewDisplayItems: typeof filterFootprintBoxPreviewDisplayItems;
+  readonly filterSpatialPickTargets: typeof filterSpatialPickTargets;
+  readonly filterSpatialPickTargetsForActiveView: typeof filterSpatialPickTargetsForActiveView;
+  readonly filterSpatialPickTargetsForEntityFlags: typeof filterSpatialPickTargetsForEntityFlags;
+  readonly filterSpatialPickTargetsForPrimitiveToggles: typeof filterSpatialPickTargetsForPrimitiveToggles;
+  readonly filterSpatialPickTargetsForTypologyToggles: typeof filterSpatialPickTargetsForTypologyToggles;
+  readonly geometryBuckets: typeof geometryBuckets;
+  readonly geometryEntityNurbsPoles: typeof geometryEntityNurbsPoles;
+  readonly geometryEntityWireSegments: typeof geometryEntityWireSegments;
+  readonly historyEntryArchivesBoxFootprint: typeof historyEntryArchivesBoxFootprint;
+  readonly interactionSpatialGroundPickPlaneEnabled: typeof interactionSpatialGroundPickPlaneEnabled;
+  readonly isRenderableMeshTransfer: typeof isRenderableMeshTransfer;
+  readonly kernelGeometry: typeof kernelGeometry;
+  readonly listFactoryFaceMeshesForModelDefinition: typeof listFactoryFaceMeshesForModelDefinition;
+  readonly listStatDefinitionsForModelDefinition: typeof listStatDefinitionsForModelDefinition;
+  readonly loadSpatialInteraction: typeof loadSpatialInteraction;
+  readonly mergeInteractionSpatial: typeof mergeInteractionSpatial;
+  readonly modelDefinitionPickTargetKinds: typeof modelDefinitionPickTargetKinds;
+  readonly modelDefinitionTypologyIds: typeof modelDefinitionTypologyIds;
+  readonly nurbsPolesFromEdge: typeof nurbsPolesFromEdge;
+  readonly pinnedPickTargetKeys: typeof pinnedPickTargetKeys;
+  readonly preciseSpatialKernelMath: typeof preciseSpatialKernelMath;
+  readonly projectRayToVerticalZLine: typeof projectRayToVerticalZLine;
+  readonly projectRayToYzPlaneAtX: typeof projectRayToYzPlaneAtX;
+  readonly pruneSelectionTargetsForEntityFlags: typeof pruneSelectionTargetsForEntityFlags;
+  readonly replDisplayedSelectionTargets: typeof replDisplayedSelectionTargets;
+  readonly replFilterSuggestions: typeof replFilterSuggestions;
+  readonly replHostGeometryPickingEnabled: typeof replHostGeometryPickingEnabled;
+  readonly replInteractionIdOnSpace: typeof replInteractionIdOnSpace;
+  readonly replIsQueryTypingTarget: typeof replIsQueryTypingTarget;
+  readonly replMergeSelectionPickInView: typeof replMergeSelectionPickInView;
+  readonly replNormalizeActionText: typeof replNormalizeActionText;
+  readonly replRendererSelectionTargets: typeof replRendererSelectionTargets;
+  readonly replShouldRepeatInteractionOnSpace: typeof replShouldRepeatInteractionOnSpace;
+  readonly replUserFacingSuggestionDetail: typeof replUserFacingSuggestionDetail;
+  readonly resetSpatialSceneColorCache: typeof resetSpatialSceneColorCache;
+  readonly resolveCommittedMeshMaterialProps: typeof resolveCommittedMeshMaterialProps;
+  readonly resolveSpatialEntityFlags: typeof resolveSpatialEntityFlags;
+  readonly resolveSpatialPickTargetsToRender: typeof resolveSpatialPickTargetsToRender;
+  readonly resolveSpatialSceneVisibility: typeof resolveSpatialSceneVisibility;
+  readonly resolveTypologyStyle: typeof resolveTypologyStyle;
+  readonly revealedObjectIdsFromPickKeys: typeof revealedObjectIdsFromPickKeys;
+  readonly solidRef: typeof solidRef;
+  readonly spatialAutoFitShouldRun: typeof spatialAutoFitShouldRun;
+  readonly spatialHoverKeyAliases: typeof spatialHoverKeyAliases;
+  readonly spatialHoverKeysMatch: typeof spatialHoverKeysMatch;
+  readonly spatialPickKindTogglesFromTypologyFilteredTargets: typeof spatialPickKindTogglesFromTypologyFilteredTargets;
+  readonly spatialPickTargetKey: typeof spatialPickTargetKey;
+  readonly spatialSceneColors: typeof spatialSceneColors;
+  readonly spatialSceneKindTogglesForModelDefinition: typeof spatialSceneKindTogglesForModelDefinition;
+  readonly spatialSelectionTarget: typeof spatialSelectionTarget;
+  readonly spatialToggleCheckboxState: typeof spatialToggleCheckboxState;
+  readonly spatialToggleGroupFill: typeof spatialToggleGroupFill;
+  readonly spatialToggleGroupState: typeof spatialToggleGroupState;
+  readonly spatialTypologyToggleLabel: typeof spatialTypologyToggleLabel;
+  readonly statDefinitionAppliesToScope: typeof statDefinitionAppliesToScope;
+  readonly transformGumballMatrixDiff: typeof transformGumballMatrixDiff;
+  readonly typologyStyleCacheKey: typeof typologyStyleCacheKey;
+  readonly typologyStyleToMaterialProps: typeof typologyStyleToMaterialProps;
+  readonly uiDataLabel: typeof uiDataLabel;
+  readonly visibleSolidRefsForModelDefinition: typeof visibleSolidRefsForModelDefinition;
+};
+
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️repluserfacingsuggestiondetail/🟦️.tsx");
-  await registerTests1(import.meta.vitest, { CAD_WORLD_FORWARD, CAD_WORLD_UP, COMMITTED_MESH_FACE_OPACITY, Model, THREE, WINDOW_SEARCH_USER, __cadRendererTestKernel, __cadRendererTestRuntime, applyCadWorldCoordinateSystem, applyModelDiff, buildGeometryObjectIndex, buildInteractionReplEngagement, buildInteractionReplSearch, buildPlanarFaceMeshTransfer, canvasHoverKeyForSelectionTarget, collectGeometryEdgeSegments, createSolidTypologyStyleResolver, createSpatialPickEvent, createSpatialPickTargets, createTypologyStyledMaterial, defaultInteractionReplChromeState, defaultInteractionSpatialViewTheme, defaultModelDefinitionId, defaultSpatialPrimitiveToggles, defaultSpatialTypologyTogglesForModelDefinition, emptyMeshTransfer, ensureTypologyObjectFromCreateDiff, filterCommittedMeshesForModelDefinition, filterFootprintBoxPreviewDisplayItems, filterSpatialPickTargets, filterSpatialPickTargetsForActiveView, filterSpatialPickTargetsForEntityFlags, filterSpatialPickTargetsForPrimitiveToggles, filterSpatialPickTargetsForTypologyToggles, geometryBuckets, geometryEntityNurbsPoles, geometryEntityWireSegments, historyEntryArchivesBoxFootprint, interactionSpatialGroundPickPlaneEnabled, isRenderableMeshTransfer, kernelGeometry, listFactoryFaceMeshesForModelDefinition, listStatDefinitionsForModelDefinition, loadSpatialInteraction, mergeInteractionSpatial, modelDefinitionPickTargetKinds, modelDefinitionTypologyIds, nurbsPolesFromEdge, pinnedPickTargetKeys, preciseSpatialKernelMath, projectRayToVerticalZLine, projectRayToYzPlaneAtX, pruneSelectionTargetsForEntityFlags, replDisplayedSelectionTargets, replFilterSuggestions, replHostGeometryPickingEnabled, replInteractionIdOnSpace, replIsQueryTypingTarget, replMergeSelectionPickInView, replNormalizeActionText, replRendererSelectionTargets, replShouldRepeatInteractionOnSpace, replUserFacingSuggestionDetail, resetSpatialSceneColorCache, resolveCommittedMeshMaterialProps, resolveSpatialEntityFlags, resolveSpatialPickTargetsToRender, resolveSpatialSceneVisibility, resolveTypologyStyle, revealedObjectIdsFromPickKeys, solidRef, spatialAutoFitShouldRun, spatialHoverKeyAliases, spatialHoverKeysMatch, spatialPickKindTogglesFromTypologyFilteredTargets, spatialPickTargetKey, spatialSceneColors, spatialSceneKindTogglesForModelDefinition, spatialSelectionTarget, spatialToggleCheckboxState, spatialToggleGroupFill, spatialToggleGroupState, spatialTypologyToggleLabel, statDefinitionAppliesToScope, transformGumballMatrixDiff, typologyStyleCacheKey, typologyStyleToMaterialProps, uiDataLabel, visibleSolidRefsForModelDefinition }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { CAD_WORLD_FORWARD, CAD_WORLD_UP, COMMITTED_MESH_FACE_OPACITY, Model, THREE, WINDOW_SEARCH_USER, __cadRendererTestKernel, __cadRendererTestRuntime, applyCadWorldCoordinateSystem, applyModelDiff, buildGeometryObjectIndex, buildInteractionReplEngagement, buildInteractionReplSearch, buildPlanarFaceMeshTransfer, canvasHoverKeyForSelectionTarget, collectGeometryEdgeSegments, createSolidTypologyStyleResolver, createSpatialPickEvent, createSpatialPickTargets, createTypologyStyledMaterial, defaultInteractionReplChromeState, defaultInteractionSpatialViewTheme, defaultModelDefinitionId, defaultSpatialPrimitiveToggles, defaultSpatialTypologyTogglesForModelDefinition, emptyMeshTransfer, ensureTypologyObjectFromCreateDiff, filterCommittedMeshesForModelDefinition, filterFootprintBoxPreviewDisplayItems, filterSpatialPickTargets, filterSpatialPickTargetsForActiveView, filterSpatialPickTargetsForEntityFlags, filterSpatialPickTargetsForPrimitiveToggles, filterSpatialPickTargetsForTypologyToggles, geometryBuckets, geometryEntityNurbsPoles, geometryEntityWireSegments, historyEntryArchivesBoxFootprint, interactionSpatialGroundPickPlaneEnabled, isRenderableMeshTransfer, kernelGeometry, listFactoryFaceMeshesForModelDefinition, listStatDefinitionsForModelDefinition, loadSpatialInteraction, mergeInteractionSpatial, modelDefinitionPickTargetKinds, modelDefinitionTypologyIds, nurbsPolesFromEdge, pinnedPickTargetKeys, preciseSpatialKernelMath, projectRayToVerticalZLine, projectRayToYzPlaneAtX, pruneSelectionTargetsForEntityFlags, replDisplayedSelectionTargets, replFilterSuggestions, replHostGeometryPickingEnabled, replInteractionIdOnSpace, replIsQueryTypingTarget, replMergeSelectionPickInView, replNormalizeActionText, replRendererSelectionTargets, replShouldRepeatInteractionOnSpace, replUserFacingSuggestionDetail, resetSpatialSceneColorCache, resolveCommittedMeshMaterialProps, resolveSpatialEntityFlags, resolveSpatialPickTargetsToRender, resolveSpatialSceneVisibility, resolveTypologyStyle, revealedObjectIdsFromPickKeys, solidRef, spatialAutoFitShouldRun, spatialHoverKeyAliases, spatialHoverKeysMatch, spatialPickKindTogglesFromTypologyFilteredTargets, spatialPickTargetKey, spatialSceneColors, spatialSceneKindTogglesForModelDefinition, spatialSelectionTarget, spatialToggleCheckboxState, spatialToggleGroupFill, spatialToggleGroupState, spatialTypologyToggleLabel, statDefinitionAppliesToScope, transformGumballMatrixDiff, typologyStyleCacheKey, typologyStyleToMaterialProps, uiDataLabel, visibleSolidRefsForModelDefinition }, { url: import.meta.url });
 }

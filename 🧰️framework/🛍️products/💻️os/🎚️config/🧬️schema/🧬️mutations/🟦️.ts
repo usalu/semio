@@ -7,6 +7,10 @@ import type { ClearDefaultApp } from "./🧹clear-default-app/🟦️.ts";
 import { clearDefaultApp, diff as clearDefaultAppDiff, inverse as clearDefaultAppInverse } from "./🧹clear-default-app/🟦️.ts";
 import type { ChangeMergePolicy, MergePolicySetting } from "./🛡️change-merge-policy/🟦️.ts";
 import { changeMergePolicy, diff as changeMergePolicyDiff, inverse as changeMergePolicyInverse } from "./🛡️change-merge-policy/🟦️.ts";
+import type { AdmitLocalDocument, LocalCatalog, LocalDocument, LocalDocumentStorage } from "./📥️admit-local-document/🟦️.ts";
+import { admitLocalDocument, diff as admitLocalDocumentDiff, inverse as admitLocalDocumentInverse, LOCAL_CATALOG_CONFIG_SCHEMA } from "./📥️admit-local-document/🟦️.ts";
+import type { RetireLocalDocument } from "./📤️retire-local-document/🟦️.ts";
+import { diff as retireLocalDocumentDiff, inverse as retireLocalDocumentInverse, retireLocalDocument } from "./📤️retire-local-document/🟦️.ts";
 import type { Identity, SignIn } from "./🪪️sign-in/🟦️.ts";
 import { diff as signInDiff, inverse as signInInverse, signIn } from "./🪪️sign-in/🟦️.ts";
 import type { SignOut } from "./🚪️sign-out/🟦️.ts";
@@ -100,3 +104,21 @@ export function applyIdentityConfigMutation(base: Identity | null, mutation: Ide
 export { changeMergePolicy, clearDefaultApp, setAppearance, setCustomDriver, setCustomTheme, setDefaultApp, setDriver, setKeybindingOverride, setLayout, setLocale, setNamedLayout, setTerminology, setTheme, signIn, signOut };
 export type { ChangeMergePolicy, ClearDefaultApp, Identity, MergePolicySetting, SetAppearance, SetCustomDriver, SetCustomTheme, SetDefaultApp, SetDriver, SetKeybindingOverride, SetLayout, SetLocale, SetNamedLayout, SetTerminology, SetTheme, SignIn, SignOut };
 //#endregion 🔖️Identity
+
+//#region 🔖️LocalCatalog
+/** 🗂️ Typed, invertible local document catalog mutation vocabulary. */
+export type LocalCatalogConfigMutation = ({ readonly mutation: "admitLocalDocument" } & AdmitLocalDocument) | ({ readonly mutation: "retireLocalDocument" } & RetireLocalDocument);
+
+/** 🧮️ Delegates local-catalog behavior to the direct semantic leaf named by the tag. */
+export function applyLocalCatalogConfigMutation(base: LocalCatalog, mutation: LocalCatalogConfigMutation): LocalCatalog {
+  return mutation.mutation === "admitLocalDocument" ? admitLocalDocumentDiff(mutation, base) : retireLocalDocumentDiff(mutation, base);
+}
+
+/** ↩️ Delegates local-catalog inverse behavior to the direct semantic leaf named by the tag. */
+export function inverseLocalCatalogConfigMutation(mutation: LocalCatalogConfigMutation, base: LocalCatalog): LocalCatalogConfigMutation[] {
+  return mutation.mutation === "admitLocalDocument" ? admitLocalDocumentInverse(mutation, base) : retireLocalDocumentInverse(mutation, base);
+}
+
+export { admitLocalDocument, LOCAL_CATALOG_CONFIG_SCHEMA, retireLocalDocument };
+export type { AdmitLocalDocument, LocalCatalog, LocalDocument, LocalDocumentStorage, RetireLocalDocument };
+//#endregion 🔖️LocalCatalog

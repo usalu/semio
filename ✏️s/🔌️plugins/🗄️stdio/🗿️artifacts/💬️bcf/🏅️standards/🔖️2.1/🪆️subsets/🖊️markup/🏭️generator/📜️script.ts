@@ -114,10 +114,14 @@ const BASE_TOPICS: TopicRecipe[] = [
   { guid: "topic-review-02", title: "Facade panel review", status: "In Progress", priority: "Medium", creationDate: "2026-01-06T09:00:00Z", creationAuthor: "bob@example.com" },
 ];
 
+/** 🗃️ The one topic a whole-document `set-snapshot` replaces the base review with — no comments, no viewpoints, no parts. */
+const REPLACEMENT_TOPIC: TopicRecipe = { guid: "topic-replacement-04", title: "Slab clash near the stair core", description: "Replacement review: the slab intersects the stair-core column.", status: "Open", priority: "High", labels: ["structural"], creationDate: "2026-01-08T09:00:00Z", creationAuthor: "dave@example.com" };
+
 type Recipe = { id: string; subset: "🖊️markup" | "👁️viewpoint"; directory: string; outcome: "applied" | "rejected"; build: () => { before: TopicRecipe[]; after?: TopicRecipe[]; beforeVersion?: string; afterVersion?: string } };
 
 const RECIPES: Recipe[] = [
   { id: "no-mutation-applied", subset: "🖊️markup", directory: "⏸️no-mutation-applied", outcome: "applied", build: () => ({ before: BASE_TOPICS, after: BASE_TOPICS }) },
+  { id: "set-snapshot-applied", subset: "🖊️markup", directory: "🗃️set-snapshot-applied", outcome: "applied", build: () => ({ before: BASE_TOPICS, after: [REPLACEMENT_TOPIC] }) },
   { id: "set-version-applied", subset: "🖊️markup", directory: "🔢️set-version-applied", outcome: "applied", build: () => ({ before: BASE_TOPICS, after: BASE_TOPICS, beforeVersion: "2.1", afterVersion: "2.2" }) },
   {
     id: "insert-topic-applied", subset: "🖊️markup", directory: "📌️insert-topic-applied",

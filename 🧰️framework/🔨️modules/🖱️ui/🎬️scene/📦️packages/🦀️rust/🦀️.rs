@@ -38,3 +38,7 @@ pub use world3d_snapshot::*;
 #[path = "../../📷️framing/🦀️.rs"]
 mod framing;
 pub use framing::{Canvas2dFraming, Canvas2dFrameCamera};
+
+#[path = "../../✂️text-splice/🦀️.rs"]
+mod text_splice;
+pub use text_splice::{rebase_text_edits, AppliedTextSplice, LocatedTextSplice, TextSplice, TEXT_SPLICE_CONTEXT_SCALARS, TEXT_SPLICE_MIN_TWO_SIDED_SCALARS};

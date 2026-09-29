@@ -619,6 +619,8 @@ fn region_bounds_normalize_a_negative_extent() {
 
 /// 🤏️ Grip precedence inside one rectangle: corners beat edges, edges beat the body, and a point
 /// outside the rectangle plus its screen-width band is no grip at all.
+///
+/// 🔍️ The band is a constant SCREEN width, so zooming in shrinks its world reach.
 #[test]
 fn region_grip_prefers_corners_then_edges_then_the_body() {
     let bounds = [0.0, 0.0, 100.0, 100.0];
@@ -628,7 +630,6 @@ fn region_grip_prefers_corners_then_edges_then_the_body() {
     assert_eq!(region_grip_at(bounds, 1.0, Point::new(100.0, 100.0)), Some(RegionGrip::SouthEast), "a corner outranks both edges meeting there");
     assert_eq!(region_grip_at(bounds, 1.0, Point::new(0.0, 0.0)), Some(RegionGrip::NorthWest), "and so does the opposite corner");
     assert_eq!(region_grip_at(bounds, 1.0, Point::new(-REGION_HIT_TOLERANCE_PX - 1.0, 50.0)), None, "past the band is a miss");
-    // 🔍️ The band is a constant SCREEN width, so zooming in shrinks its world reach.
     assert_eq!(region_grip_at(bounds, 4.0, Point::new(-REGION_HIT_TOLERANCE_PX / 2.0, 50.0)), None, "at zoom 4 the same world offset has left the band");
 }
 

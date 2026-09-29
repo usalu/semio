@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** @emoji 🧩 `@semio-tech/puzzle-5d-react` task router. */
+/** 🧩 `@semio-tech/puzzle-5d-react` task router. */
 import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, runVitest } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 class TestScript extends BundleScript {

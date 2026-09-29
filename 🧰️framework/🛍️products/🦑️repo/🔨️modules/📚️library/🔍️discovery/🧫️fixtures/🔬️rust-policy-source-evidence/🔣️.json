@@ -3,5 +3,21 @@
   "testPath": "owner/🧪️tests/🔬️law/🦀️.rs",
   "production": "pub fn value() -> u8 { 7 }\n#[cfg(test)]\n#[path = \"🧪️tests/🔬️law/🦀️.rs\"]\nmod tests;\n",
   "test": "use super::value;\n#[test]\nfn canonical_law() { assert_eq!(value(), 7); }\n",
-  "law": "fn canonical_law()"
+  "law": "fn canonical_law()",
+  "cfgTestItems": {
+    "path": "items/🦀️.rs",
+    "source": "pub fn mounted(\n    first: u8,\n    #[cfg(test)] hook: u8,\n) -> u8 {\n    #[cfg(test)] if first == u8::MAX {\n        return first.wrapping_add(hook);\n    }\n    first.wrapping_add(kept_in_production())\n}\npub fn inline(first: u8, #[cfg(test)] hook: u8) -> u8 {\n    #[cfg(test)]\n    let first = first.wrapping_add(hook);\n    first\n}\n#[cfg(not(test))]\nfn kept_in_production() -> u8 { 0 }\n#[cfg(test)]\nfn kept_in_production() -> u8 { 1 }\n#[cfg(test)] fn only_in_tests() -> u8 { 2 }\n",
+    "production": [
+      "pub fn mounted(",
+      "first.wrapping_add(kept_in_production())",
+      "pub fn inline(first: u8, #[cfg(test)] hook: u8) -> u8 {",
+      "fn kept_in_production() -> u8 { 0 }"
+    ],
+    "test": [
+      "return first.wrapping_add(hook);",
+      "let first = first.wrapping_add(hook);",
+      "fn kept_in_production() -> u8 { 1 }",
+      "fn only_in_tests() -> u8 { 2 }"
+    ]
+  }
 }

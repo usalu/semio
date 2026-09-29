@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** @emoji ⚙️ Runs the `semio-framework-ui-contract` test suite and the guest-target compile gates.
+/** ⚙️ Runs the `semio-framework-ui-contract` test suite and the guest-target compile gates.
  *
  * The wasm gates are the point of this crate: the contract is what `wasm32-wasip2` plugin components
  * and `wasm32-unknown-unknown` browser renderers both speak, so a dependency that fails either target
@@ -33,16 +33,16 @@ class BuiltTreeRetirementScript extends BundleScript {
         "built_tree_retirement_preserves_foreign_queued_page_at_full_capacity",
       ] }],
     });
-    console.log(`[DEBUG] built-tree exact native laws: ${receipts.reduce((sum, receipt) => sum + receipt.assertions, 0)} executed`);
+    console.log(`built-tree exact native laws: ${receipts.reduce((sum, receipt) => sum + receipt.assertions, 0)} executed`);
   }
 }
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    console.log(`[DEBUG] fixed-list-page-oracle checks=${fixedListStorageSelfTests()}`);
-    console.log(`[DEBUG] accessibility-projection-twin checks=${accessibilityProjectionSelfTests()}`);
-    console.log(`[DEBUG] catalogue-carrier-map-twin checks=${catalogueCarrierMapSelfTests()}`);
+    console.log(`fixed-list-page-oracle checks=${fixedListStorageSelfTests()}`);
+    console.log(`accessibility-projection-twin checks=${accessibilityProjectionSelfTests()}`);
+    console.log(`catalogue-carrier-map-twin checks=${catalogueCarrierMapSelfTests()}`);
     await runCargoTestBudgeted([], packageRoot, ["--all-features", ...rest]);
   }
 }
@@ -51,7 +51,7 @@ class TestScript extends BundleScript {
 //#region 🔖️conformance
 
 
-/** @emoji 🧪️ Runs only `🔬️conformance.rs`'s corpus harness — every fixture under
+/** 🧪️ Runs only `🔬️conformance.rs`'s corpus harness — every fixture under
  * `🧫️fixtures/🧪️conformance/` deserializes, validates/patches through this crate's own
  * `validate_snapshot`/`apply_patch`, and matches its declarative expectation. Same test binary as
  * `test`, filtered to the `conformance::` module path so iterating on the corpus does not pay for the
@@ -59,14 +59,14 @@ class TestScript extends BundleScript {
 class ConformanceScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    console.log(`[DEBUG] conformance-corpus-catalog cases=${conformanceCorpusSelfTests()}`);
+    console.log(`conformance-corpus-catalog cases=${conformanceCorpusSelfTests()}`);
     await runCargoTestBudgeted([], packageRoot, ["--all-features", ...rest, "--", "conformance::"]);
   }
 }
 //#endregion 🔖️conformance
 
 //#region 🔖️check-wasm
-/** @emoji 🌐️ Both guest flavours: wasip2 (plugin components) and unknown-unknown (browser renderers). */
+/** 🌐️ Both guest flavours: wasip2 (plugin components) and unknown-unknown (browser renderers). */
 class CheckWasmScript extends BundleScript {
   run(): void {
     const check = (args: string[]) => runCmd("cargo", ["check", "-p", "semio-framework-ui-contract", ...args], { cwd: packageRoot, budgetMs: buildBudgetMs() });

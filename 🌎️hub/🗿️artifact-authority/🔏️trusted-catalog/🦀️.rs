@@ -496,9 +496,10 @@ pub(crate) trait GuestResidentFootprintV1 {
 }
 
 impl GuestResidentFootprintV1 for semio_framework_plugin_host::CompiledHandle {
-    /// 🧩️ A compiled handle holds its parsed component, which its registration charges, and nothing beyond it.
+    /// 🧊️ Beyond its parsed component (which its registration charges) a compiled guest holds the owned interpreter's codec
+    /// origin once a codec call assembled it: the guest's linear memory right after its plugin bundle assembled.
     fn footprint_bytes(&self) -> u64 {
-        0
+        self.codec_origin_bytes()
     }
 }
 
@@ -2331,7 +2332,7 @@ fn validate_bundle(bundle: &TrustedBundleV1, profile_id: &str) -> Result<Selecte
                         || !package.native_codecs.iter().any(|codec| codec.artifact_kind == "s.gis.gismap" && codec.artifact_schema == "gis.map")
                         || !package.native_codecs.iter().any(|codec| codec.artifact_kind == "s.gis.gisterrain" && codec.artifact_schema == "gis.terrain")
                 })
-                || stdio.is_none_or(|package| package.native_codecs.len() != 26 || !package.dependencies.is_empty())
+                || stdio.is_none_or(|package| package.native_codecs.len() != 29 || !package.dependencies.is_empty())
                 || profile.open_targets.len() != bundle.packages.iter().map(|package| package.open_targets.len()).sum::<usize>()
             {
                 return Err(catalog("local stdio plus GIS profile is not its exact closed two-package native-codec closure opening every package target"));

@@ -335,6 +335,13 @@ pub mod editor {
         }
 
         #[path = "."]
+        pub mod transient {
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🦀️.rs"]
+            mod component;
+            pub use component::*;
+        }
+
+        #[path = "."]
         pub mod presence {
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️.rs"]
             mod component;
@@ -351,6 +358,8 @@ pub mod editor {
         pub mod commands {
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📬️apply-directory-event-page/🦀️.rs"]
             pub mod apply_directory_event_page;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗃️apply-local-catalog-document/🦀️.rs"]
+            pub mod apply_local_catalog_document;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📎️bind-space-file/🦀️.rs"]
             pub mod bind_space_file;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏗️create-studio/🦀️.rs"]

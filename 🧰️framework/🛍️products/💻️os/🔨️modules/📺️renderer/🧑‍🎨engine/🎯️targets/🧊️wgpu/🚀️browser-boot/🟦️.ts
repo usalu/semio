@@ -1,5 +1,5 @@
 //#region 🧲️PlatformBoot
-/** @emoji 🧵️ Browser UI isolate host for the dedicated frame Worker. */
+/** 🧵️ Browser UI isolate host for the dedicated frame Worker. */
 
 import { BrowserFrameTransport, browserFrameEventFromDom, browserFrameEventIsReplaceable, browserFramePointerDomEvent, browserFrameWheelDomEvent, type BrowserFrameDomEvent, type BrowserFrameFallbackState, type BrowserFrameIntrospectionProbe, type BrowserFrameWorkerFaultCode, type BrowserHubDocumentRemote } from "../🚚️browser-frame-transport/🟦️.ts";
 import { createWgpuPageHostIo } from "../🚪️host-io/🟦️.ts";
@@ -10,7 +10,7 @@ import { describeBrowserBootPhase } from "../🫀️boot-liveness/🟦️.ts";
 import { WGPU_PREFERS_DARK_MEDIA_QUERY, WGPU_READINESS_BEACON_UNKNOWN_PLUGIN, documentBootMetaReader, readWgpuHostStorageSnapshot, resolveWgpuBootDescriptor, resolveWgpuHostAppearance, resolveWgpuHostPlatform, stripBootBrokerProof, wgpuReadinessBeacon, type WgpuBootDescriptor, type WgpuHostAppearance, type WgpuHostPlatform, type WgpuHostStorageSnapshot } from "../🧭️boot-descriptor/🟦️.ts";
 import { DEFAULT_HOST_VARIANT } from "../../../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
 import { createAccessibilityMirror } from "../♿️accessibility-mirror/🟦️.ts";
-import { watchAgentBridgeOffer } from "../../../🧱️elements/🔗️AgentBridge/🛰️offer/🟦️.ts";
+import { agentBridgeOfferScopeFromJsonV1, watchAgentBridgeOffer } from "../../../🧱️elements/🔗️AgentBridge/🛰️offer/🟦️.ts";
 import { browserClipboardPasteCandidate, wireBrowserFullscreen, wireBrowserKeyboard } from "../🎮️input-wire/🟦️.ts";
 
 /** 🚏️ Resolves completed renderer artifacts and the generated frame worker through the browser host. */
@@ -23,7 +23,7 @@ await new Promise<void>((resolve) => {
   else resolve();
 });
 
-/** @emoji 🩺️ Resolves a stored `SEMIO_RUNTIME_DIAGNOSTICS` preference and hands it to the UI-turn
+/** 🩺️ Resolves a stored `SEMIO_RUNTIME_DIAGNOSTICS` preference and hands it to the UI-turn
  * ledger. The read lives HERE, in the UI isolate, and not in `../⏱️turn-budget/🟦️.ts`: that module is
  * also bundled into `🎞️frame-worker.js`, whose carrier census forbids credential-bearing storage. Wrapped
  * because a sandboxed page throws on `localStorage`; an absent value leaves the build-time switch to
@@ -42,21 +42,21 @@ function locale(): "en" | "de" {
   return navigator.language.toLowerCase().startsWith("de") ? "de" : "en";
 }
 
-/** @emoji 🌓️ The page realm's appearance reads — `prefers-color-scheme` plus the persisted
+/** 🌓️ The page realm's appearance reads — `prefers-color-scheme` plus the persisted
  * `os.config.ui-preferences` appearance. The frame Worker owns neither `window` nor `localStorage`,
  * so these are made HERE and forwarded; see `../🧭️boot-descriptor/🟦️.ts`'s 🌓️HostAppearance region. */
 function hostAppearance(): WgpuHostAppearance {
   return resolveWgpuHostAppearance(window);
 }
 
-/** @emoji ⌨️ The page realm's platform read — `userAgentData.platform`, else `navigator.platform`.
+/** ⌨️ The page realm's platform read — `userAgentData.platform`, else `navigator.platform`.
  * The frame Worker's own `cfg!(target_os = "macos")` is false in every wasm build, so without this a
  * macOS browser formatted `mod` as `Ctrl`; see `../🧭️boot-descriptor/🟦️.ts`'s ⌨️HostPlatform region. */
 function hostPlatform(): WgpuHostPlatform {
   return resolveWgpuHostPlatform(window);
 }
 
-/** @emoji 🗄️ The page realm's read of every durable preference key the shell owns. It lives HERE for
+/** 🗄️ The page realm's read of every durable preference key the shell owns. It lives HERE for
  * the same reason both appearance reads do: the frame Worker owns no `localStorage`, so its whole
  * preference store — appearance, locale, terminology, themes, keybinding overrides, the compute worker
  * count, the dock skeleton and `ui.introduction.seen.*` — was invisible and unwritable on the browser
@@ -65,7 +65,7 @@ function hostStorage(): WgpuHostStorageSnapshot {
   return readWgpuHostStorageSnapshot(window);
 }
 
-/** @emoji 🧭️ The page's own boot axes: `?plugin=&app=&role=&mode=&example=&hub=&user=&dataDir=` over
+/** 🧭️ The page's own boot axes: `?plugin=&app=&role=&mode=&example=&hub=&user=&dataDir=` over
  * the per-server `<meta name="semio-*">` seeds, plus the one-shot `#semio-broker=` proof — the SAME
  * vocabulary `../🎬️renderer-boot/🟦️.ts` and `../⌨️native-entrypoint/🦀️.rs` build, resolved by the ONE
  * shared resolver so the three doors cannot drift. The proof is read and then removed from the address
@@ -76,7 +76,7 @@ function bootDescriptor(): WgpuBootDescriptor {
   return descriptor;
 }
 
-/** @emoji 🪪️ The trunk shell is single-mount by construction (`#root`, one transferred `OffscreenCanvas`),
+/** 🪪️ The trunk shell is single-mount by construction (`#root`, one transferred `OffscreenCanvas`),
  * so its canvas carries the fixed `#semio-wgpu-canvas` identity `🌐️.html`'s own stylesheet and the
  * parity harness's wgpu boot gate (`🧑‍💻dev/…/📜️script.ts` `triageParityBoot`) both address it by. The
  * multi-mount library path (`../🎬️renderer-boot/🟦️.ts`'s `bootFrameworkOsWgpu`) deliberately stays
@@ -92,7 +92,7 @@ function canvasElement(): HTMLCanvasElement {
   return canvas;
 }
 
-/** @emoji 🔬️ `window.semioWgpuIntrospection.dumpStructure()`/`dumpFrameStats()` — the readiness beacon and
+/** 🔬️ `window.semioWgpuIntrospection.dumpStructure()`/`dumpFrameStats()` — the readiness beacon and
  * the structural oracle the parity harness (`🧑‍💻dev/…/📜️script.ts` `triageParityBoot`/`dumpWgpuStructure`)
  * addresses. Deliberately NOT `window.wasmBindings`: Trunk publishes its own UI-thread instantiation of the
  * renderer under that name (see `🌐️.html`), and that instance never boots, so its `dumpStructure` traps on
@@ -130,7 +130,7 @@ function statusElement(root: HTMLElement): HTMLElement {
   return status;
 }
 
-/** @emoji 🪂️ The REAL fallback state in words. The banner used to assert a static
+/** 🪂️ The REAL fallback state in words. The banner used to assert a static
  * "No UI-thread frame fallback was attempted", which was both untrue as a claim about intent and
  * useless as a diagnosis: once `transferControlToOffscreen()` succeeds there IS no UI-thread frame path
  * to attempt, and what the reader needs instead is what the surface actually did — who owns the canvas
@@ -331,7 +331,7 @@ async function mount(root: HTMLElement): Promise<void> {
       if (typeof fullscreen === "boolean") void fullscreenOwner.set(fullscreen).catch(() => {});
       accessibility?.refresh();
     },
-    onDiagnostic: ({ channel, generation, frameSequence, json }) => console.debug(`[DEBUG] wgpu ${channel} generation=${generation} frame=${frameSequence} ${json}`),
+    onDiagnostic: ({ channel, generation, frameSequence, json }) => console.debug(`[TRACE] wgpu ${channel} generation=${generation} frame=${frameSequence} ${json}`),
     onFault: (code: BrowserFrameWorkerFaultCode, detail, fallback) => {
       beacon.error();
       cleanupInput();
@@ -380,7 +380,7 @@ async function mount(root: HTMLElement): Promise<void> {
   darkQuery?.addEventListener("change", republishAppearance);
   window.addEventListener("storage", republishAppearance);
   window.addEventListener("storage", republishHostStorage);
-  const stopAgentBridgeOffer = watchAgentBridgeOffer((offer) => transport.setHostAgentBridge(offer));
+  const stopAgentBridgeOffer = watchAgentBridgeOffer((offer) => transport.setHostAgentBridge(offer), { offerScope: async () => agentBridgeOfferScopeFromJsonV1(await transport.introspect("agent-bridge-scope")) });
   window.addEventListener("pagehide", () => {
     stopAgentBridgeOffer();
     beacon.clear();

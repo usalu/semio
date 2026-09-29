@@ -42,15 +42,16 @@
       "stringCeilingBytes": 4096,
       "receiverPluginId": "procedural",
       "expectPluginIds": [
+        "flow-extension-bim",
         "flow-extension-brep",
         "flow-extension-math",
         "procedural"
       ],
-      "expectEmptyGraphPluginIds": [
-        "procedural"
+      "receiverConsumes": [
+        "forms.questionKind",
+        "flow.extension"
       ],
-      "expectManifestJsonPluginIds": [
-        "flow-extension-brep",
+      "expectConsumingNothingPluginIds": [
         "procedural"
       ]
     },
@@ -61,9 +62,18 @@
       "encoding": "pack",
       "crossings": 1,
       "sequenceCases": [
-        { "ownerBefore": 126, "sequence": 127 },
-        { "ownerBefore": 127, "sequence": 128 },
-        { "ownerBefore": 9007199254740990, "sequence": 9007199254740991 }
+        {
+          "ownerBefore": 126,
+          "sequence": 127
+        },
+        {
+          "ownerBefore": 127,
+          "sequence": 128
+        },
+        {
+          "ownerBefore": 9007199254740990,
+          "sequence": 9007199254740991
+        }
       ],
       "slimView": {
         "locale": "en",

@@ -175,6 +175,9 @@ pub fn plugin() -> Result<Plugin<NormApps>, PluginAssemblyError> {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️surface/🦀️.rs"]
 mod surface_tests;
+#[cfg(test)]
+#[path = "🧪️tests/🎯️action-args/🦀️.rs"]
+mod action_args_tests;
 //#endregion 🧪️SurfaceTests
 
 semio_framework_plugin::plugin_exports!(plugin, NormApps);

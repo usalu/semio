@@ -37,7 +37,6 @@ fn shared_map_delta_neutral_contract() {
     }
     let duplicate = json!({ "entries": [fixture["cases"][0]["source"][0], fixture["cases"][0]["source"][0]] });
     assert!(MapDelta::<DslValue>::from_value(serde_json::from_value(duplicate).unwrap()).is_err());
-    println!("[DEBUG] shared map delta native codec and apply matched 12 neutral vectors, preserving null, strict removal and atomic rejection");
 }
 
 /// 🪢️ Every compact single-key triple has associative output and identical successful bases.
@@ -63,5 +62,4 @@ fn shared_map_delta_exhaustive_composition() {
             if combined.is_ok() { assert_eq!(compact, sequential); }
         }
     } } }
-    println!("[DEBUG] shared map delta native exhaustive composition matched 648 bases and associative compact output");
 }

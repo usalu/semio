@@ -32,7 +32,7 @@ const overlappingTargets: CanvasPickTarget[] = [
   { domain: "opening", id: "opening-3", generality: 0, label: "Opening 3" },
 ];
 
-/** @emoji 🎯️ Toggleable host so `Default` can show both the open menu and its dismissed (no-operation) state on demand. */
+/** 🎯️ Toggleable host so `Default` can show both the open menu and its dismissed (no-operation) state on demand. */
 const CanvasPickMenuDemo = ({ request }: { readonly request: CanvasPickRequest | null }) => {
   const [currentRequest, setCurrentRequest] = useState<CanvasPickRequest | null>(request);
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
@@ -86,7 +86,7 @@ const leftHalfTargets: CanvasPickTarget[] = [
 ];
 const rightHalfTargets: CanvasPickTarget[] = [{ domain: "piece", id: "capsule-p-02", generality: 2, label: "Capsule P #02" }];
 
-/** @emoji 🪝️ Fake "canvas" surface wiring pointer events straight through {@link useCanvasPickInteraction} — a stand-in for the real WebGL/2d canvas hosts that share this hook. */
+/** 🪝️ Fake "canvas" surface wiring pointer events straight through {@link useCanvasPickInteraction} — a stand-in for the real WebGL/2d canvas hosts that share this hook. */
 const CanvasPickInteractionDemo = () => {
   const [focus, setFocus] = useState<CanvasHoverFocus | null>(null);
   const [lastSelected, setLastSelected] = useState<string | null>(null);

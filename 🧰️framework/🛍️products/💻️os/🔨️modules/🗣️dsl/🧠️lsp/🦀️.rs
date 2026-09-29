@@ -1,11 +1,11 @@
-//! @emoji 📡️ `dsl_lsp` — LSP 3.17 JSON-RPC subset and in-process [`LanguageSession`] over
+//! 📡️ `dsl_lsp` — LSP 3.17 JSON-RPC subset and in-process [`LanguageSession`] over
 //! [`crate::os_dsl::LanguageSpec`] hooks (semantic tokens, completion, canonicalize).
 
 use crate::os_dsl::{CompletionItem, GrammarFile, LanguageSpec, ProtocolFile, TextError, TokenClass};
 use crate::os_pack::json::{object, Object, Value};
 
 //#region 🔖️Session
-/// @emoji 🗣️ In-process language host for editor surfaces (writer, playground).
+/// 🗣️ In-process language host for editor surfaces (writer, playground).
 pub struct LanguageSession {
     spec: LanguageSpec,
     text: String,
@@ -60,7 +60,7 @@ impl LanguageSession {
         (self.spec.hooks.canonicalize)(&self.text)
     }
 
-    /// @emoji 🩺 Text diagnostics from hooks + grammar dialect checks when `grammar` is present.
+    /// 🩺 Text diagnostics from hooks + grammar dialect checks when `grammar` is present.
     pub fn diagnostics(&self) -> Vec<TextError> {
         let mut out = Vec::new();
         if self.spec.is_text_role() {
@@ -74,17 +74,17 @@ impl LanguageSession {
         out
     }
 
-    /// @emoji 📡️ Byte-level protocol verification when `protocol` text is present on the spec.
+    /// 📡️ Byte-level protocol verification when `protocol` text is present on the spec.
     pub fn verify_protocol_bytes(&self, bytes: &[u8]) -> Result<(), String> {
         self.spec.verify_protocol(bytes)
     }
 
-    /// @emoji 📖️ Parsed grammar file for text roles (`None` when unset).
+    /// 📖️ Parsed grammar file for text roles (`None` when unset).
     pub fn grammar_file(&self) -> Result<Option<GrammarFile>, TextError> {
         self.spec.parsed_grammar()
     }
 
-    /// @emoji 📡️ Parsed protocol file for binary verification (`None` when unset).
+    /// 📡️ Parsed protocol file for binary verification (`None` when unset).
     pub fn protocol_file(&self) -> Result<Option<ProtocolFile>, TextError> {
         self.spec.parsed_protocol()
     }
@@ -92,7 +92,7 @@ impl LanguageSession {
 //#endregion 🔖️Session
 
 //#region 🔖️JsonRpc
-/// @emoji 📨 Handles one LSP JSON-RPC request string; returns optional response JSON text.
+/// 📨 Handles one LSP JSON-RPC request string; returns optional response JSON text.
 pub fn handle_json_rpc(line: &str, session: &LanguageSession) -> Option<String> {
     let msg: Value = crate::os_pack::json::parse(line).ok()?;
     let id = msg.get("id").cloned();

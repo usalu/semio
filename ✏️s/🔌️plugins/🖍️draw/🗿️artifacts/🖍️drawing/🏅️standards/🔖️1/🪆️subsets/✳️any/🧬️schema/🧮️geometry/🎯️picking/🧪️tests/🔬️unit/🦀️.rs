@@ -19,5 +19,4 @@ fn curve_picking_yields_with_bounded_storage_and_refuses_unresolved_geometry() {
     for _ in 0..16 {assert!(!cursor.step(&segments));}
     let mut steps=16;while !cursor.step(&segments){steps+=1;assert!(steps<100);}
     assert!(cursor.failed());assert!(!cursor.contains(true,true,false));assert!(cursor.maximum_depth<=33);
-    eprintln!("[DEBUG] unresolved path picking refused after {steps} incremental steps");
 }

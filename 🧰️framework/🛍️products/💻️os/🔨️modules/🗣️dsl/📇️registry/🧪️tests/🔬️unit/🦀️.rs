@@ -1,7 +1,7 @@
 use super::*;
 use crate::os_dsl::schema::{FieldSpec, RecordLayout, RecordSpec, Shape};
 
-/// @emoji 🧬️ A real (not mocked) minimal `RecordSpec` — one `Int` field under `Inline` layout.
+/// 🧬️ A real (not mocked) minimal `RecordSpec` — one `Int` field under `Inline` layout.
 // 🚫️async: E4 fn-pointer slot — passed to `register_schema_spec`/`FullResolver::from_map`,
 // both `fn() -> RecordSpec` (sync, unnameable if async) — see R9/E4.
 fn sample_spec() -> RecordSpec {

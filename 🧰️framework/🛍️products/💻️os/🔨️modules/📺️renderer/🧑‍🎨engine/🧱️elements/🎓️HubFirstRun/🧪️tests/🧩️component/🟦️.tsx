@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🎓️ Laws for the hub first-run walkthrough contract and pane (ticket
+/** 🎓️ Laws for the hub first-run walkthrough contract and pane (ticket
  * `26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END` slice D2, G12 ranked item #12). Anchors are checked
  * against the shared element-id grammar this repo already owns (`ELEMENT_ID_PATTERN`, the same
  * regex `assertElementId` enforces at every call site) and against the `os.hub.` namespace

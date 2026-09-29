@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/🌳️GraphTimelineHost/component.tsx
-/** @emoji 🕰️ `🌳️GraphTimelineHost` — the graph-history/checkpoint timeline scene host: renders a
+/** 🕰️ `🌳️GraphTimelineHost` — the graph-history/checkpoint timeline scene host: renders a
  * `HistoryTable` from the program-supplied `columnsJson` and dispatches `checkoutCheckpoint` on row
  * selection. */
 // #endregion 🧲️Header
@@ -40,7 +40,7 @@ export function GraphTimelineHost({ node, onAction, requestContextMenu }: Compon
   }, [scene]);
 
   //#region ContextMenu
-  /** @emoji 🖱️ `GraphTimelineScene` carries only `columnsJson` — no per-row pick/selection state reaches this host (`HistoryTable` doesn't expose a row-context-menu hook either) — so `hits`/`selection` stay empty per surface convention. */
+  /** 🖱️ `GraphTimelineScene` carries only `columnsJson` — no per-row pick/selection state reaches this host (`HistoryTable` doesn't expose a row-context-menu hook either) — so `hits`/`selection` stay empty per surface convention. */
   const onContextMenu = useCallback(
     (event: MouseEvent<HTMLDivElement>): void => {
       if (!requestContextMenu) return;

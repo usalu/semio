@@ -64,5 +64,4 @@ fn canonical_tagged_mutations_match_the_owned_schema_validator() {
         assert!(validator.validate_json(&value.to_string()).is_err());
     }
     assert_eq!(kinds.len(), DrawingMutation::kinds().len());
-    eprintln!("[DEBUG] {} canonical tagged Drawing mutations match the owned schema validator and reject unknown tags and fields", kinds.len());
 }

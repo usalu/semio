@@ -100,7 +100,6 @@ fn concrete_window_instances_round_trip_without_kind_collapse() {
     assert_eq!(dock.window_kind_id("canvas-copy"), Some("canvas"));
     let persisted = serde_json::to_value(dock.to_window_layout()).expect("persisted layout");
     assert!(persisted.to_string().contains("canvas-copy"));
-    println!("[DEBUG] native dock retained two concrete instances of one window kind across chrome, render and drag persistence");
 }
 
 #[test]
@@ -472,39 +471,42 @@ fn apply_drop_stack_same_source_is_noop() {
     assert_eq!(dock.root, before);
 }
 
+/// 🪂️ Inside the tab bar rect → `Tab` zone wins even though it's also inside the body's column span.
+///
+/// Inside the body but below the tab bar → `Split` zone.
+///
+/// Outside every registered stack but inside the canvas → `RootSplit`.
 #[test]
 fn compute_dock_drop_zone_prefers_tab_bar_over_body_over_root() {
     let tab_bars = vec![(vec![0], WindowStackCorner::TopLeft, Rect::new(0.0, 0.0, 200.0, 24.0), vec![80.0, 80.0])];
     let bodies = vec![(vec![0], Rect::new(0.0, 24.0, 200.0, 200.0), "a".to_string())];
     let canvas = Rect::new(0.0, 0.0, 200.0, 224.0);
-    // Inside the tab bar rect → `Tab` zone wins even though it's also inside the body's column span.
     assert_eq!(compute_dock_drop_zone(10.0, 10.0, &tab_bars, &bodies, canvas), Some(DockDropZone::Tab { stack_path: vec![0], corner: WindowStackCorner::TopLeft, index: 0 }));
-    // Inside the body but below the tab bar → `Split` zone.
     assert!(matches!(compute_dock_drop_zone(100.0, 100.0, &tab_bars, &bodies, canvas), Some(DockDropZone::Split { .. })));
-    // Outside every registered stack but inside the canvas → `RootSplit`.
     assert!(matches!(compute_dock_drop_zone(190.0, 300.0, &tab_bars, &bodies, canvas), None));
     let wide_canvas = Rect::new(0.0, 0.0, 400.0, 400.0);
     assert!(matches!(compute_dock_drop_zone(390.0, 390.0, &tab_bars, &bodies, wide_canvas), Some(DockDropZone::RootSplit { .. })));
 }
 
+/// 🪓️ Wide-and-short body: a small vertical offset from center stays dominated by the x-axis.
+///
+/// Tall-and-narrow body: a small horizontal offset stays dominated by the y-axis.
 #[test]
 fn resolve_split_side_uses_dominant_axis_from_center() {
-    // Wide-and-short body: a small vertical offset from center stays dominated by the x-axis.
     assert_eq!(resolve_split_side(10.0, 60.0, 400.0, 120.0), DockSide::Left);
     assert_eq!(resolve_split_side(390.0, 60.0, 400.0, 120.0), DockSide::Right);
-    // Tall-and-narrow body: a small horizontal offset stays dominated by the y-axis.
     assert_eq!(resolve_split_side(60.0, 10.0, 120.0, 400.0), DockSide::Top);
     assert_eq!(resolve_split_side(60.0, 390.0, 120.0, 400.0), DockSide::Bottom);
 }
 
+/// 🗄️ A persisted `WindowLayout` snapshot whose `active_window_kind_id` predates the user's
+/// later in-session tab switch to `b` — a naive `self.dock.root = dock_from_window_layout(...)`
+/// teardown would silently revert focus back to `a`.
 #[test]
 fn apply_layout_diff_keeps_current_tab_focused_over_stale_persisted_active() {
     let mut dock = DockState::default();
     dock.root = stack_tabs(&["a", "b"], "b");
     dock.active_window_id = Some("b".into());
-    // 🗄️ A persisted `WindowLayout` snapshot whose `active_window_kind_id` predates the user's
-    // later in-session tab switch to `b` — a naive `self.dock.root = dock_from_window_layout(...)`
-    // teardown would silently revert focus back to `a`.
     let stale_layout = WindowLayout {
         root: WindowLayoutRoot::Stack(WindowLayoutStackNode {
             kind: "stack".into(),
@@ -520,6 +522,9 @@ fn apply_layout_diff_keeps_current_tab_focused_over_stale_persisted_active() {
     assert_eq!(dock.root, stack_tabs(&["a", "b"], "b"), "same membership, reordered-or-not — the user's current tab stays focused");
 }
 
+/// 🔑️ The incoming layout reverses the two stacks' order — `b`'s *positional* path moves from
+/// `[1]` to `[0]`. A stale-path reuse would now silently misdirect `active_stack`/
+/// `maximized_stack` at `a` instead of following `b` by key.
 #[test]
 fn apply_layout_diff_reanchors_active_and_maximized_stack_by_key() {
     let mut dock = DockState::default();
@@ -528,9 +533,6 @@ fn apply_layout_diff_reanchors_active_and_maximized_stack_by_key() {
     dock.active_stack = Some(vec![1]);
     dock.maximized_stack = Some(vec![1]);
     dock.split_resize_origin = vec![0.5, 0.5];
-    // 🔑️ The incoming layout reverses the two stacks' order — `b`'s *positional* path moves from
-    // `[1]` to `[0]`. A stale-path reuse would now silently misdirect `active_stack`/
-    // `maximized_stack` at `a` instead of following `b` by key.
     let reversed = WindowLayout {
         root: WindowLayoutRoot::Axis(ui_wgpu::wgpu::WindowLayoutAxisNode {
             kind: "row".into(),
@@ -577,13 +579,14 @@ fn apply_layout_diff_clears_maximized_stack_when_its_window_is_gone() {
     assert_eq!(dock.active_window_id.as_deref(), Some("b"));
 }
 
+/// 🌳️ Identical row → the whole node is byte-for-byte the same value (full reuse).
+///
+/// A structural kind change (Stack -> Row) at index 1 has no shared identity — adopt `next` as-is.
 #[test]
 fn diff_dock_node_reuses_unchanged_subtree_and_adopts_new_shape_where_changed() {
     let old = DockNode::Row(vec![(stack_with("a"), 0.5), (stack_with("b"), 0.5)]);
-    // Identical row → the whole node is byte-for-byte the same value (full reuse).
     let unchanged = diff_dock_node(&old, DockNode::Row(vec![(stack_with("a"), 0.5), (stack_with("b"), 0.5)]));
     assert_eq!(unchanged, old);
-    // A structural kind change (Stack -> Row) at index 1 has no shared identity — adopt `next` as-is.
     let next = DockNode::Row(vec![(stack_with("a"), 0.5), (DockNode::Row(vec![(stack_with("b"), 1.0)]), 0.5)]);
     let diffed = diff_dock_node(&old, next.clone());
     assert_eq!(diffed, next);
@@ -693,6 +696,8 @@ fn mods(meta: bool, ctrl: bool, shift: bool, alt: bool) -> PointerModifiers {
 /// 🧰️ Builds a two-window app: window `main` scopes `utility.a`, window `aux` scopes nothing; `utility.b`
 /// is an orphan (no window references it). Actions: `zeroArg` (no args) + `withArgs` (required text +
 /// defaulted toggle) scoped to `main`.
+///
+/// Scope utility.a + both actions to `main`; leave utility.b an orphan referenced by no window.
 fn actions_utilities_app() -> AppDefinition {
     let mut app = sample_app(&["main", "aux"], None);
     app.controller_id = "ctrl".into();
@@ -705,7 +710,6 @@ fn actions_utilities_app() -> AppDefinition {
             ..ActionDefinition::bounded_catalog("withArgs", LocalizedLabel::data("With Args"), ActionKind::View)
         },
     ];
-    // Scope utility.a + both actions to `main`; leave utility.b an orphan referenced by no window.
     for kind in app.window_kinds.iter_mut() {
         if kind.id == "main" {
             kind.utilities = vec![UtilityRef::new("utility.a")];
@@ -719,6 +723,7 @@ fn shell() -> ShellState {
     ShellState::new(vec![], "test".into())
 }
 
+/// 🗃️ `main` gets its explicit utility.a first, then the orphan utility.b; `aux` only sees the orphan.
 #[test]
 fn resolve_window_utilities_scopes_explicit_and_orphans() {
     let app = actions_utilities_app();
@@ -726,34 +731,35 @@ fn resolve_window_utilities_scopes_explicit_and_orphans() {
     let aux = app.window_kinds.iter().find(|k| k.id == "aux").unwrap();
     let main_ids: Vec<&str> = crate::shell::resolve_window_utilities(&app, main).iter().map(|t| t.id.as_str()).collect();
     let aux_ids: Vec<&str> = crate::shell::resolve_window_utilities(&app, aux).iter().map(|t| t.id.as_str()).collect();
-    // `main` gets its explicit utility.a first, then the orphan utility.b; `aux` only sees the orphan.
     assert_eq!(main_ids, vec!["utility.a", "utility.b"]);
     assert_eq!(aux_ids, vec!["utility.b"]);
 }
 
+/// ⌨️ Shift held but not declared → no match; declared shift required.
+///
+/// plain key must not fire while the accelerator is held.
 #[test]
 fn key_event_matches_chord_respects_modifiers() {
     use crate::shell::key_event_matches_chord;
     let z = KeyAction::Char("z".into());
     assert!(key_event_matches_chord(&z, &mods(true, false, false, false), "mod+z"));
     assert!(key_event_matches_chord(&z, &mods(false, true, false, false), "mod+z"));
-    // shift held but not declared → no match; declared shift required.
     assert!(!key_event_matches_chord(&z, &mods(true, false, true, false), "mod+z"));
     assert!(key_event_matches_chord(&z, &mods(true, false, true, false), "mod+shift+z"));
-    // plain key must not fire while the accelerator is held.
     let k = KeyAction::Char("k".into());
     assert!(key_event_matches_chord(&k, &mods(false, false, false, false), "k"));
     assert!(!key_event_matches_chord(&k, &mods(true, false, false, false), "k"));
     assert!(key_event_matches_chord(&KeyAction::Escape, &mods(false, false, false, false), "escape"));
 }
 
+/// 🚦️ Nothing staged → required `name` missing → no executable args (P2 gate).
+///
+/// Stage the required arg → executes, merging the defaulted `flag`.
 #[test]
 fn required_arg_gates_execution_and_merges_defaults() {
     let app = actions_utilities_app();
     let defs = &app.window_kinds.iter().find(|kind| kind.id == "main").unwrap().actions.iter().find(|action| action.id == "withArgs").unwrap().args;
-    // Nothing staged → required `name` missing → no executable args (P2 gate).
     assert!(ShellState::resolved_execute_args(defs, &serde_json::Map::new()).is_none());
-    // Stage the required arg → executes, merging the defaulted `flag`.
     let mut staged = serde_json::Map::new();
     staged.insert("name".into(), serde_json::json!("hello"));
     let merged = ShellState::resolved_execute_args(defs, &staged).expect("executable");
@@ -773,30 +779,33 @@ fn staging_stage_and_reset_roundtrip() {
     assert!(shell.staged_map_for("main", "withArgs").is_empty());
 }
 
+/// 🔀️ Re-selecting the active utility deactivates it (the same update a re-click / Escape performs).
+///
+/// Switching to a different utility activates it.
 #[test]
 fn utility_activation_toggles_and_switches() {
     let mut shell = shell();
     shell.apply_set_active_utility("main", "utility.a");
     assert_eq!(shell.active_utility_for_window("main"), Some("utility.a"));
-    // Re-selecting the active utility deactivates it (the same update a re-click / Escape performs).
     shell.apply_set_active_utility("main", "utility.a");
     assert_eq!(shell.active_utility_for_window("main"), None);
-    // Switching to a different utility activates it.
     shell.apply_set_active_utility("main", "utility.a");
     shell.apply_set_active_utility("main", "utility.b");
     assert_eq!(shell.active_utility_for_window("main"), Some("utility.b"));
 }
 
+/// 🛂️ No active utility → actions enabled.
+///
+/// utility.a defaults to `allows_actions_while_active = false` → actions gated.
+///
+/// utility.b sets the flag true → actions stay enabled.
 #[test]
 fn active_utility_gates_actions_unless_allowed() {
     let app = actions_utilities_app();
     let mut shell = shell();
-    // No active utility → actions enabled.
     assert!(shell.actions_enabled_for_window(&app, "main"));
-    // utility.a defaults to `allows_actions_while_active = false` → actions gated.
     shell.apply_set_active_utility("main", "utility.a");
     assert!(!shell.actions_enabled_for_window(&app, "main"));
-    // utility.b sets the flag true → actions stay enabled.
     shell.apply_set_active_utility("main", "utility.a");
     shell.apply_set_active_utility("main", "utility.b");
     assert!(shell.actions_enabled_for_window(&app, "main"));

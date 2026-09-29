@@ -901,14 +901,14 @@ export function verifyVisualizationCoverage(): void {
   assert.deepEqual(report.unknownDemoTables, []);
   assert.deepEqual(leaves.filter((leaf) => !parseVizCovers(VIZ_GALLERY_DIR).has(leaf)), []);
   assert.deepEqual(assertVizApi().missing, []);
-  console.log(`[DEBUG] print: viz coverage ${report.leaves}/${report.leaves} leaves through ${report.kinds} kinds, API ${VIZ_API_COMMANDS.length}/${VIZ_API_COMMANDS.length}`);
-  if (report.unknownFamilies.length > 0) console.log(`[DEBUG] print: ${report.unknownFamilies.length} families still awaiting a \\SemioVizFamily registration: ${report.unknownFamilies.slice(0, 8).join(" ")}…`);
+  console.log(`[TRACE] print: viz coverage ${report.leaves}/${report.leaves} leaves through ${report.kinds} kinds, API ${VIZ_API_COMMANDS.length}/${VIZ_API_COMMANDS.length}`);
+  if (report.unknownFamilies.length > 0) console.log(`[TRACE] print: ${report.unknownFamilies.length} families still awaiting a \\SemioVizFamily registration: ${report.unknownFamilies.slice(0, 8).join(" ")}…`);
 }
 
 /** 🧪️ Long-level check: every catalogue family is actually registered by a LaTeX package. */
 export function verifyVisualizationFamilies(): void {
   const report = vizCoverageReport();
   assert.deepEqual(report.unknownFamilies, []);
-  console.log(`[DEBUG] print: every viz family of ${report.kinds} kinds is registered`);
+  console.log(`[TRACE] print: every viz family of ${report.kinds} kinds is registered`);
 }
 //#endregion 🔖️Coverage

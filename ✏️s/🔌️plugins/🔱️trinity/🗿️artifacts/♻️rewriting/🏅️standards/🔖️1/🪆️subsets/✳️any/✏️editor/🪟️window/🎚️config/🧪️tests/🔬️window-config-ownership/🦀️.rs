@@ -134,12 +134,11 @@ async fn rewriting_window_config_retained_publication_renders_and_reloads_two_co
     }
     .await;
     if let Err(error) = &outcome {
-        eprintln!("[DEBUG] Rewriting window configuration runtime failure before close: {error}");
+        eprintln!("Rewriting window configuration runtime failure before close: {error}");
     }
     artifact_app_laws::close_registered_fixture_app(&mut reopened);
     artifact_app_laws::close_registered_fixture_app(&mut app);
     outcome.expect("retained Rewriting window configuration isolation and persistence");
-    eprintln!("[DEBUG] two Rewriting windows published camera/LOD independently, preserved document and app envelopes, rendered separate state, and reloaded exact persisted partitions");
 }
 
 #[test]
@@ -169,7 +168,6 @@ fn rewriting_window_config_mutations_match_the_independent_patch_trace() {
         }
     }
     assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&semio_framework_plugin::NoConfig::default())).unwrap(), fixture["expectedAppConfig"]);
-    eprintln!("[DEBUG] Rewriting window config mutations matched camera/LOD patch trace and restored exact inverses; app config stayed empty");
 }
 
 #[test]
@@ -193,5 +191,4 @@ fn rewriting_window_config_commands_use_the_trusted_concrete_window() {
     assert_eq!(emit.window_config_mutations[0].window_kind_id(), BeforeWindowConfigOwner::WINDOW_KIND_ID);
     assert!(crate::editor::rewriting::commands::set_lod_mode("compact", None).is_err());
     assert!(crate::editor::rewriting::commands::set_lod_mode(&"x".repeat(65), Some(&view)).is_err());
-    eprintln!("[DEBUG] Rewriting LOD command addressed the host-selected window and emitted only a window configuration mutation");
 }

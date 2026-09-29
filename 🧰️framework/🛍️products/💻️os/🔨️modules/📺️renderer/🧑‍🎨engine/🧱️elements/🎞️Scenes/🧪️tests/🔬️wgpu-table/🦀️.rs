@@ -88,6 +88,7 @@ fn header_click_cycles_descending_back_to_ascending() {
     assert_eq!(action.args.as_ref().and_then(|args| args.get("direction")).and_then(semio_framework::DslValue::as_str), Some("asc"));
 }
 
+/// 🔀️ "name" isn't the currently-sorted column, so clicking it must start a fresh ascending sort, not toggle.
 #[test]
 fn sorting_a_column_does_not_reset_a_different_column_to_desc() {
     let mut table = TableScene::base(columns_json(&[("name", "Name", true), ("age", "Age", true)]), "[]".to_string());
@@ -96,7 +97,6 @@ fn sorting_a_column_does_not_reset_a_different_column_to_desc() {
     let input = render(&node);
     let target = hit(&input, "s1.header.name");
     let action = target.event.as_ref().expect("sortTable action");
-    // 🔀️ "name" isn't the currently-sorted column, so clicking it must start a fresh ascending sort, not toggle.
     assert_eq!(action.args.as_ref().and_then(|args| args.get("direction")).and_then(semio_framework::DslValue::as_str), Some("asc"));
 }
 

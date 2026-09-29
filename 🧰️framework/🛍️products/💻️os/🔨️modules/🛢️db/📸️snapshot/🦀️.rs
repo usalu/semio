@@ -1,6 +1,6 @@
 //! 🗄️ 📸️ `db_snapshot` — pack-file-based document snapshots for the `db` crate family:
 //! immutable state pages are written into `KIND_CHUNK` segments, a `SnapshotDescriptor`
-//! (frontier, protocol version, VCS head, base pack hash, root list) is written into the
+//! (frontier, protocol version, base pack hash, root list) is written into the
 //! reserved `KIND_SNAPSHOT` (`0x07`) pack segment kind — this crate is the first real consumer
 //! of that segment kind — and incremental generations chain via `pack::Footer.prev_footer_offset`
 //! plus the `REQUIRED_FOOTER_CHAIN` flag, also previously reserved-unused. Built strictly against
@@ -48,19 +48,19 @@ use db_state::Page;
 use db_storage::{LeaseInfo, LeaseStorage, SnapshotStorage};
 
 //#region 🔖️Descriptor
-/// @emoji 🔢️ Wire format tag for `SnapshotDescriptor::encode`/`decode` — bumped on any
+/// 🔢️ Wire format tag for `SnapshotDescriptor::encode`/`decode` — bumped on any
 /// incompatible field layout change so a stale reader fails loudly (`DbError::Corrupt`) instead
 /// of misparsing.
-const DESCRIPTOR_FORMAT_VERSION: u8 = 1;
+const DESCRIPTOR_FORMAT_VERSION: u8 = 2;
 
-/// @emoji 🛡️ Ceiling on `roots`/`new_pages` entry counts and on any embedded string's byte
+/// 🛡️ Ceiling on `roots`/`new_pages` entry counts and on any embedded string's byte
 /// length, validated before allocating the destination `Vec`/`String` — mirrors `pack_core`'s
 /// stated "validate before allocating" invariant.
 const MAX_HASH_LIST_LEN: u64 = 4_000_000;
 const MAX_STRING_BYTES: u64 = 1024 * 1024;
 
-/// @emoji 📇️ One generation's manifest of a document's snapshot state: the frontier it was taken
-/// at, VCS/protocol provenance, the root page hashes needed to reconstruct the document tree, and
+/// 📇️ One generation's manifest of a document's snapshot state: the frontier it was taken
+/// at, protocol provenance, the root page hashes needed to reconstruct the document tree, and
 /// the hashes of the pages whose `KIND_CHUNK` bytes live *in this generation's own blob*
 /// (everything else reachable from `roots` is expected to resolve via `parent_generation`'s chain
 /// — see `resolve_page`). This is exactly the payload written into the `KIND_SNAPSHOT` segment.
@@ -68,7 +68,7 @@ const MAX_STRING_BYTES: u64 = 1024 * 1024;
 pub struct SnapshotDescriptor {
     pub document: ArtifactId,
     pub generation: u64,
-    /// @emoji 🌳️ `None` for a full baseline (self-sufficient, chains to nothing); `Some(g)` for an
+    /// 🌳️ `None` for a full baseline (self-sufficient, chains to nothing); `Some(g)` for an
     /// incremental generation whose unlisted pages must be resolved from generation `g` onward.
     pub parent_generation: Option<u64>,
     pub head_seq: u64,
@@ -76,22 +76,21 @@ pub struct SnapshotDescriptor {
     pub epoch: u64,
     pub chain_hash: [u8; 32],
     pub protocol_version: u32,
-    pub vcs_head: Option<String>,
     pub base_pack_hash: Option<ContentHash>,
     pub roots: Vec<ContentHash>,
-    /// @emoji 🧱️ Page hashes with a `KIND_CHUNK` in *this* blob, in the exact order they were
+    /// 🧱️ Page hashes with a `KIND_CHUNK` in *this* blob, in the exact order they were
     /// written — index `i` here is `pack::ChunkId(i)` in this generation's own chunk table.
     pub new_pages: Vec<ContentHash>,
     pub created_at_ms: u64,
 }
 
 impl SnapshotDescriptor {
-    /// @emoji 🧭️ Reconstructs the `Frontier` this generation was taken at.
+    /// 🧭️ Reconstructs the `Frontier` this generation was taken at.
     pub async fn frontier(&self) -> Frontier {
         Frontier { document: self.document.clone(), head_seq: self.head_seq, commit_seq: self.commit_seq, chain_hash: self.chain_hash, epoch: self.epoch }
     }
 
-    /// @emoji ✍️ Serializes this descriptor to the exact bytes written into the `KIND_SNAPSHOT`
+    /// ✍️ Serializes this descriptor to the exact bytes written into the `KIND_SNAPSHOT`
     /// segment — a flat, versioned, varint-framed encoding (this crate's own choice; the contract
     /// fixes only the segment kind, not the payload layout).
     #[cfg(test)]
@@ -106,13 +105,6 @@ impl SnapshotDescriptor {
         w.write_varint_u64(self.epoch);
         w.write_bytes(&self.chain_hash);
         w.write_varint_u64(self.protocol_version as u64);
-        match &self.vcs_head {
-            Some(head) => {
-                w.write_u8(1);
-                write_string(&mut w, head).await;
-            }
-            None => w.write_u8(0),
-        }
         match &self.base_pack_hash {
             Some(hash) => {
                 w.write_u8(1);
@@ -137,7 +129,6 @@ impl SnapshotDescriptor {
             snapshot_varint_len(self.epoch),
             32,
             snapshot_varint_len(self.protocol_version as u64),
-            1 + self.vcs_head.as_ref().map_or(0, |value| snapshot_field_len(value.as_bytes())),
             1 + self.base_pack_hash.map_or(0, |_| 32),
             snapshot_varint_len(self.roots.len() as u64) + self.roots.len().checked_mul(32).ok_or(DbError::LimitExceeded("snapshot roots bytes"))?,
             snapshot_varint_len(self.new_pages.len() as u64) + self.new_pages.len().checked_mul(32).ok_or(DbError::LimitExceeded("snapshot new pages bytes"))?,
@@ -161,10 +152,6 @@ impl SnapshotDescriptor {
         snapshot_segment_write_varint(segment, self.epoch).await?;
         snapshot_segment_write(segment, &self.chain_hash).await?;
         snapshot_segment_write_varint(segment, self.protocol_version as u64).await?;
-        snapshot_segment_write(segment, &[u8::from(self.vcs_head.is_some())]).await?;
-        if let Some(head) = &self.vcs_head {
-            snapshot_segment_write_field(segment, head.as_bytes()).await?;
-        }
         snapshot_segment_write(segment, &[u8::from(self.base_pack_hash.is_some())]).await?;
         if let Some(hash) = self.base_pack_hash {
             snapshot_segment_write(segment, &hash.0).await?;
@@ -180,7 +167,7 @@ impl SnapshotDescriptor {
         snapshot_segment_write_varint(segment, self.created_at_ms).await
     }
 
-    /// @emoji 📖️ Inverse of `encode`. Never panics on malformed input — every field read is
+    /// 📖️ Inverse of `encode`. Never panics on malformed input — every field read is
     /// bounds-checked by `pack::ByteReader` and every count is checked against
     /// `MAX_HASH_LIST_LEN`/`MAX_STRING_BYTES` before the corresponding `Vec`/`String` is allocated.
     #[cfg(test)]
@@ -198,11 +185,6 @@ impl SnapshotDescriptor {
         let epoch = r.read_varint_u64()?;
         let chain_hash = r.read_array32()?;
         let protocol_version = r.read_varint_u64()? as u32;
-        let vcs_head = match r.read_u8()? {
-            0 => None,
-            1 => Some(read_string(&mut r).await?),
-            other => return Err(DbError::Corrupt(format!("bad option tag {other}"))),
-        };
         let base_pack_hash = match r.read_u8()? {
             0 => None,
             1 => Some(ContentHash(r.read_array32()?)),
@@ -211,7 +193,7 @@ impl SnapshotDescriptor {
         let roots = read_hash_list(&mut r).await?;
         let new_pages = read_hash_list(&mut r).await?;
         let created_at_ms = r.read_varint_u64()?;
-        Ok(SnapshotDescriptor { document, generation, parent_generation, head_seq, commit_seq, epoch, chain_hash, protocol_version, vcs_head, base_pack_hash, roots, new_pages, created_at_ms })
+        Ok(SnapshotDescriptor { document, generation, parent_generation, head_seq, commit_seq, epoch, chain_hash, protocol_version, base_pack_hash, roots, new_pages, created_at_ms })
     }
 }
 
@@ -309,7 +291,7 @@ async fn read_hash_list(r: &mut pack::ByteReader<'_>) -> Result<Vec<ContentHash>
 //#endregion 🔖️Descriptor
 
 //#region 🔖️SegmentIo
-/// @emoji 🪟️ A length-bounded, base-shifted view over a borrowed byte buffer that implements
+/// 🪟️ A length-bounded, base-shifted view over a borrowed byte buffer that implements
 /// `pack::PackSource` — the mechanism this crate uses to open one generation's own pack structure
 /// (`PackFile::open_manifest`, `read_footer_only`) at an arbitrary offset inside a larger
 /// multi-generation concatenation, without touching any `pack_format` private internals.
@@ -484,11 +466,6 @@ async fn decode_snapshot_descriptor(source: &impl pack::PackSource, control: &mu
     let epoch = reader.varint().await?;
     let chain_hash = reader.fixed::<32>().await?;
     let protocol_version = u32::try_from(reader.varint().await?).map_err(|_| DbError::Corrupt("snapshot protocol version exceeds u32".to_string()))?;
-    let vcs_head = match reader.byte().await? {
-        0 => None,
-        1 => Some(reader.text().await?),
-        tag => return Err(DbError::Corrupt(format!("bad snapshot option tag {tag}"))),
-    };
     let base_pack_hash = match reader.byte().await? {
         0 => None,
         1 => Some(ContentHash(reader.fixed::<32>().await?)),
@@ -509,7 +486,7 @@ async fn decode_snapshot_descriptor(source: &impl pack::PackSource, control: &mu
     if kind != pack::KIND_SNAPSHOT {
         return Err(DbError::Corrupt(format!("expected KIND_SNAPSHOT segment (0x{:02x}), found 0x{kind:02x}", pack::KIND_SNAPSHOT)));
     }
-    Ok(SnapshotDescriptor { document, generation, parent_generation, head_seq, commit_seq, epoch, chain_hash, protocol_version, vcs_head, base_pack_hash, roots, new_pages, created_at_ms })
+    Ok(SnapshotDescriptor { document, generation, parent_generation, head_seq, commit_seq, epoch, chain_hash, protocol_version, base_pack_hash, roots, new_pages, created_at_ms })
 }
 //#endregion 🔖️SegmentIo
 
@@ -658,7 +635,7 @@ impl SnapshotPageSource for OptionalSnapshotPages<'_> {
     }
 }
 
-/// @emoji 🏗️ Builds one generation's complete, self-contained `.spk` pack bytes: the descriptor
+/// 🏗️ Builds one generation's complete, self-contained `.spk` pack bytes: the descriptor
 /// as the first (`KIND_SNAPSHOT`) segment, `new_pages` as `KIND_CHUNK` segments in order (so
 /// `descriptor.new_pages[i]` is `pack::ChunkId(i)`), then the standard `pack::PackWriter::finish`
 /// trailer. If `parent_footer_position` is `Some`, the trailing footer's `prev_footer_offset` is
@@ -737,7 +714,6 @@ fn retained_publication_descriptor_len(document: &ArtifactId, generation: u64, b
         snapshot_varint_len(body.epoch),
         32,
         snapshot_varint_len(body.protocol_version as u64),
-        1 + body.vcs_head.as_ref().map_or(0, |value| snapshot_field_len(value.as_bytes())),
         1 + body.base_pack_hash.map_or(0, |_| 32),
         snapshot_varint_len(body.roots.len() as u64) + body.roots.len().checked_mul(32).ok_or(DbError::LimitExceeded("snapshot roots bytes"))?,
         snapshot_varint_len(page_count as u64) + page_count.checked_mul(32).ok_or(DbError::LimitExceeded("snapshot retained page hashes"))?,
@@ -758,10 +734,6 @@ async fn write_retained_publication_descriptor<P: SnapshotPageSource + ?Sized>(s
     snapshot_segment_write_varint(segment, body.epoch).await?;
     snapshot_segment_write(segment, &body.chain_hash).await?;
     snapshot_segment_write_varint(segment, body.protocol_version as u64).await?;
-    snapshot_segment_write(segment, &[u8::from(body.vcs_head.is_some())]).await?;
-    if let Some(head) = &body.vcs_head {
-        snapshot_segment_write_field(segment, head.as_bytes()).await?;
-    }
     snapshot_segment_write(segment, &[u8::from(body.base_pack_hash.is_some())]).await?;
     if let Some(hash) = body.base_pack_hash {
         snapshot_segment_write(segment, &hash.0).await?;
@@ -834,7 +806,7 @@ async fn build_generation(descriptor: &SnapshotDescriptor, new_pages: &[Page], p
     Ok(output)
 }
 
-/// @emoji 🩹️ `pack::PackWriter::finish` always writes `prev_footer_offset = 0` (there is no public
+/// 🩹️ `pack::PackWriter::finish` always writes `prev_footer_offset = 0` (there is no public
 /// constructor knob for it — see module doc's design-choice note). This patches the trailing
 /// 84-byte footer's `prev_footer_offset` field (wire bytes `[72..80]`, pinned by
 /// `pack_format::Footer`'s own layout, verified byte-for-byte against `pack`'s own tests) in
@@ -852,7 +824,7 @@ async fn patch_prev_footer_offset(bytes: &mut [u8], parent_footer_offset: u64) -
     Ok(())
 }
 
-/// @emoji 🪪️ One opened generation: its decoded descriptor plus enough footer/position state to
+/// 🪪️ One opened generation: its decoded descriptor plus enough footer/position state to
 /// walk to its parent (`parent_footer_offset`) or read its own chunks (`base`/`len`).
 pub struct GenerationHandle {
     pub descriptor: SnapshotDescriptor,
@@ -867,7 +839,7 @@ impl GenerationHandle {
         self.descriptor.generation
     }
 
-    /// @emoji ⛓️ The absolute offset (within the enclosing `combined` buffer) of the parent
+    /// ⛓️ The absolute offset (within the enclosing `combined` buffer) of the parent
     /// generation's own footer, or `None` if this generation has no parent — determined from the
     /// footer's `REQUIRED_FOOTER_CHAIN` bit, per this crate's `prev_footer_offset` semantics (see
     /// module doc), not merely from `prev_footer_offset != 0` (which is a legitimate value for a
@@ -906,7 +878,7 @@ async fn open_latest_pages(combined: &db_storage::DbIoPages, control: &mut Snaps
     open_generation_pages_at(combined, base, footer.file_len, &footer, control).await
 }
 
-/// @emoji 🔚️ Opens the LAST generation physically present in `combined` (the one whose footer sits
+/// 🔚️ Opens the LAST generation physically present in `combined` (the one whose footer sits
 /// at `combined.len() - FOOTER_SIZE`) — the entry point for reading a freshly-fetched or
 /// freshly-materialized retained chain.
 #[cfg(test)]
@@ -920,7 +892,7 @@ pub async fn open_latest(combined: &[u8]) -> Result<GenerationHandle, DbError> {
     open_generation_at(combined, base, footer.file_len, &footer).await
 }
 
-/// @emoji ⬅️ Opens the generation whose own footer starts at absolute offset `footer_offset`
+/// ⬅️ Opens the generation whose own footer starts at absolute offset `footer_offset`
 /// within `combined` — used to walk one hop up a `GenerationHandle::parent_footer_offset()` chain.
 /// Uses only `pack::read_footer_only` (via a length-bounded `SubSource`) to find that footer's own
 /// `file_len`, from which its base offset is derived (`footer_offset + FOOTER_SIZE - file_len`) —
@@ -940,7 +912,7 @@ pub async fn open_ancestor(combined: &[u8], footer_offset: u64) -> Result<Genera
     open_generation_at(combined, base, footer.file_len, &footer).await
 }
 
-/// @emoji 📄️ Reads one page's raw bytes by content hash, starting at `handle` and walking to
+/// 📄️ Reads one page's raw bytes by content hash, starting at `handle` and walking to
 /// ancestors (via `open_ancestor`) until a generation whose `new_pages` lists it is found.
 /// Errors `NotFound` once the chain is exhausted without a match.
 #[cfg(test)]
@@ -961,7 +933,7 @@ pub async fn read_page(combined: &[u8], handle: &GenerationHandle, hash: Content
 //#endregion 🔖️Generation
 
 //#region 🔖️Manager
-/// @emoji 🌱️ Which lineage a `SnapshotManager::publish` call starts: `FullBaseline` is
+/// 🌱️ Which lineage a `SnapshotManager::publish` call starts: `FullBaseline` is
 /// self-sufficient (safe future `retain_from` floor); `Incremental` chains to the document's
 /// current latest generation (errors if there isn't one yet).
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -970,7 +942,7 @@ pub enum SnapshotOrigin {
     Incremental,
 }
 
-/// @emoji 📦️ Everything about a generation that isn't derived from `new_pages`/plumbing — the
+/// 📦️ Everything about a generation that isn't derived from `new_pages`/plumbing — the
 /// `SnapshotManager::publish` caller-supplied half of a `SnapshotDescriptor`.
 #[derive(Clone, Debug)]
 pub struct SnapshotBody {
@@ -979,7 +951,6 @@ pub struct SnapshotBody {
     pub epoch: u64,
     pub chain_hash: [u8; 32],
     pub protocol_version: u32,
-    pub vcs_head: Option<String>,
     pub base_pack_hash: Option<ContentHash>,
     pub roots: Vec<ContentHash>,
     pub created_at_ms: u64,
@@ -1011,7 +982,7 @@ impl SnapshotRetainedPublicationRejected {
     }
 }
 
-/// @emoji 🎛️ Publish-time trigger thresholds — `should_snapshot` fires if any is met. This
+/// 🎛️ Publish-time trigger thresholds — `should_snapshot` fires if any is met. This
 /// crate's own choice of shape (the contract fixes only that triggers exist, not their inputs).
 #[derive(Clone, Copy, Debug)]
 pub struct SnapshotPolicy {
@@ -1026,7 +997,7 @@ impl SnapshotPolicy {
     }
 }
 
-/// @emoji 🧑️‍💼️ Orchestrates `db_snapshot`'s pack-encoding logic on top of a
+/// 🧑️‍💼️ Orchestrates `db_snapshot`'s pack-encoding logic on top of a
 /// `db_storage::SnapshotStorage` backend: publish (`build_generation` + `write_generation`), load,
 /// chain materialization, retention, and verification.
 pub struct SnapshotManager<'storage, S: SnapshotStorage> {
@@ -1034,7 +1005,7 @@ pub struct SnapshotManager<'storage, S: SnapshotStorage> {
 }
 
 //#region 🔖️ChainCursor
-/// @emoji ⏳️ One resumable snapshot-chain grant authority.
+/// ⏳️ One resumable snapshot-chain grant authority.
 pub struct SnapshotCursorControl {
     cancelled: std::sync::Arc<std::sync::atomic::AtomicBool>,
     deadline: std::time::Instant,
@@ -1070,7 +1041,7 @@ impl SnapshotCursorControl {
     }
 }
 
-/// @emoji ⛓️ Incremental snapshot-chain reader retaining at most one generation owner and one
+/// ⛓️ Incremental snapshot-chain reader retaining at most one generation owner and one
 /// prepared platform slot per grant.
 #[must_use]
 pub struct SnapshotChainCursor<'manager, 'storage, S: SnapshotStorage> {
@@ -1213,14 +1184,14 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
         SnapshotChainCursor { manager: self, document, through_generation, control, operation: None, closed: false }
     }
 
-    /// @emoji ✍️ Builds and durably writes the next generation. `origin == Incremental` chains to
+    /// ✍️ Builds and durably writes the next generation. `origin == Incremental` chains to
     /// the document's current `latest_generation` (`DbError::InvalidArgument` if there is none
     /// yet); `origin == FullBaseline` starts (or restarts) a self-sufficient lineage.
     pub async fn publish(&self, document: &ArtifactId, origin: SnapshotOrigin, new_pages: &[Page], body: SnapshotBody) -> Result<u64, DbError> {
         self.publish_page_source(document, origin, new_pages, body).await
     }
 
-    /// @emoji 🧵️ Publishes from a fixed optional page owner array without constructing a
+    /// 🧵️ Publishes from a fixed optional page owner array without constructing a
     /// dynamic retained page graph.
     pub async fn publish_retained(&self, document: &ArtifactId, origin: SnapshotOrigin, new_pages: &[Option<Page>], retained_len: usize, body: SnapshotBody) -> Result<u64, DbError> {
         if retained_len > new_pages.len() || new_pages[..retained_len].iter().any(Option::is_none) {
@@ -1292,7 +1263,6 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
             epoch: body.epoch,
             chain_hash: body.chain_hash,
             protocol_version: body.protocol_version,
-            vcs_head: body.vcs_head,
             base_pack_hash: body.base_pack_hash,
             roots: body.roots,
             new_pages: hashes,
@@ -1304,7 +1274,7 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
         Ok(generation)
     }
 
-    /// @emoji 🥇️ The document's latest generation number and descriptor, or `None` if it has no
+    /// 🥇️ The document's latest generation number and descriptor, or `None` if it has no
     /// snapshot yet.
     pub async fn load_latest(&self, document: &ArtifactId) -> Result<Option<(u64, SnapshotDescriptor)>, DbError> {
         match self.storage.latest_generation(document).await? {
@@ -1321,7 +1291,7 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
         }
     }
 
-    /// @emoji 🎯️ Selection: the highest-numbered generation whose `head_seq` does not exceed
+    /// 🎯️ Selection: the highest-numbered generation whose `head_seq` does not exceed
     /// `at_most_head_seq`, or `None` if no generation qualifies — the snapshot a materializer
     /// should start replaying the WAL suffix from for a point-in-time read.
     pub async fn select_generation(&self, document: &ArtifactId, at_most_head_seq: u64) -> Result<Option<u64>, DbError> {
@@ -1345,7 +1315,7 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
         Ok(best.map(|(generation, _)| generation))
     }
 
-    /// @emoji 🗑️ Deletes every generation strictly below `floor_generation`. `floor_generation`
+    /// 🗑️ Deletes every generation strictly below `floor_generation`. `floor_generation`
     /// must itself be a full baseline (`parent_generation.is_none()`) — see module doc's scope
     /// boundary on why an incremental floor is rejected rather than silently breaking its chain.
     pub async fn retain_from(&self, document: &ArtifactId, floor_generation: u64) -> Result<(), DbError> {
@@ -1369,7 +1339,7 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
         Ok(())
     }
 
-    /// @emoji 🔬️ Verifies generation `generation` decodes cleanly at `level`: the `KIND_SNAPSHOT`
+    /// 🔬️ Verifies generation `generation` decodes cleanly at `level`: the `KIND_SNAPSHOT`
     /// descriptor round-trips (`open_latest` itself decodes it) and every declared local chunk
     /// (`descriptor.new_pages`) decodes — at `VerificationLevel::Full` this transitively checks
     /// each chunk's content hash too, since `pack::PackFile::read_chunk` already validates it
@@ -1396,7 +1366,7 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
 //#endregion 🔖️Manager
 
 //#region 🔖️Lease
-/// @emoji ⏳️ The fencing primitive the module doc's "Scope boundary" note references: this crate
+/// ⏳️ The fencing primitive the module doc's "Scope boundary" note references: this crate
 /// deliberately keeps `SnapshotManager::publish`/`retain_from` as mechanical, lease-agnostic
 /// operations (concurrency coordination is `db_compact`'s "online compaction with manifest CAS +
 /// fencing" responsibility) — `SnapshotLease` is the thin `db_storage::LeaseStorage` wrapper a
@@ -1406,30 +1376,30 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
 pub struct SnapshotLease;
 
 impl SnapshotLease {
-    /// @emoji 🏷️ The `LeaseStorage` resource name guarding `document`'s snapshot builder.
+    /// 🏷️ The `LeaseStorage` resource name guarding `document`'s snapshot builder.
     // 🚫️async: E1 pure accessor consumed synchronously by `acquire`/`renew`/`release`/`current` — see R9
     pub fn resource(document: &ArtifactId) -> String {
         format!("snapshot:{document}")
     }
 
-    /// @emoji 🤝️ Acquires (or idempotently re-acquires) the snapshot-builder lease for `document`.
+    /// 🤝️ Acquires (or idempotently re-acquires) the snapshot-builder lease for `document`.
     pub async fn acquire(storage: &impl LeaseStorage, document: &ArtifactId, holder: &str, ttl_ms: u64, now_ms: u64) -> Result<EpochFence, DbError> {
         storage.acquire(&Self::resource(document), holder, ttl_ms, now_ms).await
     }
 
-    /// @emoji ♻️ Extends `holder`'s existing lease for `document` — e.g. around a long
+    /// ♻️ Extends `holder`'s existing lease for `document` — e.g. around a long
     /// retained chain cursor + `publish` sequence for a deep incremental chain.
     pub async fn renew(storage: &impl LeaseStorage, document: &ArtifactId, holder: &str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
         storage.renew(&Self::resource(document), holder, fence, ttl_ms, now_ms).await
     }
 
-    /// @emoji 🕊️ Releases `holder`'s lease for `document` once its `publish`/`retain_from` call
+    /// 🕊️ Releases `holder`'s lease for `document` once its `publish`/`retain_from` call
     /// has completed.
     pub async fn release(storage: &impl LeaseStorage, document: &ArtifactId, holder: &str, fence: EpochFence) -> Result<(), DbError> {
         storage.release(&Self::resource(document), holder, fence).await
     }
 
-    /// @emoji 👀️ The lease's current holder/fence for `document`, or `None` if unheld — lets a
+    /// 👀️ The lease's current holder/fence for `document`, or `None` if unheld — lets a
     /// caller check whether it's safe to `retain_from` without blindly racing another builder.
     pub async fn current(storage: &impl LeaseStorage, document: &ArtifactId, now_ms: u64) -> Result<Option<LeaseInfo>, DbError> {
         storage.current(&Self::resource(document), now_ms).await

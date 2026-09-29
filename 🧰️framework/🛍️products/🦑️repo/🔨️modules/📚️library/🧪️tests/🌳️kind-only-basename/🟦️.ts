@@ -76,12 +76,12 @@ describe("kind-only implementation leaf taxonomy", () => {
     expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
     expect(validate({ ...fixture, extra: true })).toBe(false);
     for (const kind of fixture.fileKinds) {
-      expect(taxonomy.fileKinds[kind.id]).toEqual({ emoji: kind.emoji, extensionChains: kind.extensionChains, role: kind.role });
+      expect(taxonomy.fileKinds[kind.id]).toEqual<Pick<typeof kind, "emoji" | "extensionChains" | "role">>({ emoji: kind.emoji, extensionChains: kind.extensionChains, role: kind.role });
       expect(taxonomy.implementationLeafPolicy.roles.includes(taxonomy.fileKinds[kind.id]!.role) || taxonomy.implementationLeafPolicy.fileKindIds.includes(kind.id)).toBe(kind.implementation);
     }
     expect(taxonomy.packagesDirName).toBe(fixture.topology.packagesDirectory);
     expect(taxonomy.targetsDirName).toBe(fixture.topology.targetsDirectory);
-    expect(Object.keys(taxonomy.ecosystems)).toEqual(fixture.topology.packageLanguageDirectories);
+    expect(Object.keys(taxonomy.ecosystems)).toEqual<readonly string[]>(fixture.topology.packageLanguageDirectories);
     expect(taxonomy.fixedFilenameContracts[fixture.externalContracts[0]!.id]?.scope).toEqual({ kind: "package-root", ecosystemId: "🦀️rust" });
   });
 

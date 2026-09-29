@@ -6,7 +6,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
-/// @emoji 🎯️ serde stays TEST-ONLY: feeds `SpaceHistoryMutation`'s own `cfg_attr(test)` oracle
+/// 🎯️ serde stays TEST-ONLY: feeds `SpaceHistoryMutation`'s own `cfg_attr(test)` oracle
 /// derive (this file's own `serde_json` differential test below). Production never serializes
 /// through serde. `alternative_id` is `#[value(required)]`: the derive's default rule for an
 /// `Option<T>` field is to DECODE A MISSING KEY AS `None`, which is not this mutation's contract —

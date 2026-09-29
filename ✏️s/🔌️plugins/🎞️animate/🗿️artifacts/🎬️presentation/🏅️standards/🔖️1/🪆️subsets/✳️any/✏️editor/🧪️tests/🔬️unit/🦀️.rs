@@ -79,6 +79,18 @@ pub(crate) mod context {
         result
     }
 
+    /// 🚦️ The fault a refused command answers, whichever door raises it: admission (`dispatch_typed`) or the retained
+    /// job's own step (surfaced by the settle the host drives).
+    pub async fn dispatch_refusal(app: &mut PresentationApp, command: PresentationCommand) -> semio_framework_plugin::Fault {
+        match app.dispatch_typed(command, &meta("local")).await {
+            Err(fault) => fault,
+            Ok(_) => match settle_registered_typed_operation(&mut app.0, meta("local").instance_id).await {
+                Err(fault) => fault,
+                Ok(_) => panic!("the command is refused while it runs"),
+            },
+        }
+    }
+
     /// ↩️ An `undo`/`redo` verb is a FRAMEWORK-RESERVED job, not a typed command: admitted, then
     /// committed through its reserved job, then published — all three steps or the projection never moves.
     pub async fn history_verb(app: &mut PresentationApp, action: &str) {
@@ -453,7 +465,7 @@ pub(super) fn every_command() -> Vec<PresentationCommand> {
         PresentationCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { layer_id: Some("t1".into()) }),
         PresentationCommand::NoOperation(no_operation::NoOperation {}),
         PresentationCommand::CopyPrompt(copy_prompt::CopyPrompt {}),
-        PresentationCommand::ExportVideoFromDeck(export_video_from_deck::ExportVideoFromDeck { output_dir: "output/x".into(), scene_json: "{}".into() }),
+        PresentationCommand::ExportVideoFromDeck(export_video_from_deck::ExportVideoFromDeck { scene_json: "{}".into() }),
     ]
 }
 //#endregion 🔖️CommandSurfaceTests

@@ -3,7 +3,7 @@
 use crate::codec::PackError;
 
 //#region 🔖️Source
-/// @emoji 📥️ Random-access read source a pack file is decoded from — implementable over an
+/// 📥️ Random-access read source a pack file is decoded from — implementable over an
 /// in-memory slice, a file (see `pack_io`), or (via `pack_async`) a network range-fetcher.
 pub trait PackSource {
     async fn len(&self) -> u64;
@@ -55,7 +55,7 @@ impl PackSource for Vec<u8> {
     }
 }
 
-/// @emoji 📤️ Append-only write sink a pack file is encoded into — implementable over a
+/// 📤️ Append-only write sink a pack file is encoded into — implementable over a
 /// `Vec<u8>`, a file (see `pack_io`), or any other ordered byte destination.
 pub trait PackSink {
     async fn write_all(&mut self, bytes: &[u8]) -> Result<(), PackError>;

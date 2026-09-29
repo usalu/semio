@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🤖️ Laws for the agent-delegation surface (ticket
+/** 🤖️ Laws for the agent-delegation surface (ticket
  * `26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END` slice M6b, spec §6 of
  * `📓️m6-agent-principal-in-hub-space.md`). Independent oracles: the *production* credential-file
  * renderer is held against the exact shape `semio-os-mcp --credential-file` decodes
@@ -48,6 +48,7 @@ import {
   type AgentDelegationRowV1,
   type AgentDelegationSummaryV1,
 } from "../../../../../../📇️directory/🤖️delegations/🟦️.ts";
+import delegationListVectors from "../../../../../../📇️directory/🤖️delegations/🧫️fixtures/📋️agent-delegation-list.json";
 import { AgentDelegations, agentDelegationInstantV1 } from "../../🟦️.tsx";
 import Ajv from "ajv";
 import directorySchema from "../../../../../../📇️directory/🧬️schema/🔣️.json" with { type: "json" };
@@ -623,3 +624,15 @@ describe("agent delegation lane", () => {
   });
 });
 //#endregion 🔗️Hook
+
+/** 🤖️ The shared delegation-list vectors the Rust twin (`📇️directory/🔌️client` `live_agent_principals`) answers too: the
+ * parser drops a malformed row, never the listing, and ShellHost's offer-scope filter keeps only live delegations. */
+describe("agent delegation list vectors", () => {
+  for (const vector of delegationListVectors.cases) {
+    it(vector.name, () => {
+      const body = "body" in vector ? JSON.stringify(vector.body) : vector.bodyText;
+      const live = parseAgentDelegationListV1(body).filter((delegation) => !delegation.revoked && delegation.expiresAtMs > vector.nowMs);
+      expect(live.map((delegation) => delegation.agentPrincipalId)).toEqual(vector.principals);
+    });
+  }
+});

@@ -1423,7 +1423,7 @@ func (l *BaseLanguage) ScanComments(ctx CommentPolicy, file, content string, lin
 				commentText := strings.TrimSpace(line[j:])
 
 				if lineNum == 1 && strings.HasPrefix(trimmed, "#!") {
-					fmt.Printf("[DEBUG] Ignoring shebang at line 1: %s\n", trimmed)
+					fmt.Printf("[TRACE] Ignoring shebang at line 1: %s\n", trimmed)
 					break
 				}
 
@@ -1463,7 +1463,7 @@ func (l *BaseLanguage) ScanComments(ctx CommentPolicy, file, content string, lin
 					break
 				}
 				scanState.InTodoBlock = false
-				debugMarker := strings.Contains(line, "[DEBUG]")
+				debugMarker := strings.Contains(line, "[TRACE]")
 				if !debugMarker {
 					foundInline = true
 					if !inlineCommentActive {
@@ -1733,7 +1733,7 @@ func (l *TypeScriptLanguage) ScanComments(ctx CommentPolicy, file, content strin
 					break
 				}
 				scanState.InTodoBlock = false
-				debugMarker := strings.Contains(line, "[DEBUG]")
+				debugMarker := strings.Contains(line, "[TRACE]")
 				if !debugMarker {
 					foundInline = true
 					if !inlineCommentActive {

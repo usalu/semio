@@ -14,6 +14,5 @@ pub struct OpenSpace {
 }
 
 pub fn handle(payload: &OpenSpace, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
-    eprintln!("[DEBUG] home openSpace id={}", payload.space_id);
     Ok(Emit::effect(Effect::Navigate { uri: format!("/spaces/{}", payload.space_id) }))
 }

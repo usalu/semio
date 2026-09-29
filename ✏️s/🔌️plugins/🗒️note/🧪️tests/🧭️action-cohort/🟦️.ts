@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import Ajv from "ajv";
 
 type Group = { status: "migrated" | "batch-only-pending-rewrite"; lanes: string[]; routes: string[]; blocker?: string };
-type Fixture = { routeCount: number; retainedRoutes: string[]; frameworkOwnedRoutes: string[]; groups: Group[]; globals: unknown[]; scanThenMonolithRoutes: string[]; laws: Record<string, boolean> };
+type Fixture = { routeCount: number; retainedRoutes: string[]; groups: Group[]; globals: unknown[]; scanThenMonolithRoutes: string[]; laws: Record<string, boolean> };
 
 const root = resolve(import.meta.dir, "../..");
 const sourcePath = resolve(root, "🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
@@ -31,11 +31,12 @@ test("Note source and fixture have one exact hostile census", async () => {
   const retained = fixture.groups.filter((group) => group.status === "migrated").flatMap((group) => group.routes);
   expect(exact(commands, classified)).toBe(true);
   expect(commands.length).toBe(fixture.routeCount);
+  expect(classified.length).toBe(fixture.routeCount);
   expect(exact([...manifests.keys()], classified)).toBe(true);
   expect(exact(fixture.retainedRoutes, retained)).toBe(true);
-  expect(fixture.groups.every((group) => group.routes.every((route) => manifests.get(route) === group.status))).toBe(true);
+  const classification = { "migrated": "Migrated", "batch-only-pending-rewrite": "BatchOnlyPendingRewrite" } as const;
+  expect(fixture.groups.every((group) => group.routes.every((route) => manifests.get(route) === classification[group.status]))).toBe(true);
   expect(fixture.groups.every((group) => !group.lanes.includes("host-only") || group.lanes.length === 1)).toBe(true);
-  expect(fixture.frameworkOwnedRoutes).toEqual([]);
   expect(fixture.globals).toEqual([]);
   expect(fixture.scanThenMonolithRoutes).toEqual([]);
   expect(Object.values(fixture.laws).every(Boolean)).toBe(true);
@@ -48,7 +49,7 @@ test("Note source and fixture have one exact hostile census", async () => {
   const proofSource = source.slice(source.indexOf("semio_framework_plugin::bounded_first_step_tool_proofs!"), source.indexOf("fn register_tool_job_factories"));
   const proofs = [...proofSource.matchAll(/^\s*"([^"]+)"\s*=>/gm)].map((match) => match[1]!);
   expect(exact(proofs, fixture.retainedRoutes)).toBe(true);
-  expect(proofSource).toContain('factory: "BoundedFirstStepCommandJobFactory"');
+  expect(proofSource).toContain('factory: "NoteCommandJobFactory"');
 });
 
 test("hostile source rejects global ids, copied digests, and scan-then-monolith shells", async () => {
@@ -61,27 +62,8 @@ test("hostile source rejects global ids, copied digests, and scan-then-monolith 
   expect(retainedSource).not.toMatch(/fn\s+note_store_edit_digest/);
   expect(retainedSource).not.toContain("ArtifactStoreOneItemPrepared {");
   expect(retainedSource).not.toContain("fn prepare_note_artifact");
-  expect(retainedSource).toContain("authority.prepare_one_item(edit");
-  expect(retainedSource).toContain("NOTE_MATERIALIZATION_STRING_CHUNK_BYTES: usize = 1_024");
-  expect(retainedSource).toContain("local_owner::<semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot>()");
-  expect(retainedSource).toContain("child.with_local_owner(owner)");
-  expect(retainedSource).toContain("text_child_materialization_preserves_present_typed_owner");
-  expect(retainedSource).toContain("text_child_materialization_preserves_absent_owner");
-  expect(retainedSource).toContain("text_child_materialization_cancellation_retires_partial_metadata");
-  expect(retainedSource).toContain("struct NoteSnapshotMaterializationCursor");
-  expect(retainedSource).toContain("struct NoteBlockMaterializationCursor");
-  expect(retainedSource).toContain("struct NoteArtifactLinkMaterializationCursor");
-  expect(retainedSource).toContain(".range::<str, _>((std::ops::Bound::Excluded(last_key.as_str()), std::ops::Bound::Unbounded))");
-  expect(retainedSource).toContain("snapshot_materialization_copies_every_nested_owner_and_preserves_typed_text_arc");
-  expect(retainedSource).toContain("snapshot_materialization_preserves_absent_typed_owner");
-  expect(retainedSource).toContain("snapshot_materialization_cancellation_during_nested_metadata_reaches_terminal_emptiness");
-  expect(retainedSource).toContain("struct NoteRootScalarPreparation");
-  expect(retainedSource).toContain("NoteMutation::ChangeGridVisible");
-  expect(retainedSource).toContain("NoteMutation::ChangeGridSpacing");
-  expect(retainedSource).toContain("Note one-item Artifact preparation admits only exact retained root-scalar mutations on the document lane");
+  expect(retainedSource).toContain("bounded_config_store_one_item_preparation_factory::<NoteSnapshot, crate::op::NoteMutation>");
   expect(retainedSource).toContain("if self.cursor + 1 < self.units.len()");
-  expect(retainedSource).toContain("snapshot_materialization_rejects_stale_operation_authority_and_retires");
-  expect(retainedSource).toContain("root_scalar_preflight_admits_only_exact_valid_document_mutations");
   expect(schemaSource).not.toContain("static NEXT");
   expect(schemaSource).not.toContain("AtomicU64");
   expect(schemaSource).toContain("pub struct NoteIdOwner");

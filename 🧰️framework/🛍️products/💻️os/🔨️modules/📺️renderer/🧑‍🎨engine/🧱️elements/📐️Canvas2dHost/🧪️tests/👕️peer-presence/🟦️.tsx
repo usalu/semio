@@ -1,4 +1,4 @@
-/** @emoji 👕️ Mounted Canvas2d peer-presence law (collab STEP 14, draw): the real host publishes the author's pointer in WORLD
+/** 👕️ Mounted Canvas2d peer-presence law (collab STEP 14, draw): the real host publishes the author's pointer in WORLD
  * coordinates with its camera (`🧫️fixtures/👕️peer-presence`, derived independently by the fixture's own formula), and the
  * canvas presence overlay it mounts paints a peer published at that drawing position under the author's screen point for the
  * same camera, and at the forward-mapped point (`@semio-tech/framework-replication` `canvasPointToScreen`) for another. */

@@ -75,7 +75,6 @@ fn reorganize_is_reachable_by_menu_and_by_keyboard_in_both_languages() {
     assert!(label.contains("Reorganize") && label.contains("Neu anordnen"), "reorganize needs both declared languages: {label}");
     let chords: Vec<&str> = definition.keybindings.iter().filter(|binding| binding.action.action == "reorganize").map(|binding| binding.keys.as_str()).collect();
     assert_eq!(chords, vec!["mod+alt+l"], "reorganize must carry exactly its declared keyboard chord");
-    eprintln!("[DEBUG] reorganize chords={chords:?} label={label}");
 }
 
 /// ⚖️ LAW: the context menu still offers `reorganize` as its top-level layout verb — the mouse half of

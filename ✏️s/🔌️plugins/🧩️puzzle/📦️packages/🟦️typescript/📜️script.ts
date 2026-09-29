@@ -166,7 +166,7 @@ async function validateWindowOwnershipSchemas(puzzleRoot: string): Promise<numbe
   return count;
 }
 
-/** @emoji 🧩️ Whether `production` implements `traitName` for `typeName`, regardless of how the trait
+/** 🧩️ Whether `production` implements `traitName` for `typeName`, regardless of how the trait
  * path happens to be spelled. Repo-wide import-normalisation sweeps rewrite `semio_framework::Foo`
  * to a bare `Foo` (and back) as a formatting concern; asserting one exact spelling makes this oracle
  * fail on import style rather than on real publication-authority divergence. */
@@ -174,7 +174,7 @@ function implementsFor(production: string, traitName: string, typeName: string):
   return new RegExp(`impl (?:[A-Za-z_][A-Za-z0-9_]*::)*${traitName} for ${typeName}\\b`).test(production);
 }
 
-/** @emoji 🌍️ Locale and terminology are OS-owned state projected through
+/** 🌍️ Locale and terminology are OS-owned state projected through
  * `semio_framework_plugin::ViewModel`, never artifact-local settings: no puzzle owner may publish a
  * `setLocale`/`setTerminology` route nor carry a `SetLocale`/`SetTerminology` config mutation. The
  * editors read the locale out of the projected view state (`puzzle2d_config_locale(view_state)`), so

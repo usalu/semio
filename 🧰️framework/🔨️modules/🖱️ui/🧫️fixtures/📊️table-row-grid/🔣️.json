@@ -1,0 +1,425 @@
+{
+  "provenance": {
+    "what": "The language-neutral oracle for a windowed table on the wgpu target: a published Table document (a plain row with two row actions and an activation, a plain row with one, an editable row with one child per materialised cell) -> the header band, every row's rect, every cell column, every trailing action slot, what a pointer on each fires, the text the table itself paints and the row-action buttons the accessibility projection announces.",
+    "why": "The wgpu reconcile painted a childless TableRow as ONE button labelled with its joined cells and a TableRow with children as a bare horizontal stack (cells dropped, no header); TableRowProps.rowActions were never painted, so the SDK duplicated every row action as a row-action child button and Home's 32-row window overflowed its item budget after 27 rows. Ticket 26/09/23/END-TO-END-OS-HUB-COLLABORATION-MCP session 14, WG11 x LB2 TableRow agreement.",
+    "rule": "A table is ONE column grid: the header, the painted cells and an editable row's cell children share layout::table_column_rect; row actions are the RowAction props only, painted, hit and announced at layout::tree_row_action_rect, each firing its own versioned binding.",
+    "implementations": {
+      "rust": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/📊️table-row-grid/🦀️.rs",
+      "thirdParty": "taffy (flexbox) solves the editable row's cells in the same law"
+    }
+  },
+  "metrics": {
+    "source": "🖱️ui/🎨️styling tokens x uiSpacingCompactPx 3.2: treeRowUiSpacing 7.5, gapStandard 1, paddingStandard 1, iconTiny 3.75, controlHeightSmall 5",
+    "rowHeightPx": 24.0,
+    "gapPx": 3.2,
+    "actionIconPx": 12.0,
+    "actionGapPx": 3.2,
+    "controlHeightSmallPx": 16.0
+  },
+  "viewport": {
+    "width": 480.0,
+    "height": 240.0
+  },
+  "document": {
+    "surface": "home.spaces",
+    "controller": "framework.home",
+    "revision": 3,
+    "root": 0,
+    "layoutEpoch": 0,
+    "nodes": [
+      {
+        "id": 0,
+        "key": "spaces",
+        "children": [
+          1,
+          2,
+          3
+        ],
+        "component": {
+          "type": "table",
+          "label": "Spaces",
+          "columns": [
+            "Name",
+            "Kind"
+          ],
+          "actionsLabel": "Actions",
+          "window": {
+            "total": 3,
+            "offset": 0,
+            "rowExtent": "standard"
+          }
+        },
+        "layout": {
+          "kind": "stack",
+          "axis": "vertical",
+          "gap": "none",
+          "padding": {
+            "all": "none"
+          },
+          "align": "stretch",
+          "justify": "start",
+          "wrap": false,
+          "grow": true
+        },
+        "style": {},
+        "activity": "idle",
+        "accessibility": {}
+      },
+      {
+        "id": 1,
+        "key": "space:alpha",
+        "component": {
+          "type": "tableRow",
+          "cells": [
+            "Alpha",
+            "Space"
+          ],
+          "rowActions": [
+            {
+              "icon": "settings",
+              "label": "Settings",
+              "action": {
+                "trigger": "activate",
+                "action": {
+                  "scope": "framework.home",
+                  "name": "open-space-settings",
+                  "version": 1
+                },
+                "args": {
+                  "space": "alpha"
+                }
+              }
+            },
+            {
+              "icon": "trash-2",
+              "label": "Delete",
+              "action": {
+                "trigger": "activate",
+                "action": {
+                  "scope": "framework.home",
+                  "name": "delete-space",
+                  "version": 1
+                },
+                "args": {
+                  "space": "alpha"
+                }
+              }
+            }
+          ]
+        },
+        "bindings": [
+          {
+            "trigger": "activate",
+            "action": {
+              "scope": "framework.home",
+              "name": "open-space",
+              "version": 1
+            },
+            "args": {
+              "space": "alpha"
+            }
+          }
+        ],
+        "layout": {
+          "kind": "leaf",
+          "width": "hug",
+          "height": "hug"
+        },
+        "style": {},
+        "activity": "idle",
+        "accessibility": {}
+      },
+      {
+        "id": 2,
+        "key": "space:beta",
+        "component": {
+          "type": "tableRow",
+          "cells": [
+            "Beta",
+            "Space"
+          ],
+          "rowActions": [
+            {
+              "icon": "trash-2",
+              "label": "Delete",
+              "action": {
+                "trigger": "activate",
+                "action": {
+                  "scope": "framework.home",
+                  "name": "delete-space",
+                  "version": 1
+                },
+                "args": {
+                  "space": "beta"
+                }
+              }
+            }
+          ]
+        },
+        "bindings": [
+          {
+            "trigger": "activate",
+            "action": {
+              "scope": "framework.home",
+              "name": "open-space",
+              "version": 1
+            },
+            "args": {
+              "space": "beta"
+            }
+          }
+        ],
+        "layout": {
+          "kind": "leaf",
+          "width": "hug",
+          "height": "hug"
+        },
+        "style": {},
+        "activity": "idle",
+        "accessibility": {}
+      },
+      {
+        "id": 3,
+        "key": "row-2",
+        "children": [
+          4,
+          5
+        ],
+        "component": {
+          "type": "tableRow",
+          "cells": [
+            "Ada",
+            "42"
+          ]
+        },
+        "layout": {
+          "kind": "leaf",
+          "width": "hug",
+          "height": "hug"
+        },
+        "style": {},
+        "activity": "idle",
+        "accessibility": {}
+      },
+      {
+        "id": 4,
+        "key": "cell-0",
+        "component": {
+          "type": "input",
+          "kind": "text",
+          "value": "Ada",
+          "commit": "blur"
+        },
+        "bindings": [
+          {
+            "trigger": "commit",
+            "action": {
+              "scope": "s.stdio.csv@rfc4180/*#editor",
+              "name": "set-cell",
+              "version": 1
+            },
+            "args": {
+              "column": 0,
+              "revision": "0123456789abcdef",
+              "row": 2
+            }
+          }
+        ],
+        "layout": {
+          "kind": "leaf",
+          "width": "hug",
+          "height": "hug"
+        },
+        "style": {},
+        "activity": "idle",
+        "accessibility": {
+          "label": "Name"
+        }
+      },
+      {
+        "id": 5,
+        "key": "cell-1",
+        "component": {
+          "type": "text",
+          "value": "42"
+        },
+        "layout": {
+          "kind": "leaf",
+          "width": "hug",
+          "height": "hug"
+        },
+        "style": {},
+        "activity": "idle",
+        "accessibility": {}
+      }
+    ]
+  },
+  "expected": {
+    "actionsWidth": 33.6,
+    "columns": [
+      {
+        "x": 3.2,
+        "width": 220.0
+      },
+      {
+        "x": 226.4,
+        "width": 220.0
+      }
+    ],
+    "rows": [
+      {
+        "record": 1,
+        "key": "space:alpha",
+        "y": 24.0,
+        "height": 24.0
+      },
+      {
+        "record": 2,
+        "key": "space:beta",
+        "y": 48.0,
+        "height": 24.0
+      },
+      {
+        "record": 3,
+        "key": "row-2",
+        "y": 72.0,
+        "height": 24.0
+      }
+    ],
+    "editableCells": [
+      {
+        "record": 4,
+        "key": "cell-0",
+        "x": 3.2,
+        "y": 4.0,
+        "width": 220.0,
+        "height": 16.0
+      },
+      {
+        "record": 5,
+        "key": "cell-1",
+        "x": 226.4,
+        "y": 0.0,
+        "width": 220.0,
+        "height": 24.0
+      }
+    ],
+    "actionSlots": [
+      {
+        "slot": 1,
+        "x": 461.6,
+        "y": 6.0,
+        "size": 12.0
+      },
+      {
+        "slot": 2,
+        "x": 446.4,
+        "y": 6.0,
+        "size": 12.0
+      }
+    ],
+    "clicks": [
+      {
+        "x": 467.6,
+        "y": 36.0,
+        "fires": "delete-space",
+        "why": "slot 1 of space:alpha holds its LAST action"
+      },
+      {
+        "x": 452.4,
+        "y": 36.0,
+        "fires": "open-space-settings",
+        "why": "slot 2 of space:alpha holds its first action"
+      },
+      {
+        "x": 100.0,
+        "y": 36.0,
+        "fires": "open-space",
+        "why": "the row itself fires its Trigger::Activate binding"
+      },
+      {
+        "x": 467.6,
+        "y": 60.0,
+        "fires": "delete-space",
+        "why": "slot 1 of space:beta holds its only action"
+      },
+      {
+        "x": 452.4,
+        "y": 60.0,
+        "fires": "open-space",
+        "why": "an empty slot is the row"
+      }
+    ],
+    "paintedText": [
+      {
+        "text": "Name",
+        "x": 3.2,
+        "y": 0.0,
+        "width": 220.0,
+        "height": 24.0
+      },
+      {
+        "text": "Kind",
+        "x": 226.4,
+        "y": 0.0,
+        "width": 220.0,
+        "height": 24.0
+      },
+      {
+        "text": "Alpha",
+        "x": 3.2,
+        "y": 24.0,
+        "width": 220.0,
+        "height": 24.0
+      },
+      {
+        "text": "Space",
+        "x": 226.4,
+        "y": 24.0,
+        "width": 220.0,
+        "height": 24.0
+      },
+      {
+        "text": "Beta",
+        "x": 3.2,
+        "y": 48.0,
+        "width": 220.0,
+        "height": 24.0
+      },
+      {
+        "text": "Space",
+        "x": 226.4,
+        "y": 48.0,
+        "width": 220.0,
+        "height": 24.0
+      }
+    ],
+    "unpaintedBand": {
+      "y": 72.0,
+      "height": 24.0,
+      "why": "the editable row's cells are its children, which paint themselves; the table paints none of their text"
+    },
+    "accessibility": [
+      {
+        "key": "space:alpha::row-action::0",
+        "role": "button",
+        "label": "Settings: Alpha"
+      },
+      {
+        "key": "space:alpha::row-action::1",
+        "role": "button",
+        "label": "Delete: Alpha"
+      },
+      {
+        "key": "space:beta::row-action::0",
+        "role": "button",
+        "label": "Delete: Beta"
+      }
+    ],
+    "accessibilityActivation": {
+      "record": 1,
+      "key": "space:alpha::row-action::1",
+      "fires": "delete-space"
+    }
+  }
+}

@@ -13,7 +13,7 @@ use crate::{LowpolyDiff, LowpolySnapshot};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Shared
-/// @emoji 🩸 A contiguous run of RGBA bytes written into a paint-layer buffer at `offset` —
+/// 🩸 A contiguous run of RGBA bytes written into a paint-layer buffer at `offset` —
 /// `edit-paint-layer`'s payload field; its inverse holds the bytes overwritten (read from base).
 /// Kept here (not re-derived per triad) because `✏️editor/🖌️session/🦀️.rs`
 /// (plugin-shared, out of this facet's boundary) constructs values of this exact type.

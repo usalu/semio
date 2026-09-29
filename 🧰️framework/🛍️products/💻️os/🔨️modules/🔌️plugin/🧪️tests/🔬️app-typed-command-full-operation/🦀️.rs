@@ -383,7 +383,6 @@ mod typed_command_full_operation_tests {
                 }
             }
             assert!(app.close_terminal_is_empty(), "{boundary}");
-            eprintln!("[DEBUG] actual mounted publisher cancellation boundary {boundary} retained its exact Store root/ACK and reached bounded terminal close");
         }
         for case in fixture["linearizationCases"].as_array().unwrap() {
             let cancellations = ToolCancellationHandle::default();
@@ -608,7 +607,7 @@ mod typed_command_full_operation_tests {
                     }
                 }
                 assert!(app.close_terminal_is_empty());
-                eprintln!("[DEBUG] real mounted Document publication {boundary}, delayed ACK={delayed_ack}: count/revision/root retained and close terminal");
+                eprintln!("real mounted Document publication {boundary}, delayed ACK={delayed_ack}: count/revision/root retained and close terminal");
             }
         }
     }
@@ -699,7 +698,7 @@ mod typed_command_full_operation_tests {
                 }
             }
             assert!(registry.terminal_is_empty());
-            eprintln!("[DEBUG] exact latest-wins key {} matched independent serde scope equality and retired its 8192-byte identity", case["id"]);
+            eprintln!("exact latest-wins key {} matched independent serde scope equality and retired its 8192-byte identity", case["id"]);
         }
     }
 
@@ -756,7 +755,6 @@ mod typed_command_full_operation_tests {
         assert_eq!(serde_json::json!(cancellations.active_operation_count() == 1 && !replacement.token.is_cancelled_now()), fixture["deferredFinish"]["replacementPreserved"]);
         replacement.finish();
         assert_eq!(cancellations.active_operation_count(), 0);
-        eprintln!("[DEBUG] lock-held keyed finish retained its preadmitted release marker; one-slot sweep released only its exact claim");
     }
 
     #[test]
@@ -781,7 +779,6 @@ mod typed_command_full_operation_tests {
         assert!(lease.try_claim_publication().is_none());
         lease.finish();
         assert_eq!(cancellations.active_operation_count(), 0);
-        eprintln!("[DEBUG] retained keyed rebase rejected the old cancellation key and accepted only the exact refreshed revision/generation");
     }
 
     #[test]
@@ -840,9 +837,28 @@ mod typed_command_full_operation_tests {
             registry.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES);
         }
         assert!(registry.terminal_is_empty());
-        eprintln!("[DEBUG] retained latest-wins registry admitted65sequential completed targets under64live slots and one-item/4096-byte grants");
     }
 
+    /// 🛑️ Operation 1 is parked in `Worker` with no session — a state `drive_worker_step` refuses
+    /// by name, and correctly so (`session` is cleared only as the stage moves to `Publishing`).
+    /// The law is about what that refusal costs: it must terminate THAT operation and nothing
+    /// else. Before `fault_typed_operation_worker` the `Err` was propagated out of
+    /// `advance_typed_operation_publication_one`, so the actor's single publication unit died
+    /// with it and the ready publisher above could never have reached generation 1.
+    ///
+    /// 🧹️ The host ACKs the fault page of the operation it just lost, exactly as the shell
+    /// does; operation 2's presented page is deliberately left unacknowledged, because the
+    /// clauses below are about a presented-but-unACKed page's effect on retirement.
+    ///
+    /// 🪪️ Straight at the mounted operation: `acknowledge_typed_operation_result` first
+    /// matches the token's receiver against the app's BOUND live instance, and this
+    /// fixture app is driven without one (every other clause addresses instance 7 by
+    /// hand). The subject here is the operation's own page accounting, not the mount.
+    ///
+    /// 🎡️ `maintenance_step` ROTATES: a stage that can release nothing hands the call on, so the
+    /// step WORD is the rotation's verdict, not stage 18's. What stage 18 owes while the
+    /// cancellation state is locked is that it reclaims nothing and leaves its own cursor exactly
+    /// where it was — asserted directly below, over the property instead of its proxy.
     pub(super) async fn retained_latest_wins_slot_and_publication_fairness<A: ArtifactApp<Presence = PublicationPresence, PresenceMutation = PublicationPresenceMutation> + Default>() {
         let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔗️tool-latest-wins-integration.json")).unwrap();
         let mut app = VcsArtifactApp::<A>::new(A::default()).await;
@@ -920,12 +936,6 @@ mod typed_command_full_operation_tests {
             app.advance_typed_operation_publication_one().await.unwrap();
         }
         assert_eq!(app.presence_store.generation_now(), 1);
-        // 🛑️ Operation 1 is parked in `Worker` with no session — a state `drive_worker_step` refuses
-        // by name, and correctly so (`session` is cleared only as the stage moves to `Publishing`).
-        // The law is about what that refusal costs: it must terminate THAT operation and nothing
-        // else. Before `fault_typed_operation_worker` the `Err` was propagated out of
-        // `advance_typed_operation_publication_one`, so the actor's single publication unit died
-        // with it and the ready publisher above could never have reached generation 1.
         let stuck = app.tool_operations.get(1).expect("the structurally faulted operation stays mounted until it retires");
         assert_eq!(stuck.stage, MountedTypedCommandFullOperationStage::AwaitingAck, "a refused worker step leaves its own operation holding its own terminal fault page");
         let mut pages: Vec<(u64, TypedOperationResultLane, String)> = Vec::new();
@@ -933,14 +943,7 @@ mod typed_command_full_operation_tests {
             let code = if page.lane == TypedOperationResultLane::Fault { crate::app::decode_typed_operation_fault_page(page.bytes()).0 .0 } else { String::new() };
             let operation = page.token.operation;
             pages.push((operation, page.lane, code));
-            // 🧹️ The host ACKs the fault page of the operation it just lost, exactly as the shell
-            // does; operation 2's presented page is deliberately left unacknowledged, because the
-            // clauses below are about a presented-but-unACKed page's effect on retirement.
             if operation == 1 {
-                // 🪪️ Straight at the mounted operation: `acknowledge_typed_operation_result` first
-                // matches the token's receiver against the app's BOUND live instance, and this
-                // fixture app is driven without one (every other clause addresses instance 7 by
-                // hand). The subject here is the operation's own page accounting, not the mount.
                 let acknowledged = app.tool_operations.get_mut(1).expect("the terminated operation stays mounted").acknowledge_result_page(page.token).expect("the terminated operation's own fault page is acknowledgeable");
                 assert!(acknowledged, "a terminated operation must accept the ACK for the page it minted");
             }
@@ -1025,10 +1028,6 @@ mod typed_command_full_operation_tests {
         assert_eq!(app.tool_cancellations.active_operation_count(), 2);
         app.maintenance_stage = 18;
         app.maintenance_cancellation_cursor = TOOL_CANCELLATION_SLOTS + 1;
-        // 🎡️ `maintenance_step` ROTATES: a stage that can release nothing hands the call on, so the
-        // step WORD is the rotation's verdict, not stage 18's. What stage 18 owes while the
-        // cancellation state is locked is that it reclaims nothing and leaves its own cursor exactly
-        // where it was — asserted directly below, over the property instead of its proxy.
         let locked_step = app.maintenance_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap();
         assert!(
             matches!(locked_step, PluginCloseStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES),
@@ -1055,7 +1054,6 @@ mod typed_command_full_operation_tests {
             }
         }
         assert!(app.close_terminal_is_empty());
-        eprintln!("[DEBUG] reserved modulo-collision rejected; ready second publisher and result ACK progressed past a retained first worker");
     }
 
     #[test]
@@ -1266,7 +1264,6 @@ mod typed_command_full_operation_tests {
         assert!(complete);
         assert!(bytes >= wire_bytes);
         assert!(child.ops.is_empty() && child.labels.is_empty() && child.slot.is_empty() && child.child_id.is_empty() && child.op_schema.0.is_empty());
-        eprintln!("[DEBUG] child wire retirement released {bytes} bytes under the production grant");
     }
 
     #[test]
@@ -1292,6 +1289,10 @@ mod typed_command_full_operation_tests {
         assert!(source.contains("ArtifactToolPublicationLane::Child => None"));
     }
 
+    /// ⚖️ The generic command is constructed to be ENCODED: `admit_command_wire` admits the command's
+    /// own wire, so the decoder necessarily precedes its admission. What the clause has always stood
+    /// for — no generically constructed command reaches the reducer without the complete pipeline —
+    /// is asserted directly, as the order decoder → gate → reducer entry.
     #[test]
     fn full_operation_source_rejects_generic_reducers_and_old_monolithic_shells() {
         let source = include_str!("../../🦀️.rs");
@@ -1308,10 +1309,6 @@ mod typed_command_full_operation_tests {
         let gate = source[route..].find("self.require_complete_tool_operation_pipeline(&admission)?").expect("fail-closed full-operation gate");
         let refresh = source[route..].find("self.refresh_cache().await").expect("deferred legacy preparation census");
         assert!(gate < refresh, "incomplete typed command must fail before legacy preparation");
-        // ⚖️ The generic command is constructed to be ENCODED: `admit_command_wire` admits the command's
-        // own wire, so the decoder necessarily precedes its admission. What the clause has always stood
-        // for — no generically constructed command reaches the reducer without the complete pipeline —
-        // is asserted directly, as the order decoder → gate → reducer entry.
         for decoder in ["let command = Box::new(A::command_from_action(action, args).await?)", "let command = A::command_from_action(command_id, Some(&args)).await"] {
             let decoder = source.find(decoder).expect("typed route decoder");
             let gate = source[decoder..].find("self.require_complete_tool_operation_pipeline(&admission)?").expect("typed route full-operation gate") + decoder;
@@ -1327,6 +1324,13 @@ mod typed_command_full_operation_tests {
         assert!(source.contains("pub fn dispatch_typed"), "typed-value route must remain available to the dependency testkit");
     }
 
+    /// ♻️ The seven per-lane `Closing` arms collapsed into ONE shared
+    /// `PendingArtifactStorePublication::retirement_turn` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END),
+    /// so the retained one-item retirement seam is that call, not a per-lane `close_step`.
+    ///
+    /// 🧵️ The one-page publisher suspends in EXACTLY one place: the task lane's spawn. Every
+    /// other lane stays synchronous, so the awaits are enumerated and the one that is allowed is
+    /// named by its own call — a new `.await` anywhere in the publisher fails here by name.
     #[test]
     fn fixture_contract_is_anchored_to_the_production_retained_factory_publisher_and_host_receivers() {
         let source = include_str!("../../🦀️.rs");
@@ -1348,9 +1352,6 @@ mod typed_command_full_operation_tests {
         let publisher_start = source.rfind("fn publish_mounted_typed_operation_unit").expect("production one-page publisher");
         let publisher_end = source[publisher_start..].find("fn require_tool_operation_authority").map(|offset| publisher_start + offset).expect("publisher end");
         let publisher = &source[publisher_start..publisher_end];
-        // ♻️ The seven per-lane `Closing` arms collapsed into ONE shared
-        // `PendingArtifactStorePublication::retirement_turn` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END),
-        // so the retained one-item retirement seam is that call, not a per-lane `close_step`.
         for retained_seam in ["pending_artifact_publication", "begin_apply_batch", "advance_apply_batch", "ArtifactStoreOneItemAdvance::Published", "pending.retirement_turn(grant.maximum_items, grant.maximum_bytes)"] {
             assert!(publisher.contains(retained_seam), "production publisher lost its retained one-item seam: {retained_seam}");
         }
@@ -1363,9 +1364,6 @@ mod typed_command_full_operation_tests {
         assert!(publisher[..pending_advance].contains("pending.begin_close()"));
         assert!(publisher[..pending_advance].contains("pending.close_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES)"));
         assert!(!publisher.contains("dispatch_emit_group("));
-        // 🧵️ The one-page publisher suspends in EXACTLY one place: the task lane's spawn. Every
-        // other lane stays synchronous, so the awaits are enumerated and the one that is allowed is
-        // named by its own call — a new `.await` anywhere in the publisher fails here by name.
         let publisher_awaits: Vec<&str> = publisher.match_indices(".await").map(|(index, _)| publisher[..index].rsplit('\n').next().unwrap_or_default().trim()).collect();
         assert_eq!(
             publisher_awaits,

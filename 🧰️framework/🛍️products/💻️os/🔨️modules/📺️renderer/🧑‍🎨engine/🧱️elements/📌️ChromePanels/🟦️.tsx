@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/📌️ChromePanels/component.tsx
-/** @emoji 🖼️ `📌️ChromePanels` — the framework-owned settings-panel tree builders for the OS shell's
+/** 🖼️ `📌️ChromePanels` — the framework-owned settings-panel tree builders for the OS shell's
  * chrome: the Display panel (window-kind palette + named-layout tree), the Settings panel (general/
  * driver/theme/hotkeys tabs), and the Marketplace panel (plugins with their nested extensions), plus the small
  * standalone route-not-found and plugin-recovery affordances they share the chrome namespace with.
@@ -132,7 +132,7 @@ function groupNamedLayoutsToTreeItems(layouts: readonly NamedLayout[], onApply: 
   return root;
 }
 
-/** @emoji 🪟️ Recursively converts a {@link WorldProjectionTemplateDescriptor} tree (Parallel/Perspective taxonomy)
+/** 🪟️ Recursively converts a {@link WorldProjectionTemplateDescriptor} tree (Parallel/Perspective taxonomy)
  * into draggable {@link TreeDataItem}s for a window kind's Display "Windows" section — each node drags a
  * `{windowKindId, templateId}` payload that seeds the freshly-opened pane's initial camera (see
  * {@link registerPendingWorldProjection}/{@link decodeWorldProjectionTemplateId}). Branches keep `items`
@@ -695,7 +695,7 @@ const THEME_CONTRAST_GRADE_LABEL_KEYS = {
   fail: "ui.settings.theme.contrast.fail",
 } as const satisfies Record<WcagContrastGrade, UiTranslationKey>;
 
-/** @emoji ♿️ Live WCAG 2.2 verdict for ONE appearance paint: the WORST text-on-surface pair it takes part in
+/** ♿️ Live WCAG 2.2 verdict for ONE appearance paint: the WORST text-on-surface pair it takes part in
  * (`themePaintContrastPairs`), as the badge text, its grade, and — below AA — the inline warning sentence that
  * names the other paint of the pair. `null` for a paint in no pair (borders, non-chrome groups). The generated
  * default palette's surfaces are gated ≥ AA by `🎨️styling/🧪️tests/🧪️levels-oklabmix/🟦️.ts`; a hand-built
@@ -720,7 +720,7 @@ export function themeContrastBadgeText(
   };
 }
 
-/** @emoji 🔢️ Prints a contrast ratio with two decimals in the ACTIVE shell locale (`4.50` / `4,50`) — the
+/** 🔢️ Prints a contrast ratio with two decimals in the ACTIVE shell locale (`4.50` / `4,50`) — the
  * ratio a user reads beside the swatch and the one a screen reader speaks are the same localized number. */
 export function themeContrastRatioFormatter(locale: string): (ratio: number) => string {
   const format = new Intl.NumberFormat(locale ? [locale] : [], { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -1257,7 +1257,7 @@ export function useNamedLayoutHost(options: {
 //#endregion SettingsPanel
 
 //#region MarketplacePanel
-/** @emoji 🧭️ Canvas fallback when studio history resolves to an unknown route. */
+/** 🧭️ Canvas fallback when studio history resolves to an unknown route. */
 export function ShellRouteNotFoundPage({ path, onHome }: { readonly path: string; readonly onHome: () => void }) {
   return (
     <div className="flex h-full min-h-0 flex-col items-center justify-center gap-double p-double" role="alert" data-shell-route-not-found={path}>
@@ -1267,7 +1267,7 @@ export function ShellRouteNotFoundPage({ path, onHome }: { readonly path: string
   );
 }
 
-/** @emoji 🩺️ Plugin crash/quarantine recovery affordances — mirrors `ui_wgpu::ui_recovery_panel`. */
+/** 🩺️ Plugin crash/quarantine recovery affordances — mirrors `ui_wgpu::ui_recovery_panel`. */
 export function PluginRecoveryPanel({
   pluginId,
   quarantined,

@@ -1,5 +1,5 @@
 //#region 🛰️AgentBridgeOffer
-/** @emoji 🛰️ The agent-bridge OFFER both shells discover — React's `useDiscoveredAgentBridgeConfig` and the wasm32 wgpu
+/** 🛰️ The agent-bridge OFFER both shells discover — React's `useDiscoveredAgentBridgeConfig` and the wasm32 wgpu
  * page (`🚀️browser-boot`), which forwards it to its frame Worker — so the two cannot drift into two admission rules. A
  * zero-import leaf: the dev server's `semioAgentBridgeRendezvousVitePlugin` serves the offer at the same path, and the
  * wgpu page bundle may carry nothing React. */
@@ -140,6 +140,25 @@ export function parseAgentBridgeOfferScopeV1(requestUrl: string): AgentBridgeOff
   return { hubOrigin, spaceId, agentPrincipalIds: (query.get("agents") ?? "").split(",").filter((agent) => agent.length > 0) };
 }
 
+/** 🎯️ Reads the scope a wgpu shell publishes for its page (`dumpAgentBridgeOfferScope`): exactly `{hubOrigin, spaceId,
+ * agentPrincipalIds}` of non-empty strings, else `null` (the shell is in no hub space and dials only local offers). */
+export function agentBridgeOfferScopeFromJsonV1(json: string | null): AgentBridgeOfferScopeV1 {
+  if (json === null) return null;
+  let value: unknown;
+  try {
+    value = JSON.parse(json);
+  } catch {
+    return null;
+  }
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return null;
+  const record = value as Record<string, unknown>;
+  if (Object.keys(record).sort().join(",") !== "agentPrincipalIds,hubOrigin,spaceId") return null;
+  const { hubOrigin, spaceId, agentPrincipalIds } = record;
+  if (typeof hubOrigin !== "string" || hubOrigin.length === 0 || typeof spaceId !== "string" || spaceId.length === 0) return null;
+  if (!Array.isArray(agentPrincipalIds) || !agentPrincipalIds.every((agent) => typeof agent === "string" && agent.length > 0)) return null;
+  return { hubOrigin, spaceId, agentPrincipalIds: agentPrincipalIds as string[] };
+}
+
 /** 🔎️ Asks the local supervisor for the offer a shell of `scope` may dial. Never throws and never rejects: the typed "not
  * offered", a host without the endpoint, a non-JSON body and a refused offer are all the same ordinary `null`
  * ("no agent is offering a bridge right now"), because the shell must render identically whether or
@@ -181,10 +200,17 @@ export function sameAgentBridgeOffer(left: AgentBridgeConfig | null, right: Agen
 
 /** 🛰️ Polls the supervisor's offer on the shared schedule and publishes every CHANGE — an offer appearing, changing or
  * going away — the page-realm loop both wgpu page entries run (`🚀️browser-boot` forwards it to its frame Worker,
- * `🎬️renderer-boot` hands it to the page-mounted renderer). Returns the stop. */
+ * `🎬️renderer-boot` hands it to the page-mounted renderer). `offerScope` is re-read before every poll, exactly like React's
+ * hook: the shell's hub, space and its human's agents (a failed read is a shell in no hub space). Returns the stop. */
 export function watchAgentBridgeOffer(
   publish: (offer: AgentBridgeConfig | null) => void,
-  options: { readonly endpoint?: string; readonly fetchImpl?: BridgeOfferFetch; readonly setTimer?: (run: () => void, delayMs: number) => unknown; readonly clearTimer?: (handle: unknown) => void } = {},
+  options: {
+    readonly endpoint?: string;
+    readonly fetchImpl?: BridgeOfferFetch;
+    readonly setTimer?: (run: () => void, delayMs: number) => unknown;
+    readonly clearTimer?: (handle: unknown) => void;
+    readonly offerScope?: (signal: AbortSignal) => Promise<AgentBridgeOfferScopeV1>;
+  } = {},
 ): () => void {
   const setTimer = options.setTimer ?? ((run: () => void, delayMs: number) => setTimeout(run, delayMs));
   const clearTimer = options.clearTimer ?? ((handle: unknown) => clearTimeout(handle as ReturnType<typeof setTimeout>));
@@ -194,7 +220,9 @@ export function watchAgentBridgeOffer(
   let timer: unknown = null;
   let stopped = false;
   const poll = async (): Promise<void> => {
-    const discovered = await fetchAgentBridgeConfig(options.endpoint ?? AGENT_BRIDGE_OFFER_ENDPOINT, options.fetchImpl, abort.signal);
+    const scope = await (options.offerScope?.(abort.signal) ?? Promise.resolve(null)).catch(() => null);
+    if (stopped) return;
+    const discovered = await fetchAgentBridgeConfig(options.endpoint ?? AGENT_BRIDGE_OFFER_ENDPOINT, options.fetchImpl, abort.signal, scope);
     if (stopped) return;
     if (!sameAgentBridgeOffer(current, discovered)) {
       current = discovered;

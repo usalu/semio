@@ -389,6 +389,8 @@ fn config_mutation(value: &str) -> TestConfigMutation {
 }
 //#endregion ♻️RetirementDrivers
 
+/// 🪢️ The superseding owner is retired LAST: until the rejected sibling has drained, both
+/// still co-own the root the superseding write displaced.
 #[semio_framework_async_macros::async_test]
 async fn every_publication_lane_retires_a_rejected_authority_without_faulting_each_turn() {
     let fixture = fixture();
@@ -404,8 +406,6 @@ async fn every_publication_lane_retires_a_rejected_authority_without_faulting_ea
     let window_transient_authority = app.window_transient_store.capture(Some(&view)).expect("window transient capture").expect("registered window transient owner");
 
     for row in &rows {
-        // 🪢️ The superseding owner is retired LAST: until the rejected sibling has drained, both
-        // still co-own the root the superseding write displaced.
         let mut superseding_owner: Option<PendingArtifactStorePublication<RetirementApp>> = None;
         let mut pending = match row["id"].as_str().expect("fixture lane id") {
             "artifact" => {
@@ -502,12 +502,13 @@ async fn every_publication_lane_retires_a_rejected_authority_without_faulting_ea
         if let Some(mut owner) = superseding_owner {
             retire_accepted(&mut owner, grant);
         }
-        eprintln!("[DEBUG] {} retired a rejected authority over {retiring_turns} Ok turns then {}", row["id"], row["terminalOutcome"]);
     }
     drop((window_config_authority, window_transient_authority));
     close_registered_fixture_app(&mut app);
 }
 
+/// 🔁️ The authority captured at admission is now stale by construction, which is exactly why the
+/// window-transient emission branch refreshes it before it begins.
 #[semio_framework_async_macros::async_test]
 async fn window_transient_re_begin_needs_the_refreshed_live_generation() {
     let fixture = fixture();
@@ -544,8 +545,6 @@ async fn window_transient_re_begin_needs_the_refreshed_live_generation() {
     let turns = drive_rejected_retirement(&mut pending, grant, &row);
     assert!(pending.terminal_is_empty());
 
-    // 🔁️ The authority captured at admission is now stale by construction, which is exactly why the
-    // window-transient emission branch refreshes it before it begins.
     let stale = app.window_transient_store.begin(operation, &authority, mutation(expected["rejectedRevision"].as_u64().expect("rejected revision")));
     assert_eq!(stale.is_ok(), expected["staleAuthorityBeginAccepted"].as_bool().expect("stale begin expectation"));
     drop(stale);
@@ -567,6 +566,6 @@ async fn window_transient_re_begin_needs_the_refreshed_live_generation() {
     }
     assert!(re_begun.terminal_is_empty());
     drop(authority);
-    eprintln!("[DEBUG] window transient retired a rejected authority over {turns} Ok turns, refused a stale re-begin, and admitted the refreshed one at generation {}", app.window_transient_store.capture(Some(&view)).unwrap().unwrap().generation);
+    eprintln!("window transient retired a rejected authority over {turns} Ok turns, refused a stale re-begin, and admitted the refreshed one at generation {}", app.window_transient_store.capture(Some(&view)).unwrap().unwrap().generation);
     close_registered_fixture_app(&mut app);
 }

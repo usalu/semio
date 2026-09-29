@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/TiledMapHost/component.tsx
-/** @emoji 🗺️ `TiledMapHost` — tiled-map `ComponentSceneHost`: drives the map wasm session
+/** 🗺️ `TiledMapHost` — tiled-map `ComponentSceneHost`: drives the map wasm session
  * (raster/vector tile fetch+cache, marquee/click feature selection, camera pan/zoom, hover popup)
  * through a demand-scheduled render loop, reusing `World3dHost`'s window-instance context and
  * `🟦️Interpreter`'s surface context-menu plumbing. */
@@ -1086,7 +1086,7 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !scene) return undefined;
-    /** @emoji 🤏️ The second contact hands the map to the shared recognizer's pinch: the first finger's
+    /** 🤏️ The second contact hands the map to the shared recognizer's pinch: the first finger's
      * marquee/pan is dropped, every capture released, and tiles are polled continuously until the last
      * finger lifts. */
     const yieldToPinch = (): void => {

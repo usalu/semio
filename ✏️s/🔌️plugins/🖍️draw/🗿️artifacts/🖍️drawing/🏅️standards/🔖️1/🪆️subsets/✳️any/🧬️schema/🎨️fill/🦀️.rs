@@ -126,6 +126,6 @@ mod tests {
             if case["error"] == true { assert!(result.is_err(),"{}",case["name"]); }
             else { assert_eq!(result.unwrap(),serde_json::from_value(case["after"].clone()).unwrap(),"{}",case["name"]); }
         }
-        eprintln!("[DEBUG] typed fill edits matched the shared gradient fixtures");
+        eprintln!("[TRACE] typed fill edits matched the shared gradient fixtures");
     }
 }

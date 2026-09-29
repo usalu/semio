@@ -71,7 +71,6 @@ fn built_tree_retirement_closes_all_typed_fields_and_preserves_foreign_values() 
     }
     assert!(owner.terminal_is_empty());
     assert_eq!(visited, ["root", "ordinary", "rejected"]);
-    eprintln!("[DEBUG] built-tree retirement components=18 grants=3 ordinary+rejected=2 extraBytes=30 foreign=preserved");
 }
 
 #[test]
@@ -89,5 +88,4 @@ fn built_tree_retirement_closes_full_page_chain_beyond_observer_depth() {
     let mut owner = BuiltTreeRetirement::new(node);
     assert_eq!(close(&mut owner, 1), fixture["chain"]["nodes"].as_u64().unwrap() as usize * 2);
     assert_eq!(owner.close_step(0, 0).unwrap(), UiValueRetirementStep { complete: true, ..Default::default() });
-    eprintln!("[DEBUG] built-tree retirement fullPages={pages} nodes={} observerDepth=64 exactTerminal=true", pages + 1);
 }

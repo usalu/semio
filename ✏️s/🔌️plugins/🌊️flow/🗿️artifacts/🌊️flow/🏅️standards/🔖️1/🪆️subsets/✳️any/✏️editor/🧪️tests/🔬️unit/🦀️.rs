@@ -209,9 +209,8 @@ fn retained_content_child_factory_is_exact_and_legacy_closed() {
         assert_eq!(contract.lanes, &[semio_framework_plugin::ArtifactToolPublicationLane::Child]);
     }
     let proofs = <FlowPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs();
-    assert_eq!(proofs.len(), FLOW_DIRECT_STORE_TOOL_IDS.len() + FLOW_HOST_ONLY_TOOL_IDS.len() + FLOW_CHILD_GROUP_TOOL_IDS.len() + FLOW_GRAPH_OPERATION_TOOL_IDS.len());
+    assert_eq!(proofs.len(), FLOW_DIRECT_STORE_TOOL_IDS.len() + FLOW_HOST_ONLY_TOOL_IDS.len() + FLOW_CHILD_GROUP_TOOL_IDS.len() + FLOW_GRAPH_OPERATION_TOOL_IDS.len() + FLOW_CONTRIBUTIONS_TOOL_IDS.len());
     assert_eq!(FLOW_CHILD_GROUP_TOOL_IDS, &expected);
-    eprintln!("[DEBUG] retained content-child factory owns four exact keys, proofs and Child-only publication lanes");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -264,7 +263,6 @@ async fn retained_add_widget_dispatches_one_acknowledged_child_group_and_retires
         }
     }
     assert!(PluginApp::close_terminal_is_empty(&*app));
-    eprintln!("[DEBUG] retained addWidget published one typed child mutation, preserved parent identity and closed every app owner");
 }
 
 /// ↩️ Nonadjacent severed edges regain their exact original indices and large authored content.
@@ -299,25 +297,30 @@ fn delete_cascade_inverse_restores_exact_edge_order_and_label() {
     }
 }
 
-/// 🗂️ Serde is the independent Rust JSON oracle for the language-agnostic Flow/Note route census.
+/// 🗂️ Serde is the independent Rust JSON oracle for the language-agnostic Flow/Note route census, read exactly as the
+/// cohort schema (`🎬️action-cohort/🧬️schema` `routeCount`) defines it: the owner's own command rows, each classified in
+/// exactly one group. Flow's census is additionally the exact row set of its typed command table.
 #[test]
 fn action_cohort_fixtures_match_the_exact_route_census() {
     let flow: Value = serde_json::from_str(include_str!("../../../../../../../../../🧫️fixtures/🎬️action-cohort/🔣️.json")).expect("Flow action-cohort fixture must be valid JSON");
     let note: Value = serde_json::from_str(include_str!("../../../../../../../../../../🗒️note/🧫️fixtures/🧪️action-cohort/🔣️.json")).expect("Note action-cohort fixture must be valid JSON");
-    for (fixture, owner, total, framework_owned) in [(&flow, "FlowPlayApp", 34_u64, 0_usize), (&note, "NotePlayApp", 35_u64, 1_usize)] {
+    for (fixture, owner) in [(&flow, "FlowPlayApp"), (&note, "NotePlayApp")] {
         assert_eq!(fixture["owner"], owner);
-        assert_eq!(fixture["routeCount"].as_u64(), Some(total));
-        assert_eq!(fixture["frameworkOwnedRoutes"].as_array().map(Vec::len), Some(framework_owned));
         let routes: Vec<&str> = fixture["groups"].as_array().expect("groups").iter().flat_map(|group| group["routes"].as_array().expect("routes")).map(|route| route.as_str().expect("route id")).collect();
         let retained: Vec<&str> = fixture["retainedRoutes"].as_array().expect("retained routes").iter().map(|route| route.as_str().expect("retained route id")).collect();
         let migrated: Vec<&str> = fixture["groups"].as_array().expect("groups").iter().filter(|group| group["status"] == "migrated").flat_map(|group| group["routes"].as_array().expect("routes")).map(|route| route.as_str().expect("route id")).collect();
-        assert_eq!(retained, migrated, "the retained route index must exactly name the migrated groups");
+        assert_eq!(retained, migrated, "{owner}: the retained route index must exactly name the migrated groups");
         let mut unique = routes.clone();
         unique.sort_unstable();
         unique.dedup();
-        assert_eq!(routes.len() + framework_owned, total as usize);
-        assert_eq!(unique.len(), routes.len());
+        assert_eq!(unique.len(), routes.len(), "{owner}: every route is classified in exactly one group");
+        assert_eq!(fixture["routeCount"].as_u64(), Some(routes.len() as u64), "{owner}: routeCount is exactly the classified command rows");
     }
+    let mut classified: Vec<&str> = flow["groups"].as_array().expect("groups").iter().flat_map(|group| group["routes"].as_array().expect("routes")).map(|route| route.as_str().expect("route id")).collect();
+    classified.sort_unstable();
+    let mut declared = FlowCommand::TOOL_JOB_IDS.to_vec();
+    declared.sort_unstable();
+    assert_eq!(classified, declared, "the Flow census names exactly FlowCommand's rows");
 }
 
 async fn context_menu_items(app: &mut FlowApp, surface: Option<semio_framework_plugin::ContextMenuSurfaceTarget>) -> Value {
@@ -430,6 +433,7 @@ pub(super) fn every_command() -> Vec<FlowCommand> {
         FlowCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues { generation_id: Some("g1".into()), question_id: "q1".into(), value: dsl::DslValue::float(5.0) }),
         FlowCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick { window_id: main::FLOW_PLAY_WINDOW_MAIN.into(), window_kind_id: main::FLOW_PLAY_WINDOW_MAIN.into() }),
         FlowCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve { window_id: main::FLOW_PLAY_WINDOW_MAIN.into(), node_hash: 42, output_json: "{}".into() }),
+        FlowCommand::SetContributions(set_contributions::SetContributions { json: "[]".into(), page: 0, page_count: 1 }),
     ]
 }
 //#endregion 🔖️CommandSurface

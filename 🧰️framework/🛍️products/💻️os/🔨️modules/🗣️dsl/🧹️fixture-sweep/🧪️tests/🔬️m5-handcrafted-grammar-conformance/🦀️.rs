@@ -12,7 +12,7 @@ pub(super) async fn dsl_body_from_host_snapshot(text: &str) -> String {
     }
 }
 
-/// @emoji ✅️ Real check, no panics — lets the caller choose hard-assert vs. soft-log per facet.
+/// ✅️ Real check, no panics — lets the caller choose hard-assert vs. soft-log per facet.
 async fn check_grammar_recognizes(grammar_semio: &str, fixture_semio: &str) -> Result<(), String> {
     let grammar = parse_grammar(grammar_semio).map_err(|error| format!("parse grammar.semio: {error:?}"))?;
     if grammar.dialect != SemioDialect::Grammar {
@@ -44,7 +44,6 @@ async fn all_discovered_snapshot_grammars_recognize_their_shipped_fixtures() {
             continue;
         }
         let Some(fixture_text) = pilot_resolve::read_example_text(&facet.artifact_rel, facet.standard.as_deref(), ".dsl.semio").await else {
-            eprintln!("[DEBUG] soft-skip {}.fixture: no .dsl.semio under 📚️examples (🖼️assets-first walk)", facet.label);
             soft_skipped += 1;
             continue;
         };
@@ -55,7 +54,6 @@ async fn all_discovered_snapshot_grammars_recognize_their_shipped_fixtures() {
         checked += 1;
         if let Err(detail) = check_grammar_recognizes(&grammar_text, &fixture_text).await {
             if facet.is_stdio && m5_auto_discovery::stdio_is_exempt(ConformanceFacet::Grammar, &facet.artifact, facet.standard.as_deref()).await {
-                eprintln!("[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for {}: {detail}", facet.label);
                 soft_failures.push(facet.label.clone());
             } else {
                 hard_failures.push(format!("{}: {detail}", facet.label));

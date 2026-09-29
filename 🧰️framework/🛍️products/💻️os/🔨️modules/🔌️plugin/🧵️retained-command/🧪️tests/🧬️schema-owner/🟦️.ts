@@ -118,6 +118,5 @@ export function testRetainedCommandSchemaOwnership(): { readonly fixtures: numbe
   for (const classification of CLASSIFICATIONS) assert(ajv.validate(`${OWNER_ID}#/$defs/InteractiveJobClassification`, classification));
   assert.equal(ajv.validate(`${OWNER_ID}#/$defs/InteractiveJobClassification`, "FailClosed"), false);
   assert(ajv.validate(`${OWNER_ID}#/$defs/RetainedCommandAdmission`, "FailClosed"));
-  console.log(`[DEBUG] retained-command owner validated ${targets.length + 1} fixtures with Ajv and jsonschema; lanes=${LANES.length} classifications=${CLASSIFICATIONS.length}`);
   return { fixtures: targets.length + 1, validators: 2, lanes: LANES.length, classifications: CLASSIFICATIONS.length };
 }

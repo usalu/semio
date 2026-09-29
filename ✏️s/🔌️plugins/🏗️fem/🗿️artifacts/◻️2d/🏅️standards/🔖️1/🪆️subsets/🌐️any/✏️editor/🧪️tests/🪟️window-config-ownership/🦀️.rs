@@ -15,7 +15,6 @@ fn fem2d_window_config_document_admission_rejects_window_and_os_fields() {
         assert!(dsl::json::from_json_str::<crate::standards::v1::subsets::any::schema::Fem2dArtifact>(&text).is_err(), "artifact admitted {key}");
         assert!(dsl::json::from_json_str::<crate::Fem2dSnapshot>(&text).is_err(), "snapshot admitted {key}");
     }
-    eprintln!("[DEBUG] FEM 2d artifact and snapshot reject all three foreign owner fields");
 }
 
 fn block_on_fem_window_ownership<F: std::future::Future>(mut future: std::pin::Pin<Box<F>>) -> F::Output {
@@ -146,7 +145,6 @@ fn fem2d_window_config_runtime_isolates_same_kind_instances_and_restores_packs()
                 .await;
                 artifact_app_laws::close_registered_fixture_app(&mut *app);
                 outcome.expect("FEM exact-window ownership runtime law");
-                eprintln!("[DEBUG] FEM fem2d isolated two same-kind instances per window kind, restored exact packs, and preserved app/document bytes");
             }))
         })
         .expect("spawn FEM window ownership law")

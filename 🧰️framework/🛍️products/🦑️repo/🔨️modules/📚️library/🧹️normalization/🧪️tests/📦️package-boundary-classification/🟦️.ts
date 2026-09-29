@@ -569,8 +569,8 @@ describe("package boundary glue-content classification", () => {
     const grammar = taxonomy.packageGlueGrammar[disposition.grammarId!]!;
     for (const row of vectors.fixedScriptCases) {
       expect(fixedFilenameContractIdsForPath(row.path, taxonomy), row.id).toContain("root-script");
-      expect(classifyPackageSourceDisposition(row.content, disposition, grammar), row.id).toBe(row.expectedDispositionRole);
-      expect(ecmaDispositionOracle(row.content, "typescript", "command-router", grammar.maxDelegationStatements), row.id).toBe(row.expectedDispositionRole);
+      expect(classifyPackageSourceDisposition(row.content, disposition, grammar), row.id).toBe<typeof row.expectedDispositionRole>(row.expectedDispositionRole);
+      expect(ecmaDispositionOracle(row.content, "typescript", "command-router", grammar.maxDelegationStatements), row.id).toBe<typeof row.expectedDispositionRole>(row.expectedDispositionRole);
       expect(fixedSourceDispositionDecision("root-script", row.content, taxonomy)?.finding ?? null, row.id).toBe(row.expectedFinding);
     }
     for (const row of vectors.fixedScriptCases.filter((entry) => entry.placement === "package")) {
@@ -646,7 +646,7 @@ describe("package boundary glue-content classification", () => {
         expect(entry.fixedContractId, row.id).toBe(row.expectedFixedContractId);
         expect(entry.fileKind, row.id).toBe(row.expectedFileKind);
         expect(entry.packageRole, row.id).toBe(row.expectedPackageRole);
-        expect(entry.violations.map((violation) => violation.code).filter((code) => row.expectedViolations.includes(code as typeof row.expectedViolations[number])), row.id).toEqual(row.expectedViolations);
+        expect(entry.violations.map((violation) => violation.code).filter((code) => row.expectedViolations.includes(code as typeof row.expectedViolations[number])), row.id).toEqual<readonly string[]>(row.expectedViolations);
       } finally {
         rmSync(control, { recursive: true, force: true });
       }
@@ -659,8 +659,8 @@ describe("package boundary glue-content classification", () => {
     expect(decision).toEqual({ role: row.expectedRole, evidence: row.expectedEvidence });
     if (row.dispositionValidator) {
       const disposition = { contractKind: "fixed", disposition: row.dispositionValidator === "package-glue" ? "adapter-source" : "tool-metadata", validator: row.dispositionValidator, authority: "portable fixture", verification: "independent parser" } as const;
-      expect(classifyPackageSourceDisposition(row.content, disposition, grammar)).toBe(row.expectedDispositionRole);
-      if (row.oracle === "typescript-compiler") expect(ecmaDispositionOracle(row.content, row.analyzer as "typescript" | "javascript", row.dispositionValidator, row.maxDelegationStatements)).toBe(row.expectedDispositionRole);
+      expect(classifyPackageSourceDisposition(row.content, disposition, grammar)).toBe<typeof row.expectedDispositionRole>(row.expectedDispositionRole);
+      if (row.oracle === "typescript-compiler") expect(ecmaDispositionOracle(row.content, row.analyzer as "typescript" | "javascript", row.dispositionValidator, row.maxDelegationStatements)).toBe<typeof row.expectedDispositionRole>(row.expectedDispositionRole);
     }
     if (row.oracle === "typescript-compiler") expect(ecmaOracle(row.content, row.analyzer as "typescript" | "javascript", row.maxDelegationStatements)).toBe(row.expectedRole);
     else {

@@ -3,7 +3,7 @@
   "$comment": "🌉️ The mesh-wire republications a producer emits between two settled previews. Each one parses, none of them yields a single drawable mesh, and none of them changes the camera — which is exactly the shape `publish_world3d_scene_bridge_snapshot` used to answer `World3dSnapshotFault::Capacity` for, quarantining the surface for good. Held against the settled payload in `🌉️scene-bridge/🔣️.json`, which every case is applied AFTER.",
   "provenance": {
     "measuredOn": "http://127.0.0.1:6118/?plugin=generation3d&mode=generate&example=hexagonal-mushroom-column",
-    "reading": "[DEBUG] world3d surface=generation3d-generate-preview … meshes=169b instances=267b … against meshes=3644b/4646b/4786b for every settled sample, followed by `world3d bridge fault … fault=Some(Capacity) state-meshes=3` and `frame fault recorded: world3d scene mesh-wire bridge faulted`",
+    "reading": "world3d surface=generation3d-generate-preview … meshes=169b instances=267b … against meshes=3644b/4646b/4786b for every settled sample, followed by `world3d bridge fault … fault=Some(Capacity) state-meshes=3` and `frame fault recorded: world3d scene mesh-wire bridge faulted`",
     "gesture": "Add Generation, then 20 world3d gestures interleaved with 3 Form slider drags (updateGenerationValues); the fault fired on the third",
     "ticket": "26/09/09/PROCEDURAL-3D-END-TO-END",
     "probe": "🐍️wgpu-world3d-gaps-probe.mjs"

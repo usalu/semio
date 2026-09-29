@@ -17,10 +17,9 @@ name = "db"
 path = "🦀️.rs"
 
 [features]
-default = ["fs", "deflate", "vcs"]
+default = ["fs", "deflate"]
 fs = []
 deflate = []
-vcs = []
 cluster = []
 otel = []
 # 🔌️ Each backend feature pulls in its own driver dep — mirrors `🌎️hub/📦️packages/🦀️rust/Cargo.toml`'s
@@ -41,10 +40,6 @@ semio-framework-replication = { workspace = true }
 # this crate names no concrete executor (no `tokio`, no `futures`) anywhere EXCEPT the one bounded
 # runtime `db_storage_driver_runtime` owns for the external drivers that are bound to one — see that
 # module's doc and `db_storage::DbIoAsyncDriverRuntime`. See `db_storage`'s module doc ("Async-first").
-# 🔀️ O1 (drop dyn dispatch, dedyn-fw-os-misc): `#[dyn_enum]`/`dyn_enum_close!` — `VersionGraph`'s
-# two implementors (`NullVersionGraph`, `VcsVersionGraph`) close over a real enum instead of
-# `Arc<dyn VersionGraph>`. Same dependency shape `🔌️plugin`'s own Cargo.toml already uses.
-semio-framework-dispatch-macros = { path = "../../../../../../🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
 semio-framework-async = { workspace = true }
 # 🔌️ Phase 1 (`26/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR`): `db_storage`'s blocking bridge submits
 # to the process-wide `WorkerPool` on `Lane::Io` and reports its queue depth through this crate's

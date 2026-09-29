@@ -100,7 +100,7 @@ test("validates the portable artifact-schema law ownership contract", () => {
   expect((ts.parseJsonText("fixture.json", JSON.stringify(fixture)) as ts.JsonSourceFile & { readonly parseDiagnostics: readonly ts.Diagnostic[] }).parseDiagnostics).toEqual([]);
 });
 
-test("resolves every artifact-schema owner through its exact semantic context", { timeout: 30_000 }, () => {
+test("resolves every artifact-schema owner through its exact semantic context", () => {
   const taxonomy = loadTaxonomy();
   for (const context of fixture.contexts) expect(semanticDirectoryKindId(context.directoryName, taxonomy, { parentKindId: context.parentKindId }), JSON.stringify(context)).toBe(context.kindId);
   for (const owner of fixture.owners) {
@@ -108,9 +108,9 @@ test("resolves every artifact-schema owner through its exact semantic context", 
     expect(owner.path.split("/").at(-1)).toBe("🟦️.ts");
     expect(namedDeclarations(resolve(repoRoot, owner.path))).toEqual([...owner.declarations].sort());
   }
-});
+}, { timeout: 30_000 });
 
-test("typechecks every artifact-schema law owner with the installed TypeScript compiler", { timeout: 30_000 }, () => {
+test("typechecks every artifact-schema law owner with the installed TypeScript compiler", () => {
   const paths = fixture.owners.map((owner) => resolve(repoRoot, owner.path));
   const program = ts.createProgram(paths, {
     target: ts.ScriptTarget.ESNext,
@@ -134,7 +134,7 @@ test("typechecks every artifact-schema law owner with the installed TypeScript c
       return `${diagnostic.file?.fileName ?? "unknown"}${position ? `:${position.line + 1}:${position.character + 1}` : ""}: ${ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")}`;
     }),
   ).toEqual([]);
-});
+}, { timeout: 30_000 });
 
 test("removes root implementations and binds the actual command and oracle consumers", () => {
   const moved = new Set(fixture.owners.flatMap((owner) => owner.declarations));
@@ -187,7 +187,7 @@ test("distinguishes missing unreadable non-file and linked source without follow
       },
       readdir: () => [],
     };
-    expect(policySourceText("/repo", row.name, operations).state, row.name).toBe(row.expected);
+    expect(policySourceText("/repo", row.name, operations).state, row.name).toBe<string>(row.expected);
   }
   const linkedAncestorOperations = {
     lstat: (path: string) => {
@@ -302,7 +302,7 @@ test("surfaces native unreadable sources and refuses linked ancestors", async ()
   }
 });
 
-test("retains real artifact law and field-oracle behavior without fixed diagnostic counts", { timeout: 30_000 }, async () => {
+test("retains real artifact law and field-oracle behavior without fixed diagnostic counts", async () => {
   const [{ policyDiscoverArtifactSchemaOwners }, { policyArtifactSchemaBreaches }, { policyArtifactOwnershipFieldParity }] = await Promise.all([
     import("../../🧬️schema/🗿️artifact/🔍️owner-discovery/🟦️.ts"),
     import("../../🧬️schema/🗿️artifact/⚖️laws/📋️aggregate/🟦️.ts"),
@@ -318,7 +318,7 @@ test("retains real artifact law and field-oracle behavior without fixed diagnost
   expect([...new Set(breaches.map((breach) => breach.kind))].every((kind) => fixture.lawKinds.includes(kind))).toBe(true);
   for (const breach of breaches) expect(taxonomyOwners).toContain(breach.scope);
   expect(policyArtifactOwnershipFieldParity(repoRoot).filter((breach) => breach.path.endsWith("/🟦️.ts") && breach.missing.some((field) => field.startsWith("declaration:")))).toEqual([]);
-});
+}, { timeout: 30_000 });
 
 test("registers one Bun Nx and seed-derived launch route", () => {
   const project = JSON.parse(readFileSync(resolve(libraryRoot, "📦️packages/🟦️typescript/📋️project.json"), "utf8"));

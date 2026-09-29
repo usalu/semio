@@ -106,7 +106,7 @@ export function parseComponentPackageId(text: string, manifestPath: string): str
 
 
 //#region 🏛️DiscoveryContract
-/** @emoji 🔣️ The one shared taxonomy vocabulary (`🦑️repo/📚️library`'s `🔣️taxonomy.json`), read once. Every
+/** 🔣️ The one shared taxonomy vocabulary (`🦑️repo/📚️library`'s `🔣️taxonomy.json`), read once. Every
  * directory-name, manifest-filename, role and area literal this script used to hardcode as a path regex
  * now comes from here, so registry discovery can never drift from the root policy script's or the SDK
  * testkit's view of the same contract — see mechanism ticket
@@ -120,7 +120,7 @@ export function primaryFilenameForKind(kindId: string): string {
 }
 
 
-/** @emoji 🗺️ Every area root that may hold a plugin crate, cross-checked against `taxonomy.areas` at
+/** 🗺️ Every area root that may hold a plugin crate, cross-checked against `taxonomy.areas` at
  * load time so none of these literals can outlive a vocabulary rename. Membership across this array —
  * never equality against one hand-picked literal — is how every plugin-tree path test below decides
  * "is this under a plugin area"; its dedicated taxonomy-tree state decides whether findings warn or
@@ -134,19 +134,19 @@ for (const area of PLUGIN_AREAS) {
 }
 
 
-/** @emoji 🗺️ Merges every declared plugin area's `AreaState` to the most permissive member, so one
+/** 🗺️ Merges every declared plugin area's `AreaState` to the most permissive member, so one
  * still-exempt area can never be silently masked by a sibling area that already reached `clean`. */
 export function mergeAreaStates(states: readonly AreaState[]): AreaState {
   return states.includes("exempt") ? "exempt" : "clean";
 }
 
 
-/** @emoji 🌳️ Declared taxonomy-tree maturity across every plugin area, independent of the package-layout
+/** 🌳️ Declared taxonomy-tree maturity across every plugin area, independent of the package-layout
  * maturity in `areas`. `exempt` ⇒ findings are warn-only; `clean` ⇒ they fail the gate. */
 export const PLUGIN_AREAS_STATE: AreaState = mergeAreaStates(PLUGIN_AREAS.map((area) => TAXONOMY.areas[area]));
 
 
-/** @emoji 📚️ Artifact-scoped example data dir (`artifactChildDirs`, not owner root). */
+/** 📚️ Artifact-scoped example data dir (`artifactChildDirs`, not owner root). */
 export const EXAMPLES_DIRNAME = "📚️examples";
 
 if (!TAXONOMY.artifactChildDirs.includes(EXAMPLES_DIRNAME)) {
@@ -168,7 +168,7 @@ export const FORBIDDEN_EXAMPLE_PLURAL_DIRS = TAXONOMY.forbiddenExamplePluralDirs
 export const FORBIDDEN_EXAMPLE_SLUGS = new Set(TAXONOMY.forbiddenExampleSlugs ?? []);
 
 
-/** @emoji ✅️ True when `name` is an emoji+VS16+kebab example slug (and not a forbidden placeholder). */
+/** ✅️ True when `name` is an emoji+VS16+kebab example slug (and not a forbidden placeholder). */
 export function isExampleSlugName(name: string): boolean {
   return EXAMPLE_SLUG_RE.test(name) && !FORBIDDEN_EXAMPLE_SLUGS.has(name);
 }
@@ -177,14 +177,14 @@ export function isExampleSlugName(name: string): boolean {
 export const RUST_LANG = "🦀️rust";
 
 
-/** @emoji 🧩️ Roles whose packages may carry a `[package.metadata.component]` wasm component and thus
+/** 🧩️ Roles whose packages may carry a `[package.metadata.component]` wasm component and thus
  * belong in the plugin catalog: the plugin itself and the extensions it contributes. Every other role
  * (`framework`, `tool`, `s-module`, …) is filtered out by `tryParsePluginCargo` anyway — listing them
  * here keeps the intent explicit instead of implicit in a downstream parse failure. */
 export const COMPONENT_ROLES: ReadonlySet<PackageRole> = new Set<PackageRole>(["plugin", "extension"]);
 
 
-/** @emoji 📦️ Every rust package in the repo that declares a component-bearing role, via the shared
+/** 📦️ Every rust package in the repo that declares a component-bearing role, via the shared
  * `discoverPackages()` walk (two-level `📦️packages/🦀️rust/` and three-level `🎯️targets/<t>/` shapes
  * alike). Replaces the two hand-written "new contract" path regexes this script used to carry. */
 export function discoverComponentPackages(repoRoot: string, packages: readonly DiscoveredPackage[] = discoverCatalogPackages(repoRoot, TAXONOMY)): DiscoveredPackage[] {
@@ -194,7 +194,7 @@ export function discoverComponentPackages(repoRoot: string, packages: readonly D
 
 //#endregion 🏛️DiscoveryContract
 
-/** @emoji 🧭️ Every manifest that may contribute a row to the plugin catalog, via the shared package
+/** 🧭️ Every manifest that may contribute a row to the plugin catalog, via the shared package
  * discovery contract. The pre-Shape-V2 legacy sandwich shape this used to also admit was removed once
  * every declared plugin area reached `clean` — see `PLUGIN_AREAS_STATE`. */
 export function findPluginCargoFiles(root: string, packages?: readonly DiscoveredPackage[]): string[] {
@@ -329,7 +329,7 @@ export function readDescriptorJson(repoRoot: string, cratePath: string, view: Re
 
 
 /**
- * @emoji 🔣️ Parses one plugin/extension crate manifest into its catalog row. `📓️design-abi.md` §3:
+ * 🔣️ Parses one plugin/extension crate manifest into its catalog row. `📓️design-abi.md` §3:
  * when `<cratePath>/🤖️generated/🔣️.json` exists, `capabilities`/`contributes`/
  * `activationEvents`/`extensionPoints`/`executionMode`/`hashes` are read from it — Cargo
  * `[package.metadata.semio]` no longer carries `contributes` for a migrated crate (kept only for
@@ -468,7 +468,7 @@ export function parseTomlStringArray(block: string, key: string): string[] {
 
 
 /**
- * @emoji 🔗️ The runtime actor dependencies one crate DECLARES, read from
+ * 🔗️ The runtime actor dependencies one crate DECLARES, read from
  * `[package.metadata.semio].depends-on` — the same plugin-id set its builder passes to
  * `.depends_on(id, VersionPin)` (`🔌️plugin/🦀️.rs`), kept in the Cargo manifest as well because the
  * registry is generated BEFORE any wasm build and therefore cannot read the descriptor a build
@@ -505,7 +505,7 @@ export type GeneratePluginRegistryOptions = {
 
 
 
-/** @emoji 🎮️ The owning plugin id and the app scope of the playground row a variant/alias names, or
+/** 🎮️ The owning plugin id and the app scope of the playground row a variant/alias names, or
  * `undefined` for a filter that names no playground row. A row carrying `app` boots that ONE artifact
  * app; a row without one boots its crate's default session (the OS shell, for the host crate). */
 export function resolvePlaygroundFilterRow(pluginFilter: string, repoRoot = getWorkspaceRoot()): { readonly pluginId: string; readonly app?: string } | undefined {
@@ -530,7 +530,7 @@ export function resolvePlaygroundFilterRow(pluginFilter: string, repoRoot = getW
 }
 
 
-/** @emoji 🎯️ Resolves a playground variant/alias or bare plugin id to its wasm registry plugin id. */
+/** 🎯️ Resolves a playground variant/alias or bare plugin id to its wasm registry plugin id. */
 export function resolveRegistryPluginIdForFilter(pluginFilter: string, repoRoot = getWorkspaceRoot()): string {
   return resolvePlaygroundFilterRow(pluginFilter, repoRoot)?.pluginId ?? pluginFilter;
 }
@@ -547,7 +547,7 @@ export function pluginEntryHasHost(pluginId: string, repoRoot: string): boolean 
 
 
 
-/** @emoji 🏠️ True when the filter boots the host SESSION: a playground row of the crate that declares
+/** 🏠️ True when the filter boots the host SESSION: a playground row of the crate that declares
  * `[package.metadata.semio].host` AND names no `app`. The host crate also ships ordinary artifact apps
  * (`🪐️space`'s Home and Space); a row naming one of them is a single-app playground like any other. */
 export function isHostPluginFilter(pluginFilter?: string, repoRoot = getWorkspaceRoot()): boolean {

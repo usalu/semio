@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🚪️ The PAGE half of the wgpu renderer's file door — the one place a `<a download>` and an
+/** 🚪️ The PAGE half of the wgpu renderer's file door — the one place a `<a download>` and an
  * `<input type="file">` are created for this target.
  *
  * 🐛️ Why it exists at all: the wgpu shell runs inside a dedicated Worker (`🎞️frame-worker/🟦️.ts` owns the

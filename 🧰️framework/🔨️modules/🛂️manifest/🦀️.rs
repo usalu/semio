@@ -45,7 +45,7 @@ pub struct Keybinding {
     pub action: ActionDescriptor,
 }
 
-/// @emoji ⌨️ Operating system selector for a platform-specific keybinding.
+/// ⌨️ Operating system selector for a platform-specific keybinding.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -56,7 +56,7 @@ pub enum Platform {
     Linux,
 }
 
-/// @emoji ⌨️ One command chord, optionally restricted to a host platform.
+/// ⌨️ One command chord, optionally restricted to a host platform.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -78,7 +78,7 @@ impl PlatformKeybinding {
     }
 }
 
-/// @emoji 🗂️ Classifies a declared action by how it interacts with VCS history.
+/// 🗂️ Classifies a declared action by how it interacts with VCS history.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -110,7 +110,7 @@ pub enum ActionKind {
 // `ActionArgControl::ArtifactKind`/`SurfaceApp` controls (see `🔖️HostResolvedArgs`) need SOME
 // `ArgSchema` origin now that `control` is derived, not stored, and they are structurally exactly
 // this — a `String` value whose valid set the host resolves from `roles` right before render.
-/// @emoji 🧬️ Semantic refinement of a `String`-typed `ArgSchema` leaf — what KIND of string this is,
+/// 🧬️ Semantic refinement of a `String`-typed `ArgSchema` leaf — what KIND of string this is,
 /// beyond "text". Orthogonal to `ArgPresentation` (which is about the WIDGET, not the value's
 /// semantics): a `Color` format could still render as free text in a minimal shell.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
@@ -149,7 +149,7 @@ pub enum ArgFormat {
     TargetRevision,
 }
 
-/// @emoji 🌳️ The stored, engine-neutral shape of one action argument's value — see this region's
+/// 🌳️ The stored, engine-neutral shape of one action argument's value — see this region's
 /// header comment for the D6 stored/derived split.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
@@ -212,7 +212,7 @@ pub enum ArgSchema {
 }
 
 impl ArgSchema {
-    /// @emoji 🎯️ Every entity kind this value names through [`ArgFormat::EntityId`], at any depth.
+    /// 🎯️ Every entity kind this value names through [`ArgFormat::EntityId`], at any depth.
     pub fn entity_kinds(&self) -> Vec<&str> {
         match self {
             ArgSchema::String { format: Some(ArgFormat::EntityId { entity_kind }), .. } => vec![entity_kind.as_str()],
@@ -223,13 +223,13 @@ impl ArgSchema {
     }
 }
 
-/// @emoji 🪪️ The entity kind an [`ArgFormat::EntityId`] value names for one granularity of one declared interaction:
+/// 🪪️ The entity kind an [`ArgFormat::EntityId`] value names for one granularity of one declared interaction:
 /// `<interaction id>/<granularity id>` — the same pair a selection target of that interaction carries.
 pub fn interaction_entity_kind(interaction_id: &str, granularity_id: &str) -> String {
     format!("{interaction_id}/{granularity_id}")
 }
 
-/// @emoji 🖼️ How to WIDGET-render an argument beyond what its `ArgSchema` alone implies — consumed by
+/// 🖼️ How to WIDGET-render an argument beyond what its `ArgSchema` alone implies — consumed by
 /// `ActionArgDef::control()` (e.g. a bounded `Number` still renders `Slider` without this, but a
 /// single-bound one needs it to opt in).
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
@@ -245,7 +245,7 @@ pub enum ArgPresentation {
 //#endregion 🔖️ArgSchema
 
 //#region 🔖️ActionArgs
-/// @emoji 🔘️ One selectable option of a `Select` argument control — the persisted `value` and its
+/// 🔘️ One selectable option of a `Select` argument control — the persisted `value` and its
 /// human `label`.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
@@ -264,7 +264,7 @@ impl ActionArgOption {
     }
 }
 
-/// @emoji 🎚️ Declarative input control for one action argument — a lean manifest-altitude enum,
+/// 🎚️ Declarative input control for one action argument — a lean manifest-altitude enum,
 /// deliberately NOT `ui_wgpu::wgpu::UiControlNode` (whose variants embed live values and immediate-dispatch
 /// wiring). Renderers map each variant onto a staged form field. Tagged with `kind` to mirror the
 /// sibling `UtilityNode`/`UiControlNode` declarative-tree convention.
@@ -323,7 +323,7 @@ pub enum ActionArgControl {
     },
 }
 
-/// @emoji 📝️ Declares one argument of an action: its `id` (the JSON key sent in `ActionDescriptor.args`),
+/// 📝️ Declares one argument of an action: its `id` (the JSON key sent in `ActionDescriptor.args`),
 /// human `label`, stored value `schema` (see `🔖️ArgSchema` — D6: this is the sole persisted truth,
 /// `control()` below is derived from it), an optional widget `presentation` hint, whether it is
 /// `required`, an optional `default` value, and an optional `description`. An empty
@@ -360,50 +360,50 @@ impl ActionArgDef {
         ArgSchema::String { options: Vec::new(), min_len: None, max_len: None, pattern: None, format }
     }
 
-    /// @emoji 🔤️ A free-text argument.
+    /// 🔤️ A free-text argument.
     pub fn text(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
         Self::with_schema(id, label, Self::plain_string(None))
     }
 
-    /// @emoji 🔢️ A numeric argument (unbounded stepper by default).
+    /// 🔢️ A numeric argument (unbounded stepper by default).
     pub fn number(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
         Self::with_schema(id, label, ArgSchema::Number { min: None, max: None, step: None, integer: false, unit: None })
     }
 
-    /// @emoji 🔢️ A non-negative 32-bit ordinal.
+    /// 🔢️ A non-negative 32-bit ordinal.
     pub fn index(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
         Self::with_schema(id, label, ArgSchema::Number { min: Some(0.0), max: Some(u32::MAX as f64), step: Some(1.0), integer: true, unit: None })
     }
 
-    /// @emoji 🎚️ A bounded slider argument.
+    /// 🎚️ A bounded slider argument.
     pub fn slider(id: impl Into<String>, label: impl Into<LocalizedLabel>, min: f64, max: f64) -> Self {
         let mut def = Self::with_schema(id, label, ArgSchema::Number { min: Some(min), max: Some(max), step: None, integer: false, unit: None });
         def.presentation = Some(ArgPresentation::Slider);
         def
     }
 
-    /// @emoji 🔘️ A boolean toggle argument.
+    /// 🔘️ A boolean toggle argument.
     pub fn toggle(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
         Self::with_schema(id, label, ArgSchema::Boolean)
     }
 
-    /// @emoji 🔽️ A single-choice select argument.
+    /// 🔽️ A single-choice select argument.
     pub fn select(id: impl Into<String>, label: impl Into<LocalizedLabel>, options: Vec<ActionArgOption>) -> Self {
         Self::with_schema(id, label, ArgSchema::String { options, min_len: None, max_len: None, pattern: None, format: None })
     }
 
-    /// @emoji 🧭️ A three-component vector argument.
+    /// 🧭️ A three-component vector argument.
     pub fn vec3(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
         Self::with_schema(id, label, ArgSchema::Vec3 { unit: None })
     }
 
-    /// @emoji 📜️ A list-of-strings argument — the shape every multi-entity verb takes (`ids`,
+    /// 📜️ A list-of-strings argument — the shape every multi-entity verb takes (`ids`,
     /// `layerIds`), previously unexpressible, so those verbs published an empty input schema.
     pub fn text_list(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
         Self::with_schema(id, label, ArgSchema::Array { items: Box::new(Self::plain_string(None)), min_items: None, max_items: None })
     }
 
-    /// @emoji 🎯️ The ids of the entities a verb acts on, of one granularity of one declared interaction — the selection
+    /// 🎯️ The ids of the entities a verb acts on, of one granularity of one declared interaction — the selection
     /// that verb otherwise reads, stated as an argument: a human may leave it empty and act on what they selected, an
     /// agent (which has no selection) names the entities. Each id is tagged `x-semio-format: entityId` with its
     /// [`interaction_entity_kind`], which the app's definition build checks against the interactions it declares.
@@ -412,36 +412,36 @@ impl ActionArgDef {
         Self::with_schema(id, label, ArgSchema::Array { items: Box::new(Self::plain_string(Some(ArgFormat::EntityId { entity_kind }))), min_items: None, max_items: None })
     }
 
-    /// @emoji 🧱️ A record argument — the `#[dsl(block)]` payload shape a typed command decodes with
+    /// 🧱️ A record argument — the `#[dsl(block)]` payload shape a typed command decodes with
     /// `dsl::from_dsl_value` (`setFrame.frame`, `setSource.source`), previously unexpressible, so
     /// those verbs published an empty input schema and no agent could ever call them.
     pub fn object(id: impl Into<String>, label: impl Into<LocalizedLabel>, fields: Vec<ActionArgDef>) -> Self {
         Self::with_schema(id, label, ArgSchema::Object { fields })
     }
 
-    /// @emoji 🧬️ An unconstrained typed value argument.
+    /// 🧬️ An unconstrained typed value argument.
     pub fn any(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
         Self::with_schema(id, label, ArgSchema::Any)
     }
 
-    /// @emoji 🧬️ A JSON-text argument — a `String` wire field that actually carries a JSON document
+    /// 🧬️ A JSON-text argument — a `String` wire field that actually carries a JSON document
     /// (`patchLayer.value`, `setFixtureJson.json`), tagged `x-semio-format: json` so a client knows
     /// to send JSON text rather than a bare word.
     pub fn json_text(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
         Self::with_schema(id, label, Self::plain_string(Some(ArgFormat::Json)))
     }
 
-    /// @emoji 🗂️ A host-resolved artifact-kind choice — see `ActionArgControl::ArtifactKind`.
+    /// 🗂️ A host-resolved artifact-kind choice — see `ActionArgControl::ArtifactKind`.
     pub fn artifact_kind(id: impl Into<String>, label: impl Into<LocalizedLabel>, roles: Vec<AppRole>) -> Self {
         Self::with_schema(id, label, Self::plain_string(Some(ArgFormat::ArtifactKind { roles })))
     }
 
-    /// @emoji 🎭️ A host-resolved `(pluginId, appId, role)` choice — see `ActionArgControl::SurfaceApp`.
+    /// 🎭️ A host-resolved `(pluginId, appId, role)` choice — see `ActionArgControl::SurfaceApp`.
     pub fn surface_app(id: impl Into<String>, label: impl Into<LocalizedLabel>, roles: Vec<AppRole>, dialect_arg: impl Into<String>) -> Self {
         Self::with_schema(id, label, Self::plain_string(Some(ArgFormat::SurfaceApp { roles, dialect_arg: dialect_arg.into() })))
     }
 
-    /// @emoji 🔐️ The document revision a rendered binding carries — hidden and optional: the shell lanes pass the binding's
+    /// 🔐️ The document revision a rendered binding carries — hidden and optional: the shell lanes pass the binding's
     /// token (and refuse its absence in the app's own parser); the agent lane omits it and is admitted against the document's
     /// revision at admission, behind the MCP `expectedRevision` guard (ticket 26/09/23, G12 session 14c).
     pub fn document_revision(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
@@ -450,7 +450,7 @@ impl ActionArgDef {
         def
     }
 
-    /// @emoji 🔐️ One addressed target's revision a rendered binding carries — hidden and optional like
+    /// 🔐️ One addressed target's revision a rendered binding carries — hidden and optional like
     /// [`Self::document_revision`]; the agent lane fills it from the app's own `agent_target_revision`.
     pub fn target_revision(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
         let mut def = Self::with_schema(id, label, Self::plain_string(Some(ArgFormat::TargetRevision)));
@@ -458,7 +458,7 @@ impl ActionArgDef {
         def
     }
 
-    /// @emoji ❗️ Marks the argument as required — execution is blocked until it has an effective value.
+    /// ❗️ Marks the argument as required — execution is blocked until it has an effective value.
     pub fn required(mut self) -> Self {
         self.required = true;
         self
@@ -472,19 +472,19 @@ impl ActionArgDef {
         self
     }
 
-    /// @emoji 🎁️ Sets the default effective value used when nothing is staged.
+    /// 🎁️ Sets the default effective value used when nothing is staged.
     pub fn default_value(mut self, value: &impl ToValue) -> Self {
         self.default = Some(value.to_value());
         self
     }
 
-    /// @emoji 💬️ Attaches a description shown alongside the field.
+    /// 💬️ Attaches a description shown alongside the field.
     pub fn describe(mut self, description: impl Into<String>) -> Self {
         self.description = Some(description.into());
         self
     }
 
-    /// @emoji 🎛️ Derives this argument's renderer-facing `ActionArgControl` from its stored `schema` +
+    /// 🎛️ Derives this argument's renderer-facing `ActionArgControl` from its stored `schema` +
     /// `presentation` — D6 (ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet
     /// P3-manifest-schema): `schema` is the ONLY persisted truth, this is computed fresh on every
     /// call, never cached/stored. Order matters: a non-empty `options` list always wins Select over
@@ -515,7 +515,7 @@ impl ActionArgDef {
         }
     }
 
-    /// @emoji 📐️ JSON Schema (2020-12 leaf, no `$schema`/`$id` — the catalog compiler wraps those at
+    /// 📐️ JSON Schema (2020-12 leaf, no `$schema`/`$id` — the catalog compiler wraps those at
     /// the whole-action envelope, `📋️master.md` §3.2) for this one argument's value, folding in
     /// `description`/`default`.
     pub fn json_schema(&self) -> DslValue {
@@ -532,7 +532,7 @@ impl ActionArgDef {
     }
 }
 
-/// @emoji 🧬️ Tags a leaf/nested `ArgSchema` JSON Schema object with its `ArgFormat` — `x-semio-format`
+/// 🧬️ Tags a leaf/nested `ArgSchema` JSON Schema object with its `ArgFormat` — `x-semio-format`
 /// (the vendor extension every format carries) plus, for the two host-resolved refinements, the
 /// `roles`/`dialect_arg` a host needs to resolve them (`x-semio-roles`/`x-semio-dialect-arg`) — and
 /// the standard `format: "uri"` keyword where JSON Schema already defines one.
@@ -568,7 +568,7 @@ fn apply_arg_format(entries: &mut Vec<(String, DslValue)>, format: &ArgFormat) {
     entries.push(("x-semio-format".to_string(), DslValue::String(tag.to_string())));
 }
 
-/// @emoji 📐️ JSON Schema 2020-12 for one `ArgSchema` node (recursive over `Array`/`Object`) — carries
+/// 📐️ JSON Schema 2020-12 for one `ArgSchema` node (recursive over `Array`/`Object`) — carries
 /// `Number.unit`/`Vec3.unit` as `x-semio-unit`, `String.format` via `apply_arg_format`. No
 /// `additionalProperties`/`$schema`/`$id` at this altitude; the catalog compiler owns the envelope.
 fn arg_schema_json_schema(schema: &ArgSchema) -> DslValue {
@@ -655,7 +655,7 @@ fn arg_schema_json_schema(schema: &ArgSchema) -> DslValue {
 }
 //#endregion 🔖️ActionArgs
 
-/// @emoji 🎯️ Neutral icon for an action or command whose owner does not declare presentation metadata.
+/// 🎯️ Neutral icon for an action or command whose owner does not declare presentation metadata.
 pub fn default_action_icon_id(kind: ActionKind) -> IconName {
     match kind {
         ActionKind::View => "eye".into(),
@@ -674,7 +674,7 @@ pub fn default_action_icon_id(kind: ActionKind) -> IconName {
 // gateway's compiled projection, per D5, which lives in the gateway crate, not here) and from
 // `kernel::Broker`'s own `CapabilityId`/`BrokerCapabilityGrant` (the enforcement primitive
 // `CapabilityPolicy.scopes` below references, never redefines).
-/// @emoji 🎯️ A templated resource-selector string identifying what a capability reads/writes —
+/// 🎯️ A templated resource-selector string identifying what a capability reads/writes —
 /// documented vocabulary (`"artifact:{self}"`, `"artifact:{arg.<id>}"`, `"config:{self}"`,
 /// `"ui:window"`, `"clipboard"`, `"fs:{arg.<id>}"`, `"net:{origin}"`), not a closed enum: a new
 /// resource family never needs a manifest schema change.
@@ -707,7 +707,7 @@ impl ResourceSelector {
     }
 }
 
-/// @emoji 🧮️ What one capability touches — read/write resource selectors plus the three coarse flags
+/// 🧮️ What one capability touches — read/write resource selectors plus the three coarse flags
 /// the gateway's policy/preview machinery gates on.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
@@ -731,7 +731,7 @@ pub struct CapabilityEffects {
     pub reversible: bool,
 }
 
-/// @emoji 🚦️ When the gateway must pause for human approval before committing an invocation of this
+/// 🚦️ When the gateway must pause for human approval before committing an invocation of this
 /// capability.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
@@ -744,7 +744,7 @@ pub enum ApprovalMode {
     Always,
 }
 
-/// @emoji 🛡️ The scope/approval gate a capability invocation must clear — `scopes` are
+/// 🛡️ The scope/approval gate a capability invocation must clear — `scopes` are
 /// `kernel::CapabilityId`s (the Broker's own enforcement primitive, see `🔖️Kernel` below), never a
 /// parallel string vocabulary: `ExtensionPointDeclaration.capability_allowance` already establishes
 /// that `kernel::CapabilityId` is reachable from this crate with no dependency cycle.
@@ -761,7 +761,7 @@ pub struct CapabilityPolicy {
     pub approval: ApprovalMode,
 }
 
-/// @emoji 👁️ Whether/how the gateway can show the effect of an invocation before committing it.
+/// 👁️ Whether/how the gateway can show the effect of an invocation before committing it.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -773,7 +773,7 @@ pub enum PreviewMode {
     Diff,
 }
 
-/// @emoji ↩️ How a committed invocation of this capability can be undone.
+/// ↩️ How a committed invocation of this capability can be undone.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
@@ -789,7 +789,7 @@ pub enum UndoMode {
     },
 }
 
-/// @emoji 🔁️ Whether replaying the same invocation twice is safe, and how the gateway makes it so.
+/// 🔁️ Whether replaying the same invocation twice is safe, and how the gateway makes it so.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -801,7 +801,7 @@ pub enum IdempotencyMode {
     None,
 }
 
-/// @emoji ⏱️ How long-running/interactive an invocation of this capability is — the gateway's job
+/// ⏱️ How long-running/interactive an invocation of this capability is — the gateway's job
 /// vs. interactive-call dispatch hint.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
@@ -814,7 +814,7 @@ pub enum ExecutionClass {
     Job,
 }
 
-/// @emoji 🎯️ WHO a declared action/command is addressed to. Orthogonal to [`ActionKind`] (which says
+/// 🎯️ WHO a declared action/command is addressed to. Orthogonal to [`ActionKind`] (which says
 /// how a verb relates to VCS history) and to `in_palette` (which says whether a human sees it in the
 /// command palette): an agent driving the artifact through the semio MCP needs to tell an
 /// intent-level document verb (`addLayer`, `patchLayer`, `exportDocument`) apart from the raw
@@ -841,7 +841,7 @@ pub enum CapabilityAudience {
     Chrome,
 }
 
-/// @emoji 🧭️ The derivation [`resolve_audience`] applies when an action/command declares no
+/// 🧭️ The derivation [`resolve_audience`] applies when an action/command declares no
 /// [`CapabilityAudience`], stated once so the catalog compiler, the descriptor emitter and the shell
 /// all agree: framework-injected hover/selection is `Input`; ephemeral view state that is not a
 /// palette command is `Chrome`; everything else — every mutation, every history/clipboard/shell verb,
@@ -854,28 +854,28 @@ pub fn derive_audience(kind: ActionKind, in_palette: bool) -> CapabilityAudience
     }
 }
 
-/// @emoji 🧭️ This action's audience — its own declaration when it has one, otherwise
+/// 🧭️ This action's audience — its own declaration when it has one, otherwise
 /// [`derive_audience`] over `kind`/`in_palette`.
 pub fn resolve_audience(action: &ActionDefinition) -> CapabilityAudience {
     action.semantics.audience.unwrap_or_else(|| derive_audience(action.kind, action.in_palette))
 }
 
-/// @emoji 🧭️ This command's audience — see [`resolve_audience`].
+/// 🧭️ This command's audience — see [`resolve_audience`].
 pub fn resolve_command_audience(command: &CommandDefinition) -> CapabilityAudience {
     command.semantics.audience.unwrap_or_else(|| derive_audience(command.kind, command.in_palette))
 }
 
-/// @emoji 🖐️ The verbs the framework's World3d gumball dispatches ITSELF around one drag —
+/// 🖐️ The verbs the framework's World3d gumball dispatches ITSELF around one drag —
 /// `transformBegin` when a handle is grabbed and `transformEnd` when it is released
 /// (`World3dHost`'s `handleGumballDragStart`/`handleGumballDragEnd`). They bracket the pose deltas
 /// (`translateSelection`/`rotateSelection`/`scaleSelection`, each a self-contained verb that commits on
 /// its own outside a bracket) and mean nothing outside a live pointer gesture.
 pub const GUMBALL_GESTURE_BRACKET_ACTION_IDS: [&str; 2] = ["transformBegin", "transformEnd"];
 
-/// @emoji 🎛️ The gumball's handle toggle — which move/rotate/scale handles one window shows.
+/// 🎛️ The gumball's handle toggle — which move/rotate/scale handles one window shows.
 pub const GUMBALL_CHROME_ACTION_IDS: [&str; 1] = ["setTransformGumballFlag"];
 
-/// @emoji 🧭️ The one classification rule for the framework-owned gumball verbs, stated once for every
+/// 🧭️ The one classification rule for the framework-owned gumball verbs, stated once for every
 /// app that uses the gumball (lowpoly, puzzle, fem, block, …): the drag brackets are
 /// [`CapabilityAudience::Input`], the handle toggle is [`CapabilityAudience::Chrome`]. `None` for every
 /// other id. An app declaring one of these ids must resolve to exactly this audience — enforced when its
@@ -890,12 +890,12 @@ pub fn framework_fixed_audience(action_id: &str) -> Option<CapabilityAudience> {
     }
 }
 
-/// @emoji ⚖️ The audience a framework-owned verb requires when `action` resolves to a different one.
+/// ⚖️ The audience a framework-owned verb requires when `action` resolves to a different one.
 pub fn framework_fixed_audience_violation(action: &ActionDefinition) -> Option<CapabilityAudience> {
     framework_fixed_audience(&action.id).filter(|expected| *expected != resolve_audience(action))
 }
 
-/// @emoji 🧵️ Phase-8 migration disposition for every action and command declaration. The
+/// 🧵️ Phase-8 migration disposition for every action and command declaration. The
 /// default is deliberately not executable: manifests decoded without an explicit disposition remain
 /// visible to audit tooling but are rejected by [`validate_interactive_job_classification`] before a
 /// release catalog can be activated.
@@ -912,7 +912,7 @@ pub enum InteractiveJobClassification {
     Deleted,
 }
 
-/// @emoji ⚙️ Preview/undo/idempotency/cancellation shape of one capability invocation.
+/// ⚙️ Preview/undo/idempotency/cancellation shape of one capability invocation.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -941,7 +941,7 @@ pub struct CapabilityExecution {
     pub interactive_job: InteractiveJobClassification,
 }
 
-/// @emoji 🎯️ What an `ActionDefinition`/`CommandDefinition` MEANS to an agent: effects, policy,
+/// 🎯️ What an `ActionDefinition`/`CommandDefinition` MEANS to an agent: effects, policy,
 /// execution shape, and natural-language framing (`use_when`/`examples`) — everything the MCP
 /// catalog compiler needs beyond the UI-shaped fields already on the definition itself. Defaulted
 /// per-kind by `for_kind` at construction time; `#[serde(default)]` on the owning field additionally
@@ -981,7 +981,7 @@ pub struct ActionSemantics {
 }
 
 impl ActionSemantics {
-    /// @emoji 🏭️ The `📋️master.md` §3.1 defaults table, keyed by `ActionKind`: `Mutation` writes its
+    /// 🏭️ The `📋️master.md` §3.1 defaults table, keyed by `ActionKind`: `Mutation` writes its
     /// own artifact, is reversible, previews a `Diff`, undoes via `Inverse`, expects a revision, and
     /// needs `artifacts.write` gated `WhenDestructive`; `View`/`Interaction` read the config lane
     /// (`artifacts.read` + `shell.observe`); `History` needs `artifacts.write`; `Clipboard` needs
@@ -1006,7 +1006,7 @@ impl ActionSemantics {
     }
 }
 
-/// @emoji 🛡️ One release-blocking Phase-8 classification failure, addressed by owner path and
+/// 🛡️ One release-blocking Phase-8 classification failure, addressed by owner path and
 /// declaration id so generated catalogs can report every omission in one pass.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct InteractiveJobClassificationError {
@@ -1022,7 +1022,7 @@ impl std::fmt::Display for InteractiveJobClassificationError {
 
 impl std::error::Error for InteractiveJobClassificationError {}
 
-/// @emoji ✅️ Rejects an action/command catalog containing an unclassified declaration. Deleted and
+/// ✅️ Rejects an action/command catalog containing an unclassified declaration. Deleted and
 /// batch-only declarations are classified data, while UI dispatch separately rejects dispositions
 /// that are not [`InteractiveJobClassification::Migrated`].
 pub fn validate_interactive_job_classification<'a>(actions: impl IntoIterator<Item = (&'a str, &'a ActionDefinition)>, commands: impl IntoIterator<Item = (&'a str, &'a CommandDefinition)>) -> Result<(), Vec<InteractiveJobClassificationError>> {
@@ -1046,7 +1046,7 @@ pub fn validate_interactive_job_classification<'a>(actions: impl IntoIterator<It
 }
 //#endregion 🔖️ActionSemantics
 
-/// @emoji 📇️ Declares one action an app can receive via `ActionDescriptor.action`.
+/// 📇️ Declares one action an app can receive via `ActionDescriptor.action`.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -1082,7 +1082,7 @@ impl ActionDefinition {
         Self { id: id.into(), label: label.into(), kind, icon_id: icon_id.into(), args: Vec::new(), keys: None, in_palette: true, category: None, semantics: ActionSemantics::for_kind(kind) }
     }
 
-    /// @emoji 🎯️ Declares an action with the neutral icon for its kind.
+    /// 🎯️ Declares an action with the neutral icon for its kind.
     pub fn new_catalog(id: impl Into<String>, label: impl Into<LocalizedLabel>, kind: ActionKind) -> Self {
         Self::new(id, label, kind, default_action_icon_id(kind))
     }
@@ -1101,24 +1101,24 @@ impl ActionDefinition {
         definition
     }
 
-    /// @emoji 📝️ Attaches typed argument declarations to this action.
+    /// 📝️ Attaches typed argument declarations to this action.
     pub fn with_args(mut self, args: impl IntoIterator<Item = ActionArgDef>) -> Self {
         self.args = args.into_iter().collect();
         self
     }
 
-    /// @emoji 🎨️ Sets palette visibility for this action.
+    /// 🎨️ Sets palette visibility for this action.
     pub fn with_in_palette(mut self, in_palette: bool) -> Self {
         self.in_palette = in_palette;
         self
     }
 
-    /// @emoji 🎨️ Sets palette visibility for this action.
+    /// 🎨️ Sets palette visibility for this action.
     pub fn in_palette(self, in_palette: bool) -> Self {
         self.with_in_palette(in_palette)
     }
 
-    /// @emoji 🗂️ Sets this action's ribbon-parent-taxonomy category (a `ui_wgpu::wgpu::RIBBON_PARENT_CATEGORIES`
+    /// 🗂️ Sets this action's ribbon-parent-taxonomy category (a `ui_wgpu::wgpu::RIBBON_PARENT_CATEGORIES`
     /// id) — read back by `AppActionRegistry::category_of` and fed into `organize_context_menu`'s
     /// `category_of` lookup at the context-menu funnel, so an overflowing flat menu buckets this
     /// action's row into `menu.group.<category>` instead of `menu.group.actions`.
@@ -1127,18 +1127,18 @@ impl ActionDefinition {
         self
     }
 
-    /// @emoji 🗂️ Sets this action's ribbon-parent-taxonomy category — see `with_category`.
+    /// 🗂️ Sets this action's ribbon-parent-taxonomy category — see `with_category`.
     pub fn category(self, category: impl Into<String>) -> Self {
         self.with_category(category)
     }
 
-    /// @emoji 🎯️ Replaces this action's whole `ActionSemantics` wholesale.
+    /// 🎯️ Replaces this action's whole `ActionSemantics` wholesale.
     pub async fn semantics(mut self, semantics: ActionSemantics) -> Self {
         self.semantics = semantics;
         self
     }
 
-    /// @emoji ⚠️ Marks this action destructive: it discards user content no later verb reconstructs
+    /// ⚠️ Marks this action destructive: it discards user content no later verb reconstructs
     /// (delete, clear, replace-the-whole-document). Sets `effects.destructive` and raises
     /// `policy.approval` to `WhenDestructive` (a no-op if it was already `Always`), which is the one
     /// fact the MCP gateway's approval gate reads before committing an agent's invocation.
@@ -1150,14 +1150,14 @@ impl ActionDefinition {
         self
     }
 
-    /// @emoji 🗣️ Sets the natural-language phrases a capability search should match this action
+    /// 🗣️ Sets the natural-language phrases a capability search should match this action
     /// against (`ActionSemantics.use_when`).
     pub fn use_when(mut self, phrases: impl IntoIterator<Item = impl Into<String>>) -> Self {
         self.semantics.use_when = phrases.into_iter().map(Into::into).collect();
         self
     }
 
-    /// @emoji 💬️ Sets the localized one-or-two-sentence description an agent reads to decide whether
+    /// 💬️ Sets the localized one-or-two-sentence description an agent reads to decide whether
     /// this is the verb it wants (`ActionSemantics.description`) — `LocalizedLabel::native(en, de)`,
     /// English first and German second per `AGENTS.md`, never a default language.
     pub fn describe(mut self, description: impl Into<LocalizedLabel>) -> Self {
@@ -1165,14 +1165,14 @@ impl ActionDefinition {
         self
     }
 
-    /// @emoji 🎯️ Declares this action's [`CapabilityAudience`] explicitly, overriding
+    /// 🎯️ Declares this action's [`CapabilityAudience`] explicitly, overriding
     /// [`derive_audience`].
     pub fn audience(mut self, audience: CapabilityAudience) -> Self {
         self.semantics.audience = Some(audience);
         self
     }
 
-    /// @emoji 🖱️ Marks this action a raw input event ([`CapabilityAudience::Input`]) and takes it out
+    /// 🖱️ Marks this action a raw input event ([`CapabilityAudience::Input`]) and takes it out
     /// of the palette — the declaration a `Mutation`-kind pointer/gesture route needs, since
     /// [`derive_audience`] reads every mutation as agent-addressable.
     pub fn input_event(mut self) -> Self {
@@ -1181,7 +1181,7 @@ impl ActionDefinition {
         self
     }
 
-    /// @emoji 🪟️ Marks this action window/view/session chrome ([`CapabilityAudience::Chrome`]) and
+    /// 🪟️ Marks this action window/view/session chrome ([`CapabilityAudience::Chrome`]) and
     /// takes it out of the palette.
     pub fn chrome(mut self) -> Self {
         self.in_palette = false;
@@ -1189,19 +1189,19 @@ impl ActionDefinition {
         self
     }
 
-    /// @emoji 📖️ Appends one natural-language usage example (`ActionSemantics.examples`).
+    /// 📖️ Appends one natural-language usage example (`ActionSemantics.examples`).
     pub async fn example(mut self, example: impl Into<String>) -> Self {
         self.semantics.examples.push(example.into());
         self
     }
 }
 
-/// @emoji ⏪️ The framework-owned action id apps dispatch to revert to a past command-log entry —
+/// ⏪️ The framework-owned action id apps dispatch to revert to a past command-log entry —
 /// auto-injected as the 7th `history_action_definitions()` entry (never in the palette; needs a
 /// concrete `entrySeq` from the history panel's "backwards" button).
 pub const REVERT_TO_COMMAND_ACTION_ID: &str = "revertToCommand";
 
-/// @emoji 🕹️ The seven framework-owned History actions, auto-injected into every `AppDefinition`.
+/// 🕹️ The seven framework-owned History actions, auto-injected into every `AppDefinition`.
 pub fn history_action_definitions() -> Vec<ActionDefinition> {
     vec![
         ActionDefinition { keys: Some("mod+z".into()), ..ActionDefinition::resumable_framework("undo", LocalizedLabel::native("Undo", "Rückgängig"), ActionKind::History, "undo-2") }
@@ -1228,11 +1228,11 @@ pub fn history_action_definitions() -> Vec<ActionDefinition> {
     ]
 }
 
-/// @emoji 🎚️ The framework-owned action id apps dispatch to change the history panel's operations
+/// 🎚️ The framework-owned action id apps dispatch to change the history panel's operations
 /// filter — auto-injected unconditionally (mirrors `RECORD_TUTORIAL_ACTION_ID`).
 pub const SET_HISTORY_COMMAND_FILTER_ACTION_ID: &str = "setHistoryCommandFilter";
 
-/// @emoji 🎚️ The framework-injected `setHistoryCommandFilter` View action (never in the palette):
+/// 🎚️ The framework-injected `setHistoryCommandFilter` View action (never in the palette):
 /// switches the history panel's tri-state operations filter. Ephemeral UI state, never an
 /// operation — `ActionKind::View`. Arg id is `"value"` (not `"filter"`) — a top-level `UiNode::Select`
 /// always dispatches its picked option merged into `args` under the `"value"` key (both renderers'
@@ -1253,12 +1253,12 @@ pub fn set_history_command_filter_action_definition() -> ActionDefinition {
     .default_value(&"all")])
 }
 
-/// @emoji 🗒️ The framework-owned action id apps dispatch to note a shell effect (navigate, export,
+/// 🗒️ The framework-owned action id apps dispatch to note a shell effect (navigate, export,
 /// spawn, …) into the session command log without any document mutation — mirrors
 /// `SET_HISTORY_COMMAND_FILTER_ACTION_ID`'s auto-injected-constant pattern.
 pub const NOTE_SHELL_COMMAND_ACTION_ID: &str = "noteShellCommand";
 
-/// @emoji 🗒️ The framework-injected `noteShellCommand` Shell action (never in the palette): records a
+/// 🗒️ The framework-injected `noteShellCommand` Shell action (never in the palette): records a
 /// shell-kind effect that already happened into the session command log, for effects dispatched
 /// outside the normal `ActionDescriptor` path. `commandId` and `label` are required; `detail` is an
 /// optional free-text elaboration shown in the history panel. A note is an UNDO TARGET only when the
@@ -1328,7 +1328,7 @@ pub const SET_SELECTION_MODE_ACTION_ID: &str = "setSelectionMode";
 /// 🪜️ The framework-owned action id apps dispatch to switch a domain's active granularity.
 pub const SET_INTERACTION_GRANULARITY_ACTION_ID: &str = "setInteractionGranularity";
 
-/// @emoji 🎮️ The six framework-owned interaction verbs as one closed type — the key an app's declared
+/// 🎮️ The six framework-owned interaction verbs as one closed type — the key an app's declared
 /// interaction refresh scope is resolved by (`ArtifactApp::interaction_scope`), so "what does a hover
 /// repaint" is a match on a verb rather than a string compare re-derived at every call site. The
 /// framework owns the verbs; only the SCOPE each one dirties is app knowledge, because only the app
@@ -1594,11 +1594,11 @@ fn tool_run_action_arg(name: &'static str, required: bool) -> ActionArgDef {
 mod tool_run_actions_tests;
 //#endregion 🔖️ToolRun
 
-/// @emoji 🧰️ The framework-owned action id apps dispatch to activate a utility — auto-injected as a View
+/// 🧰️ The framework-owned action id apps dispatch to activate a utility — auto-injected as a View
 /// action into any `AppDefinition` that declares utilities (mirrors `history_action_definitions`).
 pub const SET_ACTIVE_UTILITY_ACTION_ID: &str = "setActiveUtility";
 
-/// @emoji 🧰️ The framework-injected `setActiveUtility` View action (never in the palette): switches the
+/// 🧰️ The framework-injected `setActiveUtility` View action (never in the palette): switches the
 /// host-owned active utility of a window kind. `utilityId` is required; `windowKindId` is contextual (the
 /// shell fills it from the focused window when absent).
 pub fn set_active_utility_action_definition() -> ActionDefinition {
@@ -1606,11 +1606,11 @@ pub fn set_active_utility_action_definition() -> ActionDefinition {
         .with_args([ActionArgDef::text("utilityId", LocalizedLabel::native("Utility", "Hilfsmittel")).required(), ActionArgDef::text("windowKindId", LocalizedLabel::native("Window", "Fenster"))])
 }
 
-/// @emoji 🛠️ The framework-owned action id apps dispatch to activate a mode-level tool — auto-injected
+/// 🛠️ The framework-owned action id apps dispatch to activate a mode-level tool — auto-injected
 /// as a View action into any `AppDefinition` that declares tools (mirrors `SET_ACTIVE_UTILITY_ACTION_ID`).
 pub const SET_ACTIVE_TOOL_ACTION_ID: &str = "setActiveTool";
 
-/// @emoji 🛠️ The framework-injected `setActiveTool` View action (never in the palette): switches the
+/// 🛠️ The framework-injected `setActiveTool` View action (never in the palette): switches the
 /// host-owned active tool of the active mode. Unlike `setActiveUtility` this takes no `windowKindId` —
 /// tools are windowless, scoped to the whole mode.
 pub fn set_active_tool_action_definition() -> ActionDefinition {
@@ -1621,12 +1621,12 @@ pub fn set_active_tool_action_definition() -> ActionDefinition {
     .required()])
 }
 
-/// @emoji 🎓️ The framework-owned action id apps dispatch to (re)start an app's introduction —
+/// 🎓️ The framework-owned action id apps dispatch to (re)start an app's introduction —
 /// auto-injected as a shell-intercepted View action into any
 /// `AppDefinition` that declares one (mirrors `SET_ACTIVE_UTILITY_ACTION_ID`).
 pub const START_INTRODUCTION_ACTION_ID: &str = "startIntroduction";
 
-/// @emoji 🎓️ The framework-injected `startIntroduction` View action: fully shell-intercepted (never
+/// 🎓️ The framework-injected `startIntroduction` View action: fully shell-intercepted (never
 /// forwarded to the program), it resets playback to the first step of `AppDefinition.introduction`.
 /// Unlike ordinary app actions this stays out of the action palette because the shell exposes the
 /// dedicated `Introduce App` command.
@@ -1634,17 +1634,17 @@ pub fn start_introduction_action_definition() -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework(START_INTRODUCTION_ACTION_ID, LocalizedLabel::native("Introduce App", "App vorstellen"), ActionKind::View, "graduation-cap") }
 }
 
-/// @emoji 📤️ The framework-owned action id of Export Document: injected into every app window and fully
+/// 📤️ The framework-owned action id of Export Document: injected into every app window and fully
 /// shell-intercepted (never forwarded to the program) — the shell writes the document's canonical archive (root
 /// envelope, its op log, every owned member) as one `.semio-archive` file, for every artifact kind alike.
 pub const EXPORT_ARTIFACT_DOCUMENT_ACTION_ID: &str = "exportArtifactDocument";
 
-/// @emoji 📥️ The framework-owned action id of Import Document, injected beside [`EXPORT_ARTIFACT_DOCUMENT_ACTION_ID`]
+/// 📥️ The framework-owned action id of Import Document, injected beside [`EXPORT_ARTIFACT_DOCUMENT_ACTION_ID`]
 /// and shell-intercepted: the shell opens a picked archive as a NEW document of the same program (a cancellable,
 /// progress-reporting load of its op log), never overwriting the focused one.
 pub const IMPORT_ARTIFACT_DOCUMENT_ACTION_ID: &str = "importArtifactDocument";
 
-/// @emoji 🗃️ The framework-injected Export/Import Document pair: `Shell` verbs in the palette and the `transfer` ribbon
+/// 🗃️ The framework-injected Export/Import Document pair: `Shell` verbs in the palette and the `transfer` ribbon
 /// category, shell chrome ([`CapabilityAudience::Chrome`]) — agents export through the MCP's own artifact export.
 pub fn document_transfer_action_definitions() -> [ActionDefinition; 2] {
     [
@@ -1687,7 +1687,7 @@ impl From<String> for ActionRef {
     }
 }
 
-/// @emoji 📍️ Fully qualified address of an action owned by one concrete window instance.
+/// 📍️ Fully qualified address of an action owned by one concrete window instance.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct ActionAddress {
@@ -1699,7 +1699,7 @@ pub struct ActionAddress {
     pub action_id: String,
 }
 
-/// @emoji 📨️ One addressed action invocation with named DSL-value arguments. Ticket
+/// 📨️ One addressed action invocation with named DSL-value arguments. Ticket
 /// `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`: `arguments` used to be
 /// keyed to `serde_json::Value` (not a `ToValue`/`FromValue` target by design); `DslValue` carries
 /// the exact same schema-less-JSON shape without the serde dependency.
@@ -1711,7 +1711,7 @@ pub struct ActionInvocation {
 }
 
 //#region 🔖️Utilities
-/// @emoji 🧰️ Declares one interactive utility (a live-preview pointer mode) an app exposes. Distinct from
+/// 🧰️ Declares one interactive utility (a live-preview pointer mode) an app exposes. Distinct from
 /// an `ActionDefinition`: exactly one utility is active per window kind at a time, and activation is
 /// host-owned session view state (`ViewModel.active_utility_id`), never a document field or VCS operation.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
@@ -1750,13 +1750,13 @@ pub struct UtilityDefinition {
 }
 
 impl UtilityDefinition {
-    /// @emoji 🧰️ A utility with sensible defaults (no group/keys/cursor/category/run, gates actions while active).
+    /// 🧰️ A utility with sensible defaults (no group/keys/cursor/category/run, gates actions while active).
     pub fn new(id: impl Into<String>, label: impl Into<LocalizedLabel>, icon_id: impl Into<IconName>) -> Self {
         Self { id: id.into(), label: label.into(), icon_id: icon_id.into(), group: None, keys: None, cursor: None, category: None, allows_actions_while_active: false, run: None }
     }
 }
 
-/// @emoji 🧰️ A validated reference into an app's `AppDefinition.utilities` registry — the utility mirror of
+/// 🧰️ A validated reference into an app's `AppDefinition.utilities` registry — the utility mirror of
 /// `ActionRef`, scoping utilities to window kinds/modes with a typed, resolvable id.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
@@ -1788,7 +1788,7 @@ impl From<String> for UtilityRef {
 //#endregion 🔖️Utilities
 
 //#region 🔖️Commands
-/// @emoji 🎛️ Declares one command: a categorized verb offered in the footer command panel.
+/// 🎛️ Declares one command: a categorized verb offered in the footer command panel.
 /// Its owner and availability are derived from the containing OS, plugin, app, or mode definition.
 /// Handling a command may emit VCS-tracked operations exactly like an operation-kind action — see
 /// `ArtifactApp::handle_command`/`ActionEmit`.
@@ -1823,7 +1823,7 @@ impl CommandDefinition {
         Self { id: id.into(), label: label.into(), category: category.into(), icon_id: icon_id.into(), kind, args: Vec::new(), keybindings: Vec::new(), in_palette: true, semantics: ActionSemantics::for_kind(kind) }
     }
 
-    /// @emoji 🎛️ Declares a command with the neutral icon for its action kind.
+    /// 🎛️ Declares a command with the neutral icon for its action kind.
     pub fn new_catalog(id: impl Into<String>, label: impl Into<LocalizedLabel>, category: impl Into<String>, kind: ActionKind) -> Self {
         Self::new(id, label, category, default_action_icon_id(kind), kind)
     }
@@ -1834,25 +1834,25 @@ impl CommandDefinition {
         Self::new_catalog(id, label, category, kind)
     }
 
-    /// @emoji 📝️ Attaches typed argument declarations to this command.
+    /// 📝️ Attaches typed argument declarations to this command.
     pub fn with_args(mut self, args: impl IntoIterator<Item = ActionArgDef>) -> Self {
         self.args = args.into_iter().collect();
         self
     }
 
-    /// @emoji ⌨️ Attaches one platform-aware command keybinding.
+    /// ⌨️ Attaches one platform-aware command keybinding.
     pub fn with_keybinding(mut self, keybinding: PlatformKeybinding) -> Self {
         self.keybindings.push(keybinding);
         self
     }
 
-    /// @emoji 🎯️ Replaces this command's whole `ActionSemantics` wholesale.
+    /// 🎯️ Replaces this command's whole `ActionSemantics` wholesale.
     pub async fn semantics(mut self, semantics: ActionSemantics) -> Self {
         self.semantics = semantics;
         self
     }
 
-    /// @emoji ⚠️ Marks this command destructive — see `ActionDefinition::destructive`.
+    /// ⚠️ Marks this command destructive — see `ActionDefinition::destructive`.
     pub fn destructive(mut self) -> Self {
         self.semantics.effects.destructive = true;
         if self.semantics.policy.approval == ApprovalMode::Never {
@@ -1861,32 +1861,32 @@ impl CommandDefinition {
         self
     }
 
-    /// @emoji 🗣️ Sets `ActionSemantics.use_when` — see `ActionDefinition::use_when`.
+    /// 🗣️ Sets `ActionSemantics.use_when` — see `ActionDefinition::use_when`.
     pub async fn use_when(mut self, phrases: impl IntoIterator<Item = impl Into<String>>) -> Self {
         self.semantics.use_when = phrases.into_iter().map(Into::into).collect();
         self
     }
 
-    /// @emoji 💬️ Sets `ActionSemantics.description` — see `ActionDefinition::describe`.
+    /// 💬️ Sets `ActionSemantics.description` — see `ActionDefinition::describe`.
     pub fn describe(mut self, description: impl Into<LocalizedLabel>) -> Self {
         self.semantics.description = Some(description.into());
         self
     }
 
-    /// @emoji 🎯️ Declares this command's [`CapabilityAudience`] — see `ActionDefinition::audience`.
+    /// 🎯️ Declares this command's [`CapabilityAudience`] — see `ActionDefinition::audience`.
     pub fn audience(mut self, audience: CapabilityAudience) -> Self {
         self.semantics.audience = Some(audience);
         self
     }
 
-    /// @emoji 📖️ Appends one `ActionSemantics.examples` entry — see `ActionDefinition::example`.
+    /// 📖️ Appends one `ActionSemantics.examples` entry — see `ActionDefinition::example`.
     pub async fn example(mut self, example: impl Into<String>) -> Self {
         self.semantics.examples.push(example.into());
         self
     }
 }
 
-/// @emoji 📍️ Hierarchical owner of a command definition.
+/// 📍️ Hierarchical owner of a command definition.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, ToValue, FromValue)]
 #[value(rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum CommandOwnerAddress {
@@ -1896,7 +1896,7 @@ pub enum CommandOwnerAddress {
     Mode { plugin_id: String, app_id: String, mode_id: String },
 }
 
-/// @emoji 📍️ Fully qualified address of one command.
+/// 📍️ Fully qualified address of one command.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct CommandAddress {
@@ -1904,7 +1904,7 @@ pub struct CommandAddress {
     pub command_id: String,
 }
 
-/// @emoji 📨️ One addressed command invocation with named DSL-value arguments — see
+/// 📨️ One addressed command invocation with named DSL-value arguments — see
 /// `ActionInvocation`'s docstring for why `arguments` is keyed to `DslValue`, not
 /// `serde_json::Value`.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
@@ -1914,7 +1914,7 @@ pub struct CommandInvocation {
     pub arguments: BTreeMap<String, DslValue>,
 }
 
-/// @emoji 💻️ Operating-system command catalog shared by every renderer.
+/// 💻️ Operating-system command catalog shared by every renderer.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -1927,7 +1927,7 @@ pub struct OsDefinition {
 //#endregion 🔖️Commands
 
 //#region 🔖️Tools
-/// @emoji 🛠️ Declares one mode-level tool: an activatable, stateful capability of a whole app mode.
+/// 🛠️ Declares one mode-level tool: an activatable, stateful capability of a whole app mode.
 /// Distinct from `UtilityDefinition` (a per-window pointer mode — a utility is a tool for a specific
 /// window) and `CommandDefinition` (a fire-once verb): exactly one tool is active per app at a time,
 /// and activation is host-owned session view state (`ViewModel.active_tool_id`), never a document
@@ -1953,13 +1953,13 @@ pub struct ToolDefinition {
 }
 
 impl ToolDefinition {
-    /// @emoji 🛠️ A tool with sensible defaults (no keybinding, no run).
+    /// 🛠️ A tool with sensible defaults (no keybinding, no run).
     pub async fn new(id: impl Into<String>, label: impl Into<LocalizedLabel>, icon_id: impl Into<IconName>) -> Self {
         Self { id: id.into(), label: label.into(), icon_id: icon_id.into(), keys: None, run: None }
     }
 }
 
-/// @emoji 🛠️ A validated reference into an app's `AppDefinition.tools` registry — the tool mirror of
+/// 🛠️ A validated reference into an app's `AppDefinition.tools` registry — the tool mirror of
 /// `UtilityRef`, scoping tools to modes with a typed, resolvable id.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
@@ -1993,7 +1993,7 @@ impl From<String> for ToolRef {
 //#endregion 🔖️Tools
 
 //#region 🆔️ElementId
-/// @emoji 🆔️ Whether `id` matches the renderer-agnostic UI element id grammar: dot-separated segments,
+/// 🆔️ Whether `id` matches the renderer-agnostic UI element id grammar: dot-separated segments,
 /// each starting with a lowercase letter and continuing with letters/digits only (camelCase, no
 /// hyphens/underscores) — e.g. `framework.window.main.action.addLayer`. This id is the single
 /// integration key across i18n, tooltips, hotkeys, command origin tracking, tutorials, E2E selectors,
@@ -2012,7 +2012,7 @@ pub fn is_element_id(id: &str) -> bool {
     })
 }
 
-/// @emoji 🆔️ Normalizes arbitrary input (a domain object's own id, a free-text label, an already
+/// 🆔️ Normalizes arbitrary input (a domain object's own id, a free-text label, an already
 /// grammar-safe word) into a single camelCase element-id segment: splits on `-`/`_`/` `/`.`, lowercases
 /// the very first character, capitalizes the first character after each separator, and drops any other
 /// non-alphanumeric character. Idempotent on input that is already a valid segment. Used as the last
@@ -2041,7 +2041,7 @@ pub fn element_id_segment(raw: &str) -> String {
     segment
 }
 
-/// @emoji 🆔️ Derives a child element id by suffixing `parent` with one or more segments, each normalized
+/// 🆔️ Derives a child element id by suffixing `parent` with one or more segments, each normalized
 /// through `element_id_segment` — the hierarchical mechanism every composite element uses to name its
 /// parts instead of a context/registry: `child_element_id("ui.chat", &["send"])` → `"ui.chat.send"`.
 pub fn child_element_id(parent: &str, segments: &[&str]) -> String {
@@ -2053,24 +2053,24 @@ pub fn child_element_id(parent: &str, segments: &[&str]) -> String {
     id
 }
 
-/// @emoji 🆔️ Element id of the app shell's navbar — singular, shell-owned chrome.
+/// 🆔️ Element id of the app shell's navbar — singular, shell-owned chrome.
 pub const UI_NAVBAR_ELEMENT_ID: &str = "ui.navbar";
-/// @emoji 🆔️ Element id of the app shell's footer — singular, shell-owned chrome.
+/// 🆔️ Element id of the app shell's footer — singular, shell-owned chrome.
 pub const UI_FOOTER_ELEMENT_ID: &str = "ui.footer";
 
-/// @emoji 🆔️ Element id of a window kind's body — `framework.window.{camelCased kind id}`.
+/// 🆔️ Element id of a window kind's body — `framework.window.{camelCased kind id}`.
 pub fn window_element_id(kind_id: &str) -> String {
     child_element_id("framework.window", &[kind_id])
 }
 
-/// @emoji 🆔️ Element id of a panel tab's uncollapsed panel body. `tab_id` is already a dotted
+/// 🆔️ Element id of a panel tab's uncollapsed panel body. `tab_id` is already a dotted
 /// `PanelTabDefinition.id()` (e.g. `puzzle.catalogue`) — appended verbatim rather than through
 /// `child_element_id`, which would collapse its dots into camelCase.
 pub fn panel_tab_element_id(tab_id: &str) -> String {
     format!("framework.panelTab.{tab_id}")
 }
 
-/// @emoji 🆔️ Alias id of the first draggable tree row inside a panel tab (document order within that
+/// 🆔️ Alias id of the first draggable tree row inside a panel tab (document order within that
 /// uncollapsed panel) — stamped via `data-element-alias` since no single tree row has a stable semantic
 /// id at authoring time. Used to teach catalogue drag-and-drop without hardcoding a kind id.
 pub fn panel_tab_first_draggable_element_id(tab_id: &str) -> String {
@@ -2079,7 +2079,7 @@ pub fn panel_tab_first_draggable_element_id(tab_id: &str) -> String {
 //#endregion 🆔️ElementId
 
 //#region 🔖️Introduction
-/// @emoji 🎓️ A first-run walkthrough an app declares to introduce its UI, utilities, and actions to a
+/// 🎓️ A first-run walkthrough an app declares to introduce its UI, utilities, and actions to a
 /// first-time user. Rendered as an ordered sequence of `IntroductionStepDefinition`s over a full-screen
 /// glass veil; the shell owns playback (start/advance/skip) as ephemeral chrome state, never the
 /// document.
@@ -2093,7 +2093,7 @@ pub struct IntroductionDefinition {
     pub steps: Vec<IntroductionStepDefinition>,
 }
 
-/// @emoji 🪜️ One step of an `IntroductionDefinition`: an info box pointing at `introduce`, with `show`
+/// 🪜️ One step of an `IntroductionDefinition`: an info box pointing at `introduce`, with `show`
 /// raising extra elements above the glass veil and `interactions` completing the step.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
@@ -2147,52 +2147,52 @@ impl IntroductionStepDefinition {
         Self { id: id.into(), title: title.into(), body: body.into(), introduce: None, show: Vec::new(), placement: IntroductionPlacement::default(), interactions: Vec::new(), ordered: false, logos: Vec::new(), demonstrations: Vec::new() }
     }
 
-    /// @emoji 🎯️ Sets the single element id raised above the glass and anchoring the info box.
+    /// 🎯️ Sets the single element id raised above the glass and anchoring the info box.
     pub fn introduce(mut self, element_id: impl Into<String>) -> Self {
         self.introduce = Some(element_id.into());
         self
     }
 
-    /// @emoji 🕳️ Additional element ids raised above the glass alongside `introduce` (no pulse).
+    /// 🕳️ Additional element ids raised above the glass alongside `introduce` (no pulse).
     pub fn show(mut self, element_ids: Vec<String>) -> Self {
         self.show = element_ids;
         self
     }
 
-    /// @emoji 📍️ Overrides where the info box is placed relative to `introduce`.
+    /// 📍️ Overrides where the info box is placed relative to `introduce`.
     pub fn placement(mut self, placement: IntroductionPlacement) -> Self {
         self.placement = placement;
         self
     }
 
-    /// @emoji ✅️ Makes the step complete when the user performs all `interactions` (any order) instead of
+    /// ✅️ Makes the step complete when the user performs all `interactions` (any order) instead of
     /// pressing Next.
     pub fn interact(mut self, interactions: Vec<IntroductionInteraction>) -> Self {
         self.interactions = interactions;
         self
     }
 
-    /// @emoji 🔢️ Like `interact`, but `interactions` must complete in declaration order.
+    /// 🔢️ Like `interact`, but `interactions` must complete in declaration order.
     pub fn interact_ordered(mut self, interactions: Vec<IntroductionInteraction>) -> Self {
         self.interactions = interactions;
         self.ordered = true;
         self
     }
 
-    /// @emoji 🏛️ Attaches institution/partner logos to the step's info box.
+    /// 🏛️ Attaches institution/partner logos to the step's info box.
     pub fn logos(mut self, logos: Vec<IntroductionLogo>) -> Self {
         self.logos = logos;
         self
     }
 
-    /// @emoji 🎬️ Attaches ghost-cursor demonstrations played in order, then looping back to the first.
+    /// 🎬️ Attaches ghost-cursor demonstrations played in order, then looping back to the first.
     pub fn demonstrate(mut self, demonstrations: Vec<IntroductionDemonstration>) -> Self {
         self.demonstrations = demonstrations;
         self
     }
 }
 
-/// @emoji 🏛️ One institution/partner logo shown in an `IntroductionStepDefinition`'s info box — a plain
+/// 🏛️ One institution/partner logo shown in an `IntroductionStepDefinition`'s info box — a plain
 /// URL pair (no DOM/CSS types), optionally linking out when clicked.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
@@ -2209,7 +2209,7 @@ pub struct IntroductionLogo {
     pub href: Option<String>,
 }
 
-/// @emoji 📍️ Where the info box is placed relative to its anchor.
+/// 📍️ Where the info box is placed relative to its anchor.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -2224,7 +2224,7 @@ pub enum IntroductionPlacement {
     Center,
 }
 
-/// @emoji 👉️ What one `IntroductionInteraction` requires: `Action`/`Utility`/`Tool`/`Panel`/`Expand`
+/// 👉️ What one `IntroductionInteraction` requires: `Action`/`Utility`/`Tool`/`Panel`/`Expand`
 /// complete as soon as the user activates that utility/tool, opens that panel tab, or expands that tree
 /// section — teaching by doing. `Pan`/`Zoom`/`Orbit` complete on that camera-navigation gesture over the
 /// 3D window named by the payload (a window-kind id) — classified from camera-state deltas by the shell
@@ -2252,7 +2252,7 @@ pub enum IntroductionInteractionKind {
     Orbit(String),
 }
 
-/// @emoji ✅️ One thing the user must do to complete an interaction-gated `IntroductionStepDefinition` —
+/// ✅️ One thing the user must do to complete an interaction-gated `IntroductionStepDefinition` —
 /// rendered as a checklist row in the info box and celebrated individually on completion.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
@@ -2273,54 +2273,54 @@ impl IntroductionInteraction {
         Self { on, label: label.into(), celebrate: None }
     }
 
-    /// @emoji 📇️ An interaction completing when the user activates action `id`.
+    /// 📇️ An interaction completing when the user activates action `id`.
     pub async fn action(id: impl Into<String>, label: impl Into<String>) -> Self {
         Self::new(IntroductionInteractionKind::Action(ActionRef::new(id.into())), label).await
     }
 
-    /// @emoji 🧰️ An interaction completing when the user activates utility `id`.
+    /// 🧰️ An interaction completing when the user activates utility `id`.
     pub async fn utility(id: impl Into<String>, label: impl Into<String>) -> Self {
         Self::new(IntroductionInteractionKind::Utility(UtilityRef::new(id.into())), label).await
     }
 
-    /// @emoji 🛠️ An interaction completing when the user activates tool `id`.
+    /// 🛠️ An interaction completing when the user activates tool `id`.
     pub async fn tool(id: impl Into<String>, label: impl Into<String>) -> Self {
         Self::new(IntroductionInteractionKind::Tool(ToolRef::new(id.into()).await), label).await
     }
 
-    /// @emoji 📑️ An interaction completing when panel tab `id` opens.
+    /// 📑️ An interaction completing when panel tab `id` opens.
     pub async fn panel(id: impl Into<String>, label: impl Into<String>) -> Self {
         Self::new(IntroductionInteractionKind::Panel(id.into()), label).await
     }
 
-    /// @emoji 🌲️ An interaction completing when tree section/item `id` expands.
+    /// 🌲️ An interaction completing when tree section/item `id` expands.
     pub async fn expand(id: impl Into<String>, label: impl Into<String>) -> Self {
         Self::new(IntroductionInteractionKind::Expand(id.into()), label).await
     }
 
-    /// @emoji 🖐️ An interaction completing when the user pans 3D window `window_kind_id`.
+    /// 🖐️ An interaction completing when the user pans 3D window `window_kind_id`.
     pub async fn pan(window_kind_id: impl Into<String>, label: impl Into<String>) -> Self {
         Self::new(IntroductionInteractionKind::Pan(window_kind_id.into()), label).await
     }
 
-    /// @emoji 🔍️ An interaction completing when the user zooms 3D window `window_kind_id`.
+    /// 🔍️ An interaction completing when the user zooms 3D window `window_kind_id`.
     pub async fn zoom(window_kind_id: impl Into<String>, label: impl Into<String>) -> Self {
         Self::new(IntroductionInteractionKind::Zoom(window_kind_id.into()), label).await
     }
 
-    /// @emoji 🌐️ An interaction completing when the user orbits 3D window `window_kind_id`.
+    /// 🌐️ An interaction completing when the user orbits 3D window `window_kind_id`.
     pub async fn orbit(window_kind_id: impl Into<String>, label: impl Into<String>) -> Self {
         Self::new(IntroductionInteractionKind::Orbit(window_kind_id.into()), label).await
     }
 
-    /// @emoji 🎉️ Overrides which element id is stamped `data-celebrated` on completion.
+    /// 🎉️ Overrides which element id is stamped `data-celebrated` on completion.
     pub async fn celebrate(mut self, element_id: impl Into<String>) -> Self {
         self.celebrate = Some(element_id.into());
         self
     }
 }
 
-/// @emoji 📌️ Where a demonstration gesture points, resolvable to a viewport pixel at play time. One
+/// 📌️ Where a demonstration gesture points, resolvable to a viewport pixel at play time. One
 /// point type covers click targets and drag endpoints across every addressing scheme the shell needs:
 /// element-relative, absolute/normalized screen space, absolute/normalized window(pane)-local space, and
 /// a 3D scene world position projected through that window's live camera.
@@ -2375,33 +2375,33 @@ pub enum IntroductionPoint {
 }
 
 impl IntroductionPoint {
-    /// @emoji 🗺️ 2D world-space coordinates on the infinite-canvas surface shown by window `window_id`.
+    /// 🗺️ 2D world-space coordinates on the infinite-canvas surface shown by window `window_id`.
     pub async fn canvas(window_id: impl Into<String>, x: f64, y: f64) -> Self {
         Self::Canvas { id: window_id.into(), x, y }
     }
 
-    /// @emoji 🏷️ A specific entity by domain + id, centered (no `offset`).
+    /// 🏷️ A specific entity by domain + id, centered (no `offset`).
     pub async fn entity(window_id: impl Into<String>, domain: impl Into<String>, entity: impl Into<String>) -> Self {
         Self::Entity { id: window_id.into(), domain: domain.into(), entity: entity.into(), offset: None }
     }
 
-    /// @emoji 🏷️ Any entity in `domain` — the surface picks a representative, nearest the viewport center.
+    /// 🏷️ Any entity in `domain` — the surface picks a representative, nearest the viewport center.
     pub async fn any_entity(window_id: impl Into<String>, domain: impl Into<String>) -> Self {
         Self::entity(window_id, domain, "*").await
     }
 
-    /// @emoji 🪡️ A parametric point at `t` (0–1 by arc length) along an entity's curve geometry.
+    /// 🪡️ A parametric point at `t` (0–1 by arc length) along an entity's curve geometry.
     pub async fn curve(window_id: impl Into<String>, domain: impl Into<String>, entity: impl Into<String>, t: f64) -> Self {
         Self::Curve { id: window_id.into(), domain: domain.into(), entity: entity.into(), t }
     }
 
-    /// @emoji 🎚️ A value mapped through an entity's live value domain (e.g. a slider's min..max).
+    /// 🎚️ A value mapped through an entity's live value domain (e.g. a slider's min..max).
     pub async fn domain_value(window_id: impl Into<String>, domain: impl Into<String>, entity: impl Into<String>, value: f64) -> Self {
         Self::Domain { id: window_id.into(), domain: domain.into(), entity: entity.into(), value }
     }
 }
 
-/// @emoji 🖱️ Which mouse button a drag-like demonstration presses.
+/// 🖱️ Which mouse button a drag-like demonstration presses.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -2413,7 +2413,7 @@ pub enum IntroductionPointerButton {
     Right,
 }
 
-/// @emoji ⌨️ Keyboard modifier held during a drag-like demonstration.
+/// ⌨️ Keyboard modifier held during a drag-like demonstration.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -2440,7 +2440,7 @@ fn introduction_orbit_default_modifiers() -> Vec<IntroductionKeyModifier> {
     vec![IntroductionKeyModifier::Alt]
 }
 
-/// @emoji 👆️ A gesture a demonstration plays: the ghost cursor travels to (or between) `IntroductionPoint`s
+/// 👆️ A gesture a demonstration plays: the ghost cursor travels to (or between) `IntroductionPoint`s
 /// and performs the visual press/release affordance for the gesture kind.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
@@ -2486,7 +2486,7 @@ pub enum IntroductionGesture {
     },
 }
 
-/// @emoji 🖱️ Ghost-cursor glyph, mirroring `🎨️ui.css`'s `--cursor-*` custom cursors.
+/// 🖱️ Ghost-cursor glyph, mirroring `🎨️ui.css`'s `--cursor-*` custom cursors.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -2501,7 +2501,7 @@ pub enum IntroductionCursor {
     Move,
 }
 
-/// @emoji 🎬️ A looping ghost-cursor demonstration attached to an interaction-gated
+/// 🎬️ A looping ghost-cursor demonstration attached to an interaction-gated
 /// `IntroductionStepDefinition`. Plays only while the user's own pointer is idle — any real pointer
 /// movement mutes it and restores the real cursor instantly; going idle again while the step is still
 /// active replays it from the beginning. `cursor` overrides the glyph shown over the target; omitted, it
@@ -2518,27 +2518,27 @@ pub struct IntroductionDemonstration {
 }
 
 impl IntroductionDemonstration {
-    /// @emoji 👆️ A left-click demonstration at `at`.
+    /// 👆️ A left-click demonstration at `at`.
     pub async fn left_click(at: IntroductionPoint) -> Self {
         Self { gesture: IntroductionGesture::LeftClick { at }, cursor: None }
     }
 
-    /// @emoji 👆️ A right-click demonstration at `at`.
+    /// 👆️ A right-click demonstration at `at`.
     pub async fn right_click(at: IntroductionPoint) -> Self {
         Self { gesture: IntroductionGesture::RightClick { at }, cursor: None }
     }
 
-    /// @emoji ✋️ A click-and-drag demonstration from `from` to `to`.
+    /// ✋️ A click-and-drag demonstration from `from` to `to`.
     pub async fn drag(from: IntroductionPoint, to: IntroductionPoint) -> Self {
         Self { gesture: IntroductionGesture::Drag { from, to, button: IntroductionPointerButton::Left, modifiers: vec![] }, cursor: None }
     }
 
-    /// @emoji 🖲️ A scroll-wheel demonstration at `at`; `delta_y` sign conveys direction.
+    /// 🖲️ A scroll-wheel demonstration at `at`; `delta_y` sign conveys direction.
     pub async fn scroll(at: IntroductionPoint, delta_y: f64) -> Self {
         Self { gesture: IntroductionGesture::Scroll { at, delta_y }, cursor: None }
     }
 
-    /// @emoji 🌐️ A camera-orbit demonstration curving from `from` to `to`.
+    /// 🌐️ A camera-orbit demonstration curving from `from` to `to`.
     pub async fn orbit(from: IntroductionPoint, to: IntroductionPoint) -> Self {
         Self { gesture: IntroductionGesture::Orbit { from, to, button: IntroductionPointerButton::Right, modifiers: vec![IntroductionKeyModifier::Alt] }, cursor: None }
     }
@@ -2546,7 +2546,7 @@ impl IntroductionDemonstration {
 //#endregion 🔖️Introduction
 
 //#region 🔖️Tutorial
-/// @emoji 🎬️ A recorded, timed, replayable walkthrough — the timeline sibling of the step-gated
+/// 🎬️ A recorded, timed, replayable walkthrough — the timeline sibling of the step-gated
 /// `IntroductionDefinition`. Where an introduction gates progression on the user performing an
 /// interaction, a tutorial plays a multi-track recording (narration, video overlay, UI state, document
 /// edits, camera, ghost-cursor gestures) against a sandboxed copy of the document while the user watches,
@@ -2581,7 +2581,7 @@ pub struct TutorialDefinition {
 }
 
 impl TutorialDefinition {
-    /// @emoji 📂️ Deserializes a `TutorialDefinition` from its JSON wire format — the constructor apps use
+    /// 📂️ Deserializes a `TutorialDefinition` from its JSON wire format — the constructor apps use
     /// to load a hand-authored or recorded tutorial (e.g. via `include_str!`) into `.tutorial(...)`.
     // 🚧️ BLOCKED: `TutorialDefinition` itself is serde-only (see its docstring) — this stays on
     // `serde_json` until that lands.
@@ -2590,7 +2590,7 @@ impl TutorialDefinition {
     }
 }
 
-/// @emoji 📖️ One scrub-bar marker in a `TutorialDefinition`'s timeline.
+/// 📖️ One scrub-bar marker in a `TutorialDefinition`'s timeline.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -2605,7 +2605,7 @@ pub struct TutorialChapter {
     pub body: Option<LocalizedLabel>,
 }
 
-/// @emoji 🎬️ What must be true at t=0: the document the tutorial sandboxes and the initial UI/camera
+/// 🎬️ What must be true at t=0: the document the tutorial sandboxes and the initial UI/camera
 /// state. The player snapshots the user's live document, loads this in its place, and restores the
 /// snapshot on exit — a tutorial can never touch real work.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
@@ -2628,7 +2628,7 @@ pub struct TutorialBase {
     pub cameras: Vec<TutorialCameraKeyframe>,
 }
 
-/// @emoji 🎞️ The seven parallel tracks of a `TutorialDefinition`'s timeline; every entry's `at` is a
+/// 🎞️ The seven parallel tracks of a `TutorialDefinition`'s timeline; every entry's `at` is a
 /// millisecond offset from tutorial start, and each `Vec` is sorted ascending by `at`
 /// (`validate_tutorial` enforces this).
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
@@ -2662,7 +2662,7 @@ pub struct TutorialTracks {
     pub gestures: Vec<TutorialGestureCue>,
 }
 
-/// @emoji 📦️ Where a tutorial media asset's bytes live. `Blob` is wire-identical to `store::BlobRef`
+/// 📦️ Where a tutorial media asset's bytes live. `Blob` is wire-identical to `store::BlobRef`
 /// (content-addressed Blake3 hash + size + media type) — `framework/core` does not depend on
 /// `semio-vcs`, so the shape is mirrored rather than reused; conversion between the two is
 /// field-for-field.
@@ -2689,7 +2689,7 @@ fn tutorial_rate_is_default(rate: &f64) -> bool {
     (*rate - 1.0).abs() < f64::EPSILON
 }
 
-/// @emoji 🎙️ One voiceover cue: `text` is both the TTS script and the caption fallback; `audio`
+/// 🎙️ One voiceover cue: `text` is both the TTS script and the caption fallback; `audio`
 /// overrides TTS with a recorded take. The timeline is always the master clock — a still-speaking TTS
 /// utterance is cancelled at the next cue's `at`; audio assets are seeked and rate-matched to the
 /// playhead instead of played independently.
@@ -2723,7 +2723,7 @@ pub struct TutorialNarrationCue {
     pub captions: Vec<TutorialCaption>,
 }
 
-/// @emoji 💬️ One timed caption sub-segment of a `TutorialNarrationCue`.
+/// 💬️ One timed caption sub-segment of a `TutorialNarrationCue`.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -2735,7 +2735,7 @@ pub struct TutorialCaption {
     pub text: LocalizedLabel,
 }
 
-/// @emoji 🖼️ Normalized 0–1 viewport rect for a `TutorialVideoCue` overlay.
+/// 🖼️ Normalized 0–1 viewport rect for a `TutorialVideoCue` overlay.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -2754,7 +2754,7 @@ impl Default for TutorialOverlayRect {
     }
 }
 
-/// @emoji 📹️ A timed video overlay — e.g. a presenter webcam picture-in-picture, or an authored clip.
+/// 📹️ A timed video overlay — e.g. a presenter webcam picture-in-picture, or an authored clip.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -2776,7 +2776,7 @@ pub struct TutorialVideoCue {
     pub source_offset_ms: u64,
 }
 
-/// @emoji 🏷️ One recorded action/command/keypress, annotational only — see `TutorialTracks::events`.
+/// 🏷️ One recorded action/command/keypress, annotational only — see `TutorialTracks::events`.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -2786,7 +2786,7 @@ pub struct TutorialEvent {
     pub kind: TutorialEventKind,
 }
 
-/// @emoji 🏷️ What one `TutorialEvent` annotates.
+/// 🏷️ What one `TutorialEvent` annotates.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
@@ -2810,7 +2810,7 @@ pub enum TutorialEventKind {
     Key { keys: String },
 }
 
-/// @emoji 🧮️ One UI-state track entry: either a full restore-point snapshot (a valid seek anchor) or a
+/// 🧮️ One UI-state track entry: either a full restore-point snapshot (a valid seek anchor) or a
 /// sparse list of changes since the previous sample.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
@@ -2821,7 +2821,7 @@ pub struct TutorialUiKeyframe {
     pub sample: TutorialUiSample,
 }
 
-/// @emoji 🧮️ See `TutorialUiKeyframe`.
+/// 🧮️ See `TutorialUiKeyframe`.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
@@ -2831,7 +2831,7 @@ pub enum TutorialUiSample {
     Delta { changes: Vec<TutorialUiChange> },
 }
 
-/// @emoji 🧮️ Renderer-neutral restore point for chrome/UI state — a superset of `ViewModel` plus the
+/// 🧮️ Renderer-neutral restore point for chrome/UI state — a superset of `ViewModel` plus the
 /// dock/panel/dialog state neither shell serializes today. Deliberately NOT a serialization of either
 /// shell's internal store: each shell implements its own `captureUiSnapshot`/`applyUiSnapshot` against
 /// this shape. Locale/terminology are excluded on purpose — a tutorial plays in the viewer's own locale.
@@ -2880,7 +2880,7 @@ pub struct TutorialUiSnapshot {
     pub command_panel_open: bool,
 }
 
-/// @emoji 🩹️ One typed, sparse UI-state change — the alphabet `compose_tutorial_ui` replays over a prior
+/// 🩹️ One typed, sparse UI-state change — the alphabet `compose_tutorial_ui` replays over a prior
 /// `TutorialUiSnapshot` to reconstruct state at any timeline offset without shipping a full snapshot at
 /// every sample.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
@@ -2948,7 +2948,7 @@ pub enum TutorialUiChange {
     },
 }
 
-/// @emoji 🖋️ One document-track entry — mirrors `store::ArtifactCommand` with `Mutation =
+/// 🖋️ One document-track entry — mirrors `store::ArtifactCommand` with `Mutation =
 /// serde_json::Value` (opaque per-app mutation JSON, already the wire shape of every `KernelMutation`
 /// diff). This is the SOLE source of document mutation during playback: recorded `TutorialEvent`s are
 /// annotational only, never re-dispatched, because re-dispatching a plugin action is non-deterministic
@@ -2962,7 +2962,7 @@ pub struct TutorialDocumentEvent {
     pub kind: TutorialDocumentEventKind,
 }
 
-/// @emoji 🖋️ See `TutorialDocumentEvent`. `Edit` carries both `forwards` and `backwards` operations
+/// 🖋️ See `TutorialDocumentEvent`. `Edit` carries both `forwards` and `backwards` operations
 /// verbatim from the vcs edit that produced it — the source of exact bidirectional scrubbing.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
@@ -3005,7 +3005,7 @@ fn tutorial_camera_up_z() -> [f64; 3] {
     [0.0, 0.0, 1.0]
 }
 
-/// @emoji 🎥️ One camera track keyframe for a specific window instance.
+/// 🎥️ One camera track keyframe for a specific window instance.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -3021,7 +3021,7 @@ pub struct TutorialCameraKeyframe {
     pub easing: TutorialEasing,
 }
 
-/// @emoji 🎥️ A camera pose — `Orbit` mirrors `World3dScene.camera_json`/`OrbitController`, `Canvas`
+/// 🎥️ A camera pose — `Orbit` mirrors `World3dScene.camera_json`/`OrbitController`, `Canvas`
 /// mirrors `Canvas2dScene`'s `cameraX`/`cameraY`/`zoom`.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
@@ -3045,7 +3045,7 @@ pub enum TutorialCameraState {
     },
 }
 
-/// @emoji 🪄️ Interpolation curve into a `TutorialCameraKeyframe` from its predecessor on the same window.
+/// 🪄️ Interpolation curve into a `TutorialCameraKeyframe` from its predecessor on the same window.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -3058,7 +3058,7 @@ pub enum TutorialEasing {
     Hold,
 }
 
-/// @emoji 👻️ One ghost-cursor gesture cue, reusing the introduction demonstration vocabulary verbatim —
+/// 👻️ One ghost-cursor gesture cue, reusing the introduction demonstration vocabulary verbatim —
 /// both shells already resolve/render `IntroductionGesture`/`IntroductionPoint`/`IntroductionCursor`.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
@@ -3073,13 +3073,13 @@ pub struct TutorialGestureCue {
     pub cursor: Option<IntroductionCursor>,
 }
 
-/// @emoji 🎬️ The framework-owned action id apps dispatch to (re)start a tutorial — auto-injected as a
+/// 🎬️ The framework-owned action id apps dispatch to (re)start a tutorial — auto-injected as a
 /// fully shell-intercepted View action into any `AppDefinition` that declares one (mirrors
 /// `START_INTRODUCTION_ACTION_ID`). Distinct from an introduction: a tutorial takes a required
 /// `tutorialId` argument since an app may declare more than one.
 pub const START_TUTORIAL_ACTION_ID: &str = "startTutorial";
 
-/// @emoji 🎬️ The framework-injected `startTutorial` View action: fully shell-intercepted, it sandboxes
+/// 🎬️ The framework-injected `startTutorial` View action: fully shell-intercepted, it sandboxes
 /// the live document, loads the selected tutorial's `base`, and starts playback from t=0.
 pub fn start_tutorial_action_definition(tutorials: &[TutorialDefinition]) -> ActionDefinition {
     let mut options = Vec::with_capacity(tutorials.len());
@@ -3094,11 +3094,11 @@ pub fn start_tutorial_action_definition(tutorials: &[TutorialDefinition]) -> Act
     .required()])
 }
 
-/// @emoji ⏺️ The framework-owned action id that opens the tutorial recorder chrome — auto-injected into
+/// ⏺️ The framework-owned action id that opens the tutorial recorder chrome — auto-injected into
 /// EVERY `AppDefinition` (recording needs no app-side declaration at all).
 pub const RECORD_TUTORIAL_ACTION_ID: &str = "recordTutorial";
 
-/// @emoji ⏺️ The framework-injected `recordTutorial` View action: fully shell-intercepted, arms the
+/// ⏺️ The framework-injected `recordTutorial` View action: fully shell-intercepted, arms the
 /// recorder against the live document (never a sandboxed copy — a recording IS the user's work).
 pub fn record_tutorial_action_definition() -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework(RECORD_TUTORIAL_ACTION_ID, LocalizedLabel::native("Record Tutorial", "Tutorial aufzeichnen"), ActionKind::View, "eye") }
@@ -3110,7 +3110,7 @@ pub fn record_tutorial_action_definition() -> ActionDefinition {
 pub const TUTORIAL_CONVERGE_MS: u64 = 600;
 
 //#region 🔖️TutorialEngine
-/// @emoji ✅️ Structural validation shared by the plugin builder and both recorders before save: every
+/// ✅️ Structural validation shared by the plugin builder and both recorders before save: every
 /// track sorted ascending by `at`, every entry within `[0, durationMs]`, chapter/narration-cue ids
 /// unique, `base.cameras` all at `at == 0`. Does NOT check that referenced action/command/element ids
 /// exist — the plugin builder's validation (which has the full `AppDefinition` in scope) does that.
@@ -3173,7 +3173,7 @@ fn tutorial_lerp3(a: [f64; 3], b: [f64; 3], t: f64) -> [f64; 3] {
     [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]
 }
 
-/// @emoji 🎥️ Interpolates between two camera keyframes at timeline offset `at_ms` (clamped into
+/// 🎥️ Interpolates between two camera keyframes at timeline offset `at_ms` (clamped into
 /// `[prev.at, next.at]`). Position/target/up/fov lerp componentwise; `Canvas.zoom` interpolates in log
 /// space so zooming reads as constant visual speed. `next.easing` governs the curve; `Hold` snaps to
 /// `prev` until `next.at`, then jumps. Mismatched camera kinds between the two keyframes (`Orbit` vs
@@ -3215,7 +3215,7 @@ pub fn interpolate_tutorial_camera(prev: &TutorialCameraKeyframe, next: &Tutoria
     }
 }
 
-/// @emoji 🎥️ Finds the camera pose for `window_id` at `at_ms`: exact if `at_ms` lands on or before the
+/// 🎥️ Finds the camera pose for `window_id` at `at_ms`: exact if `at_ms` lands on or before the
 /// first keyframe (falling back to `base.cameras`), interpolated between the bracketing pair otherwise,
 /// held at the last pose past the final keyframe. `None` when the window has no camera keyframes at all.
 pub fn tutorial_camera_at(def: &TutorialDefinition, window_id: &str, at_ms: f64) -> Option<TutorialCameraState> {
@@ -3233,7 +3233,7 @@ pub fn tutorial_camera_at(def: &TutorialDefinition, window_id: &str, at_ms: f64)
     Some(keyframes.last().unwrap().camera.clone())
 }
 
-/// @emoji 🩹️ Applies one `TutorialUiChange` onto a `TutorialUiSnapshot` in place — the pure core both
+/// 🩹️ Applies one `TutorialUiChange` onto a `TutorialUiSnapshot` in place — the pure core both
 /// `compose_tutorial_ui` and each shell's live director share.
 pub fn apply_tutorial_ui_change(state: &mut TutorialUiSnapshot, change: &TutorialUiChange) {
     match change {
@@ -3279,7 +3279,7 @@ pub fn apply_tutorial_ui_change(state: &mut TutorialUiSnapshot, change: &Tutoria
     }
 }
 
-/// @emoji 🧮️ Reconstructs the full `TutorialUiSnapshot` at `at_ms`: starts from `base.ui`, then the
+/// 🧮️ Reconstructs the full `TutorialUiSnapshot` at `at_ms`: starts from `base.ui`, then the
 /// latest `Snapshot` sample with `at <= at_ms` (if any, replacing the base), then replays every `Delta`
 /// sample after that snapshot up to and including `at_ms`, in order. This is the one place seeking (and
 /// the deviation-then-play converge step) source their target UI state.
@@ -3306,7 +3306,7 @@ pub fn compose_tutorial_ui(def: &TutorialDefinition, at_ms: f64) -> TutorialUiSn
     state
 }
 
-/// @emoji ✂️ Everything a live director's tick from `from_ms` to `to_ms` must apply: annotational
+/// ✂️ Everything a live director's tick from `from_ms` to `to_ms` must apply: annotational
 /// events, document edits, and UI deltas within the half-open interval on the crossing direction (empty
 /// when `from_ms == to_ms`). Backward direction (scrubbing left) reverses entry order so callers apply
 /// each `TutorialDocumentEventKind::Edit`'s `backwards` ops from most-recent to least-recent. Plain Rust
@@ -3320,7 +3320,7 @@ pub struct TutorialSlice {
     pub ui_changes: Vec<TutorialUiChange>,
 }
 
-/// @emoji ✂️ Computes the `TutorialSlice` for advancing the playhead from `from_ms` to `to_ms` (`to_ms`
+/// ✂️ Computes the `TutorialSlice` for advancing the playhead from `from_ms` to `to_ms` (`to_ms`
 /// may be less than `from_ms` when scrubbing backward).
 ///
 /// 🐢️ A `TutorialUiSample::Snapshot` crossed mid-slice is intentionally NOT flattened into deltas here:
@@ -3353,7 +3353,7 @@ pub fn tutorial_slice(def: &TutorialDefinition, from_ms: f64, to_ms: f64) -> Tut
 //#endregion 🔖️Tutorial
 
 //#region 🔖️Dialog
-/// @emoji 🗨️ A declared modal form dialog: a glass veil covers the screen and an info box (styled
+/// 🗨️ A declared modal form dialog: a glass veil covers the screen and an info box (styled
 /// identically to the introduction walkthrough box, see `ui_react`'s `GLASS_OVERLAY_BOX_CLASS`)
 /// presents `args` as a staged form. Submit dispatches `submit_action` with the merged effective
 /// args; empty `args` degenerates to a message/confirm dialog. Opened only via
@@ -3400,31 +3400,31 @@ impl DialogDefinition {
         }
     }
 
-    /// @emoji 📝️ Attaches explanatory body text shown below the title.
+    /// 📝️ Attaches explanatory body text shown below the title.
     pub fn body(mut self, body: impl Into<LocalizedLabel>) -> Self {
         self.body = Some(body.into());
         self
     }
 
-    /// @emoji 🧾️ Attaches the staged-form field declarations.
+    /// 🧾️ Attaches the staged-form field declarations.
     pub fn args(mut self, args: Vec<ActionArgDef>) -> Self {
         self.args = args;
         self
     }
 
-    /// @emoji ✅️ Overrides the submit button label (default "OK").
+    /// ✅️ Overrides the submit button label (default "OK").
     pub fn submit_label(mut self, label: impl Into<LocalizedLabel>) -> Self {
         self.submit_label = label.into();
         self
     }
 
-    /// @emoji ❌️ Overrides the cancel button label (default "Cancel", applied by the renderer).
+    /// ❌️ Overrides the cancel button label (default "Cancel", applied by the renderer).
     pub fn cancel_label(mut self, label: impl Into<LocalizedLabel>) -> Self {
         self.cancel_label = Some(label.into());
         self
     }
 
-    /// @emoji 🚪️ Declares an action dispatched on any dismissal (Escape, veil click, Cancel button).
+    /// 🚪️ Declares an action dispatched on any dismissal (Escape, veil click, Cancel button).
     pub fn on_cancel(mut self, action: ActionRef) -> Self {
         self.cancel_action = Some(action);
         self
@@ -3947,7 +3947,7 @@ pub fn resolve_layout_for_mode(app: &AppDefinition, mode_id: &str) -> Option<Win
 }
 
 //#region 🔖️action-args
-/// @emoji 🧮️ Computes the effective argument map for an action: for each declared arg, the staged value
+/// 🧮️ Computes the effective argument map for an action: for each declared arg, the staged value
 /// if present, else its declared `default`, else omitted. Renderers stage edits locally and pass them
 /// here; the contract enforcer ({@link VcsArtifactApp}) materializes defaults before dispatch so plugins
 /// never re-implement default-filling.
@@ -3990,7 +3990,7 @@ pub fn effective_action_args(defs: &[ActionArgDef], staged: &DslValue, seed: Opt
     DslValue::Object(effective)
 }
 
-/// @emoji ❗️ Returns the ids of required args that are still unset in `effective`. "Unset" means absent,
+/// ❗️ Returns the ids of required args that are still unset in `effective`. "Unset" means absent,
 /// `Null`, or an empty string (covers a blank Text/Select/IconSelect/ArtifactKind/SurfaceApp — the
 /// latter two resolve to a `String` effective value exactly like `Select`, contract §C8.1); `false`,
 /// `0`, and `[]` are valid values for Toggle/Number/Slider/Vec3 and never count as unset.
@@ -4029,7 +4029,7 @@ pub fn unresolved_action_args(defs: &[ActionArgDef], effective: &DslValue) -> Ve
     defs.iter().filter(|def| unresolved.contains(&def.id)).map(|def| def.id.clone()).collect()
 }
 
-/// @emoji 🚦️ Whether an action is eligible to appear in a window's Actions panel — excludes the six
+/// 🚦️ Whether an action is eligible to appear in a window's Actions panel — excludes the six
 /// framework History actions (rendered by the History rail) and the injected `setActiveUtility`/
 /// `setActiveTool` (internal View actions wired to the utility bar/tool panel, never the panel).
 // 🚫️async: E1 transitive — the only consumer is `Iterator::filter` (external trait), which takes a
@@ -4038,7 +4038,7 @@ fn action_is_panel_eligible(action: &ActionDefinition) -> bool {
     action.kind != ActionKind::History && action.id != SET_ACTIVE_UTILITY_ACTION_ID && action.id != SET_ACTIVE_TOOL_ACTION_ID
 }
 
-/// @emoji 🕹️ THE window action predicate — every [`ActionDefinition`] dispatchable in `window`, in
+/// 🕹️ THE window action predicate — every [`ActionDefinition`] dispatchable in `window`, in
 /// the order a shell must offer them: the window kind's OWN roster first, then every
 /// [`AppDefinition::actions`] row that no window kind of this app claims for itself. An id declared
 /// by ANY window kind is that window's authored declaration and is never re-offered from the app
@@ -4057,14 +4057,14 @@ pub fn window_kind_actions<'a>(app: &'a AppDefinition, window: &'a WindowKindDef
     resolved
 }
 
-/// @emoji 📇️ Resolves the actions a window kind presents in its panel — [`window_kind_actions`]
+/// 📇️ Resolves the actions a window kind presents in its panel — [`window_kind_actions`]
 /// minus the framework-only rail actions (the six History verbs and the injected
 /// `setActiveUtility`/`setActiveTool`), preserving declaration order.
 pub fn resolve_window_actions<'a>(app: &'a AppDefinition, window_kind: &'a WindowKindDefinition) -> Vec<&'a ActionDefinition> {
     window_kind_actions(app, window_kind).into_iter().filter(|action| action_is_panel_eligible(action)).collect()
 }
 
-/// @emoji 🛠️ Resolves the tools the active mode presents, in declared order — references into
+/// 🛠️ Resolves the tools the active mode presents, in declared order — references into
 /// `AppDefinition.tools` via `ModeDefinition.tools`. Unlike `resolve_window_actions`, unresolvable or
 /// unreferenced tools have no orphan fallback: tools are opt-in per mode, not automatically shown
 /// everywhere. Unresolvable refs are skipped (the builder validates them at construction time).
@@ -4153,9 +4153,8 @@ pub fn example_body_asset_name(dialect: &ArtifactDialect, example_id: &str, suff
 }
 
 /// 📚️ THE example-picker predicate — every example authored for `dialect`, in manifest order,
-/// deduplicated by id. The react shell's navbar select (`ShellHost`'s `exampleOptions`) and the
-/// host's own example-graph scoping (`exampleArtifactSources`) both answer it, and so does the
-/// TypeScript twin `examplesForDialect` (`🛂️manifest/🟦️.ts`); both are pinned against the shared
+/// deduplicated by id. The react shell's navbar select (`ShellHost`'s `exampleOptions`) answers it,
+/// and so does the TypeScript twin `examplesForDialect` (`🛂️manifest/🟦️.ts`); both are pinned against the shared
 /// `🧫️fixtures/📚️example-picker.json` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 pub fn examples_for_dialect<'a>(examples: &'a [ExampleDefinition], dialect: &ArtifactDialect) -> Vec<&'a ExampleDefinition> {
     let mut seen = std::collections::BTreeSet::new();
@@ -4684,7 +4683,7 @@ pub struct PluginManifest {
 }
 
 //#region 🔖️HostResolvedArgs
-/// @emoji 🗂️ One artifact-kind choice offered by an `ActionArgControl::ArtifactKind` dialog field —
+/// 🗂️ One artifact-kind choice offered by an `ActionArgControl::ArtifactKind` dialog field —
 /// resolved by the host from its live plugin catalogue (`artifact_kind_choices`) into a plain
 /// `Select { options }` right before the dialog renders. Round-trips through `ActionArgOption.value`
 /// as JSON via `encode_artifact_kind_choice`/`decode_artifact_kind_choice` — the frozen wire shape
@@ -4700,7 +4699,7 @@ pub struct ArtifactKindChoice {
     pub label: LocalizedLabel,
 }
 
-/// @emoji 🎭️ One `(pluginId, appId, role)` choice offered by an `ActionArgControl::SurfaceApp` dialog
+/// 🎭️ One `(pluginId, appId, role)` choice offered by an `ActionArgControl::SurfaceApp` dialog
 /// field — resolved by the host against the dialect coordinate found in the dialog's seed argument
 /// named `dialect_arg`. Round-trips through `ActionArgOption.value` as JSON via
 /// `encode_surface_app_choice`/`decode_surface_app_choice`: `{"pluginId":"draw","appId":"s.draw.draw
@@ -4765,11 +4764,13 @@ pub async fn decode_surface_app_choice(value: &str) -> Result<SurfaceAppChoice, 
     Ok(SurfaceAppChoice { app: AppRef { plugin_id, app_id }, role })
 }
 
-/// 🗂️ Every artifact-kind choice for the given `roles`: every app across `manifests` whose `role` is
-/// in `roles` and whose `io.artifact_schema` is non-empty contributes one choice per dialect
-/// coordinate. Deduped by dialect coordinate (first manifest/app wins — callers pass owner manifests
-/// first so the owner's label wins over a later contributor's), sorted by coordinate for determinism
-/// — the pure resolver behind `ActionArgControl::ArtifactKind`.
+/// 🗂️ Every artifact-kind choice for the given `roles` — Rust twin of TS `artifactKindChoices` (law in
+/// `🧪️tests/🧪️hostresolvedargs/🟦️.ts`): every app across `manifests` whose `role` is in `roles`, whose
+/// `io.artifact_schema` is non-empty and whose package declares a kind of that schema (on any of its apps
+/// — a viewer shares its editor's kind — or on the manifest) contributes one choice per dialect coordinate,
+/// labelled with that kind's own label, never its app's; an undeclared schema is not a creatable kind.
+/// Deduped by dialect coordinate (first manifest/app wins — callers pass owner manifests first so the
+/// owner's label wins over a later contributor's), sorted by coordinate for determinism.
 pub async fn artifact_kind_choices(manifests: &[PluginManifest], roles: &[AppRole]) -> Vec<ArtifactKindChoice> {
     let mut by_coordinate: BTreeMap<String, ArtifactKindChoice> = BTreeMap::new();
     for manifest in manifests {
@@ -4777,8 +4778,10 @@ pub async fn artifact_kind_choices(manifests: &[PluginManifest], roles: &[AppRol
             if !roles.contains(&app.role) || app.io.artifact_schema.is_empty() {
                 continue;
             }
-            let label = app.artifact_kinds.iter().chain(manifest.artifact_kinds.iter()).find(|kind| kind.schema == app.io.artifact_schema).map_or_else(|| app.label.clone(), |kind| kind.label.clone());
-            by_coordinate.entry(app.dialect.to_coordinate()).or_insert_with(|| ArtifactKindChoice { kind_id: app.dialect.artifact_kind.clone(), schema: app.io.artifact_schema.clone(), dialect: app.dialect.clone(), label });
+            let Some(kind) = manifest.apps.iter().flat_map(|other| other.artifact_kinds.iter()).chain(manifest.artifact_kinds.iter()).find(|kind| kind.schema == app.io.artifact_schema) else {
+                continue;
+            };
+            by_coordinate.entry(app.dialect.to_coordinate()).or_insert_with(|| ArtifactKindChoice { kind_id: app.dialect.artifact_kind.clone(), schema: app.io.artifact_schema.clone(), dialect: app.dialect.clone(), label: kind.label.clone() });
         }
     }
     by_coordinate.into_values().collect()
@@ -5628,7 +5631,7 @@ mod package_descriptor_value_codec_tests;
 // for precisely this "avoid cascading through construction sites I don't own" problem) and on
 // `ExtensionManifest`, ship together as ONE atomic lease bundle — see `📓️terra-P8-report.md` §2
 // for the full reasoning and `📓️lease-P8-agent-descriptor.md` for the exact diffs.
-/// @emoji 🤖️ What a package OFFERS to agents — see the region header above for the critical
+/// 🤖️ What a package OFFERS to agents — see the region header above for the critical
 /// `capability_requests` vs `AgentContributions` distinction. `capabilities` are fully-qualified
 /// capability ids (the same grammar `🌉️mcp/🗂️catalog` compiles — `<plugin_id>.<app_id>.
 /// <action_id>` / `….cmd.<id>` / `….mode.<mode_id>.<id>`, `📋️master.md` §3.1); `promoted` is the
@@ -5646,7 +5649,7 @@ pub struct AgentContributions {
 }
 
 impl AgentContributions {
-    /// @emoji 🧪️ `promoted ⊆ capabilities` — the one structural invariant every producer
+    /// 🧪️ `promoted ⊆ capabilities` — the one structural invariant every producer
     /// (`describe_plugin()`/`describe_extension()`) and consumer (`📇️registry:check`) must hold.
     /// Pure and dependency-free so both the Rust builder side and the registry's own TypeScript
     /// check (which has no way to call back into this crate) can each verify it independently.

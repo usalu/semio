@@ -89,7 +89,6 @@ async fn every_panel_publishes_its_body_in_generate_mode_as_well_as_edit() {
                 Err(fault) => panic!("case {} published no body for {} ({}): {fault:?}", case.id, panel.tab, panel.body_key),
             };
             let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("panel body json");
-            eprintln!("[DEBUG] mode-panel case={} panel={} bytes={}", case.id, panel.tab, json.len());
             assert!(json.contains(&panel.root), "case {} published {} without its own root {}", case.id, panel.tab, panel.root);
             for marker in &panel.contains {
                 assert!(json.contains(marker), "case {} published {} without {marker}", case.id, panel.tab);

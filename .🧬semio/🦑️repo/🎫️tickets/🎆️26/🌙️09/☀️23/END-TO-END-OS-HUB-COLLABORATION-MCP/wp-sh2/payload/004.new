@@ -19,7 +19,7 @@ async fn home_config_op_text_round_trips_every_variant() {
 #[test]
 fn home_config_holds_no_directory_projection() {
     assert_eq!(HomeConfig::default(), HomeConfig { retired_local_studio_ids: Vec::new() });
-    let kinds: Vec<&str> = <HomeConfigMutation as protocol::Mutation<HomeConfig>>::DESCRIPTORS.iter().map(|descriptor| descriptor.semantic_kind).collect();
+    let kinds: Vec<&str> = <HomeConfigMutation as Mutation<HomeConfig>>::DESCRIPTORS.iter().map(|descriptor| descriptor.semantic_kind).collect();
     assert_eq!(kinds, ["set-snapshot", "retire-local-studio", "restore-local-studio"]);
 }
 

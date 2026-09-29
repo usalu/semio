@@ -104,10 +104,9 @@ fn drawing_canvas_window_ownership_runtime_isolates_reloads_and_restores_exact_i
                 Ok(())
             }
             .await;
-            if let Err(error) = &outcome { eprintln!("[DEBUG] Drawing exact-window runtime failure before close: {error}"); }
+            if let Err(error) = &outcome { eprintln!("[TRACE] Drawing exact-window runtime failure before close: {error}"); }
             artifact_app_laws::close_registered_fixture_app(&mut *app);
             outcome.expect("Drawing exact-window runtime law");
-            eprintln!("[DEBUG] Drawing runtime isolated two Canvas windows, restored persisted Viewport2d config, cleared transient on reload, and preserved document bytes");
         }))
         .expect("spawn Drawing window ownership law")
         .join()
@@ -142,5 +141,4 @@ fn drawing_canvas_window_ownership_matches_neutral_fixture_and_codecs() {
     assert_eq!(DrawingCanvasWindowTransient::decode_pack(&base_transient.encode_pack()).unwrap(), base_transient);
     assert_eq!(DrawingCanvasWindowTransientMutation::parse_op(&transient_mutation.print_op()).unwrap(), transient_mutation);
     assert_eq!(DrawingCanvasWindowTransientMutation::decode_op(&transient_mutation.encode_op().unwrap()).unwrap(), transient_mutation);
-    eprintln!("[DEBUG] Drawing Canvas config/transient matched neutral fixture, inverse, DSL, Pack, text-op, and binary-op laws");
 }

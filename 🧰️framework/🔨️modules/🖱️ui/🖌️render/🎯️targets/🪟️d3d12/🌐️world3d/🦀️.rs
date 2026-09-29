@@ -1,4 +1,4 @@
-//! @emoji 🌐️ World3d mesh/lines encoding: packing every `SurfacePass`'s globals into the shared
+//! 🌐️ World3d mesh/lines encoding: packing every `SurfacePass`'s globals into the shared
 //! 256-byte-strided root-CBV ring, uploading instance/line data, and replaying opaque/translucent
 //! mesh + line draws. Mirrors the wgpu target's `WorldGlobalsRing`/`prepare_world_passes`/
 //! `draw_world_pass_at` (`🎯️targets/🧊️wgpu/🦀️draw.rs`) and the Metal backend's `🌐️world3d.rs`, minus

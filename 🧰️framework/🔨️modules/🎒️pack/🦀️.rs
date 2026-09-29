@@ -46,7 +46,7 @@ pub use crate::json::{
 //#endregion 🔖️Json
 
 //#region 🔖️Io
-/// @emoji 🗄️ Native-only file I/O — absent from `wasm32` builds, mirroring `pack_io` itself.
+/// 🗄️ Native-only file I/O — absent from `wasm32` builds, mirroring `pack_io` itself.
 #[cfg(not(target_arch = "wasm32"))]
 pub use crate::io::{recover_file, write_atomic, FilePackSink, FilePackSource, StreamingPackWriter};
 //#endregion 🔖️Io
@@ -56,7 +56,7 @@ pub use crate::async_::{AsyncPackSource, BoundedDemand, CancellationToken, Deman
 //#endregion 🔖️Async
 
 //#region 🔖️Http
-/// @emoji 🌐️ Native `ureq`-backed `RangeTransport` — off by default so wasm builds of this
+/// 🌐️ Native `ureq`-backed `RangeTransport` — off by default so wasm builds of this
 /// facade stay lean; enable via `pack`'s own `ureq` feature (forwards to `pack_http/ureq`).
 #[cfg(feature = "ureq")]
 pub use crate::http::UreqRangeTransport;

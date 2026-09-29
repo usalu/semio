@@ -19,7 +19,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#endregion 🔖️Contract
 
 //#region 🔖️Inference
-/// @emoji 💡️ All information inferable from a snapshot — the fourth schema family alongside
+/// 💡️ All information inferable from a snapshot — the fourth schema family alongside
 /// `Snapshot`/`Diff`/`Mutation` (ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
 /// LAWS: pure (reads only `snapshot`), deterministic (equal snapshots ⇒ byte-equal canonical
 /// serializations of the result), total (never panics, never fails — an inference with error
@@ -34,7 +34,7 @@ pub trait Inference<P>: Clone + Default + protocol::value::ToValue + protocol::v
     fn infer(snapshot: &P) -> Self;
 }
 
-/// @emoji 🗺️ Region vocabulary shared by [`DiffRegions::touches`] and an [`InferenceFieldSpec`]'s
+/// 🗺️ Region vocabulary shared by [`DiffRegions::touches`] and an [`InferenceFieldSpec`]'s
 /// `reads`. Paths are `/`-joined segments (e.g. `"objects/o1/vortices"`); two paths "intersect" when
 /// one's segments are a prefix of the other's (either direction), matching how a coarse write region
 /// (`"objects"`) covers every finer read region beneath it (`"objects/o1/vortices"`) and vice versa.
@@ -73,7 +73,7 @@ impl TouchedPaths {
     }
 }
 
-/// @emoji 🗺️ Write-region coverage of a diff — the diff→invalidation bridge for inference's tier-1
+/// 🗺️ Write-region coverage of a diff — the diff→invalidation bridge for inference's tier-1
 /// gate. Deliberately a SEPARATE trait from [`MutationDiff`] (not a new method on it), following the
 /// same seeded-shrink-only rollout as [`DiffAlgebra`] above: land standalone here, adopt per-type via
 /// a `POLICY_DIFF_REGIONS` allowlist, never as a hard bound on `MutationDiff` until every implementor
@@ -85,7 +85,7 @@ pub trait DiffRegions {
     fn touches(&self) -> TouchedPaths;
 }
 
-/// @emoji 🕸️ One named inferred field family and its declared snapshot read-set (the tier-1 gate
+/// 🕸️ One named inferred field family and its declared snapshot read-set (the tier-1 gate
 /// [`DiffRegions::touches`] is checked against).
 #[derive(Clone, Copy, Debug)]
 pub struct InferenceFieldSpec {
@@ -93,7 +93,7 @@ pub struct InferenceFieldSpec {
     pub reads: &'static [&'static str],
 }
 
-/// @emoji 🧬️ Registrable metadata for an artifact's inference family — twin of `ProjectionClass`'s
+/// 🧬️ Registrable metadata for an artifact's inference family — twin of `ProjectionClass`'s
 /// `id`/`schema_version`/`reads` trio (`crate::os_db::projection`), but static: one impl per `XInference`
 /// type, declared next to its `Inference` impl.
 pub trait InferenceSpec<P>: Inference<P> {
@@ -156,7 +156,7 @@ pub const APPROVED_VERBS: &[(&str, &str)] = &[
     ("verify", "Verified"),
 ];
 
-/// @emoji 🔤️ `const`-context string equality (stable `&str: PartialEq` isn't usable in a `const`
+/// 🔤️ `const`-context string equality (stable `&str: PartialEq` isn't usable in a `const`
 /// assertion) — used by `#[derive(Mutations)]`'s generated `SEMANTICS.kind == kebab(variant)` check.
 pub const fn str_eq(a: &str, b: &str) -> bool {
     let (a, b) = (a.as_bytes(), b.as_bytes());
@@ -173,7 +173,7 @@ pub const fn str_eq(a: &str, b: &str) -> bool {
     true
 }
 
-/// @emoji ✅️ `const`-context membership check against [`APPROVED_VERBS`] — used by
+/// ✅️ `const`-context membership check against [`APPROVED_VERBS`] — used by
 /// `#[derive(Mutations)]`'s generated compile-time assertion so an unapproved verb is a build
 /// error, not a policy-scan finding discovered later.
 pub const fn is_approved_verb(verb: &str) -> bool {
@@ -187,7 +187,7 @@ pub const fn is_approved_verb(verb: &str) -> bool {
     false
 }
 
-/// @emoji 🪧️ Compile-time semantic identity of one handcrafted mutation kind — one `&'static`
+/// 🪧️ Compile-time semantic identity of one handcrafted mutation kind — one `&'static`
 /// instance per `🧬️mutations/<kind>/` triad dir, declared as `MutationKind::SEMANTICS` on the
 /// kind's payload struct. `kind` MUST equal the triad dir stem (emoji stripped) and the kebab of
 /// the dispatch-enum variant wrapping this payload (`#[derive(Mutations)]` asserts this at
@@ -227,7 +227,7 @@ where
     /// `NoMutation` sentinel variant — there is no "no-op mutation", only an inverse with nothing
     /// to undo).
     fn inverse(&self, base: &P) -> Vec<Op>;
-    /// @emoji 🏷️ Human undo/history label in every shell locale, e.g. `Rename piece "a" to "b"` /
+    /// 🏷️ Human undo/history label in every shell locale, e.g. `Rename piece "a" to "b"` /
     /// `Piece "a" in "b" umbenennen`. [`crate::LocalizedLabel::native`] matches on `Locale`
     /// exhaustively with no catch-all arm, so a locale added to `🖱️ui/🎚️axes/🔣️.json` fails every
     /// implementor's build until it is translated — the history panel has no English fallback.
@@ -236,16 +236,16 @@ where
     fn timestamp(&self) -> Option<protocol::ids::HybridLogicalTimestamp> {
         None
     }
-    /// @emoji 🎯️ Structured address of the target inside the artifact (outermost segment first);
+    /// 🎯️ Structured address of the target inside the artifact (outermost segment first);
     /// empty means whole-artifact scope.
     fn target(&self) -> Vec<String> {
         Vec::new()
     }
-    /// @emoji 🌐️ Whether this kind can ever emit cross-artifact transaction steps.
+    /// 🌐️ Whether this kind can ever emit cross-artifact transaction steps.
     fn may_emit_foreign_steps(&self) -> bool {
         false
     }
-    /// @emoji 🌐️ Foreign steps this kind additionally dispatches to OTHER artifacts. Defaults to
+    /// 🌐️ Foreign steps this kind additionally dispatches to OTHER artifacts. Defaults to
     /// `Vec::new()` so no existing handcrafted `impl MutationKind` breaks; `#[derive(Mutations)]`
     /// gains a per-variant delegating arm (see `🗣️dsl/✨️derive/🦀️.rs` `🔖️Mutations`).
     fn foreign_steps(&self, _base: &P) -> Vec<ForeignStep> {
@@ -253,7 +253,7 @@ where
     }
 }
 
-/// @emoji 🗣️ Refinement of [`Mutation`] for an enum whose every variant is a [`MutationKind`].
+/// 🗣️ Refinement of [`Mutation`] for an enum whose every variant is a [`MutationKind`].
 /// Implemented only by `#[derive(Mutations)]`, never by hand. End-state (final ratchet, once every
 /// artifact's dispatch enum implements it): `ArtifactApp`/`ArtifactStore` bounds tighten from
 /// `Mutation` to `SemanticMutation`, making semantic vocabulary the only expressible one at
@@ -274,7 +274,7 @@ pub use crate::os_vcs::{apply_collection_mutation, collection_diff_from_mutation
 //#endregion 🔖️Collection
 
 //#region 🔖️DiffKit
-/// @emoji 🗃️ Id-keyed collection delta shape — the shared type behind a technology's per-collection
+/// 🗃️ Id-keyed collection delta shape — the shared type behind a technology's per-collection
 /// diff fragment, replacing hand-copied `NamedTripleDiff`-shaped structs (6 copies pre-overhaul).
 /// `K` = item id, `V` = full item, `Patch` = per-item sparse patch (`Patchable<Patch>`). Deliberately
 /// provides only [`named_apply`] here — `absorb`/`inverse`/`between` stay handcrafted per artifact
@@ -304,7 +304,7 @@ impl<K, V, Patch> NamedTripleDiff<K, V, Patch> {
     }
 }
 
-/// @emoji ▶️ Validates and applies a [`NamedTripleDiff`] to an id-keyed `Vec` in place:
+/// ▶️ Validates and applies a [`NamedTripleDiff`] to an id-keyed `Vec` in place:
 /// removals, then patches, then appends. Validation is completed before the first write, so a
 /// missing/duplicate/contradictory persisted target rejects the whole diff atomically.
 pub fn named_apply<K, V, Patch>(items: &mut Vec<V>, diff: &NamedTripleDiff<K, V, Patch>) -> Result<(), MutationApplyError>
@@ -352,7 +352,7 @@ where
     Ok(())
 }
 
-/// @emoji 🗃️ Index-keyed ordered-collection delta shape — the shared type behind an intrinsically
+/// 🗃️ Index-keyed ordered-collection delta shape — the shared type behind an intrinsically
 /// ordered, id-less collection's diff fragment (pptx slides/shapes, paragraphs, table rows),
 /// replacing hand-copied `IndexedTripleDiff`-shaped structs (4 copies pre-overhaul). Index
 /// convention (owned by the artifact's handcrafted `MutationKind::diff`, [`indexed_apply`] just
@@ -377,7 +377,7 @@ impl<V, Patch> IndexedTripleDiff<V, Patch> {
     }
 }
 
-/// @emoji ▶️ Validates and applies an [`IndexedTripleDiff`] in place: BASE-state `modified`
+/// ▶️ Validates and applies an [`IndexedTripleDiff`] in place: BASE-state `modified`
 /// patches first, BASE-state `removed` descending, then FINAL-state `added` ascending. Every
 /// index is exact; out-of-range and duplicate indices reject atomically instead of clamping.
 pub fn indexed_apply<V, Patch>(items: &mut Vec<V>, diff: &IndexedTripleDiff<V, Patch>) -> Result<(), MutationApplyError>
@@ -586,7 +586,7 @@ pub fn mutation_descriptor(schema: &str) -> Option<MutationDescriptor> {
 //#endregion 🔖️Descriptor
 
 //#region 🔖️Upcast
-/// @emoji ⬆️ Rewrites an operation authored at an older schema version into today's shape.
+/// ⬆️ Rewrites an operation authored at an older schema version into today's shape.
 /// LAW: `upcast(upcast(x)) == upcast(x)` — idempotence at the target version.
 pub trait MutationUpcaster<Op> {
     fn upcast(&self, from_version: crate::os_spr::ids::SchemaVersion, op: Op) -> Op;
@@ -594,7 +594,7 @@ pub trait MutationUpcaster<Op> {
 //#endregion 🔖️Upcast
 
 //#region 🔖️Events
-/// @emoji 📡️ One side-effect-channel event emitted alongside a persistent/UI diff.
+/// 📡️ One side-effect-channel event emitted alongside a persistent/UI diff.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 pub struct MutationEvent {
     pub mutation_id: crate::os_spr::ids::MutationId,
@@ -604,7 +604,7 @@ pub struct MutationEvent {
 //#endregion 🔖️Events
 
 //#region 🔖️Outcome
-/// @emoji 🗂️ The five-channel separation `framework/core`'s `InvocationResult` later maps onto:
+/// 🗂️ The five-channel separation `framework/core`'s `InvocationResult` later maps onto:
 /// durable diffs, two UI-visibility tiers, a speculative preview tier, and side-effect events.
 #[derive(Clone, Debug, Default, ToValue, FromValue)]
 pub struct CommandOutcome<Diff> {
@@ -618,7 +618,7 @@ pub struct CommandOutcome<Diff> {
 
 //#region 🔖️Composite
 
-/// @emoji 🪆️ One step of a [`Planner`]'s plan: either a concrete `Op` applied to the composite's
+/// 🪆️ One step of a [`Planner`]'s plan: either a concrete `Op` applied to the composite's
 /// own snapshot, or a [`ForeignStep`] dispatched elsewhere.
 #[derive(Clone, Debug, PartialEq)]
 pub enum PlanStep<Op> {
@@ -626,12 +626,12 @@ pub enum PlanStep<Op> {
     Foreign(ForeignStep),
 }
 
-/// @emoji 🛑️ A composite plan's recursion ceiling — mirrors `MAX_TXN_DEPTH` in the transaction
+/// 🛑️ A composite plan's recursion ceiling — mirrors `MAX_TXN_DEPTH` in the transaction
 /// protocol (§5 of the contract freeze), since a `Planner`'s foreign-step chain is exactly what a
 /// transaction later replays hop by hop.
 pub const MAX_PLAN_DEPTH: u8 = 8;
 
-/// @emoji 🚧️ Typed failure of composite-mutation planning — never a panic, per the purity law on
+/// 🚧️ Typed failure of composite-mutation planning — never a panic, per the purity law on
 /// [`CompositeMutationKind::plan`].
 #[derive(Clone, Debug, PartialEq)]
 pub enum PlanError {
@@ -669,7 +669,7 @@ impl From<MutationApplyError> for PlanError {
     }
 }
 
-/// @emoji 🧮️ Accumulates a [`CompositeMutationKind::plan`]'s steps against a snapshot that starts
+/// 🧮️ Accumulates a [`CompositeMutationKind::plan`]'s steps against a snapshot that starts
 /// at `base` and advances by every `call`ed local op — so a later step's `validate`/`diff` sees the
 /// snapshot as it would exist after every step planned before it, exactly like sequential apply.
 /// Foreign-hop depth/cycle bookkeeping lives here (`call_foreign`), keyed on `(mutation_id,
@@ -769,7 +769,7 @@ impl<P: Clone, Op: Mutation<P>> Planner<P, Op> {
     }
 }
 
-/// @emoji 🕸️ A mutation kind whose effect is a PLAN over one-or-more concrete `Op`s (this
+/// 🕸️ A mutation kind whose effect is a PLAN over one-or-more concrete `Op`s (this
 /// artifact's own) and/or [`ForeignStep`]s (other artifacts') rather than a single direct diff.
 /// Implemented once per composite kind, exactly like [`MutationKind`] is implemented once per
 /// handcrafted kind — `#[derive(CompositeMutation)]` (`🗣️dsl/✨️derive/🦀️.rs`
@@ -799,7 +799,7 @@ pub trait CompositeMutationKind<P, Op: Mutation<P>>: MutationLeaf + Clone + prot
     }
 }
 
-/// @emoji 🏗️ Runs `kind.plan` against a fresh [`Planner`] seeded at `base`. NOT a blanket
+/// 🏗️ Runs `kind.plan` against a fresh [`Planner`] seeded at `base`. NOT a blanket
 /// `impl<T: CompositeMutationKind> MutationKind for T` — coherence rejects that against the ~200
 /// concrete `impl MutationKind` in the tree — so every other free helper here, and the
 /// `#[derive(CompositeMutation)]` delegation, is built on top of this one instead.
@@ -809,7 +809,7 @@ pub fn plan_of<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P, Op>>(kind:
     Ok(planner.into_steps())
 }
 
-/// @emoji 🧬️ Folds a composite's LOCAL steps into one [`MutationOutcome`] via
+/// 🧬️ Folds a composite's LOCAL steps into one [`MutationOutcome`] via
 /// [`MutationDiff::absorb`], applying each step against the snapshot as it stood right before that
 /// step (matching [`Planner::call`]'s own advance-as-you-go semantics) — so a successful
 /// `fold_plan_diff(k, b).diff().apply(&b)` equals sequential application of the plan's local steps.
@@ -873,7 +873,7 @@ pub fn fold_plan_inverse<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P, 
     inverses
 }
 
-/// @emoji 🌐️ The [`ForeignStep`]s of a composite's plan, in discovery order — what
+/// 🌐️ The [`ForeignStep`]s of a composite's plan, in discovery order — what
 /// `#[derive(CompositeMutation)]`'s generated `MutationKind::foreign_steps` delegates to. A
 /// planning failure folds to `Vec::new()`, never a panic.
 pub fn plan_foreign_steps<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P, Op>>(kind: &K, base: &P) -> Vec<ForeignStep> {

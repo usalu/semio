@@ -352,7 +352,7 @@ crate::artifact_retire_struct!(crate::os_spr::history::HistoryMessage { level, c
 crate::artifact_retire_struct!(crate::os_spr::HistoryEdit { id, actor, started_at, finished_at, coalesce_key, description, ops, inverse, meta, lane });
 crate::artifact_retire_struct!(crate::os_spr::OpPayload { text, binary });
 crate::artifact_retire_struct!(crate::os_spr::HistoryOpMeta { op_id, dependencies, base_version, author_id, hlt, undo_policy, payload_hash, group_id, origin, messages });
-crate::artifact_retire_struct!(crate::os_spr::HistoryFold { applied, redo, checkpoint, alternative, changes, checkpoints, alternatives });
+crate::artifact_retire_struct!(crate::os_spr::HistoryFold { applied, redo, refused, checkpoint, alternative, changes, checkpoints, alternatives });
 crate::artifact_retire_struct!(crate::os_spr::FoldChange { id, edit_ids, description, saved_at });
 crate::artifact_retire_struct!(crate::os_spr::FoldCheckpoint { id, change_ids, parent_id, authors, message, timestamp, pins });
 crate::artifact_retire_struct!(crate::os_spr::FoldAlternative { id, name, checkpoint_ids });

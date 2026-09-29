@@ -71,6 +71,7 @@ async fn remove_track_then_insert_track_round_trips() {
 async fn remove_sample_then_insert_sample_round_trips() {
     let mut base = base_snapshot().await;
     base.tracks[0].samples.push(Mp4Sample { data: vec![4, 5], duration: 33, cts_offset: 0, sync: false });
+    *base.tracks[0].chunk_sample_counts.last_mut().expect("the base track has a chunk") += 1;
     let m = Mp4Mutation::RemoveSample(remove_sample::RemoveSample { track_index: 0, index: 0 });
     let mut snap = base.clone();
     apply_mp4_mutation(&mut snap, &m);

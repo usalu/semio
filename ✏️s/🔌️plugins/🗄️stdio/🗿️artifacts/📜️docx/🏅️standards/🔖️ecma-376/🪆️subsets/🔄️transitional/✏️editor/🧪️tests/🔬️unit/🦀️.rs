@@ -46,7 +46,7 @@ async fn set_page_replaces_paragraph_text_through_an_addressed_revision() {
     let snapshot = snapshot_with_blocks(vec![DocxBlock::paragraph("hello")]);
     let address = docx_block_run_address(&snapshot, &DocxBlockPath { segments: Vec::new(), index: 0 }, 0).expect("canonical address");
     let mutation = build_set_page_mutation(&snapshot, &address, "goodbye").expect("valid edit").expect("changed edit");
-    let DocxMutation::SetRunText(set_run_text::SetRunText { address: actual, text }) = &mutation else { panic!("expected SetRunText") };
+    let DocxMutation::SetRunText(crate::schema::mutations::set_run_text::SetRunText { address: actual, text }) = &mutation else { panic!("expected SetRunText") };
     assert_eq!(actual, &address);
     assert_eq!(text, "goodbye");
 }

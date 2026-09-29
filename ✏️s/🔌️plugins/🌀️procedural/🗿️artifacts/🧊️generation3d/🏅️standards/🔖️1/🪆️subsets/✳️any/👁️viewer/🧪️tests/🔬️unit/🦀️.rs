@@ -400,7 +400,6 @@ fn the_viewer_exports_the_example_it_is_showing_not_the_opened_document() {
         let config = Generation3dViewConfig { active_example_id: Some(example_id.to_string()), ..Default::default() };
         let viewed = super::Generation3dViewedDocument::resolve(&opened, &config);
         let widgets = viewed.snapshot().host_snapshot.widgets.len();
-        println!("[DEBUG] viewer export document for {example_id}: widgets={widgets}");
         assert!(widgets > 0, "{example_id}: the viewed document must carry the example's widgets, not the opened document's none");
         viewed.retire();
     }

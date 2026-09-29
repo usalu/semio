@@ -1,6 +1,8 @@
-type TestSource = { readonly directory: string; readonly url: string };
+import type { RuntimeTestDependencies } from "../../🟦️.ts";
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+type TestSource = { readonly url: string };
+
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: RuntimeTestDependencies, source: TestSource): Promise<void> {
   const { bootstrapCadModules } = dependencies;
 
   const { describe, expect, it } = vitest;

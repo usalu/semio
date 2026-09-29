@@ -20,5 +20,4 @@ export function testFrameworkEmptyStateContract(): void {
       }
     }
   }
-  console.log("[DEBUG] Framework empty-state admission: seven JSON, three text and three Pack vectors agree with independent Ajv");
 }

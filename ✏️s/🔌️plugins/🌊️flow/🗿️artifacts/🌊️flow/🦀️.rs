@@ -349,7 +349,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         dimension: "graph".into(),
         media_capability: OsMediaCapability::MeshOnly,
         media_type: MediaType { class: MediaClass::Computation, form: MediaForm::Flow },
-        schema: "flow.artifact".into(),
+        schema: FLOW_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
         export_stdio_kinds: vec![],
@@ -810,6 +810,8 @@ pub mod editor {
             pub mod spotlight_commit;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔌️toggle-extension/🦀️.rs"]
             pub mod toggle_extension;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set-contributions/🦀️.rs"]
+            pub mod set_contributions;
         }
 
         #[path = "."]

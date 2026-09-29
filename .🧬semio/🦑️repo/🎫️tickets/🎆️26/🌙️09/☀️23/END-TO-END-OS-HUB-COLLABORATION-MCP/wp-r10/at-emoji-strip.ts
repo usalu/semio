@@ -46,7 +46,9 @@ const perFile: [string, number][] = [];
 for (const path of listed) {
   const before = readFileSync(join(ROOT, path), "utf8");
   let count = 0;
-  const lines = before.split("\n").map((line, index) => line.replace(TOKEN, (_match, opener: string, space: string, offset: number, whole: string) => {
+  const lines = before.split("\n").map((line, index) => {
+    let cut = false;
+    const replaced = line.replace(TOKEN, (_match, opener: string, space: string, offset: number, whole: string) => {
     count += 1;
     const rest = whole.slice(offset + _match.length);
     const gap = space || (opener === '"""' ? "" : " ");
@@ -54,15 +56,19 @@ for (const path of listed) {
     const pick = PICKS[`${path}\t${rest}`];
     if (pick !== undefined) {
       picked.push(`${path}:${index + 1}`);
+      cut = true;
       return `${opener}${gap}${pick}\u0000`;
     }
     if (path === CAD && rest.includes(CAD_TEXT)) {
       picked.push(`${path}:${index + 1}`);
+      cut = true;
       return `${opener}${gap}🪟️ ${rest.slice(rest.indexOf(CAD_TEXT))}\u0000`;
     }
     unresolved.push(`${path}:${index + 1} ${rest.slice(0, 80)}`);
     return _match;
-  }).replace(/\u0000.*$/u, ""));
+    });
+    return cut ? replaced.slice(0, replaced.indexOf("\u0000")) : replaced;
+  });
   const after = lines.join("\n");
   tokens += count;
   if (after === before) continue;

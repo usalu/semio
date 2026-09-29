@@ -1,4 +1,4 @@
-//! @emoji 🌫️ The offscreen scene-color target + its mip-chain blur scratch texture — the D3D12
+//! 🌫️ The offscreen scene-color target + its mip-chain blur scratch texture — the D3D12
 //! counterpart of the wgpu target's `SceneColorTarget` and the Metal backend's `🌫️scene_target.rs`,
 //! mirroring `GpuContext::render_frame`'s two-pass structure (`🎯️targets/🧊️wgpu/🦀️gpu.rs`): render
 //! 2D/3D content into this target, then blur its mip chain and composite glass regions on top before

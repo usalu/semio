@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/📡️EventFeedHost/component.tsx
-/** @emoji 📰️ `📡️EventFeedHost` — renders an `EventFeedScene`: a scrollable log of `entriesJson` entries
+/** 📰️ `📡️EventFeedHost` — renders an `EventFeedScene`: a scrollable log of `entriesJson` entries
  * (icon + timestamp + title/detail), auto-scrolling to the newest entry while `follow` is set, and
  * dispatching `activateAction` on entry click. */
 // #endregion 🧲️Header
@@ -38,7 +38,7 @@ export function mintMutationMessageFeedEntry(message: MutationMessage, id: strin
 //#endregion Helpers
 
 //#region Component
-/** @emoji 📰️ Renders an `EventFeedScene`: a scrollable log of `entriesJson` entries (icon + timestamp + title/detail), auto-scrolling to the newest entry while `follow` is set, dispatching `activateAction` on entry click. */
+/** 📰️ Renders an `EventFeedScene`: a scrollable log of `entriesJson` entries (icon + timestamp + title/detail), auto-scrolling to the newest entry while `follow` is set, dispatching `activateAction` on entry click. */
 export function EventFeedHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.eventFeed;
   const windowInstanceId = useContext(WindowInstanceIdContext);
@@ -70,7 +70,7 @@ export function EventFeedHost({ node, onAction, requestContextMenu }: ComponentS
   }, [entries, scene?.follow]);
 
   //#region ContextMenu
-  /** @emoji 🖱️ `EventFeedScene` tracks no selection concept — each log row's `id` is still known at the click
+  /** 🖱️ `EventFeedScene` tracks no selection concept — each log row's `id` is still known at the click
    * site, so unlike the whole-surface-only hosts this reports the right-clicked entry as a `hit` (see
    * `TableHost`'s `onRowContextMenu` for the analogous per-row convention). */
   const onEntryContextMenu = useCallback(

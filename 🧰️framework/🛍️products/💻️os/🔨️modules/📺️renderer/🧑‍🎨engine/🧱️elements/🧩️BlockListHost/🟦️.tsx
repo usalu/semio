@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/🧩️BlockListHost/component.tsx
-/** @emoji 🧱️ `🧩️BlockListHost` — the step/block-list scene host: dnd-kit sortable steps and blocks,
+/** 🧱️ `🧩️BlockListHost` — the step/block-list scene host: dnd-kit sortable steps and blocks,
  * a drag-and-drop block palette (native-drag and driver-arm-drag), and step/block add/remove/move
  * action dispatch. */
 // #endregion 🧲️Header
@@ -252,7 +252,7 @@ export function BlockListHost({ node, onAction, requestContextMenu }: ComponentS
   const emptyLabel = useLabel("ui.host.emptyScene");
 
   //#region ContextMenu
-  /** @emoji 🖱️ `BlockListScene` carries only `stepsJson`/`paletteJson` — no per-step pick/selection state reaches this
+  /** 🖱️ `BlockListScene` carries only `stepsJson`/`paletteJson` — no per-step pick/selection state reaches this
    * host — so `hits`/`selection` stay empty per surface convention (see `🌳️GraphTimelineHost`). */
   const onContextMenu = useCallback(
     (event: MouseEvent<HTMLDivElement>): void => {

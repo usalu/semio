@@ -61,7 +61,7 @@ fn matrix_cell_row(row: usize, cell: &MatrixCell) -> UiAssemblyResult<BuiltNode>
     }
 }
 
-/// @emoji 🔺️ Signature adjacency matrix — triangle glyph strip plus lower-triangle pair rows.
+/// 🔺️ Signature adjacency matrix — triangle glyph strip plus lower-triangle pair rows.
 ///
 /// 🪟️ One windowed `rows` section spans the whole lower triangle and each matrix row is a windowed
 /// group row over its own cells, so a program with hundreds of elements streams instead of fanning a

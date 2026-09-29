@@ -415,7 +415,6 @@ async fn retained_cad_presence_close_empty_lanes_have_exact_owners() {
     assert_eq!(disposer.close_step(&mut transient, 0, maximum_bytes).unwrap(), semio_framework_plugin::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
     assert_eq!(disposer.close_step(&mut transient, maximum_items, maximum_bytes).unwrap(), semio_framework_plugin::PluginCloseStep::Complete);
     assert!(disposer.terminal_is_empty(&transient));
-    eprintln!("[DEBUG] CAD exact NoDraft and NoTransient owners completed under 1-item/4096-byte grants");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -458,7 +457,6 @@ async fn retained_factory_proofs_activate_the_real_cad_manifest_and_close_under_
         }
     }
     assert!(complete && app.close_terminal_is_empty(), "the real mounted CAD owner must reach its empty terminal shell");
-    eprintln!("[DEBUG] CAD activation joined {} exact app factory rows and completed bounded close", admitted.len());
 }
 
 #[test]
@@ -2360,7 +2358,24 @@ async fn world_scene_render_cost_probe() {
     let carrier = std::time::Instant::now();
     let _ = semio_framework_plugin::paged_text_carrier("meshes", &meshes);
     let carrier = carrier.elapsed();
-    eprintln!("[DEBUG] world scene render: cold {cold:?} warm {warm:?} (meshes lane {} bytes: cached lookup {lane:?}, paged carrier {carrier:?})", meshes.len());
     assert!(warm < cold);
 }
 //#endregion 🔖️RenderCostProbe
+
+//#region 🔖️PaneSolidExport
+/// ⚖️ A pane's current export writes the pane's real geometry: the forest's Building pane has world-space solids and
+/// exports as STEP, OBJ and STL files — never the empty spatial fallback (io-matrix 27 19:5x measured
+/// `cad.current.spatial.dsl` with `objects: []` for all three). The files' parsers (ISO 10303-21 structure, three.js
+/// OBJ/STL loaders) judge them live in `verify io`.
+#[semio_framework_async_macros::async_test]
+async fn current_pane_exports_its_real_solids() {
+    use crate::standards::v1::subsets::any::io::{CAD_SOLID_EXPORT_DIALECT_OBJ, CAD_SOLID_EXPORT_DIALECT_STL};
+    let view = forest_view();
+    let mut kernel = cad_brep_kernel();
+    assert!(!collect_pane_solids(&mut kernel, &view, CadPaneId::Building).is_empty(), "the Building pane has solids");
+    for (format, extension) in [(CAD_SOLID_EXPORT_DIALECT_STEP, ".step"), (CAD_SOLID_EXPORT_DIALECT_OBJ, ".obj"), (CAD_SOLID_EXPORT_DIALECT_STL, ".stl")] {
+        let export = export_solid_for_pane(&view, CadPaneId::Building, format).expect("a solid export");
+        assert!(export.filename.ends_with(extension), "{} names its format", export.filename);
+    }
+}
+//#endregion 🔖️PaneSolidExport

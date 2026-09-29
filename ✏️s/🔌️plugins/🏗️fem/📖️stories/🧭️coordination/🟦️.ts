@@ -45,7 +45,7 @@ import fem2dDemoDsl from "../../🗿️artifacts/◻️2d/🏅️standards/🔖�
 import fem3dDemoDsl from "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🖼️assets/🎬️demo/🗣️.dsl.semio?raw";
 
 //#region 🔖️Model
-/** @emoji 🗂️ One parsed fem DSL document: the banner dialect/version, top-level scalars, `name { … }` statement blocks and `name [cols] { rows }` tables. */
+/** 🗂️ One parsed fem DSL document: the banner dialect/version, top-level scalars, `name { … }` statement blocks and `name [cols] { rows }` tables. */
 export type FemDslDocument = {
   readonly dialect: string;
   readonly version: string;
@@ -54,14 +54,14 @@ export type FemDslDocument = {
   readonly tables: Readonly<Record<string, readonly Readonly<Record<string, unknown>>[]>>;
 };
 
-/** @emoji 📄️ One line of a statement block: an optional leading keyword (`beam`, `nodal`, `area`, …) plus its `key=value` fields. */
+/** 📄️ One line of a statement block: an optional leading keyword (`beam`, `nodal`, `area`, …) plus its `key=value` fields. */
 export type FemDslStatement = { readonly keyword: string | undefined; readonly fields: Readonly<Record<string, unknown>> };
 //#endregion 🔖️Model
 
 //#region 🔖️Tokenizer
 const CLOSERS: Readonly<Record<string, string>> = { "[": "]", "{": "}" };
 
-/** @emoji ✂️ Splits DSL text into column tokens: a quoted string (re-emitted as JSON so the reader can tell it from a bare word), a balanced `[ … ]` or `{ … }` group (newlines included), or a bare word. Never splits inside quotes or a group. */
+/** ✂️ Splits DSL text into column tokens: a quoted string (re-emitted as JSON so the reader can tell it from a bare word), a balanced `[ … ]` or `{ … }` group (newlines included), or a bare word. Never splits inside quotes or a group. */
 function tokenize(text: string): string[] {
   const tokens: string[] = [];
   let index = 0;
@@ -118,12 +118,12 @@ const QUANTITY_PATTERN = /^([-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?)([A-Za-z°µ][A-
 const COORDINATE_PATTERN = /^[-+]?\d+(?:\.\d+)?(?:,[-+]?\d+(?:\.\d+)?)+$/;
 const TEXTUAL_COLUMN_TYPES: ReadonlySet<string> = new Set(["TEXT", "ID", "BOOL"]);
 
-/** @emoji 🔤️ `some-key` → `someKey`, the record key every projection below reads. */
+/** 🔤️ `some-key` → `someKey`, the record key every projection below reads. */
 function camel(key: string): string {
   return key.replace(/-([a-z0-9])/g, (_, letter: string) => letter.toUpperCase());
 }
 
-/** @emoji 🧩️ One `key=value key=value …` run (possibly multi-line) as a typed record; quoted values keep their spaces. */
+/** 🧩️ One `key=value key=value …` run (possibly multi-line) as a typed record; quoted values keep their spaces. */
 function parseAssignments(text: string): Record<string, unknown> {
   const record: Record<string, unknown> = {};
   for (const token of tokenize(text)) {
@@ -134,7 +134,7 @@ function parseAssignments(text: string): Record<string, unknown> {
   return record;
 }
 
-/** @emoji 📄️ A `{ … }` statement run as one record per line — the shape `#[dsl(statements, block)]` fields (`FemLoadCase::loads`) and `elements { … }` both print. */
+/** 📄️ A `{ … }` statement run as one record per line — the shape `#[dsl(statements, block)]` fields (`FemLoadCase::loads`) and `elements { … }` both print. */
 function parseStatements(body: string): FemDslStatement[] {
   const statements: FemDslStatement[] = [];
   for (const rawLine of body.split(/\r?\n/)) {
@@ -155,7 +155,7 @@ function parseStatements(body: string): FemDslStatement[] {
   return statements;
 }
 
-/** @emoji 🔢️ Coerces one token to its typed value: `_` is the DSL's "absent" marker, quantities drop their unit suffix (`-4m` → `-4`, `210000000000Pa` → `2.1e11`), `x,y` coordinate pairs become number tuples, `[ … ]` becomes a list and `{ … }` a MAP record or a statement list. A `TEXT`/`ID`/`BOOL` column never has its unit stripped, so an id like `chs76` stays a string. */
+/** 🔢️ Coerces one token to its typed value: `_` is the DSL's "absent" marker, quantities drop their unit suffix (`-4m` → `-4`, `210000000000Pa` → `2.1e11`), `x,y` coordinate pairs become number tuples, `[ … ]` becomes a list and `{ … }` a MAP record or a statement list. A `TEXT`/`ID`/`BOOL` column never has its unit stripped, so an id like `chs76` stays a string. */
 export function coerceFemDslValue(token: string, columnType?: string): unknown {
   if (token === "_") return undefined;
   if (token.startsWith('"')) return JSON.parse(token) as string;
@@ -178,7 +178,7 @@ export function coerceFemDslValue(token: string, columnType?: string): unknown {
   return token;
 }
 
-/** @emoji 🔤️ Column header `name:TYPE` → the camelCased record key plus the declared type. */
+/** 🔤️ Column header `name:TYPE` → the camelCased record key plus the declared type. */
 function parseColumnHeader(header: string): { readonly key: string; readonly type: string } {
   const colon = header.lastIndexOf(":");
   return { key: camel(colon > 0 ? header.slice(0, colon) : header), type: colon > 0 ? header.slice(colon + 1) : "TEXT" };
@@ -189,7 +189,7 @@ function parseColumnHeader(header: string): { readonly key: string; readonly typ
 const TABLE_HEADER = /^([a-z0-9-]+)\s*\[([^\]]*)\]\s*\{$/;
 const BLOCK_HEADER = /^([a-z0-9-]+)\s*\{$/;
 
-/** @emoji 🧮️ Net brace depth a line contributes, ignoring braces inside a quoted string. */
+/** 🧮️ Net brace depth a line contributes, ignoring braces inside a quoted string. */
 function braceDelta(line: string): number {
   let delta = 0;
   let quoted = false;
@@ -201,7 +201,7 @@ function braceDelta(line: string): number {
   return delta;
 }
 
-/** @emoji 📖️ Parses one `🗣️.dsl.semio` fem document. Throws on a missing/foreign banner rather than returning a half-read document — a story rendering nothing is far harder to diagnose than a thrown fixture error. */
+/** 📖️ Parses one `🗣️.dsl.semio` fem document. Throws on a missing/foreign banner rather than returning a half-read document — a story rendering nothing is far harder to diagnose than a thrown fixture error. */
 export function parseFemDsl(text: string): FemDslDocument {
   const lines = text.split(/\r?\n/);
   const banner = /^semio\s+(\S+)\s+v(\S+)\s*$/.exec(lines[0] ?? "");
@@ -266,7 +266,7 @@ export type FemMaterial = { readonly id: string; readonly name: string; readonly
 export type FemSection = { readonly id: string; readonly name: string; readonly area: number; readonly iy: number };
 export type FemAnalysisSettings = { readonly modalCount: number; readonly bucklingCount: number; readonly deformationScale: number };
 
-/** @emoji 🏋️ One applied load, flattened across `FemLoad`'s three variants (`◻️2d/🦀️.rs`'s `Nodal`/`MemberUdl`/`Area`). */
+/** 🏋️ One applied load, flattened across `FemLoad`'s three variants (`◻️2d/🦀️.rs`'s `Nodal`/`MemberUdl`/`Area`). */
 export type FemLoad = {
   readonly kind: string;
   readonly id: string;
@@ -288,7 +288,7 @@ export type Fem2dNode = { readonly id: string; readonly x: number; readonly y: n
 export type Fem2dElement = { readonly kind: string; readonly id: string; readonly start: string; readonly end: string; readonly materialId: string; readonly sectionId: string };
 export type Fem2dRegion = { readonly id: string; readonly name: string; readonly outline: readonly FemVec2[]; readonly holes: readonly FemVec2[]; readonly thickness: number; readonly materialId: string; readonly meshSize: number };
 
-/** @emoji ◻️ The subset of `Fem2dSnapshot` (`🗿️artifacts/◻️2d/🦀️.rs`) the 2D stories render. */
+/** ◻️ The subset of `Fem2dSnapshot` (`🗿️artifacts/◻️2d/🦀️.rs`) the 2D stories render. */
 export type Fem2dSnapshot = {
   readonly nodes: readonly Fem2dNode[];
   readonly elements: readonly Fem2dElement[];
@@ -305,7 +305,7 @@ export type Fem3dNode = { readonly id: string; readonly x: number; readonly y: n
 export type Fem3dElement = { readonly kind: string; readonly id: string; readonly start: string; readonly end: string; readonly materialId: string; readonly sectionId: string; readonly roll: number };
 export type Fem3dSolid = { readonly id: string; readonly name: string; readonly outline: readonly FemVec2[]; readonly holes: readonly FemVec2[]; readonly baseZ: number; readonly height: number; readonly layers: number; readonly meshSize: number; readonly materialId: string; readonly axis: "x" | "y" | "z" };
 
-/** @emoji 🧊️ The subset of `Fem3dSnapshot` (`🗿️artifacts/🧊️3d/🦀️.rs`) the 3D stories render. */
+/** 🧊️ The subset of `Fem3dSnapshot` (`🗿️artifacts/🧊️3d/🦀️.rs`) the 3D stories render. */
 export type Fem3dSnapshot = {
   readonly nodes: readonly Fem3dNode[];
   readonly elements: readonly Fem3dElement[];
@@ -361,7 +361,7 @@ function combinations(rows: readonly Readonly<Record<string, unknown>>[] | undef
   return (rows ?? []).map((row) => ({ id: text(row.id), name: text(row.name) }));
 }
 
-/** @emoji 🏋️ A `loads:BLOCK` cell's statement run → the flattened `FemLoad` rows the structure layers draw vectors for. The `member-udl` keyword is accepted in both its DSL (`member-udl`) and camelCase spellings. */
+/** 🏋️ A `loads:BLOCK` cell's statement run → the flattened `FemLoad` rows the structure layers draw vectors for. The `member-udl` keyword is accepted in both its DSL (`member-udl`) and camelCase spellings. */
 function loads(cell: unknown): readonly FemLoad[] {
   if (!Array.isArray(cell)) return [];
   return (cell as readonly FemDslStatement[]).map((statement) => {
@@ -387,7 +387,7 @@ function loadCases(rows: readonly Readonly<Record<string, unknown>>[] | undefine
   return (rows ?? []).map((row) => ({ id: text(row.id), name: text(row.name), loads: loads(row.loads), selfWeight: flag(row.selfWeight) }));
 }
 
-/** @emoji ◻️ `fem.fem2d.dsl` → the `Fem2dSnapshot` slice the 2D stories render. */
+/** ◻️ `fem.fem2d.dsl` → the `Fem2dSnapshot` slice the 2D stories render. */
 export function parseFem2dDsl(dslText: string): Fem2dSnapshot {
   const doc = parseFemDsl(dslText);
   return {
@@ -418,7 +418,7 @@ export function parseFem2dDsl(dslText: string): Fem2dSnapshot {
   };
 }
 
-/** @emoji 🧊️ `fem.fem3d.dsl` → the `Fem3dSnapshot` slice the 3D stories render. */
+/** 🧊️ `fem.fem3d.dsl` → the `Fem3dSnapshot` slice the 3D stories render. */
 export function parseFem3dDsl(dslText: string): Fem3dSnapshot {
   const doc = parseFemDsl(dslText);
   return {
@@ -453,10 +453,10 @@ export function parseFem3dDsl(dslText: string): Fem3dSnapshot {
   };
 }
 
-/** @emoji 🕳️ `crate::artifacts::fem2d::schema::empty_fem2d_snapshot()`'s story twin — what `setActiveExample` loads for any id other than the bundled example's own. */
+/** 🕳️ `crate::artifacts::fem2d::schema::empty_fem2d_snapshot()`'s story twin — what `setActiveExample` loads for any id other than the bundled example's own. */
 export const EMPTY_FEM2D_SNAPSHOT: Fem2dSnapshot = { nodes: [], elements: [], supports: [], regions: [], materials: [], sections: [], loadCases: [], combinations: [], analysis: { modalCount: 3, bucklingCount: 3, deformationScale: 1 } };
 
-/** @emoji 🕳️ `Fem3dSnapshot::default()`'s story twin — what fem3d's `setActiveExample` loads for any id other than `"default"`. */
+/** 🕳️ `Fem3dSnapshot::default()`'s story twin — what fem3d's `setActiveExample` loads for any id other than `"default"`. */
 export const EMPTY_FEM3D_SNAPSHOT: Fem3dSnapshot = { nodes: [], elements: [], supports: [], solids: [], materials: [], sections: [], loadCases: [], combinations: [], analysis: { modalCount: 3, bucklingCount: 3, deformationScale: 1 } };
 //#endregion 🔖️Projections
 
@@ -515,7 +515,7 @@ const FEM_STORY_TEXT: Readonly<Record<FemStoryTextKey, Readonly<Record<FemStoryL
   omitted: { "en-US": "Not rendered here", "de-DE": "Hier nicht gezeichnet" },
 };
 
-/** @emoji 🗣️ One label in the requested locale. Throws on an unknown key so a typo surfaces at render time instead of printing `undefined` into the panel. */
+/** 🗣️ One label in the requested locale. Throws on an unknown key so a typo surfaces at render time instead of printing `undefined` into the panel. */
 export function femStoryLabel(key: FemStoryTextKey, locale: FemStoryLocale): string {
   const entry = FEM_STORY_TEXT[key];
   if (!entry) throw new Error(`[fem-story] unknown label key ${JSON.stringify(key)}`);
@@ -524,7 +524,7 @@ export function femStoryLabel(key: FemStoryTextKey, locale: FemStoryLocale): str
 //#endregion 🔖️Locale
 
 //#region 🔖️Fixtures
-/** @emoji 🎬️ The single `📚️examples/*` unit each fem subset registers (`🌐️any/🦀️.rs`'s `examples()`), keyed by the id its `ExampleSource` carries. */
+/** 🎬️ The single `📚️examples/*` unit each fem subset registers (`🌐️any/🦀️.rs`'s `examples()`), keyed by the id its `ExampleSource` carries. */
 export const FEM2D_STORY_EXAMPLE_ID = "demo";
 
 /** 🎬️ The registered example and an explicit empty-document selection. */
@@ -534,12 +534,12 @@ export const FEM3D_CLEARED_EXAMPLE_ID = "cleared";
 export const FEM2D_DEMO_SNAPSHOT: Fem2dSnapshot = parseFem2dDsl(fem2dDemoDsl);
 export const FEM3D_DEMO_SNAPSHOT: Fem3dSnapshot = parseFem3dDsl(fem3dDemoDsl);
 
-/** @emoji 📨️ `ActionDescriptor.args` is declared `unknown`, so every story reducer narrows it here once instead of casting at each read. A non-object payload becomes an empty bag, exactly as a Rust handler sees no named arguments. */
+/** 📨️ `ActionDescriptor.args` is declared `unknown`, so every story reducer narrows it here once instead of casting at each read. A non-object payload becomes an empty bag, exactly as a Rust handler sees no named arguments. */
 export function femStoryActionArgs(args: unknown): Record<string, unknown> {
   return typeof args === "object" && args !== null && !Array.isArray(args) ? (args as Record<string, unknown>) : {};
 }
 
-/** @emoji 🪪️ Port of `crate::app_surface::next_id` (`⚙️engine/🖥️app-surface/🦀️.rs`): the smallest `"{prefix}{n}"` not already taken, starting at the current count. */
+/** 🪪️ Port of `crate::app_surface::next_id` (`⚙️engine/🖥️app-surface/🦀️.rs`): the smallest `"{prefix}{n}"` not already taken, starting at the current count. */
 export function femNextId(existing: Iterable<string>, prefix: string): string {
   const ids = new Set(existing);
   let index = ids.size;
@@ -549,7 +549,7 @@ export function femNextId(existing: Iterable<string>, prefix: string): string {
 //#endregion 🔖️Fixtures
 
 //#region 🔖️Omissions
-/** @emoji 🕳️ One half of a window's Rust render this story cannot reproduce in the browser, with the reason — surfaced in every debug readout so a blank region is never mistaken for a bug. */
+/** 🕳️ One half of a window's Rust render this story cannot reproduce in the browser, with the reason — surfaced in every debug readout so a blank region is never mistaken for a bug. */
 export type FemStoryOmission = { readonly id: string; readonly reason: string };
 
 export const FEM2D_MESH_PREVIEW_OMISSION: FemStoryOmission = {
@@ -572,26 +572,26 @@ export const FEM3D_SOLVER_OMISSION: FemStoryOmission = {
   reason: "fem3d_solve_all is Rust-only (plugin wasm); the results scene renders the undeformed, uncolored structure",
 };
 
-/** @emoji 🕳️ The omission list as flat JSON for a `data-testid`'d debug panel. */
+/** 🕳️ The omission list as flat JSON for a `data-testid`'d debug panel. */
 export function femStoryOmissions(omissions: readonly FemStoryOmission[]): readonly FemStoryOmission[] {
   return omissions;
 }
 //#endregion 🔖️Omissions
 
 //#region 🔖️Fem2dScene
-/** @emoji 📐️ `SCALE_2D` — model metres to screen pixels (`🪟️windows/🧱️model/🦀️.rs`). */
+/** 📐️ `SCALE_2D` — model metres to screen pixels (`🪟️windows/🧱️model/🦀️.rs`). */
 const FEM2D_SCALE = 20;
-/** @emoji 📐️ `ORIGIN_2D` — screen-space offset so a structure anchored at (0,0) is not drawn at the canvas corner. */
+/** 📐️ `ORIGIN_2D` — screen-space offset so a structure anchored at (0,0) is not drawn at the canvas corner. */
 const FEM2D_ORIGIN = 40;
 
-/** @emoji 📐️ Port of `screen_2d`: model coordinates to the canvas' own screen space (y flipped). */
+/** 📐️ Port of `screen_2d`: model coordinates to the canvas' own screen space (y flipped). */
 export function femScreen2d(x: number, y: number): FemVec2 {
   return [x * FEM2D_SCALE + FEM2D_ORIGIN, -y * FEM2D_SCALE + FEM2D_ORIGIN];
 }
 
 type FemLayer = Record<string, unknown>;
 
-/** @emoji ➡️ Port of `vector_layer`: a two-point polyline from `origin` along `vector`, y negated. */
+/** ➡️ Port of `vector_layer`: a two-point polyline from `origin` along `vector`, y negated. */
 function femVectorLayer(id: string, origin: FemVec2, vector: FemVec2, color: string): FemLayer {
   return { kind: "polyline", id, points: [[origin[0], origin[1]], [origin[0] + vector[0], origin[1] - vector[1]]], color };
 }
@@ -601,7 +601,7 @@ function femSign(value: number): number {
 }
 
 /**
- * @emoji 🖼️ Port of `fem2d_structure_layers`: one circle per node, one line per member, one circle per
+ * 🖼️ Port of `fem2d_structure_layers`: one circle per node, one line per member, one circle per
  * support and one red vector per load, in exactly the Rust order and with the Rust's own ids
  * (`node-<id>` / `el-<id>` / `support-<id>` / `load-<id>`). The three colors are the caller's, matching the
  * two Rust call sites: bright (`#38bdf8`/`#94a3b8`/`#f97316`) for the model window, a single muted
@@ -661,7 +661,7 @@ export function fem2dStructureLayers(snapshot: Fem2dSnapshot, nodeColor: string,
 /** 🎥️ Initial navigation for a newly opened FEM 2D window. */
 export const FEM2D_DEFAULT_CAMERA: Viewport2d = { x: 0, y: 0, zoom: 1 };
 
-/** @emoji 📐️ The `canvas-2d` scene node a fem2d window renders, projected the way `crate::app_surface::canvas_2d_surface` encodes it — `surfaceId` is the window's own `BODY_KEY`. */
+/** 📐️ The `canvas-2d` scene node a fem2d window renders, projected the way `crate::app_surface::canvas_2d_surface` encodes it — `surfaceId` is the window's own `BODY_KEY`. */
 export function buildFem2dSceneNode(layers: readonly FemLayer[], camera: Viewport2d, bodyKey: string, controllerId: string) {
   return {
     type: "componentScene",
@@ -674,27 +674,27 @@ export function buildFem2dSceneNode(layers: readonly FemLayer[], camera: Viewpor
 //#endregion 🔖️Fem2dScene
 
 //#region 🔖️Fem3dScene
-/** @emoji 🧊️ `NODE_SIZE_3D` / `MEMBER_THICKNESS_3D` (`🗿️artifacts/🧊️3d/…/✏️editor/🦀️.rs`). */
+/** 🧊️ `NODE_SIZE_3D` / `MEMBER_THICKNESS_3D` (`🗿️artifacts/🧊️3d/…/✏️editor/🦀️.rs`). */
 const FEM3D_NODE_SIZE = 0.05;
 const FEM3D_MEMBER_THICKNESS = 0.05;
 
 type FemQuat = readonly [number, number, number, number];
 type FemVec3 = readonly [number, number, number];
 
-/** @emoji 🧭️ Port of `quat_mul`: Hamilton product `a * b`, both `[x,y,z,w]`. */
+/** 🧭️ Port of `quat_mul`: Hamilton product `a * b`, both `[x,y,z,w]`. */
 function quatMul(a: FemQuat, b: FemQuat): FemQuat {
   const [ax, ay, az, aw] = a;
   const [bx, by, bz, bw] = b;
   return [aw * bx + ax * bw + ay * bz - az * by, aw * by - ax * bz + ay * bw + az * bx, aw * bz + ax * by - ay * bx + az * bw, aw * bw - ax * bx - ay * by - az * bz];
 }
 
-/** @emoji 🧭️ Port of `quat_roll_z`: `roll` radians about the local +Z axis. */
+/** 🧭️ Port of `quat_roll_z`: `roll` radians about the local +Z axis. */
 function quatRollZ(roll: number): FemQuat {
   const half = roll / 2;
   return [0, 0, Math.sin(half), Math.cos(half)];
 }
 
-/** @emoji 🧭️ Port of `quat_z_to`: shortest-arc rotation taking local +Z (the `"box"` mesh's long axis) onto unit `dir`, with the antiparallel case flipped 180° about X. */
+/** 🧭️ Port of `quat_z_to`: shortest-arc rotation taking local +Z (the `"box"` mesh's long axis) onto unit `dir`, with the antiparallel case flipped 180° about X. */
 function quatZTo(dir: FemVec3): FemQuat {
   const dot = Math.min(1, Math.max(-1, dir[2]));
   if (dot > 0.999999) return [0, 0, 0, 1];
@@ -705,7 +705,7 @@ function quatZTo(dir: FemVec3): FemQuat {
   return [(-dir[1] / axisLength) * sin, (dir[0] / axisLength) * sin, 0, Math.cos(half)];
 }
 
-/** @emoji 📦️ Port of `mesh_box(1,1,1)` + `compute_normals` (`🧰️framework/🔨️modules/🏗️mesh-engine/🦀️.rs`): six quads as twelve non-indexed triangles, so accumulated normals are flat per face. This is the `"box"` mesh `world3d_meshes_json_from_kinds(&["box"])` puts in every fem3d scene. */
+/** 📦️ Port of `mesh_box(1,1,1)` + `compute_normals` (`🧰️framework/🔨️modules/🏗️mesh-engine/🦀️.rs`): six quads as twelve non-indexed triangles, so accumulated normals are flat per face. This is the `"box"` mesh `world3d_meshes_json_from_kinds(&["box"])` puts in every fem3d scene. */
 function femUnitBoxMeshData(): { readonly positions: number[]; readonly normals: number[]; readonly indices: number[] } {
   const h = 0.5;
   const faces: readonly (readonly FemVec3[])[] = [
@@ -739,7 +739,7 @@ function femUnitBoxMeshData(): { readonly positions: number[]; readonly normals:
 export const FEM3D_BOX_MESHES: readonly Record<string, unknown>[] = [{ id: "box", data: femUnitBoxMeshData() }];
 
 /**
- * @emoji 🧊️ Port of `fem3d_structural_instances`: one small box per node, then one oriented box prism per
+ * 🧊️ Port of `fem3d_structural_instances`: one small box per node, then one oriented box prism per
  * `Bar`/`Frame` member — positioned at the midpoint, scaled `[t,t,length]` so the mesh's long local Z axis
  * stretches along the member, rotated by `quat_z_to(dir) * quat_roll_z(roll)`. Ids are the Rust's own
  * (`node-<id>` / `el-<id>`). `displacements` are always absent here (no solver in the browser), so this is
@@ -774,13 +774,13 @@ export function fem3dStructuralInstances(snapshot: Fem3dSnapshot): readonly Reco
 /** 🎥️ Initial navigation for a newly opened FEM 3D window. */
 export const FEM3D_INITIAL_VIEWPORT: Viewport3dOrbit = { position: [4, -4, 3], target: [0, 0, 0], zoom: 1 };
 
-/** @emoji ✅️ `world3d_selection_json("rectangle", &[], None)`. */
+/** ✅️ `world3d_selection_json("rectangle", &[], None)`. */
 const FEM3D_SELECTION_JSON = JSON.stringify({ method: "rectangle", mode: "replace", ids: [], hoveredId: null });
 
-/** @emoji 🌞️ `world3d_environment_json(&WorldSunConfig::default())`. */
+/** 🌞️ `world3d_environment_json(&WorldSunConfig::default())`. */
 const FEM3D_ENVIRONMENT_JSON = JSON.stringify({ sun: { enabled: false, azimuth: 45, elevation: 35, intensity: 0.85, color: "#ffffff" } });
 
-/** @emoji 🌐️ The `world-3d` scene node a fem3d window renders, projected the way `crate::app_surface::world_3d_surface` encodes it — `surfaceId` is the window's own body key. */
+/** 🌐️ The `world-3d` scene node a fem3d window renders, projected the way `crate::app_surface::world_3d_surface` encodes it — `surfaceId` is the window's own body key. */
 export function buildFem3dSceneNode(instances: readonly Record<string, unknown>[], camera: Viewport3dOrbit, bodyKey: string, controllerId: string) {
   return {
     type: "componentScene",
@@ -805,7 +805,7 @@ export type FemStoryResultDisplay = { readonly sourceId: string | null; readonly
 
 export const FEM_DEFAULT_RESULT_DISPLAY: FemStoryResultDisplay = { sourceId: null, mode: "static", modeIndex: 0 };
 
-/** @emoji 📊️ The case id `render_static` resolves: the selected `sourceId` when the document knows it, else the first load case, else none. The Rust filters against `fem2d_solve_all`'s result keys; with no solver here the document's own case/combination ids stand in, which is the same set for a solvable document. */
+/** 📊️ The case id `render_static` resolves: the selected `sourceId` when the document knows it, else the first load case, else none. The Rust filters against `fem2d_solve_all`'s result keys; with no solver here the document's own case/combination ids stand in, which is the same set for a solvable document. */
 export function femResolveResultCase(display: FemStoryResultDisplay, caseIds: readonly string[]): string | null {
   if (display.sourceId !== null && caseIds.includes(display.sourceId)) return display.sourceId;
   return caseIds[0] ?? null;
@@ -821,7 +821,7 @@ export type Fem2dStoryState = {
   readonly resultDisplay: FemStoryResultDisplay;
 };
 
-/** @emoji 🎬️ The state a fem2d session starts in for one example id — `"demo"` loads the bundled fixture, every other id an empty document, exactly as `setActiveExample`'s handler branches. */
+/** 🎬️ The state a fem2d session starts in for one example id — `"demo"` loads the bundled fixture, every other id an empty document, exactly as `setActiveExample`'s handler branches. */
 export function fem2dStoryStateFor(exampleId: string, locale: FemStoryLocale): Fem2dStoryState {
   return {
     exampleId,
@@ -927,7 +927,7 @@ export function reduceFem3dStoryAction(state: Fem3dStoryState, action: string, r
 //#endregion 🔖️Fem3dReducer
 
 //#region 🔖️RenderSummaries
-/** @emoji 📋️ The bilingual document readout every fem2d story shows beside its canvas — the counts the window's own scene is built from, so the panel stays assertable even when a layer kind is empty. */
+/** 📋️ The bilingual document readout every fem2d story shows beside its canvas — the counts the window's own scene is built from, so the panel stays assertable even when a layer kind is empty. */
 export function fem2dSummaryLines(snapshot: Fem2dSnapshot, locale: FemStoryLocale): readonly string[] {
   return [
     `${femStoryLabel("nodes", locale)}: ${snapshot.nodes.length}`,
@@ -942,7 +942,7 @@ export function fem2dSummaryLines(snapshot: Fem2dSnapshot, locale: FemStoryLocal
   ];
 }
 
-/** @emoji 📋️ The fem3d counterpart, with `solids` in place of `regions`. */
+/** 📋️ The fem3d counterpart, with `solids` in place of `regions`. */
 export function fem3dSummaryLines(snapshot: Fem3dSnapshot, locale: FemStoryLocale): readonly string[] {
   return [
     `${femStoryLabel("nodes", locale)}: ${snapshot.nodes.length}`,
@@ -957,7 +957,7 @@ export function fem3dSummaryLines(snapshot: Fem3dSnapshot, locale: FemStoryLocal
   ];
 }
 
-/** @emoji 📊️ The results-window caption line: `render_static`'s resolved case, or its `"No load case defined"` placeholder branch. */
+/** 📊️ The results-window caption line: `render_static`'s resolved case, or its `"No load case defined"` placeholder branch. */
 export function femResultCaptionLine(caseId: string | null, display: FemStoryResultDisplay, locale: FemStoryLocale): string {
   if (caseId === null) return femStoryLabel("noLoadCase", locale);
   const suffix = display.mode === "static" ? "" : ` #${display.modeIndex}`;

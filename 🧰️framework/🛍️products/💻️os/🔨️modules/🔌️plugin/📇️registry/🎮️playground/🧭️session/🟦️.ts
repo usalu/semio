@@ -42,7 +42,7 @@ export type PlaygroundSession = {
 };
 
 
-/** @emoji 🎮️ Builds the pre-expanded plugin list and host metadata for one playground launch. */
+/** 🎮️ Builds the pre-expanded plugin list and host metadata for one playground launch. */
 export function buildPlaygroundSession(variant: string, projection: GeneratedCatalogProjection = readGeneratedCatalogProjection()): PlaygroundSession {
   const hostMode = projectedHostPluginFilter(projection, variant);
   const playground = projection.playgrounds.find((entry) => entry.variant === variant || entry.aliases.includes(variant));
@@ -109,7 +109,7 @@ export function renderPlaygroundSessionTypeScript(variant: string, projection: G
 }
 
 
-/** @emoji 💾️ Writes the per-launch playground session artifact consumed by os/dev and wgpu boot. */
+/** 💾️ Writes the per-launch playground session artifact consumed by os/dev and wgpu boot. */
 export function writePlaygroundSession(variant: string, outPath: string, projection: GeneratedCatalogProjection = readGeneratedCatalogProjection()): PlaygroundSession {
   const session = buildPlaygroundSession(variant, projection);
   mkdirSync(dirname(outPath), { recursive: true });
@@ -118,7 +118,7 @@ export function writePlaygroundSession(variant: string, outPath: string, project
 }
 
 
-/** @emoji 🎮️ Stages one variant below its semantic session owner without changing the canonical default session. */
+/** 🎮️ Stages one variant below its semantic session owner without changing the canonical default session. */
 export async function stagePlaygroundSession(variant: string, sessionsRoot = join(import.meta.dir, "..", "..", "dist", "sessions"), projection: GeneratedCatalogProjection = readGeneratedCatalogProjection()): Promise<{ readonly path: string; readonly session: PlaygroundSession }> {
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(variant)) throw new Error(`Invalid playground session variant: ${variant}`);
   const output = join(sessionsRoot, variant);

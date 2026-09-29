@@ -20,9 +20,9 @@ mod tests {
         round_trip("capsule_J");
     }
 
+    /// 💲️ The `$…$` delimiters are input sugar only — stripped, not echoed into `src`.
     #[test]
     fn icon_codec_bare_dollar_sugar_decodes_as_math() {
-        // The `$…$` delimiters are input sugar only — stripped, not echoed into `src`.
         assert_eq!(decode_icon("$x^2$"), Some(Icon::Math { src: "x^2".to_string() }));
     }
 

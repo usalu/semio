@@ -6,7 +6,7 @@ import { TEXT_EDITOR_SCENE_LANES, textEditorSceneFromLanes } from "../../🟦️
 
 test("text buffer carriers match their language-neutral schema", () => {
   expect(new Ajv().compile(schema)(fixture)).toBe(true);
-  expect(TEXT_EDITOR_SCENE_LANES).toEqual([{ lane: "buffer", field: fixture.field, bodyKey: fixture.laneKey, optional: false }]);
+  expect(TEXT_EDITOR_SCENE_LANES).toEqual<readonly { lane: string; field: string; bodyKey: string; optional: boolean }[]>([{ lane: "buffer", field: fixture.field, bodyKey: fixture.laneKey, optional: false }]);
 });
 
 for (const row of fixture.cases) {

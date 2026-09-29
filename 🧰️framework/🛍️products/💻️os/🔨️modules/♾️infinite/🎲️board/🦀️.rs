@@ -43,10 +43,10 @@ pub mod scene_json {
         pub style: Option<String>,
         #[serde(default)]
         pub text: Option<String>,
-        /// @emoji 🏷️ Runtime host encoding: catalog id from the baked icon table or inline SVG (`<?xml` / `<svg` …) parsed at detail LOD.
+        /// 🏷️ Runtime host encoding: catalog id from the baked icon table or inline SVG (`<?xml` / `<svg` …) parsed at detail LOD.
         #[serde(default)]
         pub icon_kind: Option<String>,
-        /// @emoji 🧩️ Semantic node-kind id for compatibility rows at `node` specificity.
+        /// 🧩️ Semantic node-kind id for compatibility rows at `node` specificity.
         #[serde(default)]
         pub node_kind: Option<String>,
         #[serde(default)]
@@ -199,7 +199,7 @@ pub trait GraphExtension: canvas::CanvasExtension {}
 // #endregion 🔖️GraphExtension
 
 // #region 🔖️RenderScene
-/// @emoji 🎨️ Encodes a batch of edge curves into a stroked vello scene.
+/// 🎨️ Encodes a batch of edge curves into a stroked vello scene.
 pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> canvas::Scene {
     let mut scene = canvas::Scene::new();
     let stroke = canvas::Stroke::new(stroke_width);
@@ -264,7 +264,7 @@ enum HitObject<E> {
     Node(NodeId),
 }
 
-/// @emoji 🎯️ One graph pick target with generality rank (lower = more general).
+/// 🎯️ One graph pick target with generality rank (lower = more general).
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 pub struct GraphPickTarget {
     pub domain: String,
@@ -1200,7 +1200,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         self.pointer_down_screen(x, y, x, y, 0, extend_selection, false, false);
     }
 
-    /// @emoji 📦️ Starts a group drag when `point` lies inside the padded union bounds of draggable selected nodes.
+    /// 📦️ Starts a group drag when `point` lies inside the padded union bounds of draggable selected nodes.
     pub fn try_begin_selection_union_drag_at(&mut self, point: Point, pad_world: f64) -> bool {
         let members: Vec<NodeId> = self.selection.node_ids.iter().copied().filter(|id| self.nodes.get(id).is_some_and(|n| n.draggable)).collect();
         if members.is_empty() {
@@ -1245,7 +1245,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         true
     }
 
-    /// @emoji 🫳️ Starts dragging a selected draggable node (or its multi-selection group) from `point`.
+    /// 🫳️ Starts dragging a selected draggable node (or its multi-selection group) from `point`.
     pub fn try_begin_selected_node_drag_at(&mut self, node_id: NodeId, point: Point) -> bool {
         if !self.selection.node_ids.contains(&node_id) {
             return false;
@@ -1273,7 +1273,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         true
     }
 
-    /// @emoji 🫳️ Selects a draggable node and starts moving it from `point`.
+    /// 🫳️ Selects a draggable node and starts moving it from `point`.
     pub fn pointer_down_on_draggable_node_at(&mut self, node_id: NodeId, point: Point, shift: bool, ctrl_or_meta: bool) {
         let merge_mode = pick_merge_mode_for_modifiers(ctrl_or_meta, shift, self.selection_options.mode.as_str());
         let merge_from_modifiers = ctrl_or_meta || shift;
@@ -1303,7 +1303,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         self.update_hover(Some(node_id));
     }
 
-    /// @emoji 🪝️ Merges a handle into the engine selection without starting edge draw.
+    /// 🪝️ Merges a handle into the engine selection without starting edge draw.
     pub fn select_handle_with_mode(&mut self, handle_id: HandleId, mode: &str) {
         if !self.selection_options.select_handles || !P::HAS_PORTS {
             return;
@@ -1317,6 +1317,8 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
 
     /// 🖱️ Flat pointer-event fields (screen/world coords, button, modifiers) mirror this repo's shared WASM host-bridge pointer contract, matched by every sibling board/editor/layout crate's `pointer_*_screen` — not bundled into a struct, to keep the JS-callable surface a plain positional arg list.
     /// Primary (`button == 0`) selects and may start drag / marquee / edge-draw. Secondary (`button == 2`) only updates selection/hover for context menus — never moves nodes.
+    ///
+    /// 🖱️ Secondary/middle empty presses must not clear selection — context menus and pan gestures own those buttons.
     #[allow(clippy::too_many_arguments, reason = "flat args mirror the shared WASM host-bridge pointer-event contract used across all `pointer_*_screen` methods in this repo")]
     pub fn pointer_down_screen(&mut self, screen_x: f64, screen_y: f64, world_x: f64, world_y: f64, button: u8, shift: bool, ctrl_or_meta: bool, _alt: bool) {
         self.proximity_connection = None;
@@ -1379,7 +1381,6 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
                 self.update_hover(None);
             }
             None => {
-                // 🖱️ Secondary/middle empty presses must not clear selection — context menus and pan gestures own those buttons.
                 self.update_hover(None);
                 self.interaction = InteractionMode::Idle;
             }
@@ -1510,6 +1511,9 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         self.pointer_up_screen(x, y, x, y, false, false, false);
     }
 
+    /// 🔌️ Dragging a wired endpoint off its port and releasing over nothing is the
+    /// reconnect gesture's other outcome: the wire is CUT. Leaving it attached made
+    /// wire deletion unreachable from the pointer altogether.
     #[allow(clippy::too_many_arguments, reason = "flat args mirror the shared WASM host-bridge pointer-event contract used across all `pointer_*_screen` methods in this repo")]
     pub fn pointer_up_screen(&mut self, screen_x: f64, screen_y: f64, world_x: f64, world_y: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
         let point = Point::new(world_x, world_y);
@@ -1535,9 +1539,6 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
                         };
                         self.try_connect_handles(source_hid, target_handle, reconnecting);
                     } else if let Some(edge_id) = reconnecting {
-                        // 🔌️ Dragging a wired endpoint off its port and releasing over nothing is the
-                        // reconnect gesture's other outcome: the wire is CUT. Leaving it attached made
-                        // wire deletion unreachable from the pointer altogether.
                         self.remove_edge(edge_id);
                     }
                 }
@@ -2197,7 +2198,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         None
     }
 
-    /// @emoji 🎯️ Returns every graph entity under a world point for pick disambiguation menus.
+    /// 🎯️ Returns every graph entity under a world point for pick disambiguation menus.
     pub fn hit_test_pick_targets(&self, point: Point) -> Vec<GraphPickTarget> {
         let mut out = Vec::new();
         for node in self.nodes.values().rev() {

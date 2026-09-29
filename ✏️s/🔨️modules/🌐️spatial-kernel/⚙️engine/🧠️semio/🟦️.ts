@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🧠️ `@semio-tech/cad-js/spatial-kernel/semio` — first-party `SpatialKernel` backed by the
+/** 🧠️ `@semio-tech/cad-js/spatial-kernel/semio` — first-party `SpatialKernel` backed by the
  * Rust `BrepKernel` (`Brep`, `semio-s-plugin-stdio`'s `🧊️brep` subset) over the existing
  * `flow_core` wasm JS→Rust bridge (`invokeBrep`/`brep_invoke`, see
  * `🧰️framework/🔨️modules/🧊️3d/🟦️.ts` and `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📐️brep-geometry/🦀️.rs`).
@@ -72,14 +72,14 @@ interface RawTopology {
   readonly shells: readonly string[];
 }
 
-/** @emoji 🔑️ Quantized face/vertex normal key (1e-3 tolerance) used to map a Rust primitive's
+/** 🔑️ Quantized face/vertex normal key (1e-3 tolerance) used to map a Rust primitive's
  * analytically-ordered faces back onto the `Model` `FaceRef`s built by the SAME construction call
  * (`boxFaceNormalMap`), since `BrepKernel` primitive constructors carry no caller-chosen labels. */
 function normalKey(n: readonly [number, number, number]): string {
   return `${Math.round(n[0] * 1000)},${Math.round(n[1] * 1000)},${Math.round(n[2] * 1000)}`;
 }
 
-/** @emoji 📦️ Fixed face order every `boxModelDiff` call emits: bottom(-Z), top(+Z), y0(-Y), x1(+X), y1(+Y), x0(-X). */
+/** 📦️ Fixed face order every `boxModelDiff` call emits: bottom(-Z), top(+Z), y0(-Y), x1(+X), y1(+Y), x0(-X). */
 function boxFaceNormalMap(diff: ModelDiff): Map<string, FaceRef> {
   const faces = diff.faces?.added ?? [];
   const normals: readonly [number, number, number][] = [
@@ -120,7 +120,7 @@ function meshTransferFromInvoke(raw: RawMeshTransfer, faceNormalMap?: Map<string
   };
 }
 
-/** @emoji 🧭️ Axis-angle rotating world `+Z` onto a unit `target` direction (rotation line through the origin), used to place cylinder/cone primitives (canonical base-at-origin, axis `+Z`) onto an arbitrary `axis`. */
+/** 🧭️ Axis-angle rotating world `+Z` onto a unit `target` direction (rotation line through the origin), used to place cylinder/cone primitives (canonical base-at-origin, axis `+Z`) onto an arbitrary `axis`. */
 function axisAngleFromZ(target: Vec3): { readonly axis: Vec3; readonly angle: number } {
   const z: Vec3 = [0, 0, 1];
   const dot = Math.max(-1, Math.min(1, vec3Dot(z, target)));
@@ -132,7 +132,7 @@ function axisAngleFromZ(target: Vec3): { readonly axis: Vec3; readonly angle: nu
 // #endregion 🌉️InvokeShapes
 
 // #region 🔧️GeometryReconstruction
-/** @emoji 🧵️ Polyline-samples a `Model` wire's edges into world points (exact for straight edges, chordally approximated for arcs/circles/nurbs — `BrepKernel` has no generic wire-from-mixed-edges constructor yet, only `polyline_wire`/`rectangle_wire` from points). */
+/** 🧵️ Polyline-samples a `Model` wire's edges into world points (exact for straight edges, chordally approximated for arcs/circles/nurbs — `BrepKernel` has no generic wire-from-mixed-edges constructor yet, only `polyline_wire`/`rectangle_wire` from points). */
 function wirePolylinePoints(model: Model, wireId: WireRef, segments = 24): Vec3[] {
   const wire = geom(model).wires[String(wireId)];
   if (!wire) return [];
@@ -149,7 +149,7 @@ function wirePolylinePoints(model: Model, wireId: WireRef, segments = 24): Vec3[
   return points;
 }
 
-/** @emoji 🧊️ Rust `GeometryHandle` for a wire's polyline approximation. */
+/** 🧊️ Rust `GeometryHandle` for a wire's polyline approximation. */
 async function polylineWireHandle(model: Model, wireId: WireRef, segments = 24): Promise<string | null> {
   const points = wirePolylinePoints(model, wireId, segments);
   if (points.length < 2) return null;
@@ -157,7 +157,7 @@ async function polylineWireHandle(model: Model, wireId: WireRef, segments = 24):
   return handle;
 }
 
-/** @emoji 🏗️ Rust `GeometryHandle` for one Rust primitive matching a `SolidPrimitive` record, placed to match the record's world transform. */
+/** 🏗️ Rust `GeometryHandle` for one Rust primitive matching a `SolidPrimitive` record, placed to match the record's world transform. */
 async function primitiveHandle(solid: SolidPrimitive): Promise<string> {
   if (solid.kind === "sphere") {
     const { handle } = await invokeBrep<{ readonly handle: string }>("sphere", { radius: solid.radius });
@@ -194,7 +194,7 @@ async function primitiveHandle(solid: SolidPrimitive): Promise<string> {
   return t.handle;
 }
 
-/** @emoji 🧵️ Assembles a Rust solid handle from a `Model` shell's planar faces (`sewFaces` + `healSolid`) — best-effort topology reconstruction for shells not covered by `primitiveHandle` (e.g. edited/extruded solids). Non-planar faces are dropped from the sew set (their wire is still polyline-approximated). */
+/** 🧵️ Assembles a Rust solid handle from a `Model` shell's planar faces (`sewFaces` + `healSolid`) — best-effort topology reconstruction for shells not covered by `primitiveHandle` (e.g. edited/extruded solids). Non-planar faces are dropped from the sew set (their wire is still polyline-approximated). */
 async function shellSolidHandle(model: Model, cell: SolidRecord): Promise<string | null> {
   const faceHandles: string[] = [];
   for (const shellId of cell.shellIds) {
@@ -699,7 +699,7 @@ class SemioBrepEngine {
 // #endregion 🧠️SemioBrepEngine
 
 // #region 🔌️SemioBrepKernel
-/** @emoji 🧠️ THE production CAD `SpatialKernel`: OCCT-backed methods route through the Rust
+/** 🧠️ THE production CAD `SpatialKernel`: OCCT-backed methods route through the Rust
  * `BrepKernel` via `invokeBrep`; every preview-math method is inherited unchanged from
  * `PreciseSpatialKernelMath`. */
 export class SemioBrepKernel extends PreciseSpatialKernelMath implements SpatialKernel {
@@ -774,8 +774,13 @@ export const semioBrepKernel = new SemioBrepKernel();
 // #endregion 🔌️SemioBrepKernel
 
 // #region 🧪️Tests
+/** 🎒️ The values this module hands its extracted suite `./🧪️tests/🧪️semio-tech-cad-js-spatial-kernel-semio/🟦️.ts`. */
+export type SemioTestDependencies = {
+  readonly SemioBrepKernel: typeof SemioBrepKernel;
+};
+
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️semio-tech-cad-js-spatial-kernel-semio/🟦️.ts");
-  await registerTests1(import.meta.vitest, { SemioBrepKernel }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { SemioBrepKernel }, { url: import.meta.url });
 }
 // #endregion 🧪️Tests

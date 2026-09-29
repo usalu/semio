@@ -179,7 +179,6 @@ fn intrinsic_maps_restore_exact_values_without_requiring_authored_key_positions(
             assert_eq!(apply_snapshot_patch(&changed, &inverse_snapshot_patch(&hash, &patch).unwrap()).unwrap(), hash);
         }
     }
-    eprintln!("[DEBUG] positioned patch insertion and rename restored ordered values and intrinsic map contents");
 }
 
 #[test]
@@ -206,7 +205,6 @@ fn positioned_insertions_preserve_nested_typed_object_order() {
         let result = SnapshotPatch::parse_op(&wire).ok().and_then(|patch| apply_snapshot_patch(&before, &patch).ok());
         assert!(result.is_none());
     }
-    println!("[DEBUG] Compact native patches retain object key positions through typed nested fields and exact undo");
 }
 
 #[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]

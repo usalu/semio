@@ -187,6 +187,26 @@ impl XlsxSnapshot {
         Ok(())
     }
 
+    /// 📗️ Resolves the main workbook part from the package root's officeDocument relationship (Transitional or Strict
+    /// relationship type).
+    pub fn workbook_part_path(&self) -> Option<String> {
+        use crate::standards::v_ecma_376::subsets::base::io::REL_TYPE_OFFICE_DOCUMENT_STRICT;
+        self.opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT).or_else(|| self.opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT_STRICT))
+    }
+
+    /// 📑️ Resolves every worksheet part by its ROLE — the targets of the main workbook's worksheet relationships
+    /// (Transitional or Strict type), independent of the part's path or its declared content type.
+    pub fn worksheet_part_paths(&self) -> Vec<String> {
+        use crate::standards::v_ecma_376::subsets::base::io::{REL_TYPE_WORKSHEET, REL_TYPE_WORKSHEET_STRICT};
+        let Some(workbook) = self.workbook_part_path() else { return Vec::new() };
+        self.opc
+            .relationships_for(&workbook)
+            .iter()
+            .filter(|relationship| relationship.rel_type == REL_TYPE_WORKSHEET || relationship.rel_type == REL_TYPE_WORKSHEET_STRICT)
+            .map(|relationship| resolve_relationship_target(&workbook, &relationship.target))
+            .collect()
+    }
+
     /// 📘️ Projects the spreadsheet view without creating persisted semantic authority.
     pub fn project_workbook(&self) -> Result<XlsxWorkbook, crate::standards::v_ecma_376::subsets::base::io::XlsxError> {
         crate::standards::v_ecma_376::subsets::base::io::import::deserializers::project_snapshot_workbook(self)

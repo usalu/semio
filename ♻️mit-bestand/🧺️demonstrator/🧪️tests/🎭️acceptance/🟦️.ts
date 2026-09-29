@@ -34,7 +34,7 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 // #endregion 🔌️Adapters
 
 //#region 🪪️BrandPaneIds
-/** @emoji 🪪️ Reads `🪧️brand.ts`'s pane ids as TEXT rather than importing it. Playwright loads specs
+/** 🪪️ Reads `🪧️brand.ts`'s pane ids as TEXT rather than importing it. Playwright loads specs
  * through Node's own ESM loader, and importing the brand module drags in the whole `@semio-tech/ui-react`
  * runtime — whose typed-scene catalog is a bare `.json` import that Node rejects without an
  * `import ... with { type: "json" }` attribute (`ERR_IMPORT_ATTRIBUTE_MISSING`). Vite rewrites that for the
@@ -47,23 +47,23 @@ function brandPaneIds(): readonly string[] {
 }
 //#endregion 🪪️BrandPaneIds
 
-/** @emoji ⏱️ Cold WASM plugin boots on a fresh page load can be slow (memory: "expect slow cold boots, be
+/** ⏱️ Cold WASM plugin boots on a fresh page load can be slow (memory: "expect slow cold boots, be
  * patient") — generous on purpose so this suite reports real content defects, not infra flakiness. */
 const SHELL_READY_TIMEOUT_MS = 120_000;
 const TEST_TIMEOUT_MS = 240_000;
 
-/** @emoji ⏳️ How long a window that IS expected to carry content may take to publish its first non-empty
+/** ⏳️ How long a window that IS expected to carry content may take to publish its first non-empty
  * frame after its surface host attaches — the shell reports "ready" as soon as the plugin's UI tree is
  * mounted, which is strictly before the guest's first scene/evaluation crosses the wire. */
 const SURFACE_CONTENT_TIMEOUT_MS = 60_000;
 
-/** 🔇️ Drops resource 404s and the repo's `[DEBUG] `-prefixed temporary diagnostics, which hosts emit at error level while a seam is being instrumented. */
+/** 🔇️ Drops resource 404s and the repo's `[TRACE] `-prefixed temporary diagnostics, which hosts emit at error level while a seam is being instrumented. */
 function significantConsoleErrors(messages: string[]): string[] {
-  return messages.filter((text) => !/Failed to load resource:.*\b40[0-9]\b/i.test(text) && !text.startsWith("[DEBUG] "));
+  return messages.filter((text) => !/Failed to load resource:.*\b40[0-9]\b/i.test(text) && !text.startsWith("[TRACE] "));
 }
 
 //#region 🆔️ElementId
-/** @emoji 🆔️ Local mirror of `framework/ui/elements/🆔️ElementId/🟦️.tsx`'s `elementIdSegment` — kept
+/** 🆔️ Local mirror of `framework/ui/elements/🆔️ElementId/🟦️.tsx`'s `elementIdSegment` — kept
  * as a tiny pure copy rather than importing the framework's React-bearing module into a Playwright spec. */
 function elementIdSegment(raw: string): string {
   let segment = "";
@@ -83,12 +83,12 @@ function elementIdSegment(raw: string): string {
   return segment;
 }
 
-/** @emoji 🪟️ Mirrors `framework/platform`'s `windowElementId(kindId)` → `"framework.window.<camelKindId>"`. */
+/** 🪟️ Mirrors `framework/platform`'s `windowElementId(kindId)` → `"framework.window.<camelKindId>"`. */
 function windowElementId(kindId: string): string {
   return `framework.window.${elementIdSegment(kindId)}`;
 }
 
-/** @emoji 🎯️ CSS selector for the element carrying `id` as either its real DOM id or a `data-element-alias`
+/** 🎯️ CSS selector for the element carrying `id` as either its real DOM id or a `data-element-alias`
  * token, scoped to one pane's shell root — mirrors `elementIdSelector`, scoped by `[data-shell-id]`. */
 function paneElementSelector(paneId: string, elementId: string): string {
   return `[data-shell-id="${paneId}"] [id="${elementId}"], [data-shell-id="${paneId}"] [data-element-alias~="${elementId}"]`;
@@ -98,7 +98,7 @@ function paneElementSelector(paneId: string, elementId: string): string {
 //#region 🚦️ShellReadiness
 type ShellOutcome = "ready" | "error" | "notFound";
 
-/** @emoji 🚦️ Waits for the pane's own `[data-shell-id]` root to report an outcome via the per-shell
+/** 🚦️ Waits for the pane's own `[data-shell-id]` root to report an outcome via the per-shell
  * `data-shell-ready`/`data-shell-error`/`data-shell-not-found` beacon (added alongside the pre-existing
  * global `document.documentElement` one specifically so a page hosting several shells can ask "is THIS
  * one ready" — see `ShellHost/🟦️.tsx`'s `#region 🔖️ReadinessBeacon`). */
@@ -119,7 +119,7 @@ async function waitForPaneShellOutcome(page: Page, paneId: string): Promise<Shel
   }, paneId) as Promise<ShellOutcome>;
 }
 
-/** @emoji 👋️ Dismisses an introduction overlay, by pointer first and by its own documented keyboard
+/** 👋️ Dismisses an introduction overlay, by pointer first and by its own documented keyboard
  * parity route second.
  *
  * `ui.introduction.skip` anchors itself to the surface the current tour step highlights
@@ -142,7 +142,7 @@ async function dismissIntroduction(page: Page, skip: Locator): Promise<void> {
   await expect(skip, "the introduction overlay must be dismissable").toHaveCount(0, { timeout: 15_000 });
 }
 
-/** @emoji 👋️ Every brand replays its own app-level introduction on load once focused
+/** 👋️ Every brand replays its own app-level introduction on load once focused
  * (`suppressAutoIntroduction={!focused}` is false for a hash-deep-linked, already-focused pane) — dismiss
  * it so it never shadows a later interaction. Absence is not an error (already dismissed, or this brand
  * has none left to show). */
@@ -154,7 +154,7 @@ async function dismissIntroductionIfPresent(page: Page, paneId: string): Promise
 //#region 🪟️SurfaceContent
 type WindowSurfaceKind = "world3d" | "nodeGraph" | "table" | "tree" | "tiledMap" | "placeholder";
 
-/** @emoji 🪟️ One window this pane is expected to open by default (per-app fixture/window research,
+/** 🪟️ One window this pane is expected to open by default (per-app fixture/window research,
  * `.🧬semio/…/DEMONSTRATOR-END-TO-END-ALL-APPS/📓️app-*.md`; the energie/statik entries were read off the
  * two standalone lanes instead, see `📓️fix-2026-09-17-energie-statik-acceptance-cases.md`).
  * `instanceIds` covers a window kind opened as
@@ -283,7 +283,7 @@ const PANE_CASES: readonly PaneCase[] = [
   },
 ];
 
-/** @emoji 📖️ Parses a `data-*-json` attribute into its array length, treating a missing/unparsable
+/** 📖️ Parses a `data-*-json` attribute into its array length, treating a missing/unparsable
  * attribute as zero rather than throwing — an absent attribute is itself evidence of "no content yet". */
 function jsonArrayLength(raw: string | null): number {
   if (!raw) return 0;
@@ -295,7 +295,7 @@ function jsonArrayLength(raw: string | null): number {
   }
 }
 
-/** @emoji ⏳️ A surface host attaches EMPTY and is filled by the first frame the guest publishes across
+/** ⏳️ A surface host attaches EMPTY and is filled by the first frame the guest publishes across
  * the wire, so a single sample right after the host becomes visible grades the boot gap, not the app: on
  * the 2026-09-16 serve generator's preview read `meshes=0` at 2.8 s and a 3689-byte `data-meshes-json`
  * once its `previewEval` run landed. This re-reads until the count is non-zero — it only ever waits on
@@ -311,7 +311,7 @@ async function settleContentCount(read: () => Promise<number>, requireContent: b
   return value;
 }
 
-/** @emoji 🌍️ `World3dHost` stamps its live scene straight onto `.semio-world-3d-host` as
+/** 🌍️ `World3dHost` stamps its live scene straight onto `.semio-world-3d-host` as
  * `data-meshes-json`/`data-instances-json` (`World3dHost/🟦️.tsx` ~line 5063) — reading those is
  * strictly more reliable than sampling canvas pixels (no readback-timing/`preserveDrawingBuffer` gotchas). */
 async function worldContentCount(container: Locator, requireContent = false): Promise<{ readonly hasScene: boolean; readonly meshes: number; readonly instances: number }> {
@@ -332,7 +332,7 @@ async function worldContentCount(container: Locator, requireContent = false): Pr
   return { hasScene: true, ...counts };
 }
 
-/** @emoji 🕸️ `NodeGraph` stamps its live flow document onto `.semio-node-graph-host` as
+/** 🕸️ `NodeGraph` stamps its live flow document onto `.semio-node-graph-host` as
  * `data-host-snapshot-json` (`NodeGraph/🟦️.tsx`'s `NodeGraphHost` render) — a real snapshot parses to a
  * JSON object carrying a `widgets[]`. That attribute was called `data-fixture-json` until commit
  * 8773331d23 ("Align plugin schemas, mutations, panels, and tests to snapshot-fixture-asset
@@ -358,7 +358,7 @@ async function nodeGraphWidgetCount(container: Locator, requireContent = false):
   return { hasScene: true, widgets };
 }
 
-/** @emoji 📊️ `Table`'s generic row primitive stamps `data-row-id` on every real data `<tr>`
+/** 📊️ `Table`'s generic row primitive stamps `data-row-id` on every real data `<tr>`
  * (`framework/ui/elements/📊️Table/🟦️.tsx` lines 201/262) — counting them is a direct, DOM-level
  * "does this table have rows" check with no reliance on cell text/locale. */
 async function tableRowCount(container: Locator, requireContent = false): Promise<{ readonly hasScene: boolean; readonly rows: number }> {
@@ -371,7 +371,7 @@ async function tableRowCount(container: Locator, requireContent = false): Promis
   return { hasScene: true, rows };
 }
 
-/** @emoji 🌳️ Two of energy's four windows (Structure, Energy simulation) have a plain framework `Tree`
+/** 🌳️ Two of energy's four windows (Structure, Energy simulation) have a plain framework `Tree`
  * for a body rather than a surface host — `TreeWindowKit` builds a `TreeView`, and `🌳️Tree/🟦️.tsx`
  * renders one `role="treeitem"` + `data-slot="tree-item-row"` element per row (lines ~1936/2013/2088).
  * There is no `.semio-…-host`/`.semio-…-empty` pair to look for, so "did this window resolve" is
@@ -384,7 +384,7 @@ async function treeRowCount(container: Locator, requireContent = false): Promise
   return { hasScene: true, rows };
 }
 
-/** @emoji 🗺️ `TiledMapHost` has no content-count DOM attribute (unlike the other three surfaces), so
+/** 🗺️ `TiledMapHost` has no content-count DOM attribute (unlike the other three surfaces), so
  * "did the map paint" has to be answered from pixels — but NOT by reading the live canvas back.
  *
  * The map is presented by the wasm/wgpu surface session, whose swap-chain is not a preserved drawing
@@ -413,7 +413,7 @@ async function tiledMapHasVisibleContent(page: Page, container: Locator, require
   return { hasScene: true, painted: distinctColors > 1, distinctColors };
 }
 
-/** @emoji 🎨️ Distinct RGBA values in the centre 60% of one element's composited screenshot; `1` means
+/** 🎨️ Distinct RGBA values in the centre 60% of one element's composited screenshot; `1` means
  * one flat colour and `0` means the grab could not be decoded. */
 async function countCanvasColors(page: Page, canvas: Locator): Promise<number> {
   const shot = (await canvas.screenshot()).toString("base64");
@@ -448,7 +448,7 @@ test("DEMONSTRATOR_PANES matches the pane ids this suite covers (drift guard)", 
 //#endregion 🧪️PaneConsistency
 
 //#region 🃏️OverviewCards
-/** @emoji 🃏️ Landing overview cards use window silhouettes (icon title chips, no drag handles). */
+/** 🃏️ Landing overview cards use window silhouettes (icon title chips, no drag handles). */
 test("demonstrator overview: pane cards use window-silhouette chrome without drag handles", async ({ page }) => {
   test.setTimeout(TEST_TIMEOUT_MS);
   const pageErrors: Error[] = [];
@@ -548,7 +548,7 @@ for (const paneCase of PANE_CASES) {
 }
 
 //#region 🎯️AussuchenSelection
-/** @emoji 🎯️ The other half of aussuchen's Preview window: picking a stock row must turn the
+/** 🎯️ The other half of aussuchen's Preview window: picking a stock row must turn the
  * `built_text_node(labels.no_selection)` placeholder into a real World3d scene.
  *
  * This is the served proof of the interaction-view threading wave

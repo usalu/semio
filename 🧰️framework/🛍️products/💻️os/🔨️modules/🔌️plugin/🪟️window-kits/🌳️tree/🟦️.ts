@@ -1,6 +1,6 @@
 // #region 🌳️TreeWindowKit
 /// <reference types="vitest/importMeta" />
-/** @emoji 🌳️ `@semio-tech/plugin-window-kits` — TS twin of Rust `TreeWindowKit` (`framework.window.tree`).
+/** 🌳️ `@semio-tech/plugin-window-kits` — TS twin of Rust `TreeWindowKit` (`framework.window.tree`).
  * ⚠️ The Rust twin is deliberately still on the old `ui_wgpu::wgpu::UiNode` return type this wave (see
  * `🔌️plugin/🦀️.rs` `#region 🔖️WindowKits`'s own doc comment, ticket
  * SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY packet `sdk-helpers`) — this file gets ahead of it onto the

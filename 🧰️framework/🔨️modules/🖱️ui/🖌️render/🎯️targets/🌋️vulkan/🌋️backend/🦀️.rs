@@ -1,4 +1,4 @@
-//! @emoji 🌋️ `VulkanBackend`: the concrete `ui_render::GraphicsBackend` implementation for Linux.
+//! 🌋️ `VulkanBackend`: the concrete `ui_render::GraphicsBackend` implementation for Linux.
 //!
 //! **Milestone reached: 1 (device + swapchain + resize + clear-colour frame), plus device-loss/
 //! recovery/`backend-testing` readback (milestone 6) and non-shader groundwork toward milestone 2.**

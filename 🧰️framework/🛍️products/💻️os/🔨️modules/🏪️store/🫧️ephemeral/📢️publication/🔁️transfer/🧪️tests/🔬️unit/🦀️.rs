@@ -55,7 +55,6 @@ fn ephemeral_transfer_preparation_preserves_handed_off_and_aliased_owners() {
         }
         assert!(cleanup.terminal_is_empty());
     }
-    eprintln!("[DEBUG] ephemeral transfer: handed-off and aliased roots survive close; abandoned 12KiB raw base roots retire with seven-byte grants");
 }
 
 #[test]
@@ -72,7 +71,6 @@ fn ephemeral_transfer_preparation_returns_rejected_mutation_ownership_intact() {
     let returned = match factory.begin(request) { Err(request) => request, Ok(_) => panic!("oversized retained capacity must reject") };
     assert_eq!(returned.mutation.as_ptr(), pointer);
     assert_eq!(returned.mutation, "retained rejection");
-    eprintln!("[DEBUG] ephemeral transfer: admission returns oversized mutation allocation intact");
 }
 
 #[test]
@@ -117,5 +115,4 @@ fn ephemeral_transfer_preparation_obeys_neutral_grants_and_bounded_retirement() 
         }
         assert!(preparation.terminal_is_empty());
     }
-    eprintln!("[DEBUG] ephemeral transfer: four neutral grant/cancel cases preserve serde values and allocation identity; 12KiB owners retire under one-item/seven-byte grants");
 }

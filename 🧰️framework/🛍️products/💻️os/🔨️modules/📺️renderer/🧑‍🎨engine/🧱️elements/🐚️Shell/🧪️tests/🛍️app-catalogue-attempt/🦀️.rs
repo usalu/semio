@@ -50,7 +50,6 @@ fn every_fixture_case_fetches_the_catalogue_once_per_app_instance_on_every_outco
                 fetched.push(index);
             }
         }
-        println!("[DEBUG] app-catalogue-attempt {name}: fetches {fetched:?} recorded={recorded:?}");
         assert_eq!(fetched, indices(case, "expectedFetchIndices"), "{name}: which refreshes fetched");
         assert_eq!(recorded, Some(case["recordedAfter"].as_u64().expect("recordedAfter") as u32), "{name}: recorded instance after the run");
     }
@@ -78,7 +77,6 @@ fn the_pre_fix_rule_refetches_a_failed_catalogue_on_every_refresh() {
         assert_eq!(baseline != expected, discriminates, "{name}: whether this case tells the two rules apart");
         if discriminates {
             discriminating += 1;
-            println!("[DEBUG] app-catalogue-attempt {name}: pre-fix {baseline:?} vs rule {expected:?}");
         }
     }
     assert!(discriminating >= 3, "the fixture must carry cases that fail on the pre-fix rule, got {discriminating}");

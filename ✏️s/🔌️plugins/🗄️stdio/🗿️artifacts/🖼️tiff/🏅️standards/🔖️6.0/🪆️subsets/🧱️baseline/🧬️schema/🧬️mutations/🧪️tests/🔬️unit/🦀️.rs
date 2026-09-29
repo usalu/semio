@@ -141,7 +141,6 @@ fn removing_strip_offsets_restores_the_neutral_fixture() {
     assert_eq!(actual, before);
     assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&actual)).unwrap(), serde_json::from_str::<serde_json::Value>(before_json).unwrap());
     assert!(inverse_tiff_baseline_mutation(&mutation, &after).is_empty());
-    eprintln!("[DEBUG] TIFF strip-offsets removal and inverse agree with the neutral fixtures");
 }
 
 /// 🧭️ An IFD 0 that never carried the tag inverts to its ABSENCE, not to a fabricated value —

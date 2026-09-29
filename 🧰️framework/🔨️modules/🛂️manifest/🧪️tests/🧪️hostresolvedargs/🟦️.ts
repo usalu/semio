@@ -48,7 +48,10 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         pluginId,
         label: pluginId,
         version: "1.0.0",
-        apps: apps.map((app) => ({ role: app.role, dialect: app.dialect, label: { native: app.label ?? { en: app.dialect.artifactKind, de: app.dialect.artifactKind } }, io: { artifactSchema: app.artifactSchema } })),
+        apps: apps.map((app) => {
+          const label = { native: app.label ?? { en: app.dialect.artifactKind, de: app.dialect.artifactKind } };
+          return { role: app.role, dialect: app.dialect, label, io: { artifactSchema: app.artifactSchema }, artifactKinds: app.artifactSchema === "" ? [] : [{ schema: app.artifactSchema, label }] };
+        }),
         workflows: [],
         examples: [],
       };
@@ -82,7 +85,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(artifactKindChoices(manifests, ["viewer"]).map((choice) => choice.kindId)).toEqual(["s.draw.draw"]);
     });
 
-    it("artifactKindChoices labels every choice with its kind's own label, never the shared editor app label", () => {
+    it("artifactKindChoices labels every choice with its package's declared kind label (viewers share their editor's kind), never the shared app label, and offers no undeclared kind", () => {
       const kind = (schema: string, en: string, de: string) => ({ schema, label: { native: { en, de }, reuse: { en, de } } });
       const editor = { native: { en: "Editor", de: "Editor" }, reuse: { en: "Editor", de: "Editor" } };
       const manifests = [
@@ -90,6 +93,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           apps: [
             { role: "editor", dialect: { artifactKind: "s.wfc.2d", standard: "1", subset: "*" }, label: editor, io: { artifactSchema: "wfc.2d" }, artifactKinds: [kind("wfc.2d", "2D", "2D")] },
             { role: "editor", dialect: { artifactKind: "s.wfc.3d", standard: "1", subset: "*" }, label: editor, io: { artifactSchema: "wfc.3d" } },
+            { role: "viewer", dialect: { artifactKind: "s.wfc.2d", standard: "1", subset: "*" }, label: editor, io: { artifactSchema: "wfc.2d" } },
+            { role: "editor", dialect: { artifactKind: "s.wfc.home", standard: "1", subset: "*" }, label: editor, io: { artifactSchema: "wfc.home" } },
           ],
           artifactKinds: [kind("wfc.3d", "3D", "3D")],
         },
@@ -98,6 +103,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(choices.map((choice) => choice.label)).toEqual([{ en: "2D", de: "2D" }, { en: "3D", de: "3D" }]);
       expect(new Set(choices.map((choice) => choice.label.en)).size).toBe(choices.length);
       expect(new Set(choices.map((choice) => choice.label.de)).size).toBe(choices.length);
+      expect(artifactKindChoices(manifests, ["viewer"]).map((choice) => choice.label)).toEqual([{ en: "2D", de: "2D" }]);
+      expect(choices.map((choice) => choice.kindId)).not.toContain("s.wfc.home");
     });
   });
 

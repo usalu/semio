@@ -41,7 +41,7 @@ export type PluginHostConfig = PluginHostMetadata & {
 \treadonly pluginId: string;
 };
 
-/** @emoji 🔏️ This module is bundled verbatim into the committed browser artifacts
+/** 🔏️ This module is bundled verbatim into the committed browser artifacts
  * (\`🧊️wgpu/🎞️frame-worker/🤖️generated/🟨️.js\`), so every row it carries must be a pure
  * function of TRACKED sources. Per-build artifact identity — \`wasmSha256\`/\`coreWasmSha256\`/
  * \`descriptorSha256\` — changes on every plugin core rebuild and therefore lives ONLY in the descriptor
@@ -56,15 +56,15 @@ export type PluginBuildTarget = {
 \treadonly capabilities: readonly string[];
 \treadonly contributes: readonly string[];
 \treadonly consumes: readonly string[];
-\t/** @emoji 🔗️ The runtime actor dependencies this crate declares in
+\t/** 🔗️ The runtime actor dependencies this crate declares in
 \t * \`[package.metadata.semio].depends-on\` (extension's \`extends\` target always first) — never its
 \t * build-time Cargo library links; see \`PluginRegistryEntry.dependsOn\` in
 \t * \`📇️registry/📜️script.ts\`. */
 \treadonly dependsOn: readonly string[];
 \treadonly host?: PluginHostMetadata;
-\t/** @emoji 🎬️ See \`PluginRegistryEntry.activationEvents\` in \`📇️registry/📜️script.ts\`. */
+\t/** 🎬️ See \`PluginRegistryEntry.activationEvents\` in \`📇️registry/📜️script.ts\`. */
 \treadonly activationEvents: readonly string[];
-\t/** @emoji 🧩️ See \`PluginRegistryEntry.extensionPoints\` in \`📇️registry/📜️script.ts\`. */
+\t/** 🧩️ See \`PluginRegistryEntry.extensionPoints\` in \`📇️registry/📜️script.ts\`. */
 \treadonly extensionPoints: readonly string[];
 \treadonly executionMode?: string;
 };
@@ -141,7 +141,7 @@ export const PLAYGROUND_BUILD_TARGETS: readonly PlaygroundBuildTarget[] = [
 ${rows}
 ];
 
-/** @emoji 🏠️ The playground variant that boots as the host/shell session — see
+/** 🏠️ The playground variant that boots as the host/shell session — see
  * \`resolveDefaultHostVariant\`. Replaces every hardcoded \`"s"\` default-variant literal downstream. */
 export const DEFAULT_HOST_VARIANT = ${JSON.stringify(defaultHostVariant)};
 `;
@@ -149,7 +149,7 @@ export const DEFAULT_HOST_VARIANT = ${JSON.stringify(defaultHostVariant)};
 
 //#endregion 🔖️SurfaceScaffolder
 
-/** @emoji 🧪️ Verifies that representative standalone and studio launches expand to complete sessions,
+/** 🧪️ Verifies that representative standalone and studio launches expand to complete sessions,
  * asserting shape rather than hardcoded plugin-id lists/counts so a plugin's crate-name change (or the
  * crate-consolidation restructure itself) can't silently break this check. */
 export function validatePlaygroundSessions(repoRoot: string): string[] {
@@ -284,7 +284,7 @@ pub fn resolve_artifact_kind_activation_owner(artifact_kind: &str) -> Option<&'s
 }
 
 
-/** @emoji 🗂️ Emits plugin component constants for headless `semio-framework-os-run`: each plugin id with its crate
+/** 🗂️ Emits plugin component constants for headless `semio-framework-os-run`: each plugin id with its crate
  * path and component file, resolved under the crate's own `dist/component-{dev,release}` deliverable (the bytes the
  * committed descriptor describes), never under cargo's internal target directory. */
 export function emitRustArtifacts(entries: PluginRegistryEntry[], _repoRoot: string): string {
@@ -299,7 +299,7 @@ ${rows}
 }
 
 
-/** @emoji 🗂️ The full generated catalog, rendered in memory once and consumed by both `generate`
+/** 🗂️ The full generated catalog, rendered in memory once and consumed by both `generate`
  * (writes) and `check` (byte-compares) so the two can never disagree about what belongs in
  * `🤖️generated/`. */
 export function renderCatalogFiles(repoRoot: string, view: RegistryCatalogInputView = registryCatalogInputView(repoRoot, TAXONOMY)): { files: Record<string, string>; entries: PluginRegistryEntry[]; playgrounds: PlaygroundEntry[]; frameworkPackages: FrameworkPackageEntry[] } {

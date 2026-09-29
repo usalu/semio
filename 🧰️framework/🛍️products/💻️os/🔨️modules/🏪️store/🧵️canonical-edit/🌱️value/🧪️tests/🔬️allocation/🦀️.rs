@@ -21,5 +21,4 @@ fn shared_value_canonical_json_rejects_overcapacity_before_admitting_key_storage
             assert!(value.capacity() * size_of::<Option<KeySlot>>() <= budget);
         }
     }
-    println!("[DEBUG] canonical key admission rejects injected allocator overcapacity before retaining a numeric table");
 }

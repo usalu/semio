@@ -51,7 +51,6 @@ async fn surface_context_retains_host_preferences_and_window_identity() {
     contexts.remove(fixture["panelSurvivor"].as_str().unwrap());
     assert_eq!(contexts.len(), 0);
     assert!(contexts.view_state.is_none());
-    eprintln!("[DEBUG] surface context retains host locale, independent window utilities and panel identity; hidden/closed surfaces release bindings");
 }
 
 #[test]
@@ -101,7 +100,6 @@ fn reserved_section_surfaces_keep_the_unnarrowed_view_and_outlive_their_windows(
     }
     contexts.remove("7:panel");
     assert_eq!(contexts.len(), 0);
-    eprintln!("[DEBUG] reserved section surfaces retained the unnarrowed host view across sibling mounts and window closure");
 }
 
 /// 🪟️ WAVE B56 LAW: the app's DEFAULT window surface is a real window INSTANCE and has host context;
@@ -132,7 +130,6 @@ async fn default_window_surface_has_host_context_and_the_synthetic_name_is_refus
     assert_eq!(refused, default["syntheticRefusal"].as_str().unwrap());
     assert!(contexts.get(synthetic).is_none());
     assert_eq!(contexts.background_surfaces(), vec![default["id"].as_str().unwrap().to_owned()]);
-    eprintln!("[DEBUG] default window surface {} retains host context; synthetic {synthetic} refused", default["id"].as_str().unwrap());
 }
 
 /// 🪟️ WAVE B56 LAW: background work addresses EVERY mounted window instance, and an instance with no
@@ -158,7 +155,6 @@ async fn background_surfaces_name_every_window_then_fall_back_to_panels() {
     }
     assert_eq!(contexts.background_surfaces(), vec!["7:panel".to_owned()]);
     assert!(!contexts.background_surfaces().iter().any(|surface| surface.ends_with(":window")));
-    eprintln!("[DEBUG] background surfaces windows={:?} then panels={:?}", windows, contexts.background_surfaces());
 }
 
 /// ⚖️ A remote edit merged into the document re-projects EVERY bound surface: the windows and the

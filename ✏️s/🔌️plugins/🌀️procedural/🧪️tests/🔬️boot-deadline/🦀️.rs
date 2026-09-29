@@ -86,7 +86,11 @@ async fn generation3d_boot_fits_the_strict_lifecycle_turn_authority() {
     }
     let settle_total_us: u64 = settle_us.iter().sum();
     let settle_max_us = settle_us.iter().copied().max().unwrap_or(0);
-    eprintln!("[DEBUG] generation3d first step manifest_us={manifest_us} install_us={install_us} describe_us={describe_us} descriptor_bytes={} open_us={open_us} ack_us={ack_us} settle_turns={} settle_total_us={settle_total_us} settle_max_us={settle_max_us}", descriptor_bytes.len(), settle_us.len());
+    eprintln!(
+        "generation3d first step manifest_us={manifest_us} install_us={install_us} describe_us={describe_us} descriptor_bytes={} open_us={open_us} ack_us={ack_us} settle_turns={} settle_total_us={settle_total_us} settle_max_us={settle_max_us}",
+        descriptor_bytes.len(),
+        settle_us.len()
+    );
 
     let ceiling_us = semio_framework_trace::GUEST_LIFECYCLE_TURN_CEILING_US;
     for (phase, spent_us) in [("open", open_us), ("ack", ack_us), ("settle-max", settle_max_us)] {

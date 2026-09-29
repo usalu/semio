@@ -219,7 +219,6 @@ fn every_window_instance_of_the_active_mode_is_laid_out_at_its_authored_fraction
             }
         }
     }
-    eprintln!("[DEBUG] wgpu dock honoured every mode-layout fixture case");
 }
 
 /// 🔁️ A mode change RE-SEEDS the layout: switching from generate back to edit must restore edit's
@@ -246,7 +245,6 @@ fn a_mode_change_reseeds_the_dock_with_the_new_modes_windows() {
     dock.apply_layout_diff(&edit_layout);
     let back: Vec<String> = dock.window_instances().into_iter().map(|(id, _)| id).collect();
     assert_eq!(back, edit_windows, "switching back restores edit's own windows");
-    eprintln!("[DEBUG] wgpu dock re-seeded across edit → generate → edit");
 }
 
 /// 📐️ `stack_body_rects` is `stack_frame_rects` minus the tab cap and nothing else — the separation
@@ -274,7 +272,6 @@ fn every_painted_body_is_its_solved_frame_minus_the_tab_cap() {
             assert!(body.w > 0.0 && body.h > 0.0, "{}: body {body:?} is empty — nothing would be laid out in it", case.id);
         }
     }
-    eprintln!("[DEBUG] wgpu dock bodies stay inside their solved frames");
 }
 
 /// 🧫️ The fixture is the one both targets read, so its own arithmetic has to close: fractions sum to
@@ -297,6 +294,5 @@ fn the_shared_fixture_declares_a_closed_layout_for_every_case() {
         assert_close(area, canvas.w * canvas.h, "declared rects tile the canvas", &case.id);
         assert!(case.expected.stacks.iter().any(|stack| stack.windows.contains(&case.expected.active_window_id)), "{}: the focused window is in one of the declared stacks", case.id);
     }
-    eprintln!("[DEBUG] shared mode-layout fixture is internally closed across {} cases", fixture.cases.len());
 }
 //#endregion 🧪️Laws

@@ -1,4 +1,4 @@
-//! @emoji 🗺️ Pure translation from `ui_render::shader_contract` (the canonical, backend-neutral
+//! 🗺️ Pure translation from `ui_render::shader_contract` (the canonical, backend-neutral
 //! pipeline description every `GraphicsBackend` builds from — see that file's header) into Vulkan
 //! descriptor/vertex-input/scissor value structs. No device call in this file — every function takes
 //! and returns plain `vk::` value structs, so the ticket TESTS section's "descriptor-layout and

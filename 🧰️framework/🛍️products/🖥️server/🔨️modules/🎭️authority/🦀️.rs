@@ -23,7 +23,7 @@ use semio_framework_dispatch_macros::dyn_enum;
 use std::future::Future;
 
 //#region 🔖️Error
-/// @emoji 💥️ What can go wrong inside a turn that is not a domain [`Rejection`]. A rejection is an
+/// 💥️ What can go wrong inside a turn that is not a domain [`Rejection`]. A rejection is an
 /// answer the caller asked for; an [`AuthorityError`] is the authority failing to answer at all.
 #[derive(Debug)]
 pub enum AuthorityError {
@@ -49,7 +49,7 @@ impl std::error::Error for AuthorityError {}
 //#endregion 🔖️Error
 
 //#region 🔖️Turn
-/// @emoji 🧠️ One actor's private state as the turn protocol sees it: a fenced [`Revision`] plus an
+/// 🧠️ One actor's private state as the turn protocol sees it: a fenced [`Revision`] plus an
 /// opaque domain payload. The protocol owns `revision` and never parses `bytes`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ActorState {
@@ -64,7 +64,7 @@ impl Default for ActorState {
     }
 }
 
-/// @emoji 🧭️ Everything a decision may read that is not the actor's own state. Deliberately tiny:
+/// 🧭️ Everything a decision may read that is not the actor's own state. Deliberately tiny:
 /// anything absent here is ambient input a pure decision is forbidden to reach for.
 #[derive(Clone, Debug, PartialEq)]
 pub struct DecisionContext {
@@ -73,7 +73,7 @@ pub struct DecisionContext {
     pub scope: Scope,
 }
 
-/// @emoji 📣️ A side effect a decision requests: mail, webhook, blob transcode, push. Committed to
+/// 📣️ A side effect a decision requests: mail, webhook, blob transcode, push. Committed to
 /// the outbox in the same write as the events, dispatched later, never inside the turn.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Effect {
@@ -81,7 +81,7 @@ pub struct Effect {
     pub payload: Vec<u8>,
 }
 
-/// @emoji 🎯️ The whole result of one decision. There is no fourth branch on purpose: a turn either
+/// 🎯️ The whole result of one decision. There is no fourth branch on purpose: a turn either
 /// produces facts, refuses, or hands the work to a long-running process.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Decision {
@@ -90,7 +90,7 @@ pub enum Decision {
     Defer(ProcessId),
 }
 
-/// @emoji ⚖️ The deterministic core that the optimistic client replica and the authority both run,
+/// ⚖️ The deterministic core that the optimistic client replica and the authority both run,
 /// unchanged, against the same [`ActorState`] and [`CommandEnvelope`].
 ///
 /// `decide` **MUST be pure**: same state, command and context yield the same [`Decision`], always.
@@ -128,7 +128,7 @@ pub trait Decider: Send + Sync {
 //#endregion 🔖️Turn
 
 //#region 🔖️Directory
-/// @emoji 📇️ One actor kind bound to the implementation that serves it. `D` is the instance's
+/// 📇️ One actor kind bound to the implementation that serves it. `D` is the instance's
 /// decider type — [`ServerInstance::Deciders`](crate::gateway::ServerInstance::Deciders).
 pub struct ActorRegistration<D: Decider> {
     pub actor_kind: String,
@@ -142,7 +142,7 @@ impl<D: Decider> ActorRegistration<D> {
     }
 }
 
-/// @emoji 🔥️ One live actor: its fencing lease, its state, how far its mailbox has been consumed
+/// 🔥️ One live actor: its fencing lease, its state, how far its mailbox has been consumed
 /// and which snapshot version that state was last persisted at.
 #[derive(Clone, Debug)]
 pub struct Activation {
@@ -152,7 +152,7 @@ pub struct Activation {
     pub snapshot_version: u64,
 }
 
-/// @emoji 🗺️ Where actors live and under whose lease.
+/// 🗺️ Where actors live and under whose lease.
 ///
 /// The implementation is a single-process [`HashMap`], but the **contract is not**: placement,
 /// activation epochs, fencing leases, mailbox sequence numbers, receipt-based deduplication and
@@ -212,11 +212,11 @@ impl AuthorityDirectory {
 //#endregion 🔖️Directory
 
 //#region 🔖️Bus
-/// @emoji 🚦️ The policy admission callback. A boxed closure rather than a concrete engine so the
+/// 🚦️ The policy admission callback. A boxed closure rather than a concrete engine so the
 /// turn protocol depends on the *decision*, never on how the decision was reached.
 pub type PolicyHook = Box<dyn Fn(&CommandEnvelope) -> PolicyDecision + Send + Sync>;
 
-/// @emoji 🏛️ The command side of the dual bus: it runs exactly one turn per submitted command,
+/// 🏛️ The command side of the dual bus: it runs exactly one turn per submitted command,
 /// against exactly one actor, in a fixed and non-negotiable order.
 pub struct CommandBus<S: AuthorityStore, D: Decider> {
     directory: AuthorityDirectory,
@@ -253,7 +253,7 @@ impl<S: AuthorityStore, D: Decider> CommandBus<S, D> {
         &mut self.store
     }
 
-    /// @emoji 📨️ Run one turn.
+    /// 📨️ Run one turn.
     ///
     /// The order below is the protocol and may not be rearranged:
     ///
@@ -403,7 +403,7 @@ fn dispatchable(actor: &ActorKey, events: &[EventRecord], effects: Vec<Effect>) 
 //#endregion 🔖️Bus
 
 //#region 🔖️Saga
-/// @emoji 🧵️ A cross-actor workflow reacting to committed facts.
+/// 🧵️ A cross-actor workflow reacting to committed facts.
 ///
 /// A saga answers one committed [`EventRecord`] with further [`CommandEnvelope`]s, each of which
 /// runs as its own independent turn against its own actor. There is deliberately no way to express
@@ -417,7 +417,7 @@ pub trait Saga: Send + Sync {
     async fn on_event(&self, event: &EventRecord) -> Vec<CommandEnvelope>;
 }
 
-/// @emoji 🔁️ Turns committed outbox rows into follow-up commands. A seam: it decides *what* to
+/// 🔁️ Turns committed outbox rows into follow-up commands. A seam: it decides *what* to
 /// issue, never *when* to run — the caller owns the scheduling.
 pub struct SagaRunner<W: Saga> {
     pub sagas: Vec<W>,
@@ -442,7 +442,7 @@ impl<W: Saga> SagaRunner<W> {
         self.sagas.push(saga);
     }
 
-    /// @emoji 🚰️ Read up to `limit` pending outbox rows, map them through every saga, mark the rows
+    /// 🚰️ Read up to `limit` pending outbox rows, map them through every saga, mark the rows
     /// delivered and return the follow-up commands.
     ///
     /// Delivery is at-least-once: a crash between mapping and marking replays the rows, which is

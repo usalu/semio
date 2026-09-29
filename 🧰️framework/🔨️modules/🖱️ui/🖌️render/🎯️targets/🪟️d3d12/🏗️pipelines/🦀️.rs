@@ -1,4 +1,4 @@
-//! @emoji 🏗️ The one root signature every pipeline in this backend shares, the static sampler heap,
+//! 🏗️ The one root signature every pipeline in this backend shares, the static sampler heap,
 //! and every `ID3D12PipelineState` this backend needs — built from the hand-written HLSL in
 //! `✨️hlsl.rs` via `D3DCompile`.
 //!

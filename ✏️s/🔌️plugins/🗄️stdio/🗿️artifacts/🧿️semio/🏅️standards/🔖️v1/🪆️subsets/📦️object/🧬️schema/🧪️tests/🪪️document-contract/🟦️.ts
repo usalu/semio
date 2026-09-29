@@ -67,5 +67,4 @@ export function testSemioObjectDocumentContract(): void {
     }
   }
   assert(snapshots > 0 && diffs > 0 && mutations > 0, "committed Object corpus must be exercised");
-  console.log("[DEBUG] Stdio Object exact contracts: " + fixtures.snapshotCases.length + " snapshot vectors, " + fixtures.diffCases.length + " diff vectors, " + snapshots + " committed snapshots, " + diffs + " committed diffs");
 }

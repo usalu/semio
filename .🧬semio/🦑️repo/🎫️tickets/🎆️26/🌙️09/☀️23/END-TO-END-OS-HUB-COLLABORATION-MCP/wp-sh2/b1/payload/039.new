@@ -26,7 +26,7 @@ pub fn local_studio_id(node_id: &str) -> &str {
 
 /// 🚫️ The direct lane cannot tell a hub space from a local studio: removal runs only as the retained job.
 pub fn handle(_payload: &DeleteVirtualFileSystemNode, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
-    Err(Fault::from("s.home.delete-vfs-node.requires-retained-job"))
+    Err(Fault::new(FaultOrigin::App, "s.home.delete-vfs-node.requires-retained-job", "removing a Home node runs only as the retained job"))
 }
 
 /// 🪦️ The retained route: `hub_row` is the id's one folded directory row from the job's captured projection — a listed

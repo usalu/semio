@@ -53,7 +53,6 @@ fn viewport_projection_corpus_matches_serde_value_and_derivation() {
         assert_eq!(derive_active_projection(&preferences), expected, "{}", row["name"]);
         assert_eq!(Viewport3dProjectionPreferences::from_value(DslValue::from(preferences_json)).unwrap(), preferences);
     }
-    eprintln!("[DEBUG] Shared viewport projection native codecs matched {combinations} mode-orientation pairs and {} pure derivations", fixture["derivations"].as_array().unwrap().len());
 }
 
 #[test]
@@ -123,7 +122,6 @@ fn viewport_projection_rejects_closed_schema_and_range_violations() {
     ]);
     assert!(Viewport3dProjectionSpec::from_value(explicit_null).is_err());
     assert!(Viewport3dProjectionMode::from_value(DslValue::Object(vec![("kind".into(), "threePoint".to_value()), ("fov".into(), DslValue::Number(Number::Float(f64::NAN)))])).is_err());
-    eprintln!("[DEBUG] Shared viewport projection native codecs rejected unknown, missing, duplicate, null, nonfinite, and out-of-range fields");
 }
 
 #[test]
@@ -136,5 +134,4 @@ fn viewport_projection_retains_inactive_preferences_across_selection() {
     let recalled: Viewport3dProjectionPreferences = serde_json::from_value(patched(&edited, &fixture["retention"]["recallCurvilinear"])).unwrap();
     let expected: Viewport3dProjectionSpec = serde_json::from_value(fixture["retention"]["expected"].clone()).unwrap();
     assert_eq!(derive_active_projection(&recalled), expected);
-    eprintln!("[DEBUG] Shared viewport projection retained all inactive curvilinear preferences through orthographic selection and recall");
 }

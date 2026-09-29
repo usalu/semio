@@ -60,7 +60,7 @@ async fn canonicalize_trace_surfaces_an_unknown_variable_as_an_error() {
     assert!(err.message.contains("unknown variable"), "unexpected message: {}", err.message);
 }
 
-/// @emoji 📖️ The fragment's `.grammar` file must at least parse under `dsl_grammar`'s parser.
+/// 📖️ The fragment's `.grammar` file must at least parse under `dsl_grammar`'s parser.
 #[semio_framework_async_macros::async_test]
 async fn grammar_file_is_syntactically_valid() {
     let source = include_str!("../../📖️.grammar.semio");

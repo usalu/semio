@@ -191,6 +191,40 @@ describe("watchAgentBridgeOffer", () => {
     expect(nextBridgeDiscoveryIntervalMs(BRIDGE_DISCOVERY_MIN_INTERVAL_MS, null)).toBe(2 * BRIDGE_DISCOVERY_MIN_INTERVAL_MS);
   });
 
+  it("asks with the shell's scope, re-read before every poll, and reads the wgpu shell's published scope exactly", async () => {
+    const { watchAgentBridgeOffer, agentBridgeOfferScopeFromJsonV1, agentBridgeOfferPathV1 } = await import("../../🛰️offer/🟦️.ts");
+    const scopes = [
+      { hubOrigin: "http://127.0.0.1:7800", spaceId: "space-a", agentPrincipalIds: ["agent:d-1"] },
+      null,
+      { hubOrigin: "http://127.0.0.1:7800", spaceId: "space-b", agentPrincipalIds: [] },
+    ] as const;
+    const asked: string[] = [];
+    let reads = 0;
+    const pending: (() => void)[] = [];
+    const stop = watchAgentBridgeOffer(() => {}, {
+      fetchImpl: async (input) => {
+        asked.push(input);
+        return { ok: true, status: 200, json: async () => agentBridgeOfferAnswerV1(null) };
+      },
+      offerScope: async () => scopes[Math.min(reads++, scopes.length - 1)] ?? null,
+      setTimer: (run) => {
+        pending.push(run);
+        return pending.length;
+      },
+      clearTimer: () => {},
+    });
+    for (let poll = 0; poll < scopes.length; poll += 1) {
+      await vi.waitFor(() => expect(asked.length).toBe(poll + 1));
+      if (poll + 1 < scopes.length) pending[poll]!();
+    }
+    stop();
+    expect(asked).toEqual(scopes.map((scope) => agentBridgeOfferPathV1(AGENT_BRIDGE_OFFER_ENDPOINT, scope)));
+    expect(agentBridgeOfferScopeFromJsonV1(JSON.stringify(scopes[0]))).toEqual(scopes[0]);
+    for (const refused of [null, "null", "not json", "[]", JSON.stringify({ hubOrigin: "http://127.0.0.1:7800", spaceId: "space-a" }), JSON.stringify({ ...scopes[0], token: "secret" }), JSON.stringify({ ...scopes[0], agentPrincipalIds: [7] }), JSON.stringify({ ...scopes[0], spaceId: "" })]) {
+      expect(agentBridgeOfferScopeFromJsonV1(refused)).toBeNull();
+    }
+  });
+
   it("refuses a poisoned offer as no offer at all", async () => {
     const { watchAgentBridgeOffer } = await import("../../🛰️offer/🟦️.ts");
     const published: (AgentBridgeConfig | null)[] = [];

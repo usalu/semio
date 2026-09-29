@@ -1,6 +1,6 @@
 //#region 🥇️LatestWins
 /**
- * @emoji 🥇️ Single-flight with a trailing coalescer: the first call launches `run()` and hands the
+ * 🥇️ Single-flight with a trailing coalescer: the first call launches `run()` and hands the
  * caller that exact run's promise. Every subsequent call that arrives while a run is still in
  * flight collapses into at most one queued follow-up run — they all share that one follow-up's
  * promise, so N concurrent callers never produce more than one extra `run()` call, and every one of

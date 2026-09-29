@@ -20,7 +20,7 @@ async fn render_splits_header_from_windowed_data_rows_and_binds_structure() {
     };
     let node = render_revisioned(&document, "store-revision", semio_framework_plugin::Locale::En, &semio_framework_plugin::TreeWindows::unhosted()).expect("render");
     assert!(matches!(node.component, Component::Container(_)));
-    let json = serde_json::to_string(&node).expect("declarative table json");
+    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("declarative table json");
     for witness in ["name", "ada", "store-revision", "set-cell", "set-header", "add-row", "add-column", "remove-row", "remove-column"] {
         assert!(json.contains(witness), "missing {witness} in {json}");
     }

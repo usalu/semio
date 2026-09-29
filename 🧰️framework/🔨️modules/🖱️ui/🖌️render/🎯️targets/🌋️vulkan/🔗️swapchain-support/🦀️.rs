@@ -1,4 +1,4 @@
-//! @emoji 🔗️ Pure swapchain-configuration decisions — format/present-mode/extent/image-count
+//! 🔗️ Pure swapchain-configuration decisions — format/present-mode/extent/image-count
 //! selection and the zero-size park predicate — split out from `crate::backend::VulkanBackend` so the
 //! surface-state transitions the ticket's TESTS section asks for ("surface-state transitions incl.
 //! zero-size park/restore") are exercised without a device or loader. Every function here takes

@@ -1,4 +1,4 @@
-/** @emoji 🎣️ Laws of the world context menu's live "suggest" submenu: the right-click finds the row that names a
+/** 🎣️ Laws of the world context menu's live "suggest" submenu: the right-click finds the row that names a
  * vortex (so the search starts the moment the menu opens), that row becomes a submenu over the live candidate
  * rows instead of dispatching, each candidate row focuses exactly its own trace record while hovered, and the
  * floating popup only renders for a popup-presented menu. */

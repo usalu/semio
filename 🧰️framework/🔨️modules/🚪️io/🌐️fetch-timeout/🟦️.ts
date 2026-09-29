@@ -1,5 +1,5 @@
 //#region ⏱️FetchWithTimeout
-/** @emoji 📨️ Structural view of a fetch response — declared locally so this module's public API
+/** 📨️ Structural view of a fetch response — declared locally so this module's public API
  * never requires the ambient `Response` type from outside this codebase. */
 export interface FetchTimeoutResponse {
   readonly ok: boolean;
@@ -10,14 +10,14 @@ export interface FetchTimeoutResponse {
   text(): Promise<string>;
 }
 
-/** @emoji ⏱️ Options for {@link fetchWithTimeout}. */
+/** ⏱️ Options for {@link fetchWithTimeout}. */
 export interface FetchTimeoutOptions {
   readonly timeoutMs: number;
   readonly signal?: AbortSignal;
 }
 
 /**
- * @emoji ⏱️ `fetch` composed with a timeout: the request aborts if it hasn't settled within
+ * ⏱️ `fetch` composed with a timeout: the request aborts if it hasn't settled within
  * `timeoutMs`, and separately aborts if the caller-supplied `signal` aborts — either can cancel it,
  * neither leaks its timer/listener past this call (both are cleaned up on every exit path: success,
  * timeout, external abort, and thrown `fetch` error alike).

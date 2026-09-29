@@ -2,7 +2,7 @@ import { prepareDocumentSurfaceV1 } from "./🔀️surface-switch/📄️documen
 import { useInitialExampleReadiness } from "../🐚️Shell/🎬️initial-example/🟦️.ts";
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/ShellHost/component.tsx
-/** @emoji 🏗️ `ShellHost` — the `FrameworkOsShell` orchestrator: boots/hot-swaps plugin wasm modules,
+/** 🏗️ `ShellHost` — the `FrameworkOsShell` orchestrator: boots/hot-swaps plugin wasm modules,
  * owns the window/dock/panel layout, wires the tutorial recorder/player, presence, backbone sync,
  * command/tool/utility ribbons, context menus, and mounts every per-app window via `🟦️Interpreter`.
  * The single largest component in the renderer-react package. */
@@ -63,9 +63,7 @@ import {
   SURFACE_FAULT_CODES,
   type CommandAddress,
   type CommandInvocation,
-  exampleArtifactSources,
   examplesForApp,
-  resolveDocumentOperatorKinds,
   scopeContributionsJson,
   type ContextMenuItemSpec,
   createBrowserStoragePort,
@@ -151,6 +149,7 @@ import {
   type BuiltNode,
   type UiDirtyScope,
   type UtilityNode,
+  type VideoRenderJobRow,
   waitForEvent,
   windowElementId,
   hostArmedViewContext,
@@ -252,7 +251,26 @@ function hubSessionStorageV1(): HubConnectionStorageV1 | null {
  * `🟦️glue.backbone-worker.ts` shim and the export entry), so this import goes straight to the
  * owner-root file by the same relative path the `new Worker(new URL(...))` call below already uses.
  * Never redefined here. */
-import { IDENTITY_CONFIG_SCHEMA, identityActorConfig, foldIdentityEvent } from "../../../../🏪️store/👷️worker/🟦️.ts";
+import { IDENTITY_CONFIG_SCHEMA, identityActorConfig, foldIdentityEvent, localCatalogActorConfig } from "../../../../🏪️store/👷️worker/🟦️.ts";
+import {
+  EMPTY_LOCAL_CATALOG_V1,
+  LOCAL_CATALOG_ACTIONS_V1,
+  LOCAL_CATALOG_READ_DEADLINE_MS_V1,
+  LOCAL_CATALOG_WRITE_DEADLINE_MS_V1,
+  decodeLocalCatalogArchiveV1,
+  decodeLocalCatalogPayloadV1,
+  localCatalogAdmissionV1,
+  localCatalogAdmitMutationV1,
+  localCatalogArchiveV1,
+  localCatalogBindingV1,
+  localCatalogDocumentIdV1,
+  localCatalogMutationEnvelopeV1,
+  localCatalogNoticeCodeV1,
+  localCatalogNoticeTextV1,
+  localCatalogRehydrationArgumentsV1,
+  sameLocalDocumentArchiveV1,
+  type LocalCatalogAdmissionV1,
+} from "./🗂️local-catalog/🟦️.ts";
 /** 🪪️ Self-contained identity facet (see that file's header doc for why it isn't re-exported through
  * `🎚️config/🧬️schema/**`) — `Identity`/mutation vocabulary, never redeclared here. */
 import {
@@ -271,6 +289,12 @@ import {
   setTerminology,
   setTheme,
   signIn,
+  applyLocalCatalogConfigMutation,
+  retireLocalDocument,
+  LOCAL_CATALOG_CONFIG_SCHEMA,
+  type LocalCatalog,
+  type LocalCatalogConfigMutation,
+  type LocalDocument,
 } from "../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
 import {
   decodeWorldProjectionTemplateId,
@@ -668,7 +692,7 @@ import {
   type UiRefreshCache,
 } from "../🛠️ShellHelpers/🟦️.tsx";
 import { toolRunPanelReveal, toolRunPanelTasksV1, type ToolRunPanelControlV1 } from "../🛠️ShellHelpers/⏯️tool-run-panel/🟦️.ts";
-import { createContributionsPublisher, type ContributionsOperatorScope, type ContributionsPublishOutcome, type ContributionsSessionKey } from "../🛠️ShellHelpers/🧩️contributions/🟦️.ts";
+import { createContributionsPublisher, type ContributionsPublishOutcome, type ContributionsSessionKey } from "../🛠️ShellHelpers/🧩️contributions/🟦️.ts";
 
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx";
 import { ENTWERFEN_MIT_BESTAND_BRAND_IDS, isEntwerfenMitBestandBrandId } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/🪧️brand.ts";
@@ -708,7 +732,7 @@ import { hopTrace, type HopTraceDetail } from "../../../../../../../🔨️modul
 import { SILENT_STREAM_MUX_ENDPOINT_V1, StreamMuxChannelV1, pageStreamMuxChannelV1, streamMuxWatchV1, type StreamMuxEndpointV1 } from "../../../../../../../🔨️modules/🚪️io/🔀️stream-mux/🟦️.ts";
 import { liveInstanceWindowFaultV1, type WindowFault, type WindowFaultClass, windowFaultFromError } from "./🩺️fault/🟦️.ts";
 import { createShellRouteLedgerV1 } from "./🧭️route-ledger/🟦️.ts";
-import { EXTENSION_TARGETS } from "../../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
+import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "../../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 import { PLUGIN_CATALOG } from "../../../../🔌️plugin/📇️registry/🟦️.ts";
 import { MODULE_EXTENSION_ROUTE } from "../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { createHubPluginSource, HUB_SAME_ORIGIN_MOUNT, type HubPluginSourceV1 } from "../../../../🔌️plugin/📇️registry/🌎️hub-source/🟦️.ts";
@@ -737,7 +761,8 @@ import type { ReduceResult, ShellCommand } from "../../../../🖥️shell/🟦�
 import { AgentChatPanel } from "../💬️AgentChatPanel/🟦️.tsx";
 import { AgentApprovalsNotice, focusAgentApprovalV1 } from "../🤖️AgentApprovals/🟦️.tsx";
 import { AgentPresence } from "../🚦️AgentPresence/🟦️.tsx";
-import { TaskManagerWindow, documentTransferTasksV1, installTasksV1, spawnedJobTasksV1, taskManagerToolRunIdV1, toolCallTasksV1, toolRunTasksV1, type TaskManagerDocumentTransferV1, type TaskManagerSourcesV1, type TaskManagerTaskV1 } from "../🧵️TaskManager/🟦️.tsx";
+import { TaskManagerWindow, documentTransferTasksV1, installTasksV1, spawnedJobTasksV1, taskManagerToolRunIdV1, toolCallTasksV1, toolRunTasksV1, videoRenderExportTasksV1, type TaskManagerDocumentTransferV1, type TaskManagerSourcesV1, type TaskManagerTaskV1 } from "../🧵️TaskManager/🟦️.tsx";
+import { browserVideoRenderEnvironmentV1, cancelVideoRenderExportV1, runVideoRenderExportV1, subscribeVideoRenderExportJobsV1, videoRenderExportJobsSnapshotV1 } from "../🎥️VideoRenderHost/🟦️.ts";
 import { cancelSpawnedJobV1, commandStallWatch, pluginRuntimeActivationRegistryV1, registerProgramExtensionV1, spawnedJobsSnapshotV1, subscribeSpawnedJobsV1, type SpawnedJobRowV1 } from "../🔌️PluginRuntime/🟦️.tsx";
 import { commandStallBandTextV1, commandStallCancelTextV1, commandStallHeldSecondsV1, type CommandStallV1 } from "../🔌️PluginRuntime/⏱️command-stall/🟦️.ts";
 import { UIFind, UIFindProvider, UISearch, type UISearchItem } from "../🔎️ShellSearch/🟦️.tsx";
@@ -788,10 +813,10 @@ function requiredHostPanelLeafId(app: AppDefinition | undefined): string {
 //#endregion 🔖️BuiltNodeReconciler
 
 //#region FrameworkOsShell
-/** @emoji 🏷️ Lets a per-window host rewrite its Mode window title (e.g. live projection label). */
+/** 🏷️ Lets a per-window host rewrite its Mode window title (e.g. live projection label). */
 export const SetWindowTitleContext = createContext<((windowId: string, title: string) => void) | null>(null);
 
-/** @emoji 🖼️ Lets a per-window host rewrite its Mode window icon (e.g. live projection glyph). */
+/** 🖼️ Lets a per-window host rewrite its Mode window icon (e.g. live projection glyph). */
 export const SetWindowIconContext = createContext<((windowId: string, iconId: IconName) => void) | null>(null);
 
 /** 🔬️ Dev-only `window.__semioOsCatalogProbe` payload — see `#region 🔖️CatalogSmokeProbe`; schema
@@ -903,10 +928,10 @@ const TRANSIENT_NOTICE_TONE_CLASS: Record<Severity, string> = {
   fatal: "border-destructive bg-destructive text-destructive-foreground font-semibold",
 };
 
-/** @emoji ⏰️ Browser timer duration shared with the native Shell chrome deadline contract. */
+/** ⏰️ Browser timer duration shared with the native Shell chrome deadline contract. */
 export const SHELL_TRANSIENT_NOTICE_AUTO_DISMISS_MS = 4000;
 
-/** @emoji ⏰️ Arms the actual ShellHost notice dismissal timer. */
+/** ⏰️ Arms the actual ShellHost notice dismissal timer. */
 export function scheduleShellTransientNoticeDismissV1(dismiss: () => void): ReturnType<typeof setTimeout> {
   return setTimeout(dismiss, SHELL_TRANSIENT_NOTICE_AUTO_DISMISS_MS);
 }
@@ -1020,15 +1045,15 @@ function WindowFaultStatus({ fault }: { readonly fault: WindowFault }): React.Re
   );
 }
 
-/** @emoji ⌨️ Last-wins app keybindings for enriching context-menu shortcut labels in scene hosts. */
+/** ⌨️ Last-wins app keybindings for enriching context-menu shortcut labels in scene hosts. */
 const AppKeybindingsContext = createContext<ReadonlyMap<string, string>>(EMPTY_KEYS_BY_ACTION_ID);
 
-/** @emoji ⌨️ Resolves action→keys bindings from the nearest {@link AppKeybindingsContext} provider. */
+/** ⌨️ Resolves action→keys bindings from the nearest {@link AppKeybindingsContext} provider. */
 export function useAppKeybindingsByActionId(): ReadonlyMap<string, string> {
   return useContext(AppKeybindingsContext);
 }
 
-/** @emoji 🖱️ Maps program context-menu specs with app keybinding shortcut enrichment. */
+/** 🖱️ Maps program context-menu specs with app keybinding shortcut enrichment. */
 export function useMapContextMenuSpecs(dispatch: (action: string, args?: Record<string, unknown>) => void) {
   const keysByActionId = useAppKeybindingsByActionId();
   return useCallback((specs: readonly ContextMenuItemSpec[]) => mapContextMenuSpecs(specs, dispatch, keysByActionId), [dispatch, keysByActionId]);
@@ -1081,20 +1106,6 @@ function encodeWindowActionInvocation(session: ActiveSession, action: ActionDesc
   return JSON.stringify(windowActionInvocation(session, action, extraInstances, requestedWindowId));
 }
 
-/** 📄️ Decode a live document pack for operator-kind reachability — pack value, then UTF-8 of pack/spr. */
-function documentSourcesFromPack(pack: Uint8Array, spr: Uint8Array, ops?: string): unknown[] {
-  const sources: unknown[] = [];
-  try {
-    sources.push(decodePackValue(pack));
-  } catch {
-    /* `.spk` / non-pack snapshot — UTF-8, spr, and ops still get a walk */
-  }
-  sources.push(new TextDecoder().decode(pack));
-  sources.push(new TextDecoder().decode(spr));
-  if (ops) sources.push(ops);
-  return sources;
-}
-
 /** 🎛️ Builds an app-owned command wire without pretending host catalogue state is a window action. */
 function encodeAppCommandInvocation(pluginId: string, app: AppDefinition, commandId: string, args: Readonly<Record<string, unknown>>): string {
   const invocation: CommandInvocation = {
@@ -1109,7 +1120,7 @@ export function appOwnsCommand(app: AppDefinition, commandId: string): boolean {
   return (app.commands ?? []).some((command) => command.id === commandId);
 }
 
-/** @emoji 📄️ Tests whether the app's OWN declaration of a host-pushed command includes `pageCount`.
+/** 📄️ Tests whether the app's OWN declaration of a host-pushed command includes `pageCount`.
  * The shell still sends exactly those arguments (`page: 0`, `pageCount: 1`) as ONE pack-encoded
  * `handleCommand`. It does not cut the payload into 4 KiB JSON pages
  * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
@@ -1119,7 +1130,7 @@ export function appCommandTakesPageRun(app: AppDefinition, commandId: string): b
 }
 
 //#region 🎥️TutorialOverlayHosts
-/** @emoji 📦️ Resolves a `TutorialAssetSrc` to a value usable as an `<video>`/`<audio>` `src` — `Blob` (a
+/** 📦️ Resolves a `TutorialAssetSrc` to a value usable as an `<video>`/`<audio>` `src` — `Blob` (a
  * studio `BlobStore` reference) isn't resolvable from this scope (no blob-store bridge here) and returns
  * `null` with a console warning; `Url`/`DataUrl` resolve directly. */
 function tutorialAssetSrcToUrl(src: TutorialAssetSrc): string | null {
@@ -1128,7 +1139,7 @@ function tutorialAssetSrcToUrl(src: TutorialAssetSrc): string | null {
   return null;
 }
 
-/** @emoji 💬️ Self-subscribes to the tutorial clock (see `useTutorialClock`) so only THIS leaf re-renders every frame — never the whole shell — mirroring `TutorialBar`'s own subscription. */
+/** 💬️ Self-subscribes to the tutorial clock (see `useTutorialClock`) so only THIS leaf re-renders every frame — never the whole shell — mirroring `TutorialBar`'s own subscription. */
 const TutorialCaptionsHost: React.FC<{ readonly tutorial: TutorialDefinition; readonly clock: TutorialClockPort; readonly captionsOn: boolean; readonly terminology: string; readonly locale: string }> = ({ tutorial, clock, captionsOn, terminology, locale }) => {
   const timeMs = useTutorialClock(clock);
   const cue = tutorialCuesBetween(tutorial.tracks.narration, timeMs)[0] ?? null;
@@ -1137,7 +1148,7 @@ const TutorialCaptionsHost: React.FC<{ readonly tutorial: TutorialDefinition; re
 
 const TUTORIAL_DEFAULT_VIDEO_RECT = { x: 0.72, y: 0.7, width: 0.24, height: 0.24 } as const;
 
-/** @emoji 📹️ Self-subscribes to the tutorial clock; resolves the covering `TutorialVideoCue` (if any) and its source-relative local time. */
+/** 📹️ Self-subscribes to the tutorial clock; resolves the covering `TutorialVideoCue` (if any) and its source-relative local time. */
 const TutorialVideoOverlayHost: React.FC<{ readonly tutorial: TutorialDefinition; readonly clock: TutorialClockPort; readonly muted: boolean; readonly playing: boolean; readonly rate: number }> = ({
   tutorial,
   clock,
@@ -1152,7 +1163,7 @@ const TutorialVideoOverlayHost: React.FC<{ readonly tutorial: TutorialDefinition
   return <TutorialVideoOverlay src={src} rect={cue?.rect ?? TUTORIAL_DEFAULT_VIDEO_RECT} muted={muted || (cue?.muted ?? false)} playing={playing} rate={rate} localTimeMs={localTimeMs} />;
 };
 
-/** @emoji 👻️ Self-subscribes to the tutorial clock; resolves the covering `TutorialGestureCue` (if any) and progress (0–1) through it, driving `TutorialGhostPointer` off the PLAYHEAD rather than its own internal clock (unlike the introduction demonstration overlay). */
+/** 👻️ Self-subscribes to the tutorial clock; resolves the covering `TutorialGestureCue` (if any) and progress (0–1) through it, driving `TutorialGhostPointer` off the PLAYHEAD rather than its own internal clock (unlike the introduction demonstration overlay). */
 const TutorialGhostPointerHost: React.FC<{ readonly tutorial: TutorialDefinition; readonly clock: TutorialClockPort }> = ({ tutorial, clock }) => {
   const timeMs = useTutorialClock(clock);
   const cue: TutorialGestureCue | null = tutorialCuesBetween(tutorial.tracks.gestures, timeMs)[0] ?? null;
@@ -1187,7 +1198,7 @@ export function tutorialInteractionSelectionActions(controllerId: string, select
   return actions;
 }
 
-/** @emoji ↔ Field-by-field structural diff of two `TutorialUiSnapshot`s into the sparse `TutorialUiChange`
+/** ↔ Field-by-field structural diff of two `TutorialUiSnapshot`s into the sparse `TutorialUiChange`
  * alphabet — the recorder's UI-diff effect calls this every `ShellState` change while armed. */
 function diffTutorialUiSnapshot(prev: TutorialUiSnapshot, next: TutorialUiSnapshot): TutorialUiChange[] {
   const changes: TutorialUiChange[] = [];
@@ -1225,7 +1236,7 @@ function diffTutorialUiSnapshot(prev: TutorialUiSnapshot, next: TutorialUiSnapsh
   return changes;
 }
 
-/** @emoji 🎥️ Epsilon-equality for two camera poses — the recorder's 10Hz camera sampler skips writing a
+/** 🎥️ Epsilon-equality for two camera poses — the recorder's 10Hz camera sampler skips writing a
  * new keyframe when the live pose hasn't meaningfully moved since the last sample. */
 function tutorialCameraPoseEquals(a: TutorialCameraState, b: TutorialCameraState): boolean {
   if (a.kind !== b.kind) return false;
@@ -1234,7 +1245,7 @@ function tutorialCameraPoseEquals(a: TutorialCameraState, b: TutorialCameraState
   return false;
 }
 
-/** @emoji 🎥️ Captures a live session into a `TutorialDefinition` — a recording IS a `TutorialDefinition`,
+/** 🎥️ Captures a live session into a `TutorialDefinition` — a recording IS a `TutorialDefinition`,
  * so this class simply accumulates a densely-sampled one (see the Rust core doc comment on
  * `TutorialDefinition`). Deliberately produces events/UI/camera/document tracks only: webcam/mic capture
  * (`MediaRecorder`) is an explicit, reported scope cut — see the ticket close-out summary — a text-only
@@ -1311,7 +1322,7 @@ export class TutorialRecorder {
 //#endregion 🎥️TutorialRecorder
 
 //#region 🐚️ShellMount
-/** @emoji 🐚️ Public props for {@link FrameworkOsShell} — the multi-instance-safe entry point. `shellId`,
+/** 🐚️ Public props for {@link FrameworkOsShell} — the multi-instance-safe entry point. `shellId`,
  * `storageNamespace`, and `ownsPage` exist so several shells can be mounted on one page: `ownsPage`
  * gates the handful of behaviors that are legitimately page-global (document title, browser history
  * sync via `bootFrameworkOs`), `storageNamespace` prefixes this shell's durable storage keys so
@@ -1341,7 +1352,7 @@ export interface FrameworkOsShellProps {
   readonly suppressAutoIntroduction?: boolean;
 }
 
-/** @emoji 📶️ The page's stream channel when the serve that hosts this page announces one (`STREAM_MUX_ANNOUNCEMENT`, defined by
+/** 📶️ The page's stream channel when the serve that hosts this page announces one (`STREAM_MUX_ANNOUNCEMENT`, defined by
  * the dev serve's backbone plugin), else the silent endpoint: a production bundle or a test harness has no channel to dial, and
  * dialing one anyway made every jsdom law that mounts the shell log a refused WebSocket. */
 function announcedPageStreams(): StreamMuxChannelV1 | StreamMuxEndpointV1 {
@@ -1820,7 +1831,7 @@ export async function copyDirectoryInviteCapabilityV1(
 //#endregion 🏛️SpaceAdministration
 //#endregion 🔖️Identity
 
-/** @emoji 🐚️ Resolves the {@link ShellScope.storage} port for a shell mount: ephemeral brands always get
+/** 🐚️ Resolves the {@link ShellScope.storage} port for a shell mount: ephemeral brands always get
  * an in-memory port (never durable, regardless of namespace); a namespaced non-ephemeral shell gets a
  * scoped view over browser storage; a bare non-ephemeral shell (the historical single-app-per-page
  * case) gets the plain shared browser port. */
@@ -1865,7 +1876,7 @@ function pluginInstallConcurrency(): number {
 //#endregion 🧵️ConcurrencyHelpers
 
 //#region 🩺️RuntimeDiagnostics
-/** @emoji 🩺️ The ONE key that arms this shell's per-action runtime traces — the refresh/completion
+/** 🩺️ The ONE key that arms this shell's per-action runtime traces — the refresh/completion
  * chatter a boot emits once per dispatched action. Off by default: a served boot of the
  * hexagonal-mushroom-column printed these on every one of ~1440 typed-operation completions
  * (`📓️runtime-verification-2026-09-09.md` boot #7), which is signal a perf run wants and an
@@ -1878,12 +1889,12 @@ function pluginInstallConcurrency(): number {
  * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
 export const RUNTIME_DIAGNOSTICS_KEY = "SEMIO_RUNTIME_DIAGNOSTICS";
 
-/** @emoji 🩺️ Armed by `1`/`true`/`on`/`yes`; anything else, including absent, leaves it off. */
+/** 🩺️ Armed by `1`/`true`/`on`/`yes`; anything else, including absent, leaves it off. */
 function runtimeDiagnosticsArmed(value: unknown): boolean {
   return typeof value === "string" && ["1", "true", "on", "yes"].includes(value.trim().toLowerCase());
 }
 
-/** @emoji 🖼️ Publishes the `commit` stage of one hop: from the moment a refresh's React state is
+/** 🖼️ Publishes the `commit` stage of one hop: from the moment a refresh's React state is
  * dispatched to the frame the compositor next runs, which is the only interval that contains React's
  * own reconcile/commit plus layout and paint. A host with no frame clock (test/SSR) publishes
  * nothing rather than inventing a number. */
@@ -1896,14 +1907,14 @@ function traceCommitToNextFrame(detail: HopTraceDetail): void {
 let runtimeDiagnosticsOverride: boolean | undefined;
 let runtimeDiagnosticsResolved: boolean | undefined;
 
-/** @emoji 🩺️ Arms or disarms the traces for this page, outranking build env and stored preference —
+/** 🩺️ Arms or disarms the traces for this page, outranking build env and stored preference —
  * the browser's counterpart to the guest's `set_runtime_diagnostics`. */
 export function setRuntimeDiagnostics(enabled: boolean | undefined): void {
   runtimeDiagnosticsOverride = enabled;
   runtimeDiagnosticsResolved = undefined;
 }
 
-/** @emoji 🩺️ Whether the shell's per-action traces may print. Resolved once per page: an explicit
+/** 🩺️ Whether the shell's per-action traces may print. Resolved once per page: an explicit
  * override wins, then the build's `VITE_SEMIO_RUNTIME_DIAGNOSTICS`, then a `localStorage` key of the
  * same name so a live tab can be armed without a rebuild. Every reader is wrapped, because a
  * sandboxed tab throws on `localStorage` and a non-Vite host has no `import.meta.env`. */
@@ -2056,7 +2067,7 @@ export async function dispatchInvokeExtensionEffect(
 }
 //#endregion 🔁️InvokeExtensionDispatch
 
-/** @emoji 🐚️ Mounts a `.semio-scope` root (theme/appearance/id scoping lands with later waves) carrying a
+/** 🐚️ Mounts a `.semio-scope` root (theme/appearance/id scoping lands with later waves) carrying a
  * {@link ShellScope} — the seam that lets several of these coexist on one page — around the actual shell
  * implementation in {@link FrameworkOsShellInner}. */
 export function FrameworkOsShell(props: FrameworkOsShellProps): React.ReactElement {
@@ -2412,7 +2423,6 @@ function FrameworkOsShellInner({
   const landingAppId = landingApp?.id;
   const hostAppId = hostApp?.id;
   const hostControllerId = hostApp?.controllerId;
-  const landingControllerId = landingApp?.controllerId;
   const hostCatalogueTabId = hostApp ? requiredHostPanelLeafId(hostApp) : undefined;
   const spacePrograms = useMemo<readonly SpaceProgramEntry[]>(
     () =>
@@ -2522,7 +2532,6 @@ function FrameworkOsShellInner({
   /** 💡️ The one document whose host-owned inference port is currently live, and its exact status. */
   const inferencePortRuntimeKey = shellState.inference.operationRuntimeKey;
   const inferencePort = inferencePortRuntimeKey === null ? undefined : shellState.inference.portByRuntimeKey[inferencePortRuntimeKey];
-  const importSpaceInputRef = useRef<HTMLInputElement>(null);
   const refreshGenerationRef = useRef(0);
   const replaceBodiesGenerationRef = useRef(0);
   const clipboardFragmentRef = useRef<unknown>(undefined);
@@ -3119,6 +3128,17 @@ function FrameworkOsShellInner({
   const identitySnapshotResolverRef = useRef<((value: Identity | null) => void) | null>(null);
   const identityClientInstanceIdRef = useRef<string | null>(null);
   const identityBootstrapAbortRef = useRef<AbortController | null>(null);
+  /** 🗂️ The host-owned local document catalog (`os.config.local-catalog`, persisted local-only in `${S_DATA_DIR}/os`) —
+   * `🗂️local-catalog/🟦️.ts`. Opened at mount, local-first, with or without a hub. `localDocumentOwnersRef` routes one kept
+   * document's worker events (a write being verified, a read-back) by the client id it was opened under;
+   * `rehydratedLocalDocumentsRef` remembers, per landing-app instance, which kept documents it was already handed. */
+  const localDataDir = useMemo(() => readViteSEnv("VITE_S_DATA_DIR"), []);
+  const [localCatalog, setLocalCatalog] = useState<LocalCatalog>(EMPTY_LOCAL_CATALOG_V1);
+  const localCatalogRef = useRef<LocalCatalog>(EMPTY_LOCAL_CATALOG_V1);
+  localCatalogRef.current = localCatalog;
+  const localCatalogClientInstanceIdRef = useRef<string | null>(null);
+  const localDocumentOwnersRef = useRef(new Map<string, { readonly status?: (persisted: boolean) => void; readonly archive?: (archive: Uint8Array) => void }>());
+  const rehydratedLocalDocumentsRef = useRef(new Map<number, Set<string>>());
   const presenceConnectedAtMsRef = useRef(Date.now());
   const presenceCursorRef = useRef<{ readonly x: number; readonly y: number } | undefined>(undefined);
   /** 🐚️ terra-web-shellhost (finding 5) — per-document `latestWins` triggers for the presence-beat
@@ -3760,6 +3780,24 @@ function FrameworkOsShellInner({
       // events. `documentArchiveReplaced` (whole-record archive, the folder read-back) resolves the bootstrap
       // effect's one-shot wait; `remoteMutations` (another tab's sign-in/out, echoed over this
       // document's `BroadcastChannel`) folds via {@link foldIdentityEvent} like `OpeningPreferences`.
+      if (message.kind === "event" && message.documentId === LOCAL_CATALOG_CONFIG_SCHEMA) {
+        if (localCatalogClientInstanceIdRef.current !== message.clientInstanceId) return;
+        const catalogEvent = message.event;
+        if (catalogEvent.kind === "documentArchiveReplaced") {
+          const decoded = decodeLocalCatalogArchiveV1(new Uint8Array(catalogEvent.archive));
+          if (decoded !== undefined) setLocalCatalog(decoded);
+        } else if (catalogEvent.kind === "remoteMutations") {
+          const latest = catalogEvent.envelopes.map((envelope) => decodeLocalCatalogPayloadV1(envelope.diff.payload)).filter((catalog): catalog is LocalCatalog => catalog !== undefined).at(-1);
+          if (latest !== undefined) setLocalCatalog(latest);
+        }
+        return;
+      }
+      if (message.kind === "event" && localDocumentOwnersRef.current.has(message.clientInstanceId)) {
+        const owner = localDocumentOwnersRef.current.get(message.clientInstanceId);
+        if (message.event.kind === "status") owner?.status?.(message.event.persisted);
+        else if (message.event.kind === "documentArchiveReplaced") owner?.archive?.(new Uint8Array(message.event.archive));
+        return;
+      }
       if (message.kind === "event" && message.documentId === IDENTITY_CONFIG_SCHEMA) {
         if (identityClientInstanceIdRef.current !== message.clientInstanceId) return;
         const identityEvent = message.event;
@@ -3860,6 +3898,86 @@ function FrameworkOsShellInner({
     backboneWorkerRef.current = worker;
     return worker;
   }, [cancelSpaceArtifactCreationsForRuntime, captureDialogOrigin, collectSpaceDirectoryEvents, failDocumentBackbone, hubEnv, loadDocumentArchive, receiveDocumentBackbone, retireBrowserActorUi]);
+
+  //#region 🗂️LocalCatalog
+  useEffect(() => {
+    const worker = ensureBackboneWorker();
+    const clientInstanceId = crypto.randomUUID();
+    localCatalogClientInstanceIdRef.current = clientInstanceId;
+    worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "open", clientInstanceId, ...localCatalogActorConfig(shellActorIdRef.current, localDataDir) }) });
+    return () => {
+      if (localCatalogClientInstanceIdRef.current === clientInstanceId) localCatalogClientInstanceIdRef.current = null;
+      worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "close", documentId: LOCAL_CATALOG_CONFIG_SCHEMA, clientInstanceId }) });
+    };
+  }, [ensureBackboneWorker, localDataDir]);
+
+  /** 💾️ Writes one kept document into its folder lane and VERIFIES it: the worker actor stays open until a folder read-back
+   * returns exactly the archive that was written (each `persisted` status asks for a fresh read), so a stale folder or a
+   * failed PUT never counts as kept. `false` once the deadline passes. */
+  const writeLocalDocumentRef = useRef(async (_admission: LocalCatalogAdmissionV1): Promise<boolean> => false);
+  writeLocalDocumentRef.current = async (admission: LocalCatalogAdmissionV1): Promise<boolean> => {
+    const worker = ensureBackboneWorker();
+    const clientInstanceId = crypto.randomUUID();
+    const { documentId, schema } = admission.document;
+    const verified = new Promise<boolean>((resolve) => {
+      const settle = (written: boolean): void => {
+        clearTimeout(deadline);
+        localDocumentOwnersRef.current.delete(clientInstanceId);
+        resolve(written);
+      };
+      const deadline = setTimeout(() => settle(false), LOCAL_CATALOG_WRITE_DEADLINE_MS_V1);
+      localDocumentOwnersRef.current.set(clientInstanceId, {
+        status: (persisted) => {
+          if (persisted) worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "send", documentId, clientInstanceId, message: { kind: "externalChanged" } }) });
+        },
+        archive: (archive) => {
+          if (sameLocalDocumentArchiveV1(archive, admission.archive)) settle(true);
+        },
+      });
+    });
+    worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "open", clientInstanceId, documentId, schema, bindings: [admission.binding], actor: shellActorIdRef.current }) });
+    worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "send", documentId, clientInstanceId, message: { kind: "localDocumentArchive", archive: Array.from(admission.archive) } }) });
+    const written = await verified;
+    worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "close", documentId, clientInstanceId }) });
+    return written;
+  };
+
+  /** 📖️ Reads one kept document's archive back from its lane, or `null` when the lane holds none before the deadline. */
+  const readLocalDocumentRef = useRef(async (_document: LocalDocument): Promise<Uint8Array | null> => null);
+  readLocalDocumentRef.current = async (document: LocalDocument): Promise<Uint8Array | null> => {
+    const worker = ensureBackboneWorker();
+    const clientInstanceId = crypto.randomUUID();
+    const read = new Promise<Uint8Array | null>((resolve) => {
+      const settle = (archive: Uint8Array | null): void => {
+        clearTimeout(deadline);
+        localDocumentOwnersRef.current.delete(clientInstanceId);
+        resolve(archive);
+      };
+      const deadline = setTimeout(() => settle(null), LOCAL_CATALOG_READ_DEADLINE_MS_V1);
+      localDocumentOwnersRef.current.set(clientInstanceId, { archive: settle });
+    });
+    worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "open", clientInstanceId, documentId: document.documentId, schema: document.schema, bindings: [localCatalogBindingV1(document)], actor: shellActorIdRef.current }) });
+    const archive = await read;
+    worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "close", documentId: document.documentId, clientInstanceId }) });
+    return archive;
+  };
+
+  /** 🧾️ Records one catalog mutation: the whole-record envelope for cross-tab listeners, then the new catalog archive for the
+   * folder lane — the facet's own event-sourced record. Without an open facet nothing is recorded. */
+  const recordLocalCatalogRef = useRef((_mutation: LocalCatalogConfigMutation): LocalCatalog | null => null);
+  recordLocalCatalogRef.current = (mutation: LocalCatalogConfigMutation): LocalCatalog | null => {
+    const clientInstanceId = localCatalogClientInstanceIdRef.current;
+    if (clientInstanceId === null) return null;
+    const base = localCatalogRef.current;
+    const next = applyLocalCatalogConfigMutation(base, mutation);
+    const worker = ensureBackboneWorker();
+    worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "send", documentId: LOCAL_CATALOG_CONFIG_SCHEMA, clientInstanceId, message: { kind: "localMutations", envelopes: [localCatalogMutationEnvelopeV1(shellActorIdRef.current, mutation, base)] } }) });
+    worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "send", documentId: LOCAL_CATALOG_CONFIG_SCHEMA, clientInstanceId, message: { kind: "localDocumentArchive", archive: Array.from(localCatalogArchiveV1(next)) } }) });
+    localCatalogRef.current = next;
+    setLocalCatalog(next);
+    return next;
+  };
+  //#endregion 🗂️LocalCatalog
 
   handleDirectoryEventPageRef.current = (message) => {
     const owner = directoryHomeOwnerRef.current;
@@ -5639,10 +5757,10 @@ function FrameworkOsShellInner({
    * generation moves under one of its awaits. The push used to sit inside that guard and `await` a
    * guest document read, so a guest re-arming a faulting `flowEvalTick` (which settles into another
    * refresh) superseded every push mid-read and the closure never crossed — 45 s of live console
-   * with zero `[DEBUG] contributions …` lines (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). The unit
-   * now lives in {@link createContributionsPublisher}: per `(pluginId, instanceId)`, joined on an
-   * unmoved registry generation, cancelled only by `retire` (a session switch), and installed keyed
-   * by `(instanceId, content)`.
+   * with zero `[TRACE] contributions …` lines (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). The unit
+   * now lives in {@link createContributionsPublisher} and awaits nothing before the crossing: the pack
+   * is cut by the receiver's `consumes` row alone (never by a document read), once per registry
+   * generation, and installed keyed by `(instanceId, content)`.
    */
   const contributionsPublisherRef = useRef<ReturnType<typeof createContributionsPublisher<ContributionsEnvironment>> | null>(null);
   if (contributionsPublisherRef.current === null) {
@@ -5650,26 +5768,13 @@ function FrameworkOsShellInner({
       // 🔢 The identity of the closure the pack is cut from: a plugin load/unload or an extension
       // toggle is a new generation and re-runs the unit; a plain refresh is not.
       registryGeneration: (environment) => `${environment.hostMode ? "host" : "focused"}|${environment.loadedPlugins.map((entry) => entry.handle.pluginId).join(",")}|${[...environment.disabledExtensionIds].sort().join(",")}`,
-      resolveScope: async (session, environment): Promise<ContributionsOperatorScope> => {
-        const receiverPlugin = environment.loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId);
-        const fromDocument = await readDocumentOperatorScope(receiverPlugin, session.instanceId);
-        if (fromDocument.status === "resolved" && fromDocument.kinds.length > 0) return fromDocument;
-        // 📚️ A genesis `ReadDocument` is the NORMAL boot state — the app's published examples carry
-        // the same operator kinds the first opened document will, so they scope the push instead of
-        // stalling it.
-        const exampleSources = exampleArtifactSources(receiverPlugin?.manifest.examples ?? [], environment.session.app.dialect);
-        const fromExamples = resolveDocumentOperatorKinds(exampleSources);
-        if (fromExamples.status === "resolved" && fromExamples.kinds.length > 0) return fromExamples;
-        if (fromDocument.status === "resolved") return fromDocument;
-        return fromDocument;
-      },
-      buildPack: (session, kinds, environment) => {
+      buildPack: (session, environment) => {
         const loadedForScope = environment.loadedPlugins.filter((entry) => !environment.disabledExtensionIds.has(programPluginIdV1(entry))).map((entry) => ({ pluginId: programPluginIdV1(entry), manifest: { topicContributions: entry.manifest.topicContributions } }));
         const receiver = environment.loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId);
-        const scopedContributionsJson = scopeContributionsJson(loadedForScope, receiver === undefined ? session.pluginId : programPluginIdV1(receiver), kinds, environment.consumedTopics);
+        const scopedContributionsJson = scopeContributionsJson(loadedForScope, receiver === undefined ? session.pluginId : programPluginIdV1(receiver), environment.consumedTopics);
         return scopedContributionsJson;
       },
-      install: async (session, json, kinds, environment) => {
+      install: async (session, json, environment) => {
         for (const pluginEntry of environment.loadedPlugins) {
           if (!pluginEntry.manifest.apps?.length) continue;
           if (!pluginShouldReceiveContributions(pluginEntry.handle.pluginId, session.pluginId, environment.hostMode)) continue;
@@ -5700,18 +5805,6 @@ function FrameworkOsShellInner({
       },
     });
   }
-
-  /** 📄️ The receiver's OWN open document, as an operator scope — a genesis envelope, a plugin that
-   * cannot be read and a read that throws are all typed `unresolved` reasons, never a silent skip. */
-  const readDocumentOperatorScope = useCallback(async (receiverPlugin: LoadedProgramState | undefined, instanceId: number): Promise<ContributionsOperatorScope> => {
-    if (!receiverPlugin) return { status: "unresolved", reason: "no-receiver" };
-    if (!receiverPlugin.handle.readAppDocumentPack) return { status: "unresolved", reason: "no-document-read" };
-    const liveDocument = await receiverPlugin.handle.readAppDocumentPack(instanceId);
-    if (!liveDocument) return { status: "unresolved", reason: "no-document-pack" };
-    const sources = documentSourcesFromPack(liveDocument.pack, liveDocument.spr, liveDocument.ops);
-    const scope: ContributionsOperatorScope = liveDocument.ops == null ? { status: "unresolved", reason: "document-ops-missing" } : resolveDocumentOperatorKinds(sources);
-    return scope;
-  }, []);
 
   /** 🧩️ Starts (or joins) the contributions unit for one session and reports what it decided. The
    * environment is captured HERE, where the live host bindings are in scope, so the unit never reads
@@ -5750,7 +5843,7 @@ function FrameworkOsShellInner({
     // 🐢️ `applyHostEffects` is declared later in this component and is referenced in the body only,
     // never in this array — the same temporal-dead-zone avoidance `refreshUi` below documents.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [captureProgramEffectOwner, hostMode, readDocumentOperatorScope, registry, resolvedTargetViewState],
+    [captureProgramEffectOwner, hostMode, registry, resolvedTargetViewState],
   );
   /** 🔚 A session switch abandons whatever contributions unit is still resolving for the instance
    * that is going away: its closure must never be installed into an instance nobody is looking at,
@@ -6085,7 +6178,7 @@ function FrameworkOsShellInner({
   //#endregion 🤝️UiRefreshCoalescing
   refreshDirectoryHomeRef.current = async (nextSession) => refreshUi(nextSession);
 
-  /** @emoji 🗣️ Keeps already-built window titles (workbench layout, extra spawned windows) in sync on every locale/terminology switch — `refreshUi` only rebuilds `shellLayout` from scratch on a session change, so an existing session's baked-in titles would otherwise go stale.
+  /** 🗣️ Keeps already-built window titles (workbench layout, extra spawned windows) in sync on every locale/terminology switch — `refreshUi` only rebuilds `shellLayout` from scratch on a session change, so an existing session's baked-in titles would otherwise go stale.
    *
    * 🌐️ And asks the GUEST to re-render, because the titles are only the shell's own half. Every label
    * inside a guest-authored body — the outliner's section headings, its per-row Hide/Lock actions, the
@@ -6744,6 +6837,20 @@ function FrameworkOsShellInner({
           }
           continue;
         }
+        if ("videoRenderExport" in effect) {
+          const { filename, program } = effect.videoRenderExport;
+          const capabilities = PLUGIN_BUILD_TARGETS.find((target) => target.pluginId === baseSession.pluginId)?.capabilities ?? [];
+          void runVideoRenderExportV1(
+            { filename, owner: baseSession.pluginId, program, capabilities },
+            {
+              environment: browserVideoRenderEnvironmentV1(),
+              deliver: (name, bytes) => downloadMediaExportBytes(name, "video/mp4", bytes),
+              locale: () => uiLocaleRef.current,
+              announce: (text) => showTransientNoticeRef.current(text, "info", "video-render-export.started"),
+            },
+          ).then(({ outcome, text }) => showTransientNoticeRef.current(text, outcome.status === "done" || outcome.status === "cancelled" ? "info" : "warning", `video-render-export.${outcome.status}`));
+          continue;
+        }
         if ("iconRenderExport" in effect) {
           for (const item of effect.iconRenderExport.items) {
             try {
@@ -6903,6 +7010,37 @@ function FrameworkOsShellInner({
               }
             } catch (openingError) {
               refuseReplay("open-rejected", "artifact opening rejected", openingError, args);
+            }
+          } else if (actionId === LOCAL_CATALOG_ACTIONS_V1.admit) {
+            const admission = localCatalogAdmissionV1(argsRecord, localDataDir, Date.now());
+            if ("refusal" in admission) {
+              showTransientNoticeRef.current(localCatalogNoticeTextV1(admission.refusal, uiLocaleRef.current), "warning", localCatalogNoticeCodeV1(admission.refusal));
+            } else {
+              const name = admission.document.name || admission.document.documentId;
+              showTransientNoticeRef.current(localCatalogNoticeTextV1("keeping", uiLocaleRef.current, name), "info", localCatalogNoticeCodeV1("keeping"));
+              const written = isCurrentEffectOwner(effectOwner) ? await writeLocalDocumentRef.current(admission) : null;
+              if (written === null) {
+                showTransientNoticeRef.current(localCatalogNoticeTextV1("cancelled", uiLocaleRef.current, name), "warning", localCatalogNoticeCodeV1("cancelled"));
+              } else if (!written) {
+                showTransientNoticeRef.current(localCatalogNoticeTextV1("write-failed", uiLocaleRef.current, name), "warning", localCatalogNoticeCodeV1("write-failed"));
+              } else if (recordLocalCatalogRef.current(localCatalogAdmitMutationV1(admission)) === null) {
+                showTransientNoticeRef.current(localCatalogNoticeTextV1("no-data-folder", uiLocaleRef.current, name), "warning", localCatalogNoticeCodeV1("no-data-folder"));
+              } else {
+                showTransientNoticeRef.current(localCatalogNoticeTextV1("kept", uiLocaleRef.current, name), "info", localCatalogNoticeCodeV1("kept"));
+                const pluginEntry = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === baseSession.pluginId);
+                const rehydration = localCatalogRehydrationArgumentsV1(admission);
+                if (pluginEntry && rehydration !== null) await makeEffectDispatchOne(pluginEntry, baseSession, (effects, target, scope) => applyHostEffects(effects, target, scope, effectOwner), () => isCurrentEffectOwner(effectOwner), resolvedTargetViewState, { causedBy: effectOwner.inputSeq, windowId: baseSession.viewState.windowId ?? null })(LOCAL_CATALOG_ACTIONS_V1.rehydrate, rehydration);
+                const seen = rehydratedLocalDocumentsRef.current.get(baseSession.instanceId);
+                if (seen !== undefined) seen.add(`${admission.document.documentId}@${admission.document.admittedAtMs}`);
+              }
+            }
+          } else if (actionId === LOCAL_CATALOG_ACTIONS_V1.retire) {
+            const documentId = localCatalogDocumentIdV1(argsRecord);
+            const kept = documentId === null ? undefined : localCatalogRef.current.documents.find((document) => document.documentId === documentId);
+            if (kept === undefined) {
+              showTransientNoticeRef.current(localCatalogNoticeTextV1("document-unknown", uiLocaleRef.current), "warning", localCatalogNoticeCodeV1("document-unknown"));
+            } else if (recordLocalCatalogRef.current(retireLocalDocument(kept.documentId)) !== null) {
+              showTransientNoticeRef.current(localCatalogNoticeTextV1("retired", uiLocaleRef.current, kept.name || kept.documentId), "info", localCatalogNoticeCodeV1("retired"));
             }
           } else if (isShellOwnedCommandId(actionId)) {
             // 🐚️ Chrome replays against shell-owned state. Routing one into the guest is what the
@@ -7305,6 +7443,35 @@ function FrameworkOsShellInner({
   );
   applyShellUriRef.current = applyShellUri;
 
+  /** 🗃️ Hands the landing app every document this device keeps that its current instance was not handed yet: each one's
+   * archive is read back from its own lane and applied as `applyLocalCatalogDocument` (a retained, idempotent catalog
+   * job), so a studio kept before a reload is listed — and opens — again. A lane that holds no archive is skipped. */
+  useEffect(() => {
+    const current = session;
+    if (!current || !hostPlugin || current.pluginId !== hostPlugin.handle.pluginId || current.app.id !== landingAppId) return;
+    const seen = rehydratedLocalDocumentsRef.current.get(current.instanceId) ?? new Set<string>();
+    rehydratedLocalDocumentsRef.current.set(current.instanceId, seen);
+    const pending = localCatalog.documents.filter((document) => !seen.has(`${document.documentId}@${document.admittedAtMs}`));
+    if (pending.length === 0) return;
+    let cancelled = false;
+    void (async () => {
+      for (const document of pending) {
+        if (cancelled) return;
+        seen.add(`${document.documentId}@${document.admittedAtMs}`);
+        const archive = await readLocalDocumentRef.current(document);
+        if (archive === null || cancelled) continue;
+        const args = localCatalogRehydrationArgumentsV1({ document, archive });
+        if (args === null) continue;
+        const owner = captureEffectOwner(current, captureDialogOrigin(current));
+        const response = await hostPlugin.handle.handleAction(current.instanceId, encodeWindowActionInvocation(current, { controllerId: current.app.controllerId, action: LOCAL_CATALOG_ACTIONS_V1.rehydrate, args }), current.viewState);
+        if (!cancelled) await applyHostEffects(response.requestedEffects ?? [], current, resolveUiDirtyScope(response.uiScope), owner);
+      }
+    })().catch(logUnlessRetiredV1("[os-shell] local catalog re-hydration failed"));
+    return () => {
+      cancelled = true;
+    };
+  }, [applyHostEffects, captureDialogOrigin, captureEffectOwner, hostPlugin, landingAppId, localCatalog, session]);
+
   useEffect(() => {
     const { overlay, sessionRoute: route } = shellSessionRouteV1(shellUri, sessionRouteRef.current);
     sessionRouteRef.current = route;
@@ -7655,6 +7822,7 @@ function FrameworkOsShellInner({
         if (isMutationRejectedFault(error)) return { reason: "mutation-rejected" };
         const text = String(error instanceof Error ? error.message : error);
         if (/queue is full|queue full|another action pending|action-busy/u.test(text)) return { reason: "queue-full", detail: text };
+        if (/action-catching-up/u.test(text)) return { reason: "catching-up", detail: text };
         if (/action-owner-mismatch|owner retired|ambiguous document owner/u.test(text)) return { reason: "owner-mismatch", detail: text };
         return { reason: "dispatch-failed", detail: text };
       };
@@ -7927,11 +8095,6 @@ function FrameworkOsShellInner({
           return refuse("undeclared-action", `sync card: ${action.action}`);
         }
 
-        if (hostMode && action.controllerId === landingControllerId && action.action === "importSpace") {
-          importSpaceInputRef.current?.click();
-          return applied();
-        }
-
         if (hostMode && action.action === "spawnApp" && action.controllerId !== hostControllerId) {
           const pluginId = typeof action.args === "object" && action.args != null && "pluginId" in action.args ? String((action.args as { pluginId?: string }).pluginId ?? "") : "";
           const program = spacePrograms.find((entry) => entry.pluginId === pluginId);
@@ -8090,7 +8253,7 @@ function FrameworkOsShellInner({
         if (!dispatchViewState) {
           return refuse("view-state-unresolved", `window=${dispatchWindowId ?? ""}`);
         }
-        // 🚨️ Undeclared-action drop — ALWAYS visible, never `[DEBUG]`/diagnostics-gated: this is the one
+        // 🚨️ Undeclared-action drop — ALWAYS visible, never `[TRACE]`/diagnostics-gated: this is the one
         // place a fully wired binding dies without a fault reaching anyone, so it names the app, the action
         // and the dispatching window kind (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
         const undeclared = undeclaredActionDiagnostic(targetSession.app.id, action.action, targetSession.app.windowKinds, (baseDispatchViewState.windowInstances ?? []).find((instance) => instance.id === dispatchWindowId)?.windowKindId ?? null, targetSession.app.actions ?? []);
@@ -8139,7 +8302,7 @@ function FrameworkOsShellInner({
         }
         if (directBrowserActor !== null) {
           // 📮️ The hub-mounted browser-actor route: a rejection (`another action pending`, `action-busy`,
-          // `action-owner-mismatch`, a closed mailbox) is a typed ledger refusal now, not a `[DEBUG]` error
+          // `action-owner-mismatch`, a closed mailbox) is a typed ledger refusal now, not a `[TRACE]` error
           // plus a "render error" toast (design §0 row 2). The mailbox names its own reasons
           // (`browserActorActionRefusalReasonV1`); a fault it does not know falls back to the shared mapper.
           try {
@@ -8244,7 +8407,6 @@ function FrameworkOsShellInner({
       updateSpacePanel,
       hostControllerId,
       hostApp,
-      landingControllerId,
       hostCatalogueTabId,
       historyCanUndo,
       ensureBackboneWorker,
@@ -10158,7 +10320,7 @@ function FrameworkOsShellInner({
    * reads through stable `sources`, so a job advancing re-renders the window, never the dock. */
   const taskManagerShellTasksRef = useRef<readonly TaskManagerTaskV1[]>([]);
   const taskManagerListenersRef = useRef(new Set<() => void>());
-  const taskManagerTasksCacheRef = useRef<{ readonly jobs: readonly SpawnedJobRowV1[]; readonly shell: readonly TaskManagerTaskV1[]; readonly transfers: readonly TaskManagerTaskV1[]; readonly tasks: readonly TaskManagerTaskV1[] } | null>(null);
+  const taskManagerTasksCacheRef = useRef<{ readonly jobs: readonly SpawnedJobRowV1[]; readonly exports: readonly VideoRenderJobRow[]; readonly shell: readonly TaskManagerTaskV1[]; readonly transfers: readonly TaskManagerTaskV1[]; readonly tasks: readonly TaskManagerTaskV1[] } | null>(null);
   const documentTransfersRef = useRef(new Map<string, { readonly transfer: TaskManagerDocumentTransferV1; readonly abort: AbortController }>());
   const documentTransferTasksRef = useRef<readonly TaskManagerTaskV1[]>([]);
   const installStartedAtRef = useRef(new Map<string, number>());
@@ -10174,6 +10336,7 @@ function FrameworkOsShellInner({
     else if (task.lane === "activation") pluginInstallAbortsRef.current.get(task.id.slice("install:".length))?.abort();
     else if (task.lane === "toolRun") fireToolRunControl(task, "abort");
     else if (task.lane === "documentTransfer") documentTransfersRef.current.get(task.id.slice("documentTransfer:".length))?.abort.abort();
+    else if (task.lane === "export") cancelVideoRenderExportV1(task.id);
     else agentBridge.cancelToolCall(task.id.slice("tool:".length));
   };
   const taskManagerSuspendRef = useRef<(task: TaskManagerTaskV1, suspend: boolean) => void>(() => undefined);
@@ -10184,20 +10347,23 @@ function FrameworkOsShellInner({
     registry: pluginRuntimeActivationRegistryV1,
     tasks: () => {
       const jobs = spawnedJobsSnapshotV1();
+      const exports = videoRenderExportJobsSnapshotV1();
       const shell = taskManagerShellTasksRef.current;
       const transfers = documentTransferTasksRef.current;
       const cached = taskManagerTasksCacheRef.current;
-      if (cached && cached.jobs === jobs && cached.shell === shell && cached.transfers === transfers) return cached.tasks;
-      const tasks = [...spawnedJobTasksV1(jobs), ...shell, ...transfers];
-      taskManagerTasksCacheRef.current = { jobs, shell, transfers, tasks };
+      if (cached && cached.jobs === jobs && cached.exports === exports && cached.shell === shell && cached.transfers === transfers) return cached.tasks;
+      const tasks = [...spawnedJobTasksV1(jobs), ...videoRenderExportTasksV1(exports, uiLocaleRef.current), ...shell, ...transfers];
+      taskManagerTasksCacheRef.current = { jobs, exports, shell, transfers, tasks };
       return tasks;
     },
     subscribe: (listener) => {
       taskManagerListenersRef.current.add(listener);
       const unsubscribeJobs = subscribeSpawnedJobsV1(listener);
+      const unsubscribeExports = subscribeVideoRenderExportJobsV1(listener);
       return () => {
         taskManagerListenersRef.current.delete(listener);
         unsubscribeJobs();
+        unsubscribeExports();
       };
     },
     cancel: (task) => taskManagerCancelRef.current(task),
@@ -11014,7 +11180,7 @@ function FrameworkOsShellInner({
     [loadedPlugins, onAction, session, focusedApp, focusedProgram],
   );
 
-  /** @emoji 🎛️ Shared by the desktop navbar center cluster and the mobile panel's synthetic "App" tab (see `mobilePanelTabs`). */
+  /** 🎛️ Shared by the desktop navbar center cluster and the mobile panel's synthetic "App" tab (see `mobilePanelTabs`). */
   const exampleSelectElement = useMemo(() => {
     if (!session || !focusedApp || exampleOptions.length === 0 || locks.exampleId || (hostMode && focusedApp.id === landingAppId)) return null;
     return (
@@ -11032,7 +11198,7 @@ function FrameworkOsShellInner({
     );
   }, [session, focusedApp, exampleOptions, locks.exampleId, hostMode, landingAppId, activeExampleId, dispatchActiveExample]);
 
-  /** @emoji 🎛️ Shared by the desktop navbar center cluster and the mobile panel's synthetic "App" tab (see `mobilePanelTabs`).
+  /** 🎛️ Shared by the desktop navbar center cluster and the mobile panel's synthetic "App" tab (see `mobilePanelTabs`).
    * `aria-keyshortcuts` republishes the two framework mode-cycling chords on the GROUP, which is where
    * they belong: the chords step through the group rather than addressing any one button. */
   const modeSwitcherElement = useMemo(() => {
@@ -11067,7 +11233,7 @@ function FrameworkOsShellInner({
     return surfaceRoleAppsV1(apps, session.app.dialect);
   }, [loadedPlugins, session]);
 
-  /** @emoji 👁️✏️ Navbar role group — the in-shell control that makes `…#viewer` reachable without a
+  /** 👁️✏️ Navbar role group — the in-shell control that makes `…#viewer` reachable without a
    * reload (`📓️audit-window-inventory-2026-09-12.md` §4 P0 item 2). Labels come from each target
    * `AppDefinition`'s OWN localized label, so en/de follow the plugin rather than a shell dictionary.
    * Shares the mode switcher's placement in both the desktop navbar cluster and the mobile "App" tab. */
@@ -11464,7 +11630,7 @@ function FrameworkOsShellInner({
   const detailsOverrideTabId = panel?.activePanelTab;
   const detailsOverrideAnchor = detailsOverrideTabId ? findPanelTabInDock(dock, detailsOverrideTabId)?.anchor : undefined;
 
-  /** @emoji 🎓️ The current introduction step's target element ids (`introduce` + `show`), classified by
+  /** 🎓️ The current introduction step's target element ids (`introduce` + `show`), classified by
    * shape — `null` unless that shape is present, so every reveal override below (here and in
    * `modeWindows`) is a plain truthiness check. A folded utility bar/Actions rail/dock panel would
    * otherwise hide the target from ever mounting (see `useIntroductionAnchorRect`), leaving the step
@@ -12580,34 +12746,6 @@ function FrameworkOsShellInner({
       <div className="flex h-full min-h-0 flex-col overflow-hidden">
         {studioHomeBar}
         {focusedBar}
-        <input
-          ref={importSpaceInputRef}
-          type="file"
-          // 📦️ `.pack` files branch to `s/plugin`'s pack-aware `importSpacePackPayload` action
-          // (`semio_framework_os::import_os_space_from_pack`, wave 2 s+shome+sstudio family) —
-          // read as a dataUrl, same shape as the generic `RequestFileOpen`/`readAs: "dataUrl"` path
-          // below. Anything else keeps reading as text and dispatching the JSON-envelope "importSpace".
-          accept=".spk,.dsl,.ops,application/octet-stream"
-          className="hidden"
-          onChange={(event) => {
-            const file = event.target.files?.[0];
-            if (!file) return;
-            if (file.name.toLowerCase().endsWith(".pack")) {
-              const reader = new FileReader();
-              reader.onload = () => {
-                const payload = typeof reader.result === "string" ? reader.result : "";
-                onAction({ controllerId: landingControllerId ?? "", action: "importSpacePackPayload", args: { payload } });
-                event.target.value = "";
-              };
-              reader.readAsDataURL(file);
-              return;
-            }
-            void file.text().then((json) => {
-              onAction({ controllerId: landingControllerId ?? "", action: "importSpace", args: { json } });
-              event.target.value = "";
-            });
-          }}
-        />
         <div className="min-h-0 flex-1">
           <ShellFaultBoundary boundaryId="session-canvas" fallbackLabel={shellLabel("ui.common.renderError")}>
             <App
@@ -12831,9 +12969,9 @@ function FrameworkOsShellInner({
    * programs this session can spawn, and which installed plugins ended up `failed`/`crashed` (the shell
    * only console-logs a non-primary install failure — see the streaming install effect). Shape is
    * {@link ShellCatalogProbe}; consumed by
-   * `framework-os-dev verify catalog`. Beside it, `__semioOsInstalledContributions()` reads the contributions closure the
-   * host last pushed through `setContributions` (`<instanceId>::<json>`, {@link createContributionsPublisher}'s
-   * `installedKey`) — the witness that a topic-only extension reached its parent. Never defined in a production build. */
+   * `framework-os-dev verify catalog`. Beside it, `__semioOsInstalledContributions(instanceId)` reads the contributions
+   * closure the host last pushed into that instance through `setContributions` ({@link createContributionsPublisher}'s
+   * `installedFor`) — the witness that a topic-only extension reached its parent. Never defined in a production build. */
   useEffect(() => {
     let dev = false;
     try {
@@ -12850,8 +12988,8 @@ function FrameworkOsShellInner({
       programs: spacePrograms.map((program) => ({ pluginId: program.pluginId, appId: program.appId, label: program.label })),
       spawned: (panel?.spawnedApps ?? []).map((entry) => ({ id: entry.id, pluginId: entry.pluginId, appId: entry.appId })),
     };
-    const installed = window as unknown as { __semioOsInstalledContributions?: () => string | null };
-    installed.__semioOsInstalledContributions = () => contributionsPublisherRef.current?.installedKey() ?? null;
+    const installed = window as unknown as { __semioOsInstalledContributions?: (instanceId: number) => string | null };
+    installed.__semioOsInstalledContributions = (instanceId) => contributionsPublisherRef.current?.installedFor(instanceId) ?? null;
     return () => {
       delete host.__semioOsCatalogProbe;
       delete installed.__semioOsInstalledContributions;
@@ -12882,7 +13020,7 @@ function FrameworkOsShellInner({
     };
   }, []);
 
-  /** 🧯️ One console record per plugin the router excluded — permanent, not a `[DEBUG]` trace: an
+  /** 🧯️ One console record per plugin the router excluded — permanent, not a `[TRACE]` trace: an
    * excluded plugin installs cleanly, so this is the only signal outside the dev probe that its
    * surfaces are unroutable. */
   useEffect(() => {

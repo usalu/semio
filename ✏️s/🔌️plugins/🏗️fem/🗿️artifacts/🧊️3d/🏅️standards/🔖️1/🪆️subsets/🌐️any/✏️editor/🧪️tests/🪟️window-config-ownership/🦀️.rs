@@ -19,7 +19,6 @@ fn fem3d_window_config_camera_uses_the_shared_renderer_pose_contract() {
     ] {
         assert!(dsl::json::from_json_str::<set_camera::SetCamera>(&invalid.to_string()).is_err());
     }
-    eprintln!("[DEBUG] FEM native camera command admits the actual nested renderer pose and rejects opaque, flat, short-vector and projection-mixed payloads");
 }
 
 
@@ -38,7 +37,6 @@ fn fem3d_window_config_document_admission_rejects_window_and_os_fields() {
         assert!(dsl::json::from_json_str::<crate::standards::v1::subsets::any::schema::Fem3dArtifact>(&text).is_err(), "artifact admitted {key}");
         assert!(dsl::json::from_json_str::<Fem3dSnapshot>(&text).is_err(), "snapshot admitted {key}");
     }
-    eprintln!("[DEBUG] FEM 3d artifact and snapshot reject all three foreign owner fields");
 }
 
 fn block_on_fem_window_ownership<F: std::future::Future>(mut future: std::pin::Pin<Box<F>>) -> F::Output {
@@ -171,7 +169,6 @@ fn fem3d_window_config_runtime_isolates_same_kind_instances_and_restores_packs()
                 .await;
                 artifact_app_laws::close_registered_fixture_app(&mut *app);
                 outcome.expect("FEM exact-window ownership runtime law");
-                eprintln!("[DEBUG] FEM fem3d isolated two same-kind instances per window kind, restored exact packs, and preserved app/document bytes");
             }))
         })
         .expect("spawn FEM window ownership law")

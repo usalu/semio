@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use crate::os_dsl::schema::{FieldSpec, FieldValue, RecordLayout, RecordSpec, RecordValue, Shape};
 
 //#region 🔖️Fixtures
-/// @emoji 🧬️ A small 3-field record spec exercising a few different `Shape` variants
+/// 🧬️ A small 3-field record spec exercising a few different `Shape` variants
 /// (`Text`, `UInt`, `Bool`) — enough to prove the facade's wiring end to end without
 /// duplicating `pack_value`'s own exhaustive wire-tag coverage.
 fn sample_spec() -> RecordSpec {

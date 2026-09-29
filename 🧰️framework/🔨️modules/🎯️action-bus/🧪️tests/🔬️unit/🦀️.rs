@@ -389,7 +389,6 @@ fn retained_wire_pages_are_admitted_sealed_transferred_and_closed_by_logical_byt
     );
     assert_eq!(dispatch.job.close_step(1, 8), semio_framework_job::InteractiveJobCloseStep::Complete);
     assert!(dispatch.job.terminal_is_empty());
-    eprintln!("[DEBUG] retained-number-close zero-items=blocked zero-bytes=blocked logical=7+1 backing-logical=0 terminal=true");
 }
 
 #[test]

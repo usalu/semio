@@ -35,7 +35,7 @@ export class GenerateScript extends BundleScript {
 //#endregion 🔖️generate
 
 //#region 🔖️check
-/** @emoji 🔎️ Renders the catalog in memory and byte-compares it against the committed generated files — never writes. */
+/** 🔎️ Renders the catalog in memory and byte-compares it against the committed generated files — never writes. */
 export class CheckScript extends BundleScript {
   run(_segments: string[]): void {
     const repoRoot = getWorkspaceRoot();

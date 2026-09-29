@@ -1,4 +1,4 @@
-//! @emoji 🔌️ The per-target concrete `ActiveBackend` alias — the shape `ui_render::backend`'s own
+//! 🔌️ The per-target concrete `ActiveBackend` alias — the shape `ui_render::backend`'s own
 //! docstring prescribes for this exact crate (U3: `dyn GraphicsBackend` is banned, and there is
 //! nothing here for a vtable to erase in the first place — exactly one of the four hand-written
 //! backends compiles per real target, so the seam resolves at *compile* time via a `cfg`-selected

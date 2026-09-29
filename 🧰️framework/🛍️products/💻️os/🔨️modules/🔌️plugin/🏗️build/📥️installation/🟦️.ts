@@ -59,7 +59,7 @@ function assertExtensionOutputsFresh(root: string = extensionOutRoot, rebuilding
   }
 }
 
-/** @emoji 🧩️ Mirrors a just-built extension crate from `🔌️plugin-modules/` into the runtime `/🧩️extension-modules` install root so catalog loads resolve without a separate `.sxt` install step. */
+/** 🧩️ Mirrors a just-built extension crate from `🔌️plugin-modules/` into the runtime `/🧩️extension-modules` install root so catalog loads resolve without a separate `.sxt` install step. */
 function publishBuiltExtension(target: PluginRegistryEntry, builtOutDir: string): void {
   if (target.role !== "extension") return;
   if (!existsSync(builtOutDir)) return;
@@ -95,7 +95,7 @@ function publishBuiltExtension(target: PluginRegistryEntry, builtOutDir: string)
   console.log(`published extension ${target.pluginId} -> ${moduleUrl}`);
 }
 
-/** @emoji 🧩️ Seeds `/🧩️extension-modules` from any extension crates already present under `🔌️plugin-modules/` (covers restart without rebuild). */
+/** 🧩️ Seeds `/🧩️extension-modules` from any extension crates already present under `🔌️plugin-modules/` (covers restart without rebuild). */
 export function syncBuiltExtensionsToInstallRoot(entries: readonly PluginRegistryEntry[]): void {
   for (const target of entries) {
     if (target.role !== "extension") continue;

@@ -404,7 +404,7 @@ fn fixed_tree_bands_keep_their_intrinsic_pitch_inside_a_short_scroll_viewport() 
     let scroll = LayoutSpec::Scroll(ScrollLayout { axes: ScrollAxes::Vertical, padding: EdgeSpace::default(), sizing: Sizing::Fill });
     let mut fixture = Fixture::new();
     let viewport = fixture.push(LayoutNodeKind::Stack { horizontal: false, gap: 0.0, padding: 0.0 }, None, Some(&scroll));
-    let tree = fixture.push(LayoutNodeKind::Tree { height: intrinsic, reversed: false }, Some(viewport), None);
+    let tree = fixture.push(LayoutNodeKind::Tree { height: intrinsic, header: 0.0, reversed: false }, Some(viewport), None);
     let section = fixture.push(LayoutNodeKind::TreeSection { header: row, height: intrinsic, expanded: true, reversed: false }, Some(tree), None);
     let mut rows = Vec::new();
     for _ in 0..action_count {
@@ -425,7 +425,7 @@ fn a_closed_tree_section_keeps_its_header_toolbar_live_and_collapses_only_its_ro
     let header = metrics.row_height;
     let toolbar_layout = LayoutSpec::Stack(StackLayout { axis: Axis::Horizontal, ..StackLayout::default() });
     let mut fixture = Fixture::new();
-    let tree = fixture.push(LayoutNodeKind::Tree { height: header, reversed: false }, None, None);
+    let tree = fixture.push(LayoutNodeKind::Tree { height: header, header: 0.0, reversed: false }, None, None);
     let section = fixture.push(LayoutNodeKind::TreeSection { header, height: header, expanded: false, reversed: false }, Some(tree), None);
     let toolbar = fixture.push(LayoutNodeKind::TreeHeaderToolbar { header, reversed: false }, Some(section), Some(&toolbar_layout));
     let execute = fixture.push(LayoutNodeKind::Control { height: metrics.control_height, label_padding: Some(metrics.gap) }, Some(toolbar), None);

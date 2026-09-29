@@ -192,7 +192,7 @@ export class AdminClient {
 //#endregion 🔖️AdminClient
 
 //#region 🔖️Session
-/** @emoji 🚦️ `unreachable` is deliberately distinct from `unauthorized`: a hub that is not running at
+/** 🚦️ `unreachable` is deliberately distinct from `unauthorized`: a hub that is not running at
  * all fails the probe with a transport error, and reporting that as "your token was rejected" sends
  * the operator hunting for a credential when the actual fix is to start the hub. */
 export type AdminSessionStatus = "probing" | "authorized" | "unauthorized" | "unreachable";

@@ -55,7 +55,7 @@ export function wgpuBrowserMounts(options: WgpuBrowserConfiguration): readonly (
 }
 
 /** 🧊️ Mounts completed compiler/generator outputs and live modules without compiling or copying them. */
-/** @emoji 🧭️ The per-SERVER boot axes this serve bakes into the page, the wgpu twin of React's
+/** 🧭️ The per-SERVER boot axes this serve bakes into the page, the wgpu twin of React's
  * `VITE_SEMIO_*` build-time env (`🧑‍💻dev/🟦️.ts`): the `?query=` is the per-navigation axis, a
  * `<meta name="semio-*">` is the per-server default. Names and precedence are owned by
  * `../🧭️boot-descriptor/🟦️.ts`'s `WGPU_BOOT_META_NAMES`, restated here because a Vite config cannot

@@ -1,9 +1,9 @@
 
 use super::*;
 
+/// 🔐️ "" -> e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 (well-known empty-input SHA-256)
 #[semio_framework_async_macros::async_test]
 async fn sha256_hex_matches_known_vector() {
-    // "" -> e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 (well-known empty-input SHA-256)
     assert_eq!(semio_framework_hash::sha256_hex(b""), "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
 }
 
@@ -19,6 +19,26 @@ async fn raw_and_core_hashes_are_independent() {
 async fn full_catalog_describe_retains_finite_wall_and_fuel_bounds() {
     assert_eq!(DESCRIBE_DEADLINE_MS, 1_800_000);
     assert_eq!(DESCRIBE_FUEL_BUDGET, 8_000_000_000);
+}
+
+/// 🪪️ The static kind-identity law over the language-neutral fixture (`🧫️fixtures/🪪️kind-identity`).
+#[semio_framework_async_macros::async_test]
+async fn kind_identity_law_matches_the_fixture() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️kind-identity/🔣️.json")).expect("kind-identity fixture");
+    for case in fixture["cases"].as_array().expect("cases") {
+        let apps: Vec<KindIdentityApp<'_>> = case["apps"]
+            .as_array()
+            .expect("apps")
+            .iter()
+            .map(|app| KindIdentityApp {
+                app_id: app["appId"].as_str().expect("appId"),
+                presented_kind: app["presentedKind"].as_str().expect("presentedKind"),
+                presented_schema: app["presentedSchema"].as_str().expect("presentedSchema"),
+                declared: app["declared"].as_array().expect("declared").iter().map(|pair| (pair[0].as_str().expect("kind"), pair[1].as_str().expect("schema"))).collect(),
+            })
+            .collect();
+        assert_eq!(kind_identity_faults(&apps).len() as u64, case["faults"].as_u64().expect("faults"), "{}", case["name"]);
+    }
 }
 
 #[semio_framework_async_macros::async_test]

@@ -1,4 +1,4 @@
-//! @emoji 📖️ `dsl_grammar` — the self-hosted `.grammar` spec format: a hand-authorable,
+//! 📖️ `dsl_grammar` — the self-hosted `.grammar` spec format: a hand-authorable,
 //! EBNF-style description of one language's productions, used as the *normative* artifact every
 //! handcrafted grammar in the repo ships alongside its parser/printer. This crate parses and
 //! prints the format itself (this crate's own `📖️grammar/📖️grammar.grammar` is written in it and
@@ -22,7 +22,7 @@ pub enum SemioDialect {
     Protocol,
 }
 
-/// @emoji 📄️ One parsed `.grammar.semio` / `.protocol.semio` file: header directives + productions.
+/// 📄️ One parsed `.grammar.semio` / `.protocol.semio` file: header directives + productions.
 /// `lex` (P2-M1) is the per-grammar string-quote/escape + comment dialect declared by `string`/
 /// `comment` header directives — `LexOptions::default()` when the grammar declares neither,
 /// reproducing the fixed pre-M1 alphabet exactly.
@@ -54,7 +54,7 @@ pub enum MacroArg {
     Ident(String),
 }
 
-/// @emoji 🧩️ One symbol in a production's alternative. `Terminal` vs. `Ref` is decided lexically
+/// 🧩️ One symbol in a production's alternative. `Terminal` vs. `Ref` is decided lexically
 /// at parse time (an all-uppercase bareword is a terminal token-class name; anything else is a
 /// reference to another production, or a zero-arg macro — resolved later, not by this parser).
 #[derive(Clone, Debug, PartialEq)]
@@ -71,7 +71,7 @@ pub enum Symbol {
 //#endregion 🔖️Model
 
 //#region 📡️ProtocolModel
-/// @emoji 📡️ One parsed `.protocol.semio` file: framing + typed body directives.
+/// 📡️ One parsed `.protocol.semio` file: framing + typed body directives.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ProtocolFile {
     pub id: String,
@@ -90,7 +90,7 @@ pub enum Framing {
     Chunked,
 }
 
-/// @emoji 🔀️ P2-M2 item 4: guard gating a field's (or a whole segment's) presence on an
+/// 🔀️ P2-M2 item 4: guard gating a field's (or a whole segment's) presence on an
 /// EARLIER-decoded field's value — bmp's BITFIELDS masks (`if compression eq 3`), palette
 /// (`if bits_per_pixel le 8`). Evaluated against the walk-wide field env (item 3), so the guarded
 /// field can reference a value decoded in ANY earlier block, not just the same one.
@@ -111,7 +111,7 @@ pub enum CondOp {
     Ge,
 }
 
-/// @emoji 🔁️ P2-M2 item 1: one "repeated tag-dispatched block" — read a discriminator (+ optional
+/// 🔁️ P2-M2 item 1: one "repeated tag-dispatched block" — read a discriminator (+ optional
 /// length), branch into a known arm's fields or skip an unrecognized discriminator's declared
 /// length as opaque bytes, repeat until EOF or a declared sentinel discriminator value (`until`).
 /// `order` controls whether `length` is read before or after `discriminator` each iteration (GLB/
@@ -132,7 +132,7 @@ pub enum DispatchOrder {
     LengthFirst,
 }
 
-/// @emoji 🌿️ One recognized discriminator value's field-set. `nested` supports the GIF 89a
+/// 🌿️ One recognized discriminator value's field-set. `nested` supports the GIF 89a
 /// two-level case (an extension-introducer arm dispatches AGAIN on the label byte) — recursive via
 /// `NestedDispatch`'s own `Vec<RepeatArm>`, so nesting depth is not artificially capped at two.
 #[derive(Clone, Debug, PartialEq)]
@@ -251,13 +251,13 @@ pub enum Count {
     Field(String),
 }
 
-/// @emoji ✅️ Successful byte walk: every declared wire slot consumed.
+/// ✅️ Successful byte walk: every declared wire slot consumed.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ProtocolTrace {
     pub consumed: usize,
 }
 
-/// @emoji ❌️ Spec/bytes disagreement at a concrete offset.
+/// ❌️ Spec/bytes disagreement at a concrete offset.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ProtocolMismatch {
     pub offset: usize,
@@ -294,7 +294,7 @@ struct GToken {
     span: TextSpan,
 }
 
-/// @emoji 🔬️ Pre-scans `?`/`|` (not in `dsl_core`'s alphabet) and delegates every other run of
+/// 🔬️ Pre-scans `?`/`|` (not in `dsl_core`'s alphabet) and delegates every other run of
 /// characters whole to `crate::os_dsl::lex`, exactly like `math::graph::crate::os_dsl::lex_spanned` does
 /// for its own two Cypher-specific extras.
 // 🚫️async: E1 pure — `core_lex`/`core_lex_with` (`🗣️dsl/🔍️lexer/🦀️.rs`) were reverted to
@@ -505,7 +505,7 @@ impl Cursor {
     }
 }
 
-/// @emoji 🔢 The largest exact repetition `n(…)` a grammar may state. Exact repetition expands to
+/// 🔢 The largest exact repetition `n(…)` a grammar may state. Exact repetition expands to
 /// the copies it names, so the bound is what keeps a typo from building an enormous production.
 const EXACT_REPETITION_MAXIMUM: usize = 1_024;
 
@@ -689,7 +689,7 @@ fn parse_production_line(cursor: &mut Cursor) -> Result<Production, TextError> {
     Ok(Production { name, alternatives })
 }
 
-/// @emoji 📖️ Parses one `.grammar` file. Protocol dialect sources project through
+/// 📖️ Parses one `.grammar` file. Protocol dialect sources project through
 /// [`parse_protocol`] into a shallow [`GrammarFile`] (empty productions).
 fn parse_grammar_id(cursor: &mut Cursor) -> Result<String, TextError> {
     let first = cursor.expect_ident_or_int()?;
@@ -996,7 +996,7 @@ fn parse_prim(cursor: &mut Cursor) -> Result<Prim, TextError> {
     }
 }
 
-/// @emoji 🔀️ P2-M2 item 4: `if <field> <op> <value>` guard, `<op>` one of `eq|ne|lt|le|gt|ge`
+/// 🔀️ P2-M2 item 4: `if <field> <op> <value>` guard, `<op>` one of `eq|ne|lt|le|gt|ge`
 /// (word-keyword operators rather than symbolic `==`/`<=` — this file's own local protocol lexer
 /// only ever whitelists a small fixed token set, see the module doc; word keywords need zero lexer
 /// changes and stay entirely inside this parser).
@@ -1028,7 +1028,7 @@ fn parse_field_pair(cursor: &mut Cursor) -> Result<Field, TextError> {
     Ok(Field { name, ty, cond })
 }
 
-/// @emoji 🏷️ P2-M2 item 1: an arm/`until` tag literal — a `TEXT` literal encodes to its raw ASCII
+/// 🏷️ P2-M2 item 1: an arm/`until` tag literal — a `TEXT` literal encodes to its raw ASCII
 /// bytes (PNG/GLB's 4-char chunk/type tags), an int/hex literal encodes big-endian, trimmed to the
 /// discriminator prim's own byte width (GIF/JPG's single-byte introducer/marker codes).
 fn parse_tag_value(cursor: &mut Cursor, discriminator: &Prim) -> Result<Vec<u8>, TextError> {
@@ -1042,7 +1042,7 @@ fn parse_tag_value(cursor: &mut Cursor, discriminator: &Prim) -> Result<Vec<u8>,
     }
 }
 
-/// @emoji ✂️ Trims leading zero bytes off a `u64`'s big-endian representation (keeping at least one
+/// ✂️ Trims leading zero bytes off a `u64`'s big-endian representation (keeping at least one
 /// byte) — used for `backward <name> magic 0x...` directives, matching `framing magic`'s existing
 /// literal-to-bytes convention but without forcing a fixed 8-byte width.
 fn trim_be_bytes(value: u64) -> Vec<u8> {
@@ -1051,7 +1051,7 @@ fn trim_be_bytes(value: u64) -> Vec<u8> {
     be[first_nonzero..].to_vec()
 }
 
-/// @emoji 🌿️ Parses one `arm <tag> { field... | nested <name> <prim> { arm ... } }` body.
+/// 🌿️ Parses one `arm <tag> { field... | nested <name> <prim> { arm ... } }` body.
 fn parse_arm_body(cursor: &mut Cursor) -> Result<(Vec<Field>, Option<NestedDispatch>), TextError> {
     cursor.expect(GKind::LBrace)?;
     cursor.skip_newlines();
@@ -1083,7 +1083,7 @@ fn parse_arm_body(cursor: &mut Cursor) -> Result<(Vec<Field>, Option<NestedDispa
     Ok((fields, nested))
 }
 
-/// @emoji 🔁️ P2-M2 item 1: `repeat <name> { tag <prim> length <prim>? order length-first?
+/// 🔁️ P2-M2 item 1: `repeat <name> { tag <prim> length <prim>? order length-first?
 /// trailer <prim>? until <tag>? arm <tag> {...}* }`.
 fn parse_repeat_dispatch(cursor: &mut Cursor) -> Result<RepeatDispatch, TextError> {
     cursor.expect(GKind::LBrace)?;
@@ -1178,7 +1178,7 @@ fn flush_open_segment(blocks: &mut Vec<Block>, open: &mut Option<Block>) {
     }
 }
 
-/// @emoji 📡️ Parses one `.protocol.semio` file into a typed [`ProtocolFile`] — retains every body
+/// 📡️ Parses one `.protocol.semio` file into a typed [`ProtocolFile`] — retains every body
 /// directive (`header`/`field`/`segment`/`record`/`struct`/`enum`/`footer`/`chain`).
 pub fn parse_protocol(text: &str) -> Result<ProtocolFile, TextError> {
     let tokens = lex(text)?;
@@ -1483,7 +1483,7 @@ fn print_alternatives(alts: &[Alternative], out: &mut String) {
     }
 }
 
-/// @emoji 🖨️ Canonical printer — `parse_grammar(print_grammar(g)) == g` is this crate's own
+/// 🖨️ Canonical printer — `parse_grammar(print_grammar(g)) == g` is this crate's own
 /// round-trip law, checked by the `self_hosting` test below over this crate's own grammar file.
 pub fn print_grammar(grammar: &GrammarFile) -> String {
     let mut out = String::new();
@@ -1650,7 +1650,7 @@ fn print_cond(cond: &Cond, out: &mut String) {
     out.push_str(&cond.value.to_string());
 }
 
-/// @emoji 🏷️ Prints raw discriminator/magic bytes back to source: printable multi-byte ASCII
+/// 🏷️ Prints raw discriminator/magic bytes back to source: printable multi-byte ASCII
 /// round-trips as a `TEXT` literal (PNG/GLB's 4-char tags stay readable), anything else as a hex
 /// integer literal — matches [`parse_tag_value`]'s two accepted input forms exactly.
 fn print_tag_bytes(tag: &[u8], out: &mut String) {
@@ -1715,7 +1715,7 @@ fn header_fixed_size(fields: &[Field]) -> usize {
     total
 }
 
-/// @emoji 🖨️ Lossless protocol printer — `parse_protocol(print_protocol(p)) == p`.
+/// 🖨️ Lossless protocol printer — `parse_protocol(print_protocol(p)) == p`.
 pub fn print_protocol(protocol: &ProtocolFile) -> String {
     let mut out = String::new();
     out.push_str("dialect protocol\nprotocol ");
@@ -1906,7 +1906,7 @@ pub fn print_protocol(protocol: &ProtocolFile) -> String {
     out
 }
 
-/// @emoji ♻️ `canonicalize(canonicalize(x)) == canonicalize(x)` — the idempotence law every
+/// ♻️ `canonicalize(canonicalize(x)) == canonicalize(x)` — the idempotence law every
 /// technology's canonical form must satisfy.
 pub fn canonicalize(text: &str) -> Result<String, TextError> {
     if is_protocol_source(text) {
@@ -1922,13 +1922,13 @@ pub fn canonicalize(text: &str) -> Result<String, TextError> {
 //#endregion 🔖️FromRecordSpec
 
 //#region 🔖️Recognizer
-/// @emoji 🧭️ Recognizer with explicit terminal predicates, family fragment merge, and macro matchers.
+/// 🧭️ Recognizer with explicit terminal predicates, family fragment merge, and macro matchers.
 pub struct MacroMatcher {
     pub name: &'static str,
     pub try_match: fn(&str) -> bool,
 }
 
-/// @emoji 🧩️ Named grammar fragments (family kits) merged into Recognizer::compile_with.
+/// 🧩️ Named grammar fragments (family kits) merged into Recognizer::compile_with.
 #[derive(Default, Clone)]
 pub struct FragmentRegistry {
     fragments: std::collections::HashMap<String, GrammarFile>,
@@ -1985,7 +1985,7 @@ impl Recognizer {
         Self::compile_with(grammar, &registry)
     }
 
-    /// @emoji 🔗️ Compile grammar, merging productions from each use via registry.
+    /// 🔗️ Compile grammar, merging productions from each use via registry.
     pub fn compile_with(grammar: &GrammarFile, registry: &FragmentRegistry) -> Self {
         let mut merged = grammar.clone();
         let mut seen = std::collections::HashSet::<String>::new();
@@ -2008,7 +2008,7 @@ impl Recognizer {
         self.grammar.productions.iter().find(|p| p.name == name)
     }
 
-    /// @emoji ✅️ Recognizes text against the grammar start production. Lexes with this grammar's
+    /// ✅️ Recognizes text against the grammar start production. Lexes with this grammar's
     /// own `lex` dialect (P2-M1: per-grammar string/comment configuration), so a grammar that
     /// declared `comment`/`string` header directives recognizes text under ITS OWN alphabet.
     /// Lexes forgivingly (P2-M1 item 2): a raw-span terminal (`LINE`/`REST`) exists precisely to
@@ -2028,7 +2028,7 @@ impl Recognizer {
         }
     }
 
-    /// @emoji 📊️ Productions never reached while recognizing text. Forgiving for the same reason
+    /// 📊️ Productions never reached while recognizing text. Forgiving for the same reason
     /// as [`Recognizer::recognize`] (P2-M1 raw-span support).
     pub fn uncovered_productions(&self, text: &str) -> Result<Vec<String>, TextError> {
         let raw = core_lex_with(text, &Limits::default(), true, &self.grammar.lex)?;
@@ -2136,7 +2136,7 @@ impl Recognizer {
         }
     }
 
-    /// @emoji 🔙️ Tries the LARGEST token span first, shrinking down to (and including, P2-P1) a
+    /// 🔙️ Tries the LARGEST token span first, shrinking down to (and including, P2-P1) a
     /// zero-width match — real backtracking, unlike `Symbol::Star`'s single-pass greedy loop, which
     /// is why a macro is the right escape hatch for a Ref that must stop short of a following
     /// literal it would otherwise swallow (see the `hex` macro's own doc comment). The zero-width
@@ -2154,7 +2154,7 @@ impl Recognizer {
     }
 }
 
-/// @emoji 📏️ Which delimiter ends a P2-M1 "raw span" terminal capture.
+/// 📏️ Which delimiter ends a P2-M1 "raw span" terminal capture.
 enum RawSpanEnd {
     /// `LINE` — rest of the current physical line (up to the next `\n`, or EOF if none) — obj's
     /// `o`/`g` names, stl's `solid <name>`/`endsolid <name>`, dxf's opaque group-code value lines.
@@ -2163,7 +2163,7 @@ enum RawSpanEnd {
     Eof,
 }
 
-/// @emoji ✂️ Captures a raw byte span of the ORIGINAL source starting at `tokens[pos]`'s byte
+/// ✂️ Captures a raw byte span of the ORIGINAL source starting at `tokens[pos]`'s byte
 /// offset (or end-of-text if `pos` is already past the last token) through `end`, then returns the
 /// token index just past every token that span swallowed — the span's interior is never
 /// re-tokenized, matching the shared lexer's own token boundaries only at the far edge.
@@ -2184,7 +2184,7 @@ fn slice_source_text(tokens: &[crate::os_dsl::SpannedToken]) -> String {
     tokens.iter().map(|t| t.text.as_str().to_string()).collect::<Vec<_>>().join(" ")
 }
 
-/// @emoji 🏷️ Explicit terminal predicates — BOOL is Ident true|false.
+/// 🏷️ Explicit terminal predicates — BOOL is Ident true|false.
 fn terminal_matches(name: &str, token: &crate::os_dsl::SpannedToken) -> bool {
     let upper = name.to_uppercase();
     let text = token.text.as_str();
@@ -2232,7 +2232,7 @@ fn macro_props_ok(text: &str) -> bool {
     text.contains('=')
 }
 
-/// @emoji 🔠️ P2-P1: a run of lowercase hex digits (`enc_str`/`hex_encode`'s own alphabet), incl. the
+/// 🔠️ P2-P1: a run of lowercase hex digits (`enc_str`/`hex_encode`'s own alphabet), incl. the
 /// empty string (an empty hex-encoded value is valid — see `match_macro_span`'s zero-width floor).
 /// Exists as a MACRO, not a `hex = {INT | IDENT | FLOAT}*` production, because a Star is a single
 /// greedy pass with no backtracking (`Symbol::Star`'s doc comment): a *production*-modeled `hex`
@@ -2274,7 +2274,7 @@ fn default_macros() -> Vec<MacroMatcher> {
 //#endregion 🔖️Recognizer
 
 //#region 📡️ProtocolWalk
-/// @emoji 🧮️ P2-M2 items 3+6: walk-wide state threaded through the ENTIRE `walk_protocol` pass
+/// 🧮️ P2-M2 items 3+6: walk-wide state threaded through the ENTIRE `walk_protocol` pass
 /// (every block, in order) — not reset per block/call as the pre-M2 `walk_fields`-local `HashMap`
 /// was. `env` makes a LATER block's `Count::Field`/`Cond` resolve against a value decoded by any
 /// EARLIER block (las's VLR/point-record repeat counts from the header; gif89a's GCE state carried
@@ -2381,7 +2381,7 @@ fn resolve_count(count: &Count, env: &std::collections::HashMap<String, u64>, of
     }
 }
 
-/// @emoji 🔀️ P2-M2 item 4: evaluate a field/segment presence guard against the walk-wide env.
+/// 🔀️ P2-M2 item 4: evaluate a field/segment presence guard against the walk-wide env.
 fn eval_cond(cond: &Cond, env: &std::collections::HashMap<String, u64>, offset: usize) -> Result<bool, ProtocolMismatch> {
     let actual = *env.get(&cond.field).ok_or_else(|| mismatch(offset, format!("condition references unknown field `{}`", cond.field)))?;
     Ok(match cond.op {
@@ -2463,7 +2463,7 @@ fn walk_prim(prim: &Prim, bytes: &[u8], pos: &mut usize, state: &mut WalkState, 
     Ok(())
 }
 
-/// @emoji 🏷️ P2-M2 item 1: reads a discriminator's exact raw bytes (no numeric decode — arm tags
+/// 🏷️ P2-M2 item 1: reads a discriminator's exact raw bytes (no numeric decode — arm tags
 /// are compared byte-for-byte, see [`parse_tag_value`]) and advances `pos` past them.
 fn read_raw_prim_bytes(prim: &Prim, bytes: &[u8], pos: &mut usize) -> Result<Vec<u8>, ProtocolMismatch> {
     match prim {
@@ -2489,7 +2489,7 @@ fn read_raw_prim_bytes(prim: &Prim, bytes: &[u8], pos: &mut usize) -> Result<Vec
     }
 }
 
-/// @emoji 🔢️ Reads a numeric scalar (length/count field) honoring [`WalkState::big_endian`] for
+/// 🔢️ Reads a numeric scalar (length/count field) honoring [`WalkState::big_endian`] for
 /// the plain (non-`Be`) variants — used by `repeat`'s `length` directive and, via [`walk_fields`],
 /// for ordinary `Count::Field`-producing fields.
 fn read_scalar_prim(prim: &Prim, bytes: &[u8], pos: &mut usize, state: &WalkState) -> Result<u64, ProtocolMismatch> {
@@ -2541,7 +2541,7 @@ fn read_scalar_prim(prim: &Prim, bytes: &[u8], pos: &mut usize, state: &WalkStat
     }
 }
 
-/// @emoji 🔎️ P2-M2 item 5a: the rightmost occurrence of `pattern` in `bytes` — ZIP's EOCD is
+/// 🔎️ P2-M2 item 5a: the rightmost occurrence of `pattern` in `bytes` — ZIP's EOCD is
 /// located by scanning BACKWARD from EOF because its preceding comment field is 0-65535 bytes, so
 /// its start is unknowable except by finding the EOCD's own magic first.
 fn find_last_occurrence(bytes: &[u8], pattern: &[u8]) -> Option<usize> {
@@ -2629,7 +2629,7 @@ fn walk_fields(fields: &[Field], bytes: &[u8], pos: &mut usize, state: &mut Walk
     Ok(())
 }
 
-/// @emoji 🌿️ P2-M2 item 1b: single-shot (non-repeating) second-level dispatch — GIF 89a's
+/// 🌿️ P2-M2 item 1b: single-shot (non-repeating) second-level dispatch — GIF 89a's
 /// extension-introducer arm dispatches again on the label byte.
 fn walk_nested_dispatch(nested: &NestedDispatch, bytes: &[u8], pos: &mut usize, state: &mut WalkState) -> Result<(), ProtocolMismatch> {
     let tag = read_raw_prim_bytes(&nested.discriminator, bytes, pos)?;
@@ -2645,7 +2645,7 @@ fn walk_nested_dispatch(nested: &NestedDispatch, bytes: &[u8], pos: &mut usize, 
     }
 }
 
-/// @emoji 🔁️ P2-M2 item 1: read discriminator (+ optional length, per `order`), dispatch into a
+/// 🔁️ P2-M2 item 1: read discriminator (+ optional length, per `order`), dispatch into a
 /// known arm's fields or skip an unrecognized discriminator's declared `length` as opaque bytes,
 /// repeat until EOF or `until`'s sentinel discriminator value is seen.
 fn walk_repeat(dispatch: &RepeatDispatch, bytes: &[u8], pos: &mut usize, state: &mut WalkState) -> Result<(), ProtocolMismatch> {
@@ -2717,7 +2717,7 @@ fn definitions_only(block: &Block) -> bool {
     matches!(block, Block::Struct { .. } | Block::Enum { .. })
 }
 
-/// @emoji 🧭️ Spec-driven byte walker — consumes every declared wire slot and must finish at
+/// 🧭️ Spec-driven byte walker — consumes every declared wire slot and must finish at
 /// exactly `bytes.len()`, else returns [`ProtocolMismatch`] with the failing offset. **Exception**
 /// (P2-M2 item 5, documented precisely per the plan's own instruction): once ANY block has
 /// explicitly JUMPED `pos` (`Block::BackwardScan`/`Block::JumpTo`), the walk is no longer a pure
@@ -2813,7 +2813,7 @@ pub fn walk_protocol(spec: &ProtocolFile, bytes: &[u8]) -> Result<ProtocolTrace,
     Ok(ProtocolTrace { consumed: pos })
 }
 
-/// @emoji 📡️ Shallow [`GrammarFile`] back-compat check: pack requires leading `0x89` magic
+/// 📡️ Shallow [`GrammarFile`] back-compat check: pack requires leading `0x89` magic
 /// (any family) and ≥32 bytes; spr requires non-empty bytes. Deep walks use [`verify_protocol_source`].
 pub fn verify_protocol_bytes(spec: &GrammarFile, bytes: &[u8]) -> Result<(), String> {
     let id = spec.id.to_ascii_lowercase();
@@ -2838,7 +2838,7 @@ pub fn verify_protocol_bytes(spec: &GrammarFile, bytes: &[u8]) -> Result<(), Str
     Err(format!("verify_protocol_bytes: cannot classify protocol id='{}' start='{}'", spec.id, spec.start))
 }
 
-/// @emoji 📡️ Parses handcrafted `.protocol.semio` source then deep-walks bytes via [`walk_protocol`].
+/// 📡️ Parses handcrafted `.protocol.semio` source then deep-walks bytes via [`walk_protocol`].
 pub fn verify_protocol_source(source: &str, bytes: &[u8]) -> Result<(), String> {
     let spec = parse_protocol(source).map_err(|error| error.message)?;
     walk_protocol(&spec, bytes).map(|_| ()).map_err(|e| format!("offset {}: {}", e.offset, e.message))

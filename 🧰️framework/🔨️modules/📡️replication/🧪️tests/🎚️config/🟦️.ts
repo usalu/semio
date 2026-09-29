@@ -12,7 +12,7 @@ const root = resolve(configDir, "../.."); // 📡️replication module root — 
 const repoRoot = resolve(configDir, "../../../../..");
 
 /**
- * @emoji 🧪️ Vitest for `@semio-tech/framework-replication` (inline `import.meta.vitest`).
+ * 🧪️ Vitest for `@semio-tech/framework-replication` (inline `import.meta.vitest`).
  *
  * `includeSource`/`coverage.include` use a glob (`*.ts`, non-recursive, scoped to this module's own
  * root) rather than an explicit filename — see `@semio-tech/framework-kernel`'s config for why an

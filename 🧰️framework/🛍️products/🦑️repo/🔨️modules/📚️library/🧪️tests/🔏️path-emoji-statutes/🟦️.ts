@@ -695,7 +695,7 @@ test("selector-free joined identities are the only live spellings for the repair
     expect(existsSync(join(repoRoot, row.legacyPath)), row.legacyPath).toBe(false);
     const name = basename(row.path), identity = leadingEmojiIdentity(name).emoji, oracle = emojiRegex().exec(name);
     expect(oracle?.index, row.path).toBe(0);
-    expect(identity, row.path).toBe(oracle?.[0]);
+    expect(identity, row.path).toBe<string | undefined>(oracle?.[0]);
     expect(identity.includes("\uFE0F"), row.path).toBe(false);
     expect(pathEmojiStatuteFindings([{ path: row.path, nodeKind: row.nodeKind }], fixture.genericEmojiIdentities), row.path).toEqual([]);
   }

@@ -57,7 +57,6 @@ fn wal_writer_release_signal_preserves_exact_waits_across_writer_and_backend_reu
     assert!(cell.active.is_none());
     assert!(cell.waiter.is_none());
     assert_eq!(WAL_WRITER_SIGNAL_BACKING_BYTES, DB_IO_BACKEND_CONTROLS * WAL_WRITER_CAPACITY * size_of::<Mutex<WalWriterSignalCell>>());
-    eprintln!("[DEBUG] WAL release cells retained requests, woke once at terminal, rejected stale keys and overflow, and preserved all completion epochs through backend reuse");
 }
 
 #[test]

@@ -15,7 +15,7 @@ async fn reactor_native_lifecycle_poll(runtime: &crate::plugin_runtime::PluginRu
         match crate::reactor::poll_kernel(runtime, events.clone(), None, None, reactor_native_lifecycle_budget()).await {
             Ok(result) => return result,
             Err(fault) if fault.code.0 == "plugin.reactor-turn-deadline" && fault.retryable => {
-                eprintln!("[DEBUG] retained lifecycle exact-event deadline retry={} events={:?}", attempt + 1, events);
+                eprintln!("retained lifecycle exact-event deadline retry={} events={:?}", attempt + 1, events);
                 std::thread::yield_now();
             }
             Err(fault) => panic!("actual native lifecycle turn: {fault:?}"),
@@ -59,7 +59,6 @@ async fn reactor_native_lifecycle_finish(runtime: &crate::plugin_runtime::Plugin
         if runtime.guest_lifetimes.borrow().get(lifetime.instance_id).is_none() { break; }
     }
     assert!(runtime.guest_lifetimes.borrow().get(lifetime.instance_id).is_none(), "exact final ACK releases the structural owner");
-    eprintln!("[DEBUG] native reactor lifetime={} close={} retired and acknowledged", lifetime.guest_lifetime, close_generation);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -135,15 +134,22 @@ async fn reactor_native_lifecycle_output_failure_preserves_ack_and_owner() {
     reactor_native_lifecycle_finish(&runtime, lifetime, 9).await;
 }
 
+/// 🧪️ `PATCHES`/`PENDING_PATCHES` are ONE process-wide authority per thread (the actor is a
+/// singleton by design), so the two cases must not share a surface: residue from the first
+/// case would otherwise be emitted by the second case's very first poll and the law would
+/// report it as "a freshly queued patch was emitted immediately". Each case therefore runs
+/// on its own instance pair and its own surface id, and every clause names its case.
+///
+/// 🩹️ A queued patch is carried by the FIRST turn that runs after it is queued. It used to
+/// need two (`publish_into` the turn handback on one call, extraction on the next — one whole
+/// host round trip per published surface, the `<n>:e---p` half of the two-state ping-pong in
+/// `📓️reactor-reconcile-spin-2026-09-14.md` §1), and this law used to spend a preparation poll
+/// on that dead turn. The extraction now belongs to the same call, so the faulting poll below
+/// IS the turn that stages this patch — which is exactly what makes it the turn under test.
 #[semio_framework_async_macros::async_test]
 async fn reactor_output_fault_returns_real_patch_and_preserves_other_lifecycle_ack() {
     use semio_framework::kernel::{ActorInstanceLifecycleAck, ActorInstanceLifecycleReceipt as Receipt, Event};
     for late_clock in [false, true] {
-        // 🧪️ `PATCHES`/`PENDING_PATCHES` are ONE process-wide authority per thread (the actor is a
-        // singleton by design), so the two cases must not share a surface: residue from the first
-        // case would otherwise be emitted by the second case's very first poll and the law would
-        // report it as "a freshly queued patch was emitted immediately". Each case therefore runs
-        // on its own instance pair and its own surface id, and every clause names its case.
         let (instance_a, instance_b) = if late_clock { (17u32, 18u32) } else { (7u32, 8u32) };
         let surface = format!("{instance_a}:output-fault-window");
         let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
@@ -157,12 +163,6 @@ async fn reactor_output_fault_returns_real_patch_and_preserves_other_lifecycle_a
             surface: semio_framework_ui_contract::SurfaceId::try_from(surface.as_str()).unwrap(),
             base_revision: semio_framework_ui_contract::UiRevision(0), revision: semio_framework_ui_contract::UiRevision(2), ops: Default::default(),
         });
-        // 🩹️ A queued patch is carried by the FIRST turn that runs after it is queued. It used to
-        // need two (`publish_into` the turn handback on one call, extraction on the next — one whole
-        // host round trip per published surface, the `<n>:e---p` half of the two-state ping-pong in
-        // `📓️reactor-reconcile-spin-2026-09-14.md` §1), and this law used to spend a preparation poll
-        // on that dead turn. The extraction now belongs to the same call, so the faulting poll below
-        // IS the turn that stages this patch — which is exactly what makes it the turn under test.
         assert!(
             include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../⚛️reactor/📨️pending/🦀️.rs")).contains("`publish_into` is atomic (it moves the whole
     /// source or nothing), so the extraction belongs to the same call"),

@@ -3,7 +3,7 @@ mod tests {
     use crate::format::VerificationLevel;
     use crate::{ByteRange, CodecId, KIND_DOCUMENT, KIND_SCHEMA};
 
-    /// @emoji 🎲️ Per-test unique scratch directory under `std::env::temp_dir()` — no external
+    /// 🎲️ Per-test unique scratch directory under `std::env::temp_dir()` — no external
     /// `tempfile` crate dependency, per the contract's std-only preference.
     static DIR_COUNTER: AtomicU64 = AtomicU64::new(0);
 
@@ -104,7 +104,7 @@ mod tests {
     //#endregion 🔖️Atomic
 
     //#region 🔖️Stream
-    /// @emoji 📏️ Wire length of a non-compressed segment frame (`kind, flags, seg_len varint,
+    /// 📏️ Wire length of a non-compressed segment frame (`kind, flags, seg_len varint,
     /// payload, crc32`) — mirrors `pack_format`'s private `encode_segment` for `CodecId(0)`,
     /// used here only to compute a valid `doc_span.len` for a hand-built `Manifest`.
     async fn uncompressed_segment_wire_len(payload_len: usize) -> u64 {

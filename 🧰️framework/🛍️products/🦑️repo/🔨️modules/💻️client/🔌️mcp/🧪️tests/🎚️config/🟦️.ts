@@ -7,7 +7,7 @@ const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
 
-/** @emoji 🧪️ Vitest for `@semio-tech/repo-mcp-schema`: the owner module's `🔬️schema` case, which asserts
+/** 🧪️ Vitest for `@semio-tech/repo-mcp-schema`: the owner module's `🔬️schema` case, which asserts
  * that `🧬️schema/🔗️.graphql` and `🧬️schema/🔣️.json` declare the same exports with the same field
  * nullability, and that the JSON facet compiles under an independent draft-07 validator. */
 export default {

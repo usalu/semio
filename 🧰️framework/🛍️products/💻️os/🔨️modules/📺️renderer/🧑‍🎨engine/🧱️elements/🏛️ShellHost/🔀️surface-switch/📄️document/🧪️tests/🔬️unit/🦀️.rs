@@ -68,6 +68,5 @@ fn document_surface_preparation_preserves_complete_archive_and_refuses_stale_own
             assert_eq!(serde_json::to_value(ports.events).unwrap(), law["events"], "{law}");
             assert_eq!(ports.source, fixture["archive"]);
         }
-        eprintln!("[DEBUG] native document preparation executes complete archive, failure and stale-owner traces");
     });
 }

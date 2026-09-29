@@ -6,6 +6,24 @@ Slice ST2, session 14 (2026-09-27 18:3x, Opus executor). Coordinator = `main`. C
 `st2-apply.py`). Captures `wp-st2/generated/`. Durable data `.🧬semio/🌐hub/s14-st2-*/`. Guest-linked edits = prepared
 patches + overlay proofs until the coordinator announces WINDOW 3 OPEN in `📓️fleet-14-agents.md`.
 
+## Session 14c — T2 Law Verdicts (2026-09-29 04:2x, after T2 GREEN 04:27)
+
+| Law | Verdict | Evidence (`.🧬semio/🌐hub/s14-st2-captures/`) |
+|---|---|---|
+| stdio catalogue contract (TS) | **PASS** 88 editors / 10 packages / 36 formats | `t2-catalogue-contract-1.txt` |
+| hub `trusted-stdio-gis-bundle-check --source` | **PASS** rc 0 (bootstrap oracle codecs=31); stored generation `7d60c569…` == derived (channel 19) | `t2-bundle-check-1.txt`, `t2-generation-1.txt` |
+| `shipped_fleet` | census **3/3 PASS** (bounded fleet per package ≤ 40, every app once, every kind opened by exactly one package). REGRESSION FOUND + FIXED: my st2-code rewrote the file wholesale and DROPPED LB2 p6's law (T1) `the_shipped_assembly_publishes_every_editor_document_schema_and_a_json_node_edit_lands` → restored 04:3x (test-only), widened to every package's editors → **RED 1/4**: `s.stdio.bmp@v3/*#editor (stdio-image) edits s.stdio.bmp, whose document schema its package's assembly must publish` | `t2-native-1.txt` (3/3 before), `t2-native-2.txt` |
+| `editor_catalog` | **RED 1/89**. p6 alone did not fix `schema-unregistered`: the law drove editors without ever assembling a package, and schemas are published only by `plugin()` (p6). Test-only fix: assemble all 10 packages once before driving an editor → schema-unregistered **74 → 28**. Remaining classes: 28 schema-unregistered = kinds NO assembly publishes (bmp, wav, epw, binary, ifc + ifc.2x3, semio + 19 semio subsets: their artifact roots have no `runtime_assembly`/`.schema(…)`, unlike the other 29 kinds); 25 `window-config.window-context` (law renders with a ViewModel window id the app never registered — law shape vs the SDK's window-instance registry); 8 stale fixture paths (gltf, obj, pdf14 ×3, xlsx ×3); 7 `schema-identity`, 3 `invalid-schema-contract` (unresolved `$.properties.header.$ref`), 3 docx publication-invalid, 2 fragment oneOf, 2 path-invalid; 6 jpg/gif/tiff default-document encode | `t2-native-2.txt` |
+| `editor-component-check` | **PASS 10/10** (run 3). run 1 (04:41–05:01): **stdio 59 728 fns / 54.4 MB, stdio-media 20 479 / 18.1 MB, stdio-bim 19 227 / 18.7 MB validated** (all far under the 1 000 000 ceiling), then `stdio catalog-root exceeded its configured deadline` — the check's ONE 20-min budget (`CATALOG_DEADLINE_MS`) covered all 10 package links (my ST patch widened the loop without scaling it; 4-job cap → 3–10 min per link). FIX landed 05:0x (tooling, not chain-built): per-package budget in `🗄️stdio/📦️packages/🦀️rust/📜️script.ts` `EditorComponentCheckScript` (tsc of the file: 0 errors in the class, 50 pre-existing elsewhere). Run 2 (05:04–05:33, per-package budget): stdio 59 715 / 54.4 MB, media 20 479, bim 19 225, **office 21 240 / 22.2 MB, pdf 20 357 / 22.6 MB, binary validated**; split on the coordinator's request after 6/10 (SIGINT → lane released to L1's T3 renderer check, no orphan cargo); run 3 (05:35–06:09) **rc 0, 10/10 validated**: mesh 25 102 / 21.3 MB, image 29 194 / 30.7 MB, cad 24 994 / 26.5 MB, **semio 37 718 / 45.6 MB** (largest family, 38 apps; 15 min release link). **PASS** — every stdio package component links and stays < 6 % of the 1 000 000-function ceiling (stdio itself 59 715). Output dir (272 MB) deleted | `t2-components-{1,2,3}.txt`, `t2-stdio-script-tsc-1.txt` |
+
+- Test-only edits landed 04:3x (no row in L1's train, rule 22 shape): `🗄️stdio/🧪️tests/🚢️shipped-fleet/🦀️.rs` (+ p6 law, widened),
+  `🗄️stdio/🧪️tests/✏️editor-catalog/🦀️.rs` (package assembly helper); native compile of both test targets rc 0 (they ran).
+  `st2-apply.py` templates now reproduce the live files exactly (`st2-laws/*.rs`; checked: template == live, patch(pre-T2) == live).
+- Product fault for the owner of stdio reds (U6): 7 artifact roots (🪟️bmp, 🔊️wav, 🌦️epw, 💾️binary, 🏗️ifc, 🧿️semio, 🎞️gif)
+  are not `.artifact(…)` runtime assemblies with `.schema(…)`, so after T1's p6 no stdio package publishes their document
+  schemas → every snapshot edit on those kinds is refused `snapshot-edit.schema-unregistered` in `s` (28 editors measured:
+  bmp, wav, epw, binary, ifc, ifc.2x3 ×4, semio + 18 semio subsets; gif's 2 fail earlier on default encode).
+
 ## Session 14c
 
 | # | Item | State | Evidence |
@@ -83,6 +101,15 @@ patches + overlay proofs until the coordinator announces WINDOW 3 OPEN in `📓�
 - 20:01 final dry runs on the live tree clean (row 1); overlay build-dir + target deleted (rule 23, 7.8 GB), overlay scratch
   (fake ticket, binaryen clone, artifact dirs) removed; the overlay-only cache-contracts bypass edits are undone by the next sync.
   Captures trimmed (job3 warnings stripped; `overlay-removed.txt` → `overlay-removed-summary.txt`).
+- 29 03:4x resume (after the usage cut, kernel panics and the 01:14 sweep; my `wp-st2/*.py|ts|zsh` + payloads survived, `generated/`
+  is gone → captures now in `.🧬semio/🌐hub/s14-st2-captures/`). T2 (L1) applied my code part; R10 wrote the r10 part 03:45.
+  R10 question: the `🧩️composition` → `🏘️composition` move left `🏘️composition/{🏃️commands,🏗️build}` unresolved (my r10 taxonomy
+  transform never registered them — my miss); R10 added `members-of-composition` (`ownerKindIds: ["composition"]`). CONFIRMED as the
+  intended kind: `🏘️composition` resolves as the global `composition` kind (🏘️, `^composition$`), the taxonomy's convention is
+  `members-of-<kind>` → `[<kind>]` (e.g. `members-of-stdio` → `stdio`, `members-of-inferences`), and neither child is admissible
+  otherwise (`commands` kind has another emoji; `🏗️build` exists only as `hub-build` (parent `hub`) and `plugin-build`
+  (`members-of-modules`)). Live taxonomy loads valid (330 ms). 1b remainder `nx1b-apply.py --dry-run --part rebuild`: 1 file,
+  0 problems (`s14-st2-captures/nx1b-rebuild-dry-1.txt`).
 
 ## Session 14b
 

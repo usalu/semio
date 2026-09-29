@@ -123,10 +123,10 @@ async fn derived_composer_reads_includes_child_slot_dialects() {
     assert_eq!(reads[0].subset, SubsetId::ANY);
 }
 
+/// 🍃️ `NoChildren<S>::slots()` is `&[]` — proves the pre-C1 behavior is byte-identical for
+/// any spec that never names a `children: $ty` (every macro invocation before this wave).
 #[semio_framework_async_macros::async_test]
 async fn derived_composer_reads_defaults_to_composition_reads_for_a_leaf_with_no_children() {
-    // 🍃️ `NoChildren<S>::slots()` is `&[]` — proves the pre-C1 behavior is byte-identical for
-    // any spec that never names a `children: $ty` (every macro invocation before this wave).
     struct LeafSpec;
     impl DerivedArtifactSpec for LeafSpec {
         type Snapshot = ChildrenTestSnapshot;

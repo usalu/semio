@@ -72,13 +72,11 @@ fn mounted_3d_element_interfaces_match_numpy_fixture() {
             next.push(element.mounted_next_string_bytes());
             if let Some(bytes) = element.close_mounted_string_step() { released.push(bytes); }
         }
-        eprintln!("[DEBUG] mounted {kind} close expected={expected_owners}, next={next:?}, released={released:?}, terminal={}", element.mounted_strings_terminal_is_empty());
         assert!(element.mounted_strings_terminal_is_empty(), "{kind} string owners retire");
         assert_eq!(released.len(), expected_owners, "{kind} exact string count");
         assert_eq!(next[..expected_owners], released.iter().copied().map(Some).collect::<Vec<_>>());
         assert_eq!(element.mounted_next_string_bytes(), None);
     }
-    eprintln!("[DEBUG] Bar3, Frame3, and Tet4 borrowed exact node ids and matched every allocation-free mounted cell to cold and NumPy matrices");
 }
 
 /// ↕️ The y-bending blocks of `local_mass` and `local_geometric_stiffness` must be `S·B·S` of the

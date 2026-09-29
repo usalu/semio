@@ -165,7 +165,6 @@ fn one_declared_capacity_answers_rows_ceiling_and_admission() {
         assert_eq!(capacity.work_items(), case.work_items, "{}", case.name);
         assert_eq!(capacity.admits(case.rows), case.admitted, "{}", case.name);
         assert_eq!(capacity.rows_for_items(case.items), case.admitted.then_some(case.rows), "{}", case.name);
-        eprintln!("[DEBUG] work capacity {}: items={} rows={} maximum_work_items={} admitted={}", case.name, case.items, case.rows, case.work_items, case.admitted);
     }
 }
 
@@ -208,7 +207,6 @@ fn an_item_counted_extent_cannot_stand_in_for_a_row_counted_footprint() {
 fn a_refused_reducer_step_reports_the_apps_own_fault_code_and_message() {
     let fault = semio_framework::Fault::new(semio_framework::FaultOrigin::App, semio_framework::FaultCode::new("generation3d.io.export"), "format `dwg` has no readable descriptor set");
     let detail = super::reducer_fault_detail(&fault);
-    println!("[DEBUG] reducer fault detail: {detail}");
     assert!(detail.starts_with("retained command reducer rejected operation: "), "the prefix every reader keys on must survive: {detail}");
     assert!(detail.contains("generation3d.io.export"), "the app's own code must reach the reader: {detail}");
     assert!(detail.contains("format `dwg` has no readable descriptor set"), "the app's own message must reach the reader: {detail}");
@@ -219,7 +217,6 @@ fn a_refused_reducer_step_reports_the_apps_own_fault_code_and_message() {
 fn an_oversized_reducer_fault_detail_is_clipped_on_a_char_boundary() {
     let fault = semio_framework::Fault::new(semio_framework::FaultOrigin::App, semio_framework::FaultCode::new("x"), "ü".repeat(4096));
     let detail = super::reducer_fault_detail(&fault);
-    println!("[DEBUG] clipped detail bytes: {}", detail.len());
     assert!(detail.len() <= super::ARTIFACT_COMMAND_FAULT_DETAIL_MAXIMUM_BYTES);
     assert!(detail.starts_with("retained command reducer rejected operation: x "));
     assert_eq!(detail, String::from_utf8(detail.clone().into_bytes()).expect("a clipped detail stays valid utf-8"));

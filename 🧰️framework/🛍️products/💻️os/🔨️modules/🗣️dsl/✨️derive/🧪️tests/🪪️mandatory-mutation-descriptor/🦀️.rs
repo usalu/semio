@@ -55,6 +55,6 @@ fn mutation_trait_matches_adjacent_required_declaration_facts() {
     assert_eq!(expected.subject, "mutation-trait-facts");
     assert_eq!(expected.category, "required-associated-items");
     let actual = mutation_trait_facts(include_str!("../../../../../../../🔨️modules/📡️replication/🎮️mutation/🦀️.rs"));
-    println!("[DEBUG] actual={} expected={}", serde_json::to_string(&actual).expect("actual facts serialize"), serde_json::to_string(&expected.facts).expect("expected facts serialize"));
+    println!("actual={} expected={}", serde_json::to_string(&actual).expect("actual facts serialize"), serde_json::to_string(&expected.facts).expect("expected facts serialize"));
     assert_eq!(actual, expected.facts);
 }

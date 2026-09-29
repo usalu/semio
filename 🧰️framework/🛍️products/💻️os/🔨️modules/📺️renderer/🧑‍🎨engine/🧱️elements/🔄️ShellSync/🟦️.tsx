@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/ShellSync/component.tsx
-/** @emoji 🔗️ `ShellSync` — `SyncAttachCard`, the footer popover for attaching/detaching a document's
+/** 🔗️ `ShellSync` — `SyncAttachCard`, the footer popover for attaching/detaching a document's
  * backbone sync connection (file/folder/remote), rendering the sync-scoped `UtilityTree` above a
  * draft-path input and status badge (`useSyncStatusLabel`), plus `HubConnectionIndicator`, the
  * always-visible shell-chrome badge for the hub link itself.
@@ -259,7 +259,7 @@ export interface HubConnectionIndicatorProps {
   readonly onSignIn?: () => void;
 }
 
-/** @emoji 📶️ The persistent hub-connection badge. Lives in the shell footer beside the presence bar,
+/** 📶️ The persistent hub-connection badge. Lives in the shell footer beside the presence bar,
  * so "the hub is unreachable" is readable without opening any one document's sync popover — audit
  * `📓️g5-ux-completeness-audit.md` §5's last gap. `role="status"` + `aria-live="polite"` announce a
  * transition once; the accessible name is the localized state text, never a colour. It only renders:

@@ -1,11 +1,14 @@
-type TestSource = { readonly directory: string; readonly url: string };
+import { buildBoxInteractionSpec } from "../../../🗿️artifact/🟦️.ts";
+import { preciseSpatialKernelMath } from "../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧮️preview/🟦️.ts";
+import type { ActionsTestDependencies } from "../../🟦️.ts";
+import type { Vec3 } from "@semio-tech/s-3d-js";
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
-  const { __actionsTestKernel, __actionsTestRuntime, buildBoxInteractionSpec, resolveDisplay } = dependencies;
-  type Vec3 = any;
+type TestSource = { readonly url: string };
+
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: ActionsTestDependencies, source: TestSource): Promise<void> {
+  const { __actionsTestRuntime, resolveDisplay } = dependencies;
 
   __actionsTestRuntime!.bootstrapCadModules();
-  const { preciseSpatialKernelMath } = __actionsTestKernel!;
   const M = preciseSpatialKernelMath;
   const { describe, expect, it } = vitest;
 

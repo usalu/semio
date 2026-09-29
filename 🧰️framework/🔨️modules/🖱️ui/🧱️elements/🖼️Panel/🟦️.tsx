@@ -42,21 +42,21 @@ export interface TreePanelConfig {
   emptyState?: React.ReactNode;
   indentMultiplier?: number;
   className?: string;
-  /** @emoji ↕️ Override section-reorder grips; defaults to enabled when {@link sections} has more than one entry. */
+  /** ↕️ Override section-reorder grips; defaults to enabled when {@link sections} has more than one entry. */
   sortableSections?: boolean;
   onSectionsReorder?: (orderedIds: readonly string[]) => void;
 }
 
 export interface TreePanelDefinition {
   resolveTree(): TreePanelConfig;
-  /** @emoji 📡️ Present on a LIVE source ({@link liveTreePanelDefinition}): its content changes on its own, `resolveTree`
+  /** 📡️ Present on a LIVE source ({@link liveTreePanelDefinition}): its content changes on its own, `resolveTree`
    * answers one object per change, and the pane re-reads it on every notification. */
   subscribe?(listener: () => void): () => void;
 }
 
 export type TreePanelSource = TreePanelConfig | TreePanelDefinition;
 
-/** @emoji 📡️ A LIVE tree source: `read` answers the value the tree is built from (a new object only when it changed), `build`
+/** 📡️ A LIVE tree source: `read` answers the value the tree is built from (a new object only when it changed), `build`
  * turns it into the config once per value, and the pane re-reads it on every `subscribe` notification — so content that moves
  * on every keystroke (the History tab's entries) re-renders that one tree, never the host that composed the tab. */
 export function liveTreePanelDefinition<Value>(subscribe: (listener: () => void) => () => void, read: () => Value, build: (value: Value) => TreePanelConfig): TreePanelDefinition {
@@ -71,7 +71,7 @@ export function liveTreePanelDefinition<Value>(subscribe: (listener: () => void)
   };
 }
 
-/** @emoji 🌲️ Factory for a static {@link TreePanelDefinition}. */
+/** 🌲️ Factory for a static {@link TreePanelDefinition}. */
 export function staticTreePanelDefinition(config: TreePanelConfig): TreePanelDefinition {
   return { resolveTree: () => config };
 }
@@ -83,13 +83,13 @@ function resolveTreePanelSource(tree: TreePanelSource): TreePanelConfig {
   return tree;
 }
 
-/** @emoji 📡️ One LIVE unit's config, re-read on every notification of its source. */
+/** 📡️ One LIVE unit's config, re-read on every notification of its source. */
 function PanelLiveTreeUnit({ source, render }: { readonly source: TreePanelDefinition & { subscribe(listener: () => void): () => void }; readonly render: (config: TreePanelConfig) => React.ReactNode }) {
   const config = reactHostPort.useSyncExternalStore(source.subscribe, source.resolveTree, source.resolveTree);
   return <>{render(config)}</>;
 }
 
-/** @emoji 🖱️ Pointer-drag props for a host element (replaces imperative drag controllers). */
+/** 🖱️ Pointer-drag props for a host element (replaces imperative drag controllers). */
 export function usePointerDrag<TElement extends HTMLElement = HTMLDivElement>(handlers: {
   onStart?: (event: React.PointerEvent<TElement>) => void;
   onMove?: (event: React.PointerEvent<TElement>) => void;
@@ -129,8 +129,8 @@ export function usePointerDrag<TElement extends HTMLElement = HTMLDivElement>(ha
   );
 }
 
-/** @emoji 📦️ Native HTML drag-and-drop event props for a host element. */
-/** @emoji 🌲 Panel tree-unit dock header — handle-only under the default driver, whole-header under surface drag. */
+/** 📦️ Native HTML drag-and-drop event props for a host element. */
+/** 🌲 Panel tree-unit dock header — handle-only under the default driver, whole-header under surface drag. */
 function PanelTreeUnitHeader({
   anchor,
   tabId,
@@ -220,7 +220,7 @@ export function useNativeDragAndDrop<TElement extends HTMLElement = HTMLDivEleme
   );
 }
 
-/** @emoji 📏️ The inline extent an open anchored panel takes when its caller states no `size`.
+/** 📏️ The inline extent an open anchored panel takes when its caller states no `size`.
  * The panel floats over the window column at that width; the column itself does not shrink. */
 export const PANEL_DEFAULT_SIZE_PX = 300;
 
@@ -230,17 +230,17 @@ export const PANEL_DEFAULT_SIZE_PX = 300;
 export interface PanelProps {
   anchor: Anchor;
   visible?: boolean;
-  /** @emoji 🎛️ Fired when the panel's own tab button group opens or folds it (see {@link Panel}). */
+  /** 🎛️ Fired when the panel's own tab button group opens or folds it (see {@link Panel}). */
   onVisibleChange?: (visible: boolean) => void;
   size?: number;
   onSizeChange?: (size: number) => void;
   tabs: readonly PanelTabNode[];
   activeTabPath?: readonly string[];
   onActiveTabPathChange?: (path: readonly string[]) => void;
-  /** @emoji 🌱️ Per-branch drill-down memory (see {@link progressPanelTabSelection}) — which child was last active under each branch, so returning to it restores the drill-down. */
+  /** 🌱️ Per-branch drill-down memory (see {@link progressPanelTabSelection}) — which child was last active under each branch, so returning to it restores the drill-down. */
   pathMemory?: Readonly<Record<string, string>>;
   onPathMemoryChange?: (memory: Readonly<Record<string, string>>) => void;
-  /** @emoji 🌱️ Persisted tree section/group expansion across every leaf tab's units (see {@link PanelTreeUnitsPane}). */
+  /** 🌱️ Persisted tree section/group expansion across every leaf tab's units (see {@link PanelTreeUnitsPane}). */
   treeOpenStates?: Readonly<Record<string, boolean>>;
   onTreeOpenStateChange?: (id: string, open: boolean) => void;
   /**
@@ -255,10 +255,10 @@ export interface PanelProps {
   maxSize?: number;
   zIndex?: 10 | 20 | 30 | 40;
   className?: string;
-  /** @emoji 🌀️ Drives the panel chrome silhouette while a tab body is still loading. */
+  /** 🌀️ Drives the panel chrome silhouette while a tab body is still loading. */
   status?: UiStatus;
   /**
-   * @emoji 🎛️ Where this anchor's folded root tab row lives — `"panel"` (default) keeps the chip-only
+   * 🎛️ Where this anchor's folded root tab row lives — `"panel"` (default) keeps the chip-only
    * folded bar on the floating panel; `"chrome"` parks the folded root row in a sibling
    * {@link PanelChromeTabBar} in the navbar/footer. While open, the floating panel hosts the full tab
    * strip as {@link WindowChrome} left chips (same row as fold, U-cutout between) and is positioned via
@@ -269,7 +269,7 @@ export interface PanelProps {
   tabBarHost?: "panel" | "chrome";
 }
 
-/** @emoji 🌲️ Leaf-tab tree body shared by {@link Panel} and Layout's private mobile panel — one section per unit (sorted by order); skipped when the active tab has no units. Under a {@link PanelDockProvider}, labeled (or multi-unit) headers become native-DnD handles draggable to another leaf tab's unit list (see {@link PANEL_TREE_UNIT_MIME}). Unlabeled single-unit tabs omit the unit header so trees are not topped by a lonely grip. */
+/** 🌲️ Leaf-tab tree body shared by {@link Panel} and Layout's private mobile panel — one section per unit (sorted by order); skipped when the active tab has no units. Under a {@link PanelDockProvider}, labeled (or multi-unit) headers become native-DnD handles draggable to another leaf tab's unit list (see {@link PANEL_TREE_UNIT_MIME}). Unlabeled single-unit tabs omit the unit header so trees are not topped by a lonely grip. */
 export const PanelTreeUnitsPane = reactHostPort.memo(function PanelTreeUnitsPane({
   anchor,
   tabId,
@@ -281,10 +281,10 @@ export const PanelTreeUnitsPane = reactHostPort.memo(function PanelTreeUnitsPane
   readonly anchor?: Anchor;
   readonly tabId: string;
   readonly units: readonly PanelTreeUnit[];
-  /** @emoji 🌱️ Persisted tree expansion, namespaced `${unitId}:${innerId}` across every unit this pane hosts. */
+  /** 🌱️ Persisted tree expansion, namespaced `${unitId}:${innerId}` across every unit this pane hosts. */
   readonly treeOpenStates?: Readonly<Record<string, boolean>>;
   readonly onTreeOpenStateChange?: (id: string, open: boolean) => void;
-  /** @emoji ♻️ Identity-only prop — included so memo re-renders when lazy tree sources must re-resolve. */
+  /** ♻️ Identity-only prop — included so memo re-renders when lazy tree sources must re-resolve. */
   readonly treeContentRevision?: unknown;
 }) {
   const flow = useFlow();
@@ -366,7 +366,7 @@ export function PanelEmptyDockZone({ anchor }: { readonly anchor: Anchor }) {
   );
 }
 
-/** @emoji ↔ Panel resize handle with ghost wiring (inside {@link PanelGhostRoot}) — a corner panel gets one inner (canvas-facing) handle; a middle panel gets one on each edge, `deltaFactor` encoding both which way growth goes and (for a centered middle panel, where the opposite edge moves too) the 2× multiplier.
+/** ↔ Panel resize handle with ghost wiring (inside {@link PanelGhostRoot}) — a corner panel gets one inner (canvas-facing) handle; a middle panel gets one on each edge, `deltaFactor` encoding both which way growth goes and (for a centered middle panel, where the opposite edge moves too) the 2× multiplier.
  *
  * @remarks A grab strip never covers a button: the handle is rendered inside `panel-body-stack`, so it spans the panel's BODY and stops at the chrome cap row that carries the tab strip. Mounted on the panel root it spanned `top-0 bottom-0` of the whole panel at `z-20`, and the tab strip — which is drawn by whichever panel at this anchor is open and carries EVERY panel's tab, overflowing that panel's own width — ran straight underneath it: an open History panel's 3 px left handle at x 1137‑1140 sat on the centre of the neighbouring `puzzle3d.panel.settings` tab (x 1095‑1178), so `elementFromPoint` answered `panel-resize-handle` and the tab could not be activated by pointer at all. Measured on `:6013`, ticket 26/09/02 wave B45.
  */

@@ -74,7 +74,7 @@ const contract = JSON.parse(readFileSync(join(packageDir, "../../🧫️fixtures
 };
 const entryPath = join(repoRoot, contract.entry);
 
-/** @emoji 📦️ Vite's own `externalize-deps` rule for `--configLoader bundle` (`vite/dist/node/chunks/config.js`):
+/** 📦️ Vite's own `externalize-deps` rule for `--configLoader bundle` (`vite/dist/node/chunks/config.js`):
  * every bare specifier is external, so a config's real bundle graph is its relative-import closure. */
 const externalizeDeps: Plugin = {
   name: "externalize-deps",
@@ -90,7 +90,7 @@ async function esbuildConfigGraph(): Promise<{ readonly modules: readonly string
   return { modules: Object.keys(result.metafile.inputs).map(repoRelative).sort(), sourceBytes: Object.values(result.metafile.inputs).reduce((total, input) => total + input.bytes, 0) };
 }
 
-/** @emoji 🔮️ Independent oracle: Bun's own bundler resolves the same entry under the same
+/** 🔮️ Independent oracle: Bun's own bundler resolves the same entry under the same
  * externalize-every-package rule, and its sourcemap `sources` array is a second implementation's view
  * of this graph, not a second read of esbuild's.
  *
@@ -156,7 +156,7 @@ const watchPolicy = JSON.parse(readFileSync(join(packageDir, "../../🧫️fixtu
   readonly vanishedRename: { readonly path: string; readonly previousExists: boolean; readonly expectedEvents: readonly string[] };
 };
 
-/** @emoji 🔮️ Independent oracle: `picomatch` is the glob engine chokidar itself filters with, so the
+/** 🔮️ Independent oracle: `picomatch` is the glob engine chokidar itself filters with, so the
  * fixture's equivalent ignore globs decide every path through a third-party implementation rather than
  * through a second reading of ours. */
 const picomatchUnwatched = (relativePath: string): boolean => watchPolicy.unwatchedGlobs.some((glob) => picomatch(glob, { dot: true })(relativePath));
@@ -301,11 +301,11 @@ describe("dev server watch policy", () => {
   }, 30_000);
 });
 
-/** @emoji ✍️ The write styles a dev server must survive. `sed -i ''` and a rename-into-place are the same
+/** ✍️ The write styles a dev server must survive. `sed -i ''` and a rename-into-place are the same
  * shape — macOS editors, `sed`, and every agent file-writing tool save atomically — and that shape is
  * exactly the one whose filesystem event never names the edited file. */
 
-/** @emoji 📦️ Reserve one loopback port for Vite — server.port 0 hangs under this runner. */
+/** 📦️ Reserve one loopback port for Vite — server.port 0 hangs under this runner. */
 async function reserveLoopbackPort(): Promise<number> {
   return await new Promise((resolve, reject) => {
     const server = createNetServer();
@@ -442,7 +442,7 @@ const browserContract = JSON.parse(readFileSync(join(packageDir, "../../🧫️f
 const browserAliases = [...browserContract.alias].sort((left, right) => right.find.length - left.find.length);
 const SOURCE_MODULE = /\.(?:[cm]?tsx?|[cm]?jsx?)$/u;
 
-/** @emoji 🧭️ Vite's file resolution for one candidate path, in the declared extension order: the exact file, then
+/** 🧭️ Vite's file resolution for one candidate path, in the declared extension order: the exact file, then
  * `<candidate><extension>`, then a directory's own package entry. The ORDER is the contract — `🟦️.mts` sits ahead of
  * `🟦️.ts`/`🟦️.tsx`, so an extensionless `…/🟦️` in a directory that also carries a tool-config entry silently resolves
  * to the tool config rather than to the browser entry beside it. */
@@ -476,7 +476,7 @@ function resolveBrowserCandidate(candidate: string): string | null {
   return null;
 }
 
-/** @emoji ✂️ Every specifier a bundler keeps: comments and fully type-only `import type … from` / `export type … from`
+/** ✂️ Every specifier a bundler keeps: comments and fully type-only `import type … from` / `export type … from`
  * statements are erased before any bundler sees them, so they carry no browser edge and are dropped here too. */
 function browserSpecifiers(source: string): readonly string[] {
   const body = source
@@ -502,7 +502,7 @@ interface BrowserGraph {
   readonly unresolved: readonly string[];
 }
 
-/** @emoji 🌐️ The closure Vite serves to the browser: a breadth-first walk of the host entry's relative and aliased
+/** 🌐️ The closure Vite serves to the browser: a breadth-first walk of the host entry's relative and aliased
  * imports under the declared resolve order, with every bare specifier recorded as a leaf edge (Vite hands exactly
  * those to its esbuild dependency optimizer, which is where a node-only package's `.node` binding fails the pass). */
 function browserGraph(): BrowserGraph {
@@ -541,7 +541,7 @@ function browserGraph(): BrowserGraph {
   return { modules: [...modules].map(repoRelative).sort(), packageEdges, resolutions, unresolved };
 }
 
-/** @emoji 🔮️ Independent oracle: esbuild resolves and walks the same entry under the same extension order and alias
+/** 🔮️ Independent oracle: esbuild resolves and walks the same entry under the same extension order and alias
  * map, with every bare specifier external — a second implementation of the closure, not a second read of ours. */
 async function esbuildBrowserGraph(): Promise<{ readonly modules: readonly string[]; readonly packages: readonly string[] }> {
   const externalizeBare: Plugin = {

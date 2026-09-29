@@ -71,7 +71,7 @@ export const VerticalWindows: React.FC<{ children: React.ReactNode }> = ({ child
 
 // #region 🧭️Mode
 
-/** @emoji 🪟️ Window descriptor rendered inside {@link Mode}. */
+/** 🪟️ Window descriptor rendered inside {@link Mode}. */
 export interface ModeWindowDescriptor extends Omit<WindowConfig, "children" | "onOpenInNewWindow" | "onMaximize" | "onMinimize" | "onClose"> {
   title?: UiLabel;
   iconId: IconName;
@@ -80,7 +80,7 @@ export interface ModeWindowDescriptor extends Omit<WindowConfig, "children" | "o
 
 export const COMPOSE_WINDOW_TEMPLATE_MIME = "application/x-compose-window-template";
 
-/** @emoji 👻️ Ephemeral window id used while previewing an external template drag on {@link Mode}. */
+/** 👻️ Ephemeral window id used while previewing an external template drag on {@link Mode}. */
 export const MODE_TEMPLATE_PREVIEW_WINDOW_ID = "__compose-mode-template-preview__";
 
 export interface WindowTemplateDragSession {
@@ -98,38 +98,38 @@ export function setPanelGhostSessionBridge(bridge: PanelGhostSessionBridge | nul
 
 const activeWindowTemplateDragSession = ephemeralBox<WindowTemplateDragSession | null>("framework.modules.ui.elements.Canvas.component.tsx.activeWindowTemplateDragSession", null);
 
-/** @emoji 🪟️ Records the active palette template drag until drop or dragend. */
+/** 🪟️ Records the active palette template drag until drop or dragend. */
 export function beginWindowTemplateDrag(session: WindowTemplateDragSession): void {
   activeWindowTemplateDragSession.current = session;
   panelGhostSessionBridge?.begin(null);
 }
 
-/** @emoji 🪟️ Clears the active palette template drag session. */
+/** 🪟️ Clears the active palette template drag session. */
 export function endWindowTemplateDrag(): void {
   activeWindowTemplateDragSession.current = null;
   panelGhostSessionBridge?.end();
 }
 
-/** @emoji 🪟️ Returns the in-flight palette template drag, if any. */
+/** 🪟️ Returns the in-flight palette template drag, if any. */
 export function readActiveWindowTemplateDragSession(): WindowTemplateDragSession | null {
   return activeWindowTemplateDragSession.current;
 }
 
-/** @emoji 🖱️ Active pointer-driven window-template drag from the Display tree. */
+/** 🖱️ Active pointer-driven window-template drag from the Display tree. */
 export const windowTemplatePointerDragRef = { active: false };
 
-/** @emoji 🖱️ Marks a pointer-driven window-template drag as active. */
+/** 🖱️ Marks a pointer-driven window-template drag as active. */
 export function beginWindowTemplatePointerDrag(_encoded: string): void {
   windowTemplatePointerDragRef.active = true;
 }
 
-/** @emoji 🖱️ Cancels a pointer-driven window-template drag. */
+/** 🖱️ Cancels a pointer-driven window-template drag. */
 export function cancelWindowTemplatePointerDrag(): void {
   windowTemplatePointerDragRef.active = false;
   endWindowTemplateDrag();
 }
 
-/** @emoji 🖱️ {@link TreeDragAndDropController} for Display rows that carry window-template `dragData`. */
+/** 🖱️ {@link TreeDragAndDropController} for Display rows that carry window-template `dragData`. */
 export function windowTemplatePaletteTreeDragController(): TreeDragAndDropController {
   const readEncoded = (dragData: Record<string, string> | undefined): string | undefined => {
     const payload = dragData?.[COMPOSE_WINDOW_TEMPLATE_MIME];
@@ -184,13 +184,13 @@ export interface ModeProps {
   onTemplateDrop?: (payload: WindowTemplateDropPayload, target: ModeCanvasDropTarget) => void;
   children?: React.ReactNode;
   className?: string;
-  /** @emoji 📱️ Renders only the active window full-bleed with no tab bar, drag, dock, or maximize chrome. */
+  /** 📱️ Renders only the active window full-bleed with no tab bar, drag, dock, or maximize chrome. */
   mobile?: boolean;
 }
 
 //#region 🧭️ModeCanvasSpacing
 
-/** @emoji 📐️ Canvas inset on {@link Mode} body; inter-panel splitters use the same {@link --spacing-single} step as navbar and footer chrome. */
+/** 📐️ Canvas inset on {@link Mode} body; inter-panel splitters use the same {@link --spacing-single} step as navbar and footer chrome. */
 export const MODE_CANVAS_INSET_CLASS = "p-single";
 
 //#endregion 🧭️ModeCanvasSpacing
@@ -214,14 +214,14 @@ export function modeCollectWindowIds(node: WindowLayoutNode): string[] {
   return node.children.flatMap(modeCollectWindowIds);
 }
 
-/** @emoji 🪟️ Ensures every window leaf sits inside a tab stack. */
+/** 🪟️ Ensures every window leaf sits inside a tab stack. */
 function normalizeLayoutToStacks(node: WindowLayoutNode): WindowLayoutNode {
   if (node.kind === "window") return { kind: "stack", children: [node], activeId: node.id };
   if (node.kind === "stack") return { ...node, activeId: node.activeId ?? node.children[0]?.id };
   return { ...node, children: node.children.map((child) => normalizeLayoutToStacks(child) as WindowLayoutAxisNode | WindowLayoutStackNode) };
 }
 
-/** @emoji 🪟️ Collapses empty axes and hoists single-child axes. */
+/** 🪟️ Collapses empty axes and hoists single-child axes. */
 function collapseLayout(node: WindowLayoutNode | null): WindowLayoutNode | null {
   if (!node) return null;
   if (node.kind === "window") return node;
@@ -272,7 +272,7 @@ function mapLayoutStacks(layout: WindowLayoutNode, mapper: (stack: WindowLayoutS
   };
 }
 
-/** @emoji 🧭️ Finds the stack path that currently holds `windowId`, or null if absent. */
+/** 🧭️ Finds the stack path that currently holds `windowId`, or null if absent. */
 export function resolveStackPathForWindowId(layout: WindowLayoutNode, windowId: string): ModeLayoutPath | null {
   let found: ModeLayoutPath | null = null;
   mapLayoutStacks(layout, (stack, path) => {
@@ -282,7 +282,7 @@ export function resolveStackPathForWindowId(layout: WindowLayoutNode, windowId: 
   return found;
 }
 
-/** @emoji 🪟️ Drops windows that are no longer declared without auto-opening undeclared layout slots. */
+/** 🪟️ Drops windows that are no longer declared without auto-opening undeclared layout slots. */
 function reconcileWindows(layout: WindowLayoutNode, windowIds: readonly string[]): WindowLayoutNode {
   const normalized = normalizeLayoutToStacks(layout);
   const allowed = new Set(windowIds);
@@ -303,7 +303,7 @@ function removeAbsentWindowsFromLayout(layout: WindowLayoutNode, allowed: Readon
   };
 }
 
-/** @emoji 🪟️ Removes a window from the layout tree and collapses empty nodes. */
+/** 🪟️ Removes a window from the layout tree and collapses empty nodes. */
 function removeWindowFromLayout(layout: WindowLayoutNode, windowId: string): WindowLayoutNode | null {
   if (layout.kind === "window") return layout.id === windowId ? null : layout;
   if (layout.kind === "stack") {
@@ -319,12 +319,12 @@ function removeWindowFromLayout(layout: WindowLayoutNode, windowId: string): Win
 
 export const WINDOW_STACK_CORNERS: readonly WindowStackCorner[] = ["topLeft", "topRight", "bottomLeft", "bottomRight"];
 
-/** @emoji 🧭️ Resolves a window node's stack corner, defaulting to top-left. */
+/** 🧭️ Resolves a window node's stack corner, defaulting to top-left. */
 export function resolveWindowCorner(node: { corner?: WindowStackCorner }): WindowStackCorner {
   return node.corner ?? "topLeft";
 }
 
-/** @emoji 🧭️ Groups stack window children by chrome corner while preserving relative order. */
+/** 🧭️ Groups stack window children by chrome corner while preserving relative order. */
 export function modeStackTabsByCorner(children: readonly WindowLayoutWindowNode[]): Record<WindowStackCorner, WindowLayoutWindowNode[]> {
   const groups = { topLeft: [], topRight: [], bottomLeft: [], bottomRight: [] } as Record<WindowStackCorner, WindowLayoutWindowNode[]>;
   for (const child of children) groups[resolveWindowCorner(child)].push(child);
@@ -352,7 +352,7 @@ function insertWindowAsTab(layout: WindowLayoutNode, stackPath: ModeLayoutPath, 
   });
 }
 
-/** @emoji 🧭️ Inserts a window as a tab in a stack corner, mapping a corner-local index onto the flat children list. */
+/** 🧭️ Inserts a window as a tab in a stack corner, mapping a corner-local index onto the flat children list. */
 export function insertWindowAsTabAtCorner(layout: WindowLayoutNode, stackPath: ModeLayoutPath, windowId: string, corner: WindowStackCorner, index?: number): WindowLayoutNode {
   return updateLayoutAtPath(layout, stackPath, (node) => {
     if (node.kind !== "stack") return node;
@@ -363,7 +363,7 @@ export function insertWindowAsTabAtCorner(layout: WindowLayoutNode, stackPath: M
   });
 }
 
-/** @emoji 🧭️ Sets the chrome corner for a window node anywhere in the layout tree. */
+/** 🧭️ Sets the chrome corner for a window node anywhere in the layout tree. */
 export function setWindowCornerInLayout(layout: WindowLayoutNode, windowId: string, corner: WindowStackCorner): WindowLayoutNode {
   if (layout.kind === "window") return layout.id === windowId ? { ...layout, corner } : layout;
   if (layout.kind === "stack") {
@@ -378,7 +378,7 @@ export function setWindowCornerInLayout(layout: WindowLayoutNode, windowId: stri
   };
 }
 
-/** @emoji 📑️ Merges every tab from a dragged stack into another stack corner at the given corner-local index. */
+/** 📑️ Merges every tab from a dragged stack into another stack corner at the given corner-local index. */
 function mergeStackTabsIntoStack(layout: WindowLayoutNode, targetStackPath: ModeLayoutPath, stack: WindowLayoutStackNode, index: number, corner: WindowStackCorner = "topLeft"): WindowLayoutNode {
   const insertAt = index < 0 ? undefined : index;
   let result = layout;
@@ -400,7 +400,7 @@ function reorderTabInStack(layout: WindowLayoutNode, stackPath: ModeLayoutPath, 
   });
 }
 
-/** @emoji 🪟️ Splits a stack with a dragged window on the given side. */
+/** 🪟️ Splits a stack with a dragged window on the given side. */
 function splitWithWindow(layout: WindowLayoutNode, stackPath: ModeLayoutPath, windowId: string, side: ModeDockSide): WindowLayoutNode {
   const without = removeWindowFromLayout(layout, windowId) ?? { kind: "stack", children: [] };
   return updateLayoutAtPath(without, stackPath, (node) => {
@@ -420,7 +420,7 @@ function splitRootWithWindow(layout: WindowLayoutNode, windowId: string, side: M
   return { kind: horizontal ? "row" : "column", children: children as (WindowLayoutAxisNode | WindowLayoutStackNode)[] };
 }
 
-/** @emoji 🪟️ Detaches a tab stack from the layout tree for stack-level drag-dock. */
+/** 🪟️ Detaches a tab stack from the layout tree for stack-level drag-dock. */
 function extractStackFromLayout(layout: WindowLayoutNode, stackPath: ModeLayoutPath): { layout: WindowLayoutNode | null; stack: WindowLayoutStackNode | null } {
   const stack = readLayoutAtPath(layout, stackPath);
   if (!stack || stack.kind !== "stack") return { layout, stack: null };
@@ -437,7 +437,7 @@ function extractStackFromLayout(layout: WindowLayoutNode, stackPath: ModeLayoutP
   return { layout: collapseLayout(without), stack };
 }
 
-/** @emoji 🪟️ Splits a stack with a dragged tab stack on the given side. */
+/** 🪟️ Splits a stack with a dragged tab stack on the given side. */
 function splitWithStack(layout: WindowLayoutNode, targetStackPath: ModeLayoutPath, stack: WindowLayoutStackNode, side: ModeDockSide): WindowLayoutNode {
   return updateLayoutAtPath(layout, targetStackPath, (node) => {
     if (node.kind !== "stack") return node;
@@ -447,14 +447,14 @@ function splitWithStack(layout: WindowLayoutNode, targetStackPath: ModeLayoutPat
   });
 }
 
-/** @emoji 🪟️ Splits the mode root with a dragged tab stack on the given side. */
+/** 🪟️ Splits the mode root with a dragged tab stack on the given side. */
 function splitRootWithStack(layout: WindowLayoutNode, stack: WindowLayoutStackNode, side: ModeDockSide): WindowLayoutNode {
   const horizontal = side === "left" || side === "right";
   const children = side === "left" || side === "top" ? [stack, layout] : [layout, stack];
   return { kind: horizontal ? "row" : "column", children: children as (WindowLayoutAxisNode | WindowLayoutStackNode)[] };
 }
 
-/** @emoji 🪟️ Writes resizable panel percentages back onto axis children. */
+/** 🪟️ Writes resizable panel percentages back onto axis children. */
 function safePanelGroupSetLayout(group: ResizablePrimitive.GroupImperativeHandle, layout: Record<string, number>): void {
   try {
     group.setLayout(layout);
@@ -489,12 +489,12 @@ function applyAxisSizes(layout: WindowLayoutNode, axisPath: ModeLayoutPath, size
 }
 
 
-/** @emoji ↔ True when a child axis runs perpendicular to its parent axis. */
+/** ↔ True when a child axis runs perpendicular to its parent axis. */
 export function modeAxisIsPerpendicularChild(parentKind: "row" | "column", child: WindowLayoutNode): boolean {
   return (parentKind === "row" && child.kind === "column") || (parentKind === "column" && child.kind === "row");
 }
 
-/** @emoji ↔ Separator indices and size-weighted fractions for joins inside a perpendicular child axis. */
+/** ↔ Separator indices and size-weighted fractions for joins inside a perpendicular child axis. */
 export function modePerpendicularJoinSeparators(node: WindowLayoutNode): readonly { index: number; fraction: number }[] {
   if (node.kind !== "row" && node.kind !== "column") return [];
   const count = node.children.length;
@@ -511,7 +511,7 @@ export function modePerpendicularJoinSeparators(node: WindowLayoutNode): readonl
   return joins;
 }
 
-/** @emoji ↔ Corner join specs for a main-axis separator that crosses perpendicular child splits. */
+/** ↔ Corner join specs for a main-axis separator that crosses perpendicular child splits. */
 export function modeJoinCornerSpecsForSeparator(parentPath: ModeLayoutPath, parentKind: "row" | "column", separatorIndex: number, prevChild: WindowLayoutNode, nextChild: WindowLayoutNode): ResizableJoinCornerSpec[] {
   const specs: ResizableJoinCornerSpec[] = [];
   const pushSpecs = (beforeSide: boolean, crossPath: ModeLayoutPath, crossChild: WindowLayoutNode) => {
@@ -537,7 +537,7 @@ export function modeJoinCornerSpecsForSeparator(parentPath: ModeLayoutPath, pare
   return specs;
 }
 
-/** @emoji ↔ Corner join specs on a cross-axis separator where it meets a parent split. */
+/** ↔ Corner join specs on a cross-axis separator where it meets a parent split. */
 export function modeJoinCornerSpecsForCrossSeparator(crossPath: ModeLayoutPath, crossKind: "row" | "column", crossSeparatorIndex: number, parent: { path: ModeLayoutPath; kind: "row" | "column"; panelIndex: number }): ResizableJoinCornerSpec[] {
   if ((parent.kind === "row" && crossKind !== "column") || (parent.kind === "column" && crossKind !== "row")) return [];
   const parentSeparatorIndex = parent.panelIndex === 0 ? parent.panelIndex + 1 : parent.panelIndex;
@@ -556,16 +556,16 @@ export function modeJoinCornerSpecsForCrossSeparator(crossPath: ModeLayoutPath, 
   ];
 }
 
-/** @emoji ↔ One perpendicular axis that participates in a corner join. */
+/** ↔ One perpendicular axis that participates in a corner join. */
 export type ModeJoinCornerCrossAxis = {
   path: ModeLayoutPath;
   separatorIndex: number;
 };
 
-/** @emoji ↔ Max fraction delta for two perpendicular joins to count as the same touching corner. */
+/** ↔ Max fraction delta for two perpendicular joins to count as the same touching corner. */
 export const MODE_JOIN_CORNER_TOUCH_EPS = 0.0025;
 
-/** @emoji ↔ Every perpendicular axis whose join actually touches this corner (same main separator + size fraction), including the dragged cross axis. */
+/** ↔ Every perpendicular axis whose join actually touches this corner (same main separator + size fraction), including the dragged cross axis. */
 export function resolveJoinCornerPeerCrossAxes(layout: WindowLayoutNode, spec: ResizableJoinCornerSpec): ModeJoinCornerCrossAxis[] {
   const fallback: ModeJoinCornerCrossAxis[] = [{ path: spec.crossAxisPath, separatorIndex: spec.crossSeparatorIndex }];
   const mainNode = spec.mainAxisPath ? readLayoutAtPath(layout, spec.mainAxisPath) : layout;
@@ -589,7 +589,7 @@ export function resolveJoinCornerPeerCrossAxes(layout: WindowLayoutNode, spec: R
   return peers.length > 0 ? peers : fallback;
 }
 
-/** @emoji ↔ Percentage delta for one panel pair on an axis separator. */
+/** ↔ Percentage delta for one panel pair on an axis separator. */
 export function applyAxisResizeDelta(layout: WindowLayoutNode, axisPath: ModeLayoutPath, separatorIndex: number, deltaPct: number, minPct = 8): WindowLayoutNode {
   if (Math.abs(deltaPct) < 0.001) return layout;
   return updateLayoutAtPath(layout, axisPath, (node) => {
@@ -612,7 +612,7 @@ export function applyAxisResizeDelta(layout: WindowLayoutNode, axisPath: ModeLay
   });
 }
 
-/** @emoji ↔ Pointer delta for a corner join on perpendicular row/column axes. */
+/** ↔ Pointer delta for a corner join on perpendicular row/column axes. */
 export function resolveJoinCornerResizeDeltas(parentKind: "row" | "column", deltaXPx: number, deltaYPx: number, mainAxisPixelSize: number, crossAxisPixelSize: number): { mainDeltaPct: number; crossDeltaPct: number } {
   if (mainAxisPixelSize <= 0 || crossAxisPixelSize <= 0) return { mainDeltaPct: 0, crossDeltaPct: 0 };
   if (parentKind === "row") {
@@ -627,7 +627,7 @@ export function resolveJoinCornerResizeDeltas(parentKind: "row" | "column", delt
   };
 }
 
-/** @emoji ↔ Applies a separator percentage delta to a live resizable group layout. */
+/** ↔ Applies a separator percentage delta to a live resizable group layout. */
 export function applyAxisGroupLayoutDelta(layout: Record<string, number>, axisPath: ModeLayoutPath, separatorIndex: number, deltaPct: number, minPct = 8): Record<string, number> {
   const leadingId = modeJoinPath(axisPath, separatorIndex - 1);
   const trailingId = modeJoinPath(axisPath, separatorIndex);
@@ -643,14 +643,14 @@ export function applyAxisGroupLayoutDelta(layout: Record<string, number>, axisPa
   };
 }
 
-/** @emoji ↔ Resolves persisted percentages for one resizable axis. */
+/** ↔ Resolves persisted percentages for one resizable axis. */
 export function modeAxisGroupLayout(layout: WindowLayoutNode, axisPath: ModeLayoutPath): Record<string, number> {
   const node = axisPath ? readLayoutAtPath(layout, axisPath) : layout;
   if (!node || (node.kind !== "row" && node.kind !== "column")) return {};
   return Object.fromEntries(node.children.map((child, index) => [modeJoinPath(axisPath, index), child.size ?? 100 / node.children.length]));
 }
 
-/** @emoji ↔ Applies a corner grab delta to the main axis and every peer cross axis at the join. */
+/** ↔ Applies a corner grab delta to the main axis and every peer cross axis at the join. */
 export function applyModeJoinCornerResize(layout: WindowLayoutNode, spec: ResizableJoinCornerSpec, deltaXPx: number, deltaYPx: number, mainAxisPixelSize: number, crossAxisPixelSize: number): WindowLayoutNode {
   const { mainDeltaPct, crossDeltaPct } = resolveJoinCornerResizeDeltas(spec.parentKind, deltaXPx, deltaYPx, mainAxisPixelSize, crossAxisPixelSize);
   let next = applyAxisResizeDelta(layout, spec.mainAxisPath, spec.mainSeparatorIndex, mainDeltaPct);
@@ -688,7 +688,7 @@ function resolveModeLayout(windows: readonly ModeWindowDescriptor[], layout?: Wi
   );
 }
 
-/** @emoji 🪟️ Inserts a new window leaf at a dock drop target (external template drag). */
+/** 🪟️ Inserts a new window leaf at a dock drop target (external template drag). */
 export function insertWindowAtDropZone(layout: WindowLayoutNode, windowId: string, target: ModeCanvasDropTarget): WindowLayoutNode {
   if (target.kind === "root-split") return splitRootWithWindow(layout, windowId, target.side as ModeDockSide);
   if (target.kind === "split") return splitWithWindow(layout, target.stackPath, windowId, target.side as ModeDockSide);
@@ -744,7 +744,7 @@ function computeTabInsertIndex(pointerX: number, tabBarElement: HTMLElement | nu
   return tabs.length;
 }
 
-/** @emoji 📍️ Resolves tab-bar insertion line and slot preview geometry for drag feedback. */
+/** 📍️ Resolves tab-bar insertion line and slot preview geometry for drag feedback. */
 function computeTabInsertPreview(tabBarElement: HTMLElement | null, insertIndex: number): { insertX: number; top: number; height: number; slotLeft: number; slotWidth: number } | null {
   if (!tabBarElement) return null;
   const tabBarRect = tabBarElement.getBoundingClientRect();
@@ -774,7 +774,7 @@ function pointerInRect(x: number, y: number, rect: DOMRect): boolean {
   return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
 }
 
-/** @emoji 🧭️ Maps pointer position in a rectangle to a split side using half-panel zones (dominant axis from center). */
+/** 🧭️ Maps pointer position in a rectangle to a split side using half-panel zones (dominant axis from center). */
 function resolveModeSplitSideInBody(localX: number, localY: number, bodyWidth: number, bodyHeight: number): ModeDockSide {
   const midX = bodyWidth / 2;
   const midY = bodyHeight / 2;
@@ -784,7 +784,7 @@ function resolveModeSplitSideInBody(localX: number, localY: number, bodyWidth: n
   return localY < midY ? "top" : "bottom";
 }
 
-/** @emoji 📐️ Half-panel rectangle for split drop preview inside a stack body (origin top-left of body). */
+/** 📐️ Half-panel rectangle for split drop preview inside a stack body (origin top-left of body). */
 function computeModeSplitPreviewInBody(bodyWidth: number, bodyHeight: number, side: ModeDockSide): { left: number; top: number; width: number; height: number } {
   const halfWidth = bodyWidth / 2;
   const halfHeight = bodyHeight / 2;
@@ -837,7 +837,7 @@ function applyModeDrop(layout: WindowLayoutNode, drag: ModeDragState, zone: Mode
   return insertWindowAsTabAtCorner(without, zone.stackPath, windowId, zone.corner, zone.index < 0 ? undefined : zone.index);
 }
 
-/** @emoji 🪓️ Removes the dragged tab or stack from the committed layout while it floats on the cursor. */
+/** 🪓️ Removes the dragged tab or stack from the committed layout while it floats on the cursor. */
 function modeDockOutLayout(committed: WindowLayoutNode, drag: Pick<ModeDragState, "dragKind" | "windowId" | "stackPath">): WindowLayoutNode {
   if (drag.dragKind === "stack") {
     const { layout } = extractStackFromLayout(committed, drag.stackPath);
@@ -854,7 +854,7 @@ interface ModeTabInsertPreview {
 
 type ModeDockTabDisplayItem = { id: string; title: string; iconId: IconName; preview?: "ghost" };
 
-/** @emoji 📑️ Tab bar row with ghost tab(s) at the drop index so layout matches the committed drop. */
+/** 📑️ Tab bar row with ghost tab(s) at the drop index so layout matches the committed drop. */
 function modeDockTabsWithInsertPreview(
   tabs: readonly { id: string; title: string; iconId: IconName }[],
   insertPreview: ModeTabInsertPreview | null,
@@ -869,7 +869,7 @@ function modeDockTabsWithInsertPreview(
   return row;
 }
 
-/** @emoji 📑️ Tab descriptors shown as insert-preview ghosts for the current drag. */
+/** 📑️ Tab descriptors shown as insert-preview ghosts for the current drag. */
 function modeDockDragInsertTabs(layout: WindowLayoutNode, drag: ModeDragState, windowTitle: (windowId: string) => string, windowIconId: (windowId: string) => IconName): readonly { id: string; title: string; iconId: IconName }[] {
   if (drag.dragKind === "tab") return [{ id: drag.windowId, title: windowTitle(drag.windowId), iconId: windowIconId(drag.windowId) }];
   const stack = readLayoutAtPath(layout, drag.stackPath);
@@ -901,7 +901,7 @@ interface ModeDockDragPreviewProps {
   tabOnly?: boolean;
 }
 
-/** @emoji 🪟️ Floating tab or window preview shown while docking. */
+/** 🪟️ Floating tab or window preview shown while docking. */
 const ModeDockDragPreview: React.FC<ModeDockDragPreviewProps> = ({ title, iconId, content, className, style, tabOnly = false }) =>
   tabOnly ? (
     <div data-slot="mode-dock-drag-preview" data-level="window" className={cn(modeDockInactiveTabClass, "pointer-events-none flex max-w-[12rem] shrink-0 items-center px-single text-xs text-element shadow-md select-none", glassClass, className)} style={style}>
@@ -947,7 +947,7 @@ interface ModeDockContextValue {
   activateWindow: (windowId: string) => void;
   deactivateActiveWindow: () => void;
   maximizedStackPath: ModeLayoutPath | null;
-  /** @emoji ⛶️ False when the canvas has only one window — Focus/Unfocus has nothing to enlarge against. */
+  /** ⛶️ False when the canvas has only one window — Focus/Unfocus has nothing to enlarge against. */
   canMaximize: boolean;
   toggleMaximize: (stackPath: ModeLayoutPath) => void;
 }
@@ -961,7 +961,7 @@ interface ModeDockTabBarProps {
   activeId: string | undefined;
   activeWindowId: string | null;
   onSelectTab: (windowId: string) => void;
-  /** @emoji 📱️ Windows always take the full space on mobile — the Focus/Unfocus control is meaningless there and is hidden; Close stays. */
+  /** 📱️ Windows always take the full space on mobile — the Focus/Unfocus control is meaningless there and is hidden; Close stays. */
   mobile?: boolean;
   showMaximize?: boolean;
   isMaximized?: boolean;
@@ -1134,7 +1134,7 @@ interface ModeDockStackProps {
   node: WindowLayoutStackNode;
   windowsById: ReadonlyMap<string, ModeWindowDescriptor>;
   activeWindowId: string | null;
-  /** @emoji 📱️ Skips the per-tab active-chrome grid (which sizes tab columns to their content and doesn't scroll) in favor of the plain scrollable tab strip, and drops the Focus control (windows always take the full space on mobile) so only Close stays reachable when many windows collapse into one mobile tab stack. Desktop also hides Focus when the canvas has only one window. */
+  /** 📱️ Skips the per-tab active-chrome grid (which sizes tab columns to their content and doesn't scroll) in favor of the plain scrollable tab strip, and drops the Focus control (windows always take the full space on mobile) so only Close stays reachable when many windows collapse into one mobile tab stack. Desktop also hides Focus when the canvas has only one window. */
   mobile?: boolean;
 }
 
@@ -1338,7 +1338,7 @@ function renderModeDockNode(node: WindowLayoutAxisNode | WindowLayoutStackNode, 
 
 //#endregion 🧭️ModeRender
 
-/** @emoji 🪟️ Golden-Layout-style docking mode shell with tab stacks, drag-dock, resize, maximize, and close. */
+/** 🪟️ Golden-Layout-style docking mode shell with tab stacks, drag-dock, resize, maximize, and close. */
 const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChange, onWindowClose, onWindowOpenInNewWindow, layout, onLayoutChange, onTemplateDrop, children, className = "", mobile = false }) => {
   // 🐚️ Gates the active-window search-routing keydown listener below to this shell — absent outside a `ShellScopeProvider` (tests), where it simply stays inert.
   const shellScope = useShellScopeOptional();
@@ -1889,7 +1889,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
   const hasWindows = orderedWindowIds.length > 0;
   const emptyShellNotice = resolveTranslationLabel(modeT("ui.display.emptyShell"));
 
-  /** @emoji 📱️ Mobile has no split-pane window manager: every window collapses into one tab stack, rendered through the same {@link ModeDockStack} chrome (tab bar, utility bar, measures, engagement) as desktop. */
+  /** 📱️ Mobile has no split-pane window manager: every window collapses into one tab stack, rendered through the same {@link ModeDockStack} chrome (tab bar, utility bar, measures, engagement) as desktop. */
   const mobileFlatStack: WindowLayoutStackNode | null = mobile
     ? {
         kind: "stack",
@@ -2014,7 +2014,7 @@ export {
 
 // #region 🧭️App
 
-/** @emoji 📱️ Mode descriptor rendered inside {@link App}. */
+/** 📱️ Mode descriptor rendered inside {@link App}. */
 export interface AppModeDescriptor {
   id: string;
   label?: UiLabel;
@@ -2031,7 +2031,7 @@ export interface AppProps {
   chrome?: boolean;
 }
 
-/** @emoji 📱️ App shell with optional mode switcher and one active mode body. */
+/** 📱️ App shell with optional mode switcher and one active mode body. */
 const App: React.FC<AppProps> = ({ modes, activeModeId, onActiveModeChange, children, className = "", chrome = true }) => {
   const modeLabel = useLabel("ui.selection.mode");
   const activeMode = modes.find((mode) => mode.id === activeModeId) ?? modes[0];
@@ -2069,7 +2069,7 @@ export { App };
 
 // #region 🧭️Ui
 
-/** @emoji 🖥️ App descriptor rendered inside {@link Ui}. */
+/** 🖥️ App descriptor rendered inside {@link Ui}. */
 export interface UiAppDescriptor {
   id: string;
   label?: UiLabel;
@@ -2088,7 +2088,7 @@ export interface UiProps {
   chrome?: boolean;
 }
 
-/** @emoji 🖥️ Top-level UI shell with optional app switcher and one active app body. */
+/** 🖥️ Top-level UI shell with optional app switcher and one active app body. */
 const Ui: React.FC<UiProps> = ({ apps, activeAppId, onActiveAppChange, navbar, footer, children, className = "", chrome = true }) => {
   const activeApp = apps.find((app) => app.id === activeAppId) ?? apps[0];
   const body = children ?? activeApp?.children;

@@ -1,4 +1,4 @@
-/** @emoji 🌐️ Builds CDN-ready standalone playground sites from plugin `📜️script.ts build`. */
+/** 🌐️ Builds CDN-ready standalone playground sites from plugin `📜️script.ts build`. */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { BundleScript, type ScriptRouter } from "../../🏃️process/🧭️routing/🟦️.ts";
@@ -6,7 +6,7 @@ import { runBun } from "../../🟦️.ts";
 
 const DISTRIBUTION_BUILD_SCRIPT = "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/📜️script.ts";
 
-/** @emoji 🎮️ Playground variant ids declared on the crate next to this package's `📜️script.ts`. */
+/** 🎮️ Playground variant ids declared on the crate next to this package's `📜️script.ts`. */
 export function playgroundVariantsFromCrateManifest(crateManifestPath: string): readonly string[] {
   const text = readFileSync(crateManifestPath, "utf8");
   const variants: string[] = [];
@@ -18,7 +18,7 @@ export function playgroundVariantsFromCrateManifest(crateManifestPath: string): 
   return variants;
 }
 
-/** @emoji 🏗️ Registers `build [<variant>|all]` to publish the react release distribution for this plugin crate. */
+/** 🏗️ Registers `build [<variant>|all]` to publish the react release distribution for this plugin crate. */
 export function registerPlaygroundSiteBuildCommands(router: ScriptRouter): void {
   class BuildScript extends BundleScript {
     async run(segments: string[]): Promise<void> {

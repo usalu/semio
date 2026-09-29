@@ -17,7 +17,7 @@ import { repoCacheDirectory } from "../../../../🧰️framework/🛍️products
 
 const playDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
-/** @emoji 🚫️ Keep wasm-pack engine packages out of Vite's dep optimizer — their `pkg/` entries are produced by `buildEngineWasm`. */
+/** 🚫️ Keep wasm-pack engine packages out of Vite's dep optimizer — their `pkg/` entries are produced by `buildEngineWasm`. */
 const FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE = [
   "@semio-tech/framework-surface-rs",
   "@semio-tech/framework-editor-rs",
@@ -29,11 +29,11 @@ const FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE = [
 const repoRoot = path.resolve(playDir, "../..");
 
 //#region 🔖️DemonstratorUnionAssets
-/** @emoji 🎪️ Registry rows for exactly this demonstrator's eight panes — the union this page needs to
+/** 🎪️ Registry rows for exactly this demonstrator's eight panes — the union this page needs to
  * actually mount, not every playground variant in the monorepo (mirrors `os/dev`'s own `resolvedPlaygroundAssets`,
  * scoped down from its "studio serves everything" fallback since a demonstrator pane list is fixed). */
 const resolvedPlaygroundAssets = DEMONSTRATOR_RUNTIME_TARGETS.flatMap((target) => target.assets);
-/** @emoji 🔌️ Transitive runtime assets for every pane, split by the exact public roots encoded in the generated catalog. */
+/** 🔌️ Transitive runtime assets for every pane, split by the exact public roots encoded in the generated catalog. */
 const { pluginModuleDirNames, extensionModuleDirNames } = demonstratorRuntimeModuleLayout([...new Set(DEMONSTRATOR_RUNTIME_TARGETS.map((target) => target.pluginId))]);
 //#endregion 🔖️DemonstratorUnionAssets
 

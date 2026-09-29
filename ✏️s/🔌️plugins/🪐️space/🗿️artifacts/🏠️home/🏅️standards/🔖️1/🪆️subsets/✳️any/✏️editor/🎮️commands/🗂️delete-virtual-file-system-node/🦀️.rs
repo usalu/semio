@@ -1,12 +1,17 @@
-//! 🗂️ 🗂️ S Home launcher app command — `delete-virtual-file-system-node`.
+//! 🗂️ S Home launcher app command — `delete-virtual-file-system-node`: retires one local-only studio from Home.
+//!
+//! Event-sourced, never a CRUD delete: the command emits exactly one config event,
+//! [`HomeConfigMutation::RetireLocalStudio`] — a tombstone in the Home config ledger — and performs no catalog IO. The
+//! studio's catalog document and its whole history stay intact; Home simply stops listing it, and the event's exact
+//! inverse ([`HomeConfigMutation::RestoreLocalStudio`]) lists it again in this session. A persisted studio is also unlisted
+//! from the host's local document catalog (`os.local-catalog.retire`: its files stay on disk), so a reload does not hand it
+//! back; undoing the removal lists it again only until the next reload. Hub spaces are never addressed here: the hub
+//! directory owns their deletion (`deleteSpace` → `os.directory.delete-space`).
 
-use crate::standards::v1::subsets::any::schema::mutations::change_catalog_generation;
+use crate::editor::home::config::{local_studio_id_is_admissible, HomeConfig, HomeConfigMutation};
 use crate::standards::v1::subsets::any::schema::mutations::text::SHomeMutation;
 use crate::SHomeSnapshot;
-use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-
-use semio_framework_os::delete_os_space;
+use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, FaultOrigin};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[dsl(keyword = "delete-vfs-node")]
@@ -14,18 +19,32 @@ pub struct DeleteVirtualFileSystemNode {
     pub node_id: String,
 }
 
-pub fn handle(payload: &DeleteVirtualFileSystemNode, doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
-    let generation = doc.snapshot.catalog_generation;
-    match payload.node_id.strip_prefix("studio:") {
-        Some(space_id) => {
-            // 🌉️ `draft_backbone_port`/`ephemeral_draft_catalog`/`catalog_port` are plugin-root
-            // async fns (outside this lease); `handle` must stay sync — bridged via `resolve_ready`,
-            // matching `🏗️create-studio`'s own seam.
-            let draft_port = semio_framework_plugin::resolve_ready(crate::draft_backbone_port());
-            semio_framework_plugin::resolve_ready(crate::ephemeral_draft_catalog()).discard_draft(&draft_port, space_id);
-            let _ = delete_os_space(space_id, &semio_framework_plugin::resolve_ready(crate::catalog_port()));
-            Ok(Emit::mutations(vec![change_catalog_generation(generation + 1)]))
-        }
-        None => Ok(Emit::default()),
+/// 🪪️ The local studio id one Home file-tree node names: `studio:<id>`, or the bare id.
+pub fn local_studio_id(node_id: &str) -> &str {
+    node_id.strip_prefix("studio:").unwrap_or(node_id)
+}
+
+/// 🚫️ The direct lane cannot tell a hub space from a local studio: removal runs only as the retained job.
+pub fn handle(_payload: &DeleteVirtualFileSystemNode, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
+    Err(Fault::new(FaultOrigin::App, "s.home.delete-vfs-node.requires-retained-job", "removing a Home node runs only as the retained job"))
+}
+
+/// 🪦️ The retained route: `hub_row` is the id's one folded directory row from the job's captured projection — a listed
+/// hub space is refused, because the hub directory owns its deletion.
+pub fn handle_with_row(payload: &DeleteVirtualFileSystemNode, _doc: &ArtifactView<'_, SHomeSnapshot>, cfg: &ConfigView<'_, HomeConfig>, hub_row: Option<&store::os_directory::DirectorySpace>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
+    let space_id = local_studio_id(&payload.node_id);
+    if !local_studio_id_is_admissible(space_id) {
+        return Err(Fault::new(FaultOrigin::App, "s.home.delete-vfs-node.node-invalid", "the node id names no admissible local studio"));
     }
+    if hub_row.is_some() {
+        return Err(Fault::new(FaultOrigin::App, "s.home.delete-vfs-node.hub-space", format!("{space_id} is a hub space; the hub directory deletes it (Delete Space)")));
+    }
+    if cfg.snapshot.is_local_studio_retired(space_id) {
+        return Err(Fault::new(FaultOrigin::App, "s.home.delete-vfs-node.already-retired", format!("local studio {space_id} is already retired from Home")));
+    }
+    let Some(entry) = semio_framework_plugin::resolve_ready(crate::list_all_space_catalog_entries()).into_iter().find(|entry| entry.id == space_id) else {
+        return Err(Fault::new(FaultOrigin::App, "s.home.delete-vfs-node.unknown-local-studio", format!("no local studio {space_id} is listed in Home")));
+    };
+    let unkeep = (!entry.backbone_uri.is_empty()).then(|| Effect::ReplayShellCommand { action_id: "os.local-catalog.retire".into(), args: Some(pack::json_to_dsl_value(&pack::json!({ "documentId": space_id }))) });
+    Ok(Emit { config_mutations: vec![HomeConfigMutation::RetireLocalStudio { space_id: space_id.to_owned() }], effects: unkeep.into_iter().collect(), ..Default::default() })
 }

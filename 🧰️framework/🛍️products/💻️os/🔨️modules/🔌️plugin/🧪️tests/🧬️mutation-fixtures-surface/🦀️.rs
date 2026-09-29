@@ -496,13 +496,14 @@ async fn new_viewer_constructs_a_registry_less_wrapper() {
 /// factory existed this law dispatched the generic `"typed-command"` verb into a registry-less
 /// wrapper and died on `interactive-job.unknown-key` — it proved what the runtime forbids, not that
 /// an editor mutates.
+///
+/// 🔁️ A migrated verb's dispatch only ADMITS: the document advances when the worker's emit walks
+/// the bounded publication ladder, which is the product's own route and what the host drives every
+/// turn. Asserting the count before settling would assert that a migrated editor does NOT mutate.
 #[semio_framework_async_macros::async_test]
 async fn editor_fixture_still_mutates_normally() {
     let mut app = new_registered_app::<EditorApp<SurfaceEditorFixture>, _>(surface_manifest()).await;
     app.dispatch_typed(SurfaceEditorCommand::Increment, &meta("local")).await.expect("increment");
-    // 🔁️ A migrated verb's dispatch only ADMITS: the document advances when the worker's emit walks
-    // the bounded publication ladder, which is the product's own route and what the host drives every
-    // turn. Asserting the count before settling would assert that a migrated editor does NOT mutate.
     let receipt = crate::app::artifact_app_laws::settle_registered_typed_operation(&mut app, meta("local").instance_id).await.expect("the admitted operation settles");
     assert!(receipt.lanes.contains(&crate::app::TypedOperationResultLane::Artifact), "the increment settles on the Artifact publication lane it declares, got {:?}", receipt.lanes);
     assert_eq!(app.snapshot().unwrap().count, 1);

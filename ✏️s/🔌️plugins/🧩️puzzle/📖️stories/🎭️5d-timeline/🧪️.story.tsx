@@ -91,7 +91,7 @@ function storySummarizePuzzle5dConnectionParams(fixture: StoryPuzzle5dFixture) {
 //#endregion StoryTypes
 
 //#region WasmFixtureLoader
-/** @emoji 🧵️ Lazily loads+inits `@semio-tech/puzzle-5d-rs`'s wasm module once (mirrors `framework/product/os/module/renderer/js/react/index.tsx`'s `createEngineSession` caching), then exposes `parse_dsl`'d fixture JSON via the crate's `puzzle5dParseDslJson` free export. */
+/** 🧵️ Lazily loads+inits `@semio-tech/puzzle-5d-rs`'s wasm module once (mirrors `framework/product/os/module/renderer/js/react/index.tsx`'s `createEngineSession` caching), then exposes `parse_dsl`'d fixture JSON via the crate's `puzzle5dParseDslJson` free export. */
 type Puzzle5dWasmModule = { readonly default: (input?: unknown) => Promise<unknown>; readonly puzzle5dParseDslJson: (dslText: string) => string };
 let puzzle5dWasmModulePromise: Promise<Puzzle5dWasmModule> | null = null;
 function loadPuzzle5dWasm(): Promise<Puzzle5dWasmModule> {
@@ -111,7 +111,7 @@ async function parsePuzzle5dFixtureDsl(dslText: string): Promise<StoryPuzzle5dFi
 //#endregion WasmFixtureLoader
 
 //#region HistorySynthesis
-/** @emoji 🗄️ Synthesizes one linear `HistoryColumn` per fixture part (see header docstring) — newest (last-assembled) part first. */
+/** 🗄️ Synthesizes one linear `HistoryColumn` per fixture part (see header docstring) — newest (last-assembled) part first. */
 function historyColumnsFromParts(parts: readonly StoryPuzzle5dPart[]): readonly HistoryColumn[] {
   return [...parts]
     .map((part, index) => ({
@@ -129,7 +129,7 @@ function historyColumnsFromParts(parts: readonly StoryPuzzle5dPart[]): readonly 
 //#endregion HistorySynthesis
 
 //#region PluginEmulator
-/** @emoji 🖱️ Story-local mirror of the ONE `MergeMode` set algebra (`🕹️interaction/🧫️fixtures/🎯️merge-modes.json`) — see `../3d/World.stories.tsx`'s copy. */
+/** 🖱️ Story-local mirror of the ONE `MergeMode` set algebra (`🕹️interaction/🧫️fixtures/🎯️merge-modes.json`) — see `../3d/World.stories.tsx`'s copy. */
 function applyStoryMerge(current: readonly string[], id: string, merge: string): string[] {
   const set = new Set(current);
   if (merge === "replace" || merge === "range") return [id];
@@ -146,7 +146,7 @@ function applyStoryMerge(current: readonly string[], id: string, merge: string):
   return [...set];
 }
 
-/** @emoji 🧩️ Story-local reducer: `checkoutCheckpoint` (from `🌳️GraphTimelineHost`) scrubs `revealCount`; `worldPick`/`setHover`/`setCamera` (from `World3dHost`) mirror the same subset `../3d/World.stories.tsx` implements, resolved against the *currently revealed* parts slice. */
+/** 🧩️ Story-local reducer: `checkoutCheckpoint` (from `🌳️GraphTimelineHost`) scrubs `revealCount`; `worldPick`/`setHover`/`setCamera` (from `World3dHost`) mirror the same subset `../3d/World.stories.tsx` implements, resolved against the *currently revealed* parts slice. */
 function reduceStoryPuzzle5dAction(state: StoryPuzzle5dState, action: string, args: Record<string, unknown> | undefined): StoryPuzzle5dState {
   const { fixture, runtime } = state;
   const revealed = fixture.parts.slice(0, runtime.revealCount);

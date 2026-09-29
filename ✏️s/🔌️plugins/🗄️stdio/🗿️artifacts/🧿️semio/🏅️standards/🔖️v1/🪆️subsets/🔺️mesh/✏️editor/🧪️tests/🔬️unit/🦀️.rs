@@ -29,7 +29,7 @@ async fn set_vertex_requires_stable_targets_and_finite_coordinates() {
     assert_eq!(command, editing::SnapshotEditingCommand::Native(SemioMeshEditCommand::SetVertex(SemioMeshSetVertexArgs { mesh_id: "mesh-a".into(), primitive_id: "primitive-a".into(), vertex_index: 2, point: [1.0, 2.0, 3.0] })));
     assert!(SemioMeshEditor::command_from_action("set-vertex", Some(&DslValue::Object(vec![]))).is_err());
     let definition = create_semio_mesh_editor();
-    let action = definition.actions.iter().find(|action| action.id == "set-vertex").expect("set-vertex action");
+    let action = definition.actions.iter().chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter())).find(|action| action.id == "set-vertex").expect("set-vertex action");
     assert_eq!(action.args.len(), 4);
     assert!(action.args.iter().all(|argument| argument.required));
 }

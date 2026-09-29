@@ -509,12 +509,7 @@ fn fragment_error(error: SchemaError, path: &[SchemaFragmentPathSegment]) -> Sch
 }
 
 fn schema_has_observing_siblings(schema: &Object) -> bool {
-    schema.iter().any(|(key, _)| {
-        !matches!(
-            key,
-            "$ref" | "$id" | "$schema" | "$comment" | "title" | "description" | "default" | "examples" | "readOnly" | "writeOnly" | "deprecated" | "definitions" | "$defs"
-        )
-    })
+    schema.iter().any(|(key, _)| !key.starts_with("x-") && !matches!(key, "$ref" | "$id" | "$schema" | "$comment" | "title" | "description" | "default" | "examples" | "readOnly" | "writeOnly" | "deprecated" | "definitions" | "$defs"))
 }
 
 fn normalize_fragment_cursor<'a>(mut cursor: FragmentSchemaCursor<'a>, path: &[SchemaFragmentPathSegment]) -> Result<FragmentSchemaCursor<'a>, SchemaFragmentError> {
@@ -632,25 +627,7 @@ fn fragment_union_branches<'a>(schema: &'a Object) -> Option<&'a [Value]> {
 }
 
 fn fragment_union_is_standalone(schema: &Object) -> bool {
-    schema.iter().all(|(key, _)| {
-        matches!(
-            key,
-            "oneOf"
-                | "anyOf"
-                | "$id"
-                | "$schema"
-                | "$comment"
-                | "title"
-                | "description"
-                | "default"
-                | "examples"
-                | "readOnly"
-                | "writeOnly"
-                | "deprecated"
-                | "definitions"
-                | "$defs"
-        )
-    })
+    schema.iter().all(|(key, _)| key.starts_with("x-") || matches!(key, "oneOf" | "anyOf" | "$id" | "$schema" | "$comment" | "title" | "description" | "default" | "examples" | "readOnly" | "writeOnly" | "deprecated" | "definitions" | "$defs"))
 }
 
 fn fragment_branch_object<'a>(cursor: FragmentSchemaCursor<'a>, path: &[SchemaFragmentPathSegment]) -> Result<Option<(Scope<'a>, &'a Object)>, SchemaFragmentError> {

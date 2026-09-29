@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🪞️ The text editor host's echo pack over `✏️TextEditor/🧫️fixtures/🪞️echo-pack/🔣️.json`: an echo of the editor's own
+/** 🪞️ The text editor host's echo pack over `✏️TextEditor/🧫️fixtures/🪞️echo-pack/🔣️.json`: an echo of the editor's own
  * keystroke must sync a byte-identical pack (the host skips it, so the canvas paints once per key, not twice — ticket
  * 26/09/23 F3 measured writer 2.08 paints per key because the buffer's lane ref rode every echo), while an echo that changes any
  * other field, an undeclared lane, or another author's text must reach the session. Third-party oracle: Node's

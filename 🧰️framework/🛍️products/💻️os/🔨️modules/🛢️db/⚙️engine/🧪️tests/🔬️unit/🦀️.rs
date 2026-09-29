@@ -1,8 +1,5 @@
 use super::*;
-use crate::vcs_integration::{HashMutation, HashProjection};
 use db_storage::{PayloadStorage as _, WalStorage as _};
-use protocol::{OpBinary, OpText};
-use store::ArtifactPack;
 
 async fn rejected_document_open_error(mut rejected: DatabaseDocumentOpenRejected) -> DbError {
     loop {
@@ -961,7 +958,6 @@ async fn database_capability_open_paused_transfer_blocks_public_close() {
             }
         }
         let empty = terminal.terminal_is_empty() && database_capability_open_registry().lock().unwrap()[state.slot].as_ref().is_none_or(|owner| !Arc::ptr_eq(owner, &state));
-        eprintln!("[DEBUG] capability-drive-ownership: {} first={first:?} admission-retained={retained} exact-storage={exact_storage} final-empty={empty}", row["name"]);
         assert_eq!(first == DatabaseCapabilityOpenCloseStep::Blocked, row["closeBlocked"].as_bool().unwrap(), "a live stack-local transfer must exclude public cleanup");
         assert_eq!(retained, row["admissionRetained"].as_bool().unwrap(), "live drive cannot release its admission or registry identity");
         assert_eq!(exact_storage, row["storageRetained"].as_bool().unwrap());
@@ -1056,7 +1052,6 @@ async fn database_capability_open_lease_successors_and_active_publication_retire
         assert_eq!(Arc::as_ptr(&result.into_parts().0) as usize, pointer);
         assert_eq!(retained, row["admissionDuringPublication"].as_bool().unwrap());
         let retirement_submissions = count.load(Ordering::Acquire) - before_retirement;
-        eprintln!("[DEBUG] capability-finalizer-handoff: {} admission-retained={retained} retirement-submissions={retirement_submissions} terminal-empty={}", row["name"], state.terminal_is_empty());
         assert_eq!(retirement_submissions, row["retirementSubmissions"].as_u64().unwrap() as usize);
         assert!(state.terminal_is_empty());
         assert!(state.controlled_submit_refusal.lock().unwrap().is_none());
@@ -1073,7 +1068,6 @@ async fn database_capability_open_lease_successors_and_active_publication_retire
         } else {
             assert!(before_late > 1, "real successors must have reentered the submitter");
         }
-        eprintln!("[DEBUG] capability-lease-completion: {} admission-during-publication={retained} closed=true late-submissions=0", row["name"]);
     }
 }
 
@@ -1143,7 +1137,7 @@ async fn database_capability_open_completion_interleavings_preserve_result_and_w
         }
         assert!(state.terminal_is_empty(), "fixture cleanup must return exact admission");
         assert!(database_capability_open_registry().lock().unwrap()[state.slot].as_ref().is_none_or(|owner| !Arc::ptr_eq(owner, &state)), "exact capability registry slot must be released");
-        eprintln!("[DEBUG] capability-completion: {} first-ready={first_ready} wakes={} waiter-empty={waiter_empty} abandoned={abandoned}", row["name"], wake.0.load(std::sync::atomic::Ordering::Acquire));
+        eprintln!("capability-completion: {} first-ready={first_ready} wakes={} waiter-empty={waiter_empty} abandoned={abandoned}", row["name"], wake.0.load(std::sync::atomic::Ordering::Acquire));
         assert_eq!(first_ready, row["firstReady"].as_bool().unwrap(), "completion in check-to-registration window must be observed in the same poll");
         assert_eq!(wake.0.load(std::sync::atomic::Ordering::Acquire) as u64, row["wakes"].as_u64().unwrap());
         assert!(waiter_empty, "Ready must retire its transient waiter");
@@ -1206,7 +1200,7 @@ async fn database_capability_open_consumed_completion_retires_before_publisher_w
         }
         assert!(state.terminal_is_empty(), "fixture cleanup must return exact admission");
         assert!(database_capability_open_registry().lock().unwrap()[state.slot].as_ref().is_none_or(|owner| !Arc::ptr_eq(owner, &state)), "exact capability registry slot must be released");
-        eprintln!("[DEBUG] capability-completion: {} terminal-before-wake={terminal_before_wake} wakes={}", row["name"], wake.0.load(std::sync::atomic::Ordering::Acquire));
+        eprintln!("capability-completion: {} terminal-before-wake={terminal_before_wake} wakes={}", row["name"], wake.0.load(std::sync::atomic::Ordering::Acquire));
         assert_eq!(terminal_before_wake, row["terminalBeforePublisherWake"].as_bool().unwrap(), "Ready must not strand admission behind an already-consumed completion");
         assert_eq!(wake.0.load(std::sync::atomic::Ordering::Acquire) as u64, row["wakes"].as_u64().unwrap());
     }
@@ -1297,7 +1291,6 @@ async fn database_capability_open_cancel_and_stale_generation_retain_exact_owner
     drop(probe);
     let terminal = take_database_capability_open_terminal(generation).expect("cancelled capability-open terminal authority");
     drain_controlled_capability_terminal(&terminal, &submitted);
-    eprintln!("[DEBUG] capability-cleanup: cancellation exact-storage=true actor/public-grants<=1 registry-empty=true");
 
     let stale_storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
     let stale_pointer = Arc::as_ptr(&stale_storage) as usize;
@@ -1320,7 +1313,6 @@ async fn database_capability_open_cancel_and_stale_generation_retain_exact_owner
     drop(stale);
     let terminal = take_database_capability_open_terminal(stale_generation).expect("stale capability-open terminal authority");
     drain_controlled_capability_terminal(&terminal, &submitted);
-    eprintln!("[DEBUG] capability-cleanup: stale-generation exact-storage=true actor/public-grants<=1 registry-empty=true");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1629,7 +1621,6 @@ async fn database_catalog_read_paused_transfers_exclude_successors_and_public_cl
             }
         }
         let empty = terminal.terminal_is_empty() && database_catalog_read_registry().lock().unwrap()[state.slot].as_ref().is_none_or(|owner| !Arc::ptr_eq(owner, &state));
-        eprintln!("[DEBUG] catalog-read-transfer: {} first={first:?} resume-blocked={resume_blocked} submissions-active={submissions_while_active} admission-retained={retained} exact-storage={exact_storage} final-empty={empty}", row["name"]);
         assert_eq!(submissions_while_active, row["submissionsWhileActive"].as_u64().unwrap() as usize, "active transfer must defer successor submission");
         assert!(resume_blocked);
         assert_eq!(first == DatabaseCatalogReadCloseStep::Blocked, row["closeBlocked"].as_bool().unwrap());
@@ -1826,7 +1817,6 @@ async fn database_catalog_read_retry_and_terminal_resume_preserve_exact_root() {
             }
         }
         let empty = state.terminal_is_empty() && database_catalog_read_registry().lock().unwrap()[state.slot].as_ref().is_none_or(|owner| !Arc::ptr_eq(owner, &state));
-        eprintln!("[DEBUG] catalog-read-recovery: {} exact-storage-key-root=true terminal-empty={empty}", row["name"]);
         assert_eq!(empty, row["terminalEmpty"].as_bool().unwrap());
         assert!(!state.retry_armed.load(Ordering::Acquire));
         assert!(!state.terminal_result_checked_out.load(Ordering::Acquire));
@@ -1911,7 +1901,6 @@ async fn database_catalog_read_consumed_publication_preserves_exact_root_and_ret
         assert_catalog_read_fixture_result(&fixture, result, pointer, operation);
         let retirement_submissions = count.load(Ordering::Acquire) - before_retirement;
         let empty = state.terminal_is_empty();
-        eprintln!("[DEBUG] catalog-read-publication: {} exact-storage-key-root=true admission-retained={retained} retirement-submissions={retirement_submissions} terminal-empty={empty}", row["name"]);
         assert_eq!(retained, row["admissionDuringPublication"].as_bool().unwrap());
         assert_eq!(retirement_submissions, row["retirementSubmissions"].as_u64().unwrap() as usize);
         assert_eq!(empty, row["terminalEmpty"].as_bool().unwrap());
@@ -2096,7 +2085,6 @@ async fn database_catalog_read_cancel_stale_and_rejection_preserve_exact_storage
         assert!(queue.lock().unwrap().pop().is_none());
         assert!(terminal.terminal_is_empty());
         assert!(database_catalog_read_registry().lock().unwrap()[state.slot].as_ref().is_none_or(|owner| !Arc::ptr_eq(owner, &state)));
-        eprintln!("[DEBUG] catalog-read-interruption: stale={stale} exact-storage=true bounded-close=true registry-empty=true");
     }
 }
 
@@ -2116,29 +2104,6 @@ async fn database_catalog_read_terminal_result_drop_hands_back_exact_result() {
     while !terminal.terminal_is_empty() {
         let _ = terminal.close_step();
     }
-}
-
-#[semio_framework_async_macros::async_test]
-async fn hash_operation_text_and_binary_round_trip_with_every_field_present_and_absent() {
-    let bare = HashMutation { hash: [7u8; 32], author: None, timestamp: None };
-    assert_eq!(HashMutation::parse_op(&bare.print_op()).unwrap().hash, bare.hash);
-    assert!(HashMutation::parse_op(&bare.print_op()).unwrap().author.is_none());
-    assert_eq!(HashMutation::decode_op(&bare.encode_op().unwrap()).unwrap(), bare);
-
-    let full = HashMutation { hash: [9u8; 32], author: Some(protocol::ActorId("actor-1".into())), timestamp: Some(protocol::HybridLogicalTimestamp { actor: 1, physical_ms: 2, logical: 3 }) };
-    let reparsed = HashMutation::parse_op(&full.print_op()).unwrap();
-    assert_eq!(reparsed.hash, full.hash);
-    assert_eq!(reparsed.author, full.author);
-    assert_eq!(reparsed.timestamp, full.timestamp);
-    let redecoded = HashMutation::decode_op(&full.encode_op().unwrap()).unwrap();
-    assert_eq!(redecoded, full);
-}
-
-#[semio_framework_async_macros::async_test]
-async fn hash_projection_pack_round_trips() {
-    let projection = HashProjection { latest_hash: [3u8; 32] };
-    let bytes = projection.encode_pack();
-    assert_eq!(HashProjection::decode_pack(&bytes).unwrap(), projection);
 }
 
 //#region 🧸️Fixtures
@@ -3081,9 +3046,8 @@ async fn database_concurrent_ensure_mounts_one_actor_and_one_writer() {
     if let Err(error) = database.shutdown(&DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(30))).await {
         let closing = database.closing_authority.as_ref().map(|(document, authority)| format!("document={document} {}", authority.shutdown_debug_witness())).unwrap_or_else(|| String::from("no-closing-authority"));
         eprintln!(
-            "[DEBUG] concurrent mount shutdown retained state: closing={closing} registry={} graph_complete={} emit_started={} pool_use={}; error={error}",
+            "concurrent mount shutdown retained state: closing={closing} registry={} emit_started={} pool_use={}; error={error}",
             database.open_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).len(),
-            database.shutdown_graph_complete,
             database.shutdown_emit_started,
             database.pool_use.as_ref().map_or(0, Arc::strong_count),
         );
@@ -3118,7 +3082,6 @@ async fn database_worker_pool_use_blocks_early_shutdown_and_releases_at_terminal
         database.hello_retained(to_core_document_id(&document).await, None, String::from("post-terminal-session"), protocol::ActorId(String::from("post-terminal-actor")), 4096,),
         Err(DatabaseRetainedActivityRejected::Closed(DbError::Closed))
     ));
-    assert_eq!(database.checkpoint_document(&document, String::from("post-terminal-checkpoint"), &[]).await, Err(DbError::Closed));
     let (ran_tx, ran_rx) = std::sync::mpsc::sync_channel(1);
     pool.submit_at(pool.now_ms(), Lane::UserVisible, Box::new(move || ran_tx.send(()).unwrap()));
     ran_rx.recv().unwrap();
@@ -3218,7 +3181,6 @@ async fn database_published_opening_joins_without_actor_overwrite() {
 
 #[semio_framework_async_macros::async_test]
 async fn database_cancelled_ensure_waiter_does_not_cancel_mount_owner() {
-    eprintln!("[DEBUG] cancelled-waiter stage=setup");
     let pool = test_worker_pool();
     let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
     let mut database = Database::open(pool.clone(), DbConfig::for_profile(Profile::Test), storage).await.unwrap();
@@ -3229,7 +3191,6 @@ async fn database_cancelled_ensure_waiter_does_not_cancel_mount_owner() {
         std::task::Poll::Ready(())
     })
     .await;
-    eprintln!("[DEBUG] cancelled-waiter stage=first-pending");
     drop(cancelled);
     {
         let registry = database.open_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -3237,33 +3198,27 @@ async fn database_cancelled_ensure_waiter_does_not_cancel_mount_owner() {
         assert_eq!(waiters.iter().flatten().count(), 0);
         assert!(!owner.terminal.load(std::sync::atomic::Ordering::Acquire));
         eprintln!(
-            "[DEBUG] cancelled-waiter stage=owner-retained driver={} wake={} resume={}",
+            "cancelled-waiter stage=owner-retained driver={} wake={} resume={}",
             owner.driver.load(std::sync::atomic::Ordering::Acquire),
             owner.wake_requested.load(std::sync::atomic::Ordering::Acquire),
             owner.resume_requested.load(std::sync::atomic::Ordering::Acquire)
         );
     }
-    eprintln!("[DEBUG] cancelled-waiter stage=join");
     let handle = database.ensure_document(&document).await.unwrap();
-    eprintln!("[DEBUG] cancelled-waiter stage=joined");
     assert_eq!(database.catalog().await.artifacts.iter().filter(|entry| entry.document == document).count(), 1);
     drop(handle);
-    eprintln!("[DEBUG] cancelled-waiter stage=shutdown");
     if let Err(error) = database.shutdown(&DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(30))).await {
         let closing = database.closing_authority.as_ref().map(|(document, authority)| format!("document={document} {}", authority.shutdown_debug_witness())).unwrap_or_else(|| String::from("none"));
         let registry = database.open_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         eprintln!(
-            "[DEBUG] cancelled-waiter shutdown retained state: closing={closing} registry={} graph_complete={} emit_started={} pool_use={}; error={error}",
+            "cancelled-waiter shutdown retained state: closing={closing} registry={} emit_started={} pool_use={}; error={error}",
             registry.len(),
-            database.shutdown_graph_complete,
             database.shutdown_emit_started,
             database.pool_use.as_ref().map_or(0, Arc::strong_count),
         );
         panic!("database shutdown after cancelled waiter failed: {error}");
     }
-    eprintln!("[DEBUG] cancelled-waiter stage=pool-shutdown");
     pool.shutdown();
-    eprintln!("[DEBUG] cancelled-waiter stage=complete");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -3301,9 +3256,8 @@ async fn database_mount_owner_emits_before_ready_and_survives_elected_waiter_can
         let closing = database.closing_authority.as_ref().map(|(document, authority)| format!("document={document} {}", authority.shutdown_debug_witness())).unwrap_or_else(|| String::from("none"));
         let registry = database.open_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         eprintln!(
-            "[DEBUG] emission mount shutdown retained state: closing={closing} registry={} graph_complete={} emit_started={} pool_use={}; error={error}",
+            "emission mount shutdown retained state: closing={closing} registry={} emit_started={} pool_use={}; error={error}",
             registry.len(),
-            database.shutdown_graph_complete,
             database.shutdown_emit_started,
             database.pool_use.as_ref().map_or(0, Arc::strong_count),
         );
@@ -3512,7 +3466,6 @@ async fn database_document_mount_failure_terminalizes_authority_builder_wal_owne
     assert!(matches!(rejected_document_open_error(rejected).await, DbError::Io(_)));
     storage.wal().await.acquire_writer(&core_document).await.unwrap().release().await.unwrap();
     database.shutdown(&DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(5))).await.unwrap();
-    eprintln!("[DEBUG] database mount retained and terminalized the exact failed WAL release owner before caller fanout");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -3632,9 +3585,8 @@ async fn database_document_mount_unlock_fault_parks_exact_owner_until_controlled
     if let Err(error) = database.shutdown(&DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(30))).await {
         let closing = database.closing_authority.as_ref().map(|(document, authority)| format!("document={document} {}", authority.shutdown_debug_witness())).unwrap_or_else(|| String::from("none"));
         eprintln!(
-            "[DEBUG] unlock-retry shutdown retained state: closing={closing} registry={} graph_complete={} emit_started={} pool_use={}; error={error}",
+            "unlock-retry shutdown retained state: closing={closing} registry={} emit_started={} pool_use={}; error={error}",
             database.open_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).len(),
-            database.shutdown_graph_complete,
             database.shutdown_emit_started,
             database.pool_use.as_ref().map_or(0, Arc::strong_count),
         );
@@ -3784,7 +3736,7 @@ async fn full_submit_durable_query_round_trip_over_a_real_document_authority() {
     }
     let _history_capacity = db_artifact::history_capacity_test_lock();
     let root = tempdir("round-trip").await;
-    let database = Database::open_at(test_worker_pool(), &root, Profile::Test).await.unwrap();
+    let mut database = Database::open_at(test_worker_pool(), &root, Profile::Test).await.unwrap();
     let document = protocol::ArtifactId("doc-1".to_string());
     let handle = database.create_document(ArtifactSpec::new(document.clone()).await).await.unwrap();
 
@@ -3816,6 +3768,8 @@ async fn full_submit_durable_query_round_trip_over_a_real_document_authority() {
     assert_eq!(history.entries().len(), 1);
     assert!(history.operation_id_eq(0, 0, "op-1"));
     while history.close_step() {}
+    drop(handle);
+    database.shutdown(&DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(30))).await.unwrap();
 }
 
 #[semio_framework_async_macros::async_test]
@@ -3825,7 +3779,7 @@ async fn artifact_history_empty_and_two_batch_replay_are_deterministic() {
     }
     let _history_capacity = db_artifact::history_capacity_test_lock();
     let root = tempdir("history-order").await;
-    let database = Database::open_at(test_worker_pool(), &root, Profile::Test).await.unwrap();
+    let mut database = Database::open_at(test_worker_pool(), &root, Profile::Test).await.unwrap();
     let document = protocol::ArtifactId("history-doc".to_string());
     let handle = database.create_document(ArtifactSpec::new(document.clone()).await).await.unwrap();
     let mut empty = handle.history().await.unwrap();
@@ -3844,6 +3798,8 @@ async fn artifact_history_empty_and_two_batch_replay_are_deterministic() {
     assert!(second.operation_id_eq(1, 0, "history-2"));
     while first.close_step() {}
     while second.close_step() {}
+    drop(handle);
+    database.shutdown(&DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(30))).await.unwrap();
 }
 
 #[semio_framework_async_macros::async_test]
@@ -3917,38 +3873,6 @@ async fn subscribe_preview_and_snapshot_now_are_documented_unimplemented_not_pan
 }
 //#endregion 🔖️Deferred extension seams
 
-//#region 🔖️VersionGraph
-#[cfg(feature = "vcs")]
-#[semio_framework_async_macros::async_test]
-async fn checkpoint_document_mints_distinct_real_vcs_content_addressed_checkpoint_ids() {
-    let root = tempdir("vcs-checkpoint").await;
-    let database = Database::open_at(test_worker_pool(), &root, Profile::Test).await.unwrap();
-    let document = protocol::ArtifactId("doc-1".to_string());
-    let handle = database.create_document(ArtifactSpec::new(document.clone()).await).await.unwrap();
-
-    let batch1 = db_artifact::CommandBatch::new(vec![envelope("op-1", &[], "alice", &document, &[("x", serde_json::json!(1))]).await]).await.unwrap();
-    db_actor::block_on(handle.submit(batch1, db_artifact::SubmitOptions::default())).unwrap().unwrap();
-    let checkpoint_1 = database.checkpoint_document(&document, "first".to_string(), &[protocol::ActorId("alice".to_string())]).await.unwrap();
-    assert!(checkpoint_1.starts_with("ck-"), "vcs checkpoint ids are content-addressed as ck-<hex16>, got {checkpoint_1:?}");
-
-    let batch2 = db_artifact::CommandBatch::new(vec![envelope("op-2", &["op-1"], "alice", &document, &[("x", serde_json::json!(2))]).await]).await.unwrap();
-    db_actor::block_on(handle.submit(batch2, db_artifact::SubmitOptions::default())).unwrap().unwrap();
-    let checkpoint_2 = database.checkpoint_document(&document, "second".to_string(), &[protocol::ActorId("alice".to_string())]).await.unwrap();
-
-    assert_ne!(checkpoint_1, checkpoint_2, "distinct commits must mint distinct content-addressed checkpoint ids");
-}
-
-#[cfg(not(feature = "vcs"))]
-#[semio_framework_async_macros::async_test]
-async fn checkpoint_document_errs_unimplemented_without_the_vcs_feature() {
-    let root = tempdir("no-vcs-checkpoint").await;
-    let database = Database::open_at(test_worker_pool(), &root, Profile::Test).await.unwrap();
-    let document = protocol::ArtifactId("doc-1".to_string());
-    database.create_document(ArtifactSpec::new(document.clone())).await.unwrap();
-    assert!(matches!(database.checkpoint_document(&document, "msg".to_string(), &[]).await, Err(DbError::Unimplemented(_))));
-}
-//#endregion 🔖️VersionGraph
-
 //#region 🔖️Compact + Sync
 #[semio_framework_async_macros::async_test]
 async fn compact_document_runs_a_real_compaction_pass_without_error() {
@@ -4009,9 +3933,8 @@ async fn compact_document_uses_live_actor_writer_and_restores_submits() {
     database.shutdown(&DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(1))).await.unwrap();
 }
 
-#[cfg(feature = "vcs")]
 #[semio_framework_async_macros::async_test]
-async fn database_shutdown_cancellation_and_vcs_error_preserve_exact_retry_owners() {
+async fn database_shutdown_cancellation_preserves_exact_retry_owners() {
     let root = tempdir("shutdown-retry-owner").await;
     let mut database = Database::open_at(test_worker_pool(), &root, Profile::Test).await.unwrap();
     let document = protocol::ArtifactId("shutdown-retry-owner".to_string());
@@ -4037,13 +3960,7 @@ async fn database_shutdown_cancellation_and_vcs_error_preserve_exact_retry_owner
         semio_framework_async::yield_once().await;
     }
     assert!(database.closing_authority.is_none());
-    match database.version_graph.as_ref() {
-        VersionGraphs::Vcs(graph) => graph.fail_next_shutdown_step(),
-        VersionGraphs::Null(_) => panic!("vcs feature must mount the real graph"),
-    }
-    assert!(matches!(database.shutdown(&control).await, Err(DbError::Internal(detail)) if detail == "injected retained VCS shutdown fault"));
-    assert!(!database.shutdown_graph_complete);
-    database.shutdown(&control).await.expect("retry consumes retained VCS owner");
+    database.shutdown(&control).await.expect("the retried shutdown completes");
     assert!(database.shutdown_complete);
 }
 
@@ -4426,7 +4343,7 @@ async fn artifact_history_completion_interleavings_preserve_result_and_wake() {
         let registry_empty = handle.history_terminal(generation).is_none();
         assert!(terminal.terminal_is_empty(), "history fixture cleanup must finish its exact terminal state");
         eprintln!(
-            "[DEBUG] history-completion: {} first-ready={first_ready} wakes={wake_count} waiter-empty={waiter_empty} wake-lock-released={wake_lock_released} exact-result={exact_result} admission-released={admission_released} registry-empty={registry_empty}",
+            "history-completion: {} first-ready={first_ready} wakes={wake_count} waiter-empty={waiter_empty} wake-lock-released={wake_lock_released} exact-result={exact_result} admission-released={admission_released} registry-empty={registry_empty}",
             row["name"]
         );
         observations.push((row.clone(), first_ready, wake_count, waiter_empty, exact_result, admission_released, registry_empty, wake_lock_released));
@@ -4781,35 +4698,6 @@ fn artifact_history_future_handle_drop_and_terminal_take_resume_are_exact() {
 }
 //#endregion 🔖️Retained submit authority
 
-//#region 🔖️MemberOpen
-/// 📦️ The version-graph projection must be OPENABLE as an owned member of a composed document. Until
-/// 2026-09-21 it declared `UnsupportedMemberSnapshotOpen`, whose `step` has exactly one answer —
-/// `Rejected(MemberOpenDiagnostic::Decode)` — so a composed document owning a version-graph member was
-/// refused at member-open step 0, always. The declared opener is named here so a regression back to the
-/// rejecting one fails loudly instead of silently refusing every such member.
-#[test]
-fn version_graph_member_opens_through_its_own_pack_codec() {
-    assert_eq!(
-        std::any::type_name::<<HashProjection as store::MemberStoreOwner<HashMutation>>::SnapshotOpen>(),
-        std::any::type_name::<store::PackMemberSnapshotOpen<HashProjection>>(),
-        "a version-graph member must open through PackMemberSnapshotOpen"
-    );
-    let projection = HashProjection { latest_hash: [7u8; 32] };
-    let encoded = store::ArtifactPack::encode_pack(&projection);
-    let decoded = <HashProjection as store::ArtifactPack>::decode_pack(&encoded).expect("the member opener's whole-pack decode");
-    assert_eq!(decoded, projection, "the opener's decode round-trips the exact member snapshot");
-    let mut cursor = store::retirement::RetireOwned::retirement(decoded);
-    for turn in 0..4_096 {
-        match cursor.close_step(4_096) {
-            store::retirement::RetirementStep::Complete if cursor.terminal_is_empty() => break,
-            store::retirement::RetirementStep::BudgetExhausted => panic!("the member opener's owner cursor stalled on turn {turn}"),
-            _ => {}
-        }
-        assert!(turn < 4_095, "the member opener's owner cursor never reached terminal-empty");
-    }
-}
-//#endregion 🔖️MemberOpen
-
 /// 🐢️ Laws whose honest size takes minutes in a debug build; the `long` level runs them.
 mod long {
     use super::*;
@@ -4900,8 +4788,7 @@ mod long {
     }
 
     /// 📈️ The same growth over SQLite storage, the hub's storage backend of choice: past every former
-    /// wall (the eighth index entry, the 64th version-graph change, the 128th replaced value) with a
-    /// small payload.
+    /// wall (the eighth index entry, the 128th replaced value) with a small payload.
     #[cfg(feature = "sqlite")]
     #[semio_framework_async_macros::async_test]
     async fn a_sqlite_document_keeps_accepting_edits_past_every_former_wall() {

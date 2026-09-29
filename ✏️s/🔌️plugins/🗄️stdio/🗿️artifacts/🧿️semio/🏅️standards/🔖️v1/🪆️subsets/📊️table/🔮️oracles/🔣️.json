@@ -146,6 +146,7 @@
         }
       ],
       "kinds": [
+        "set-snapshot",
         "create-column",
         "delete-column",
         "rename-column",

@@ -36,7 +36,7 @@ use crate::*;
 use db_storage::{db_io_copy_pages, CatalogStorage, DbBackend, DbIoPages, DbIoU64List, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalSegmentState, WalStorage};
 
 //#region 🔖️Prng
-/// @emoji 🎲️ splitmix64 — see <https://prng.di.unimi.it/splitmix64.c>. Small, dependency-free,
+/// 🎲️ splitmix64 — see <https://prng.di.unimi.it/splitmix64.c>. Small, dependency-free,
 /// good enough statistical spread for deterministic test-data/schedule generation (not
 /// cryptography) — the same seed always produces the same draw sequence, matching `pack_corruption`'s
 /// `RecordValueGen` precedent (this crate hand-rolls its own rather than depending on
@@ -58,7 +58,7 @@ impl SplitMix64 {
         z ^ (z >> 31)
     }
 
-    /// @emoji 🎯️ A uniform draw in `0..bound`, or `0` if `bound == 0` (never divides by zero).
+    /// 🎯️ A uniform draw in `0..bound`, or `0` if `bound == 0` (never divides by zero).
     pub fn next_range(&mut self, bound: u64) -> u64 {
         if bound == 0 {
             0
@@ -70,7 +70,7 @@ impl SplitMix64 {
 //#endregion 🔖️Prng
 
 //#region 🔖️Generators
-/// @emoji 🎲️ Deterministic seeded fabricator for the primitive pieces of a `protocol::
+/// 🎲️ Deterministic seeded fabricator for the primitive pieces of a `protocol::
 /// MutationEnvelope` (paths, actors, JSON values, operation ids) — the unit `WorkloadGen` builds
 /// whole envelopes from.
 pub struct CommandGen {
@@ -83,7 +83,7 @@ impl CommandGen {
         CommandGen { rng: SplitMix64::new(seed), counter: 0 }
     }
 
-    /// @emoji 🛤️ One of a bounded pool of `/`-free path names, so generated workloads have a
+    /// 🛤️ One of a bounded pool of `/`-free path names, so generated workloads have a
     /// realistic amount of path collision (and thus conflict/last-writer activity) rather than
     /// every draw being trivially disjoint.
     pub fn random_path(&mut self) -> String {
@@ -98,7 +98,7 @@ impl CommandGen {
         serde_json::json!(self.rng.next_u64() % 1_000_000)
     }
 
-    /// @emoji 🆔️ A fresh, seed-derived but still call-order-unique operation id — unique because
+    /// 🆔️ A fresh, seed-derived but still call-order-unique operation id — unique because
     /// `counter` (not just the rng draw) is folded in, so two draws never collide even if the rng
     /// itself repeats within one generator's lifetime.
     pub fn next_operation_id(&mut self) -> protocol::MutationId {
@@ -107,7 +107,7 @@ impl CommandGen {
     }
 }
 
-/// @emoji 🎲️ Builds whole, self-contained `protocol::MutationEnvelope` sequences from `CommandGen`
+/// 🎲️ Builds whole, self-contained `protocol::MutationEnvelope` sequences from `CommandGen`
 /// — the unit the law assertions and `CrashHarness` drive as their workload.
 pub struct WorkloadGen(CommandGen);
 
@@ -116,7 +116,7 @@ impl WorkloadGen {
         WorkloadGen(CommandGen::new(seed))
     }
 
-    /// @emoji 🧩️ `count` sequential, mutually DISJOINT-path envelopes (`path-0` .. `path-{count-1}`,
+    /// 🧩️ `count` sequential, mutually DISJOINT-path envelopes (`path-0` .. `path-{count-1}`,
     /// deterministic naming by index, not by the rng draw) with empty `dependencies` — deterministic
     /// given `seed`, and disjoint so the final materialized state never depends on submit order,
     /// which is exactly the property `assert_sync_convergence`/`SimRuntime`'s interleaving tests
@@ -154,7 +154,7 @@ impl WorkloadGen {
 //#endregion 🔖️Generators
 
 //#region 🔖️SimRuntime
-/// @emoji ⏱️ A manually-advanced virtual clock — never reads the wall clock, so a `SimRuntime` run
+/// ⏱️ A manually-advanced virtual clock — never reads the wall clock, so a `SimRuntime` run
 /// is reproducible byte-for-byte from its seed alone.
 #[derive(Clone, Copy, Debug, Default)]
 pub struct SimClock {
@@ -176,7 +176,7 @@ impl SimClock {
     }
 }
 
-/// @emoji 📋️ One schedulable unit of `SimRuntime` work: a name (surfaced in the run order for
+/// 📋️ One schedulable unit of `SimRuntime` work: a name (surfaced in the run order for
 /// assertions/debugging) plus a closure run synchronously when its turn comes. Deliberately not
 /// `Send` — `SimRuntime` is a single-threaded cooperative scheduler, so a scheduled action may
 /// freely capture `!Send` state (e.g. a `Rc<RefCell<db_artifact::ArtifactEngine>>`, itself `!Send`
@@ -186,7 +186,7 @@ struct SimTask {
     action: Box<dyn FnOnce(&mut SimClock)>,
 }
 
-/// @emoji 🎲️ Seeded deterministic scheduler: collects named tasks, then runs them in a
+/// 🎲️ Seeded deterministic scheduler: collects named tasks, then runs them in a
 /// seed-derived permutation (Fisher–Yates over the same `SplitMix64` the generators use),
 /// advancing `SimClock` by a small seeded jitter between each. The same seed always reproduces the
 /// identical interleaving + timing — what makes a failing model-check reproducible from one logged
@@ -214,7 +214,7 @@ impl SimRuntime {
         self.tasks.push(SimTask { name: name.into(), action: Box::new(action) });
     }
 
-    /// @emoji ▶️ Shuffles every scheduled task via a seed-derived Fisher–Yates permutation, then
+    /// ▶️ Shuffles every scheduled task via a seed-derived Fisher–Yates permutation, then
     /// runs each in that order, advancing the clock by `0..=max_jitter_ms` (also seed-derived)
     /// before each. Returns the task names in the order they actually ran, for assertions.
     pub fn run(mut self, max_jitter_ms: u64) -> Vec<String> {
@@ -236,7 +236,7 @@ impl SimRuntime {
     }
 }
 
-/// @emoji 🔭️ Bounded interleaving explorer for model checks: derives `permutations` distinct seeds
+/// 🔭️ Bounded interleaving explorer for model checks: derives `permutations` distinct seeds
 /// from `base_seed` and calls `run_one(seed)` once per derived seed, collecting whatever
 /// caller-chosen observation `run_one` returns (typically a `SimRuntime::run` task order, or a
 /// resulting state hash). A panicking assertion inside `run_one` names its own seed in the failure,
@@ -254,37 +254,37 @@ pub fn explore_interleavings<T>(base_seed: u64, permutations: u32, mut run_one: 
 //#endregion 🔖️SimRuntime
 
 //#region 🔖️FaultStorage
-/// @emoji 💥️ One knob of `FaultStorage`'s injectable fault script — every field independently
+/// 💥️ One knob of `FaultStorage`'s injectable fault script — every field independently
 /// optional/off by default, so a freshly `FaultScript::default()`ed `FaultStorage` behaves exactly
 /// like its inner backend.
 #[derive(Clone, Copy, Default, Debug)]
 pub struct FaultScript {
-    /// @emoji 🚫️ The Nth call to `WalStorage::append` (1-indexed, counting EVERY append this
+    /// 🚫️ The Nth call to `WalStorage::append` (1-indexed, counting EVERY append this
     /// storage sees, including a document's own genesis header write) fails outright with
     /// `DbError::Io` before reaching the inner backend — models a crash where the physical write
     /// never lands at all.
     pub fail_nth_write: Option<u64>,
-    /// @emoji ✂️ `(nth, keep_bytes)`: the Nth `append` call forwards only its first `keep_bytes`
+    /// ✂️ `(nth, keep_bytes)`: the Nth `append` call forwards only its first `keep_bytes`
     /// bytes to the inner backend (still succeeding, reporting the inner backend's real new
     /// length) — models a crash mid-`write(2)`, the "torn write" fault `db_wal`'s own recovery
     /// (`WalRecoveryReport.torn_tail_bytes`) exists to detect and truncate.
     pub torn_write_at: Option<(u64, u64)>,
-    /// @emoji 🚫️ The Nth call to `WalStorage::sync` (1-indexed) fails before reaching the
+    /// 🚫️ The Nth call to `WalStorage::sync` (1-indexed) fails before reaching the
     /// inner backend, after any preceding append has already completed.
     pub fail_nth_sync: Option<u64>,
-    /// @emoji 🤥️ `WalStorage::sync` returns `Ok(())` without ever forwarding to the inner backend —
+    /// 🤥️ `WalStorage::sync` returns `Ok(())` without ever forwarding to the inner backend —
     /// models a storage device that acknowledges `fsync` without actually forcing data to physical
     /// storage (a caller relying on `DurabilityClass::Fsync` alone, without independently verifying
     /// durability, cannot tell the difference from the return value).
     pub fsync_lies: bool,
-    /// @emoji ⚔️ The Nth call to `CatalogStorage::cas_root` (1-indexed) fails with a synthetic
+    /// ⚔️ The Nth call to `CatalogStorage::cas_root` (1-indexed) fails with a synthetic
     /// `DbError::Fenced` (as if a competing writer had already advanced the epoch) without ever
     /// touching the inner backend — models exercising a caller's CAS-retry path without needing a
     /// second real writer.
     pub cas_conflict_nth: Option<u64>,
 }
 
-/// @emoji 💥️ Wraps a real `db_storage::DbStorage` backend with a scriptable `FaultScript`, injected
+/// 💥️ Wraps a real `db_storage::DbStorage` backend with a scriptable `FaultScript`, injected
 /// only at the WAL append/sync and catalog-CAS boundaries (see `FaultScript`'s fields) — every
 /// other operation (segment lifecycle, snapshot/payload/index/lease storage) passes straight
 /// through to `inner` untouched, since those are outside this testkit's stated crash-simulation
@@ -311,18 +311,18 @@ impl FaultStorage {
         *self.script.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
     }
 
-    /// @emoji 🔢️ Every `WalStorage::append` call this storage has seen so far, faulted or not —
+    /// 🔢️ Every `WalStorage::append` call this storage has seen so far, faulted or not —
     /// `CrashHarness` uses this to discover exactly how many write boundaries a workload has.
     pub async fn append_calls(&self) -> u64 {
         self.append_calls.load(Ordering::SeqCst)
     }
 
-    /// @emoji 🔢️ Every `WalStorage::sync` call this storage has seen, faulted or not.
+    /// 🔢️ Every `WalStorage::sync` call this storage has seen, faulted or not.
     pub async fn sync_calls(&self) -> u64 {
         self.sync_calls.load(Ordering::SeqCst)
     }
 
-    /// @emoji 🔢️ How many `WalStorage::sync` calls actually reached the inner backend (as opposed
+    /// 🔢️ How many `WalStorage::sync` calls actually reached the inner backend (as opposed
     /// to being lied about under `FaultScript::fsync_lies`).
     pub async fn sync_delegated_calls(&self) -> u64 {
         self.sync_delegated_calls.load(Ordering::SeqCst)
@@ -332,7 +332,7 @@ impl FaultStorage {
         self.cas_calls.load(Ordering::SeqCst)
     }
 
-    /// @emoji 🎚️ Passes the inner backend's own capabilities straight through — fault injection
+    /// 🎚️ Passes the inner backend's own capabilities straight through — fault injection
     /// never changes what the backend claims to support, only what it actually does on a call.
     pub async fn capabilities(&self) -> StorageCapabilities {
         self.inner.capabilities().await
@@ -519,15 +519,15 @@ impl LeaseStorage for FaultStorage {
 //#endregion 🔖️FaultStorage
 
 //#region 🔖️CrashHarness
-/// @emoji 📋️ What `CrashHarness::run_crash_after_every_write` found across every injected write
+/// 📋️ What `CrashHarness::run_crash_after_every_write` found across every injected write
 /// boundary.
 #[derive(Clone, Debug, Default)]
 pub struct CrashHarnessReport {
     pub writes_tested: u64,
-    /// @emoji 🚨️ `(write index crashed after, error)` for every crash point where reopening the
+    /// 🚨️ `(write index crashed after, error)` for every crash point where reopening the
     /// faulted storage itself errored (recovery must never do this).
     pub reopen_failures: Vec<(u64, String)>,
-    /// @emoji 🚨️ Write indices where the reopened, recovered document's state did not match the
+    /// 🚨️ Write indices where the reopened, recovered document's state did not match the
     /// expected "exactly the prefix of commands durably committed before the fault" invariant.
     pub state_mismatches: Vec<u64>,
 }
@@ -538,7 +538,7 @@ impl CrashHarnessReport {
     }
 }
 
-/// @emoji 💥️ Drives `db_artifact::ArtifactEngine` through a fixed, seeded workload once per WAL
+/// 💥️ Drives `db_artifact::ArtifactEngine` through a fixed, seeded workload once per WAL
 /// write boundary, injecting a `FaultScript::fail_nth_write` at that exact boundary and verifying
 /// recovery afterward — the family's "crash after every write boundary; recovery invariants hold"
 /// law.
@@ -546,7 +546,7 @@ pub struct CrashHarness;
 
 #[cfg(not(target_arch = "wasm32"))]
 impl CrashHarness {
-    /// @emoji 💥️ For `seed`/`op_count`'s deterministic `WorkloadGen::disjoint_batch` workload:
+    /// 💥️ For `seed`/`op_count`'s deterministic `WorkloadGen::disjoint_batch` workload:
     /// discovers the true `WalStorage::append` call count of a fault-free run (the document's own
     /// genesis header write, plus one call per committed `submit()` at `DurabilityClass::Fsync`),
     /// then for every write boundary strictly after genesis, reruns the workload against a fresh
@@ -602,14 +602,14 @@ impl CrashHarness {
     }
 }
 
-/// @emoji 💥️ A fresh `FaultStorage`-wrapped `MemoryStorage`, already living inside its
+/// 💥️ A fresh `FaultStorage`-wrapped `MemoryStorage`, already living inside its
 /// [`DbBackend::Fault`] variant — `MemoryStorage` does no genuinely-blocking I/O, so
 /// `CrashHarness`'s workloads never enter the shared typed I/O lane.
 async fn new_fault_backend() -> Arc<DbBackend> {
     Arc::new(DbBackend::Fault(Box::new(FaultStorage::new(Arc::new(DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()))).await)))
 }
 
-/// @emoji 🔍️ Recovers the `&FaultStorage` a [`new_fault_backend`] produced, so `CrashHarness` can
+/// 🔍️ Recovers the `&FaultStorage` a [`new_fault_backend`] produced, so `CrashHarness` can
 /// call its `append_calls`/`set_script` inherent methods without a second, unwrapped handle to the
 /// same storage (an `Arc` clone can't be un-wrapped back to an owned value while other references
 /// are still live, so the enum is the single source of truth, matched into on demand instead).
@@ -630,7 +630,7 @@ async fn run_workload_against(document: &protocol::ArtifactId, ops: &[protocol::
     }
 }
 
-/// @emoji 💥️ Like `run_workload_against`, but stops silently at the first injected fault instead of
+/// 💥️ Like `run_workload_against`, but stops silently at the first injected fault instead of
 /// panicking — the fault IS the point, simulating a crash mid-workload.
 #[cfg(not(target_arch = "wasm32"))]
 async fn run_workload_until_fault(document: &protocol::ArtifactId, ops: &[protocol::MutationEnvelope], storage: Arc<DbBackend>) {
@@ -706,7 +706,7 @@ async fn single_envelope_batch(envelope: protocol::MutationEnvelope) -> db_artif
     db_artifact::CommandBatch::new(vec![envelope]).await.expect("testkit: single-envelope batch")
 }
 
-/// @emoji 🔁️ The replay-determinism law: (1) a document's WAL replay after a clean shutdown+reopen
+/// 🔁️ The replay-determinism law: (1) a document's WAL replay after a clean shutdown+reopen
 /// reproduces an identical `Frontier`; (2) an entirely independent `Database` driven by the same
 /// seeded workload converges on a byte-identical `Frontier` (proving the generator itself, and the
 /// whole submit→WAL→materialize pipeline, are both deterministic — not just idempotent once).
@@ -751,7 +751,7 @@ pub async fn assert_replay_deterministic(pool: Arc<semio_framework_async::Worker
     assert_eq!(frontier_first_run, frontier_independent, "an independent replica driven by the same seeded workload must converge to an identical frontier");
 }
 
-/// @emoji 📸️ The "snapshot + WAL suffix == full replay" law: a replica that snapshots partway
+/// 📸️ The "snapshot + WAL suffix == full replay" law: a replica that snapshots partway
 /// through a workload and reopens (materializing from snapshot ⊕ suffix) must reach the EXACT same
 /// frontier as a replica that never snapshots and reopens via full-from-genesis replay. Drives real
 /// `db_artifact::ArtifactEngine::{create, submit, snapshot_now, open}` over two independent
@@ -792,7 +792,7 @@ pub async fn assert_snapshot_plus_suffix_equals_replay(seed: u64, before_snapsho
     }
 }
 
-/// @emoji 🧬️ A minimal, always-triggered projection: counts how many committed envelopes it has
+/// 🧬️ A minimal, always-triggered projection: counts how many committed envelopes it has
 /// seen — enough to distinguish "ran" from "carried forward" without interpreting any operation
 /// semantics (per `db_projection`'s own "semantics-free" contract).
 struct CountingProjection;
@@ -821,7 +821,7 @@ impl db_projection::ProjectionClass for CountingProjection {
     }
 }
 
-/// @emoji 🧬️ The "rebuild == incremental apply" law: applying a projection envelope-by-envelope via
+/// 🧬️ The "rebuild == incremental apply" law: applying a projection envelope-by-envelope via
 /// `apply_envelope` (persisting a checkpoint each step) must reach the exact same final state as a
 /// pure, storage-independent `rebuild_in_memory` pass over the same event sequence. Drives real
 /// `db_projection::ProjectionEngine` against a real `db_storage::MemoryStorage`'s `IndexStorage`.
@@ -870,7 +870,7 @@ async fn schema_erased_envelope(document: &protocol::ArtifactId, mutation_id: &s
     }
 }
 
-/// @emoji ↩️ The inverse-undo roundtrip law: undoing a committed operation must apply its recorded
+/// ↩️ The inverse-undo roundtrip law: undoing a committed operation must apply its recorded
 /// inverse exactly; undoing THAT undo (a redo, via the compensating envelope's own flipped inverse
 /// — `db_artifact::ArtifactEngine::undo`'s "inverse of inverse" mechanism) must restore the exact
 /// original value. Drives a real `db_artifact::ArtifactEngine` over `MemoryStorage`.
@@ -899,7 +899,7 @@ pub async fn assert_inverse_undo_roundtrip(seed: u64) {
     assert_eq!(after_redo, forward_value, "undoing the undo (redo) must restore the exact original value — inverse-of-inverse roundtrip");
 }
 
-/// @emoji 🔀️ The sync-convergence law: a replica that catches up in one shot, and a replica that
+/// 🔀️ The sync-convergence law: a replica that catches up in one shot, and a replica that
 /// catches up across two resumed batches, must both converge to the EXACT same `Frontier` as the
 /// canonical source they are replicating from — real `db_sync::{replay_sync_state, missing_commands}`
 /// missing-command transfer over real `db_artifact::ArtifactEngine` replicas.
@@ -941,7 +941,7 @@ pub async fn assert_sync_convergence(seed: u64, op_count: usize) {
     assert_eq!(server_frontier, replica2.frontier().await, "a resumed replica must converge to the server's exact frontier");
 }
 
-/// @emoji 🚧️ The fencing law: once a writer's `cas_root` succeeds, a second writer presenting the
+/// 🚧️ The fencing law: once a writer's `cas_root` succeeds, a second writer presenting the
 /// now-superseded epoch must be fenced (`DbError::Fenced`), and the root must remain exactly what
 /// the winning writer left it as — the split-brain gate `EpochFence`/`CatalogStorage`
 /// exist for. Generic over any real `&impl CatalogStorage` backend (exercised against both
@@ -961,7 +961,7 @@ pub async fn assert_fencing_excludes_stale_writer(storage: &impl CatalogStorage)
     assert_eq!(root_epoch, winner_epoch);
 }
 
-/// @emoji 🌫️ The preview-never-durable law: publishing a preview must never append a single byte to
+/// 🌫️ The preview-never-durable law: publishing a preview must never append a single byte to
 /// the document's WAL, never create a new segment, and never advance the committed frontier — while
 /// still correctly shadowing the committed value for the preview's own reader. Drives a real
 /// `db_artifact::ArtifactEngine` (backed by a real `db_preview::PreviewStore`) over `MemoryStorage`.
@@ -1000,7 +1000,7 @@ pub async fn assert_preview_never_durable(seed: u64) {
     assert_eq!(committed_still, committed_value, "a preview must never mutate the canonical committed state");
 }
 
-/// @emoji 🫧️ The overlay structural-sharing law: each `db_state::OverlayRoot::set` grows the
+/// 🫧️ The overlay structural-sharing law: each `db_state::OverlayRoot::set` grows the
 /// overlay by exactly one entry (no hidden base copy), and every earlier snapshot remains exactly
 /// as it was — unaffected by later derivations sharing the same immutable base. This is the
 /// operationally-relevant, functionally-testable half of "structural sharing" (persistence: an

@@ -352,7 +352,7 @@ function block(value: Block): string {
 // #endregion 🧾️Serializer
 
 // #region 🔌️Compiler
-/** @emoji 📝️ Compiles the owned presentation CommonMark/GFM subset to a safe HTML fragment. */
+/** 📝️ Compiles the owned presentation CommonMark/GFM subset to a safe HTML fragment. */
 export async function compileOwnedMarkdownToHtml(markdown: string): Promise<string> {
   return parseMarkdown(markdown).blocks.map(block).join("\n");
 }

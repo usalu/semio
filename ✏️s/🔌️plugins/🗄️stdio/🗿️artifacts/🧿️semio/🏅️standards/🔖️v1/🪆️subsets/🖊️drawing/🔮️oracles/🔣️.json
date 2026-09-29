@@ -371,6 +371,7 @@
         }
       ],
       "kinds": [
+        "set-snapshot",
         "create-layer",
         "delete-layer",
         "create-node",

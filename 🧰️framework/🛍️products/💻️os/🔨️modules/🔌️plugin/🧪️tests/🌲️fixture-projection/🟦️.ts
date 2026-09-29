@@ -21,5 +21,4 @@ export function testFixtureProjectionRetirement(): void {
   const body = source.slice(start, source.indexOf("/// 🧪️ Mounts", start));
   assert(body.includes("catch_unwind") && body.includes("terminal_is_empty()") && body.includes("resume_unwind"));
   assert(!body.includes("close_built_node_page_one") && !body.includes("close_ui_value_page"));
-  console.log("[DEBUG] fixture observation source:3 outcomes,3 denials,384 exact pages; native panic retirement remains separate");
 }

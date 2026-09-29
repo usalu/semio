@@ -1195,7 +1195,7 @@ mod tests {
         while !copy.terminal_is_empty() {
             copy.close_step(app_store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 4_096 }).expect("bounded brep close");
             close_turns += 1;
-            assert!(close_turns < 20_000);
+            assert!(close_turns < 8 * 4_096, "a cancelled copy of 4 096 one-item steps retires within 8 retirement units per copied item");
         }
         assert!(close_turns > 1);
     }

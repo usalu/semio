@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/🔄️ShellSync/tests/component.tsx
-/** @emoji 🧪️ `🔄️ShellSync` laws for ticket `26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END` slice U1
+/** 🧪️ `🔄️ShellSync` laws for ticket `26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END` slice U1
  * (audit `📓️g5-ux-completeness-audit.md` ranked items 4 and 8): the sync status line is composed from
  * localized words rather than English literals, and the always-visible hub badge folds every attached
  * document's `RemoteState` into one honest aggregate that is readable without colour.

@@ -3,7 +3,7 @@ mod tests {
     use crate::os_spr::history::HistoryTransitionRecord;
     use std::sync::atomic::{AtomicU64, Ordering};
 
-    /// @emoji 🎲️ Per-test unique scratch directory under `std::env::temp_dir()` — no external
+    /// 🎲️ Per-test unique scratch directory under `std::env::temp_dir()` — no external
     /// `tempfile` crate dependency, matching `pack_io`'s own test convention.
     static DIR_COUNTER: AtomicU64 = AtomicU64::new(0);
 

@@ -22,7 +22,6 @@ async fn generate_preview_entry_state_is_an_idle_status_host_with_a_hint() {
     assert!(status.get("progress").is_some(), "the entry status must carry progress counters: {status_json}");
     let hint = status.get("hint").and_then(serde_json::Value::as_str).unwrap_or_default();
     assert!(hint.contains("evaluate a generation"), "the entry status must hint at creating a generation: {status_json}");
-    eprintln!("[DEBUG] generate preview entry status={status_json}");
 }
 
 /// ⚖️ LAW: the two World3d previews offer the SAME direct-manipulation surface. Both declare the
@@ -49,7 +48,6 @@ fn both_previews_offer_the_same_gumball_surface() {
     }
     assert_eq!(utilities(generate), utilities(edit), "both previews must offer the same transform utility rail");
     assert_eq!(utilities(generate), vec!["move".to_string(), "rotate".to_string(), "scale".to_string()]);
-    eprintln!("[DEBUG] generate preview actions={:?} utilities={:?}", actions(generate), utilities(generate));
 }
 
 /// ⚖️ LAW: the generate preview's selection payload carries a live gumball as soon as something is

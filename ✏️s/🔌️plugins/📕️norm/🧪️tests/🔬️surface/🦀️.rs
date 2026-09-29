@@ -215,3 +215,67 @@ set_active_example_case!(
     semio_s_artifact_norm_vdi3805::Vdi3805Snapshot
 );
 //#endregion 🎨️SetActiveExample
+
+//#region 🗂️RosterExamples
+/// 🗂️ Asserts every example one family editor offers in its navbar picker loads through `setActiveExample`,
+/// and that the picker roster is exactly the family's `📚️examples/*` example modules — an example on disk
+/// the picker hides, or a picker entry `setActiveExample` cannot load, is the drift this law exists for
+/// (en1992 offered five examples and loaded two).
+macro_rules! roster_examples_case {
+    ($name:ident, $editor:ty, $set_active:path, $snapshot:ty, $family_dir:literal) => {
+        #[test]
+        fn $name() {
+            use semio_framework_plugin::ArtifactEditor;
+            use $set_active as set_active_example;
+            let roster = <$editor as ArtifactEditor>::examples();
+            let boot = <$snapshot>::default();
+            let config = semio_framework_plugin::NoConfig::default();
+            for example in &roster {
+                let emit = set_active_example::handle(
+                    &set_active_example::SetActiveExample { example_id: example.id().to_string() },
+                    &semio_framework_plugin::ArtifactView::new(&boot, &semio_framework_plugin::HistoryView::empty()),
+                    &semio_framework_plugin::ConfigView { snapshot: &config, window: None },
+                )
+                .unwrap_or_else(|fault| panic!("{}: example '{}' must load: {fault:?}", stringify!($name), example.id()));
+                assert!(
+                    !emit.artifact_mutations.is_empty() || emit.description.as_deref() == Some("setSnapshot"),
+                    "{}: example '{}' loaded nothing",
+                    stringify!($name),
+                    example.id()
+                );
+            }
+            let mut rostered: Vec<String> = roster.iter().map(|example| example.id().to_string()).collect();
+            rostered.sort();
+            let mut on_disk = example_ids_on_disk($family_dir);
+            on_disk.sort();
+            assert_eq!(rostered, on_disk, "{}: the picker roster must be exactly the family's 📚️examples/* modules", stringify!($name));
+        }
+    };
+}
+
+/// 📚️ The `pub const ID` of every `📚️examples/*/🦀️.rs` example module of one norm family.
+fn example_ids_on_disk(family_dir: &str) -> Vec<String> {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts").join(family_dir).join("🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples");
+    std::fs::read_dir(&root)
+        .unwrap_or_else(|error| panic!("{}: {error}", root.display()))
+        .filter_map(|entry| std::fs::read_to_string(entry.ok()?.path().join("🦀️.rs")).ok())
+        .filter_map(|source| source.lines().find_map(|line| line.trim().strip_prefix("pub const ID: &str = \"")?.strip_suffix("\";").map(str::to_string)))
+        .collect()
+}
+
+roster_examples_case!(din4108_roster_examples_all_load, semio_s_artifact_norm_din4108::editor::din4108::Din4108PlayApp, semio_s_artifact_norm_din4108::editor::din4108::commands::set_active_example, semio_s_artifact_norm_din4108::Din4108Snapshot, "🧱️din4108");
+roster_examples_case!(din16798_roster_examples_all_load, semio_s_artifact_norm_din16798::editor::din16798::Din16798PlayApp, semio_s_artifact_norm_din16798::editor::din16798::commands::set_active_example, semio_s_artifact_norm_din16798::Din16798Snapshot, "🌬️din16798");
+roster_examples_case!(din18599_roster_examples_all_load, semio_s_artifact_norm_din18599::editor::din18599::Din18599PlayApp, semio_s_artifact_norm_din18599::editor::din18599::commands::set_active_example, semio_s_artifact_norm_din18599::Din18599Snapshot, "⚡️din18599");
+roster_examples_case!(en1990_roster_examples_all_load, semio_s_artifact_norm_en1990::editor::en1990::En1990PlayApp, semio_s_artifact_norm_en1990::editor::en1990::commands::set_active_example, semio_s_artifact_norm_en1990::En1990Snapshot, "⚖️en1990");
+roster_examples_case!(en1991_roster_examples_all_load, semio_s_artifact_norm_en1991::editor::en1991::En1991PlayApp, semio_s_artifact_norm_en1991::editor::en1991::commands::set_active_example, semio_s_artifact_norm_en1991::En1991Snapshot, "🏋️en1991");
+roster_examples_case!(en1992_roster_examples_all_load, semio_s_artifact_norm_en1992::editor::en1992::En1992PlayApp, semio_s_artifact_norm_en1992::editor::en1992::commands::set_active_example, semio_s_artifact_norm_en1992::En1992Snapshot, "🏛️en1992");
+roster_examples_case!(en1993_roster_examples_all_load, semio_s_artifact_norm_en1993::editor::en1993::En1993PlayApp, semio_s_artifact_norm_en1993::editor::en1993::commands::set_active_example, semio_s_artifact_norm_en1993::En1993Snapshot, "🔩️en1993");
+roster_examples_case!(en1994_roster_examples_all_load, semio_s_artifact_norm_en1994::editor::en1994::En1994PlayApp, semio_s_artifact_norm_en1994::editor::en1994::commands::set_active_example, semio_s_artifact_norm_en1994::En1994Snapshot, "🧩️en1994");
+roster_examples_case!(en1995_roster_examples_all_load, semio_s_artifact_norm_en1995::editor::en1995::En1995PlayApp, semio_s_artifact_norm_en1995::editor::en1995::commands::set_active_example, semio_s_artifact_norm_en1995::En1995Snapshot, "🪵️en1995");
+roster_examples_case!(en1996_roster_examples_all_load, semio_s_artifact_norm_en1996::editor::en1996::En1996PlayApp, semio_s_artifact_norm_en1996::editor::en1996::commands::set_active_example, semio_s_artifact_norm_en1996::En1996Snapshot, "🪨️en1996");
+roster_examples_case!(en1997_roster_examples_all_load, semio_s_artifact_norm_en1997::editor::en1997::En1997PlayApp, semio_s_artifact_norm_en1997::editor::en1997::commands::set_active_example, semio_s_artifact_norm_en1997::En1997Snapshot, "🌍️en1997");
+roster_examples_case!(en1998_roster_examples_all_load, semio_s_artifact_norm_en1998::editor::en1998::En1998PlayApp, semio_s_artifact_norm_en1998::editor::en1998::commands::set_active_example, semio_s_artifact_norm_en1998::En1998Snapshot, "🫨️en1998");
+roster_examples_case!(en1999_roster_examples_all_load, semio_s_artifact_norm_en1999::editor::en1999::En1999PlayApp, semio_s_artifact_norm_en1999::editor::en1999::commands::set_active_example, semio_s_artifact_norm_en1999::En1999Snapshot, "🪶️en1999");
+roster_examples_case!(iso16757_roster_examples_all_load, semio_s_artifact_norm_iso16757::editor::iso16757::Iso16757PlayApp, semio_s_artifact_norm_iso16757::editor::iso16757::commands::set_active_example, semio_s_artifact_norm_iso16757::Iso16757Snapshot, "📇️iso16757");
+roster_examples_case!(vdi3805_roster_examples_all_load, semio_s_artifact_norm_vdi3805::editor::vdi3805::Vdi3805PlayApp, semio_s_artifact_norm_vdi3805::editor::vdi3805::commands::set_active_example, semio_s_artifact_norm_vdi3805::Vdi3805Snapshot, "🏭️vdi3805");
+//#endregion 🗂️RosterExamples

@@ -29,7 +29,6 @@ export function testResumableQueryOracle(): void {
       database.close();
     }
   }
-  console.log(`[DEBUG] SQLite matched ${fixture.cases.length} neutral query result and mutation cases`);
   const database = new Database(":memory:");
   try {
     database.run("CREATE TABLE selections (window_id TEXT PRIMARY KEY, start INTEGER, end INTEGER)");
@@ -41,7 +40,6 @@ export function testResumableQueryOracle(): void {
   } finally {
     database.close();
   }
-  console.log("[DEBUG] SQLite matched independent concrete-window selection owners in the query interleaving fixture");
   const retained = new Database(":memory:");
   try {
     retained.run("CREATE TABLE source (id INTEGER PRIMARY KEY, live INTEGER NOT NULL)");
@@ -76,5 +74,4 @@ export function testResumableQueryOracle(): void {
   } finally {
     retained.close();
   }
-  console.log("[DEBUG] SQLite matched cancellation, exact checkpoint owners, entity grants, and the oversized table oracle");
 }

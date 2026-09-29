@@ -39,7 +39,6 @@ fn retained_paged_list_neutral_order_capacity_and_close() {
     assert_eq!(list.capacity(), 0);
     assert_eq!(list.allocated_bytes(), 0);
     assert_eq!(list.root.capacity(), 0);
-    eprintln!("[DEBUG] Neutral paged list matched Serde order, exact capacity refusal and all allocated backing releases");
 }
 
 #[test]
@@ -73,5 +72,4 @@ fn retained_paged_list_capacity_admission_and_exact_release_grants() {
         list.release_empty_page(exact).unwrap();
     }
     assert_eq!((list.root.capacity(), list.len(), list.capacity(), list.allocated_bytes()), (0, 0, 0, 0));
-    eprintln!("[DEBUG] Neutral paged list pre-admitted multiple backing pages and retained exact tail below its grant");
 }

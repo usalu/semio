@@ -48,7 +48,6 @@ fn scalar_bytes_from_node_matches_serde_json_byte_for_byte() {
         assert_eq!(bytes_of(ArtifactCanonicalJsonNode::F64(value)), serde_json::to_vec(&value).unwrap(), "mismatch for {value:e}");
         checked += 1;
     }
-    eprintln!("[DEBUG] [canonical-edit] {checked} ScalarBytes f64 values matched serde_json byte-for-byte");
 }
 
 #[derive(Clone, Debug, Serialize, ToValue, Deserialize, FromValue)]

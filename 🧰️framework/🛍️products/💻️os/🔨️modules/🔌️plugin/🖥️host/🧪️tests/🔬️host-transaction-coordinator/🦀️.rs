@@ -11,8 +11,10 @@ use std::cell::RefCell;
 
 #[derive(Default)]
 struct FakeInstance {
-    pending: Option<(String, Vec<Vec<u8>>)>, // (txn_id, prepared_ops)
-    edits: Vec<(String, Vec<Vec<u8>>)>,      // (group_id, ops) applied, in commit order
+    pending: Option<(String, Vec<Vec<u8>>)>,
+    /// 📜️ (txn_id, prepared_ops)
+    edits: Vec<(String, Vec<Vec<u8>>)>,
+    /// ↩️ (group_id, ops) applied, in commit order
     undone: Vec<String>,
 }
 
@@ -22,8 +24,8 @@ struct FakeCluster {
 }
 
 impl FakeCluster {
-    // 🚫️async: E1 — pure in-memory RefCell fake, no suspension point; reverted per R9
-    // (run_transaction/undo_group require a SYNC FnMut(...) -> Result<...> closure).
+    /// 🚫️async: E1 — pure in-memory RefCell fake, no suspension point; reverted per R9
+    /// (run_transaction/undo_group require a SYNC FnMut(...) -> Result<...> closure).
     fn exchange(&self, plugin_id: &str, instance_id: u32, command: protocol::AppCommand) -> Result<Vec<protocol::AppFrame>, TransactionError> {
         let mut instances = self.instances.borrow_mut();
         let instance = instances.entry((plugin_id.to_string(), instance_id)).or_default();
@@ -68,6 +70,9 @@ async fn dependency(id: &str) -> semio_framework::PluginDependency {
     semio_framework::PluginDependency::new(id, semio_framework::tree_pin!())
 }
 
+/// 🪪️ `io::ArtifactKindId::parse("s.b.widget").plugin()` == "b" (bare middle segment) — the
+/// CONTRIBUTED row must be registered under the CONTRIBUTOR's own bare plugin id ("a"), with
+/// "b" (matching the artifact kind's real owner) as its declared dependency.
 #[semio_framework_async_macros::async_test]
 async fn a_two_member_transaction_commits_and_group_undo_restores_both() {
     let cluster = FakeCluster::default();
@@ -76,9 +81,6 @@ async fn a_two_member_transaction_commits_and_group_undo_restores_both() {
     instances.bind("artifacts/target", "s.b", 2, "s.b.widget").await.unwrap();
 
     let router = ArtifactMutationRouter::new();
-    // 🪪️ `io::ArtifactKindId::parse("s.b.widget").plugin()` == "b" (bare middle segment) — the
-    // CONTRIBUTED row must be registered under the CONTRIBUTOR's own bare plugin id ("a"), with
-    // "b" (matching the artifact kind's real owner) as its declared dependency.
     router
         .register_roster(
             "a",
@@ -196,6 +198,11 @@ async fn an_unknown_mutation_is_rejected() {
     assert_eq!(error.code().await, "transaction.unknown-mutation");
 }
 
+/// 🪪️ `io::ArtifactKindId::parse("s.b.widget").plugin()` == "b" (bare middle segment) — the
+/// CONTRIBUTED row must be registered under the CONTRIBUTOR's own bare plugin id ("a"), with
+/// "b" (matching the artifact kind's real owner) as its declared dependency.
+///
+/// The contributed plan returns the SAME step again -> a real cycle by (artifact_id, mutation_id, payload_hash).
 #[semio_framework_async_macros::async_test]
 async fn a_cycle_is_rejected() {
     let cluster = FakeCluster::default();
@@ -203,9 +210,6 @@ async fn a_cycle_is_rejected() {
     instances.bind("artifacts/initiator", "s.a", 1, "s.a.widget").await.unwrap();
     instances.bind("artifacts/target", "s.b", 2, "s.b.widget").await.unwrap();
     let router = ArtifactMutationRouter::new();
-    // 🪪️ `io::ArtifactKindId::parse("s.b.widget").plugin()` == "b" (bare middle segment) — the
-    // CONTRIBUTED row must be registered under the CONTRIBUTOR's own bare plugin id ("a"), with
-    // "b" (matching the artifact kind's real owner) as its declared dependency.
     router
         .register_roster(
             "a",
@@ -229,7 +233,6 @@ async fn a_cycle_is_rejected() {
         payload: vec![7],
         label: "x".into(),
     };
-    // The contributed plan returns the SAME step again -> a real cycle by (artifact_id, mutation_id, payload_hash).
     let step_for_plan = step.clone();
     let error = coordinator
         .run_transaction(
@@ -257,20 +260,21 @@ async fn a_cycle_is_rejected() {
     assert_eq!(error.code().await, "transaction.cycle");
 }
 
+/// 🧯️ Pre-occupy s.b/2's pending slot so its OWN prepare hits `transaction.instance-busy`
+/// for real, through the fake's genuine busy-check — not a stubbed rejection.
+///
+/// 🪪️ `io::ArtifactKindId::parse("s.b.widget").plugin()` == "b" (bare middle segment) — the
+/// CONTRIBUTED row must be registered under the CONTRIBUTOR's own bare plugin id ("a"), with
+/// "b" (matching the artifact kind's real owner) as its declared dependency.
 #[semio_framework_async_macros::async_test]
 async fn a_member_rejection_rolls_back_every_already_prepared_member() {
     let cluster = FakeCluster::default();
     let instances = InstanceDirectory::new();
     instances.bind("artifacts/initiator", "s.a", 1, "s.a.widget").await.unwrap();
     instances.bind("artifacts/target", "s.b", 2, "s.b.widget").await.unwrap();
-    // Pre-occupy s.b/2's pending slot so its OWN prepare hits `transaction.instance-busy`
-    // for real, through the fake's genuine busy-check — not a stubbed rejection.
     cluster.instances.borrow_mut().entry(("s.b".to_string(), 2)).or_default().pending = Some(("someone-elses-txn".into(), vec![]));
 
     let router = ArtifactMutationRouter::new();
-    // 🪪️ `io::ArtifactKindId::parse("s.b.widget").plugin()` == "b" (bare middle segment) — the
-    // CONTRIBUTED row must be registered under the CONTRIBUTOR's own bare plugin id ("a"), with
-    // "b" (matching the artifact kind's real owner) as its declared dependency.
     router
         .register_roster(
             "a",
@@ -315,6 +319,13 @@ async fn a_member_rejection_rolls_back_every_already_prepared_member() {
     assert!(instances_map.get(&("s.a".to_string(), 1)).unwrap().pending.is_none(), "the initiator, prepared before the rejection, must have been rolled back");
 }
 
+/// 🪪️ `io::ArtifactKindId::parse("s.b.widget").plugin()` == "b" (bare middle segment) — the
+/// CONTRIBUTED row must be registered under the CONTRIBUTOR's own bare plugin id ("a"), with
+/// "b" (matching the artifact kind's real owner) as its declared dependency.
+///
+/// Each level's contributed plan hands back ONE new foreign step targeting the NEXT (distinct)
+/// instance in the chain, so the cycle guard (which keys on artifact_id) never fires — this is
+/// purely a depth chain, 10 hops deep against `MAX_PLAN_DEPTH` = 8.
 #[semio_framework_async_macros::async_test]
 async fn a_chain_deeper_than_max_plan_depth_is_rejected() {
     let cluster = FakeCluster::default();
@@ -324,9 +335,6 @@ async fn a_chain_deeper_than_max_plan_depth_is_rejected() {
         instances.bind(&format!("artifacts/target-{i}"), "s.b", 100 + i as u32, "s.b.widget").await.unwrap();
     }
     let router = ArtifactMutationRouter::new();
-    // 🪪️ `io::ArtifactKindId::parse("s.b.widget").plugin()` == "b" (bare middle segment) — the
-    // CONTRIBUTED row must be registered under the CONTRIBUTOR's own bare plugin id ("a"), with
-    // "b" (matching the artifact kind's real owner) as its declared dependency.
     router
         .register_roster(
             "a",
@@ -350,9 +358,6 @@ async fn a_chain_deeper_than_max_plan_depth_is_rejected() {
         payload: vec![0],
         label: "x".into(),
     }];
-    // Each level's contributed plan hands back ONE new foreign step targeting the NEXT (distinct)
-    // instance in the chain, so the cycle guard (which keys on artifact_id) never fires — this is
-    // purely a depth chain, 10 hops deep against `MAX_PLAN_DEPTH` = 8.
     let error = coordinator
         .run_transaction(
             &instances,

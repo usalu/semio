@@ -523,6 +523,8 @@ impl ArtifactApp for ToyRunApp {
 type ToyApp = VcsArtifactApp<ToyRunApp>;
 
 /// 🛂️ The toy manifest declares both tools with their `ToolRunDefinition` — the run's source of record.
+///
+/// 📖️ The READ-ONLY twin of the toy run: the same job, declared as publishing nothing.
 async fn toy_manifest() -> App {
     let fixture = fixture();
     let mut builder = App::builder(ToyRunApp::APP_ID, LocalizedLabel::data("Tool Run Fixture"))
@@ -582,7 +584,6 @@ async fn toy_manifest() -> App {
         })
         .await;
     tools.push(ToolRef::new(undeclared).await);
-    // 📖️ The READ-ONLY twin of the toy run: the same job, declared as publishing nothing.
     let read_only = text(&fixture["readOnlyRun"]["toolId"]);
     builder = builder
         .tool(ToolDefinition {
@@ -823,7 +824,6 @@ async fn tool_run_large_finalize_reclaims_each_folded_root_before_the_next_op() 
     }
     assert_eq!(app.store.envelope().vcs.edits.len() - edits, 1, "still exactly one grouped edit");
     assert_eq!(app.store.envelope().vcs.edits.last().expect("finalized edit").forwards.len() as u64, units * number(&fixture["opsPerUnit"]), "every provisional op landed");
-    eprintln!("[DEBUG] large finalize: {units} units in {turns} driver turns, peak {peak} returned document roots");
     close(&mut app);
 }
 
@@ -1290,6 +1290,8 @@ async fn a_finalize_in_the_wire_carrier_finalizes_the_run_it_names() {
 /// non-terminal run is `toolRun.busy`. Generation3d's read-only `previewEval` therefore ran exactly ONCE
 /// per session and its 3d preview stopped re-evaluating after the first evaluation
 /// (`📓️preview-rearm-after-inspector-edit-2026-09-14.md`).
+///
+/// ▶️ And the slot is free: the next start is admitted, with no finalize action anywhere in this test.
 #[semio_framework_async_macros::async_test]
 async fn a_read_only_run_finalizes_itself_and_frees_its_slot_for_the_next_start() {
     let fixture = fixture();
@@ -1302,7 +1304,6 @@ async fn a_read_only_run_finalizes_itself_and_frees_its_slot_for_the_next_start(
     println!("[STATS] readOnlyRun state={} after its job completed, with no finalize action dispatched", state.as_str());
     assert_ne!(state, ToolRunState::Complete, "a read-only run never parks in complete waiting for a finalize nobody owes it");
     pump_until(&mut app, "the read-only run settles", |app| app.tool_runs.state().is_some_and(ToolRunState::is_terminal) && !app.tool_runs.has_pending_work()).await;
-    // ▶️ And the slot is free: the next start is admitted, with no finalize action anywhere in this test.
     let output = tool_run_action(&mut app, "toolRunStart", vec![("toolId".into(), DslValue::String(tool_id.into()))]).await;
     assert_eq!(output.get("rejected").and_then(DslValue::as_str), None, "the finished read-only run never refuses the next start as busy");
     assert_eq!(output.get("toolRun").and_then(DslValue::as_str), Some("spawnJob"), "and the next start really spawns a job");

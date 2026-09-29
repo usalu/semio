@@ -16,7 +16,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     receipt: { schema: "semio.dev.activation/v1", variant: name, profile: "dev", plugins: plugins.map(([pluginId, seed, rebuiltAt]) => ({ pluginId, artifactSha256: sha(seed), rebuiltAt })) },
   });
 
-  /** @emoji 💿️ The staged artifact the merge reads off disk, as a fixture: one sha per component, exactly
+  /** 💿️ The staged artifact the merge reads off disk, as a fixture: one sha per component, exactly
    * as {@link playInstalledArtifactSha256} answers it, `undefined` for a component that is not staged. */
   const installed = (seeds: Readonly<Record<string, string | null>>) => (pluginId: string) => seeds[pluginId] === undefined || seeds[pluginId] === null ? undefined : sha(seeds[pluginId]!);
 
@@ -115,7 +115,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   describe("playInstalledArtifactSha256", () => {
-    /** @emoji 🔏️ The whole lane-drift resolution rests on play computing the SAME artifact identity the
+    /** 🔏️ The whole lane-drift resolution rests on play computing the SAME artifact identity the
      * activation writes into a receipt. Play restates that digest synchronously (a Vite config factory
      * cannot await), so this law pins the restatement to the framework's own streaming digest over a
      * fixture holding what a staged module directory holds: nested paths, a `\0` byte, an empty file and

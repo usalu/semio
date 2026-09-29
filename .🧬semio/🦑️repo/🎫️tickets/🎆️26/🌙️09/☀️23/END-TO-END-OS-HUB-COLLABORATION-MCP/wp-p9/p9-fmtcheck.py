@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 """🎨️ Proves every Rust line P9's patch set adds is rustfmt-stable: loads the set's hunks (`patches/p9-agent-lane.py`), formats
 each touched stage file with the repo `rustfmt.toml` (`skip_children`) and lists every added line rustfmt would re-wrap.
-Exit 1 when any added line is unstable. Usage: p9-fmtcheck.py"""
+Exit 1 when any added line is unstable. Usage: [P9_STAGE=<stage root>] p9-fmtcheck.py [<set name>]"""
+import os
 import subprocess
 import sys
 import types
 from pathlib import Path
 
 TREE = Path("/Users/ueli/Documents/semio")
-STAGE = TREE / ".🧬semio/🌐hub/s14-p9-stage/stage"
-PATCH = Path(__file__).parent / "patches/p9-agent-lane.py"
+STAGE = TREE / os.environ.get("P9_STAGE", ".🧬semio/🌐hub/s14-p9-stage") / "stage"
+PATCH = Path(__file__).parent / "patches" / f"{sys.argv[1] if len(sys.argv) > 1 else 'p9-agent-lane'}.py"
 
 hunks = []
 module = types.ModuleType("p9_patch")

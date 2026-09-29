@@ -367,6 +367,15 @@ impl RetainedNodePaintCursor {
         self.chrome = false;
         self.item = 0;
     }
+
+    /// 🧮️ Moves to the next part of the SAME phase — a table's next column label or cell: the glyph and measure state restart,
+    /// the part index advances.
+    fn next_part(&mut self) {
+        self.glyph.reset();
+        self.measure_byte = 0;
+        self.measure_width = 0.0;
+        self.item += 1;
+    }
 }
 
 fn retained_fixed_output(draw: &mut DrawList, paint: impl FnOnce(&mut DrawList)) -> Result<(), crate::wgpu::draw::RetainedOutputError> {
@@ -575,7 +584,7 @@ fn retained_tree_item_node_at(retained: &UiTree, tree_id: NodeId, tree: &UiTreeN
         return None;
     }
     let section = retained_tree_section_at(tree, cursor.section, reversed)?;
-    let mut parent = retained.explicit_child(tree_id, &section.id)?;
+    let mut parent = if crate::wgpu::mounted_layout::document_table(retained, tree_id).is_some() { tree_id } else { retained.explicit_child(tree_id, &section.id)? };
     let mut items = section.items.as_slice();
     for level in 0..cursor.depth {
         let item = items.get(retained_tree_index(items.len(), cursor.path[level], reversed)?)?;
@@ -629,6 +638,103 @@ fn retained_select_popup_at_bounds(tree: &UiTree, id: NodeId, bounds: Rect, popu
     Some(popup.translated(bounds.x - local.x, bounds.y - local.y))
 }
 
+/// 📊️ Advances a table's column header by one glyph (`cursor.item` is the column): each materialised column label over its
+/// `layout::table_column_rect`, then `TableProps::actions_label` over the trailing actions column, in the band
+/// `LayoutNodeKind::Tree::header` reserves ahead of the rows; then the rows (phase 2).
+#[allow(clippy::too_many_arguments, reason = "one retained paint context")]
+fn retained_table_header_step(
+    retained: &UiTree,
+    tree_id: NodeId,
+    tree: &UiTreeNode,
+    bounds: Rect,
+    theme: &Theme,
+    reversed: bool,
+    inline: ui_contract::FlowInline,
+    metrics: &TreeRowMetrics,
+    atlas: &mut FontAtlas,
+    draw: &mut DrawList,
+    cursor: &mut RetainedNodePaintCursor,
+) -> RetainedNodePaintStep {
+    let Some(table) = crate::wgpu::mounted_layout::document_table(retained, tree_id) else { return RetainedNodePaintStep::Fault };
+    let header = metrics.header_height;
+    let actions = crate::wgpu::mounted_layout::table_actions_width_of(tree, metrics);
+    let columns = table.columns.len();
+    let (label, rect) = match (table.columns.get(cursor.item), table.actions_label.as_ref()) {
+        (Some(label), _) => (label, crate::wgpu::layout::table_column_rect(bounds.w, header, cursor.item, columns, actions, metrics)),
+        (None, Some(label)) if cursor.item == columns && actions > 0.0 => (label, Rect::new(if inline.is_rtl() { 0.0 } else { bounds.w - actions }, 0.0, actions, header)),
+        _ => {
+            if !reversed {
+                cursor.row_y += header;
+            }
+            cursor.advance(2);
+            return RetainedNodePaintStep::Pending;
+        }
+    };
+    let y = if reversed { cursor.row_y + retained_tree_content_height(retained, tree_id, tree, metrics) - header } else { cursor.row_y };
+    match retained_tree_text_step(label.0.as_str(), Rect::new(bounds.x + rect.x, y, rect.w, header), theme.font_size_small, theme.text_muted, inline, atlas, draw, cursor) {
+        RetainedNodePaintStep::Complete => {
+            cursor.next_part();
+            RetainedNodePaintStep::Pending
+        }
+        step => step,
+    }
+}
+
+/// 📊️ Advances one table row's cells by one glyph (`cursor.item` is the column): column `i` paints `TableRowProps::cells[i]` in
+/// its `layout::table_column_rect` unless the row materialised a child for it — an editable row's input, paged draft or
+/// read-only surface, which paints itself in the same column (`LayoutNodeKind::TableRow`); then the row's trailing actions.
+#[allow(clippy::too_many_arguments, reason = "one retained paint context")]
+fn retained_table_cells_step(
+    retained: &UiTree,
+    tree_id: NodeId,
+    tree: &UiTreeNode,
+    item: &UiTreeItemNode,
+    row: Rect,
+    font_size: f32,
+    theme: &Theme,
+    inline: ui_contract::FlowInline,
+    metrics: &TreeRowMetrics,
+    reversed: bool,
+    atlas: &mut FontAtlas,
+    draw: &mut DrawList,
+    cursor: &mut RetainedNodePaintCursor,
+) -> RetainedNodePaintStep {
+    let (Some(table), Some(row_id)) = (crate::wgpu::mounted_layout::document_table(retained, tree_id), retained_tree_item_node_at(retained, tree_id, tree, cursor, reversed)) else {
+        return RetainedNodePaintStep::Fault;
+    };
+    let columns = table.columns.len();
+    let index = cursor.item;
+    if index >= columns {
+        cursor.advance(5);
+        return RetainedNodePaintStep::Pending;
+    }
+    let materialised = retained.children(row_id).count();
+    let Some(text) = crate::wgpu::mounted_layout::document_table_row(retained, row_id).and_then(|props| props.cells.get(index)).filter(|_| index >= materialised) else {
+        cursor.next_part();
+        return RetainedNodePaintStep::Pending;
+    };
+    let column = crate::wgpu::layout::table_column_rect(row.w, row.h, index, columns, crate::wgpu::mounted_layout::table_actions_width_of(tree, metrics), metrics);
+    let color = foreground_on_fill(theme, theme.text_element, item.presence.selected, item.presence.state == UiState::Previewed || item.presence.hover);
+    let color = if item.presence.state == UiState::Disabled { color.with_alpha(color.a * 0.5) } else { color };
+    match retained_tree_text_step(text.as_str(), Rect::new(row.x + column.x, row.y + column.y, column.w, column.h), font_size, color, inline, atlas, draw, cursor) {
+        RetainedNodePaintStep::Complete => {
+            cursor.next_part();
+            RetainedNodePaintStep::Pending
+        }
+        step => step,
+    }
+}
+
+/// 📊️ How far the paint cursor moves past one row: a table row's whole laid-out height (`mounted_layout::live_tree_item_height`
+/// — a row whose cell hosts a draft or read-only surface is taller), a tree row's own band (its nested rows advance it themselves).
+fn retained_tree_row_advance(retained: &UiTree, tree_id: NodeId, tree: &UiTreeNode, item: &UiTreeItemNode, cursor: &RetainedNodePaintCursor, metrics: &TreeRowMetrics, reversed: bool) -> f32 {
+    let band = metrics.for_item(item).row_height;
+    if crate::wgpu::mounted_layout::document_table(retained, tree_id).is_none() {
+        return band;
+    }
+    retained_tree_item_node_at(retained, tree_id, tree, cursor, reversed).map_or(band, |row| crate::wgpu::mounted_layout::live_tree_item_height(retained, row, item, metrics, 0))
+}
+
 fn retained_tree_node_step(
     retained: &UiTree,
     tree_id: NodeId,
@@ -672,6 +778,9 @@ fn retained_tree_node_step(
                 cursor.section += 1;
                 cursor.advance(1);
                 return RetainedNodePaintStep::Pending;
+            }
+            if crate::wgpu::mounted_layout::document_table(retained, tree_id).is_some() {
+                return retained_table_header_step(retained, tree_id, tree, bounds, theme, reversed, inline, &metrics, atlas, draw, cursor);
             }
             let open = retained.tree_section_open(tree_id, &section.id, crate::wgpu::layout::tree_section_default_open(section));
             let header_height = tree_section_header_height(section, &metrics);
@@ -807,6 +916,9 @@ fn retained_tree_node_step(
                 return RetainedNodePaintStep::Pending;
             }
             let Some((row, _)) = retained_tree_item_row(retained, tree_id, tree, bounds, cursor, &metrics, reversed) else { return RetainedNodePaintStep::Fault };
+            if crate::wgpu::mounted_layout::document_table(retained, tree_id).is_some() {
+                return retained_table_cells_step(retained, tree_id, tree, item, row, font_size, theme, inline, &metrics, reversed, atlas, draw, cursor);
+            }
             let indent = bounds.x + (cursor.depth - 1) as f32 * TREE_INDENT_PER_LEVEL + TREE_TOGGLE_WIDTH;
             let label_x = indent + if item.icon_id.is_some() { TREE_ICON_SIZE + theme.gap_standard } else { 0.0 };
             let selected = item.presence.selected;
@@ -876,13 +988,12 @@ fn retained_tree_node_step(
                 return RetainedNodePaintStep::Pending;
             }
             let trailing = if driver_drag == UiDriverDrag::Handle && tree_drag_role(item).is_some() { tree_drag_handle_reservation(&metrics) } else { 0.0 };
-            let offset = theme.gap_standard + trailing + cursor.item as f32 * (TREE_ICON_SIZE + theme.padding_standard);
-            let x = if inline.is_rtl() { bounds.x + offset - TREE_ICON_SIZE } else { bounds.x + bounds.w - offset };
             let Some((row, _)) = retained_tree_item_row(retained, tree_id, tree, bounds, cursor, &metrics, reversed) else { return RetainedNodePaintStep::Fault };
+            let slot = crate::wgpu::layout::tree_row_action_rect(row.w, row.h, cursor.item, trailing, &metrics);
             let result = retained_fixed_output(draw, |draw| {
                 if let Some(icons) = icons {
                     let on_hover_fill = item.presence.state == UiState::Previewed || item.presence.hover;
-                    push_icon(draw, icons, action.icon_id.as_str(), x, row.y + (row.h - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, foreground_on_fill(theme, theme.text_element, item.presence.selected, on_hover_fill));
+                    push_icon(draw, icons, action.icon_id.as_str(), row.x + slot.x, row.y + slot.y, slot.w, foreground_on_fill(theme, theme.text_element, item.presence.selected, on_hover_fill));
                 }
             });
             if result.is_err() {
@@ -899,7 +1010,8 @@ fn retained_tree_node_step(
             let Some(item) = retained_tree_item_at(tree, cursor, reversed) else { return RetainedNodePaintStep::Fault };
             let Some((_, open)) = retained_tree_item_row(retained, tree_id, tree, bounds, cursor, &metrics, reversed) else { return RetainedNodePaintStep::Fault };
             if item.presence.visible() && (!reversed || !open) {
-                cursor.row_y += metrics.for_item(item).row_height;
+                let advance = retained_tree_row_advance(retained, tree_id, tree, item, cursor, &metrics, reversed);
+                cursor.row_y += advance;
             }
             cursor.selected = None;
             if open {
@@ -3095,7 +3207,7 @@ fn paint_section(tree: &UiTree, id: NodeId, node: &UiSectionNode, bounds: Rect, 
     }
 }
 
-/** @emoji 🌿️ Same header chrome as {@link paint_section} (chevron + label), for a `Group`'s always-
+/** 🌿️ Same header chrome as {@link paint_section} (chevron + label), for a `Group`'s always-
  * present `label` — used when a nested subtree (e.g. `Origin`) is painted directly in the native
  * retained tree rather than pre-expanded into `UiTreeItemNode.items`. */
 #[cfg(test)]

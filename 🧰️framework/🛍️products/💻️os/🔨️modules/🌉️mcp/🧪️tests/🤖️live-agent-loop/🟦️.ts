@@ -135,11 +135,7 @@ class Peer {
   readonly serverRequests: Record<string, unknown>[] = [];
   private buffer = "";
   private nextId = 1;
-  // 🧭️ No annotation: `Bun.spawn` is declared twice (bun-types and the repo's own `🌿️environment`
-  // ambient), so `ReturnType<typeof Bun.spawn>` picks whichever overload comes last in the program and
-  // loses `stdin.write`/`stdout`'s async iterator. Inferring the field from the constructor assignment
-  // binds the signature this call actually resolved to.
-  private readonly child;
+  private readonly child: Bun.Subprocess<"pipe", "pipe", "pipe">;
   /** 🙋 How this client answers `elicitation/create`; `silent` answers nothing at all, which is what
    * exercises the gateway's wall-clock elicitation deadline. */
   elicitationAnswer: "accept" | "decline" | "silent" = "accept";

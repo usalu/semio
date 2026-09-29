@@ -73,7 +73,7 @@ mod tests {
     //#endregion 🔖️AppTypes
 
     //#region 🔖️Registry
-    /// @emoji 🧭️ `(app label, envelope_id, check fn)` — dispatch is by sniffed `plugin.artifact` from `.semio` content.
+    /// 🧭️ `(app label, envelope_id, check fn)` — dispatch is by sniffed `plugin.artifact` from `.semio` content.
     type CheckFn = fn(&str) -> Result<(), String>;
 
     fn registry() -> Vec<(&'static str, &'static str, CheckFn)> {
@@ -142,7 +142,7 @@ mod tests {
     //#endregion 🔖️Registry
 
     //#region 🔖️Walk
-    /// @emoji 🏠️ Ascends from `CARGO_MANIFEST_DIR` looking for `nx.json` (a repo-root-only marker)
+    /// 🏠️ Ascends from `CARGO_MANIFEST_DIR` looking for `nx.json` (a repo-root-only marker)
     /// rather than hardcoding a `../..` depth — robust to this crate ever moving.
     fn repo_root() -> PathBuf {
         let mut dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
@@ -164,7 +164,7 @@ mod tests {
         name == "node_modules" || name == "target" || name.starts_with('.') || name == "🦑️repo"
     }
 
-    /// @emoji 📚️ Recursively finds every directory literally named `📚️examples` under `root`,
+    /// 📚️ Recursively finds every directory literally named `📚️examples` under `root`,
     /// skipping `node_modules`/`target`/hidden/ticket-scratch directories.
     fn example_dirs(root: &Path) -> Vec<PathBuf> {
         fn walk(dir: &Path, out: &mut Vec<PathBuf>) {
@@ -193,7 +193,7 @@ mod tests {
         out
     }
 
-    /// @emoji 🏷️ Direct child directories of a `📚️examples` root — one per example slug.
+    /// 🏷️ Direct child directories of a `📚️examples` root — one per example slug.
     fn example_slug_dirs(examples_dir: &Path) -> Vec<PathBuf> {
         let mut out = Vec::new();
         let entries = match std::fs::read_dir(examples_dir) {
@@ -209,7 +209,7 @@ mod tests {
         out
     }
 
-    /// @emoji 📄️ Recursively collects every FILE under `dir`.
+    /// 📄️ Recursively collects every FILE under `dir`.
     fn collect_files(dir: &Path, out: &mut Vec<PathBuf>) {
         let entries = match std::fs::read_dir(dir) {
             Ok(entries) => entries,
@@ -225,7 +225,7 @@ mod tests {
         }
     }
 
-    /// @emoji 🖼️ Collects `.semio` assets for one example slug.
+    /// 🖼️ Collects `.semio` assets for one example slug.
     /// Prefers `🖼️assets/` (new layout); soft-migrates by walking the slug tree when assets are absent.
     fn collect_slug_semio_files(slug_dir: &Path) -> Vec<PathBuf> {
         let assets = slug_dir.join(ASSETS_DIR_NAME);
@@ -240,7 +240,7 @@ mod tests {
         files
     }
 
-    /// @emoji 📚️ Repo-wide `.semio` example assets under every `📚️examples/<slug>/` (assets-first).
+    /// 📚️ Repo-wide `.semio` example assets under every `📚️examples/<slug>/` (assets-first).
     fn collect_example_semio_files(root: &Path) -> Vec<PathBuf> {
         let mut out = Vec::new();
         for examples in example_dirs(root) {

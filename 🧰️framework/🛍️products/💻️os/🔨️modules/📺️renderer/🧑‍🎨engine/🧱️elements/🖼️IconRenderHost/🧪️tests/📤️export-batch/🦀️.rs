@@ -42,7 +42,6 @@ fn icon_export_effect_admits_large_batches_and_scopes_cancellation_to_existing_r
         assert_eq!(batch.phase_key(), expected["phase"].as_str().unwrap());
         assert_eq!(batch.completed, 0);
         assert!(shell.error.is_none());
-        eprintln!("[DEBUG] icon export queue case={} accepted={} failed={}", scenario["name"], expected["admitted"], expected["failed"]);
     }
 }
 
@@ -59,7 +58,6 @@ fn icon_export_batch_invalid_items_settle_without_fetching_or_saving() {
     assert_eq!(batch.completed, fixture["expected"]["completed"].as_u64().unwrap() as usize);
     assert_eq!(batch.failed, fixture["expected"]["failed"].as_u64().unwrap() as usize);
     assert!(batch.asset.is_none() && batch.saving.is_none() && batch.initializing.is_none());
-    eprintln!("[DEBUG] icon export invalid batch terminal failed={} delivered={}", batch.failed, batch.completed);
 }
 
 #[test]
@@ -80,7 +78,6 @@ fn icon_export_batch_cancel_discards_queued_items_incrementally() {
         assert_eq!(super::super::shell_chrome_string("icon.export.cancel", is_de), fixture["labels"][locale]["cancel"].as_str().unwrap());
         assert_eq!(super::super::shell_chrome_string("common.close", is_de), fixture["labels"][locale]["close"].as_str().unwrap());
     }
-    eprintln!("[DEBUG] icon export cancellation terminal owners=0 delivered=0");
 }
  
 
@@ -119,5 +116,4 @@ fn icon_export_effect_publishes_an_accessible_cancel_control_and_drains_on_activ
     assert!(shell.icon_export.as_ref().unwrap().terminal_is_empty());
     assert_eq!(shell.icon_export.as_ref().unwrap().phase_key(), "cancelled");
     assert!(shell.close_icon_export_step());
-    eprintln!("[DEBUG] IconRenderExport effect published progress and accessible cancel; activation retired the batch");
 }

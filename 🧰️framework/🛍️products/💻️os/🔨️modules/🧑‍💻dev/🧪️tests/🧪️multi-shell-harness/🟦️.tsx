@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🐚️ Multi-shell dev harness — mounts several independent `FrameworkOsShell` instances on one
+/** 🐚️ Multi-shell dev harness — mounts several independent `FrameworkOsShell` instances on one
  * page (no iframes) so the per-shell scoping work (`ShellScope` and everything built on it) can be
  * smoke-tested wave by wave, ahead of the mit-bestand demonstrator rebuild that depends on it. */
 // #endregion 🧲️Header
@@ -14,7 +14,7 @@ import * as React from "react";
 import { createRoot } from "react-dom/client";
 
 //#region 🐚️MultiShellHarnessPanes
-/** @emoji 🐚️ Two deliberately plain, unbranded playground variants (no shell locks beyond what's set
+/** 🐚️ Two deliberately plain, unbranded playground variants (no shell locks beyond what's set
  * here) — this harness exercises the generic multi-instance mechanism, not any one product's brand. */
 const MULTI_HARNESS_PANES = [
   { variant: "cad", shellId: "harness-cad", locale: "en", appearance: "light" },
@@ -23,7 +23,7 @@ const MULTI_HARNESS_PANES = [
 
 type MultiHarnessPane = (typeof MULTI_HARNESS_PANES)[number];
 
-/** @emoji 👁️✏️ Boot-time surface role (contract §5), shared by every harness pane — mirrors
+/** 👁️✏️ Boot-time surface role (contract §5), shared by every harness pane — mirrors
  * `🟦️.ts`'s own `VITE_SEMIO_APP_ROLE` resolution so both dev entry points agree on the same
  * default-editor, viewer-on-request rule. */
 const MULTI_HARNESS_APP_ROLE: "viewer" | "editor" = import.meta.env.VITE_SEMIO_APP_ROLE === "viewer" ? "viewer" : "editor";

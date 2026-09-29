@@ -1,5 +1,5 @@
 // #region 🧭️Header
-/** @emoji 🏗️ `@semio-tech/cad-js-module-aec-building` — building BIM STEP import profile. */
+/** 🏗️ `@semio-tech/cad-js-module-aec-building` — building BIM STEP import profile. */
 // #endregion 🧭️Header
 
 import { core } from "@semio-tech/cad-js";
@@ -38,7 +38,7 @@ const BUILDING_LAYER_TYPOLOGY: Readonly<Record<string, TypologyRef>> = {
 // #endregion 🪪️ImportProfile
 
 // #region 📦️Register
-/** @emoji 📦️ Registers building STEP import profile on the core engine. */
+/** 📦️ Registers building STEP import profile on the core engine. */
 export function register(): void {
   registerImportProfile(AEC_BUILDING_MODEL_DEFINITION_ID, {
     layerTypology: BUILDING_LAYER_TYPOLOGY,
@@ -48,8 +48,14 @@ export function register(): void {
 // #endregion 📦️Register
 
 // #region 🧪️Tests
+/** 🎒️ The values this module hands its extracted suite `./🧪️tests/🧪️semio-tech-cad-js-module-aec-building/🟦️.ts`. */
+export type AecBuildingTestDependencies = {
+  readonly AEC_BUILDING_MODEL_DEFINITION_ID: typeof AEC_BUILDING_MODEL_DEFINITION_ID;
+  readonly typologyFromStepLayer: typeof typologyFromStepLayer;
+};
+
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️semio-tech-cad-js-module-aec-building/🟦️.ts");
-  await registerTests1(import.meta.vitest, { AEC_BUILDING_MODEL_DEFINITION_ID, typologyFromStepLayer }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { AEC_BUILDING_MODEL_DEFINITION_ID, typologyFromStepLayer }, { url: import.meta.url });
 }
 // #endregion 🧪️Tests

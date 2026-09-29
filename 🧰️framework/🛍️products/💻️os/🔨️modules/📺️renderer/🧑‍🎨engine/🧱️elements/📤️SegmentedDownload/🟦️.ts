@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🧵️ Bounded, operation-owned browser download streaming. */
+/** 🧵️ Bounded, operation-owned browser download streaming. */
 // #endregion 🧲️Header
 
 import { admitSegmentedDownloadChunk, admitSegmentedDownloadOperationId, SEGMENTED_DOWNLOAD_CONTRACT, SEGMENTED_DOWNLOAD_REFUSAL } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/📤️segmented-download/🟦️.ts";

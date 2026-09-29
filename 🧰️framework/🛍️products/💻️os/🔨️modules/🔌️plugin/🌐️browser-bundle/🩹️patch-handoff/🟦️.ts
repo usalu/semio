@@ -1,5 +1,5 @@
 /// <reference types="vitest/importMeta" />
-/** @emoji 🩹️ Strict private browser-actor UI patch handoff. */
+/** 🩹️ Strict private browser-actor UI patch handoff. */
 import type { UiNodeRecord, UiPatch, UiPatchOp } from "@semio-tech/framework";
 import { actorInstanceLifetimeEquals, type ActorInstanceLifetime } from "../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts";
 import { actorUiPatchReceiptEquals, decodeActorUiPatchReceipt, encodeActorUiPatchReceipt, validateActorUiPatchPairing, type ActorUiPatchReceipt } from "../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts";

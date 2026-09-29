@@ -1,0 +1,13 @@
+/// 📤️ Exporting a report the document does not have yet is REFUSED with the app's own typed code — the code users
+/// and agents see, carried structurally through the retained job's fault page (never the wrapper code
+/// `interactive-job.app-owned-output` with the domain code flattened into its text).
+#[semio_framework_async_macros::async_test]
+async fn export_qc_report_without_a_report_is_refused_with_its_domain_code() {
+    use semio_framework_plugin::artifact_app_laws::{meta, settle_registered_typed_operation};
+    let mut app = app().await;
+    app.dispatch_typed(RemodelingCommand::ExportQcReport(export_qc_report::ExportQcReport {}), &meta("local")).await.expect("exportQcReport is admitted");
+    let fault = settle_registered_typed_operation(&mut *app, meta("local").instance_id).await.expect_err("an export with no report is refused");
+    assert_eq!(fault.code.0, "remodeling.qc-report.missing", "{fault:?}");
+    assert!(fault.message.contains("Run the quality check before exporting its report."), "{fault:?}");
+    assert!(!fault.message.contains("remodeling.qc-report.missing"), "the domain code rides in its own field, not in the text: {fault:?}");
+}

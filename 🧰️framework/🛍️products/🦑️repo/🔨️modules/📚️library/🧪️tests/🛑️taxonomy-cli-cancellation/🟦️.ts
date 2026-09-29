@@ -74,7 +74,7 @@ test("the CLI forwards its guarded cancellation path to every planning implement
   }
 });
 
-test("the real CLI options cancel incoming-reference planning without changing source bytes", { timeout: 30_000 }, () => {
+test("the real CLI options cancel incoming-reference planning without changing source bytes", () => {
   mkdirSync(ticket, { recursive: true });
   for (const factory of planOptionFactories()) {
     const directory = mkdtempSync(join(ticket, "🧪️cli-plan-cancellation-"));
@@ -106,7 +106,7 @@ test("the real CLI options cancel incoming-reference planning without changing s
     expect(existsSync(cancel)).toBe(true);
     expect(readFileSync(join(directory, vector.sourcePath), "utf8")).toBe(vector.source);
   }
-});
+}, { timeout: 30_000 });
 
 test("registers the cancellation gate through Nx and both launch catalogs", () => {
   const expected = vector.execution;

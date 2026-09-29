@@ -1,4 +1,4 @@
-/** @emoji 🧪️ jsdom polyfills for presentation renderer tests. */
+/** 🧪️ jsdom polyfills for presentation renderer tests. */
 import { vi } from "vitest";
 
 Object.defineProperty(globalThis, "IS_REACT_ACT_ENVIRONMENT", { value: true, writable: true });

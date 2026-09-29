@@ -15,22 +15,22 @@ import { Icon, type IconName } from "../🔣️Icons/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🧪️NavbarExampleSelect
-/** @emoji ∅ Sentinel id for the navbar “No example” row. */
+/** ∅ Sentinel id for the navbar “No example” row. */
 const NAVBAR_NO_EXAMPLE_ID = "__none__";
 
-/** @emoji 🧹️ Maps navbar sentinel / legacy empty ids to the canonical blank example id (`""`). */
+/** 🧹️ Maps navbar sentinel / legacy empty ids to the canonical blank example id (`""`). */
 function normalizePlaygroundExampleId(exampleId: string): string {
   return !exampleId || exampleId === NAVBAR_NO_EXAMPLE_ID || exampleId === "empty" ? "" : exampleId;
 }
 
-/** @emoji 🧪️ One selectable example row for {@link NavbarExampleSelect}. */
+/** 🧪️ One selectable example row for {@link NavbarExampleSelect}. */
 export interface NavbarExampleOption {
   readonly id: string;
   readonly label: string;
   readonly icon: IconName;
 }
 
-/** @emoji 🧪️ Props for {@link NavbarExampleSelect}. */
+/** 🧪️ Props for {@link NavbarExampleSelect}. */
 export interface NavbarExampleSelectProps {
   readonly id: string;
   readonly label?: UiLabel;
@@ -41,7 +41,7 @@ export interface NavbarExampleSelectProps {
   readonly includeNoExample?: boolean;
 }
 
-/** @emoji 🧪️ Center-navbar dropdown for switching playground examples (kits, graphs, shape sources).
+/** 🧪️ Center-navbar dropdown for switching playground examples (kits, graphs, shape sources).
  *
  * 🆔️ `id` names the TRIGGER — the combobox the user presses and the one element whose text is the
  * active example's label — matching the wgpu shell, which handles a press on the bare control id

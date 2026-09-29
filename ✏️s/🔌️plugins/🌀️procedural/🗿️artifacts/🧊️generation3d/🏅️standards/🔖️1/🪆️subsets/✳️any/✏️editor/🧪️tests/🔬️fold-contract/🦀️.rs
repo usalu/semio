@@ -96,7 +96,7 @@ fn set_active_example_artifact_gesture_fits_its_declared_fold_envelope_for_every
         assert_eq!(base.host_snapshot.schema, target.host_snapshot.schema, "example {example_id}: the replayed gesture does not reach the example's own schema");
         let (rows, declared) = folded_rows_against_declaration(&items);
         assert!(rows <= declared, "example {example_id}: the staged gesture folds {rows} rows against a declared envelope of {declared}");
-        eprintln!("[DEBUG] fold envelope {previous} -> {example_id}: {} items, {rows} rows, {declared} declared", items.len());
+        eprintln!("fold envelope {previous} -> {example_id}: {} items, {rows} rows, {declared} declared", items.len());
     }
 }
 
@@ -158,7 +158,6 @@ macro_rules! set_active_example_publishes {
                 let after = live_widget_ids(&app);
                 assert_eq!(after, bundled_widget_ids($example), "{} did not reach the store: the published document is not the example's fixture", $example);
                 assert!(after != before || $example == PROCEDURAL_EXAMPLE_HEX_COLUMN, "{} left the document untouched", $example);
-                eprintln!("[DEBUG] setActiveExample {} published: lanes={:?} effects={} widgets={}", $example, receipt.lanes, receipt.effects.len(), after.len());
                 semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
             }
         )+
@@ -191,6 +190,6 @@ async fn interaction_select_publishes_through_the_retained_typed_path() {
     // cannot: it settles a typed operation, and the reserved spawn is not one.
     let settled = context::select_graph(&mut app, "node", &[node_id.as_str()]).await;
     assert_eq!(app.interaction_state().await.selection.get("graph").map(|selection| selection.ids.as_slice()), Some([node_id].as_slice()));
-    eprintln!("[DEBUG] interactionSelect published: effects={}", settled.requested_effects.len());
+    eprintln!("interactionSelect published: effects={}", settled.requested_effects.len());
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
 }

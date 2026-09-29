@@ -6,7 +6,7 @@ export const INTERACTIVE_JOB_INPUT_ITEM_CAPACITY = 65_536;
 export const INTERACTIVE_JOB_INPUT_BYTE_CAPACITY = 256 * 1024 * 1024;
 export const INTERACTIVE_JOB_PAGE_ITEM_CAPACITY = 128;
 export const INTERACTIVE_JOB_PAGE_BYTE_CAPACITY = 16 * 1024;
-/** @emoji ⏱️ One consumer turn's ceiling — the same ceiling every other UI turn on this isolate is
+/** ⏱️ One consumer turn's ceiling — the same ceiling every other UI turn on this isolate is
  * priced against, and priced by the same executing-time/sustained-run law (`../⏱️turn-budget/🟦️.ts`). */
 export const INTERACTIVE_JOB_UI_BUDGET_MS = UI_TURN_BUDGET_MS;
 export const INTERACTIVE_JOB_OBSERVER_CAPACITY = 32;
@@ -86,19 +86,19 @@ export class BrowserInteractiveJobPort {
     return this.statusSnapshot;
   }
 
-  /** @emoji ⏱️ Prices one foreign consumer turn. Never a verdict: an overrun records and asks the caller
+  /** ⏱️ Prices one foreign consumer turn. Never a verdict: an overrun records and asks the caller
    * to YIELD, it does not quarantine the port. Answers `false` only to request deferred cadence. */
   observeConsumerTurn(site: string, durationMs: number): boolean {
     return this.uiTurns.admit(site, durationMs).verdict !== "sustained-overrun";
   }
 
-  /** @emoji 💥️ A consumer that THREW is a real defect and still quarantines the port — the budget path
+  /** 💥️ A consumer that THREW is a real defect and still quarantines the port — the budget path
    * above never does, so the two can no longer be confused for one another. */
   reportConsumerFault(site: string, detail: string): void {
     this.quarantine(`${site} threw: ${detail}`);
   }
 
-  /** @emoji 📊️ This port's UI-turn ledger, for the surface owner's fallback report. */
+  /** 📊️ This port's UI-turn ledger, for the surface owner's fallback report. */
   uiTurnSnapshot(): TurnLedgerSnapshot {
     return this.uiTurns.snapshot();
   }
@@ -295,7 +295,7 @@ export class BrowserInteractiveJobPort {
     return true;
   }
 
-  /** @emoji ⏱️ Closes the executing span opened by {@link enterConsumerTurn} and records it. Answers
+  /** ⏱️ Closes the executing span opened by {@link enterConsumerTurn} and records it. Answers
    * `false` only when the port has now overrun {@link SUSTAINED_TURN_OVERRUN_TURNS} turns in a row and
    * the caller should yield the rest of its drain to the next macrotask — never that the port is dead. */
   private observe(site: string): boolean {

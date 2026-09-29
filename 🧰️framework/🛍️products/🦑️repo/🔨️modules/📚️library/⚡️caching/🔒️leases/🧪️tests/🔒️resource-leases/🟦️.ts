@@ -15,7 +15,7 @@ type ResourceLeaseFixture = {
 };
 
 /** 🔒️ One spawned participant plus the output the race is decided on. */
-type ResourceLeaseChild = { process: ReturnType<typeof Bun.spawn>; output: string; errors: string; done: Promise<number> };
+type ResourceLeaseChild = { process: Bun.Subprocess<"pipe", "pipe", "pipe">; output: string; errors: string; done: Promise<number> };
 
 /** 🔒️ Compares resource ownership against independent Node, Bun and Python SQLite processes. */
 export async function testResourceLeases(generated: string): Promise<void> {

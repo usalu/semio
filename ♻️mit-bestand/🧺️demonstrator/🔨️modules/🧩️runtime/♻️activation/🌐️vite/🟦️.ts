@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji ♻️ Keeps the Demonstrator's merged activation receipt current while its dev server runs.
+/** ♻️ Keeps the Demonstrator's merged activation receipt current while its dev server runs.
  * Node-only on purpose: it is imported by `🏗️builder/🌐️vite/🟦️.ts`, never by the browser-shared
  * `🔨️modules/🧩️runtime/🟦️.ts`. */
 // #endregion 🧲️Header
@@ -8,7 +8,7 @@ import type { Plugin } from "vite";
 import { observeActivationReceipts } from "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
 import { demonstratorActivationLaneReceiptDirectories, publishDemonstratorUnionReceipt } from "../🟦️.ts";
 
-/** @emoji 👀️ Republishes the union receipt whenever ANY lane completes a new activation.
+/** 👀️ Republishes the union receipt whenever ANY lane completes a new activation.
  *
  * `semioActivationVitePlugin` watches exactly one receipt directory, and no framework lane can ever
  * produce the Demonstrator's cross-app union — so this plugin owns the fan-in: it subscribes to every

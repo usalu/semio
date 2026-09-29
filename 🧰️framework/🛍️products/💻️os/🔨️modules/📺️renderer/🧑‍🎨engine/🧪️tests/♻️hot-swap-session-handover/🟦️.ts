@@ -104,7 +104,7 @@ describe("♻️ a hot swap hands every window over to the successor instance", 
 
   test("the node-graph surface is keyed on its surfaceId alone — which is why the ordering, not a retry, is the fix", () => {
     const source = readFileSync(join(engineRoot, "🧱️elements", "🕸️NodeGraph", "🟦️.tsx"), "utf8");
-    const unmount = source.indexOf('console.log("[DEBUG] node-graph host unmount surface=%s", surfaceId);');
+    const unmount = source.indexOf('console.log("[TRACE] node-graph host unmount surface=%s", surfaceId);');
     expect(unmount).toBeGreaterThan(0);
     expect(source.slice(unmount, unmount + 600)).toContain(law.sourceScan.nodeGraphSurfaceEffectKey);
   });

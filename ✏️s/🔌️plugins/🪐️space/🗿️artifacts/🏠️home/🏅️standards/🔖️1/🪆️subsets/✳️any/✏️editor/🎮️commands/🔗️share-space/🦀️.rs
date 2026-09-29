@@ -8,7 +8,7 @@
 use crate::standards::v1::subsets::any::schema::mutations::text::SHomeMutation;
 use crate::SHomeSnapshot;
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, FaultOrigin};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
@@ -21,10 +21,15 @@ pub struct ShareSpace {
 //#endregion 🔖️Payload
 
 //#region 🔖️Handle
-pub fn handle(payload: &ShareSpace, _doc: &ArtifactView<'_, SHomeSnapshot>, cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
-    let directory = cfg.snapshot.directory().ok();
-    let is_hub = directory.as_ref().is_some_and(|model| model.spaces.contains_key(&payload.space_id));
-    if !is_hub {
+/// 🚫️ The direct lane cannot tell a hub space from a local one: sharing runs only as the retained job.
+pub fn handle(_payload: &ShareSpace, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
+    Err(Fault::new(FaultOrigin::App, "s.home.share-space.requires-retained-job", "sharing a space runs only as the retained job"))
+}
+
+/// 🔗️ The retained route: `hub_row` is the space's one folded directory row from the job's captured projection — a
+/// space without one is local-only and cannot be shared until it is promoted.
+pub fn handle_with_row(payload: &ShareSpace, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>, hub_row: Option<&store::os_directory::DirectorySpace>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
+    if hub_row.is_none() {
         let args = Some(pack::json_to_dsl_value(&pack::json!({
             "spaceId": payload.space_id.clone(),
             "dataClass": "ephemeralLocalOnly",

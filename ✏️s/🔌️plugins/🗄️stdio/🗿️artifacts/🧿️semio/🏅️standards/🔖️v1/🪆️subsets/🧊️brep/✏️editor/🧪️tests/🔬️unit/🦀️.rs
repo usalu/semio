@@ -91,7 +91,7 @@ async fn dispatching_set_vertex_refuses_duplicate_vertex_ids() {
 #[semio_framework_async_macros::async_test]
 async fn set_vertex_is_visible_with_required_localized_arguments() {
     let definition = create_semio_brep_editor();
-    let action = definition.actions.iter().find(|action| action.id == "set-vertex").expect("set-vertex action");
+    let action = definition.actions.iter().chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter())).find(|action| action.id == "set-vertex").expect("set-vertex action");
     assert_eq!(action.args.len(), 2);
     assert!(action.args.iter().all(|argument| argument.required));
     assert_eq!(action.label.resolve(semio_framework_plugin::Terminology::Native, semio_framework_plugin::Locale::En), "Move Vertex");

@@ -1,4 +1,4 @@
-//! @emoji 🪟️ `D3d12Backend`: the concrete `ui_render::GraphicsBackend` implementation for Windows.
+//! 🪟️ `D3d12Backend`: the concrete `ui_render::GraphicsBackend` implementation for Windows.
 //!
 //! Milestones reached (see `📓️terra-backend-d3d12-report.md` for the authoritative statement):
 //! device + DXGI flip-model swapchain (3 buffers) + direct command queue + per-frame fence (resize

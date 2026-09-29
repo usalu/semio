@@ -20,5 +20,4 @@ export function testFormsResponseExport(): void {
     assert.equal(validate(json), true, test.name);
     assert.deepEqual(json, test.responses, test.name);
   }
-  console.log("[DEBUG] Forms response JSON/CSV exports matched shared vectors and Ajv");
 }

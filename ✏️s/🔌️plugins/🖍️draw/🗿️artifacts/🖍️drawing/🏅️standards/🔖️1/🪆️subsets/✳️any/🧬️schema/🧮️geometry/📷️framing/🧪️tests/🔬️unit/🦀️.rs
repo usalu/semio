@@ -9,5 +9,4 @@ fn drawing_scene_framing_fixtures() {
         let actual = drawing_scene_bounds(artboard.as_ref(),&nodes);
         for (index,value) in actual.iter().enumerate() { assert!((value-case["expected"][index].as_f64().unwrap()).abs()<1e-8,"{}: {actual:?}",case["name"]); }
     }
-    eprintln!("[DEBUG] shared Drawing framing covers visible paths, transformed images, text, artboards and sheared strokes");
 }

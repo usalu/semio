@@ -24,7 +24,7 @@ export interface FieldProps {
   readonly children: React.ReactNode;
 }
 
-/** @emoji 🏷️ Labelled form field wrapper with description and validation message. */
+/** 🏷️ Labelled form field wrapper with description and validation message. */
 export const Field: React.FC<FieldProps> = ({ id, label, description, required, error, className, children }) => {
   return (
     <div id={id} className={cn("flex flex-col gap-single min-w-0", className)} data-slot="field">

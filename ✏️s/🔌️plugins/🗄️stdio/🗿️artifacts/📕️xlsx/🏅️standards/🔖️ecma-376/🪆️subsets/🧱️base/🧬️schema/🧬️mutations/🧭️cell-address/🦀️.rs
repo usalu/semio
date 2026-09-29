@@ -78,7 +78,41 @@ fn hash_node(hash: &mut u64, node: &XmlNode, recursive: bool) {
     }
 }
 
-fn address_revision(root: &XmlNode, path: &[usize]) -> Result<String, String> {
+/// 🔤️ The shared-string entry (`sst/si`) a `t="s"` cell displays, if it is one — hashed into the cell's revision, so a change to
+/// the referenced text invalidates a draft exactly like a change to the cell itself.
+fn referenced_shared_string<'a>(snapshot: &'a XlsxSnapshot, root: &XmlNode, path: &[usize]) -> Result<Option<&'a XmlNode>, String> {
+    let (cell, scope) = scoped_node_at_path(root, path)?;
+    if attribute_value(cell, &scope, &[""], "t")? != Some("s") {
+        return Ok(None);
+    }
+    let XmlNode::Element { children, .. } = cell else { return Ok(None) };
+    let mut index = None;
+    for child in children {
+        if element_matches(child, &namespace_scope(&scope, child), &SPREADSHEETML_NAMESPACES, "v")? {
+            let XmlNode::Element { children: value, .. } = child else { continue };
+            let text: String = value.iter().filter_map(|node| if let XmlNode::Text { text } = node { Some(text.as_str()) } else { None }).collect();
+            index = text.trim().parse::<usize>().ok();
+        }
+    }
+    let Some(index) = index else { return Ok(None) };
+    let workbook = workbook_path(snapshot)?;
+    let Some(relationship) = snapshot.opc.relationships_for(&workbook).iter().find(|relationship| relationship.rel_type.ends_with("/sharedStrings")) else { return Ok(None) };
+    let Some(sst) = snapshot.xml_part(&resolve_relationship_target(&workbook, &relationship.target)).and_then(|part| part.document.root.as_ref()) else { return Ok(None) };
+    let sst_scope = namespace_scope(&[], sst);
+    let XmlNode::Element { children, .. } = sst else { return Ok(None) };
+    let mut seen = 0;
+    for child in children {
+        if element_matches(child, &namespace_scope(&sst_scope, child), &SPREADSHEETML_NAMESPACES, "si")? {
+            if seen == index {
+                return Ok(Some(child));
+            }
+            seen += 1;
+        }
+    }
+    Ok(None)
+}
+
+fn address_revision(snapshot: &XlsxSnapshot, root: &XmlNode, path: &[usize]) -> Result<String, String> {
     let mut hash = 0xcbf29ce484222325;
     let mut node = root;
     for &index in path {
@@ -91,6 +125,9 @@ fn address_revision(root: &XmlNode, path: &[usize]) -> Result<String, String> {
         node = children.get(index).ok_or_else(|| format!("node path child {index} is outside {} children", children.len()))?;
     }
     hash_node(&mut hash, node, true);
+    if let Some(entry) = referenced_shared_string(snapshot, root, path)? {
+        hash_node(&mut hash, entry, true);
+    }
     Ok(format!("{hash:016x}"))
 }
 
@@ -180,7 +217,7 @@ pub fn xlsx_cell_address_at_path(snapshot: &XlsxSnapshot, part_path: &str, node_
         XmlNode::Element { name, .. } => expanded_element_name(name, &bindings)?,
         _ => return Err("cell address resolved a non-element".into()),
     };
-    let revision = address_revision(root, &node_path)?;
+    let revision = address_revision(snapshot, root, &node_path)?;
     Ok(XlsxCellAddress { part_path: part_path.into(), node_path, namespace_uri, local_name, revision })
 }
 
@@ -211,7 +248,7 @@ pub fn resolve_xlsx_cell_address<'a>(snapshot: &'a XlsxSnapshot, address: &XlsxC
         XmlNode::Element { name, .. } => expanded_element_name(name, &bindings)?,
         _ => return Err("cell address resolved a non-element".into()),
     };
-    if namespace_uri != address.namespace_uri || local_name != address.local_name || address_revision(root, &address.node_path)? != address.revision {
+    if namespace_uri != address.namespace_uri || local_name != address.local_name || address_revision(snapshot, root, &address.node_path)? != address.revision {
         return Err("XLSX cell address is stale".into());
     }
     Ok(ResolvedXlsxCellAddress { part_index, node })

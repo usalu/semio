@@ -4,7 +4,7 @@ use crate::codec::ids::{ByteRange, ChunkId, CodecId, ContentHash};
 use crate::diagnostic::FaultOrigin;
 
 //#region 🔖️Errors
-/// @emoji 🚨️ The one error type every `pack_*` public fn returns; never leaks `std::io::Error`.
+/// 🚨️ The one error type every `pack_*` public fn returns; never leaks `std::io::Error`.
 #[derive(Debug, Clone, PartialEq)]
 pub enum PackError {
     BadMagic,
@@ -58,7 +58,7 @@ pub use semio_framework_io_base64::{base64_standard_decode, base64_standard_enco
 //#endregion 🔤️Base64
 
 //#region 🔖️Limits
-/// @emoji 🛡️ Corruption-hardening ceilings every decoder must validate against before
+/// 🛡️ Corruption-hardening ceilings every decoder must validate against before
 /// allocating — load-bearing for every other `pack_*` crate's fuzz/corruption tests.
 #[derive(Clone, Debug)]
 pub struct PackLimits {
@@ -78,18 +78,18 @@ impl Default for PackLimits {
 //#endregion 🔖️Limits
 
 //#region 🔖️Varint
-/// @emoji ➡️ Zigzag-encodes an `i64` into the `u64` domain: small magnitudes stay small
+/// ➡️ Zigzag-encodes an `i64` into the `u64` domain: small magnitudes stay small
 /// regardless of sign. See <https://protobuf.dev/programming-guides/encoding/#signed-ints>.
 fn zigzag_encode(value: i64) -> u64 {
     ((value << 1) ^ (value >> 63)) as u64
 }
 
-/// @emoji ⬅️ Inverse of `zigzag_encode`.
+/// ⬅️ Inverse of `zigzag_encode`.
 fn zigzag_decode(value: u64) -> i64 {
     ((value >> 1) as i64) ^ -((value & 1) as i64)
 }
 
-/// @emoji ✏️ Writes `value` as an unsigned LEB128 varint (minimal length, max 10 bytes).
+/// ✏️ Writes `value` as an unsigned LEB128 varint (minimal length, max 10 bytes).
 pub fn write_varint_u64(out: &mut Vec<u8>, value: u64) {
     let mut remaining = value;
     loop {
@@ -103,7 +103,7 @@ pub fn write_varint_u64(out: &mut Vec<u8>, value: u64) {
     }
 }
 
-/// @emoji 📖️ Reads an unsigned LEB128 varint starting at `*pos`, advancing `*pos` past it.
+/// 📖️ Reads an unsigned LEB128 varint starting at `*pos`, advancing `*pos` past it.
 /// Errors `Malformed` on a >10-byte (overlong) encoding, `Truncated` on running out of bytes.
 pub fn read_varint_u64(bytes: &[u8], pos: &mut usize) -> Result<u64, PackError> {
     let start = *pos;
@@ -128,18 +128,18 @@ pub fn read_varint_u64(bytes: &[u8], pos: &mut usize) -> Result<u64, PackError> 
     Err(PackError::Malformed { what: "varint", offset: start as u64, detail: "overlong varint (exceeds 10 bytes)".to_string() })
 }
 
-/// @emoji ✏️ Writes `value` as a zigzag-encoded signed varint.
+/// ✏️ Writes `value` as a zigzag-encoded signed varint.
 pub fn write_varint_i64(out: &mut Vec<u8>, value: i64) {
     write_varint_u64(out, zigzag_encode(value));
 }
 
-/// @emoji 📖️ Reads a zigzag-encoded signed varint starting at `*pos`.
+/// 📖️ Reads a zigzag-encoded signed varint starting at `*pos`.
 pub fn read_varint_i64(bytes: &[u8], pos: &mut usize) -> Result<i64, PackError> {
     let raw = read_varint_u64(bytes, pos)?;
     Ok(zigzag_decode(raw))
 }
 
-/// @emoji ✅️ True iff `bytes` is exactly one minimal-length varint (decoding then re-encoding
+/// ✅️ True iff `bytes` is exactly one minimal-length varint (decoding then re-encoding
 /// reproduces the input byte-for-byte, with nothing left over).
 pub fn is_minimal_varint(bytes: &[u8]) -> bool {
     let mut pos = 0usize;
@@ -157,7 +157,7 @@ pub fn is_minimal_varint(bytes: &[u8]) -> bool {
 //#endregion 🔖️Varint
 
 //#region 🔖️Bytes
-/// @emoji 👓️ A bounds-checked cursor over a borrowed byte slice — every read either succeeds
+/// 👓️ A bounds-checked cursor over a borrowed byte slice — every read either succeeds
 /// or returns `PackError` (`Truncated`), it never panics or reads out of bounds.
 pub struct ByteReader<'a> {
     bytes: &'a [u8],
@@ -230,7 +230,7 @@ impl<'a> ByteReader<'a> {
     }
 }
 
-/// @emoji ✍️ An append-only byte buffer with typed little-endian and varint writers.
+/// ✍️ An append-only byte buffer with typed little-endian and varint writers.
 #[derive(Default)]
 pub struct ByteWriter {
     buf: Vec<u8>,
@@ -281,10 +281,10 @@ impl ByteWriter {
 //#endregion 🔖️Bytes
 
 //#region 🔖️Crc
-/// @emoji 🌀️ CRC-32C (Castagnoli) polynomial, reflected form, as used by iSCSI/ext4/pack.
+/// 🌀️ CRC-32C (Castagnoli) polynomial, reflected form, as used by iSCSI/ext4/pack.
 const CRC32C_POLY: u32 = 0x82F6_3B78;
 
-/// @emoji 📐️ Builds the 256-entry CRC-32C lookup table at compile time — no runtime init, no
+/// 📐️ Builds the 256-entry CRC-32C lookup table at compile time — no runtime init, no
 /// dependency on the `crc`/`crc32c` crates.
 const fn build_crc32c_table() -> [u32; 256] {
     let mut table = [0u32; 256];
@@ -304,7 +304,7 @@ const fn build_crc32c_table() -> [u32; 256] {
 
 const CRC32C_TABLE: [u32; 256] = build_crc32c_table();
 
-/// @emoji 🧮️ Computes the CRC-32C (Castagnoli) checksum of `bytes`.
+/// 🧮️ Computes the CRC-32C (Castagnoli) checksum of `bytes`.
 pub fn crc32c(bytes: &[u8]) -> u32 {
     let mut crc: u32 = 0xFFFF_FFFF;
     for &byte in bytes {
@@ -314,7 +314,7 @@ pub fn crc32c(bytes: &[u8]) -> u32 {
     crc ^ 0xFFFF_FFFF
 }
 
-/// @emoji 🧮️ Retained CRC-32C state for fixed-page readers that must yield between input pages.
+/// 🧮️ Retained CRC-32C state for fixed-page readers that must yield between input pages.
 pub struct Crc32cCursor {
     crc: u32,
 }
@@ -344,7 +344,7 @@ impl Default for Crc32cCursor {
 //#endregion 🔖️Crc
 
 //#region 🔖️Codec
-/// @emoji 🗜️ A pluggable segment payload compressor/decompressor, identified by `CodecId`.
+/// 🗜️ A pluggable segment payload compressor/decompressor, identified by `CodecId`.
 /// `decompress` must validate `raw_len` against `limit` BEFORE allocating the output buffer.
 pub trait CompressionCodec {
     fn id(&self) -> CodecId;
@@ -354,7 +354,7 @@ pub trait CompressionCodec {
     fn decompress(&self, stored: &[u8], raw_len: u64, limit: u64) -> Result<Vec<u8>, PackError>;
 }
 
-/// @emoji 🚫️ The identity codec (`CodecId(0)`) — no compression, used as the default and as
+/// 🚫️ The identity codec (`CodecId(0)`) — no compression, used as the default and as
 /// the fallback when a segment's compressed flag bit is unset.
 pub struct NoCompression;
 
@@ -380,7 +380,7 @@ impl CompressionCodec for NoCompression {
 //#endregion 🔖️Codec
 
 //#region 🔖️Deflate
-/// @emoji 🗜️ Deflate compression (first-party `semio-framework-deflate`, RFC 1951 raw DEFLATE) as
+/// 🗜️ Deflate compression (first-party `semio-framework-deflate`, RFC 1951 raw DEFLATE) as
 /// a `CodecId(1)` `CompressionCodec`.
 #[cfg(feature = "deflate")]
 pub struct DeflateCodec;

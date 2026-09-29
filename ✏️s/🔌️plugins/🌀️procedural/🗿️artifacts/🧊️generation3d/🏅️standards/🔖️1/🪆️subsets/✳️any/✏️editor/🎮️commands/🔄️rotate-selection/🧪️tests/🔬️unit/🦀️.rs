@@ -27,7 +27,6 @@ async fn rotate_selection_composes_world_axes_and_preserves_the_result_selection
     assert!(snapshot.host_snapshot.synapses.iter().any(|wire| wire.from == ROTATE_ID && wire.to == "extrude__gumball_rotate__gumball_translate"));
     drop(snapshot);
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
-    eprintln!("[DEBUG] rotation gestures: world-axis composition and chained transform selection verified");
 }
 
 #[test]

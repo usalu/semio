@@ -17,7 +17,7 @@
 use super::{DslValue, Number};
 
 //#region 🔖️Traits
-/// @emoji 🔁️ Converts `self` into a [`DslValue`] tree. First-party analog of `serde::Serialize`.
+/// 🔁️ Converts `self` into a [`DslValue`] tree. First-party analog of `serde::Serialize`.
 pub trait ToValue {
     fn to_value(&self) -> DslValue;
 
@@ -37,7 +37,7 @@ pub trait ToValue {
     }
 }
 
-/// @emoji 🔁️ Hydrates `Self` from a [`DslValue`] tree. First-party analog of
+/// 🔁️ Hydrates `Self` from a [`DslValue`] tree. First-party analog of
 /// `serde::de::DeserializeOwned`.
 pub trait FromValue: Sized {
     fn from_value(value: DslValue) -> Result<Self, ValueError>;
@@ -58,7 +58,7 @@ pub trait FromValue: Sized {
 
 }
 
-/// @emoji ✏️ One structural edit over already-decoded value path segments.
+/// ✏️ One structural edit over already-decoded value path segments.
 #[derive(Clone, Debug, PartialEq)]
 pub enum ValueEdit {
     Set(DslValue),
@@ -68,7 +68,7 @@ pub enum ValueEdit {
     Remove,
 }
 
-/// @emoji 📐 Describes a value at a typed path without materializing its children.
+/// 📐 Describes a value at a typed path without materializing its children.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ValueShape {
     Null,
@@ -92,7 +92,7 @@ impl ValueShape {
     }
 }
 
-/// @emoji 🚨️ A decode failure, with a dotted field/index/variant path prefixed as the caller
+/// 🚨️ A decode failure, with a dotted field/index/variant path prefixed as the caller
 /// unwinds (see [`ValueError::under`]) so a nested failure reads as `"steps.3.title: ..."`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ValueError(pub String);
@@ -140,7 +140,7 @@ fn object_entry_index(entries: &[(String, DslValue)], key: &str) -> Result<Optio
 //#endregion 🔖️Traits
 
 //#region 🔖️Scalars
-/// @emoji 🔢️ Unsigned integer scalars — round-trip through [`Number::UInt`] so a wire-visible
+/// 🔢️ Unsigned integer scalars — round-trip through [`Number::UInt`] so a wire-visible
 /// `u64` field (e.g. `ttl_secs`) encodes as bare `3600`, never `3600.0`. See
 /// `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/
 /// 🔍️research/📓️dslvalue-integer-fidelity.md`.

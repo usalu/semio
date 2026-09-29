@@ -68,7 +68,6 @@ mod directory_durability_tests {
         assert_eq!(serde_json::json!(take_trace(&storage)), fixture["delete"]);
         writer.release().await.unwrap();
         storage.close().await.unwrap();
-        eprintln!("[DEBUG] mounted filesystem WAL created nested names, fsynced file and parent in neutral order, rejected duplicate creation without truncation, and retired segment before marker");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -95,7 +94,6 @@ mod directory_durability_tests {
         assert!(!marker.exists());
         writer.release().await.unwrap();
         storage.close().await.unwrap();
-        eprintln!("[DEBUG] seal fault retained a sealed marker through retry; deletion fault after parent fsync retained only the marker and never resurrected an active segment");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -118,7 +116,6 @@ mod directory_durability_tests {
             semio_framework_async::yield_once().await;
         }
         storage.close().await.unwrap();
-        eprintln!("[DEBUG] mounted snapshot replacement did not acknowledge an injected post-rename failure; explicit replacement completed only after parent fsync");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -149,6 +146,5 @@ mod directory_durability_tests {
             wal.close().await.unwrap();
             reopened.close().await.unwrap();
         }
-        eprintln!("[DEBUG] independent filesystem reopen repaired the parent name after both pre-barrier create failures and durably recreated a missing unacknowledged segment before header acknowledgment");
     }
 }

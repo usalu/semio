@@ -13,7 +13,7 @@ describe("🔁️ host effect invocation", () => {
   for (const row of fixture.cases) {
     test(`${row.action} re-enters the ${row.expect.kind} channel`, () => {
       const answered = hostEffectInvocationV1(scope, commandIds, row.action, row.args as Record<string, unknown> | undefined);
-      expect(answered.kind).toBe(row.expect.kind);
+      expect(answered.kind).toBe<string>(row.expect.kind);
       expect(JSON.parse(JSON.stringify(answered.invocation))).toEqual(row.expect.invocation);
     });
   }

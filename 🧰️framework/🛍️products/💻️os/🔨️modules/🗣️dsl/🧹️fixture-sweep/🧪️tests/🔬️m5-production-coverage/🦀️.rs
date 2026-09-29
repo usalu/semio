@@ -27,7 +27,6 @@ async fn all_discovered_grammars_report_uncovered_productions_for_their_shipped_
             continue;
         }
         let Some(fixture_text) = pilot_resolve::read_example_text(&facet.artifact_rel, facet.standard.as_deref(), ".dsl.semio").await else {
-            eprintln!("[DEBUG] soft-skip {}.fixture: no .dsl.semio under 📚️examples (🖼️assets-first walk)", facet.label);
             continue;
         };
         if soft_skip_missing(&format!("{}.fixture", facet.label), &fixture_text).await {
@@ -40,7 +39,7 @@ async fn all_discovered_grammars_report_uncovered_productions_for_their_shipped_
         let body = dsl_body_from_host_snapshot(&fixture_text).await;
         let Ok(uncovered) = recognizer.uncovered_productions(&body) else { continue };
         if !uncovered.is_empty() {
-            eprintln!("[DEBUG] {}: uncovered productions ({}) = {}", facet.label, uncovered.len(), uncovered.join(", "));
+            eprintln!("{}: uncovered productions ({}) = {}", facet.label, uncovered.len(), uncovered.join(", "));
         }
         checked += 1;
         // Soft assertion for now (matches the pre-P2-M3 design): recognition must succeed;

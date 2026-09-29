@@ -10,10 +10,10 @@ import { interactiveControlTransitionClass } from "../🖱️interaction-present
 // #endregion 🔌️Adapters
 
 // #region 🧾️FormControlPresentation
-/** @emoji 🎯️ Focus and open presentation for form controls. */
+/** 🎯️ Focus and open presentation for form controls. */
 export const formControlFocusBorderClass = cn("outline-none", interactiveControlTransitionClass, "focus-visible:border-accent data-[state=open]:border-accent aria-invalid:border-destructive focus-visible:ring-0 shadow-none");
 
-/** @emoji 🚫️ Native browser affordances disabled on editable UI controls. */
+/** 🚫️ Native browser affordances disabled on editable UI controls. */
 export const uiFormControlBrowserDefaultProps = {
   autoComplete: "off",
   autoCorrect: "off",

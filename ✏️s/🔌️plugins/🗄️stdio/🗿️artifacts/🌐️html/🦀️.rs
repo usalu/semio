@@ -26,15 +26,24 @@ pub const HTML_ARTIFACT_SCHEMA_ID: &str = "s.stdio.html";
 pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
 
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
-    semio_s_artifact_stdio_contract::definition_from_schema(ARTIFACT_DEFINITION_SCHEMA)
+    let factories = native_codecs();
+    let executables = semio_s_artifact_stdio_contract::native_codec_executables(ARTIFACT_DEFINITION_SCHEMA, &factories)?;
+    semio_s_artifact_stdio_contract::definition_from_schema_with_executables(ARTIFACT_DEFINITION_SCHEMA, executables)
 }
 
 pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
     semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
 }
 
+fn native_codec() -> store::ArtifactCodec {
+    let mut codec = store::ArtifactCodec::of::<HtmlSnapshot, HtmlMutation>(STDIO_HTML_DOCUMENT_SCHEMA);
+    codec.extension = "html";
+    codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"));
+    codec
+}
+
 pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactory> {
-    Vec::new()
+    vec![semio_s_artifact_stdio_contract::NativeCodecFactory { id: "stdio.native.html.v1", artifact: "html", kind: artifact_kind, codec: native_codec }]
 }
 
 pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
@@ -54,7 +63,15 @@ pub const HTML_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.html", stand
 /// 🗂️ This artifact's `ArtifactKindSpec`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
-    semio_s_artifact_stdio_contract::definition_only_assembly("html", definition()?)
+    semio_s_artifact_stdio_contract::runtime_assembly("html", definition()?, declaration)
+}
+
+/// 🧩️ The executable facets the hub-native document codec needs: the artifact schema, the declared representations
+/// and the `stdio.html` document codec the linked `stdio.native.html.v1` receipt instantiates.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    let formats = formats()?;
+    semio_framework_plugin::ArtifactDeclaration::builder(definition).schema(standards::v5::subsets::any::schema::html_artifact_schema_descriptor()).formats(formats).document_codec_bare::<HtmlSnapshot, HtmlMutation>(STDIO_HTML_DOCUMENT_SCHEMA).try_build()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

@@ -42,7 +42,7 @@ test("registry imported data follows the schema-first role and strict JSON gramm
   for (const row of dataVector.cases) {
     for (const path of [row.path, row.path.replaceAll("/", "\\")]) {
       if (row.error) expect(() => dependencies(row.source, path, row.role), row.id).toThrow(row.error);
-      else expect(dependencies(row.source, path, row.role), row.id).toEqual(row.expected);
+      else expect(dependencies(row.source, path, row.role), row.id).toEqual<typeof row.expected>(row.expected);
     }
     if (row.path.endsWith(".json") && row.role === "static-import") {
       const errors: import("jsonc-parser").ParseError[] = [];
@@ -79,9 +79,9 @@ test("registry imported data is retained in the production compiler closure with
 test("registry imported data closure matches Bun's independent in-memory compiler inputs", async () => {
   const files = new Map(dataVector.graph.files.map(({ path, content }) => ["/" + path, content])), loaded: string[] = [];
   const result = await Bun.build({
-    entrypoints: dataVector.graph.entries.map((path) => "/" + path), target: "bun", write: false,
+    entrypoints: dataVector.graph.entries.map((path) => "/" + path), target: "bun",
     plugins: [{ name: "authored-registry-data-oracle", setup(build) {
-      build.onResolve({ filter: /.*/u }, (args) => ({ path: args.kind === "entry-point" ? args.path : posix.resolve(posix.dirname(args.importer), args.path), namespace: "authored-registry-data" }));
+      build.onResolve({ filter: /.*/u }, (args) => ({ path: args.kind === "entry-point-build" ? args.path : posix.resolve(posix.dirname(args.importer), args.path), namespace: "authored-registry-data" }));
       build.onLoad({ filter: /.*/u, namespace: "authored-registry-data" }, (args) => {
         loaded.push(args.path);
         const contents = files.get(args.path);

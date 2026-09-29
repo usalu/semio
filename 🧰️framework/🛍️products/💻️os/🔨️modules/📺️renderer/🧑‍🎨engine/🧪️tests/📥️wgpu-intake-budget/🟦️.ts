@@ -5,17 +5,17 @@ import { RETAINED_UI_INTAKE_SLICE_STEPS, RETAINED_UI_INTAKE_STEPS_PER_NODE, reta
 import { WGPU_UI_INTAKE_STEP_CEILING, WgpuUiIntakeCursor } from "../../🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts";
 import intakeFixture from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧫️fixtures/📥️intake/🔣️.json";
 
-/** @emoji 📏️ The fixed TOTAL budget the wgpu target applied before this suite existed. Kept as a literal
+/** 📏️ The fixed TOTAL budget the wgpu target applied before this suite existed. Kept as a literal
  * so the regression it caused stays legible: generation3d's first document faulted against it at
  * `shell-boot` with `wgpu-ui.intake-budget-exhausted` (`📓️wgpu-intake-budget-2026-09-10.md`). */
 const RETIRED_FIXED_WGPU_BUDGET = 4_096;
 
-/** @emoji 🧱️ One retained text node, the shape a window body's paged scene lanes are built from. */
+/** 🧱️ One retained text node, the shape a window body's paged scene lanes are built from. */
 function textNode(id: number, bytes: number): object {
   return { id, key: `n${id}`, component: { type: "text", value: "x".repeat(bytes), emphasize: null, dataAttributes: null }, children: [] };
 }
 
-/** @emoji 📦️ A retained surface patch carrying `totalBytes` of text across `leafBytes`-sized nodes,
+/** 📦️ A retained surface patch carrying `totalBytes` of text across `leafBytes`-sized nodes,
  * measured through the SAME `pack` wire encoder the guest publishes with — the intake advances one
  * phase per wire element (a LEB128 byte, a text body, an attach), so the encoded size is the honest
  * lower bound on the phases the patch demands. */

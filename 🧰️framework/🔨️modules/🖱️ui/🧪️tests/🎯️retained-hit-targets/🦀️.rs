@@ -314,7 +314,6 @@ fn every_fixture_case_registers_resolves_and_orders_on_the_live_registry() {
             if let Some(want) = probe["wheelPropagatesToScene"].as_bool() {
                 assert_eq!(wheel_propagates(hit), want, "{name}: ({x}, {y}) wheel propagation");
             }
-            println!("[DEBUG] retained-hit-targets probe {name} ({x}, {y}) -> {:?}", hit.control_id);
         }
 
         // 🔢️ The ordering rule: the chrome registers the window's own region before the body paints,
@@ -326,7 +325,7 @@ fn every_fixture_case_registers_resolves_and_orders_on_the_live_registry() {
             assert_eq!(hit.control_id.as_deref(), Some(control_id.as_str()), "{name}: {control_id} was outranked at its own centre");
             assert_eq!(kind_name(hit.kind), *kind, "{name}: {control_id} resolved another entry's kind at its own centre");
         }
-        println!("[DEBUG] retained-hit-targets case {name}: {} entries pinned, {} points replayed", published.len(), case["probes"].as_array().map_or(0, Vec::len));
+        println!("retained-hit-targets case {name}: {} entries pinned, {} points replayed", published.len(), case["probes"].as_array().map_or(0, Vec::len));
     }
 }
 
@@ -342,7 +341,6 @@ fn the_defect_point_no_longer_answers_the_window() {
     assert_ne!(hit.control_id.as_deref(), Some(window_id.as_str()), "the window's own ScrollRegion answered the row point again");
     assert_eq!(hit.kind, HitKind::TreeItem);
     assert_eq!(hit.event.as_ref().map(|action| action.action.as_str()), Some("addGeneration"));
-    println!("[DEBUG] retained-hit-targets: (160.696, 138) -> {:?} / addGeneration", hit.control_id);
 }
 
 /// 🎯️ The oracle's own registry for one case, loaded straight from its declared entries instead of
@@ -461,5 +459,4 @@ fn a_frame_build_never_empties_what_the_pointer_reads() {
         single = targets.clone();
     }
     assert!(single_missed >= expected["singleBufferedMissedAtLeast"].as_u64().expect("single missed") as usize, "the single-buffer counter-model must miss, or this law proves nothing");
-    println!("[DEBUG] retained-hit-targets frame cycle: {presses} presses over {} entries — double-buffered resolved {resolved} missed {missed}; single-buffered resolved {single_resolved} missed {single_missed}", targets.len());
 }

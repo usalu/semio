@@ -116,7 +116,7 @@ test("mutation ticket role routing reaches only the mocked N admission boundary"
   ].join("\n");
   const child = Bun.spawnSync([process.execPath, "-e", source], { cwd: root, stdout: "pipe", stderr: "pipe", timeout: 10_000 });
   const stdout = new TextDecoder().decode(child.stdout), stderr = new TextDecoder().decode(child.stderr);
-  expect(child.signal ?? null).toBeNull();
+  expect(child.signalCode ?? null).toBeNull();
   expect(child.exitCode).toBe(0);
   const line = stdout.split("\n").find((value) => value.startsWith(marker));
   expect(line).toBeDefined();

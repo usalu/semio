@@ -11,12 +11,12 @@ import { cn, type ClassNameInput } from "../🏷️class-name-composition/🟦�
 // #region 🧬️StyleVariantSchema
 type StyleVariantPrimitive = string | number | boolean;
 
-/** @emoji 🧬️ Declares named variants and their finite CSS-class choices. */
+/** 🧬️ Declares named variants and their finite CSS-class choices. */
 export type StyleVariantSchema = Readonly<Record<string, Readonly<Record<string, ClassNameInput>>>>;
 
 type StyleVariantLiteral<Key extends string> = Key extends "true" | "false" ? boolean : Key;
 
-/** @emoji 🎚️ Selects zero or one choice from each declared style variant. */
+/** 🎚️ Selects zero or one choice from each declared style variant. */
 export type StyleVariantSelection<Schema extends StyleVariantSchema> = {
   readonly [Name in keyof Schema]?: StyleVariantLiteral<Extract<keyof Schema[Name], string>> | null;
 };
@@ -27,13 +27,13 @@ type StyleVariantCondition<Schema extends StyleVariantSchema> = {
     | readonly StyleVariantLiteral<Extract<keyof Schema[Name], string>>[];
 };
 
-/** @emoji 🧩️ Declares classes selected by a conjunction of variant choices. */
+/** 🧩️ Declares classes selected by a conjunction of variant choices. */
 export type StyleCompoundVariant<Schema extends StyleVariantSchema> = StyleVariantCondition<Schema> & {
   readonly class?: ClassNameInput;
   readonly className?: ClassNameInput;
 };
 
-/** @emoji 📜️ Defines defaults and compound rules for one finite variant schema. */
+/** 📜️ Defines defaults and compound rules for one finite variant schema. */
 export interface StyleVariantConfiguration<Schema extends StyleVariantSchema> {
   readonly variants: Schema;
   readonly defaultVariants?: StyleVariantSelection<Schema>;
@@ -45,10 +45,10 @@ type StyleVariantInvocation<Schema extends StyleVariantSchema> = StyleVariantSel
   readonly className?: ClassNameInput;
 };
 
-/** @emoji 🧵️ Compiles a typed variant selection into one owned class-name string. */
+/** 🧵️ Compiles a typed variant selection into one owned class-name string. */
 export type StyleVariantCompiler<Schema extends StyleVariantSchema> = (selection?: StyleVariantInvocation<Schema>) => string;
 
-/** @emoji 🏷️ Extracts the public variant selection accepted by an owned compiler. */
+/** 🏷️ Extracts the public variant selection accepted by an owned compiler. */
 export type StyleVariantProps<Compiler> = Compiler extends StyleVariantCompiler<infer Schema> ? StyleVariantSelection<Schema> : never;
 // #endregion 🧬️StyleVariantSchema
 
@@ -57,7 +57,7 @@ function styleVariantValueEquals(actual: StyleVariantPrimitive | null | undefine
   return Array.isArray(expected) ? expected.some((candidate) => candidate === actual) : expected === actual;
 }
 
-/** @emoji 🪡️ Compiles base, selected, default, compound, and caller classes in stable schema order. */
+/** 🪡️ Compiles base, selected, default, compound, and caller classes in stable schema order. */
 export function styleVariants<const Schema extends StyleVariantSchema = {}>(
   base?: ClassNameInput,
   configuration?: StyleVariantConfiguration<Schema>,

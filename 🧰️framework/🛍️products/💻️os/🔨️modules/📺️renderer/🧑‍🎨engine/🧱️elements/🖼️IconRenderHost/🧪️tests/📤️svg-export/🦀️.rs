@@ -141,7 +141,6 @@ fn svg_export_matches_neutral_three_and_sharp_fixture_and_retires_before_deliver
     assert!(markup.contains("semio-icon-ellipse-clip"));
     assert!(markup.contains("<rect x=\"-48\" y=\"-32\" width=\"96\" height=\"64\" fill=\"rgb(16,32,48)\"/>"));
     assert_eq!(markup.matches("<path ").count(), fixture["expected"]["pathCount"].as_u64().unwrap() as usize);
-    println!("[DEBUG] icon SVG neutral receipt steps={steps} bytes={} paths={}", markup.len(), markup.matches("<path ").count());
     export.cancel();
     while !export.close_step() {}
     assert!(export.terminal_is_empty());

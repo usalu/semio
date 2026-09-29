@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/🐚️Shell/component.tsx
-/** @emoji 🐚️ `🐚️Shell` — the core shell state/types module: boot option/lock/default types, the
+/** 🐚️ `🐚️Shell` — the core shell state/types module: boot option/lock/default types, the
  * consolidated `ShellState` reducer (`useReducer` store replacing ~38 independent `useState` calls,
  * grouped by concern into slices), `bootFrameworkOs` (the pre-mount entry point), and the
  * `ShellFaultBoundary` scoped React error boundary. */
@@ -1350,7 +1350,7 @@ type ShellFaultBoundaryProps = {
 
 type ShellFaultBoundaryState = { readonly hasFault: boolean; readonly message: string; readonly fault: Fault | null };
 
-/** @emoji 🧯️ Scoped React fault boundary — logs `[DEBUG] shell fault` and renders a localized fallback with optional retry. */
+/** 🧯️ Scoped React fault boundary — logs `[TRACE] shell fault` and renders a localized fallback with optional retry. */
 export class ShellFaultBoundary extends Component<ShellFaultBoundaryProps, ShellFaultBoundaryState> {
   constructor(props: ShellFaultBoundaryProps) {
     super(props);

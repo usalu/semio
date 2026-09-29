@@ -15,10 +15,14 @@ pub mod opening_config {
         mod component;
         pub use component::*;
 
+        #[path = "🧬️schema/🧬️mutations/📥️admit-local-document/🦀️.rs"]
+        pub mod admit_local_document;
         #[path = "🧬️schema/🧬️mutations/🛡️change-merge-policy/🦀️.rs"]
         pub mod change_merge_policy;
         #[path = "🧬️schema/🧬️mutations/🧹clear-default-app/🦀️.rs"]
         pub mod clear_default_app;
+        #[path = "🧬️schema/🧬️mutations/📤️retire-local-document/🦀️.rs"]
+        pub mod retire_local_document;
         #[path = "🧬️schema/🧬️mutations/📌️set-default-app/🦀️.rs"]
         pub mod set_default_app;
         #[path = "🧬️schema/🧬️mutations/🪪️sign-in/🦀️.rs"]

@@ -1,0 +1,163 @@
+    pub(crate) const TYPED_OPERATION_FAULT_BYTES: usize = 256;
+    /// 🏷️ The longest frozen fault code a typed-operation fault carries (`transaction.instance-busy`,
+    /// `remodeling.qc-report.missing`, …) — a longer or empty code is no frozen code and reads as
+    /// [`TYPED_OPERATION_UNTYPED_FAULT_CODE`].
+    pub(crate) const TYPED_OPERATION_FAULT_CODE_BYTES: usize = 64;
+    /// 🏷️ The code of a job fault whose detail is no [`TypedOperationFault`] record — an engine's or a framework
+    /// job's own text, never an app refusal (every app refusal crosses as a record).
+    pub const TYPED_OPERATION_UNTYPED_FAULT_CODE: &str = "interactive-job.app-owned-output";
+    /// 🧯️ The `schema` every [`TypedOperationFault`] record names — the `$id` of `🧬️schema/🧯️typed-operation-fault/🔣️.json`.
+    pub const TYPED_OPERATION_FAULT_SCHEMA: &str = "semio.typed-operation-fault.v1";
+
+    /// 🧯️ One refusal as it crosses the interactive-job boundary, as a TYPED RECORD: the job fault detail an app-owned
+    /// job hands the framework and the Fault-lane page a typed operation publishes both carry it, and every reader
+    /// decodes it by type ([`Self::decode`]) — never by splitting text. `code` is the frozen code a caller branches on
+    /// and a host renders its declared text by (the app's `AppDefinition.faults`, the framework fault catalog),
+    /// `parameters` the values that text shows, `origin` who refused, `message` the refuser's own detail. The
+    /// `FaultCode` values the contract freezes are the whole point of a refusal: erasing them at the publication
+    /// boundary left every migrated dispatch answering one generic code, and flattening them into the message text
+    /// (`retained command reducer rejected operation: <code> <message>`) left every reader parsing prose.
+    ///
+    /// Schema `🧬️schema/🧯️typed-operation-fault/🔣️.json`; cases `🧫️fixtures/🧯️typed-operation-fault.json` (Rust law
+    /// `app::typed_operation_fault_tests`, AJV twin `🧪️tests/🧯️typed-operation-fault/🟦️.ts`); host decoder
+    /// `decodeTypedOperationFaultV1` (`🎭️actor/🖼️wire-turn/🟦️.ts`).
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+    #[value(rename_all = "camelCase")]
+    pub struct TypedOperationFault {
+        pub schema: String,
+        pub code: String,
+        pub origin: FaultOrigin,
+        pub message: String,
+        pub parameters: Vec<semio_framework::FaultParameter>,
+    }
+
+    impl TypedOperationFault {
+        /// 🧯️ The record of one `Fault`: its code when that is a frozen code (non-empty, at most
+        /// [`TYPED_OPERATION_FAULT_CODE_BYTES`]) else [`TYPED_OPERATION_UNTYPED_FAULT_CODE`], its origin, its
+        /// message clipped to [`TYPED_OPERATION_FAULT_BYTES`] on a char boundary, and its parameters whose names are
+        /// well-formed (`Fault::with_parameter` already bounds their number and values).
+        pub fn of_fault(fault: &Fault) -> Self {
+            let code = fault.code.0.as_str();
+            let code = if code.is_empty() || code.len() > TYPED_OPERATION_FAULT_CODE_BYTES { TYPED_OPERATION_UNTYPED_FAULT_CODE } else { code };
+            let mut end = fault.message.len().min(TYPED_OPERATION_FAULT_BYTES);
+            while !fault.message.is_char_boundary(end) {
+                end -= 1;
+            }
+            let parameters = fault.parameters.as_slice().iter().filter(|parameter| typed_operation_fault_parameter_bounded(parameter)).cloned().collect();
+            Self { schema: TYPED_OPERATION_FAULT_SCHEMA.to_string(), code: code.to_string(), origin: fault.origin, message: fault.message[..end].to_string(), parameters }
+        }
+
+        /// 📦️ The record's wire bytes: its canonical value encoding as JSON, the codec every typed-operation page
+        /// lane uses.
+        pub fn encode(&self) -> Vec<u8> {
+            protocol::json::to_json_string(self).into_bytes()
+        }
+
+        /// 🔎️ Decodes one record by type; `None` for bytes that are no `semio.typed-operation-fault.v1` record with a
+        /// frozen code, a bounded message and at most `FAULT_PARAMETERS_MAXIMUM` well-formed, bounded parameters.
+        pub fn decode(bytes: &[u8]) -> Option<Self> {
+            let record: Self = protocol::json::from_json_str(std::str::from_utf8(bytes).ok()?).ok()?;
+            let bounded = !record.code.is_empty() && record.code.len() <= TYPED_OPERATION_FAULT_CODE_BYTES && record.message.len() <= TYPED_OPERATION_FAULT_BYTES && record.parameters.len() <= semio_framework::FAULT_PARAMETERS_MAXIMUM && record.parameters.iter().all(typed_operation_fault_parameter_bounded);
+            (record.schema == TYPED_OPERATION_FAULT_SCHEMA && bounded).then_some(record)
+        }
+
+        /// 🧯️ The `Fault` a caller is answered with — the record's own code, origin, message and parameters.
+        pub fn into_fault(self) -> Fault {
+            let mut fault = Fault::new(self.origin, FaultCode::received(self.code), self.message);
+            fault.parameters = self.parameters.into_iter().collect();
+            fault
+        }
+    }
+
+    /// 📏️ A parameter a record carries: a `[a-z][A-Za-z0-9]*` name within `FAULT_PARAMETER_NAME_BYTES`, a value within
+    /// `FAULT_PARAMETER_VALUE_BYTES`.
+    fn typed_operation_fault_parameter_bounded(parameter: &semio_framework::FaultParameter) -> bool {
+        let mut name = parameter.name.chars();
+        name.next().is_some_and(|first| first.is_ascii_lowercase()) && name.all(|character| character.is_ascii_alphanumeric()) && parameter.name.len() <= semio_framework::FAULT_PARAMETER_NAME_BYTES && parameter.value.len() <= semio_framework::FAULT_PARAMETER_VALUE_BYTES
+    }
+
+    #[cfg(test)]
+    include!("🧪️tests/🧯️typed-operation-fault/🦀️.rs");
+
+    /// 🧯️ One refusal retained with a fixed footprint until its Fault-lane page is published: the message bytes
+    /// ([`Self::as_bytes`], what the language-neutral fault-bound oracle prices), the frozen code, the origin and the
+    /// parameters.
+    #[derive(Clone)]
+    struct ArtifactBoundedToolFault {
+        bytes: [u8; TYPED_OPERATION_FAULT_BYTES],
+        len: usize,
+        code: [u8; TYPED_OPERATION_FAULT_CODE_BYTES],
+        code_len: usize,
+        origin: FaultOrigin,
+        parameters: [BoundedFaultParameter; semio_framework::FAULT_PARAMETERS_MAXIMUM],
+        parameter_count: usize,
+    }
+
+    /// 🧩️ One retained parameter: name and value bytes within their bounds.
+    #[derive(Clone, Copy)]
+    struct BoundedFaultParameter {
+        name: [u8; semio_framework::FAULT_PARAMETER_NAME_BYTES],
+        name_len: usize,
+        value: [u8; semio_framework::FAULT_PARAMETER_VALUE_BYTES],
+        value_len: usize,
+    }
+
+    impl ArtifactBoundedToolFault {
+        /// 🧾️ Retains a terminal job fault's detail so the publication that follows a cancelled lease reports the real
+        /// cause instead of a generic cancellation: a [`TypedOperationFault`] record keeps its code, origin and message;
+        /// any other detail is an untyped job's own text under [`TYPED_OPERATION_UNTYPED_FAULT_CODE`].
+        fn from_payload(detail: &semio_framework_job::RetainedJobPayload) -> Self {
+            let mut bytes = Vec::new();
+            for page in 0..detail.page_count() {
+                let Some(page) = detail.page(page) else { break };
+                bytes.extend_from_slice(page);
+                if bytes.len() > TYPED_OPERATION_RESULT_PAGE_BYTES {
+                    break;
+                }
+            }
+            match TypedOperationFault::decode(&bytes) {
+                Some(record) => Self::from_fault(&record.into_fault()),
+                None => Self::from_fault(&Fault::new(FaultOrigin::Framework, FaultCode::new(TYPED_OPERATION_UNTYPED_FAULT_CODE), String::from_utf8_lossy(&bytes).into_owned())),
+            }
+        }
+
+        fn from_fault(fault: &Fault) -> Self {
+            let record = TypedOperationFault::of_fault(fault);
+            let empty = BoundedFaultParameter { name: [0; semio_framework::FAULT_PARAMETER_NAME_BYTES], name_len: 0, value: [0; semio_framework::FAULT_PARAMETER_VALUE_BYTES], value_len: 0 };
+            let mut bounded = Self { bytes: [0; TYPED_OPERATION_FAULT_BYTES], len: record.message.len(), code: [0; TYPED_OPERATION_FAULT_CODE_BYTES], code_len: record.code.len(), origin: record.origin, parameters: [empty; semio_framework::FAULT_PARAMETERS_MAXIMUM], parameter_count: record.parameters.len() };
+            bounded.bytes[..bounded.len].copy_from_slice(record.message.as_bytes());
+            bounded.code[..bounded.code_len].copy_from_slice(record.code.as_bytes());
+            for (slot, parameter) in bounded.parameters.iter_mut().zip(&record.parameters) {
+                slot.name_len = parameter.name.len();
+                slot.name[..slot.name_len].copy_from_slice(parameter.name.as_bytes());
+                slot.value_len = parameter.value.len();
+                slot.value[..slot.value_len].copy_from_slice(parameter.value.as_bytes());
+            }
+            bounded
+        }
+
+        /// 🧯️ The typed record this refusal publishes on the Fault lane.
+        fn record(&self) -> TypedOperationFault {
+            TypedOperationFault {
+                schema: TYPED_OPERATION_FAULT_SCHEMA.to_string(),
+                code: String::from_utf8_lossy(&self.code[..self.code_len]).into_owned(),
+                origin: self.origin,
+                message: String::from_utf8_lossy(&self.bytes[..self.len]).into_owned(),
+                parameters: self.parameters[..self.parameter_count].iter().map(|slot| semio_framework::FaultParameter { name: String::from_utf8_lossy(&slot.name[..slot.name_len]).into_owned(), value: String::from_utf8_lossy(&slot.value[..slot.value_len]).into_owned() }).collect(),
+            }
+        }
+
+        /// 📬️ This refusal's Fault-lane page: the typed record, never framed text.
+        fn page(&self, token: TypedOperationResultToken) -> Result<TypedOperationResultPage, Fault> {
+            TypedOperationResultPage::try_serialize(token, TypedOperationResultLane::Fault, &self.record())
+        }
+
+        fn into_fault(self) -> Fault {
+            self.record().into_fault()
+        }
+
+        fn as_bytes(&self) -> &[u8] {
+            &self.bytes[..self.len]
+        }
+    }
+

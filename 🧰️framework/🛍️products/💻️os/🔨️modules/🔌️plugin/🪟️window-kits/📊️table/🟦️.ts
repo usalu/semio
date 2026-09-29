@@ -1,6 +1,6 @@
 // #region 📊️TableWindowKit
 /// <reference types="vitest/importMeta" />
-/** @emoji 📊️ `@semio-tech/plugin-window-kits` — TS twin of Rust `TableWindowKit` (`framework.window.table`). */
+/** 📊️ `@semio-tech/plugin-window-kits` — TS twin of Rust `TableWindowKit` (`framework.window.table`). */
 import type { ActionDescriptor, TableScene, UiComponentSceneNode } from "@semio-tech/framework";
 
 /** 🆔️ Frozen kind id — twin of Rust `TableWindowKit::KIND_ID`. */

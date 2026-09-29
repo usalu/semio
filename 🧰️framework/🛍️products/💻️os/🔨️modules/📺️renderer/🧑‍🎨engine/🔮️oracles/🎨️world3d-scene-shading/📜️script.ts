@@ -1321,7 +1321,7 @@ export async function runReferenceVisualOracle(repoRoot: string, outputDirectory
         ].join("\n"),
       );
     }
-    console.log("[DEBUG] Recorded " + result.rows.length + " actual " + (webgpu ? "WebGPU" : "Three") + " reference visual pixel samples");
+    console.log("Recorded " + result.rows.length + " actual " + (webgpu ? "WebGPU" : "Three") + " reference visual pixel samples");
     if (
       fixture.pixelOracle.status === "recorded" &&
       differences.some((row: any) => row.delta === null || row.delta.some((value: number, index: number) => Math.abs(value) > (index < 3 ? fixture.pixelOracle.maximumRgbError : 0)))
@@ -1563,7 +1563,7 @@ async function runGridVisualOracle(repoRoot: string, outputDirectory: string | u
       await writeFile(join(output, "pixels.json"), JSON.stringify(result, null, 2));
       await writeFile(join(output, "report.md"), ["# " + (webgpu ? "Production WGSL" : "Installed Drei") + " Grid Pixels", "", "| Case | Actual RGBA8 | Drei RGBA8 | Delta |", "| --- | --- | --- | --- |", ...differences.map((row: any) => "| " + row.id + " | " + row.actual.join(", ") + " | " + (row.expected?.join(", ") ?? "Unrecorded") + " | " + (row.delta?.join(", ") ?? "Unrecorded") + " |"), ""].join("\n"));
     }
-    console.log("[DEBUG] Recorded " + result.rows.length + " actual " + (webgpu ? "production WGSL" : "installed Drei") + " grid pixel samples");
+    console.log("Recorded " + result.rows.length + " actual " + (webgpu ? "production WGSL" : "installed Drei") + " grid pixel samples");
     if (fixture.pixelOracle.status === "recorded" && differences.some((row: any) => row.delta === null || row.delta.some((value: number, index: number) => Math.abs(value) > (index < 3 ? fixture.pixelOracle.maximumRgbError : 0)))) throw new Error("Grid pixels differ from the recorded installed-Drei fixture; see persisted report");
   } finally {
     await browser.close();
@@ -1698,7 +1698,7 @@ export async function runSceneShadingOracle(
           "",
         ].join("\n"),
       );
-    console.log("[DEBUG] Recorded " + result.rows.length + " actual " + command + " pixel samples");
+    console.log("Recorded " + result.rows.length + " actual " + command + " pixel samples");
     if (
       oracle.status === "recorded" &&
       differences.some((row: any) => row.delta === null || row.delta.some((value: number, index: number) => Math.abs(value) > (webgpu && index < 3 ? oracle.profile.maximumRgbError : 0)))

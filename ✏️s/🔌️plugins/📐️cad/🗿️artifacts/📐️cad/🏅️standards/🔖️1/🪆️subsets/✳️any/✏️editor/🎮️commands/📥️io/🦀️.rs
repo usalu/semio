@@ -106,11 +106,8 @@ pub mod save_current {
         };
         let pane = cad_pane_from_view(ctx.view_state.as_ref().ok_or_else(|| Fault::from("cad.window.invalid: current export has no host view context"))?)?;
         let view = CadPlayView { document: document.clone(), runtime: runtime_of(cfg), interaction: CadInteractionSnapshot::default() };
-        let effect = match export_solid_for_pane(&view, pane, format) {
-            Some(export) => cad_solid_export_effect(export),
-            None => cad_spatial_export_effect(&export_spatial_json(&view, "current", Some(pane))?, "cad.current.spatial.dsl"),
-        };
-        Ok(Emit::effect(effect))
+        let export = export_solid_for_pane(&view, pane, format).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("cad.export.empty-pane"), "The current pane has no solid to export."))?;
+        Ok(Emit::effect(cad_solid_export_effect(export)))
     }
 }
 //#endregion 🔖️SaveCurrent

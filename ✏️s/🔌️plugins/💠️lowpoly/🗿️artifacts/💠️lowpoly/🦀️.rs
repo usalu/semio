@@ -29,7 +29,7 @@ pub const LOWPOLY_DOCUMENT_SCHEMA: &str = "lowpoly.document";
 
 pub use crate::schema::{LOWPOLY_DEFAULT_EXAMPLE_ID, LOWPOLY_DEFAULT_EXAMPLE_LABEL};
 
-/// @emoji 🎨️ An opaque-white RGBA buffer sized for one paint layer.
+/// 🎨️ An opaque-white RGBA buffer sized for one paint layer.
 pub fn empty_paint_pixels() -> Vec<u8> {
     let mut pixels = vec![0u8; LOWPOLY_PAINT_TEXTURE_SIZE * LOWPOLY_PAINT_TEXTURE_SIZE * 4];
     for chunk in pixels.chunks_mut(4) {
@@ -59,7 +59,7 @@ impl Default for LowpolyTransform {
     }
 }
 
-/// @emoji 🖌️ One paint layer of an object: compositing metadata plus its persisted RGBA pixel buffer.
+/// 🖌️ One paint layer of an object: compositing metadata plus its persisted RGBA pixel buffer.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct LowpolyPaintLayer {
@@ -176,13 +176,13 @@ impl Identified<String> for LowpolyObject {
     }
 }
 
-/// @emoji 📸️ Persisted lowpoly snapshot: schema plus mesh objects (geometry, transform, shading,
+/// 📸️ Persisted lowpoly snapshot: schema plus mesh objects (geometry, transform, shading,
 /// paint layers). Non-persistent fields live on [`schema::LowpolyArtifact`](crate::schema::LowpolyArtifact).
 pub use crate::schema::snapshot::LowpolySnapshot;
 
 pub use crate::snapshot::schema::snapshot_from_mesh_json;
 
-/// @emoji 🎯️ Ephemeral component selection — never part of the document, threaded into the compute
+/// 🎯️ Ephemeral component selection — never part of the document, threaded into the compute
 /// session so mesh operations know their target vertices/edges/faces.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
@@ -355,7 +355,7 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         dimension: "3d".into(),
         media_capability: semio_framework_plugin::OsMediaCapability::MeshOnly,
         media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Mesh },
-        schema: "lowpoly.fixture".into(),
+        schema: LOWPOLY_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
         export_stdio_kinds: vec!["stdio.dwg".into(), "stdio.gltf".into(), "stdio.json".into(), "stdio.las".into(), "stdio.obj".into(), "stdio.ply".into(), "stdio.png".into(), "stdio.stl".into()],

@@ -840,9 +840,9 @@ where
     P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<M> + crate::os_schema_composition::ArtifactCompositionFields,
     M: Clone + ToValue + FromValue + Mutation<P>,
 {
+    /// 💣️ A panic already unwinding through a live open must not become a double panic that aborts the
+    /// whole process; the drop bomb still fires for every non-unwinding drop.
     fn drop(&mut self) {
-        // A panic already unwinding through a live open must not become a double panic that aborts the
-        // whole process; the drop bomb still fires for every non-unwinding drop.
         assert!(
             std::thread::panicking() || self.ownership_is_empty(),
             "member-open operation dropped before exact member handoff or bounded close"

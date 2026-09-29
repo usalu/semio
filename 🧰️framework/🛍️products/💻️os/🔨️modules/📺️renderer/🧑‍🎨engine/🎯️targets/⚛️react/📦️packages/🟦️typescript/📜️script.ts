@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** @emoji 🎨️ `@semio-tech/framework-renderer-react` task router. */
+/** 🎨️ `@semio-tech/framework-renderer-react` task router. */
 import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
 import { join } from "node:path";

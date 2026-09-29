@@ -29,7 +29,7 @@ const BLOCK5D_STORY_CONTROLLER_ID = "block5d-story";
 
 type Block5dWorldRuntime = { readonly selectedIds: readonly string[]; readonly hoveredId: string | null };
 
-/** @emoji 🖱️ Story-local mirror of `instanceMergeArg`/`componentMergeArg` — see `../3d/World.stories.tsx`'s copy. */
+/** 🖱️ Story-local mirror of `instanceMergeArg`/`componentMergeArg` — see `../3d/World.stories.tsx`'s copy. */
 function applyStoryWorldMerge(current: readonly string[], id: string, merge: string): string[] {
   const set = new Set(current);
   if (merge === "replace" || merge === "range") return [id];

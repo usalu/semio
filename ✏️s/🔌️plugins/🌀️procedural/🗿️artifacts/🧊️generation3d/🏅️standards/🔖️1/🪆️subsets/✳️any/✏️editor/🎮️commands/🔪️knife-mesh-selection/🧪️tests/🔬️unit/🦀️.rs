@@ -58,7 +58,6 @@ fn knife_selection_splices_a_typed_widget_and_preserves_analysis() {
             let actual = after["analysis"]["out"][field]["value"].as_f64().unwrap();
             assert!((actual / expected - 1.0).abs() < 1e-6, "{field}: {actual} != {expected}");
         }
-        eprintln!("[DEBUG] selected-face knife: widget={id}, area={}, volume={}", after["analysis"]["out"]["area"]["value"], after["analysis"]["out"]["volume"]["value"]);
         Ok::<_, String>(())
     });
     snapshot.retire_cold();
@@ -81,5 +80,4 @@ async fn knife_selection_undo_redo_restores_the_graph_and_analysis_connection() 
     let after = (before.0 + 1, "extrude__knifeCut".into());
     semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(&mut app, Generation3dCommand::KnifeMeshSelection(payload()), probe, before, after).await;
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
-    eprintln!("[DEBUG] selected-face knife: undo/redo preserves the downstream analysis connection");
 }

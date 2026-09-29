@@ -1,4 +1,4 @@
-//! @emoji 🗺️ `SurfaceProps` — embedded product surfaces with an opaque pack-encoded payload.
+//! 🗺️ `SurfaceProps` — embedded product surfaces with an opaque pack-encoded payload.
 //!
 //! Final shape (ticket `26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME` 📌️important.md, packet
 //! `ui-w4-core`, item 4 — replaces this file's own former `⚠️ SCAFFOLD` header and the placement-

@@ -71,7 +71,6 @@ fn neutral_cold_ingress_variants_preserve_authority_and_refuse_hostile_wit() {
         bad.aggregate_sha256 = vec![1; length];
         assert!(wit_cold_ingress_to_kernel(wit_reactor::ColdPairIngressStatus::Applied(bad)).is_err());
     }
-    eprintln!("[DEBUG] native cold status variants=6 hostile-authorities=5 invalid-hash-lengths=3");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -105,5 +104,4 @@ async fn native_cold_pages_use_dedicated_bounded_input() {
         invalid.bytes = vec![0; size];
         assert!(kernel_cold_page_to_wit(&invalid).is_err());
     }
-    eprintln!("[DEBUG] native cold dedicated-pages=1 ordinary-events=0 duplicate-refusals=1 invalid-lengths=4");
 }

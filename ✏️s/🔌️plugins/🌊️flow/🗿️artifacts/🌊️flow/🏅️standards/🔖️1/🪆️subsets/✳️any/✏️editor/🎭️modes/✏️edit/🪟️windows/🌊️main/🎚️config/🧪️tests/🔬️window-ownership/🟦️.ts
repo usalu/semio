@@ -91,6 +91,5 @@ export function testFlowWindowOwnershipOracle(): void {
   for (const rejected of fixture.rejections) assert.throws(() => target(fixture.windowInstances, rejected.windowId, rejected.claimedWindowKindId), new RegExp(rejected.code));
   assert(!Object.hasOwn(fixture.baseConfig, "contributionsJson") && !Object.hasOwn(fixture.baseTransient, "contributionsJson"));
   assert.equal(fixture.hostContext.programContributions.length, 1);
-  console.log(`[DEBUG] flow-window-ownership windows=${Object.keys(configs).length} transients=${Object.keys(transients).length} documentBytes=${documentBytes.length} staleAndWrongKind=rejected`);
 }
 

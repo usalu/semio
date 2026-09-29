@@ -603,7 +603,7 @@ impl UiTree {
         Some((origin.0 + layout.x - scroll.0, origin.1 + layout.y - scroll.1))
     }
 
-    /** @emoji 📐️ One node's ABSOLUTE painted rect: its own accepted layout plus every ancestor's
+    /** 📐️ One node's ABSOLUTE painted rect: its own accepted layout plus every ancestor's
      * origin, with the accumulation stopping at an OPEN overlay (itself or an ancestor) because
      * everything under a floating surface is positioned against that surface's placement rather than
      * against the document it was authored in. The single geometry answer shared by

@@ -14,7 +14,7 @@ import type { Meta, StoryObj } from "../../../🧪️tests/📚️storybook-type
 // #endregion 🔌️Adapters
 
 // 📍️#region 📍️Scene
-/** @emoji 📦️ Minimal R3F mesh — enough for {@link Scene}'s real `<Canvas>` (via `HostThreeCanvas`) to have something to render/orbit around. */
+/** 📦️ Minimal R3F mesh — enough for {@link Scene}'s real `<Canvas>` (via `HostThreeCanvas`) to have something to render/orbit around. */
 function StoryBox() {
   return (
     <mesh position={[0, 0.5, 0]}>

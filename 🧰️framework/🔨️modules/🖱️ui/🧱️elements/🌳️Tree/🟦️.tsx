@@ -9,7 +9,7 @@
 import { ephemeralBox, type TreePresentation, type TreeWindowRowExtent } from "@semio-tech/framework";
 import { retainTreeFocus } from "./🎯️focus/🟦️.ts";
 
-/** @emoji 📏️ Re-exported from the UI contract because this element's whole window API is stated in it — a consumer of `TreeDataWindow`/`TreeWindowContainerMeasure` must be able to name the token without reaching past this module. */
+/** 📏️ Re-exported from the UI contract because this element's whole window API is stated in it — a consumer of `TreeDataWindow`/`TreeWindowContainerMeasure` must be able to name the token without reaching past this module. */
 export type { TreeWindowRowExtent };
 import * as React from "react";
 import { closestCenter, DndContext, type DragEndEvent } from "@dnd-kit/core";
@@ -189,7 +189,7 @@ const assertNoNestedTreeSections = (children: React.ReactNode, ownerName: "TreeS
   visitNestedChildren(children);
 };
 
-/** @emoji 🧭️ Vertical unfold direction for a tree's foldable groups — `"up"` mirrors the {@link Ribbon} `"up"` pattern: a group's children render above its own header row, in reverse order, so the tree grows toward a fixed anchor (e.g. a bottom corner panel's pinned chrome) instead of away from it. */
+/** 🧭️ Vertical unfold direction for a tree's foldable groups — `"up"` mirrors the {@link Ribbon} `"up"` pattern: a group's children render above its own header row, in reverse order, so the tree grows toward a fixed anchor (e.g. a bottom corner panel's pinned chrome) instead of away from it. */
 export type TreeDirection = "down" | "up";
 
 export const TreeContext = reactHostPort.createContext<{ level: number; isLastAtLevel: boolean[]; showLines: boolean; isTree: boolean; indentMultiplier: number; direction?: TreeDirection }>({
@@ -201,7 +201,7 @@ export const TreeContext = reactHostPort.createContext<{ level: number; isLastAt
   direction: "down",
 });
 
-/** @emoji 🧭️ Fold-affordance chevron for a tree group row — points toward where the content actually is: along the block axis when open (down, or up when {@link direction} is `"up"`), along the {@link FlowInline}-mirrored inline axis when closed (right in ltr/down or rtl/up, left in ltr/up or rtl/down). */
+/** 🧭️ Fold-affordance chevron for a tree group row — points toward where the content actually is: along the block axis when open (down, or up when {@link direction} is `"up"`), along the {@link FlowInline}-mirrored inline axis when closed (right in ltr/down or rtl/up, left in ltr/up or rtl/down). */
 export function treeFoldChevronIcon(direction: TreeDirection, inline: FlowInline, open: boolean): React.ComponentType<{ className?: string }> {
   if (open) return direction === "up" ? ChevronUpIcon : ChevronDownIcon;
   const towardStart = direction === "up";
@@ -213,7 +213,7 @@ export const PropertyValueColumnContext = reactHostPort.createContext(false);
 export const uiSpacingLen = (multiplier: number): string => `calc(${multiplier} * var(--ui-spacing))`;
 export const detailPanelIndentLen = (level: number, multiplier = 1): string => uiSpacingLen(level * STYLING_DOM.treeIndentPerLevelUiSpacing * multiplier);
 export const detailPanelIndentPx = (level: number, multiplier = 1): number => domSizePx("treeIndentPerLevelUiSpacing") * level * multiplier;
-/** @emoji 📏️ The ONE tree row pitch, straight off `dom.treeRowUiSpacing` — every row shell is exactly this tall and every sibling gap is zero, so a virtual window's spacers are `rows × treeRowHeightPx` and nothing else. */
+/** 📏️ The ONE tree row pitch, straight off `dom.treeRowUiSpacing` — every row shell is exactly this tall and every sibling gap is zero, so a virtual window's spacers are `rows × treeRowHeightPx` and nothing else. */
 export const treeRowHeightPx = domSizePx("treeRowUiSpacing");
 export const detailPanelHeaderLineCenterPx = treeRowHeightPx / 2;
 const treeRowShellClassName = "relative h-[var(--tree-row-height,var(--size-workbench))] min-h-[var(--tree-row-min-height,var(--size-workbench))] max-h-[var(--tree-row-max-height,var(--size-workbench))] w-full min-w-0 select-none overflow-hidden";
@@ -236,7 +236,7 @@ const treeItemControlClassName =
   "min-w-0 w-full flex items-stretch justify-[var(--tree-value-justify,flex-end)] [&_[data-detail-panel-control='fill']]:min-w-0 [&_[data-detail-panel-control='fill']]:w-full [&_[data-detail-panel-control='fit']]:ms-auto [&_[data-detail-panel-control='fit']]:max-w-full [&_[data-detail-panel-control='fit']]:shrink-0";
 const indentationLineLen = (i: number, multiplier = 1): string => `calc(${detailPanelIndentLen(i, multiplier)} + ${uiSpacingLen(STYLING_DOM.treeIndentLineExtraUiSpacing)})`;
 const indentationLinePx = (i: number, multiplier = 1): number => detailPanelIndentPx(i, multiplier) + domSizePx("treeIndentLineExtraUiSpacing");
-/** @emoji 🌳️ Ancestor guide indices for a branch at {@link level}: parent level always continues through expanded children; deeper ancestors stop after last siblings. */
+/** 🌳️ Ancestor guide indices for a branch at {@link level}: parent level always continues through expanded children; deeper ancestors stop after last siblings. */
 const treeBranchGuideIndices = (level: number, isLastAtLevel: readonly boolean[]): number[] => Array.from({ length: level }, (_, index) => index).filter((index) => index === level - 1 || !isLastAtLevel[index]);
 const treeRowInlineGapPx = domSizePx("propertyInlineGapUiSpacing");
 const treeToggleSlotWidthPx = domSizePx("treeToggleUiSpacing");
@@ -256,7 +256,7 @@ const treeSectionLabelSlotClassName = "flex h-full min-w-0 flex-1 items-center t
 const treeSectionChevronClassName = "size-small flex-shrink-0 text-element transition-colors";
 const treeRowDefaultIconClassName = "size-tiny flex-shrink-0 transition-colors";
 
-/** @emoji 🖼️ Renders a tree row glyph before the label; uses {@link DefaultIcon} when `icon` is omitted. `emphasized` mirrors the row's active/highlighted/drop-ready state so the icon reads as clearly as the label beside it. */
+/** 🖼️ Renders a tree row glyph before the label; uses {@link DefaultIcon} when `icon` is omitted. `emphasized` mirrors the row's active/highlighted/drop-ready state so the icon reads as clearly as the label beside it. */
 const renderTreeRowIcon = (icon: React.ReactNode | undefined, defaultIcon: IconName, emphasized = false) => (
   <span data-slot="tree-icon" className={cn("flex items-center justify-center flex-shrink-0 transition-colors", emphasized ? "text-emphasized" : "text-element")}>
     {icon ?? <Icon icon={defaultIcon} size={12} className={treeRowDefaultIconClassName} />}
@@ -306,7 +306,7 @@ interface TreeDocumentGutterProps {
   showLines: boolean;
   slot?: React.ReactNode;
   connectCurrentLevel?: boolean;
-  /** @emoji 🌿️ Draw the current-level stem from the row anchor toward this group's children (`down` → bottom, `up` → top). */
+  /** 🌿️ Draw the current-level stem from the row anchor toward this group's children (`down` → bottom, `up` → top). */
   extendBranchStem?: boolean;
   slotOffsetPx?: number;
   anchorOffsetPx?: number;
@@ -408,7 +408,7 @@ interface TreeBranchContentProps {
   topPaddingPx?: number;
   ownerRowKind?: string;
   ownerExpanded?: boolean;
-  /** @emoji 🪟️ Window mirror for a virtualised container — this element's top edge is row 0 of the child list. */
+  /** 🪟️ Window mirror for a virtualised container — this element's top edge is row 0 of the child list. */
   windowAttributes?: TreeWindowDomAttributes;
 }
 
@@ -507,7 +507,7 @@ export interface TreeSectionAction {
   text?: string;
   id?: string;
   disabled?: boolean;
-  /** @emoji 📍️ Row actions paint on the header; menu actions appear in the row context menu. */
+  /** 📍️ Row actions paint on the header; menu actions appear in the row context menu. */
   placement?: TreeActionPlacement;
 }
 
@@ -528,7 +528,7 @@ export type TreeHeaderAction = TreeSectionAction | TreeCheckboxAction;
 
 export type TreeDragRole = "sort" | "transfer";
 
-/** @emoji 📮️ DOM mirror of a row's transfer payload — the first (and for every catalogue/palette row, the
+/** 📮️ DOM mirror of a row's transfer payload — the first (and for every catalogue/palette row, the
  * only) MIME key and its bytes, exactly what a real `dragstart` would put on the `DataTransfer`. Same
  * principle as the world host's `data-instances-json`: a native HTML5 drag cannot be driven by synthetic
  * pointer moves, so without this the payload is unreadable outside a live OS drag. */
@@ -537,7 +537,7 @@ export function treeRowDragPayloadAttributes(dragData: Record<string, string> | 
   return entry ? { "data-drag-mime": entry[0], "data-drag-payload": entry[1] } : {};
 }
 
-/** @emoji 🫳️ Which drag handles a tree row exposes under the default driver. */
+/** 🫳️ Which drag handles a tree row exposes under the default driver. */
 export function deriveTreeDragRoles(item: { readonly draggable?: boolean; readonly dragData?: Record<string, string>; readonly isDragHandle?: boolean }, paletteDragEnabled: boolean): readonly TreeDragRole[] {
   const roles: TreeDragRole[] = [];
   const hasTransfer = Boolean(item.dragData) || (paletteDragEnabled && (item.draggable || item.dragData));
@@ -567,7 +567,7 @@ function menuTreeHeaderActionsToContextItems(actions: readonly TreeHeaderAction[
     }));
 }
 
-/** @emoji 🖱️ Merges menu-placement row actions into a host-built context menu. */
+/** 🖱️ Merges menu-placement row actions into a host-built context menu. */
 export function mergeTreeRowContextMenu(actions: readonly TreeHeaderAction[] | undefined, contextMenu: readonly ContextMenuItem[] | undefined): ContextMenuItem[] | undefined {
   const fromActions = menuTreeHeaderActionsToContextItems(actions ?? []);
   if (fromActions.length === 0) {
@@ -628,14 +628,14 @@ export interface TreeCheckboxProps {
   title?: UiLabel;
   disabled?: boolean;
   ariaLabel?: string;
-  /** @emoji 🕰️ The value the state's AUTHORITY last published, when `checked` may still be an optimistic
+  /** 🕰️ The value the state's AUTHORITY last published, when `checked` may still be an optimistic
    * draft — stamped as `data-published-value` so a reader outside React can tell a pending draft from a
    * landed change. See `WindowMeasureToggle`. */
   publishedValue?: string;
 }
 
 /**
- * @emoji ☑️ Compact tree-row checkbox used as a property control or header action.
+ * ☑️ Compact tree-row checkbox used as a property control or header action.
  *
  * The wrapper only stops the click from reaching the enclosing tree row; it must never
  * `preventDefault()` it. Cancelling a checkbox's click runs the HTML "legacy-canceled activation
@@ -710,7 +710,7 @@ export interface TreeDataActivationContext {
   sectionId: string;
 }
 
-/** @emoji 🖱️ Builds the exact `(event, context)` pair a row activation carries, for hosts that press a
+/** 🖱️ Builds the exact `(event, context)` pair a row activation carries, for hosts that press a
  * {@link TreeDataItem.onClick} without a rendered tree (row-gate and category-tree tests). The event is a
  * real DOM `MouseEvent` wrapped in React's synthetic surface, so a handler that reads `button`,
  * `metaKey` or calls `preventDefault()` behaves exactly as it does under a rendered row. */
@@ -772,7 +772,7 @@ export interface TreeDataWindow {
   readonly rowExtent: TreeWindowRowExtent;
 }
 
-/** @emoji 📏️ Resolves the declared closed-row geometry of a virtual Tree window. */
+/** 📏️ Resolves the declared closed-row geometry of a virtual Tree window. */
 export function treeWindowRowExtentPx(extent: TreeWindowRowExtent): number {
   const exactMetric = (value: number) => Math.round(value * 1_000) / 1_000;
   switch (extent) {
@@ -787,13 +787,13 @@ export function treeWindowRowExtentPx(extent: TreeWindowRowExtent): number {
   }
 }
 
-/** @emoji 📏️ Every declared closed-row geometry token — the one runtime list a renderer validates a DOM or wire token against before pricing rows with {@link treeWindowRowExtentPx}. A token absent from this list has no pitch, so the container's whole geometry would be `NaN`. */
+/** 📏️ Every declared closed-row geometry token — the one runtime list a renderer validates a DOM or wire token against before pricing rows with {@link treeWindowRowExtentPx}. A token absent from this list has no pitch, so the container's whole geometry would be `NaN`. */
 export const TREE_WINDOW_ROW_EXTENTS = ["standard", "compactText", "compactSmallControl", "compactControl"] as const satisfies readonly TreeWindowRowExtent[];
 
-/** @emoji 🪟️ Rows requested beyond each edge of the viewport, so a scroll of up to this many rows paints from what is already materialised. */
+/** 🪟️ Rows requested beyond each edge of the viewport, so a scroll of up to this many rows paints from what is already materialised. */
 export const TREE_WINDOW_OVERSCAN_ROWS = 8;
 
-/** @emoji 🪟️ Hard ceiling on one window request — the guest's `UI_BUILT_CHILDREN_MAX`/`UI_DOCUMENT_NODES` fan-out of one child list. */
+/** 🪟️ Hard ceiling on one window request — the guest's `UI_BUILT_CHILDREN_MAX`/`UI_DOCUMENT_NODES` fan-out of one child list. */
 export const TREE_WINDOW_ROWS_MAX = 128;
 
 /**
@@ -819,13 +819,13 @@ export const TREE_WINDOW_ROWS_MAX = 128;
  **/
 export const TREE_WINDOW_BODY_NODE_BUDGET = 103;
 
-/** @emoji 📐️ One MATERIALISED row of a windowed container as the DOM measured it: which entry of the child list it is, and where its own top edge sits — in the same space as the container's `top`. */
+/** 📐️ One MATERIALISED row of a windowed container as the DOM measured it: which entry of the child list it is, and where its own top edge sits — in the same space as the container's `top`. */
 export interface TreeWindowRowMeasure {
   readonly index: number;
   readonly top: number;
 }
 
-/** @emoji 📐️ One windowed container as the DOM measured it: its authored key, its window, and the full virtual extent (`top`/`height` cover spacers, rows and any expanded nested content); `rows` are its own materialised rows' real tops, ascending, when the observer could read them. */
+/** 📐️ One windowed container as the DOM measured it: its authored key, its window, and the full virtual extent (`top`/`height` cover spacers, rows and any expanded nested content); `rows` are its own materialised rows' real tops, ascending, when the observer could read them. */
 export interface TreeWindowContainerMeasure {
   readonly key: string;
   readonly total: number;
@@ -837,14 +837,14 @@ export interface TreeWindowContainerMeasure {
   readonly rows?: readonly TreeWindowRowMeasure[];
 }
 
-/** @emoji 🪟️ One container's next window: materialise `rows` entries starting at `offset`. */
+/** 🪟️ One container's next window: materialise `rows` entries starting at `offset`. */
 export interface TreeWindowRequest {
   readonly key: string;
   readonly offset: number;
   readonly rows: number;
 }
 
-/** @emoji 📐️ What one on-screen container contributes to the viewport rule: the rows of it the viewport actually covers, where inside its child list they start, and how far its centre sits from the viewport's — the order a body-wide budget trims in. */
+/** 📐️ What one on-screen container contributes to the viewport rule: the rows of it the viewport actually covers, where inside its child list they start, and how far its centre sits from the viewport's — the order a body-wide budget trims in. */
 export interface TreeWindowVisibleRows {
   readonly total: number;
   readonly visibleRows: number;
@@ -917,7 +917,7 @@ export function treeWindowVisibleRowsForViewport(containers: readonly TreeWindow
   return visible;
 }
 
-/** @emoji 🪟️ One container's window at an EXACT row count: the slice starts `overscan` rows before the first visible one and always ends inside `total`. */
+/** 🪟️ One container's window at an EXACT row count: the slice starts `overscan` rows before the first visible one and always ends inside `total`. */
 function treeWindowRequestAtRows(key: string, metrics: TreeWindowVisibleRows, rows: number, overscan: number): TreeWindowRequest {
   const bounded = Math.max(1, Math.min(Math.floor(rows), metrics.total));
   return { key, offset: Math.min(Math.max(0, metrics.firstVisibleRow - Math.max(0, overscan)), metrics.total - bounded), rows: bounded };
@@ -1013,7 +1013,7 @@ export function treeWindowRowIndexOf(childWindow: TreeDataWindow | undefined, ma
   return leading + (direction === "up" ? materialisedCount - 1 - position : position);
 }
 
-/** @emoji 🪟️ Spacer row counts for a container that materialised `materialisedCount` rows of {@link TreeDataWindow}. */
+/** 🪟️ Spacer row counts for a container that materialised `materialisedCount` rows of {@link TreeDataWindow}. */
 export function treeWindowSpacerRows(childWindow: TreeDataWindow | undefined, materialisedCount: number): { readonly leading: number; readonly trailing: number } {
   if (!childWindow) return { leading: 0, trailing: 0 };
   const total = Math.max(0, Math.floor(childWindow.total));
@@ -1046,13 +1046,13 @@ export function treeWindowSpacerRows(childWindow: TreeDataWindow | undefined, ma
  **/
 export const TREE_WINDOW_PATH_SEPARATOR = "␟";
 
-/** @emoji 🪟️ One windowed container's path: its enclosing windowed containers' keys, outermost first, then its own. A top-level section's path IS its key, so a flat body is unchanged. `undefined` for an unwindowed container, which has no window identity at all. */
+/** 🪟️ One windowed container's path: its enclosing windowed containers' keys, outermost first, then its own. A top-level section's path IS its key, so a flat body is unchanged. `undefined` for an unwindowed container, which has no window identity at all. */
 export function treeWindowPathOf(parentWindowPath: string | undefined, windowKey: string | undefined): string | undefined {
   if (windowKey === undefined || windowKey.length === 0) return undefined;
   return parentWindowPath ? `${parentWindowPath}${TREE_WINDOW_PATH_SEPARATOR}${windowKey}` : windowKey;
 }
 
-/** @emoji 📮️ DOM mirror of a container's window, stamped on its branch content element — the element whose top edge IS row 0 of the child list, so a measurement of it plus these numbers is the whole observer contract. */
+/** 📮️ DOM mirror of a container's window, stamped on its branch content element — the element whose top edge IS row 0 of the child list, so a measurement of it plus these numbers is the whole observer contract. */
 export interface TreeWindowDomAttributes {
   readonly "data-tree-window-key"?: string;
   readonly "data-tree-window-path"?: string;
@@ -1062,7 +1062,7 @@ export interface TreeWindowDomAttributes {
   readonly "data-tree-window-row-extent": TreeWindowRowExtent;
 }
 
-/** @emoji 📮️ Builds {@link TreeWindowDomAttributes} for a windowed container; `undefined` for an unwindowed one (no attributes, no spacers). `-key` stays the AUTHORED node key (and the pick target id); `-path` is the window's identity — what the host keys its state by and sends back on the wire. */
+/** 📮️ Builds {@link TreeWindowDomAttributes} for a windowed container; `undefined` for an unwindowed one (no attributes, no spacers). `-key` stays the AUTHORED node key (and the pick target id); `-path` is the window's identity — what the host keys its state by and sends back on the wire. */
 export function treeWindowDomAttributes(childWindow: TreeDataWindow | undefined, materialisedCount: number, windowKey: string | undefined, windowPath?: string): TreeWindowDomAttributes | undefined {
   if (!childWindow) return undefined;
   const total = Math.max(0, Math.floor(childWindow.total));
@@ -1096,7 +1096,7 @@ export interface TreeDataItem {
   label: React.ReactNode;
   icon?: React.ReactNode;
   description?: React.ReactNode;
-  /** @emoji 🎛️ Inline control rendered in a property-style tree row. */
+  /** 🎛️ Inline control rendered in a property-style tree row. */
   control?: React.ReactNode;
   items?: TreeDataItem[];
   getItems?: () => Promise<TreeDataItem[]>;
@@ -1108,28 +1108,28 @@ export interface TreeDataItem {
   isSelected?: boolean;
   isDragHandle?: boolean;
   defaultOpen?: boolean;
-  /** @emoji 🌀️ Host-declared loading state, ORed with the tree's own async {@link getItems} pending state. */
+  /** 🌀️ Host-declared loading state, ORed with the tree's own async {@link getItems} pending state. */
   loading?: boolean;
-  /** @emoji 🌀️ Host-declared waiting state; dashed, slower ring than {@link loading}. */
+  /** 🌀️ Host-declared waiting state; dashed, slower ring than {@link loading}. */
   waiting?: boolean;
   collapsibleState?: TreeItemCollapsibleState;
   emptyState?: React.ReactNode;
   draggable?: boolean;
-  /** @emoji 📤️ Extra `dataTransfer` MIME entries merged on drag start (in-app palette drags). */
+  /** 📤️ Extra `dataTransfer` MIME entries merged on drag start (in-app palette drags). */
   dragData?: Record<string, string>;
   onClick?: (event: React.MouseEvent, context: TreeDataActivationContext) => void;
   onDoubleClick?: (event: React.MouseEvent, context: TreeDataActivationContext) => void;
   onPointerEnter?: () => void;
   onPointerLeave?: () => void;
-  /** @emoji 👁️ Muted row styling for hidden entities in scene outliners. */
+  /** 👁️ Muted row styling for hidden entities in scene outliners. */
   isHidden?: boolean;
-  /** @emoji 🖱️ Right-click menu for the row (selection-aware actions are built by the host). */
+  /** 🖱️ Right-click menu for the row (selection-aware actions are built by the host). */
   contextMenu?: ContextMenuItem[];
-  /** @emoji 🪟️ The slice of this group's children {@link TreeDataItem.items} actually carries — see {@link TreeDataWindow}. */
+  /** 🪟️ The slice of this group's children {@link TreeDataItem.items} actually carries — see {@link TreeDataWindow}. */
   window?: TreeDataWindow;
-  /** @emoji 🔑️ The authored node key — the pick target id, NOT {@link TreeDataItem.id}, which is a DOM id. */
+  /** 🔑️ The authored node key — the pick target id, NOT {@link TreeDataItem.id}, which is a DOM id. */
   windowKey?: string;
-  /** @emoji 🪟️ This window's IDENTITY: {@link treeWindowPathOf} of the enclosing windowed containers and this one. What the host keys its state by and reports back; the same key under two parents is two windows. Defaults to {@link TreeDataItem.windowKey} for a top-level container. */
+  /** 🪟️ This window's IDENTITY: {@link treeWindowPathOf} of the enclosing windowed containers and this one. What the host keys its state by and reports back; the same key under two parents is two windows. Defaults to {@link TreeDataItem.windowKey} for a top-level container. */
   windowPath?: string;
 }
 
@@ -1142,25 +1142,25 @@ export interface TreeDataSection {
   actions?: TreeHeaderAction[];
   className?: string;
   defaultOpen?: boolean;
-  /** @emoji 🌀️ Host-declared loading state, ORed with the tree's own async {@link getItems} pending state. */
+  /** 🌀️ Host-declared loading state, ORed with the tree's own async {@link getItems} pending state. */
   loading?: boolean;
-  /** @emoji 🌀️ Host-declared waiting state; dashed, slower ring than {@link loading}. */
+  /** 🌀️ Host-declared waiting state; dashed, slower ring than {@link loading}. */
   waiting?: boolean;
   emptyState?: React.ReactNode;
   onPointerEnter?: () => void;
   onPointerLeave?: () => void;
   onDoubleClick?: (event: React.MouseEvent) => void;
-  /** @emoji ↕️ When true (or when the host Tree enables {@link TreeRootProps.sortableSections}), this section header shows a drag handle for reordering among sibling sections. */
+  /** ↕️ When true (or when the host Tree enables {@link TreeRootProps.sortableSections}), this section header shows a drag handle for reordering among sibling sections. */
   draggable?: boolean;
-  /** @emoji 🪟️ The slice of this section's children {@link TreeDataSection.items} actually carries — see {@link TreeDataWindow}. */
+  /** 🪟️ The slice of this section's children {@link TreeDataSection.items} actually carries — see {@link TreeDataWindow}. */
   window?: TreeDataWindow;
-  /** @emoji 🔑️ The authored node key — the pick target id, NOT {@link TreeDataSection.id}, which is a DOM id. */
+  /** 🔑️ The authored node key — the pick target id, NOT {@link TreeDataSection.id}, which is a DOM id. */
   windowKey?: string;
-  /** @emoji 🪟️ This window's IDENTITY: {@link treeWindowPathOf} of the enclosing windowed containers and this one. A top-level section's path IS its key. */
+  /** 🪟️ This window's IDENTITY: {@link treeWindowPathOf} of the enclosing windowed containers and this one. A top-level section's path IS its key. */
   windowPath?: string;
 }
 
-/** @emoji 🖱️ Pointer-driven external drag when native `draggable` does not start inside scroll panels. */
+/** 🖱️ Pointer-driven external drag when native `draggable` does not start inside scroll panels. */
 export interface TreePointerPaletteDragController {
   readEncodedDragPayload: (dragData: Record<string, string>) => string | undefined;
   begin: (encoded: string, types: readonly string[]) => void;
@@ -1177,7 +1177,7 @@ export interface TreeDragAndDropController {
 
 export type TreeDropPosition = "before" | "after" | "inside";
 
-/** @emoji 📍️ Resolves whether a tree drop lands before, after, or inside a row. */
+/** 📍️ Resolves whether a tree drop lands before, after, or inside a row. */
 export function resolveTreeDropPosition(event: React.DragEvent<HTMLElement>): TreeDropPosition {
   const rect = event.currentTarget.getBoundingClientRect();
   const y = event.clientY - rect.top;
@@ -1186,14 +1186,14 @@ export function resolveTreeDropPosition(event: React.DragEvent<HTMLElement>): Tr
   return "inside";
 }
 
-/** @emoji 🔀️ True when a drag carries only internal tree reorder data (not palette payloads). */
+/** 🔀️ True when a drag carries only internal tree reorder data (not palette payloads). */
 export function isTreeReorderDragEvent(event: React.DragEvent): boolean {
   const types = [...event.dataTransfer.types];
   if (!types.includes("application/vnd.code.tree.item")) return false;
   return !types.some((kind) => kind !== "application/vnd.code.tree.item" && kind.startsWith("application/"));
 }
 
-/** @emoji 👁️ Fixed overlay showing where a tree reorder drop will land. */
+/** 👁️ Fixed overlay showing where a tree reorder drop will land. */
 function TreeReorderDropPreview(props: { readonly preview: { readonly targetId: string; readonly position: TreeDropPosition } | null }): React.ReactElement | null {
   const [frame, setFrame] = reactHostPort.useState<DOMRect | null>(null);
   // 🐚️ Falls back to `document`/`document.body` outside any shell — inside one, scopes the id lookup and
@@ -1236,7 +1236,7 @@ export interface TreeReorderControllerOptions {
   readonly resolveParentId?: (item: TreeDataItem) => string | undefined;
 }
 
-/** @emoji 🔀️ Builds a {@link TreeDragAndDropController} that emits cross-container reorder moves. */
+/** 🔀️ Builds a {@link TreeDragAndDropController} that emits cross-container reorder moves. */
 export function treeReorderDragController(options: TreeReorderControllerOptions): TreeDragAndDropController {
   return {
     handleDrop: ({ target, targetKind, sourceItems, dropPosition }) => {
@@ -1258,7 +1258,7 @@ export interface UseTreeReorderResult {
   readonly dragController: TreeDragAndDropController;
 }
 
-/** @emoji 🔀️ Hook wiring tree reorder callbacks to drop-position aware drag handling. */
+/** 🔀️ Hook wiring tree reorder callbacks to drop-position aware drag handling. */
 export function useTreeReorder(onMove: (move: TreeReorderMove) => void, resolveParentId?: (item: TreeDataItem) => string | undefined): UseTreeReorderResult {
   const dropStateRef = reactHostPort.useRef<{ id: string | null; position: TreeDropPosition | null }>({ id: null, position: null });
   const [, bump] = reactHostPort.useState(0);
@@ -1294,7 +1294,7 @@ export interface CatalogueProps {
   readonly dragController?: TreeDragAndDropController;
 }
 
-/** @emoji 🗂️ Draggable catalogue palette rendered as a tree section. */
+/** 🗂️ Draggable catalogue palette rendered as a tree section. */
 export const Catalogue: React.FC<CatalogueProps> = ({ title, items, mime = CATALOGUE_DRAG_MIME, className, dragController }) => {
   const sections = reactHostPort.useMemo<TreeDataSection[]>(
     () => [
@@ -1318,17 +1318,17 @@ export const Catalogue: React.FC<CatalogueProps> = ({ title, items, mime = CATAL
 const activeCatalogueDragPayload = ephemeralBox<string | null>("framework.modules.ui.elements.Tree.component.tsx.activeCatalogueDragPayload", null);
 const activeCataloguePointerDragData = ephemeralBox<{ readonly payload: string; readonly types: readonly string[] } | null>("framework.modules.ui.elements.Tree.component.tsx.activeCataloguePointerDragData", null);
 
-/** @emoji 🖱️ Payload of the catalogue drag currently in flight — native HTML5 `dragover` can't read `dataTransfer` until drop, so drop targets (e.g. a canvas host previewing a fixture drop) read this instead. */
+/** 🖱️ Payload of the catalogue drag currently in flight — native HTML5 `dragover` can't read `dataTransfer` until drop, so drop targets (e.g. a canvas host previewing a fixture drop) read this instead. */
 export function getActiveCatalogueDragPayload(): string | null {
   return activeCatalogueDragPayload.current;
 }
 
-/** @emoji 🖱️ Payload owned specifically by the pointer transport, separate from native HTML drag. */
+/** 🖱️ Payload owned specifically by the pointer transport, separate from native HTML drag. */
 export function getActiveCataloguePointerDragData(): { readonly payload: string; readonly types: readonly string[] } | null {
   return activeCataloguePointerDragData.current;
 }
 
-/** @emoji 🖱️ {@link TreeDragAndDropController} for catalogue rows carrying encoded payloads. */
+/** 🖱️ {@link TreeDragAndDropController} for catalogue rows carrying encoded payloads. */
 export function catalogueTreeDragController(mime: string = CATALOGUE_DRAG_MIME): TreeDragAndDropController {
   const pointerRef = { active: false };
   const readEncoded = (dragData: Record<string, string> | undefined): string | undefined => {
@@ -1487,13 +1487,13 @@ interface TreeSectionProps {
   onDragLeave?: React.DragEventHandler<HTMLDivElement>;
   onDrop?: React.DragEventHandler<HTMLDivElement>;
   isLastSection?: boolean;
-  /** @emoji 🎯️ Passive drop-zone highlight while a compatible tree drag is in flight. */
+  /** 🎯️ Passive drop-zone highlight while a compatible tree drag is in flight. */
   isDropReady?: boolean;
-  /** @emoji 🫳️ When true, renders a trailing {@link DragHandle} for reorder (with handle-only initiation unless {@link dragInitiation} is `"surface"`). */
+  /** 🫳️ When true, renders a trailing {@link DragHandle} for reorder (with handle-only initiation unless {@link dragInitiation} is `"surface"`). */
   isDragHandle?: boolean;
-  /** @emoji 🫳️ `"handle"` restricts native drag start to the trailing grip; `"surface"` keeps the whole section header draggable. Defaults to `"handle"` when {@link isDragHandle} or {@link draggable} is set. */
+  /** 🫳️ `"handle"` restricts native drag start to the trailing grip; `"surface"` keeps the whole section header draggable. Defaults to `"handle"` when {@link isDragHandle} or {@link draggable} is set. */
   dragInitiation?: "handle" | "surface";
-  /** @emoji 🪟️ Window mirror stamped on this section's branch content element — build it with {@link treeWindowDomAttributes}. */
+  /** 🪟️ Window mirror stamped on this section's branch content element — build it with {@link treeWindowDomAttributes}. */
   windowAttributes?: TreeWindowDomAttributes;
 }
 
@@ -1569,7 +1569,7 @@ interface TreeItemProps {
   onPointerUp?: React.PointerEventHandler<HTMLDivElement>;
   onPointerCancel?: React.PointerEventHandler<HTMLDivElement>;
   layoutKind?: "default" | "property";
-  /** @emoji 🖱️ Whether this row carries an activation OF ITS OWN, as opposed to the selection handler the
+  /** 🖱️ Whether this row carries an activation OF ITS OWN, as opposed to the selection handler the
    * tree wires onto every row. Only the `property` layout reads it, and only for an EXPANDABLE row: there
    * the label click folds the group, which is right for an inspector heading and wrong for a row that
    * declares an action (the puzzle3d catalogue's object-kind rows nest their rim-vortex templates AND bind
@@ -1577,25 +1577,25 @@ interface TreeItemProps {
   activatable?: boolean;
   isHidden?: boolean;
   contextMenu?: ContextMenuItem[];
-  /** @emoji 🎚️ Control rendered on the header row of expandable property groups (label left, control right). */
+  /** 🎚️ Control rendered on the header row of expandable property groups (label left, control right). */
   headerControl?: React.ReactNode;
-  /** @emoji 🫳️ `"handle"` restricts native drag start to the trailing grip (arms `draggable` only while the grip is pressed); `"surface"` keeps the whole row draggable. */
+  /** 🫳️ `"handle"` restricts native drag start to the trailing grip (arms `draggable` only while the grip is pressed); `"surface"` keeps the whole row draggable. */
   dragInitiation?: "handle" | "surface";
-  /** @emoji 🫳️ Explicit drag handles for sort vs palette transfer; overrides {@link dragInitiation} when set. */
+  /** 🫳️ Explicit drag handles for sort vs palette transfer; overrides {@link dragInitiation} when set. */
   dragRoles?: readonly TreeDragRole[];
-  /** @emoji 🫳️ Pointer-down handler for palette transfer drags — wired to the transfer handle only. */
+  /** 🫳️ Pointer-down handler for palette transfer drags — wired to the transfer handle only. */
   transferPointerDown?: React.PointerEventHandler<HTMLSpanElement>;
-  /** @emoji 📮️ The row's transfer payload by MIME, mirrored onto the row as `data-drag-mime`/`data-drag-payload` so the transferred bytes are readable from the DOM without opening a real drag. */
+  /** 📮️ The row's transfer payload by MIME, mirrored onto the row as `data-drag-mime`/`data-drag-payload` so the transferred bytes are readable from the DOM without opening a real drag. */
   dragData?: Record<string, string>;
-  /** @emoji 🎯️ Passive drop-zone highlight while a compatible tree drag is in flight. */
+  /** 🎯️ Passive drop-zone highlight while a compatible tree drag is in flight. */
   isDropReady?: boolean;
-  /** @emoji 🪟️ Window mirror stamped on this group's branch content element — build it with {@link treeWindowDomAttributes}. */
+  /** 🪟️ Window mirror stamped on this group's branch content element — build it with {@link treeWindowDomAttributes}. */
   windowAttributes?: TreeWindowDomAttributes;
-  /** @emoji 📐️ This row's own entry index inside its PARENT's window, stamped as `data-tree-window-row` so the
+  /** 📐️ This row's own entry index inside its PARENT's window, stamped as `data-tree-window-row` so the
    * host observer can read the real top of every materialised row instead of assuming a uniform row pitch
    * (a row that is itself an open windowed group is many rows tall). Build it with {@link treeWindowRowIndexOf}. */
   windowRowIndex?: number;
-  /** @emoji 📏️ Required closed-row geometry inherited from this row's parent virtual window. */
+  /** 📏️ Required closed-row geometry inherited from this row's parent virtual window. */
   windowRowExtent?: TreeWindowRowExtent;
 }
 
@@ -1624,23 +1624,23 @@ interface TreeRootProps {
   onSelectionChange?: (selectedIds: string[], items: TreeDataItem[]) => void;
   highlightedIds?: readonly string[];
   dragAndDropController?: TreeDragAndDropController;
-  /** @emoji 🈳️ What the tree shows while it has no sections — a message or a whole window (Tasks, Chat). It is
+  /** 🈳️ What the tree shows while it has no sections — a message or a whole window (Tasks, Chat). It is
    * CONTENT, so it reads in its own direction (`dir="auto"`): a panel mirrored for its anchor (`useFlow().inline`
    * `"rtl"` on the right edge) mirrors its chrome, never a sentence — ".No task is running" was measured live. */
   emptyState?: React.ReactNode;
   indentMultiplier?: number;
-  /** @emoji 🧭️ `"up"` makes every foldable group in this tree unfold above its own header (children in reverse order), mirroring the {@link Ribbon} `"up"` pattern — for trees hosted in a panel that grows upward. Defaults to `"down"`. */
+  /** 🧭️ `"up"` makes every foldable group in this tree unfold above its own header (children in reverse order), mirroring the {@link Ribbon} `"up"` pattern — for trees hosted in a panel that grows upward. Defaults to `"down"`. */
   direction?: TreeDirection;
-  /** @emoji 🌱️ Controlled section/group expansion (see {@link TreeStateProvider}) — lets a host persist which groups are open across remounts. Uncontrolled (per-mount) when omitted. */
+  /** 🌱️ Controlled section/group expansion (see {@link TreeStateProvider}) — lets a host persist which groups are open across remounts. Uncontrolled (per-mount) when omitted. */
   openStates?: Readonly<Record<string, boolean>>;
   onOpenStateChange?: (id: string, open: boolean) => void;
-  /** @emoji ↕️ When true, every section header renders a drag handle and sibling sections can be reordered. Defaults to true when there are two or more sections. */
+  /** ↕️ When true, every section header renders a drag handle and sibling sections can be reordered. Defaults to true when there are two or more sections. */
   sortableSections?: boolean;
-  /** @emoji ↕️ Fires after a section-handle reorder with the new section-id order (host may persist; Tree also keeps an internal merge so program re-renders do not snap order back). */
+  /** ↕️ Fires after a section-handle reorder with the new section-id order (host may persist; Tree also keeps an internal merge so program re-renders do not snap order back). */
   onSectionsReorder?: (orderedIds: readonly string[]) => void;
 }
 
-/** @emoji ↕️ Merges a remembered section-id order with the latest section list — keeps prior relative order for surviving ids, appends newly appeared sections in source order. */
+/** ↕️ Merges a remembered section-id order with the latest section list — keeps prior relative order for surviving ids, appends newly appeared sections in source order. */
 export function mergeTreeSectionOrder(previousIds: readonly string[], sections: readonly TreeDataSection[]): TreeDataSection[] {
   const byId = new Map(sections.map((section) => [section.id, section]));
   const ordered: TreeDataSection[] = [];
@@ -1656,7 +1656,7 @@ export function mergeTreeSectionOrder(previousIds: readonly string[], sections: 
   return ordered;
 }
 
-/** @emoji ✅️ Per-tree selection store; rows subscribe via {@link useSyncExternalStore} without invalidating {@link TreeDataRenderingContext}. */
+/** ✅️ Per-tree selection store; rows subscribe via {@link useSyncExternalStore} without invalidating {@link TreeDataRenderingContext}. */
 interface TreeSelectionStore {
   subscribe: (listener: () => void) => () => void;
   getSelectedIds: () => readonly string[];
@@ -1717,7 +1717,7 @@ function useTreeItemRowSelected(itemId: string, itemSelectedOverride: boolean | 
   return itemSelectedOverride ?? subscribedSelected;
 }
 
-/** @emoji 🖱️ Per-tree highlight store; rows subscribe via {@link useSyncExternalStore} without invalidating {@link TreeDataRenderingContext}. */
+/** 🖱️ Per-tree highlight store; rows subscribe via {@link useSyncExternalStore} without invalidating {@link TreeDataRenderingContext}. */
 interface TreeHighlightStore {
   subscribe: (listener: () => void) => () => void;
   getHighlightedIds: () => readonly string[];
@@ -1778,7 +1778,7 @@ function useTreeItemRowHighlighted(itemId: string, itemHighlightedOverride: bool
   return itemHighlightedOverride ?? subscribedHighlighted;
 }
 
-/** @emoji 🌲️ Stable context for hoisted Tree data rows (avoids remounting rows when Tree re-renders). */
+/** 🌲️ Stable context for hoisted Tree data rows (avoids remounting rows when Tree re-renders). */
 interface TreeDataRenderingContextValue {
   readonly sectionItemsById: Record<string, TreeDataItem[]>;
   readonly itemItemsById: Record<string, TreeDataItem[]>;
@@ -1797,7 +1797,7 @@ interface TreeDataRenderingContextValue {
   readonly draggedIds: readonly string[];
   readonly dropPreview: { readonly targetId: string; readonly position: TreeDropPosition } | null;
   readonly buildPalettePointerProps: (item: TreeDataItem, section: TreeDataSection) => Pick<TreeItemProps, "onPointerDown">;
-  /** @emoji ↕️ Section headers render reorder grips and accept sibling-section drops. */
+  /** ↕️ Section headers render reorder grips and accept sibling-section drops. */
   readonly sortableSections: boolean;
   readonly draggedSectionId: string | null;
   readonly handleSectionDragStart: (event: React.DragEvent<HTMLDivElement>, section: TreeDataSection) => void;
@@ -1878,7 +1878,7 @@ const treeSemanticHoverRowSelector = '[data-slot="tree-item-row"], [data-slot="t
 
 const treeSemanticHoverStaySelector = `${treeSemanticHoverRowSelector}, [data-slot="tree-section-content"], [data-slot="tree-item-content"], [data-slot="tree-property-content"], [data-slot="control-tree-folder-content"], [data-slot="window-measure-tree-content"]`;
 
-/** @emoji 🎨️ Tree row shell: group + text tokens; gutter stays transparent so branch guides remain visible. */
+/** 🎨️ Tree row shell: group + text tokens; gutter stays transparent so branch guides remain visible. */
 export function treeRowChromeShellClasses(isSelected: boolean, isHighlighted: boolean, isHidden = false): string {
   const hiddenClass = isHidden ? "opacity-50 text-muted-foreground" : "";
   if (isSelected) {
@@ -1890,7 +1890,7 @@ export function treeRowChromeShellClasses(isSelected: boolean, isHighlighted: bo
   return cn("group/tree-row", "text-element", interactiveControlTransitionClass, hoverExcludingHandleTextEmphasizedClass, hiddenClass);
 }
 
-/** @emoji 🎨️ Tree row content fill: backgrounds apply only on the label column, not the guide gutter. */
+/** 🎨️ Tree row content fill: backgrounds apply only on the label column, not the guide gutter. */
 export function treeRowChromeContentFillClasses(isSelected: boolean, isHighlighted: boolean, isLoading = false, isWaiting = false): string {
   const ringClass = loadingBorderStateClass(isLoading, isSelected) || waitingBorderStateClass(isWaiting, isSelected);
   if (isSelected) {
@@ -1902,7 +1902,7 @@ export function treeRowChromeContentFillClasses(isSelected: boolean, isHighlight
   return cn(interactiveControlTransitionClass, groupHoverExcludingHandleBgFillClass, ringClass);
 }
 
-/** @emoji 🎨️ Tree row chrome: element gray at rest; hover highlight; selected primary + emphasized (no hover fill override). */
+/** 🎨️ Tree row chrome: element gray at rest; hover highlight; selected primary + emphasized (no hover fill override). */
 export function treeRowChromeClasses(isSelected: boolean, isHighlighted: boolean, isHidden = false, isLoading = false, isWaiting = false): string {
   return cn(treeRowChromeShellClasses(isSelected, isHighlighted, isHidden), treeRowChromeContentFillClasses(isSelected, isHighlighted, isLoading, isWaiting));
 }
@@ -1919,7 +1919,7 @@ const TreeItemRowContextMenu: React.FC<{ readonly items?: readonly ContextMenuIt
   );
 };
 
-/** @emoji 🖱️ Skip row leave when pointer moves to another tree row or nested branch (avoids stale leave clearing fast-hover highlight). */
+/** 🖱️ Skip row leave when pointer moves to another tree row or nested branch (avoids stale leave clearing fast-hover highlight). */
 export function shouldDispatchTreeRowPointerLeave(relatedTarget: EventTarget | null): boolean {
   if (!(relatedTarget instanceof Element)) {
     return true;
@@ -3322,7 +3322,7 @@ export const syncTreeSelectionPath = (root: HTMLElement, selectedIds: readonly s
   }
 };
 
-/** @emoji 🖱️ Pointer handlers that mark ancestor branch guide lines on row hover. */
+/** 🖱️ Pointer handlers that mark ancestor branch guide lines on row hover. */
 const useTreeHoverPathRootHandlers = () => {
   const treeRootRef = reactHostPort.useRef<HTMLDivElement>(null);
   const lastHoverRowRef = reactHostPort.useRef<Element | null>(null);
@@ -3389,7 +3389,7 @@ const useTreeHoverPathRootHandlers = () => {
   return { treeRootRef, handleTreePointerOver, handleTreePointerLeave, refreshTreeHoverPath };
 };
 
-/** @emoji ✅️ Marks ancestor section rows when a descendant tree item is selected. */
+/** ✅️ Marks ancestor section rows when a descendant tree item is selected. */
 const useTreeSelectionPathSync = (treeRootRef: React.RefObject<HTMLDivElement | null>, selectedIds: readonly string[]) => {
   reactHostPort.useLayoutEffect(() => {
     const root = treeRootRef.current;
@@ -3401,7 +3401,7 @@ const useTreeSelectionPathSync = (treeRootRef: React.RefObject<HTMLDivElement | 
 };
 //#endregion 🎃️TreeHoverPath
 
-/** @emoji 🌿️ Hoisted data-tree item row (stable component type across Tree re-renders). */
+/** 🌿️ Hoisted data-tree item row (stable component type across Tree re-renders). */
 const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { readonly item: TreeDataItem; readonly section: TreeDataSection; readonly path: readonly string[]; readonly isLastItem: boolean; readonly windowRowIndex?: number; readonly windowRowExtent?: TreeWindowRowExtent }): React.ReactElement {
   const { item, section, path, isLastItem, windowRowIndex, windowRowExtent } = props;
   const { direction = "down" } = reactHostPort.useContext(TreeContext);
@@ -3505,7 +3505,7 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { r
   );
 });
 
-/** @emoji 🌿️ Hoisted data-tree section row (stable component type across Tree re-renders). */
+/** 🌿️ Hoisted data-tree section row (stable component type across Tree re-renders). */
 const TreeDataSectionView = reactHostPort.memo(function TreeDataSectionView(props: { readonly section: TreeDataSection; readonly isLastSection: boolean }): React.ReactElement {
   const { section, isLastSection } = props;
   const { direction = "down" } = reactHostPort.useContext(TreeContext);
@@ -4559,7 +4559,7 @@ const WindowMeasureTreeRow: React.FC<WindowMeasureTreeRowProps> = ({ left, right
   </div>
 );
 
-/** @emoji 🌳️ Root tree shell for the window measures rail (guide lines + indentation). */
+/** 🌳️ Root tree shell for the window measures rail (guide lines + indentation). */
 export const WindowMeasuresTree: React.FC<{ children: React.ReactNode; className?: string; direction?: FlowBlock }> = ({ children, className, direction = "down" }) => {
   const { treeRootRef, handleTreePointerOver, handleTreePointerLeave, refreshTreeHoverPath } = useTreeHoverPathRootHandlers();
   const orderedChildren = direction === "up" ? React.Children.toArray(children).reverse() : children;
@@ -4590,7 +4590,7 @@ export interface WindowMeasureTreeGroupProps {
   children?: React.ReactNode;
 }
 
-/** @emoji 🌳️ Collapsible measure group row (same geometry as {@link ControlTree} folders). */
+/** 🌳️ Collapsible measure group row (same geometry as {@link ControlTree} folders). */
 export const WindowMeasureTreeGroup: React.FC<WindowMeasureTreeGroupProps> = ({ id, label, defaultOpen = false, headerControl, children }) => {
   const { level, isLastAtLevel, showLines, isTree, indentMultiplier, direction = "down" } = reactHostPort.useContext(TreeContext);
   const { block, inline } = useFlow();
@@ -4662,7 +4662,7 @@ export interface WindowMeasureTreeLeafProps {
   waiting?: boolean;
 }
 
-/** @emoji 🌳️ Measure control leaf aligned like a tree row (icon + label + value or full-width control). */
+/** 🌳️ Measure control leaf aligned like a tree row (icon + label + value or full-width control). */
 export const WindowMeasureTreeLeaf: React.FC<WindowMeasureTreeLeafProps> = ({ label, icon, children, fullWidth = false, loading = false, waiting = false }) => {
   const { level, isLastAtLevel, showLines } = reactHostPort.useContext(TreeContext);
   const labelNode = label ? (
@@ -4713,7 +4713,7 @@ export const WindowMeasureTreeLeaf: React.FC<WindowMeasureTreeLeafProps> = ({ la
 
 // #region 🪟️WindowPaneChromeToggle
 
-/** @emoji 🪟️ Props for {@link WindowPaneChromeToggle} — the panel-toggle twin for every window pane header. */
+/** 🪟️ Props for {@link WindowPaneChromeToggle} — the panel-toggle twin for every window pane header. */
 export interface WindowPaneChromeToggleProps {
   readonly id: string;
   readonly icon: IconName;
@@ -4721,13 +4721,13 @@ export interface WindowPaneChromeToggleProps {
   readonly onClick?: () => void;
   readonly disabled?: boolean;
   readonly className?: string;
-  /** @emoji 🫳️ Pointer-drag props forwarded to the trailing {@link DragHandle} (omit when the pane is not re-anchorable yet). */
+  /** 🫳️ Pointer-drag props forwarded to the trailing {@link DragHandle} (omit when the pane is not re-anchorable yet). */
   readonly dragPointerProps?: Pick<React.HTMLAttributes<HTMLSpanElement>, "onPointerCancel" | "onPointerDown" | "onPointerMove" | "onPointerUp">;
   readonly showDragHandle?: boolean;
   readonly emphasized?: boolean;
 }
 
-/** @emoji 🪟️ Pane chrome toggle matching panel toggles: leading semantic icon, label, trailing {@link DragHandle} — never a fold-direction chevron. */
+/** 🪟️ Pane chrome toggle matching panel toggles: leading semantic icon, label, trailing {@link DragHandle} — never a fold-direction chevron. */
 export const WindowPaneChromeToggle: React.FC<WindowPaneChromeToggleProps> = ({ id, icon, label, onClick, disabled, className, dragPointerProps, showDragHandle = true, emphasized = false }) => {
   const inlineText = useControlInlineText(id, label);
   const tooltipText = useControlTooltipText(id, label);

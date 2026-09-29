@@ -143,7 +143,6 @@ fn n_pending_retained_surfaces_converge_in_bounded_crossings_that_each_carry_som
         assert!(ledger.crossings <= count * per_surface + 1, "{count} surfaces cost {} crossings against the declared {per_surface} per surface", ledger.crossings);
         assert!(ledger.with_patch >= count, "{count} surfaces published {} patch-carrying crossings", ledger.with_patch);
         assert!(ledger.idle <= fixture["idleCrossingsAllowed"].as_u64().expect("declared idle allowance") as usize, "{count} surfaces cost {} crossings that carried neither an event nor a patch", ledger.idle);
-        eprintln!("[DEBUG] reconcile-spin surfaces={count} crossings={} patch={} events={} idle={}", ledger.crossings, ledger.with_patch, ledger.with_events, ledger.idle);
     }
 }
 
@@ -206,7 +205,6 @@ fn a_host_blocked_ready_output_spends_no_opportunity_and_arms_nothing() {
     assert!(tracker.has_publishable_work(), "the fixture must leave one ready output behind: {}", tracker.debug_state());
     let spent = drive_reconcile_within(&tracker, reconcile_step_opportunities(u64::MAX), far_deadline()).expect("reconcile drive");
     let arms = reconcile_arms_turn(&tracker);
-    eprintln!("[DEBUG] reconcile-spin host-blocked spent={spent} arms={arms} tracker={}", tracker.debug_state());
     assert_eq!(spent, 0, "a saturated publication authority with nothing drivable must spend no opportunity: {}", tracker.debug_state());
     assert!(!arms, "a ready output the HOST is blocking must not arm another turn: {} | {}", tracker.debug_state(), with_pending(|pending| pending.borrow().debug_state()));
     for (receipt, surface, revision) in issued {
@@ -243,7 +241,6 @@ fn the_reconcile_drive_respects_the_turns_wall_hold() {
     }
     let spent = drive_reconcile_within(&tracker, reconcile_step_opportunities(u64::MAX), std::time::Instant::now()).expect("reconcile drive");
     assert!(spent <= stride, "an expired hold must stop the drive inside one {stride}-opportunity stride; spent {spent}");
-    eprintln!("[DEBUG] reconcile-spin expired-hold spent={spent} stride={stride}");
     let (ledger, published) = settle_tracker(&tracker, 53);
     assert_eq!(published, 4, "a drive cut short by its hold still converges on the turns that follow it");
     assert_eq!(ledger.idle, 0, "resuming after a spent hold must not cost a crossing that carries nothing");
@@ -305,7 +302,7 @@ fn a_cancellation_mid_drive_stops_the_publication_and_still_quiesces() {
             }
         }
     }
-    eprintln!("[DEBUG] reconcile-spin cancellation quiesced in {turns} turns");
+    eprintln!("reconcile-spin cancellation quiesced in {turns} turns");
     assert!(!reconcile_arms_turn(&tracker), "a cancelled, retired instance must not arm the turn");
 }
 

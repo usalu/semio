@@ -28,7 +28,7 @@ describe("taxonomy source admission projection", () => {
   });
   for (const row of vectors.cases) test(row.id, () => {
     const actual = projectTaxonomySourceAdmission(row.input);
-    expect(actual).toEqual(row.expected);
+    expect(actual).toEqual<typeof row.expected>(row.expected);
     expect(validateResult(actual), JSON.stringify(validateResult.errors)).toBe(true);
   });
   for (const row of vectors.schemaRejections) test(row.id, () => {

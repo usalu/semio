@@ -1,4 +1,4 @@
-//! @emoji 🔌️ The `GraphicsBackend` contract every backend replays a [`crate::scene::RenderPacket`]
+//! 🔌️ The `GraphicsBackend` contract every backend replays a [`crate::scene::RenderPacket`]
 //! through, plus [`NullBackend`] — the concrete no-op implementation the alias below resolves to
 //! until a real backend crate lands.
 //!

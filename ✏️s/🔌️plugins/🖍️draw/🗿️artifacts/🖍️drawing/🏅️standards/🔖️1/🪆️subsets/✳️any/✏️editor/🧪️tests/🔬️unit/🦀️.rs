@@ -649,7 +649,6 @@ async fn direct_drag_projects_without_editing_and_publishes_only_on_release() {
             assert_eq!(transform.x, 30.0);
             assert_eq!(transform.y, 20.0);
         }
-        eprintln!("[DEBUG] retained direct drag preview/release verified; cancelled={cancelled}");
     }
 }
 
@@ -935,7 +934,6 @@ async fn path_join_conversion_position_and_translation_each_undo_as_one_edit() {
             path.segments.clone()
         },before,after).await;
     }
-    eprintln!("[DEBUG] path joins, conversions, positions and translations restore exact geometry through one undo and redo");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -948,7 +946,6 @@ async fn shape_conversion_restores_the_primitive_with_one_undo() {
     let mut after=before.clone();
     for mutation in edit_selection::plan(&before,&[id.clone()],"toPath").unwrap() { crate::mutations::apply_drawing_mutation(&mut after,&mutation).unwrap(); }
     artifact_laws::assert_undo_redo_round_trip(&mut *app,DrawingCommand::EditSelection(edit_selection::EditSelection { operation:"toPath".into(),ids:vec![id] }),|app|app.snapshot().unwrap(),before,after).await;
-    eprintln!("[DEBUG] shape conversion and its identity survive one undo/redo cycle");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1438,7 +1435,6 @@ async fn selected_group_and_layer_drag_preserves_selection_and_one_history_edit(
             assert_eq!(app.snapshot().unwrap(),after);
         }
         assert_eq!(selected_strokes(&app).await,selected);
-        eprintln!("[DEBUG] selected group and layer preview once and share one history edit; cancelled={cancelled}");
     }
 }
 
@@ -1454,7 +1450,6 @@ async fn created_layers_are_painted_and_selected_for_immediate_editing() {
         let scene=crate::schema::flatten_drawing_document_to_scene_nodes(&snapshot);
         let node=scene.iter().find(|node|node.id==base.id).unwrap();
         assert!(node.fill.is_some() || node.stroke.as_ref().is_some_and(|stroke|stroke.width>0.0));
-        eprintln!("[DEBUG] {kind} is visible in the scene and selected immediately after creation");
     }
 }
 
@@ -1474,7 +1469,6 @@ fn drawing_canvas_initial_framing_uses_world_bounds_and_respects_restored_naviga
     let scene = canvas_scene(semio_framework_plugin::built_to_component_tree(canvas_window::render(&document,&config,&preview,DRAWING_DEFAULT_UTILITY,&[],&[]).unwrap()));
     assert!(scene.framing.is_none());
     assert_eq!((scene.camera_x,scene.camera_y,scene.zoom),(777.0,-333.0,2.0));
-    eprintln!("[DEBUG] initial Drawing framing follows off-origin geometry and yields to restored navigation");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1497,7 +1491,6 @@ async fn text_content_and_size_each_undo_as_one_selection_edit() {
         load_drawing_fixture(&mut app, &before);
         artifact_laws::assert_undo_redo_round_trip(&mut *app, DrawingCommand::PatchLayers(patch_layers::PatchLayers { layer_ids: vec!["first".into(), "second".into()], field: field.into(), value: value.into() }), |app| app.snapshot().unwrap(), before, after).await;
     }
-    eprintln!("[DEBUG] text content and size preserve unrelated facets and undo/redo together for two selected text layers");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1519,7 +1512,6 @@ async fn select_all_discovers_unvisited_layers_and_prunes_deleted_selection() {
     let admission=app.handle_action("selectAll", None, &meta).await.expect("empty Select All admission");
     semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app,admission).await.expect("empty Select All publication");
     assert!(selected_strokes(&app).await.is_empty());
-    eprintln!("[DEBUG] Select All discovers untouched layers and document deletion retires selection");
 }
 
 
@@ -1567,7 +1559,6 @@ async fn transform_handles_render_and_commit_once_through_the_registered_editor(
                 artifact_laws::settle_history_verb(&mut *app,"redo",meta.instance_id).await;
                 assert_eq!(app.snapshot().unwrap(),after);
             }
-            eprintln!("[DEBUG] registered handle {handle} preview/release/history; cancelled={cancelled}");
         }
     }
 }
@@ -1616,7 +1607,6 @@ async fn node_drag_previews_without_mutation_and_commits_one_undoable_edit() {
             artifact_laws::settle_history_verb(&mut *app,"redo",meta.instance_id).await;assert_eq!(app.snapshot().unwrap(),after);
         }
         assert_eq!(selected_strokes(&app).await,vec!["curve".to_string()]);
-        eprintln!("[DEBUG] path control drag preserves press offset and affine scale, previews, cancels and commits once; cancelled={cancelled}");
     }
 }
 
@@ -1649,7 +1639,6 @@ async fn point_click_persists_and_local_position_rebinds_but_topology_edit_prune
     settled(&mut app,DrawingCommand::EditPath(edit_path::EditPath {layer_id:"path".into(),edit:Box::new(PathEdit::Reverse)}),&meta).await;
     assert!(app.interaction_state().await.selection[DRAWING_POINT_DOMAIN].ids.is_empty());
     assert_eq!(selected_strokes(&app).await,vec!["path".to_owned()]);
-    eprintln!("[DEBUG] node click persists, numeric editing rebinds selection and topology changes prune old point addresses");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1678,7 +1667,6 @@ async fn every_keyboard_nudge_moves_document_axes_and_undoes_once() {
         artifact_laws::settle_history_verb(&mut *app,"redo",meta.instance_id).await;
         assert_eq!(app.snapshot().unwrap(),after);
     }
-    eprintln!("[DEBUG] all eight keyboard nudge actions commit and undo exactly once");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1717,7 +1705,6 @@ async fn node_keyboard_nudges_rebind_selection_and_use_parent_axes() {
     artifact_laws::settle_history_verb(&mut *app,"undo",meta.instance_id).await;
     artifact_laws::settle_history_verb(&mut *app,"undo",meta.instance_id).await;
     assert_eq!(app.snapshot().unwrap(),before);
-    eprintln!("[DEBUG] point nudge honors ancestor affine basis, preserves handles and rebinds repeated selection");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1765,7 +1752,6 @@ async fn modified_node_picks_and_combined_drag_preserve_layers_and_one_history_e
         settled(&mut app,DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {x:700.0,y:500.0,width:800.0,height:600.0,shift:false,alt:false,ctrl:false,meta:false,cancelled:false}),&meta).await;
         assert!(app.interaction_state().await.selection.get(DRAWING_POINT_DOMAIN).is_none_or(|selection|selection.ids.is_empty()));
         assert_eq!(selected_strokes(&app).await,vec!["first".to_owned(),"second".to_owned()]);
-        eprintln!("[DEBUG] modified node picks preserve layers and combined affine preview/release/history; cancelled={cancelled}");
     }
 }
 
@@ -1782,7 +1768,6 @@ async fn fill_rule_selection_edit_undoes_as_one_history_entry() {
     let ids=before.layers.iter().map(|layer|crate::schema::layer_id(layer).to_string()).collect();
     load_drawing_fixture(&mut app,&before);
     artifact_laws::assert_undo_redo_round_trip(&mut *app,DrawingCommand::PatchLayers(patch_layers::PatchLayers {layer_ids:ids,field:"fillRule".into(),value:"nonzero".into()}),|app|app.snapshot().unwrap(),before,after).await;
-    eprintln!("[DEBUG] multi-selection fill-rule edit publishes and undoes/redoes as one history entry");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1803,7 +1788,6 @@ async fn alignment_across_groups_undoes_as_one_history_entry() {
     for layer in &mut body.children {crate::schema::layer_base_mut(layer).transform.x=-10.0;}
     load_drawing_fixture(&mut app,&before);
     artifact_laws::assert_undo_redo_round_trip(&mut *app,DrawingCommand::EditSelection(edit_selection::EditSelection {ids:vec!["first".into(),"second".into(),"third".into()],operation:"alignLeft".into()}),|app|app.snapshot().unwrap(),before,after).await;
-    eprintln!("[DEBUG] cross-group alignment publishes and undoes/redoes as one history entry");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1818,7 +1802,6 @@ async fn layer_stack_steps_undo_as_one_history_entry() {
         let after=DrawingSnapshot {layers:order.into_iter().map(|id|before.layers.iter().find(|layer|crate::schema::layer_id(layer)==id).unwrap().clone()).collect(),..before.clone()};
         load_drawing_fixture(&mut app,&before);
         artifact_laws::assert_undo_redo_round_trip(&mut *app,DrawingCommand::EditSelection(edit_selection::EditSelection {ids:vec!["c".into(),"b".into()],operation:operation.into()}),|app|app.snapshot().unwrap(),before,after).await;
-        eprintln!("[DEBUG] {operation} publishes and undoes/redoes as one history entry");
     }
 }
 
@@ -1843,7 +1826,6 @@ async fn ungroup_selects_promoted_children_and_undoes_as_one_history_entry() {
     assert_eq!(selected_strokes(&app).await,vec!["first".to_owned(),"second".to_owned()]);
     artifact_laws::settle_history_verb(&mut *app,"undo",meta.instance_id).await;assert_eq!(app.snapshot().unwrap(),before);
     artifact_laws::settle_history_verb(&mut *app,"redo",meta.instance_id).await;assert_eq!(app.snapshot().unwrap(),after);
-    eprintln!("[DEBUG] ungroup selects promoted children and undoes/redoes as one history entry");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1853,7 +1835,6 @@ async fn group_isolation_selection_edit_undoes_as_one_history_entry() {
     let after:DrawingSnapshot=serde_json::from_str(include_str!("../../../../🎨️style/🧫️fixtures/🧬️mutations/🧩️set-group-isolation/🧩️pass-through-to-isolated/📸️snapshot/➡️after/🔣️.json")).unwrap();
     load_drawing_fixture(&mut app,&before);
     artifact_laws::assert_undo_redo_round_trip(&mut *app,DrawingCommand::PatchLayers(patch_layers::PatchLayers {layer_ids:vec!["group-a".into()],field:"isolation".into(),value:"true".into()}),|app|app.snapshot().unwrap(),before,after).await;
-    eprintln!("[DEBUG] group isolation publishes and undoes/redoes as one history entry");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1882,7 +1863,6 @@ async fn deleting_selected_nodes_commits_once_clears_points_and_undoes_exactly()
     assert_eq!(selected_strokes(&app).await,vec!["path".to_owned()]);
     artifact_laws::settle_history_verb(&mut *app,"undo",meta.instance_id).await;assert_eq!(app.snapshot().unwrap(),before);
     artifact_laws::settle_history_verb(&mut *app,"redo",meta.instance_id).await;assert_eq!(app.snapshot().unwrap(),after);
-    eprintln!("[DEBUG] Delete selection commits one node edit, clears stale point references and supports exact undo/redo");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1908,6 +1888,5 @@ async fn node_marquee_preserves_layers_and_supports_merge_and_cancellation() {
         settled(&mut app,DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {x:412.0,y:312.0,width:800.0,height:600.0,shift,ctrl,meta:false,alt:false,cancelled}),&meta).await;
         assert_eq!(app.interaction_state().await.selection[DRAWING_POINT_DOMAIN].ids,expected.iter().copied().map(point).collect::<Vec<_>>());
         assert_eq!(selected_strokes(&app).await,vec!["path".to_owned()]);assert_eq!(app.snapshot().unwrap(),before);
-        eprintln!("[DEBUG] node marquee selection preserves the document and layers; shift={shift}, ctrl={ctrl}, cancelled={cancelled}");
     }
 }

@@ -1,6 +1,6 @@
 @capability-docx-ecma-376-mutate
 @oracle-jszip-docx-ecma-376-mutate-reader
-@comparison-semantic-docx-ecma-376-mutate-v1
+@comparison-semantic-docx-ecma-376-jszip-v1
 @mutations-docx-ecma-376-base
 Feature: Apply every typed DOCX ECMA-376 mutation to a real-world document
   The committed `example.docx` under this artifact's own demo example is a genuine OOXML package but
@@ -69,6 +69,14 @@ Feature: Apply every typed DOCX ECMA-376 mutation to a real-world document
   This does NOT widen the vocabulary: `InsertStyle` still appends by definition, so the
   interior-`remove-style` gap described above is exactly as non-invertible as it was.
 
+  THE JUDGE. `jszip-docx-ecma-376-mutate-reader` is a third-party READER (jszip + fast-xml-parser): each mutation
+  row's expected package is not computed, it is the COMMITTED `➡️after.docx` under
+  `🧫️fixtures/🧾️readme-afters/<fixture>/`, written by python-docx (MIT, a second third-party library) applying that very
+  row to the real README package through its own package/part/oxml model (generator recorded in each fixture manifest);
+  the real README itself is the expected package of every inverse row, both no-mutation baselines and the identity
+  round trip. `docx-ecma-376-jszip-compare-v1` reads it and the subject's `actual-docx` with the same reader. The
+  `zip`+`quick-xml` composition below stays as the Rust supplement and keeps asserting all three laws in role.
+
   ALL THREE LAWS ARE ASSERTED IN ROLE, through the shared ✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law module,
   so no scenario can pass merely because the reference composition declined to error.
   `mutate-<kind>` fails unless the mutation MOVES the very projection the case is compared through:
@@ -94,25 +102,26 @@ Feature: Apply every typed DOCX ECMA-376 mutation to a real-world document
   @mode-differential
   Scenario Outline: Apply <id> to the real document
     Given the real input document shared://📜️example-readme.docx
+    And the committed after-document shared://🧾️readme-afters/<fixture>/➡️after.docx
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
       """
-    Then the oracle and the subject agree on the semantic projection
+    Then the jszip reader reads the subject's package and the committed after-document as the same DOCX
     Examples:
-      | id                  | params                                                                                                                                                                                                                                                                             |
-      | set-snapshot        | {"body": [{"kind":"paragraph","style":"Heading1","runs":[{"text":"Wave 7 replacement document","bold":false,"italic":false,"underline":false}]},{"kind":"paragraph","style":"Normal","runs":[{"text":"This whole document was replaced by a ","bold":false,"italic":false,"underline":false},{"text":"set-snapshot","bold":true,"italic":false,"underline":false},{"text":" mutation.","bold":false,"italic":false,"underline":false}]},{"kind":"table","rows":[{"cells":[{"blocks":[{"kind":"paragraph","style":"TableCell","runs":[{"text":"Left","bold":false,"italic":false,"underline":false}]}]},{"blocks":[{"kind":"paragraph","style":"TableCell","runs":[{"text":"Right","bold":false,"italic":false,"underline":false}]}]}]}]}], "styles": [{"id":"Normal","name":"Normal","basedOn":null},{"id":"Heading1","name":"heading 1","basedOn":"Normal"},{"id":"TableCell","name":"Table Cell","basedOn":"Normal"}]} |
-      | insert-block        | {"path": {"segments": [{"blockIndex": 359, "row": 1, "cell": 0}], "index": 1}, "block": {"kind":"paragraph","style":"TableCell","runs":[{"text":"(wave 7 annotation)","bold":false,"italic":true,"underline":false}]}}                                                          |
-      | remove-block        | {"path": {"segments": [{"blockIndex": 359, "row": 2, "cell": 0}], "index": 0}}                                                                                                                                                                                                    |
-      | set-block-content   | {"path": {"segments": [], "index": 4}, "block": {"kind":"paragraph","style":"Normal","runs":[{"text":"Wave 7 replaced this admonition paragraph outright.","bold":false,"italic":true,"underline":false}]}}                                                                     |
-      | set-run-text        | {"path": {"segments": [], "index": 177}, "runIndex": 0, "text": "Wave 7 mutation replaced this run's text entirely, still real."}                                                                                                                                                |
-      | set-run-formatting  | {"path": {"segments": [], "index": 177}, "runIndex": 0, "bold": false, "italic": true, "underline": true}                                                                                                                                                                        |
-      | insert-style        | {"style": {"id": "Callout", "name": "Callout", "basedOn": "Normal"}}                                                                                                                                                                                                              |
-      | remove-style        | {"id": "TableCell"}                                                                                                                                                                                                                                                                    |
-      | set-style-name      | {"id": "Heading2", "name": "Section Heading"}                                                                                                                                                                                                                                     |
-      | set-style-based-on  | {"id": "Heading3", "basedOn": "Heading1"}                                                                                                                                                                                                                                         |
-      | set-part            | {"path": "docProps/app.xml", "contentType": "application/vnd.openxmlformats-officedocument.extended-properties+xml", "content": "<Properties xmlns=\"http://schemas.openxmlformats.org/officeDocument/2006/extended-properties\"><Application>semio-wave7-mutation-test</Application></Properties>"} |
-      | remove-part         | {"path": "docProps/core.xml"}                                                                                                                                                                                                                                                     |
+      | id                  | params                                                                                                                                                                                                                                                                             | fixture |
+      | set-snapshot        | {"body": [{"kind":"paragraph","style":"Heading1","runs":[{"text":"Wave 7 replacement document","bold":false,"italic":false,"underline":false}]},{"kind":"paragraph","style":"Normal","runs":[{"text":"This whole document was replaced by a ","bold":false,"italic":false,"underline":false},{"text":"set-snapshot","bold":true,"italic":false,"underline":false},{"text":" mutation.","bold":false,"italic":false,"underline":false}]},{"kind":"table","rows":[{"cells":[{"blocks":[{"kind":"paragraph","style":"TableCell","runs":[{"text":"Left","bold":false,"italic":false,"underline":false}]}]},{"blocks":[{"kind":"paragraph","style":"TableCell","runs":[{"text":"Right","bold":false,"italic":false,"underline":false}]}]}]}]}], "styles": [{"id":"Normal","name":"Normal","basedOn":null},{"id":"Heading1","name":"heading 1","basedOn":"Normal"},{"id":"TableCell","name":"Table Cell","basedOn":"Normal"}]} | 📸️set-snapshot |
+      | insert-block        | {"path": {"segments": [{"blockIndex": 359, "row": 1, "cell": 0}], "index": 1}, "block": {"kind":"paragraph","style":"TableCell","runs":[{"text":"(wave 7 annotation)","bold":false,"italic":true,"underline":false}]}}                                                          | ➕️insert-block |
+      | remove-block        | {"path": {"segments": [{"blockIndex": 359, "row": 2, "cell": 0}], "index": 0}}                                                                                                                                                                                                    | ➖️remove-block |
+      | set-block-content   | {"path": {"segments": [], "index": 4}, "block": {"kind":"paragraph","style":"Normal","runs":[{"text":"Wave 7 replaced this admonition paragraph outright.","bold":false,"italic":true,"underline":false}]}}                                                                     | 📝️set-block-content |
+      | set-run-text        | {"path": {"segments": [], "index": 177}, "runIndex": 0, "text": "Wave 7 mutation replaced this run's text entirely, still real."}                                                                                                                                                | ✍️set-run-text |
+      | set-run-formatting  | {"path": {"segments": [], "index": 177}, "runIndex": 0, "bold": false, "italic": true, "underline": true}                                                                                                                                                                        | 🪄️set-run-formatting |
+      | insert-style        | {"style": {"id": "Callout", "name": "Callout", "basedOn": "Normal"}}                                                                                                                                                                                                              | 💬️insert-style |
+      | remove-style        | {"id": "TableCell"}                                                                                                                                                                                                                                                                    | 🗨️remove-style |
+      | set-style-name      | {"id": "Heading2", "name": "Section Heading"}                                                                                                                                                                                                                                     | 🔤️set-style-name |
+      | set-style-based-on  | {"id": "Heading3", "basedOn": "Heading1"}                                                                                                                                                                                                                                         | 🌳️set-style-based-on |
+      | set-part            | {"path": "docProps/app.xml", "contentType": "application/vnd.openxmlformats-officedocument.extended-properties+xml", "content": "<Properties xmlns=\"http://schemas.openxmlformats.org/officeDocument/2006/extended-properties\"><Application>semio-wave7-mutation-test</Application></Properties>"} | 🧩️set-part |
+      | remove-part         | {"path": "docProps/core.xml"}                                                                                                                                                                                                                                                     | 🧹️remove-part |
 
   @id-no-mutation-baseline-mutate
   @level-exhaustive
@@ -123,7 +132,7 @@ Feature: Apply every typed DOCX ECMA-376 mutation to a real-world document
       """
       {"kind": "no-mutation", "params": {}}
       """
-    Then the oracle and the subject agree on the semantic projection
+    Then the jszip reader reads the subject's package and the real README as the same DOCX
 
   @id-inverse
   @level-exhaustive
@@ -134,7 +143,7 @@ Feature: Apply every typed DOCX ECMA-376 mutation to a real-world document
       """
       {"kind": "<id>", "params": <params>}
       """
-    Then the oracle and the subject agree on the semantic projection
+    Then the jszip reader reads the restored package and the real README as the same DOCX
     Examples:
       | id                  | params                                                                                                                                                                                                                                                                             |
       | set-snapshot        | {"body": [{"kind":"paragraph","style":"Heading1","runs":[{"text":"Wave 7 replacement document","bold":false,"italic":false,"underline":false}]},{"kind":"paragraph","style":"Normal","runs":[{"text":"This whole document was replaced by a ","bold":false,"italic":false,"underline":false},{"text":"set-snapshot","bold":true,"italic":false,"underline":false},{"text":" mutation.","bold":false,"italic":false,"underline":false}]},{"kind":"table","rows":[{"cells":[{"blocks":[{"kind":"paragraph","style":"TableCell","runs":[{"text":"Left","bold":false,"italic":false,"underline":false}]}]},{"blocks":[{"kind":"paragraph","style":"TableCell","runs":[{"text":"Right","bold":false,"italic":false,"underline":false}]}]}]}]}], "styles": [{"id":"Normal","name":"Normal","basedOn":null},{"id":"Heading1","name":"heading 1","basedOn":"Normal"},{"id":"TableCell","name":"Table Cell","basedOn":"Normal"}]} |
@@ -159,7 +168,7 @@ Feature: Apply every typed DOCX ECMA-376 mutation to a real-world document
       """
       {"kind": "no-mutation", "params": {}}
       """
-    Then the oracle and the subject agree on the semantic projection
+    Then the jszip reader reads the restored package and the real README as the same DOCX
 
   @id-identity-round-trip
   @level-long
@@ -167,5 +176,5 @@ Feature: Apply every typed DOCX ECMA-376 mutation to a real-world document
   Scenario: Decode and re-encode the real document without passing bytes through
     Given the real input document shared://📜️example-readme.docx
     When the document is fully parsed into the subset's own snapshot model and re-encoded from it alone
-    Then the oracle and the subject agree on the semantic projection
+    Then the jszip reader reads the re-encoded package and the real README as the same DOCX
     And the re-encoded bytes are not bit-identical to the input

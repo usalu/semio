@@ -54,7 +54,6 @@ fn worker_maintenance_matches_neutral_retention_and_aba_lifecycle() {
         assert_eq!(actual, step["expected"].as_str().unwrap(), "{step}");
     }
     assert!(registry.state.lock().unwrap().entries.iter().all(Option::is_none));
-    eprintln!("[DEBUG] fixed maintenance slots matched all 20 neutral coalescing, running-close, concurrent-wake, fault, and ABA transitions");
 }
 
 #[test]
@@ -80,7 +79,6 @@ fn worker_maintenance_capacity_and_pool_identity_are_exact() {
     }
     registry.state.lock().unwrap().next_generation = u64::MAX;
     assert_eq!(registry.install(Lane::Io, idle, [0; 2]), Err(WorkerMaintenanceError::GenerationExhausted));
-    eprintln!("[DEBUG] maintenance admission fenced foreign pools, capacity+1, retired generations, and exhausted generation without wrapping");
 }
 
 #[test]

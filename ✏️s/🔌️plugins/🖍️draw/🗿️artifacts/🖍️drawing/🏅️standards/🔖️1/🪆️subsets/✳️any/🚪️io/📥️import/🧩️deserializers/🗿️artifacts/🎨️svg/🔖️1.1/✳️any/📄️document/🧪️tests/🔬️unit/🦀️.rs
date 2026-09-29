@@ -7,7 +7,6 @@ fn svg_documents_preserve_owned_hierarchy_and_paint() {
         if case["after"].is_null(){assert!(load().is_err(),"{}",case["name"]);continue;}
         assert_eq!(load().unwrap(),serde_json::from_value::<crate::DrawingSnapshot>(case["after"].clone()).unwrap(),"{}",case["name"]);
     }
-    eprintln!("[DEBUG] SVG document import preserves editable hierarchy, inherited styles, viewBox placement, and text");
 }
 #[test]
 fn svg_import_cancels_without_a_partial_document(){
@@ -27,7 +26,6 @@ async fn registered_svg_deserializer_accepts_text_and_utf8_bytes() {
     let bytes=SvgIntoDraw::deserialize(&IoPayload::Binary(source.as_bytes().to_vec())).await.unwrap().value;
     assert_eq!(text,bytes);assert_eq!(text.layers.len(),1);
     assert!(SvgIntoDraw::deserialize(&IoPayload::Binary(vec![255])).await.is_err());
-    eprintln!("[DEBUG] SVG deserializer imports text and UTF-8 payloads into the same editable document");
 }
 
 #[test]
@@ -53,5 +51,4 @@ fn svg_import_normalizes_css_blends_and_accepts_exported_isolation() {
         let imported=output.iter().flat_map(|node|node.groups.iter().map(|group|group.blend_mode.as_str()).chain(std::iter::once(node.blend_mode.as_str()))).filter(|mode|*mode!="normal").collect::<std::collections::BTreeSet<_>>();
         assert_eq!(authored,imported,"{}",case["name"]);
     }
-    eprintln!("[DEBUG] SVG import accepts exported isolation and preserves all authored blend modes");
 }

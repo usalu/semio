@@ -8,7 +8,7 @@ use std::collections::BTreeSet;
 // #region 🔖️IoNode
 const EMPTY_PORTS: &[IoPortSpec] = &[];
 
-/// @emoji 🔤️ Converts spaced or dashed labels into PascalCase display text.
+/// 🔤️ Converts spaced or dashed labels into PascalCase display text.
 pub fn to_pascal_case(s: &str) -> String {
     s.split(|c: char| c.is_whitespace() || c == '-' || c == '_')
         .filter(|part| !part.is_empty())
@@ -22,7 +22,7 @@ pub fn to_pascal_case(s: &str) -> String {
         .collect()
 }
 
-/// @emoji 🏷️ Normalizes node display name and abbreviation to PascalCase.
+/// 🏷️ Normalizes node display name and abbreviation to PascalCase.
 pub fn normalize_node_display(name: &str, abbreviation: &str) -> (String, String) {
     (to_pascal_case(name), to_pascal_case(abbreviation))
 }
@@ -294,9 +294,9 @@ pub struct DagNodeSpec {
     pub height: f64,
     pub operator_kind: Option<String>,
     pub properties: PropertyBag,
-    // 🔀️ serde flattens `kind` into the parent object; `#[derive(ToValue)]` has no `flatten`, so the
-    // first-party encoding nests it under a `kind` key instead. Only the serde form is on a wire
-    // today — the value form exists to satisfy `ArtifactStore`'s bounds.
+    /// 🔀️ serde flattens `kind` into the parent object; `#[derive(ToValue)]` has no `flatten`, so the
+    /// first-party encoding nests it under a `kind` key instead. Only the serde form is on a wire
+    /// today — the value form exists to satisfy `ArtifactStore`'s bounds.
     pub kind: DagNodeKind,
 }
 

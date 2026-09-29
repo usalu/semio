@@ -1791,7 +1791,7 @@ fn lowpoly_render(
 }
 
 //#region 🔖️LowpolyPlayApp
-/// @emoji 🖌️ B1: sheds `RefCell<LowpolyPlayRuntime>` entirely — every former runtime field now lives in
+/// 🖌️ B1: sheds `RefCell<LowpolyPlayRuntime>` entirely — every former runtime field now lives in
 /// `LowpolyConfig`, written through `LowpolyConfigMutation`s emitted from `handle`. The one remaining
 /// field is genuine mid-gesture scratch state (`LowpolyScratch`) — the "scratch + commit" pattern the
 /// `ArtifactEditor` trait itself sanctions for `&self`-only `handle`/`render`.

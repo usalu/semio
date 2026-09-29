@@ -27,5 +27,4 @@ export function testEquationGraphWindowConfigOracle(): void {
   for (const state of Object.values(windows)) assert(validateConfig(state), JSON.stringify(validateConfig.errors));
   assert.deepEqual(generations, fixture.expectedGenerations);
   assert.deepEqual(fixture.expectedAppConfig, {});
-  console.log("[DEBUG] Equation graph-window config matched Ajv, TypeScript folds, and independent JSON Patch partitions");
 }

@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/🏘️SpaceBrowser/component.tsx
-/** @emoji 🏘️ `🏘️SpaceBrowser` — the end-user spaces surface `🛂️SpaceAdministration` never was: list
+/** 🏘️ `🏘️SpaceBrowser` — the end-user spaces surface `🛂️SpaceAdministration` never was: list
  * the spaces I can reach, switch between them, create one, see who is a member and who is here right
  * now, issue an invitation, and redeem one someone sent me. Purely presentational: every mutation
  * leaves as an intent callback, and `useHubConnection` turns it into a closed `DirectoryCommand` on

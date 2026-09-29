@@ -331,7 +331,7 @@ mod renderer {
     }
 
     impl RasterImage {
-        /// @emoji 🖼️ Builds an RGBA8 raster image for scene drawing.
+        /// 🖼️ Builds an RGBA8 raster image for scene drawing.
         pub fn rgba8(width: u32, height: u32, data: SharedArc<Vec<u8>>) -> Self {
             Self { width, height, data }
         }
@@ -1155,7 +1155,7 @@ mod renderer {
     }
     // #endregion 🔖️DrawList
 
-    /// @emoji 🏷️ Parsed SVG document for icon and label rasterization. Host/browser only — see
+    /// 🏷️ Parsed SVG document for icon and label rasterization. Host/browser only — see
     /// `vello_backend`'s `usvg` re-export docstring above; its only real callers are
     /// `IconPaintCache::get_or_build`'s native arm and `#[cfg(test)]` code.
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
@@ -1167,7 +1167,7 @@ mod renderer {
             Self(tree)
         }
 
-        /// @emoji 🏷️ Appends the SVG tree into a scene. Builds a standalone real `vello::Scene`
+        /// 🏷️ Appends the SVG tree into a scene. Builds a standalone real `vello::Scene`
         /// from the tree, then records it as one `SceneCommand::VelloFragment` — `Scene` itself
         /// stays a first-party command list even on this host/browser-only path.
         pub fn append_to_scene(&self, scene: &mut Scene) {
@@ -1177,7 +1177,7 @@ mod renderer {
         }
     }
 
-    /// @emoji 🏷️ Appends a parsed SVG document into a scene.
+    /// 🏷️ Appends a parsed SVG document into a scene.
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     pub fn append_svg_document(scene: &mut Scene, doc: &SvgDocument) {
         doc.append_to_scene(scene);
@@ -1210,10 +1210,10 @@ pub use renderer::{append_svg_document, SvgDocument};
 use semio_framework_intrinsic_size as intrinsic_size;
 
 // #region ⚠️ Errors
-/// @emoji 🚨️ SVG-parse failures raised by canvas icon/label rendering.
+/// 🚨️ SVG-parse failures raised by canvas icon/label rendering.
 #[derive(Clone, Debug, PartialEq)]
 pub enum CanvasError {
-    /// @emoji 🏷️ SVG source failed to parse into a `usvg` tree.
+    /// 🏷️ SVG source failed to parse into a `usvg` tree.
     SvgParse(String),
 }
 
@@ -1230,37 +1230,37 @@ impl std::error::Error for CanvasError {}
 
 pub mod theme {
     // #region theme
-    //! @emoji 🎨️ Default canvas paint helpers from centralized styling tokens.
+    //! 🎨️ Default canvas paint helpers from centralized styling tokens.
 
     use super::Color;
     use ui_styling::{appearance::AppearanceName, CANVAS_LIGHT};
 
-    /// @emoji 🌈️ Maps a linear-sRGB token color to `Color`.
+    /// 🌈️ Maps a linear-sRGB token color to `Color`.
     pub fn linear_color(rgba: [f32; 4]) -> Color {
         Color::new(rgba)
     }
 
-    /// @emoji 🎨️ Shared default clear color for graph board canvases.
+    /// 🎨️ Shared default clear color for graph board canvases.
     pub fn default_raster_clear() -> Color {
         linear_color(CANVAS_LIGHT.raster_clear)
     }
 
-    /// @emoji 🎨️ Default themed icon foreground paint.
+    /// 🎨️ Default themed icon foreground paint.
     pub fn default_icon_fg() -> Color {
         linear_color(CANVAS_LIGHT.icon_fg)
     }
 
-    /// @emoji 🎨️ Default themed icon background paint.
+    /// 🎨️ Default themed icon background paint.
     pub fn default_icon_bg() -> Color {
         linear_color(CANVAS_LIGHT.icon_bg)
     }
 
-    /// @emoji 🎨️ Resolves canvas paints for a theme name.
+    /// 🎨️ Resolves canvas paints for a theme name.
     pub fn canvas_clear_for(theme: AppearanceName) -> Color {
         linear_color(theme.canvas().raster_clear)
     }
 
-    /// @emoji 🌈️ Parses an sRGB8888 JSON array into `Color`.
+    /// 🌈️ Parses an sRGB8888 JSON array into `Color`.
     pub fn color_from_json_rgba8(arr: &[serde_json::Value]) -> Option<Color> {
         let r = u8::try_from(arr.first()?.as_u64().unwrap_or(0).min(255)).ok()?;
         let g = u8::try_from(arr.get(1)?.as_u64().unwrap_or(0).min(255)).ok()?;
@@ -1269,7 +1269,7 @@ pub mod theme {
         Some(Color::from_rgba8(r, g, b, a))
     }
 
-    /// @emoji 🎨️ Merges one camelCase color field from a canvas theme JSON object.
+    /// 🎨️ Merges one camelCase color field from a canvas theme JSON object.
     pub fn merge_color_field(next: &mut Color, v: &serde_json::Value, key: &str) {
         if let Some(arr) = v.get(key).and_then(|x| x.as_array()) {
             if let Some(c) = color_from_json_rgba8(arr) {
@@ -1278,13 +1278,13 @@ pub mod theme {
         }
     }
 
-    /// @emoji 🌓️ Returns whether a canvas clear color reads as a light background.
+    /// 🌓️ Returns whether a canvas clear color reads as a light background.
     pub fn clear_is_light(clear: Color) -> bool {
         let [r, g, b, _] = clear.components();
         0.2126 * f64::from(r) + 0.7152 * f64::from(g) + 0.0722 * f64::from(b) > 0.5
     }
 
-    /// @emoji 🎨️ Checkerboard cell shades for transparent raster layers.
+    /// 🎨️ Checkerboard cell shades for transparent raster layers.
     pub fn checkerboard_shades_for_clear(clear: Color) -> (u8, u8) {
         if clear_is_light(clear) {
             (220, 180)
@@ -1298,7 +1298,7 @@ pub mod theme {
 // #region 🏷️IconAssets
 
 pub mod icon_assets {
-    //! @emoji 📎️ Static bytes for icon rendering; `include_bytes!` paths are relative to this `lib.rs` file.
+    //! 📎️ Static bytes for icon rendering; `include_bytes!` paths are relative to this `lib.rs` file.
 
     pub static NOTO_COLOR_EMOJI_SUBSET_TTF: &[u8] = include_bytes!("🖼️assets/😀️NotoColorEmoji-subset.ttf");
 
@@ -1321,7 +1321,7 @@ pub mod svg_icon {
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     static ICON_USVG_OPTIONS: OnceLock<usvg::Options<'static>> = OnceLock::new();
 
-    /// @emoji 🔤️ Shared `usvg` parse options with bundled Noto Color Emoji so `<text>` in Typst `emoji:` SVG matches the Typst font book; avoids system fallback glyphs.
+    /// 🔤️ Shared `usvg` parse options with bundled Noto Color Emoji so `<text>` in Typst `emoji:` SVG matches the Typst font book; avoids system fallback glyphs.
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     pub fn usvg_options_icons() -> &'static usvg::Options<'static> {
         ICON_USVG_OPTIONS.get_or_init(|| {
@@ -1516,7 +1516,7 @@ pub mod svg_icon {
     }
 
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-    /// @emoji 🏷️ Renders SVG tree paints literally (no icon fg/bg remapping); used for map labels.
+    /// 🏷️ Renders SVG tree paints literally (no icon fg/bg remapping); used for map labels.
     pub fn render_svg_tree_literal(scene: &mut Scene, tree: &usvg::Tree) {
         render_group_literal(scene, tree.root(), false);
     }
@@ -1588,7 +1588,7 @@ pub mod svg_icon {
     }
 
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-    /// @emoji 📐️ Union of visible paint bounds (paths, raster images, text) in absolute SVG space for uniform scale-and-center fits.
+    /// 📐️ Union of visible paint bounds (paths, raster images, text) in absolute SVG space for uniform scale-and-center fits.
     pub fn svg_icon_content_bounds(tree: &usvg::Tree) -> (f64, f64, f64, f64) {
         let mut acc = None::<(f64, f64, f64, f64)>;
         for c in tree.root().children() {
@@ -1623,7 +1623,7 @@ pub mod svg_icon {
     }
 
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-    /// @emoji 🏷️ Parses SVG source and renders it themed into `scene`.
+    /// 🏷️ Parses SVG source and renders it themed into `scene`.
     pub fn append_svg_str_themed(scene: &mut Scene, svg: &str, fg: Color, bg: Color) -> Result<(), super::CanvasError> {
         let tree = usvg::Tree::from_str(svg, usvg_options_icons()).map_err(|e| super::CanvasError::SvgParse(e.to_string()))?;
         render_svg_tree_themed(scene, &tree, fg, bg);
@@ -1631,12 +1631,12 @@ pub mod svg_icon {
     }
 
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-    /// @emoji 🏷️ Parses SVG source and renders it with the default icon theme into `scene`.
+    /// 🏷️ Parses SVG source and renders it with the default icon theme into `scene`.
     pub fn append_svg_str(scene: &mut Scene, svg: &str) -> Result<(), super::CanvasError> {
         append_svg_str_themed(scene, svg, super::theme::default_icon_fg(), super::theme::default_icon_bg())
     }
 
-    /// @emoji 📐️ Parses SVG and returns visible content bounds in absolute SVG space.
+    /// 📐️ Parses SVG and returns visible content bounds in absolute SVG space.
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     pub fn svg_icon_content_bounds_from_str(svg: &str) -> Result<(f64, f64, f64, f64), super::CanvasError> {
         let tree = usvg::Tree::from_str(svg, usvg_options_icons()).map_err(|e| super::CanvasError::SvgParse(e.to_string()))?;
@@ -1660,23 +1660,23 @@ pub mod svg_icon {
 
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 impl SvgDocument {
-    /// @emoji 🏷️ Parses icon SVG with bundled emoji font options.
+    /// 🏷️ Parses icon SVG with bundled emoji font options.
     pub fn parse_icons(svg: &str) -> Result<Self, CanvasError> {
         let tree = usvg::Tree::from_str(svg, svg_icon::usvg_options_icons()).map_err(|e| CanvasError::SvgParse(e.to_string()))?;
         Ok(Self::from_tree(tree))
     }
 
-    /// @emoji 📐️ Visible content bounds in absolute SVG space.
+    /// 📐️ Visible content bounds in absolute SVG space.
     pub fn content_bounds(&self) -> (f64, f64, f64, f64) {
         svg_icon::svg_icon_content_bounds(&self.0)
     }
 
-    /// @emoji 🏷️ Renders themed icon paints into a scene.
+    /// 🏷️ Renders themed icon paints into a scene.
     pub fn render_themed(&self, scene: &mut Scene, fg: Color, bg: Color) {
         svg_icon::render_svg_tree_themed(scene, &self.0, fg, bg);
     }
 
-    /// @emoji 🏷️ Renders literal SVG paints into a scene.
+    /// 🏷️ Renders literal SVG paints into a scene.
     pub fn render_literal(&self, scene: &mut Scene) {
         svg_icon::render_svg_tree_literal(scene, &self.0);
     }
@@ -1716,7 +1716,7 @@ pub mod text {
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     static MAP_LABEL_USVG_OPTIONS: OnceLock<usvg::Options<'static>> = OnceLock::new();
 
-    /// @emoji 🔤️ `usvg` options with bundled map label sans for place-name labels.
+    /// 🔤️ `usvg` options with bundled map label sans for place-name labels.
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     pub fn usvg_options_map_labels() -> &'static usvg::Options<'static> {
         MAP_LABEL_USVG_OPTIONS.get_or_init(|| {
@@ -1727,11 +1727,11 @@ pub mod text {
         })
     }
 
-    /// @emoji 🗂️ The schema whose `const`s are the shaped-label cache's bounds — their only source.
+    /// 🗂️ The schema whose `const`s are the shaped-label cache's bounds — their only source.
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     pub const LABEL_SHAPES_SCHEMA: &str = include_str!("🧬️schema/🏷️label-shapes/🔣️.json");
 
-    /// @emoji 📏️ Entry, byte and per-entry byte bounds of one [`BoundedLru`].
+    /// 📏️ Entry, byte and per-entry byte bounds of one [`BoundedLru`].
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub struct LabelShapeBounds {
@@ -1742,7 +1742,7 @@ pub mod text {
 
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     impl LabelShapeBounds {
-        /// @emoji 📜️ Reads the bounds a label-shapes schema declares as `properties.<bound>.const`; refuses a
+        /// 📜️ Reads the bounds a label-shapes schema declares as `properties.<bound>.const`; refuses a
         /// schema without them, with no entry, or whose single entry could exceed the total.
         pub fn from_schema(schema: &str) -> Result<Self, String> {
             let document: serde_json::Value = serde_json::from_str(schema).map_err(|error| format!("label-shapes schema: {error}"))?;
@@ -1754,14 +1754,14 @@ pub mod text {
             Ok(bounds)
         }
 
-        /// @emoji 🏷️ The bounds [`LABEL_SHAPES_SCHEMA`] declares.
+        /// 🏷️ The bounds [`LABEL_SHAPES_SCHEMA`] declares.
         pub fn declared() -> Self {
             static DECLARED: OnceLock<LabelShapeBounds> = OnceLock::new();
             *DECLARED.get_or_init(|| Self::from_schema(LABEL_SHAPES_SCHEMA).expect("the label-shapes schema declares consistent bounds"))
         }
     }
 
-    /// @emoji 🧾️ What one [`BoundedLru::admit`] did: stored after evicting these keys (least recent first), or bypassed
+    /// 🧾️ What one [`BoundedLru::admit`] did: stored after evicting these keys (least recent first), or bypassed
     /// because the entry alone exceeds `maximum_entry_bytes`.
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     #[derive(Clone, Debug, PartialEq, Eq)]
@@ -1770,7 +1770,7 @@ pub mod text {
         Bypassed,
     }
 
-    /// @emoji 🔁️ A least-recently-used map bounded by entry count, total accounted bytes and per-entry bytes — the
+    /// 🔁️ A least-recently-used map bounded by entry count, total accounted bytes and per-entry bytes — the
     /// policy of the shaped-label cache, generic so its laws replay without a font.
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     pub struct BoundedLru<V> {
@@ -1786,7 +1786,7 @@ pub mod text {
             Self { bounds, entries: HashMap::new(), bytes: 0, clock: 0 }
         }
 
-        /// @emoji 🔎️ The value under `key`, made the most recent.
+        /// 🔎️ The value under `key`, made the most recent.
         pub fn get(&mut self, key: &str) -> Option<&V> {
             self.clock += 1;
             let clock = self.clock;
@@ -1795,7 +1795,7 @@ pub mod text {
             Some(&entry.0)
         }
 
-        /// @emoji ➕️ Stores `value` under `key`, accounted at `bytes`, after evicting least-recently-used keys until
+        /// ➕️ Stores `value` under `key`, accounted at `bytes`, after evicting least-recently-used keys until
         /// both the entry count and the byte total fit; replaces a present key.
         pub fn admit(&mut self, key: String, value: V, bytes: usize) -> LruAdmission {
             if let Some((_, previous, _)) = self.entries.remove(&key) {
@@ -1828,12 +1828,12 @@ pub mod text {
             self.entries.is_empty()
         }
 
-        /// @emoji ⚖️ Accounted bytes of every resident entry.
+        /// ⚖️ Accounted bytes of every resident entry.
         pub fn bytes(&self) -> usize {
             self.bytes
         }
 
-        /// @emoji 🗝️ Resident keys, least recent first.
+        /// 🗝️ Resident keys, least recent first.
         pub fn keys(&self) -> Vec<String> {
             let mut rows: Vec<(u64, &String)> = self.entries.iter().map(|(key, entry)| (entry.2, key)).collect();
             rows.sort_unstable();
@@ -1841,14 +1841,14 @@ pub mod text {
         }
     }
 
-    /// @emoji 🖋️ One shaped label: the usvg content bounds of its markup and, once painted, its outline scene.
+    /// 🖋️ One shaped label: the usvg content bounds of its markup and, once painted, its outline scene.
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     struct LabelShape {
         bounds: (f64, f64, f64, f64),
         scene: Option<Scene>,
     }
 
-    /// @emoji 📊️ Counters of the calling thread's shaped-label cache: `shapes` counts usvg shapings (font face parse +
+    /// 📊️ Counters of the calling thread's shaped-label cache: `shapes` counts usvg shapings (font face parse +
     /// glyph shaping + outlining), `hits` the paints and measures that reused one.
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -1872,7 +1872,7 @@ pub mod text {
         static LABEL_SHAPES: RefCell<LabelShapeCache> = RefCell::new(LabelShapeCache { lru: BoundedLru::new(LabelShapeBounds::declared()), stats: LabelShapeStats::default() });
     }
 
-    /// @emoji 📊️ The calling thread's shaped-label cache counters (a browser canvas session runs on one thread; every
+    /// 📊️ The calling thread's shaped-label cache counters (a browser canvas session runs on one thread; every
     /// native test thread owns its own cache).
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     pub fn label_shape_stats() -> LabelShapeStats {
@@ -1882,7 +1882,7 @@ pub mod text {
         })
     }
 
-    /// @emoji 🗃️ Shapes `markup` with usvg once per content: every later paint (`paint`) or measure of the same markup
+    /// 🗃️ Shapes `markup` with usvg once per content: every later paint (`paint`) or measure of the same markup
     /// reuses the shaped outline scene and bounds, so an unchanged frame re-parses no font face and reshapes no glyph
     /// run (measured ticket 26/09/23 F1: an idle-then-typed trinity query editor spent ~85 ms of every paint in
     /// `usvg::Tree::from_str`). The markup carries every input of the shaping — text, size, family, fill, halo.
@@ -1919,7 +1919,7 @@ pub mod text {
         Some(shape)
     }
 
-    /// @emoji 📐️ Measure markup of one label line: its box, no paint — shared by the line layout and every prefix advance.
+    /// 📐️ Measure markup of one label line: its box, no paint — shared by the line layout and every prefix advance.
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn label_measure_markup(text: &str, px: f64) -> String {
         let pad = px * ui_styling::metrics::label::PAD_RATIO;
@@ -1933,7 +1933,7 @@ pub mod text {
         )
     }
 
-    /// @emoji 🖌️ Paint markup of one single-color label with its halo.
+    /// 🖌️ Paint markup of one single-color label with its halo.
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn label_paint_markup(text: &str, px: f64, fill: Color, halo: Color) -> String {
         let pad = px * ui_styling::metrics::label::PAD_RATIO;
@@ -1950,7 +1950,7 @@ pub mod text {
         )
     }
 
-    /// @emoji 🌈️ Paint markup of one line with colored inline tspans; `None` when no span paints anything.
+    /// 🌈️ Paint markup of one line with colored inline tspans; `None` when no span paints anything.
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn label_tspans_markup(line: &str, spans: &[(usize, usize, Color)], px: f64) -> Option<String> {
         let pad = px * ui_styling::metrics::label::PAD_RATIO;
@@ -1993,7 +1993,7 @@ pub mod text {
         }
     }
 
-    /// @emoji 📐️ Estimated label box size in screen px for layout (matches `append_label` padding).
+    /// 📐️ Estimated label box size in screen px for layout (matches `append_label` padding).
     pub fn label_extent(label: &str, px: f64) -> (f64, f64) {
         let trimmed = label.trim();
         if trimmed.is_empty() || px < ui_styling::metrics::label::MIN_PX {
@@ -2045,7 +2045,7 @@ pub mod text {
         }
     }
 
-    /// @emoji ↔ Horizontal text advance inside a label box (excludes outer padding).
+    /// ↔ Horizontal text advance inside a label box (excludes outer padding).
     pub fn label_advance(label: &str, px: f64) -> f64 {
         if label.is_empty() || px < ui_styling::metrics::label::MIN_PX {
             return 0.0;
@@ -2053,7 +2053,7 @@ pub mod text {
         label.len() as f64 * px * ui_styling::metrics::label::CHAR_WIDTH_RATIO
     }
 
-    /// @emoji 📏️ Left inset from label origin to first glyph baseline start.
+    /// 📏️ Left inset from label origin to first glyph baseline start.
     pub fn label_text_inset(px: f64) -> f64 {
         if px < ui_styling::metrics::label::MIN_PX {
             return 0.0;
@@ -2105,7 +2105,7 @@ pub mod text {
         (bx + bw) - pad
     }
 
-    /// @emoji ↔ World x for a byte offset in a code line (matches `append_label_tspans` layout).
+    /// ↔ World x for a byte offset in a code line (matches `append_label_tspans` layout).
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     pub fn label_byte_world_x(line: &str, byte_offset: usize, origin_x: f64, px: f64) -> f64 {
         let Some(layout) = label_line_layout(line, px) else {
@@ -2129,12 +2129,12 @@ pub mod text {
         origin_x + label_text_inset(px) + label_advance(&line[..end], px)
     }
 
-    /// @emoji ↔ World x range for a byte span in a code line.
+    /// ↔ World x range for a byte span in a code line.
     pub fn label_span_world_x(line: &str, byte_start: usize, byte_end: usize, origin_x: f64, px: f64) -> (f64, f64) {
         (label_byte_world_x(line, byte_start, origin_x, px), label_byte_world_x(line, byte_end, origin_x, px))
     }
 
-    /// @emoji 🏷️ Renders a single map label via SVG text at `origin` (screen px, baseline), shaped once per content.
+    /// 🏷️ Renders a single map label via SVG text at `origin` (screen px, baseline), shaped once per content.
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     pub fn append_label(scene: &mut Scene, label: &str, origin: Point, px: f64, fill: Color, halo: Color) {
         let trimmed = label.trim();
@@ -2147,7 +2147,7 @@ pub mod text {
         append_shaped_label(scene, &shape, origin, px);
     }
 
-    /// @emoji 📌️ Places one shaped label's outline scene at `origin` (screen px, baseline) at its fitted scale.
+    /// 📌️ Places one shaped label's outline scene at `origin` (screen px, baseline) at its fitted scale.
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn append_shaped_label(scene: &mut Scene, shape: &LabelShape, origin: Point, px: f64) {
         let (bx, by, bw, bh) = shape.bounds;
@@ -2168,7 +2168,7 @@ pub mod text {
     #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
     pub fn append_label(_scene: &mut Scene, _label: &str, _origin: Point, _px: f64, _fill: Color, _halo: Color) {}
 
-    /// @emoji 🏷️ Renders one label with colored inline tspans (single padding box, no per-span gaps), shaped once per content.
+    /// 🏷️ Renders one label with colored inline tspans (single padding box, no per-span gaps), shaped once per content.
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     pub fn append_label_tspans(scene: &mut Scene, line: &str, spans: &[(usize, usize, Color)], origin: Point, px: f64, _halo: Color) {
         if line.is_empty() || spans.is_empty() || px < ui_styling::metrics::label::MIN_PX {
@@ -2398,17 +2398,17 @@ pub mod lod {
         }
     }
 
-    /// @emoji 🔤️ Fixed screen label px for a LOD band; stays constant while zooming inside the band.
+    /// 🔤️ Fixed screen label px for a LOD band; stays constant while zooming inside the band.
     pub fn band_label_screen_px(band_px: &[f64], band_index: usize, fallback: f64) -> f64 {
         band_px.get(band_index).copied().unwrap_or(fallback)
     }
 
-    /// @emoji 🔤️ Lower camera-zoom bound for a LOD band (previous band `max_zoom`, or `zoom_min`).
+    /// 🔤️ Lower camera-zoom bound for a LOD band (previous band `max_zoom`, or `zoom_min`).
     pub fn band_floor_zoom(band_floor_zoom: &[f64], band_index: usize, zoom_min: f64) -> f64 {
         band_floor_zoom.get(band_index).copied().unwrap_or(zoom_min).max(zoom_min)
     }
 
-    /// @emoji 🔤️ Label screen px scaled with camera zoom inside one LOD band so text keeps the same proportion to world geometry.
+    /// 🔤️ Label screen px scaled with camera zoom inside one LOD band so text keeps the same proportion to world geometry.
     pub fn lod_band_label_screen_px(base_screen_px: f64, zoom: f64, band_floor_zoom: f64) -> f64 {
         let z = zoom.max(ui_styling::metrics::camera::LOD_ZOOM_FLOOR);
         let floor = band_floor_zoom.max(ui_styling::metrics::camera::LOD_ZOOM_FLOOR);
@@ -2466,7 +2466,7 @@ pub mod raster {
 pub mod render {
     use super::{Affine, Scene};
 
-    /// @emoji 📐️ Scales a logical-viewport scene to the physical GPU surface (device pixel ratio).
+    /// 📐️ Scales a logical-viewport scene to the physical GPU surface (device pixel ratio).
     pub fn scale_scene_for_device_pixel_ratio(scene: Scene, dpr: f64) -> Scene {
         let scale = dpr.max(1.0);
         if (scale - 1.0).abs() < f64::EPSILON {
@@ -2515,7 +2515,7 @@ pub mod gpu_session {
             self.surface.is_some()
         }
 
-        /// @emoji 🖥️ WebGPU surface bring-up; returns `String` (not `CanvasError`) because every call site is a wasm-bindgen boundary fn that immediately erases the error into a `JsValue` for JS — see `render_frame` below for the same convention.
+        /// 🖥️ WebGPU surface bring-up; returns `String` (not `CanvasError`) because every call site is a wasm-bindgen boundary fn that immediately erases the error into a `JsValue` for JS — see `render_frame` below for the same convention.
         ///
         /// The adapter is acquired BEFORE the canvas is touched, and that order is the contract, not
         /// a preference: `Instance::create_surface` binds a `webgpu` context to the element, a canvas
@@ -2631,7 +2631,7 @@ pub mod icon_codec {
 
     // #region 🏷️IconUnion
 
-    /// @emoji 🖼️ Canonical structured icon payload shared across canvases and UI chrome.
+    /// 🖼️ Canonical structured icon payload shared across canvases and UI chrome.
     #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
     #[serde(tag = "kind", rename_all = "camelCase")]
     #[value(tag = "kind", rename_all = "camelCase")]
@@ -2702,7 +2702,12 @@ pub mod icon_codec {
         None
     }
 
-    /// @emoji 🔤️ Decodes a canonical icon string into a structured {@link Icon}.
+    /// 🔤️ Decodes a canonical icon string into a structured {@link Icon}.
+    ///
+    /// `$formula$` decode sugar — generic math-notation culture, not a Typst leftover (the icon
+    /// selector's own placeholder already teaches it). Unlike Typst's own `$...$` inline-math
+    /// marker, the compiler's grammar has no delimiter syntax of its own, so the `$`s must be
+    /// STRIPPED here rather than passed through verbatim.
     pub fn decode_icon(encoded: &str) -> Option<Icon> {
         let t = encoded.trim();
         if t.is_empty() {
@@ -2722,10 +2727,6 @@ pub mod icon_codec {
             let src = src.trim();
             return (!src.is_empty()).then(|| Icon::Math { src: src.to_string() });
         }
-        // `$formula$` decode sugar — generic math-notation culture, not a Typst leftover (the icon
-        // selector's own placeholder already teaches it). Unlike Typst's own `$...$` inline-math
-        // marker, the compiler's grammar has no delimiter syntax of its own, so the `$`s must be
-        // STRIPPED here rather than passed through verbatim.
         if t.len() >= 2 && t.starts_with('$') && t.ends_with('$') {
             let inner = t[1..t.len() - 1].trim();
             return (!inner.is_empty()).then(|| Icon::Math { src: inner.to_string() });
@@ -2762,15 +2763,16 @@ pub mod icon_codec {
         None
     }
 
-    /// @emoji 🔤️ Encodes a structured {@link Icon} into the canonical wire string.
+    /// 🔤️ Encodes a structured {@link Icon} into the canonical wire string.
+    ///
+    /// Always canonical, even for a `src` that was decoded from `$…$` sugar — the `$`
+    /// delimiters are input sugar only, never round-tripped back out.
     pub fn encode_icon(icon: &Icon) -> String {
         match icon {
             Icon::Url { url } => format!("url:{}", url.trim()),
             Icon::Shortcode { code } => format!(":{code}:"),
             Icon::Data { data } => data.trim().to_string(),
             Icon::Emoji { emoji } => format!("emoji:{}", emoji.trim()),
-            // Always canonical, even for a `src` that was decoded from `$…$` sugar — the `$`
-            // delimiters are input sugar only, never round-tripped back out.
             Icon::Math { src } => format!("math:{}", src.trim()),
             Icon::Text { text } => format!("text:{}", text.trim()),
             Icon::Svg { svg } => svg.trim().to_string(),
@@ -2879,7 +2881,7 @@ pub mod icon_codec {
         Some(RgbaImage { data: Arc::from([].as_slice()), w, h })
     }
 
-    /// @emoji 🧮️ Compiles a semio math notation snippet ([`compiler::syntax::parse_formula`]) to SVG
+    /// 🧮️ Compiles a semio math notation snippet ([`compiler::syntax::parse_formula`]) to SVG
     /// via the `compiler` module — replaces the former Typst-markup icon path. `None` on invalid
     /// notation syntax (graceful degradation, matching the old malformed-typst-markup behavior).
     fn resolve_math_src(src: &str) -> BoardResolvedIcon {
@@ -2894,7 +2896,7 @@ pub mod icon_codec {
         }
     }
 
-    /// @emoji 😀️ Renders an arbitrary emoji string via `compiler::compile_emoji_to_svg` — infallible
+    /// 😀️ Renders an arbitrary emoji string via `compiler::compile_emoji_to_svg` — infallible
     /// (the compiler's fonts are always embedded, no host-fetch failure mode remains).
     fn resolve_emoji_body(em: &str) -> BoardResolvedIcon {
         let em = em.trim();
@@ -2905,7 +2907,7 @@ pub mod icon_codec {
         BoardResolvedIcon::SvgPlain(compiler::compile_emoji_to_svg(em, options).svg)
     }
 
-    /// @emoji 📝️ Renders arbitrary text via `compiler::compile_text_to_svg` — infallible.
+    /// 📝️ Renders arbitrary text via `compiler::compile_text_to_svg` — infallible.
     fn resolve_text_body(text: &str) -> BoardResolvedIcon {
         let text = text.trim();
         if text.is_empty() {
@@ -2957,7 +2959,7 @@ pub mod icon_codec {
         }
     }
 
-    /// @emoji 🔍️ Resolves an icon encoding to paintable content; `themed_lookup` marks SVG as themed when present.
+    /// 🔍️ Resolves an icon encoding to paintable content; `themed_lookup` marks SVG as themed when present.
     pub fn board_resolve_icon_kind(encoded: &str, themed_lookup: ThemedSvgLookup) -> BoardResolvedIcon {
         let Some(icon) = decode_icon(encoded) else {
             return BoardResolvedIcon::None;

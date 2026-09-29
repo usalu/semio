@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji ⏯️ The shell side of the framework ToolRun panel (`framework.panel.toolRun`, body `framework.body.toolRun`):
+/** ⏯️ The shell side of the framework ToolRun panel (`framework.panel.toolRun`, body `framework.body.toolRun`):
  * which runs a rendered panel body holds, whether a run the shell has not seen yet started — the moment the shell
  * reveals the panel — and each live run as the Tasks window lists it. The group-key law is `⏯️tool-run`'s own
  * (`toolRunPanelNewRuns`), pinned by its lifecycle fixture; the wgpu Shell reads the same law in Rust. */

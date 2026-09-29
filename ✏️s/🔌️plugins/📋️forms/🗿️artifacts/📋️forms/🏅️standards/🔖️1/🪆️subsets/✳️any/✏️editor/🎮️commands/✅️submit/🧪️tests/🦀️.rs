@@ -30,7 +30,6 @@ fn submission_routes_errors_and_prevents_duplicate_responses() {
         assert_eq!(restored, next);
         assert!(handle_window(&spec, &restored, &transient, "revision-b".into()).unwrap().0.artifact_mutations.is_empty());
     }
-    println!("[DEBUG] Forms submission command returned to invalid steps, persisted answers and prevented repeat submissions");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -100,5 +99,4 @@ async fn mounted_submission_persists_reopens_exports_and_discards() {
     }.await;
     app.close();
     outcome.expect("mounted Forms response lifecycle");
-    eprintln!("[DEBUG] Mounted Forms accepted answers, saved once, reopened the document, rendered responses, downloaded JSON/CSV, and removed a response");
 }

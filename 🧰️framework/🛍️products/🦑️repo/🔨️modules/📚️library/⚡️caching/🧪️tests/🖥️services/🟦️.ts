@@ -91,7 +91,7 @@ else {
   const run = (id: string) => {
     const child = Bun.spawn(["node", join(nxRoot, "dist/bin/nx.js"), "run", "fixture:test", "--output-style=stream"], { cwd: root, env: { ...env, FIXTURE_RUN_ID: id, FIXTURE_SHARED: scenario.sharing ? "1" : "0" }, stdout: "pipe", stderr: "pipe" });
     children.push(child);
-    const drain = async (stream: BunReadableStream) => { for await (const bytes of stream) appendFileSync(join(root, "state/" + id + ".log"), bytes); };
+    const drain = async (stream: ReadableStream<Uint8Array>) => { for await (const bytes of stream) appendFileSync(join(root, "state/" + id + ".log"), bytes); };
     const completion = Promise.all([drain(child.stdout), drain(child.stderr), child.exited]).then(results => { outcomes.set(id, results[2]); return results[2]; });
     runs.push(completion); return completion;
   };

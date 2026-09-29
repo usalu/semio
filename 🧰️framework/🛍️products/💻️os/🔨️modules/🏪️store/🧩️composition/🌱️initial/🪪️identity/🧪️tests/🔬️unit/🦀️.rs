@@ -78,5 +78,5 @@ fn initial_child_identity_matches_neutral_coordinates_and_blake3() {
         let fields = [value.as_str(); 9];
         assert_eq!(derive(fields, 63).unwrap(), oracle(fields, 63).0);
     }
-    eprintln!("[DEBUG] initial-child identity vectors={} coordinate substitutions={} denials={} scope-agreement=3 full-width frames=2 independent=blake3 authority=none", rows.len(), rows.len() * 9, denied);
+    eprintln!("initial-child identity vectors={} coordinate substitutions={} denials={} scope-agreement=3 full-width frames=2 independent=blake3 authority=none", rows.len(), rows.len() * 9, denied);
 }

@@ -197,19 +197,17 @@ impl protocol::Mutation<HomeConfig> for HomeConfigMutation {
     type Diff = HomeConfig;
 
     fn diff(&self, base: &HomeConfig) -> protocol::MutationOutcome<HomeConfig> {
-        let mut next = base.clone();
         match self {
-            HomeConfigMutation::Snapshot { config } => return protocol::MutationOutcome::new(config.clone()),
+            HomeConfigMutation::Snapshot { config } => protocol::MutationOutcome::new(config.clone()),
             HomeConfigMutation::RetireLocalStudio { space_id } | HomeConfigMutation::RestoreLocalStudio { space_id } => {
                 let retired = matches!(self, HomeConfigMutation::RetireLocalStudio { .. });
-                return match base.with_local_studio_retired(space_id, retired) {
+                match base.with_local_studio_retired(space_id, retired) {
                     Some(candidate) if local_studio_tombstones_are_admissible(&candidate) => protocol::MutationOutcome::new(candidate),
-                    Some(_) => protocol::MutationOutcome::new(next).absorb_messages([protocol::MutationMessage::error("s.home.local-studio-tombstone-refused", format!("Local studio {space_id} cannot be retired: its id is not admissible or {HOME_RETIRED_LOCAL_STUDIOS_MAXIMUM} studios are retired already.")).at(["retiredLocalStudioIds"])]),
-                    None => protocol::MutationOutcome::new(next).warn("mutation.no-op", format!("Local studio {space_id} is already {}.", if retired { "retired" } else { "listed" })),
-                };
+                    Some(_) => protocol::MutationOutcome::new(base.clone()).absorb_messages([protocol::MutationMessage::error("s.home.local-studio-tombstone-refused", format!("Local studio {space_id} cannot be retired: its id is not admissible or {HOME_RETIRED_LOCAL_STUDIOS_MAXIMUM} studios are retired already.")).at(["retiredLocalStudioIds"])]),
+                    None => protocol::MutationOutcome::new(base.clone()).warn("mutation.no-op", format!("Local studio {space_id} is already {}.", if retired { "retired" } else { "listed" })),
+                }
             }
         }
-        protocol::MutationOutcome::new(next)
     }
 
     fn inverse(&self, base: &HomeConfig) -> Vec<Self> {

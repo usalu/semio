@@ -29,7 +29,6 @@ fn retained_wire_short_close_conserves_logical_bytes_and_physical_backing() {
     assert_eq!(input.pages.capacity(), 0);
     assert!(input.terminal_is_empty());
     assert_eq!(input.close_step(1, 8), Step::Complete);
-    eprintln!("[DEBUG] wire-short-close released={released} backing-capacity={capacity}->0 zero-grants-preserve=true");
 }
 
 #[test]

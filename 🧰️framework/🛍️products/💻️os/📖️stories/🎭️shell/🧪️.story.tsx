@@ -22,17 +22,17 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** @emoji 🖥️ Studio host program — `PLUGIN_HOST_CONFIGS` (`framework/core/js/index.ts`) resolves `"s"` to studio mode. */
+/** 🖥️ Studio host program — `PLUGIN_HOST_CONFIGS` (`framework/core/js/index.ts`) resolves `"s"` to studio mode. */
 export const Studio: Story = {
   args: { plugin: "s" } satisfies OsBootHostProps,
 };
 
-/** @emoji 🧩️ Puzzle program, no `appId` override — lands on its manifest's first app. */
+/** 🧩️ Puzzle program, no `appId` override — lands on its manifest's first app. */
 export const Puzzle: Story = {
   args: { plugin: "puzzle" } satisfies OsBootHostProps,
 };
 
-/** @emoji 🚫️ A registry pluginId with no prebuilt web artifact — exercises the artifact-missing panel deterministically offline (never triggers a cargo build). */
+/** 🚫️ A registry pluginId with no prebuilt web artifact — exercises the artifact-missing panel deterministically offline (never triggers a cargo build). */
 export const ArtifactMissing: Story = {
   args: { plugin: "architect" } satisfies OsBootHostProps,
 };

@@ -95,7 +95,6 @@ fn member_open_input_framing_is_canonical_scoped_and_budgeted() {
     let mut cx = StepContext::new(OperationId(1), Generation(1), StepBudget::new(8, 1), root_cancel_token(), || Some(1), &mut sequence);
     assert!(matches!(request.step_input(&mut cx), MemberOpenInputStep::Pending(MemberOpenProgress { completed: 0, .. })));
     retire_request(&mut request);
-    eprintln!("[DEBUG] member input: 8 canonical frames x 3 fuel grants, 4 sticky authority denials, exact step deadline and retained close");
 }
 
 #[test]

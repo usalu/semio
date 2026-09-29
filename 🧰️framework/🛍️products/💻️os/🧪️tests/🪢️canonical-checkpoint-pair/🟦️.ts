@@ -14,6 +14,7 @@ import {
   CANONICAL_CHECKPOINT_PAIR_MAX_RECORDS,
   CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE_V1,
   CANONICAL_CHECKPOINT_PAIR_RECORD_BYTES,
+  admitCanonicalCheckpointPairForRebootstrapV1,
   admitCanonicalCheckpointPairV1,
   decodeCanonicalCheckpointPairV1,
   type CanonicalCheckpointPairV1,
@@ -68,6 +69,17 @@ describe("🪢️ canonical checkpoint pair", () => {
       const body = hexBytes(refusal.bodyHex);
       if (refusal.stage === "decode") expect(() => decodeCanonicalCheckpointPairV1(body)).toThrow(refusal.refusal);
       else expect(() => verifyDigests(decodeCanonicalCheckpointPairV1(body))).toThrow(refusal.refusal);
+    });
+  }
+
+  for (const admission of fixture.rebootstrapAdmissions) {
+    it(`rebootstrap ${admission.id} is ${admission.refusal ?? "admitted"}`, () => {
+      const pair = fixture.pairs.find((candidate: { id: string }) => candidate.id === admission.pair);
+      const decoded = decodeCanonicalCheckpointPairV1(hexBytes(pair.bodyHex));
+      const control = { ...admission.control, checkpointId: [...hexBytes(admission.control.checkpointId)], descriptorDigestV1: [...hexBytes(admission.control.descriptorDigestV1)] };
+      const admit = () => admitCanonicalCheckpointPairForRebootstrapV1(decoded, control);
+      if (admission.refusal === null) expect(admit).not.toThrow();
+      else expect(admit).toThrow(admission.refusal);
     });
   }
 

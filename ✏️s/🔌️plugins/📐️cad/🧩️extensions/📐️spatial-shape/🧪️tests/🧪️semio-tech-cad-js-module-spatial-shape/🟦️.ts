@@ -1,13 +1,17 @@
-type TestSource = { readonly directory: string; readonly url: string };
+import { preciseSpatialKernelMath } from "../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧮️preview/🟦️.ts";
+import type { core } from "@semio-tech/cad-js";
+import type { SpatialShapeTestDependencies } from "../../🟦️.ts";
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+type TestSource = { readonly url: string };
+
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: SpatialShapeTestDependencies, source: TestSource): Promise<void> {
   const { SPATIAL_SHAPE_GEOMETRY_STAT_ID, SPATIAL_SHAPE_VOLUME_PROPERTY_ID, core, solidRef } = dependencies;
-  type TypologyRef = any;
+  type TypologyRef = core.TypologyRef;
 
   const { describe, expect, it } = vitest;
   const { runtime, brepjs } = await import("@semio-tech/cad-js");
   const { bootstrapCadModules } = runtime;
-  const { BrepjsKernel, preciseSpatialKernelMath } = brepjs;
+  const { BrepjsKernel } = brepjs;
   const { Model, applyModelDiff, computeStat, defaultModelDefinitionId, derivePropertyValue, loadPropertyDefinition, loadStatDefinition, objectsForStatCompute } = core;
   type ObjectRef = core.ObjectRef;
   type SpatialKernel = core.SpatialKernel;

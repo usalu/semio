@@ -23,7 +23,6 @@ fn jack_graph_window_config_mutations_match_the_independent_patch_trace() {
             assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(state)).unwrap(), row["expected"][id]);
         }
     }
-    eprintln!("[DEBUG] Jack graph-window config mutations matched the independent camera/LOD patch trace and restored exact inverses");
 }
 
 #[test]
@@ -44,5 +43,4 @@ fn jack_graph_window_config_command_uses_the_trusted_concrete_window() {
     assert_eq!(emit.window_config_mutations[0].window_id(), "graph-right");
     assert_eq!(emit.window_config_mutations[0].window_kind_id(), JackGraphWindowConfigOwner::WINDOW_KIND_ID);
     assert!(crate::editor::jack::commands::set_lod_mode("compact", None).is_err());
-    eprintln!("[DEBUG] Jack LOD command addressed only the host-selected concrete graph window");
 }

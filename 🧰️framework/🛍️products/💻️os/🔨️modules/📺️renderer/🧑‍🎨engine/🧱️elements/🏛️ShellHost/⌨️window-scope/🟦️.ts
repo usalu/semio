@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/ShellHost/window-scope/component.ts
-/** @emoji ⌨️ Which window a mode opens ACTIVE, and which window an app-wide chord addresses — as an
+/** ⌨️ Which window a mode opens ACTIVE, and which window an app-wide chord addresses — as an
  * OWNED unit: no React, no shell imports, so a law can drive both decisions without building the
  * shell's element graph (the same separation `🔀️surface-switch` keeps).
  *

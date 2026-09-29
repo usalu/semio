@@ -150,7 +150,6 @@ async fn artifact_composition_projection_walks_aliases_nested_options_and_cancel
     assert!(snapshot.visit_child_refs(&mut visitor).is_err());
     assert_eq!(visitor.steps, 4);
     assert_eq!(visitor.rows, [("optionalChild", "child")]);
-    eprintln!("[DEBUG] schema child visitor: alias, nested option, collection and bounded early-stop assertions");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -180,7 +179,6 @@ async fn artifact_composition_projection_real_child_alias_has_fixed_admission_bo
     assert!(ChildRestoreProjection::from_snapshot(&parent).is_ok());
     parent.many = vec![child(format!("{}x", "ä".repeat(128)))];
     assert!(matches!(ChildRestoreProjection::from_snapshot(&parent), Err(ChildRestoreProjectionError::InvalidReference)));
-    eprintln!("[DEBUG] real derived child projection: 64/65 references, sparse traversal and 256/257 UTF-8 byte boundaries");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -720,6 +718,9 @@ fn fragment_validation_uses_only_the_smallest_required_post_edit_frontier() {
         assert!(!requested.iter().any(String::is_empty), "{} materialized the unrelated 2 MiB payload", case["id"]);
         if matches!(case["id"].as_str(), Some("discriminated-union-boundary" | "discriminated-union-overflow")) {
             assert_eq!(requested, ["/variant/kind"], "{} projected more than its discriminating tag", case["id"]);
+        }
+        if matches!(case["id"].as_str(), Some("annotated-reference-union-boundary" | "annotated-reference-union-overflow")) {
+            assert_eq!(requested, ["/samples/kind"], "{}: an `x-` annotation beside `$ref` must not force the container projection", case["id"]);
         }
         if case.get("arrayLengthBefore").is_some() {
             assert!(requested.is_empty(), "{} projected the large array instead of reading its shape", case["id"]);

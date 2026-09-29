@@ -311,7 +311,7 @@ export async function produceFreshComponentV1<T>(
   }
 }
 
-/** @emoji 🛂️ The ONE describe route of every plugin and extension component (the inferred Nx `describe` target, which
+/** 🛂️ The ONE describe route of every plugin and extension component (the inferred Nx `describe` target, which
  * `dependsOn` `component-dev`): reads the exact bytes `component-dev` staged at `<crate>/dist/component-dev/<crate>.wasm`,
  * extracts its core with jco and re-emits `🛂️.descriptor.semio` + `🔣️.json` at the owner root (`<owner>/📦️packages/🦀️rust`
  * is the crate). No build happens here, so the committed descriptor, the `materialize-dev` staging (which reads the same
@@ -341,7 +341,7 @@ export function describeComponentDeliverable(repoRoot: string, manifest: string,
   }
 }
 
-/** @emoji 🛂️ `describe component --manifest <Cargo.toml>`: the command the inferred Nx `describe` target of every component runs. */
+/** 🛂️ `describe component --manifest <Cargo.toml>`: the command the inferred Nx `describe` target of every component runs. */
 export class DescribeComponentScript extends BundleScript {
   run(segments: string[]): void {
     if (segments.length !== 2 || segments[0] !== "--manifest") throw new Error("usage: component --manifest <Cargo.toml>");

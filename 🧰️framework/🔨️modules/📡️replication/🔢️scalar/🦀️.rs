@@ -1,7 +1,7 @@
 //! 🔢 Lossless scalar codecs for protocol payloads.
 
 //#region 🔖️Scalars
-/// @emoji 🧮️ Tagged, lossless-by-construction scalar codecs shared by `protocol_history`'s
+/// 🧮️ Tagged, lossless-by-construction scalar codecs shared by `protocol_history`'s
 /// payload codecs. `out`/`input` follow `crate::codec::ByteWriter`/`ByteReader` conventions exactly
 /// (they take `&mut crate::codec::ByteWriter` / `&mut crate::codec::ByteReader<'_>` directly — no
 /// reimplementation of the varint/byte primitives).
@@ -17,7 +17,7 @@ use crate::codec::{ByteReader, ByteWriter, PackError};
 // ms component is nonzero) safely falls back to tag 0 raw text — correctness never depends on
 // the parser/formatter being calendar-complete, only on the equality check.
 
-/// @emoji ⏱️ Writes `raw` using the most compact of the three timestamp tags that reproduces
+/// ⏱️ Writes `raw` using the most compact of the three timestamp tags that reproduces
 /// it byte-exact. Returns `Some(epoch_ms)` iff tag 1/2 was written (thread this back in as
 /// `prev_epoch_ms` on the next call to keep deltas short); `None` iff tag 0 (raw) was written.
 pub fn write_timestamp(out: &mut ByteWriter, raw: &str, prev_epoch_ms: Option<i64>) -> Option<i64> {
@@ -45,7 +45,7 @@ pub fn write_timestamp(out: &mut ByteWriter, raw: &str, prev_epoch_ms: Option<i6
     }
 }
 
-/// @emoji ⏱️ Reads one tagged timestamp, returning the reconstructed string and, iff tag 1/2,
+/// ⏱️ Reads one tagged timestamp, returning the reconstructed string and, iff tag 1/2,
 /// the `epoch_ms` to feed back in as `prev_epoch_ms` for the next call.
 pub fn read_timestamp(input: &mut ByteReader<'_>, prev_epoch_ms: Option<i64>) -> Result<(String, Option<i64>), PackError> {
     let tag = input.read_u8()?;
@@ -86,7 +86,7 @@ fn round_trip_epoch_ms(raw: &str) -> Option<i64> {
     (format_rfc3339_ms(epoch_ms) == raw).then_some(epoch_ms)
 }
 
-/// @emoji 📆️ Parses a UTC RFC-3339 timestamp (`Z` or numeric `±HH:MM` offset, optional
+/// 📆️ Parses a UTC RFC-3339 timestamp (`Z` or numeric `±HH:MM` offset, optional
 /// fractional seconds truncated to milliseconds) into milliseconds since the Unix epoch.
 /// `None` on any deviation from the grammar — callers fall back to raw text, never panic.
 fn parse_rfc3339_ms(s: &str) -> Option<i64> {
@@ -171,7 +171,7 @@ fn parse_rfc3339_ms(s: &str) -> Option<i64> {
     Some(total_seconds * 1_000 + ms)
 }
 
-/// @emoji 📆️ Canonical UTC formatter: `YYYY-MM-DDTHH:MM:SSZ`, with `.fffZ` appended iff the
+/// 📆️ Canonical UTC formatter: `YYYY-MM-DDTHH:MM:SSZ`, with `.fffZ` appended iff the
 /// millisecond component is nonzero. The single source of truth for the tag-1/2 round trip.
 pub fn format_rfc3339_ms(epoch_ms: i64) -> String {
     let days = epoch_ms.div_euclid(86_400_000);
@@ -190,7 +190,7 @@ pub fn format_rfc3339_ms(epoch_ms: i64) -> String {
     }
 }
 
-/// @emoji 🌍️ Howard Hinnant's `days_from_civil`: proleptic-Gregorian date to days-since-epoch.
+/// 🌍️ Howard Hinnant's `days_from_civil`: proleptic-Gregorian date to days-since-epoch.
 /// <https://howardhinnant.github.io/date_algorithms.html>
 fn days_from_civil(y: i64, m: i64, d: i64) -> i64 {
     let y = if m <= 2 { y - 1 } else { y };
@@ -202,7 +202,7 @@ fn days_from_civil(y: i64, m: i64, d: i64) -> i64 {
     era * 146_097 + doe - 719_468
 }
 
-/// @emoji 🌍️ Inverse of `days_from_civil`.
+/// 🌍️ Inverse of `days_from_civil`.
 fn civil_from_days(z: i64) -> (i64, i64, i64) {
     let z = z + 719_468;
     let era = if z >= 0 { z } else { z - 146_096 } / 146_097;
@@ -229,7 +229,7 @@ fn civil_from_days(z: i64) -> (i64, i64, i64) {
 // (raw) is never emitted by this writer — it exists purely so `read_id` stays forward-
 // compatible with ids written directly by another layer that chooses to skip interning.
 
-/// @emoji 🪪️ Writes `id` using the most compact of the four id tags that preserves it exactly.
+/// 🪪️ Writes `id` using the most compact of the four id tags that preserves it exactly.
 // ✏️ `intern` is `FnMut` because dictionary insertion mutates its captured builder;
 // `resolve` is a plain `Fn` over an immutable reader.
 pub fn write_id(out: &mut ByteWriter, id: &str, mut intern: impl FnMut(&str) -> u32, edit_ordinal_of: impl Fn(&str) -> Option<u64>) -> Result<(), PackError> {
@@ -249,7 +249,7 @@ pub fn write_id(out: &mut ByteWriter, id: &str, mut intern: impl FnMut(&str) -> 
     Ok(())
 }
 
-/// @emoji 🪪️ Reads one tagged id, resolving dictrefs/ordinals through the supplied closures.
+/// 🪪️ Reads one tagged id, resolving dictrefs/ordinals through the supplied closures.
 pub fn read_id<'r>(input: &mut ByteReader<'_>, resolve: impl Fn(u32) -> Result<&'r str, PackError>, ordinal_to_id: impl Fn(u64) -> Result<&'r str, PackError>) -> Result<String, PackError> {
     let tag = input.read_u8()?;
     match tag {
@@ -278,7 +278,7 @@ pub fn read_id<'r>(input: &mut ByteReader<'_>, resolve: impl Fn(u32) -> Result<&
     }
 }
 
-/// @emoji 🔪️ Splits `"<prefix>-<uuid>"` into `(prefix, 16 raw uuid bytes)`, requiring the
+/// 🔪️ Splits `"<prefix>-<uuid>"` into `(prefix, 16 raw uuid bytes)`, requiring the
 /// trailing 36 bytes to be a canonical lowercase-hex-with-dashes UUID and a non-empty prefix
 /// — so the round trip through `format_uuid` reproduces the original text exactly.
 fn split_prefix_uuid(id: &str) -> Option<(&str, [u8; 16])> {
@@ -328,7 +328,7 @@ fn lower_hex_val(b: u8) -> Option<u8> {
     }
 }
 
-/// @emoji 🎨️ Formats 16 raw bytes as a canonical lowercase `8-4-4-4-12` UUID string.
+/// 🎨️ Formats 16 raw bytes as a canonical lowercase `8-4-4-4-12` UUID string.
 fn format_uuid(bytes: &[u8; 16]) -> String {
     let mut s = String::with_capacity(36);
     for (i, b) in bytes.iter().enumerate() {

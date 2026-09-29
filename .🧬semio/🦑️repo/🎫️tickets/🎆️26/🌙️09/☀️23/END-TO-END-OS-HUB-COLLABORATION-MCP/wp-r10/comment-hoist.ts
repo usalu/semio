@@ -161,7 +161,7 @@ function hoist(path: string, apply: boolean): { blocks: number; needsEmoji: stri
     out.push(trimmed.get(row) ?? lines[row]!);
   }
   if (apply && needsEmoji.length === 0) writeFileSync(path, out.join("\n"));
-  if (preview !== undefined && relative(REPO, path) === preview) writeFileSync(`${REPO}/.tmp-ticket/wp-r10/generated/comment-hoist-preview.rs`, out.join("\n"));
+  if (preview !== undefined && relative(REPO, path) === preview) writeFileSync(`${REPO}/.🧬semio/🌐hub/s14-r10-state/comment-hoist-preview.rs`, out.join("\n"));
   return { blocks: blocks.length + regionRows.size, needsEmoji };
 }
 

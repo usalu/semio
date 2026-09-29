@@ -22,7 +22,7 @@ pub enum OpeningConfigMutation {
 
 //#region 🔖️UiPreferences
 pub use super::ui_preferences::{
-    set_appearance, set_custom_driver, set_custom_theme, set_driver, set_keybinding_override, set_layout, set_locale, set_terminology, set_theme, SetAppearance, SetCustomDriver, SetCustomTheme, SetDriver, SetKeybindingOverride, SetLayout, SetLocale,
+    set_appearance, set_custom_driver, set_custom_theme, set_driver, set_keybinding_override, set_layout, set_locale, set_named_layout, set_terminology, set_theme, SetNamedLayout, SetAppearance, SetCustomDriver, SetCustomTheme, SetDriver, SetKeybindingOverride, SetLayout, SetLocale,
     SetTerminology, SetTheme,
 };
 
@@ -40,6 +40,7 @@ pub enum UiPreferencesConfigMutation {
     SetTheme(SetTheme),
     SetCustomTheme(SetCustomTheme),
     SetKeybindingOverride(SetKeybindingOverride),
+    SetNamedLayout(SetNamedLayout),
 }
 //#endregion 🔖️UiPreferences
 
@@ -76,12 +77,31 @@ pub enum IdentityConfigMutation {
 }
 //#endregion 🔖️Identity
 
+//#region 🔖️LocalCatalog
+pub use super::admit_local_document::{
+    admit_local_document, apply_local_catalog_config_mutation, apply_local_catalog_config_mutation_reporting, decode_local_catalog_config_mutation_json, decode_local_catalog_json, encode_local_catalog_json, inverse_local_catalog_config_mutation,
+    inverse_local_catalog_config_mutation_steps, AdmitLocalDocument, LocalCatalog, LocalDocument, LocalDocumentStorage, LOCAL_CATALOG_CONFIG_SCHEMA,
+};
+pub use super::retire_local_document::{retire_local_document, RetireLocalDocument};
+
+/// 🗂️ Typed, invertible local document catalog mutation vocabulary.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::Mutations)]
+#[serde(tag = "mutation", rename_all = "camelCase")]
+#[value(tag = "mutation", rename_all = "camelCase")]
+#[mutations(snapshot = LocalCatalog, diff = LocalCatalog, schema = "os.config.local-catalog")]
+pub enum LocalCatalogConfigMutation {
+    AdmitLocalDocument(AdmitLocalDocument),
+    RetireLocalDocument(RetireLocalDocument),
+}
+//#endregion 🔖️LocalCatalog
+
 //#region 🔖️Registry
 /// 🪪️ Registers every OS config mutation descriptor through the derive-generated registries.
 pub fn register_os_config_mutation_descriptors() -> Result<(), semio_framework_os_kernel::MutationDescriptorError> {
     register_opening_config_mutation_descriptors(semio_framework_os_kernel::StateClass::Config)?;
     register_ui_preferences_config_mutation_descriptors(semio_framework_os_kernel::StateClass::Config)?;
     register_merge_policy_config_mutation_descriptors(semio_framework_os_kernel::StateClass::Config)?;
-    register_identity_config_mutation_descriptors(semio_framework_os_kernel::StateClass::Config)
+    register_identity_config_mutation_descriptors(semio_framework_os_kernel::StateClass::Config)?;
+    register_local_catalog_config_mutation_descriptors(semio_framework_os_kernel::StateClass::Config)
 }
 //#endregion 🔖️Registry

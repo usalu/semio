@@ -14,7 +14,7 @@ function significantConsoleErrors(messages: string[]): string[] {
   return messages.filter((text) => !/Failed to load resource:.*\b404\b/i.test(text));
 }
 
-/** @emoji 🧪️ Navigates to one story's iframe and asserts it actually rendered (no missing-story/preview-failure text, no page/console errors) — the shared "loads cleanly" assertion every story id below gets. */
+/** 🧪️ Navigates to one story's iframe and asserts it actually rendered (no missing-story/preview-failure text, no page/console errors) — the shared "loads cleanly" assertion every story id below gets. */
 async function expectStoryLoads(page: Page, storyId: string): Promise<{ readonly pageErrors: Error[]; readonly consoleErrors: string[] }> {
   const pageErrors: Error[] = [];
   const consoleErrors: string[] = [];

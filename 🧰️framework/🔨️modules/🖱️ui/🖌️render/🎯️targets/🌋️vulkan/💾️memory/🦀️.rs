@@ -1,4 +1,4 @@
-//! @emoji 💾️ Manual GPU memory management — no VMA (ticket brief, `backend-vulkan`). Two shapes only:
+//! 💾️ Manual GPU memory management — no VMA (ticket brief, `backend-vulkan`). Two shapes only:
 //! [`find_memory_type`] (dedicated `vkAllocateMemory` per resource — used by
 //! `crate::resources::GpuResources` for textures/atlases/meshes, which are long-lived and few per
 //! frame) and [`GrowBuffer`] (one capacity-doubling host-visible arena per frame-in-flight — the

@@ -4,7 +4,7 @@
 # usage: h13-verb.sh <label> <package dir> <verb args…>
 LABEL=$1; DIR=$2; shift 2
 LOG="/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-h13-logs/$LABEL.txt"
-export CARGO_INCREMENTAL=0 CARGO_TARGET_DIR=/Users/ueli/Documents/semio/.tmp-ticket/wp-h13/target RUST_MIN_STACK=268435456 NX_DAEMON=false
+export CARGO_INCREMENTAL=0 CARGO_TARGET_DIR="/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-h13-target" RUST_MIN_STACK=268435456 NX_DAEMON=false
 export CARGO_BUILD_BUILD_DIR=/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/build-fleet-b
 export SEMIO_TEST_ARTIFACT_DIR="/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-h13-test-artifacts/$LABEL"
 mkdir -p "$SEMIO_TEST_ARTIFACT_DIR" && chmod 700 "$SEMIO_TEST_ARTIFACT_DIR"

@@ -23,20 +23,20 @@ extern crate protocol as dsl_core;
 extern crate semio_framework_value_derive as value_derive;
 
 //#region 🔖️Mesh
-/// @emoji 🥽️ Half-edge mesh kernel: topology, editing ops, tessellation, UV/decimation.
+/// 🥽️ Half-edge mesh kernel: topology, editing ops, tessellation, UV/decimation.
 #[path = "../../🥽️mesh/🦀️.rs"]
 pub mod mesh;
 //#endregion 🔖️Mesh
 
 //#region 🔖️Rigid
-/// @emoji 🌀️ Single-precision rigid-body algebra: vectors, points, unit quaternions, isometries —
+/// 🌀️ Single-precision rigid-body algebra: vectors, points, unit quaternions, isometries —
 /// the framework-owned replacement for the `nalgebra` surface plugins used to reach for directly.
 #[path = "../../🌀️rigid/🦀️.rs"]
 pub mod rigid;
 //#endregion 🔖️Rigid
 
 //#region 🔖️Collision
-/// @emoji 🧿️ BVH-accelerated triangle-mesh collision queries: shape-vs-shape intersection and
+/// 🧿️ BVH-accelerated triangle-mesh collision queries: shape-vs-shape intersection and
 /// winding-number point containment — the framework-owned replacement for `parry3d::shape` plus
 /// `parry3d::query::intersection_test`.
 #[path = "../../🧿️collision/🦀️.rs"]

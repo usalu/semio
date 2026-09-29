@@ -37,6 +37,7 @@ struct PendingProjection {
 const SELECT_LISTBOX_KEY_SUFFIX: &str = "::listbox";
 const SELECT_OPTION_KEY_INFIX: &str = "::option::";
 const SLIDER_EDITOR_KEY_SUFFIX: &str = "::editor";
+const ROW_ACTION_KEY_INFIX: &str = "::row-action::";
 
 pub(crate) fn select_accessibility_option_value(record: &ui_contract::UiNodeRecord, key: &str) -> Option<String> {
     let ui_contract::Component::Select(select) = &record.component else { return None };
@@ -47,6 +48,58 @@ pub(crate) fn select_accessibility_option_value(record: &ui_contract::UiNodeReco
 
 pub(crate) fn is_slider_accessibility_editor(record: &ui_contract::UiNodeRecord, key: &str) -> bool {
     matches!(record.component, ui_contract::Component::Slider(_)) && key == format!("{}{SLIDER_EDITOR_KEY_SUFFIX}", record.key.as_str())
+}
+
+/// 🎬️ A tree or table row record's `RowAction`s and the name React composes their buttons' names with (the tree item's label,
+/// the table row's first cell).
+fn record_row_actions(record: &ui_contract::UiNodeRecord) -> Option<(&str, &ui_contract::UiFixedList<ui_contract::RowAction>)> {
+    match &record.component {
+        ui_contract::Component::TreeItem(item) => Some((item.label.0.as_str(), &item.row_actions)),
+        ui_contract::Component::TableRow(row) => Some((row.cells.get(0).map_or(record.key.as_str(), |cell| cell.as_str()), &row.row_actions)),
+        _ => None,
+    }
+}
+
+/// ♿️ Which of a row's actions the virtual `<rowKey>::row-action::<i>` button of [`accessibility_projection`] activates.
+pub(crate) fn row_accessibility_action(record: &ui_contract::UiNodeRecord, key: &str) -> Option<usize> {
+    let (_, actions) = record_row_actions(record)?;
+    let index = key.strip_prefix(record.key.as_str())?.strip_prefix(ROW_ACTION_KEY_INFIX)?.parse::<usize>().ok()?;
+    actions.get(index).filter(|action| action.placement == ui_contract::RowActionPlacement::Row).map(|_| index)
+}
+
+/// ♿️ A row's Row-placed actions as the buttons its trailing action icons paint — named `"<label>: <row name>"` as React's
+/// `TableView` names them, reachable and activatable, so no row action is pointer-only on this target.
+fn row_action_accessibility_nodes(record: &ui_contract::UiNodeRecord, depth: usize, owner: &AccessibilityProjectionNode) -> Vec<AccessibilityProjectionNode> {
+    let Some((name, actions)) = record_row_actions(record) else { return Vec::new() };
+    let mut nodes = Vec::new();
+    for (index, action) in actions.iter().enumerate() {
+        if action.placement != ui_contract::RowActionPlacement::Row {
+            continue;
+        }
+        let mut button = owner.clone();
+        button.key = format!("{}{ROW_ACTION_KEY_INFIX}{index}", record.key.as_str());
+        button.role = "button".to_string();
+        button.depth = depth.saturating_add(1);
+        button.label = Some(action.label.as_ref().map_or_else(|| name.to_string(), |label| format!("{}: {name}", label.0.as_str())));
+        button.description = None;
+        button.shortcut = None;
+        button.focusable = !record.disabled;
+        button.tabbable = !record.disabled;
+        button.actionable = !record.disabled;
+        button.focused = false;
+        button.checked = None;
+        button.pressed = None;
+        button.selected = None;
+        button.expanded = None;
+        button.level = None;
+        button.value_min = None;
+        button.value_max = None;
+        button.value_now = None;
+        button.value_text = None;
+        button.busy = false;
+        nodes.push(button);
+    }
+    nodes
 }
 
 fn select_accessibility_nodes(record: &ui_contract::UiNodeRecord, depth: usize, owner: &AccessibilityProjectionNode) -> Vec<AccessibilityProjectionNode> {
@@ -187,6 +240,12 @@ pub fn accessibility_projection(tree: &UiTree) -> Vec<AccessibilityProjectionNod
                 }
                 projection.push(virtual_node);
             }
+        }
+        for virtual_node in row_action_accessibility_nodes(record, pending.depth, &node) {
+            if projection.len() >= UI_DOCUMENT_NODES {
+                break;
+            }
+            projection.push(virtual_node);
         }
         if children_visible {
             for index in (0..record.children.len()).rev() {

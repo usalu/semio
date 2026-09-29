@@ -56,6 +56,7 @@ fn event_kind(event: &ArtifactEvent) -> &'static str {
         ArtifactEvent::BootstrapProgress { .. } => "bootstrapProgress",
         ArtifactEvent::Status(_) => "status",
         ArtifactEvent::Presence { .. } => "presence",
+        ArtifactEvent::RebootstrapRequired { .. } => "rebootstrapRequired",
         ArtifactEvent::Session { .. } => "session",
         ArtifactEvent::Preview { .. } => "preview",
         ArtifactEvent::CommandOutcome { .. } => "commandOutcome",

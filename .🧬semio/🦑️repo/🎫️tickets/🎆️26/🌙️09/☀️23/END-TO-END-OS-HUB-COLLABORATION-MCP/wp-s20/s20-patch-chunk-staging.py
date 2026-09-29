@@ -213,7 +213,27 @@ def fixture_text(text: str) -> str:
     return body[:-1].rstrip() + ",\n" + addition + "\n}\n"
 
 
+
+#: 🏁️ Set-level landing markers `(repo path, text)` — `None` = the set deletes that file. All present → the set is
+#: landed and nothing is applied (per-hunk checks alone cannot see an insert whose text a later codemod reworded).
+LANDED = [('🧰️framework/🔨️modules/🎠️kernel/🦀️.rs', 'pub struct ImportStaging {')]
+
+
+def landed_guard() -> bool:
+    """🏁️ True when every landing marker is in the tree; a partial landing is a conflict, never a second write."""
+    tree = Path("/Users/ueli/Documents/semio")
+    present = [(not (tree / rel).exists()) if marker is None else ((tree / rel).exists() and marker in (tree / rel).read_text()) for rel, marker in LANDED]
+    if all(present):
+        print("landed: every set marker is in the tree — nothing to apply")
+        return True
+    if any(present):
+        raise SystemExit(f"CONFLICT: set partially landed (markers {present}) — nothing written")
+    return False
+
+
 def main() -> None:
+    if landed_guard():
+        return
     texts: dict[str, str] = {}
     notes = []
     for rel, old, new in hunks():

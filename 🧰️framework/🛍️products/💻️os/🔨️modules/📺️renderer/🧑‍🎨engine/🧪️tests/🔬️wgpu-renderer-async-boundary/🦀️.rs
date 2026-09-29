@@ -667,7 +667,6 @@ fn an_independent_decoder_job_preserves_its_exact_response_through_cancellation(
     let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
     assert!(outcome.terminal_is_empty());
     close_owned_decoder_fixture(authority, recovered);
-    println!("[DEBUG] independent decoder cancelled after one page and returned token {token:?}");
 }
 
 /// 🎟️ Session saturation returns the unchanged decoder response while rejected metadata closes separately.
@@ -733,7 +732,6 @@ fn an_independent_decoder_job_recovers_its_response_from_an_exact_rejected_sessi
         assert!(session.terminal_is_empty());
     }
     close_owned_decoder_fixture(authority, recovered);
-    println!("[DEBUG] saturated decoder session returned the same {bytes}-byte response token {token:?}");
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -773,7 +771,6 @@ fn decoder_worker_boundary(cancel_after_ready: bool) {
     let observed_bytes = probe.observed_bytes;
     assert!(decoder.terminal_is_empty());
     close_owned_decoder_fixture(authority, probe);
-    println!("[DEBUG] real decoder returned {outcome:?} with ready cancellation {cancel_after_ready}, token {observed_token:?}, bytes {observed_bytes}, wakes {}", wakes.load(Ordering::Acquire));
     assert_eq!(completed, Some(Some(RendererAssetDecodeResult::Ready)));
     assert_eq!(observed_token, token);
     assert_eq!(observed_bytes, bytes.len());
@@ -843,7 +840,7 @@ fn native_asset_response_transfers_each_credited_page_without_losing_its_bytes()
             }
         }
         assert!(authority.terminal_is_empty());
-        println!("[DEBUG] native response transferred {observed}/{length} bytes with result {result:?}");
+        println!("native response transferred {observed}/{length} bytes with result {result:?}");
         assert_eq!(result.is_ok(), case["accepted"].as_bool().unwrap());
         assert_eq!(observed as u64, case["transferredBytes"].as_u64().unwrap());
         if result.is_ok() {
@@ -925,7 +922,6 @@ fn a_frame_candidate_never_advances_the_independently_owned_asset_decoder() {
             break;
         }
     }
-    println!("[DEBUG] frame candidate decoded {observed} asset bytes before returning without a mounted interaction");
     assert!(matches!(result, AppFrameTransactionStep::Superseded));
     assert_eq!(observed as u64, law["expected"]["frameDecodeUnits"].as_u64().unwrap());
 }

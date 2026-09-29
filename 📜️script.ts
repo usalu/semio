@@ -37,7 +37,7 @@ import { interactivityDatabaseCreateCatalogSelfTests } from "./🧰️framework/
 import { interactivityDatabaseCompactionSelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🧪️tests/🔬️interactivity-database-compaction/🟦️.ts";
 import { interactivityDatabaseSyncHelloSelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🧪️tests/🔬️interactivity-database-sync-hello/🟦️.ts";
 import { interactivityArtifactHistorySelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🧪️tests/🔬️interactivity-artifact-history/🟦️.ts";
-import { interactivityVcsBridgeSelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🧪️tests/🔬️interactivity-vcs-bridge/🟦️.ts";
+import { interactivityDbCliSelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🧪️tests/🔬️interactivity-db-cli/🟦️.ts";
 import { interactivityMcpHttpTransportSelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🚚️transport/🧪️tests/🔬️interactivity-mcp-http-transport/🟦️.ts";
 import { dependencyJsLockParitySelfTests } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧪️tests/🔬️dependency-js-lock-parity/🟦️.ts";
 import { dependencyTruthSelfTests } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧪️tests/🔬️dependency-truth/🟦️.ts";
@@ -300,14 +300,14 @@ export class NativeOsScript extends Script {
 //#endregion 🔖️NativeOsScript
 
 //#region 🔖️SetupScript
-/** @emoji 🔗️ Repo-relative instruction files `setup git` recreates as links to `AGENTS.md`, one per
+/** 🔗️ Repo-relative instruction files `setup git` recreates as links to `AGENTS.md`, one per
  * client that cannot read `AGENTS.md` itself. `codex`, `cursor-chat`, `windsurf-chat`, `droid` and
  * `kiro-cli` read the canonical file directly and need no alias; `claude-code` reads `CLAUDE.md`,
  * `antigravity-chat` reads `GEMINI.md`, and `copilot-chat` reads only `.github/copilot-instructions.md`.
  * @see AGENTS.md */
 export const AGENT_INSTRUCTION_ALIASES = ["CLAUDE.md", "GEMINI.md", ".github/copilot-instructions.md"] as const;
 
-/** @emoji 🧷️ The repo-local git settings `setup git` writes into `.git/config`; the user's global git config is never
+/** 🧷️ The repo-local git settings `setup git` writes into `.git/config`; the user's global git config is never
  * touched. `core.longpaths` lets Git for Windows check out, track and clean paths past `MAX_PATH` (tracked fixture paths
  * reach 239 UTF-16 units below the clone root; git ignores the key elsewhere) and `core.symlinks` materializes the
  * committed symlinks. A first clone on Windows needs `git clone -c core.longpaths=true`, which writes the same key.
@@ -331,8 +331,22 @@ export class SetupScript extends Script {
         native: (rest) => new NativeOsScript(this.root, this.repoRoot).run(rest),
         deps: (rest) => new NativeDependenciesScript(this.root, this.repoRoot).run(rest),
         prepare: () => console.log("[prepare] Nx prerequisites completed"),
+        devcontainer: (rest) => this.runDevcontainer(rest),
       },
-      "bun ./📜️script.ts setup [postinstall|git|native]",
+      "bun ./📜️script.ts setup [postinstall|git|native|deps|prepare|devcontainer <start|attach|gitkraken>]",
+    );
+  }
+
+  /** 🔁️ The devcontainer lifecycle `.devcontainer/devcontainer.json` runs: `start` on every container start, `attach` on
+   * every editor attach, `gitkraken` to open GitKraken Desktop on the checkout. Loaded on demand, so no other verb pays for it.
+   * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🐳️containers/🔁️lifecycle/🟦️.ts */
+  private async runDevcontainer(segments: string[]): Promise<void> {
+    const lifecycle = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🐳️containers/🔁️lifecycle/🟦️.ts");
+    const host = lifecycle.processLifecycleHost(), context = lifecycle.processLifecycleContext(this.root);
+    await dispatchSubcommand(
+      segments,
+      { start: () => lifecycle.devcontainerStart(host, context), attach: () => lifecycle.devcontainerAttach(host, context), gitkraken: () => lifecycle.launchGitKraken(host, context) },
+      "bun ./📜️script.ts setup devcontainer <start|attach|gitkraken>",
     );
   }
 
@@ -3615,7 +3629,7 @@ function toolJobPuzzleReservedRoutesExact(source: string, host: string): boolean
   return exactFactories && resumableJobs && fixedIngress && retainedProtocol && hostProtocol && implementation.body.includes("ArtifactReservedToolInput::Media") && implementation.body.includes("ArtifactReservedToolJob::new(Puzzle5dImportJob::new(");
 }
 
-/** @emoji 📋️ Puzzle 2d's half of the reserved-route policy. Its clipboard producer is the one-step
+/** 📋️ Puzzle 2d's half of the reserved-route policy. Its clipboard producer is the one-step
  * `Puzzle2dClipboardJob` (ported from puzzle3d), not puzzle5d's four fixed-page state machines, so the
  * fixed-page ingress clauses do not apply — what it must prove instead is that the app owns the route
  * at all (`copy`/`cut`/`paste` built here, never left as the framework's empty stub), that it owns a
@@ -7552,7 +7566,7 @@ export class VerifyScript extends Script {
       const packageArgs = packages.flatMap((name) => ["-p", name]);
       if (segments[1] === "test") {
         await runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", "--no-fail-fast", ...packageArgs, "committed_diff", "--", "--nocapture"], this.root);
-        console.log(`[DEBUG] artifact-contract-ownership: committed diff generation, canonical encoding and application checks completed for ${packages.length} selected artifact crates.`);
+        console.log(`artifact-contract-ownership: committed diff generation, canonical encoding and application checks completed for ${packages.length} selected artifact crates.`);
         return;
       }
       await runCargo(["check", "--manifest-path", "Cargo.toml", "--tests", ...packageArgs], this.root);
@@ -7745,7 +7759,7 @@ export class VerifyScript extends Script {
     }
     if (segments[0] === "home-host-panel-owner") {
       const oracle = join(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧬️schema/📌️panel-state/🧪️tests/🔬️unit/🟦️.ts");
-      const directoryOracle = join(this.root, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/📇️directory-projection/🧪️tests/🔬️unit/🟦️.ts");
+      const directoryOracle = join(this.root, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧬️schema/📇️directory-projection/🧪️tests/🔬️unit/🟦️.ts");
       const { testHostPanelStateSchema } = await import(oracle);
       const { testHomeDirectoryProjectionSchema } = await import(directoryOracle);
       const { testResolvedHostContext } = await import(join(this.root, "🧰️framework/🔨️modules/🛂️manifest/🪟️view-context/🧪️tests/🪟️resolved-host-context/🟦️.ts"));
@@ -7783,7 +7797,7 @@ export class VerifyScript extends Script {
       const homeEditor = spaceManifest.manifest.apps.find((app) => app.id === "s.space.home@1/*#editor");
       const generatedHomeActions = new Map(homeEditor?.windowKinds.flatMap((window) => window.actions).map((action) => [action.id, action]) ?? []);
       for (const actionId of ["bindSpaceFile", "importSpace", "deleteVirtualFileSystemNode", "renameSpace"]) {
-        if ((generatedHomeActions.get(actionId) as { semantics?: { execution?: { interactiveJob?: string } } } | undefined)?.semantics?.execution?.interactiveJob !== "batchOnlyPendingRewrite") throw new Error(`generated Home action ${actionId} overclaims retained execution`);
+        if ((generatedHomeActions.get(actionId) as { semantics?: { execution?: { interactiveJob?: string } } } | undefined)?.semantics?.execution?.interactiveJob !== "migrated") throw new Error(`generated Home action ${actionId} is not published as retained (migrated) execution`);
       }
       if (generatedHomeActions.has("foldDirectoryEvents")) throw new Error("generated Home still declares the retired foldDirectoryEvents writer");
       runCmd(
@@ -8238,6 +8252,25 @@ export class VerifyScript extends Script {
       }
       return;
     }
+    if (segments[0] === "video-render-export") {
+      const { testVideoRenderProgramContract } = await import("./🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🎞️video-render-program/🟦️.ts");
+      const { testVideoRenderJobContract } = await import("./🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🧵️video-render-job/🟦️.ts");
+      const { testRasterVideoAvcPcmContract } = await import("./🧰️framework/🔨️modules/🖌️raster/🎥️video/🧪️tests/🔬️unit/🟦️.ts");
+      const { testVideoRenderHostContract } = await import("./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎥️VideoRenderHost/🧪️tests/🔬️unit/🟦️.ts");
+      testVideoRenderProgramContract();
+      testVideoRenderJobContract();
+      testRasterVideoAvcPcmContract();
+      await testVideoRenderHostContract();
+      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--lib", "ESNext,DOM", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", `${join(this.root, "🧰️framework/🔨️modules/🖌️raster/🎥️video")}/🟦️.ts`], { cwd: this.root });
+      if (segments[1] === "native") {
+        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework", "--lib", "video_render", "--", "--nocapture"], this.root);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-raster", "--lib", "video", "--", "--nocapture"], this.root);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-plugin", "--lib", "wire_effect_round_trip", "--", "--nocapture"], this.root);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-animate-presentation", "--lib", "export_video", "--", "--nocapture"], this.root);
+      }
+      return;
+    }
     if (segments[0] === "file-open-import") {
       const { testFileOpenImportContract } = await import("./🧰️framework/🔨️modules/🎠️kernel/🧪️tests/📤️file-open-import/🟦️.ts");
       testFileOpenImportContract();
@@ -8666,24 +8699,24 @@ export class VerifyScript extends Script {
     interactivityDbIoB1B6SelfTests();
     interactivityP1qR4SelfTests();
     const failures = interactivityDbIoB1B6Failures(
-      policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_DB_STORAGE_FILE),
-      policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_DB_SQLITE_FILE),
-      policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_DB_POSTGRES_FILE),
-      policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_DB_NEO4J_FILE),
-      policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_HUB_BIN_FILE),
+      policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_STORAGE_FILE),
+      policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_SQLITE_FILE),
+      policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_POSTGRES_FILE),
+      policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_NEO4J_FILE),
+      policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_HUB_BIN_FILE),
     );
     failures.push(
       ...interactivityP1qR4Failures(
-        policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_PACK_FORMAT_FILE),
-        policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_DB_SNAPSHOT_FILE),
-        policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_DB_INDEX_FILE),
-        policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_DB_WAL_FILE),
-        policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_DB_ARTIFACT_FILE),
-        policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_DB_QUERY_FILE),
-        policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_DB_ENGINE_FILE),
-        policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_DB_COMPACT_FILE),
-        policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_DB_CLI_FILE),
-        policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_DB_STATE_FILE),
+        policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_PACK_FORMAT_FILE),
+        policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_SNAPSHOT_FILE),
+        policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_INDEX_FILE),
+        policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_WAL_FILE),
+        policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_ARTIFACT_FILE),
+        policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_QUERY_FILE),
+        policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_ENGINE_FILE),
+        policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_COMPACT_FILE),
+        policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_CLI_FILE),
+        policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_STATE_FILE),
       ),
     );
     if (failures.length > 0) throw new Error(`[verify interactivity p1q-b1-b6] ${failures.join("; ")}`);
@@ -8693,7 +8726,7 @@ export class VerifyScript extends Script {
   /** 🌱️ Runs the isolated P1w retained initial-catalog CAS source and hostile-mutation gate. */
   private runInteractivityP1w(): void {
     interactivityDatabaseCatalogBootstrapSelfTests();
-    const failures = interactivityDatabaseCatalogBootstrapFailures(policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_DB_ENGINE_FILE));
+    const failures = interactivityDatabaseCatalogBootstrapFailures(policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_ENGINE_FILE));
     if (failures.length > 0) throw new Error(`[verify interactivity p1w] ${failures.join("; ")}`);
     console.log("[verify interactivity p1w] live-source and hostile mutations clean.");
   }
@@ -8702,9 +8735,9 @@ export class VerifyScript extends Script {
   private runInteractivityP1x(): void {
     interactivityDatabaseCreateCatalogSelfTests();
     const failures = interactivityDatabaseCreateCatalogFailures(
-      policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_DB_ENGINE_FILE),
-      policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_ASYNC_FILE),
-      policyReadFileSafe(this.root, INTERACTIVITY_P1X_CONTRACT_FILE),
+      policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_ENGINE_FILE),
+      policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_ASYNC_FILE),
+      policyReadRustPolicySource(this.root, INTERACTIVITY_P1X_CONTRACT_FILE),
     );
     if (failures.length > 0) throw new Error(`[verify interactivity p1x] ${failures.join("; ")}`);
     console.log("[verify interactivity p1x] live-source and hostile mutations clean.");
@@ -8712,11 +8745,11 @@ export class VerifyScript extends Script {
 
   /** 🧹 Runs the isolated P1y retained database-compaction source and hostile-mutation gate. */
   private runInteractivityP1y(): void {
-    const compact = policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_DB_COMPACT_FILE);
-    const engine = policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_DB_ENGINE_FILE);
-    const snapshot = policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_DB_SNAPSHOT_FILE);
-    const index = policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_DB_INDEX_FILE);
-    const contract = policyReadFileSafe(this.root, INTERACTIVITY_P1Y_CONTRACT_FILE);
+    const compact = policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_COMPACT_FILE);
+    const engine = policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_ENGINE_FILE);
+    const snapshot = policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_SNAPSHOT_FILE);
+    const index = policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_INDEX_FILE);
+    const contract = policyReadRustPolicySource(this.root, INTERACTIVITY_P1Y_CONTRACT_FILE);
     interactivityDatabaseCompactionSelfTests(compact, engine, snapshot, index, contract);
     const failures = interactivityDatabaseCompactionFailures(compact, engine, snapshot, index, contract);
     if (failures.length > 0) throw new Error(`[verify interactivity p1y] ${failures.join("; ")}`);
@@ -8725,12 +8758,12 @@ export class VerifyScript extends Script {
 
   /** 👋️ Runs the isolated P1z retained sync-hello source and hostile-mutation gate. */
   private runInteractivityP1z(): void {
-    const sync = policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_DB_SYNC_FILE);
-    const engine = policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_DB_ENGINE_FILE);
-    const hub = policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_HUB_BIN_FILE);
-    const wal = policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_DB_WAL_FILE);
-    const protocol = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/📡️replication/📡️wire/🦀️.rs");
-    const contract = policyReadFileSafe(this.root, INTERACTIVITY_P1Z_CONTRACT_FILE);
+    const sync = policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_SYNC_FILE);
+    const engine = policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_ENGINE_FILE);
+    const hub = policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_HUB_BIN_FILE);
+    const wal = policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_WAL_FILE);
+    const protocol = policyReadRustPolicySource(this.root, "🧰️framework/🔨️modules/📡️replication/📡️wire/🦀️.rs");
+    const contract = policyReadRustPolicySource(this.root, INTERACTIVITY_P1Z_CONTRACT_FILE);
     interactivityDatabaseSyncHelloSelfTests(sync, engine, hub, wal, protocol, contract);
     const failures = interactivityDatabaseSyncHelloFailures(sync, engine, hub, wal, protocol, contract);
     if (failures.length > 0) throw new Error(`[verify interactivity p1z] ${failures.join("; ")}`);
@@ -9127,7 +9160,7 @@ export class VerifyScript extends Script {
     }
   }
 
-  /** @emoji 🎨️ Discovers every app-level Tailwind entry (`globals.css` / `🎨️.css`), validates
+  /** 🎨️ Discovers every app-level Tailwind entry (`globals.css` / `🎨️.css`), validates
    * relative `@import`/`@source` literals resolve on disk, and asserts each entry's import chain reaches
    * the shared UI stylesheet that owns the framework class sources. */
   private checkAppTailwindEntries(offenders: string[]): void {
@@ -9159,7 +9192,7 @@ export class VerifyScript extends Script {
     }
   }
 
-  /** @emoji 🎨️ App / storybook / product Tailwind entry CSS files that must inherit the shared UI sources. */
+  /** 🎨️ App / storybook / product Tailwind entry CSS files that must inherit the shared UI sources. */
   private listAppTailwindEntries(): string[] {
     const found: string[] = [];
     const visit = (dir: string, depth: number): void => {
@@ -9193,7 +9226,7 @@ export class VerifyScript extends Script {
     });
   }
 
-  /** @emoji 🎨️ Relative path of the shared UI `🎨️.css` from the workspace root. */
+  /** 🎨️ Relative path of the shared UI `🎨️.css` from the workspace root. */
   private findSharedUiGlobalsRel(): string | null {
     const candidates = [
       "🧰️framework/🔨️modules/🖱️ui/🧵️styles/🎨️.css",
@@ -9204,7 +9237,7 @@ export class VerifyScript extends Script {
     return null;
   }
 
-  /** @emoji 🎨️ Walks relative `@import "..."` edges (skipping package specifiers) until `targetAbs` is reached. */
+  /** 🎨️ Walks relative `@import "..."` edges (skipping package specifiers) until `targetAbs` is reached. */
   private cssImportChainReaches(fromAbs: string, targetAbs: string, seen: Set<string>): boolean {
     const normalizedFrom = resolve(fromAbs);
     const normalizedTarget = resolve(targetAbs);
@@ -9845,6 +9878,24 @@ function interactivityMaskComments(raw: string, initialDepth: number): { code: s
 }
 
 /** 🧪️Brace-spans of any free item guarded by a `cfg` expression containing `test`. */
+/** 🧩️ What a `#[cfg(test)]` attribute's same-line remainder starts: a parameter, field or argument (`hook: T,`, `hook: T) -> R {`)
+ * ends at a top-level `,` or an unmatched `)`/`]` and leaves its enclosing item in production; anything else is the item itself. */
+function interactivityCfgTestSameLineKind(item: string): "member" | "item" {
+  let depth = 0;
+  for (const char of item) {
+    if (char === "(" || char === "[") depth++;
+    else if (char === ")" || char === "]") {
+      if (depth === 0) return "member";
+      depth--;
+    } else if (depth === 0 && char === ",") return "member";
+    else if (depth === 0 && (char === "{" || char === ";")) return "item";
+  }
+  return "item";
+}
+
+/** 🧪️ The line spans of `#[cfg(test)]` items — an attribute that names `test` without negating it (`cfg(not(test))` is production) —
+ * whether the item starts on the attribute's own line (`#[cfg(test)] hook: T,`, `#[cfg(test)] if armed {`) or on a later one. A
+ * test-only parameter or field (`,`) keeps its enclosing production item. */
 function interactivityCfgTestItemSpans(lines: readonly string[]): PolicyModSpan[] {
   const spans: PolicyModSpan[] = [];
   const stack: { startLine: number; depth: number }[] = [];
@@ -9852,16 +9903,20 @@ function interactivityCfgTestItemSpans(lines: readonly string[]): PolicyModSpan[
   let depth = 0;
   lines.forEach((raw, i) => {
     const codeOnly = policyMaskLiterals(raw).replace(/\/\/.*$/, "");
-    if (/#\[cfg\([^\]]*\btest\b[^\]]*\)\]/.test(raw)) pendingStart = i + 1;
-    if (pendingStart !== undefined && i + 1 > pendingStart && !/^\s*#\[/.test(raw)) {
-      const openCount = (codeOnly.match(/\{/g) ?? []).length;
+    const attribute = /#\[cfg\((?![^\]]*\bnot\s*\()[^\]]*\btest\b[^\]]*\)\]/.exec(codeOnly);
+    if (attribute) pendingStart = i + 1;
+    const sameLine = pendingStart === i + 1 && attribute ? codeOnly.slice(attribute.index + attribute[0].length) : "";
+    if (sameLine.trim().length > 0 && !/^\s*#\[/.test(sameLine) && interactivityCfgTestSameLineKind(sameLine) === "member") pendingStart = undefined;
+    const item = pendingStart === undefined ? "" : i + 1 > pendingStart ? codeOnly : sameLine;
+    if (pendingStart !== undefined && item.trim().length > 0 && !/^\s*#\[/.test(item)) {
+      const openCount = (item.match(/\{/g) ?? []).length;
       if (openCount > 0) {
         stack.push({ startLine: pendingStart, depth });
         pendingStart = undefined;
-      } else if (/;\s*$/.test(codeOnly)) {
+      } else if (/;\s*$/.test(item)) {
         spans.push({ name: "cfg(test)", startLine: pendingStart, endLine: i + 1 });
         pendingStart = undefined;
-      } else if (/,\s*$/.test(codeOnly)) {
+      } else if (/,\s*$/.test(item)) {
         pendingStart = undefined;
       }
     }
@@ -9990,8 +10045,8 @@ function interactivityAuditRun(repoRoot: string): InteractivityAuditReport {
   for (const failure of interactivityDatabaseCatalogReadFailures(dbEngine)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_DB_ENGINE_FILE, line: 0, text: failure });
   interactivityArtifactHistorySelfTests();
   for (const failure of interactivityArtifactHistoryFailures(dbEngine, dbArtifact, dbWal)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_DB_ENGINE_FILE, line: 0, text: failure });
-  interactivityVcsBridgeSelfTests();
-  for (const failure of interactivityVcsBridgeFailures(dbEngine, dbCli)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_DB_ENGINE_FILE, line: 0, text: failure });
+  interactivityDbCliSelfTests();
+  for (const failure of interactivityDbCliFailures(dbCli)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_DB_CLI_FILE, line: 0, text: failure });
   interactivityPreparedRasterProducerSelfTests();
   const preparedRaster = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PREPARED_RASTER_FILE);
   const preparedRasterDraw = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PREPARED_RASTER_DRAW_FILE);
@@ -12723,10 +12778,9 @@ function interactivityDbIoB1B6Failures(storageSource: string, sqliteSource: stri
     "fn db_io_operation_return_result_lease",
     "fn db_io_operation_transfer_to_backend",
     "fn db_io_operation_detach_task",
-    "fn db_io_operation_terminal_is_empty",
     "backend_owner: bool",
     "pub struct DbIoResultLease",
-    "result_handback: Option<DbIoTaskHandle>",
+    "result_handback: Option<DbIoResultHandback>",
     "Ok(()) if owner.cancelled => DbIoTerminal::Cancelled(terminal.ok())",
     "pub struct DbIoAsyncTaskLease",
     "credit_returned: bool",
@@ -12794,8 +12848,9 @@ function interactivityDbIoB1B6Failures(storageSource: string, sqliteSource: stri
   ]) if (!storage.includes(required)) failures.push(`DB aggregate/result/backend authority missing: ${required}`);
   for (const forbidden of ["into_lease_info", "pub struct LeaseInfo {"])
     if (storage.includes(forbidden)) failures.push(`DB result boundary retains an uncensused lease allocation: ${forbidden}`);
-  for (const forbidden of ["callback_at(", "db_io_schedule_close", "Arc<dyn DbIoTaskExecutor>", "retry_job: Option<(Job", "terminal_job: Option<", "process_worker_pool("])
+  for (const forbidden of ["db_io_schedule_close", "Arc<dyn DbIoTaskExecutor>", "retry_job: Option<(Job", "terminal_job: Option<", "process_worker_pool("])
     if (storage.includes(forbidden)) failures.push(`DB mounted close/retry retains forbidden opaque authority: ${forbidden}`);
+  if (storage.split("callback_at(").slice(1).some((call) => !/^[^;]*?, move \|\| (?:db_io_retry\(handle, generation\)|waker\.wake\(\))\)/u.test(call))) failures.push("DB mounted close/retry retains forbidden opaque authority: callback_at( with an opaque closure (only the generation-qualified `db_io_retry(handle, generation)` token or a waker wake may ride the pool timer)");
   for (const forbidden of ["std::mem::forget", "std::mem::ManuallyDrop", "Waker::noop()"])
     if (storage.includes(forbidden)) failures.push(`DB lossless retirement/backend close retains prohibited production path: ${forbidden}`);
   for (const marker of ["impl Future for DbIoPageWriterSeal", "impl Future for DbIoObservedBytesWrite", "impl Future for DbIoListTransfer", "impl Future for DbIoPlatformClose", "impl Future for DbIoPlatformSlicesCopy"]) {
@@ -12830,8 +12885,10 @@ function interactivityDbIoB1B6Failures(storageSource: string, sqliteSource: stri
   if (observedText.includes("drop(source)")) failures.push("DB observed driver text ordinarily drops its external allocation");
   const writerSeal = rustItem(storage, "impl Future for DbIoPageWriterSeal");
   const writerSealStep = rustItem(storage, "pub fn seal_retained_step");
-  for (const required of ["self.seal_phase", "self.seal_page", "page.transition(current, next)?", "Ok(None)", "Ok(Some(owner))"])
+  for (const required of ["self.seal_phase", "self.seal_page", "self.transition(current, next)?", "Ok(None)", "Ok(Some(owner))"])
     if (!writerSealStep.includes(required)) failures.push(`DB writer publication lacks persisted one-opportunity seal state: ${required}`);
+  const writerTransition = rustItem(storage.slice(0, storage.indexOf("impl Future for DbIoPageWriterSeal")), "fn transition(&self, expected: DbIoPagePhase, next: DbIoPagePhase)");
+  if (!ordered(writerTransition, ["for page in self.pages.iter().take(self.reserved as usize).flatten()", "page.validate_phase(slot, expected)?", "for page in self.pages.iter().take(self.reserved as usize).flatten()", ".phase = next"])) failures.push("DB writer seal transition is not one bounded validate-all-then-commit phase change over its fixed page array");
   if (!writerSeal.includes("writer.seal_retained_step()") || writerSeal.includes("writer.finish()") || /while\b|\bloop\b/.test(writerSealStep)) failures.push("DB writer publication is not a persisted one-page transition cursor");
   for (const [name, source] of [["storage", storage], ["SQLite", sqlite], ["PostgreSQL", postgres], ["Neo4j", neo4j]] as const)
     if (/\b(?:writer|output)\.(?:finish|seal)\(\)/.test(source)) failures.push(`${name} production bypasses retained DbIoPageWriterSeal completion`);
@@ -12841,8 +12898,10 @@ function interactivityDbIoB1B6Failures(storageSource: string, sqliteSource: stri
   const memory = storage.slice(memoryStart, memoryEnd < 0 ? undefined : memoryEnd);
   for (const required of [
     "wal: std::sync::Mutex<Box<[Option<MemoryWalOwner>]>>",
-    "payloads: std::sync::Mutex<[Option<MemoryPayloadOwner>; DB_IO_MEMORY_OWNERS]>",
-    "leases: std::sync::Mutex<[Option<MemoryLeaseOwner>; DB_IO_MEMORY_OWNERS]>",
+    "payloads: std::sync::Mutex<Box<[Option<MemoryPayloadOwner>]>>",
+    "leases: std::sync::Mutex<Box<[Option<MemoryLeaseOwner>]>>",
+    "payloads: std::sync::Mutex::new(memory_fixed_none_box(DB_IO_MEMORY_OWNERS))",
+    "leases: std::sync::Mutex::new(memory_fixed_none_box(DB_IO_MEMORY_OWNERS))",
     "fn bind_owner_operation",
     "fn owner_backing_bytes",
     "pages.transfer_to_backend(backend_operation)?",
@@ -12852,7 +12911,7 @@ function interactivityDbIoB1B6Failures(storageSource: string, sqliteSource: stri
   for (const forbidden of ["HashMap<", "BTreeMap<", "collect::<HashMap", "process_worker_pool("])
     if (memory.includes(forbidden)) failures.push(`memory typed operation retains uncensused dynamic owner: ${forbidden}`);
   const memoryFacade = storage.slice(storage.indexOf("pub struct MemoryStorage"), storage.indexOf("//#region 🔖️Fs"));
-  if (!memoryFacade.includes("pub async fn new(pool: Arc<WorkerPool>)") || !memoryFacade.includes("memory_execute(self.pool.as_ref(), DbIoTask::")) failures.push("MemoryStorage does not inject and use the shared typed WorkerPool");
+  if (!memoryFacade.includes("pub async fn new(pool: Arc<WorkerPool>)") || !memoryFacade.includes("register_db_io_backend_reserved_with_use(DbIoBackendKind::Memory, executor, pool.clone(), pool_use,") || !memoryFacade.includes("submit_db_io_task_admitted(task).await?.finish().await") || !memoryFacade.includes("memory_execute(DbIoTask::")) failures.push("MemoryStorage does not inject and use the shared typed WorkerPool");
   if (!memory.includes("output.seal_retained_step()")) failures.push("Memory production completion bypasses its retained one-opportunity page seal");
 
   for (const owner of ["DbIoPageWriter", "DbIoPages", "DbIoU64List", "DbIoLeaseResult", "DbIoFault", "DbIoResultLease", "DbIoArtifactId"] as const) {
@@ -12897,7 +12956,7 @@ function interactivityDbIoB1B6Failures(storageSource: string, sqliteSource: stri
     const facade = source.slice(facadeStart, source.indexOf("//#region 🔖️DbBackend", facadeStart));
     if (!facade.includes("worker_pool: Arc<WorkerPool>") || !facade.includes("self.execute(DbIoTask::")) failures.push(`${name} public facade bypasses typed shared-pool submission`);
     if (/\.execute\(&self\.(?:pool|graph)\)|\.fetch_(?:one|optional)\(&self\.(?:pool|graph)\)/.test(facade)) failures.push(`${name} public facade directly calls its external driver`);
-    if (!ordered(facade, ["submit_db_io_task(self.worker_pool.as_ref(), task)", "operation.start_async_native_on_lane_io().await?", "operation.await"])) failures.push(`${name} external driver execution escapes the generation-qualified Lane::Io worker order`);
+    if (!ordered(facade, ["submit_db_io_task_admitted(task).await?", "operation.start_async_native_on_lane_io().await?", "operation.finish().await"])) failures.push(`${name} external driver execution escapes the generation-qualified Lane::Io worker order`);
     if (/drive_task\([^)]*\)\.await/.test(facade) || facade.includes("take_async_native().await")) failures.push(`${name} facade polls an actual external driver future outside WorkerPool authority`);
     if (/ArtifactId\([^)]*(?:as_str\(\)|document)[^)]*(?:to_string|to_owned)/.test(source)) failures.push(`${name} constructs an uncensused post-admission ArtifactId`);
     const artifactMacro = source.slice(source.indexOf("macro_rules! with_admitted_artifact"), source.indexOf("use ", source.indexOf("macro_rules! with_admitted_artifact")));
@@ -12911,7 +12970,7 @@ function interactivityDbIoB1B6Failures(storageSource: string, sqliteSource: stri
     if (!postgres.includes(required)) failures.push(`PostgreSQL pre-driver capacity admission missing: ${required}`);
   for (const forbidden of ["reserve_driver_output(len as u64)", "reserve_driver_output(range.len)"])
     if (postgres.includes(forbidden)) failures.push(`PostgreSQL external Vec allocation is not precharged to its maximum observed capacity: ${forbidden}`);
-  for (const required of ["reserve_driver_read", "BoltBytes", "db_io_write_observed_bytes_range(reservation, bytes.value", "DbIoExternalBytes::new(current.value)", "current_reservation.observe_capacity(current.capacity()?)?", "while !current.terminal_is_empty()", "semio_framework_async::yield_once().await", "write_driver_bytes(reservation, bytes", "self.graph = Some(Graph::connect(config).await", "Neo4jDbIoExecutor::new(config"])
+  for (const required of ["reserve_driver_read", "BoltBytes", "db_io_write_observed_bytes_range(reservation, bytes.value", "DbIoExternalBytes::new(current.value.to_vec())", "current_reservation.observe_capacity(current.capacity()?)?", "while !current.terminal_is_empty()", "semio_framework_async::yield_once().await", "write_driver_bytes(reservation, bytes", "self.graph = Some(Graph::connect(config).await", "Neo4jDbIoExecutor::new(config"])
     if (!neo4j.includes(required)) failures.push(`Neo4j retained codec/connect authority missing: ${required}`);
   for (const forbidden of ["fn encode_bytes(", "let updated = apply_append", "let updated = apply_truncate", "connect_with_config_and_uri(config, uri.clone()).await", "BASE64", "base64::", "decode_bytes(&row.get::<String>"])
     if (neo4j.includes(forbidden)) failures.push(`Neo4j production retains a whole-buffer or pre-registration path: ${forbidden}`);
@@ -12940,12 +12999,12 @@ function interactivityDbIoB1B6Failures(storageSource: string, sqliteSource: stri
   for (const evidence of ["DB_IO_LOST_OWNER_SLOTS", "db_io_park_lost_owner(owner)", "DB_IO_LOST_OWNER_OVERFLOW", "DB_IO_LOST_OWNER_QUARANTINE", "retained-overflow-owner", "exact-plus-one-candidate", "exact-plus-two-candidate", "exact-all-tier-refusal", "db_io_park_lost_owner(refused)", "assert_eq!(exact", "db_io_lost_owner_close_step"])
     if (!saturationLaw.includes(evidence)) failures.push(`DB saturation identity/recovery law lacks production-path evidence: ${evidence}`);
   const closeInterruptionLaw = rustItem(storageSource, "async fn db_io_storage_ready_and_pending_close_interruption_recover_the_same_owner_and_ledger");
-  for (const evidence of ["db_io_close_platform", "Poll::Pending", "Poll::Ready(Ok(()))", "Poll::Ready(Err(DbError::Unavailable", "drop(close)", "ledger_witness"])
+  for (const evidence of ["db_io_close_platform", "Poll::Pending", "Poll::Ready(Ok(()))", "Poll::Ready(Err(DbError::LimitExceeded(", "drop(close)", "ledger_witness"])
     if (!closeInterruptionLaw.includes(evidence)) failures.push(`DB Ready/Pending/fault close-interruption law lacks production-path evidence: ${evidence}`);
   const pageSealLaw = rustItem(storageSource, "fn db_io_page_writer_seal_memory_sqlite_neo_state_wal_index_max_cancel_fault_drop_is_one_opportunity");
   for (const evidence of ["seal_retained()", "Future::poll", "Poll::Pending", "drop(seal)", "DB_IO_OPERATION_PAGES + 1", "DbIoPagePhase::Queued", "Poll::Ready(Err(rejected))", "rejected.into_writer()", "ledger_witness()"])
     if (!pageSealLaw.includes(evidence)) failures.push(`DB page-seal hostile law lacks exact interrupted/max/fault owner evidence: ${evidence}`);
-  if (!postgresSource.includes("lost_postgres_facade_drives_the_real_lazy_pool_to_closed") || !postgres.includes("self.pool.is_closed()") || !postgres.includes("pool.close().await") || !postgres.includes("Future::poll(future.as_mut(), context)")) failures.push("PostgreSQL lost-facade path lacks a real Lane::Io-polled async pool-close terminal witness");
+  if (!postgresSource.includes("lost_postgres_facade_drives_the_real_lazy_pool_to_closed") || !postgres.includes("self.pool.is_closed()") || !postgres.includes("db_storage_driver_runtime::detach_unit(Box::pin(async move { pool.close().await }))") || !postgres.includes("std::future::Future::poll(std::pin::Pin::new(receiver), context)")) failures.push("PostgreSQL lost-facade path lacks a real Lane::Io-polled async pool-close terminal witness");
   if (!neo4jSource.includes("lost_neo4j_facade_retires_the_real_owned_config_without_a_service")) failures.push("Neo4j lost-facade path lacks its real owned-control retirement law");
   if (!hub.includes("PostgresStorage::connect(pool.clone()") || !hub.includes("Neo4jStorage::connect(pool.clone()")) failures.push("Hub async-native storage callers bypass the shared WorkerPool");
   return failures;
@@ -13445,6 +13504,17 @@ function interactivityDatabaseCatalogBootstrapFixtureBody(source: string, name: 
   return open < 0 ? "" : toolJobRustBlock(source, open)?.body ?? "";
 }
 
+/** 🔁️ The one loop a retained driver's `schedule` may hold is the lost-wake handshake: the Idle-to-Queued claim retried only after a
+ * racing driver release left the authority Idle and this caller reclaimed its own wake, returning on every other observation. Blanks
+ * that exact loop keyword so a region's no-loop census still sees every other loop. */
+function interactivityDriverHandshakeBlanked(region: string, authority: string): string {
+  const start = region.indexOf(`while self.driver_authority.compare_exchange(${authority}::Idle as u8, ${authority}::Queued as u8`);
+  if (start < 0) return region;
+  const exit = region.indexOf(`!= ${authority}::Idle as u8 || !self.wake_requested.swap(false`, start);
+  if (exit < 0 || !region.slice(start, exit).includes("self.wake_requested.store(true") || !/^[^{};]*\{\s*return;\s*\}/u.test(region.slice(exit))) return region;
+  return `${region.slice(0, start)}if${region.slice(start + "while".length)}`;
+}
+
 function interactivityDatabaseCatalogBootstrapFailures(engineSource: string): string[] {
   const production = interactivityProductionSource(engineSource);
   const start = production.indexOf("//#region 🔖️CatalogBootstrapCas");
@@ -13457,7 +13527,7 @@ function interactivityDatabaseCatalogBootstrapFailures(engineSource: string): st
   const waits = production.match(/\bdb_actor::block_on\s*\(/g)?.length ?? 0;
   const expectedWaits = production.includes("DatabaseSyncHelloFuture::try_submit") ? 0 : production.includes("db_compact::DatabaseCompactionFuture::try_submit") ? 1 : 2;
   if (waits !== expectedWaits || openWith.includes("db_actor::block_on") || openWith.includes("storage.catalog().await.cas_root") || openWith.includes("cas_root(EpochFence::INITIAL")) failures.push("P1w retained bootstrap does not preserve the exact post-P1y production-wait/direct-CAS cut");
-  if (!openWith.includes("Self::open_catalog_bootstrap_retained(pool.clone(), storage, pages)") || !openWith.includes("Err(rejected) => return Err(rejected.close_and_take_error())") || !openWith.includes("let result = bootstrap.await?") || !openWith.includes("result.into_parts()") || !openWith.includes("storage = retained_storage") && !openWith.includes("(retained_storage, epoch, Vec::new())")) failures.push("fresh Database::open_with does not consume the retained P1w result and exact storage handback");
+  if (!openWith.includes("DatabaseCatalogBootstrapFuture::try_prepare_with_use(pool.clone(), pool_use.clone(), storage, pages, DatabaseCatalogBootstrapKey::root(), EpochFence::INITIAL") || !openWith.includes("Err(rejected) => return Err(rejected.close_and_take_error())") || !openWith.includes("let result = bootstrap.await?") || !openWith.includes("result.into_parts()") || !openWith.includes("storage = retained_storage") && !openWith.includes("(retained_storage, epoch, Vec::new())")) failures.push("fresh Database::open_with does not consume the retained P1w result and exact storage handback");
   for (const caller of ["pub async fn open(", "pub async fn open_at(", "pub async fn open_with_emit"])
     if (!production.includes(caller)) failures.push(`P1w caller census lost ${caller}`);
   for (const required of [
@@ -13555,8 +13625,9 @@ function interactivityDatabaseCatalogBootstrapFailures(engineSource: string): st
   if (!terminalClose.includes("self.state.schedule()") || !terminalClose.includes("DatabaseCatalogBootstrapDriverAuthority::Driving") || !terminalClose.includes("DatabaseCatalogBootstrapDriverAuthority::Retry") || terminalClose.includes("self.state.polling.load") || terminalClose.includes("retire_one(") || terminalClose.includes("close_one(") || terminalClose.includes("drop(")) failures.push("P1w public close bypasses atomic driver authority or executes retirement on the facade caller");
   const retired = bootstrap.slice(bootstrap.indexOf("fn retire_one"), bootstrap.indexOf("fn release_success"));
   if (!retired.includes("owner.close_step()") || !retired.includes("DatabaseCatalogBootstrapWork::close_one") || !retired.includes("owner.close_one()") || retired.includes("while ") || retired.includes("loop {")) failures.push("P1w retirement does not advance one page/future/result/control owner per opportunity");
+  const bootstrapLoops = interactivityDriverHandshakeBlanked(bootstrap, "DatabaseCatalogBootstrapDriverAuthority");
   for (const forbidden of ["db_actor::block_on", "semio_framework_async::block_on", "WorkerPool::new(", "thread::spawn", "loop {", "while ", ".unwrap()", ".expect(", ".to_string()", "Vec<", "String>"])
-    if (bootstrap.includes(forbidden)) failures.push(`P1w production region contains prohibited ${forbidden}`);
+    if (bootstrapLoops.includes(forbidden)) failures.push(`P1w production region contains prohibited ${forbidden}`);
 
   const fixtureRequirements: readonly [string, readonly string[]][] = [
     ["database_catalog_bootstrap_max_plus_one_and_aba_preserve_exact_credit_identity", ["DATABASE_CATALOG_BOOTSTRAP_PAGES + 1", "replacement.1", "!state.release(slot, generation", "state.bytes"]],
@@ -13566,7 +13637,7 @@ function interactivityDatabaseCatalogBootstrapFailures(engineSource: string): st
     ["database_catalog_bootstrap_ready_and_pending_interruption_publish_once_and_retain_owner", ["ControlledCatalogBootstrapPoll::Ready", "ControlledCatalogBootstrapPoll::Pending", "probe.cancel()", "polls.load", "Err(DbError::Closed)"]],
     ["database_catalog_bootstrap_handoff_interruption_retires_unpolled_pages_one_lane_opportunity_at_a_time", ["catalog_bootstrap_pages(3)", "DatabaseCatalogBootstrapPhase::Poll", "work.future.is_none()", "work.pages", "work.storage", "probe.cancel()", "Err(DbError::Closed)", "terminal_work"]],
     ["database_catalog_bootstrap_atomic_driver_claim_closes_first_poll_pending_ready_panic_and_retirement_races", ["controlled_driver_claim_hook", "DatabaseCatalogBootstrapDriverAuthority::Driving", "assert_ne!(driver_thread, std::thread::current().id())", "page_identity", "storage_identity", "polls.load", "0", "active_drivers", "max_active_drivers", "ControlledCatalogBootstrapPoll::Pending", "ControlledCatalogBootstrapPoll::Ready", "ControlledCatalogBootstrapPoll::Panic", "controlled_driver_release_hook", "completion.lock()", "terminal_completion.lock()", "state.admission", "database_catalog_bootstrap_registry", "release(slot, generation, bytes)", "drop(result)", "DatabaseCatalogBootstrapCloseStep::Blocked", "terminal.terminal_is_empty()", "DatabaseCatalogBootstrapDriverAuthority::Idle", "Arc::as_ptr(&storage)"]],
-    ["database_catalog_bootstrap_lost_handle_take_resume_close_and_terminal_witness_are_exact", ["take_database_catalog_bootstrap_terminal", "terminal.resume()", "terminal.close_step()", "retained_owners", "saturating_sub(current) <= 1"]],
+    ["database_catalog_bootstrap_lost_handle_take_resume_close_and_terminal_witness_are_exact", ["take_database_catalog_bootstrap_terminal", "terminal.resume()", "terminal.close_step()", "retained_owners", "driver_grants", "initial.saturating_sub(current) as u64 <= granted - initial_grants + grant_in_flight"]],
     ["database_catalog_bootstrap_backend_no_service_close_retires_only_on_io_lane", ["ControlledCatalogBootstrapPoll::NoService", "poll_worker_thread", "terminal.close_step()", "terminal_empty"]],
     ["database_catalog_bootstrap_stale_generation_fault_preserves_storage_pages_and_current_slot", ["replacement_generation", "DbError::StaleGeneration", "admission.release(state.slot, replacement_generation", "Arc::as_ptr(&storage)"]],
     ["database_catalog_bootstrap_real_queue_saturation_retains_exact_job_and_recovers_identity", ["WorkerSubmitErrorKind::Saturated", "retry_job", "Lane::Io", "Some(pointer)", "EpochFence::INITIAL.next()"]],
@@ -13643,10 +13714,14 @@ function interactivityDatabaseCreateCatalogFailures(engineSource: string, asyncS
   const callbackAtStart = asyncProduction.indexOf("pub fn callback_at(");
   const callbackAtEnd = asyncProduction.indexOf("pub fn is_shutdown", callbackAtStart);
   const callbackAt = callbackAtStart < 0 || callbackAtEnd < 0 ? "" : asyncProduction.slice(callbackAtStart, callbackAtEnd);
+  const scheduleCallbackStart = asyncProduction.indexOf("fn schedule_callback(");
+  const scheduleCallback = scheduleCallbackStart < 0 ? "" : asyncProduction.slice(scheduleCallbackStart, asyncProduction.indexOf("fn is_fired", scheduleCallbackStart));
+  const earlierDeadlineStart = asyncProduction.indexOf("inner.wheel.install_earlier_deadline_hook(");
+  const earlierDeadline = earlierDeadlineStart < 0 ? "" : asyncProduction.slice(earlierDeadlineStart, asyncProduction.indexOf("}));", earlierDeadlineStart));
 
   const expectedWaits = production.includes("DatabaseSyncHelloFuture::try_submit") ? 0 : production.includes("db_compact::DatabaseCompactionFuture::try_submit") ? 1 : 2;
   if (waits !== expectedWaits || createDocument.includes("db_actor::block_on") || createDocument.includes("cas_root(") || createDocument.includes("target_arch = \"wasm32\"")) failures.push("P1x does not preserve the exact post-P1y native/Wasm caller cut");
-  if (!workerLoop.includes("inner.wheel.fire_due_batch(inner.now_ms(), TIMER_ACTIONS_PER_POOL_TURN)") || workerLoop.indexOf("inner.wheel.fire_due_batch") > workerLoop.indexOf("select_and_pop") || !callbackAt.includes("self.inner.wheel.schedule_callback") || !callbackAt.includes("self.inner.notify_idle()")) failures.push("P1x liveness evidence is not bound to real WorkerPool worker-loop timer service");
+  if (!workerLoop.includes("inner.wheel.fire_due_batch(inner.now_ms(), TIMER_ACTIONS_PER_POOL_TURN)") || workerLoop.indexOf("inner.wheel.fire_due_batch") > workerLoop.indexOf("select_and_pop") || !callbackAt.includes("self.inner.wheel.schedule_callback") || !scheduleCallback.includes("self.announce_earlier_deadline(earliest)") || !earlierDeadline.includes("parking.signal_timer")) failures.push("P1x liveness evidence is not bound to real WorkerPool worker-loop timer service");
   for (const required of [
     "cancellation/deadline/exhaustion latency guarantee is conditional on shared-pool service",
     "at least one native worker must return to the head of `WorkerPool::worker_loop`",
@@ -13711,7 +13786,7 @@ function interactivityDatabaseCreateCatalogFailures(engineSource: string, asyncS
   const drivingToIdle = "compare_exchange(DatabaseCreateCatalogDriverAuthority::Driving as u8, DatabaseCreateCatalogDriverAuthority::Idle as u8";
   const retryCallback = "self.pool.callback_at(self.pool.now_ms().saturating_add(1), move || state.retry())";
   if (!schedule.includes(idleToQueued) || !schedule.includes("wake_requested.store(true") || !retained.includes("self.pool.try_submit(Lane::Io, job)")) failures.push("P1x driver admission is not uniquely claimed on shared Lane::Io");
-  if (!submit.includes("Some((error.into_job(), next_attempt))") || submit.indexOf("Some((error.into_job(), next_attempt))") > submit.indexOf(queuedToRetry) || !submit.includes(retryCallback) || submit.indexOf(retryCallback) < submit.indexOf(queuedToRetry) || !retry.includes(retryToQueued) || !retry.includes("attempt >= DATABASE_CREATE_CATALOG_RETRY_LIMIT") || !retry.includes("!self.is_current()") || !retry.includes("self.cancelled.load") || !retry.includes("self.deadline_ms.load") || !retry.includes("Some(job)") || !retry.includes("self.retry_closing.store(true") || !retry.includes("self.drive_callback_close_claimed()") || !retry.includes("fn callback_close_one") || !retry.includes("self.arm_callback_close()")) failures.push("P1x saturation/retry lacks its exact refusal-branch callback_at registration or bounded stale/cancel/deadline/exhaustion close handoff");
+  if (!submit.includes("Some((error.into_job(), next_attempt))") || submit.indexOf("Some((error.into_job(), next_attempt))") > submit.indexOf(queuedToRetry) || !submit.includes(retryCallback) || submit.indexOf(retryCallback) < submit.indexOf(queuedToRetry) || !retry.includes(retryToQueued) || !retry.includes("attempt >= DATABASE_CREATE_CATALOG_RETRY_LIMIT") || !retry.includes("!self.is_current()") || !retry.includes("self.cancelled.load") || !retry.includes("self.deadline_ms.load") || !retry.includes("Some(job)") || !retry.includes("self.retry_closing.store(true") || !retry.includes("self.drive_callback_close_claimed(true)") || !retry.includes("fn callback_close_one") || !retry.includes("self.arm_callback_close()")) failures.push("P1x saturation/retry lacks its exact refusal-branch callback_at registration or bounded stale/cancel/deadline/exhaustion close handoff");
   if (!rejectionSubmit.includes("Some((error.into_job(), next_attempt))") || !rejectionSubmit.includes(retryCallback) || rejectionSubmit.indexOf(retryCallback) < rejectionSubmit.indexOf(queuedToRetry) || !rejectionRetry.includes("attempt >= DATABASE_CREATE_CATALOG_RETRY_LIMIT") || !rejectionRetry.includes("self.pool.now_ms() >= self.deadline_ms") || !rejectionRetry.includes("Some(job)") || !rejectionRetry.includes("self.callback_close.store(true") || !rejectionRetry.includes("self.drive_close_claimed()") || !rejection.includes("fn callback_close_one") || !rejection.includes("terminal_job")) failures.push("P1x rejection-close saturation retry lacks its exact refusal-branch callback registration or exact job/owner close handoff");
   if (!drive.includes(queuedToDriving) || drive.indexOf(queuedToDriving) > drive.indexOf("self.opportunities.fetch_add") || drive.indexOf("self.drive_claimed(generation)") > drive.indexOf(drivingToIdle) || drive.indexOf(drivingToIdle) > drive.indexOf("wake_requested.swap(false")) failures.push("P1x driver claim/release/wake ordering permits a competing grant or lost wake");
   const cancellationCheck = claimed.indexOf("self.cancelled.load");
@@ -13730,13 +13805,19 @@ function interactivityDatabaseCreateCatalogFailures(engineSource: string, asyncS
   if (!retire.includes("pages.close_step()") || !retire.includes("writer.close_step()") || !retire.includes("candidate.pop()") || !retire.includes("cursor.clone_text.take()") || !retire.includes("cursor.base.take()") || retire.includes("loop {") || retire.includes("while ")) failures.push("P1x close is not one admitted page/backing/owner per Lane::Io opportunity");
   if (!futurePoll.includes("completion.lock()") || futurePoll.indexOf("waker.lock()") < futurePoll.indexOf("completion.lock()") || futurePoll.lastIndexOf("completion.lock()") < futurePoll.indexOf("waker.lock()")) failures.push("P1x completion lacks check-register-recheck lost-wakeup closure");
   if (!resultDrop.includes("state.terminal_completion.lock()") || !resultDrop.includes("state.abandoned.store(true") || !resultDrop.includes("state.begin_callback_close()") || !rejection.includes("DatabaseCreateCatalogRejectedClose::prepare(pool") || !rejection.includes("self.close.take_owner()") || !rejection.includes("self.close.restore_owner(owner)") || !terminal.includes("self.state.begin_callback_close()") || !retire.includes("self.terminal_job") ) failures.push("P1x result/rejection/lost-handle paths do not hand exact owners to retained close authority");
-  const actual = createDocument.indexOf("let _published_epoch = actual?");
-  const spawn = createDocument.indexOf("self.spawn_authority_create");
-  const emit = createDocument.indexOf("db_engine.document_created");
-  const register = createDocument.indexOf("self.register_handle");
-  if (!createDocument.includes("self.create_document_catalog_retained(spec.document)") || !createDocument.includes("Err(rejected) => return Err(rejected.close_and_take_error())") || actual < 0 || spawn < actual || emit < spawn || register < emit) failures.push("P1x caller spawns/emits/registers before durable catalog publication or loses rejected owners");
+  const mountRunStart = production.indexOf("async fn run_document_mount(");
+  const mountRun = mountRunStart < 0 ? "" : production.slice(mountRunStart, production.indexOf("async fn mount_document(", mountRunStart));
+  const publishMountStart = production.indexOf("async fn publish_mount_catalog(");
+  const publishMount = publishMountStart < 0 ? "" : production.slice(publishMountStart, production.indexOf("async fn run_open_document_mount(", publishMountStart));
+  const mountComplete = production.slice(production.indexOf("fn complete(&self, result: Result<DatabaseDocumentMountReply, DbError>)"), production.indexOf("//#region 🔖️Database"));
+  const published = mountRun.indexOf("Self::publish_mount_catalog(");
+  const spawn = mountRun.indexOf("db_artifact::ArtifactAuthority::spawn_with_pool_use(");
+  const emit = mountRun.indexOf("db_engine.document_created");
+  const reply = mountRun.indexOf("Ok(DatabaseDocumentMountReply");
+  if (!createDocument.includes("self.mount_document(spec.document, DatabaseDocumentMountPolicy::Create)") || !publishMount.includes("DatabaseCreateCatalogFuture::try_prepare_with_use(pool, pool_use, catalog, storage, document, true)") || !publishMount.includes("Err(rejected) => return Err(rejected.close_and_take_error())") || !publishMount.includes("let result = transaction.await?") || !publishMount.includes("actual.map(|_| ())") || published < 0 || spawn < published || emit < spawn || reply < emit || !mountComplete.includes("DatabaseDocumentMountSlot::Ready(")) failures.push("P1x caller spawns/emits/registers before durable catalog publication or loses rejected owners");
+  const retainedLoops = interactivityDriverHandshakeBlanked(retained, "DatabaseCreateCatalogDriverAuthority");
   for (const forbidden of ["db_actor::block_on", "thread::spawn", "WorkerPool::new(", "loop {", "while ", "#[cfg(target_arch", ".unwrap()", ".expect("])
-    if (retained.includes(forbidden)) failures.push(`P1x retained production region contains prohibited ${forbidden}`);
+    if (retainedLoops.includes(forbidden)) failures.push(`P1x retained production region contains prohibited ${forbidden}`);
   const laws: readonly [string, readonly string[]][] = [
     ["database_create_catalog_max_plus_one_document_and_entry_caps_return_exact_owners", ["DATABASE_CREATE_CATALOG_MAX_ID_BYTES + 1", "document.0.capacity()", "DATABASE_CREATE_CATALOG_MAX_ENTRIES", "Arc::as_ptr(&storage)", "into_parts()"]],
     ["database_create_catalog_observed_vec_and_string_overallocation_faults_retire_exact_backings", ["controlled_capacity_overage", "DATABASE_CREATE_CATALOG_ITEMS as usize + 1", "candidate.is_some()", "observed backing capacity", "DATABASE_CREATE_CATALOG_MAX_ID_BYTES + 1", "clone_text.is_some()", "cloned string capacity", "admission"]],
@@ -13749,7 +13830,7 @@ function interactivityDatabaseCreateCatalogFailures(engineSource: string, asyncS
     ["database_create_catalog_real_worker_loop_services_finite_saturation_cancel_deadline_exhaustion_and_close", ["replenishing_held_create_catalog_io_pool", "release_held_create_catalog_worker", "spent_submission_attempts", "DATABASE_CREATE_CATALOG_RETRY_LIMIT", "backend_polls", "callback_worker_thread", "terminal_job_retirements", "retry exhausted", "retry_job", "terminal_job", "database_create_catalog_registry", "close.terminal_is_empty()", "pool.shutdown()"]],
     ["database_create_catalog_two_worker_reserved_capacity_services_timers_while_one_violator_is_held", ["reserved_replenishing_create_catalog_io_pool", "DatabaseCreateCatalogFuture::try_submit", "DatabaseCreateCatalogDriverAuthority::Retry", "retry_job", "reserved-cancel", "reserved-deadline", "reserved-exhaust", "release_held_create_catalog_worker(&service_gate)", "spent_submission_attempts", "DATABASE_CREATE_CATALOG_RETRY_LIMIT", "backend_polls", "callback_worker_thread", "terminal_job_retirements", "database_create_catalog_registry", "admission", "close.terminal_is_empty()", "maintenance_gate"]],
     ["database_create_catalog_sole_permanently_nonreturning_worker_retains_discoverable_owners_without_latency_claim", ["held_create_catalog_io_pool", "probe.cancel()", "drop(probe)", "DatabaseCreateCatalogDriverAuthority::Retry", "retry_job", "storage_pointer", "admission", "backend_polls", "database_create_catalog_registry", "take_database_create_catalog_terminal", "DatabaseCreateCatalogCloseStep::Blocked", "!terminal.terminal_is_empty()"]],
-    ["database_create_catalog_drop_terminal_close_retires_one_owner_per_lane_grant", ["take_database_create_catalog_terminal", "terminal.close_step()", "saturating_sub(current) <= 1", "state.admission"]],
+    ["database_create_catalog_drop_terminal_close_retires_one_owner_per_lane_grant", ["take_database_create_catalog_terminal", "terminal.close_step()", "state.opportunities", "initial.saturating_sub(current) as u64 <= granted - initial_grants", "state.admission"]],
     ["database_create_catalog_one_production_opportunity_is_under_eight_ms_and_native_wasm_share_source", ["drive_one(state.generation)", "from_millis(8)", "opportunities.load", "include_str!", "target_arch", "db_actor::block_on"]],
     ["database_create_catalog_maximum_catalog_claim_revalidate_and_snapshot_clone_never_hold_worker", ["DATABASE_CREATE_CATALOG_MAX_ENTRIES - 1", "DatabaseCreateCatalogPhase::Claim", "DatabaseCreateCatalogPhase::Revalidate", "DatabaseCreateCatalogPhase::Retire", "pending_owned", "catalog_contention_armed", "from_millis(8)", "Arc::clone(&catalog.entries)", "entries.as_ref().clone()"]],
     ["database_create_catalog_durable_publication_precedes_authority_spawn_emit_and_registration", ["create_document_catalog_retained", "actual.is_ok()", "open_artifacts", "catalog", "document"]],
@@ -13782,17 +13863,17 @@ function interactivityDatabaseCompactionFailures(compactSource: string, engineSo
   const start = compact.indexOf("//#region 🧵️RetainedCompactionJob");
   const end = compact.indexOf("//#endregion 🧵️RetainedCompactionJob", start);
   const retained = start < 0 || end < 0 ? "" : compact.slice(start, end);
-  const facadeStart = engine.indexOf("pub fn compact_document_retained");
-  const facadeEnd = engine.indexOf("pub async fn hello", facadeStart);
+  const facadeStart = engine.indexOf("fn compact_document_retained(");
+  const facadeEnd = engine.indexOf("pub fn hello_retained", facadeStart);
   const facade = facadeStart < 0 || facadeEnd < 0 ? "" : engine.slice(facadeStart, facadeEnd);
   const failures: string[] = [];
   const waits = engine.match(/\bdb_actor::block_on\s*\(/g)?.length ?? 0;
   const expectedWaits = engine.includes("DatabaseSyncHelloFuture::try_submit") ? 0 : 1;
-  if (waits !== expectedWaits || facade.includes("block_on(") || !facade.includes("DatabaseCompactionFuture::try_submit") || !facade.includes("let requested_at_ms = now_ms().await") || !facade.includes("compaction.await?.close_and_take_report()") || !facade.includes("Err(rejected) => return Err(rejected.close_and_take_error())")) failures.push("P1y selected facade wait was not cut over to the retained terminal witness with the exact post-P1z wait census and admitted epoch");
+  if (facade.includes(".compact_retained(holder, consolidate_snapshots,")) failures.push("P1y facade compacts through the document actor (`retained_compaction_with_wal`): a lease release error there completes publicly and consumes the fence, with no retained release witness, while the retained `DatabaseCompactionFuture` that carries the witness has no production caller");
+  else if (waits !== expectedWaits || facade.includes("block_on(") || !facade.includes("DatabaseCompactionFuture::try_submit") || !facade.includes("let requested_at_ms = now_ms().await") || !facade.includes("compaction.await?.close_and_take_report()") || !facade.includes("Err(rejected) => return Err(rejected.close_and_take_error())")) failures.push("P1y selected facade wait was not cut over to the retained terminal witness with the exact post-P1z wait census and admitted epoch");
   for (const required of [
     "const DATABASE_COMPACTION_SLOTS: usize = 32",
     "const DATABASE_COMPACTION_MAX_SEGMENTS: usize = 64",
-    "const DATABASE_COMPACTION_MAX_HASHES: usize = 4_096",
     "DATABASE_COMPACTION_OPERATION_ITEMS",
     "DATABASE_COMPACTION_OPERATION_BYTES",
     "DATABASE_COMPACTION_TOTAL_ITEMS",
@@ -13809,13 +13890,13 @@ function interactivityDatabaseCompactionFailures(compactSource: string, engineSo
     "DatabaseCompactionAdmission::try_claim(&document)",
     "database_compaction_registry()",
     "struct DatabaseCompactionSegmentOwners",
-    "struct DatabaseCompactionHashOwners",
     "CompactionRetainedPages",
     "type DatabaseCompactionExecutionFuture",
     "quarantined: Option<DatabaseCompactionExecutionFuture>",
     "pub struct DatabaseCompactionResult",
     "pub struct DatabaseCompactionRejected",
   ]) if (!retained.includes(required)) failures.push(`P1y fixed retained authority missing ${required}`);
+  if (retained.includes("struct DatabaseCompactionHashOwners") || retained.includes("DATABASE_COMPACTION_MAX_HASHES") || !compactSource.includes("fn document_compaction_retains_shared_and_private_cas_without_global_reference_authority(")) failures.push("P1y production compaction retains a payload-hash working set instead of deferring payload reclamation to the global reference authority");
   if (!compact.includes("pub struct CompactionIndexReports") || !compact.includes("slots: [Option<IndexKindReport>; COMPACTION_INDEX_REPORTS]") || compact.includes("pub struct CompactionIndexReports(Vec")) failures.push("P1y fixed index report authority is missing");
   if ((retained.match(/close_compaction_descriptor\(/g)?.length ?? 0) < 6) failures.push("P1y admitted snapshot descriptor owners do not all use incremental backing retirement");
   const descriptorClose = retained.slice(retained.indexOf("async fn close_compaction_descriptor"), retained.indexOf("async fn retire_compaction_snapshot_body"));
@@ -13850,11 +13931,13 @@ function interactivityDatabaseCompactionFailures(compactSource: string, engineSo
   if (!retained.includes("lease.acquire(lease_recovery.resource.as_str(), holder.as_str(), DEFAULT_LEASE_TTL_MS, now_ms)") || !retained.includes("publish_retained_expected(document, latest_generation") || retained.includes("manager.publish_retained(document, db_snapshot::SnapshotOrigin::FullBaseline")) failures.push("P1y lease/publication is not qualified by the admitted epoch and atomic expected snapshot generation");
   const indexChild = retained.slice(retained.indexOf("progress.store(DatabaseCompactionProgress::IndexMerge"), retained.indexOf("if consolidate_snapshots"));
   const indexControl = index.slice(index.indexOf("pub fn retained_operation_control"), index.indexOf("pub fn cancel", index.indexOf("pub fn retained_operation_control")));
-  if (!indexChild.includes("retained_operation_control(cancelled.clone(), deadline, DATABASE_COMPACTION_INDEX_FUEL)") || !indexChild.includes("DATABASE_COMPACTION_TURN_MS") || indexChild.includes("operation_control(65_536)") || !indexControl.includes("IndexCursorControl::new(cancelled, deadline, fuel)") || (indexChild.match(/if let Err\(error\) = compaction_opportunity\(cancelled\)\.await \{\s+break Err\(error\);/g)?.length ?? 0) !== 2 || indexChild.indexOf("drop(handle)") > indexChild.indexOf("let stats = stats?")) failures.push("P1y index child does not use the exact parent cancel, eight-ms deadline and bounded resumable fuel authority with lossless debit return");
+  const indexGrant = index.slice(index.indexOf("pub fn grant(&mut self)"), index.indexOf("pub struct IndexBytes"));
+  if (!indexChild.includes("compaction_opportunity(cancelled).await?") || !indexChild.includes("retained_operation_control(cancelled.clone(), deadline, DATABASE_COMPACTION_INDEX_FUEL)") || !indexChild.includes("DATABASE_COMPACTION_TURN_MS") || indexChild.includes("operation_control(65_536)") || !indexChild.includes("handle.compact(&mut control).await") || indexChild.indexOf("drop(handle)") < 0 || indexChild.indexOf("drop(handle)") > indexChild.indexOf("let stats = match stats") || !indexChild.includes('if message == "index cursor cancelled" => return Err(DbError::Closed)') || !indexControl.includes("IndexCursorControl::retained(cancelled, deadline, fuel)") || !index.includes("cooperative: Some((duration, fuel))")) failures.push("P1y index child does not use the exact parent cancel, eight-ms deadline and bounded resumable fuel authority with lossless debit return");
+  if (indexGrant.includes("std::thread::yield_now()")) failures.push("P1y retained index budget refill yields the OS thread (std::thread::yield_now) instead of the owned compaction future at its eight-ms boundary");
   const expectedPublish = snapshot.slice(snapshot.indexOf("pub async fn publish_retained_expected"), snapshot.indexOf("async fn publish_page_source", snapshot.indexOf("pub async fn publish_retained_expected")));
   const expectedBuild = snapshot.slice(snapshot.indexOf("async fn build_generation_retained_expected"), snapshot.indexOf("pub async fn build_generation_pages", snapshot.indexOf("async fn build_generation_retained_expected")));
   const publicationClaim = snapshot.slice(snapshot.indexOf("const SNAPSHOT_PUBLICATION_CLAIMS"), snapshot.indexOf("impl SnapshotPageSource for OptionalSnapshotPages"));
-  if (!expectedPublish.includes("let _claim = SnapshotPublicationClaim::try_claim(document)?") || !publicationClaim.includes("compare_exchange(0, identity") || publicationClaim.includes("std::sync::Mutex") || !expectedPublish.includes("observed != Some(expected_generation)") || expectedPublish.indexOf("observed != Some(expected_generation)") > expectedPublish.indexOf("write_generation") || !expectedPublish.includes("SnapshotRetainedPublicationRejected { error, body }") || expectedBuild.includes("Vec::with_capacity") || !expectedBuild.includes("write_retained_publication_descriptor")) failures.push("P1y expected snapshot publication lacks one nonblocking atomic claim, pre-write stale refusal, exact body recovery or allocation-free retained hash path");
+  if (!expectedPublish.includes("let _claim = SnapshotPublicationClaim::try_claim(self.storage.publication_scope(), document)?") || !publicationClaim.includes("[u64; SNAPSHOT_PUBLICATION_CLAIMS]") || !publicationClaim.includes("if claims.contains(&identity) {\n            return Err(DbError::Conflict(") || !publicationClaim.includes("impl Drop for SnapshotPublicationClaim") || !publicationClaim.includes("if claims[self.slot] == self.identity") || publicationClaim.includes(".await") || !expectedPublish.includes("observed != Some(expected_generation)") || expectedPublish.indexOf("observed != Some(expected_generation)") > expectedPublish.indexOf("write_generation") || !expectedPublish.includes("SnapshotRetainedPublicationRejected { error, body }") || expectedBuild.includes("Vec::with_capacity") || !expectedBuild.includes("write_retained_publication_descriptor")) failures.push("P1y expected snapshot publication lacks one nonblocking atomic claim, pre-write stale refusal, exact body recovery or allocation-free retained hash path");
   if (!retained.includes("next_items = self.items.checked_add(items)") || !retained.includes("next_bytes = self.bytes.checked_add(bytes)") || !retained.includes("self.items.checked_sub") || !retained.includes("self.bytes.checked_sub") || (retained.match(/ledger\.release\(page_items, page_bytes\)\?/g)?.length ?? 0) !== 6 || !retained.includes("close_compaction_descriptor(owner, ledger).await?")) failures.push("P1y observed backing is not cumulative/debit-returned across every retained descriptor/page/error owner");
   if (!retained.includes("pool.callback_at(deadline_ms, move || deadline.deadline_callback())") || !retained.includes("expired.store(true") || !retained.includes("DbError::Timeout(\"database compaction deadline\"")) failures.push("P1y deadline does not use the mounted production callback and typed terminal result");
   const resultDrop = retained.slice(retained.indexOf("impl Drop for DatabaseCompactionResult"), retained.indexOf("pub struct DatabaseCompactionFuture"));
@@ -13917,13 +14000,15 @@ function interactivityDatabaseSyncHelloFailures(syncSource: string, engineSource
   const end = sync.indexOf("//#endregion 👋️RetainedHello", start);
   const retained = start < 0 || end < 0 ? "" : sync.slice(start, end);
   const facadeStart = engine.indexOf("pub fn hello_retained");
-  const facadeEnd = engine.indexOf("pub async fn checkpoint_document", facadeStart);
+  const facadeEnd = engine.indexOf("\n}\n", facadeStart);
   const facade = facadeStart < 0 || facadeEnd < 0 ? "" : engine.slice(facadeStart, facadeEnd);
+  const admissionReadyStart = sync.indexOf("impl std::future::Future for DatabaseSyncHelloAdmissionReady");
+  const admissionReady = admissionReadyStart < 0 ? "" : sync.slice(admissionReadyStart, sync.indexOf("impl Drop for DatabaseSyncHelloAdmissionReady", admissionReadyStart));
   const failures: string[] = [];
   const waits = engine.match(/\bdb_actor::block_on\s*\(/g)?.length ?? 0;
-  if (waits !== 0 || facade.includes("block_on(") || !facade.includes("DatabaseSyncHelloFuture::try_submit") || !facade.includes("hello.await?.close_and_take_session()") || !facade.includes("Err(rejected) => return Err(rejected.close_and_take_error())")) failures.push("P1z final selected engine wait is not the retained terminal witness");
+  if (waits !== 0 || facade.includes("block_on(") || !facade.includes("DatabaseSyncHelloFuture::try_submit") || !facade.includes("hello.await?.close_and_take_session()") || !facade.includes("let error = rejected.close_and_take_error();") || !facade.includes("db_sync::DatabaseSyncHelloAdmissionReady::new(self.pool.clone(), deadline_ms).await?") || !admissionReady.includes("state.waiters.register(&mut this.waiter, context.waker())") || !admissionReady.includes("this.pool.callback_at(this.deadline_ms") || admissionReady.includes("block_on(")) failures.push("P1z final selected engine wait is not the retained terminal witness");
   const hubHello = hub.slice(hub.indexOf("let mut hello_session = match state.db.hello"), hub.indexOf("state.release_color(&space_id, &actor.0);", hub.indexOf("Ok(None) => break")));
-  if (!hubHello.includes("hello_session.take_welcome()") || !hubHello.includes("hello_session.next_frame().await") || !hubHello.includes("Ok(Some(frame))") || !hubHello.includes("Ok(None) => break") || !hubHello.includes("welcome.frame()") || !hubHello.includes("frame.frame()") || !hubHello.includes("welcome.acknowledge()") || !hubHello.includes("frame.acknowledge()") || hubHello.indexOf("welcome.acknowledge()") < hubHello.indexOf("sender.send(welcome_bytes).await") || hubHello.indexOf("frame.acknowledge()") < hubHello.indexOf("sender.send(frame_bytes).await") || hub.includes("welcome_response.follow_up")) failures.push("P1z hub caller is not an explicit post-send returned-frame acknowledgement consumer");
+  if (!hubHello.includes("hello_session.take_welcome()") || !hubHello.includes("hello_session.next_frame().await") || !hubHello.includes("Ok(Some(frame))") || !hubHello.includes("Ok(None) => break") || !hubHello.includes("welcome.frame()") || !hubHello.includes("frame.frame()") || !hubHello.includes("welcome.acknowledge()") || !hubHello.includes("frame.acknowledge()") || hubHello.indexOf("sender.send(welcome_bytes)") < 0 || hubHello.indexOf("welcome.acknowledge()") < hubHello.indexOf("sender.send(welcome_bytes)") || hubHello.indexOf("sender.send(frame_bytes)") < 0 || hubHello.indexOf("frame.acknowledge()") < hubHello.indexOf("sender.send(frame_bytes)") || hub.includes("welcome_response.follow_up")) failures.push("P1z hub caller is not an explicit post-send returned-frame acknowledgement consumer");
   for (const required of ["const DATABASE_SYNC_HELLO_SLOTS: usize = 8", "const DATABASE_SYNC_HELLO_MAX_ITEMS: usize = 65_536", "const DATABASE_SYNC_HELLO_MAX_BYTES: usize = 256 * 1024 * 1024", "const DATABASE_SYNC_HELLO_TURN_MS: u64 = 8", "const DATABASE_SYNC_HELLO_FRAME_UNIT_BYTES: usize = 4 * 1024", "DatabaseSyncHelloBackingLedger", "database_sync_hello_input_credit", "database_sync_hello_envelope_credit", "DatabaseSyncHelloAdmission::try_claim", "DatabaseSyncHelloFollowUp", "DatabaseSyncHelloExecutionFuture", "DatabaseSyncHelloRejectedClose", "database_sync_hello_registry"])
     if (!retained.includes(required)) failures.push("P1z fixed retained authority missing " + required);
   const backingLedger = retained.slice(retained.indexOf("impl DatabaseSyncHelloBackingLedger"), retained.indexOf("fn database_sync_hello_allocate_vec"));
@@ -13932,9 +14017,12 @@ function interactivityDatabaseSyncHelloFailures(syncSource: string, engineSource
   const snapshotBacking = protocol.slice(protocol.indexOf("pub const SNAPSHOT_CHUNK_BACKING_BYTES"), protocol.indexOf("pub enum ServerFrame"));
   const snapshotDecode = protocol.slice(protocol.indexOf("fn read_snapshot_chunk_bytes"), protocol.indexOf("pub async fn decode_server_frame"));
   if (!snapshotAllocation.includes('ledger.observe(1, DATABASE_SYNC_HELLO_FRAME_UNIT_BYTES, "database sync hello fixed snapshot chunk backing")?') || !snapshotAllocation.includes("Ok(DatabaseSyncHelloSnapshotBackingReservation { bytes: DATABASE_SYNC_HELLO_FRAME_UNIT_BYTES })") || snapshotAllocation.indexOf("ledger.observe(1, DATABASE_SYNC_HELLO_FRAME_UNIT_BYTES") > snapshotAllocation.indexOf("protocol::SnapshotChunkBytes::allocate_fixed()") || !snapshotAllocation.includes("fn allocate(self, ledger: &mut DatabaseSyncHelloBackingLedger)") || !snapshotAllocation.includes("let actual = owner.backing_bytes()") || !snapshotAllocation.includes("if actual != self.bytes") || !snapshotAllocation.includes("owner.close_one()") || !snapshotAllocation.includes("ledger.release(1, self.bytes)?") || !snapshotAllocation.includes("return Err(DbError::LimitExceeded") || !snapshotAllocation.includes("        }\n        Ok(owner)") || snapshotAllocation.includes("reserve_allocation") || snapshotAllocation.includes("try_reserve_exact")) failures.push("P1z snapshot backing is not exact-unit pre-debited, observed, retained on refusal, and held through transfer");
-  if (!snapshotBacking.includes("pub const SNAPSHOT_CHUNK_BACKING_BYTES: usize = 4 * 1024") || !snapshotBacking.includes("Option<Box<[u8; SNAPSHOT_CHUNK_BACKING_BYTES]>>") || !snapshotBacking.includes("Box::new([0; SNAPSHOT_CHUNK_BACKING_BYTES])") || !snapshotBacking.includes("filter(|end| *end <= SNAPSHOT_CHUNK_BACKING_BYTES)") || !snapshotBacking.includes("std::mem::size_of_val(backing.as_ref())") || !snapshotBacking.includes("self.backing.take()") || snapshotBacking.includes("Vec<u8>") || snapshotBacking.includes("try_reserve_exact") || !snapshotDecode.includes("if len > SNAPSHOT_CHUNK_BACKING_BYTES as u64") || !snapshotDecode.includes("SnapshotChunkBytes::try_from_slice(source)")) failures.push("P1z protocol snapshot owner or decoder can exceed the fixed 4 KiB backing");
-  const envelopeAllocation = retained.slice(retained.indexOf("fn database_sync_hello_allocate_envelope_vec"), retained.indexOf("fn database_sync_hello_retire_vec"));
-  if (!envelopeAllocation.includes('ledger.observe(1, reserved, "database sync hello cumulative envelope backing")?') || envelopeAllocation.indexOf("ledger.observe(1, reserved") > envelopeAllocation.indexOf("owner.try_reserve_exact(count)") || !retained.includes("database_sync_hello_decode_text") || !retained.includes("database_sync_hello_decode_payload") || !retained.includes("database_sync_hello_decode_envelope") || !retained.includes("database_sync_hello_allocate_envelope_vec::<protocol::MutationId>")) failures.push("P1z WAL envelope backings are not cumulatively debited before every allocation");
+  if (!snapshotBacking.includes("pub const SNAPSHOT_CHUNK_BACKING_BYTES: usize = 4 * 1024") || !snapshotBacking.includes("Option<Box<[u8; SNAPSHOT_CHUNK_BACKING_BYTES]>>") || !snapshotBacking.includes("Box::new([0; SNAPSHOT_CHUNK_BACKING_BYTES])") || !snapshotBacking.includes("filter(|end| *end <= SNAPSHOT_CHUNK_BACKING_BYTES)") || !snapshotBacking.includes("size_of_val(backing.as_ref())") || !snapshotBacking.includes("self.backing.take()") || snapshotBacking.includes("Vec<u8>") || snapshotBacking.includes("try_reserve_exact") || !snapshotDecode.includes("if len > SNAPSHOT_CHUNK_BACKING_BYTES as u64") || !snapshotDecode.includes("SnapshotChunkBytes::try_from_slice(source)")) failures.push("P1z protocol snapshot owner or decoder can exceed the fixed 4 KiB backing");
+  const vecAllocation = retained.slice(retained.indexOf("fn database_sync_hello_allocate_vec<T>"), retained.indexOf("struct DatabaseSyncHelloSnapshotBackingReservation"));
+  const tailReaderStart = retained.indexOf("async fn database_sync_hello_tail_reader(");
+  const tailReader = tailReaderStart < 0 ? "" : retained.slice(tailReaderStart, retained.indexOf("\n}\n", tailReaderStart));
+  if (!vecAllocation.includes("let reserved = ledger.reserve_allocation(1, requested, label)?") || vecAllocation.indexOf("ledger.reserve_allocation(1, requested, label)") > vecAllocation.indexOf("owner.try_reserve_exact(count)") || !vecAllocation.includes("ledger.settle_allocation(reserved, actual, label)?") || !retained.includes("database_sync_hello_allocate_vec::<u8>(ledger, source.len(), label)")) failures.push("P1z admitted owners are not debited against the cumulative ledger before they allocate");
+  if (tailReaderStart < 0 || !/reserve_allocation|database_sync_hello_allocate_vec/.test(tailReader)) failures.push("P1z WAL envelope backings are not cumulatively debited before every allocation: the tail reader decodes each command (decode_wal_command) into an unaccounted envelope and Vec");
   if (/\bowners\.(?:document(?:\.0)?|session_id|origin(?:\.0)?)\.clone\s*\(/.test(retained) || retained.includes("server_frontier.clone()") || !retained.includes("ArtifactId(std::mem::take(&mut owners.document.0))") || !retained.includes("std::mem::take(&mut owners.session_id)") || !retained.includes("std::mem::take(&mut owners.origin.0)")) failures.push("P1z admitted input or tail identity is cloned additively or instead of moved");
   if (!retained.includes("state.next_generation = generation.checked_add(1)") || !retained.includes("entry.generation == self.generation") || !retained.includes("if self.current()") || !retained.includes("StaleGeneration")) failures.push("P1z generation admission/publication is not checked end to end");
   const schedule = retained.slice(retained.indexOf("fn schedule("), retained.indexOf("fn submit_exact("));
@@ -13945,26 +14033,33 @@ function interactivityDatabaseSyncHelloFailures(syncSource: string, engineSource
   if (!schedule.includes("compare_exchange(DatabaseSyncHelloDriverAuthority::Idle as u8, DatabaseSyncHelloDriverAuthority::Queued as u8") || !schedule.includes("self.submit_exact")) failures.push("P1z schedule lacks the unique driver authority claim");
   if (!submit.includes("try_submit(semio_framework_async::Lane::Io, job)") || !submit.includes("Some((error.into_job(), next))") || !submit.includes("callback_at")) failures.push("P1z saturated I/O submission loses its exact job or retry registration");
   if (!retry.includes("DATABASE_SYNC_HELLO_RETRY_LIMIT") || !retry.includes("self.expired.store(true") || !retry.includes("self.cancelled.store(true") || !retry.includes("self.submit_exact(job, attempt)")) failures.push("P1z retry exhaustion/deadline cannot hand off to retained cancellation close");
-  if (!drive.includes("DatabaseSyncHelloDriverAuthority::Queued as u8, DatabaseSyncHelloDriverAuthority::Driving as u8") || drive.indexOf("self.poll_one()") > drive.indexOf("self.driver.store(DatabaseSyncHelloDriverAuthority::Idle as u8") || drive.indexOf("wake_requested.swap(false") > drive.indexOf("self.driver.store(DatabaseSyncHelloDriverAuthority::Idle as u8")) failures.push("P1z driver releases authority before exact owner and wake publication");
-  if (!poll.includes("std::panic::catch_unwind") || !poll.includes("core.future = Some(future)") || !poll.includes("core.execution = Some(execution)") || !poll.includes("core.quarantined = Some(DatabaseSyncHelloQuarantineClose") || !poll.includes("follow_up.drive_one(ledger, &self.cancelled, &self.expired)") || poll.indexOf("database_sync_hello_control(&self.cancelled, &self.expired)") > poll.indexOf("follow_up.drive_one(ledger, &self.cancelled, &self.expired)")) failures.push("P1z Pending Ready panic or cancel-before-stream owners are not retained by the typed I/O driver");
+  const driveClaim = drive.indexOf("DatabaseSyncHelloDriverAuthority::Queued as u8, DatabaseSyncHelloDriverAuthority::Driving as u8");
+  const driveWakeClear = drive.indexOf("self.wake_requested.store(false", driveClaim);
+  const drivePoll = drive.indexOf("self.poll_one()", driveWakeClear);
+  const driveRelease = drive.indexOf("self.driver.store(DatabaseSyncHelloDriverAuthority::Idle as u8", drivePoll);
+  const driveWakeRecheck = drive.indexOf("self.wake_requested.load(", driveRelease);
+  if (driveClaim < 0 || driveWakeClear < 0 || drivePoll < 0 || driveRelease < 0 || driveWakeRecheck < 0 || drive.indexOf("self.schedule()", driveWakeRecheck) < 0) failures.push("P1z driver releases authority before exact owner and wake publication");
+  if (!poll.includes("std::panic::catch_unwind") || !poll.includes("core.future = Some(future)") || !poll.includes("core.execution = Some(execution)") || !poll.includes("core.quarantined = Some(DatabaseSyncHelloQuarantineClose") || !poll.includes("follow_up.drive_one(ledger, &self.cancelled, &self.expired, &mut context)") || poll.indexOf("database_sync_hello_control(&self.cancelled, &self.expired)") > poll.indexOf("follow_up.drive_one(ledger, &self.cancelled, &self.expired, &mut context)")) failures.push("P1z Pending Ready panic or cancel-before-stream owners are not retained by the typed I/O driver");
   const execute = retained.slice(retained.indexOf("async fn database_sync_hello_execute"), retained.indexOf("type DatabaseSyncHelloExecutionFuture"));
   const snapshotReadStart = execute.indexOf("let page_reservation = database_sync_hello_reserve_snapshot_pages");
   const snapshotRead = snapshotReadStart < 0 ? "" : execute.slice(snapshotReadStart, execute.indexOf("let pack_hash", snapshotReadStart));
   if (!retained.includes("const DATABASE_SYNC_HELLO_SNAPSHOT_PAGE_ITEMS: usize = db_storage::DB_IO_OPERATION_PAGES") || !retained.includes("const DATABASE_SYNC_HELLO_SNAPSHOT_PAGE_BYTES: usize = DATABASE_SYNC_HELLO_SNAPSHOT_PAGE_ITEMS * db_storage::DB_IO_PAGE_BYTES") || !snapshotAllocation.includes("struct DatabaseSyncHelloSnapshotPageReservation") || !snapshotAllocation.includes('ledger.observe(DATABASE_SYNC_HELLO_SNAPSHOT_PAGE_ITEMS, DATABASE_SYNC_HELLO_SNAPSHOT_PAGE_BYTES, "database sync hello fixed snapshot page backing")?') || !snapshotAllocation.includes("let bytes = items.checked_mul(db_storage::DB_IO_PAGE_BYTES)") || !snapshotAllocation.includes("items > self.items || bytes > self.bytes || pages.len() > bytes") || !snapshotAllocation.includes("ledger.release(self.items - items, self.bytes - bytes)") || !snapshotAllocation.includes("ledger.release(self.items, self.bytes)") || !snapshotRead.includes("database_sync_hello_reserve_snapshot_pages(&mut ledger)?") || snapshotRead.indexOf("database_sync_hello_reserve_snapshot_pages(&mut ledger)?") > snapshotRead.indexOf("snapshots.read_generation") || snapshotRead.includes("reserve_allocation") || !snapshotRead.includes("page_reservation.observed(&pages)") || !snapshotRead.includes("page_reservation.settle(&mut ledger, page_items, page_bytes)?") || (snapshotRead.match(/page_reservation\.release\(&mut ledger\)\?/g)?.length ?? 0) < 3 || (snapshotRead.match(/ledger\.release\(page_items, page_bytes\)\?/g)?.length ?? 0) < 4 || (snapshotRead.match(/database_sync_hello_close_pages\(&mut pages, &cancelled, &expired\)\.await\?/g)?.length ?? 0) < 6) failures.push("P1z snapshot read-generation pages lack exact fixed predebit, observed backing settlement, or close/error credit return");
   const opportunity = retained.slice(retained.indexOf("async fn database_sync_hello_opportunity"), retained.indexOf("fn database_sync_hello_control"));
   const control = retained.slice(retained.indexOf("fn database_sync_hello_control"), retained.indexOf("fn database_sync_hello_allocate_envelope_vec"));
-  if ((opportunity.match(/database_sync_hello_control\(cancelled, expired\)/g)?.length ?? 0) !== 2 || opportunity.indexOf("semio_framework_async::yield_once().await") < opportunity.indexOf("database_sync_hello_control(cancelled, expired)") || opportunity.lastIndexOf("database_sync_hello_control(cancelled, expired)") < opportunity.indexOf("semio_framework_async::yield_once().await") || !execute.includes("database_sync_hello_opportunity(&cancelled, &expired).await?") || execute.indexOf("database_sync_hello_opportunity(&cancelled, &expired).await?") > execute.indexOf("replay_sync_state_retained") || !retained.includes("records.replenish") || !retained.includes("decode_control.replenish")) failures.push("P1z cancellation or deadline is not rechecked after yield and before the next backend operation");
-  if (!control.includes("if expired.load(std::sync::atomic::Ordering::Acquire)") || !control.includes("if cancelled.load(std::sync::atomic::Ordering::Acquire)") || control.indexOf("if expired.load") > control.indexOf("if cancelled.load") || !control.includes('DbError::Timeout("database sync hello deadline")')) failures.push("P1z independently expired deadline does not control every operation");
+  if ((opportunity.match(/database_sync_hello_control\(cancelled, expired\)/g)?.length ?? 0) !== 2 || opportunity.indexOf("semio_framework_async::yield_once().await") < opportunity.indexOf("database_sync_hello_control(cancelled, expired)") || opportunity.lastIndexOf("database_sync_hello_control(cancelled, expired)") < opportunity.indexOf("semio_framework_async::yield_once().await") || !execute.includes("database_sync_hello_opportunity(&cancelled, &expired).await?") || execute.indexOf("database_sync_hello_opportunity(&cancelled, &expired).await?") > execute.indexOf("replay_sync_state_retained") || !retained.includes("records.replenish") || !retained.includes("decode_control.renew_step()?") || !retained.includes("WalCursorControl::stall_bounded(cancelled.clone(), db_wal::WAL_REPLAY_STEP_STALL_BOUND, db_wal::WAL_REPLAY_STEP_FUEL)")) failures.push("P1z cancellation or deadline is not rechecked after yield and before the next backend operation");
+  if (!control.includes("if expired.load(std::sync::atomic::Ordering::Acquire)") || !control.includes("if cancelled.load(std::sync::atomic::Ordering::Acquire)") || control.indexOf("if expired.load") > control.indexOf("if cancelled.load") || !control.includes('DbError::Timeout("database sync hello deadline".to_string())')) failures.push("P1z independently expired deadline does not control every operation");
   const grant = retained.slice(retained.indexOf("struct DatabaseSyncHelloGrant"), retained.indexOf("impl DatabaseSyncHelloFollowUp"));
   const stream = retained.slice(retained.indexOf("impl DatabaseSyncHelloFollowUp"), retained.indexOf("struct DatabaseSyncHelloPrepared"));
   const streamDrive = stream.slice(stream.indexOf("fn drive_one"), stream.indexOf("fn close_one"));
-  if (!grant.includes("std::time::Instant::now().checked_add(std::time::Duration::from_millis(DATABASE_SYNC_HELLO_TURN_MS))") || !grant.includes("database_sync_hello_control(cancelled, expired)?") || !grant.includes("std::time::Instant::now() >= self.deadline") || !streamDrive.includes("let mut grant = DatabaseSyncHelloGrant::fresh()?") || !streamDrive.includes("self.drive_one_with_grant(ledger, cancelled, expired, &mut grant)") || !streamDrive.includes("let unit_bytes = (*chunk_bytes).min(DATABASE_SYNC_HELLO_FRAME_UNIT_BYTES)") || !streamDrive.includes("let len = unit_bytes.min(pages.len() - *offset)") || !streamDrive.includes("database_sync_hello_reserve_snapshot_chunk(ledger, len)?") || !streamDrive.includes("let owner = reservation.allocate(ledger)?") || !streamDrive.includes("let remaining = unit_bytes.saturating_sub(target.len())") || (streamDrive.match(/grant\.check\(cancelled, expired\)\?/g)?.length ?? 0) < 7 || !streamDrive.includes("pages.page(*page)") || !streamDrive.includes("target.try_extend_from_slice") || !streamDrive.includes("let next_seq = seq.checked_add(1)") || streamDrive.indexOf("let next_seq = seq.checked_add(1)") > streamDrive.indexOf("let bytes = chunk.take()") || !streamDrive.includes("Ok(None)") || streamDrive.includes("while ") || streamDrive.includes("loop {") || !streamDrive.includes("SnapshotDone") || !streamDrive.includes("envelopes.take()")) failures.push("P1z snapshot or tail output lacks a fresh real 8 ms grant and fixed one-page allocation/copy/publication unit");
+  const tailDriveStart = retained.indexOf("fn drive(&mut self, ledger: &mut DatabaseSyncHelloBackingLedger");
+  const tailDrive = tailDriveStart < 0 ? "" : retained.slice(tailDriveStart, retained.indexOf("fn close_one", tailDriveStart));
+  if (!grant.includes("std::time::Instant::now().checked_add(std::time::Duration::from_millis(DATABASE_SYNC_HELLO_TURN_MS))") || !grant.includes("database_sync_hello_control(cancelled, expired)?") || !grant.includes("std::time::Instant::now() >= self.deadline") || !streamDrive.includes("let mut grant = DatabaseSyncHelloGrant::fresh()?") || !streamDrive.includes("self.drive_one_with_grant(ledger, cancelled, expired, &mut grant, context)") || !streamDrive.includes("let unit_bytes = (*chunk_bytes).min(DATABASE_SYNC_HELLO_FRAME_UNIT_BYTES)") || !streamDrive.includes("let len = unit_bytes.min(pages.len() - *offset)") || !streamDrive.includes("database_sync_hello_reserve_snapshot_chunk(ledger, len)?") || !streamDrive.includes("let owner = reservation.allocate(ledger)?") || !streamDrive.includes("let remaining = unit_bytes.saturating_sub(target.len())") || (streamDrive.match(/grant\.check\(cancelled, expired\)\?/g)?.length ?? 0) < 6 || !streamDrive.includes("pages.page(*page)") || !streamDrive.includes("target.try_extend_from_slice") || !streamDrive.includes("let next_seq = seq.checked_add(1)") || streamDrive.indexOf("let next_seq = seq.checked_add(1)") > streamDrive.indexOf("let bytes = chunk.take()") || !streamDrive.includes("Ok(DatabaseSyncHelloFollowUpStep::Progress)") || streamDrive.includes("while ") || streamDrive.includes("loop {") || !streamDrive.includes("SnapshotDone") || !streamDrive.includes("Self::Tail(tail) => tail.drive(ledger, context)") || !tailDrive.includes("self.take_page()") || !tailDrive.includes('ledger.observe(items, bytes, "database sync hello tail frame backing")?') || tailDrive.indexOf('ledger.observe(items, bytes, "database sync hello tail frame backing")?') > tailDrive.indexOf("Ok(DatabaseSyncHelloFollowUpStep::Frame(frame))") || tailDrive.includes("while ") || tailDrive.includes("loop {")) failures.push("P1z snapshot or tail output lacks a fresh real 8 ms grant and fixed one-page allocation/copy/publication unit");
   if (!streamDrive.includes("if chunk.is_none() {\n                    grant.check(cancelled, expired)?") || !streamDrive.includes("grant.check(cancelled, expired)?;\n                let fragment = pages.page(*page)") || !streamDrive.includes("grant.check(cancelled, expired)?;\n                if !target.try_extend_from_slice") || !streamDrive.includes("if target.len() == unit_bytes || *offset == pages.len() {\n                    grant.check(cancelled, expired)?")) failures.push("P1z snapshot allocation, copy, or publication is not immediately deadline/cancel gated");
   if (retained.includes("let _ = database_sync_hello_control") || retained.includes("database_sync_hello_control(cancelled, expired).ok()")) failures.push("P1z cleanup or stream path discards cancellation/deadline control");
   const nextPoll = retained.slice(retained.indexOf("impl std::future::Future for DatabaseSyncHelloNextFuture"), retained.indexOf("impl Drop for DatabaseSyncHelloNextFuture"));
   const returnedClose = retained.slice(retained.indexOf("fn close_returned_frame_one"), retained.indexOf("fn poll_one"));
   const returnedLease = retained.slice(retained.indexOf("struct DatabaseSyncHelloReturnedFrameLease"), retained.indexOf("pub struct DatabaseSyncHelloSession"));
-  if (!retained.includes("returned_generation: std::sync::atomic::AtomicU64") || !retained.includes("returned_fallback: Option<DatabaseSyncHelloReturnedFrameLease>") || !returnedLease.includes("state.returned_generation.fetch_update") || !returnedLease.includes("generation.checked_add(1).filter(|next| *next != 0)") || !returnedLease.includes("pub struct DatabaseSyncHelloReturnedFrame") || !returnedLease.includes("pub fn acknowledge") || !returnedLease.includes("core.returned_frame = Some(DatabaseSyncHelloReturnedFrameLease { generation, items, bytes, close: None })") || (returnedLease.match(/core\.returned_fallback = Some\(DatabaseSyncHelloReturnedFrameLease/g)?.length ?? 0) < 2 || !returnedLease.includes("match self.mount_close()") || returnedLease.includes("let _ = self.mount_close()") || !returnedLease.includes("lease.close = Some(DatabaseSyncHelloFrameClose") || !returnedClose.includes("core.returned_fallback.as_mut()") || !returnedClose.includes("close.close_one()") || !returnedClose.includes("close.terminal_is_empty()") || !returnedClose.includes("ledger.release(items, bytes)") || !returnedClose.includes("owner.generation == generation") || retained.includes("outstanding_bytes") || (nextPoll.match(/core\.returned_frame\.is_none\(\)/g)?.length ?? 0) < 2) failures.push("P1z returned output credit can escape its generation-qualified acknowledgement close");
+  if (!retained.includes("returned_generation: std::sync::atomic::AtomicU64") || !retained.includes("returned_fallback: Option<DatabaseSyncHelloReturnedFrameLease>") || !returnedLease.includes("state.returned_generation.try_update") || !returnedLease.includes("generation.checked_add(1).filter(|next| *next != 0)") || !returnedLease.includes("pub struct DatabaseSyncHelloReturnedFrame") || !returnedLease.includes("pub fn acknowledge") || !returnedLease.includes("core.returned_frame = Some(DatabaseSyncHelloReturnedFrameLease { generation, items, bytes, close: None })") || (returnedLease.match(/core\.returned_fallback = Some\(DatabaseSyncHelloReturnedFrameLease/g)?.length ?? 0) < 2 || !returnedLease.includes("match self.mount_close()") || returnedLease.includes("let _ = self.mount_close()") || !returnedLease.includes("lease.close = Some(DatabaseSyncHelloFrameClose") || !returnedClose.includes("core.returned_fallback.as_mut()") || !returnedClose.includes("close.close_one()") || !returnedClose.includes("close.terminal_is_empty()") || !returnedClose.includes("ledger.release(items, bytes)") || !returnedClose.includes("owner.generation == generation") || retained.includes("outstanding_bytes") || (nextPoll.match(/core\.returned_frame\.is_none\(\)/g)?.length ?? 0) < 2) failures.push("P1z returned output credit can escape its generation-qualified acknowledgement close");
   const close = retained.slice(retained.indexOf("fn close_one_claimed"), retained.indexOf("fn deadline_callback"));
   const deadlineCallback = retained.slice(retained.indexOf("fn deadline_callback"), retained.indexOf("fn progress", retained.indexOf("fn deadline_callback")));
   if (!deadlineCallback.includes("self.expired.store(true") || !deadlineCallback.includes("self.cancelled.store(true") || !deadlineCallback.includes("self.schedule()")) failures.push("P1z deadline callback does not publish both controlling state and real-loop wake");
@@ -13989,7 +14084,7 @@ function interactivityDatabaseSyncHelloFailures(syncSource: string, engineSource
     ["retained_sync_hello_grant_deadline_between_allocation_copy_and_publication_retains_credit", ["DatabaseSyncHelloGrant::expiring_at(3)", "drive_one_with_grant", "chunk: Some(chunk), offset: 0", "DatabaseSyncHelloGrant::expiring_at(5)", "chunk.len() == DATABASE_SYNC_HELLO_FRAME_UNIT_BYTES", "ledger.items", "close_one", "ledger.close_one_credit", "independently_expired", "DbError::Timeout"]],
     ["retained_sync_hello_cancel_before_stream_demand_publishes_no_new_frame", ["DatabaseSyncHelloFuture::try_submit", "take_welcome", "session.cancel()", "session.next_frame().await", "Err(DbError::Closed)", "state.demand", "core.frame.as_ref()"]],
     ["retained_sync_hello_cumulative_actual_backing_rejects_max_plus_one_without_mutation", ["DatabaseSyncHelloBackingLedger", "DATABASE_SYNC_HELLO_MAX_ITEMS", "DATABASE_SYNC_HELLO_MAX_BYTES", "cumulative max plus one", "assert_eq!"]],
-    ["retained_sync_hello_predebits_envelope_clone_and_overallocation_before_owner_construction", ["database_sync_hello_allocate_envelope_vec", "database_sync_hello_clone_string", "source.as_ptr()", "owner.as_ptr()", "DATABASE_SYNC_HELLO_MAX_BYTES", "assert_eq!"]],
+    ["retained_sync_hello_predebits_envelope_clone_and_overallocation_before_owner_construction", ["database_sync_hello_allocate_vec::<u8>", "database_sync_hello_clone_string", "source.as_ptr()", "owner.as_ptr()", "DATABASE_SYNC_HELLO_MAX_BYTES", "assert_eq!"]],
     ["retained_sync_hello_cancel_between_yield_and_resume_prevents_next_wal_backend_operation", ["database_sync_hello_opportunity", "Poll::Pending", "cancelled.store(true", "Poll::Ready(Err(DbError::Closed))", "database_sync_hello_control"]],
     ["retained_sync_hello_quarantine_cursor_and_byte_item_ledger_reach_zero_before_release", ["DatabaseSyncHelloExecutionFuture", "DatabaseSyncHelloQuarantineClose", "quarantine.close_one()", "quarantine.terminal_is_empty()", "ledger.close_one_credit()", "ledger.terminal_is_empty()"]],
     ["retained_sync_hello_page_close_error_is_typed_and_blocks_terminal_release", ["database_sync_hello_apply_follow_up_close_result", "Err(DbError::Internal", "p1z retained page-close fault", "retained.attempts", "retained.error", "terminal_is_empty", "close_one"]],
@@ -14137,40 +14232,15 @@ function interactivityArtifactHistoryFailures(engineSource: string, artifactSour
 
 
 
-function interactivityVcsBridgeFailures(engineSource: string, cliSource: string): string[] {
-  const production = interactivityProductionSource(engineSource);
+/** ⌨️ The DB CLI's process-entry waits: at most 18 production `db::actor::block_on` edges and exactly one more, in a test-only
+ * `seed_document`, never in production code. */
+function interactivityDbCliFailures(cliSource: string): string[] {
   const productionCli = interactivityProductionSource(cliSource);
-  const vcs = production.slice(production.indexOf("pub mod vcs_integration"), production.indexOf("//#endregion 🔖️VersionGraph", production.indexOf("pub mod vcs_integration")));
-  const recordCredit = vcs.slice(vcs.indexOf("fn record_credit"), vcs.indexOf("fn checkpoint_credit"));
-  const checkpointCredit = vcs.slice(vcs.indexOf("fn checkpoint_credit"), vcs.indexOf("fn relation_credit"));
-  const acquire = vcs.slice(vcs.indexOf("impl Future for VcsStoreAcquire"), vcs.indexOf("impl Drop for VcsStoreAcquire"));
-  const failures: string[] = [];
   const productionCliWaits = productionCli.match(/\bdb::actor::block_on\s*\(/g)?.length ?? 0;
   const wholeCliWaits = cliSource.match(/\bdb::actor::block_on\s*\(/g)?.length ?? 0;
   const seedDocument = cliSource.slice(cliSource.indexOf("fn seed_document"));
-  if (productionCliWaits > 18 || wholeCliWaits !== productionCliWaits + 1 || productionCli.includes("fn seed_document") || !seedDocument.includes("db::actor::block_on(")) failures.push("DB CLI census exceeds 18 process-entry waits or does not isolate exactly one test-only seed_document wait");
-  for (const forbidden of ["block_on(", "submit_blocking", "ask_blocking", "thread::spawn", "WorkerPool::new(", "loop {"]) if (vcs.includes(forbidden)) failures.push(`live VCS integration retains ${forbidden}`);
-  if (!vcs.includes("const VCS_OPERATION_ITEMS: usize = 64") || !vcs.includes("const VCS_OPERATION_PAGE_BYTES: u64 = 16 * 1024") || !vcs.includes("const VCS_OPERATION_PAGES: u64 = 4") || !vcs.includes("const VCS_TOTAL_PAGES: u64 = 256") || !vcs.includes("VcsOperationAdmission::try_claim(items, bytes)")) failures.push("VCS operation lacks fixed item/page/process admission");
-  for (const owner of ["document.0.capacity()", "change.parent.as_ref()", "change.author.0.capacity()", "change.message.capacity()", "request.change_ids.capacity()", "request.authors.capacity()", "request.change_ids.iter().map(String::capacity)", "request.authors.iter().map"])
-    if (!vcs.includes(owner)) failures.push(`VCS nested byte preflight missing ${owner}`);
-  if (!recordCredit.includes("std::mem::size_of::<HashMutation>()") || !checkpointCredit.includes("author_owner_bytes, derived_author_owner_bytes, derived_author_id_bytes") || !checkpointCredit.includes("vcs_credit(items, fixed.into_iter()")) failures.push("VCS derived mutation/author owners are outside admitted byte credit");
-  if (!checkpointCredit.includes("let derived_author_items = request.authors.len();") || !checkpointCredit.includes(".and_then(|value| value.checked_add(request.authors.len()))") || !checkpointCredit.includes(".and_then(|value| value.checked_add(derived_author_items))")) failures.push("VCS checkpoint item credit omits source-name or derived-id String owners");
-  if (!vcs.includes("protocol::ActorId(author.0)") || !vcs.includes("let mutations = Vec::from([operation]);") || vcs.includes("change.author.0.clone()") || vcs.includes("mutations: vec![operation]")) failures.push("VCS record conversion clones or allocates an uncredited derived owner");
-  if (!vcs.includes("Vec::with_capacity(source_authors.capacity())")) failures.push("VCS checkpoint conversion lacks the preflight-matched derived author backing owner");
-  if (!vcs.includes("waiters: [Option<VcsStoreWaiter>; VCS_OPERATION_ITEMS]") || !vcs.includes("min_by_key(|(_, generation)| *generation)") || !vcs.includes("state.waiters[self.slot] = None") || !vcs.includes("state.busy_generation = Some(*generation)") || vcs.includes("wake_all")) failures.push("VCS waiter ownership is not fixed, FIFO-reserved, and one-shot");
-  if (!acquire.includes("VcsOperationAdmission::is_current(self.slot, self.generation)") || acquire.indexOf("VcsOperationAdmission::is_current") > acquire.indexOf("state.busy_generation") || !acquire.includes("Poll::Pending")) failures.push("VCS acquire freshness does not precede store mutation or cannot park");
-  if (!vcs.includes("impl Drop for VcsStoreAcquire") || !vcs.includes("impl Drop for VcsStoreBuildPermit") || !vcs.includes("impl Drop for VcsStoreLease") || !vcs.includes("self.cell.release(self.generation, self.store.take())")) failures.push("VCS cancel/close cannot return the exact waiter/build/store owner");
-  for (const fixture of [
-    "vcs_retained_item_cap_plus_one_and_nested_bytes_plus_one_return_without_mutation",
-    "vcs_record_derived_owner_credit_cap_plus_one_preserves_exact_input",
-    "vcs_checkpoint_derived_owner_credit_cap_plus_one_preserves_exact_input",
-    "vcs_checkpoint_derived_item_boundary_admits_31_rejects_32_and_preserves_exact_owners",
-    "vcs_derived_owner_process_aggregate_plus_one_rejects_without_consuming_input",
-    "vcs_retained_pending_wake_is_fifo_one_shot_and_quiet_without_release",
-    "vcs_retained_cancel_clears_waiter_and_slot_aba_stays_stale",
-    "vcs_retained_live_source_has_no_nested_executor_or_guarded_await",
-  ]) if (!engineSource.includes(fixture)) failures.push(`VCS retained-bridge fixture missing: ${fixture}`);
-  return failures;
+  if (productionCliWaits > 18 || wholeCliWaits !== productionCliWaits + 1 || productionCli.includes("fn seed_document") || !seedDocument.includes("db::actor::block_on(")) return ["DB CLI census exceeds 18 process-entry waits or does not isolate exactly one test-only seed_document wait"];
+  return [];
 }
 
 
@@ -15308,7 +15378,7 @@ export class OsScript extends Script {
 //#endregion 🔖️OsScript
 
 //#region 🔖️SemioScript
-/** @emoji 🧬 Universal `.semio` file processor (`inspect`, `verify`, `open`, `convert`). */
+/** 🧬 Universal `.semio` file processor (`inspect`, `verify`, `open`, `convert`). */
 export class SemioScript extends Script {
   run(segments: string[]): void {
     if (segments.length === 0) {
@@ -16314,7 +16384,7 @@ const POLICY_DIFF_COMPLETENESS_ALLOWLIST = new Set<string>([
  */
 const POLICY_GRAMMAR_FILE_ALLOWLIST = new Set<string>([]);
 
-/** @emoji 📡️ Stub `.protocol.semio` files not yet backed by a byte-level recognizer proof. */
+/** 📡️ Stub `.protocol.semio` files not yet backed by a byte-level recognizer proof. */
 const POLICY_PROTOCOL_FILE_ALLOWLIST = new Set<string>([]);
 
 /**
@@ -19112,6 +19182,7 @@ const POLICY_PLUGIN_CLOSED_SHAPE_DESTINATIONS: Readonly<Record<string, string>> 
   "✏️s/🔌️plugins/🖍️draw/🔄️fsm": "→ 🗿️artifacts/draw/🏅️standards/🔖️1/⚙️engine/fsm/; the nested ✨️macros sub-crate needs a crate-boundary specialist, not a plain directory move — 📓️w0-b-plugin-shape.md §5.",
   "✏️s/🔌️plugins/🧩️puzzle/🔨️modules": "Move 🔨️modules/🎲️board-2d/🦀️.rs into 🗿️artifacts/puzzle2d/🏅️standards/🔖️1/⚙️engine/board-2d/ — 📓️w0-b-plugin-shape.md §5.",
   "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions": "Extension-crate axis (role=extension, extends=sourcing, 3 crates) — pending the §6 ruling in 📓️w0-census.md.",
+  "✏️s/🔌️plugins/🗄️stdio/🧩️extensions": "Family-component axis (role=plugin, depends-on=stdio, 9 crates): each ships the apps of whole stdio artifact kinds as its own component (ST1, one stdio component cannot link all 176 apps).",
   "✏️s/🔌️plugins/📐️cad/🔣️machine.json": "210KB root data file — CANNOT CLASSIFY without reading contents (likely a generated/vendored CAD-kernel data file) — 📓️w0-b-plugin-shape.md §5.",
 };
 
@@ -19804,6 +19875,7 @@ const POLICY_HOST_EFFECT_CAPABILITY: Readonly<Record<string, string>> = {
   SetPanel: "Window", // Rights::Write, Scope::Instance
   DownloadMediaExport: "Asset", // Rights::Write, Scope::Instance
   IconRenderExport: "Asset", // Rights::Write, Scope::Instance
+  VideoRenderExport: "Asset", // Rights::Write, Scope::Instance
   RequestFileOpen: "Asset", // Rights::Open, Scope::Instance
   RequestMediaFrames: "Asset", // Rights::Open, Scope::Instance
   SpawnPluginInstance: "Window", // Rights::Open, Scope::Global
@@ -26043,6 +26115,6 @@ export {
   interactivityDatabaseCompactionFailures,
   interactivityDatabaseSyncHelloFailures,
   interactivityArtifactHistoryFailures,
-  interactivityVcsBridgeFailures,
+  interactivityDbCliFailures,
   interactivityMcpHttpTransportFailures,
 };

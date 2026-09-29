@@ -105,11 +105,10 @@ async fn unchanged_cell_drafts_preserve_types_and_cached_values() {
     let mut snapshot = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(XlsxWorkbook { sheets: vec![XlsxSheet { name: "Sheet".into(), cells: vec![XlsxCell { row: 1, col: 0, value }] }], shared_strings });
     let revision = crate::standards::v_ecma_376::subsets::base::schema::mutations::cell_address::xlsx_cell_address(&snapshot, "Sheet", 1, 0).unwrap().revision;
     let command = XlsxEditorCommand::SetCell { sheet_name: "Sheet".into(), row: 1, column: 0, revision, value: conflict["draft"].as_str().unwrap().into() };
-    crate::standards::v_ecma_376::subsets::base::schema::mutations::apply_xlsx_mutation(&mut snapshot, &XlsxMutation::SetSharedString(set_shared_string::SetSharedString { index: 1, value: "unrelated change".into() }));
+    crate::standards::v_ecma_376::subsets::base::schema::mutations::apply_xlsx_mutation(&mut snapshot, &XlsxMutation::SetSharedString(crate::standards::v_ecma_376::subsets::base::schema::mutations::set_shared_string::SetSharedString { index: 1, value: "unrelated change".into() }));
     assert!(xlsx_set_cell_emit(&snapshot, &command).is_ok(), "unrelated shared strings do not invalidate this cell");
-    crate::standards::v_ecma_376::subsets::base::schema::mutations::apply_xlsx_mutation(&mut snapshot, &XlsxMutation::SetSharedString(set_shared_string::SetSharedString { index, value: conflict["replacement"].as_str().unwrap().into() }));
+    crate::standards::v_ecma_376::subsets::base::schema::mutations::apply_xlsx_mutation(&mut snapshot, &XlsxMutation::SetSharedString(crate::standards::v_ecma_376::subsets::base::schema::mutations::set_shared_string::SetSharedString { index, value: conflict["replacement"].as_str().unwrap().into() }));
     assert!(xlsx_set_cell_emit(&snapshot, &command).is_err(), "referenced text changes invalidate the draft");
-    println!("[DEBUG] 🧱️base XLSX unchanged drafts preserve ten typed values; referenced shared-string conflicts are rejected");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -137,7 +136,6 @@ async fn unchanged_cell_draft_fixture_matches_independent_spreadsheet_values_and
         assert_eq!(kind, case["referenceKind"].as_str().unwrap(), "{}", case["id"]);
         assert_eq!(formulas.get_value((index as u32, 0)).map(String::as_str).unwrap_or_default(), case["formula"].as_str().unwrap_or_default());
     }
-    println!("[DEBUG] Calamine independently confirms all ten XLSX draft fixture values, types, and formula sources");
 }
 
 fn canonical_save_fixture() -> serde_json::Value {
@@ -216,9 +214,44 @@ fn assert_independent_canonical_package(bytes: &[u8], case: &serde_json::Value, 
     }
 }
 
+/// 🔮️ The package calamine can read: every part verbatim except cell-level `extLst`, which calamine 0.36 refuses
+/// (`cells_reader.rs`: "v, f, or is") although ECMA-376 Part 1 §18.3.1.4 allows it — the values it answers are unaffected.
+fn calamine_value_projection(bytes: &[u8]) -> Vec<u8> {
+    use std::io::{Cursor, Read, Write};
+    let mut archive = zip::ZipArchive::new(Cursor::new(bytes)).expect("package ZIP");
+    let mut writer = zip::ZipWriter::new(Cursor::new(Vec::new()));
+    let options = zip::write::SimpleFileOptions::default().compression_method(zip::CompressionMethod::Stored);
+    for index in 0..archive.len() {
+        let mut entry = archive.by_index(index).expect("package entry");
+        let name = entry.name().to_string();
+        let mut content = Vec::new();
+        entry.read_to_end(&mut content).expect("package entry bytes");
+        if let Ok(mut text) = String::from_utf8(content.clone()) {
+            for prefix in ["", "s:"] {
+                let (open, close, cell_end) = (format!("<{prefix}extLst>"), format!("</{prefix}extLst>"), format!("</{prefix}c>"));
+                let mut from = 0;
+                while let Some(found) = text[from..].find(&open) {
+                    let start = from + found;
+                    let Some(end) = text[start..].find(&close).map(|end| start + end + close.len()) else { break };
+                    if text[end..].starts_with(&cell_end) {
+                        text.replace_range(start..end, "");
+                        from = start;
+                    } else {
+                        from = end;
+                    }
+                }
+            }
+            content = text.into_bytes();
+        }
+        writer.start_file(name, options).expect("projection entry");
+        writer.write_all(&content).expect("projection bytes");
+    }
+    writer.finish().expect("projection ZIP").into_inner()
+}
+
 fn assert_independent_spreadsheet_values(bytes: Vec<u8>, case: &serde_json::Value, edited: bool) {
     use calamine::{Data, Reader};
-    let mut reference: calamine::Xlsx<_> = calamine::open_workbook_from_rs(std::io::Cursor::new(bytes)).expect("Calamine opens neutral package");
+    let mut reference: calamine::Xlsx<_> = calamine::open_workbook_from_rs(std::io::Cursor::new(calamine_value_projection(&bytes))).expect("Calamine opens neutral package");
     assert_eq!(reference.sheet_names(), ["Data"]);
     let values = reference.worksheet_range("Data").unwrap();
     let formulas = reference.worksheet_formula("Data").unwrap();
@@ -246,7 +279,6 @@ async fn canonical_save_fixtures_are_valid_independent_workbooks() {
             assert_independent_spreadsheet_values(bytes, case, false);
         }
     }
-    println!("[DEBUG] Independent ZIP/Quick-XML preserve all five authored package fixtures; Calamine checks four custom-directory namespace variants");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -261,5 +293,4 @@ async fn canonical_xlsx_no_op_save_preserves_all_xml_fields_and_custom_part_path
             assert_independent_spreadsheet_values(encoded, case, false);
         }
     }
-    println!("[DEBUG] No-op XLSX save preserves five custom-path canonical XML packages and independent spreadsheet values");
 }

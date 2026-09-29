@@ -24,7 +24,6 @@ mod document_window_replacement_tests {
         assert!(fresh.try_claim_publication().is_some());
         fresh.finish();
         assert_eq!(handle.active_operation_count(), 0);
-        eprintln!("[DEBUG] replacement cancels old keyed and single work, rejects rebase, admits fresh work, and releases all cancellation owners");
     }
 
     struct RetirementWindow;
@@ -67,6 +66,6 @@ mod document_window_replacement_tests {
             }
         }
         assert!(registries.is_empty());
-        eprintln!("[DEBUG] zero grant preserves document cursor; blocked first generation permits later retirement; close cursor drains returned owners");
+        eprintln!("zero grant preserves document cursor; blocked first generation permits later retirement; close cursor drains returned owners");
     }
 }

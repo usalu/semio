@@ -98,7 +98,6 @@ fn archive_comment_only_diff_and_snapshot_replay_preserve_exact_text() {
     }
     let oracle: serde_json::Value = serde_json::from_str(&protocol::os_pack::json::to_json_string(&after.to_value())).unwrap();
     assert_eq!(oracle["opc"]["comment"], fixture["after"]);
-    println!("[DEBUG] Pptx archive comment text/binary diff, inverse, absorption and snapshot replay preserve Unicode and empty text");
 }
 
 #[test]
@@ -120,5 +119,4 @@ fn placeholder_kind_diff_has_distinct_shape_discriminator_and_replays_exactly() 
         assert_eq!(replay.apply(&before).unwrap(), after);
         assert_eq!(replay.inverse(&before).apply(&after).unwrap(), before);
     }
-    println!("[DEBUG] PPTX placeholder kind diff keeps shapeKind and kind distinct through JSON, text, binary and inverse replay");
 }

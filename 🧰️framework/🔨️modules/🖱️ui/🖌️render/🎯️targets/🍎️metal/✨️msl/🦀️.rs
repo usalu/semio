@@ -1,4 +1,4 @@
-//! @emoji ✨️ Hand-written MSL for the five shader families, ported line-for-line from the canonical
+//! ✨️ Hand-written MSL for the five shader families, ported line-for-line from the canonical
 //! WGSL in `ui_render::shader_contract` (packet `shader-repair`'s repaired constants — never the
 //! asyncify-corrupted `🎯️targets/🧊️wgpu/🦀️shaders.rs`).
 //!

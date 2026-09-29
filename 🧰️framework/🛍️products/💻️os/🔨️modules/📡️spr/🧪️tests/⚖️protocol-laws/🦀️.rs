@@ -731,7 +731,7 @@ pub async fn assert_wire_frame_round_trip(sample: &WireFrameSample) {
     }
 }
 
-/// @emoji 🧵️ Which side of the app-engine channel an `assert_channel_frame_round_trip` sample
+/// 🧵️ Which side of the app-engine channel an `assert_channel_frame_round_trip` sample
 /// represents — `AppCommand`/`AppFrame` are distinct enums with distinct encode/decode fn pairs,
 /// same rationale as `WireFrameSample` above.
 pub enum ChannelFrameSample<'a> {

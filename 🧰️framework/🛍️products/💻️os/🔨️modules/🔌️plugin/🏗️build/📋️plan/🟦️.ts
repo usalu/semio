@@ -44,13 +44,13 @@ const repoRoot = getWorkspaceRoot();
 
 
 
-/** @emoji 🎚️ The staging profile this process produces and serves — `ship` builds the release tree, every
+/** 🎚️ The staging profile this process produces and serves — `ship` builds the release tree, every
  * other mode the dev tree. Paired with {@link pluginWasmProfile}, which selects the matching cargo profile. */
 function devStagingProfile(): "dev" | "release" { return semioBuildMode() === "ship" ? "release" : "dev"; }
 
 const pluginOutRoot = pluginModulesRoot(devStagingProfile());
 
-/** @emoji 🧊️ The one wgpu renderer package the dev router delegates `serve`/`wasm`/`native` to — a single
+/** 🧊️ The one wgpu renderer package the dev router delegates `serve`/`wasm`/`native` to — a single
  * constant so the ship, dev and bench call sites can never drift onto different (or extinct) paths. */
 const WGPU_PACKAGE_ROOT = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust");
 
@@ -58,14 +58,14 @@ const WGPU_SCRIPT_PATH = join(WGPU_PACKAGE_ROOT, "📜️script.ts");
 
 const PLUGIN_WASM_TARGET = "wasm32-wasip2";
 
-/** @emoji 🎭️ Playwright is a TEST-ONLY dependency, loaded lazily by the harness commands below. The
+/** 🎭️ Playwright is a TEST-ONLY dependency, loaded lazily by the harness commands below. The
  * specifier is held in a constant so no bundler can statically resolve it: `⚙️vite.config.ts` imports
  * this module for its Vite plugins, and a literal `import("playwright")` makes bun follow the dynamic
  * import while LOADING THE CONFIG — dragging `playwright-core` into a browser build and failing on its
  * uninstalled optional `chromium-bidi`. Runtime behaviour is identical. */
 const PLAYWRIGHT_MODULE_SPECIFIER = "playwright";
 
-/** @emoji 🎯 Ensures the wasip2 rustc target is installed for plugin component builds. */
+/** 🎯 Ensures the wasip2 rustc target is installed for plugin component builds. */
 function ensureWasmTarget(): void {
   const probe = runProbe("rustup", ["target", "list", "--installed"]);
   if (!probe.stdout.includes(PLUGIN_WASM_TARGET)) {
@@ -78,7 +78,7 @@ function pluginWasmProfile(mode = semioBuildMode(), override: string | null = pr
   return selectComponentWasmProfile(mode, override ?? undefined);
 }
 
-/** @emoji 🧊️ The guest's shadow stack is NOT passed here: `-zstack-size` lives in `.cargo/config.toml`'s
+/** 🧊️ The guest's shadow stack is NOT passed here: `-zstack-size` lives in `.cargo/config.toml`'s
  * `[target.wasm32-wasip2]` beside the memory maximum it is carved out of, so a plain `cargo build` into
  * the shared target directory produces the same component this plan does. */
 function pluginCargoArgs(packageName: string, profile: string): string[] {
@@ -101,10 +101,10 @@ function resolvePluginBuildTargets(entries: readonly PluginRegistryEntry[], filt
 }
 
 //#region 🔖️PlaygroundVariantResolution
-/** @emoji 📚️ Generated playground catalog (variant -> crate pluginId + optional app id), loaded once for this process via `@semio-tech/repo-lib`'s `loadFrameworkOsPlaygroundCatalog` (backed by `framework/plugin/registry/generated/🎮️playgrounds/🟦️.ts`). */
+/** 📚️ Generated playground catalog (variant -> crate pluginId + optional app id), loaded once for this process via `@semio-tech/repo-lib`'s `loadFrameworkOsPlaygroundCatalog` (backed by `framework/plugin/registry/generated/🎮️playgrounds/🟦️.ts`). */
 const playgroundCatalog = loadFrameworkOsPlaygroundCatalog();
 
-/** @emoji 🧭️ A resolved playground filter: the crate pluginId to build/load, plus the app id and shell brand id to inject when the filter matched a catalog variant row. */
+/** 🧭️ A resolved playground filter: the crate pluginId to build/load, plus the app id and shell brand id to inject when the filter matched a catalog variant row. */
 type ResolvedPlaygroundFilter = {
   readonly pluginId: string;
   readonly appId?: string;
@@ -122,7 +122,7 @@ function resolvePlaygroundFilter(filterPlugin: string): ResolvedPlaygroundFilter
   return row ? { pluginId: row.pluginId, appId: row.app, brand: row.brand } : { pluginId: filterPlugin };
 }
 
-/** @emoji 🎯️ Resolves a raw filter to the crate pluginId `generatePluginRegistry`'s `filterPlaygroundPlugin` option expects, or `undefined` for the unfiltered/studio case. */
+/** 🎯️ Resolves a raw filter to the crate pluginId `generatePluginRegistry`'s `filterPlaygroundPlugin` option expects, or `undefined` for the unfiltered/studio case. */
 function resolveCatalogFilterPluginId(filterPlugin?: string): string | undefined {
   return filterPlugin && !isHostPlaygroundFilter(filterPlugin) ? resolvePlaygroundFilter(filterPlugin).pluginId : undefined;
 }

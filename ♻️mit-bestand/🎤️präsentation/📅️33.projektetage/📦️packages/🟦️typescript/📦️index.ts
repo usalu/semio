@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 📽️ 33. Projektetage — declarative paper intro via `@semio-tech/presentation`. */
+/** 📽️ 33. Projektetage — declarative paper intro via `@semio-tech/presentation`. */
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters

@@ -23,43 +23,43 @@ import { expect, test, type Page } from "@playwright/test";
 //#region 🪪️PlayPanes
 type PlayPane = { readonly variant: string; readonly label: string; readonly example?: string; readonly exampleLabel?: string };
 
-/** @emoji 🪪️ Reads the pane catalog as data instead of importing app modules, which drag the React runtime into Node's loader. */
+/** 🪪️ Reads the pane catalog as data instead of importing app modules, which drag the React runtime into Node's loader. */
 function playPanes(): readonly PlayPane[] {
   const catalog = JSON.parse(readFileSync(join(import.meta.dirname, "..", "..", "🔨️modules", "🧩️runtime", "🔣️.json"), "utf8")) as { readonly groups: readonly { readonly panes: readonly PlayPane[] }[] };
   return catalog.groups.flatMap(group => group.panes);
 }
 //#endregion 🪪️PlayPanes
 
-/** @emoji ⏱️ Cold wasm plugin boots can be slow — generous so the suite reports real defects, not infrastructure latency. */
+/** ⏱️ Cold wasm plugin boots can be slow — generous so the suite reports real defects, not infrastructure latency. */
 const SHELL_READY_TIMEOUT_MS = 120_000;
 const TEST_TIMEOUT_MS = 180_000;
 
-/** @emoji 🕊️ Quiet window after the network settles: the shell announces the boot example after "ready",
+/** 🕊️ Quiet window after the network settles: the shell announces the boot example after "ready",
  * and a refused announcement is only logged once the guest answers. */
 const BOOT_SETTLE_MS = 2_000;
 
-/** @emoji 📄️ A DOM main region with neither text nor this many elements rendered nothing a reader sees. */
+/** 📄️ A DOM main region with neither text nor this many elements rendered nothing a reader sees. */
 const MINIMUM_MAIN_REGION_ELEMENTS = 10;
 
-/** @emoji 🖼️ The smallest edge an image asset may have and still be the CONTENT of the pixel layer it
+/** 🖼️ The smallest edge an image asset may have and still be the CONTENT of the pixel layer it
  * fills. `raster`'s composite declares a 1024×1024 `pixel` layer whose `imageKey` resolves to the 2×2
  * `semio-emblem` placeholder, decodes nothing (`📓️raster.md`: `atob` is never called) and paints an empty
  * canvas — while "the document has a layer and the scene has an asset" reads perfectly healthy. Eight
  * pixels a side is far below any authored demo and far above a placeholder. */
 const MINIMUM_IMAGE_ASSET_EDGE = 8;
 
-/** @emoji ⏳️ A retained lane can land after the boot settle — `energy`'s 4 542-character `data-meshes-json`
+/** ⏳️ A retained lane can land after the boot settle — `energy`'s 4 542-character `data-meshes-json`
  * was still empty 2.5 s after `data-shell-ready` and full at 4 s — so the witness is polled rather than
  * read once. A painted pane answers on the first read (≈20 ms); only a genuinely empty one pays the wait. */
 const PAINT_WITNESS_DEADLINE_MS = 4_000;
 const PAINT_WITNESS_POLL_MS = 250;
 
-/** @emoji 🔇️ Drops resource 404s and the repo's `[DEBUG] `-prefixed temporary diagnostics. */
+/** 🔇️ Drops resource 404s and the repo's `[TRACE] `-prefixed temporary diagnostics. */
 function significantConsoleErrors(messages: readonly string[]): string[] {
-  return messages.filter(text => !/Failed to load resource:.*\b40[0-9]\b/i.test(text) && !text.startsWith("[DEBUG] "));
+  return messages.filter(text => !/Failed to load resource:.*\b40[0-9]\b/i.test(text) && !text.startsWith("[TRACE] "));
 }
 
-/** @emoji 👂️ Collects page errors, console errors and refused inputs — a refused input is the shell's
+/** 👂️ Collects page errors, console errors and refused inputs — a refused input is the shell's
  * "The input could not be delivered" notice, logged only as a warning. */
 function collectErrors(page: Page): { readonly pageErrors: string[]; readonly consoleErrors: string[]; readonly refusedInputs: string[] } {
   const pageErrors: string[] = [], consoleErrors: string[] = [], refusedInputs: string[] = [];
@@ -72,13 +72,13 @@ function collectErrors(page: Page): { readonly pageErrors: string[]; readonly co
 }
 
 //#region 🖼️VisibleContent
-/** @emoji 📦️ Request paths that must be answered by a FILE. A dev server's SPA fallback happily answers
+/** 📦️ Request paths that must be answered by a FILE. A dev server's SPA fallback happily answers
  * `GET /🖼️assets/🖼️bauteilbörse.png` with `index.html` and HTTP 200, so a missing figure looks like a
  * loaded one to everything except the eye — exactly how `animate`'s missing deck figure survived audit #1
  * and a whole strict acceptance run (ticket 26/09/19 `📓️status.md`, 2026-09-22 04:10). */
 const ASSET_PATH = /\.(png|jpe?g|gif|webp|avif|svg|ico|bmp|glb|gltf|obj|stl|ply|3dm|mp3|mp4|webm|wav|ogg|woff2?|ttf|otf|pdf)$/i;
 
-/** @emoji 🏚️ Collects every asset request the server answered with a document instead of the asset. */
+/** 🏚️ Collects every asset request the server answered with a document instead of the asset. */
 function collectSpaFallbackAssets(page: Page): string[] {
   const answered: string[] = [];
   page.on("response", response => {
@@ -93,12 +93,12 @@ function collectSpaFallbackAssets(page: Page): string[] {
   return answered;
 }
 
-/** @emoji 🪟️ One mounted window's verdict on whether it PAINTED anything, read from what its host
+/** 🪟️ One mounted window's verdict on whether it PAINTED anything, read from what its host
  * publishes rather than from pixels. */
 type WindowWitness = { readonly surface: string; readonly kind: "world3d" | "paint2d" | "dom"; readonly painted: boolean; readonly detail: string };
 type PaintWitness = { readonly painted: boolean; readonly detail: string };
 
-/** @emoji 🔬️ Asks every window of the pane, in its OWN terms, whether it painted — evaluated inside the
+/** 🔬️ Asks every window of the pane, in its OWN terms, whether it painted — evaluated inside the
  * page so one round trip answers for the whole pane (≈20 ms).
  *
  * Pixels cannot answer this. An element screenshot is the PAGE screenshot clipped to the element box, so
@@ -166,7 +166,7 @@ async function readPaintWitnesses(page: Page, variant: string): Promise<readonly
   }, { id: variant, minimumElements: MINIMUM_MAIN_REGION_ELEMENTS, minimumEdge: MINIMUM_IMAGE_ASSET_EDGE });
 }
 
-/** @emoji 🖼️ Polls {@link readPaintWitnesses} until some window paints or the deadline passes, and renders
+/** 🖼️ Polls {@link readPaintWitnesses} until some window paints or the deadline passes, and renders
  * the verdict of every window so a failure names the exact empty one. */
 async function paintWitness(page: Page, variant: string): Promise<PaintWitness> {
   const deadline = Date.now() + PAINT_WITNESS_DEADLINE_MS;
@@ -182,7 +182,7 @@ async function paintWitness(page: Page, variant: string): Promise<PaintWitness> 
 
 type ShellOutcome = "ready" | "error" | "notFound";
 
-/** @emoji 🚦️ Waits for the pane's own `[data-shell-id]` root to report an outcome. */
+/** 🚦️ Waits for the pane's own `[data-shell-id]` root to report an outcome. */
 async function waitForPaneShellOutcome(page: Page, paneId: string): Promise<ShellOutcome> {
   await page.waitForFunction(id => {
     const el = document.querySelector(`[data-shell-id="${id}"]`) as HTMLElement | null;

@@ -38,5 +38,4 @@ fn bounded_value_retirement_is_live_and_conserves_one_page_under_every_grant() {
         assert!(retirement.terminal_is_empty(), "{name}");
         drop(retirement);
     }
-    eprintln!("[DEBUG] bounded value retirement frees on the first positive grant and reports exactly one page under 1/64/4096/10000-byte grants");
 }

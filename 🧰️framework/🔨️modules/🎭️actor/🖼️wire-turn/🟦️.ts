@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🖼️ Renderer-agnostic interpretation of one `ShardClient.turn()` result — coercing its
+/** 🖼️ Renderer-agnostic interpretation of one `ShardClient.turn()` result — coercing its
  * opaque `unknown` shape, decoding retained-mode `UiPatch` ops onto a kept tree, and translating a
  * raw wire `effect` variant into the shared `kernel::Effect` TS union. Lifted out of
  * `PluginRuntime/🟦️.tsx`'s `🔖️ActorAdapter`/`🔖️RetainedUiPatch` regions (MICROKERNEL-POOLED-
@@ -19,7 +19,7 @@ import type { Effect, SpawnedJobCompletion, SpawnedJobStep } from "../../🎠️
 // kernel alone decides what a transcript of `step-job` observations means. A value import, unlike
 // `decodePackValue`'s injected codec, because nothing in `🎠️kernel/🟦️.ts`'s own import graph reaches
 // back here — verified, not assumed.
-import { jobPlacementFromWireName, spawnedJobCompletion, SPAWNED_JOB_DEADLINE_MS, SPAWNED_JOB_FUEL, SPAWNED_JOB_STEP_CEILING } from "../../🎠️kernel/🟦️.ts";
+import { jobPlacementFromWireName, spawnedJobCompletion, SPAWNED_JOB_DEADLINE_MS, SPAWNED_JOB_FUEL, SPAWNED_JOB_STEP_CEILING, videoRenderProgramFromWire } from "../../🎠️kernel/🟦️.ts";
 import { parseWitColdPairIngressStatus, type ColdPairIngressStatus } from "../📥️cold-pair/🟦️.ts";
 // #endregion 🔌️Imports
 
@@ -397,7 +397,7 @@ export function decodeWirePatchOps(ops: readonly WireVariant[], decodePackValue:
 export type RetainedSurface = { readonly revision: number; readonly node: unknown };
 
 /**
- * @emoji 🖼️ Reconciles one `UiPatch`'s ops onto `previous` (the last body a caller retained for the
+ * 🖼️ Reconciles one `UiPatch`'s ops onto `previous` (the last body a caller retained for the
  * surface), so the UI thread reads an already-reconciled tree instead of awaiting a plugin turn. Only
  * a root `PatchOp::Replace` (path `[]`) is applied — the only shape any guest emits this wave; anything
  * else, or a `baseRevision` that doesn't match `previous.revision` on a non-full-replace patch, is an
@@ -503,6 +503,15 @@ export function wireIconRenderExport(effect: WireVariant, decodePackValue: (byte
     if (typeof record.filename !== "string" || !Object.hasOwn(record, "request") || Object.keys(record).some((key) => key !== "filename" && key !== "request")) throw new Error("icon-export.items-invalid");
     return { filename: record.filename, request: record.request };
   }) } };
+}
+
+/** 🎥️ Decodes `video-render-export-effect` (`🔌️plugin/🧬️schema/📜️.wit`): `program` crosses as a `pack` and is normalised by
+ * `kernel::videoRenderProgramFromWire`. One decoder for both renderer doors, like {@link wireDownloadMediaExport}. */
+export function wireVideoRenderExport(effect: WireVariant, decodePackValue: (bytes: Uint8Array) => unknown): Extract<Effect, { readonly videoRenderExport: unknown }> {
+  const value = (effect.val ?? {}) as Record<string, unknown>;
+  const decoded = value.program !== null && typeof value.program === "object" && !ArrayBuffer.isView(value.program) && !Array.isArray(value.program) && "schema" in value.program;
+  const program = decoded ? value.program : decodePackValue(coerceWireBytes(value.program));
+  return { videoRenderExport: { filename: String(value.filename ?? ""), program: videoRenderProgramFromWire(program) } };
 }
 
 /** 🧵️ Decodes `spawn-job-effect` (`🔌️plugin/🧬️schema/📜️.wit`) without narrowing its u64 identity.
@@ -729,7 +738,7 @@ export type InboundRequestAnswer =
   | { readonly status: "unanswered"; readonly turns: number };
 
 /**
- * @emoji 📥️ Drives ONE `Event::Request` to its `respond` on the callee's actor — the host half of the
+ * 📥️ Drives ONE `Event::Request` to its `respond` on the callee's actor — the host half of the
  * ABI's single inbound-call seam, shared verbatim by the React `PluginRuntime` door and the wgpu
  * `plugin-bridge` one so the two targets can never drift into two protocols (this module's own
  * header: the "third divergent copy" hazard).
@@ -802,7 +811,7 @@ export function wireJobStep(raw: unknown): SpawnedJobStep {
 }
 
 /**
- * @emoji 🧵️ Drives ONE `Effect::SpawnJob` to a terminal `job-step` — the host half of the ABI's job
+ * 🧵️ Drives ONE `Effect::SpawnJob` to a terminal `job-step` — the host half of the ABI's job
  * seam, shared verbatim by every renderer door so the two targets can never drift into two
  * protocols (this module's own header: the "third divergent copy" hazard).
  *
@@ -893,6 +902,8 @@ export function wireEffectToFriendly(effect: WireVariant, decodePackValue: (byte
       return wireDownloadMediaExport(effect);
     case "icon-render-export":
       return wireIconRenderExport(effect, decodePackValue);
+    case "video-render-export":
+      return wireVideoRenderExport(effect, decodePackValue);
     case "spawn-job":
       return wireSpawnJob(effect);
     case "cancel-job":

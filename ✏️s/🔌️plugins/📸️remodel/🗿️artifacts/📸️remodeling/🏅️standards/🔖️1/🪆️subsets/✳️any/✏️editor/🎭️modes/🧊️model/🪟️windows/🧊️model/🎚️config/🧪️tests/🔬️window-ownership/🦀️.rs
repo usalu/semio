@@ -44,7 +44,6 @@ fn remodel_window_ownership_mutations_match_neutral_fixture_and_codecs() {
             owner => panic!("unknown fixture owner {owner}"),
         }
     }
-    eprintln!("[DEBUG] Remodel Model, Frames, and Report window mutations matched the neutral fixture, inverse, text, binary, DSL, and Pack laws");
 }
 
 #[test]
@@ -168,10 +167,9 @@ fn remodel_window_ownership_runtime_isolates_renders_and_reopens_six_windows() {
                 if report_config::addressed(&model_left, RemodelingReportWindowConfig::default()).is_ok() { return Err("Remodel Report owner accepted Model window identity".into()); }
                 Ok(())
             }.await;
-            if let Err(error) = &outcome { eprintln!("[DEBUG] Remodel exact-window runtime failure before close: {error}"); }
+            if let Err(error) = &outcome { eprintln!("[TRACE] Remodel exact-window runtime failure before close: {error}"); }
             artifact_app_laws::close_registered_fixture_app(&mut *app);
             outcome.expect("Remodel exact-window runtime law");
-            eprintln!("[DEBUG] Remodel retained commands isolated, rendered, and reopened two concrete windows for each of three owners");
         }))
         .expect("spawn Remodel window ownership law")
         .join()

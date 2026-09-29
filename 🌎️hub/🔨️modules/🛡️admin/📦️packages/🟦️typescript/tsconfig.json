@@ -1,28 +1,14 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../../../../tsconfig.json",
   "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
-    "lib": ["DOM", "ESNext"],
-    "moduleResolution": "bundler",
-    "jsx": "react-jsx",
-    "strict": true,
-    "esModuleInterop": true,
-    "isolatedModules": true,
-    "resolveJsonModule": true,
-    "skipLibCheck": true,
-    "allowJs": false,
-    "allowImportingTsExtensions": true,
-    "incremental": true,
-    "tsBuildInfoFile": "node_modules/.cache/tsconfig.tsbuildinfo",
-    "noEmit": true,
-    "types": ["react", "react-dom", "vite/client"],
-    "baseUrl": ".",
+    "tsBuildInfoFile": "../../../../../node_modules/.cache/tsconfig.hub-admin.tsbuildinfo",
+    "types": ["bun", "node", "react", "react-dom", "vite/client"],
     "paths": {
       "@semio-tech/ui-react": ["../../../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx"],
       "@semio-tech/framework-os": ["../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx", "../../🧱️elements/**/*.tsx"],
-  "exclude": ["node_modules", "📤️dist", "📜️script.ts"]
+  "exclude": ["node_modules", "📤️dist"]
 }

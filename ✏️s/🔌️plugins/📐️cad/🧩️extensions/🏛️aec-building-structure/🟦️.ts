@@ -1,5 +1,5 @@
 // #region 🧭️Header
-/** @emoji 🏛️ `@semio-tech/cad-js-module-aec-building-structure` — structure stat, transformation, and STEP import profiles. */
+/** 🏛️ `@semio-tech/cad-js-module-aec-building-structure` — structure stat, transformation, and STEP import profiles. */
 // #endregion 🧭️Header
 
 import { core } from "@semio-tech/cad-js";
@@ -102,7 +102,7 @@ function registerStructureImportProfile(modelDefinitionId: string): void {
   });
 }
 
-/** @emoji 📦️ Registers structure stat, transformation, and STEP import profiles on the core engine. */
+/** 📦️ Registers structure stat, transformation, and STEP import profiles on the core engine. */
 export function register(): void {
   registerStatComputer(STRUCTURE_STABILITY_STAT_ID, computeStructureStabilityStat);
   registerTransformationApplier(qualifiedTransformationId(AEC_BUILDING_STRUCTURE_MODEL_DEFINITION_ID, STRUCTURE_FROM_BUILDING_TRANSFORMATION_ID), applyBuildingToStructureTransformation);
@@ -115,8 +115,18 @@ export function register(): void {
 // #endregion 📦️Register
 
 // #region 🧪️Tests
+/** 🎒️ The values this module hands its extracted suite `./🧪️tests/🧪️semio-tech-cad-js-module-aec-building-structure/🟦️.ts`. */
+export type AecBuildingStructureTestDependencies = {
+  readonly AEC_BUILDING_STRUCTURE_MODEL_DEFINITION_ID: typeof AEC_BUILDING_STRUCTURE_MODEL_DEFINITION_ID;
+  readonly STRUCTURE_FROM_BUILDING_TRANSFORMATION_ID: typeof STRUCTURE_FROM_BUILDING_TRANSFORMATION_ID;
+  readonly STRUCTURE_STABILITY_STAT_ID: typeof STRUCTURE_STABILITY_STAT_ID;
+  readonly core: typeof core;
+  readonly qualifiedTransformationId: typeof qualifiedTransformationId;
+  readonly solidRef: typeof solidRef;
+};
+
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️semio-tech-cad-js-module-aec-building-structure/🟦️.ts");
-  await registerTests1(import.meta.vitest, { AEC_BUILDING_STRUCTURE_MODEL_DEFINITION_ID, STRUCTURE_FROM_BUILDING_TRANSFORMATION_ID, STRUCTURE_STABILITY_STAT_ID, core, qualifiedTransformationId, solidRef }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { AEC_BUILDING_STRUCTURE_MODEL_DEFINITION_ID, STRUCTURE_FROM_BUILDING_TRANSFORMATION_ID, STRUCTURE_STABILITY_STAT_ID, core, qualifiedTransformationId, solidRef }, { url: import.meta.url });
 }
 // #endregion 🧪️Tests

@@ -488,7 +488,6 @@ fn retained_drawing_arena_bootstrap_deadline_between_guards_preserves_and_resume
     assert_eq!(yielded, DrawingMutationArenaBootstrapStep::Pending { advanced_items: 1 });
     assert_eq!(retained, Some((law["expectedAllocationDelta"].as_u64().unwrap() as usize, None)), "budget exhaustion preserves the exact building owner without allocating or faulting");
     assert_eq!(serde_json::to_value(actual).unwrap(), law["expectedStages"]);
-    println!("[DEBUG] Drawing bootstrap crossed its deadline between guards, retained its allocation, and resumed to Ready");
 }
 
 fn close_arena_bootstrap_step(bootstrap: &mut DrawingMutationArenaPoolBootstrap) -> store::SnapshotRetirementStep {
@@ -1601,5 +1600,4 @@ fn retained_blend_mutations_validate_vocabulary_and_return_unchanged_rejections(
         }
         drain_snapshot(source);drain_mutation(operation);
     }
-    eprintln!("[DEBUG] retained blend mutations preserve exact documents and release candidate owners after rejection");
 }

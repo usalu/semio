@@ -22,6 +22,7 @@ import hashlib
 import json
 import os
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -34,6 +35,8 @@ ART = "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/"
 CRATES = {"semio-s-artifact-stdio-docx": ART + "📜️docx/", "semio-s-artifact-stdio-xlsx": ART + "📕️xlsx/"}
 GATED = ("/✏️editor/", "/👁️viewer/")
 REGION = re.compile(r"^\s*//#region\s+(.*?)\s*$")
+USE_HEAD = re.compile(r"^[ \t]*(pub(\([^)]*\))?[ \t]+)?use\b")
+RUSTFMT_CONFIG = "/Users/ueli/Documents/semio/rustfmt.toml"
 ENDREGION = re.compile(r"^\s*//#endregion\b")
 
 
@@ -207,15 +210,16 @@ def span_name(span: dict) -> str:
 
 
 def count(prefix: str) -> int:
-    """🔢️ `COUNT errors=<n> dead=<n>` over both units' docx/xlsx diagnostics (every error of the two crates counts)."""
-    errors, dead = 0, 0
+    """🔢️ `COUNT errors=<hard errors> dead=<removable items + imports + unresolved imports>` of one round (both units)."""
+    errors = 0
     for unit in ("lib", "tests"):
         for m in diagnostics(Path(f"{prefix}.{unit}.json")):
-            if m.get("level") == "error":
+            if m.get("level") == "error" and (m.get("code") or {}).get("code") != "E0432" and not re.match(r"(aborting due to|could not compile)", m["message"]):
                 errors += 1
                 print(f"  ERROR [{unit}] {m['rendered'].strip().splitlines()[0][:300]}")
+    unresolved = sum(len(spans) for spans in unresolved_imports(prefix).values())
     lib, tests, _, _, kept, dead = classify(prefix) if errors == 0 else ({}, {}, {}, {}, [], -1)
-    print(f"COUNT errors={errors} dead={dead} kept={len(kept)} lib-warnings={len(lib)} test-warnings={len(tests)}")
+    print(f"COUNT errors={errors} dead={dead + unresolved if errors == 0 else -1} kept={len(kept)} unresolved={unresolved} lib-warnings={len(lib)} test-warnings={len(tests)}")
     return 0
 
 
@@ -231,7 +235,7 @@ def dead_keys(messages: list) -> dict:
             continue
         for span in m["spans"]:
             if span["is_primary"] and any(c in norm(span["file_name"]) for c in CRATES.values()):
-                keys[(code, norm(span["file_name"]), span["line_start"], span["column_start"])] = m
+                keys[(code, norm(span["file_name"]), span["line_start"], span["column_start"])] = (m, span)
     return keys
 
 
@@ -249,15 +253,12 @@ def classify(prefix: str) -> tuple:
     lib, tests = dead_keys(diagnostics(Path(prefix + ".lib.json"))), dead_keys(diagnostics(Path(prefix + ".tests.json")))
     gated_corpus = gated_test_names(ROOT)
     removals, imports, kept, removable = {}, {}, [], 0
-    for key, message in lib.items():
+    for key, (message, span) in lib.items():
         code, file, line, column = key
         is_gated = any(g in file for g in GATED)
         if code == "unused_imports":
-            if key in tests or is_gated:
-                imports.setdefault(file, []).append(message)
-                removable += 1
-            else:
-                kept.append(("import used by tests", file, line, message["message"]))
+            imports.setdefault(file, set()).add((span["byte_start"], span["byte_end"], key in tests or is_gated))
+            removable += 1
             continue
         if not ITEM_MESSAGE.match(message["message"]) or re.search(r"\b(field|fields|variant|variants)\b", message["message"]):
             kept.append(("not an item (field/variant)", file, line, message["message"]))
@@ -281,10 +282,67 @@ def classify(prefix: str) -> tuple:
     return lib, tests, removals, imports, kept, removable
 
 
+def use_statement(text: str, start: int, end: int) -> tuple:
+    """🧭️ `[start, end)` of the whole `use` statement (possibly multi-line) that contains the span `[start, end)`."""
+    head = text.rfind("\n", 0, start) + 1
+    while not USE_HEAD.match(text[head : text.find("\n", head)]):
+        head = text.rfind("\n", 0, head - 1) + 1
+    tail = text.find("\n", text.find(";", end))
+    return head, len(text) if tail < 0 else tail + 1
+
+
+def drop_use_names(statement: str, spans: list) -> str:
+    """✂️ Removes each `(start, end, separators_included)` span from one `use` statement, then its separator and any group the
+    removal emptied or left with one member (rustfmt's own normal form); an emptied statement becomes empty text."""
+    for start, end, separated in sorted(set(spans), reverse=True):
+        if separated:
+            statement = statement[:start] + statement[end:]
+            continue
+        after = re.match(r"\s*,\s*", statement[end:])
+        before = re.search(r",\s*$", statement[:start])
+        if after:
+            statement = statement[:start] + statement[end + after.end() :]
+        elif before:
+            statement = statement[: before.start()] + statement[end:]
+        else:
+            statement = statement[:start] + statement[end:]
+    previous = None
+    while previous != statement:
+        previous = statement
+        statement = re.sub(r"(?:\b[\w:]+)?::\{\s*\}\s*,?\s*", "", statement)
+        statement = re.sub(r",(\s*)\}", r"\1}", statement)
+        statement = re.sub(r"::\{\s*([\w]+(?:\s+as\s+\w+)?|\*)\s*,?\s*\}", r"::\1", statement)
+    return "" if re.fullmatch(r"\s*(pub(\([^)]*\))?\s+)?use\s*(\{\s*\})?\s*;?\s*", statement) else statement
+
+
+def rustfmt_statement(statement: str) -> str:
+    """🎨️ Formats one `use` statement exactly as rustfmt formats it in place: nested modules reproduce its indentation."""
+    if not statement:
+        return statement
+    depth = (len(statement) - len(statement.lstrip(" "))) // 4
+    source = "".join(f"mod u6_{level} {{\n" for level in range(depth)) + statement.strip() + "\n" + "}\n" * depth
+    formatted = subprocess.run(["rustfmt", "--edition", "2021", "--config-path", RUSTFMT_CONFIG, "--emit", "stdout"], input=source, capture_output=True, text=True, check=True).stdout
+    lines = formatted.splitlines(keepends=True)
+    return "".join(lines[depth : len(lines) - depth])
+
+
+def unresolved_imports(prefix: str) -> dict:
+    """🔗️ file → E0432 name spans (`byte_start`, `byte_end`) of both units: imports of items an earlier round removed."""
+    spans = {}
+    for unit in ("lib", "tests"):
+        for m in diagnostics(Path(f"{prefix}.{unit}.json")):
+            if m.get("level") == "error" and (m.get("code") or {}).get("code") == "E0432":
+                for span in m["spans"]:
+                    if span["is_primary"] and any(c in norm(span["file_name"]) for c in CRATES.values()):
+                        spans.setdefault(norm(span["file_name"]), set()).add((span["byte_start"], span["byte_end"]))
+    return spans
+
+
 def analyze(prefix: str, round_no: int) -> int:
     lib, tests, removals, imports, kept, _ = classify(prefix)
+    unresolved = unresolved_imports(prefix)
     edits = []
-    for file in sorted(set(removals) | set(imports)):
+    for file in sorted(set(removals) | set(imports) | set(unresolved)):
         path = ROOT / file
         original = path.read_text()
         lines = original.splitlines(keepends=True)
@@ -298,16 +356,20 @@ def analyze(prefix: str, round_no: int) -> int:
                 items = [r for r in items if not (first <= r[0] and r[1] <= last)] + [(first, last)]
         raw = original.encode()
         ops = [("item", line_offset[a], a, b) for a, b in items]
-        for message in imports.get(file, []):
-            for child in message.get("children", []):
-                for span in child.get("spans", []):
-                    if span.get("suggestion_applicability") == "MachineApplicable" and norm(span["file_name"]) == file and span["suggested_replacement"] == "":
-                        start_char = len(raw[: span["byte_start"]].decode())
-                        end_char = len(raw[: span["byte_end"]].decode())
-                        if not any(line_offset[a] <= start_char < line_offset[b + 1] for a, b in items):
-                            ops.append(("import", start_char, start_char, end_char))
+        for byte_start, byte_end, dead in imports.get(file, ()):
+            start_char, end_char = len(raw[:byte_start].decode()), len(raw[:byte_end].decode())
+            if not any(line_offset[a] <= start_char < line_offset[b + 1] for a, b in items):
+                ops.append(("import", start_char, start_char, end_char, False, dead))
+        for byte_start, byte_end in unresolved.get(file, ()):
+            start_char, end_char = len(raw[:byte_start].decode()), len(raw[:byte_end].decode())
+            if not any(line_offset[a] <= start_char < line_offset[b + 1] for a, b in items):
+                ops.append(("import", start_char, start_char, end_char, False, True))
+        statements = {}
+        for op in [op for op in ops if op[0] == "import"]:
+            statements.setdefault(use_statement(original, op[2], op[3]), []).append(op)
+        ops = [op for op in ops if op[0] != "import"] + [("use", head, head, tail, spans) for (head, tail), spans in statements.items()]
         text = original
-        for op in sorted(set(ops), key=lambda o: o[1], reverse=True):
+        for op in sorted(ops, key=lambda o: o[1], reverse=True):
             cur = text.splitlines(keepends=True)
             if op[0] == "item":
                 first, last = with_blank(cur, op[2], op[3])
@@ -317,27 +379,30 @@ def analyze(prefix: str, round_no: int) -> int:
                 del cur[first : last + 1]
                 text = "".join(cur)
                 continue
-            start, end = op[2], op[3]
-            stmt_start = text.rfind("\n", 0, start) + 1
-            stmt_end = text.find("\n", end)
-            stmt_end = len(text) if stmt_end < 0 else stmt_end + 1
-            while not text[stmt_start:stmt_end].rstrip().endswith(";"):
-                nxt = text.find("\n", stmt_end)
-                stmt_end = len(text) if nxt < 0 else nxt + 1
-            old = text[stmt_start:stmt_end]
-            new = text[stmt_start:start] + text[end:stmt_end]
-            if new.strip() == "":
-                new = ""
-            old_u, new_u, at = unique_edit(text, old, new, cur, text.count("\n", 0, stmt_start))
-            edits.append({"file": file, "region": region_of(cur, at), "old": old_u, "new": new_u, "what": "import " + text[start:end].strip()[:80]})
-            text = text[:stmt_start] + new + text[stmt_end:]
+            head, tail, spans = op[2], op[3], op[4]
+            old = text[head:tail]
+            new = drop_use_names(old, [(span[2] - head, span[3] - head, span[4]) for span in spans])
+            test_only = sorted({text[span[2] : span[3]] for span in spans if not span[5]})
+            if test_only:
+                indent = old[: len(old) - len(old.lstrip(" "))]
+                use_head = re.match(r"\s*(?:pub(?:\([^)]*\))?\s+)?use\s+([\w:]+?)(?:::\{|;)", old)
+                use_path = use_head.group(1) if "{" in old else use_head.group(1).rsplit("::", 1)[0]
+                names = test_only[0] if len(test_only) == 1 else "{" + ", ".join(test_only) + "}"
+                new = (new if new.strip() else indent) + ("" if not new.strip() else indent) + f"#[cfg(test)]\n{indent}use {use_path}::{names};\n"
+            new = rustfmt_statement(new)
+            old_u, new_u, at = unique_edit(text, old, new, cur, text.count("\n", 0, head))
+            edits.append({"file": file, "region": region_of(cur, at), "old": old_u, "new": new_u, "what": "import " + ", ".join(sorted(text[span[2] : span[3]].strip(" ,\n") for span in spans))[:100]})
+            text = text[:head] + new + text[tail:]
         text = tidy(file, text, edits)
         path.write_text(text)
     payload = json.loads(PAYLOAD.read_text()) if PAYLOAD.exists() else {"rounds": []}
     payload["rounds"] = payload["rounds"][: round_no - 1] + [{"round": round_no, "capture": prefix, "edits": edits, "kept": kept}]
     PAYLOAD.parent.mkdir(parents=True, exist_ok=True)
     PAYLOAD.write_text(json.dumps(payload, ensure_ascii=False, indent=1) + "\n")
-    print(f"round {round_no}: lib dead/unused {len(lib)}, lib-test {len(tests)}, edits {len(edits)} "
+    if not edits:
+        print(f"round {round_no}: no edit derivable from {prefix}")
+        return 1
+    print(f"round {round_no}: lib dead/unused {len(lib)}, lib-test {len(tests)}, unresolved imports {sum(len(v) for v in unresolved.values())}, edits {len(edits)} "
           f"({sum(1 for e in edits if not e['what'].startswith('import'))} items, {sum(1 for e in edits if e['what'].startswith('import'))} imports), kept {len(kept)}")
     for reason, file, line, message in kept:
         print(f"  KEPT {reason}: {file.rsplit('🪆️subsets/', 1)[-1]}:{line} {message}")

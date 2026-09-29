@@ -79,6 +79,8 @@ fn content_left_the_view(content: &camera::ContentBounds, at: &camera::Camera, v
     camera::content_coverage(content, at, view) <= camera::CONTENT_REFIT_MAX_COVERAGE
 }
 
+/// 📐️ A graph past the zoom-out floor cannot be fully framed by construction; every other row
+/// must come out whole, which is the only property a "fit" actually promises.
 #[test]
 fn a_fitted_camera_frames_the_whole_graph_it_was_fitted_to() {
     let document = fixture();
@@ -87,8 +89,6 @@ fn a_fitted_camera_frames_the_whole_graph_it_was_fitted_to() {
         let view = viewport(&row["viewport"]);
         let fitted = camera::fit_camera(&content, &view, camera::CONTENT_FIT_PADDING_PX);
         let coverage = camera::content_coverage(&content, &fitted, &view);
-        // 📐️ A graph past the zoom-out floor cannot be fully framed by construction; every other row
-        // must come out whole, which is the only property a "fit" actually promises.
         let clamped = fitted.zoom <= camera::CANVAS_CAMERA_ZOOM_MIN;
         assert!(clamped || coverage >= 0.999, "{}: a fit that frames {coverage} of its own graph is not a fit", row["name"]);
     }

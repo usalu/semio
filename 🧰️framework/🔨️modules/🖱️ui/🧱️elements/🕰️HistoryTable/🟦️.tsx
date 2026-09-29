@@ -13,7 +13,7 @@ import { type ElementProps } from "../../🔨️modules/🆔️element-identity/
 // #endregion 🔌️Adapters
 
 // #region 🗄️HistoryTable
-/** @emoji 🗄️ Author of a VCS checkpoint. */
+/** 🗄️ Author of a VCS checkpoint. */
 export interface HistoryColumnAuthor {
   readonly id: string;
   readonly name: string;
@@ -25,7 +25,7 @@ export interface HistoryColumnAuthor {
  * `undefined` when the checkpoint carries no message at all (the common case). */
 export type HistoryMutationLevel = "info" | "warning" | "error" | "fatal";
 
-/** @emoji 🗄️ One row of a checkpoint ancestor graph — mirrors the plugin-side `HistoryColumn` (see `vcs::HistoryColumn`). */
+/** 🗄️ One row of a checkpoint ancestor graph — mirrors the plugin-side `HistoryColumn` (see `vcs::HistoryColumn`). */
 export interface HistoryColumn {
   readonly checkpointId: string;
   readonly timestamp: string;

@@ -191,7 +191,9 @@ export { STUDIO_E2E_HEADLESS_GPU_ERROR_FRAGMENTS, activateStudioE2eWorkflowWindo
 /** 🏠️ The Home landing's studio catalog as a person drives it in the served React `s` shell (goal outcome 1, Home row of
  * the reachability census): the toolbar's Import Studio control opens the host file picker and the retained import job
  * lists the picked `.os` studio under its own name; the row's "Remove from Home" retires it (a Home config tombstone,
- * undoable); a reload reopens Home with the removal kept. With `--hub` the person also signs in, creates a hub space from
+ * undoable, and unlisted from the host's local document catalog); a second imported studio is kept on this device, so a
+ * reload reopens Home with the removal kept AND the kept studio listed again (the host re-hydrates it from its own folder
+ * lane — a serve this harness starts gets a scratch `S_DATA_DIR`). With `--hub` the person also signs in, creates a hub space from
  * the toolbar's Create Space dialog, finds it again after the reload and deletes it. Every step is judged on the rendered
  * rows (windowed tables paged as a person scrolls) and the run fails on any fault line in the console.
  *
@@ -242,11 +244,30 @@ export async function runHomeE2e(options: HomeE2eOptions): Promise<HomeE2eReport
   const studioName = `Home E2E import ${stamp}`;
   const studioFile = join(outDir, "studio.os");
   writeFileSync(studioFile, homeE2eStudioText(studioName));
+  const keptName = `Home E2E kept ${stamp}`;
+  const keptFile = join(outDir, "kept.os");
+  writeFileSync(keptFile, homeE2eStudioText(keptName));
   ensureParityPlaywrightBrowsersPath();
   const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
   const browser = await chromium.launch({ headless: true, args: ["--use-angle=metal", "--ignore-gpu-blocklist"] });
   const [session] = (await openSessions(browser, [options.baseUrl], [options.human ?? { label: "local", email: "", password: "" }], options.locale === "de" ? "de-DE" : "en-US")) as [Session];
   const page = session.page;
+  await session.context.addInitScript(() => {
+    const seen: string[] = [];
+    const counted = new WeakSet<Element>();
+    (globalThis as unknown as { __homeE2eNotices: string[] }).__homeE2eNotices = seen;
+    const scan = (): void => {
+      for (const element of document.querySelectorAll("[data-notice-code]")) {
+        if (counted.has(element)) continue;
+        counted.add(element);
+        seen.push(element.getAttribute("data-notice-code") ?? "");
+      }
+    };
+    const start = (): void => new MutationObserver(scan).observe(document.body, { subtree: true, childList: true, attributes: true });
+    if (document.body) start();
+    else document.addEventListener("DOMContentLoaded", start);
+  });
+  const noticesSeen = (): Promise<string[]> => page.evaluate(() => (globalThis as unknown as { __homeE2eNotices?: string[] }).__homeE2eNotices ?? []);
   const flush = (): void => {
     writeFileSync(join(outDir, "report.json"), JSON.stringify(report, null, 2));
     writeFileSync(join(outDir, "console.txt"), session.lines.join("\n"));
@@ -300,13 +321,27 @@ export async function runHomeE2e(options: HomeE2eOptions): Promise<HomeE2eReport
         return { pass: await homeRowGone(page, studioName, 30_000), detail: { studioId } };
       });
     }
+    let keptId: string | null = null;
+    await step("import-kept-studio", async () => {
+      const chooser = page.waitForEvent("filechooser", { timeout: 30_000 }).catch((error: unknown) => (error instanceof Error ? error : new Error(String(error))));
+      await activate(page, "s-home-import-studio");
+      const picker = await chooser;
+      if (picker instanceof Error) throw picker;
+      const before = (await noticesSeen()).length;
+      await picker.setFiles(keptFile);
+      keptId = await waitNamedRow(page, "space", keptName, 60_000);
+      const settled = await page.waitForFunction((from) => ((globalThis as unknown as { __homeE2eNotices?: string[] }).__homeE2eNotices ?? []).slice(from).some((code) => code.startsWith("shell.localCatalog.") && code !== "shell.localCatalog.keeping"), before, { timeout: 45_000 }).then(() => true, () => false);
+      const notices = (await noticesSeen()).slice(before);
+      return { pass: settled && notices.includes("shell.localCatalog.kept"), detail: { keptId, notices } };
+    });
     await step("reopen", async () => {
       await page.reload({ waitUntil: "domcontentloaded" });
       await page.locator('[data-ui-node-key="s-home-create-space"]').first().waitFor({ state: "attached", timeout: 180_000 });
       if (options.human !== null) await settleHome(session);
       const hubRow = spaceId === null ? null : await waitNamedRow(page, "space", spaceName, 60_000).then(() => true, () => false);
       const removedStaysRemoved = studioId === null ? null : await homeRowGone(page, studioName, 5_000);
-      return { pass: hubRow !== false && removedStaysRemoved !== false, detail: { hubRow, removedStaysRemoved } };
+      const keptAfterReload = keptId === null ? null : await waitNamedRow(page, "space", keptName, 60_000).then(() => true, () => false);
+      return { pass: hubRow !== false && removedStaysRemoved !== false && keptAfterReload !== false, detail: { hubRow, removedStaysRemoved, keptAfterReload } };
     });
     if (spaceId !== null) {
       await step("delete-hub-space", async () => {
@@ -361,8 +396,12 @@ export async function runHomeE2eCli(repoRoot: string, defaultOutDir: string, seg
   const cancel = (): void => controller.abort();
   process.once("SIGINT", cancel);
   process.once("SIGTERM", cancel);
+  const outDir = resolve(flag("--out") ?? defaultOutDir);
+  if (!process.env.S_DATA_DIR) {
+    process.env.S_DATA_DIR = join(outDir, tag, "data");
+    mkdirSync(process.env.S_DATA_DIR, { recursive: true });
+  }
   await withAcceptanceRecord(repoRoot, "home-e2e", () => withDevServe(repoRoot, "home-e2e", { serveUrl, ...(hubUrl === null ? {} : { hubUrl }), locale, signal: controller.signal, startedAt }, async (baseUrl) => {
-    const outDir = resolve(flag("--out") ?? defaultOutDir);
     const report = await runHomeE2e({ baseUrl, hubUrl, human: hubUrl === null ? null : { label: "user", email: email!, password: password! }, locale, tag, outDir, signal: controller.signal });
     const passed = report.steps.filter((row) => row.pass).length;
     const total = report.steps.length;

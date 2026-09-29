@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🎭️ Per-surface verdicts of one browser-actor patch offer on the shell (🎫️ 26/09/23 C10, audit G-P1-4 and
+/** 🎭️ Per-surface verdicts of one browser-actor patch offer on the shell (🎫️ 26/09/23 C10, audit G-P1-4 and
  * S15 finding b): the neutral corpus drives `browserActorPanelKeysV1` and `applyBrowserActorUiPatchesV1` step by step
  * over a document shown in two windows plus its panels, and Ajv checks every verdict the shell answers against the
  * private patch-handoff schema the worker's reader enforces. */

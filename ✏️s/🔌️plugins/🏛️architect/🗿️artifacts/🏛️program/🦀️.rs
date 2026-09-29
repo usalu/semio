@@ -195,7 +195,7 @@ pub fn genesis_program_child_pack(snapshot: &ProgramSnapshot, slot: &str, child_
 #[cfg(test)]
 use store::ArtifactDsl;
 
-/// @emoji 📜️ Persisted architect program document schema identifier.
+/// 📜️ Persisted architect program document schema identifier.
 pub use crate::schema::mutations::ProgramMutation;
 
 pub use crate::schema::diff::ProgramDiff;
@@ -386,7 +386,7 @@ pub fn empty_plugin() -> ProgramSnapshot {
     }
 }
 
-/// @emoji 🧪️ Sample program for tests with elements, stakeholders, and one adjacency.
+/// 🧪️ Sample program for tests with elements, stakeholders, and one adjacency.
 pub fn sample_plugin() -> ProgramSnapshot {
     let mut program = empty_plugin();
     program.meta.title = "Sample Clinic".into();

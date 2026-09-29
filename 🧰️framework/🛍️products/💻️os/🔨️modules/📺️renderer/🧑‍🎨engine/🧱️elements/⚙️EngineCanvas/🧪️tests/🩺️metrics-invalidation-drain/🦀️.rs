@@ -4,7 +4,7 @@
 //! ⚖️ `AppPresenter::admit_next_frame` builds no frame while a presentation is pending, so every
 //! `Ok(false)` this arm answers is a blocked frame for the whole host. One slot per step spends
 //! `ENGINE_SURFACE_CAPACITY` of them on a scan whose entire work is one `begin_close()` per slot.
-//! Measured on 6118 as `[DEBUG] engine realize stalled arm=metrics-invalidation-scan steps=128
+//! Measured on 6118 as `[TRACE] engine realize stalled arm=metrics-invalidation-scan steps=128
 //! scan=Some(212)` on every example boot, with the host's own frame gate reading
 //! `blocked=true phase=Some(Engine)` across it (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
 //! `📓️wgpu-wheel-zoom-a11y-live-2026-09-14.md` §6.2, `📓️wgpu-regressions-sweep-2026-09-15.md`).

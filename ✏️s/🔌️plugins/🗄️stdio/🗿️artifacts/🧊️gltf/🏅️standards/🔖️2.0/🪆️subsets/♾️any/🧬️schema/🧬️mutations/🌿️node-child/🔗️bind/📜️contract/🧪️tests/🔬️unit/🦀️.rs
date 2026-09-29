@@ -25,5 +25,4 @@ fn canonical_vectors_execute_direct_mutation_and_codec_laws() {
             assert_eq!(mutation::validate(&rejected, &base).unwrap_err().code, "gltf.mutation.index-out-of-range");
         }
     }
-    println!("[DEBUG] bind_node_child: {} canonical vectors verified through direct mutations, inverse restoration and the independent JSON oracle.", vectors.len());
 }

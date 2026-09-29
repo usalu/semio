@@ -199,6 +199,11 @@ def stdio_cargo(text, plan_data):
 
 #region stdio laws
 def shipped_fleet_rs(plan_data):
+    """🛡️ The census laws for the ten stdio packages plus LB2 p6's schema-publication law widened to every package's editors."""
+    return shipped_fleet_census_rs(plan_data).rstrip("\n") + "\n\n" + open(os.path.join(HERE, "st2-laws", "shipped-fleet-schema-law.rs"), encoding="utf-8").read()
+
+
+def shipped_fleet_census_rs(plan_data):
     rows = ["        ShippedPackage { id: \"stdio\", manifest: include_str!(\"../../📦️packages/🦀️rust/Cargo.toml\"), descriptor: describe(semio_s_plugin_stdio::plugin()) },"]
     for family in plan_data["families"]:
         rows.append(f"        ShippedPackage {{ id: \"{family['id']}\", manifest: include_str!(\"../../🧩️extensions/{family['dir']}/📦️packages/🦀️rust/Cargo.toml\"), descriptor: describe({family['lib']}::plugin()) }},")
@@ -351,7 +356,9 @@ fn every_stdio_kind_is_opened_by_exactly_one_package() {{
 
 def editor_catalog_rs(text):
     text = replace_once(text, "    println!(\"[DEBUG] editor={} native replay, retained edit/undo/redo, and artifact/source reopen passed\", definition.id);\n", "", "editor catalog: DEBUG line")
-    return remove_span(editor_catalog_details_rs(text), "#[test]\nfn assembled_plugin_exposes_every_editable_artifact() {\n", "\n}\n\n", "editor catalog: assembled plugin law")
+    text = remove_span(editor_catalog_details_rs(text), "#[test]\nfn assembled_plugin_exposes_every_editable_artifact() {\n", "\n}\n\n", "editor catalog: assembled plugin law")
+    text = replace_once(text, "async fn assert_editor<E: ArtifactEditor + SnapshotEditingEditor>(definition: AppDefinition) {\n    let fixture = fixture();\n", "async fn assert_editor<E: ArtifactEditor + SnapshotEditingEditor>(definition: AppDefinition) {\n    stdio_packages_assembled();\n    let fixture = fixture();\n", "editor catalog: assemble before driving an editor")
+    return replace_once(text, "fn fixture() -> serde_json::Value {\n", open(os.path.join(HERE, "st2-laws", "editor-catalog-assembly.rs"), encoding="utf-8").read() + "fn fixture() -> serde_json::Value {\n", "editor catalog: package assembly helper")
 
 
 def editor_catalog_details_rs(text):

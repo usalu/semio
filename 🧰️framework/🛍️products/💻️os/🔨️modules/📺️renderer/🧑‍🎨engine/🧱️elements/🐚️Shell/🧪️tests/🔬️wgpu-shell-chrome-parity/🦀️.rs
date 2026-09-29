@@ -154,7 +154,6 @@ fn the_example_picker_offers_every_example_of_the_open_dialect_and_nothing_else(
         cases += 1;
     }
     assert!(cases >= 5, "the shared fixture is expected to carry every surface/dialect case");
-    eprintln!("[DEBUG] wgpu example picker: {cases} dialect cases answered by the shared 📚️example-picker fixture");
 }
 
 #[test]
@@ -174,7 +173,6 @@ fn the_example_picker_trigger_shows_the_picked_row_and_the_open_dropdown_is_its_
     assert!(!shell_example_control(&rows, false, true).expect("picker").active);
     let empty = shell_example_rows(&[], &app, None, Terminology::default(), Locale::default());
     assert!(shell_example_control(&empty, false, false).is_none(), "a dialect with no authored example paints no trigger at all");
-    eprintln!("[DEBUG] wgpu example picker trigger: localized label, selected row and pressed state all hold");
 }
 
 #[test]
@@ -189,7 +187,6 @@ fn the_boot_example_is_resolved_the_way_the_shared_fixture_declares() {
         rows += 1;
     }
     assert!(rows >= 8, "the shared fixture is expected to carry every precedence and fallback case");
-    eprintln!("[DEBUG] wgpu boot example: {rows} shared fixture rows answered identically to React's resolveBootExampleId");
 }
 
 /// 📚️ The `?example=` axis reaches the picker through ONE door — `sync_session_chrome` handing
@@ -211,7 +208,6 @@ fn the_boot_example_query_reaches_the_picker_through_the_shared_resolver() {
     let example = settle_body.find("apply_boot_example").expect("settle_boot applies the boot example");
     let refresh = settle_body.find("refresh_ui").expect("settle_boot refreshes");
     assert!(push < example && example < refresh, "the boot example is announced AFTER the flow-extension registry is armed and BEFORE the first render");
-    eprintln!("[DEBUG] wgpu boot example: the `?example=` query reaches the picker through sync_session_chrome and is announced between push_contributions and refresh_ui");
 }
 
 //#endregion 📚️ExamplePicker
@@ -249,7 +245,6 @@ fn the_roles_group_exists_exactly_when_the_plugin_declares_both_surfaces_of_the_
         rows += 1;
     }
     assert_eq!(rows, 4, "the shared fixture's four group rows");
-    eprintln!("[DEBUG] wgpu roles group: {rows} shared fixture rows answered identically to React");
 }
 
 #[test]
@@ -264,7 +259,6 @@ fn a_role_switch_resolves_the_app_the_shared_fixture_declares() {
         rows += 1;
     }
     assert_eq!(rows, 4, "the shared fixture's four role-target rows");
-    eprintln!("[DEBUG] wgpu role switch targets: {rows} shared fixture rows answered identically to React");
 }
 
 #[test]
@@ -276,7 +270,6 @@ fn the_mode_group_renders_one_pressed_button_per_declared_mode_and_none_for_a_si
     assert_eq!(controls.iter().map(|control| control.active).collect::<Vec<_>>(), vec![false, true]);
     let viewer = parity_app("s.procedural.generation3d@1/*#viewer", AppRole::Viewer, dialect, "Viewer", "Betrachter", &["view"]);
     assert!(shell_mode_controls(&viewer, Some("view"), Terminology::default(), Locale::default()).is_empty(), "a one-mode surface renders no mode switcher, exactly as React renders none");
-    eprintln!("[DEBUG] wgpu mode group: two-mode editor paints both ids, one-mode viewer paints none");
 }
 
 #[test]
@@ -290,7 +283,6 @@ fn stepping_the_mode_wraps_the_way_the_shared_fixture_declares() {
         rows += 1;
     }
     assert_eq!(rows, 6, "the shared fixture's six mode-step rows");
-    eprintln!("[DEBUG] wgpu mode step: {rows} shared fixture rows answered identically to React");
 }
 
 //#endregion 🎛️ModeAndRoleGroups
@@ -337,7 +329,6 @@ fn every_shared_keybinding_row_routes_to_its_shell_verb_and_outranks_app_keybind
         rows += 1;
     }
     assert_eq!(rows, 4, "the shared fixture's four keybinding rows");
-    eprintln!("[DEBUG] wgpu shell chords: {rows} shared fixture rows route to the same verb React's SHELL_KEYBINDINGS declare");
 }
 
 #[test]
@@ -351,7 +342,6 @@ fn the_alt_axis_never_swallows_a_neighbouring_chord() {
     assert!(is_reserved_shell_chord(&ui_wgpu::wgpu::KeyAction::Char("f".into()), &accelerator), "mod+f stays the find chord");
     assert!(!is_reserved_shell_chord(&ui_wgpu::wgpu::KeyAction::Char("f".into()), &with_alt), "mod+alt+f belongs to whoever declares it, not to find");
     assert!(!is_reserved_shell_chord(&ui_wgpu::wgpu::KeyAction::Char("f".into()), &bare), "a bare `f` is never a reserved shell accelerator — app actions such as zoomToFlow own it");
-    eprintln!("[DEBUG] wgpu shell chords: the alt axis is disjoint from the palette/find/panel accelerators");
 }
 
 //#endregion ⌨️Chords
@@ -370,15 +360,14 @@ fn the_cancel_contract_is_read_the_way_the_shared_fixture_declares() {
         rows += 1;
     }
     assert_eq!(rows, 11, "the fixture's eleven cancel-contract rows");
-    eprintln!("[DEBUG] wgpu world3d cancel contract: {rows} fixture rows, hostile payloads included, degrade to no affordance");
 }
 
+/// 🔤️ The fixture carries the shared control-height token so the TypeScript twin can apply the
+/// very same size gate without re-deriving `UI_SPACING_COMPACT_PX × CONTROL_HEIGHT_UI_SPACING`.
 #[test]
 fn a_live_surface_offers_exactly_the_overlay_controls_the_shared_fixture_declares() {
     let fixture: Value = serde_json::from_str(SURFACE_CONTROLS_FIXTURE).expect("🛑️ fixture parses");
     let theme = crate::resolve_theme("light");
-    // 🔤️ The fixture carries the shared control-height token so the TypeScript twin can apply the
-    // very same size gate without re-deriving `UI_SPACING_COMPACT_PX × CONTROL_HEIGHT_UI_SPACING`.
     assert!((f64::from(theme.control_height) - fixture["controlHeightPx"].as_f64().expect("fixture control height")).abs() < 1e-6, "the fixture's declared control height must stay the theme's own token");
     let mut rows = 0;
     for case in fixture["surfaceControls"].as_array().expect("fixture surface rows") {
@@ -399,7 +388,6 @@ fn a_live_surface_offers_exactly_the_overlay_controls_the_shared_fixture_declare
         rows += 1;
     }
     assert_eq!(rows, 5, "the fixture's five surface-control rows");
-    eprintln!("[DEBUG] wgpu surface controls: {rows} fixture rows offer the cancel hit target exactly when the surface declares it");
 }
 
 #[test]
@@ -408,7 +396,6 @@ fn the_cancel_control_dispatches_only_the_action_the_surface_itself_published() 
     assert_eq!(published.cancel_action, "stopTheThing", "the shell learns the verb from the surface's own status contract, never from code");
     assert!(published.cancellable);
     assert!(!WGPU_SHELL_SOURCE.contains("\"cancelPreviewEval\""), "no domain verb may be hardcoded in the shell's cancel path");
-    eprintln!("[DEBUG] wgpu world3d cancel: the dispatched verb is the published one and no domain verb is compiled in");
 }
 
 //#endregion 🛑️SurfaceControls
@@ -447,7 +434,6 @@ fn the_compute_status_is_read_field_for_field_the_way_the_shared_fixture_declare
         }
     }
     assert_eq!(fixture["statusPane"].as_array().map(Vec::len), Some(11), "the fixture's eleven status-pane rows");
-    eprintln!("[DEBUG] wgpu world3d status: {rows} of 11 shared fixture rows are unsettled and paint a pill; the rest annotate nothing");
 }
 
 /// 🌍️ The pill carries the PRODUCER's language pair, and falls back to the shell's own bilingual
@@ -465,7 +451,6 @@ fn the_status_pill_speaks_the_readers_language_and_never_defaults_to_one() {
     assert_eq!(world3d_status_pill_for("window:preview", &unlabelled, false).expect("pill").phase_text, shell_chrome_string("common.loading", false));
     assert_eq!(world3d_status_pill_for("window:preview", &unlabelled, true).expect("pill").phase_text, shell_chrome_string("common.loading", true));
     assert_ne!(shell_chrome_string("common.loading", false), shell_chrome_string("common.loading", true), "the fallback itself carries both tongues");
-    eprintln!("[DEBUG] wgpu world3d status pill: en/de both resolved from the producer's pair, fallback bilingual");
 }
 
 /// 🖼️ A pill leads its surface's overlay row and the cancel control follows it, so the two never
@@ -487,7 +472,6 @@ fn the_status_pill_leads_the_row_the_cancel_control_follows() {
     assert!(controls[0].1[0] >= rect.x + rect.w, "the cancel control starts after the pill, never over it");
     let tiny = [("window:procedural-view-preview", Rect::new(24.0, 40.0, 24.0, 12.0), Some(computing))];
     assert!(surface_status_pills_for(&tiny, &[], &theme, false).is_empty(), "a collapsed pane carries no pill either");
-    eprintln!("[DEBUG] wgpu world3d status pill: leads the overlay row at {:?}, cancel anchored at {:?}", [rect.x, rect.y], controls[0].1);
 }
 
 /// ⏳️⛓️ The TIMELINE law — the one no single row can state. A long evaluation must publish a RUN of
@@ -535,7 +519,6 @@ fn a_long_evaluation_publishes_a_monotone_run_of_non_idle_frames_and_then_settle
         if lane == "evaluation" {
             assert!(non_idle >= minimum, "{lane}: {non_idle} non-idle frames, the law needs at least {minimum}");
         }
-        eprintln!("[DEBUG] wgpu world3d status timeline {lane}: {non_idle} non-idle frame(s), ratio monotone up to {previous_ratio}, settled at the end");
     }
     assert!(timeline["cancelled"].as_array().is_some_and(|frames| frames.iter().any(|frame| frame["expected"]["phase"] == "cancelled")), "the cancelled lane settles on `cancelled`, not on `idle`");
 }
@@ -564,7 +547,6 @@ fn a_press_on_the_overlay_chrome_over_a_surface_belongs_to_the_shell() {
     assert!(!ShellState::pointer_press_belongs_to_shell_chrome(None), "a press on nothing is nobody's chrome");
 
     super::shell_input_tests::retained_world_sequence_probe("chrome");
-    eprintln!("[DEBUG] wgpu overlay press routing: cancel anchored at {anchor:?} inside {bounds:?}, renderer asks the shell first");
 }
 
 //#endregion ⏳️ComputeStatusPane
@@ -602,7 +584,6 @@ fn no_user_visible_chrome_literal_bypasses_the_bilingual_paths() {
     }
     assert!(offenders.is_empty(), "these chrome literals bypass the EN/DE paths — route them through shell_chrome_string or LocalizedLabel::native: {offenders:?}");
     assert_eq!(allowed, 6, "exactly the six declared locale-invariant proper-noun/endonym call sites remain");
-    eprintln!("[DEBUG] wgpu shell chrome i18n: 0 English-only literals, {allowed} declared locale-invariant proper nouns");
 }
 
 /// 🗣️ The `Label::data` family is only one way an English-only literal reaches a reader. This law
@@ -643,7 +624,6 @@ fn no_capitalised_chrome_phrase_escapes_the_bilingual_tables() {
     }
     assert!(offenders.is_empty(), "these chrome phrases never reach the EN/DE tables — route them through shell_chrome_string or LocalizedLabel::native: {offenders:?}");
     assert!(exempted > 40, "the exemptions themselves must stay visible to this law, saw {exempted}");
-    eprintln!("[DEBUG] wgpu shell chrome i18n: 0 English-only chrome phrases outside the EN/DE tables, {exempted} declared exemptions");
 }
 
 /// 🔤️ `Word word…` / `Word Word…` — a capitalised phrase of at least two words, which is what UI
@@ -687,13 +667,17 @@ fn every_chrome_key_the_shell_asks_for_answers_in_both_tongues() {
         assert_ne!(de, *key, "{key}: the German arm falls through to the raw key");
         assert!(!en.is_empty() && !de.is_empty(), "{key}: both tongues carry text");
     }
-    eprintln!("[DEBUG] wgpu shell chrome i18n: {} distinct keys asked for, all answered in EN and DE", keys.len());
 }
 
 //#endregion 🗣️ChromeI18n
 
 //#region 🔀️SwitchOrder
 
+/// 🔀️ The SHARED subsequence both shells hold: seal before retire, create before retire, retire
+/// before publish, publish before refresh. React's `quiesce` and `seed` steps have no wgpu
+/// counterpart yet — this target has no pending-guest-work tracker to quiesce and seeds its
+/// landing layout inside the same `sync_dock` the publish step runs — so they are deliberately
+/// NOT asserted against this body rather than faked.
 #[test]
 fn the_session_switch_creates_before_it_retires_and_leaks_no_instance() {
     let fixture: Value = serde_json::from_str(SURFACE_SWITCH_FIXTURE).expect("🔀️ fixture parses");
@@ -708,17 +692,11 @@ fn the_session_switch_creates_before_it_retires_and_leaks_no_instance() {
     assert!(retire < publish && publish < refresh, "retire → publish → refresh");
     assert_eq!(body.matches("create_app(").count(), 1, "created − retired === 0: one create per switch");
     assert_eq!(body.matches("destroy_app(").count(), 1, "created − retired === 0: one retire per switch");
-    // 🔀️ The SHARED subsequence both shells hold: seal before retire, create before retire, retire
-    // before publish, publish before refresh. React's `quiesce` and `seed` steps have no wgpu
-    // counterpart yet — this target has no pending-guest-work tracker to quiesce and seeds its
-    // landing layout inside the same `sync_dock` the publish step runs — so they are deliberately
-    // NOT asserted against this body rather than faked.
     let declared_at = |verb: &str| declared.iter().position(|step| step == verb).unwrap_or_else(|| panic!("the shared fixture declares {verb}"));
     assert!(declared_at("seal") < declared_at("retire"));
     assert!(declared_at("create") < declared_at("retire"));
     assert!(declared_at("retire") < declared_at("publish"));
     assert!(declared_at("publish") < declared_at("refresh"));
-    eprintln!("[DEBUG] wgpu session switch order: create → seal → retire → publish → refresh, one create and one retire; shared fixture declares {declared:?}");
 }
 
 #[test]
@@ -731,7 +709,6 @@ fn asking_for_the_role_already_mounted_creates_and_retires_nothing() {
     let session = shell.session.as_ref().expect("the session survives a no-op switch");
     assert_eq!(session.instance_id, 7, "the mounted instance is untouched");
     assert_eq!(session.app.role, AppRole::Editor);
-    eprintln!("[DEBUG] wgpu session switch: asking for the mounted role is a no-operation");
 }
 
 //#endregion 🔀️SwitchOrder
@@ -827,7 +804,6 @@ fn a_seeded_mode_layout_always_opens_with_one_window_active() {
         seeds += 1;
     }
     assert!(seeds >= 6 && projections >= 3, "⌨️ the shared corpus must stay populated");
-    eprintln!("[DEBUG] window-scope: {projections} stack projections, {seeds} dock seeds agree with the React twin");
 }
 
 #[test]
@@ -925,6 +901,8 @@ fn dock_sync_seeds_the_authored_instance_and_publishes_its_projection_icons() {
     assert_eq!(icons.get("main-perspective").map(String::as_str), Some("projection-three-point"));
 }
 
+/// 🎯️ A resolved target always names a MOUNTED window whose kind declares the verb — anything
+/// else dies on the undeclared-action gate instead of reaching the plugin.
 #[test]
 fn an_app_wide_chord_resolves_to_the_window_that_owns_its_verb_in_the_active_mode() {
     let fixture: Value = serde_json::from_str(WINDOW_SCOPE_FIXTURE).expect("⌨️ the shared window-scope fixture parses");
@@ -952,8 +930,6 @@ fn an_app_wide_chord_resolves_to_the_window_that_owns_its_verb_in_the_active_mod
             WindowScopeTargetKindV1::Owner => owners += 1,
             WindowScopeTargetKindV1::Focused => {}
         }
-        // 🎯️ A resolved target always names a MOUNTED window whose kind declares the verb — anything
-        // else dies on the undeclared-action gate instead of reaching the plugin.
         if let Some(window_id) = window_id {
             assert!(mounted.iter().any(|instance| instance.id == window_id), "{}: the target is mounted", case["id"]);
             assert!(window_action_definition(&app, &window_id, action_id).is_some(), "{}: the target declares the verb", case["id"]);
@@ -965,7 +941,7 @@ fn an_app_wide_chord_resolves_to_the_window_that_owns_its_verb_in_the_active_mod
     }
     assert_ne!(KEYBINDING_UNOWNED_LABEL_EN, KEYBINDING_UNOWNED_LABEL_DE, "🇩🇪️ the two languages are authored, not copied");
     assert!(owners >= 4 && unowned >= 2, "⌨️ the corpus must pin both the owner hop and the hinted no-operation");
-    eprintln!("[DEBUG] window-scope chords: {owners} owner hops, {unowned} hinted no-operations, {} hint locales, code {KEYBINDING_UNOWNED_CODE}", fixture["unownedHint"].as_array().expect("⌨️ fixture hint rows").len());
+    eprintln!("window-scope chords: {owners} owner hops, {unowned} hinted no-operations, {} hint locales, code {KEYBINDING_UNOWNED_CODE}", fixture["unownedHint"].as_array().expect("⌨️ fixture hint rows").len());
 }
 /// ⚖️ LAW: the shell's own chrome chords stay out of the app-keybinding loop, and only
 /// accelerator-carrying ones do — a bare key belongs to whichever surface has focus, which is what
@@ -988,7 +964,7 @@ fn the_shells_own_accelerator_chords_are_reserved_from_the_app_keybinding_loop()
     assert_eq!(semio_framework::ToolRunAction::Step.chord(), block["collision"]["chord"].as_str().expect("⌨️ fixture collision chord"), "the tool-run step chord still collides with the shell's mode step");
     assert_eq!(block["collision"]["alsoMintedFor"].as_str(), Some(semio_framework::ToolRunAction::Step.id()), "the fixture names the action the chord is minted for");
     eprintln!(
-        "[DEBUG] reserved shell chords: {} of {} fixture rows reserved, collision {}",
+        "reserved shell chords: {} of {} fixture rows reserved, collision {}",
         block["cases"].as_array().expect("rows").iter().filter(|case| case["reserved"].as_bool() == Some(true)).count(),
         block["cases"].as_array().expect("rows").len(),
         block["collision"]["chord"]
@@ -1069,7 +1045,6 @@ fn the_overlay_row_steps_clear_of_an_open_floating_panel() {
     }
     let cancel = reserved_controls.iter().find(|(control, _)| control.control_id.starts_with("shell.world3d.cancel")).expect("🛟️ the cancel control is offered");
     assert!(cancel.1[0] >= pill_rect.x + pill_rect.w, "🛟️ the cancel still follows the pill on the reserved row");
-    eprintln!("[DEBUG] wgpu overlay row safe area: flush x={} reserved x={} panel right={}", flush_pills[0].1.x, pill_rect.x, panel.x + panel.w);
 }
 
 #[test]
@@ -1253,6 +1228,5 @@ fn incoming_layout_prunes_unknown_windows_against_the_react_instance_roster() {
         assert_eq!(serde_json::to_value(&shell.world_projection_template).unwrap(), case["templates"], "{}: projections only for declared kinds", case["id"]);
         shell.sync_dock();
         assert_eq!(shell.dock.collect_window_ids(), expected, "{}: stable repeat", case["id"]);
-        eprintln!("[DEBUG] declared window ingress {}: {:?}", case["id"], expected);
     }
 }

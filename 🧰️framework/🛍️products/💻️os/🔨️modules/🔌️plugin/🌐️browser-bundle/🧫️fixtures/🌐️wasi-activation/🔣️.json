@@ -48,7 +48,7 @@
   ],
   "lineBuffer": {
     "chunks": [
-      "[DEBUG] cooperative-maintenance instance=",
+      "cooperative-maintenance instance=",
       "1",
       " turn=",
       "2",
@@ -60,7 +60,7 @@
     "hostCalls": [
       {
         "channel": "stderr",
-        "text": "[DEBUG] cooperative-maintenance instance=1 turn=2 generation=1",
+        "text": "cooperative-maintenance instance=1 turn=2 generation=1",
         "level": "debug"
       },
       {

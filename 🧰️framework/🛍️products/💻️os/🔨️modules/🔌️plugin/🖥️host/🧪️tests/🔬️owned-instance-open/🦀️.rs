@@ -339,6 +339,8 @@ async fn wasmtime_codec_genesis_answers_the_same_pair_as_the_interpreter() {
     let owned_compiled = owned.compile(&package_ref("semio:note", &bytes), &bytes).await.expect("compile plugin component");
     let owned_pair = owned.codec_genesis(&owned_compiled, NOTE_DOCUMENT_SCHEMA, MINTED_DOCUMENT_ID, codec_budget()).await.expect("owned codec.genesis");
     assert_eq!(jit_pair, owned_pair, "a pure codec export must answer identically under both runtimes");
+    let owned_from_origin = owned.codec_genesis(&owned_compiled, NOTE_DOCUMENT_SCHEMA, MINTED_DOCUMENT_ID, codec_budget()).await.expect("owned codec.genesis from the assembled origin");
+    assert_eq!(jit_pair, owned_from_origin, "a call from the owned codec origin answers what the JIT's fresh instance answers");
 }
 
 
@@ -498,6 +500,13 @@ const GIS_DOCUMENT_SCHEMA: &str = "gis.map";
 ///
 /// 🚧️ Skipped when gis is not staged in any target root: a slice rebuilds only the plugins it
 /// needs, and note is driven by the laws above.
+///
+/// ⏱️ No wall-clock assertion lives here, deliberately. A first cut of this law failed a run in
+/// which BOTH calls answered — genesis 840.703220583 s, pack-schema-hash 895.51642 s at machine
+/// load ≈ 40 (`🗑️generated/hc1-codec-laws-3.txt`) — which is the very judgement this slice took
+/// out of the product. What the law asserts is that the two calls a hub makes per creation ANSWER
+/// under the hub's own budget; how long they take is the machine's business, and the durations
+/// ride in the two failure messages above for whoever needs them.
 #[semio_framework_async_macros::async_test]
 async fn owned_codec_genesis_answers_the_biggest_staged_component_under_the_hub_s_own_budget() {
     let Some(path) = plugin_wasm_in_profiles("semio_s_plugin_gis.wasm", &["component-release"]) else { return };
@@ -516,12 +525,6 @@ async fn owned_codec_genesis_answers_the_biggest_staged_component_under_the_hub_
         .await
         .unwrap_or_else(|error| panic!("codec.pack-schema-hash({GIS_DOCUMENT_SCHEMA}) after {:?}: {error}", hashed.elapsed()));
     assert_ne!(hash, [0; 32], "a kind with a structural record specification must not answer the zero fingerprint");
-    // ⏱️ No wall-clock assertion lives here, deliberately. A first cut of this law failed a run in
-    // which BOTH calls answered — genesis 840.703220583 s, pack-schema-hash 895.51642 s at machine
-    // load ≈ 40 (`🗑️generated/hc1-codec-laws-3.txt`) — which is the very judgement this slice took
-    // out of the product. What the law asserts is that the two calls a hub makes per creation ANSWER
-    // under the hub's own budget; how long they take is the machine's business, and the durations
-    // ride in the two failure messages above for whoever needs them.
 }
 
 //#region 🗂️GuestCodecDispatch
@@ -533,6 +536,14 @@ async fn owned_codec_genesis_answers_the_biggest_staged_component_under_the_hub_
 /// not link. This law drives all four through the enum and pins them against the concrete runtime
 /// underneath: a forwarding method that dropped an argument or crossed two operations would answer
 /// something, and something is exactly what a fingerprint must never be.
+///
+/// 📥️ `print-mirror` and `apply-ops` had no `WasmtimeRuntime` implementation at all before this
+/// slice — only the owned interpreter carried them — so these two rows are the compiled half's
+/// first execution as well as the enum's.
+///
+/// 🚫️ …and a schema this component does not own is a typed refusal, never a fabricated answer —
+/// which is what makes `print-mirror` usable as the pair-validation DISCRIMINATOR the WIT says
+/// it is.
 #[semio_framework_async_macros::async_test]
 async fn guest_runtimes_forwards_all_four_codec_exports_to_the_runtime_beneath_it() {
     let Some(path) = plugin_wasm("semio_s_plugin_note.wasm") else { return };
@@ -546,17 +557,112 @@ async fn guest_runtimes_forwards_all_four_codec_exports_to_the_runtime_beneath_i
     assert_eq!(routed.codec_pack_schema_hash(&compiled, NOTE_DOCUMENT_SCHEMA, &jit_budget()).await.expect("routed codec.pack-schema-hash"), direct_hash);
     assert_eq!(routed.codec_genesis(&compiled, NOTE_DOCUMENT_SCHEMA, MINTED_DOCUMENT_ID, &jit_budget()).await.expect("routed codec.genesis"), direct_pair);
 
-    // 📥️ `print-mirror` and `apply-ops` had no `WasmtimeRuntime` implementation at all before this
-    // slice — only the owned interpreter carried them — so these two rows are the compiled half's
-    // first execution as well as the enum's.
     let mirror = routed.codec_print_mirror(&compiled, NOTE_DOCUMENT_SCHEMA, &direct_pair.pack, &direct_pair.spr, &jit_budget()).await.expect("routed codec.print-mirror");
     assert!(!mirror.dsl.is_empty(), "a genesis pair prints a non-empty dsl mirror");
     let applied = routed.codec_apply_ops(&compiled, NOTE_DOCUMENT_SCHEMA, &direct_pair.pack, &direct_pair.spr, &[], &jit_budget()).await.expect("routed codec.apply-ops with an empty batch");
     assert_eq!(applied, direct_pair, "an empty batch applied to a pair is that pair");
 
-    // 🚫️ …and a schema this component does not own is a typed refusal, never a fabricated answer —
-    // which is what makes `print-mirror` usable as the pair-validation DISCRIMINATOR the WIT says
-    // it is.
     routed.codec_pack_schema_hash(&compiled, "not.a.kind.this.package.owns", &jit_budget()).await.expect_err("a foreign kind has no fingerprint here");
 }
 //#endregion 🗂️GuestCodecDispatch
+
+//#region 🧊️CodecOrigin
+/// 🪪️ A second server-minted identity, for the law that no codec call sees what an earlier one did.
+const SECOND_MINTED_DOCUMENT_ID: &str = "artifact-fedcba9876543210fedcba9876543210";
+
+/// 🧪️ One codec export on a FRESH instance — how every codec call ran before codec origins — as the reference answer
+/// and its fuel.
+fn fresh_codec_answer<T: serde::de::DeserializeOwned>(runtime: &OwnedRuntime, compiled: &CompiledHandle, operation: OwnedOperation, input: &OwnedCodecInput<'_>) -> (T, u64) {
+    let mut instance = runtime.instantiate_actor(compiled, RuntimeActorId(0)).expect("fresh owned instance");
+    let state = owned_state_mut(&mut instance).expect("owned instance state");
+    begin_owned_operation(state, operation, Some(serde_json::to_vec(input).expect("encode codec input"))).expect("begin fresh codec call");
+    let invocation = resume_owned_operation_observed(state, operation, codec_budget().fuel, codec_budget().deadline_ms, OwnedDeadline::NoFuelProgress, |_, _| {}, None).expect("fresh codec call completes");
+    (decode_owned_result(&invocation.output).expect("fresh codec call answers"), invocation.fuel_used)
+}
+
+/// 🧊️ Every codec call starts from its compiled guest's post-assembly origin, and answers byte for byte what a fresh
+/// instance answers — H12 measured 99.4 % of a B3 puzzle codec call in the bundle assembly a fresh instance repeats per
+/// call. The first call pays the assembly once (its reported fuel is the assembly's plus its own operation's, exactly);
+/// every later call pays only its operation; an intervening call leaves nothing behind for the next; the origin is
+/// charged to the compiled guest and shared by every clone of it.
+#[semio_framework_async_macros::async_test]
+async fn codec_calls_answer_from_the_assembled_origin_exactly_what_a_fresh_instance_answers() {
+    let Some(path) = plugin_wasm("semio_s_plugin_note.wasm") else { return };
+    let bytes = std::fs::read(&path).expect("read plugin component");
+    let runtime = OwnedRuntime::new();
+    let compiled = runtime.compile(&package_ref("semio:note", &bytes), &bytes).await.expect("compile plugin component");
+    assert_eq!(compiled.codec_origin_bytes(), 0, "a compiled guest holds no origin before its first codec call");
+    let genesis_input = |document_id: &'static str| OwnedCodecInput { artifact_schema: NOTE_DOCUMENT_SCHEMA, document_id, pack: &[], spr: &[], ops: &[] };
+    let (fresh_pair, fresh_fuel): (GuestDocumentPair, u64) = fresh_codec_answer(&runtime, &compiled, OwnedOperation::Genesis, &genesis_input(MINTED_DOCUMENT_ID));
+
+    let cancellation = GuestCallCancellation::default();
+    let mut first_fuel = 0;
+    let first = runtime.codec_genesis_observed(&compiled, NOTE_DOCUMENT_SCHEMA, MINTED_DOCUMENT_ID, codec_budget(), |fuel, _| first_fuel = fuel, &cancellation).await.expect("first codec.genesis assembles the origin");
+    let origin_bytes = compiled.codec_origin_bytes();
+    assert!(origin_bytes >= 65_536, "the assembled origin holds the guest's linear memory, got {origin_bytes} bytes");
+    assert_eq!(compiled.clone().codec_origin_bytes(), origin_bytes, "every clone of a compiled guest shares its one origin");
+    let mut second_fuel = 0;
+    let second = runtime.codec_genesis_observed(&compiled, NOTE_DOCUMENT_SCHEMA, MINTED_DOCUMENT_ID, codec_budget(), |fuel, _| second_fuel = fuel, &cancellation).await.expect("second codec.genesis runs from the origin");
+    assert_eq!(first, fresh_pair, "the assembling call answers what a fresh instance answers");
+    assert_eq!(second, fresh_pair, "a call from the origin answers what a fresh instance answers");
+    let assembly_fuel = match &*owned_compiled_guest(&compiled).expect("owned compiled guest").codec_origin.lock() {
+        OwnedCodecOriginState::Ready(origin) => origin.assembly_fuel,
+        OwnedCodecOriginState::Absent | OwnedCodecOriginState::Assembling { .. } => panic!("the origin is ready after a codec call"),
+    };
+    assert_eq!(first_fuel, assembly_fuel + second_fuel, "the first call reports the assembly and its own operation, nothing else");
+    assert!(second_fuel < fresh_fuel, "a call from the origin skips the bundle assembly a fresh instance pays: {second_fuel} against {fresh_fuel} fuel");
+    println!("codec origin: fresh genesis {fresh_fuel} fuel, assembly {assembly_fuel}, genesis from origin {second_fuel}, origin {origin_bytes} bytes");
+
+    let (fresh_other, _): (GuestDocumentPair, u64) = fresh_codec_answer(&runtime, &compiled, OwnedOperation::Genesis, &genesis_input(SECOND_MINTED_DOCUMENT_ID));
+    assert_eq!(runtime.codec_genesis(&compiled, NOTE_DOCUMENT_SCHEMA, SECOND_MINTED_DOCUMENT_ID, codec_budget()).await.expect("genesis of another document"), fresh_other);
+    assert_eq!(runtime.codec_genesis(&compiled, NOTE_DOCUMENT_SCHEMA, MINTED_DOCUMENT_ID, codec_budget()).await.expect("genesis again"), fresh_pair, "no codec call sees what an earlier one did");
+
+    let (fresh_hash, _): (Vec<u8>, u64) = fresh_codec_answer(&runtime, &compiled, OwnedOperation::PackSchemaHash, &OwnedCodecInput { artifact_schema: NOTE_DOCUMENT_SCHEMA, document_id: "", pack: &[], spr: &[], ops: &[] });
+    assert_eq!(runtime.codec_pack_schema_hash(&compiled, NOTE_DOCUMENT_SCHEMA, codec_budget()).await.expect("codec.pack-schema-hash from the origin").to_vec(), fresh_hash);
+    let pair_input = OwnedCodecInput { artifact_schema: NOTE_DOCUMENT_SCHEMA, document_id: "", pack: &fresh_pair.pack, spr: &fresh_pair.spr, ops: &[] };
+    let (fresh_mirror, _): (GuestDocumentMirror, u64) = fresh_codec_answer(&runtime, &compiled, OwnedOperation::PrintMirror, &pair_input);
+    assert_eq!(runtime.codec_print_mirror(&compiled, NOTE_DOCUMENT_SCHEMA, &fresh_pair.pack, &fresh_pair.spr, codec_budget()).await.expect("codec.print-mirror from the origin"), fresh_mirror);
+    let (fresh_applied, _): (GuestDocumentPair, u64) = fresh_codec_answer(&runtime, &compiled, OwnedOperation::ApplyOps, &pair_input);
+    assert_eq!(runtime.codec_apply_ops(&compiled, NOTE_DOCUMENT_SCHEMA, &fresh_pair.pack, &fresh_pair.spr, &[], codec_budget()).await.expect("codec.apply-ops from the origin"), fresh_applied);
+    runtime.codec_pack_schema_hash(&compiled, "not.a.kind.this.package.owns", codec_budget()).await.expect_err("a foreign kind is refused from the origin as from a fresh instance");
+}
+
+/// 🚦️ One assembly per compiled guest: a call that finds another call assembling waits, relays that assembly's fuel as
+/// its own progress and ends at once when its own caller cancels it; when the assembling call ends without an origin the
+/// waiter assembles it itself, and every later call starts from that one origin.
+#[test]
+fn a_call_waiting_for_another_calls_assembly_relays_its_fuel_honours_its_cancellation_and_takes_over() {
+    let Some(path) = plugin_wasm("semio_s_plugin_note.wasm") else { return };
+    let bytes = std::fs::read(&path).expect("read plugin component");
+    let runtime = OwnedRuntime::new();
+    let compiled = runtime.compile_component(&package_ref("semio:note", &bytes), &bytes).expect("compile plugin component");
+    let owned = owned_compiled_guest(&compiled).expect("owned compiled guest");
+    let cell = &owned.codec_origin;
+    *cell.lock() = OwnedCodecOriginState::Assembling { fuel: 7 };
+    std::thread::scope(|scope| {
+        let (relay, relayed) = std::sync::mpsc::channel();
+        let cancellation = GuestCallCancellation::default();
+        let waiter = scope.spawn({
+            let cancellation = cancellation.clone();
+            let runtime = &runtime;
+            move || runtime.codec_origin(owned, codec_budget(), &mut |fuel: u64, _: std::time::Duration| relay.send(fuel).expect("relay"), Some(&cancellation)).map(|used| used.spent_fuel)
+        });
+        assert_eq!(relayed.recv().expect("the waiter relays the assembly's fuel"), 7);
+        cell.assembled_so_far(11);
+        assert_eq!(relayed.recv().expect("the waiter relays the assembly's next fuel"), 11);
+        cancellation.cancel();
+        assert!(matches!(waiter.join().expect("waiter thread"), Err(TurnFault::Cancelled)), "a cancelled waiter ends without waiting for the assembly");
+    });
+    assert!(matches!(&*cell.lock(), OwnedCodecOriginState::Assembling { fuel: 11 }), "a waiter never touches another call's assembly");
+    std::thread::scope(|scope| {
+        let runtime = &runtime;
+        let waiter = scope.spawn(move || runtime.codec_origin(owned, codec_budget(), &mut |_: u64, _: std::time::Duration| {}, None));
+        std::thread::sleep(OWNED_CODEC_ORIGIN_WAIT_POLL * 4);
+        drop(OwnedCodecOriginAssembly { cell, origin: None });
+        let assembled = waiter.join().expect("waiter thread").expect("the waiter assembles the origin itself once the other assembly gave up");
+        assert!(assembled.spent_fuel > 0 && assembled.spent_fuel == assembled.origin.assembly_fuel && assembled.reported_fuel == assembled.spent_fuel, "the call that assembled spends and reports the assembly's fuel as its own");
+        let again = runtime.codec_origin(owned, codec_budget(), &mut |_: u64, _: std::time::Duration| {}, None).expect("the ready origin");
+        assert!(Arc::ptr_eq(&assembled.origin, &again.origin) && again.spent_fuel == 0 && again.reported_fuel == 0, "every later call starts from the one origin and assembles nothing");
+    });
+}
+//#endregion 🧊️CodecOrigin

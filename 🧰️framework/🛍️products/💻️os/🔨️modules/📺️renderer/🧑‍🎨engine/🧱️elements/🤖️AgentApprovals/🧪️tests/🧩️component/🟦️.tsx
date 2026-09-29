@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/🤖️AgentApprovals/component.test.tsx
-/** @emoji 🧪️ `🤖️AgentApprovals` tests: the pure `parseApprovalSummary` fallback parser plus a
+/** 🧪️ `🤖️AgentApprovals` tests: the pure `parseApprovalSummary` fallback parser plus a
  * render + decision-dispatch test proving the dialog shows capability/diff/risk and that clicking
  * a decision button calls `onDecision` with the right `(approvalId, decision)`. Not wired into the
  * nx `test` target — see `AgentBridge/🧪️component.test.ts`'s header for why, and

@@ -20,5 +20,4 @@ export function testFormsVisibility(): void {
     }
     assert.deepEqual(before, item.before);
   }
-  console.log("[DEBUG] Forms visual visibility rules matched shared vectors and JSON Patch");
 }

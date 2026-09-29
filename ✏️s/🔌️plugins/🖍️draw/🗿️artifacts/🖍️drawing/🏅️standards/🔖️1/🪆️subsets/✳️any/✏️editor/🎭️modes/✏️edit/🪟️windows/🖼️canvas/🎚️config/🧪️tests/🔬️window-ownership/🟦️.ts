@@ -61,7 +61,6 @@ export function testDrawingCanvasWindowOwnershipOracle(): void {
   assert.deepEqual(JSON.parse(JSON.stringify(configs)), configs);
   assert.equal(JSON.stringify(fixture.document), documentBytes);
   for (const rejection of fixture.rejections) assert.throws(() => target(fixture.windowInstances, rejection.windowId, rejection.claimedWindowKindId), new RegExp(rejection.code));
-  console.log(`[DEBUG] drawing-canvas-window-ownership configs=${Object.keys(configs).length} transients=${Object.keys(transients).length} reload=config-restored-transient-reset`);
 }
 
 testDrawingCanvasWindowOwnershipOracle();

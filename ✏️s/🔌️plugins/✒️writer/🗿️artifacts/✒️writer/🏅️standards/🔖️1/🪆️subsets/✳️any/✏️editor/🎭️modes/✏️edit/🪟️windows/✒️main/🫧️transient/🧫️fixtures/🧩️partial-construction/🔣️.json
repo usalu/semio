@@ -7,7 +7,8 @@
   "base": {
     "editorSelection": {
       "start": 1,
-      "end": 2
+      "end": 2,
+      "splice": 0
     },
     "lintGeneration": 3
   },
@@ -18,13 +19,15 @@
         "kind": "set-editor-selection",
         "selection": {
           "start": 5,
-          "end": 9
+          "end": 9,
+          "splice": 0
         }
       },
       "patch": {
         "editorSelection": {
           "start": 5,
-          "end": 9
+          "end": 9,
+          "splice": 0
         }
       },
       "copiedBytes": 12288

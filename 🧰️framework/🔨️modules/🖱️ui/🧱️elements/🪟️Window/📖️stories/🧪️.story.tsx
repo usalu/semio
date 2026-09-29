@@ -161,7 +161,7 @@ type CategoryDemoNode = { readonly id: string; readonly label: string; readonly 
   | { readonly kind: "group"; readonly children: readonly CategoryDemoNode[] }
 );
 
-/** @emoji 🪟️ Only window-scoped categories (selection / utilities) belong in a window's own panel — mode-wide categories like actions/history are shared across every window in the mode and render once in the footer instead (see 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎀️Ribbon/📖️stories/🧪️.story.tsx `ModeWideFooterCategories`). */
+/** 🪟️ Only window-scoped categories (selection / utilities) belong in a window's own panel — mode-wide categories like actions/history are shared across every window in the mode and render once in the footer instead (see 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎀️Ribbon/📖️stories/🧪️.story.tsx `ModeWideFooterCategories`). */
 const WINDOW_CATEGORY_DEMO_TREE: readonly CategoryDemoNode[] = [
   { id: "selection", label: "Selection", icon: MousePointer, kind: "leaves", leaves: [{ id: "direct", icon: MousePointer }] },
   {
@@ -185,7 +185,7 @@ const WINDOW_CATEGORY_DEMO_TREE: readonly CategoryDemoNode[] = [
   },
 ];
 
-/** @emoji 🗂️ Same at-most-one-active-per-level recursion as the "Recursive Category Groups" Ribbon story, sized for a window's bottom-left utility bar slot. */
+/** 🗂️ Same at-most-one-active-per-level recursion as the "Recursive Category Groups" Ribbon story, sized for a window's bottom-left utility bar slot. */
 function buildWindowCategoryRows(tree: readonly CategoryDemoNode[], activePath: readonly string[], onActivate: (depth: number, value: string) => void): RibbonRow[] {
   const rows: RibbonRow[] = [];
   let level = tree;

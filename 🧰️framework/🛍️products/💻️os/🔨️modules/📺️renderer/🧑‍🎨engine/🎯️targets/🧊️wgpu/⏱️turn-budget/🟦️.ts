@@ -1,5 +1,5 @@
 // #region ⏱️Ceiling
-/** @emoji ⏱️ The browser's twin of the guest step authority: what one turn of a browser isolate may
+/** ⏱️ The browser's twin of the guest step authority: what one turn of a browser isolate may
  * cost, how an overrun is priced, and who may be degraded for it. BOTH isolates the wgpu surface runs
  * in are priced here — the UI isolate against {@link UI_TURN_BUDGET_MS}, the frame Worker against
  * {@link WORKER_STEP_BUDGET_MS} — because neither of them publishes a per-thread CPU clock and the
@@ -12,11 +12,11 @@
  * `🧪️tests/⏱️wgpu-worker-step-budget/🟦️.ts` pin the constants against the Rust ones (ticket
  * 26/09/09/PROCEDURAL-3D-END-TO-END). */
 
-/** @emoji ⏱️ What "interactive" means for ONE UI turn. Unchanged in meaning by the ledger below: every
+/** ⏱️ What "interactive" means for ONE UI turn. Unchanged in meaning by the ledger below: every
  * breach is still measured and still recorded — what changed is that a breach is no longer a verdict. */
 export const UI_TURN_BUDGET_MS = 2;
 
-/** @emoji 🧵️ What "interactive" means for ONE frame-Worker step — a boot step, a frame step, an
+/** 🧵️ What "interactive" means for ONE frame-Worker step — a boot step, a frame step, an
  * interactive-job admission, an asset pump step, a close step. Four times {@link UI_TURN_BUDGET_MS}
  * because the Worker owns the whole frame while the UI isolate only has to stay responsive within it.
  *
@@ -27,7 +27,7 @@ export const UI_TURN_BUDGET_MS = 2;
  * all. A breach of this ceiling is a measurement; only a throw is a fault. */
 export const WORKER_STEP_BUDGET_MS = 8;
 
-/** @emoji 🔁️ How many CONSECUTIVE UI turns must each breach [`UI_TURN_BUDGET_MS`] before the overrun is
+/** 🔁️ How many CONSECUTIVE UI turns must each breach [`UI_TURN_BUDGET_MS`] before the overrun is
  * attributed to the turn's own work instead of to the machine that scheduled it.
  *
  * 🧮️ Why a consecutive count and not thread CPU time: the browser publishes no per-thread CPU clock at
@@ -39,10 +39,10 @@ export const WORKER_STEP_BUDGET_MS = 8;
  * reasoning `SUSTAINED_OVERRUN_QUARANTINE_STEPS` already settled for the Rust side. */
 export const SUSTAINED_TURN_OVERRUN_TURNS = 4;
 
-/** @emoji 📊️ Fixed telemetry ring — no allocation on the measured path. */
+/** 📊️ Fixed telemetry ring — no allocation on the measured path. */
 export const TURN_SAMPLE_CAPACITY = 64;
 
-/** @emoji 🩺️ Arms the recorded-overrun traces. 🪞️ The same key `🏛️ShellHost/🟦️.tsx`'s
+/** 🩺️ Arms the recorded-overrun traces. 🪞️ The same key `🏛️ShellHost/🟦️.tsx`'s
  * `RUNTIME_DIAGNOSTICS_KEY` and the guest's `RUNTIME_DIAGNOSTICS_ENV` use; declared here rather than
  * imported because the wgpu boot bundle must not pull the React shell into the UI isolate.
  *
@@ -52,22 +52,22 @@ export const TURN_SAMPLE_CAPACITY = 64;
  * the answer to {@link setTurnDiagnostics}. */
 export const TURN_DIAGNOSTICS_KEY = "SEMIO_RUNTIME_DIAGNOSTICS";
 
-/** @emoji 🩺️ The query parameter a stamped worker url carries the resolved preference on. 🪞️ The same
+/** 🩺️ The query parameter a stamped worker url carries the resolved preference on. 🪞️ The same
  * name `🎭️actor/🩺️diagnostics/🟦️.ts`'s `SHARD_WORKER_DIAGNOSTICS_PARAM` stamps shard workers with
  * (`🔬️engine-contract/🟦️.ts` asserts the two spell it the same); restated here because that module
  * reads `localStorage` and this one is bundled into the frame worker, which reads none. It is the only
  * channel that exists before the worker's first message, and the frame worker needs it that early: the
- * per-frame `[DEBUG]` dumps inside the renderer wasm are armed before the first frame is built. */
+ * per-frame `[TRACE]` dumps inside the renderer wasm are armed before the first frame is built. */
 export const TURN_DIAGNOSTICS_PARAM = "diagnostics";
 
-/** @emoji 🩺️ Whether THIS worker realm's own url carries the diagnostics stamp. `undefined` when the
+/** 🩺️ Whether THIS worker realm's own url carries the diagnostics stamp. `undefined` when the
  * url names nothing, which leaves the build-time switch in charge. */
 export function stampedTurnDiagnostics(search: string): boolean | undefined {
   const stamped = new URLSearchParams(search).get(TURN_DIAGNOSTICS_PARAM);
   return stamped === null ? undefined : diagnosticsArmed(stamped);
 }
 
-/** @emoji ⚖️ What one measured UI turn means for the surface that produced it.
+/** ⚖️ What one measured UI turn means for the surface that produced it.
  * `admitted` — inside the ceiling. `recorded-overrun` — one breach, counted, work continues.
  * `sustained-overrun` — {@link SUSTAINED_TURN_OVERRUN_TURNS} breaches in a row, so the cost is the
  * turn's own: the owner degrades to deferred cadence and still continues. `clock-fault` — the reading
@@ -102,14 +102,14 @@ function diagnosticsArmed(value: unknown): boolean {
   return typeof value === "string" && ["1", "true", "on", "yes"].includes(value.trim().toLowerCase());
 }
 
-/** @emoji 🩺️ Arms or disarms the UI-turn traces for this isolate, outranking build env and stored
+/** 🩺️ Arms or disarms the UI-turn traces for this isolate, outranking build env and stored
  * preference — the transport's counterpart to `setRuntimeDiagnostics`. */
 export function setTurnDiagnostics(enabled: boolean | undefined): void {
   diagnosticsOverride = enabled;
   diagnosticsResolved = undefined;
 }
 
-/** @emoji 🩺️ Whether recorded overruns may print. Resolved once per isolate: an explicit override wins,
+/** 🩺️ Whether recorded overruns may print. Resolved once per isolate: an explicit override wins,
  * otherwise the build's `VITE_SEMIO_RUNTIME_DIAGNOSTICS`. The reader is wrapped because a Worker has no
  * `import.meta.env` at all. */
 export function turnDiagnosticsEnabled(): boolean {
@@ -127,7 +127,7 @@ export function turnDiagnosticsEnabled(): boolean {
 // #endregion 🩺️Diagnostics
 
 // #region ⏳️ExecutingClock
-/** @emoji ⏳️ Charges only the spans a UI turn is actually EXECUTING. 🪞️ The browser twin of the guest
+/** ⏳️ Charges only the spans a UI turn is actually EXECUTING. 🪞️ The browser twin of the guest
  * reactor's `TURN_EXECUTION` accumulator (`🔌️plugin/⚛️reactor/🔄️turn/🦀️.rs` region `⏱️TurnExecution`):
  * a turn that yields — an `await`, a deferred macrotask, a rAF hand-off — accrues nothing across the gap,
  * so hidden-tab throttling and macrotask latency can never be billed to the hook that yielded. Spans
@@ -141,7 +141,7 @@ export class TurnClock {
 
   constructor(private readonly now: () => number) {}
 
-  /** @emoji ▶️ Opens a turn (or a nested span of the open turn). */
+  /** ▶️ Opens a turn (or a nested span of the open turn). */
   enter(): void {
     if (this.depth === 0) {
       this.charged = 0;
@@ -153,19 +153,19 @@ export class TurnClock {
     this.depth++;
   }
 
-  /** @emoji ⏸️ Stops charging while the turn is provably not running. */
+  /** ⏸️ Stops charging while the turn is provably not running. */
   suspend(): void {
     if (this.depth === 0) return;
     this.chargeSpan();
   }
 
-  /** @emoji ▶️ Resumes charging after a suspension gap that accrued nothing. */
+  /** ▶️ Resumes charging after a suspension gap that accrued nothing. */
   resume(): void {
     if (this.depth === 0) return;
     this.spanStartedAt = this.reading();
   }
 
-  /** @emoji ⏹️ Closes the turn and answers the executing milliseconds, or `undefined` when the clock
+  /** ⏹️ Closes the turn and answers the executing milliseconds, or `undefined` when the clock
    * never produced a usable reading. */
   leave(): number | undefined {
     if (this.depth === 0) return undefined;
@@ -198,7 +198,7 @@ export class TurnClock {
 // #endregion ⏳️ExecutingClock
 
 // #region 📒️Ledger
-/** @emoji 📒️ One isolate's fixed-capacity turn ledger. Every measured turn is admitted here exactly
+/** 📒️ One isolate's fixed-capacity turn ledger. Every measured turn is admitted here exactly
  * once, in turn order, and the ledger answers whether the isolate has now overrun
  * {@link SUSTAINED_TURN_OVERRUN_TURNS} turns in a row. Any admitted turn resets the run, so an
  * isolated descheduling spike is recorded and forgotten while a genuinely expensive turn degrades the
@@ -252,7 +252,7 @@ export class TurnLedger {
     return { site, verdict: "sustained-overrun", executingMs, consecutive: this.consecutive };
   }
 
-  /** @emoji 🐢️ Whether the owner should run its next turns on deferred cadence. Latches on a sustained
+  /** 🐢️ Whether the owner should run its next turns on deferred cadence. Latches on a sustained
    * run and clears on the first admitted turn, so a surface recovers on its own. */
   degraded(): boolean {
     return this.degradedUntilAdmitted;
@@ -278,13 +278,13 @@ export class TurnLedger {
     return ordered[Math.min(count - 1, Math.ceil(count * 0.99) - 1)]!;
   }
 
-  /** @emoji 🩺️ The one print this module owns, behind {@link turnDiagnosticsEnabled}. Its body was
-   * stripped by a `[DEBUG]`-removal sweep, which left the gate standing over nothing and made every
+  /** 🩺️ The one print this module owns, behind {@link turnDiagnosticsEnabled}. Its body was
+   * stripped by a `[TRACE]`-removal sweep, which left the gate standing over nothing and made every
    * overrun invisible — the breach this ledger exists to surface
    * (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY wave 2–6 integration). */
   private trace(site: string, verdict: TurnVerdict, executingMs: number): void {
     if (!turnDiagnosticsEnabled()) return;
-    console.debug(`[DEBUG] ${this.scope} ${verdict} site=${site} executing=${executingMs.toFixed(3)}ms budget=${this.budgetMs}ms consecutive=${this.consecutive} worst=${this.worstExecutingMs.toFixed(3)}ms@${this.worstSite}`);
+    console.debug(`[TRACE] ${this.scope} ${verdict} site=${site} executing=${executingMs.toFixed(3)}ms budget=${this.budgetMs}ms consecutive=${this.consecutive} worst=${this.worstExecutingMs.toFixed(3)}ms@${this.worstSite}`);
   }
 }
 // #endregion 📒️Ledger

@@ -1,4 +1,4 @@
-//! @emoji 🏗️ Builds every `MTLRenderPipelineState`/`MTLDepthStencilState`/`MTLSamplerState` this
+//! 🏗️ Builds every `MTLRenderPipelineState`/`MTLDepthStencilState`/`MTLSamplerState` this
 //! backend needs, from the hand-written MSL in `✨️msl.rs`.
 //!
 //! **Metal's state split differs from wgpu's in a way that changes the object count.** In wgpu (and

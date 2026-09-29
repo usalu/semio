@@ -30,7 +30,7 @@ afterEach(() => {
 });
 
 describe("trusted stdio catalog", () => {
-  it("matches the language-neutral fixture schema and publishes 26 first-party codecs", () => {
+  it("matches the language-neutral fixture schema and publishes 29 first-party codecs", () => {
     const ajv = new Ajv({ strict: true, allErrors: true });
     ajv.addSchema(schema);
     const validateFixture = ajv.compile(schema);

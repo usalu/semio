@@ -20,7 +20,6 @@ test("story window ownership admits and echoes the renderer's closed orbit pose"
     expect(validate(invalid)).toBe(false);
     expect(() => reduceFem3dStoryAction(initial, "setCamera", { camera: invalid })).toThrow(TypeError);
   }
-  console.log("[DEBUG] FEM story camera schema, renderer payload and exact window echo agree with Ajv and fast-json-patch");
 });
 
 test("story document replacement preserves window preferences and OS locale", () => {
@@ -47,5 +46,4 @@ test("story document replacement preserves window preferences and OS locale", ()
       expect(reduceFem3dStoryAction(cleared, "setActiveExample", { exampleId: "demo" }).snapshot.nodes.length).toBeGreaterThan(0);
     }
   }
-  console.log("[DEBUG] FEM story replacement preserves exact window preferences and externally supplied OS locale");
 });

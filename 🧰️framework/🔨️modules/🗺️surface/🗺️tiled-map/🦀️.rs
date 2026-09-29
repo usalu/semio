@@ -47,7 +47,7 @@ pub struct MapPalette {
 }
 
 impl MapPalette {
-    /// @emoji 🎨️ Builds a map palette from centralized theme tokens.
+    /// 🎨️ Builds a map palette from centralized theme tokens.
     pub fn from_map_palette(t: &ui_styling::MapPalette) -> Self {
         Self {
             surface_clear: map_color(t.surface_clear),
@@ -91,17 +91,17 @@ const GIS_MAP_LODS: &[Lod] = &[
 /// oracle fixture to record a nonexistent band index 8 for `spanDeg = 0`.
 const GIS_MAP_LOD_TILE_Z: &[u32] = &[0, 1, 2, 3, 4, 5, 7, 10];
 
-/// @emoji 🔭️ OSM raster tiles for automatic viewport picking.
+/// 🔭️ OSM raster tiles for automatic viewport picking.
 pub const MAP_RASTER_TILE_Z_MAX: u32 = 19;
 
-/// @emoji 🌐️ Upper visible longitude span (degrees) per band; coarser band when span exceeds threshold.
+/// 🌐️ Upper visible longitude span (degrees) per band; coarser band when span exceeds threshold.
 const GIS_MAP_LOD_MAX_SPAN_DEG: &[f64] = &[100.0, 35.0, 12.0, 4.0, 1.2, 0.35, 0.1, 0.0];
 
 const GIS_MAP_LOD_SCALE: LodScale = LodScale { lods: GIS_MAP_LODS };
 
 const MAX_MAP_TILE_CACHE_ENTRIES: usize = 512;
 
-/// @emoji 🧮️ The most tiles one visible-tile enumeration may request — the budget `pick_raster_tile_zoom` and
+/// 🧮️ The most tiles one visible-tile enumeration may request — the budget `pick_raster_tile_zoom` and
 /// `pick_vector_tile_zoom` keep every viewport under.
 pub const MAX_VISIBLE_TILE_REQUESTS: usize = 256;
 
@@ -141,7 +141,7 @@ fn tile_range_revision(cursor: &tiles::VisibleTileCursor) -> u64 {
     h
 }
 
-/// @emoji 📶️ Window LOD select value: camera zoom picks the tile band.
+/// 📶️ Window LOD select value: camera zoom picks the tile band.
 pub const GIS_MAP_LOD_MODE_AUTOMATIC: &str = "automatic";
 
 pub fn gis_map_lod_scale_json() -> String {
@@ -184,7 +184,7 @@ fn resolve_map_lod_index_from_span(span_deg: f64) -> usize {
     GIS_MAP_LODS.len().saturating_sub(1)
 }
 
-/// @emoji 📶️ The automatic LOD band a viewport longitude span (degrees) resolves to, and that band's raster tile z —
+/// 📶️ The automatic LOD band a viewport longitude span (degrees) resolves to, and that band's raster tile z —
 /// the pair the `🕸️web-mercator-tile-oracle` case's `lod-band-selection` specification vectors pin.
 pub fn map_lod_band(span_deg: f64) -> (usize, u32) {
     let index = resolve_map_lod_index_from_span(span_deg);
@@ -200,7 +200,7 @@ fn resolve_detail_lod_index(span_deg: f64, forced_lod_id: Option<&str>) -> usize
     resolve_map_lod_index_from_span(span_deg)
 }
 
-/// @emoji 🔭️ Representative viewport longitude span (degrees) for a pinned LOD band.
+/// 🔭️ Representative viewport longitude span (degrees) for a pinned LOD band.
 pub fn representative_viewport_span_for_lod(lod_idx: usize) -> f64 {
     match lod_idx {
         0 => 180.0,
@@ -231,7 +231,7 @@ fn forced_lod_tile_z(id: &str) -> Option<u32> {
     GIS_MAP_LOD_TILE_Z.get(idx).copied()
 }
 
-/// @emoji 🧷️ Pinned LOD is a minimum tile-detail floor; world/continent automatic bands use fixed coarse tile z.
+/// 🧷️ Pinned LOD is a minimum tile-detail floor; world/continent automatic bands use fixed coarse tile z.
 fn pick_tile_z_target(camera: &camera::Camera, viewport: &camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
     let ideal = ideal_tile_z_for_viewport(camera, viewport);
     let span = viewport_lon_span_degrees(camera, viewport);
@@ -259,9 +259,9 @@ fn active_map_lod(forced_lod_id: Option<&str>, camera: &camera::Camera, viewport
     current_map_lod(camera, viewport)
 }
 
-/// @emoji 🔭️ Whole-world fit on an ~800px viewport is ~300; min allows shrinking the planet to a few pixels.
+/// 🔭️ Whole-world fit on an ~800px viewport is ~300; min allows shrinking the planet to a few pixels.
 pub const MAP_CAMERA_ZOOM_MIN: f64 = 8.0;
-/// @emoji 🔭️ ~100M yields ~1.4e-3° longitude across 800px (~150 m), i.e. street scale (see `viewport_lon_span_degrees`).
+/// 🔭️ ~100M yields ~1.4e-3° longitude across 800px (~150 m), i.e. street scale (see `viewport_lon_span_degrees`).
 pub const MAP_CAMERA_ZOOM_MAX: f64 = 100_000_000.0;
 
 pub fn gis_map_camera_limits_json() -> String {
@@ -284,7 +284,7 @@ fn clamp_map_zoom_for_viewport(zoom: f64, viewport: &camera::Viewport) -> f64 {
     zoom.max(projection::cover_zoom_for_viewport(viewport)).min(MAP_CAMERA_ZOOM_MAX)
 }
 
-/// @emoji 🧷️ Keeps the viewport filled by the world map with no empty margins or outscroll.
+/// 🧷️ Keeps the viewport filled by the world map with no empty margins or outscroll.
 fn clamp_camera_to_world_bounds(camera: &mut camera::Camera, viewport: &camera::Viewport) {
     camera.zoom = clamp_map_zoom_for_viewport(camera.zoom, viewport);
     let half_w = viewport.width as f64 / (2.0 * camera.zoom);
@@ -352,10 +352,10 @@ pub mod projection {
         (lon, lat)
     }
 
-    /// @emoji 📐️ Mercator world span in map units (`[-WORLD_HALF, WORLD_HALF]` on each axis).
+    /// 📐️ Mercator world span in map units (`[-WORLD_HALF, WORLD_HALF]` on each axis).
     pub const WORLD_VISIBLE_SPAN: f64 = WORLD_HALF * 2.0;
 
-    /// @emoji 📐️ Minimum zoom so every viewport pixel maps inside the world (cover, no outscroll).
+    /// 📐️ Minimum zoom so every viewport pixel maps inside the world (cover, no outscroll).
     pub fn cover_zoom_for_viewport(viewport: &super::canvas::camera::Viewport) -> f64 {
         let vw = viewport.width.max(1) as f64;
         let vh = viewport.height.max(1) as f64;
@@ -1143,7 +1143,7 @@ pub mod vector_tiles {
         }
     }
 
-    /// @emoji 🔭️ Per-viewport vector draw gates (span + tile z) to match OSM raster LOD.
+    /// 🔭️ Per-viewport vector draw gates (span + tile z) to match OSM raster LOD.
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub struct VectorDetailProfile {
         pub draw_water: bool,
@@ -1156,7 +1156,7 @@ pub mod vector_tiles {
         pub max_admin_level: u64,
     }
 
-    /// @emoji 🗺️ Vector tile z cap from viewport span (finer than raster LOD floor so oceans stay separated).
+    /// 🗺️ Vector tile z cap from viewport span (finer than raster LOD floor so oceans stay separated).
     pub fn max_tile_z_for_span(span_deg: f64) -> u32 {
         let z = if span_deg > super::GIS_MAP_LOD_MAX_SPAN_DEG[0] {
             3
@@ -1232,7 +1232,7 @@ pub mod vector_tiles {
         }
     }
 
-    /// @emoji 📏️ Per-LOD road stroke multiplier (city 30% of prior default).
+    /// 📏️ Per-LOD road stroke multiplier (city 30% of prior default).
     pub fn transportation_stroke_lod_scale(span_deg: f64, forced_lod_id: Option<&str>) -> f64 {
         match super::resolve_detail_lod_index(span_deg, forced_lod_id) {
             3 => ui_styling::strokes::MAP_ROAD_LOD_REGION,
@@ -1241,7 +1241,7 @@ pub mod vector_tiles {
         }
     }
 
-    /// @emoji 📏️ Screen stroke scale from viewport longitude span; damped in region/city bands.
+    /// 📏️ Screen stroke scale from viewport longitude span; damped in region/city bands.
     pub fn vector_line_scale(span_deg: f64) -> f64 {
         let cap = ui_styling::strokes::MAP_LINE_SCALE_CAP;
         let span = span_deg.max(0.08);
@@ -1325,7 +1325,7 @@ pub mod vector_tiles {
         }
     }
 
-    /// @emoji 🛣️ Street-name labels use a stricter span gate than road geometry to avoid city-band overload.
+    /// 🛣️ Street-name labels use a stricter span gate than road geometry to avoid city-band overload.
     pub fn transportation_name_visible(class: &str, span_deg: f64) -> bool {
         let caps = super::GIS_MAP_LOD_MAX_SPAN_DEG;
         match class {
@@ -1339,7 +1339,7 @@ pub mod vector_tiles {
         }
     }
 
-    /// @emoji 📍️ POI captions only appear from district zoom inward.
+    /// 📍️ POI captions only appear from district zoom inward.
     pub fn poi_label_visible(span_deg: f64) -> bool {
         span_deg <= super::GIS_MAP_LOD_MAX_SPAN_DEG[5]
     }
@@ -1353,7 +1353,7 @@ pub mod vector_tiles {
         super::GIS_MAP_LOD_MAX_SPAN_DEG.get(lod_idx.saturating_sub(1)).copied().unwrap_or(180.0).max(0.05)
     }
 
-    /// @emoji 🔤️ Label screen px scaled with viewport span inside one map LOD band.
+    /// 🔤️ Label screen px scaled with viewport span inside one map LOD band.
     pub fn vector_label_px_for_lod(lod_idx: usize, span_deg: f64, weight: f64) -> f64 {
         let base = GIS_MAP_LABEL_BAND_SCREEN_PX.get(lod_idx).copied().unwrap_or(10.5);
         let span = span_deg.max(0.05);
@@ -1361,7 +1361,7 @@ pub mod vector_tiles {
         base * floor / span * weight
     }
 
-    /// @emoji 🔤️ Resolves the active map LOD band from viewport span, then returns its zoom-scaled label px.
+    /// 🔤️ Resolves the active map LOD band from viewport span, then returns its zoom-scaled label px.
     pub fn vector_label_px(span_deg: f64, weight: f64) -> f64 {
         let lod_idx = super::resolve_map_lod_index_from_span(span_deg);
         vector_label_px_for_lod(lod_idx, span_deg, weight)
@@ -1405,7 +1405,7 @@ pub mod vector_tiles {
         Color::from_rgba8(rgba.r, rgba.g, rgba.b, alpha)
     }
 
-    /// @emoji 🎨️ Opaque land/water base fill; weight scales RGB only so tile composites do not seam.
+    /// 🎨️ Opaque land/water base fill; weight scales RGB only so tile composites do not seam.
     pub fn weighted_opaque_fill(color: Color, weight: f64) -> Color {
         let w = super::clamp_map_layer_weight(weight).clamp(0.25, 1.0);
         let rgba = color.to_rgba8();
@@ -1442,7 +1442,7 @@ pub mod vector_tiles {
         matches!(class, "ocean" | "sea" | "bay" | "strait" | "fjord" | "lagoon" | "sound" | "gulf")
     }
 
-    /// @emoji 🌊️ Keep continent zoom free of inland water while preserving adjacent LODs.
+    /// 🌊️ Keep continent zoom free of inland water while preserving adjacent LODs.
     pub fn water_polygon_visible_for_lod(lod_idx: usize, properties: &std::collections::BTreeMap<String, String>) -> bool {
         lod_idx != 1 || water_class_is_open_sea(property_class(properties))
     }
@@ -1451,7 +1451,7 @@ pub mod vector_tiles {
         lod_idx >= 2
     }
 
-    /// @emoji 🗺️ Suppress country-polygon lake holes only at continent zoom.
+    /// 🗺️ Suppress country-polygon lake holes only at continent zoom.
     pub fn country_polygon_holes_visible_for_lod(lod_idx: usize) -> bool {
         lod_idx != 1
     }
@@ -1600,7 +1600,7 @@ impl MapVectorStyle {
     }
 }
 
-/// @emoji 🎚️ Layer ids that accept a weight slider at the given LOD and tile render mode.
+/// 🎚️ Layer ids that accept a weight slider at the given LOD and tile render mode.
 pub fn map_layer_weight_slider_keys_at_lod(lod_id: &str, render_mode: &str) -> Vec<&'static str> {
     let lod_idx = GIS_MAP_LOD_SCALE.index_of(lod_id).unwrap_or(0);
     let span = representative_viewport_span_for_lod(lod_idx);
@@ -1642,7 +1642,7 @@ pub fn map_layer_weight_slider_keys_at_lod(lod_id: &str, render_mode: &str) -> V
     keys
 }
 
-/// @emoji 🎚️ JSON array of layer ids with weight sliders for window options at a LOD.
+/// 🎚️ JSON array of layer ids with weight sliders for window options at a LOD.
 pub fn gis_map_layer_weight_slider_ids_json(lod_id: &str, render_mode: &str) -> String {
     let keys = map_layer_weight_slider_keys_at_lod(lod_id, render_mode);
     serde_json::to_string(&keys).unwrap_or_else(|_| "[]".into())
@@ -1657,17 +1657,17 @@ fn map_layer_default_true() -> bool {
     true
 }
 
-/// @emoji 🎚️ Minimum layer line/label weight multiplier from window sliders.
+/// 🎚️ Minimum layer line/label weight multiplier from window sliders.
 pub const MAP_LAYER_WEIGHT_MIN: f64 = ui_styling::metrics::map::LAYER_WEIGHT_MIN;
 
-/// @emoji 🎚️ Maximum layer line/label weight multiplier from window sliders.
+/// 🎚️ Maximum layer line/label weight multiplier from window sliders.
 pub const MAP_LAYER_WEIGHT_MAX: f64 = ui_styling::metrics::map::LAYER_WEIGHT_MAX;
 
 fn map_layer_default_weight() -> f64 {
     1.0
 }
 
-/// @emoji 🎚️ Clamps a layer weight slider value to the supported multiplier range.
+/// 🎚️ Clamps a layer weight slider value to the supported multiplier range.
 pub fn clamp_map_layer_weight(value: f64) -> f64 {
     if value.is_finite() {
         value.clamp(MAP_LAYER_WEIGHT_MIN, MAP_LAYER_WEIGHT_MAX)
@@ -1676,7 +1676,7 @@ pub fn clamp_map_layer_weight(value: f64) -> f64 {
     }
 }
 
-/// @emoji 🎚️ Per-layer line/label weight multipliers (1.0 = default cartography).
+/// 🎚️ Per-layer line/label weight multipliers (1.0 = default cartography).
 #[derive(Clone, Copy, Debug, serde::Deserialize, serde::Serialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", default)]
 #[value(rename_all = "camelCase", default)]
@@ -1740,7 +1740,7 @@ impl MapLayerStrokeScale {
     }
 }
 
-/// @emoji 👁️ Per-layer show/hide gates for base map vector paint and user overlays.
+/// 👁️ Per-layer show/hide gates for base map vector paint and user overlays.
 #[derive(Clone, Copy, Debug, serde::Deserialize, serde::Serialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", default)]
 #[value(rename_all = "camelCase", default)]
@@ -2261,7 +2261,7 @@ impl LabelDeclutter {
 #[derive(Debug)]
 pub enum FrameworkSurfaceTiledMapError {
     Json(serde_json::Error),
-    Image(image::ImageError),
+    Image(String),
     Mvt(vector_tiles::MvtDecodeError),
 }
 
@@ -2269,7 +2269,7 @@ impl std::fmt::Display for FrameworkSurfaceTiledMapError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Json(error) => error.fmt(formatter),
-            Self::Image(error) => error.fmt(formatter),
+            Self::Image(message) => formatter.write_str(message),
             Self::Mvt(error) => error.fmt(formatter),
         }
     }
@@ -2279,8 +2279,8 @@ impl std::error::Error for FrameworkSurfaceTiledMapError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Self::Json(error) => Some(error),
-            Self::Image(error) => Some(error),
             Self::Mvt(error) => Some(error),
+            Self::Image(_) => None,
         }
     }
 }
@@ -2293,7 +2293,7 @@ impl From<serde_json::Error> for FrameworkSurfaceTiledMapError {
 
 impl From<image::ImageError> for FrameworkSurfaceTiledMapError {
     fn from(error: image::ImageError) -> Self {
-        Self::Image(error)
+        Self::Image(error.to_string())
     }
 }
 
@@ -3861,7 +3861,7 @@ impl MapHost {
         scene
     }
 
-    /// @emoji 📐️ Scales the logical viewport scene to the physical GPU surface (matches puzzle2d dpr handling).
+    /// 📐️ Scales the logical viewport scene to the physical GPU surface (matches puzzle2d dpr handling).
     pub fn build_render_scene(&self) -> Scene {
         let inner = self.build_vector_scene();
         let scale = self.viewport.dpr.max(1.0);

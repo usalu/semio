@@ -19,5 +19,4 @@ export function testBrowserActorHostContext(): void {
     assert.equal(validate(value), false, row.name);
     assert.throws(() => parseBrowserActorViewStateRequest(value), row.name);
   }
-  console.log(`[DEBUG] browser-actor-host-context cases=${fixture.invalid.length + 1} schema=valid wire=round-trip`);
 }

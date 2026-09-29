@@ -21,7 +21,7 @@ use crate::os_dsl::schema::{DslValue, ExprValue, FieldValue, RecordSpec, RecordV
 use std::collections::HashMap;
 
 //#region 🔖️Arbitrary
-/// @emoji 🎲️ Deterministic seeded generator: splitmix64 state, advanced on every draw. NOT the
+/// 🎲️ Deterministic seeded generator: splitmix64 state, advanced on every draw. NOT the
 /// `arbitrary`/`quickcheck` crates — the same seed always produces the same sequence of
 /// `RecordValue`s, which is what makes a failing corruption/round-trip test reproducible from a
 /// single logged `u64`.
@@ -34,7 +34,7 @@ impl RecordValueGen {
         Self { state: seed }
     }
 
-    /// @emoji 🌱️ Fabricates one `RecordValue` matching `spec`, recursing into nested
+    /// 🌱️ Fabricates one `RecordValue` matching `spec`, recursing into nested
     /// `Record`/`Block`/`Statements`/`Table`/`Map`/`Value` shapes up to `max_depth` — beyond that,
     /// [`Self::shallow_value`] takes over so genuinely self-referential specs (a recursive
     /// `Statements` table whose own variant list names itself) terminate instead of looping
@@ -44,7 +44,7 @@ impl RecordValueGen {
     }
 
     //#region 🔖️Prng
-    /// @emoji 🌀️ splitmix64 — see <https://prng.di.unimi.it/splitmix64.c>. Small, dependency-free,
+    /// 🌀️ splitmix64 — see <https://prng.di.unimi.it/splitmix64.c>. Small, dependency-free,
     /// good enough statistical spread for test-data generation (not cryptography).
     fn next_u64(&mut self) -> u64 {
         self.state = self.state.wrapping_add(0x9E37_79B9_7F4A_7C15);
@@ -58,7 +58,7 @@ impl RecordValueGen {
         self.next_u64() & 1 == 1
     }
 
-    /// @emoji 🎯️ Uniform-ish `[0, bound)`; `0` for `bound == 0` (modulo bias is irrelevant for
+    /// 🎯️ Uniform-ish `[0, bound)`; `0` for `bound == 0` (modulo bias is irrelevant for
     /// test-data spread).
     fn next_range(&mut self, bound: u64) -> u64 {
         if bound == 0 {
@@ -76,7 +76,7 @@ impl RecordValueGen {
         self.next_range(1_000_000)
     }
 
-    /// @emoji 🔢️ Deliberately never NaN/Infinity — `FieldValue`'s derived `PartialEq` uses `==`,
+    /// 🔢️ Deliberately never NaN/Infinity — `FieldValue`'s derived `PartialEq` uses `==`,
     /// under which `NaN != NaN` always, so a generated NaN would make
     /// `assert_encode_decode_identity` fail even on a perfectly correct codec. Round-trips through
     /// `crate::os_dsl::format_f64`/`parse_f64` so every generated float is also exactly
@@ -127,7 +127,7 @@ impl RecordValueGen {
         RecordValue { fields }
     }
 
-    /// @emoji ✏️ One field value matching `shape`, self-describing enough that the pack codec
+    /// ✏️ One field value matching `shape`, self-describing enough that the pack codec
     /// always accepts it. `depth > max_depth` defers to [`Self::shallow_value`] — the recursion
     /// backstop for lazy `fn() -> RecordSpec` shapes (`Record`/`Statements`/`Table`) that could
     /// otherwise recurse forever on a self-referential grammar.
@@ -242,7 +242,7 @@ impl RecordValueGen {
         }
     }
 
-    /// @emoji 🛑️ Non-recursing terminal value for `shape`, used once `max_depth` is exhausted.
+    /// 🛑️ Non-recursing terminal value for `shape`, used once `max_depth` is exhausted.
     /// Safe to call unconditionally: `Tuple`/`List`/`Map`/`Block` are structurally finite Rust
     /// values (no lazy indirection), so only `Record`/`Statements`/`Table` — the three genuinely
     /// self-referential shapes — need the empty/default fallback rather than real recursion.
@@ -357,7 +357,7 @@ impl RecordValueGen {
 //#endregion 🔖️Arbitrary
 
 //#region 🔖️Laws
-/// @emoji 🧹️ Strips `FieldValue::Absent` entries at every nesting level (the "pure-Absent noise"
+/// 🧹️ Strips `FieldValue::Absent` entries at every nesting level (the "pure-Absent noise"
 /// `decode_document` reinserts for every spec field not found on the wire — canonical mode never
 /// encodes `Absent`, so a freshly-decoded record always carries one for every spec field the
 /// generator happened to skip) and sorts `Map` entries by key bytes (`encode_map` always sorts,
@@ -416,7 +416,7 @@ fn normalize_value(value: &FieldValue) -> FieldValue {
     }
 }
 
-/// @emoji 🔁️ LAW: `decode_document(encode_document(spec, record)) == record`, modulo the
+/// 🔁️ LAW: `decode_document(encode_document(spec, record)) == record`, modulo the
 /// pure-Absent noise [`normalize_record`] strips.
 pub async fn assert_encode_decode_identity(spec: &RecordSpec, record: &RecordValue) {
     let options = crate::os_pack::EncodeOptions::default();
@@ -425,7 +425,7 @@ pub async fn assert_encode_decode_identity(spec: &RecordSpec, record: &RecordVal
     assert_eq!(normalize_record(&decoded), normalize_record(record), "encode/decode round trip diverged (ignoring pure-Absent noise)");
 }
 
-/// @emoji 🧊️ LAW: `encode_document` is a pure function of `(spec, record)` — byte-identical
+/// 🧊️ LAW: `encode_document` is a pure function of `(spec, record)` — byte-identical
 /// output across repeated calls, regardless of `HashMap` iteration order inside `record.fields`.
 pub async fn assert_canonical_stable(spec: &RecordSpec, record: &RecordValue) {
     let options = crate::os_pack::EncodeOptions::default();
@@ -434,7 +434,7 @@ pub async fn assert_canonical_stable(spec: &RecordSpec, record: &RecordValue) {
     assert_eq!(a, b, "encode_document must be byte-identical across repeated calls (canonical determinism law)");
 }
 
-/// @emoji 🕳️ LAW: field ids present in `record_with_extra_fields` but absent from `spec` still
+/// 🕳️ LAW: field ids present in `record_with_extra_fields` but absent from `spec` still
 /// round-trip through the wire and are reported in `DecodeReport.unknown_field_ids` — the
 /// mechanism that lets an older reader tolerate a newer writer's additive schema evolution.
 pub async fn assert_unknown_field_preserved(spec: &RecordSpec, record_with_extra_fields: &RecordValue, extra_ids: &[u16]) {
@@ -455,7 +455,7 @@ pub async fn assert_unknown_field_preserved(spec: &RecordSpec, record_with_extra
     }
 }
 
-/// @emoji 🌊️ LAW: splitting a document's body across many small `Document` frames (a "streamed"
+/// 🌊️ LAW: splitting a document's body across many small `Document` frames (a "streamed"
 /// encode, `frame_size = 1`) decodes to the exact same `RecordValue` as encoding it as one large
 /// frame (a "buffered" encode) — `decode_document` must reassemble frames transparently
 /// regardless of how many the encoder chose to emit.
@@ -474,7 +474,7 @@ pub async fn assert_streamed_equals_buffered(spec: &RecordSpec, record: &RecordV
     assert_eq!(normalize_record(&buffered_decoded), normalize_record(&streamed_decoded), "single-frame and many-small-frame encodings of the same document must decode identically");
 }
 
-/// @emoji 🔀️ LAW: `decode_pack(encode_pack(sample)) == parse_dsl(print_dsl(sample)) == sample` —
+/// 🔀️ LAW: `decode_pack(encode_pack(sample)) == parse_dsl(print_dsl(sample)) == sample` —
 /// the DSL text and pack binary encodings of the same value must agree with each other and with
 /// the original. Kept generic over closures so this crate needs no dependency on `vcs`/
 /// `dsl_derive`; their own `test_support` wraps this with concrete `P: ArtifactDsl + ArtifactPack`
@@ -494,7 +494,7 @@ where
 //#endregion 🔖️Laws
 
 //#region 🔖️Golden
-/// @emoji 🔑️ `hex(blake3(bytes))` — for committing an expected pack encoding's hash as a text
+/// 🔑️ `hex(blake3(bytes))` — for committing an expected pack encoding's hash as a text
 /// constant in a caller's own test, so a future unintended encoding change is caught by a one-line
 /// diff instead of a giant byte-literal.
 pub async fn golden_hash_hex(bytes: &[u8]) -> String {

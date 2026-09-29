@@ -25,7 +25,7 @@ fn window_stack(window_kind_id: &str, title: &str, size: Option<f64>) -> WindowL
     })
 }
 
-/// @emoji 🪟️ Two rows: LHS/RHS/Jack on top (50%), Parameters/Before/After on the bottom (50%).
+/// 🪟️ Two rows: LHS/RHS/Jack on top (50%), Parameters/Before/After on the bottom (50%).
 pub fn layout() -> WindowLayout {
     WindowLayout {
         root: WindowLayoutRoot::Axis(WindowLayoutAxisNode {

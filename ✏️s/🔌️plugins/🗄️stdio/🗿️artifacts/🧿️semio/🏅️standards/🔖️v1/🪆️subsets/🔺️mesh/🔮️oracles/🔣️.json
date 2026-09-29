@@ -443,6 +443,7 @@
         }
       ],
       "kinds": [
+        "set-snapshot",
         "create-mesh",
         "delete-mesh",
         "create-primitive",

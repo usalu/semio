@@ -373,7 +373,6 @@ async fn preview_eval_exact_window_transient_isolates_and_resets_in_the_register
         assert!(app.window_transient_snapshot(view).expect("reset preview snapshot").and_then(|snapshot| snapshot.get::<Generation3dPreviewWindowTransientOwner>().cloned()).is_some_and(|state| state.preview_eval_text.is_none()));
     }
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut **app);
-    eprintln!("[DEBUG] Generation3d registered runtime isolated two preview evaluations, preserved app config bytes, reset both ephemeral windows on document reload, and closed terminal-empty");
 }
 fn production_initial_snapshot(label: &str) -> Generation3dSnapshot {
     let mut snapshot = Generation3dSnapshot::default();
@@ -695,7 +694,7 @@ fn retained_route_dispositions_are_exact_and_exhaustive() {
 }
 
 /// 📏️ The scoped contributions pack the procedural plugin actually pushed on 2026-09-14, measured in
-/// the browser (`[DEBUG] contributions scoped pack {"chars":272089,…}`) — the size a declared ceiling
+/// the browser (`[TRACE] contributions scoped pack {"chars":272089,…}`) — the size a declared ceiling
 /// has to admit, not a round number.
 const GENERATION3D_MEASURED_CONTRIBUTIONS_PACK_CHARS: usize = 272_089;
 
@@ -1088,7 +1087,6 @@ fn every_window_scoped_chord_names_its_owning_window_kind_and_the_modes_that_mou
         }
     }
     assert!(scoped >= 5, "the fixture must keep stating the window-scoped chords: {scoped}");
-    eprintln!("[DEBUG] window-scoped chords: {scoped} rows, modes {mode_ids:?}");
 }
 
 /// ⚖️ LAW: the example picker offers the bundled flow-fixture examples, and never the
@@ -1357,7 +1355,6 @@ async fn context_menu_reads_the_framework_owned_graph_selection() {
         assert!(selected.iter().any(|candidate| candidate == id), "a live graph selection must offer {id}: {selected:?}");
     }
     assert!(selected.iter().any(|id| id.contains("delete")), "a live graph selection must offer the destructive delete row: {selected:?}");
-    eprintln!("[DEBUG] generation3d context menu unfolded {} rows for one framework-owned graph selection", selected.len());
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
 }
 
@@ -1415,7 +1412,6 @@ async fn context_menu_groups_are_taxonomy_categories() {
             "`menu.group.{category}` is outside the closed ribbon-parent taxonomy, so the shell renders its raw id to the user"
         );
     }
-    eprintln!("[DEBUG] generation3d context-menu groups: {categories:?}");
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
 }
 
@@ -1479,7 +1475,6 @@ async fn window_measure_labels_are_localized() {
         .map(|((id, _), _)| id.as_str())
         .collect();
     assert!(untranslated.is_empty(), "window-chrome measure labels a German user still reads in English: {untranslated:?}");
-    eprintln!("[DEBUG] generation3d localized {} window-chrome measure labels", english.len());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1660,7 +1655,6 @@ fn mesh_import_preserves_fixture_coordinates_in_an_editable_graph() {
         for (actual, expected) in result.indices.iter().zip(&indices) {
             assert_eq!(&result.positions[*actual as usize * 3..*actual as usize * 3 + 3], &positions[*expected as usize * 3..*expected as usize * 3 + 3]);
         }
-        eprintln!("[DEBUG] mesh import {}: {} triangles preserved", case["name"], result.indices.len() / 3);
     }
 }
 
@@ -1791,7 +1785,6 @@ fn mesh_preview_renders_without_a_brep_conversion_in_editor_and_viewer() {
     let viewer = crate::viewer::generation3d::modes::view::windows::preview::preview_payload(&eval_json, &fixture, &Default::default(), None, &Default::default());
     let viewer_meshes: Vec<Value> = serde_json::from_str(&viewer.meshes_json).unwrap();
     assert_eq!(mesh_data_from_json(&viewer_meshes[0]["data"]), expected);
-    eprintln!("[DEBUG] direct mesh preview: editor and viewer each publish {} triangles", expected.indices.len() / 3);
     fixture.retire_cold();
 }
 
@@ -2125,7 +2118,6 @@ async fn hex_column_evaluates_end_to_end_through_the_extension_round_trip() {
     let meshes: serde_json::Value = serde_json::from_str(&world.meshes_json).expect("preview meshes json");
     let mesh_count = meshes.as_array().map_or(0, Vec::len);
     assert!(mesh_count >= 1, "the extruded column must reach the preview as at least one mesh, got {mesh_count}: {}", world.meshes_json);
-    eprintln!("[DEBUG] hex column round trip finished: status={status_json} meshes={mesh_count}");
 }
 
 /// ⚖️ LAW: the served machine. The host's `contributionsJson` — built here exactly the way
@@ -2389,7 +2381,6 @@ async fn extension_invocations_address_the_contributing_plugin_and_a_missing_con
         addresses.iter().any(|(extension_id, capability)| extension_id == BREP_EXTENSION_PLUGIN_ID && capability == "tessellate"),
         "the tessellate hop must address the contributing brep plugin: {addresses:?}"
     );
-    eprintln!("[DEBUG] invocation addresses: {addresses:?}");
 
     let miss = semio_framework_os_flow::flow_extension_invocation_address("not-contributed-by-anything").expect_err("an uncontributed flow extension id has no invocation address");
     let mut owner = Generation3dInstanceOperationOwner::new();
@@ -2421,7 +2412,6 @@ async fn extension_invocations_address_the_contributing_plugin_and_a_missing_con
             "{extension_id} -> {plugin_id} missing from {contributed:?}"
         );
     }
-    eprintln!("[DEBUG] unaddressable geometry kernel published: {faulted}");
 }
 
 /// ⚖️ LAW: the SERVED ORDER. `ShellHost` loads the example and only THEN pushes the contributions
@@ -3002,7 +2992,6 @@ fn mesh_component_edits_insert_typed_widgets_and_update_downstream_analysis() {
         assert!(feeds_analysis);
         let evaluation: Value = serde_json::from_str(&evaluation).unwrap();
         assert_eq!(evaluation[&id]["out"]["meshOut"]["$schema"], "mesh", "{operation}: {evaluation}");
-        eprintln!("[DEBUG] mesh component {operation}: selection={indices}, analysis rewired");
     }
 }
 
@@ -3076,7 +3065,6 @@ fn mesh_component_gumball_projects_a_topology_pivot_and_live_dispatch() {
     assert_eq!(value["gumballActive"], false);
     let invalid = PreviewInteractionMarks { components: selection::ComponentSelection { selected: vec!["extrude@meshOut#0.face.9999".into()], ..marks.components.clone() }, ..Default::default() };
     assert!(preview_payload(&evaluation, &snapshot.host_snapshot, &cfg, None, &invalid).component_pivot.is_none());
-    eprintln!("[DEBUG] component gumball: pivot={:?}, live dispatch enabled", payload.component_pivot);
     snapshot.retire_cold();
 }
 
@@ -3119,7 +3107,6 @@ async fn mesh_component_edit_undo_redo_restores_geometry_and_analysis_connection
             probe, before, after,
         ).await;
         semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
-        eprintln!("[DEBUG] mesh component {operation}: undo and redo restore the analysis connection");
     }
 }
 
@@ -3145,7 +3132,6 @@ async fn mesh_component_commands_reject_stale_topology_before_publication() {
     assert!(context::dispatch_with_view(&mut app, command, flow_view).await.is_err());
     assert_eq!(dsl::json::to_json_string(&context::snapshot(&app).host_snapshot), before);
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
-    eprintln!("[DEBUG] stale component commands: rejected before artifact publication");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -3172,7 +3158,6 @@ async fn mesh_component_gumball_rejects_changed_selection_before_and_during_drag
         let before = dsl::json::to_json_string(&context::snapshot(&app).host_snapshot);
         assert!(context::dispatch_with_view(&mut app, command(), view).await.is_err());
         assert_eq!(dsl::json::to_json_string(&context::snapshot(&app).host_snapshot), before);
-        eprintln!("[DEBUG] component {operation}: changed targets rejected before and during the gesture without artifact mutation");
         semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
     }
 }
@@ -3223,7 +3208,6 @@ async fn mesh_component_gumball_retains_selection_coalesces_drags_and_round_trip
         assert_eq!(probe(&app), before);
         semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut *app, "redo", meta("local").instance_id).await;
         assert_eq!(probe(&app), (before.0 + 1, id));
-        eprintln!("[DEBUG] component gumball {operation}: repeated drag, retained selection, evaluation, undo/redo");
         semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
     }
 }

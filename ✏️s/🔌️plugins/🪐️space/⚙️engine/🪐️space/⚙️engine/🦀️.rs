@@ -62,7 +62,7 @@ impl OsParameterId for WorkflowParameter {
     }
 }
 
-/// @emoji ➕️ Builds an `AddParameter` operation with a fresh default parameter of the requested type.
+/// ➕️ Builds an `AddParameter` operation with a fresh default parameter of the requested type.
 pub async fn add_parameter_operation(parameter_type: &WorkflowParameterType, name: &str) -> WorkflowMutation {
     WorkflowMutation::AddParameter(AddParameter { parameter: Box::new(create_default_workflow_parameter(parameter_type, name, None).await) })
 }
@@ -150,7 +150,7 @@ fn local_clamp_numeric_value(value: f64, min: Option<f64>, max: Option<f64>, ste
     next
 }
 
-/// @emoji 🩹️ Builds a `ChangeParameter` operation by folding `patch` (a `{field: value}` object) into
+/// 🩹️ Builds a `ChangeParameter` operation by folding `patch` (a `{field: value}` object) into
 /// the current parameter — the store-free operation-builder used in place of os-core's
 /// `OsWorkflowStore::patch_parameter`.
 pub async fn patch_parameter_operation(projection: &WorkflowSnapshot, parameter_id: &str, patch: &Value) -> Option<WorkflowMutation> {
@@ -167,7 +167,7 @@ pub async fn patch_parameter_operation(projection: &WorkflowSnapshot, parameter_
 //#endregion 🔖️Parameters
 
 //#region 🔖️WorkflowNodes
-/// @emoji ✨️ Builds the `AddNode` operation (minting a fresh node — id, ports, document/config refs,
+/// ✨️ Builds the `AddNode` operation (minting a fresh node — id, ports, document/config refs,
 /// everything — via `workflow_node_for_app`, so replay never re-derives it) plus the new node's id for
 /// the caller to focus. The store-free operation-builder the plugin uses in place of os-core's
 /// `OsWorkflowStore::add_workflow_node`. A node IS the app instance now, there is no separate
@@ -185,7 +185,7 @@ pub async fn add_workflow_node_operation(plugin_id: &str, app_id: &str, label: O
 //#endregion 🔖️WorkflowNodes
 
 //#region 🔖️MediaContractConnect
-/// @emoji 🤝️ Resolves the source/target `WorkflowMediaPort`s for a proposed connect from the live
+/// 🤝️ Resolves the source/target `WorkflowMediaPort`s for a proposed connect from the live
 /// projection and negotiates their wire contract — shared by both connect entry points
 /// (`connections::ConnectMediaPorts` and the `graph_edit::NodeGraphEdit`/`"connect"` fixture edit) so
 /// neither can push a `WorkflowMutation::ConnectPorts` for an incompatible or unresolved pair of ports.
@@ -217,7 +217,7 @@ pub async fn media_port_label(port_id: &str, parameter_by_id: &HashMap<String, &
 //#endregion 🔖️MediaVfs
 
 //#region 🔖️CompiledDag
-/// @emoji 🕸️ Projects the workflow onto the generic port-directed-DAG fixture the Compiled DAG window
+/// 🕸️ Projects the workflow onto the generic port-directed-DAG fixture the Compiled DAG window
 /// renders — every `WorkflowNode` becomes one `DagNodeKind::AppInstance` directly (node IS instance
 /// now; no separate join through `OsAppInstance`).
 pub async fn workflow_to_dag_fixture(projection: &WorkflowSnapshot) -> DagHostSnapshot {

@@ -6,9 +6,8 @@
 //!    so an app can shadow them (row 19);
 //! 3. OS-level file drag-and-drop exists on NEITHER renderer — parity by absence, pinned so React
 //!    growing one turns this law red instead of leaving wgpu silently behind (row 10);
-//! 4. `namedLayouts` round-trips through the `semio.os.config` document React's `NamedLayoutStore`
-//!    owns, with React's own `origin: "user"` filter; `windowPanes` stays consumer-less on both sides
-//!    (row 21);
+//! 4. a saved layout is a `setNamedLayout` event of the `os.config.ui-preferences` log both renderers replay,
+//!    with React's own `origin: "user"` projection; `windowPanes` stays consumer-less on both sides (row 21);
 //! 5. the introduction's persisted-seen key is BRAND-scoped, React's `introductionSeenKey` (row 9);
 //! 6. every arg shape `command_search_items` emits has a live route in `activate_search_item`
 //!    (row 20).
@@ -79,6 +78,10 @@ fn restore_boot_descriptor(descriptor: crate::WgpuBootDescriptor) {
 /// `Linux` — while the chord FORMATTER, fixed by W7a at the same file, painted `⌘️`. A macOS browser
 /// user was therefore shown and matched the `f11` arm of `os.toggleFullscreen` and of every
 /// app-declared Mac-scoped keybinding.
+///
+/// 🖥️ The concrete consequence the audit demonstrated: `os.toggleFullscreen` declares
+/// `MacOs → control+meta+f` and `Windows`/`Linux → f11` (`build_os_commands`). The palette row's
+/// description is the resolved chord list, so it must follow the door.
 #[test]
 fn the_shell_reads_its_platform_from_the_host_platform_door() {
     let source = read_engine("🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs");
@@ -102,9 +105,6 @@ fn the_shell_reads_its_platform_from_the_host_platform_door() {
         assert_eq!(command_host_platform(), expected, "⌨️ and the shell's keybinding filter reads exactly that");
     }
 
-    // 🖥️ The concrete consequence the audit demonstrated: `os.toggleFullscreen` declares
-    // `MacOs → control+meta+f` and `Windows`/`Linux → f11` (`build_os_commands`). The palette row's
-    // description is the resolved chord list, so it must follow the door.
     let shell = ShellState::new(Vec::new(), String::new());
     let fullscreen_description = |shell: &ShellState| shell.command_search_items().into_iter().find(|item| item.id == "command.os.os.toggleFullscreen").and_then(|item| item.description).unwrap_or_default();
     crate::set_host_platform("MacIntel");
@@ -137,14 +137,18 @@ fn the_shell_reads_its_platform_from_the_host_platform_door() {
 /// The audit listed this as still open ("absent in `handle_keyboard_async`"); it is not — W12c wired
 /// `shell_edit_verb_for` into the tail of `handle_keyboard_async`. This law pins the two properties
 /// the routing depends on so the row cannot regress into being true again.
+///
+/// ⏪️ React reads `event.ctrlKey || event.metaKey` — NOT the platform's `mod` — so both
+/// accelerators answer on every platform.
+///
+/// 🛡️ Never reserved: React dispatches this tail AFTER the app-keybinding loop, so an app that
+/// declares `mod+z` wins. A reserved chord would win here instead and the app's binding would die.
 #[test]
 fn the_undo_redo_chords_match_reacts_gate_and_stay_shadowable() {
     let key = |character: char| ui_wgpu::wgpu::KeyAction::Char(character.to_string());
     let modifiers = |ctrl: bool, meta: bool, shift: bool, alt: bool| PointerModifiers { ctrl, meta, shift, alt };
 
     for (meta, ctrl) in [(true, false), (false, true)] {
-        // ⏪️ React reads `event.ctrlKey || event.metaKey` — NOT the platform's `mod` — so both
-        // accelerators answer on every platform.
         assert_eq!(shell_edit_verb_for(&key('z'), &modifiers(ctrl, meta, false, false)), Some(ShellEditVerb::Undo));
         assert_eq!(shell_edit_verb_for(&key('z'), &modifiers(ctrl, meta, true, false)), Some(ShellEditVerb::Redo), "shift picks redo");
         assert_eq!(shell_edit_verb_for(&key('y'), &modifiers(ctrl, meta, false, false)), Some(ShellEditVerb::Redo), "the `mod+y` redo alias");
@@ -155,8 +159,6 @@ fn the_undo_redo_chords_match_reacts_gate_and_stay_shadowable() {
     assert_eq!(ShellEditVerb::Undo.action_id(), "undo");
     assert_eq!(ShellEditVerb::Redo.action_id(), "redo");
 
-    // 🛡️ Never reserved: React dispatches this tail AFTER the app-keybinding loop, so an app that
-    // declares `mod+z` wins. A reserved chord would win here instead and the app's binding would die.
     let shell = ShellState::new(Vec::new(), String::new());
     let table = shell.shortcut_table();
     for chord in ["mod+z", "mod+shift+z", "mod+y"] {
@@ -178,6 +180,8 @@ fn the_undo_redo_chords_match_reacts_gate_and_stay_shadowable() {
 /// So the parity-correct action is NOT to build one on wgpu alone — that is the divergence `📓️w1d`
 /// refused for `?mode=` — but to pin the absence on BOTH sides. React growing an OS file drop turns
 /// this law red, which is the moment the wgpu port becomes owed.
+///
+/// 📤️ What DOES exist on both sides, so the absence above is about the OS drop and nothing else.
 #[test]
 fn neither_renderer_accepts_an_os_file_drop() {
     let mut react_file_drops = Vec::new();
@@ -194,7 +198,6 @@ fn neither_renderer_accepts_an_os_file_drop() {
     for listener in ["\"drop\"", "\"dragover\"", "\"dragenter\"", "\"dragleave\""] {
         assert!(!trunk.contains(&format!("addEventListener({listener}")), "📥️ the wgpu trunk page registers {listener} — if React now has an OS file drop this is right, and this law needs rewriting into the positive form");
     }
-    // 📤️ What DOES exist on both sides, so the absence above is about the OS drop and nothing else.
     let host_io = read_engine("🎯️targets/🧊️wgpu/🚪️host-io/🟦️.ts");
     assert!(host_io.contains("\"request-file-open\""), "📤️ the picker-based open door is the one that exists");
     assert!(host_io.contains("\"download-media-export\""), "⬇️ and the download door beside it");
@@ -203,46 +206,47 @@ fn neither_renderer_accepts_an_os_file_drop() {
 
 // #region 🖥️NamedLayoutPersistence
 
-/// ⚖️ LAW (item 7 / audit row 21): a SAVED layout round-trips through the one `semio.os.config`
-/// document React's `NamedLayoutStore` owns — React's flat `namedLayouts[<appId>]` record (not the
-/// `{os, apps}` layer shape the dock projections use), React's `"framework-os"` fallback key, and
-/// React's `origin: "user"` read filter.
-///
-/// 🩸️ W5a made the whole document round-trip on disk, so a layout saved in the React shell survived a
-/// switch to wgpu and was then IGNORED: no wgpu lane read the projection.
+/// ⚖️ LAW (item 7 / audit row 21, event-sourced since ticket 26/09/23 S18): a SAVED layout is one `setNamedLayout`
+/// event in the `os.config.ui-preferences` log — filed under the app React's Display host files it under
+/// (`"framework-os"` without a session), projected back sorted by id with `origin: "user"`, never written for a
+/// builtin — and the event React commits decodes here, so one React-saved layout can no longer empty this
+/// renderer's whole preference log.
 #[test]
-fn saved_named_layouts_round_trip_through_reacts_own_document() {
+fn saved_named_layouts_are_ui_preference_events() {
     let layout = ui_wgpu::wgpu::create_stack_layout(&["main".to_string()], None);
     let user = ui_wgpu::wgpu::NamedLayout { id: "user-1".into(), label: "Mine".into(), icon_id: None, layout: layout.clone(), origin: "user".into(), group_path: None };
-    let builtin = ui_wgpu::wgpu::NamedLayout { id: "builtin-1".into(), label: "Theirs".into(), icon_id: None, layout, origin: "builtin".into(), group_path: None };
+    let builtin = ui_wgpu::wgpu::NamedLayout { id: "builtin-1".into(), label: "Theirs".into(), icon_id: None, layout: layout.clone(), origin: "builtin".into(), group_path: None };
 
-    let mut config = empty_os_shell_config();
-    write_named_layouts_in(&mut config, Some("puzzle3d"), std::slice::from_ref(&user));
-    assert!(config["namedLayouts"]["puzzle3d"].is_array(), "🖥️ filed under React's flat per-app key, never a `{{os, apps}}` layer: {config}");
-    assert_eq!(read_named_layouts(&config, Some("puzzle3d")), vec![user.clone()], "and read back whole");
-    assert!(read_named_layouts(&config, Some("other-app")).is_empty(), "another app's layer is another app's");
+    let events = named_layout_events(&UiPreferences::default(), Some("puzzle3d"), &[user.clone(), builtin]);
+    assert_eq!(events.len(), 1, "🖥️ one event per saved user layout, none for a builtin: {events:?}");
+    let mut preferences = UiPreferences::default();
+    for event in &events {
+        apply_ui_preferences_config_mutation(&mut preferences, event).expect("a saved layout applies");
+    }
+    assert_eq!(user_named_layouts(&preferences, Some("puzzle3d")), vec![user.clone()], "and projects back whole");
+    assert!(user_named_layouts(&preferences, Some("other-app")).is_empty(), "another app's layouts are another app's");
+    assert!(named_layout_events(&preferences, Some("puzzle3d"), std::slice::from_ref(&user)).is_empty(), "🖥️ an unchanged roster appends nothing");
+    for event in named_layout_events(&preferences, Some("puzzle3d"), &[]) {
+        apply_ui_preferences_config_mutation(&mut preferences, &event).expect("a removal applies");
+    }
+    assert!(user_named_layouts(&preferences, Some("puzzle3d")).is_empty(), "🖥️ removing the last layout removes it");
 
-    // 🖥️ React's `NamedLayoutStore` has no app id of its own when there is no session: `session?.app.id
-    // ?? "framework-os"`.
-    let mut sessionless = empty_os_shell_config();
-    write_named_layouts_in(&mut sessionless, None, std::slice::from_ref(&user));
-    assert!(sessionless["namedLayouts"][NAMED_LAYOUT_STORE_FALLBACK_APP_ID].is_array(), "🖥️ the sessionless layer is React's `framework-os`: {sessionless}");
+    let sessionless = named_layout_events(&UiPreferences::default(), None, std::slice::from_ref(&user));
+    assert!(matches!(sessionless.as_slice(), [UiPreferencesConfigMutation::SetNamedLayout(set)] if set.app_id == NAMED_LAYOUT_STORE_FALLBACK_APP_ID), "🖥️ the sessionless layer is React's `framework-os`: {sessionless:?}");
 
-    // 🖥️ React's `readPersisted` filter: `entry.origin === "user"`. A builtin written into the document
-    // must never come back and shadow the app's own declaration.
-    let mut mixed = empty_os_shell_config();
-    write_named_layouts_in(&mut mixed, Some("puzzle3d"), &[user.clone(), builtin]);
-    assert_eq!(read_named_layouts(&mixed, Some("puzzle3d")), vec![user], "🖥️ only `origin: \"user\"` rows survive the read");
-
-    // 🖥️ The sibling projections are untouched by a layout write — the same whole-document rewrite rule
-    // W5a pinned for the dock layers.
-    assert!(mixed["dockLayouts"]["apps"].is_object() && mixed["windowPanes"]["apps"].is_object(), "🗄️ the sibling projections survive: {mixed}");
+    let react_event = serde_json::json!({ "mutation": "setNamedLayout", "appId": "draw", "layoutId": "user-7", "layout": { "label": "Wide", "layout": serde_json::to_value(&layout).expect("layout json") } });
+    let decoded = decode_ui_preferences_config_mutation_json(&react_event.to_string()).expect("🗄️ the event React commits decodes in this renderer");
+    let mut from_react = UiPreferences::default();
+    apply_ui_preferences_config_mutation(&mut from_react, &decoded).expect("and applies");
+    assert_eq!(user_named_layouts(&from_react, Some("draw")).iter().map(|entry| entry.label.as_str()).collect::<Vec<_>>(), vec!["Wide"], "🗄️ a React-saved layout is this renderer's user layout");
 }
 
 /// ⚖️ LAW (item 7, second half): `windowPanes` is carried and consumed by NEITHER renderer.
 /// `WindowPaneStateStore` (`🧰️framework/🔨️modules/🖥️platform/🟦️.ts`) has no production caller in React
 /// either — only its own unit suite — so giving wgpu a reader would invent behaviour React does not
 /// have. The projection stays carried, and this law says where the port becomes owed.
+///
+/// 🗄️ Carried regardless, so the document a React shell writes survives a wgpu write untouched.
 #[test]
 fn window_panes_stay_consumer_less_on_both_renderers() {
     let react_consumers: Vec<String> = react_element_sources().into_iter().filter(|(_, source)| source.contains("WindowPaneStateStore")).map(|(path, _)| path).collect();
@@ -250,7 +254,6 @@ fn window_panes_stay_consumer_less_on_both_renderers() {
         react_consumers.is_empty(),
         "🪟️ React now mounts `WindowPaneStateStore` ({react_consumers:?}) — wgpu owes the twin reader beside `load_persisted_named_layouts`, over the `windowPanes` layer `read_os_shell_config_layer` already understands"
     );
-    // 🗄️ Carried regardless, so the document a React shell writes survives a wgpu write untouched.
     assert!(empty_os_shell_config()["windowPanes"]["apps"].is_object(), "🗄️ the projection is still carried");
 }
 // #endregion 🖥️NamedLayoutPersistence
@@ -265,6 +268,9 @@ fn window_panes_stay_consumer_less_on_both_renderers() {
 /// `ui.introduction.seen.<appId>` where React writes `ui.introduction.seen.<brandId>:<appId>` — the one
 /// concretely demonstrated brand divergence (`📓️w5a` §7.1). The brand REGISTRY stays TypeScript; what
 /// crosses is the resolved row (`WgpuBootBrand`), exactly as `locks`/`defaults` already do.
+///
+/// 🏷️ The two brand predicates, term for term with `shouldReplayIntroductionOnLoad` /
+/// `shouldPersistIntroductionSeen` (`🧱️elements/🐚️Shell/🟦️.tsx`): `ephemeral` implies replay.
 #[test]
 fn the_introduction_seen_key_is_brand_scoped() {
     let restore = crate::boot_descriptor();
@@ -284,8 +290,6 @@ fn the_introduction_seen_key_is_brand_scoped() {
     crate::apply_boot_descriptor(branded).expect("a brand id is a bounded field");
     assert_eq!(shell.introduction_seen_key().as_deref(), Some(format!("entwerfen-mit-bestand-aggregator:{app_id}").as_str()), "🏷️ a branded shell carries React's `${{brand.id}}:${{app.id}}`");
 
-    // 🏷️ The two brand predicates, term for term with `shouldReplayIntroductionOnLoad` /
-    // `shouldPersistIntroductionSeen` (`🧱️elements/🐚️Shell/🟦️.tsx`): `ephemeral` implies replay.
     for (ephemeral, replay_flag, replays) in [(false, false, false), (false, true, true), (true, false, true), (true, true, true)] {
         let brand = crate::WgpuBootBrand { window_title: String::new(), ephemeral, replay_introduction_on_load: replay_flag };
         assert_eq!(brand.replays_introduction(), replays, "🏷️ ephemeral={ephemeral} replayIntroductionOnLoad={replay_flag}");

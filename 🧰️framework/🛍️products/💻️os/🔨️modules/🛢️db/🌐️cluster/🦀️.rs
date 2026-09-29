@@ -24,7 +24,7 @@
 use crate::db_durability::Frontier;
 use crate::*;
 use db_storage::{SnapshotStorage as _, WalStorage as _};
-/// @emoji 🏷️ A cluster node's identity — the consistent-hash ring's key type and the `holder`
+/// 🏷️ A cluster node's identity — the consistent-hash ring's key type and the `holder`
 /// string `db_storage::LeaseStorage` records ownership grants under.
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct NodeId(pub String);
@@ -47,13 +47,13 @@ impl From<String> for NodeId {
     }
 }
 
-/// @emoji 🎯️ Default virtual nodes per physical node (this crate's own choice — the contract fixes
+/// 🎯️ Default virtual nodes per physical node (this crate's own choice — the contract fixes
 /// "consistent hash", not a vnode count): high enough that ring-position variance stays low
 /// (bounded remap on membership change, see the `🧪️Tests` region's minimal-remap laws), low enough
 /// that `ShardMap::owner`'s `BTreeMap` lookup stays cheap even with hundreds of physical nodes.
 pub const DEFAULT_VIRTUAL_NODES: u32 = 128;
 
-/// @emoji #⃣ A small, dependency-free 64-bit FNV-1a — see the module doc for why this crate
+/// #⃣ A small, dependency-free 64-bit FNV-1a — see the module doc for why this crate
 /// doesn't reach for `blake3` here (ring placement needs distribution, not content-addressing).
 // 🚫️async: E1 pure accessor consumed synchronously (once inline inside a temp-borrowing expression) — see R9
 fn fnv1a_64(bytes: &[u8]) -> u64 {
@@ -67,7 +67,7 @@ fn fnv1a_64(bytes: &[u8]) -> u64 {
     hash
 }
 
-/// @emoji 💍️ Consistent-hash ring mapping documents to cluster nodes: shard placement, computed
+/// 💍️ Consistent-hash ring mapping documents to cluster nodes: shard placement, computed
 /// identically by every node from the identical membership list — no coordination needed beyond
 /// agreeing on membership. Ring positions are `fnv1a_64("<node>#<vnode-index>")`; document lookups
 /// hash the document id the same way and walk clockwise to the first ring entry at or past it.
@@ -78,12 +78,12 @@ pub struct ShardMap {
 }
 
 impl ShardMap {
-    /// @emoji 🆕️ An empty ring with `virtual_nodes` (clamped to at least 1) vnodes per node added.
+    /// 🆕️ An empty ring with `virtual_nodes` (clamped to at least 1) vnodes per node added.
     pub async fn new(virtual_nodes: u32) -> Self {
         Self { virtual_nodes: virtual_nodes.max(1), ring: std::collections::BTreeMap::new() }
     }
 
-    /// @emoji ➕️ Adds `node`'s vnodes to the ring. Idempotent: re-adding an already-present node
+    /// ➕️ Adds `node`'s vnodes to the ring. Idempotent: re-adding an already-present node
     /// recomputes (but does not duplicate) its ring positions.
     pub async fn add_node(&mut self, node: &NodeId) {
         for vnode in 0..self.virtual_nodes {
@@ -92,24 +92,24 @@ impl ShardMap {
         }
     }
 
-    /// @emoji ➖️ Removes every one of `node`'s vnodes from the ring. Idempotent if absent. Per
+    /// ➖️ Removes every one of `node`'s vnodes from the ring. Idempotent if absent. Per
     /// consistent hashing's defining law, this only changes the owner of documents that were
     /// previously owned by `node` — every other document's owner is unaffected (see `🧪️Tests`).
     pub async fn remove_node(&mut self, node: &NodeId) {
         self.ring.retain(|_, owner| owner != node);
     }
 
-    /// @emoji 📋️ Every distinct physical node currently on the ring.
+    /// 📋️ Every distinct physical node currently on the ring.
     pub async fn nodes(&self) -> std::collections::BTreeSet<NodeId> {
         self.ring.values().cloned().collect()
     }
 
-    /// @emoji 🕳️ True iff the ring has no nodes at all.
+    /// 🕳️ True iff the ring has no nodes at all.
     pub async fn is_empty(&self) -> bool {
         self.ring.is_empty()
     }
 
-    /// @emoji 🎯️ The node owning `document`: the first ring position at or after `document`'s hash,
+    /// 🎯️ The node owning `document`: the first ring position at or after `document`'s hash,
     /// wrapping to the ring's lowest position past the maximum key. `None` iff the ring is empty.
     pub async fn owner(&self, document: &ArtifactId) -> Option<NodeId> {
         if self.ring.is_empty() {
@@ -122,7 +122,7 @@ impl ShardMap {
 //#endregion 🔖️ShardMap
 
 //#region 🔖️Ownership
-/// @emoji ⏳️ One shard's ownership as held by this process — wraps `db_storage::LeaseStorage`
+/// ⏳️ One shard's ownership as held by this process — wraps `db_storage::LeaseStorage`
 /// (already the fencing primitive, per its own doc) with the specific resource/holder/fence tuple
 /// a shard-scoped write path checks before mutating anything. The primitive `resolve_split_brain`/
 /// `reconcile_shard_owner` build on for failover.
@@ -134,32 +134,32 @@ pub struct ShardOwnership {
 }
 
 impl ShardOwnership {
-    /// @emoji 🤝️ Claims (or idempotently reaffirms) ownership of `shard` for `holder` — thin
+    /// 🤝️ Claims (or idempotently reaffirms) ownership of `shard` for `holder` — thin
     /// wrapper over `LeaseStorage::acquire` that also remembers the resulting fence locally.
     pub async fn acquire(storage: &impl db_storage::LeaseStorage, shard: &str, holder: NodeId, ttl_ms: u64, now_ms: u64) -> Result<ShardOwnership, DbError> {
         let fence = storage.acquire(shard, &holder.0, ttl_ms, now_ms).await?;
         Ok(ShardOwnership { shard: shard.to_string(), holder, fence })
     }
 
-    /// @emoji ♻️ Extends this ownership's TTL without changing its epoch. Errors `Fenced` if
+    /// ♻️ Extends this ownership's TTL without changing its epoch. Errors `Fenced` if
     /// another node has since won the shard (see `LeaseStorage::renew`'s doc).
     pub async fn renew(&self, storage: &impl db_storage::LeaseStorage, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
         storage.renew(&self.shard, &self.holder.0, self.fence, ttl_ms, now_ms).await
     }
 
-    /// @emoji 🕊️ Voluntarily releases this ownership (e.g. graceful shutdown / planned handoff).
+    /// 🕊️ Voluntarily releases this ownership (e.g. graceful shutdown / planned handoff).
     pub async fn release(&self, storage: &impl db_storage::LeaseStorage) -> Result<(), DbError> {
         storage.release(&self.shard, &self.holder.0, self.fence).await
     }
 
-    /// @emoji ✅️ Validates a write presented under `presented` against this ownership's fence — the
+    /// ✅️ Validates a write presented under `presented` against this ownership's fence — the
     /// primitive every shard-scoped write path calls before mutating storage.
     pub async fn validate(&self, presented: EpochFence) -> Result<(), DbError> {
         self.fence.check(presented)
     }
 }
 
-/// @emoji 🧭️ Whether `shard` is currently held, and by whom — `LeaseStorage::current`'s
+/// 🧭️ Whether `shard` is currently held, and by whom — `LeaseStorage::current`'s
 /// cluster-flavored projection, feeding failover detection and `reconcile_shard_owner`.
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum OwnershipStatus {
@@ -167,7 +167,7 @@ pub enum OwnershipStatus {
     Vacant,
 }
 
-/// @emoji 👀️ Reads `shard`'s current ownership from `storage` as of `now_ms`.
+/// 👀️ Reads `shard`'s current ownership from `storage` as of `now_ms`.
 pub async fn ownership_status(storage: &impl db_storage::LeaseStorage, shard: &str, now_ms: u64) -> Result<OwnershipStatus, DbError> {
     Ok(match storage.current(shard, now_ms).await? {
         Some(mut info) => {
@@ -181,16 +181,16 @@ pub async fn ownership_status(storage: &impl db_storage::LeaseStorage, shard: &s
 //#endregion 🔖️Ownership
 
 //#region 🔖️Replication
-/// @emoji 📡️ What `replicate_document` actually did to catch a follower up — lets the caller (e.g.
+/// 📡️ What `replicate_document` actually did to catch a follower up — lets the caller (e.g.
 /// `db_engine`, once it exists) decide whether a follow-up snapshot-materialize step is needed.
 #[derive(Clone, Debug, PartialEq)]
 pub enum ReplicationOutcome {
-    /// @emoji ✅️ The follower was already caught up; nothing was replicated.
+    /// ✅️ The follower was already caught up; nothing was replicated.
     UpToDate { frontier: Frontier },
-    /// @emoji 🚚️ `count` commands were appended to the follower's own WAL, advancing it to
+    /// 🚚️ `count` commands were appended to the follower's own WAL, advancing it to
     /// `frontier`.
     TailApplied { frontier: Frontier, count: usize },
-    /// @emoji 📸️ The follower fell behind the leader's retained WAL floor; `generation`'s raw
+    /// 📸️ The follower fell behind the leader's retained WAL floor; `generation`'s raw
     /// snapshot bytes were copied verbatim to the follower's `SnapshotStorage`. See the module
     /// doc's "extension seam" note: this does NOT advance the follower's WAL-derived frontier —
     /// materializing the snapshot into live state is `db_snapshot`/`db_artifact`'s job.
@@ -241,7 +241,7 @@ impl std::fmt::Debug for ReplicationRejected {
     }
 }
 
-/// @emoji 🔁️ Catches `document` up on `follower` against `leader`'s current state: replays both
+/// 🔁️ Catches `document` up on `follower` against `leader`'s current state: replays both
 /// sides' WALs (via `db_sync::replay_sync_state`), decides a `db_sync::BootstrapPlan`, and applies
 /// it — appending missing commands to the follower's own WAL for the `Tail` case (this crate's
 /// follower-WAL-consumption primitive), or copying the raw snapshot bytes for the `Snapshot` case
@@ -338,7 +338,7 @@ fn replication_retired<T>(outcome: Result<T, DbError>, retired: Result<(), DbErr
 //#endregion 🔖️Replication
 
 //#region 🔖️Quorum
-/// @emoji 🤝️ Tracks which nodes have acknowledged durability for one write (conceptually, one
+/// 🤝️ Tracks which nodes have acknowledged durability for one write (conceptually, one
 /// `(document, frontier)` pair) — the cluster-side satisfaction check for
 /// `DurabilityClass::Quorum(n)`. Ack-idempotent: acking the same node twice never
 /// double-counts.
@@ -349,12 +349,12 @@ pub struct QuorumTracker {
 }
 
 impl QuorumTracker {
-    /// @emoji 🆕️ A tracker requiring `threshold` distinct acks to be satisfied.
+    /// 🆕️ A tracker requiring `threshold` distinct acks to be satisfied.
     pub async fn new(threshold: u8) -> Self {
         Self { threshold, acked: std::collections::BTreeSet::new() }
     }
 
-    /// @emoji ✅️ Records `node`'s ack. Returns `true` iff this call is the one that first reached
+    /// ✅️ Records `node`'s ack. Returns `true` iff this call is the one that first reached
     /// the threshold (edge-triggered — the primitive `ClusterEvent::QuorumReached` fires exactly
     /// once from).
     pub async fn ack(&mut self, node: NodeId) -> bool {
@@ -363,19 +363,19 @@ impl QuorumTracker {
         !was_satisfied && self.satisfied()
     }
 
-    /// @emoji 🥇️ True iff at least `threshold` distinct nodes have acked.
+    /// 🥇️ True iff at least `threshold` distinct nodes have acked.
     // 🚫️async: E1 pure accessor consumed synchronously by tests and `ack` — see R9
     pub fn satisfied(&self) -> bool {
         self.acked.len() >= self.threshold as usize
     }
 
-    /// @emoji 🔢️ How many distinct nodes have acked so far.
+    /// 🔢️ How many distinct nodes have acked so far.
     pub async fn ack_count(&self) -> usize {
         self.acked.len()
     }
 }
 
-/// @emoji 🥇️ Whether `class` is satisfied given `replica_ack_count` distinct replica acks.
+/// 🥇️ Whether `class` is satisfied given `replica_ack_count` distinct replica acks.
 /// `Memory`/`Os`/`Fsync` are single-node durability concerns (satisfied the moment the local write
 /// completes, before any cluster-level tracking is even consulted); only `Quorum(n)` needs a
 /// cluster-wide ack count, which this fn gates on.
@@ -388,27 +388,27 @@ pub async fn durability_satisfied(class: DurabilityClass, replica_ack_count: usi
 //#endregion 🔖️Quorum
 
 //#region 🔖️ReadRouting
-/// @emoji 🔎️ What a read/preview needs from the replica it's routed to — a minimal,
+/// 🔎️ What a read/preview needs from the replica it's routed to — a minimal,
 /// `db_cluster`-owned projection of what `db_query`'s (not yet implemented this wave)
 /// `Consistency` enum will eventually drive shard-level routing decisions with. Exactly what the
 /// contract's "read/preview routing" responsibility needs: a target node, not a query result.
 #[derive(Clone, Debug, PartialEq)]
 pub enum ReadIntent {
-    /// @emoji 🎯️ Must observe the shard's current leader (the only always-fresh replica).
+    /// 🎯️ Must observe the shard's current leader (the only always-fresh replica).
     Canonical,
-    /// @emoji 🏔️ Any replica whose frontier dominates `at_least` (`Frontier::dominates`) may serve
+    /// 🏔️ Any replica whose frontier dominates `at_least` (`Frontier::dominates`) may serve
     /// it — the routing-level form of a `Consistency::AtLeast` query.
     BoundedStaleness { at_least: Frontier },
-    /// @emoji 🌫️ Any replica at all, preferring the freshest — read-scaling with no consistency
+    /// 🌫️ Any replica at all, preferring the freshest — read-scaling with no consistency
     /// requirement.
     AnyReplica,
-    /// @emoji 🎭️ Preview reads always target the leader: previews are ephemeral overlays that (per
+    /// 🎭️ Preview reads always target the leader: previews are ephemeral overlays that (per
     /// the contract's preview law, owned by `db_preview`, not yet implemented) only ever exist on
     /// the shard's owning actor.
     Preview,
 }
 
-/// @emoji 🧾️ One candidate replica's current state, as `route_read`'s routing decision input.
+/// 🧾️ One candidate replica's current state, as `route_read`'s routing decision input.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ReplicaStatus {
     pub node: NodeId,
@@ -416,7 +416,7 @@ pub struct ReplicaStatus {
     pub is_leader: bool,
 }
 
-/// @emoji 🧭️ Picks a target node for `intent` among `replicas`. Errors `Unavailable` if no
+/// 🧭️ Picks a target node for `intent` among `replicas`. Errors `Unavailable` if no
 /// candidate satisfies `intent` (no leader present for `Canonical`/`Preview`, no replica meets
 /// `BoundedStaleness`'s floor, or an empty replica set).
 pub async fn route_read(intent: &ReadIntent, replicas: &[ReplicaStatus]) -> Result<NodeId, DbError> {
@@ -440,7 +440,7 @@ pub async fn route_read(intent: &ReadIntent, replicas: &[ReplicaStatus]) -> Resu
 //#endregion 🔖️ReadRouting
 
 //#region 🔖️SplitBrain
-/// @emoji ⚖️ The outcome of comparing two claimed epochs for the same shard — a strictly higher
+/// ⚖️ The outcome of comparing two claimed epochs for the same shard — a strictly higher
 /// epoch always wins (a newer leadership handoff supersedes an older one); equal epochs are `Tie`
 /// (should not arise for a correctly-fenced single shard's two DIFFERENT claimants, but handled
 /// without panicking rather than assumed unreachable).
@@ -451,7 +451,7 @@ pub enum SplitBrainOutcome {
     Tie,
 }
 
-/// @emoji ⚖️ Compares `local`'s claimed epoch against `remote`'s.
+/// ⚖️ Compares `local`'s claimed epoch against `remote`'s.
 pub async fn resolve_split_brain(local: EpochFence, remote: EpochFence) -> SplitBrainOutcome {
     match local.epoch.cmp(&remote.epoch) {
         std::cmp::Ordering::Greater => SplitBrainOutcome::LocalWins,
@@ -460,7 +460,7 @@ pub async fn resolve_split_brain(local: EpochFence, remote: EpochFence) -> Split
     }
 }
 
-/// @emoji 🚨️ The split-brain repair primitive: a node that believes it still owns `shard` (e.g.
+/// 🚨️ The split-brain repair primitive: a node that believes it still owns `shard` (e.g.
 /// after a network partition healed) re-validates its locally-held `claimed` ownership against
 /// `storage`'s actual current state, since another node may have already won a failover while it
 /// was partitioned. A still-matching holder+fence is confirmed as `LocalWins` (not a `Tie` — it's
@@ -475,22 +475,22 @@ pub async fn reconcile_shard_owner(storage: &impl db_storage::LeaseStorage, shar
 //#endregion 🔖️SplitBrain
 
 //#region 🔖️Coordinator
-/// @emoji 📣️ A cluster-lifecycle event this crate hands to whatever supervises a shard (`db_engine`,
+/// 📣️ A cluster-lifecycle event this crate hands to whatever supervises a shard (`db_engine`,
 /// once it exists) via a `db_actor` mailbox — prioritized so a fencing loss is never queued behind
 /// routine replication/quorum traffic.
 #[derive(Clone, Debug, PartialEq)]
 pub enum ClusterEvent {
-    /// @emoji 🚨️ This node's `ShardOwnership` was fenced out by a newer epoch — must stop serving
+    /// 🚨️ This node's `ShardOwnership` was fenced out by a newer epoch — must stop serving
     /// writes for the shard immediately.
     OwnershipLost { shard: String, fence: EpochFence },
-    /// @emoji ✅️ A follower finished catching up to a given frontier.
+    /// ✅️ A follower finished catching up to a given frontier.
     ReplicationCaughtUp { document: ArtifactId, frontier: Frontier },
-    /// @emoji 🤝️ A quorum-durability threshold was just reached for a frontier.
+    /// 🤝️ A quorum-durability threshold was just reached for a frontier.
     QuorumReached { document: ArtifactId, frontier: Frontier, acked: usize },
 }
 
 impl ClusterEvent {
-    /// @emoji 🚦️ The mailbox lane this event is admitted under — see the type's own doc for why
+    /// 🚦️ The mailbox lane this event is admitted under — see the type's own doc for why
     /// ownership loss preempts everything else.
     pub async fn priority(&self) -> Priority {
         match self {
@@ -501,7 +501,7 @@ impl ClusterEvent {
     }
 }
 
-/// @emoji 📬️ A fresh `db_actor` mailbox for `ClusterEvent`s, sized per `capacities`.
+/// 📬️ A fresh `db_actor` mailbox for `ClusterEvent`s, sized per `capacities`.
 pub async fn cluster_mailbox(capacities: MailboxCapacities) -> (db_actor::Address<ClusterEvent>, db_actor::Receiver<ClusterEvent>) {
     db_actor::mailbox(capacities)
 }

@@ -83,7 +83,7 @@ async fn every_run_hop_names_a_viewer_preview_window_that_is_actually_attached()
         assert_eq!(started.is_empty(), case.armed_window_ids.is_empty(), "arming case {}: a run starts exactly when a preview window is attached, got {started:?}", case.id);
         let run = context::drive_preview_run(&mut app, &view, &owed).await;
         let hops: Vec<String> = run.hop_windows.iter().cloned().collect::<std::collections::BTreeSet<_>>().into_iter().collect();
-        eprintln!("[DEBUG] viewer run hops {}: attached={:?} hops={:?}", case.id, view.window_instances.iter().map(|window| window.id.as_str()).collect::<Vec<_>>(), run.hop_windows);
+        eprintln!("viewer run hops {}: attached={:?} hops={:?}", case.id, view.window_instances.iter().map(|window| window.id.as_str()).collect::<Vec<_>>(), run.hop_windows);
         assert_eq!(hops, case.armed_window_ids, "arming case {}", case.id);
         assert!(context::owed_run_actions(&mut app, &semio_framework_plugin::ViewModel::default()).await.is_empty(), "no roster at all starts nothing");
         semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
@@ -111,7 +111,6 @@ async fn destroying_a_converged_instance_retires_every_ordered_root() {
     let meshes = context::preview_mesh_count(&body);
     assert!(meshes >= 1, "the chain must actually converge onto painted geometry, got {meshes}");
     let retired = semio_framework_os_flow::cancel_all_evaluations();
-    eprintln!("[DEBUG] teardown after convergence: hops={} meshes={meshes} parked evaluations retired={retired}", settled.hops);
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
     drop(app);
 }
@@ -135,7 +134,6 @@ async fn only_a_viewer_preview_addressed_tick_passes_the_retained_preflight() {
             },
             Err(fault) => Some(format!("{fault:?}")),
         };
-        eprintln!("[DEBUG] viewer tick dispatch {}: payloadWindowId={:?} refusal={outcome:?}", case.id, case.payload_window_id);
         assert_eq!(outcome.is_none(), case.admitted, "dispatch case {}: {outcome:?}", case.id);
         semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
     }
@@ -156,7 +154,6 @@ async fn a_viewer_tick_emits_extension_work_or_re_arms_but_never_settles_silentl
     assert!(!tick.lanes.contains(&TypedOperationResultLane::Fault), "viewer preview tick faulted: {:?}", tick.lanes);
     let answered = crate::brep_extension::settle(&mut *app, action_meta.instance_id, &action_meta).await.answered;
     let owed = context::owed_run_actions(&mut app, &view).await;
-    eprintln!("[DEBUG] viewer preview tick: owed={owed:?} answered={answered}");
     assert!(answered > 0 || !owed.is_empty(), "the viewer evaluation must emit ExtensionInvocation or owe the run another hop, not a dead sync tick");
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
 }

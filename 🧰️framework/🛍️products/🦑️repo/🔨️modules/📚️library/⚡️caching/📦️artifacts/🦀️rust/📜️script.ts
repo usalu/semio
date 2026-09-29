@@ -47,7 +47,7 @@ export async function runArtifactRustPackageMain(packageRoot: string, cargoName:
   }
   class TestScript extends BundleScript {
     async run(segments: string[]): Promise<void> {
-      for (const twin of options.twins ?? []) console.log(`[DEBUG] ${twin.name}-twin checks=${twin.run()}`);
+      for (const twin of options.twins ?? []) console.log(`[TRACE] ${twin.name}-twin checks=${twin.run()}`);
       await runArtifactRustTests(cargoName, this.repoRoot, segments, options.testFeatures);
     }
   }

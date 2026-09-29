@@ -26,7 +26,6 @@ fn shared_artifact_addressing_matches_neutral_identities_and_rejects_foreign_fie
     for value in fixture["invalidUris"].as_array().unwrap() {
         assert!(crate::os_io::ArtifactRef::parse_uri(value.as_str().unwrap()).is_err());
     }
-    eprintln!("[DEBUG] shared artifact addressing preserved three exact child identities, rejected five foreign child records, and omitted local materialization from every native wire projection");
 }
 
 /// 🔗️ Link identity admits exactly its target, pin variant and role across native JSON and independent vectors.
@@ -42,7 +41,6 @@ fn shared_artifact_addressing_links_match_neutral_pin_variants_and_reject_foreig
     for row in fixture["invalidLinks"].as_array().unwrap() {
         assert!(ArtifactLink::from_value(DslValue::from(row.clone())).is_err(), "accepted foreign link shape {row}");
     }
-    eprintln!("[DEBUG] shared link identity preserved three pin variants and rejected nine foreign or malformed records");
 }
 
 /// 🆔️ `content_id` is `<prefix>-` + the first 16 hex digits of SHA-256: equal to Python `hashlib`'s answer for every

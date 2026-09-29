@@ -30,14 +30,14 @@ import { resolveWgpuBootDescriptor, type WgpuBootDescriptor, type WgpuHostAppear
 import { browserClipboardPasteCandidate } from "../../🎯️targets/🧊️wgpu/🎮️input-wire/🟦️.ts";
 import type { OrderedScrollEvent, OrderedScrollFixture } from "../../../../../../../🔨️modules/🖱️ui/🖥️host/📥️input/🎡️ordered-scroll/🧪️tests/🔬️ordered-scroll/🟦️.ts";
 
-/** @emoji 🧭️ One resolved boot descriptor for a fixture transport — the shared resolver, never a hand
+/** 🧭️ One resolved boot descriptor for a fixture transport — the shared resolver, never a hand
  * rolled literal, so these fixtures cannot drift from the shape the three real doors produce
  * (`🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts`). */
 function testBootDescriptor(variant: string): WgpuBootDescriptor {
   return resolveWgpuBootDescriptor({ defaultVariant: variant });
 }
 
-/** @emoji 🌓️ The appearance a realm that read nothing publishes — React's own no-window default. */
+/** 🌓️ The appearance a realm that read nothing publishes — React's own no-window default. */
 const TEST_HOST_APPEARANCE: WgpuHostAppearance = { preference: "", systemDark: false };
 const TEST_HOST_PLATFORM = "MacIntel";
 const TEST_HOST_STORAGE: WgpuHostStorageSnapshot = {};

@@ -7471,10 +7471,11 @@ pub(crate) mod kernel_runtime {
         /// state machine is genuinely asynchronous and the whole request loop is mounted once on the
         /// injected renderer worker pool. No executor bridge or dedicated kernel thread remains in
         /// product logic.
+        ///
+        /// 🧵️ P1e: the injected process-wide pool (`crate::renderer_worker_pool`), never a pool this
+        /// type mints for itself — see `ParallelRuntime::new`'s own doc.
         async fn new(request_queue: Arc<KernelRequestQueue>) -> Self {
             let guest_runtime: Arc<GuestRuntimes> = Arc::new(GuestRuntimes::Owned(OwnedRuntime::new()));
-            // 🧵️ P1e: the injected process-wide pool (`crate::renderer_worker_pool`), never a pool this
-            // type mints for itself — see `ParallelRuntime::new`'s own doc.
             let pool = Arc::new(crate::renderer_worker_pool());
             let worker_count = u16::try_from(pool.worker_count()).unwrap_or(u16::MAX);
             let runtime = crate::parallel_runtime::ParallelRuntime::new(pool, guest_runtime.clone(), native_shard_count(), 2, 64).await;
@@ -8146,6 +8147,20 @@ pub(crate) mod kernel_runtime {
             *self.plugin_ordinals.entry(plugin_id.to_string()).or_insert(next)
         }
 
+        /// 🐛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): compile
+        /// remains a genuine suspension point on the worker-pool-owned request state machine.
+        ///
+        /// 🐣️ `InstanceOpen` is the first event a fresh instance must receive (`📓️design-abi.md`
+        /// §2) — `actor`/`config`/`assets`/`capabilities` are placeholders until a real capability
+        /// broker/asset-preload pipeline lands (A2b/T1 territory, not this packet's). It rides
+        /// behind the declared `Activate` this app id justifies (`activation_turn_event`), so a
+        /// guest woken by an artifact kind learns WHICH kind before it opens anything.
+        ///
+        /// 🧩️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): descriptor-driven
+        /// native cascade — M6's own acceptance wording, "activating a parent brings up its N
+        /// extension actors." `wasm_path` is always `<modules_root>/<plugin_id>/<file>.wasm`
+        /// (`program_bridge::load_wasm_plugins`'s own layout convention), so the extensions' own
+        /// wasm artifacts live as siblings under the same `modules_root`.
         async fn create_app(&mut self, wasm_path: PathBuf, plugin_id: String, app_id: String, artifact_schema: String) -> Result<u32, String> {
             let replay_route_index = self.replay_routes.iter().position(Option::is_none).ok_or_else(|| "kernel: fixed replay route registry is full".to_string())?;
             let component = read_native_component(&wasm_path).await?;
@@ -8155,8 +8170,6 @@ pub(crate) mod kernel_runtime {
             let artifact_digest = JobReplayRequest::from_spawn(&app_id, &[]).tool;
             let package_id = PackageId(plugin_id.clone());
             let package_ref = PackageRef { package: package_id.clone(), hash };
-            // 🐛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): compile
-            // remains a genuine suspension point on the worker-pool-owned request state machine.
             let compiled = self.compile_serving_others(package_ref.clone(), bytes.to_vec()).await?;
             if !artifact_schema.is_empty() {
                 let codec = semio_framework_plugin_host::OwnedComponentDocumentCodec::try_new(self.guest_runtime.clone(), compiled.clone(), artifact_schema).map_err(|error| error.to_string())?;
@@ -8181,11 +8194,6 @@ pub(crate) mod kernel_runtime {
                 .await?;
             self.replay_routes[replay_route_index] = Some(MountedReplayRouteSeed { actor, plugin: plugin_digest, package: hash.0, window: u64::from(instance_id), artifact: artifact_digest });
             self.instances.insert(instance_id, actor);
-            // 🐣️ `InstanceOpen` is the first event a fresh instance must receive (`📓️design-abi.md`
-            // §2) — `actor`/`config`/`assets`/`capabilities` are placeholders until a real capability
-            // broker/asset-preload pipeline lands (A2b/T1 territory, not this packet's). It rides
-            // behind the declared `Activate` this app id justifies (`activation_turn_event`), so a
-            // guest woken by an artifact kind learns WHICH kind before it opens anything.
             let open = Event::InstanceOpen {
                 request: semio_framework::kernel::ActorInstanceOpenRequest { activation_generation: 1, instance_id, request_sequence: 1 },
                 app_id: semio_framework::kernel::AppInstanceId(app_id.clone()),
@@ -8199,11 +8207,6 @@ pub(crate) mod kernel_runtime {
             first_turn.extend(semio_framework_plugin_host::activation::activation_turn_event(&app_id));
             first_turn.push(open);
             self.run_turn(actor, instance_id, first_turn).await?;
-            // 🧩️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): descriptor-driven
-            // native cascade — M6's own acceptance wording, "activating a parent brings up its N
-            // extension actors." `wasm_path` is always `<modules_root>/<plugin_id>/<file>.wasm`
-            // (`program_bridge::load_wasm_plugins`'s own layout convention), so the extensions' own
-            // wasm artifacts live as siblings under the same `modules_root`.
             if let Some(modules_root) = wasm_path.parent().and_then(|dir| dir.parent()) {
                 self.activate_extensions_of(&plugin_id, actor, modules_root).await;
             }
@@ -8232,6 +8235,14 @@ pub(crate) mod kernel_runtime {
         /// is missing. A lease-request for a small additive method is open — see this ticket's report.
         /// `link_extension` (cascade topology, zero-orphan teardown) is unaffected by this gap and
         /// works correctly regardless of which shard the extension landed on.
+        ///
+        /// 🕳️ Honest gap: the REAL capability enforcement point for a guest instance is the
+        /// `caps: &[BrokerCapabilityGrant]` argument below, `&[]` here because this native host
+        /// has no capability broker wired up for ANY actor kind yet — the parent's own
+        /// activation above passes the identical empty placeholder (A2b/T1 territory). The
+        /// `intersect_capabilities` call still records the correctly-scoped grant kernel-side
+        /// (`set_capabilities` below) so the intersection mechanism is exercised end-to-end and
+        /// ready the moment a broker starts populating `parent_grants` for real.
         async fn activate_extensions_of(&mut self, plugin_id: &str, parent: ActorId, modules_root: &std::path::Path) {
             let extensions = extension_index().extensions_of(plugin_id);
             if extensions.is_empty() {
@@ -8280,13 +8291,6 @@ pub(crate) mod kernel_runtime {
                 };
                 let extension_ordinal = self.plugin_ordinal(&extension.extension_id);
                 let extension_kind = ActorKind::Extension { plugin: PackageId(plugin_id.to_string()), extension_id: extension.extension_id.clone() };
-                // 🕳️ Honest gap: the REAL capability enforcement point for a guest instance is the
-                // `caps: &[BrokerCapabilityGrant]` argument below, `&[]` here because this native host
-                // has no capability broker wired up for ANY actor kind yet — the parent's own
-                // activation above passes the identical empty placeholder (A2b/T1 territory). The
-                // `intersect_capabilities` call still records the correctly-scoped grant kernel-side
-                // (`set_capabilities` below) so the intersection mechanism is exercised end-to-end and
-                // ready the moment a broker starts populating `parent_grants` for real.
                 match self.runtime.activate(extension.package.clone(), extension_ordinal, extension_kind, Lane::Background, None, ActivationEvent::Manual, &extension_compiled, &[] as &[BrokerCapabilityGrant], &TURN_BUDGET).await {
                     Ok(extension_actor) => {
                         self.replay_routes[replay_route_index] =
@@ -8487,14 +8491,14 @@ pub(crate) mod kernel_runtime {
             true
         }
 
+        /// 🎫️ `Event::PatchRejected` carries the issued-patch authority the guest minted with the
+        /// patch. A rejection with no authority behind it (a surface the registry could not admit
+        /// at all, so no turn ever reached a slot) has nothing to reject back and stays a local
+        /// registry entry rather than a fabricated receipt.
         async fn exchange(&mut self, instance: u32, mut events: Vec<Event>) -> Result<ExchangeOutcome, String> {
             let Some(&actor) = self.instances.get(&instance) else {
                 return Err(format!("kernel: instance {instance} is not registered"));
             };
-            // 🎫️ `Event::PatchRejected` carries the issued-patch authority the guest minted with the
-            // patch. A rejection with no authority behind it (a surface the registry could not admit
-            // at all, so no turn ever reached a slot) has nothing to reject back and stays a local
-            // registry entry rather than a fabricated receipt.
             if let Some(rejection) = self.pending_rejections.take_instance_one(instance) {
                 if let Some(receipt) = rejection.receipt {
                     events.insert(0, Event::PatchRejected { receipt, surface: rejection.surface.0.as_str().to_string(), revision: rejection.revision.0, reason: rejection.reason.to_string() });
@@ -8925,6 +8929,24 @@ pub(crate) mod kernel_runtime {
         /// 🚚️ Submits `envelopes` to `actor`, then grants and collects until nothing is left to grant and
         /// no deferred reserved-job completion of `actor` is owed. An outcome no grant of this call asked
         /// for is such a completion: the shard runs a job's `Event::JobCompleted` turn by itself.
+        ///
+        /// 🎠️ terra-kernel-loop: a trap must ALSO reach `Kernel::complete` — otherwise
+        /// the failure ladder (`FailureState::on_signal`) never sees it, staying just as
+        /// inert for the trap path as `Kernel::complete` being uncalled at all used to
+        /// leave it. `ShardOutcome::Fault` carries no `TurnResult` (no `fuel_used`, no
+        /// `Effect`s — the turn never returned one), so a minimal `Faulted` `TurnResult`
+        /// is synthesized from its `message` — the same shape `apply_turn_result`'s
+        /// caller already treats a fault as `TurnStatus::Faulted` for retry purposes.
+        ///
+        /// 🚧️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (K1, landed mid-session):
+        /// `ShardOutcome` also carries checkpoint/resume/cancel control responses.
+        /// This kernel pool state machine does not consume those control responses;
+        /// a `Job` publication is handled by the explicit owner-moving arm above.
+        /// Any remaining control response reaching here — for `actor` OR any other
+        /// actor `Kernel::tick` happened to grant in the SAME call — is silently
+        /// ignored rather than aborting an otherwise-successful turn; unlike the
+        /// ORIGINAL `Fault`/`Job` handling this replaces, this loop may observe outcomes
+        /// for actors OTHER than `actor` (DRR is global), so those must not error out.
         async fn dispatch_turn(&mut self, actor: ActorId, instance: u32, envelopes: Vec<Envelope>, replay_start_index: Option<usize>) -> Result<(ExchangeOutcome, Option<Vec<Event>>), String> {
             let stepped_reserved_job = envelopes.iter().find_map(|envelope| match &envelope.payload {
                 Payload::JobStep { turn } => self.reserved_jobs.iter().flatten().any(|job| job.actor == actor && job.job == turn.job).then_some(turn.job),
@@ -9045,13 +9067,6 @@ pub(crate) mod kernel_runtime {
                             }
                             replay_capture_started = true;
                         }
-                        // 🎠️ terra-kernel-loop: a trap must ALSO reach `Kernel::complete` — otherwise
-                        // the failure ladder (`FailureState::on_signal`) never sees it, staying just as
-                        // inert for the trap path as `Kernel::complete` being uncalled at all used to
-                        // leave it. `ShardOutcome::Fault` carries no `TurnResult` (no `fuel_used`, no
-                        // `Effect`s — the turn never returned one), so a minimal `Faulted` `TurnResult`
-                        // is synthesized from its `message` — the same shape `apply_turn_result`'s
-                        // caller already treats a fault as `TurnStatus::Faulted` for retry purposes.
                         ShardOutcome::Fault { actor: reported, message } => {
                             self.begin_fault_close(ActorId(reported));
                             let faulted = semio_framework_actor::TurnResult {
@@ -9076,15 +9091,6 @@ pub(crate) mod kernel_runtime {
                                 });
                             }
                         }
-                        // 🚧️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (K1, landed mid-session):
-                        // `ShardOutcome` also carries checkpoint/resume/cancel control responses.
-                        // This kernel pool state machine does not consume those control responses;
-                        // a `Job` publication is handled by the explicit owner-moving arm above.
-                        // Any remaining control response reaching here — for `actor` OR any other
-                        // actor `Kernel::tick` happened to grant in the SAME call — is silently
-                        // ignored rather than aborting an otherwise-successful turn; unlike the
-                        // ORIGINAL `Fault`/`Job` handling this replaces, this loop may observe outcomes
-                        // for actors OTHER than `actor` (DRR is global), so those must not error out.
                         _ => {}
                     }
                 }
@@ -9124,12 +9130,12 @@ pub(crate) mod kernel_runtime {
             Ok((outcome, continuation))
         }
 
+        /// 🎠️ terra-kernel-loop: `Kernel::complete` (the bridge this doc comment used to flag as
+        /// unreached — "bridging the two needs a real pack-encode step this packet didn't reach")
+        /// is now genuinely called, from `run_turn`, for EVERY `ShardOutcome::Turn` a tick grants
+        /// (including `actor`'s own, before this method is even invoked) — so `Kernel`'s
+        /// failure-ladder/metrics bookkeeping is live for this host now, not skipped.
         async fn apply_turn_result(&mut self, actor: ActorId, instance: u32, mut result: TurnResult) -> Result<ExchangeOutcome, String> {
-            // 🎠️ terra-kernel-loop: `Kernel::complete` (the bridge this doc comment used to flag as
-            // unreached — "bridging the two needs a real pack-encode step this packet didn't reach")
-            // is now genuinely called, from `run_turn`, for EVERY `ShardOutcome::Turn` a tick grants
-            // (including `actor`'s own, before this method is even invoked) — so `Kernel`'s
-            // failure-ladder/metrics bookkeeping is live for this host now, not skipped.
             let _ = actor;
             let mut frames = Vec::new();
             let mut effects = Vec::new();
@@ -9969,14 +9975,20 @@ pub mod scale_bench {
         /// budget 5 used to time itself this way and that is exactly the defect this packet fixed;
         /// budget 5 now uses `pump_tracking` below instead, which stamps the moment ONE specific
         /// actor's own outcome is observed rather than waiting on this method's own return.
+        ///
+        /// 🔀️ Cloned BEFORE the call (a small `HashMap<u64, TurnBudget>`, one per activated
+        /// actor) so the closure below borrows THIS local binding, not `self` — `self.runtime.
+        /// tick_and_dispatch(..)` already holds `self.runtime` mutably for the duration of the
+        /// call, and a closure capturing `&self.budgets` directly would conflict with that.
+        ///
+        /// 🎠️ terra-kernel-loop: same reasoning as `kernel_runtime::run_turn`'s own
+        /// `ShardOutcome::Fault` arm — a trap must reach `Kernel::complete` too, or the
+        /// failure ladder never sees the SAME "hang"/"crash" profiles budgets 2/3/6
+        /// deliberately exercise.
         async fn pump(&mut self) -> Result<usize, String> {
             let mut total = 0usize;
             loop {
                 self.now_ms += 1;
-                // 🔀️ Cloned BEFORE the call (a small `HashMap<u64, TurnBudget>`, one per activated
-                // actor) so the closure below borrows THIS local binding, not `self` — `self.runtime.
-                // tick_and_dispatch(..)` already holds `self.runtime` mutably for the duration of the
-                // call, and a closure capturing `&self.budgets` directly would conflict with that.
                 let budgets = self.budgets.clone();
                 let fallback = TurnBudget { fuel: BENCH_FUEL, deadline_ms: 50, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
                 let decision = self.runtime.tick_and_dispatch(self.now_ms, |actor| crate::actor_budget_from_turn_budget(budgets.get(&actor.0).copied().unwrap_or(fallback), Lane::Background)).await;
@@ -9994,10 +10006,6 @@ pub mod scale_bench {
                         ShardOutcome::Turn { actor, result, .. } => {
                             let _ = self.runtime.complete_actor(ActorId(*actor), result, self.now_ms).await;
                         }
-                        // 🎠️ terra-kernel-loop: same reasoning as `kernel_runtime::run_turn`'s own
-                        // `ShardOutcome::Fault` arm — a trap must reach `Kernel::complete` too, or the
-                        // failure ladder never sees the SAME "hang"/"crash" profiles budgets 2/3/6
-                        // deliberately exercise.
                         ShardOutcome::Fault { actor, message } => {
                             let faulted = semio_framework_actor::TurnResult {
                                 cold_pair_ingress: Default::default(),
@@ -10190,6 +10198,33 @@ pub mod scale_bench {
     /// 🏋️ Budgets 4 (memory) and 5 (interactive p95 under 40-cpu-actor load) share one fully-activated
     /// registry ("the" 50x50 scale claim) so budget 5 measures real contention against the same live
     /// fleet budget 4 just measured RSS for, instead of paying for a second 2550-instance activation.
+    ///
+    /// Budget 5 — reuse the live fleet: 40 cpu-profile actors + 1 idle-profile "interactive" actor.
+    ///
+    /// 🎯️ terra-bench-instrument: the 40 cpu-actor `Wake`s are submitted BEFORE the
+    /// clock starts, on `Lane::Background` (`env.send`, unchanged) — they still get
+    /// GRANTED in the SAME `Kernel::tick` as the interactive command just below
+    /// (`grants_per_tick` comfortably covers 41 single-turn grants), so they are
+    /// genuinely running/contending on their own real `ShardExecutor` threads for the
+    /// WHOLE measured interval below, which is exactly the "40 cpu actors saturating
+    /// the background" load this budget names. They are just not what stops the clock.
+    ///
+    /// 🎯️ terra-bench-instrument: the one envelope in this bench that carries
+    /// `Lane::Interactive` (`Env::send_payload_lane`) — every other envelope this
+    /// harness ever sends, including the 40 `Wake`s above, stays `Lane::Background`.
+    ///
+    /// 🎯️ terra-bench-instrument (THE measurement fix): the interval this bench
+    /// records is send -> `interactive_actor`'s OWN `ShardOutcome` being observed,
+    /// via `Env::pump_tracking`'s `Instant` stamp — NOT the moment `pump_tracking`
+    /// itself returns. `pump_tracking` still drives every actor granted this round
+    /// (the 40 cpu actors included) all the way to `Kernel::complete`, exactly like
+    /// `pump()` does elsewhere in this file, so kernel bookkeeping stays correct for
+    /// the next round; those other 40 completions may land AFTER the stamp below and
+    /// are deliberately excluded from `samples_ms`. Before this fix, the interval was
+    /// `start.elapsed()` taken AFTER `pump()` (bulk-waits for ALL 41 outcomes) had
+    /// already returned — i.e. it timed the slowest of 41 actors every round, not this
+    /// one actor's own response; see this packet's own report for why that made the
+    /// 8ms budget unreachable by construction, independent of scheduler quality.
     async fn budget_4_and_5(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord], shard_count: u16, memory_budget_bytes: u64) -> (serde_json::Value, serde_json::Value) {
         let mut env = Env::new(runtime.clone(), shard_count).await;
         let mut activated: Vec<(ActorId, String)> = Vec::with_capacity(records.len());
@@ -10236,7 +10271,6 @@ pub mod scale_bench {
             },
         );
 
-        // Budget 5 — reuse the live fleet: 40 cpu-profile actors + 1 idle-profile "interactive" actor.
         let cpu_actors: Vec<ActorId> = activated.iter().filter(|(_, profile)| profile == "cpu").take(40).map(|(actor, _)| *actor).collect();
         let interactive_actor = activated.iter().find(|(_, profile)| profile == "idle").map(|(actor, _)| *actor);
         let row5 = match interactive_actor {
@@ -10250,20 +10284,10 @@ pub mod scale_bench {
                 let mut samples_ms: Vec<f64> = Vec::with_capacity(ROUNDS);
                 let mut round_faults = 0usize;
                 for _ in 0..ROUNDS {
-                    // 🎯️ terra-bench-instrument: the 40 cpu-actor `Wake`s are submitted BEFORE the
-                    // clock starts, on `Lane::Background` (`env.send`, unchanged) — they still get
-                    // GRANTED in the SAME `Kernel::tick` as the interactive command just below
-                    // (`grants_per_tick` comfortably covers 41 single-turn grants), so they are
-                    // genuinely running/contending on their own real `ShardExecutor` threads for the
-                    // WHOLE measured interval below, which is exactly the "40 cpu actors saturating
-                    // the background" load this budget names. They are just not what stops the clock.
                     for actor in &cpu_actors {
                         env.send(*actor, &Event::Wake).await;
                     }
                     let start = Instant::now();
-                    // 🎯️ terra-bench-instrument: the one envelope in this bench that carries
-                    // `Lane::Interactive` (`Env::send_payload_lane`) — every other envelope this
-                    // harness ever sends, including the 40 `Wake`s above, stays `Lane::Background`.
                     env.send_payload_lane(
                         interactive_actor,
                         Payload::Event {
@@ -10288,18 +10312,6 @@ pub mod scale_bench {
                         Lane::Interactive,
                     )
                     .await;
-                    // 🎯️ terra-bench-instrument (THE measurement fix): the interval this bench
-                    // records is send -> `interactive_actor`'s OWN `ShardOutcome` being observed,
-                    // via `Env::pump_tracking`'s `Instant` stamp — NOT the moment `pump_tracking`
-                    // itself returns. `pump_tracking` still drives every actor granted this round
-                    // (the 40 cpu actors included) all the way to `Kernel::complete`, exactly like
-                    // `pump()` does elsewhere in this file, so kernel bookkeeping stays correct for
-                    // the next round; those other 40 completions may land AFTER the stamp below and
-                    // are deliberately excluded from `samples_ms`. Before this fix, the interval was
-                    // `start.elapsed()` taken AFTER `pump()` (bulk-waits for ALL 41 outcomes) had
-                    // already returned — i.e. it timed the slowest of 41 actors every round, not this
-                    // one actor's own response; see this packet's own report for why that made the
-                    // 8ms budget unreachable by construction, independent of scheduler quality.
                     match env.pump_tracking(interactive_actor).await {
                         Ok(Some(seen_at)) => samples_ms.push((seen_at - start).as_secs_f64() * 1000.0),
                         Ok(None) => round_faults += 1,
@@ -10328,6 +10340,15 @@ pub mod scale_bench {
     //#endregion 🔖️Budget4And5FullScale
 
     //#region 🔖️Budget6Hang
+    /// 🐛️ `🎭️profile::turn()` runs unconditionally on EVERY `poll`, including `InstanceOpen` (see
+    /// `guest::FixtureGuest::poll` in this crate's `🦀️.rs` — it always calls
+    /// `on_instance_open` THEN `profile::turn`) — the hang profile's overrun busy-loop, and the
+    /// epoch-interrupt trap it draws, is therefore typically already hit on THIS first turn, not a
+    /// dedicated follow-up `Wake`. A wasmtime component instance is permanently poisoned after any
+    /// trap (cannot be re-entered), so a second call into an already-trapped instance correctly
+    /// fails with "cannot enter component instance" — that message is CONFIRMING evidence of an
+    /// earlier kill, not a different failure. Checked here first; falls back to an explicit `Wake`
+    /// only if the InstanceOpen turn happened not to trigger it.
     async fn budget_6_hang(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord]) -> serde_json::Value {
         let Some(hang_record) = records.iter().find(|r| profile_of(r) == "hang") else {
             return skipped(6, "hang actor killed within 2x budget, shard rebuilt, siblings restored, total pause <= 250ms", "no hang-profile record in registry");
@@ -10357,15 +10378,6 @@ pub mod scale_bench {
         if env.pump().await.is_err() {
             return row(6, "hang actor killed within 2x budget, shard rebuilt, siblings restored, total pause <= 250ms", "fail", json!(null), json!(null), "ShardLoop::pump failed on InstanceOpen phase");
         }
-        // 🐛️ `🎭️profile::turn()` runs unconditionally on EVERY `poll`, including `InstanceOpen` (see
-        // `guest::FixtureGuest::poll` in this crate's `🦀️.rs` — it always calls
-        // `on_instance_open` THEN `profile::turn`) — the hang profile's overrun busy-loop, and the
-        // epoch-interrupt trap it draws, is therefore typically already hit on THIS first turn, not a
-        // dedicated follow-up `Wake`. A wasmtime component instance is permanently poisoned after any
-        // trap (cannot be re-entered), so a second call into an already-trapped instance correctly
-        // fails with "cannot enter component instance" — that message is CONFIRMING evidence of an
-        // earlier kill, not a different failure. Checked here first; falls back to an explicit `Wake`
-        // only if the InstanceOpen turn happened not to trigger it.
         let open_outcomes = env.drain();
         let hang_fault_on_open = open_outcomes.iter().find_map(|o| match o {
             ShardOutcome::Fault { actor, message } if *actor == hang_actor.0 => Some(message.clone()),
@@ -10423,6 +10435,9 @@ pub mod scale_bench {
     /// checkpoint wire path K1 unblocked.
     const BUDGET_7_DESCRIPTION: &str = "stateful actor LRU-suspended and resumed -> identical state hash";
 
+    /// 💤️ The "evicted" half of LRU-suspend: drop A's live instance from this shard.
+    ///
+    /// The "resumed elsewhere" half: a FRESH instance, resumed from the captured checkpoint bytes.
     async fn budget_7_stateful(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord]) -> serde_json::Value {
         let Some(record) = records.iter().find(|r| profile_of(r) == "stateful") else {
             return skipped(7, BUDGET_7_DESCRIPTION, "no stateful-profile record in registry");
@@ -10454,10 +10469,8 @@ pub mod scale_bench {
             return row(7, BUDGET_7_DESCRIPTION, "fail", json!({ "outcomes": format!("{suspend_outcomes:?}") }), json!(null), "no ShardOutcome::Checkpoint for Suspend");
         };
 
-        // The "evicted" half of LRU-suspend: drop A's live instance from this shard.
         env.unregister(actor_a).await;
 
-        // The "resumed elsewhere" half: a FRESH instance, resumed from the captured checkpoint bytes.
         let actor_b = match env.activate(compiled, record).await {
             Ok(actor) => actor,
             Err(error) => return row(7, BUDGET_7_DESCRIPTION, "fail", json!({ "error": error }), json!(null), "re-activate/instantiate failed"),
@@ -10494,6 +10507,10 @@ pub mod scale_bench {
     //#endregion 🔖️Budget7Stateful
 
     //#region 🔖️Budget8CapabilityRevoke
+    /// 🐛️ `🎭️profile::turn()` runs unconditionally on EVERY `poll` (see budget 6's identical note) —
+    /// the `io` profile's ONE-TIME `RequestCapability` effect is therefore typically emitted on
+    /// THIS very first `InstanceOpen` turn, not a dedicated follow-up. Checked on both turns so a
+    /// real request is never misread as absent just because it landed on turn 1.
     async fn budget_8_capability_revoke(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord]) -> serde_json::Value {
         let Some(record) = records.iter().find(|r| profile_of(r) == "io") else {
             return skipped(8, "capability revoked at runtime -> denied completion, actor stays alive, quota counters zero", "no io-profile record in registry");
@@ -10505,10 +10522,6 @@ pub mod scale_bench {
             Ok(instance) => instance,
             Err(error) => return row(8, "capability revoked at runtime -> denied completion, actor stays alive, quota counters zero", "fail", json!({ "error": error.to_string() }), json!(null), "instantiate failed"),
         };
-        // 🐛️ `🎭️profile::turn()` runs unconditionally on EVERY `poll` (see budget 6's identical note) —
-        // the `io` profile's ONE-TIME `RequestCapability` effect is therefore typically emitted on
-        // THIS very first `InstanceOpen` turn, not a dedicated follow-up. Checked on both turns so a
-        // real request is never misread as absent just because it landed on turn 1.
         let open_result = match runtime.execute_turn(&mut inst, &[instance_open_event(record, 1)], budget).await {
             Ok(result) => result,
             Err(fault) => return row(8, "capability revoked at runtime -> denied completion, actor stays alive, quota counters zero", "fail", json!({ "error": fault.to_string() }), json!(null), "InstanceOpen turn failed"),
@@ -10629,7 +10642,7 @@ where
 }
 
 /// 🩺️ Temporary transition-only tracing so a per-frame predicate can be observed without 60 lines a
-/// second. Remove with the `[DEBUG]` lines it serves.
+/// second. Remove with the `[TRACE]` lines it serves.
 pub(crate) fn log_debug_diagnostic_once_per_transition(site: &'static str, state: bool, message: &str) {
     if semio_framework_trace::runtime_diagnostics_enabled() {
         log_debug_once_per_transition(site, state, message);
@@ -10650,7 +10663,7 @@ fn log_debug_once_per_transition(site: &'static str, state: bool, message: &str)
     log_debug(message);
 }
 
-/// 🩺️ A PER-FRAME `[DEBUG]` dump. Printed only while runtime diagnostics are armed
+/// 🩺️ A PER-FRAME `[TRACE]` dump. Printed only while runtime diagnostics are armed
 /// (`SEMIO_RUNTIME_DIAGNOSTICS` — the process environment natively, the url stamp the UI isolate puts
 /// on the frame Worker in a browser, `localStorage` in React's own shell), because sixty of these a
 /// second per surface is not a trace, it is a mask: the boot fault this gate was added with
@@ -10789,6 +10802,9 @@ pub fn keybinding_platform_kind(platform: &str) -> semio_framework::manifest::Pl
 }
 
 /// ⌨️ The compile-time platform a NATIVE build runs on — the initializer both door cells start from.
+///
+/// 🌐️ `wasm32-unknown-unknown` lands here too, which is exactly the defect this door exists for:
+/// the value is a PLACEHOLDER until the page publishes the real one, never an answer.
 const fn compiled_host_platform() -> semio_framework::manifest::Platform {
     #[cfg(target_os = "macos")]
     {
@@ -10800,8 +10816,6 @@ const fn compiled_host_platform() -> semio_framework::manifest::Platform {
     }
     #[cfg(all(not(target_os = "macos"), not(target_os = "windows")))]
     {
-        // 🌐️ `wasm32-unknown-unknown` lands here too, which is exactly the defect this door exists for:
-        // the value is a PLACEHOLDER until the page publishes the real one, never an answer.
         semio_framework::manifest::Platform::Linux
     }
 }
@@ -11816,23 +11830,23 @@ impl RuntimeApply {
     }
 
     fn start_dispatch(cursor: &mut Option<RuntimeDispatchCursor>, runtime: &mut AppRuntime, handle: &AppHandle) -> bool {
-        log_debug("[DEBUG] start_dispatch enter");
+        log_debug("[TRACE] start_dispatch enter");
         let Some(cursor_value) = cursor.as_mut() else { return true };
         if cursor_value.terminal_is_empty() {
             cursor.take();
             return true;
         }
         let Some(mailbox) = handle.upgrade().map(RuntimeMailbox) else {
-            log_debug("[DEBUG] start_dispatch refused: mailbox handle expired");
+            log_debug("[TRACE] start_dispatch refused: mailbox handle expired");
             return false;
         };
         let Some(mut interaction) = runtime.check_out_interaction("dispatch-event") else {
-            log_debug_once_per_transition("start-dispatch-checkout", true, "[DEBUG] start_dispatch refused: interaction state is checked out");
+            log_debug_once_per_transition("start-dispatch-checkout", true, "[TRACE] start_dispatch refused: interaction state is checked out");
             return false;
         };
-        log_debug_once_per_transition("start-dispatch-checkout", false, "[DEBUG] start_dispatch: interaction state checked out for one event");
+        log_debug_once_per_transition("start-dispatch-checkout", false, "[TRACE] start_dispatch: interaction state checked out for one event");
         if !mailbox.reserve_interaction_future() {
-            log_debug("[DEBUG] start_dispatch refused: interaction future credits exhausted");
+            log_debug("[TRACE] start_dispatch refused: interaction future credits exhausted");
             interaction.frame_fault = Some("runtime dispatch completion credits exhausted".to_string());
             runtime.return_interaction(interaction);
             return false;
@@ -11989,7 +12003,7 @@ impl RuntimeApply {
                                         cursor_value.actions.cancel_correlation(receipt.token);
                                     }
                                 }
-                                log_debug(&format!("[DEBUG] frame deferred action failed: {error}"));
+                                log_debug(&format!("[TRACE] frame deferred action failed: {error}"));
                                 interaction.shell.note_dispatch_fault(&error);
                             }
                         }
@@ -12010,7 +12024,7 @@ impl RuntimeApply {
 
     fn apply_step(&mut self, runtime: &mut AppRuntime, handle: &AppHandle) -> bool {
         if let Self::DispatchEvents(cursor) = self {
-            log_debug(&format!("[DEBUG] apply_step DispatchEvents present={} terminal-empty={:?}", cursor.is_some(), cursor.as_ref().map(RuntimeDispatchCursor::terminal_is_empty)));
+            log_debug(&format!("[TRACE] apply_step DispatchEvents present={} terminal-empty={:?}", cursor.is_some(), cursor.as_ref().map(RuntimeDispatchCursor::terminal_is_empty)));
         }
         match self {
             Self::Resize { width, height, dpr } => runtime.resize(*width, *height, *dpr),
@@ -13398,7 +13412,7 @@ impl RuntimeMailbox {
                 }
                 Some(true) => {}
             }
-            log_debug_diagnostic(&format!("[DEBUG] asset ready kind={:?} url={} bytes={}", probe.owner().kind(), probe.owner().url(), probe.owner().received_bytes()));
+            log_debug_diagnostic(&format!("[TRACE] asset ready kind={:?} url={} bytes={}", probe.owner().kind(), probe.owner().url(), probe.owner().received_bytes()));
             if matches!(probe.owner(), RendererAssetFetchOwner::Shared(_)) && matches!(probe.owner().kind(), WorldAssetRequestKind::Glb) {
                 let Some(asset) = probe.take_ready_mesh_asset() else { return RendererAssetDecodeTurnKind::Pending };
                 match scenes::icon_export::asset::publish(probe.owner().owner().token(), asset) {
@@ -13528,7 +13542,7 @@ impl RuntimeMailbox {
             }
             match publish_world3d_asset_mesh(state, probe.owner().url(), asset) {
                 Ok(()) => {
-                    log_debug_diagnostic(&format!("[DEBUG] asset mesh published url={}", probe.owner().url()));
+                    log_debug_diagnostic(&format!("[TRACE] asset mesh published url={}", probe.owner().url()));
                     probe.finish_ready_mesh();
                     return RendererAssetDecodeTurnKind::Published;
                 }
@@ -14227,7 +14241,7 @@ impl RuntimeMailbox {
     }
 
     pub(crate) fn record_frame_fault(&self, fault: &'static str) {
-        log_debug(&format!("[DEBUG] frame fault recorded: {fault}"));
+        log_debug(&format!("[TRACE] frame fault recorded: {fault}"));
         let mut slot = self.0.frame_fault.lock().expect("runtime frame fault lock");
         if slot.is_none() {
             *slot = Some(fault.to_string());
@@ -14370,7 +14384,7 @@ impl RuntimeMailbox {
                                     }
                                 }
                                 if let Some(interaction) = owner.interaction.as_mut() {
-                                    log_debug(&format!("[DEBUG] frame deferred action failed: {error}"));
+                                    log_debug(&format!("[TRACE] frame deferred action failed: {error}"));
                                     interaction.shell.note_dispatch_fault(&error);
                                 }
                             }
@@ -14595,21 +14609,24 @@ impl RuntimeMailbox {
         }
     }
 
+    /// 🎟️ On native the owner may also be a frame-maintenance refusal this runtime is still holding:
+    /// the reservation is already cancelled and the state lives inside the refusal's owner cell, so
+    /// the mailbox alone cannot see it.
+    ///
+    /// 🩺️ Once per abandoned episode, and the episode is what QUARANTINES the surface — the overlay
+    /// is the only place this used to appear, and a probe reads the console, not the canvas.
     fn apply_pending_step(&self) -> bool {
         let Ok(mut runtime) = self.try_lock() else {
-            log_debug_once_per_transition("apply-lock", true, "[DEBUG] apply_pending_step blocked: runtime mutex is held");
+            log_debug_once_per_transition("apply-lock", true, "[TRACE] apply_pending_step blocked: runtime mutex is held");
             return false;
         };
-        log_debug_once_per_transition("apply-lock", false, "[DEBUG] apply_pending_step: runtime mutex acquired again");
+        log_debug_once_per_transition("apply-lock", false, "[TRACE] apply_pending_step: runtime mutex acquired again");
         let available = runtime.interaction_available();
         let queue = self.0.completions.lock().expect("runtime completion mailbox lock");
         let head_requires_interaction = queue.head_requires_interaction();
         let owner_outstanding = queue.interaction_owner_outstanding();
         let index = queue.first_applicable(available);
         drop(queue);
-        // 🎟️ On native the owner may also be a frame-maintenance refusal this runtime is still holding:
-        // the reservation is already cancelled and the state lives inside the refusal's owner cell, so
-        // the mailbox alone cannot see it.
         #[cfg(not(target_arch = "wasm32"))]
         let owner_outstanding = owner_outstanding || runtime.pending_frame_maintenance_refusal.is_some();
         let admission = runtime.checkout.admit(head_requires_interaction, available, owner_outstanding);
@@ -14618,15 +14635,13 @@ impl RuntimeMailbox {
             "apply-interaction",
             blocked,
             &if blocked {
-                format!("[DEBUG] apply_pending_step blocked: head needs the interaction state, checked out at {:?} for {} opportunities", runtime.checkout.site(), runtime.checkout.opportunities())
+                format!("[TRACE] apply_pending_step blocked: head needs the interaction state, checked out at {:?} for {} opportunities", runtime.checkout.site(), runtime.checkout.opportunities())
             } else {
-                "[DEBUG] apply_pending_step: interaction state is available again".to_string()
+                "[TRACE] apply_pending_step: interaction state is available again".to_string()
             },
         );
         if let Some((site, opportunities)) = runtime.checkout.take_abandoned_notice() {
-            // 🩺️ Once per abandoned episode, and the episode is what QUARANTINES the surface — the overlay
-            // is the only place this used to appear, and a probe reads the console, not the canvas.
-            log_debug(&format!("[DEBUG] frame fault recorded: runtime interaction checkout at {site} has no owner left to return it after {opportunities} apply opportunities"));
+            log_debug(&format!("[TRACE] frame fault recorded: runtime interaction checkout at {site} has no owner left to return it after {opportunities} apply opportunities"));
             let mut slot = self.0.frame_fault.lock().expect("runtime frame fault lock");
             if slot.is_none() {
                 *slot = Some(format!("runtime interaction checkout at {site} has no owner left to return it after {opportunities} apply opportunities"));
@@ -15351,6 +15366,80 @@ impl FrameTransaction {
         }
     }
 
+    /// 🎟️ No interaction state, no frame — and NO PARKING.
+    ///
+    /// 🩸️ Parking here (`Pending`) kept the build alive across the whole checkout, and a live build
+    /// both freezes the frame generation and keeps asking for frames, so the worker isolate spun its
+    /// whole interactive share on a transaction that could not move — starving the very suspended
+    /// turn whose completion returns the state. Measured on 6118 as a third dispatched pointer move
+    /// that never came home, after which the isolate answered nothing for thirty seconds
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-runtime-mailbox-dispatch-2026-09-13.md`).
+    /// Ending the build instead retires the session in this same turn: the mailbox is pumped from
+    /// every advance, the returning completion is applied at the next opportunity, and the build that
+    /// needs the state is admitted fresh against it.
+    ///
+    /// 🥽️ ONE `registerBrushMesh` per world surface per frame — React's `BrushMeshRegistrar`
+    /// announces a loaded GLB's collision geometry to the puzzle guest per window instance,
+    /// and `drainPuzzle3dBrushMeshQueue` keeps exactly one page outstanding while a first
+    /// upload runs. The wgpu host dispatched nothing at all, so the guest's brush and
+    /// volume-brush utilities had no collision body on this renderer (ticket
+    /// 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w11a-…-missing.md` §6 family B). The row is
+    /// `gesture` provenance like every other surface-derived action on this lane.
+    ///
+    /// 🌩️ ONE effect-flush ROUND, counted where the transaction actually enters the stage.
+    ///
+    /// 🩸️ The counter used to be charged on every `step` taken WHILE the stage was
+    /// `FlushEffects`, which is not a storm measure at all: the stage covers the whole
+    /// post-intent tail (deferred frame work, board authority, world snapshots, the prepared
+    /// packet), and that tail legitimately needs far more than {@link EFFECT_STORM_BUDGET}
+    /// one-cursor steps. It only stayed invisible while the wgpu browser frame never reached
+    /// this stage at all; the moment it did, every frame faulted
+    /// `frame effect storm budget exhausted` and quarantined the surface
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-blank-paint-2026-09-12.md`).
+    ///
+    /// 🔁️ A `Pending` draw rebuild does NOT end this phase's turn.
+    ///
+    /// 🩸️ `step_world3d_draw_rebuild` owns only the PUBLISH half of a rebuild and answers
+    /// `Pending` for as long as its cursor is unsealed — and the only thing that can seal
+    /// it is `step_world3d_snapshot`, below. Returning here therefore made the two steps
+    /// wait on each other forever: measured on 6118 as `procedural-preview` frozen at
+    /// `apply-page=0/3 apply-item=1 rebuild=true state-meshes=2 draws=0` across 3.8 M
+    /// frame-transaction turns, with the solid `extrude@solid` sitting unconsumed in its
+    /// mesh lane (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). Both shared drivers —
+    /// `♾️infinite/🌍️world`'s own `drive_scene_bridge` and
+    /// `⚙️EngineCanvas/🧪️tests/🧩️wgpu-engine-surfaces` — already run the two steps in
+    /// exactly this order, unconditionally; this host was the one place that diverged.
+    ///
+    /// 🧹️ `Stale` is NOT a fault: it means the rebuild cursor was begun for a revision
+    /// or generation the state has since moved past, and the owning module's own rule
+    /// (`♾️infinite/🌍️world` §`retained_draw_rebuild_stale_and_interrupted_close_never_publish`)
+    /// is to CLOSE that cursor down its stepped ladder and let the next rebuild begin.
+    /// The reference driver `⚙️EngineCanvas/🧪️tests/🧩️wgpu-engine-surfaces/🦀️.rs:191`
+    /// faults on `Fault` alone; this host was the one place that also faulted on `Stale`,
+    /// and the fault code is fatal — `record_frame_fault` quarantines the surface for
+    /// good. Measured on 6118: a hover on the ELEVENTH gesture of a session published
+    /// `seq=3751 frame-credits: world3d retained draw rebuild faulted` and the frame
+    /// wire froze at 3 751 batches for the remaining nine gestures, with the page
+    /// showing "Surface: quarantined · input accepted: no"
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    ///
+    /// 🚧️🚪️ A modal layer OPENING clears the hover the pane published, with no pointer
+    /// move of its own. React's overlays take pointer events the instant they mount, so
+    /// r3f raises `onPointerOut` there and then — its `context-menu` step journals the
+    /// clear inside the step that opened the menu. This renderer only handed a surface its
+    /// leave on the next MOVE (W12a), so the clear rode along to the next step that moved
+    /// the pointer at all: the stray `interactionHover targets:[]` in
+    /// `example-picker-open`, ten steps and six keyboard chords later
+    /// (`🗑️generated/w12c-parity-run-19/steps.json` step 33, ticket 26/09/17 packet
+    /// W13c §1). Idempotent by construction — the clear retires the published hover, so
+    /// the predicate answers `false` on every later frame the layer stays open.
+    ///
+    /// 🖼️ One bitmap per step off `ui_wgpu`'s own image ledger — the drain
+    /// `take_ui_image_upload`'s docstring names ("the host's per-frame drain") and never had.
+    /// It answers `None` whenever a `SceneHost` is registered (the renderer's normal case:
+    /// `render_ui_image_step` owns `UiNode::Image` then), so this is free here and is what
+    /// makes the no-scene-host paint path in `ui_wgpu` actually show a decoded `data:` image
+    /// instead of the `alt` placeholder.
     pub(crate) fn step(&mut self, runtime: &RuntimeMailbox, handle: &AppHandle, context: &mut semio_framework_job::StepContext<'_>) -> AppFrameTransactionStep {
         let _latency = frame_latency::FrameLatencyTimer::start(frame_latency::FrameLatencyAuthority::renderer_frame(self.generation.0), self.stage.latency_stage(), 1);
         context.set_stage(self.stage_label());
@@ -15375,17 +15464,6 @@ impl FrameTransaction {
             return AppFrameTransactionStep::Pending;
         }
         let Ok(mut app) = runtime.try_lock() else { return AppFrameTransactionStep::Pending };
-        // 🎟️ No interaction state, no frame — and NO PARKING.
-        //
-        // 🩸️ Parking here (`Pending`) kept the build alive across the whole checkout, and a live build
-        // both freezes the frame generation and keeps asking for frames, so the worker isolate spun its
-        // whole interactive share on a transaction that could not move — starving the very suspended
-        // turn whose completion returns the state. Measured on 6118 as a third dispatched pointer move
-        // that never came home, after which the isolate answered nothing for thirty seconds
-        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-runtime-mailbox-dispatch-2026-09-13.md`).
-        // Ending the build instead retires the session in this same turn: the mailbox is pumped from
-        // every advance, the returning completion is applied at the next opportunity, and the build that
-        // needs the state is admitted fresh against it.
         if !app.interaction_available() {
             self.phase = AppFrameTransactionPhase::Terminal;
             return AppFrameTransactionStep::Superseded;
@@ -15432,13 +15510,6 @@ impl FrameTransaction {
                     AppFrameTransactionStep::Fault
                 }
             },
-            // 🥽️ ONE `registerBrushMesh` per world surface per frame — React's `BrushMeshRegistrar`
-            // announces a loaded GLB's collision geometry to the puzzle guest per window instance,
-            // and `drainPuzzle3dBrushMeshQueue` keeps exactly one page outstanding while a first
-            // upload runs. The wgpu host dispatched nothing at all, so the guest's brush and
-            // volume-brush utilities had no collision body on this renderer (ticket
-            // 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w11a-…-missing.md` §6 family B). The row is
-            // `gesture` provenance like every other surface-derived action on this lane.
             AppFrameTransactionPhase::BrushMesh => {
                 let Some(surface) = app.shell.world3d_states.keys().nth(self.brush_mesh_cursor).cloned() else {
                     self.phase = AppFrameTransactionPhase::Build;
@@ -15541,7 +15612,7 @@ impl FrameTransaction {
                             Ok(true) => return AppFrameTransactionStep::Pending,
                             Ok(false) => {}
                             Err(fault) => {
-                                log_debug(&format!("[DEBUG] text editor outbox admission failed: {fault:?}"));
+                                log_debug(&format!("[TRACE] text editor outbox admission failed: {fault:?}"));
                                 runtime.record_frame_fault("text editor outbox admission failed");
                                 self.phase = AppFrameTransactionPhase::Terminal;
                                 return AppFrameTransactionStep::Fault;
@@ -15561,16 +15632,6 @@ impl FrameTransaction {
                 if interpreter::drive_clipboard_io_step(&mut app.input) {
                     return AppFrameTransactionStep::Pending;
                 }
-                // 🌩️ ONE effect-flush ROUND, counted where the transaction actually enters the stage.
-                //
-                // 🩸️ The counter used to be charged on every `step` taken WHILE the stage was
-                // `FlushEffects`, which is not a storm measure at all: the stage covers the whole
-                // post-intent tail (deferred frame work, board authority, world snapshots, the prepared
-                // packet), and that tail legitimately needs far more than {@link EFFECT_STORM_BUDGET}
-                // one-cursor steps. It only stayed invisible while the wgpu browser frame never reached
-                // this stage at all; the moment it did, every frame faulted
-                // `frame effect storm budget exhausted` and quarantined the surface
-                // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-blank-paint-2026-09-12.md`).
                 let Some(next) = self.effect_opportunities.checked_add(1) else {
                     runtime.record_frame_fault("frame effect opportunity counter exhausted");
                     self.phase = AppFrameTransactionPhase::Terminal;
@@ -15703,46 +15764,22 @@ impl FrameTransaction {
                 match step_world3d_scene_bridge(state, context) {
                     World3dSceneBridgeStep::Pending => return AppFrameTransactionStep::Pending,
                     World3dSceneBridgeStep::Fault => {
-                        log_debug(&format!("[DEBUG] world3d bridge fault surface={surface_id} {}", state.ingest_census()));
+                        log_debug(&format!("[TRACE] world3d bridge fault surface={surface_id} {}", state.ingest_census()));
                         runtime.record_frame_fault("world3d scene mesh-wire bridge faulted");
                         self.phase = AppFrameTransactionPhase::Terminal;
                         return AppFrameTransactionStep::Fault;
                     }
                     World3dSceneBridgeStep::Idle | World3dSceneBridgeStep::Complete => {}
                 }
-                // 🔁️ A `Pending` draw rebuild does NOT end this phase's turn.
-                //
-                // 🩸️ `step_world3d_draw_rebuild` owns only the PUBLISH half of a rebuild and answers
-                // `Pending` for as long as its cursor is unsealed — and the only thing that can seal
-                // it is `step_world3d_snapshot`, below. Returning here therefore made the two steps
-                // wait on each other forever: measured on 6118 as `procedural-preview` frozen at
-                // `apply-page=0/3 apply-item=1 rebuild=true state-meshes=2 draws=0` across 3.8 M
-                // frame-transaction turns, with the solid `extrude@solid` sitting unconsumed in its
-                // mesh lane (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). Both shared drivers —
-                // `♾️infinite/🌍️world`'s own `drive_scene_bridge` and
-                // `⚙️EngineCanvas/🧪️tests/🧩️wgpu-engine-surfaces` — already run the two steps in
-                // exactly this order, unconditionally; this host was the one place that diverged.
                 match step_world3d_draw_rebuild(state, context) {
                     WorldDrawRebuildStep::Pending | WorldDrawRebuildStep::Complete => {}
-                    // 🧹️ `Stale` is NOT a fault: it means the rebuild cursor was begun for a revision
-                    // or generation the state has since moved past, and the owning module's own rule
-                    // (`♾️infinite/🌍️world` §`retained_draw_rebuild_stale_and_interrupted_close_never_publish`)
-                    // is to CLOSE that cursor down its stepped ladder and let the next rebuild begin.
-                    // The reference driver `⚙️EngineCanvas/🧪️tests/🧩️wgpu-engine-surfaces/🦀️.rs:191`
-                    // faults on `Fault` alone; this host was the one place that also faulted on `Stale`,
-                    // and the fault code is fatal — `record_frame_fault` quarantines the surface for
-                    // good. Measured on 6118: a hover on the ELEVENTH gesture of a session published
-                    // `seq=3751 frame-credits: world3d retained draw rebuild faulted` and the frame
-                    // wire froze at 3 751 batches for the remaining nine gestures, with the page
-                    // showing "Surface: quarantined · input accepted: no"
-                    // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
                     WorldDrawRebuildStep::Stale => {
-                        log_debug(&format!("[DEBUG] world3d draw rebuild surface={surface_id} step=Stale {}", state.ingest_census()));
+                        log_debug(&format!("[TRACE] world3d draw rebuild surface={surface_id} step=Stale {}", state.ingest_census()));
                         close_world3d_draw_rebuild_step(state, context);
                         return AppFrameTransactionStep::Pending;
                     }
                     WorldDrawRebuildStep::Fault => {
-                        log_debug(&format!("[DEBUG] world3d draw rebuild surface={surface_id} step=Fault {}", state.ingest_census()));
+                        log_debug(&format!("[TRACE] world3d draw rebuild surface={surface_id} step=Fault {}", state.ingest_census()));
                         runtime.record_frame_fault("world3d retained draw rebuild faulted");
                         self.phase = AppFrameTransactionPhase::Terminal;
                         return AppFrameTransactionStep::Fault;
@@ -15751,7 +15788,7 @@ impl FrameTransaction {
                 let snapshot_step = step_world3d_snapshot(state, context);
                 world3d_ingest_trace(&surface_id, state, &format!("snapshot-{snapshot_step:?}"));
                 if matches!(snapshot_step, World3dSnapshotApplyStep::Complete) {
-                    log_debug(&format!("[DEBUG] world3d delivery applied surface={surface_id} {}", state.ingest_census()));
+                    log_debug(&format!("[TRACE] world3d delivery applied surface={surface_id} {}", state.ingest_census()));
                 }
                 match snapshot_step {
                     World3dSnapshotApplyStep::Idle | World3dSnapshotApplyStep::Complete => {
@@ -15782,16 +15819,6 @@ impl FrameTransaction {
                 }
                 let surface_id = surface_id.to_owned();
                 let AppInteractionState { shell, input, .. } = interaction;
-                // 🚧️🚪️ A modal layer OPENING clears the hover the pane published, with no pointer
-                // move of its own. React's overlays take pointer events the instant they mount, so
-                // r3f raises `onPointerOut` there and then — its `context-menu` step journals the
-                // clear inside the step that opened the menu. This renderer only handed a surface its
-                // leave on the next MOVE (W12a), so the clear rode along to the next step that moved
-                // the pointer at all: the stray `interactionHover targets:[]` in
-                // `example-picker-open`, ten steps and six keyboard chords later
-                // (`🗑️generated/w12c-parity-run-19/steps.json` step 33, ticket 26/09/17 packet
-                // W13c §1). Idempotent by construction — the clear retires the published hover, so
-                // the predicate answers `false` on every later frame the layer stays open.
                 let modal = shell.pointer_input_is_modal();
                 let Some(state) = shell.world3d_states.get_mut(&surface_id) else {
                     runtime.record_frame_fault("world3d authority surface order lost ownership");
@@ -15827,12 +15854,6 @@ impl FrameTransaction {
                 }
             }
             AppFrameTransactionPhase::RasterUploads => {
-                // 🖼️ One bitmap per step off `ui_wgpu`'s own image ledger — the drain
-                // `take_ui_image_upload`'s docstring names ("the host's per-frame drain") and never had.
-                // It answers `None` whenever a `SceneHost` is registered (the renderer's normal case:
-                // `render_ui_image_step` owns `UiNode::Image` then), so this is free here and is what
-                // makes the no-scene-host paint path in `ui_wgpu` actually show a decoded `data:` image
-                // instead of the `alt` placeholder.
                 if let Some(upload) = ui_wgpu::wgpu::take_ui_image_upload() {
                     scenes::queue_decoded_raster_upload("ui-image", upload.key, upload.width, upload.height, upload.pixels);
                     return AppFrameTransactionStep::Pending;
@@ -16928,6 +16949,23 @@ impl AppPresenter {
         self.present_step_inner()
     }
 
+    /// 🩺️ The stored string is only ever surfaced by this fn's `Err` return,
+    /// and that return is unreachable while `pending` is still held by the
+    /// `Aborted` phase this line just entered — so an abort that never
+    /// finishes closing its candidate reported NOTHING at all, leaving the
+    /// host's own `frame gate blocked=true phase=Some(Aborted)
+    /// retained-fault=true` as the only trace and the REASON invisible
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+    /// `📓️wgpu-wheel-zoom-a11y-live-2026-09-14.md` §3.4a).
+    ///
+    /// 🎟️ The pair the BUILD was admitted under, never `current()` — see
+    /// `RuntimePresentationAuthority::admit_build` for the surface fault that re-reading a
+    /// moving authority here produced.
+    ///
+    /// 🧷️ A prepared world draw whose mesh is not resident is SKIPPED, never fatal — the
+    /// parity behaviour of React, which renders nothing until its loader resolves. It is
+    /// still a residency-law breach on the build side, so it is reported on the transition
+    /// rather than swallowed (`retain_ensured_world_draws`, `📓️w11a-…`).
     fn present_step_inner(&mut self) -> Result<AppPresentStep, String> {
         #[cfg(not(target_arch = "wasm32"))]
         {
@@ -16953,7 +16991,7 @@ impl AppPresenter {
             return Ok(AppPresentStep::Idle);
         };
         if let Some(shape) = Self::note_present_stall(&mut self.stall, cursor, upload_progress) {
-            log_debug(&format!("[DEBUG] os_host present stalled {shape} retained-fault={:?}", self.retained_fault));
+            log_debug(&format!("[TRACE] os_host present stalled {shape} retained-fault={:?}", self.retained_fault));
             if !matches!(cursor.phase, AppPresentPhase::Aborted) {
                 if self.retained_fault.is_none() {
                     self.retained_fault = Some(format!("presentation stalled: {shape}"));
@@ -17037,15 +17075,7 @@ impl AppPresenter {
                         Err(error) => {
                             cursor.phase = AppPresentPhase::Aborted;
                             if self.retained_fault.is_none() {
-                                // 🩺️ The stored string is only ever surfaced by this fn's `Err` return,
-                                // and that return is unreachable while `pending` is still held by the
-                                // `Aborted` phase this line just entered — so an abort that never
-                                // finishes closing its candidate reported NOTHING at all, leaving the
-                                // host's own `frame gate blocked=true phase=Some(Aborted)
-                                // retained-fault=true` as the only trace and the REASON invisible
-                                // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
-                                // `📓️wgpu-wheel-zoom-a11y-live-2026-09-14.md` §3.4a).
-                                log_debug(&format!("[DEBUG] os_host present aborted engine={} fault={error}", cursor.engine));
+                                log_debug(&format!("[TRACE] os_host present aborted engine={} fault={error}", cursor.engine));
                                 self.retained_fault = Some(format!("engine canvas present: {error}"));
                             }
                             return Ok(AppPresentStep::Pending);
@@ -17058,9 +17088,6 @@ impl AppPresenter {
             }
             AppPresentPhase::BeginGpu => {
                 let packet = cursor.frame.packet.as_ref().ok_or_else(|| "prepared frame packet was transferred before admission".to_string())?;
-                // 🎟️ The pair the BUILD was admitted under, never `current()` — see
-                // `RuntimePresentationAuthority::admit_build` for the surface fault that re-reading a
-                // moving authority here produced.
                 let expected = self.presentation_authority.admitted();
                 #[cfg(not(target_arch = "wasm32"))]
                 {
@@ -17243,14 +17270,10 @@ impl AppPresenter {
                 }
                 let Some(gpu_cursor) = cursor.gpu_cursor.as_mut() else { return Ok(AppPresentStep::Pending) };
                 let outcome = self.gpu.prepared_present_step(packet, gpu_cursor);
-                // 🧷️ A prepared world draw whose mesh is not resident is SKIPPED, never fatal — the
-                // parity behaviour of React, which renders nothing until its loader resolves. It is
-                // still a residency-law breach on the build side, so it is reported on the transition
-                // rather than swallowed (`retain_ensured_world_draws`, `📓️w11a-…`).
                 if let Some((key, version)) = self.gpu.take_missing_world_mesh() {
-                    log_debug_once_per_transition("present-missing-world-mesh", true, &format!("[DEBUG] os_host prepared world mesh was not resident, draw skipped: key={key} version={version}"));
+                    log_debug_once_per_transition("present-missing-world-mesh", true, &format!("[TRACE] os_host prepared world mesh was not resident, draw skipped: key={key} version={version}"));
                 } else {
-                    log_debug_once_per_transition("present-missing-world-mesh", false, "[DEBUG] os_host prepared world mesh residency restored");
+                    log_debug_once_per_transition("present-missing-world-mesh", false, "[TRACE] os_host prepared world mesh residency restored");
                 }
                 match outcome {
                     Ok(true) => cursor.phase = AppPresentPhase::CloseGpu,
@@ -17657,6 +17680,10 @@ impl AppRuntime {
     }
 
     /// 🧵️ Advances exactly one retained pre-input frame owner or chrome child.
+    ///
+    /// ♻️ Retires the registry the PREVIOUS build left staged, one entry per boundary
+    /// step. The pointer's own authority is the last COMPLETE frame's buffer, which this
+    /// never touches — see `ui_wgpu::wgpu::HitRegistry`.
     fn frame_before_input_step(&mut self, handle: &AppHandle, build_directives: &frame_job::FrameDirectives, cursor: &mut FrameBuildCursor) -> FrameBuildBoundaryStep {
         match cursor.phase {
             FrameBuildPhase::Deferred => {
@@ -17736,9 +17763,6 @@ impl AppRuntime {
                 cursor.phase = FrameBuildPhase::InputFrame;
             }
             FrameBuildPhase::InputFrame => {
-                // ♻️ Retires the registry the PREVIOUS build left staged, one entry per boundary
-                // step. The pointer's own authority is the last COMPLETE frame's buffer, which this
-                // never touches — see `ui_wgpu::wgpu::HitRegistry`.
                 if self.input.retire_hit_step() {
                     return FrameBuildBoundaryStep::Pending;
                 }
@@ -17971,6 +17995,18 @@ impl AppRuntime {
     }
 
     /// 🎞️ Advances one retained post-input owner transfer without driving deferred work inline.
+    ///
+    /// 🫀️ The settle lane is re-read every frame, never latched across one: the shell's own
+    /// predicate answers over armed work, an owed refresh scope and whichever producers
+    /// report `computing`, so a frame owes a settle step exactly while there is a chain to
+    /// converge (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`'s `ShellSettlePump`).
+    ///
+    /// 🩺️ Only a frame that actually carries a dispatchable action says so — the
+    /// tutorial/maintenance installs run several times a second and are not news.
+    /// Its ABSENCE after a `frame input action` line was the defect
+    /// `📓️wgpu-deferred-action-commit-2026-09-13.md` closes; a `frame input action`
+    /// now always has one of these behind it, however many builds were superseded in
+    /// between.
     fn frame_after_input_step(&mut self, runtime: &RuntimeMailbox, partial: &mut AppFrameAfterChrome, cursor: &mut FrameFinishCursor, cancel: semio_framework_job::CancelToken) -> FrameFinishBoundaryStep {
         match cursor.phase {
             FrameFinishPhase::Inputs => {
@@ -17980,10 +18016,6 @@ impl AppRuntime {
             FrameFinishPhase::Deferred => {
                 cursor.flush_tutorial = !self.shell.tutorial_pending_document_ops.is_empty();
                 cursor.shell_maintenance = self.shell.chrome_maintenance_pending();
-                // 🫀️ The settle lane is re-read every frame, never latched across one: the shell's own
-                // predicate answers over armed work, an owed refresh scope and whichever producers
-                // report `computing`, so a frame owes a settle step exactly while there is a chain to
-                // converge (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`'s `ShellSettlePump`).
                 cursor.settle = self.shell.settle_pump_pending();
                 cursor.pump_sync = app_now_ms() - self.last_sync_pump_ms >= SHELL_SYNC_PUMP_INTERVAL_MS;
                 if cursor.pump_sync {
@@ -18117,14 +18149,8 @@ impl AppRuntime {
                 };
                 if has_deferred {
                     let deferred_actions = std::mem::take(&mut self.frame_actions);
-                    // 🩺️ Only a frame that actually carries a dispatchable action says so — the
-                    // tutorial/maintenance installs run several times a second and are not news.
-                    // Its ABSENCE after a `frame input action` line was the defect
-                    // `📓️wgpu-deferred-action-commit-2026-09-13.md` closes; a `frame input action`
-                    // now always has one of these behind it, however many builds were superseded in
-                    // between.
                     if !deferred_actions.is_empty() {
-                        log_debug("[DEBUG] frame deferred install carries an action");
+                        log_debug("[TRACE] frame deferred install carries an action");
                     }
                     self.pending_frame_deferred = Some(FrameDeferredCursor::new(deferred_actions, cursor.pump_sync, cursor.flush_tutorial, cursor.shell_maintenance, cursor.settle, input.preview_generation, cancel));
                 }
@@ -18249,6 +18275,30 @@ impl AppInteractionState {
         false
     }
 
+    /// ✍️ A focused text editor owns the keyboard before the shell's chord table does — the same
+    /// precedence React gets from DOM focus on its `<textarea>`. Without this the editor's
+    /// `text_editor_apply_key_into` had no production caller at all and typing into a TextEditor
+    /// surface only ever fired global accelerators.
+    ///
+    /// ⎋️🚚️ A live World3d relocate drag owns `Escape` before ANY chord table does — React binds it
+    /// as a CAPTURE-phase `keydown` while `relocateMode` is on and calls `event.stopPropagation()`
+    /// only when a drag was actually cancelled (`🌐️World3dHost/🟦️.tsx:6873-6881`). The drag is
+    /// dropped, its ghost cleared, and nothing is dispatched.
+    ///
+    /// ⌨️ A board pane under the pointer owns `Escape` (cancel area-select) and `Tab`/`shift+Tab`
+    /// (walk the brush slot's candidates) before the shell's chord table does — React gets the same
+    /// precedence from a CAPTURE-phase listener that calls `preventDefault` (`🖥️Board2dHost/🟦️.tsx`
+    /// :1292-1313, :1338-1339). Both chords had NO wgpu path at all before this.
+    ///
+    /// 🔌️ w2-input-wiring: spawns the ASYNC `handle_keyboard_async` (mirrors this fn's own
+    /// `on_button`/`on_move` sibling callbacks above, and the `spawn_app_task` pattern this fn
+    /// used to hand-roll just for search/find-Enter-activation) instead of calling the sync
+    /// `handle_keyboard` directly. Before this fix `handle_keyboard_async` was entirely dead code
+    /// (see `report-w3-shell-input-cutover.md`'s "MAJOR FINDING"): the P4 app-keybinding dispatch,
+    /// P5 idle-Escape-deactivates-utility, and — worst — committing a focused `Input`'s typed text
+    /// via Enter/Escape never fired. `handle_keyboard_async`'s own top already reimplements the
+    /// exact search/find-Enter-activation this fn used to hand-duplicate around the sync call, so
+    /// that duplication is gone, not just moved.
     async fn handle_key(&mut self, action: KeyAction, modifiers: PointerModifiers) {
         if interpreter::apply_focused_vfs_control_key(&action, &mut self.input) {
             return;
@@ -18281,36 +18331,15 @@ impl AppInteractionState {
         if interpreter::apply_focused_node_graph_note_key(&action, &modifiers) {
             return;
         }
-        // ✍️ A focused text editor owns the keyboard before the shell's chord table does — the same
-        // precedence React gets from DOM focus on its `<textarea>`. Without this the editor's
-        // `text_editor_apply_key_into` had no production caller at all and typing into a TextEditor
-        // surface only ever fired global accelerators.
         if interpreter::apply_focused_text_editor_key(&action, &modifiers, &mut self.input) {
             return;
         }
-        // ⎋️🚚️ A live World3d relocate drag owns `Escape` before ANY chord table does — React binds it
-        // as a CAPTURE-phase `keydown` while `relocateMode` is on and calls `event.stopPropagation()`
-        // only when a drag was actually cancelled (`🌐️World3dHost/🟦️.tsx:6873-6881`). The drag is
-        // dropped, its ghost cleared, and nothing is dispatched.
         if action == KeyAction::Escape && self.shell.world3d_states.values_mut().fold(false, |cancelled, state| infinite_world::world::world3d_cancel_relocate_drag(state) || cancelled) {
             return;
         }
-        // ⌨️ A board pane under the pointer owns `Escape` (cancel area-select) and `Tab`/`shift+Tab`
-        // (walk the brush slot's candidates) before the shell's chord table does — React gets the same
-        // precedence from a CAPTURE-phase listener that calls `preventDefault` (`🖥️Board2dHost/🟦️.tsx`
-        // :1292-1313, :1338-1339). Both chords had NO wgpu path at all before this.
         if self.board2d_key(&action, &modifiers) {
             return;
         }
-        // 🔌️ w2-input-wiring: spawns the ASYNC `handle_keyboard_async` (mirrors this fn's own
-        // `on_button`/`on_move` sibling callbacks above, and the `spawn_app_task` pattern this fn
-        // used to hand-roll just for search/find-Enter-activation) instead of calling the sync
-        // `handle_keyboard` directly. Before this fix `handle_keyboard_async` was entirely dead code
-        // (see `report-w3-shell-input-cutover.md`'s "MAJOR FINDING"): the P4 app-keybinding dispatch,
-        // P5 idle-Escape-deactivates-utility, and — worst — committing a focused `Input`'s typed text
-        // via Enter/Escape never fired. `handle_keyboard_async`'s own top already reimplements the
-        // exact search/find-Enter-activation this fn used to hand-duplicate around the sync call, so
-        // that duplication is gone, not just moved.
         if let Err(err) = self.shell.handle_keyboard_async(action, &modifiers, &mut self.input).await {
             log_debug(&format!("keyboard failed: {err}"));
         }
@@ -18540,6 +18569,7 @@ impl AppInteractionState {
         self.input.pointer_x = x;
         self.input.pointer_y = y;
         self.input.pointer_down = down;
+        self.shell.presence_pointer = Some((x, y));
         let target = match self.pointer_capture.holder(pointer.id) {
             Some(PointerHitOwner::Surface) => interpreter::captured_scene_pointer(pointer.id),
             Some(PointerHitOwner::Chrome) => None,
@@ -18644,7 +18674,7 @@ fn step_world3d_camera_fit_after_snapshot(state: &mut infinite_world::world::Wor
     let _ = step_world3d_camera_fit(state);
 }
 
-/// 🩺️ Rate-limited `[DEBUG] ` trace of one World3d surface's MESH INGEST, taken where the frame
+/// 🩺️ Rate-limited `[TRACE] ` trace of one World3d surface's MESH INGEST, taken where the frame
 /// transaction actually drives it rather than where the chrome paints it. Behind the runtime
 /// diagnostics switch like every other per-frame census (`🎞️Scenes`' own `world3d surface=…`), so a
 /// boot with diagnostics off carries no world chatter at all.
@@ -18665,10 +18695,10 @@ fn world3d_ingest_trace(surface_id: &str, state: &infinite_world::world::World3d
     if seen % WORLD3D_INGEST_TRACE_STRIDE != 0 {
         return;
     }
-    log_debug_diagnostic(&format!("[DEBUG] world3d ingest surface={surface_id} stage={stage} steps={seen} {}", state.ingest_census()));
+    log_debug_diagnostic(&format!("[TRACE] world3d ingest surface={surface_id} stage={stage} steps={seen} {}", state.ingest_census()));
 }
 
-/// 🕹️ One `[DEBUG] ` line per INTENT, not per authority step, and only while the runtime diagnostics
+/// 🕹️ One `[TRACE] ` line per INTENT, not per authority step, and only while the runtime diagnostics
 /// switch is armed — an orbit drag raises one intent per pointer move, so an ungated pair per intent
 /// is per-frame chatter on exactly the gesture whose latency this ticket measures.
 ///
@@ -18677,6 +18707,14 @@ fn world3d_ingest_trace(surface_id: &str, state: &infinite_world::world::World3d
 /// outcome. The ENTER line is emitted once per queue generation and the LEAVE line only on a
 /// terminal step, which is exactly one pair per pointer, wheel or button intent
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+///
+/// 🐌️ An intent that never terminates is the one failure this trace exists for: the authority
+/// answers `Pending` and the frame transaction re-enters the same phase forever, so without a
+/// stride line the console shows an `enter` with no `leave` and nothing about WHERE it stopped.
+/// 🔀️ A Pending step is logged only when the authority's own census CHANGED — that is exactly
+/// its transition ladder (`Pick[Hover …]` → `Plan[0/1 Camera]` → …), which is what a step that
+/// faults or never terminates has to be read off. A stride line on top catches a spin whose
+/// census is constant.
 fn world3d_interaction_trace(surface_id: &str, state: &infinite_world::world::World3dState, generation: u64, outcome: Option<WorldInteractionAuthorityStep>) {
     const WORLD3D_INTERACTION_STUCK_STRIDE: u64 = 4096;
     static ENTERED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(u64::MAX);
@@ -18688,15 +18726,8 @@ fn world3d_interaction_trace(surface_id: &str, state: &infinite_world::world::Wo
                 return;
             }
             PENDING.store(0, std::sync::atomic::Ordering::Relaxed);
-            log_debug_diagnostic(&format!("[DEBUG] world3d interaction surface={surface_id} enter g={generation} {}", state.interaction_census()));
+            log_debug_diagnostic(&format!("[TRACE] world3d interaction surface={surface_id} enter g={generation} {}", state.interaction_census()));
         }
-        // 🐌️ An intent that never terminates is the one failure this trace exists for: the authority
-        // answers `Pending` and the frame transaction re-enters the same phase forever, so without a
-        // stride line the console shows an `enter` with no `leave` and nothing about WHERE it stopped.
-        // 🔀️ A Pending step is logged only when the authority's own census CHANGED — that is exactly
-        // its transition ladder (`Pick[Hover …]` → `Plan[0/1 Camera]` → …), which is what a step that
-        // faults or never terminates has to be read off. A stride line on top catches a spin whose
-        // census is constant.
         Some(WorldInteractionAuthorityStep::Pending) => {
             let pending = PENDING.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1;
             let census = state.interaction_census();
@@ -18707,13 +18738,24 @@ fn world3d_interaction_trace(surface_id: &str, state: &infinite_world::world::Wo
                 hasher.finish()
             };
             if CENSUS.swap(digest, std::sync::atomic::Ordering::Relaxed) != digest || pending % WORLD3D_INTERACTION_STUCK_STRIDE == 0 {
-                log_debug_diagnostic(&format!("[DEBUG] world3d interaction surface={surface_id} step g={generation} pending={pending} {census}"));
+                log_debug_diagnostic(&format!("[TRACE] world3d interaction surface={surface_id} step g={generation} pending={pending} {census}"));
             }
         }
-        Some(step) => log_debug_diagnostic(&format!("[DEBUG] world3d interaction surface={surface_id} leave g={generation} step={step:?} {}", state.interaction_census())),
+        Some(step) => log_debug_diagnostic(&format!("[TRACE] world3d interaction surface={surface_id} leave g={generation} step={step:?} {}", state.interaction_census())),
     }
 }
 
+/// 🧹️ P3c: this used to build a `PointerCallbacks` here (5 `Rc<RefCell<AppRuntime>>` clones, one
+/// per input kind) and hand it back alongside `runtime`. `winit_app.rs`'s own `HostUserEvent` doc
+/// comment records that its one caller stopped using it at the P3a enqueue-only
+/// `WindowDelegate`/`dispatch_normalized_event` cutover -- `boot_runtime` was left constructing it
+/// anyway because touching this signature wasn't that packet's job. It is
+/// this packet's job (removing `self_weak`, see this crate's own `AppHandle` doc comment), and per
+/// AGENTS.md's no-legacy-code rule, dead construction is deleted outright. Right-click remains a
+/// lossless `DispatchEvent::PointerDown { button: Secondary }` in the enqueue-only contract;
+/// `winit_app::dispatch_normalized_event` maps it to button `2` and calls the canonical
+/// `handle_pointer_button`, whose Shell path opens the context menu. The redundant callbacks-only
+/// `handle_context_menu` wrapper is deleted with its sole caller. See `📓️p3c-explicit-app-handle.md`.
 #[cfg(not(target_arch = "wasm32"))]
 async fn boot_runtime(
     window: Arc<Window>,
@@ -18830,17 +18872,6 @@ async fn boot_runtime(
         stall: AppPresentStallWatch::default(),
     };
 
-    // 🧹️ P3c: this used to build a `PointerCallbacks` here (5 `Rc<RefCell<AppRuntime>>` clones, one
-    // per input kind) and hand it back alongside `runtime`. `winit_app.rs`'s own `HostUserEvent` doc
-    // comment records that its one caller stopped using it at the P3a enqueue-only
-    // `WindowDelegate`/`dispatch_normalized_event` cutover -- `boot_runtime` was left constructing it
-    // anyway because touching this signature wasn't that packet's job. It is
-    // this packet's job (removing `self_weak`, see this crate's own `AppHandle` doc comment), and per
-    // AGENTS.md's no-legacy-code rule, dead construction is deleted outright. Right-click remains a
-    // lossless `DispatchEvent::PointerDown { button: Secondary }` in the enqueue-only contract;
-    // `winit_app::dispatch_normalized_event` maps it to button `2` and calls the canonical
-    // `handle_pointer_button`, whose Shell path opens the context menu. The redundant callbacks-only
-    // `handle_context_menu` wrapper is deleted with its sole caller. See `📓️p3c-explicit-app-handle.md`.
     log_debug("wgpu renderer booted");
     Ok((runtime, presenter))
 }
@@ -19139,6 +19170,11 @@ pub fn run_native(plugin_filter: &str, plugin_modules_root: std::path::PathBuf) 
 /// session summary as JSON to stdout and returns an exit code. An honest, explicit substitute for
 /// driving a real window when this environment cannot open one (lane 3-D's brief proposed exactly this
 /// shape). Returns `0` on a clean boot+dump, `1` on any hard failure along the way.
+///
+/// 🪪️ Identity mint/restore runs on a background OS thread (contract §C3: never blocks
+/// `boot()` itself) — poll the same every-frame pump the real render loop uses (drains the
+/// identity bootstrap channel + the directory stream + folds any pending events) for up to 5s
+/// so a real hub round trip has time to land before the dump.
 #[cfg(not(target_arch = "wasm32"))]
 pub async fn run_smoke(plugin_filter: &str, plugin_modules_root: std::path::PathBuf) -> i32 {
     let loaded = match load_wasm_plugins(plugin_filter, &plugin_modules_root).await {
@@ -19154,10 +19190,6 @@ pub async fn run_smoke(plugin_filter: &str, plugin_modules_root: std::path::Path
         eprintln!("smoke: shell.boot() failed: {error}");
         return 1;
     }
-    // 🪪️ Identity mint/restore runs on a background OS thread (contract §C3: never blocks
-    // `boot()` itself) — poll the same every-frame pump the real render loop uses (drains the
-    // identity bootstrap channel + the directory stream + folds any pending events) for up to 5s
-    // so a real hub round trip has time to land before the dump.
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
     while std::time::Instant::now() < deadline {
         shell.pump_sync_events().await;
@@ -19361,6 +19393,9 @@ thread_local! {
 /// 🖥️ The native per-server seeds, read straight off the process env under the SAME names React's
 /// serve projects into `VITE_SEMIO_*` (`🧑‍💻dev/🟦️.ts`). The CLI's own per-navigation flags overwrite
 /// these in `apply_boot_descriptor`; a browser build has no process env and starts empty.
+///
+/// 🏷️ The resolved brand ROW, under the same `SEMIO_*` names the serve injects as
+/// `<meta semio-brand-*>` for the browser door — one vocabulary, three doors.
 #[cfg(not(target_arch = "wasm32"))]
 fn resolve_environment_boot_descriptor() -> WgpuBootDescriptor {
     let read = |name: &str| std::env::var(name).ok().filter(|value| !value.is_empty()).unwrap_or_default();
@@ -19368,8 +19403,6 @@ fn resolve_environment_boot_descriptor() -> WgpuBootDescriptor {
         app_id: read("SEMIO_APP_ID"),
         app_role: read("SEMIO_APP_ROLE"),
         brand_id: read("SEMIO_BRAND"),
-        // 🏷️ The resolved brand ROW, under the same `SEMIO_*` names the serve injects as
-        // `<meta semio-brand-*>` for the browser door — one vocabulary, three doors.
         brand: WgpuBootBrand { window_title: read("SEMIO_BRAND_WINDOW_TITLE"), ephemeral: read("SEMIO_BRAND_EPHEMERAL") == "true", replay_introduction_on_load: read("SEMIO_BRAND_REPLAY_INTRODUCTION") == "true" },
         app_example: read("SEMIO_DEFAULT_EXAMPLE"),
         defaults: WgpuBootDefaults { example_id: read("SEMIO_DEFAULT_EXAMPLE") },
@@ -19397,7 +19430,7 @@ pub fn apply_boot_descriptor(descriptor: WgpuBootDescriptor) -> Result<(), Strin
 /// variable a native process reads and of the `localStorage` key React's `ShellHost` reads. A Worker
 /// realm owns neither, so the UI isolate resolves the preference, stamps it on the frame Worker's url
 /// (`🎭️actor/🩺️diagnostics/🟦️.ts`'s `stampShardWorkerDiagnostics`) and the Worker hands it here —
-/// before the first frame, because every per-frame `[DEBUG]` dump in this crate is gated on it.
+/// before the first frame, because every per-frame `[TRACE]` dump in this crate is gated on it.
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen(js_name = semioWgpuSetRuntimeDiagnostics)]
 pub fn semio_wgpu_set_runtime_diagnostics(enabled: bool) {

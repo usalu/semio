@@ -44,7 +44,7 @@
         "style": {},
         "activity": "idle",
         "accessibility": { "label": "Generation parameters" },
-        "children": [1, 3, 4, 5, 6, 7, 8, 9, 10]
+        "children": [1, 3, 4, 5, 6, 7, 8, 9, 10, 11]
       },
       {
         "id": 1,
@@ -139,6 +139,15 @@
         "style": {},
         "activity": "idle",
         "accessibility": { "label": "Explicit override" }
+      },
+      {
+        "id": 11,
+        "key": "#caption",
+        "component": { "type": "text", "value": "6 Handle Kinds, 11 Handles" },
+        "layout": { "kind": "leaf", "width": "fill", "height": "hug" },
+        "style": {},
+        "activity": "idle",
+        "accessibility": {}
       }
     ]
   },
@@ -153,7 +162,8 @@
     { "nodeId": 7, "key": "#evaluation", "depth": 1, "role": "progressbar", "label": "Evaluation progress", "description": null, "live": "off", "shortcut": null, "hidden": false, "disabled": false, "focusable": false, "tabbable": false, "actionable": false, "valueMin": 0, "valueMax": 100, "valueNow": 12, "valueText": "Meshing faces (2/3): 12 of 100 faces (12 %)", "busy": false },
     { "nodeId": 8, "key": "#preparation", "depth": 1, "role": "progressbar", "label": "Preparation progress", "description": null, "live": "off", "shortcut": null, "hidden": false, "disabled": false, "focusable": false, "tabbable": false, "actionable": false, "valueMin": null, "valueMax": null, "valueNow": null, "valueText": null, "busy": true },
     { "nodeId": 9, "key": "#intrinsic-tree-item", "depth": 1, "role": "treeitem", "label": "Intrinsic row", "description": null, "live": "off", "shortcut": null, "hidden": false, "disabled": false, "focusable": true, "tabbable": true, "actionable": false },
-    { "nodeId": 10, "key": "#explicit-tree-item", "depth": 1, "role": "treeitem", "label": "Explicit override", "description": null, "live": "off", "shortcut": null, "hidden": false, "disabled": false, "focusable": true, "tabbable": true, "actionable": false }
+    { "nodeId": 10, "key": "#explicit-tree-item", "depth": 1, "role": "treeitem", "label": "Explicit override", "description": null, "live": "off", "shortcut": null, "hidden": false, "disabled": false, "focusable": true, "tabbable": true, "actionable": false },
+    { "nodeId": 11, "key": "#caption", "depth": 1, "role": "paragraph", "label": "6 Handle Kinds, 11 Handles", "description": null, "live": "off", "shortcut": null, "hidden": false, "disabled": false, "focusable": false, "tabbable": false, "actionable": false }
   ],
   "announcedNote": "🏷️ The subset a reader can reach BY NAME: not hidden, focusable or actionable, and carrying a label of its own. The mirror still exposes the whole projection — a live region is announced without ever being reachable — so this is the reach law, not the exposure law.",
   "announced": [2, 5, 6, 9, 10]

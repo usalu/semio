@@ -1,5 +1,5 @@
 /**
- * @emoji 🧭 Language-neutral guardrails for snapshot / fixture / asset naming in sequence.
+ * 🧭 Language-neutral guardrails for snapshot / fixture / asset naming in sequence.
  */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -21,6 +21,5 @@ export function sequenceSnapshotFixtureAssetSelfTests(): number {
     assert(!/\bSequenceFixture\b/.test(source), "use SequenceHostSnapshot");
     assert(!/\.to_fixture\s*\(/.test(source), "SequenceSnapshot bridges must call to_host_snapshot");
   }
-  console.log("[DEBUG] Sequence snapshot/fixture/asset terminology lint: 3 sources, 0 forbidden patterns");
   return sources.length;
 }

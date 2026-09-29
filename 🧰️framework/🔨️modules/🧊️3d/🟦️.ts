@@ -2,13 +2,13 @@ import { ephemeralBox } from "@semio-tech/framework";
 // #region 🧲️Header
 /// <reference types="vite/client" />
 /// <reference types="vitest/importMeta" />
-/** @emoji 🧭️ `@semio-tech/geometry-brep-js` — brep WASM bridge and mesh contracts. */
+/** 🧭️ `@semio-tech/geometry-brep-js` — brep WASM bridge and mesh contracts. */
 // #endregion 🧲️Header
 
 // #region 📐️Contracts
 export type Vec3 = readonly [number, number, number];
 
-/** @emoji 🌀️ Edge curve geometry kinds (`line`, `arc`, `circle`, `ellipse`, `nurbs`). */
+/** 🌀️ Edge curve geometry kinds (`line`, `arc`, `circle`, `ellipse`, `nurbs`). */
 export type EdgeCurve =
   | { readonly kind: "line" }
   | { readonly kind: "arc"; readonly center: Vec3 }
@@ -33,7 +33,7 @@ export type EdgeCurve =
       readonly rational?: boolean;
     };
 
-/** @emoji 🔵️ Plane frame for a circular arc through `start` and `end` about `center` (CCW in `u×v`). */
+/** 🔵️ Plane frame for a circular arc through `start` and `end` about `center` (CCW in `u×v`). */
 export interface ArcPlaneFrame {
   readonly center: Vec3;
   readonly radius: number;
@@ -43,7 +43,7 @@ export interface ArcPlaneFrame {
 }
 
 // #region 🧱️kernelGeometry
-/** @emoji 🧱️ Kernel-private brep document (use `Object` / `Model` in framework code). */
+/** 🧱️ Kernel-private brep document (use `Object` / `Model` in framework code). */
 export namespace kernelGeometry {
   export type AnchorRef = string & { readonly __brand: "AnchorRef" };
   export type VertexRef = string & { readonly __brand: "VertexRef" };
@@ -59,7 +59,7 @@ export namespace kernelGeometry {
     return id as SolidRef;
   }
 
-  /** @emoji 🧱️ Kernel-private vertex payload (brepjs persistence; prefer `Object` at framework level). */
+  /** 🧱️ Kernel-private vertex payload (brepjs persistence; prefer `Object` at framework level). */
   export interface VertexRecord {
     readonly id: VertexRef;
     readonly position: Vec3;
@@ -72,27 +72,27 @@ export namespace kernelGeometry {
     | { readonly kind: "face"; readonly id: FaceRef; readonly u: number; readonly v: number }
     | { readonly kind: "solid"; readonly id: SolidRef; readonly u: number; readonly v: number; readonly w: number };
 
-  /** @emoji 🧱️ Anchor payload: parametric point attached to kernel geometry. */
+  /** 🧱️ Anchor payload: parametric point attached to kernel geometry. */
   export interface AnchorRecord {
     readonly id: AnchorRef;
     readonly position: Vec3;
     readonly attachment: AnchorAttachment;
   }
 
-  /** @emoji 🧱️ Edge payload: two boundary vertices; optional `curve`. */
+  /** 🧱️ Edge payload: two boundary vertices; optional `curve`. */
   export interface EdgeRecord {
     readonly id: EdgeRef;
     readonly vertexIds: readonly VertexRef[];
     readonly curve?: EdgeCurve;
   }
 
-  /** @emoji 🧱️ Wire payload: ordered boundary edges. */
+  /** 🧱️ Wire payload: ordered boundary edges. */
   export interface WireRecord {
     readonly id: WireRef;
     readonly edgeIds: readonly EdgeRef[];
   }
 
-  /** @emoji 🌊️ Face-support geometry (`plane`, `cylinder`, `cone`, `sphere`, `torus`, `nurbs`). */
+  /** 🌊️ Face-support geometry (`plane`, `cylinder`, `cone`, `sphere`, `torus`, `nurbs`). */
   export type FaceSurface =
     | { readonly kind: "plane"; readonly origin: Vec3; readonly normal: Vec3 }
     | { readonly kind: "cylinder"; readonly origin: Vec3; readonly axis: Vec3; readonly radius: number }
@@ -107,27 +107,27 @@ export namespace kernelGeometry {
         readonly vKnots?: readonly number[];
       };
 
-  /** @emoji 🧱️ Face payload: trimming wires + optional underlying surface. */
+  /** 🧱️ Face payload: trimming wires + optional underlying surface. */
   export interface FaceRecord {
     readonly id: FaceRef;
     readonly wireIds: readonly WireRef[];
     readonly surface?: FaceSurface;
   }
 
-  /** @emoji 🧱️ Shell payload: connected faces. */
+  /** 🧱️ Shell payload: connected faces. */
   export interface ShellRecord {
     readonly id: ShellRef;
     readonly faceIds: readonly FaceRef[];
   }
 
-  /** @emoji 🧊️ Analytic brepjs solid primitive (`box`, `sphere`, `cylinder`, `cone`). */
+  /** 🧊️ Analytic brepjs solid primitive (`box`, `sphere`, `cylinder`, `cone`). */
   export type SolidPrimitive =
     | { readonly kind: "box"; readonly cornerA: Vec3; readonly cornerB: Vec3; readonly height: number }
     | { readonly kind: "sphere"; readonly center: Vec3; readonly radius: number }
     | { readonly kind: "cylinder"; readonly base: Vec3; readonly axis: Vec3; readonly radius: number; readonly height: number }
     | { readonly kind: "cone"; readonly base: Vec3; readonly axis: Vec3; readonly radius: number; readonly height: number; readonly radiusTop?: number };
 
-  /** @emoji 🧱️ Solid payload: closed shells and/or analytic primitive. */
+  /** 🧱️ Solid payload: closed shells and/or analytic primitive. */
   export interface SolidRecord {
     readonly id: SolidRef;
     readonly shellIds: readonly ShellRef[];
@@ -151,21 +151,21 @@ export const solidRef = kernelGeometry.solidRef;
 export type GeometryRef = string & { readonly __brand: "GeometryRef" };
 export type GeometryKind = "vertex" | "edge" | "wire" | "face" | "shell" | "solid" | "compound";
 
-/** @emoji 🧩️ Triangle index range for one B-Rep face (Three.js `addGroup`). */
+/** 🧩️ Triangle index range for one B-Rep face (Three.js `addGroup`). */
 export interface FaceGroup {
   readonly start: number;
   readonly count: number;
   readonly entityId: kernelGeometry.FaceRef;
 }
 
-/** @emoji 🧩️ Line index range for one B-Rep edge (Three.js edge pick). */
+/** 🧩️ Line index range for one B-Rep edge (Three.js edge pick). */
 export interface EdgeGroup {
   readonly start: number;
   readonly count: number;
   readonly entityId: kernelGeometry.EdgeRef;
 }
 
-/** @emoji 🧩️ Face metadata for kernel→renderer picking and tooltips. */
+/** 🧩️ Face metadata for kernel→renderer picking and tooltips. */
 export interface FaceInfo {
   readonly entityId: kernelGeometry.FaceRef;
   readonly surfaceType: string;
@@ -173,14 +173,14 @@ export interface FaceInfo {
   readonly normal: readonly [number, number, number];
 }
 
-/** @emoji 🧩️ Edge metadata for kernel→renderer picking and tooltips. */
+/** 🧩️ Edge metadata for kernel→renderer picking and tooltips. */
 export interface EdgeInfo {
   readonly entityId: kernelGeometry.EdgeRef;
   readonly curveType: string;
   readonly length: number;
 }
 
-/** @emoji 🖼️ Zero-copy tessellation payload (grouped buffers + B-Rep edge polylines). */
+/** 🖼️ Zero-copy tessellation payload (grouped buffers + B-Rep edge polylines). */
 export interface MeshTransfer {
   readonly position: Float32Array;
   readonly normal: Float32Array;
@@ -194,7 +194,7 @@ export interface MeshTransfer {
   readonly color?: string;
 }
 
-/** @emoji 🖼️ Empty mesh transfer for stubs and missing solids. */
+/** 🖼️ Empty mesh transfer for stubs and missing solids. */
 export function emptyMeshTransfer(): MeshTransfer {
   return {
     position: new Float32Array(0),
@@ -287,7 +287,7 @@ async function tessellateGeometryJson(handle: string, tolerance: number): Promis
   return module.tessellate(handle, tolerance);
 }
 
-/** @emoji 📦️ Parses worker-tessellated preview mesh JSON into a mesh transfer. */
+/** 📦️ Parses worker-tessellated preview mesh JSON into a mesh transfer. */
 export function meshTransferFromPreviewPayload(value: unknown): MeshTransfer | null {
   if (!value || typeof value !== "object") return null;
   const raw = value as RawMeshTransfer;
@@ -313,7 +313,7 @@ function rawMeshToTransfer(raw: RawMeshTransfer): MeshTransfer {
   };
 }
 
-/** @emoji 🔌️ Preview kernel backed by flow eval brep WASM tessellation. */
+/** 🔌️ Preview kernel backed by flow eval brep WASM tessellation. */
 export interface BrepWasmBridge {
   tessellateGeometry(ref: GeometryRef, tolerance: number): Promise<MeshTransfer>;
   disposeGeometry(ref: GeometryRef): void;
@@ -333,22 +333,28 @@ export function createBrepWasmBridge(module: BrepWasmModule): BrepWasmBridge {
   };
 }
 
-/** @emoji ⏳️ Loads brep tessellation WASM via flow (standalone `flow_extension_brep` pack removed in Wave 3.c). */
+/** 🕸️ The flow core wasm addressed by its module URL: a served (`http(s)`) asset is handed to the bindings to fetch, a
+ * `file:` URL (a node or Bun test run) is read from disk, since `fetch` has no portable `file:` support. */
+async function flowCoreWasmSource(): Promise<{ readonly module_or_path: URL | Uint8Array }> {
+  const url = new URL("../../🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/flow_core_bg.wasm", import.meta.url);
+  if (url.protocol !== "file:") return { module_or_path: url };
+  const { readFile } = await import("node:fs/promises");
+  return { module_or_path: await readFile(url) };
+}
+
+/** ⏳️ Loads brep tessellation WASM via flow (standalone `flow_extension_brep` pack removed in Wave 3.c). */
 export async function ensureBrepWasmLoaded(): Promise<BrepWasmModule> {
   if (brepWasm.current) return brepWasm.current;
-  const [{ default: initFlow, tessellate, dispose, brep_invoke }, { default: wasmUrl }] = await Promise.all([
-    import("../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/flow_core.js"),
-    import("../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/flow_core_bg.wasm?url"),
-  ]);
+  const { default: initFlow, tessellate, dispose, brep_invoke } = await import("../../🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/flow_core.js");
   if (typeof tessellate !== "function" || typeof dispose !== "function") {
     throw new Error("flow brep tessellation exports missing — rebuild flow/core wasm");
   }
-  if (initFlow) await initFlow({ module_or_path: wasmUrl });
+  if (initFlow) await initFlow(await flowCoreWasmSource());
   brepWasm.current = { tessellate, dispose, brep_invoke };
   return brepWasm.current;
 }
 
-/** @emoji 🌉️ Generic JSON-RPC call into the first-party Rust `BrepKernel` (see `brep_invoke` in
+/** 🌉️ Generic JSON-RPC call into the first-party Rust `BrepKernel` (see `brep_invoke` in
  * `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📐️brep-geometry/🦀️.rs`). Parses the JSON
  * result and throws on a `{"error"}` payload; used by `SemioBrepKernel`
  * (`✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🟦️.ts`). */
@@ -376,7 +382,7 @@ type BrepModuleWasm = {
 
 const brepModuleWasm = ephemeralBox<BrepModuleWasm | null>("s.modules.3d.packages.typescript.index.ts.brepModuleWasm", null);
 
-/** @emoji ⏳️ Brep operator WASM loader — standalone `flow_extension_brep` pack removed in Wave 3.c; install the packaged brep extension instead. */
+/** ⏳️ Brep operator WASM loader — standalone `flow_extension_brep` pack removed in Wave 3.c; install the packaged brep extension instead. */
 export async function ensureBrepModuleWasmLoaded(): Promise<BrepModuleWasm> {
   if (brepModuleWasm.current) return brepModuleWasm.current;
   throw new Error(
@@ -399,7 +405,7 @@ function readBrepTextChannel(raw: Record<string, unknown>, channel: string): str
   throw new Error(`brep export missing ${channel} payload`);
 }
 
-/** @emoji 💾️ Exports a brep geometry handle to OBJ text via flow brep WASM. */
+/** 💾️ Exports a brep geometry handle to OBJ text via flow brep WASM. */
 export async function exportObj(handle: GeometryRef, deflection = 0.1): Promise<string> {
   const mod = await ensureBrepModuleWasmLoaded();
   const input = JSON.stringify({
@@ -411,14 +417,14 @@ export async function exportObj(handle: GeometryRef, deflection = 0.1): Promise<
   return readBrepTextChannel(raw, "obj");
 }
 
-/** @emoji 💾️ Exports a brep geometry handle to GLB bytes via tessellation. */
+/** 💾️ Exports a brep geometry handle to GLB bytes via tessellation. */
 export async function exportGltf(handle: GeometryRef, deflection = 0.1): Promise<Uint8Array> {
   const bridge = await createDefaultBrepWasmBridge();
   const mesh = await bridge.tessellateGeometry(handle, deflection);
   return meshTransferToGlb(mesh);
 }
 
-/** @emoji 💾️ Serializes a {@link MeshTransfer} to OBJ text. */
+/** 💾️ Serializes a {@link MeshTransfer} to OBJ text. */
 export function meshTransferToObj(mesh: MeshTransfer): string {
   let out = "# mesh export\n";
   const vertexCount = mesh.position.length / 3;
@@ -445,7 +451,7 @@ function vec3Bounds(position: Float32Array): { min: [number, number, number]; ma
   return { min, max };
 }
 
-/** @emoji 💾️ Encodes a {@link MeshTransfer} as minimal GLB v2 bytes. */
+/** 💾️ Encodes a {@link MeshTransfer} as minimal GLB v2 bytes. */
 export function meshTransferToGlb(mesh: MeshTransfer): Uint8Array {
   const positions = mesh.position;
   const indices = mesh.index;
@@ -500,7 +506,7 @@ export function meshTransferToGlb(mesh: MeshTransfer): Uint8Array {
   return out;
 }
 
-/** @emoji 🔗️ Merges mesh transfers into one triangle soup. */
+/** 🔗️ Merges mesh transfers into one triangle soup. */
 export function mergeMeshTransfers(meshes: readonly MeshTransfer[]): MeshTransfer {
   const positions: number[] = [];
   const normals: number[] = [];

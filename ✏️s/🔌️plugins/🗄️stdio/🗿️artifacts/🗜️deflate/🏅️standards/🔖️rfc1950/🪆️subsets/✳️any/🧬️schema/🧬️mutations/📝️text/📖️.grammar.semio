@@ -13,7 +13,7 @@ start op
 # `set-preset-dictionary`). Field keys are likewise kebab-case of the Rust field ident, printed
 # `key=value` in declaration order. Every token below is copied verbatim from a REAL
 # `cargo test -p semio-s-plugin-stdio --lib artifacts::deflate -- --ignored --nocapture` run of a
-# temporary `[DEBUG]` dump against representative `DeflateMutation` values (deleted before this
+# temporary `[TRACE]` dump against representative `DeflateMutation` values (deleted before this
 # wave closes), e.g.:
 #   no-mutation
 #   set-snapshot snapshot { schema=stdio.deflate compression-method=8 window-bits=7 compression-level-hint=default dict-id=305419896 payload="dGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsYXp5IGRvZw==" }

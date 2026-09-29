@@ -43,6 +43,12 @@ fn under_own_window(case: &Value) -> Value {
 /// 🖼️ A shell whose one board window, owned by `window_id`, was painted with `camera` at `bounds` and
 /// mirrored into the pointer-state maps by the same body a presented frame runs.
 fn painted_board(window_id: &str, bounds: Rect, camera: &Value) -> ShellState {
+    painted_board_with_input(window_id, bounds, camera).0
+}
+
+/// 🖱️ [`painted_board`] plus the input state its paint registered the board's retained hits in — what the renderer's pointer
+/// routing reads to let a published board surface claim a move.
+fn painted_board_with_input(window_id: &str, bounds: Rect, camera: &Value) -> (ShellState, InputState<ActionDescriptor>) {
     let mut shell = ShellState::new(Vec::new(), String::new());
     shell.panel_anchors = std::array::from_fn(|_| PanelAnchorState::default());
     shell.dock_tabs = ShellDock::default();
@@ -51,10 +57,10 @@ fn painted_board(window_id: &str, bounds: Rect, camera: &Value) -> ShellState {
     let records = vec![shell_input_tests::tree_pointer_record(1, window_id, ui_contract::Component::Surface(surface), &[], None)];
     let document = shell.publish_surface_records(window_id, records).expect("board document publishes");
     shell.dock_window_plan = vec![(window_id.to_string(), bounds)];
-    let _input = shell_input_tests::paint_component_pointer_documents(&mut shell, &[(window_id, "s.test.board", &document, bounds)]);
+    let input = shell_input_tests::paint_component_pointer_documents(&mut shell, &[(window_id, "s.test.board", &document, bounds)]);
     shell.sync_engine_surface_states();
     assert_eq!(shell.board2d_states.len(), 1, "the painted board registered its surface");
-    shell
+    (shell, input)
 }
 
 fn window_view_json(view: &PresenceWindowView) -> Value {
@@ -101,4 +107,26 @@ fn a_painted_board_paints_the_verified_roster_and_never_its_own_actor() {
         assert_eq!(numeric(&Value::Array(cursors)), numeric(&case["expected"]["cursors"]), "{} cursors", case["id"]);
         assert_eq!(numeric(&Value::Array(marks)), numeric(&case["expected"]["marks"]), "{} marks", case["id"]);
     }
+}
+
+/// 👥️ LAW (ticket 26/09/23 session 13, wasm32 run s13d: 293 heartbeats while the pointer crossed a painted puzzle board, 0 of them
+/// with a pointer): the pointer a peer sees is the one the RENDERER receives. Every `publish` case is driven through the move path
+/// the winit app and the browser worker drive (`AppInteractionState::handle_pointer_move`) over a painted board; a move the board
+/// surface claims still becomes the presence pointer, so the heartbeat's window view is the fixture's expected view.
+#[test]
+fn a_pointer_the_renderer_routes_over_a_painted_board_is_the_presence_pointer_its_view_publishes() {
+    let _serialized = crate::engine_canvas::engine_surface_law_guard();
+    let mut claimed = 0;
+    for case in fixture()["publish"].as_array().expect("publish cases").iter().filter(|case| case["pointer"].is_array()).map(under_own_window) {
+        let (shell, input) = painted_board_with_input(case["windowId"].as_str().expect("window id"), rect(&case["bounds"]), &case["camera"]);
+        let mut interaction = shell_input_tests::pointer_interaction(shell, input);
+        let (x, y) = (case["pointer"][0].as_f64().expect("x") as f32, case["pointer"][1].as_f64().expect("y") as f32);
+        if interaction.shell.scene_pointer_target_at(x, y, &interaction.input, &interaction.theme).is_some() {
+            claimed += 1;
+        }
+        semio_framework_async::block_on(interaction.handle_pointer_move(shell_input_tests::mouse_pointer(1), x, y, false, 0, PointerModifiers::default()));
+        let (views, _) = interaction.shell.board_presence_views();
+        assert_eq!(views.iter().map(window_view_json).map(|view| numeric(&view)).collect::<Vec<_>>(), vec![numeric(&case["expected"])], "{}", case["id"]);
+    }
+    assert!(claimed >= 1, "at least one routed move is claimed by the painted board surface (the path that froze the presence pointer)");
 }

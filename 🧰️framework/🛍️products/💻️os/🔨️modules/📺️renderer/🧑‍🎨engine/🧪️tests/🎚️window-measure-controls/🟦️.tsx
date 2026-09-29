@@ -103,7 +103,7 @@ const selectMeasure = (value: string) =>
 
 const countAction = { controllerId: "puzzle3d-play", action: "setFillCount" } as const;
 
-/** @emoji 🔢️ An unbounded count: a floor but deliberately NO ceiling, which is the whole point of `number`. */
+/** 🔢️ An unbounded count: a floor but deliberately NO ceiling, which is the whole point of `number`. */
 const numberMeasure = (value: number) => ({ kind: "number", id: "puzzle3d-fill-count", label: "Count", value, min: 0, step: 1, ready: 42, loading: true, onChange: countAction }) as never;
 
 const numberInput = (): HTMLInputElement => document.getElementById("puzzle3d-fill-count") as HTMLInputElement;

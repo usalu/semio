@@ -31,5 +31,4 @@ export function testSharedDynamicValueOracle(): void {
   assert.equal(reads, 0, "validation must not execute accessor values");
   const child = { value: 1 }, shared = { left: child, right: child };
   assert.deepEqual(parseDslValue(shared), shared);
-  console.log("[DEBUG] shared dynamic value projection matched nine Ajv JSON vectors and rejected all nine non-JSON constructions");
 }

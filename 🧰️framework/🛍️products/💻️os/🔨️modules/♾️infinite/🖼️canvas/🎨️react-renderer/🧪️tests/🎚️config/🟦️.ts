@@ -9,7 +9,7 @@ const configDir = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦�
 const repoRoot = resolve(configDir, "../../../../../../../../..");
 const componentSource = "../../🟦️.tsx";
 
-/** @emoji 🧪️ Vitest for `@semio-tech/infinite-canvas-react-renderer` — in-source `import.meta.vitest` on `🟦️.tsx`. */
+/** 🧪️ Vitest for `@semio-tech/infinite-canvas-react-renderer` — in-source `import.meta.vitest` on `🟦️.tsx`. */
 export default {
   root: testRoot,
   resolve: {

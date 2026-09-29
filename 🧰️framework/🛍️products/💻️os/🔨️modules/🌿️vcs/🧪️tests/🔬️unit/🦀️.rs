@@ -186,7 +186,7 @@ async fn pending_change_checkpoint_hash_is_byte_identical_before_history_reserva
     drop(changes.pop());
 }
 
-/// @emoji 🔬️ `content_addressed_checkpoint_id_core`'s committed-`Change` branch now hashes
+/// 🔬️ `content_addressed_checkpoint_id_core`'s committed-`Change` branch now hashes
 /// `crate::os_pack::json::to_json_string(change)` instead of `serde_json::to_vec(change)` —
 /// direct proof the two are byte-identical for `Change`, both with and without `description`
 /// (its one `Option` field, `skip_serializing_if`-omitted when `None`).
@@ -200,7 +200,7 @@ fn change_to_json_string_matches_serde_json_byte_for_byte() {
     }
 }
 
-/// @emoji 🔬️ `pending_change_ref_json`'s hand-built wire shape, byte-for-byte against an
+/// 🔬️ `pending_change_ref_json`'s hand-built wire shape, byte-for-byte against an
 /// independent `serde_json` oracle (a local `#[derive(Serialize)]` twin reproducing
 /// `PendingChangeRef`'s pre-conversion shape) — the direct proof this ticket's own
 /// `float-format-parity.md` calls for, that converting `content_addressed_checkpoint_id_core`
@@ -226,7 +226,7 @@ fn pending_change_ref_json_matches_serde_json_oracle() {
     }
 }
 
-/// @emoji 🧩️ `composition_pins`/`CompositionPin` extension to `content_addressed_checkpoint_id`:
+/// 🧩️ `composition_pins`/`CompositionPin` extension to `content_addressed_checkpoint_id`:
 /// the three properties the ticket calls for — pin-set changes flip the id, identical
 /// pins-in-identical-order converge, and (critically) an EMPTY pin list must hash to the exact
 /// same bytes `content_addressed_checkpoint_id` produced before this field existed, so every

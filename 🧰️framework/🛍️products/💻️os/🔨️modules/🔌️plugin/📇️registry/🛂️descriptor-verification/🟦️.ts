@@ -7,7 +7,7 @@ import { DESCRIPTOR_JSON_REL_PATH, PluginRegistryEntry } from "../🔎️discove
 
 
 
-/** @emoji 🔎️ Renders the catalog in memory and byte-compares it against `generated/*` plus
+/** 🔎️ Renders the catalog in memory and byte-compares it against `generated/*` plus
  * `.vscode/launch.json` — never writes (a lint/verify step must never let the auto-commit daemon land
  * regenerated files). Launch freshness is folded in here rather than living in a second, unenforced
  * entry point, so one `check` covers every artifact `generate` produces. */
@@ -81,13 +81,32 @@ export function auditInteractiveJobClassificationDrift(pluginId: string, ownerRo
 }
 
 
+/** 🧬️ The component a committed descriptor describes: `describe` hashes the `dist/component-dev` deliverable it staged
+ * (`hashes.wasmSha256`, the `rebuild-all` invariant the hub's trusted-catalog preflight enforces as well), so that file is
+ * what the descriptor is checked against — never the canonical `wasm-release` artifact of the ambient target dir, whose
+ * bytes no descriptor names (an unrelated release build there failed every `check`, ticket 26/09/23 W4). */
+export function describedComponentPath(repoRoot: string, entry: Pick<PluginRegistryEntry, "cratePath" | "wasmOut">): string {
+  return join(repoRoot, entry.cratePath, "dist", "component-dev", entry.wasmOut);
+}
+
+
+/** 🪪️ One descriptor's component finding: a missing deliverable is a warning ("not built"), bytes that differ from
+ * `wasmSha256` are an error (the descriptor is stale against its own build). */
+export function describedComponentFindings(repoRoot: string, entry: Pick<PluginRegistryEntry, "pluginId" | "cratePath" | "wasmOut">, wasmSha256: string): { warnings: string[]; errors: string[] } {
+  const described = describedComponentPath(repoRoot, entry);
+  if (!existsSync(described)) return { warnings: [`${entry.pluginId}: has hashes.wasmSha256 but no component-dev deliverable at ${relative(repoRoot, described)} — the described component is not built`], errors: [] };
+  const actual = sha256HexOfFile(described);
+  return actual === wasmSha256 ? { warnings: [], errors: [] } : { warnings: [], errors: [`${entry.pluginId}: hashes.wasmSha256 is ${wasmSha256} but ${relative(repoRoot, described)} actually hashes to ${actual} — re-run \`describe\` after the latest build`] };
+}
+
+
 /**
  * 🛂️ `📓️design-abi.md` §3's registry `check` extension, fail-closed: every discovered crate owns a
  * complete `🔣️.json` + `🛂️.descriptor.semio` pair, the pair strict-decodes to one semantically
  * identical value in both forms, it carries no placeholder identity, `pluginId`/`packageId`/`extends`
  * match the Cargo component, every `on-extension-request:<point>` names a real host extension point,
- * the built wasm's sha256 matches `hashes.wasmSha256`, and no committed `interactiveJob` contradicts
- * the owner's own Rust classification.
+ * the described component's sha256 matches `hashes.wasmSha256` ({@link describedComponentFindings}), and no
+ * committed `interactiveJob` contradicts the owner's own Rust classification.
  *
  * A missing, half-published, divergent or placeholder pair is an **error**, not a warning: the strict
  * catalog gate treats exactly these as unpublishable, so a green `check` over them was reporting a
@@ -136,15 +155,9 @@ export function validateDescriptors(entries: readonly PluginRegistryEntry[], rep
       }
     }
     if (entry.hashes) {
-      const builtWasm = publicationWasmPath(repoRoot, entry.wasmOut);
-      if (!existsSync(builtWasm)) {
-        warnings.push(`${entry.pluginId}: has hashes.wasmSha256 but no canonical ${WASM_PUBLICATION_PROFILE} publication artifact at ${relative(repoRoot, builtWasm)} — publication identity remains unverified`);
-      } else {
-        const actual = sha256HexOfFile(builtWasm);
-        if (actual !== entry.hashes.wasmSha256) {
-          errors.push(`${entry.pluginId}: hashes.wasmSha256 is ${entry.hashes.wasmSha256} but ${relative(repoRoot, builtWasm)} actually hashes to ${actual} — re-run \`describe\` after the latest build`);
-        }
-      }
+      const findings = describedComponentFindings(repoRoot, entry, entry.hashes.wasmSha256);
+      warnings.push(...findings.warnings);
+      errors.push(...findings.errors);
     }
   }
   console.log(`descriptor gate: ${described}/${entries.length} crates own a verified 🔣️.json + 🛂️.descriptor.semio pair.`);

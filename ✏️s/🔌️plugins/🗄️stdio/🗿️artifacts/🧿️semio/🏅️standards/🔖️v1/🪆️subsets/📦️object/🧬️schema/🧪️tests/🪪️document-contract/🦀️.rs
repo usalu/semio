@@ -48,7 +48,6 @@ async fn stdio_document_contract_object_round_trips_exact_children() {
     let text = include_str!("../../../🖼️assets/📦️crate/🗣️.dsl.semio");
     let pack = include_bytes!("../../../🖼️assets/📦️crate/🎒️.pack.semio");
     assert_eq!(SemioObjectSnapshot::parse_dsl(text).expect("authored text asset"), SemioObjectSnapshot::decode_pack(pack).expect("authored Pack asset"));
-    eprintln!("[DEBUG] Object snapshot/diff JSON, text and Pack preserve exact child references and reject foreign owners");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -68,5 +67,4 @@ async fn stdio_document_contract_object_rejects_invalid_typed_mutations() {
     assert_eq!(outcome.messages()[0].code.0.as_str(), "mutation.child-identity");
     let foreign = serde_json::json!({"CreateMesh": {"child_id": "mesh-1", "target": {"artifactId": "mesh-1", "dialect": {"artifactKind": "s.stdio.semio", "standard": "v1", "subset": "mesh"}}, "locale": "de"}});
     assert!(dsl::json::from_json_str::<SemioObjectMutation>(&foreign.to_string()).is_err(), "closed mutation payload rejects OS settings");
-    eprintln!("[DEBUG] Object mutation rejects mismatched child identity before modifying the parent");
 }

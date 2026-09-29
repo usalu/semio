@@ -27,5 +27,4 @@ fn microsecond_owned_wasi_clock_is_real_nanoseconds_with_checked_unsigned_range(
         }
     }
     assert!(last > start, "owned WASI host must not return a frozen zero clock");
-    eprintln!("[DEBUG] owned WASI real monotonic nanoseconds start={start} last={last}");
 }

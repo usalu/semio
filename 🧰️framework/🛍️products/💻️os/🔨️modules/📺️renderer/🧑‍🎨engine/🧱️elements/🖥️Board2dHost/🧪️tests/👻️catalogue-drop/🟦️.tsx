@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 👻️ Catalogue part drags ride the pointer transport. The 2D board must paint and commit that
+/** 👻️ Catalogue part drags ride the pointer transport. The 2D board must paint and commit that
  * ghost while the cursor is over the board, the same way the 3D window already does. */
 // #endregion 🧲️Header
 

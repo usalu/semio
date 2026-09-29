@@ -68,7 +68,7 @@ async fn flush_dict_delta<S: crate::os_pack::PackSink>(writer: &mut SprWriter<S>
     }
 }
 
-/// @emoji 🏗️ Hand-assembles a `.spr` stream with 4 edits and one embedded-pack `REC_PROJECTION`
+/// 🏗️ Hand-assembles a `.spr` stream with 4 edits and one embedded-pack `REC_PROJECTION`
 /// taken right after edit ordinal 1 (i.e. covering edits 0 and 1) — the shape `resolve_plan`'s
 /// index-free reverse-scan fallback and `materialize_with`'s tail replay are exercised against.
 async fn build_stream_with_snapshot(snapshot_body: &[u8]) -> Vec<u8> {

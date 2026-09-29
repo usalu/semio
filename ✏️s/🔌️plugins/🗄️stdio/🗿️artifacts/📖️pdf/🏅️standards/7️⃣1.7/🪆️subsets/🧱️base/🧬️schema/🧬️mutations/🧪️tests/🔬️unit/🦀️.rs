@@ -24,7 +24,7 @@ fn samples() -> Vec<PdfMutation> {
 #[test]
 fn every_kind_is_declared_once_in_declaration_order() {
     let kinds = pdf_mutation_kinds();
-    assert_eq!(kinds.len(), 60);
+    assert_eq!(kinds.len(), 61);
     assert_eq!(kinds.len(), binary::BINARY_TAG_REGISTRY.len());
     assert_eq!(kinds.len(), text::TEXT_OPCODE_REGISTRY.len());
     let mut seen = std::collections::HashSet::new();

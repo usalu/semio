@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji ⚔️ What a human is told when the hub refuses one of their command batches (🎫️ 26/09/23 C10, audit G-P2-3): the
+/** ⚔️ What a human is told when the hub refuses one of their command batches (🎫️ 26/09/23 C10, audit G-P2-3): the
  * neutral corpus drives `hubCommandRejectionReasonKeyV1` over the hub's own canonical MutationMessage payloads and pins the
  * exact notice text in English and German; the hub's English diagnostic `reason` never reaches the notice. The payload
  * bytes are encoded by Node's own `TextEncoder`/`JSON.stringify` (the hub's `encode_messages` shape), independent of the

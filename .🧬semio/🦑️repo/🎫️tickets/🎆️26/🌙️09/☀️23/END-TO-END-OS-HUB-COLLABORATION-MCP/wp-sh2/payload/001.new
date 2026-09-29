@@ -9,7 +9,7 @@ fn retained_command_fixture_matches_exact_routes_and_serde_json_boundaries() {
     assert_eq!(migrated, HOME_RETAINED_TOOL_IDS);
     assert_eq!(HOME_RETAINED_PUBLICATION_CONTRACTS.len(), migrated.len());
     assert_eq!(fixture["controller"].as_str(), Some(S_HOME_CONTROLLER_ID));
-    let contract = crate::editor::home::config::home_retained_contract();
+    let contract = home_retained_contract();
     for (key, expected) in [
         ("rawBytes", HOME_RETAINED_RAW_BYTES),
         ("checkpointBytes", semio_framework_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES),
@@ -127,7 +127,7 @@ async fn space_document_persists_through_backbone_port() {
 /// is what the role law below actually needs to be able to distinguish (ticket 26/09/18, S3: that law
 /// asserted `manageSpace` against a memberless fixture and had never run, because the assertion above
 /// it stopped the test first).
-async fn directory_with_one_folded_space() -> crate::editor::home::transient::HomeTransient {
+async fn directory_with_one_folded_space() -> HomeTransient {
     let created = pack::json!({
         "seq": 1, "id": "evt-1", "hlc": {"physicalMs": 0, "logical": 0}, "actor": {"kind": "user", "id": "u"}, "spaceId": "sp-1",
         "body": {"kind": "space.created", "spaceId": "sp-1", "name": "Fixture", "spaceKind": "atelier", "visibility": "private", "ownerUserId": "u1"},
@@ -152,8 +152,7 @@ async fn directory_with_one_folded_space() -> crate::editor::home::transient::Ho
         receipt_sha256: String::new(),
     };
     page.receipt_sha256 = semio_framework_hash::sha256_hex(page.canonical_unsigned_json().as_bytes());
-    crate::editor::home::transient::HomeTransient::with_directory(crate::editor::home::transient::HomeTransient::default().directory().fold_page(&page))
-}
+    HomeTransient::with_directory(HomeTransient::default().directory().fold_page(&page))
 }
 
 #[semio_framework_async_macros::async_test]
@@ -366,7 +365,7 @@ async fn the_bind_job_validates_then_writes_the_studio_file_once() {
     let file_path = std::env::temp_dir().join(format!("{stem}.os")).to_string_lossy().into_owned();
     let read_back = || {
         use semio_framework_os::OsBackbonePort as _;
-        semio_framework_os::open_file_space_backbone(&file_path).and_then(|port| port.read(&format!("file://{file_path}"))).and_then(|payload| semio_framework_os::decode_backbone_payload::<semio_framework_artifact_space_space::SpaceSnapshot, semio_framework_artifact_space_space::SpaceMutation>(&payload, semio_framework_artifact_space_space::S_SPACE_SCHEMA))
+        semio_framework_os::open_file_space_backbone(&file_path).and_then(|port| port.read(&format!("file://{file_path}"))).and_then(|payload| semio_framework_os::decode_backbone_payload::<semio_framework_artifact_space_space::SpaceSnapshot, semio_framework_artifact_space_space::SpaceMutation>(&payload, S_SPACE_SCHEMA))
     };
     let mut work = HomeCatalogWork::new("bindSpaceFile");
     assert!(matches!(work.advance(&bind(&space_id, &file_path), &doc).expect("validate stage"), ArtifactCommandWorkStep::Progress { .. }));

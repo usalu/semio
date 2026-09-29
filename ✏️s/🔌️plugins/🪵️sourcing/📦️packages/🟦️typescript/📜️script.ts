@@ -6,7 +6,7 @@ import { BundleScript, ScriptRouter, runCmd, runBundleScriptMain } from "../../.
 class TestScript extends BundleScript {
   run(): void {
     runCmd(process.execPath, ["test", ...["✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts","✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🟦️.ts"].map(path => resolve(this.repoRoot, path))], { cwd: this.repoRoot });
- console.log("[DEBUG] sourcing ts ok"); }
+ console.log("sourcing ts ok"); }
 }
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

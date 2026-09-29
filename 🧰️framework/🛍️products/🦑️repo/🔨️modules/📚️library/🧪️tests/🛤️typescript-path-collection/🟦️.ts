@@ -175,7 +175,7 @@ test("the mixed-template source fixture is admitted without reading or executing
 
 test("rejected for-of proof cannot fall through the separate weak distant-map authority", () => {
   const rows = vector.cases.filter((entry: any) => entry.id.startsWith("rejected-for-of"));
-  for (const compiler of compilers) for (const row of rows) expect(implementation(compiler).parse("reader.ts", row.source).filter((token: Token) => token.value === "🟦️targetsold.ts"), row.id).toEqual([]);
+  for (const compiler of compilers) for (const row of rows) expect<readonly Token[]>(implementation(compiler).parse("reader.ts", row.source).filter((token: Token) => token.value === "🟦️targetsold.ts"), row.id).toEqual([]);
 });
 
 test("exact physical resolution and leaf rewriting remain separate from reader proof", () => {

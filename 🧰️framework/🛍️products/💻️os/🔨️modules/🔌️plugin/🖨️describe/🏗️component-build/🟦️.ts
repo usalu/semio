@@ -39,20 +39,20 @@ export function cargoTargetRoot(repoRoot: string): string {
   return cargoTargetDirectory(repoRoot);
 }
 
-/** @emoji 🛠️ Resolves the debug-profile binary path for the current platform, after ensuring it is built (cargo's incremental cache makes a no-op rebuild fast — never exec a possibly-stale binary). */
+/** 🛠️ Resolves the debug-profile binary path for the current platform, after ensuring it is built (cargo's incremental cache makes a no-op rebuild fast — never exec a possibly-stale binary). */
 export function ensureBuiltBin(repoRoot: string, budgetMs = buildBudgetMs()): string {
   runCmd("cargo", ["build", "-p", CRATE_NAME], { cwd: repoRoot, env: devToolingEnv(), budgetMs });
   const binName = process.platform === "win32" ? `${CRATE_NAME}.exe` : CRATE_NAME;
   return join(cargoTargetRoot(repoRoot), "debug", binName);
 }
 
-/** @emoji 🎯️ WASI-development artifact path cargo just built for `packageName`, resolved through
+/** 🎯️ WASI-development artifact path cargo just built for `packageName`, resolved through
  * the same {@link cargoTargetRoot} cargo used in {@link ensureBuiltBin}. */
 export function pluginWasmArtifactPath(repoRoot: string, packageName: string, profile = "wasm-dev", targetRoot = cargoTargetRoot(repoRoot)): string {
   return join(targetRoot, "wasm32-wasip2", profile, `${packageName.replace(/-/g, "_")}.wasm`);
 }
 
-/** @emoji 🧬 Extracts the first core module from the exact component with jco's independent parser. */
+/** 🧬 Extracts the first core module from the exact component with jco's independent parser. */
 export function extractPluginCore(repoRoot: string, component: string, outDir: string, baseName: string, budgetMs = buildBudgetMs()): string {
   const jco = resolveWorkspaceBin("@bytecodealliance/jco", repoRoot);
   if (!jco) throw new Error("missing @bytecodealliance/jco workspace binary; run bun install");

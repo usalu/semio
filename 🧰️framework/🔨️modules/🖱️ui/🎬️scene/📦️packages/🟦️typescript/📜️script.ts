@@ -8,7 +8,7 @@ class TestScript extends BundleScript {
     runCmd("bun", [
       "test",
       resolve(import.meta.dir, "../../🧪️tests/🚚️text-editor-lanes/🟦️.test.ts"),
-      resolve(import.meta.dir, "../../🧪️tests/🚚️table-lanes/🟦️.test.ts"),
+      resolve(import.meta.dir, "../../🧪️tests/🚚️table-lanes/🟦️.test.ts"), resolve(import.meta.dir, "../../🧪️tests/✂️text-splice/🟦️.test.ts"),
       resolve(import.meta.dir, "../../🧪️tests/🚚️world3d-scene-lanes/🟦️.test.ts"),
       ...segments,
     ], { cwd: this.repoRoot });

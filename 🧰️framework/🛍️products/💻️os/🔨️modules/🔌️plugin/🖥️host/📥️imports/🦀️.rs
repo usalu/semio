@@ -201,12 +201,12 @@ impl CancelOnDrop {
 }
 
 impl Drop for CancelOnDrop {
-    // 🚫️async: E5 executor bridge. `Drop::drop` (E1 — `Drop` is an externally-declared trait,
-    // language-fixed sync) cannot `.await`; `CancelToken::cancel` lives in `⏳️async` (outside this
-    // packet's `🔌️plugin/🖥️host` path_scope, so it cannot be reverted to sync here even though its
-    // own body — a bare `AtomicU8::store` — has no suspension point of its own). Same bridge shape
-    // as `🚚️process-transport/🦀️.rs`'s `impl Drop for ProcessTransport`. Sound: `cancel`
-    // never actually parks, so this never blocks.
+    /// 🚫️async: E5 executor bridge. `Drop::drop` (E1 — `Drop` is an externally-declared trait,
+    /// language-fixed sync) cannot `.await`; `CancelToken::cancel` lives in `⏳️async` (outside this
+    /// packet's `🔌️plugin/🖥️host` path_scope, so it cannot be reverted to sync here even though its
+    /// own body — a bare `AtomicU8::store` — has no suspension point of its own). Same bridge shape
+    /// as `🚚️process-transport/🦀️.rs`'s `impl Drop for ProcessTransport`. Sound: `cancel`
+    /// never actually parks, so this never blocks.
     fn drop(&mut self) {
         if self.armed {
             semio_framework_async::block_on(self.token.cancel());
@@ -230,10 +230,10 @@ impl DirectAwaitCapabilityRegistry {
         self.0.lock().expect("DirectAwaitCapabilityRegistry mutex poisoned").entry(capability).or_default().push(token);
     }
 
-    // 🚫️async: E5 executor bridge, same reasoning as `CancelOnDrop::drop` above — `revoke` itself
-    // stays sync per this impl's own R9 tag (its consumer, `begin_call`'s sync-scoped bookkeeping,
-    // needs it sync), but `CancelToken::cancel` is a genuinely-async external-crate fn this file
-    // cannot revert to sync. `cancel` never actually parks (bare atomic store), so this never blocks.
+    /// 🚫️async: E5 executor bridge, same reasoning as `CancelOnDrop::drop` above — `revoke` itself
+    /// stays sync per this impl's own R9 tag (its consumer, `begin_call`'s sync-scoped bookkeeping,
+    /// needs it sync), but `CancelToken::cancel` is a genuinely-async external-crate fn this file
+    /// cannot revert to sync. `cancel` never actually parks (bare atomic store), so this never blocks.
     fn revoke(&self, capability: CapabilityTokenId) {
         if let Some(tokens) = self.0.lock().expect("DirectAwaitCapabilityRegistry mutex poisoned").remove(&capability) {
             for token in tokens {
@@ -422,6 +422,10 @@ async fn decode_json<T: serde::de::DeserializeOwned>(bytes: &[u8]) -> Option<T> 
 /// `effects::Effect` (see this region's own doc above for why a second copy, not a shared generic).
 /// Only reached from `emit` (the one-way door) — `io-run` stays the one `Err` case, same
 /// `## blocked-on` this mirrors (`Effect::IoRun` has no kernel counterpart yet, packet A3).
+///
+/// 🚫️async: R10 residue shape 1 — `decode_dsl` is async, hoisted out of `Option::and_then`'s
+/// sync closure below (and at every other `.args.and_then(|bytes| decode_dsl(&bytes))` site
+/// in this match).
 async fn wit_effect_to_kernel(effect: wit_effects::Effect) -> Result<semio_framework::kernel::Effect, String> {
     use semio_framework::kernel::Effect as K;
     use wit_effects::Effect as E;
@@ -445,9 +449,6 @@ async fn wit_effect_to_kernel(effect: wit_effects::Effect) -> Result<semio_frame
             K::OpenWindow { req: semio_framework::kernel::RequestId(inner.req), kind: semio_framework::kernel::WindowKindId(inner.params.kind), params: decode_dsl(&inner.params.params).await.unwrap_or(semio_framework::DslValue::Null) }
         }
         E::CloseWindow(inner) => K::CloseWindow { window: semio_framework::kernel::WindowHandle(inner.window as u128) },
-        // 🚫️async: R10 residue shape 1 — `decode_dsl` is async, hoisted out of `Option::and_then`'s
-        // sync closure below (and at every other `.args.and_then(|bytes| decode_dsl(&bytes))` site
-        // in this match).
         E::DispatchAction(inner) => {
             let args = match inner.params.args {
                 Some(bytes) => decode_dsl(&bytes).await,
@@ -489,6 +490,7 @@ async fn wit_effect_to_kernel(effect: wit_effects::Effect) -> Result<semio_frame
             K::OpenDialog { req: semio_framework::kernel::RequestId(inner.req), dialog_id: inner.params.dialog_id, args }
         }
         E::IconRenderExport(inner) => K::IconRenderExport { items: decode_json(&inner.items).await.unwrap_or_default() },
+        E::VideoRenderExport(inner) => K::VideoRenderExport { filename: inner.filename, program: decode_dsl(&inner.program).await.and_then(|value| dsl::from_dsl_value(value).ok()).unwrap_or_default() },
         E::DownloadMediaExport(inner) => K::DownloadMediaExport { filename: inner.filename, mime_type: inner.mime_type, data: inner.data, encoding: inner.encoding },
         E::RequestFileOpen(inner) => K::RequestFileOpen { req: semio_framework::kernel::RequestId(inner.req), accept: inner.params.accept, read_as: inner.params.read_as, import_action: String::new(), multiple: inner.params.multiple },
         E::RequestMediaFrames(inner) => {
@@ -558,7 +560,7 @@ mod effect_conversion_tests;
 /// 🌿️ Byte-for-byte the same behaviour as `actor_bindings`'s own `pure::Host for ActorHostState` —
 /// there is one world now and it imports `pure` unchanged.
 impl host_async_bindings::semio::framework::pure::Host for AsyncActorHostState {
-    // 🚫️async: E1 — see `actor_bindings::…::pure::Host`'s own tag above; identical WIT contract.
+    /// 🚫️async: E1 — see `actor_bindings::…::pure::Host`'s own tag above; identical WIT contract.
     fn log(&mut self, level: String, message: String) {
         eprintln!("[actor-async:{}:{level}] {message}", self.actor);
     }
@@ -575,12 +577,12 @@ impl host_async_bindings::semio::framework::pure::Host for AsyncActorHostState {
 
 //#region 🚪️host_async::Host (emit / emit-patch)
 impl wit_host_async::Host for AsyncActorHostState {
-    // 🚫️async: E1 — bindgen declares `emit`/`emit-patch` sync (fire-and-forget signal pushes),
-    // unlike the rest of this world's imports. `wit_effect_to_kernel` itself must stay `async`
-    // (it transitively awaits `store::pack_rt::decode_wire_value`, out of this packet's scope to
-    // touch), so this is a genuine E5 sync/async bridge: `block_on` is sound here because the
-    // whole decode chain is pure in-memory byte-buffer decoding with no real I/O, so it resolves
-    // in its first poll and never actually parks — see R9/R2 E1+E5.
+    /// 🚫️async: E1 — bindgen declares `emit`/`emit-patch` sync (fire-and-forget signal pushes),
+    /// unlike the rest of this world's imports. `wit_effect_to_kernel` itself must stay `async`
+    /// (it transitively awaits `store::pack_rt::decode_wire_value`, out of this packet's scope to
+    /// touch), so this is a genuine E5 sync/async bridge: `block_on` is sound here because the
+    /// whole decode chain is pure in-memory byte-buffer decoding with no real I/O, so it resolves
+    /// in its first poll and never actually parks — see R9/R2 E1+E5.
     fn emit(&mut self, value: wit_effects::Effect) {
         match semio_framework_async::block_on(wit_effect_to_kernel(value)) {
             Ok(effect) => self.effect_sink.push(effect),
@@ -726,6 +728,9 @@ impl wit_host_async::HostWithStore<AsyncActorHostState> for HasSelf<AsyncActorHo
 
     /// 🐌️ Single-chunk fallback — see `single_chunk_shared`'s own doc for why: no chunked blob
     /// backend exists in this codebase, and adding one is out of this packet's owned paths.
+    ///
+    /// 🚫️async: R10 residue shape 1 — `fault_bytes` is async, hoisted out of `map_err`'s sync
+    /// closure via an explicit match.
     async fn blob_read(accessor: &Accessor<AsyncActorHostState, Self>, hash: String) -> Result<StreamReader<u8>, Vec<u8>> {
         let call = begin_call(accessor.with(|mut access| snapshot_call(access.get()))).await;
         if call.ctx.cancel.is_cancelled().await {
@@ -736,8 +741,6 @@ impl wit_host_async::HostWithStore<AsyncActorHostState> for HasSelf<AsyncActorHo
         call.guard.disarm();
         let bytes = result?;
         let shared = single_chunk_shared(bytes).await;
-        // 🚫️async: R10 residue shape 1 — `fault_bytes` is async, hoisted out of `map_err`'s sync
-        // closure via an explicit match.
         match accessor.with(|access| StreamReader::new(access, ChunkStreamProducer { shared })) {
             Ok(reader) => Ok(reader),
             Err(error) => Err(fault_bytes("stream-error", error.to_string()).await),
@@ -751,6 +754,8 @@ impl wit_host_async::HostWithStore<AsyncActorHostState> for HasSelf<AsyncActorHo
     /// pulling real chunks into `ChunkShared`, waking the guest's stream reader as they arrive. This
     /// is what actually fixes the poll bridge's "only keeps the FINAL chunk" gap the WIT doc calls
     /// out — see the packet report's `## streams`.
+    ///
+    /// 🚫️async: R10 residue shape 1 — same `fault_bytes`-inside-`map_err` reasoning as `blob_read`.
     async fn http_fetch(accessor: &Accessor<AsyncActorHostState, Self>, params: wit_effects::HttpParams) -> Result<wit_host_async::HttpResponse, Vec<u8>> {
         let call = begin_call(accessor.with(|mut access| snapshot_call(access.get()))).await;
         if call.ctx.cancel.is_cancelled().await {
@@ -785,7 +790,6 @@ impl wit_host_async::HostWithStore<AsyncActorHostState> for HasSelf<AsyncActorHo
             }
         });
         call.services.runtime.spawn_scoped(&call.scope, call.ctx, pull).await;
-        // 🚫️async: R10 residue shape 1 — same `fault_bytes`-inside-`map_err` reasoning as `blob_read`.
         let body_reader = match accessor.with(|access| StreamReader::new(access, ChunkStreamProducer { shared })) {
             Ok(reader) => reader,
             Err(error) => return Err(fault_bytes("stream-error", error.to_string()).await),

@@ -24,41 +24,41 @@ use pack::crc32c;
 use pack::ByteWriter;
 
 //#region 🔖️Limits
-/// @emoji 🛡️ Ceiling on one entry's key, validated via `check_len` before the key's bytes
+/// 🛡️ Ceiling on one entry's key, validated via `check_len` before the key's bytes
 /// are read off storage (decode side) or written into a run (encode side).
 const MAX_KEY_LEN: u64 = 64 * 1024;
 
-/// @emoji 🛡️ Ceiling on one entry's value — generous enough for a serialized `Frontier`/postings
+/// 🛡️ Ceiling on one entry's value — generous enough for a serialized `Frontier`/postings
 /// list/location pointer, small enough to refuse an obviously-corrupt on-disk length before
 /// allocating it.
 const MAX_VALUE_LEN: u64 = 16 * 1024 * 1024;
 
-/// @emoji 🛡️ Ceiling on the number of entries a single run may hold, checked against the header's
+/// 🛡️ Ceiling on the number of entries a single run may hold, checked against the header's
 /// `entry_count` field before admitting decoded fixed entry slots.
 const MAX_RUN_ENTRIES: u64 = 64;
 
-/// @emoji 🧺️ The entries one run holds at most — what an owner batching its own entries fills.
+/// 🧺️ The entries one run holds at most — what an owner batching its own entries fills.
 pub const RUN_ENTRIES_MAX: usize = MAX_RUN_ENTRIES as usize;
 
-/// @emoji 🪜️ The highest level an append-only owner's runs fold to ([`IndexHandle::append_owned_sorted_run`]): the newest
+/// 🪜️ The highest level an append-only owner's runs fold to ([`IndexHandle::append_owned_sorted_run`]): the newest
 /// [`LEVEL_FOLD_RUNS`] full runs of level `L` fold into one run of level `L + 1`, so a level-`L` run holds up to
 /// `MAX_RUN_ENTRIES · 4^L` entries and a kind of `N` entries spans about `3 · RUN_LEVEL_MAX + N / (MAX_RUN_ENTRIES · 4^RUN_LEVEL_MAX)` runs.
 const RUN_LEVEL_MAX: u32 = 3;
 
-/// @emoji 🪜️ How many full runs of one level fold into one run of the next.
+/// 🪜️ How many full runs of one level fold into one run of the next.
 const LEVEL_FOLD_RUNS: usize = 4;
 
-/// @emoji 🛡️ Ceiling on the entries of any run a reader admits: a level-[`RUN_LEVEL_MAX`] run's.
+/// 🛡️ Ceiling on the entries of any run a reader admits: a level-[`RUN_LEVEL_MAX`] run's.
 const LEVEL_RUN_ENTRIES_MAX: u64 = MAX_RUN_ENTRIES << (2 * RUN_LEVEL_MAX);
 
-/// @emoji 🛡️ Ceiling on the bytes a fold reads (its input runs together): one read operation's credit, so the folded run —
+/// 🛡️ Ceiling on the bytes a fold reads (its input runs together): one read operation's credit, so the folded run —
 /// never larger than its inputs — is always read in one operation; a fold that would exceed it is skipped and its runs
 /// stay as they are.
 const LEVEL_FOLD_BYTES_MAX: usize = db_storage::DB_IO_MAX_READ_BYTES as usize;
 //#endregion 🔖️Limits
 
 //#region 🔖️IndexKind
-/// @emoji 🗂️ The ten index namespaces `db_artifact`/`db_conflict`/`db_projection`/`db_query` build
+/// 🗂️ The ten index namespaces `db_artifact`/`db_conflict`/`db_projection`/`db_query` build
 /// on top of this crate's sorted-run engine (per the contract's per-crate responsibility line for
 /// `db_index`). Every kind shares the same generic `IndexHandle` mechanism (`put`/`get`/`delete`/
 /// `scan_prefix`/`compact`/`stats` all work identically for any kind); the typed wrappers below
@@ -82,11 +82,11 @@ pub enum IndexKind {
 }
 
 impl IndexKind {
-    /// @emoji 📋️ Every kind, for tests and for callers that want to enumerate/verify a document's
+    /// 📋️ Every kind, for tests and for callers that want to enumerate/verify a document's
     /// whole index (e.g. `db_cli verify`).
     pub const ALL: [IndexKind; 10] = [IndexKind::Command, IndexKind::ActorSeq, IndexKind::Frontier, IndexKind::TouchedRegion, IndexKind::Inverse, IndexKind::Commit, IndexKind::Conflict, IndexKind::Projection, IndexKind::FullText, IndexKind::Preview];
 
-    /// @emoji 🏷️ The one-byte tag stamped in every run's header and packed into the high byte of
+    /// 🏷️ The one-byte tag stamped in every run's header and packed into the high byte of
     /// its `run_id`s (see `make_run_id`) — this crate's own on-disk representation, not part of the
     /// frozen contract.
     fn tag(self) -> u8 {
@@ -105,7 +105,7 @@ impl IndexKind {
     }
 }
 
-/// @emoji 🔢️ A `run_id`'s layout, high to low: `[format:4][kind:4][sequence:48][level:2][entries-1:6]`.
+/// 🔢️ A `run_id`'s layout, high to low: `[format:4][kind:4][sequence:48][level:2][entries-1:6]`.
 /// `db_storage::IndexStorage` addresses runs by a single flat `u64` per document; the high byte
 /// namespaces the runs of one kind (and this crate's run-id format) so ten kinds share one document's
 /// storage without colliding, and the low bits carry the run's fold level and, for a level-0 run, its
@@ -124,12 +124,12 @@ const SEQUENCE_MASK: u64 = (1u64 << SEQUENCE_BITS) - 1;
 const _: () = assert!(MAX_RUN_ENTRIES == 1 << RUN_ENTRY_BITS);
 const _: () = assert!(RUN_LEVEL_MAX as u64 <= RUN_LEVEL_MASK);
 
-/// @emoji 🏷️ The high byte every run of `kind` carries in its id.
+/// 🏷️ The high byte every run of `kind` carries in its id.
 fn run_namespace(kind: IndexKind) -> u8 {
     ((RUN_ID_FORMAT << 4) | u64::from(kind.tag())) as u8
 }
 
-/// @emoji 🧮️ Packs `kind`, `sequence`, the run's fold `level` and its `entries` count into one `run_id`. Errors
+/// 🧮️ Packs `kind`, `sequence`, the run's fold `level` and its `entries` count into one `run_id`. Errors
 /// `LimitExceeded` if `sequence` doesn't fit its 48 bits (2^48 runs of one kind for one document), `level` exceeds
 /// [`RUN_LEVEL_MAX`], or `entries` is outside `1..=` the level's capacity (an empty run is never written).
 fn make_run_id(kind: IndexKind, sequence: u64, level: u32, entries: usize) -> Result<u64, DbError> {
@@ -146,7 +146,7 @@ fn make_run_id(kind: IndexKind, sequence: u64, level: u32, entries: usize) -> Re
     Ok((u64::from(run_namespace(kind)) << RUN_NAMESPACE_SHIFT) | (sequence << RUN_SEQUENCE_SHIFT) | (u64::from(level) << RUN_ENTRY_BITS) | count)
 }
 
-/// @emoji 📐️ The entries a run of `level` holds at most.
+/// 📐️ The entries a run of `level` holds at most.
 fn level_capacity(level: u32) -> u64 {
     MAX_RUN_ENTRIES << (2 * level)
 }
@@ -163,7 +163,7 @@ fn level_of_run_id(run_id: u64) -> u32 {
     ((run_id >> RUN_ENTRY_BITS) & RUN_LEVEL_MASK) as u32
 }
 
-/// @emoji 📏️ A level-0 run's exact entry count; a folded run's capacity (its level's).
+/// 📏️ A level-0 run's exact entry count; a folded run's capacity (its level's).
 fn entries_of_run_id(run_id: u64) -> u64 {
     match level_of_run_id(run_id) {
         0 => (run_id & RUN_ENTRY_MASK) + 1,
@@ -173,7 +173,7 @@ fn entries_of_run_id(run_id: u64) -> u64 {
 //#endregion 🔖️IndexKind
 
 //#region 🔖️SortedRun
-/// @emoji 📇️ One entry's value in a sorted run: either a live payload or a tombstone recording that
+/// 📇️ One entry's value in a sorted run: either a live payload or a tombstone recording that
 /// a key was deleted (and must keep shadowing that key in any older, not-yet-merged run beneath).
 pub struct IndexCursorControl {
     cancelled: std::sync::Arc<std::sync::atomic::AtomicBool>,
@@ -465,7 +465,7 @@ pub enum RunValue {
     Tombstone,
 }
 
-/// @emoji 📌️ One `(key, value)` pair inside a sorted run. A well-formed run's entries are strictly
+/// 📌️ One `(key, value)` pair inside a sorted run. A well-formed run's entries are strictly
 /// ascending and unique by `key` — both `encode_run` (on the way in) and `decode_run` (on the way
 /// back out, defending against on-disk corruption) enforce this.
 #[derive(Debug)]
@@ -554,12 +554,12 @@ impl RunEntries {
     }
 }
 
-/// @emoji 🪧️ A run's 6-byte header: 4-byte magic, 1-byte format version, 1-byte `IndexKind` tag —
+/// 🪧️ A run's 6-byte header: 4-byte magic, 1-byte format version, 1-byte `IndexKind` tag —
 /// see `read_run_header`.
 const RUN_MAGIC: [u8; 4] = *b"DBIR";
 const RUN_VERSION: u8 = 1;
 
-/// @emoji 📐️ A run header's parsed fields plus how many bytes of `body` it occupied, so the caller
+/// 📐️ A run header's parsed fields plus how many bytes of `body` it occupied, so the caller
 /// knows where the entry stream starts.
 struct RunHeader {
     entry_count: u64,
@@ -651,7 +651,7 @@ async fn read_run_header(reader: &mut RunPageReader<'_>, expected_kind: IndexKin
     Ok(RunHeader { entry_count })
 }
 
-/// @emoji ✍️ Encodes a well-formed (strictly ascending, unique-by-key) entry list into one run's
+/// ✍️ Encodes a well-formed (strictly ascending, unique-by-key) entry list into one run's
 /// bytes: `MAGIC(4) VERSION(1) KIND(1) entry_count(varint) entries... crc32c(4, LE)`. Each entry is
 /// `key_len(varint) key value_tag(1: 0=tombstone,1=put) [value_len(varint) value]`. Errors
 /// `InvalidArgument` if `entries` isn't strictly ascending — this fn never silently re-sorts, since
@@ -757,7 +757,7 @@ async fn encode_run_pages(kind: IndexKind, entries: &RunEntries, control: &mut I
     writer.seal_retained().await.map_err(db_storage::DbIoPageWriterRejected::into_error)
 }
 
-/// @emoji 📥️ Encodes strictly ascending, unique `(key, value)` puts into one run's bytes (the same
+/// 📥️ Encodes strictly ascending, unique `(key, value)` puts into one run's bytes (the same
 /// layout as `encode_run_pages`) straight from caller-owned slices, under one page writer.
 async fn encode_sorted_run_pages(kind: IndexKind, entries: &[(&[u8], &[u8])], control: &mut IndexCursorControl) -> Result<db_storage::DbIoPages, DbError> {
     check_len(entries.len() as u64, MAX_RUN_ENTRIES, "db_index::entries")?;
@@ -887,14 +887,14 @@ async fn decode_run_pages(mut pages: db_storage::DbIoPages, expected_kind: Index
 //#endregion 🔖️SortedRun
 
 //#region 🔖️RunView
-/// @emoji 📏️ One byte range inside a run's retained pages.
+/// 📏️ One byte range inside a run's retained pages.
 #[derive(Clone, Copy, Debug)]
 struct RunRange {
     start: usize,
     len: usize,
 }
 
-/// @emoji 👁️ One entry of a run read in place: its key and, for a put, its value, as ranges of the
+/// 👁️ One entry of a run read in place: its key and, for a put, its value, as ranges of the
 /// run's own pages.
 #[derive(Clone, Copy, Debug)]
 struct RunViewEntry {
@@ -902,7 +902,7 @@ struct RunViewEntry {
     value: Option<RunRange>,
 }
 
-/// @emoji 👁️ One run read in place. Loading, searching and merging a run costs exactly its retained
+/// 👁️ One run read in place. Loading, searching and merging a run costs exactly its retained
 /// pages — never a page per entry — so a run of `MAX_RUN_ENTRIES` small entries stays inside one
 /// operation's I/O credit, and an index never outgrows that credit as its document grows.
 struct RunView {
@@ -910,7 +910,7 @@ struct RunView {
     entries: Box<[RunViewEntry]>,
 }
 
-/// @emoji 🧹️ Returns every page of a run read to its arena before the owner is dropped, so a read
+/// 🧹️ Returns every page of a run read to its arena before the owner is dropped, so a read
 /// never parks its pages as a lost owner for maintenance to reclaim later.
 fn close_run_pages(mut pages: db_storage::DbIoPages) -> Result<(), DbError> {
     while pages.close_step()?.is_some() {}
@@ -935,7 +935,7 @@ impl RunView {
         Ok(run_range_cmp(&self.pages, RunRange { start: key.start, len: prefix.len() }, &prefix.pages, RunRange { start: 0, len: prefix.len() })? == std::cmp::Ordering::Equal)
     }
 
-    /// @emoji 🔢️ Entry `index`'s key as a big-endian `u64` (the seq-keyed kinds' key shape).
+    /// 🔢️ Entry `index`'s key as a big-endian `u64` (the seq-keyed kinds' key shape).
     fn key_u64_be(&self, index: usize) -> Result<u64, DbError> {
         let key = self.entries[index].key;
         if key.len != 8 {
@@ -945,7 +945,7 @@ impl RunView {
         Ok(u64::from_be_bytes(reader.array()?))
     }
 
-    /// @emoji 🔢️ Entry `index`'s put value as a little-endian `u64` (the actor-seq kind's value shape).
+    /// 🔢️ Entry `index`'s put value as a little-endian `u64` (the actor-seq kind's value shape).
     fn value_u64_le(&self, index: usize) -> Result<u64, DbError> {
         let value = self.entries[index].value.ok_or_else(|| DbError::Corrupt("index run entry has no value".to_string()))?;
         if value.len != 8 {
@@ -955,7 +955,7 @@ impl RunView {
         Ok(u64::from_le_bytes(reader.array()?))
     }
 
-    /// @emoji 🔎️ The entry holding exactly `key`, by binary search over the run's ascending keys.
+    /// 🔎️ The entry holding exactly `key`, by binary search over the run's ascending keys.
     fn find(&self, key: &IndexBytes, control: &mut IndexCursorControl) -> Result<Option<usize>, DbError> {
         let (mut low, mut high) = (0usize, self.entries.len());
         while low < high {
@@ -970,7 +970,7 @@ impl RunView {
         Ok(None)
     }
 
-    /// @emoji 📤️ Copies one of this run's ranges out as caller-owned bytes, charged to the run's own
+    /// 📤️ Copies one of this run's ranges out as caller-owned bytes, charged to the run's own
     /// read operation.
     async fn materialize(&self, range: RunRange, control: &mut IndexCursorControl) -> Result<IndexBytes, DbError> {
         let mut writer = db_storage::DbIoPageWriter::try_reserve_for_operation(self.pages.operation(), range.len.div_ceil(db_storage::DB_IO_PAGE_BYTES)).map_err(db_storage::DbIoPageWriterRejected::into_error)?;
@@ -985,7 +985,7 @@ impl RunView {
     }
 }
 
-/// @emoji ⚖️ Lexicographic order of two ranges, each over its own pages.
+/// ⚖️ Lexicographic order of two ranges, each over its own pages.
 fn run_range_cmp(left: &db_storage::DbIoPages, left_range: RunRange, right: &db_storage::DbIoPages, right_range: RunRange) -> Result<std::cmp::Ordering, DbError> {
     let mut left_reader = RunPageReader { pages: left, position: left_range.start, limit: left_range.start + left_range.len };
     let mut right_reader = RunPageReader { pages: right, position: right_range.start, limit: right_range.start + right_range.len };
@@ -1009,7 +1009,7 @@ fn run_range_cmp(left: &db_storage::DbIoPages, left_range: RunRange, right: &db_
     }
 }
 
-/// @emoji 👁️ Verifies one run's checksum and structure and reads its entries in place.
+/// 👁️ Verifies one run's checksum and structure and reads its entries in place.
 async fn view_run_pages(pages: db_storage::DbIoPages, expected_kind: IndexKind, control: &mut IndexCursorControl) -> Result<RunView, DbError> {
     match view_run_entries(&pages, expected_kind, control).await {
         Ok(entries) => Ok(RunView { pages, entries }),
@@ -1072,14 +1072,14 @@ async fn view_run_entries(pages: &db_storage::DbIoPages, expected_kind: IndexKin
     Ok(entries.into_boxed_slice())
 }
 
-/// @emoji 📌️ One output entry of a merge: which input view, which of its entries.
+/// 📌️ One output entry of a merge: which input view, which of its entries.
 #[derive(Clone, Copy)]
 struct RunPick {
     view: usize,
     entry: usize,
 }
 
-/// @emoji 🔀️ The ascending merge of adjacent runs (`views` oldest first), the newest winning on an equal
+/// 🔀️ The ascending merge of adjacent runs (`views` oldest first), the newest winning on an equal
 /// key and tombstones dropped only when nothing older remains beneath.
 fn merge_run_views(views: &[&RunView], drop_tombstones: bool, control: &mut IndexCursorControl) -> Result<Vec<RunPick>, DbError> {
     let mut heads = vec![0usize; views.len()];
@@ -1125,7 +1125,7 @@ async fn run_write_range(writer: &mut db_storage::DbIoPageWriter, checksum: &mut
     Ok(())
 }
 
-/// @emoji ✍️ Encodes picked entries of in-place runs as one run, copying key and value bytes straight
+/// ✍️ Encodes picked entries of in-place runs as one run, copying key and value bytes straight
 /// from their source pages — the same wire as `encode_run_pages`.
 async fn encode_run_from_views(kind: IndexKind, views: &[&RunView], picks: &[RunPick], control: &mut IndexCursorControl) -> Result<db_storage::DbIoPages, DbError> {
     check_len(picks.len() as u64, LEVEL_RUN_ENTRIES_MAX, "db_index::entries")?;
@@ -1220,7 +1220,7 @@ async fn merge_run_entries(mut older: RunEntries, mut newer: RunEntries, drop_to
 //#endregion 🔖️Merge
 
 //#region 🔖️MergePolicy
-/// @emoji ⚖️ When an append (`IndexHandle::put_batch`) folds runs together. This
+/// ⚖️ When an append (`IndexHandle::put_batch`) folds runs together. This
 /// crate's own choice (the contract fixes the LSM-lite shape, not the trigger threshold): after every
 /// append, if a kind has more than `max_runs_before_merge` runs, the oldest adjacent pair among its
 /// newest `max_runs_before_merge + 1` runs whose entries fit one run (`MAX_RUN_ENTRIES`) is merged
@@ -1241,7 +1241,7 @@ impl Default for MergePolicy {
 //#endregion 🔖️MergePolicy
 
 //#region 🔖️Stats
-/// @emoji 📊️ A kind's current shape: how many runs it's spread across, how many live entries (each
+/// 📊️ A kind's current shape: how many runs it's spread across, how many live entries (each
 /// counted once even if shadowed copies exist in older runs — `entry_count` sums each run's raw
 /// header count, so a key overwritten `N` times across `N` runs is NOT deduplicated here; `compact`
 /// first is the way to get an exact live-key count) and how many bytes on `IndexStorage`.
@@ -1253,14 +1253,14 @@ pub struct IndexStats {
 }
 //#endregion 🔖️Stats
 
-/// @emoji 🧭️ What one entry of a newest-first range walk means for the rest of its run.
+/// 🧭️ What one entry of a newest-first range walk means for the rest of its run.
 enum RangeStep {
     Skip,
     Below,
 }
 
 //#region 🔖️IndexHandle
-/// @emoji 🔍️ One `(document, kind)`'s view onto its sorted runs — every typed wrapper below
+/// 🔍️ One `(document, kind)`'s view onto its sorted runs — every typed wrapper below
 /// (`CommandIndex`, `FrontierIndex`, ...) is a thin codec layered on top of one of these. Never
 /// interprets key/value bytes itself; that's the typed layer's job.
 pub struct IndexHandle<'a, S: IndexStorage> {
@@ -1272,12 +1272,12 @@ pub struct IndexHandle<'a, S: IndexStorage> {
 }
 
 impl<'a, S: IndexStorage> IndexHandle<'a, S> {
-    /// @emoji 🚀️ Opens a handle with the default `MergePolicy`.
+    /// 🚀️ Opens a handle with the default `MergePolicy`.
     pub async fn new(storage: &'a S, document: ArtifactId, kind: IndexKind) -> Self {
         Self::with_policy(storage, document, kind, MergePolicy::default()).await
     }
 
-    /// @emoji 🚀️ Opens a handle with an explicit `MergePolicy` (e.g. a tighter threshold for a
+    /// 🚀️ Opens a handle with an explicit `MergePolicy` (e.g. a tighter threshold for a
     /// hot, frequently-scanned kind, or a looser one for a write-heavy, rarely-read kind).
     pub async fn with_policy(storage: &'a S, document: ArtifactId, kind: IndexKind, policy: MergePolicy) -> Self {
         Self { storage, document, kind, policy, cancelled: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)) }
@@ -1296,7 +1296,7 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
         self.cancelled.store(true, std::sync::atomic::Ordering::Release);
     }
 
-    /// @emoji 📋️ This handle's live run ids, ascending (oldest sequence first) — one storage listing;
+    /// 📋️ This handle's live run ids, ascending (oldest sequence first) — one storage listing;
     /// every id of another kind or run-id format for the same document is filtered out.
     async fn kind_run_ids(&self, control: &mut IndexCursorControl) -> Result<Vec<u64>, DbError> {
         control.grant()?;
@@ -1318,7 +1318,7 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
         view_run_pages(pages, self.kind, control).await
     }
 
-    /// @emoji 🔀️ Folds two adjacent runs (`older` directly beneath `newer`) into one run under
+    /// 🔀️ Folds two adjacent runs (`older` directly beneath `newer`) into one run under
     /// `older`'s sequence and deletes both inputs: written before deleted, so a crash in between
     /// leaves copies whose values agree, and the newer copy of every key still wins. The caller only
     /// picks a pair whose entries fit one run.
@@ -1352,7 +1352,7 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
         self.storage.delete_run(&self.document, newer_id).await
     }
 
-    /// @emoji 🥇️ The greatest live entry whose key starts with `prefix` and is at most `upper`, walking
+    /// 🥇️ The greatest live entry whose key starts with `prefix` and is at most `upper`, walking
     /// runs newest-first and keeping only the best candidate plus the tombstoned keys above it —
     /// never every entry of the kind. The newest occurrence of a key decides whether it is live.
     pub async fn last_live_in_range(&self, prefix: &IndexBytes, upper: Option<&IndexBytes>, control: &mut IndexCursorControl) -> Result<Option<(IndexBytes, IndexBytes)>, DbError> {
@@ -1436,7 +1436,7 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
         Ok(best)
     }
 
-    /// @emoji ✍️ Durably appends `entries` as one new, newest retained run,
+    /// ✍️ Durably appends `entries` as one new, newest retained run,
     /// then applies `MergePolicy`. A no-op (no run written) if `entries` is empty.
     pub async fn put_batch(&self, mut entries: RunEntries, control: &mut IndexCursorControl) -> Result<(), DbError> {
         if entries.is_empty() {
@@ -1478,7 +1478,7 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
         self.put_batch(entries, control).await
     }
 
-    /// @emoji ➕️ Writes `pages` (holding `count` entries) as the kind's newest run from ONE listing
+    /// ➕️ Writes `pages` (holding `count` entries) as the kind's newest run from ONE listing
     /// of its runs, then lets `MergePolicy` fold at most one adjacent pair — sizes come from the run
     /// ids, so an append never reads a run it does not merge.
     async fn append_run(&self, pages: db_storage::DbIoPages, count: usize, control: &mut IndexCursorControl) -> Result<(), DbError> {
@@ -1502,7 +1502,7 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
         self.merge_one_within_policy(&ids, control).await
     }
 
-    /// @emoji 🔎️ Resolves `key` by searching runs newest-to-oldest in place and returning the first match —
+    /// 🔎️ Resolves `key` by searching runs newest-to-oldest in place and returning the first match —
     /// `Ok(None)` if the first match is a tombstone, or if no run has ever held `key`.
     pub async fn get(&self, key: &IndexBytes, control: &mut IndexCursorControl) -> Result<Option<IndexBytes>, DbError> {
         let ids = self.kind_run_ids(control).await?;
@@ -1533,7 +1533,7 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
         result
     }
 
-    /// @emoji 🔝️ The kind's newest run read in place, or `None` when the kind holds no run — the
+    /// 🔝️ The kind's newest run read in place, or `None` when the kind holds no run — the
     /// one read an append-only owner needs to learn how far its entries reach.
     async fn newest_run(&self, control: &mut IndexCursorControl) -> Result<Option<RunView>, DbError> {
         let ids = self.kind_run_ids(control).await?;
@@ -1543,7 +1543,7 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
         }
     }
 
-    /// @emoji 📜️ Every live (non-tombstoned) `(key, value)` whose key starts with `prefix`, ascending by
+    /// 📜️ Every live (non-tombstoned) `(key, value)` whose key starts with `prefix`, ascending by
     /// key — runs searched in place newest-first, each key decided by its newest occurrence, only the
     /// live matches materialized (at most `MAX_RUN_ENTRIES` of them).
     pub async fn scan_prefix(&self, prefix: &IndexBytes, control: &mut IndexCursorControl) -> Result<RunEntries, DbError> {
@@ -1614,7 +1614,7 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
         Ok(output)
     }
 
-    /// @emoji 🌀️ `MergePolicy`'s enforcement after one append, bounded to ONE merge: while this kind
+    /// 🌀️ `MergePolicy`'s enforcement after one append, bounded to ONE merge: while this kind
     /// has more runs than `policy.max_runs_before_merge`, the oldest adjacent pair among its newest
     /// `max_runs_before_merge + 1` runs whose entries fit one run is merged. Sizes come from the run
     /// ids. Tombstones are dropped only when the pair holds the kind's oldest run, since nothing older
@@ -1630,7 +1630,7 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
         self.merge_adjacent(candidates[pair], candidates[pair + 1], window + pair == 0, control).await
     }
 
-    /// @emoji 🧹️ Folds this kind's runs into the fewest runs `MAX_RUN_ENTRIES` allows: from the oldest,
+    /// 🧹️ Folds this kind's runs into the fewest runs `MAX_RUN_ENTRIES` allows: from the oldest,
     /// every adjacent pair that fits one run is merged (tombstones dropped wherever the pair holds the
     /// oldest run, and from a lone oldest run). Returns the post-compaction `stats()`.
     pub async fn compact(&self, control: &mut IndexCursorControl) -> Result<IndexStats, DbError> {
@@ -1657,7 +1657,7 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
         self.stats(control).await
     }
 
-    /// @emoji 🧹️ Rewrites the kind's oldest run without its tombstones (nothing older remains for
+    /// 🧹️ Rewrites the kind's oldest run without its tombstones (nothing older remains for
     /// them to shadow), or deletes it when nothing else is left in it.
     async fn drop_run_tombstones(&self, run_id: u64, control: &mut IndexCursorControl) -> Result<(), DbError> {
         let view = self.view_run(run_id, control).await?;
@@ -1686,7 +1686,7 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
         }
     }
 
-    /// @emoji 📊️ Current shape of this kind's runs — see `IndexStats`'s doc for what `entry_count`
+    /// 📊️ Current shape of this kind's runs — see `IndexStats`'s doc for what `entry_count`
     /// does and doesn't count. Run and entry counts come from the listing; bytes from each run.
     pub async fn stats(&self, control: &mut IndexCursorControl) -> Result<IndexStats, DbError> {
         let run_ids = self.kind_run_ids(control).await?;
@@ -1700,7 +1700,7 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
         Ok(IndexStats { run_count: run_ids.len(), entry_count: run_ids.iter().map(|id| entries_of_run_id(*id)).sum(), total_bytes })
     }
 
-    /// @emoji ✅️ Fully decodes (checksum + structural validation) every live run for this kind,
+    /// ✅️ Fully decodes (checksum + structural validation) every live run for this kind,
     /// surfacing the first `DbError::Corrupt` found rather than any value — `db_cli verify`'s hook.
     /// A level-0 run whose entry count differs from the one its id declares, or a folded run holding
     /// more than its level's capacity, is corrupt too.
@@ -1718,14 +1718,14 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
         Ok(())
     }
 
-    /// @emoji 🗂️ Lists this kind's runs once for an append-only owner ([`OwnedRuns`]).
+    /// 🗂️ Lists this kind's runs once for an append-only owner ([`OwnedRuns`]).
     pub async fn owned_runs(&self, control: &mut IndexCursorControl) -> Result<OwnedRuns, DbError> {
         let ids = self.kind_run_ids(control).await?;
         let next_sequence = ids.last().map_or(0, |id| sequence_of_run_id(*id) + 1);
         Ok(OwnedRuns { ids, next_sequence, fold_ceiling: RUN_LEVEL_MAX })
     }
 
-    /// @emoji 📥️ Appends strictly ascending, unique `(key, value)` puts as `runs`' newest run without listing the
+    /// 📥️ Appends strictly ascending, unique `(key, value)` puts as `runs`' newest run without listing the
     /// document's runs, then folds while the newest [`LEVEL_FOLD_RUNS`] runs are full runs of one level below
     /// `runs`' fold ceiling — at most [`RUN_LEVEL_MAX`] folds of at most [`LEVEL_FOLD_BYTES_MAX`] each, so an append
     /// costs the same however many runs the kind holds. `runs` names exactly what storage holds after every
@@ -1762,7 +1762,7 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
         Ok(())
     }
 
-    /// @emoji 🪜️ Folds `group` (adjacent full runs, oldest first) into one run of `level` under the oldest's
+    /// 🪜️ Folds `group` (adjacent full runs, oldest first) into one run of `level` under the oldest's
     /// sequence, written before its inputs are deleted — a crash between leaves copies whose values agree and the
     /// folded copy sorts right after its oldest input. `None`, with nothing written, when the inputs exceed
     /// [`LEVEL_FOLD_BYTES_MAX`].
@@ -1805,7 +1805,7 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
 //#endregion 🔖️IndexHandle
 
 //#region 🔖️OwnedRuns
-/// @emoji 🗂️ The runs of one kind an append-only owner writes, ascending, as it knows them: listed once when the
+/// 🗂️ The runs of one kind an append-only owner writes, ascending, as it knows them: listed once when the
 /// owner mounts ([`IndexHandle::owned_runs`]) and kept current by its own appends and folds, so an append never
 /// lists the document's runs again. `fold_ceiling` is the level this owner stopped folding at because a fold
 /// would exceed one read operation's credit (entries of that size never fold higher).
@@ -1817,7 +1817,7 @@ pub struct OwnedRuns {
 }
 
 impl OwnedRuns {
-    /// @emoji 🔢️ How many runs the kind holds.
+    /// 🔢️ How many runs the kind holds.
     pub fn len(&self) -> usize {
         self.ids.len()
     }
@@ -1829,7 +1829,7 @@ impl OwnedRuns {
 //#endregion 🔖️OwnedRuns
 
 //#region 🔖️RecordLocation
-/// @emoji 📍️ A pointer into a document's WAL: which segment, what byte offset, how many bytes.
+/// 📍️ A pointer into a document's WAL: which segment, what byte offset, how many bytes.
 /// `CommandIndex`/`InverseIndex`'s value shape — deliberately NOT the WAL record itself (this crate
 /// never depends on `db_wal`/`protocol`; a location is exactly enough for a caller who DOES depend
 /// on those to seek and re-read the actual record).
@@ -1871,7 +1871,7 @@ async fn decode_index_bytes<T>(mut bytes: IndexBytes, control: &mut IndexCursorC
     result
 }
 
-/// @emoji 🔢️ `u64 -> RecordLocation`, keyed big-endian so byte order matches numeric order — the
+/// 🔢️ `u64 -> RecordLocation`, keyed big-endian so byte order matches numeric order — the
 /// shared shape behind both `CommandIndex` (keyed by command seq) and `InverseIndex` (keyed by the
 /// same command seq, pointing at its inverse's location instead).
 struct SeqLocationIndex<'a, S: IndexStorage> {
@@ -1933,7 +1933,7 @@ impl<'a, S: IndexStorage> SeqLocationIndex<'a, S> {
 //#endregion 🔖️RecordLocation
 
 //#region 🔖️CommandIndex
-/// @emoji 🗃️ `command_seq -> RecordLocation` — `db_artifact`'s primary lookup for "where in the
+/// 🗃️ `command_seq -> RecordLocation` — `db_artifact`'s primary lookup for "where in the
 /// WAL is command N", the backbone of replay-from-a-point and `Consistency::Exact`/`AtLeast` query
 /// resolution.
 pub struct CommandIndex<'a, S: IndexStorage>(SeqLocationIndex<'a, S>);
@@ -1947,18 +1947,18 @@ impl<'a, S: IndexStorage> CommandIndex<'a, S> {
         self.0.record(command_seq, location).await
     }
 
-    /// @emoji 📥️ Records ascending `(command_seq, location)` pairs as ONE run (at most `MAX_RUN_ENTRIES`) of `runs`, without
+    /// 📥️ Records ascending `(command_seq, location)` pairs as ONE run (at most `MAX_RUN_ENTRIES`) of `runs`, without
     /// listing ([`IndexHandle::append_owned_sorted_run`]).
     pub async fn record_owned_run(&self, runs: &mut OwnedRuns, entries: &[(u64, RecordLocation)]) -> Result<(), DbError> {
         self.0.record_owned_run(runs, entries).await
     }
 
-    /// @emoji 🗂️ This kind's runs, listed once for its append-only owner.
+    /// 🗂️ This kind's runs, listed once for its append-only owner.
     pub async fn owned_runs(&self) -> Result<OwnedRuns, DbError> {
         self.0.owned_runs().await
     }
 
-    /// @emoji 🔝️ The highest command seq recorded, `0` when none — read from the newest run alone,
+    /// 🔝️ The highest command seq recorded, `0` when none — read from the newest run alone,
     /// which holds it for an owner that records in ascending order.
     pub async fn indexed_through(&self) -> Result<u64, DbError> {
         self.0.indexed_through().await
@@ -1985,7 +1985,7 @@ impl<'a, S: IndexStorage> CommandIndex<'a, S> {
 //#endregion 🔖️CommandIndex
 
 //#region 🔖️InverseIndex
-/// @emoji ↩️ `command_seq -> RecordLocation` of that command's inverse operation payload —
+/// ↩️ `command_seq -> RecordLocation` of that command's inverse operation payload —
 /// `db_artifact`'s undo machinery's lookup.
 pub struct InverseIndex<'a, S: IndexStorage>(SeqLocationIndex<'a, S>);
 
@@ -1998,18 +1998,18 @@ impl<'a, S: IndexStorage> InverseIndex<'a, S> {
         self.0.record(command_seq, location).await
     }
 
-    /// @emoji 📥️ Records ascending `(command_seq, location)` pairs as ONE run (at most `MAX_RUN_ENTRIES`) of `runs`, without
+    /// 📥️ Records ascending `(command_seq, location)` pairs as ONE run (at most `MAX_RUN_ENTRIES`) of `runs`, without
     /// listing ([`IndexHandle::append_owned_sorted_run`]).
     pub async fn record_owned_run(&self, runs: &mut OwnedRuns, entries: &[(u64, RecordLocation)]) -> Result<(), DbError> {
         self.0.record_owned_run(runs, entries).await
     }
 
-    /// @emoji 🗂️ This kind's runs, listed once for its append-only owner.
+    /// 🗂️ This kind's runs, listed once for its append-only owner.
     pub async fn owned_runs(&self) -> Result<OwnedRuns, DbError> {
         self.0.owned_runs().await
     }
 
-    /// @emoji 🔝️ The highest command seq recorded, `0` when none — read from the newest run alone,
+    /// 🔝️ The highest command seq recorded, `0` when none — read from the newest run alone,
     /// which holds it for an owner that records in ascending order.
     pub async fn indexed_through(&self) -> Result<u64, DbError> {
         self.0.indexed_through().await
@@ -2036,7 +2036,7 @@ impl<'a, S: IndexStorage> InverseIndex<'a, S> {
 //#endregion 🔖️InverseIndex
 
 //#region 🔖️ActorSeqIndex
-/// @emoji 👤️ `(actor, actor_seq) -> command_seq` — resolves an actor's own local operation sequence
+/// 👤️ `(actor, actor_seq) -> command_seq` — resolves an actor's own local operation sequence
 /// number (idempotency / causal-order checks at admission) to the document's global command
 /// sequence. Keys are `actor_bytes || 0x00 || actor_seq(8, BE)`; `actor`'s id must not itself
 /// contain a NUL byte (validated) so the `0x00` separator stays unambiguous and prefix scans by
@@ -2090,7 +2090,7 @@ impl<'a, S: IndexStorage> ActorSeqIndex<'a, S> {
         }
     }
 
-    /// @emoji 📥️ Records `(actor, actor_seq, command_seq)` triples as ONE run (at most
+    /// 📥️ Records `(actor, actor_seq, command_seq)` triples as ONE run (at most
     /// `MAX_RUN_ENTRIES`) of `runs`, keyed and ordered as `record` keys them, without listing.
     pub async fn record_owned_run(&self, runs: &mut OwnedRuns, entries: &[(ActorId, u64, u64)]) -> Result<(), DbError> {
         let mut encoded = Vec::with_capacity(entries.len());
@@ -2103,13 +2103,13 @@ impl<'a, S: IndexStorage> ActorSeqIndex<'a, S> {
         self.handle.append_owned_sorted_run(runs, &slices, &mut control).await
     }
 
-    /// @emoji 🗂️ This kind's runs, listed once for its append-only owner.
+    /// 🗂️ This kind's runs, listed once for its append-only owner.
     pub async fn owned_runs(&self) -> Result<OwnedRuns, DbError> {
         let mut control = self.handle.operation_control(8_192)?;
         self.handle.owned_runs(&mut control).await
     }
 
-    /// @emoji 🔝️ The highest command seq any entry of the newest run points at, `0` when none —
+    /// 🔝️ The highest command seq any entry of the newest run points at, `0` when none —
     /// for an owner that records runs in ascending command order.
     pub async fn indexed_through(&self) -> Result<u64, DbError> {
         let mut control = self.handle.operation_control(8_192)?;
@@ -2128,7 +2128,7 @@ impl<'a, S: IndexStorage> ActorSeqIndex<'a, S> {
         highest
     }
 
-    /// @emoji 🥇️ The highest `(actor_seq, command_seq)` pair recorded for `actor`, or `None` if
+    /// 🥇️ The highest `(actor_seq, command_seq)` pair recorded for `actor`, or `None` if
     /// `actor` has never been recorded.
     pub async fn latest_for_actor(&self, actor: &ActorId) -> Result<Option<(u64, u64)>, DbError> {
         validate_actor_key_safe(actor).await?;
@@ -2153,7 +2153,7 @@ impl<'a, S: IndexStorage> ActorSeqIndex<'a, S> {
 //#endregion 🔖️ActorSeqIndex
 
 //#region 🔖️FrontierIndex
-/// @emoji 🧭️ `commit_seq -> Frontier` — a per-commit snapshot of `Frontier`, letting
+/// 🧭️ `commit_seq -> Frontier` — a per-commit snapshot of `Frontier`, letting
 /// `Consistency::Historical`/replica resume resolve "what did the frontier look like at commit N"
 /// without replaying.
 pub struct FrontierIndex<'a, S: IndexStorage> {
@@ -2215,7 +2215,7 @@ impl<'a, S: IndexStorage> FrontierIndex<'a, S> {
         }
     }
 
-    /// @emoji 📥️ Records ascending frontiers (by `commit_seq`) as ONE run (at most `MAX_RUN_ENTRIES`) of `runs`, without listing.
+    /// 📥️ Records ascending frontiers (by `commit_seq`) as ONE run (at most `MAX_RUN_ENTRIES`) of `runs`, without listing.
     pub async fn record_owned_run(&self, runs: &mut OwnedRuns, frontiers: &[Frontier]) -> Result<(), DbError> {
         let mut encoded = Vec::with_capacity(frontiers.len());
         for frontier in frontiers {
@@ -2226,13 +2226,13 @@ impl<'a, S: IndexStorage> FrontierIndex<'a, S> {
         self.handle.append_owned_sorted_run(runs, &slices, &mut control).await
     }
 
-    /// @emoji 🗂️ This kind's runs, listed once for its append-only owner.
+    /// 🗂️ This kind's runs, listed once for its append-only owner.
     pub async fn owned_runs(&self) -> Result<OwnedRuns, DbError> {
         let mut control = self.handle.operation_control(8_192)?;
         self.handle.owned_runs(&mut control).await
     }
 
-    /// @emoji 🔝️ The highest `commit_seq` recorded, `0` when none — from the newest run alone.
+    /// 🔝️ The highest `commit_seq` recorded, `0` when none — from the newest run alone.
     pub async fn indexed_through(&self) -> Result<u64, DbError> {
         let mut control = self.handle.operation_control(8_192)?;
         let Some(view) = self.handle.newest_run(&mut control).await? else { return Ok(0) };
@@ -2241,7 +2241,7 @@ impl<'a, S: IndexStorage> FrontierIndex<'a, S> {
         highest
     }
 
-    /// @emoji 🥇️ The frontier recorded under the highest `commit_seq`, or `None` if none recorded.
+    /// 🥇️ The frontier recorded under the highest `commit_seq`, or `None` if none recorded.
     pub async fn latest(&self) -> Result<Option<Frontier>, DbError> {
         let mut control = self.handle.operation_control(16_384)?;
         let prefix = admit_generated_index_bytes(Vec::new(), MAX_KEY_LEN, &mut control).await?;
@@ -2255,7 +2255,7 @@ impl<'a, S: IndexStorage> FrontierIndex<'a, S> {
 //#endregion 🔖️FrontierIndex
 
 //#region 🔖️TouchedRegionIndex
-/// @emoji 🎯️ `region -> [command_seq]` (ascending, deduplicated) — `db_conflict`'s reverse index:
+/// 🎯️ `region -> [command_seq]` (ascending, deduplicated) — `db_conflict`'s reverse index:
 /// given a region a new command is about to touch, which prior commands also touched it (the
 /// candidate set for touched-region-intersection conflict checks).
 pub struct TouchedRegionIndex<'a, S: IndexStorage> {
@@ -2286,7 +2286,7 @@ impl<'a, S: IndexStorage> TouchedRegionIndex<'a, S> {
         Self { handle: IndexHandle::new(storage, document, IndexKind::TouchedRegion).await }
     }
 
-    /// @emoji ➕️ Records that `command_seq` touched `region` — read-modify-write over the region's
+    /// ➕️ Records that `command_seq` touched `region` — read-modify-write over the region's
     /// current posting list, kept sorted and deduplicated.
     pub async fn record_touch(&self, region: &[u8], command_seq: u64) -> Result<(), DbError> {
         let mut control = self.handle.operation_control(16_384)?;
@@ -2335,7 +2335,7 @@ impl<'a, S: IndexStorage> TouchedRegionIndex<'a, S> {
 //#endregion 🔖️TouchedRegionIndex
 
 //#region 🔖️CommitIndex
-/// @emoji 🏁️ `commit_id -> command_seq` — resolves a VCS-facing commit id (`vcs::Checkpoint.id`,
+/// 🏁️ `commit_id -> command_seq` — resolves a VCS-facing commit id (`vcs::Checkpoint.id`,
 /// per the contract's content-addressed `ck-<hex16>` scheme) to the command sequence it was cut at,
 /// for `Consistency::Historical(commit_id)` query resolution.
 pub struct CommitIndex<'a, S: IndexStorage> {
@@ -2368,7 +2368,7 @@ impl<'a, S: IndexStorage> CommitIndex<'a, S> {
 //#endregion 🔖️CommitIndex
 
 //#region 🔖️FullTextIndex
-/// @emoji 🔤️ `term -> [doc_ref]` — a minimal inverted index: `index_document` tokenizes text into
+/// 🔤️ `term -> [doc_ref]` — a minimal inverted index: `index_document` tokenizes text into
 /// lowercase alphanumeric-run terms and records `doc_ref` (an opaque caller-chosen id, typically a
 /// field/command location) against each; `search` resolves one term to its posting list. No
 /// ranking/stemming/stopwords — `db_query`'s full-text query planner is expected to layer that on
@@ -2392,7 +2392,7 @@ impl<'a, S: IndexStorage> FullTextIndex<'a, S> {
         }
     }
 
-    /// @emoji ➕️ Tokenizes `text` and records `doc_ref` against every distinct term it contains.
+    /// ➕️ Tokenizes `text` and records `doc_ref` against every distinct term it contains.
     pub async fn index_document(&self, doc_ref: u64, text: &str) -> Result<(), DbError> {
         let mut control = self.handle.operation_control(65_536)?;
         for term in text.split(|character: char| !character.is_alphanumeric()).filter(|term| !term.is_empty()) {
@@ -2427,7 +2427,7 @@ impl<'a, S: IndexStorage> FullTextIndex<'a, S> {
         Ok(())
     }
 
-    /// @emoji 🔎️ The posting list for `term` (case-folded to match `index_document`'s tokenizer),
+    /// 🔎️ The posting list for `term` (case-folded to match `index_document`'s tokenizer),
     /// or an empty list if the term has never been indexed.
     pub async fn search(&self, term: &str) -> Result<db_storage::DbIoU64List, DbError> {
         let mut control = self.handle.operation_control(16_384)?;
@@ -2437,7 +2437,7 @@ impl<'a, S: IndexStorage> FullTextIndex<'a, S> {
 //#endregion 🔖️FullTextIndex
 
 //#region 🔖️BlobList
-/// @emoji 📦️ Encodes a list of opaque byte blobs (`ConflictIndex`'s per-command conflict records)
+/// 📦️ Encodes a list of opaque byte blobs (`ConflictIndex`'s per-command conflict records)
 /// as `count(varint) [len(varint) bytes]...` — the same read-modify-write accumulation shape
 /// `TouchedRegionIndex`/`FullTextIndex` use for their posting lists, generalized to arbitrary-size
 /// values instead of `u64` postings.
@@ -2536,7 +2536,7 @@ async fn decode_blob_list(bytes: IndexBytes, control: &mut IndexCursorControl) -
 //#endregion 🔖️BlobList
 
 //#region 🔖️ConflictIndex
-/// @emoji ⚔️ `command_seq -> [ConflictRecord bytes]` — a command may surface more than one
+/// ⚔️ `command_seq -> [ConflictRecord bytes]` — a command may surface more than one
 /// conflict (touched-region collision, constraint violation, …), so this accumulates a list per
 /// `command_seq` the same way `TouchedRegionIndex` accumulates a posting list: read the current
 /// list, append, write back. Record shapes are `db_conflict`'s concern; this index only stores and
@@ -2550,7 +2550,7 @@ impl<'a, S: IndexStorage> ConflictIndex<'a, S> {
         Self { handle: IndexHandle::new(storage, document, IndexKind::Conflict).await }
     }
 
-    /// @emoji ➕️ Appends `record` to `command_seq`'s conflict list.
+    /// ➕️ Appends `record` to `command_seq`'s conflict list.
     pub async fn record_conflict(&self, command_seq: u64, record: IndexBytes) -> Result<(), DbError> {
         let mut control = self.handle.operation_control(32_768)?;
         let mut records = self.conflicts_for_with_control(command_seq, &mut control).await?;
@@ -2563,7 +2563,7 @@ impl<'a, S: IndexStorage> ConflictIndex<'a, S> {
         self.handle.put(key, value, &mut control).await
     }
 
-    /// @emoji 📋️ Every conflict record recorded for `command_seq`, in the order they were
+    /// 📋️ Every conflict record recorded for `command_seq`, in the order they were
     /// recorded, or empty if none.
     async fn conflicts_for_with_control(&self, command_seq: u64, control: &mut IndexCursorControl) -> Result<IndexBlobList, DbError> {
         let key = admit_generated_index_bytes(command_seq.to_be_bytes().to_vec(), MAX_KEY_LEN, control).await?;
@@ -2593,7 +2593,7 @@ impl<'a, S: IndexStorage> ConflictIndex<'a, S> {
 //#endregion 🔖️ConflictIndex
 
 //#region 🔖️ProjectionIndex
-/// @emoji 📽️ `(projection_id, frontier_seq) -> opaque projection state bytes`, floor-queryable per
+/// 📽️ `(projection_id, frontier_seq) -> opaque projection state bytes`, floor-queryable per
 /// projection id — `db_projection`'s "this projection's state as of at or before frontier X"
 /// lookup. Keys are `projection_id_bytes || 0x00 || frontier_seq(8, BE)`, the same NUL-separated
 /// composite shape `ActorSeqIndex` uses (`projection_id` must not itself contain a NUL byte,
@@ -2631,7 +2631,7 @@ impl<'a, S: IndexStorage> ProjectionIndex<'a, S> {
         self.handle.put(key, state, &mut control).await
     }
 
-    /// @emoji 🎯️ The exact state recorded for `projection_id` at `frontier_seq`, or `None` if
+    /// 🎯️ The exact state recorded for `projection_id` at `frontier_seq`, or `None` if
     /// nothing was recorded at that exact sequence.
     pub async fn at(&self, projection_id: &str, frontier_seq: u64) -> Result<Option<IndexBytes>, DbError> {
         let mut control = self.handle.operation_control(8_192)?;
@@ -2641,7 +2641,7 @@ impl<'a, S: IndexStorage> ProjectionIndex<'a, S> {
         Ok(result)
     }
 
-    /// @emoji 🏔️ The state recorded at the greatest `frontier_seq' <= frontier_seq` for
+    /// 🏔️ The state recorded at the greatest `frontier_seq' <= frontier_seq` for
     /// `projection_id` specifically — scoped to `projection_id`'s own key range (via the NUL
     /// separator) before scanning, so a projection with no entry at or before `frontier_seq` never
     /// wrongly surfaces a different, lexicographically-earlier projection's entry.
@@ -2681,7 +2681,7 @@ impl<'a, S: IndexStorage> ProjectionIndex<'a, S> {
 //#endregion 🔖️ProjectionIndex
 
 //#region 🔖️PreviewIndex
-/// @emoji 🌫️ `(actor, preview_key) -> opaque latest preview bytes` — `publish`/`withdraw` are
+/// 🌫️ `(actor, preview_key) -> opaque latest preview bytes` — `publish`/`withdraw` are
 /// plain `put`/`delete`, so `latest` naturally coalesces to the most recently published-or-
 /// withdrawn value per `(actor, preview_key)`, matching the contract's "coalescing
 /// latest-per-(actor,key)" preview law. Keys are `actor_bytes || 0x00 || preview_key_bytes`
@@ -2727,7 +2727,7 @@ impl<'a, S: IndexStorage> PreviewIndex<'a, S> {
         Ok(result)
     }
 
-    /// @emoji 📋️ Every currently-live `(preview_key, value)` published by `actor`.
+    /// 📋️ Every currently-live `(preview_key, value)` published by `actor`.
     pub async fn for_actor(&self, actor: &ActorId) -> Result<RunEntries, DbError> {
         validate_actor_key_safe(actor).await?;
         let mut prefix = actor.0.as_bytes().to_vec();

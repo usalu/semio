@@ -8,7 +8,7 @@
 //! owns `MergePolicy`; this module is the third leg — what an authority DOES once it has both.
 
 //#region 🔖️ConflictId
-/// @emoji 🆔️ Content-addressed conflict identity: two authorities independently detecting the
+/// 🆔️ Content-addressed conflict identity: two authorities independently detecting the
 /// identical conflict (same kind, same artifact, same mutation-id set, same HLC) converge on the
 /// identical id.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -58,7 +58,7 @@ impl ConflictId {
 //#endregion 🔖️ConflictId
 
 //#region 🔖️ConflictKind
-/// @emoji 🚧️ What kind of conflict this is. `Quarantined`: a whole incoming batch was rejected
+/// 🚧️ What kind of conflict this is. `Quarantined`: a whole incoming batch was rejected
 /// outright by `policy.rejects(worst).await` — nothing in `envelopes` was applied; `resolve_conflict`'s
 /// `Accept` replays it under `LaissezFaire`, `Discard` seeds it into the causal DAG as already-seen
 /// without ever relaying it. `Degraded`: the batch WAS applied (its worst level was below the
@@ -117,7 +117,7 @@ impl ConflictKind {
 //#endregion 🔖️ConflictKind
 
 //#region 🔖️ConflictStatus
-/// @emoji 🚦️ A conflict's own lifecycle, independent of the `MutationMessage`s it carries.
+/// 🚦️ A conflict's own lifecycle, independent of the `MutationMessage`s it carries.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ConflictStatus {
     Open,
@@ -146,7 +146,7 @@ impl crate::value::FromValue for ConflictStatus {
     }
 }
 
-/// @emoji ✅️❌️ What a human/authority decided to do with an `Open` conflict.
+/// ✅️❌️ What a human/authority decided to do with an `Open` conflict.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ConflictResolution {
     Accept,
@@ -174,7 +174,7 @@ impl crate::value::FromValue for ConflictResolution {
 //#endregion 🔖️ConflictStatus
 
 //#region 🔖️Conflict
-/// @emoji ⚔️ One first-class conflict: identity, what it is, its lifecycle status, the messages that
+/// ⚔️ One first-class conflict: identity, what it is, its lifecycle status, the messages that
 /// explain it, who was involved, and when it was detected.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Conflict {
@@ -234,7 +234,7 @@ impl crate::value::FromValue for Conflict {
 //#endregion 🔖️Conflict
 
 //#region 🔖️Reports
-/// @emoji 📨️ One edit's worth of `MutationMessage`s — the per-edit unit `MergeReport::replayed`
+/// 📨️ One edit's worth of `MutationMessage`s — the per-edit unit `MergeReport::replayed`
 /// carries and `📡️spr/📜️history`'s durable ledger keys by `edit_id`.
 #[derive(Clone, Debug, PartialEq)]
 pub struct EditMessages {
@@ -269,7 +269,7 @@ impl crate::value::FromValue for EditMessages {
     }
 }
 
-/// @emoji 📤️ The report a single LOCAL dispatch (one `ArtifactStore::dispatch`-shaped call)
+/// 📤️ The report a single LOCAL dispatch (one `ArtifactStore::dispatch`-shaped call)
 /// produces: the policy it was judged against, the worst level reached, and every message.
 #[derive(Clone, Debug, PartialEq)]
 pub struct DispatchReport {
@@ -312,7 +312,7 @@ impl crate::value::FromValue for DispatchReport {
     }
 }
 
-/// @emoji 🔀️ The report one `ingest_remote`/`resolve_conflict` merge
+/// 🔀️ The report one `ingest_remote`/`resolve_conflict` merge
 /// produces: whether the incoming batch was accepted, where it landed (`insertion_index` — the
 /// position in `applied_edit_ids` the batch's first edit was inserted at, meaningful only when
 /// `accepted`), every replayed edit's messages, the worst level across the whole replayed suffix,

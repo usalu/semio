@@ -186,7 +186,7 @@ store::impl_whole_record_config!(CadConfig);
 //#endregion 🔖️Config
 
 //#region 🔖️ConfigOperations
-/// @emoji 🧮️ WORKFLOWS-END-TO-END-TYPED-PORTS config recipe: `CadConfig`'s
+/// 🧮️ WORKFLOWS-END-TO-END-TYPED-PORTS config recipe: `CadConfig`'s
 /// operation enum. Unlike `CadMutation` (many narrow document-mutating variants), this is a single
 /// whole-record `Snapshot`: application commands convert their scratch state into the next
 /// `CadConfig` and diff it against the pre-command config, the same shape `reset_document_effect` uses for

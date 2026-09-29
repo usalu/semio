@@ -94,6 +94,17 @@
     "protocol_path": "🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
   },
   {
+    "artifact": "html",
+    "factory_id": "stdio.native.html.v1",
+    "descriptor_codec_id": "s.stdio.html.standard.5.codec.native-document.v1",
+    "runtime_capability_id": "s.stdio.html.standard.5.codec.codec-stdio-html-extension-html.v1",
+    "artifact_kind": "s.stdio.html",
+    "artifact_schema": "stdio.html",
+    "extension": "html",
+    "pack_schema_sha256": "563a275178326c5e528ca2c6a9c5c4b4da8b7e0c83af5d6d49b0ea5b8b0b3e0d",
+    "protocol_path": "🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
+  },
+  {
     "artifact": "jpg",
     "factory_id": "stdio.native.jpg.v1",
     "descriptor_codec_id": "s.stdio.jpg.standard.jfif-1-01.codec.native-document.v1",
@@ -257,6 +268,28 @@
     "extension": "tiff",
     "pack_schema_sha256": "498e64a94f0652c53ffc1839376721e66ba387d38681cc179d7b0bf844bc9b4a",
     "protocol_path": "🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
+  },
+  {
+    "artifact": "tsv",
+    "factory_id": "stdio.native.tsv.v1",
+    "descriptor_codec_id": "s.stdio.tsv.standard.iana.codec.native-document.v1",
+    "runtime_capability_id": "s.stdio.tsv.standard.iana.codec.codec-stdio-tsv-extension-tsv.v1",
+    "artifact_kind": "s.stdio.tsv",
+    "artifact_schema": "stdio.tsv",
+    "extension": "tsv",
+    "pack_schema_sha256": "8c65ab63508c1db68d9b9d67dd8482a604a71b5f8966fb4046967e5ec3a4f989",
+    "protocol_path": "🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
+  },
+  {
+    "artifact": "txt",
+    "factory_id": "stdio.native.txt.v1",
+    "descriptor_codec_id": "s.stdio.txt.standard.utf-8.codec.native-document.v1",
+    "runtime_capability_id": "s.stdio.txt.standard.utf-8.codec.codec-stdio-txt-extension-txt.v1",
+    "artifact_kind": "s.stdio.txt",
+    "artifact_schema": "stdio.txt",
+    "extension": "txt",
+    "pack_schema_sha256": "d416b7a0cf81eff01de894166b9c30e77106920a106bc8406807f9187b519536",
+    "protocol_path": "🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
   },
   {
     "artifact": "xlsx",

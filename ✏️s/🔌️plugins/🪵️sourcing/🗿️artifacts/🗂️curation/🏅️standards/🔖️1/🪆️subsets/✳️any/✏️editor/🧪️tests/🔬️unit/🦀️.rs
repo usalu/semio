@@ -178,7 +178,6 @@ async fn retained_example_load_publishes_authored_stock_and_closes_exact_owners(
             std::thread::yield_now();
         }
         assert!(app.close_terminal_is_empty());
-        eprintln!("[DEBUG] retained example {example_id} published {} authored rows and retired", stock.len());
     }
 }
 
@@ -257,7 +256,6 @@ async fn a_saved_curation_archive_carries_its_catalog_member_and_reloads_with_it
     assert_eq!(reloaded.catalog.child_id, catalog_id);
     assert_eq!(reloaded.curated.iter().map(|item| (item.object_id.as_str(), item.count)).collect::<Vec<_>>(), vec![(object_id.as_str(), 1)]);
     assert!(app.child_store(crate::CATALOG_CHILD_SLOT, &catalog_id).await.is_some(), "the reopened catalog member is live after the reload");
-    eprintln!("[DEBUG] saved curation archive reloaded with {} member(s)", status.total.saturating_sub(1));
 }
 
 #[test]

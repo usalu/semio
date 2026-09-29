@@ -1,6 +1,6 @@
 // #region 🎯️ActionBus
 /// <reference types="vitest/importMeta" />
-/** @emoji 🎯️ `@semio-tech/framework` — utility and tool derivation helpers. */
+/** 🎯️ `@semio-tech/framework` — utility and tool derivation helpers. */
 import type { IconName } from "@semio-tech/assets";
 import {
   type ActionDefinition,

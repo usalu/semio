@@ -128,7 +128,7 @@ async function testCargoDiskScan(output: string): Promise<void> {
   const python = Bun.which("python3") ?? Bun.which("python");
   assert.ok(python, "Native Python byte oracle is required");
   for (const [scanned, path] of [[buildUnits, join(buildDir, "debug/build")], [targetUnits, targetDir]] as const) {
-    const oracle = Bun.spawnSync([python, "-c", PYTHON_BYTES_ORACLE, path], { stdout: "pipe", stderr: "pipe", timeout: 30000 });
+    const oracle: Bun.SyncSubprocess<"pipe", "pipe"> = Bun.spawnSync([python, "-c", PYTHON_BYTES_ORACLE, path], { stdout: "pipe", stderr: "pipe", timeout: 30000 });
     assert.equal(oracle.exitCode, 0, oracle.stderr.toString());
     const expectedBytes = JSON.parse(oracle.stdout.toString());
     const scannedBytes = scanned.reduce((sum: number, unit: { bytes: number }) => sum + unit.bytes, 0) + (scanned === targetUnits ? Buffer.byteLength("Signature: 8a477f597d28d172789f06886806bc55") : 0);

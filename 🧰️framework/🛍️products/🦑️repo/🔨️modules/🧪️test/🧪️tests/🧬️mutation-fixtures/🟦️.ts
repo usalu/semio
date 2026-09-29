@@ -36,7 +36,7 @@ test("HTML source pair controls preserve the six-node semantic boundary", () => 
   expect(contract.rootDirectoryKindId).toBe(htmlPairs.fixtureKind);
   expect(contract.realizedNodeCount).toBe(6);
   expect(contract.exclusiveAlternatives).toEqual([]);
-  expect(contract.requiredNodes.map(node => ({ path: semanticDescendantNodeRelativePath(node, catalog), type: node.nodeType, kind: "kindId" in node ? node.kindId : null }))).toEqual(htmlPairs.nodes);
+  expect(contract.requiredNodes.map(node => ({ path: semanticDescendantNodeRelativePath(node, catalog), type: node.nodeType, kind: "kindId" in node ? node.kindId : null }))).toEqual<typeof htmlPairs.nodes>(htmlPairs.nodes);
   expect([...catalog.semanticDirectoryMemberKinds[htmlPairs.fixtureKind]!.memberNames].sort()).toEqual(htmlPairs.pairs.map(pair => pair.directoryName).sort());
   for (const pair of htmlPairs.pairs) {
     expect(semanticDirectoryKindId(pair.directoryName, catalog, { parentKindId: "fixtures" }), pair.id).toBe(htmlPairs.fixtureKind);

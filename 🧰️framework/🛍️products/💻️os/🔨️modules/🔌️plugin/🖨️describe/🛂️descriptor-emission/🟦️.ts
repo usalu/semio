@@ -85,7 +85,7 @@ function emissionArtifact(root: string, path: string, label: string, maximum: nu
   return { path: real, sha256: hash.digest("hex") };
 }
 
-/** @emoji 🛂️ The owner descriptor receipt contract: emits `🛂️.descriptor.semio` + `🔣️.json` for
+/** 🛂️ The owner descriptor receipt contract: emits `🛂️.descriptor.semio` + `🔣️.json` for
  * `ownerRoot` from ONE decoded descriptor, out of two independently supplied artifacts — the raw
  * `wasm32-wasip2` component and the separately extracted core module. Both are hashed here, in this
  * process, from the exact bytes on disk; the emitter blanks exactly `hashes.descriptorSha256` for its

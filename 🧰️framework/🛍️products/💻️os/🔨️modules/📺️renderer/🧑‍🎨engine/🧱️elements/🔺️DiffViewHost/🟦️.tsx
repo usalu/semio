@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/🔺️DiffViewHost/component.tsx
-/** @emoji 🆚️ `🔺️DiffViewHost` — the text-diff scene host: a minimal, dependency-free O(before·after)
+/** 🆚️ `🔺️DiffViewHost` — the text-diff scene host: a minimal, dependency-free O(before·after)
  * LCS-based line diff between `before`/`after`, rendered unified (default) or split per `mode`. */
 // #endregion 🧲️Header
 
@@ -158,7 +158,7 @@ export function ConflictDiffPreview({ before, after }: { readonly before: string
 //#endregion 🔖️ConflictDiff
 
 //#region Component
-/** @emoji 🆚️ Renders a `DiffViewScene`: a minimal, dependency-free line-based diff between `before`/`after`, unified (default) or split per `mode`. */
+/** 🆚️ Renders a `DiffViewScene`: a minimal, dependency-free line-based diff between `before`/`after`, unified (default) or split per `mode`. */
 export function DiffViewHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.diffView;
   const windowInstanceId = useContext(WindowInstanceIdContext);
@@ -179,7 +179,7 @@ export function DiffViewHost({ node, onAction, requestContextMenu }: ComponentSc
   const splitRows = useMemo(() => (scene?.mode === "split" ? buildSplitRows(lines) : []), [lines, scene?.mode]);
 
   //#region ContextMenu
-  /** @emoji 🖱️ `DiffViewScene` carries only `before`/`after`/`mode` — no per-line pick/selection state reaches this
+  /** 🖱️ `DiffViewScene` carries only `before`/`after`/`mode` — no per-line pick/selection state reaches this
    * host — so `hits`/`selection` stay empty per surface convention (see `🌳️GraphTimelineHost`). */
   const onContextMenu = useCallback(
     (event: MouseEvent<HTMLDivElement>): void => {

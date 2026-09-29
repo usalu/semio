@@ -1,4 +1,4 @@
-//! @emoji 🕰️ Owned host-temporal presentation contract for renderer surfaces.
+//! 🕰️ Owned host-temporal presentation contract for renderer surfaces.
 
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;

@@ -34,7 +34,7 @@ const STORY_TABLE_ROWS: readonly StoryTableRow[] = [
 //#region Reducer
 const STORY_TABLE_CONTROLLER_ID = "table-story";
 
-/** @emoji 🧮️ Story-local mirror of the `sortTable`/`selectRow`/`adjustCount`/`removeRow` handling a real host app performs against `TableHost`'s dispatched actions. */
+/** 🧮️ Story-local mirror of the `sortTable`/`selectRow`/`adjustCount`/`removeRow` handling a real host app performs against `TableHost`'s dispatched actions. */
 function reduceStoryTableAction(state: StoryTableState, descriptor: ActionDescriptor): StoryTableState {
   const args = (descriptor.args ?? {}) as Record<string, unknown>;
   switch (descriptor.action) {
@@ -118,7 +118,7 @@ function TableStoryHost({ initialRows }: { readonly initialRows: readonly StoryT
   );
 }
 
-/** @emoji 🕳️ `TableHost` with an absent `table` scene — exercises the `emptySceneLabel` fallback path with zero fixture setup. */
+/** 🕳️ `TableHost` with an absent `table` scene — exercises the `emptySceneLabel` fallback path with zero fixture setup. */
 function TableStoryEmptyHost(): ReactElement {
   const node: UiComponentSceneNode = { type: "componentScene", surfaceId: "table.story.empty", controllerId: STORY_TABLE_CONTROLLER_ID, componentKind: "table" };
   return (

@@ -184,7 +184,7 @@ export {
   type InteractiveJobTerminal,
 } from "../../🧱️elements/🔌️Ports/🟦️";
 
-/** @emoji 🧊️ Host surface for three.js / R3F (implemented by 🔌️Adapters). */
+/** 🧊️ Host surface for three.js / R3F (implemented by 🔌️Adapters). */
 export interface ThreeHostPort {
   readonly canvas: typeof ThreeCanvas;
   readonly drei: { OrbitControls: typeof OrbitControls; Grid: typeof Grid };
@@ -205,7 +205,7 @@ export { flowHostPort, type FlowHostPort, HostReactFlow, HostReactFlowProvider }
 // goes through the imported setReactHostPort() setter, since an ES import binding can't be assigned to
 // directly.
 
-/** @emoji 🔌️ Default R3F host port wired to fiber/drei adapters. */
+/** 🔌️ Default R3F host port wired to fiber/drei adapters. */
 export let threeHostPort: ThreeHostPort = {
   canvas: sceneHostPort.fiber.canvas,
   drei: { OrbitControls: sceneHostPort.drei.OrbitControls, Grid: sceneHostPort.drei.Grid },
@@ -216,7 +216,7 @@ const defaultFlowHostPort = flowHostPort;
 const defaultThreeHostPort = threeHostPort;
 const defaultSceneHostPort = sceneHostPort;
 
-/** @emoji 🔌️ Overrides for {@link configureHostPorts}; an omitted/`undefined` key is left untouched (whatever port is currently installed keeps running). */
+/** 🔌️ Overrides for {@link configureHostPorts}; an omitted/`undefined` key is left untouched (whatever port is currently installed keeps running). */
 export type HostPortOverrides = Partial<{
   readonly react: ReactHostPort;
   readonly flow: FlowHostPort;
@@ -225,7 +225,7 @@ export type HostPortOverrides = Partial<{
   readonly iconRender: IconRenderPort;
 }>;
 
-/** @emoji 🔌️ Swaps one or more host ports; ESM importers cannot assign `export let` bindings directly,
+/** 🔌️ Swaps one or more host ports; ESM importers cannot assign `export let` bindings directly,
  * so this is the only way to inject a test double or alternate adapter (e.g. Storybook's `withRenderer`
  * decorator) before a story renders. Ports are page-global (one React per page), so a merge — only the
  * keys you pass are touched, everything else keeps whatever is currently installed — is required rather
@@ -270,7 +270,7 @@ const ICON_RENDER_GLB_CACHE = ephemeralMap<string, Promise<THREE.Group>>("framew
 const ICON_RENDER_MESH_OUTLINE_USER_DATA_KEY = "semio.iconRender.meshOutline";
 const ICON_RENDER_EDGE_GEOMETRY_CACHE = new WeakMap<THREE.BufferGeometry, THREE.EdgesGeometry>();
 
-/** @emoji 🌫️ Empty/`transparent` lets the host surface show through — mirrors world-3d environment JSON. */
+/** 🌫️ Empty/`transparent` lets the host surface show through — mirrors world-3d environment JSON. */
 export function isTransparentIconBackground(background?: string): boolean {
   return !background || background === "transparent";
 }
@@ -301,7 +301,7 @@ function applyIconMeshEdgeBorders(root: THREE.Object3D, borderColor: string): vo
   }
 }
 
-/** @emoji ☀️ Sun position on a sphere from azimuth/elevation degrees, see https://en.wikipedia.org/wiki/Horizontal_coordinate_system. */
+/** ☀️ Sun position on a sphere from azimuth/elevation degrees, see https://en.wikipedia.org/wiki/Horizontal_coordinate_system. */
 export function sunPositionFromAzimuthElevation(azimuthDeg: number, elevationDeg: number, distance = 120): [number, number, number] {
   const az = (azimuthDeg * Math.PI) / 180;
   const el = (elevationDeg * Math.PI) / 180;
@@ -374,12 +374,12 @@ function buildIconScene(request: IconRenderRequest, model: THREE.Group): THREE.S
   return scene;
 }
 
-/** @emoji 📷️ Whether an icon shot uses parallel projection — mirrors world-3d `camera.projection`. */
+/** 📷️ Whether an icon shot uses parallel projection — mirrors world-3d `camera.projection`. */
 export function iconRenderCameraIsOrthographic(camera: IconRenderCamera): boolean {
   return camera.projection === "orthographic";
 }
 
-/** @emoji 📷️ Orthographic zoom for a drei/R3F pixel frustum (`left = -width/2`, …) — twin of `worldProjectionOrthoZoom`. */
+/** 📷️ Orthographic zoom for a drei/R3F pixel frustum (`left = -width/2`, …) — twin of `worldProjectionOrthoZoom`. */
 export function iconRenderOrthoZoomForRadius(radius: number, width: number, height: number, padding = 1.25): number {
   const padded = Math.max(radius * Math.max(padding, 1), 0.5);
   const zoomX = width * 0.5 / padded;
@@ -387,7 +387,7 @@ export function iconRenderOrthoZoomForRadius(radius: number, width: number, heig
   return Math.max(Math.min(zoomX, zoomY), 1e-3);
 }
 
-/** @emoji 📷️ Perspective eye distance so a bounding sphere fits the shot frustum — twin of `world3dFrameDistanceForRadius`. */
+/** 📷️ Perspective eye distance so a bounding sphere fits the shot frustum — twin of `world3dFrameDistanceForRadius`. */
 export function iconRenderPerspectiveDistanceForRadius(radius: number, fovDeg: number, aspect: number, padding = 1.25): number {
   const vertical = Math.min(Math.max(((fovDeg * Math.PI) / 180) * 0.5, 0.02), 1.5);
   const horizontal = Math.min(Math.max(Math.atan(Math.tan(vertical) * Math.max(aspect, 0.05)), 0.02), 1.5);
@@ -395,7 +395,7 @@ export function iconRenderPerspectiveDistanceForRadius(radius: number, fovDeg: n
   return Math.max((Math.max(radius, 1e-4) / Math.sin(half)) * Math.max(padding, 1), 0.5);
 }
 
-/** @emoji 🎯️ `request.camera`, or — with `request.fit` enabled — the same viewing direction re-targeted at
+/** 🎯️ `request.camera`, or — with `request.fit` enabled — the same viewing direction re-targeted at
  * the model's bounding-sphere centre and backed off so the sphere fills the frame (`padding` ≥ 1). */
 export function iconRenderCameraPose(request: IconRenderRequest, model: THREE.Object3D): IconRenderCamera {
   const camera = request.camera;
@@ -421,7 +421,7 @@ export function iconRenderCameraPose(request: IconRenderRequest, model: THREE.Ob
   return { ...camera, position: [target[0] + direction.x * distance, target[1] + direction.y * distance, target[2] + direction.z * distance], target, zoom: camera.zoom };
 }
 
-/** @emoji 📷️ Builds the three.js camera for an icon shot — perspective or orthographic to match the scene lane. */
+/** 📷️ Builds the three.js camera for an icon shot — perspective or orthographic to match the scene lane. */
 export function buildIconCamera(request: IconRenderRequest, pose: IconRenderCamera = request.camera): THREE.Camera {
   const up = pose.up ?? [0, 0, 1];
   if (iconRenderCameraIsOrthographic(pose)) {
@@ -442,7 +442,7 @@ export function buildIconCamera(request: IconRenderRequest, pose: IconRenderCame
   return camera;
 }
 
-/** @emoji 🧼️ Strips three.js SVGRenderer's default opaque clear color when the shot background is transparent. */
+/** 🧼️ Strips three.js SVGRenderer's default opaque clear color when the shot background is transparent. */
 export function finalizeIconSvgMarkup(svgMarkup: string, options: { readonly background?: string }): string {
   if (!isTransparentIconBackground(options.background)) return svgMarkup;
   return svgMarkup.replace(/\sstyle="background-color:[^"]*"/gi, "");
@@ -473,7 +473,7 @@ async function renderIconPng(scene: THREE.Scene, camera: THREE.Camera, width: nu
   return { dataUrl };
 }
 
-/** @emoji ⭕️ Clips rendered SVG markup to an axis-aligned ellipse inscribed in the shot bounds. */
+/** ⭕️ Clips rendered SVG markup to an axis-aligned ellipse inscribed in the shot bounds. */
 export function clipIconSvgMarkupToEllipse(svgMarkup: string, width: number, height: number): string {
   const clipId = "semio-icon-ellipse-clip";
   if (svgMarkup.includes(`id="${clipId}"`)) return svgMarkup;
@@ -539,7 +539,7 @@ async function applyIconRenderShape(result: IconRenderResult, shape: IconRenderS
   return { dataUrl };
 }
 
-/** @emoji 🖼️ Default three.js-backed icon render port (SVGRenderer + WebGL PNG), reassignable via {@link configureHostPorts}. */
+/** 🖼️ Default three.js-backed icon render port (SVGRenderer + WebGL PNG), reassignable via {@link configureHostPorts}. */
 export let iconRenderPort: IconRenderPort = {
   async render(request: IconRenderRequest): Promise<IconRenderResult> {
     const model = await loadGlbGroup(request.assetUrl);
@@ -552,7 +552,7 @@ export let iconRenderPort: IconRenderPort = {
 
 const defaultIconRenderPort = iconRenderPort;
 
-/** @emoji 🖼️ Aspect-ratio style keeping a W×H frame inside its container. */
+/** 🖼️ Aspect-ratio style keeping a W×H frame inside its container. */
 export function iconShotFrameStyle(width: number, height: number): React.CSSProperties {
   const landscape = width >= height;
   return {
@@ -564,12 +564,12 @@ export function iconShotFrameStyle(width: number, height: number): React.CSSProp
   };
 }
 
-/** @emoji 🖼️ Frame mask class for an icon shot shape. */
+/** 🖼️ Frame mask class for an icon shot shape. */
 export function iconShotFrameClass(shape: IconRenderShape): string {
   return shape === "ellipse" ? "rounded-[50%]" : "rounded-none";
 }
 
-/** @emoji 🖼️ Centered shot frame overlay with shape mask and W×H badge. */
+/** 🖼️ Centered shot frame overlay with shape mask and W×H badge. */
 export function IconShotFrame({
   width,
   height,
@@ -611,31 +611,31 @@ export function IconShotFrame({
 // #endregion 🔖️IconRenderPort
 
 // #region 🖼️ReferenceMedia
-/** @emoji 🖼️ Reference plane media kind for infinite-world grid underlays. */
+/** 🖼️ Reference plane media kind for infinite-world grid underlays. */
 export type ReferenceMediaKind = "image" | "svg" | "pdf";
 
-/** @emoji 🖼️ Source descriptor for {@link ReferenceMediaPort.loadReferenceTexture}. */
+/** 🖼️ Source descriptor for {@link ReferenceMediaPort.loadReferenceTexture}. */
 export interface ReferenceMediaSource {
   readonly url: string;
   readonly mediaKind: ReferenceMediaKind;
   readonly page?: number;
 }
 
-/** @emoji 🖼️ Loaded reference texture with intrinsic pixel dimensions. */
+/** 🖼️ Loaded reference texture with intrinsic pixel dimensions. */
 export interface ReferenceMediaLoadResult {
   readonly texture: THREE.Texture;
   readonly width: number;
   readonly height: number;
 }
 
-/** @emoji 🖼️ Port for rasterizing png/svg/pdf paths into three.js textures. */
+/** 🖼️ Port for rasterizing png/svg/pdf paths into three.js textures. */
 export interface ReferenceMediaPort {
   loadReferenceTexture(source: ReferenceMediaSource): Promise<ReferenceMediaLoadResult>;
 }
 
 const REFERENCE_MEDIA_RASTER_MAX = 4096;
 
-/** @emoji 🔎️ Infers reference media kind from a URL path extension. */
+/** 🔎️ Infers reference media kind from a URL path extension. */
 export function referenceMediaKindFromUrl(url: string): ReferenceMediaKind | null {
   const ext = url.split(/[?#]/, 1)[0]?.split(".").pop()?.toLowerCase() ?? "";
   if (["png", "jpg", "jpeg", "gif", "webp", "bmp", "avif", "tif", "tiff"].includes(ext)) {
@@ -721,7 +721,7 @@ async function loadReferenceImageTexture(url: string): Promise<ReferenceMediaLoa
   };
 }
 
-/** @emoji 🖼️ Default {@link ReferenceMediaPort} wired through {@link sceneHostPort}. */
+/** 🖼️ Default {@link ReferenceMediaPort} wired through {@link sceneHostPort}. */
 export let referenceMediaPort: ReferenceMediaPort = {
   async loadReferenceTexture(source) {
     if (source.mediaKind === "image") {
@@ -742,30 +742,30 @@ export const HostThreeCanvas = threeHostPort.canvas;
 export const HostSceneCanvas = sceneHostPort.fiber.canvas;
 export type { ThreeEvent };
 
-/** @emoji 🌳️ Typography for measure tree leaf labels. */
+/** 🌳️ Typography for measure tree leaf labels. */
 export const windowMeasureTreeLeafLabelClass = "text-tiny font-normal text-element group-hover:text-emphasized transition-colors";
 
-/** @emoji 🌳️ Typography for measure tree group headers. */
+/** 🌳️ Typography for measure tree group headers. */
 export const windowMeasureTreeGroupLabelClass = "text-tiny font-semibold uppercase tracking-wide text-element group-hover:text-emphasized";
 
-/** @emoji 📑️ Panel tab label beside the icon. */
+/** 📑️ Panel tab label beside the icon. */
 export const panelTabLabelClass = "min-w-0 truncate text-xs leading-none";
 
-/** @emoji 📑️ Panel tab icon slot — defers dimensions to the tab icon (12px). */
+/** 📑️ Panel tab icon slot — defers dimensions to the tab icon (12px). */
 export const panelTabIconSlotClass = "inline-flex shrink-0 items-center justify-center overflow-visible leading-none [&_svg]:block";
 
-/** @emoji 🎯️ Label/icon emphasis paired with {@link dropZoneReadyFillClass} so text stays legible on the fill. */
+/** 🎯️ Label/icon emphasis paired with {@link dropZoneReadyFillClass} so text stays legible on the fill. */
 export const dropZoneReadyTextClass = "text-emphasized";
 
-/** @emoji 🎯️ Passive drop-zone fill — secondary accent, kept visually distinct from the stronger primary-accent indicator on the actively hovered target. */
+/** 🎯️ Passive drop-zone fill — secondary accent, kept visually distinct from the stronger primary-accent indicator on the actively hovered target. */
 export const dropZoneReadyFillClass = "bg-[var(--accent-secondary)]";
 
-/** @emoji Combined passive drop-zone treatment (fill + emphasized text/icons). */
+/** 📥️ Combined passive drop-zone treatment (fill + emphasized text/icons). */
 export const dropZoneReadyClass = cn(dropZoneReadyFillClass, dropZoneReadyTextClass);
 
-/** @emoji 🎨️ Active/on: primary fill + active border + emphasized content (never the transient hover fill). */
+/** 🎨️ Active/on: primary fill + active border + emphasized content (never the transient hover fill). */
 
-/** @emoji 🌀️ Maps shell chrome {@link UiStatus} to the shared border ring utilities. */
+/** 🌀️ Maps shell chrome {@link UiStatus} to the shared border ring utilities. */
 
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 export { cn };
@@ -829,7 +829,7 @@ import {
 export { chromeControlItemBaseClass, chromeControlItemClass, chromeControlTabItemClass, modeDockTabClassName, windowPaneChromeToggleClass, chromeControlGroupShellClass, chromeControlGroupClass, chromeControlItemOnClass, chromeControlTabActiveClass };
 
 // #region 🔖️SelectionMarquee
-/** @emoji ⬚️ Canonical area-select overlay coverage (drag right-to-left = partial). */
+/** ⬚️ Canonical area-select overlay coverage (drag right-to-left = partial). */
 export type SelectionMarqueeCoverage = "partial" | "full";
 
 export type SelectionMarqueeRect = {
@@ -849,7 +849,7 @@ export type SelectionMarqueeProps = {
   readonly className?: string;
 } & ({ readonly shape: "rect"; readonly rect: SelectionMarqueeRect } | { readonly shape: "polygon"; readonly points: readonly SelectionMarqueePoint[] });
 
-/** @emoji ⬚️ Shared SVG marquee for spatial area selection (primary fill/stroke; dashed when partial). */
+/** ⬚️ Shared SVG marquee for spatial area selection (primary fill/stroke; dashed when partial). */
 export function SelectionMarquee(props: SelectionMarqueeProps): React.ReactElement {
   const { coverage, className } = props;
   const svgClass = cn("selection-marquee pointer-events-none absolute inset-0 h-full w-full overflow-visible", className);
@@ -873,12 +873,12 @@ export const SELECTION_DRAG_DIRECTION_THRESHOLD_PX = 2;
 
 export type SelectionMarqueeMethod = "lasso" | "rectangle";
 
-/** @emoji 🖱️ Crossing selection when the drag ends left of the start (partial overlap). */
+/** 🖱️ Crossing selection when the drag ends left of the start (partial overlap). */
 export function marqueeIsCrossing(startX: number, endX: number): boolean {
   return endX < startX;
 }
 
-/** @emoji 🖱️ Lasso uses the first horizontal step; rectangle compares start vs end. */
+/** 🖱️ Lasso uses the first horizontal step; rectangle compares start vs end. */
 export function marqueeIsCrossingFromPath(path: readonly SelectionMarqueePoint[], method: SelectionMarqueeMethod = "rectangle"): boolean {
   const start = path[0];
   if (!start) return false;
@@ -893,17 +893,17 @@ export function marqueeIsCrossingFromPath(path: readonly SelectionMarqueePoint[]
   return marqueeIsCrossing(start.x, end.x);
 }
 
-/** @emoji 🖱️ Maps drag direction to marquee coverage (rectangle endpoints). */
+/** 🖱️ Maps drag direction to marquee coverage (rectangle endpoints). */
 export function marqueeCoverageFromDrag(startX: number, endX: number): SelectionMarqueeCoverage {
   return marqueeIsCrossing(startX, endX) ? "partial" : "full";
 }
 
-/** @emoji 🖱️ Maps gesture path to marquee coverage (lasso first horizontal step). */
+/** 🖱️ Maps gesture path to marquee coverage (lasso first horizontal step). */
 export function marqueeCoverageFromPath(path: readonly SelectionMarqueePoint[], method: SelectionMarqueeMethod = "rectangle"): SelectionMarqueeCoverage {
   return marqueeIsCrossingFromPath(path, method) ? "partial" : "full";
 }
 
-/** @emoji 🖱️ Resolves marquee coverage for rectangle or lasso gestures. */
+/** 🖱️ Resolves marquee coverage for rectangle or lasso gestures. */
 export function marqueeCoverageFromGesture(input: { readonly method: SelectionMarqueeMethod; readonly startX: number; readonly endX: number; readonly path: readonly SelectionMarqueePoint[] }): SelectionMarqueeCoverage {
   if (input.method === "lasso" && input.path.length > 0) {
     return marqueeCoverageFromPath(input.path, "lasso");
@@ -911,7 +911,7 @@ export function marqueeCoverageFromGesture(input: { readonly method: SelectionMa
   return marqueeCoverageFromDrag(input.startX, input.endX);
 }
 
-/** @emoji 🎯️ Maps shift/ctrl modifiers to a marquee-drag `MergeMode` (ctrl+shift → invertive).
+/** 🎯️ Maps shift/ctrl modifiers to a marquee-drag `MergeMode` (ctrl+shift → invertive).
  * `persistentMode` — a shell's own {@link SelectionModeStore} value, e.g. `useShellScope().selection.get()`
  * — takes precedence when set to something other than `"replace"`, mirroring the toolbar toggle in
  * `SelectionUtilityOptions`; omitted, behaves as if the toolbar is at its `"replace"` setting (was: read a
@@ -933,7 +933,7 @@ export function marqueeModeFromModifiers(modifiers: { readonly shiftKey?: boolea
   return "replace";
 }
 
-/** @emoji 🎯️ Applies a marquee-drag `MergeMode` when committing ids — `"range"` has no meaning without
+/** 🎯️ Applies a marquee-drag `MergeMode` when committing ids — `"range"` has no meaning without
  * an ordered topology here (see `marqueeModeFromModifiers`'s doc), so it falls back to `"replace"`. */
 export function selectionMergeIds(mode: MergeMode, current: readonly string[], incoming: readonly string[]): string[] {
   const currentSet = new Set(current);
@@ -1011,7 +1011,7 @@ export { windowElementId, panelTabElementId, panelTabFirstDraggableElementId } f
 export type { CanvasHoverFocus, CanvasPickRequest, CanvasPickTarget } from "@semio-tech/framework";
 export type { DockSkeleton, DockTabSkeleton, IntroductionStepDefinition, TutorialCameraKeyframe, TutorialDefinition } from "@semio-tech/framework";
 
-/** @emoji 🎯️ Fixed DOM pick list for overlapping canvas targets (not painted on the infinite canvas). */
+/** 🎯️ Fixed DOM pick list for overlapping canvas targets (not painted on the infinite canvas). */
 export function CanvasPickMenu({ request, hoveredKey, onHoverKey, onPick, onDismiss, renderRow, title }: CanvasPickMenuProps): React.ReactNode {
   const menuRef = React.useRef<HTMLDivElement | null>(null);
   const selectTargetLabel = useLabel("ui.common.selectTarget");
@@ -1107,7 +1107,7 @@ export type CanvasPickInteraction = {
   readonly onMenuPick: (target: CanvasPickTarget) => void;
 };
 
-/** @emoji 🎯️ Shared pointer routing for canvas hover (most-specific) and click disambiguation menus. */
+/** 🎯️ Shared pointer routing for canvas hover (most-specific) and click disambiguation menus. */
 export function useCanvasPickInteraction({ resolveTargetsAtClient, onHoverFocus, onSelectTarget, clickThresholdPx = 4 }: UseCanvasPickInteractionOptions): CanvasPickInteraction {
   const [pickMenu, setPickMenu] = React.useState<CanvasPickRequest | null>(null);
   const [menuHoveredKey, setMenuHoveredKey] = React.useState<string | null>(null);
@@ -1469,9 +1469,9 @@ export {
   type IconProps,
 };
 
-/** @emoji 🌀️ Waiting ring matching the element's current state color; empty when not waiting. */
+/** 🌀️ Waiting ring matching the element's current state color; empty when not waiting. */
 
-/** @emoji 📋️ Hover row styling for menus, selects, comboboxes, and context menus. */
+/** 📋️ Hover row styling for menus, selects, comboboxes, and context menus. */
 
 import {
   createDOMEventBinding,
@@ -1650,7 +1650,7 @@ export {
 };
 export type { ControlKeybindingAction, ControlKeybindingDefinition, ControlKeybindingCallback, ControlKeybindingOptions, ControlKeybindingDependencies, ControlHotkeyBadgeProps };
 
-/** @emoji ⌨️ Maps dock {@link Anchor} values to {@link SHELL_KEYBINDINGS} control ids. */
+/** ⌨️ Maps dock {@link Anchor} values to {@link SHELL_KEYBINDINGS} control ids. */
 export const SHELL_PANEL_ANCHOR_KEY_IDS: Readonly<Record<Anchor, keyof typeof SHELL_KEYBINDINGS & string>> = {
   "top-left": "ui.shell.panelAnchor.topLeft",
   "top-middle": "ui.shell.panelAnchor.topMiddle",
@@ -1665,7 +1665,7 @@ export const SHELL_PANEL_ANCHOR_KEY_IDS: Readonly<Record<Anchor, keyof typeof SH
 // #endregion ⌨️UiKeybindings
 
 // #region 🌈️SurfaceChrome
-/** @emoji 🌈️ Document-level UI chrome shared by Elements shells: appearance (system/light/dark), device (desktop/tablet/mobile), and driver — mirrors sketchpad `Appearance` / `Device` behavior on `documentElement`. */
+/** 🌈️ Document-level UI chrome shared by Elements shells: appearance (system/light/dark), device (desktop/tablet/mobile), and driver — mirrors sketchpad `Appearance` / `Device` behavior on `documentElement`. */
 export type ElementsSurfaceAppearance = "system" | "light" | "dark";
 
 // 📱️ The device vocabulary and the breakpoint policy are NOT declared here: `📱️device/🟦️.ts` owns them
@@ -1691,7 +1691,7 @@ export interface ElementsSurfaceChromeInput {
   driver: UiDriver;
 }
 
-/** @emoji 🐚️ Resolves an explicit surface-chrome root (a shell's own root — e.g. its `ShellScope.rootRef`)
+/** 🐚️ Resolves an explicit surface-chrome root (a shell's own root — e.g. its `ShellScope.rootRef`)
  * or falls back to `document.documentElement` for the page-owning case; every entry point below takes
  * this same optional-root shape so a single-shell page's existing call sites (which pass none) keep
  * their exact current behavior unchanged. `undefined` in a non-browser environment (SSR/vitest without
@@ -1700,7 +1700,7 @@ function resolveElementsSurfaceChromeRoot(root?: HTMLElement): HTMLElement | und
   return root ?? (typeof document !== "undefined" ? document.documentElement : undefined);
 }
 
-/** @emoji 🐚️ Paints a surface-chrome root's own background/foreground/color-scheme — every root, not
+/** 🐚️ Paints a surface-chrome root's own background/foreground/color-scheme — every root, not
  * just `documentElement`, so an embedded shell's own `.semio-scope` div is visually correct even before
  * any descendant renders. When the root IS `documentElement` (the page-owning case), also mirrors onto
  * `document.body` exactly as before this was made root-scoped — unchanged behavior for that case. */
@@ -1726,7 +1726,7 @@ function clearElementsSurfaceChromeBaseColors(root: HTMLElement): void {
   }
 }
 
-/** @emoji 🌓️ Resolves whether {@link ElementsSurfaceAppearance} is dark for the current system preference. */
+/** 🌓️ Resolves whether {@link ElementsSurfaceAppearance} is dark for the current system preference. */
 export function resolveElementsSurfaceChromeDark(appearance: ElementsSurfaceAppearance): boolean {
   if (appearance === "dark") return true;
   if (appearance === "light") return false;
@@ -1734,7 +1734,7 @@ export function resolveElementsSurfaceChromeDark(appearance: ElementsSurfaceAppe
   return window.matchMedia("(prefers-color-scheme: dark)").matches;
 }
 
-/** @emoji 🌓️ True when a surface-chrome root (`document.documentElement` by default) currently carries
+/** 🌓️ True when a surface-chrome root (`document.documentElement` by default) currently carries
  * the dark surface chrome class. */
 export function isElementsSurfaceChromeDarkApplied(rootOverride?: HTMLElement): boolean {
   const root = resolveElementsSurfaceChromeRoot(rootOverride);
@@ -1744,7 +1744,7 @@ export function isElementsSurfaceChromeDarkApplied(rootOverride?: HTMLElement): 
 type ElementsSurfaceChromeLease = { readonly id: number; readonly input: ElementsSurfaceChromeInput };
 
 const elementsSurfaceChromeLeaseSeq = ephemeralBox("framework.modules.ui.packages.typescript.targets.react.index.tsx.elementsSurfaceChromeLeaseSeq", 0);
-/** @emoji 🐚️ One independent lease stack per surface-chrome root — was a single page-global stack, which
+/** 🐚️ One independent lease stack per surface-chrome root — was a single page-global stack, which
  * meant a second mounted shell's appearance/driver/device lease silently won (last-wins) over the
  * first's for the WHOLE page instead of just its own subtree. */
 const elementsSurfaceChromeLeasesByRoot = ephemeralMap<HTMLElement, ElementsSurfaceChromeLease[]>("framework.modules.ui.packages.typescript.targets.react.index.tsx.elementsSurfaceChromeLeasesByRoot");
@@ -1786,12 +1786,12 @@ function clearElementsSurfaceChromeDriverDom(root: HTMLElement): void {
 }
 
 // #region 🫥️ChromeReveal
-/** @emoji 🫥️ Extra radius (px) around a reveal region's own rect that still counts as "inside" — makes the invisible-until-hovered bar reachable. */
+/** 🫥️ Extra radius (px) around a reveal region's own rect that still counts as "inside" — makes the invisible-until-hovered bar reachable. */
 const CHROME_REVEAL_ACTIVATION_BAND_PX = 24;
-/** @emoji 🫥️ Screen-edge band (px) that reveals a region anchored to that edge (navbar top, footer bottom), even before the cursor reaches the region's own rect. */
+/** 🫥️ Screen-edge band (px) that reveals a region anchored to that edge (navbar top, footer bottom), even before the cursor reaches the region's own rect. */
 const CHROME_REVEAL_EDGE_BAND_PX = 8;
 
-/** @emoji 🐚️ One independent reveal controller per surface-chrome root — was a single page-global
+/** 🐚️ One independent reveal controller per surface-chrome root — was a single page-global
  * controller, which meant hovering ANY mounted shell revealed hover-reveal chrome for EVERY shell that
  * had opted into it (and a pointer-move over shell B's DOM would drive shell A's reveal state). */
 const chromeRevealBindingsByRoot = ephemeralMap<HTMLElement, ReturnType<typeof createDOMEventBinding>>("framework.modules.ui.packages.typescript.targets.react.index.tsx.chromeRevealBindingsByRoot");
@@ -1869,7 +1869,7 @@ function teardownUiChromeRevealController(root: HTMLElement): void {
   root.querySelectorAll<HTMLElement>("[data-ui-reveal-region][data-ui-revealed]").forEach((region) => delete region.dataset.uiRevealed);
 }
 
-/** @emoji 🫥️ Ensures the pointer/focus reveal tracker is installed iff the driver wants hover-reveal chrome; called whenever driver DOM attrs are (re)applied. */
+/** 🫥️ Ensures the pointer/focus reveal tracker is installed iff the driver wants hover-reveal chrome; called whenever driver DOM attrs are (re)applied. */
 function syncUiChromeRevealController(root: HTMLElement, chrome: UiDriverReveal): void {
   if (chrome === "hover") ensureUiChromeRevealController(root);
   else teardownUiChromeRevealController(root);
@@ -1894,7 +1894,7 @@ function applyElementsSurfaceChromeAppearanceDom(root: HTMLElement, appearance: 
   setStylingAppearanceRoot(root);
 }
 
-/** @emoji 🌓️ Applies `.dark`/`color-scheme` to a root (`document.documentElement` by default) before
+/** 🌓️ Applies `.dark`/`color-scheme` to a root (`document.documentElement` by default) before
  * React/CSS load (play/static entries); does not register a surface-chrome lease. */
 export function bootstrapElementsSurfaceChromeDocument(appearance: ElementsSurfaceAppearance = "system", rootOverride?: HTMLElement): void {
   const root = resolveElementsSurfaceChromeRoot(rootOverride);
@@ -1943,7 +1943,7 @@ function syncElementsSurfaceChromeDomFromLeaseStack(root: HTMLElement): void {
   applyElementsSurfaceChromeDom(root, input);
 }
 
-/** @emoji 🐚️ One shared `matchMedia` listener re-applies EVERY root with an active `appearance: "system"`
+/** 🐚️ One shared `matchMedia` listener re-applies EVERY root with an active `appearance: "system"`
  * lease when the OS preference flips — the media query itself is genuinely page-global (there is only
  * one system preference), but each root's lease stack (and therefore whether it even has a "system"
  * lease) stays independent. */
@@ -1972,7 +1972,7 @@ function ensureElementsSurfaceChromeSystemListeners(): void {
 }
 
 /**
- * @emoji 🌈️ Imperative surface chrome controller for class-based shells; returns a cleanup that reverts
+ * 🌈️ Imperative surface chrome controller for class-based shells; returns a cleanup that reverts
  * DOM state, browser default input, and the active driver. `rootOverride` scopes this lease to one
  * shell's own root (e.g. its `ShellScope.rootRef`) — omitted, it falls back to `document.documentElement`
  * (the single-shell-per-page case, unchanged from before this was made root-scoped).
@@ -2003,7 +2003,7 @@ export function applyElementsSurfaceChrome(input: ElementsSurfaceChromeInput, ro
 }
 
 /**
- * @emoji 🌓️ Syncs a surface-chrome root (`dark`, `touch`, `data-ui-device`, `data-ui-driver` + axis
+ * 🌓️ Syncs a surface-chrome root (`dark`, `touch`, `data-ui-device`, `data-ui-driver` + axis
  * attrs), base colors, and {@link setUiDriverProvider}; returns `mobile` for {@link AppProps.mobile}.
  * `root` scopes this to one shell — omitted, targets `document.documentElement` as before. Callers reading
  * this from a ref (e.g. `ShellScope.rootRef.current`) must re-render once that ref attaches (`FrameworkOsShell`
@@ -2017,7 +2017,7 @@ export function useElementsSurfaceChrome({ appearance, device, driver }: Element
 }
 
 /**
- * @emoji 🌓️ Observes a surface-chrome root's appearance attributes and runs `sync` on mount and whenever
+ * 🌓️ Observes a surface-chrome root's appearance attributes and runs `sync` on mount and whenever
  * they change. Holds `sync` in a ref so callers can pass an inline arrow without retriggering the effect
  * every render (React 19: unstable `sync` identity → effect → `paintOverlays`/`setState` → re-render →
  * Maximum update depth). `root` scopes the observed element — omitted, observes `document.documentElement`;
@@ -2043,7 +2043,7 @@ export function useCanvasAppearanceSync(sync: () => void, enabled = true, root?:
   }, [appearanceRoot, enabled, root]);
 }
 
-/** @emoji 🧪️ Clears every surface-chrome root's leases and DOM overrides between vitest cases (tests only
+/** 🧪️ Clears every surface-chrome root's leases and DOM overrides between vitest cases (tests only
  * ever exercise the default `document.documentElement` root, but this clears all of them defensively). */
 export function resetElementsSurfaceChromeForTests(): void {
   for (const root of elementsSurfaceChromeDeferredClearFrames.keys()) cancelElementsSurfaceChromeDeferredClear(root);
@@ -2056,10 +2056,10 @@ export function resetElementsSurfaceChromeForTests(): void {
 
 // #region 🎛️UiChromePrefs
 
-/** @emoji 🌓️ Storage key for surface appearance (system/light/dark). */
+/** 🌓️ Storage key for surface appearance (system/light/dark). */
 export const UI_CHROME_APPEARANCE_STORAGE_KEY = "ui.chrome.appearance";
 
-/** @emoji 🌓️ Reads persisted surface appearance from the given shell's storage — a required param
+/** 🌓️ Reads persisted surface appearance from the given shell's storage — a required param
  * (not a `localStorage` default) since two shells on one page must never read/write each other's
  * appearance through a shared key. */
 export function readStoredUiChromeAppearance(storage: StoragePort): ElementsSurfaceAppearance {
@@ -2068,74 +2068,74 @@ export function readStoredUiChromeAppearance(storage: StoragePort): ElementsSurf
   return "system";
 }
 
-/** @emoji 🌓️ Persists surface appearance to the given shell's storage. */
+/** 🌓️ Persists surface appearance to the given shell's storage. */
 export function writeStoredUiChromeAppearance(storage: StoragePort, appearance: ElementsSurfaceAppearance): void {
   storage.set(UI_CHROME_APPEARANCE_STORAGE_KEY, appearance);
 }
 
-/** @emoji 📐️ User-selectable layout device; mobile is automatic and excluded here. */
+/** 📐️ User-selectable layout device; mobile is automatic and excluded here. */
 export type UiChromeLayout = "desktop" | "tablet";
 
-/** @emoji 📐️ Storage key for the user-selected desktop/tablet layout. */
+/** 📐️ Storage key for the user-selected desktop/tablet layout. */
 export const UI_CHROME_LAYOUT_STORAGE_KEY = "ui.chrome.layout";
 
-/** @emoji 📐️ Reads the persisted layout preference from the given shell's storage, defaulting to desktop. */
+/** 📐️ Reads the persisted layout preference from the given shell's storage, defaulting to desktop. */
 export function readStoredUiChromeLayout(storage: StoragePort): UiChromeLayout {
   return storage.get(UI_CHROME_LAYOUT_STORAGE_KEY) === "tablet" ? "tablet" : "desktop";
 }
 
-/** @emoji 📐️ Persists the layout preference to the given shell's storage. */
+/** 📐️ Persists the layout preference to the given shell's storage. */
 export function writeStoredUiChromeLayout(storage: StoragePort, layout: UiChromeLayout): void {
   storage.set(UI_CHROME_LAYOUT_STORAGE_KEY, layout);
 }
 
-/** @emoji 🌐️ Storage key for the active UI locale. */
+/** 🌐️ Storage key for the active UI locale. */
 export const UI_CHROME_LOCALE_STORAGE_KEY = "ui.chrome.locale";
 
-/** @emoji 🌐️ Reads the persisted UI locale from the given shell's storage, if any. */
+/** 🌐️ Reads the persisted UI locale from the given shell's storage, if any. */
 export function readStoredUiChromeLocale(storage: StoragePort): UiLocale | null {
   const raw = storage.get(UI_CHROME_LOCALE_STORAGE_KEY);
   return raw === "en" || raw === "de" ? raw : null;
 }
 
-/** @emoji 🌐️ Persists the active UI locale to the given shell's storage. */
+/** 🌐️ Persists the active UI locale to the given shell's storage. */
 export function writeStoredUiChromeLocale(storage: StoragePort, locale: UiLocale): void {
   storage.set(UI_CHROME_LOCALE_STORAGE_KEY, locale);
 }
 
-/** @emoji 🗣️ Id of the always-available default terminology (no term substitutions). */
+/** 🗣️ Id of the always-available default terminology (no term substitutions). */
 export const UI_TERMINOLOGY_NATIVE = "native";
 
-/** @emoji 🗣️ Storage key for the active app terminology id. */
+/** 🗣️ Storage key for the active app terminology id. */
 export const UI_CHROME_TERMINOLOGY_STORAGE_KEY = "ui.chrome.terminology";
 
-/** @emoji 🗣️ Reads the persisted terminology id from the given shell's storage, defaulting to native. */
+/** 🗣️ Reads the persisted terminology id from the given shell's storage, defaulting to native. */
 export function readStoredUiChromeTerminology(storage: StoragePort): string {
   return storage.get(UI_CHROME_TERMINOLOGY_STORAGE_KEY) || UI_TERMINOLOGY_NATIVE;
 }
 
-/** @emoji 🗣️ Persists the active terminology id to the given shell's storage. */
+/** 🗣️ Persists the active terminology id to the given shell's storage. */
 export function writeStoredUiChromeTerminology(storage: StoragePort, id: string): void {
   storage.set(UI_CHROME_TERMINOLOGY_STORAGE_KEY, id);
 }
 
-/** @emoji 🎨️ Storage key for the active theme id (builtin or `custom.<slug>`). */
+/** 🎨️ Storage key for the active theme id (builtin or `custom.<slug>`). */
 export const UI_CHROME_THEME_ID_STORAGE_KEY = "ui.chrome.theme";
 
-/** @emoji 🎨️ Reads the persisted active theme id from the given shell's storage, if any. */
+/** 🎨️ Reads the persisted active theme id from the given shell's storage, if any. */
 export function readStoredUiChromeThemeId(storage: StoragePort): string | null {
   return storage.get(UI_CHROME_THEME_ID_STORAGE_KEY);
 }
 
-/** @emoji 🎨️ Persists the active theme id to the given shell's storage. */
+/** 🎨️ Persists the active theme id to the given shell's storage. */
 export function writeStoredUiChromeThemeId(storage: StoragePort, id: string): void {
   storage.set(UI_CHROME_THEME_ID_STORAGE_KEY, id);
 }
 
-/** @emoji 🎨️ Storage key for a full snapshot of the active theme (boot-time fallback before builtin/custom lookup resolves). */
+/** 🎨️ Storage key for a full snapshot of the active theme (boot-time fallback before builtin/custom lookup resolves). */
 export const UI_CHROME_THEME_SNAPSHOT_STORAGE_KEY = "ui.chrome.theme.snapshot";
 
-/** @emoji 🎨️ Reads the persisted active theme snapshot from the given shell's storage; discards it silently if invalid. */
+/** 🎨️ Reads the persisted active theme snapshot from the given shell's storage; discards it silently if invalid. */
 export function readStoredUiChromeThemeSnapshot(storage: StoragePort): UiTheme | null {
   const raw = storage.get(UI_CHROME_THEME_SNAPSHOT_STORAGE_KEY);
   if (!raw) return null;
@@ -2146,15 +2146,15 @@ export function readStoredUiChromeThemeSnapshot(storage: StoragePort): UiTheme |
   }
 }
 
-/** @emoji 🎨️ Persists a full snapshot of the active theme to the given shell's storage. */
+/** 🎨️ Persists a full snapshot of the active theme to the given shell's storage. */
 export function writeStoredUiChromeThemeSnapshot(storage: StoragePort, theme: UiTheme): void {
   storage.set(UI_CHROME_THEME_SNAPSHOT_STORAGE_KEY, serializeUiTheme(theme));
 }
 
-/** @emoji 🎨️ Storage key for the user's saved custom themes, keyed by theme id. */
+/** 🎨️ Storage key for the user's saved custom themes, keyed by theme id. */
 export const UI_CUSTOM_THEMES_STORAGE_KEY = "ui.themes.custom";
 
-/** @emoji 🎨️ Reads the user's saved custom themes from the given shell's storage; discards any entry that fails to parse. */
+/** 🎨️ Reads the user's saved custom themes from the given shell's storage; discards any entry that fails to parse. */
 export function readStoredUiCustomThemes(storage: StoragePort): Record<string, UiTheme> {
   const raw = storage.get(UI_CUSTOM_THEMES_STORAGE_KEY);
   if (!raw) return {};
@@ -2174,15 +2174,15 @@ export function readStoredUiCustomThemes(storage: StoragePort): Record<string, U
   }
 }
 
-/** @emoji 🎨️ Persists the user's saved custom themes to the given shell's storage. */
+/** 🎨️ Persists the user's saved custom themes to the given shell's storage. */
 export function writeStoredUiCustomThemes(storage: StoragePort, themes: Record<string, UiTheme>): void {
   storage.set(UI_CUSTOM_THEMES_STORAGE_KEY, JSON.stringify(themes));
 }
 
-/** @emoji 🧵️ Storage key for WASM compute worker thread count (`ui.chrome.*` namespace). */
+/** 🧵️ Storage key for WASM compute worker thread count (`ui.chrome.*` namespace). */
 export const UI_COMPUTE_WORKER_COUNT_STORAGE_KEY = "ui.compute.workerCount";
 
-/** @emoji 🧵️ Default compute workers: `navigator.hardwareConcurrency` or 1. */
+/** 🧵️ Default compute workers: `navigator.hardwareConcurrency` or 1. */
 export function defaultComputeWorkerCount(): number {
   if (typeof navigator !== "undefined" && typeof navigator.hardwareConcurrency === "number" && navigator.hardwareConcurrency > 0) {
     return navigator.hardwareConcurrency;
@@ -2190,7 +2190,7 @@ export function defaultComputeWorkerCount(): number {
   return 1;
 }
 
-/** @emoji 🧵️ Reads persisted compute worker count from the given shell's storage. */
+/** 🧵️ Reads persisted compute worker count from the given shell's storage. */
 export function readStoredComputeWorkerCount(storage: StoragePort): number {
   const raw = storage.get(UI_COMPUTE_WORKER_COUNT_STORAGE_KEY);
   if (raw == null || raw === "") return defaultComputeWorkerCount();
@@ -2199,33 +2199,33 @@ export function readStoredComputeWorkerCount(storage: StoragePort): number {
   return parsed;
 }
 
-/** @emoji 🧵️ Persists compute worker count to the given shell's storage. */
+/** 🧵️ Persists compute worker count to the given shell's storage. */
 export function writeStoredComputeWorkerCount(storage: StoragePort, count: number): void {
   storage.set(UI_COMPUTE_WORKER_COUNT_STORAGE_KEY, String(Math.max(1, Math.floor(count))));
 }
 
-/** @emoji 🧵️ True when SharedArrayBuffer thread pools are available. */
+/** 🧵️ True when SharedArrayBuffer thread pools are available. */
 export function isCrossOriginIsolatedRuntime(): boolean {
   return typeof crossOriginIsolated !== "undefined" && crossOriginIsolated === true;
 }
 
-/** @emoji 🧵️ Effective worker count after cross-origin isolation fallback. */
+/** 🧵️ Effective worker count after cross-origin isolation fallback. */
 export function effectiveComputeWorkerCount(storage: StoragePort, requested = readStoredComputeWorkerCount(storage)): number {
   if (!isCrossOriginIsolatedRuntime()) return 1;
   return Math.max(1, Math.floor(requested));
 }
 
-/** @emoji 🎓️ Storage key prefix for whether an app's introduction has already been shown on this device. */
+/** 🎓️ Storage key prefix for whether an app's introduction has already been shown on this device. */
 export const UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX = "ui.introduction.seen.";
 
-/** @emoji 🎓️ Reads whether `appId`'s introduction has already been shown — auto-start checks this once
+/** 🎓️ Reads whether `appId`'s introduction has already been shown — auto-start checks this once
  * per app; replaying stays available via the `startIntroduction` action regardless of this flag. */
 export function readStoredIntroductionSeen(storage: StoragePort, appId: string): boolean {
   if (!appId) return false;
   return storage.get(`${UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX}${appId}`) === "true";
 }
 
-/** @emoji 🎓️ Marks `appId`'s introduction as shown so it stops auto-starting on future launches. */
+/** 🎓️ Marks `appId`'s introduction as shown so it stops auto-starting on future launches. */
 export function writeStoredIntroductionSeen(storage: StoragePort, appId: string): void {
   if (!appId) return;
   storage.set(`${UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX}${appId}`, "true");
@@ -2309,7 +2309,7 @@ export { ChromeControlHint };
 // #region 🔑️Schema & Keys
 // Type/key-derivation machinery: locale codes, label shapes, the deep dot-path key type, and compile-time key-coverage checks.
 
-/** @emoji 🪁️ Supported UI locale codes — the single source is `@semio-tech/framework`'s
+/** 🪁️ Supported UI locale codes — the single source is `@semio-tech/framework`'s
  * `ShellLocale`, so a brand's `locks.locale` and this chrome bundle's coverage can never drift apart. */
 // #region UiLabel
 import { uiDataLabel, type UiLabel } from "../../🧱️elements/🎗️UiLabel/🟦️.tsx";
@@ -2359,7 +2359,7 @@ const _assertUiSettingsLanguageKeys: AssertUiSettingsLanguageKeysCovered<UiLocal
 
 const _assertUiSettingsTerminologyKeys: AssertUiSettingsTerminologyKeysCovered<UiChromeTerminologyId> = true;
 
-/** @emoji 🏷️ Compile-time check that every brand-lockable {@link ShellLocale} has a complete chrome bundle — closes the loop from a brand's `locks.locale` through `ShellLocale` to an actual translated `uiChromeTranslationBundles` entry. */
+/** 🏷️ Compile-time check that every brand-lockable {@link ShellLocale} has a complete chrome bundle — closes the loop from a brand's `locks.locale` through `ShellLocale` to an actual translated `uiChromeTranslationBundles` entry. */
 type AssertShellBrandLocalesBundled<L extends string> = L extends keyof typeof uiChromeTranslationBundles ? true : false;
 const _assertShellBrandLocalesBundled: AssertShellBrandLocalesBundled<ShellLocale> = true;
 
@@ -4298,7 +4298,7 @@ declare module "i18next" {
 
 // UiRegisteredTranslationKey imported from core I18n above/with schema import
 
-/** @emoji 🪁️ Merges additional locale bundles into the shared UI i18n instance, requiring every
+/** 🪁️ Merges additional locale bundles into the shared UI i18n instance, requiring every
  * {@link UiLocale} to register the exact same schema `S` (a compile error otherwise — the same
  * both-locales-or-nothing guarantee the domain-neutral chrome bundle gets from `satisfies
  * UiTranslationSchema`). Returns a caster from `S`'s own dot-path key union to {@link UiRegisteredTranslationKey}
@@ -4364,17 +4364,17 @@ export function disposeShellI18nInstance(instance: typeof i18next): void {
 // #endregion 🐚️ShellI18n
 
 //#region 🗣️TsNativeTerminology
-/** @emoji 🗣️ A `(locale) -> label-record` pair for one terminology id, mirroring the Rust `*_LABELS_{ID}_{LOCALE}` const pattern for TS-native products (e.g. compose, coda) that never cross the WASM plugin boundary and so have no `AppDefinition.terminologies`/`AppLabelsOverlay`. */
+/** 🗣️ A `(locale) -> label-record` pair for one terminology id, mirroring the Rust `*_LABELS_{ID}_{LOCALE}` const pattern for TS-native products (e.g. compose, coda) that never cross the WASM plugin boundary and so have no `AppDefinition.terminologies`/`AppLabelsOverlay`. */
 export type UiTerminologyLabelSet<Keys extends string> = Readonly<Record<UiLocale, Readonly<Record<Keys, string>>>>;
 
-/** @emoji 🗣️ Builds a `(terminologyId, locale) -> labels` resolver from a set of terminology-keyed label tables, falling back to `native` for unknown/undeclared ids — the TS analog of the Rust `puzzle2d_labels`-style resolver. */
+/** 🗣️ Builds a `(terminologyId, locale) -> labels` resolver from a set of terminology-keyed label tables, falling back to `native` for unknown/undeclared ids — the TS analog of the Rust `puzzle2d_labels`-style resolver. */
 export function createTerminologyLabelResolver<Keys extends string>(sets: Readonly<Record<string, UiTerminologyLabelSet<Keys>>>): (terminologyId: string, locale: UiLocale) => Readonly<Record<Keys, string>> {
   return (terminologyId, locale) => (sets[terminologyId] ?? sets[UI_TERMINOLOGY_NATIVE])![locale];
 }
 
 const uiTerminologyChangeListeners = ephemeralSet<() => void>("framework.modules.ui.packages.typescript.targets.react.index.tsx.uiTerminologyChangeListeners");
 
-/** @emoji 🗣️ React hook giving TS-native products (no Rust `AppDefinition`) read/write access to the shared `ui.chrome.terminology` contract — the same localStorage key the shell's Settings terminology dropdown drives — without depending on `os-shell` state or any Rust type. */
+/** 🗣️ React hook giving TS-native products (no Rust `AppDefinition`) read/write access to the shared `ui.chrome.terminology` contract — the same localStorage key the shell's Settings terminology dropdown drives — without depending on `os-shell` state or any Rust type. */
 export function useUiTerminology(): { readonly terminology: string; readonly setTerminology: (id: string) => void } {
   const storage = shellScopeStorageOrBrowserFallback(useShellScopeOptional());
   const [terminology, setTerminologyState] = React.useState<string>(() => readStoredUiChromeTerminology(storage));
@@ -4405,7 +4405,7 @@ function normalizeUiLocale(language?: string): UiTranslationLocaleCode {
   return language?.toLowerCase().startsWith("de") ? "de" : "en";
 }
 
-/** @emoji 🧭️ Maps a BCP47 tag (e.g. `navigator.language`, `"de-AT"`) onto a {@link ShellLocale};
+/** 🧭️ Maps a BCP47 tag (e.g. `navigator.language`, `"de-AT"`) onto a {@link ShellLocale};
  * defaults to `"en"`. Same rule the chrome's own locale detector uses — exposed so boot code
  * (renderer/demonstrator) can resolve a default before any brand lock is known. */
 export const detectShellLocale = normalizeUiLocale as (language?: string) => ShellLocale;
@@ -4478,10 +4478,10 @@ function initializeUiI18n(): UiI18nPort {
   return createUiI18nPort(i18next);
 }
 
-/** @emoji 🪁️ Shared UI i18n port (domain-neutral bundles; extend via {@link registerUiTranslationBundles}). */
+/** 🪁️ Shared UI i18n port (domain-neutral bundles; extend via {@link registerUiTranslationBundles}). */
 export const uiI18n = initializeUiI18n();
 
-/** @emoji 🪁️ Sets the active UI locale on the shared i18n port (user-initiated, in-app switch —
+/** 🪁️ Sets the active UI locale on the shared i18n port (user-initiated, in-app switch —
  * for boot-time/brand-locked locale resolution, use {@link initUiLocaleSync} instead, which runs
  * before the first render rather than in a post-paint effect). */
 export function setUiLocale(locale: UiLocale): Promise<unknown> {
@@ -4489,7 +4489,7 @@ export function setUiLocale(locale: UiLocale): Promise<unknown> {
   return uiI18n.changeLanguage(locale);
 }
 
-/** @emoji 🚀️ Resolves the shell's locale synchronously, before the first React render — call this
+/** 🚀️ Resolves the shell's locale synchronously, before the first React render — call this
  * at renderer/demonstrator boot (module scope or before `ReactDOM.createRoot(...).render(...)`),
  * never from a `useEffect`. A `useEffect`-based call runs after the first paint has already
  * committed, which is exactly how a German-locked brand could still flash English chrome
@@ -4533,7 +4533,7 @@ export function useActionHotkey(
   useHotkeys(finalHotkey, callback, options ?? {}, dependencies ?? []);
 }
 
-/** @emoji ⌨️ Chords for toggling each panel's fold/unfold state (derived from {@link SHELL_KEYBINDINGS}). */
+/** ⌨️ Chords for toggling each panel's fold/unfold state (derived from {@link SHELL_KEYBINDINGS}). */
 export const PANEL_TOGGLE_HOTKEYS: Record<Anchor, string> = {
   "top-left": SHELL_KEYBINDINGS[SHELL_PANEL_ANCHOR_KEY_IDS["top-left"]],
   "top-middle": SHELL_KEYBINDINGS[SHELL_PANEL_ANCHOR_KEY_IDS["top-middle"]],
@@ -4596,7 +4596,7 @@ export function useMediaQuery(query: string, defaultValue = false): boolean {
 // #region 📱️UiMobile Context
 const UiMobileContext = reactHostPort.createContext<boolean | undefined>(undefined);
 
-/** @emoji 📱️ Broadcasts the shell's authoritative mobile flag to descendants (e.g. {@link Pane}, {@link Window}) that have no `mobile` prop of their own. */
+/** 📱️ Broadcasts the shell's authoritative mobile flag to descendants (e.g. {@link Pane}, {@link Window}) that have no `mobile` prop of their own. */
 export const UiMobileProvider: React.FC<{
   readonly mobile: boolean;
   readonly children: React.ReactNode;
@@ -4604,7 +4604,7 @@ export const UiMobileProvider: React.FC<{
 
 const UiDeviceContext = reactHostPort.createContext<ElementsSurfaceDevice | undefined>(undefined);
 
-/** @emoji 📱️ Broadcasts the shell's authoritative device to descendants — the three-way twin of
+/** 📱️ Broadcasts the shell's authoritative device to descendants — the three-way twin of
  * {@link UiMobileProvider}, used when a shell pins a device from settings instead of measuring one. */
 export const UiDeviceProvider: React.FC<{
   readonly device: ElementsSurfaceDevice;
@@ -4616,7 +4616,7 @@ export const UiDeviceProvider: React.FC<{
 );
 
 /**
- * @emoji 📱️ The device this subtree paints for: the nearest {@link UiDeviceProvider}, else the viewport
+ * 📱️ The device this subtree paints for: the nearest {@link UiDeviceProvider}, else the viewport
  * measured through the ONE policy `📱️device/🟦️.ts` shares with the wgpu dock.
  *
  * `AGENTS.md` orders the devices desktop → mobile → tablet and the settings surface has always offered
@@ -4635,7 +4635,7 @@ export function useUiDevice(): ElementsSurfaceDevice {
   return elementsSurfaceDeviceForMatches({ mobile: mobileMedia, tablet: tabletMedia });
 }
 
-/** @emoji 📱️ Returns the nearest {@link UiMobileProvider} flag, falling back to {@link UI_MOBILE_MEDIA_QUERY} for standalone usage (Storybook, tests). */
+/** 📱️ Returns the nearest {@link UiMobileProvider} flag, falling back to {@link UI_MOBILE_MEDIA_QUERY} for standalone usage (Storybook, tests). */
 export function useUiMobile(): boolean {
   const media = useMediaQuery(UI_MOBILE_MEDIA_QUERY);
   const ctx = reactHostPort.useContext(UiMobileContext);
@@ -4705,7 +4705,7 @@ export enum SectionSpecificity {
 
 const PANEL_GHOST_MOVE_THRESHOLD_PX = 4;
 
-/** @emoji 👻️ Global ghost session API (begin/end while dragging or editing). */
+/** 👻️ Global ghost session API (begin/end while dragging or editing). */
 export interface PanelGhostValue {
   readonly active: boolean;
   readonly begin: (target: EventTarget | null) => void;
@@ -4714,7 +4714,7 @@ export interface PanelGhostValue {
 
 const PanelGhostContext = reactHostPort.createContext<PanelGhostValue | undefined>(undefined);
 
-/** @emoji 👻️ Returns the global ghost controller when inside {@link GhostProvider}. */
+/** 👻️ Returns the global ghost controller when inside {@link GhostProvider}. */
 export const usePanelGhost = (): PanelGhostValue | undefined => reactHostPort.useContext(PanelGhostContext);
 
 interface InteractionCommands {
@@ -4724,7 +4724,7 @@ interface InteractionCommands {
 const InteractionContext = reactHostPort.createContext<InteractionCommands | undefined>(undefined);
 const ActiveInteractionContext = reactHostPort.createContext<string | undefined>(undefined);
 
-/** @emoji 🔤️ External provider for interaction commands; prefer {@link GhostProvider} at layout root. */
+/** 🔤️ External provider for interaction commands; prefer {@link GhostProvider} at layout root. */
 export const InteractionProvider: React.FC<{
   commands?: InteractionCommands;
   activeInteraction?: string;
@@ -4752,7 +4752,7 @@ function findGhostRegionAncestor(target: Element): Element | null {
   return null;
 }
 
-/** @emoji 📐️ Pane/panel/mode edge resize is layout chrome, not a canvas ghost interaction. */
+/** 📐️ Pane/panel/mode edge resize is layout chrome, not a canvas ghost interaction. */
 function isChromeResizeHandleTarget(target: EventTarget | null): boolean {
   if (!(target instanceof Element)) return false;
   const slotted = target.closest("[data-slot]");
@@ -4761,7 +4761,7 @@ function isChromeResizeHandleTarget(target: EventTarget | null): boolean {
   return slot === "pane-resize-handle" || slot === "panel-resize-handle" || slot === "resizable-handle" || slot === "resizable-corner" || slot.startsWith("window-measures-resize");
 }
 
-/** @emoji 👻️ Keeps automatic ghosting on interaction surfaces and direct tree rows, not nested UI controls. */
+/** 👻️ Keeps automatic ghosting on interaction surfaces and direct tree rows, not nested UI controls. */
 export function shouldBeginAutomaticGhostInteraction(target: EventTarget | null): boolean {
   if (!(target instanceof Element)) return false;
   if (isChromeResizeHandleTarget(target)) return false;
@@ -4866,7 +4866,7 @@ function useGhostController(): GhostController {
   return reactHostPort.useMemo(() => ({ active, begin, end, commands, activeInteraction }), [active, activeInteraction, begin, commands, end]);
 }
 
-/** @emoji 👻️ Mounts global ghost detection and interaction context for layout + panels. */
+/** 👻️ Mounts global ghost detection and interaction context for layout + panels. */
 export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const ghost = useGhostController();
   reactHostPort.useEffect(() => {
@@ -4885,13 +4885,13 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
 interface GhostRegionShellProps extends React.HTMLAttributes<HTMLDivElement> {
   children?: React.ReactNode;
-  /** @emoji 🫳️ When true, the region root is click-through while ghosted (panels over canvas). */
+  /** 🫳️ When true, the region root is click-through while ghosted (panels over canvas). */
   clickThroughWhenGhost?: boolean;
-  /** @emoji 👻️ When false, this region stays undimmed during a global ghost session (navbar/footer panel toggles). Default true — open panels/panes hide. */
+  /** 👻️ When false, this region stays undimmed during a global ghost session (navbar/footer panel toggles). Default true — open panels/panes hide. */
   sessionGhost?: boolean;
 }
 
-/** @emoji 👻️ Ghost region shell: dims {@link data-dim} children when {@link GhostProvider} is active and {@link sessionGhost} is true. */
+/** 👻️ Ghost region shell: dims {@link data-dim} children when {@link GhostProvider} is active and {@link sessionGhost} is true. */
 export const GhostRegionShell = reactHostPort.forwardRef<HTMLDivElement, GhostRegionShellProps>(function GhostRegionShell({ children, className, style, clickThroughWhenGhost = false, sessionGhost = true, ...props }, ref) {
   const ghost = usePanelGhost();
   const ghostActive = Boolean(sessionGhost && ghost?.active);
@@ -4913,7 +4913,7 @@ interface PanelGhostRootProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
 }
 
-/** @emoji 👻️ Panel shell marked as a ghost region; dims when {@link GhostProvider} session is active. */
+/** 👻️ Panel shell marked as a ghost region; dims when {@link GhostProvider} session is active. */
 export const PanelGhostRoot = reactHostPort.forwardRef<HTMLDivElement, PanelGhostRootProps>(function PanelGhostRoot({ children, className, style, ...props }, ref) {
   const level = useLevel();
   return (
@@ -4935,17 +4935,17 @@ export const GLASS_OVERLAY_BOX_CLASS = cn("text-foreground pointer-events-auto f
 
 type IntroductionRect = { readonly top: number; readonly left: number; readonly width: number; readonly height: number };
 
-/** @emoji 🎓️ Converts a viewport (getBoundingClientRect) box into coordinates local to `host`. */
+/** 🎓️ Converts a viewport (getBoundingClientRect) box into coordinates local to `host`. */
 export function introductionRectRelativeToHost(rect: IntroductionRect, hostRect: IntroductionRect): IntroductionRect {
   return { top: rect.top - hostRect.top, left: rect.left - hostRect.left, width: rect.width, height: rect.height };
 }
 
-/** @emoji 🎓️ Viewport-pixel point → host-local point for absolute overlays inside a transformed shell. */
+/** 🎓️ Viewport-pixel point → host-local point for absolute overlays inside a transformed shell. */
 export function introductionPointRelativeToHost(point: { readonly x: number; readonly y: number }, hostRect: IntroductionRect): { readonly x: number; readonly y: number } {
   return { x: point.x - hostRect.left, y: point.y - hostRect.top };
 }
 
-/** @emoji 🎓️ Live-tracks the union DOM rect of an introduction step's `introduce` element(s) (via
+/** 🎓️ Live-tracks the union DOM rect of an introduction step's `introduce` element(s) (via
  * {@link elementIdSelector}), stamping every match `data-introduced="true"` (pulsing the introduced border, see
  * `framework/ui/styling/js/🎨️ui.css`) for as long as they stay attached — cleared on unmount/selector change. A kind-level
  * window id that aliases every open instance (Top + Perspective) therefore pulses and anchors against the
@@ -5055,7 +5055,7 @@ function useIntroductionAnchorRect(selector: string | null): IntroductionRect | 
   return rect;
 }
 
-/** @emoji 🎓️ Elevates the chrome unit containing each of `ids` above the single fullscreen introduction
+/** 🎓️ Elevates the chrome unit containing each of `ids` above the single fullscreen introduction
  * veil, by stamping `data-introduction-elevated` (see `framework/ui/styling/js/🎨️ui.css`) on its nearest
  * `[data-slot="mode-dock-stack"]` (full window silhouette: tabs + gap + controls + body) or else its
  * nearest `[data-elevation-root]` ancestor — the panel/window/navbar/footer that owns a real, root-level
@@ -5137,7 +5137,7 @@ type IntroductionInfoBoxPosition = { readonly top: number; readonly left: number
 
 export const INTRODUCTION_INFO_BOX_GAP_PX = 16;
 
-/** @emoji 📝️ Splits an introduction step body into visual paragraphs on blank lines so each
+/** 📝️ Splits an introduction step body into visual paragraphs on blank lines so each
  * paragraph can emphasize independently on hover. */
 export function splitIntroductionBodyParagraphs(body: string): readonly string[] {
   return body
@@ -5146,7 +5146,7 @@ export function splitIntroductionBodyParagraphs(body: string): readonly string[]
     .filter((paragraph) => paragraph.length > 0);
 }
 
-/** @emoji 🧲️ Clamps an introduction info box to the viewport. Authored placement uses a visual inset;
+/** 🧲️ Clamps an introduction info box to the viewport. Authored placement uses a visual inset;
  * direct manipulation uses zero so every outer edge can meet the corresponding viewport border. */
 export function clampIntroductionInfoBoxPosition(
   position: IntroductionInfoBoxPosition,
@@ -5160,7 +5160,7 @@ export function clampIntroductionInfoBoxPosition(
   };
 }
 
-/** @emoji 🎓️ Where the info box sits relative to its anchor. `auto` picks the side with the most free
+/** 🎓️ Where the info box sits relative to its anchor. `auto` picks the side with the most free
  * viewport space; `center` (and any anchor-less step) centers the box in the viewport.
  *
  * 🧲️ EVERY branch clamps, the centered one included: centering a box that is wider or taller than the
@@ -5204,7 +5204,7 @@ export function resolveIntroductionPlacement(
 }
 
 //#region 🎬️DemonstrationProjectors
-/** @emoji 🏷️ What a surface resolver returns for `IntroductionPoint.Entity`/`Curve`/`Domain`: a viewport
+/** 🏷️ What a surface resolver returns for `IntroductionPoint.Entity`/`Curve`/`Domain`: a viewport
  * pixel anchor plus whatever richer geometry the surface can offer — `rect` for offset-within-bounds and
  * domain-to-track mapping, `polyline` (viewport px) for arc-length curve targeting, `domain` for mapping
  * a value onto `rect`. `visible: false` means "found but not currently resolvable" (off-camera, hidden,
@@ -5217,7 +5217,7 @@ export type IntroductionResolvedGeometry = {
   readonly visible: boolean;
 };
 
-/** @emoji 🧭️ A surface's live-camera/live-entity capabilities for demonstration targeting, registered per
+/** 🧭️ A surface's live-camera/live-entity capabilities for demonstration targeting, registered per
  * window element id by the surface that owns the data (a react-three-fiber `useThree` bridge, a WASM
  * canvas session, a DOM-rendered host). Every method may be omitted — a surface implements only the point
  * kinds it can genuinely resolve. All three are called every animation frame; implementations must be
@@ -5234,7 +5234,7 @@ export type IntroductionSurfaceResolver = {
 
 const introductionSurfaceResolvers = ephemeralMap<string, IntroductionSurfaceResolver>("framework.modules.ui.packages.typescript.targets.react.index.tsx.introductionSurfaceResolvers");
 
-/** @emoji 🧭️ Registers the demonstration-targeting resolver for the surface shown by window element
+/** 🧭️ Registers the demonstration-targeting resolver for the surface shown by window element
  * `windowId` — call from the window's own host component (has the live camera/session/DOM refs),
  * unregister on unmount via the returned disposer. Multiple concurrently open instances of the same
  * window kind (split panes) last-write-wins; acceptable for a single demonstration target. */
@@ -5245,7 +5245,7 @@ export function registerIntroductionSurfaceResolver(windowId: string, resolver: 
   };
 }
 
-/** @emoji 🧊️ Pure NDC (`[-1, 1]`, y-up) → viewport-pixel conversion shared by every 3D scene resolver. */
+/** 🧊️ Pure NDC (`[-1, 1]`, y-up) → viewport-pixel conversion shared by every 3D scene resolver. */
 export function ndcToViewportPoint(ndc: { readonly x: number; readonly y: number }, rect: { readonly left: number; readonly top: number; readonly width: number; readonly height: number }): { readonly x: number; readonly y: number } {
   return { x: rect.left + ((ndc.x + 1) / 2) * rect.width, y: rect.top + ((1 - ndc.y) / 2) * rect.height };
 }
@@ -5254,7 +5254,7 @@ export function ndcToViewportPoint(ndc: { readonly x: number; readonly y: number
 //#region 🎬️DemonstrationResolve
 type IntroductionResolvedPoint = { readonly x: number; readonly y: number };
 
-/** @emoji 🪡️ A point at `t` (0–1, clamped) along `points` by arc length — linearly interpolates between
+/** 🪡️ A point at `t` (0–1, clamped) along `points` by arc length — linearly interpolates between
  * the two points straddling `t`'s cumulative distance. Degenerate inputs (0 or 1 points, zero-length
  * polyline) return the first point (or the origin) for every `t`, never throw. */
 export function polylinePointAt(points: readonly { readonly x: number; readonly y: number }[], t: number): { readonly x: number; readonly y: number } {
@@ -5284,7 +5284,7 @@ export function polylinePointAt(points: readonly { readonly x: number; readonly 
   return points[points.length - 1];
 }
 
-/** @emoji 🪡️ Samples a canvas-layer path (`move`/`line`/`quad`/`cubic` segments, in whatever local
+/** 🪡️ Samples a canvas-layer path (`move`/`line`/`quad`/`cubic` segments, in whatever local
  * coordinate space the caller's points are already expressed in — apply layer transforms before calling)
  * into a flat polyline via de Casteljau evaluation — the one parametric-curve evaluator this codebase has,
  * needed because `IntroductionPoint.Curve` resolves through arc-length interpolation over a polyline, not
@@ -5337,7 +5337,7 @@ export function sampleBezierSegments(
   return points;
 }
 
-/** @emoji 📌️ Resolves an `IntroductionPoint` to a live viewport pixel. Called every animation frame by a
+/** 📌️ Resolves an `IntroductionPoint` to a live viewport pixel. Called every animation frame by a
  * playing demonstration — re-resolving (rather than caching) keeps a drag path glued to a target that's
  * still moving (a resizing panel, an orbiting 3D camera, a panning 2D canvas). `null` means "not
  * resolvable yet" (element not mounted, no surface resolver registered, entity not found/hidden, or a 3D
@@ -5424,7 +5424,7 @@ type IntroductionPointerIdleState = {
   readonly lastPositionRef: React.RefObject<IntroductionPointerPosition | null>;
 };
 
-/** @emoji 💤️ Tracks whether the user's real pointer has been still for `thresholdMs` — the gate a
+/** 💤️ Tracks whether the user's real pointer has been still for `thresholdMs` — the gate a
  * demonstration plays behind — and where it last was. Any `pointerdown`/`wheel`/`keydown`, or a
  * `pointermove` with different coordinates or non-zero movement deltas, resets the timer and flips back
  * to not-idle immediately. Same-coordinate, zero-delta moves are ignored because browsers re-fire them
@@ -5503,7 +5503,7 @@ type IntroductionDemoVisual = {
   readonly showDoubleChip: boolean;
 };
 
-/** @emoji 🖱️ Resolves the mini-mouse highlight, modifier chips, and press/trail family for a gesture. */
+/** 🖱️ Resolves the mini-mouse highlight, modifier chips, and press/trail family for a gesture. */
 export function introductionDemoResolveVisual(gesture: IntroductionGesture): IntroductionDemoVisual {
   switch (gesture.kind) {
     case "leftClick":
@@ -5535,7 +5535,7 @@ function introductionDemoRippleClass(feedback: IntroductionDemoFeedbackKind, dou
   return double ? `${base} introduction-demo-ripple--double` : base;
 }
 
-/** @emoji 🌐️ A point along the quadratic-bezier arc from `from` to `to`, bulged perpendicular to the
+/** 🌐️ A point along the quadratic-bezier arc from `from` to `to`, bulged perpendicular to the
  * straight line between them — an `orbit` gesture reads as a curved rotation around a pivot, visually
  * distinct from `drag`'s straight-line pan/reposition. */
 export function introductionDemoArcPoint(from: IntroductionResolvedPoint, to: IntroductionResolvedPoint, t: number): IntroductionResolvedPoint {
@@ -5586,7 +5586,7 @@ function introductionDemoLerp(a: number, b: number, t: number): number {
 
 const INTRODUCTION_DEMO_APPEAR_OFFSET = { x: -32, y: -32 } as const;
 
-/** @emoji 🎬️ Ghost-cursor gesture demonstration(s) for an introduction step, mounted by `UIIntroduction`
+/** 🎬️ Ghost-cursor gesture demonstration(s) for an introduction step, mounted by `UIIntroduction`
  * whenever it has one or more effective demonstrations. Plays them in order, one full gesture-loop each,
  * then wraps back to the first — e.g. a viewport step showing zoom, then pan, then orbit, repeating.
  * Plays only while {@link useIntroductionPointerIdle} is true — any real pointer movement hides it and
@@ -5918,7 +5918,7 @@ const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstrations: read
   );
 };
 
-/** @emoji 🎬️ The default demonstration for a purely informational step (`interactions.length === 0`, the
+/** 🎬️ The default demonstration for a purely informational step (`interactions.length === 0`, the
  * Next/Done button is the only way to continue) — clicking `ui.introduction.next`, the stable id every
  * such button renders under regardless of its Next/Done label. Used by `UIIntroduction` whenever the step
  * doesn't declare its own `demonstration`, so authors never have to spell this out per step. */
@@ -5934,7 +5934,7 @@ export type UIIntroductionProps = {
   readonly onDismiss: (completed: boolean) => void;
 };
 
-/** @emoji 🗺️ Resolves manifest-localized copy at the UI boundary while retaining support for already-resolved TS-native strings. */
+/** 🗺️ Resolves manifest-localized copy at the UI boundary while retaining support for already-resolved TS-native strings. */
 export function resolveUiLocalizedText(value: unknown, terminology: string, locale: UiLocale): string {
   if (typeof value === "string") return value;
   if (value === null || typeof value !== "object") return "";
@@ -5946,7 +5946,7 @@ export function resolveUiLocalizedText(value: unknown, terminology: string, loca
   return typeof resolved === "string" ? resolved : "";
 }
 
-/** @emoji 📐️ One row of an introduction step's {@link IntroductionLogo}s, all sharing one computed height
+/** 📐️ One row of an introduction step's {@link IntroductionLogo}s, all sharing one computed height
  * so the row fills its full width edge-to-edge with no logo dominating over another — the height isn't
  * guessed: it's solved from the row's measured width and each logo's own natural aspect ratio (`width /
  * sum-of-aspect-ratios`, accounting for the `gap-double` between logos), so it's exactly right for
@@ -6003,7 +6003,7 @@ function IntroductionLogoRow({ logos }: { readonly logos: readonly IntroductionL
   );
 }
 
-/** @emoji 🎓️ Full-screen first-run walkthrough: a single fullscreen glass veil covers the screen, the
+/** 🎓️ Full-screen first-run walkthrough: a single fullscreen glass veil covers the screen, the
  * current step's `introduce`/`show` elements elevate above it (see `useIntroductionElevation`) and stay
  * crisp and interactive — `introduce` additionally pulses the introduced border on the precise element —
  * and an info box explains it (header {@link DragHandle} between title and step count repositions the box
@@ -6318,7 +6318,7 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
 
 // #region 🎥️Tutorial
 //#region 🎬️TutorialEngine
-/** @emoji ⏱️ Formats a millisecond offset as `mm:ss` (floored to the second, never negative). */
+/** ⏱️ Formats a millisecond offset as `mm:ss` (floored to the second, never negative). */
 export function formatTutorialTime(ms: number): string {
   const totalSeconds = Math.max(0, Math.floor(ms / 1000));
   const minutes = Math.floor(totalSeconds / 60);
@@ -6326,7 +6326,7 @@ export function formatTutorialTime(ms: number): string {
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
-/** @emoji ✂️ Every cue whose `[at, at + durationMs)` window covers `atMs` — shared by narration/video/gesture track lookups. */
+/** ✂️ Every cue whose `[at, at + durationMs)` window covers `atMs` — shared by narration/video/gesture track lookups. */
 export function tutorialCuesBetween<T extends { readonly at: number; readonly durationMs: number }>(cues: readonly T[], atMs: number): readonly T[] {
   return cues.filter((cue) => atMs >= cue.at && atMs < cue.at + cue.durationMs);
 }
@@ -6339,7 +6339,7 @@ function tutorialLerp3(a: readonly [number, number, number], b: readonly [number
   return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
 }
 
-/** @emoji 🎥️ TS port of Rust `interpolate_tutorial_camera` — same semantics (log-space zoom, ease-in-out/linear/hold curves, mismatched-kind snap). Keep in lockstep with `framework/core/rs/lib.rs`'s `//#region 🔖️TutorialEngine`. */
+/** 🎥️ TS port of Rust `interpolate_tutorial_camera` — same semantics (log-space zoom, ease-in-out/linear/hold curves, mismatched-kind snap). Keep in lockstep with `framework/core/rs/lib.rs`'s `//#region 🔖️TutorialEngine`. */
 export function interpolateTutorialCamera(prev: TutorialCameraKeyframe, next: TutorialCameraKeyframe, atMs: number): TutorialCameraState {
   const span = Math.max(next.at - prev.at, 1);
   const raw = Math.min(1, Math.max(0, (atMs - prev.at) / span));
@@ -6361,7 +6361,7 @@ export function interpolateTutorialCamera(prev: TutorialCameraKeyframe, next: Tu
   return t < 0.5 ? prevCamera : nextCamera;
 }
 
-/** @emoji 🎥️ TS port of Rust `tutorial_camera_at`. */
+/** 🎥️ TS port of Rust `tutorial_camera_at`. */
 export function tutorialCameraAt(def: TutorialDefinition, windowId: string, atMs: number): TutorialCameraState | undefined {
   const keyframes = [...def.base.cameras, ...def.tracks.camera].filter((keyframe) => keyframe.windowId === windowId);
   const first = keyframes[0];
@@ -6375,7 +6375,7 @@ export function tutorialCameraAt(def: TutorialDefinition, windowId: string, atMs
   return keyframes[keyframes.length - 1].camera;
 }
 
-/** @emoji 🩹️ TS port of Rust `apply_tutorial_ui_change` — immutable (returns a new snapshot) rather than in-place, since TS callers never hold a live `&mut`. */
+/** 🩹️ TS port of Rust `apply_tutorial_ui_change` — immutable (returns a new snapshot) rather than in-place, since TS callers never hold a live `&mut`. */
 export function applyTutorialUiChange(state: TutorialUiSnapshot, change: TutorialUiChange): TutorialUiSnapshot {
   switch (change.kind) {
     case "activeMode":
@@ -6420,7 +6420,7 @@ export function applyTutorialUiChange(state: TutorialUiSnapshot, change: Tutoria
   }
 }
 
-/** @emoji 🧮️ TS port of Rust `compose_tutorial_ui`. */
+/** 🧮️ TS port of Rust `compose_tutorial_ui`. */
 export function composeTutorialUi(def: TutorialDefinition, atMs: number): TutorialUiSnapshot {
   let state = def.base.ui;
   let deltas: TutorialUiChange[] = [];
@@ -6437,7 +6437,7 @@ export function composeTutorialUi(def: TutorialDefinition, atMs: number): Tutori
   return state;
 }
 
-/** @emoji ✂️ TS mirror of Rust `TutorialSlice` — see `tutorialSlice` below. */
+/** ✂️ TS mirror of Rust `TutorialSlice` — see `tutorialSlice` below. */
 export type TutorialSlice = {
   readonly forward: boolean;
   readonly events: readonly TutorialEvent[];
@@ -6445,7 +6445,7 @@ export type TutorialSlice = {
   readonly uiChanges: readonly TutorialUiChange[];
 };
 
-/** @emoji ✂️ TS port of Rust `tutorial_slice` — same directionality contract (forward: oldest→newest;
+/** ✂️ TS port of Rust `tutorial_slice` — same directionality contract (forward: oldest→newest;
  * backward: newest→oldest so `Edit.backwards` unwind in the right order). Never spans a
  * `TutorialUiSample::Snapshot` boundary correctly on its own — a seek/scrub must call
  * {@link composeTutorialUi} wholesale instead, exactly like the Rust doc comment warns. */
@@ -6469,7 +6469,7 @@ export function tutorialSlice(def: TutorialDefinition, fromMs: number, toMs: num
   return { forward, events, document, uiChanges };
 }
 
-/** @emoji ✅️ TS port of Rust `validate_tutorial` — light structural sanity check shared by the recorder before download; does not validate referenced action/command/element ids (no `AppDefinition` in scope here). Returns the first error found, or `null`. */
+/** ✅️ TS port of Rust `validate_tutorial` — light structural sanity check shared by the recorder before download; does not validate referenced action/command/element ids (no `AppDefinition` in scope here). Returns the first error found, or `null`. */
 export function validateTutorial(def: TutorialDefinition): string | null {
   const sortedByAt = <T,>(label: string, items: readonly T[], at: (item: T) => number): string | null => {
     let last: number | null = null;
@@ -6513,13 +6513,13 @@ export function validateTutorial(def: TutorialDefinition): string | null {
 //#endregion 🎬️TutorialEngine
 
 //#region 🎬️TutorialClock
-/** @emoji ⏱️ The minimal read+subscribe surface {@link TutorialBar}/{@link TutorialCaptions}/{@link TutorialVideoOverlay}/{@link TutorialGhostPointer} need — lets every per-frame time consumer self-subscribe via `useSyncExternalStore` instead of the whole shell re-rendering on every tick. */
+/** ⏱️ The minimal read+subscribe surface {@link TutorialBar}/{@link TutorialCaptions}/{@link TutorialVideoOverlay}/{@link TutorialGhostPointer} need — lets every per-frame time consumer self-subscribe via `useSyncExternalStore` instead of the whole shell re-rendering on every tick. */
 export type TutorialClockPort = {
   readonly getTimeMs: () => number;
   readonly subscribe: (callback: () => void) => () => void;
 };
 
-/** @emoji ⏱️ Full imperative control surface for a `TutorialClockPort` — owned by the shell orchestration (director), read by the UI kit. */
+/** ⏱️ Full imperative control surface for a `TutorialClockPort` — owned by the shell orchestration (director), read by the UI kit. */
 export type TutorialClock = TutorialClockPort & {
   readonly play: () => void;
   readonly pause: () => void;
@@ -6531,7 +6531,7 @@ export type TutorialClock = TutorialClockPort & {
   readonly dispose: () => void;
 };
 
-/** @emoji ⏱️ Creates a tiny external store driven by `requestAnimationFrame`: `t += dtWallClock * rate` while playing, auto-pausing at `durationMs`. Not a React hook itself — subscribe via {@link useTutorialClock} (or any `useSyncExternalStore`) for the reactive read. */
+/** ⏱️ Creates a tiny external store driven by `requestAnimationFrame`: `t += dtWallClock * rate` while playing, auto-pausing at `durationMs`. Not a React hook itself — subscribe via {@link useTutorialClock} (or any `useSyncExternalStore`) for the reactive read. */
 export function createTutorialClock(durationMs: number): TutorialClock {
   let tMs = 0;
   let rate = 1;
@@ -6598,14 +6598,14 @@ export function createTutorialClock(durationMs: number): TutorialClock {
   };
 }
 
-/** @emoji ⏱️ Subscribes the calling component to a {@link TutorialClockPort}'s per-frame time — only this component re-renders on tick, never the whole shell. */
+/** ⏱️ Subscribes the calling component to a {@link TutorialClockPort}'s per-frame time — only this component re-renders on tick, never the whole shell. */
 export function useTutorialClock(clock: TutorialClockPort): number {
   return reactHostPort.useSyncExternalStore(clock.subscribe, clock.getTimeMs, clock.getTimeMs);
 }
 //#endregion 🎬️TutorialClock
 
 //#region 🎬️TutorialCameraDriver
-/** @emoji 🎥️ A live 3D/2D window's imperative camera bridge for tutorial playback — modeled exactly on {@link registerIntroductionSurfaceResolver}. `get` reads the surface's current live pose (for deviation-then-play convergence); `set` writes a pose during playback/seek. */
+/** 🎥️ A live 3D/2D window's imperative camera bridge for tutorial playback — modeled exactly on {@link registerIntroductionSurfaceResolver}. `get` reads the surface's current live pose (for deviation-then-play convergence); `set` writes a pose during playback/seek. */
 export type TutorialCameraDriver = {
   readonly get: () => TutorialCameraState | null;
   readonly set: (camera: TutorialCameraState) => void;
@@ -6613,7 +6613,7 @@ export type TutorialCameraDriver = {
 
 const tutorialCameraDrivers = ephemeralMap<string, TutorialCameraDriver>("framework.modules.ui.packages.typescript.targets.react.index.tsx.tutorialCameraDrivers");
 
-/** @emoji 🎥️ Registers the tutorial camera driver for window instance `windowId` — call from the window's own host component (e.g. `World3dHost`), unregister on unmount via the returned disposer. */
+/** 🎥️ Registers the tutorial camera driver for window instance `windowId` — call from the window's own host component (e.g. `World3dHost`), unregister on unmount via the returned disposer. */
 export function registerTutorialCameraDriver(windowId: string, driver: TutorialCameraDriver): () => void {
   tutorialCameraDrivers.set(windowId, driver);
   return () => {
@@ -6621,7 +6621,7 @@ export function registerTutorialCameraDriver(windowId: string, driver: TutorialC
   };
 }
 
-/** @emoji 🎥️ Looks up a registered {@link TutorialCameraDriver}, or `undefined` if that window hasn't mounted/registered one yet. */
+/** 🎥️ Looks up a registered {@link TutorialCameraDriver}, or `undefined` if that window hasn't mounted/registered one yet. */
 export function getTutorialCameraDriver(windowId: string): TutorialCameraDriver | undefined {
   return tutorialCameraDrivers.get(windowId);
 }
@@ -6630,7 +6630,7 @@ export function getTutorialCameraDriver(windowId: string): TutorialCameraDriver 
 //#region 🎬️TutorialBar
 const TUTORIAL_RATES = [0.5, 1, 1.5, 2] as const;
 
-/** @emoji ⏭️ Cycles through the fixed rate ladder (0.5→1→1.5→2→0.5→…). */
+/** ⏭️ Cycles through the fixed rate ladder (0.5→1→1.5→2→0.5→…). */
 function nextTutorialRate(rate: number): number {
   const index = TUTORIAL_RATES.indexOf(rate as (typeof TUTORIAL_RATES)[number]);
   return TUTORIAL_RATES[(index === -1 ? 0 : index + 1) % TUTORIAL_RATES.length];
@@ -6659,7 +6659,7 @@ export type TutorialBarProps = {
   readonly onAddChapter: () => void;
 };
 
-/** @emoji 🎥️ Navbar-style timeline/controls row shown as {@link LayoutProps.subnavbar} whenever a tutorial is active — markup mirrors `Navbar`/`Footer` (`id="ui.tutorial.bar"`, `data-slot="tutorial-bar"`, `data-ui-reveal-region`, `data-elevation-root`). Only this component subscribes to the per-frame `clock` (see {@link useTutorialClock}), so the 60fps scrubber/time readout never re-renders the rest of the shell. */
+/** 🎥️ Navbar-style timeline/controls row shown as {@link LayoutProps.subnavbar} whenever a tutorial is active — markup mirrors `Navbar`/`Footer` (`id="ui.tutorial.bar"`, `data-slot="tutorial-bar"`, `data-ui-reveal-region`, `data-elevation-root`). Only this component subscribes to the per-frame `clock` (see {@link useTutorialClock}), so the 60fps scrubber/time readout never re-renders the rest of the shell. */
 export const TutorialBar: React.FC<TutorialBarProps> = ({
   title,
   durationMs,
@@ -6755,7 +6755,7 @@ export type TutorialCaptionsProps = {
   readonly visible: boolean;
 };
 
-/** @emoji 💬️ Bottom-center glass strip showing the active narration cue's caption text — hidden entirely when `visible` is false (captions toggled off) or no cue currently covers the playhead. Reuses {@link GLASS_OVERLAY_BOX_CLASS}'s panel glass tier, positioned bottom-center instead of anchored. */
+/** 💬️ Bottom-center glass strip showing the active narration cue's caption text — hidden entirely when `visible` is false (captions toggled off) or no cue currently covers the playhead. Reuses {@link GLASS_OVERLAY_BOX_CLASS}'s panel glass tier, positioned bottom-center instead of anchored. */
 export const TutorialCaptions: React.FC<TutorialCaptionsProps> = ({ text, visible }) => {
   if (!visible || !text) return null;
   return (
@@ -6777,7 +6777,7 @@ export type TutorialVideoOverlayProps = {
   readonly localTimeMs: number;
 };
 
-/** @emoji 📹️ Fixed `<video>` positioned via the active cue's normalized {@link TutorialOverlayRect}, resynced to the playhead every render (hard reseek past a 300ms drift, matching the plan's tolerance) rather than played independently. */
+/** 📹️ Fixed `<video>` positioned via the active cue's normalized {@link TutorialOverlayRect}, resynced to the playhead every render (hard reseek past a 300ms drift, matching the plan's tolerance) rather than played independently. */
 export const TutorialVideoOverlay: React.FC<TutorialVideoOverlayProps> = ({ src, rect, muted, playing, rate, localTimeMs }) => {
   const videoRef = reactHostPort.useRef<HTMLVideoElement | null>(null);
   reactHostPort.useEffect(() => {
@@ -6814,7 +6814,7 @@ export type TutorialGhostPointerProps = {
   readonly progress: number;
 };
 
-/** @emoji 👻️ Tutorial-playback ghost cursor — a lean, parallel implementation of `IntroductionDemonstrationOverlay`'s point resolution (reuses {@link resolveIntroductionPoint}/{@link introductionDemoArcPoint}/{@link introductionDemoResolveVisual} verbatim rather than re-deriving them) driven by the tutorial playhead's `progress` instead of its own internal rAF phase machine — click-family/scroll gestures render statically at their point, `drag` lerps linearly from→to, `orbit` bulges along the same quadratic arc the introduction overlay uses. */
+/** 👻️ Tutorial-playback ghost cursor — a lean, parallel implementation of `IntroductionDemonstrationOverlay`'s point resolution (reuses {@link resolveIntroductionPoint}/{@link introductionDemoArcPoint}/{@link introductionDemoResolveVisual} verbatim rather than re-deriving them) driven by the tutorial playhead's `progress` instead of its own internal rAF phase machine — click-family/scroll gestures render statically at their point, `drag` lerps linearly from→to, `orbit` bulges along the same quadratic arc the introduction overlay uses. */
 export const TutorialGhostPointer: React.FC<TutorialGhostPointerProps> = ({ cue, progress }) => {
   const [point, setPoint] = reactHostPort.useState<{ readonly x: number; readonly y: number } | null>(null);
   // 🐚️ See `IntroductionDemonstrationOverlay`'s doc for why this falls back to `document.documentElement`.
@@ -6874,7 +6874,7 @@ export { UIDialog, type UIDialogProps, type UIDialogFieldBinding };
 // #endregion 🗨️Dialog
 
 // #region 🎈️Level Context
-/** @emoji 📚️ Semantic UI depth layer for background/glass/z-index tokens (base=0 .. menu=5, formula-derived — see contract at .🧬semio/🦑️repo/🎫️tickets/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt). */
+/** 📚️ Semantic UI depth layer for background/glass/z-index tokens (base=0 .. menu=5, formula-derived — see contract at .🧬semio/🦑️repo/🎫️tickets/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt). */
 import {
   type Level,
   LEVELS,
@@ -6912,91 +6912,91 @@ export {
   setSurfaceActiveRoot,
 };
 
-/** @emoji 📏️ Emphasized shell stroke for active/selected chrome accents. */
+/** 📏️ Emphasized shell stroke for active/selected chrome accents. */
 export const borderEmphasizedClass = "!border-emphasized";
 
-/** @emoji 📏️ Emphasized chrome frame (`border` + {@link borderEmphasizedClass}). */
+/** 📏️ Emphasized chrome frame (`border` + {@link borderEmphasizedClass}). */
 export const borderEmphasizedFrameClass = `box-border border border-solid ${borderEmphasizedClass}`;
 
-/** @emoji 📏️ Emphasized navbar bottom edge. */
+/** 📏️ Emphasized navbar bottom edge. */
 export const borderEmphasizedBottomClass = `border-b ${borderEmphasizedClass}`;
 
-/** @emoji 📏️ Emphasized footer top edge. */
+/** 📏️ Emphasized footer top edge. */
 export const borderEmphasizedTopClass = `border-t ${borderEmphasizedClass}`;
 
-/** @emoji 📏️ Subtle normal stroke for controls, windows, dividers, and in-chrome separators. */
+/** 📏️ Subtle normal stroke for controls, windows, dividers, and in-chrome separators. */
 
-/** @emoji 📏️ Normal chrome frame (`border` + {@link borderNormalClass}); panel/pane hosts prefer {@link shellChromeFrameLayerClass} + CSS parent-hover. */
+/** 📏️ Normal chrome frame (`border` + {@link borderNormalClass}); panel/pane hosts prefer {@link shellChromeFrameLayerClass} + CSS parent-hover. */
 export const borderNormalFrameClass = `box-border border border-solid ${borderNormalClass}`;
 
-/** @emoji 📏️ Normal bottom edge utility for in-chrome dividers (not shell navbar — navbar uses a CSS `::after` stroke). */
+/** 📏️ Normal bottom edge utility for in-chrome dividers (not shell navbar — navbar uses a CSS `::after` stroke). */
 
-/** @emoji 📏️ Normal top edge utility for in-chrome dividers (not shell footer — footer uses a CSS `::before` stroke). */
+/** 📏️ Normal top edge utility for in-chrome dividers (not shell footer — footer uses a CSS `::before` stroke). */
 export const borderNormalTopClass = `border-t ${borderNormalClass}`;
 
-/** @emoji 📏️ Active window chrome line when that stack is globally active. */
+/** 📏️ Active window chrome line when that stack is globally active. */
 export const activeLineClass = "border-active-base";
 
-/** @emoji 🪟️ Shell outline — normal gray frame; emphasized while the pointer is inside the parent `[data-slot="panel"]` / `[data-slot="pane"]`. */
+/** 🪟️ Shell outline — normal gray frame; emphasized while the pointer is inside the parent `[data-slot="panel"]` / `[data-slot="pane"]`. */
 export const shellChromeBorderClass = borderNormalFrameClass;
 
-/** @emoji 🪟️ Parent stroke on top of fill and content (transparent center; ghost-dimmed with the open panel/pane). Border color is CSS-only so parent `:hover` can emphasize it like the window silhouette. */
+/** 🪟️ Parent stroke on top of fill and content (transparent center; ghost-dimmed with the open panel/pane). Border color is CSS-only so parent `:hover` can emphasize it like the window silhouette. */
 export const shellChromeFrameLayerClass = "pointer-events-none absolute inset-0 z-30 box-border bg-transparent";
 
-/** @emoji 🪟️ Frosted floating menu/popover surface for technology renderer overlays — menu tier; host element must also carry `data-level="menu"` (Radix-portal-style consumers stamp their own content root). */
+/** 🪟️ Frosted floating menu/popover surface for technology renderer overlays — menu tier; host element must also carry `data-level="menu"` (Radix-portal-style consumers stamp their own content root). */
 export const floatingMenuSurfaceClass = cn(glassClass, "overflow-hidden rounded-md border shadow-sm text-element", borderNormalClass);
 
 // #region 📋️MenuItem
 import { MenuItem, menuItemClassName, type MenuItemProps } from "../../🧱️elements/📋️MenuItem/🟦️.tsx";
 export { MenuItem, menuItemClassName, type MenuItemProps };
 
-/** @emoji 🪟️ Action row inside {@link floatingMenuSurfaceClass}. */
+/** 🪟️ Action row inside {@link floatingMenuSurfaceClass}. */
 export const floatingMenuItemClass = menuItemClassName;
 // #endregion 📋️MenuItem
 
-/** @emoji 🪟️ Frosted editor aside chrome for technology renderers — pane-level chrome; host element must also carry `data-level="pane"`. */
+/** 🪟️ Frosted editor aside chrome for technology renderers — pane-level chrome; host element must also carry `data-level="pane"`. */
 export const floatingPaneAsideClass = cn("relative flex shrink-0 flex-col gap-single overflow-auto p-double text-element z-[2]", shellChromeBorderClass, glassClass);
 
-/** @emoji 🪟️ Frosted compact ribbon chrome (projection switch, align controls) — window-level chrome; host element must also carry `data-level="window"`. */
+/** 🪟️ Frosted compact ribbon chrome (projection switch, align controls) — window-level chrome; host element must also carry `data-level="window"`. */
 export const floatingRibbonSurfaceClass = cn("overflow-hidden rounded-md border shadow-sm text-element", borderNormalClass, glassClass);
 
-/** @emoji 🪟️ Frosted inline field/action shell inside editor asides — menu tier (fallback); host element must also carry `data-level="menu"`. */
+/** 🪟️ Frosted inline field/action shell inside editor asides — menu tier (fallback); host element must also carry `data-level="menu"`. */
 export const floatingFieldSurfaceClass = cn(glassClass, "relative overflow-visible rounded-md border", borderNormalClass);
 
-/** @emoji 🪟️ Golden-window host root for technology canvases inside {@link ProductShell} — base level (the floor windows float on); host element must also carry `data-level="base"`. */
+/** 🪟️ Golden-window host root for technology canvases inside {@link ProductShell} — base level (the floor windows float on); host element must also carry `data-level="base"`. */
 export const canvasHostRootClass = cn("relative flex h-full min-h-0 w-full min-w-0 flex-col text-element font-sans", surfaceClass);
 
-/** @emoji 🪟️ Full-viewport standalone editor shell (outside golden windows) — base level. */
+/** 🪟️ Full-viewport standalone editor shell (outside golden windows) — base level. */
 export const editorShellRootClass = cn("text-element flex h-screen min-h-0 w-full flex-row font-sans", surfaceClass);
 
-/** @emoji 🏷️ Toggle chip for layer/filter controls in technology renderers. */
+/** 🏷️ Toggle chip for layer/filter controls in technology renderers. */
 export const floatingTagClass = cn("inline-flex items-center gap-half rounded-full border px-half py-0.5 text-xs text-element", borderNormalClass);
 
 export const floatingTagOnClass = "bg-accent text-accent-foreground";
 export const floatingTagOffClass = "bg-transparent text-muted-foreground";
 
-/** @emoji 🪟️ Canvas viewport surface inside a host root. */
+/** 🪟️ Canvas viewport surface inside a host root. */
 export const canvasViewportClass = cn("relative h-full min-h-0 w-full min-w-0 outline-none", surfaceClass);
 
-/** @emoji 📑️ Panel tab strip scroll row — `ui-scrollbar-hidden` preserves fixed control height when overflowing tabs scroll horizontally. */
+/** 📑️ Panel tab strip scroll row — `ui-scrollbar-hidden` preserves fixed control height when overflowing tabs scroll horizontally. */
 const panelTabBarScrollClass = "ui-scrollbar-hidden relative z-40 flex min-w-0 items-stretch shrink-0 overflow-x-auto overscroll-x-contain scroll-px-single";
 
-/** @emoji 📑️ Panel tab strip base — `w-full` spans chrome/mobile dividers across the row; floating panel caps omit it so the U-gap opens after the last tab. */
+/** 📑️ Panel tab strip base — `w-full` spans chrome/mobile dividers across the row; floating panel caps omit it so the U-gap opens after the last tab. */
 const panelTabBarBaseClass = cn(panelTabBarScrollClass, "w-full");
 
-/** @emoji 📑️ Panel tab strip with its divider on the content-facing side. */
+/** 📑️ Panel tab strip with its divider on the content-facing side. */
 export const panelTabBarClass = cn(panelTabBarBaseClass, borderNormalBottomClass);
 
-/** @emoji 📑️ Panel tab icon slot — defers dimensions to the tab icon (12px). */
+/** 📑️ Panel tab icon slot — defers dimensions to the tab icon (12px). */
 
-/** @emoji 📑️ Panel tab label beside the icon. */
+/** 📑️ Panel tab label beside the icon. */
 
-/** @emoji 📏️ Normal logical-end divider between sibling panel-tab toggles; the last toggle defers its outer edge to the hosting chrome silhouette. */
-/** @emoji 📏️ Normal logical-end divider between sibling panel-tab toggles; the last toggle defers its outer edge to the hosting chrome silhouette. */
+/** 📏️ Normal logical-end divider between sibling panel-tab toggles; the last toggle defers its outer edge to the hosting chrome silhouette. */
+/** 📏️ Normal logical-end divider between sibling panel-tab toggles; the last toggle defers its outer edge to the hosting chrome silhouette. */
 export const panelTabButtonDividerClass = "border-e border-solid !border-normal last:border-e-0";
 
-/** @emoji 📑️ Panel tab button with icon, mandatory name, and a normal divider between sibling toggles. */
-/** @emoji 📑️ Panel tab button with icon, mandatory name, and a normal divider between sibling toggles. */
+/** 📑️ Panel tab button with icon, mandatory name, and a normal divider between sibling toggles. */
+/** 📑️ Panel tab button with icon, mandatory name, and a normal divider between sibling toggles. */
 export const panelTabButtonClass = cn(
   "inline-flex min-h-0 shrink-0 items-center gap-tiny bg-transparent p-0",
   panelTabButtonDividerClass,
@@ -7007,13 +7007,13 @@ export const panelTabButtonClass = cn(
   hoverExcludingHandleTextEmphasizedClass,
 );
 
-/** @emoji 📑️ Floating panel tab strip inside {@link WindowChrome} — collapsed tabs defer every outer edge to the silhouette; expanded tabs restore the normal content-facing edge that separates their toggles from the panel body. */
+/** 📑️ Floating panel tab strip inside {@link WindowChrome} — collapsed tabs defer every outer edge to the silhouette; expanded tabs restore the normal content-facing edge that separates their toggles from the panel body. */
 export function panelAnchorTabBarClass(direction: "up" | "down", expanded = false): string {
   return cn(panelTabBarScrollClass, "h-medium", expanded && (direction === "up" ? borderNormalTopClass : borderNormalBottomClass));
 }
 
-/** @emoji 📑️ Panel tab button padding. */
-/** @emoji 📑️ Panel tab button padding. */
+/** 📑️ Panel tab button padding. */
+/** 📑️ Panel tab button padding. */
 export const panelAnchorTabButtonClass = cn(panelTabButtonClass, "px-tiny");
 
 // #region 🫳️DragAffordance
@@ -7021,8 +7021,8 @@ import { DragHandle, HANDLE_HOVER_SCOPE_ATTR } from "../../🧱️elements/🧱�
 export { DragHandle, HANDLE_HOVER_SCOPE_ATTR };
 // #endregion 🫳️DragAffordance
 
-/** @emoji 📑️ Shared panel/mobile panel tab bar variant. */
-/** @emoji 📑️ `"chrome"` is a host alias for `"panel"` — folded chrome-hosted bars render via {@link WindowChrome} chipOnly, not a separate visual variant. */
+/** 📑️ Shared panel/mobile panel tab bar variant. */
+/** 📑️ `"chrome"` is a host alias for `"panel"` — folded chrome-hosted bars render via {@link WindowChrome} chipOnly, not a separate visual variant. */
 // #region 📑️PanelTabBar
 import {
   reconcileActivePath,
@@ -7074,17 +7074,17 @@ export {
 
 export const ANCHORS = ["top-left", "top-middle", "top-right", "right-middle", "bottom-right", "bottom-middle", "bottom-left", "left-middle"] as const;
 
-/** @emoji 🧭️ One of the eight anchors a panel or pane can grow from. */
+/** 🧭️ One of the eight anchors a panel or pane can grow from. */
 export type Anchor = (typeof ANCHORS)[number];
 
-/** @emoji 🧭️ `"top"`/`"middle"`/`"bottom"` row of an {@link Anchor} — `left-middle`/`right-middle` sit in the middle row. */
+/** 🧭️ `"top"`/`"middle"`/`"bottom"` row of an {@link Anchor} — `left-middle`/`right-middle` sit in the middle row. */
 export function anchorVertical(anchor: Anchor): "top" | "middle" | "bottom" {
   if (anchor.startsWith("top")) return "top";
   if (anchor.startsWith("bottom")) return "bottom";
   return "middle";
 }
 
-/** @emoji 🧭️ `"left"`/`"middle"`/`"right"` column of an {@link Anchor} — `top-middle`/`bottom-middle` sit in the middle column. */
+/** 🧭️ `"left"`/`"middle"`/`"right"` column of an {@link Anchor} — `top-middle`/`bottom-middle` sit in the middle column. */
 export function anchorHorizontal(anchor: Anchor): "left" | "middle" | "right" {
   switch (anchor) {
     case "top-left":
@@ -7101,16 +7101,16 @@ export function anchorHorizontal(anchor: Anchor): "left" | "middle" | "right" {
 }
 
 // #region 🧭️Flow Context
-/** @emoji 🧭️ Horizontal reading direction — `"rtl"` mirrors icon/label order and rides on native CSS `dir`. */
+/** 🧭️ Horizontal reading direction — `"rtl"` mirrors icon/label order and rides on native CSS `dir`. */
 import { type FlowInline, type FlowBlock, type Flow, FlowProvider, useFlow } from "../../🔨️modules/🧭️flow-direction-context/🟦️.tsx";
 export { type FlowInline, type FlowBlock, type Flow, FlowProvider, useFlow };
 
-/** @emoji 🧭️ The mirrored {@link Flow} a {@link Panel} or {@link Pane} grows into — right anchors flip inline, bottom anchors flip block; middle anchors (row or column) never mirror. */
+/** 🧭️ The mirrored {@link Flow} a {@link Panel} or {@link Pane} grows into — right anchors flip inline, bottom anchors flip block; middle anchors (row or column) never mirror. */
 export function flowFromAnchor(anchor: Anchor): Flow {
   return { inline: anchorHorizontal(anchor) === "right" ? "rtl" : "ltr", block: anchorVertical(anchor) === "bottom" ? "up" : "down" };
 }
 
-/** @emoji 🧭️ Edge insets for an {@link Anchor} plus responsive width/height clamps to its containing region — corners inset on both axes, an edge-middle anchor centers along its middle axis via a translate. Shared by {@link Panel} and {@link Pane} so both float from identical math. */
+/** 🧭️ Edge insets for an {@link Anchor} plus responsive width/height clamps to its containing region — corners inset on both axes, an edge-middle anchor centers along its middle axis via a translate. Shared by {@link Panel} and {@link Pane} so both float from identical math. */
 export function anchorPositionStyle(anchor: Anchor): React.CSSProperties {
   const horizontal = anchorHorizontal(anchor);
   const vertical = anchorVertical(anchor);
@@ -7134,7 +7134,7 @@ export function anchorPositionStyle(anchor: Anchor): React.CSSProperties {
 }
 
 /**
- * @emoji 🧭️ Open chrome-hosted {@link Panel} position — pulls the window-chrome cap into the navbar/footer
+ * 🧭️ Open chrome-hosted {@link Panel} position — pulls the window-chrome cap into the navbar/footer
  * band where {@link PanelChromeTabBar} parked the folded toggles, so opening unfolds in place instead of
  * jumping the chips into the canvas. Navbar/footer are `h-large` with centered `h-medium` items; the offset
  * aligns the panel's `min-h-medium` cap to that centered row. Max height grows by the same overhang so the
@@ -7157,27 +7157,27 @@ export function chromeHostedOpenPanelPositionStyle(anchor: Anchor): React.CSSPro
   return style;
 }
 
-/** @emoji 🧭️ Chevron {@link IconName} that points toward where a fold's content is — the opposite state's chevron, mirrored for {@link FlowInline} `"rtl"`. `pointsOut` is `true` when the fold is collapsed (chevron points toward the hidden content) and `false` when expanded (chevron points back at the fold). */
+/** 🧭️ Chevron {@link IconName} that points toward where a fold's content is — the opposite state's chevron, mirrored for {@link FlowInline} `"rtl"`. `pointsOut` is `true` when the fold is collapsed (chevron points toward the hidden content) and `false` when expanded (chevron points back at the fold). */
 export function flowChevronIconName(inline: FlowInline, pointsOut: boolean): IconName {
   const right = inline === "rtl" ? pointsOut : !pointsOut;
   return right ? "chevron-right" : "chevron-left";
 }
 // #endregion 🧭️Flow Context
 
-/** @emoji 🌱️ One draggable tree granule inside a leaf tab — dockable between leaf tabs, rendered as its own collapsible section. */
+/** 🌱️ One draggable tree granule inside a leaf tab — dockable between leaf tabs, rendered as its own collapsible section. */
 // #region 🧲️PanelDock
 // Composable drag-and-drop: tabs dock between all eight anchors (pointer-capture drag, mirrors 🧭️ModeDockDrag);
 // tree units dock between leaf tabs (native HTML5 drag-and-drop, mirrors the window-template palette-drag session).
 
 //#region 🔀️Transforms
 
-/** @emoji 🔀️ True if `id` is `node.id` itself or belongs to one of its descendants. */
+/** 🔀️ True if `id` is `node.id` itself or belongs to one of its descendants. */
 export function isPanelTabInSubtree(node: PanelTabNode, id: string): boolean {
   if (node.id === id) return true;
   return node.kind === "branch" && node.children.some((child) => isPanelTabInSubtree(child, id));
 }
 
-/** @emoji 🔀️ Locates a tab anywhere in `dock`, returning its home anchor and the node itself. */
+/** 🔀️ Locates a tab anywhere in `dock`, returning its home anchor and the node itself. */
 export function findPanelTabInDock(dock: PanelDock, id: string): { readonly anchor: Anchor; readonly node: PanelTabNode } | null {
   for (const anchor of ANCHORS) {
     const path = findPanelTabPath(dock.anchors[anchor], id);
@@ -7193,18 +7193,18 @@ function collectPanelTabSubtreeIds(node: PanelTabNode, into: Set<string>): void 
   if (node.kind === "branch") node.children.forEach((child) => collectPanelTabSubtreeIds(child, into));
 }
 
-/** @emoji 🔀️ Reassigns `order` to match array position — call after any transform that reorders a sibling array so the existing order-based sort renders the new arrangement. */
+/** 🔀️ Reassigns `order` to match array position — call after any transform that reorders a sibling array so the existing order-based sort renders the new arrangement. */
 export function normalizePanelTabOrder(tabs: readonly PanelTabNode[]): readonly PanelTabNode[] {
   return tabs.map((tab, index) => (tab.order === index ? tab : { ...tab, order: index }));
 }
 
-/** @emoji 🔀️ Recursively drops branch tabs left with zero children. The complementary half of "deliberately emptied" — keeping such branches out of {@link applyDockSkeleton}'s auto-append — is handled there by its subtree-mention check, so an emptied branch never resurfaces with default children restored. */
+/** 🔀️ Recursively drops branch tabs left with zero children. The complementary half of "deliberately emptied" — keeping such branches out of {@link applyDockSkeleton}'s auto-append — is handled there by its subtree-mention check, so an emptied branch never resurfaces with default children restored. */
 export function pruneEmptyPanelBranches(tabs: readonly PanelTabNode[]): readonly PanelTabNode[] {
   const pruned = tabs.map((tab) => (tab.kind === "branch" ? { ...tab, children: pruneEmptyPanelBranches(tab.children) } : tab)).filter((tab) => tab.kind !== "branch" || tab.children.length > 0);
   return pruned.length === tabs.length && pruned.every((tab, index) => tab === tabs[index]) ? tabs : pruned;
 }
 
-/** @emoji 🔀️ Removes `id` wherever it lives in `tabs` (searching recursively into branches), pruning any ancestor branch left empty by the removal. Removal-first: callers compute insertion indices against this result, never the pre-removal tree. */
+/** 🔀️ Removes `id` wherever it lives in `tabs` (searching recursively into branches), pruning any ancestor branch left empty by the removal. Removal-first: callers compute insertion indices against this result, never the pre-removal tree. */
 function removePanelTabFromSiblings(tabs: readonly PanelTabNode[], id: string): { readonly tabs: readonly PanelTabNode[]; readonly removed: PanelTabNode | null } {
   const directIndex = tabs.findIndex((tab) => tab.id === id);
   if (directIndex >= 0) {
@@ -7245,10 +7245,10 @@ function appendPanelTabAsChild(tabs: readonly PanelTabNode[], parentId: string, 
   });
 }
 
-/** @emoji 🎯️ Where a dragged tab lands: `"insert"` places it among `parentPath`'s children at `index` (root when `parentPath` is empty); `"child"` appends it as the last child of the branch tab `parentId` (leaf targets never promote to branches in v1). */
+/** 🎯️ Where a dragged tab lands: `"insert"` places it among `parentPath`'s children at `index` (root when `parentPath` is empty); `"child"` appends it as the last child of the branch tab `parentId` (leaf targets never promote to branches in v1). */
 export type PanelTabDockTarget = { readonly kind: "insert"; readonly anchor: Anchor; readonly parentPath: readonly string[]; readonly index: number } | { readonly kind: "child"; readonly anchor: Anchor; readonly parentId: string };
 
-/** @emoji 🎯️ A completed tab drag: move `tabId` (found via {@link findPanelTabInDock}, not `fromAnchor` alone) to `target`. */
+/** 🎯️ A completed tab drag: move `tabId` (found via {@link findPanelTabInDock}, not `fromAnchor` alone) to `target`. */
 export interface PanelTabDockMove {
   readonly tabId: string;
   readonly fromAnchor: Anchor;
@@ -7293,21 +7293,21 @@ function replacePanelTabInDock(dock: PanelDock, id: string, nextNode: PanelTabNo
   return { anchors };
 }
 
-/** @emoji 🎯️ Where a dragged tree unit lands: `tabId`'s (a leaf's) unit list, at `index`. */
+/** 🎯️ Where a dragged tree unit lands: `tabId`'s (a leaf's) unit list, at `index`. */
 export interface PanelTreeUnitDockTarget {
   readonly anchor: Anchor;
   readonly tabId: string;
   readonly index: number;
 }
 
-/** @emoji 🎯️ A completed tree-unit drag from leaf `fromTabId` to `target`. */
+/** 🎯️ A completed tree-unit drag from leaf `fromTabId` to `target`. */
 export interface PanelTreeUnitDockMove {
   readonly unitId: string;
   readonly fromTabId: string;
   readonly target: PanelTreeUnitDockTarget;
 }
 
-/** @emoji 🎯️ Pure move transform for tree units — reorders within a leaf's own unit list, or moves a unit from one leaf tab's list into another's. */
+/** 🎯️ Pure move transform for tree units — reorders within a leaf's own unit list, or moves a unit from one leaf tab's list into another's. */
 export function moveTreeUnitInDock(dock: PanelDock, move: PanelTreeUnitDockMove): PanelDock {
   const from = findPanelTabInDock(dock, move.fromTabId);
   if (!from || from.node.kind !== "leaf") return dock;
@@ -7341,7 +7341,7 @@ function normalizePanelTreeUnitOrder(units: readonly PanelTreeUnit[]): readonly 
 
 //#region 🎯️HitTesting
 
-/** @emoji 🎯️ A registered {@link PanelTabRow} drop surface — v1's drop surfaces are the base row of every anchor plus the rows along each anchor's current active path (branches not on the active path aren't visible, so aren't registered). */
+/** 🎯️ A registered {@link PanelTabRow} drop surface — v1's drop surfaces are the base row of every anchor plus the rows along each anchor's current active path (branches not on the active path aren't visible, so aren't registered). */
 export interface PanelTabRowDropTarget {
   readonly anchor: Anchor;
   readonly parentPath: readonly string[];
@@ -7384,7 +7384,7 @@ export function computeTabDockDropZone(pointerX: number, pointerY: number, rows:
 const DOCK_DRAG_CURSOR_OFFSET_X = 8;
 const DOCK_DRAG_CURSOR_OFFSET_Y = 10;
 
-/** @emoji 🪟️ Floating label following the cursor while dragging a panel tab or tree unit. */
+/** 🪟️ Floating label following the cursor while dragging a panel tab or tree unit. */
 const DockDragChip: React.FC<{ readonly label: string; readonly x: number; readonly y: number }> = ({ label, x, y }) => (
   <div
     data-slot="dock-drag-chip"
@@ -7400,10 +7400,10 @@ const DockDragChip: React.FC<{ readonly label: string; readonly x: number; reado
 
 //#region 🌱️TreeUnitDrag
 
-/** @emoji 🌱️ `dataTransfer` MIME identifying a tree-unit drag between leaf tabs. */
+/** 🌱️ `dataTransfer` MIME identifying a tree-unit drag between leaf tabs. */
 export const PANEL_TREE_UNIT_MIME = "application/x-semio-panel-tree-unit";
 
-/** @emoji ↕️ `dataTransfer` MIME identifying a tree-section reorder drag within one {@link Tree}. */
+/** ↕️ `dataTransfer` MIME identifying a tree-section reorder drag within one {@link Tree}. */
 export const TREE_SECTION_REORDER_MIME = "application/x-semio-tree-section-reorder";
 
 export interface PanelTreeUnitDragSession {
@@ -7415,26 +7415,26 @@ export interface PanelTreeUnitDragSession {
 const activePanelTreeUnitDragSession = ephemeralBox<PanelTreeUnitDragSession | null>("framework.modules.ui.packages.typescript.targets.react.index.tsx.activePanelTreeUnitDragSession", null);
 const panelTreeUnitDragListeners = ephemeralSet<() => void>("framework.modules.ui.packages.typescript.targets.react.index.tsx.panelTreeUnitDragListeners");
 
-/** @emoji 🌱️ Records the active tree-unit drag until drop or dragend. */
+/** 🌱️ Records the active tree-unit drag until drop or dragend. */
 export function beginPanelTreeUnitDrag(session: PanelTreeUnitDragSession): void {
   activePanelTreeUnitDragSession.current = session;
   panelGhostSessionBridge?.begin(null);
   panelTreeUnitDragListeners.forEach((listener) => listener());
 }
 
-/** @emoji 🌱️ Clears the active tree-unit drag session. */
+/** 🌱️ Clears the active tree-unit drag session. */
 export function endPanelTreeUnitDrag(): void {
   activePanelTreeUnitDragSession.current = null;
   panelGhostSessionBridge?.end();
   panelTreeUnitDragListeners.forEach((listener) => listener());
 }
 
-/** @emoji 🌱️ Returns the in-flight tree-unit drag, if any. */
+/** 🌱️ Returns the in-flight tree-unit drag, if any. */
 export function readActivePanelTreeUnitDrag(): PanelTreeUnitDragSession | null {
   return activePanelTreeUnitDragSession.current;
 }
 
-/** @emoji 🌱️ True while a tree-unit drag is in flight — re-renders drop-zone consumers. */
+/** 🌱️ True while a tree-unit drag is in flight — re-renders drop-zone consumers. */
 export function usePanelTreeUnitDragActive(): boolean {
   return reactHostPort.useSyncExternalStore(
     (listener) => {
@@ -7468,7 +7468,7 @@ interface PanelDockPendingDrag {
   readonly startY: number;
 }
 
-/** @emoji 🎛️ Business-free ui↔shell contract shared by every {@link Panel} under one {@link PanelDockProvider}. */
+/** 🎛️ Business-free ui↔shell contract shared by every {@link Panel} under one {@link PanelDockProvider}. */
 export interface PanelDockContextValue {
   readonly dragTabId: string | null;
   readonly draggedSubtreeIds: ReadonlySet<string> | null;
@@ -7480,12 +7480,12 @@ export interface PanelDockContextValue {
 
 export const PanelDockContext = reactHostPort.createContext<PanelDockContextValue | null>(null);
 
-/** @emoji 🎛️ The enclosing {@link PanelDockProvider} contract, or `null` outside one, including Layout's private mobile panel. */
+/** 🎛️ The enclosing {@link PanelDockProvider} contract, or `null` outside one, including Layout's private mobile panel. */
 export function usePanelDockContext(): PanelDockContextValue | null {
   return reactHostPort.useContext(PanelDockContext);
 }
 
-/** @emoji 🎛️ Props for {@link PanelDockProvider}. */
+/** 🎛️ Props for {@link PanelDockProvider}. */
 export interface PanelDockProviderProps {
   readonly dock: PanelDock;
   readonly onTabDockDrop: (move: PanelTabDockMove) => void;
@@ -7493,7 +7493,7 @@ export interface PanelDockProviderProps {
   readonly children: React.ReactNode;
 }
 
-/** @emoji 🎛️ Wraps a layout's panels, wiring pointer-capture tab dragging (mirrors {@link Mode}'s window-tab drag) across all of them. Tree-unit drags are native HTML5 DnD and don't need this provider — see {@link beginPanelTreeUnitDrag}. */
+/** 🎛️ Wraps a layout's panels, wiring pointer-capture tab dragging (mirrors {@link Mode}'s window-tab drag) across all of them. Tree-unit drags are native HTML5 DnD and don't need this provider — see {@link beginPanelTreeUnitDrag}. */
 export const PanelDockProvider: React.FC<PanelDockProviderProps> = ({ dock, onTabDockDrop, onTreeUnitDockDrop, children }) => {
   const panelGhost = usePanelGhost();
   const [pendingDrag, setPendingDrag] = reactHostPort.useState<PanelDockPendingDrag | null>(null);
@@ -7601,11 +7601,11 @@ export const PanelDockProvider: React.FC<PanelDockProviderProps> = ({ dock, onTa
 
 //#region 🎛️PanelChromeTabBar
 
-/** @emoji 🎛️ Props for {@link PanelChromeTabBar}: the anchor's own tab-selection state (see {@link usePanelTabSelection}) plus which anchor it drives. */
+/** 🎛️ Props for {@link PanelChromeTabBar}: the anchor's own tab-selection state (see {@link usePanelTabSelection}) plus which anchor it drives. */
 export interface PanelChromeTabBarProps extends PanelTabSelectionOptions {
   readonly anchor: Anchor;
   readonly className?: string;
-  /** @emoji 🗜️ Icon-only chips — see `PanelTabBarProps.compactLabels`. */
+  /** 🗜️ Icon-only chips — see `PanelTabBarProps.compactLabels`. */
   readonly compactLabels?: boolean;
 }
 
@@ -7680,13 +7680,13 @@ export const PanelChromeTabBar: React.FC<PanelChromeTabBarProps> = ({ anchor, cl
 
 //#endregion 🎛️PanelChromeTabBar
 
-/** @emoji 📑️ Mobile panel tab strip height. */
+/** 📑️ Mobile panel tab strip height. */
 export const mobilePanelTabBarClass = cn(panelTabBarClass, "h-large");
 
-/** @emoji 📑️ Mobile panel tab button padding. */
+/** 📑️ Mobile panel tab button padding. */
 export const mobilePanelTabButtonClass = cn(panelTabButtonClass, "px-single");
 
-/** @emoji ↔ Accent stroke on the panel resize edge while hovered or dragging. */
+/** ↔ Accent stroke on the panel resize edge while hovered or dragging. */
 export function panelResizeEdgeAccentClass(resizeSide: "left" | "right", active: boolean): string | undefined {
   if (!active) return undefined;
   switch (resizeSide) {
@@ -7697,13 +7697,13 @@ export function panelResizeEdgeAccentClass(resizeSide: "left" | "right", active:
   }
 }
 
-/** @emoji 🪟️ All border effects the silhouette SVG can paint. */
+/** 🪟️ All border effects the silhouette SVG can paint. */
 export const WINDOW_SILHOUETTE_BORDER_KINDS = ["celebrated", "introduced", "loading", "waiting", "active", "normal"] as const;
 
-/** @emoji 🪟️ Which border effect the dock-stack silhouette overlay should paint. */
+/** 🪟️ Which border effect the dock-stack silhouette overlay should paint. */
 export type WindowSilhouetteBorderKind = (typeof WINDOW_SILHOUETTE_BORDER_KINDS)[number];
 
-/** @emoji 🪟️ Whether an introduced stamp is the window chrome body itself (kind/instance scroll surface or
+/** 🪟️ Whether an introduced stamp is the window chrome body itself (kind/instance scroll surface or
  * `[data-slot="window"]`), not a nested utility/action/tree row inside the pane. Window silhouette pulse
  * and the stack SVG border must follow only these stamps — introducing `transform` must pulse the utility
  * toggle, not the enclosing Top/Perspective silhouette. */
@@ -7718,7 +7718,7 @@ export function isWindowChromeIntroducedTarget(el: Element): boolean {
   return false;
 }
 
-/** @emoji 🪟️ Resolves silhouette border kind from the active window + stack active flag.
+/** 🪟️ Resolves silhouette border kind from the active window + stack active flag.
  * Introduction stamps `data-introduced` on the window kind id target — often the inner scroll surface
  * (`framework.window.{kind}`), not `[data-slot="window"]` itself — so window-chrome descendants count.
  * Nested introduce targets (utilities, actions) must not promote the window silhouette. `celebrated`
@@ -7743,7 +7743,7 @@ export function resolveWindowSilhouetteBorderKind(windowEl: Element | null, stac
   return stackActive ? "active" : "normal";
 }
 
-/** @emoji 🪟️ Maps a silhouette border kind to stroke classes and color tokens. */
+/** 🪟️ Maps a silhouette border kind to stroke classes and color tokens. */
 export function windowSilhouetteBorderPaint(kind: WindowSilhouetteBorderKind): { readonly className: string; readonly stroke: string } {
   switch (kind) {
     case "celebrated":
@@ -7764,18 +7764,18 @@ export function windowSilhouetteBorderPaint(kind: WindowSilhouetteBorderKind): {
 const WINDOW_CHROME_GAP_SELECTOR = '[data-slot="window-chrome-gap"], [data-slot="mode-dock-tab-gap"]';
 const WINDOW_CHROME_CAP_SELECTOR = '[data-slot="window-chrome-cap"], [data-slot="mode-dock-tabbar"]';
 
-/** @emoji 🪟️ Whether a stack-local rect sits on the given silhouette dock edge. */
+/** 🪟️ Whether a stack-local rect sits on the given silhouette dock edge. */
 function windowSilhouetteRectOnDock(stackRect: DOMRect, rect: DOMRect, dock: "top" | "bottom"): boolean {
   return dock === "top" ? rect.top - stackRect.top <= WINDOW_SILHOUETTE_CHIP_EPSILON : stackRect.bottom - rect.bottom <= WINDOW_SILHOUETTE_CHIP_EPSILON;
 }
 
-/** @emoji 🪟️ Whether `element` belongs to `stack`'s own chrome — nested pane/panel `[data-window-silhouette]` hosts (e.g. projection) keep their chips out of the enclosing window outline so the window bottom stays rectangular while those panes overlay like window options. */
+/** 🪟️ Whether `element` belongs to `stack`'s own chrome — nested pane/panel `[data-window-silhouette]` hosts (e.g. projection) keep their chips out of the enclosing window outline so the window bottom stays rectangular while those panes overlay like window options. */
 function windowSilhouetteOwnsElement(stack: HTMLElement, element: Element): boolean {
   const owner = element.closest("[data-window-silhouette]");
   return owner === null || owner === stack;
 }
 
-/** @emoji 🖱️ Reads fused submenu wing rects for a context menu stack. */
+/** 🖱️ Reads fused submenu wing rects for a context menu stack. */
 function measureContextMenuFusion(stack: HTMLElement, stackRect: DOMRect, base: WindowSilhouetteMetrics): WindowSilhouetteMetrics {
   const fusionBody = stack.querySelector<HTMLElement>('[data-slot="context-menu-fusion-body"]');
   if (!fusionBody) return base;
@@ -7799,7 +7799,7 @@ function measureContextMenuFusion(stack: HTMLElement, stackRect: DOMRect, base: 
   return { ...base, width, height, contextMenuFusion: fusion };
 }
 
-/** @emoji 🪟️ Reads live silhouette metrics from painted chip spans grouped by `data-dock` (works for RTL caps and bottom-docked panels). Nested silhouette chips are ignored — see {@link windowSilhouetteOwnsElement}. */
+/** 🪟️ Reads live silhouette metrics from painted chip spans grouped by `data-dock` (works for RTL caps and bottom-docked panels). Nested silhouette chips are ignored — see {@link windowSilhouetteOwnsElement}. */
 export function measureWindowSilhouetteMetrics(stack: HTMLElement): WindowSilhouetteMetrics | null {
   const stackRect = stack.getBoundingClientRect();
   const width = stackRect.width;
@@ -7831,7 +7831,7 @@ export function measureWindowSilhouetteMetrics(stack: HTMLElement): WindowSilhou
   return measureContextMenuFusion(stack, stackRect, base);
 }
 
-/** @emoji 📐️ Coalesced owned-chip measurement shared by silhouette content, glass, border, and hit clipping. */
+/** 📐️ Coalesced owned-chip measurement shared by silhouette content, glass, border, and hit clipping. */
 export function useWindowSilhouetteGeometry(stack: HTMLElement | null, enabled = true): WindowSilhouetteGeometry {
   const [geometry, setGeometry] = reactHostPort.useState<WindowSilhouetteGeometry>(() => createWindowSilhouetteGeometry(null));
   reactHostPort.useLayoutEffect(() => {
@@ -7886,16 +7886,16 @@ export function useWindowSilhouetteGeometry(stack: HTMLElement | null, enabled =
   return geometry;
 }
 
-/** @emoji 📏️ Tab/gap/controls cells stay transparent; glass lives on chip (+ controls) cells only so the U-gap punches through to the base floor. Borders owned by {@link ModeDockStackSilhouetteBorder}. */
+/** 📏️ Tab/gap/controls cells stay transparent; glass lives on chip (+ controls) cells only so the U-gap punches through to the base floor. Borders owned by {@link ModeDockStackSilhouetteBorder}. */
 export const windowCapFrameClass = "relative z-[2] border-0 bg-transparent";
 
-/** @emoji 🪟️ Gap cutout stays clear — never glass — so the base/canvas floor shows through the U-notch. */
+/** 🪟️ Gap cutout stays clear — never glass — so the base/canvas floor shows through the U-notch. */
 export const windowGapFrameClass = "border-0 bg-transparent";
 
-/** @emoji 📏️ Body fill only — outer stroke is the stack silhouette SVG (tabs + cutout + controls + body); base level (mode body / floor windows float on) — host element must also carry `data-level="base"`. */
+/** 📏️ Body fill only — outer stroke is the stack silhouette SVG (tabs + cutout + controls + body); base level (mode body / floor windows float on) — host element must also carry `data-level="base"`. */
 export const windowBodyFrameClass = cn("relative border-0", surfaceClass);
 
-/** @emoji 📐️ Grid tracks for multi-tab active chrome: one column per tab, then flex gap, then controls. */
+/** 📐️ Grid tracks for multi-tab active chrome: one column per tab, then flex gap, then controls. */
 export interface ModeDockChromeGrid {
   readonly templateColumns: string;
   readonly activeCol: number;
@@ -7906,7 +7906,7 @@ export interface ModeDockChromeGrid {
   readonly tabCol: (tabIndex: number) => number;
 }
 
-/** @emoji 📐️ Computes {@link ModeDockChromeGrid} column indices for a tab stack. */
+/** 📐️ Computes {@link ModeDockChromeGrid} column indices for a tab stack. */
 export function modeDockChromeGridPlacement(tabs: readonly { id: string; title: string }[], activeId: string | undefined): ModeDockChromeGrid {
   const activeTabIndex = Math.max(
     0,
@@ -7927,37 +7927,37 @@ export function modeDockChromeGridPlacement(tabs: readonly { id: string; title: 
   };
 }
 
-/** @emoji 📏️ Inactive sibling tab — normal pill resting on the U-frame baseline; transparent so it
+/** 📏️ Inactive sibling tab — normal pill resting on the U-frame baseline; transparent so it
  * shows the chip-cell glass beneath it rather than a second opaque fill (matches {@link panelWindowInactiveTabClass}'s rule for the panel variant). */
 export const modeDockInactiveTabClass = cn(`relative z-30 box-border min-h-medium shrink-0`, "bg-transparent");
 
-/** @emoji 📏️ Inactive tab before gap — inner divider only; outer stroke owned by the silhouette SVG. */
+/** 📏️ Inactive tab before gap — inner divider only; outer stroke owned by the silhouette SVG. */
 export const modeDockInactiveTabBeforeGapClass = cn(`relative z-30 box-border min-h-medium shrink-0`, "bg-transparent");
 
-/** @emoji 📑️ Inactive panel tab inside {@link WindowChrome} — no opaque fill; the chip-cap glass is the panel boundary and must meet the body without a seam. */
+/** 📑️ Inactive panel tab inside {@link WindowChrome} — no opaque fill; the chip-cap glass is the panel boundary and must meet the body without a seam. */
 export const panelWindowInactiveTabClass = "relative z-30 box-border min-h-medium h-full shrink-0 bg-transparent";
 
-/** @emoji 🪟️ Icon + title cluster inside a mode-dock tab — standard gap between glyph and label. */
+/** 🪟️ Icon + title cluster inside a mode-dock tab — standard gap between glyph and label. */
 export const modeDockTabLabelClassName = "flex min-w-0 flex-1 items-center gap-single overflow-visible";
 
-/** @emoji 🪟️ Default mode-dock tab label — element gray; emphasize on hover/active only. */
+/** 🪟️ Default mode-dock tab label — element gray; emphasize on hover/active only. */
 
-/** @emoji 🪧️ Static shell title (navbar app label, pane headings) — element gray at rest. */
+/** 🪧️ Static shell title (navbar app label, pane headings) — element gray at rest. */
 export const shellChromeTitleClassName = "truncate text-sm font-medium text-element";
 
-/** @emoji 🪧️ Uppercase shell section title — element gray at rest. */
+/** 🪧️ Uppercase shell section title — element gray at rest. */
 export const shellChromeSectionTitleClassName = "text-2xs font-semibold uppercase tracking-wide text-element";
 
-/** @emoji 📏️ Globally active dock tab — primary fill + emphasized label. */
+/** 📏️ Globally active dock tab — primary fill + emphasized label. */
 export const modeDockActiveTabFillClass = interactiveActiveFillClass;
 
-/** @emoji 📏️ Stack-active tab fill — outline owned by the stack silhouette SVG; `border-0` must win over {@link interactiveActiveFillClass}'s border color utility. */
+/** 📏️ Stack-active tab fill — outline owned by the stack silhouette SVG; `border-0` must win over {@link interactiveActiveFillClass}'s border color utility. */
 export const modeDockActiveTabClass = cn("relative z-20 box-border min-h-medium shrink-0 border-0", modeDockActiveTabFillClass);
 
-/** @emoji 📏️ Maximize/controls glass cell — host stamps {@link glassClass}; fill must not span the U-gap. */
+/** 📏️ Maximize/controls glass cell — host stamps {@link glassClass}; fill must not span the U-gap. */
 export const windowControlsCapClass = "pointer-events-auto relative z-[2] flex shrink-0 items-stretch border-0 bg-transparent text-element";
 
-/** @emoji 🪜️ `WindowChrome`'s own internal stacking, as inline z-indexes.
+/** 🪜️ `WindowChrome`'s own internal stacking, as inline z-indexes.
  *
  * The chrome's chip rows carried Tailwind ARBITRARY z utilities (`z-[2]`/`z-[1]`), and this design
  * system's stylesheet does not emit those — measured on a served boot, cap row, body plane and footer all
@@ -7968,15 +7968,15 @@ export const windowControlsCapClass = "pointer-events-auto relative z-[2] flex s
  * `pointer-events: auto` over the entire application (26/09/02/PUZZLE-3D-END-TO-END wave B49 §1).
  * Stated inline, the order cannot silently vanish with a utility that was never generated. */
 export const WINDOW_CHROME_CHIP_ROW_STYLE: React.CSSProperties = { zIndex: 2 };
-/** @emoji 🪜️ The body plane, one level below every chip row — see {@link WINDOW_CHROME_CHIP_ROW_STYLE}. */
+/** 🪜️ The body plane, one level below every chip row — see {@link WINDOW_CHROME_CHIP_ROW_STYLE}. */
 export const WINDOW_CHROME_BODY_PLANE_STYLE: React.CSSProperties = { zIndex: 1 };
 
-/** @emoji 📏️ Multi-tab controls cap — chip glass only; U-gap stays a clear punch-through. */
+/** 📏️ Multi-tab controls cap — chip glass only; U-gap stays a clear punch-through. */
 export const windowControlsCapActiveSplitClass = "relative flex shrink-0 items-stretch border-0 bg-transparent text-element";
 
 //#region 🪟️WindowChrome
 
-/** @emoji 🪟️ Optional right-cap control on {@link WindowChrome} (enlarge / close). */
+/** 🪟️ Optional right-cap control on {@link WindowChrome} (enlarge / close). */
 export interface WindowChromeControlAction {
   readonly id: string;
   readonly slot: string;
@@ -7985,7 +7985,7 @@ export interface WindowChromeControlAction {
   readonly onClick: () => void;
 }
 
-/** @emoji 🪟️ Title chip in the window-chrome cap row (name + optional drag) — transparent and
+/** 🪟️ Title chip in the window-chrome cap row (name + optional drag) — transparent and
  * borderless so the painted chip-cap cell shows through and the silhouette remains the sole outline. */
 export const windowChromeTitleChipClass = cn(modeDockTabClassName, "relative z-30 box-border min-h-medium shrink-0 border-0 bg-transparent");
 
@@ -8007,7 +8007,7 @@ export interface WindowChromeProps {
   readonly bodySlot?: string;
   readonly bodyStyle?: React.CSSProperties;
   readonly titleChips?: React.ReactNode;
-  /** @emoji 🧭️ Optional top-right chip content rendered ahead of enlarge/close in the controls cell. */
+  /** 🧭️ Optional top-right chip content rendered ahead of enlarge/close in the controls cell. */
   readonly capRightChips?: React.ReactNode;
   readonly body?: React.ReactNode;
   readonly enlarge?: WindowChromeControlAction;
@@ -8023,11 +8023,11 @@ export interface WindowChromeProps {
   readonly borderKind?: WindowSilhouetteBorderKind;
   readonly stackBindProps?: SurfaceActiveBindProps;
   readonly stackDataAttrs?: Record<string, string | undefined>;
-  /** @emoji 📐️ Cap row shrink-wraps to title chip + gap (context menus with fused wings). */
+  /** 📐️ Cap row shrink-wraps to title chip + gap (context menus with fused wings). */
   readonly capFitContent?: boolean;
-  /** @emoji 🧭️ Which silhouette edge the cap row docks to — `"bottom"` for panels that grow upward from a bottom anchor. */
+  /** 🧭️ Which silhouette edge the cap row docks to — `"bottom"` for panels that grow upward from a bottom anchor. */
   readonly capDock?: "top" | "bottom";
-  /** @emoji ↔ Inline layout overrides for the cap row (e.g. chrome-hosted trailing navbar reserve). */
+  /** ↔ Inline layout overrides for the cap row (e.g. chrome-hosted trailing navbar reserve). */
   readonly capRowStyle?: React.CSSProperties;
   readonly capSlot?: string;
   readonly chipSlot?: string;
@@ -8035,7 +8035,7 @@ export interface WindowChromeProps {
   readonly silhouetteSlot?: string;
 }
 
-/** @emoji 🪟️ SVG overlay that paints the U-cutout silhouette for any window-chrome stack. */
+/** 🪟️ SVG overlay that paints the U-cutout silhouette for any window-chrome stack. */
 export const WindowChromeSilhouetteBorder: React.FC<{
   readonly stack: HTMLElement | null;
   readonly geometry?: WindowSilhouetteGeometry;
@@ -8120,7 +8120,7 @@ export const WindowChromeSilhouetteBorder: React.FC<{
   );
 };
 
-/** @emoji 🪟️ Shared U-cutout window chrome: left title chip(s), open gap, optional enlarge/close, continuous body border.
+/** 🪟️ Shared U-cutout window chrome: left title chip(s), open gap, optional enlarge/close, continuous body border.
  * Cap glass lives only on the chip (+ controls) cells — never the full cap row — so the U-gap stays transparent
  * and shows whatever sits behind the stack (veil, canvas, page). Do not paint an absolute inset fill. */
 export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChromeProps>(
@@ -8345,7 +8345,7 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
 );
 WindowChrome.displayName = "WindowChrome";
 
-/** @emoji 🪟️ Context menu with U-cutout chrome — title chip only, no enlarge/close; gap punches through. Forwards its ref to the outer window-chrome stack so callers (e.g. {@link ContextMenuController}'s on-screen clamp) can measure/adjust the rendered surface. */
+/** 🪟️ Context menu with U-cutout chrome — title chip only, no enlarge/close; gap punches through. Forwards its ref to the outer window-chrome stack so callers (e.g. {@link ContextMenuController}'s on-screen clamp) can measure/adjust the rendered surface. */
 export const ContextMenuChrome = reactHostPort.forwardRef<HTMLDivElement, { readonly title: string; readonly icon: IconSource; readonly children: React.ReactNode; readonly className?: string; readonly style?: React.CSSProperties }>(
   ({ title, icon, children, className, style }, ref) => {
     return (
@@ -8373,25 +8373,25 @@ ContextMenuChrome.displayName = "ContextMenuChrome";
 
 //#endregion 🪟️WindowChrome
 
-/** @emoji 🪟️ Window chrome icon button — element gray by default, emphasize on hover. */
+/** 🪟️ Window chrome icon button — element gray by default, emphasize on hover. */
 export const windowChromeControlButtonClass = cn("flex size-medium items-center justify-center border-0 bg-transparent transition-colors", interactiveHoverClass);
 
-/** @emoji 📐️ Default unfolded width of window panes and the options rail (token-derived; matches panel default 300px). */
+/** 📐️ Default unfolded width of window panes and the options rail (token-derived; matches panel default 300px). */
 export const windowMeasuresDefaultWidthPx = domSizePx("layoutPanelRailUiSpacing");
 
-/** @emoji 📐️ Minimum unfolded width of the window options rail (token-derived). */
+/** 📐️ Minimum unfolded width of the window options rail (token-derived). */
 export const windowMeasuresMinWidthPx = domSizePx("layoutPanelMinUiSpacing");
 
-/** @emoji 📐️ Maximum unfolded width of the window options rail (token-derived). */
+/** 📐️ Maximum unfolded width of the window options rail (token-derived). */
 export const windowMeasuresMaxWidthPx = domSizePx("layoutPanelMaxUiSpacing");
 
-/** @emoji 📐️ Max width cap for window engagement (token-derived). */
+/** 📐️ Max width cap for window engagement (token-derived). */
 export const windowEngagementMaxWidthPx = domSizePx("layoutEngagementMaxUiSpacing");
 
-/** @emoji 📐️ Merged top-left Actions body beside the engagement chrome toggle: the active engagement's status/control (when present) stacked above the categorized ad-hoc actions tree; scrolls once content exceeds the window body. */
+/** 📐️ Merged top-left Actions body beside the engagement chrome toggle: the active engagement's status/control (when present) stacked above the categorized ad-hoc actions tree; scrolls once content exceeds the window body. */
 export const windowEngagementBodyClass = "flex min-h-medium min-w-0 max-h-full flex-auto flex-col gap-half overflow-y-auto px-single";
 
-/** @emoji 📐️ Utility row beside the utility bar chrome toggle — a single utility keeps the chrome's height, but the active utility's options tree (stacked above it) can grow taller; its inline `maxHeight` (see {@link useWindowUtilityBarMaxHeightPx}) caps it just below the top-anchored chrome and this scrolls the overflow instead of painting past that line. */
+/** 📐️ Utility row beside the utility bar chrome toggle — a single utility keeps the chrome's height, but the active utility's options tree (stacked above it) can grow taller; its inline `maxHeight` (see {@link useWindowUtilityBarMaxHeightPx}) caps it just below the top-anchored chrome and this scrolls the overflow instead of painting past that line. */
 export const utilityBarBodyClass = "flex min-h-medium min-w-0 flex-auto items-center gap-single overflow-x-auto overflow-y-auto px-single";
 
 import {
@@ -8417,14 +8417,14 @@ export {
   useWindowContentDeadLineScroll,
 };
 
-/** @emoji 🚧️ Block offset that clears a window's floating chrome control row — the single rule for
+/** 🚧️ Block offset that clears a window's floating chrome control row — the single rule for
  * anything a window's CONTENT anchors to a top corner (a scene overlay button, a status chip, the folded
  * engagement's quick-action rail). Reads the live clearance the enclosing {@link Window} publishes
  * ({@link windowChromeScrollClearanceVar}, measured off the mounted engagement/search/measures overlays)
  * and falls back to the chrome row's own token height, so content can never paint over a pane toggle. */
 export const windowChromeClearedTopOffset = `calc(var(${windowChromeScrollClearanceVar}, calc(var(--size-medium) + var(--spacing-single))) + var(--spacing-single))`;
 
-/** @emoji 🏝️ Full-bleed scroll surface for chrome-aware window bodies (writer hosts, forms, tables). */
+/** 🏝️ Full-bleed scroll surface for chrome-aware window bodies (writer hosts, forms, tables). */
 export const ChromeAwareWindowScrollSurface = reactHostPort.forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<"div">>(({ className, children, ...props }, ref) => {
   const scrollerRef = reactHostPort.useRef<HTMLDivElement | null>(null);
   const setScrollerRef = reactHostPort.useCallback(
@@ -8444,55 +8444,55 @@ export const ChromeAwareWindowScrollSurface = reactHostPort.forwardRef<HTMLDivEl
 });
 ChromeAwareWindowScrollSurface.displayName = "ChromeAwareWindowScrollSurface";
 
-/** @emoji 📐️ Labelled icon action in window rail chrome bars (options + action). */
+/** 📐️ Labelled icon action in window rail chrome bars (options + action). */
 export const windowRailChromeLabelActionClass = cn("flex h-medium w-auto items-center justify-center border-0 bg-transparent text-element px-single gap-single", interactiveHoverClass);
 
-/** @emoji 🪟️ Pane chrome toggle — same layout as {@link panelAnchorTabButtonClass}: leading semantic icon, label, trailing {@link DragHandle}. */
+/** 🪟️ Pane chrome toggle — same layout as {@link panelAnchorTabButtonClass}: leading semantic icon, label, trailing {@link DragHandle}. */
 
-/** @emoji 🪟️ Built-in window pane icons — fixed semantic affordances (never fold-direction chevrons). */
+/** 🪟️ Built-in window pane icons — fixed semantic affordances (never fold-direction chevrons). */
 export const WINDOW_PANE_MEASURES_ICON = "settings-2" as const satisfies IconName;
 export const WINDOW_PANE_ACTIONS_ICON = "play" as const satisfies IconName;
 export const WINDOW_PANE_SEARCH_ICON = "search" as const satisfies IconName;
 export const WINDOW_PANE_UTILITIES_ICON = "hammer" as const satisfies IconName;
 
-/** @emoji 📐️ Measure tree body: grows with content, scrolls once the stack hits the window bottom. */
+/** 📐️ Measure tree body: grows with content, scrolls once the stack hits the window bottom. */
 export const windowMeasuresBodyClass = "flex min-h-0 min-w-0 flex-auto flex-col overflow-y-auto overscroll-contain p-tiny";
 
-/** @emoji 📐️ Vertical rhythm between top-level measure groups in the rail. */
+/** 📐️ Vertical rhythm between top-level measure groups in the rail. */
 export const windowMeasuresStackInnerClass = "flex w-full min-w-0 flex-col gap-tiny";
 
-/** @emoji 📐️ Single measure tile in the window rail — transparent so the {@link WindowChrome} body glass shows through, never a second glass layer of its own. */
+/** 📐️ Single measure tile in the window rail — transparent so the {@link WindowChrome} body glass shows through, never a second glass layer of its own. */
 export const windowMeasureTileClass = cn("pointer-events-auto select-none bg-transparent w-full min-w-0 shrink-0 rounded-sm border", `${borderElementClass}/40`, "px-tiny py-tiny");
 
-/** @emoji 📐️ Optional measure caption above a control. */
+/** 📐️ Optional measure caption above a control. */
 export const windowMeasureLabelClass = "text-muted-foreground mb-tiny block min-w-0 truncate text-2xs font-medium leading-none";
 
-/** @emoji 📐️ Measure section title without a heavy chrome box. */
+/** 📐️ Measure section title without a heavy chrome box. */
 export const windowMeasureSectionClass = "text-muted-foreground w-full truncate px-single py-tiny text-center text-2xs font-medium uppercase tracking-wide";
 
-/** @emoji 📐️ Constrains measure controls to the rail width. */
+/** 📐️ Constrains measure controls to the rail width. */
 export const windowMeasureControlClass = "w-full min-w-0 max-w-full";
 
-/** @emoji 🌳️ Compact disclosure header for a nested measure group. */
+/** 🌳️ Compact disclosure header for a nested measure group. */
 export const windowMeasureGroupHeaderClass = "pointer-events-auto flex h-small w-full min-w-0 shrink-0 cursor-pointer select-none items-center gap-tiny rounded-sm px-tiny py-0 text-element hover:bg-hover-interactive-fill hover:text-emphasized";
 
-/** @emoji 🌳️ Indented children under a measure group (minimal chrome). */
+/** 🌳️ Indented children under a measure group (minimal chrome). */
 export const windowMeasureGroupChildrenClass = "pointer-events-none flex w-full min-w-0 flex-col gap-0 border-s ps-tiny ms-tiny pb-0 pt-0";
 
-/** @emoji 🌳️ Nested measure leaf without an outer tile border (indent only). */
+/** 🌳️ Nested measure leaf without an outer tile border (indent only). */
 export const windowMeasureTileNestedClass = "pointer-events-auto select-none w-full min-w-0 shrink-0 px-0 py-0";
 
-/** @emoji 📐️ Toggle sized to fill the measure tree row (active fill spans full width). */
+/** 📐️ Toggle sized to fill the measure tree row (active fill spans full width). */
 export const windowMeasureToggleClass =
   "!w-full min-w-0 max-w-full [&_[data-slot=toggle-group-item]]:!flex-1 [&_[data-slot=toggle-group-item]]:min-w-0 [&_[data-slot=toggle-group-item]]:max-w-full [&_[data-slot=toggle-group-item]]:!aspect-auto [&_[data-slot=toggle-group-item]]:!shrink [&_[data-slot=inline-label]]:min-w-0 [&_[data-slot=inline-label]]:truncate";
 
-/** @emoji 📐️ Dense toggle row for nested measure groups (shorter control chrome). */
+/** 📐️ Dense toggle row for nested measure groups (shorter control chrome). */
 export const windowMeasureToggleCompactClass =
   "[&_[data-slot=toggle-group]]:h-small [&_[data-slot=toggle-group-item]]:min-h-0 [&_[data-slot=toggle-group-item]]:py-tiny [&_[data-slot=toggle-group-item]]:px-single [&_[data-slot=inline-label]]:!text-tiny";
 
-/** @emoji 🌳️ Typography for measure tree group headers. */
+/** 🌳️ Typography for measure tree group headers. */
 
-/** @emoji 🌳️ Typography for measure tree leaf labels. */
+/** 🌳️ Typography for measure tree leaf labels. */
 
 // #endregion 🎈️Level Context
 
@@ -8501,7 +8501,7 @@ import { type ElementProps } from "../../🔨️modules/🆔️element-identity/
 export type { ElementProps };
 
 //#region 🧭️ElementState
-/** @emoji 🧭️ The shared, compile-time-enforced state model every rendered UI element carries — explicit
+/** 🧭️ The shared, compile-time-enforced state model every rendered UI element carries — explicit
  * re-export from `@semio-tech/ui-styling` (this package must not leak types from outside the codebase).
  * `state`/`status`/`hover`/`selected` mirror the Rust `UiState`/`UiStatus`/`UiPresence` model in `ui_wgpu`
  * (see `framework/ui/wgpu/rs/lib.rs`'s 🔖️Presence region) byte-for-byte. */
@@ -8516,7 +8516,7 @@ export interface UiElementStateProps {
   selected?: boolean;
 }
 
-/** @emoji 🧭️ Resolves `props` against the shared defaults and returns everything a component needs to
+/** 🧭️ Resolves `props` against the shared defaults and returns everything a component needs to
  * apply the model: whether it must render `null` (`state === "hidden"`), the `data-ui-*` attribute
  * spread for CSS-driven components, and the fill-kind for 3D/canvas components that can't use CSS. */
 export function useElementState(props: UiElementStateProps): {
@@ -8529,10 +8529,10 @@ export function useElementState(props: UiElementStateProps): {
   return { state, hidden: state.state === "hidden", attrs: elementStateAttributes(state), fillKind: resolveElementFillKind(state) };
 }
 
-/** @emoji 🎉️ Default lifetime of a transient celebration stamp — two burst cycles of --celebrate-border-duration. */
+/** 🎉️ Default lifetime of a transient celebration stamp — two burst cycles of --celebrate-border-duration. */
 export const CELEBRATE_STAMP_DURATION_MS = 2400;
 
-/** @emoji 🎉️ Imperatively stamps `data-celebrated="true"` on `target` for `durationMs`, then removes it —
+/** 🎉️ Imperatively stamps `data-celebrated="true"` on `target` for `durationMs`, then removes it —
  * the transient counterpart of an authored `state: "celebrating"`. Unmanaged by React (like the
  * introduction engine's `data-introduced` stamp) so re-renders can't clobber it. Returns a cancel
  * function that un-stamps immediately. */
@@ -8546,7 +8546,7 @@ export function celebrateElement(target: Element, durationMs = CELEBRATE_STAMP_D
   };
 }
 
-/** @emoji 🎉️ Imperatively stamps `data-celebrated="true"` on every match of `selector` for `durationMs`,
+/** 🎉️ Imperatively stamps `data-celebrated="true"` on every match of `selector` for `durationMs`,
  * then removes it — the selector form of {@link celebrateElement}. Returns a cancel that un-stamps
  * every match immediately. `root` scopes the search (e.g. a shell's own root) — omitted, searches the
  * whole document as before; matters because element ids/aliases are not guaranteed unique across
@@ -8556,7 +8556,7 @@ export function celebrateElements(selector: string, durationMs = CELEBRATE_STAMP
   return () => cancels.forEach((cancel) => cancel());
 }
 
-/** @emoji 🎉️ Imperatively stamps `data-celebrated="true"` on every mounted UI element id (and every
+/** 🎉️ Imperatively stamps `data-celebrated="true"` on every mounted UI element id (and every
  * element carrying a valid `data-element-alias`) for `durationMs` — the tour-finale counterpart of
  * {@link celebrateElements}. Skips the introduction chrome itself (`ui.introduction.*`) so the
  * dismiss unmount doesn't race the stamp. Returns a cancel that un-stamps every match immediately.
@@ -8746,7 +8746,7 @@ export const Spinner: React.FC<SpinnerProps> = ({ size = "medium", className = "
 
 type OwnedRouteTarget = { kind: "internal"; href: string };
 
-/** @emoji 🧭️ Parses the closed same-document route grammar without normalizing its path, query, or fragment. */
+/** 🧭️ Parses the closed same-document route grammar without normalizing its path, query, or fragment. */
 export function parseOwnedRouteTarget(href: unknown): OwnedRouteTarget | null {
   if (typeof href !== "string" || href.length === 0 || /[\s\u0000-\u001f\u007f\\]/u.test(href)) return null;
   if (/^[a-z][a-z0-9+.-]*:/i.test(href) || href.startsWith("//")) return null;
@@ -8758,7 +8758,7 @@ export function parseOwnedRouteTarget(href: unknown): OwnedRouteTarget | null {
   return { kind: "internal", href };
 }
 
-/** @emoji 🚦️ Performs the one owned browser-history command and publishes one matching navigation signal. */
+/** 🚦️ Performs the one owned browser-history command and publishes one matching navigation signal. */
 export function navigateOwnedRoute(target: OwnedRouteTarget): { navigated: boolean } {
   if (typeof window === "undefined" || typeof window.history?.pushState !== "function" || typeof window.PopStateEvent !== "function") return { navigated: false };
   let event: PopStateEvent;
@@ -8772,7 +8772,7 @@ export function navigateOwnedRoute(target: OwnedRouteTarget): { navigated: boole
   return { navigated: true };
 }
 
-/** @emoji 🔗️ Anchor that delegates primary internal clicks to the owned navigation command while preserving native behavior for every other target or gesture. */
+/** 🔗️ Anchor that delegates primary internal clicks to the owned navigation command while preserving native behavior for every other target or gesture. */
 export function RouteLink({ href, target, download, onClick, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>): React.ReactElement {
   const handleClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
     onClick?.(event);
@@ -8829,7 +8829,7 @@ export const NotFound: React.FC<NotFoundProps> = ({ title, description, parentPa
 // Tone-based status-surface kit: badges, status chips, stat tiles, and empty/error placeholders.
 // Consumers MUST use StatusTone (never hardcoded palette colors) for tone-driven styling.
 
-/** @emoji 🚦️ Semantic tone shared by {@link Badge}, {@link StatusChip}, and {@link StatCard} deltas. */
+/** 🚦️ Semantic tone shared by {@link Badge}, {@link StatusChip}, and {@link StatCard} deltas. */
 export type StatusTone = "neutral" | "info" | "success" | "warning" | "danger";
 
 /**
@@ -8864,7 +8864,7 @@ export interface BadgeProps {
   icon?: React.ReactNode;
 }
 
-/** @emoji 🏷️ Small tone-colored pill for inline status labels. */
+/** 🏷️ Small tone-colored pill for inline status labels. */
 export function Badge({ id, tone = "neutral", text, icon }: BadgeProps): React.ReactElement {
   return (
     <span id={id} data-slot="badge" className={cn("inline-flex items-center gap-half rounded-full border px-half py-0.5 text-xs font-medium", STATUS_TONE_SURFACE_CLASS[tone])}>
@@ -8893,7 +8893,7 @@ const STATUS_CHIP_TONE: Record<StatusChipProps["status"], StatusTone> = {
   offline: "neutral",
 };
 
-/** @emoji 🟢️ Inline dot-and-label indicator for live status (connection, task, presence). */
+/** 🟢️ Inline dot-and-label indicator for live status (connection, task, presence). */
 export function StatusChip({ id, status, label }: StatusChipProps): React.ReactElement {
   const tone = STATUS_CHIP_TONE[status];
   return (
@@ -8915,7 +8915,7 @@ export interface StatCardProps {
   icon?: React.ReactNode;
 }
 
-/** @emoji 📊️ Labelled metric tile with an optional tone-colored delta badge. */
+/** 📊️ Labelled metric tile with an optional tone-colored delta badge. */
 export function StatCard({ id, label, value, delta, icon }: StatCardProps): React.ReactElement {
   return (
     <div id={id} data-slot="stat-card" className="flex flex-col gap-single border p-single">
@@ -8942,7 +8942,7 @@ export interface EmptyStateProps {
   action?: { label: string; onClick: () => void };
 }
 
-/** @emoji 📭️ Centered placeholder for lists or panels with no content yet. */
+/** 📭️ Centered placeholder for lists or panels with no content yet. */
 export function EmptyState({ id, icon, title, description, action }: EmptyStateProps): React.ReactElement {
   return (
     <div id={id} data-slot="empty-state" className="flex flex-col items-center justify-center h-full gap-medium p-large text-center">
@@ -8968,7 +8968,7 @@ export interface ErrorViewProps {
   onRetry?: () => void;
 }
 
-/** @emoji 🚨️ Centered error placeholder with an optional retry action. */
+/** 🚨️ Centered error placeholder with an optional retry action. */
 export function ErrorView({ id, title, message, onRetry }: ErrorViewProps): React.ReactElement {
   const somethingWentWrongLabel = useLabel("ui.common.somethingWentWrong");
   const retryLabel = useLabel("ui.common.retry");
@@ -8991,7 +8991,7 @@ export function ErrorView({ id, title, message, onRetry }: ErrorViewProps): Reac
 // #endregion 🚦️StatusSurface
 
 //#region 🧭️UiElementRegistry
-/** @emoji 🧭️ Compile-time checklist of chrome components that must accept the shared {@link UiElementStateProps} axes. */
+/** 🧭️ Compile-time checklist of chrome components that must accept the shared {@link UiElementStateProps} axes. */
 export const UI_ELEMENT_REGISTRY = ["Window", "Panel", "Canvas", "Button", "Slider", "TreeItem", "Action"] as const;
 //#endregion 🧭️UiElementRegistry
 
@@ -9283,13 +9283,13 @@ type FullscreenHTMLElement = HTMLElement & {
   webkitRequestFullscreen?: () => Promise<void> | void;
 };
 
-/** @emoji 🖥️ Whether the browser document is in fullscreen mode. */
+/** 🖥️ Whether the browser document is in fullscreen mode. */
 export function readDocumentFullscreenActive(doc: Document = document): boolean {
   const typed = doc as FullscreenDocument;
   return !!(typed.fullscreenElement ?? typed.webkitFullscreenElement);
 }
 
-/** @emoji 🖥️ Enter or exit browser fullscreen. `root` is the element requesting fullscreen — a shell's
+/** 🖥️ Enter or exit browser fullscreen. `root` is the element requesting fullscreen — a shell's
  * own root (e.g. `ShellScope.rootRef.current`) so going fullscreen from within one embedded shell fills
  * the screen with just that shell's content, not the whole page (other mounted shells included);
  * omitted, defaults to `document.documentElement` (the single-shell-per-page case, unchanged). The
@@ -9307,7 +9307,7 @@ export async function toggleDocumentFullscreen(root: Element = document.document
   else typedRoot.webkitRequestFullscreen?.();
 }
 
-/** @emoji 🖥️ Tracks browser fullscreen state for shell chrome. `root` scopes which element requests
+/** 🖥️ Tracks browser fullscreen state for shell chrome. `root` scopes which element requests
  * fullscreen — see {@link toggleDocumentFullscreen}'s doc. */
 export function useDocumentFullscreen(root?: Element): { isFullscreen: boolean; toggle: () => void } {
   const [isFullscreen, setIsFullscreen] = reactHostPort.useState(() => (typeof document !== "undefined" ? readDocumentFullscreenActive() : false));
@@ -9345,7 +9345,7 @@ export function publishShellNavbarTrailingEndWidthPx(root: HTMLElement | undefin
   for (const listener of shellNavbarTrailingEndWidthListenersByRoot.get(key) ?? []) listener();
 }
 
-/** @emoji ↔ Measured trailing navbar chrome width (fullscreen toggle footprint) for this shell. */
+/** ↔ Measured trailing navbar chrome width (fullscreen toggle footprint) for this shell. */
 export function useShellNavbarTrailingEndWidthPx(root?: HTMLElement): number {
   const key = resolveElementsSurfaceChromeRoot(root);
   return reactHostPort.useSyncExternalStore(
@@ -9364,13 +9364,13 @@ export function useShellNavbarTrailingEndWidthPx(root?: HTMLElement): number {
   );
 }
 
-/** @emoji ↔ Inline cap-row reserve that clears trailing navbar controls for chrome-hosted right panels. */
+/** ↔ Inline cap-row reserve that clears trailing navbar controls for chrome-hosted right panels. */
 export function shellNavbarTrailingEndReserveStyle(widthPx: number): React.CSSProperties | undefined {
   if (widthPx <= 0) return undefined;
   return { paddingInlineStart: `${widthPx + uiSpacingPx(1)}px` };
 }
 
-/** @emoji 🧢 One OPEN chrome-hosted dock's cap row: it sizes to its CONTENT and never below the body it
+/** 🧢 One OPEN chrome-hosted dock's cap row: it sizes to its CONTENT and never below the body it
  * caps, so the fold control is laid out BESIDE the tab strip instead of underneath it.
  *
  * The cap row is a flex row of `[tab strip | gap | controls]` inside a panel root pinned to the body
@@ -9390,7 +9390,7 @@ export function chromeHostedPanelCapRowStyle(anchor: Anchor, trailingEndWidthPx:
 }
 
 // #region 🛟️ChromePanelSafeArea
-/** @emoji 🛟️ An axis-aligned viewport box in CSS pixels — the one geometry currency of the safe area,
+/** 🛟️ An axis-aligned viewport box in CSS pixels — the one geometry currency of the safe area,
  * so a caller can state a box it has not laid out yet ({@link Window}'s right-edge chrome column) as
  * readily as one it measured ({@link safeAreaBoxFromRect}). */
 export interface SafeAreaBox {
@@ -9400,19 +9400,19 @@ export interface SafeAreaBox {
   readonly bottom: number;
 }
 
-/** @emoji 🛟️ One open anchored chrome {@link Panel}'s occupied viewport box, with the anchor it grew from. */
+/** 🛟️ One open anchored chrome {@link Panel}'s occupied viewport box, with the anchor it grew from. */
 export interface ChromePanelOccupancy {
   readonly key: string;
   readonly anchor: Anchor;
   readonly box: SafeAreaBox;
 }
 
-/** @emoji 🛟️ Which axis an in-window affordance is free to yield on. Window pane toggles do not yield —
+/** 🛟️ Which axis an in-window affordance is free to yield on. Window pane toggles do not yield —
  * they stay behind anchored chrome panels. Floating content overlays (e.g. a world view rail) take
  * `"either"`, i.e. whichever single axis clears the chrome panel with the smaller displacement. */
 export type SafeAreaYield = "inline" | "block" | "either";
 
-/** @emoji 🛟️ How far an affordance must move off its anchor's own two edges to clear the chrome panels
+/** 🛟️ How far an affordance must move off its anchor's own two edges to clear the chrome panels
  * over it — at most one axis is ever non-zero. */
 export interface ChromePanelSafeArea {
   readonly inlinePx: number;
@@ -9422,7 +9422,7 @@ export interface ChromePanelSafeArea {
 const CHROME_PANEL_SAFE_AREA_CLEAR: ChromePanelSafeArea = Object.freeze({ inlinePx: 0, blockPx: 0 });
 const NO_CHROME_PANEL_OCCUPANCIES: readonly ChromePanelOccupancy[] = Object.freeze([]);
 
-/** @emoji 🛟️ A measured DOM rect as a {@link SafeAreaBox}, rounded to whole pixels so a sub-pixel
+/** 🛟️ A measured DOM rect as a {@link SafeAreaBox}, rounded to whole pixels so a sub-pixel
  * reflow of an unchanged panel never re-publishes and never re-renders its readers. */
 export function safeAreaBoxFromRect(rect: DOMRect): SafeAreaBox {
   return { left: Math.round(rect.left), top: Math.round(rect.top), right: Math.round(rect.right), bottom: Math.round(rect.bottom) };
@@ -9443,7 +9443,7 @@ const shellChromePanelBoxesByRoot = ephemeralMap<HTMLElement, Map<string, Chrome
 const shellChromePanelSnapshotByRoot = ephemeralMap<HTMLElement, readonly ChromePanelOccupancy[]>("framework.modules.ui.packages.typescript.targets.react.index.tsx.shellChromePanelSnapshotByRoot");
 const shellChromePanelListenersByRoot = ephemeralMap<HTMLElement, Set<() => void>>("framework.modules.ui.packages.typescript.targets.react.index.tsx.shellChromePanelListenersByRoot");
 
-/** @emoji 🛟️ Publishes (or, with `box: null`, retracts) one open anchored chrome panel's occupied
+/** 🛟️ Publishes (or, with `box: null`, retracts) one open anchored chrome panel's occupied
  * viewport box. An anchored panel floats OVER the canvas region in the app root's stacking context (see
  * {@link anchorPositionStyle} and `📐️Layout`), so it is the only party that knows the box it occupies —
  * window content painted under it cannot derive that from its own layout, and cannot win the corner back
@@ -9469,7 +9469,7 @@ export function publishShellChromePanelBox(root: HTMLElement | undefined, key: s
   for (const listener of shellChromePanelListenersByRoot.get(rootKey) ?? []) listener();
 }
 
-/** @emoji 🛟️ Every open anchored chrome panel of this shell, as the boxes they occupy — the single
+/** 🛟️ Every open anchored chrome panel of this shell, as the boxes they occupy — the single
  * observable any in-window affordance reserves itself against. */
 export function useShellChromePanelBoxes(root?: HTMLElement): readonly ChromePanelOccupancy[] {
   const rootKey = resolveElementsSurfaceChromeRoot(root);
@@ -9490,7 +9490,7 @@ export function useShellChromePanelBoxes(root?: HTMLElement): readonly ChromePan
 }
 
 /**
- * @emoji 🛟️ The safe area an affordance anchored inside `host` keeps from the chrome panels painted
+ * 🛟️ The safe area an affordance anchored inside `host` keeps from the chrome panels painted
  * over it — the ONE rule both renderers obey (its wgpu twin is `chrome_panel_safe_area`, and both answer
  * `🐚️Shell/🧫️fixtures/🛑️surface-controls/🔣️.json`'s `chromePanelSafeArea` rows).
  *
@@ -9531,7 +9531,7 @@ export function chromePanelSafeArea(affordance: SafeAreaBox, host: SafeAreaBox, 
   return CHROME_PANEL_SAFE_AREA_CLEAR;
 }
 
-/** @emoji 🛟️ {@link anchorPositionStyle}'s two edge insets, moved inward by a {@link chromePanelSafeArea}
+/** 🛟️ {@link anchorPositionStyle}'s two edge insets, moved inward by a {@link chromePanelSafeArea}
  * — the flush `var(--spacing-single)` inset (or the caller's own `base`, e.g. a window content rail's
  * {@link windowChromeClearedTopOffset}) when the safe area is clear, so a shell with no open panel lays
  * out byte-for-byte as authored. A middle anchor has no edge to reserve on that axis. */
@@ -9546,7 +9546,7 @@ export function chromePanelSafeAreaStyle(anchor: Anchor, safeArea: ChromePanelSa
   return style;
 }
 
-/** @emoji 🛟️ Live {@link chromePanelSafeArea} for one mounted affordance, measured against every open
+/** 🛟️ Live {@link chromePanelSafeArea} for one mounted affordance, measured against every open
  * anchored chrome panel of the enclosing shell.
  *
  * The affordance is graded on its UNRESERVED box — its measured rect with the offset this hook currently
@@ -9624,7 +9624,7 @@ function NavbarFullscreenToggle({ onToggle }: { readonly onToggle?: () => void }
   );
 }
 
-/** @emoji 🖥️ Navbar trailing chrome (chat toggle, fullscreen, …) — parks width so center labels do not collapse when panels open. */
+/** 🖥️ Navbar trailing chrome (chat toggle, fullscreen, …) — parks width so center labels do not collapse when panels open. */
 export function NavbarTrailingChromeSlot({
   beforeFullscreen,
   showFullscreenToggle = true,
@@ -9685,14 +9685,14 @@ export { NavbarExampleSelect, type NavbarExampleOption, type NavbarExampleSelect
 // Draggable Electron-style window title bar with minimize/maximize/close controls.
 // Consumers MUST omit `controls` on non-Electron hosts; no control buttons render without it.
 
-/** @emoji 🪟️ Configuration for {@link DesktopTitlebar} window controls. */
+/** 🪟️ Configuration for {@link DesktopTitlebar} window controls. */
 export interface DesktopTitlebarProps {
   title: string;
   controls?: { minimize(): void; maximize(): void; close(): void };
   children?: React.ReactNode;
 }
 
-/** @emoji 🪟️ Draggable title bar row with a title, extra chrome, and window controls. @see https://www.electronjs.org/docs/latest/tutorial/custom-title-bar */
+/** 🪟️ Draggable title bar row with a title, extra chrome, and window controls. @see https://www.electronjs.org/docs/latest/tutorial/custom-title-bar */
 export function DesktopTitlebar({ title, controls, children }: DesktopTitlebarProps): React.ReactElement {
   const minimizeLabel = useLabel("ui.common.minimize");
   const maximizeLabel = useLabel("ui.common.maximize");
@@ -10007,7 +10007,7 @@ export type { PanelProps, TreePanelConfig, TreePanelDefinition, TreePanelSource 
 // `26/07/15/RENAME-WINDOW-PANELS-TO-PANES-AND-CORNER-PANELS-TO-PANELS`): "panel" is the shell-edge dock, "pane" is
 // chrome floating inside one window.
 
-/** @emoji 🧭️ Nearest anchor to a pointer position within a host's bounding rect — a 3×3 zone grid over the box.
+/** 🧭️ Nearest anchor to a pointer position within a host's bounding rect — a 3×3 zone grid over the box.
  * There is no center anchor, so the dead-center zone resolves to whichever edge-middle the pointer has drifted
  * closer to (compares distance from the vertical vs. horizontal midline). */
 export function nearestAnchor(pointerX: number, pointerY: number, hostRect: { readonly left: number; readonly top: number; readonly width: number; readonly height: number }): Anchor {
@@ -10025,15 +10025,15 @@ export function nearestAnchor(pointerX: number, pointerY: number, hostRect: { re
 }
 
 interface PaneHostContextValue {
-  /** @emoji 🎯️ Imperative bounds source for drag math (read on demand, well after mount — never during another component's render). */
+  /** 🎯️ Imperative bounds source for drag math (read on demand, well after mount — never during another component's render). */
   readonly containerRef: React.RefObject<HTMLDivElement | null>;
-  /** @emoji 🌱️ Reactive mirror of the same node, `null` until mount — {@link usePaneSlot} portals need a render-time value, and a ref's `.current` isn't populated yet during the same pass a child first renders alongside its ref owner. */
+  /** 🌱️ Reactive mirror of the same node, `null` until mount — {@link usePaneSlot} portals need a render-time value, and a ref's `.current` isn't populated yet during the same pass a child first renders alongside its ref owner. */
   readonly container: HTMLDivElement | null;
 }
 
 const PaneHostContext = reactHostPort.createContext<PaneHostContextValue | undefined>(undefined);
 
-/** @emoji 🪟️ The nearest {@link PaneHost}, or `undefined` outside one — {@link Pane} drag-to-reanchor and {@link usePaneSlot} both need it. */
+/** 🪟️ The nearest {@link PaneHost}, or `undefined` outside one — {@link Pane} drag-to-reanchor and {@link usePaneSlot} both need it. */
 function usePaneHostContext(): PaneHostContextValue | undefined {
   return reactHostPort.useContext(PaneHostContext);
 }
@@ -10046,7 +10046,7 @@ export interface PaneHostProps {
   readonly children?: React.ReactNode;
 }
 
-/** @emoji 🪟️ Bounds box for floating panes: mount one inside a window body (or any floating-chrome host) so every
+/** 🪟️ Bounds box for floating panes: mount one inside a window body (or any floating-chrome host) so every
  * {@link Pane} inside — direct JSX children or portaled in via {@link usePaneSlot} — shares one anchor coordinate
  * space to drag between and one DOM parent to measure drag drops against.
  *
@@ -10076,7 +10076,7 @@ export const PaneHost: React.FC<PaneHostProps> = ({ className, children }) => {
   );
 };
 
-/** @emoji 🪟️ Portals `pane` into the nearest {@link PaneHost} — lets a component deep inside a window's canvas
+/** 🪟️ Portals `pane` into the nearest {@link PaneHost} — lets a component deep inside a window's canvas
  * (e.g. a per-tool floating control) contribute a draggable pane without threading it through the window's props.
  * Renders nothing outside a `PaneHost`. */
 export function usePaneSlot(pane: React.ReactElement): React.ReactPortal | null {
@@ -10084,7 +10084,7 @@ export function usePaneSlot(pane: React.ReactElement): React.ReactPortal | null 
   return host?.container ? (createPortal(pane, host.container) as React.ReactPortal) : null;
 }
 
-/** @emoji ↔ Pane resize handle — same sign convention as {@link PanelResizeHandle}: dragging the right-side handle right (or the left-side handle left) grows the pane. Middle anchors pass `deltaFactor={2}` so each edge contributes half the visual grow. */
+/** ↔ Pane resize handle — same sign convention as {@link PanelResizeHandle}: dragging the right-side handle right (or the left-side handle left) grows the pane. Middle anchors pass `deltaFactor={2}` so each edge contributes half the visual grow. */
 function PaneResizeHandle({
   side,
   size,
@@ -10131,14 +10131,14 @@ function PaneResizeHandle({
  * Props interface for the Pane component.
  **/
 export interface PaneProps {
-  /** @emoji 🆔️ The pane container's own DOM id — rendered on the overlay root, and the stem every derived chrome id (`<id>.pane.fold`) falls back to. */
+  /** 🆔️ The pane container's own DOM id — rendered on the overlay root, and the stem every derived chrome id (`<id>.pane.fold`) falls back to. */
   readonly id: string;
   readonly anchor: Anchor;
-  /** @emoji 🧭️ Fires while dragging the pane's handle, once per anchor crossed — omit to make the pane fixed (drag handle still renders as a pure affordance, matching panel toggles). */
+  /** 🧭️ Fires while dragging the pane's handle, once per anchor crossed — omit to make the pane fixed (drag handle still renders as a pure affordance, matching panel toggles). */
   readonly onAnchorChange?: (anchor: Anchor) => void;
   readonly folded?: boolean;
   readonly onFoldToggle?: () => void;
-  /** @emoji 🖼️ Fixed semantic icon for the pane chrome toggle — never a fold-direction chevron. */
+  /** 🖼️ Fixed semantic icon for the pane chrome toggle — never a fold-direction chevron. */
   readonly icon: IconName;
   readonly label?: UiLabel;
   readonly size?: number;
@@ -10146,7 +10146,7 @@ export interface PaneProps {
   readonly minSize?: number;
   readonly maxSize?: number;
   readonly resizable?: boolean;
-  /** @emoji ⛶️ Fill the {@link PaneHost} (programmatic span across the host). */
+  /** ⛶️ Fill the {@link PaneHost} (programmatic span across the host). */
   readonly expanded?: boolean;
   readonly overlaySlot?: string;
   readonly overlayRef?: React.Ref<HTMLDivElement>;
@@ -10160,9 +10160,9 @@ export interface PaneProps {
   readonly toggleDisabled?: boolean;
   readonly dimWhenOpen?: boolean;
   readonly onResizeActiveChange?: (active: boolean) => void;
-  /** @emoji 🗂️ Stacking order among panes sharing one anchor — lower first, in this anchor's flow direction. */
+  /** 🗂️ Stacking order among panes sharing one anchor — lower first, in this anchor's flow direction. */
   readonly order?: number;
-  /** @emoji 🛟️ Extra inline inset on this anchor's own edge — see {@link chromePanelSafeArea}. */
+  /** 🛟️ Extra inline inset on this anchor's own edge — see {@link chromePanelSafeArea}. */
   readonly inlineEdgeReservePx?: number;
   readonly zIndex?: 10 | 20 | 30 | 40;
   readonly className?: string;
@@ -10173,7 +10173,7 @@ const PANE_DEFAULT_SIZE = 300;
 const PANE_DEFAULT_MIN_SIZE = 200;
 const PANE_DEFAULT_MAX_SIZE = 600;
 
-/** @emoji 🪟️ One floating pane inside a {@link PaneHost} — anchored via the exact same {@link anchorPositionStyle}/
+/** 🪟️ One floating pane inside a {@link PaneHost} — anchored via the exact same {@link anchorPositionStyle}/
  * {@link flowFromAnchor} math as {@link Panel}, foldable to a chip, optionally width-resizable (inner edge for
  * corners / side-middle; both edges for top/bottom-middle, matching panel grow), and (given `onAnchorChange`)
  * draggable by its handle to any of the eight anchors via {@link nearestAnchor} — dropped anywhere inside the
@@ -10364,14 +10364,14 @@ export interface EngagementStatus {
   content: React.ReactNode;
 }
 
-/** @emoji 🔘️ One discrete option on an engagement {@link EngagementRingControl}. */
+/** 🔘️ One discrete option on an engagement {@link EngagementRingControl}. */
 export interface EngagementRingOption {
   id: string;
   label: string;
   disabled?: boolean;
 }
 
-/** @emoji 🎚️ Engagement range slider for numeric values (height, distance, …). */
+/** 🎚️ Engagement range slider for numeric values (height, distance, …). */
 export interface EngagementSliderControl {
   kind: "slider";
   id?: string;
@@ -10379,7 +10379,7 @@ export interface EngagementSliderControl {
   value: number;
   min: number;
   max: number;
-  /** @emoji 🎚️ Absolute preloaded/ready extent on the fixed `[min, max]` range. */
+  /** 🎚️ Absolute preloaded/ready extent on the fixed `[min, max]` range. */
   ready?: number;
   step?: number;
   unit?: string;
@@ -10388,7 +10388,7 @@ export interface EngagementSliderControl {
   onCommit?: (value: number) => void;
 }
 
-/** @emoji 🔢️ Engagement stepper for numeric values without fixed upper bound. */
+/** 🔢️ Engagement stepper for numeric values without fixed upper bound. */
 export interface EngagementStepperControl {
   kind: "stepper";
   id?: string;
@@ -10403,7 +10403,7 @@ export interface EngagementStepperControl {
   onCommit?: (value: number) => void;
 }
 
-/** @emoji 🧫️ Engagement ring (radial dial) for angles or discrete option selection. */
+/** 🧫️ Engagement ring (radial dial) for angles or discrete option selection. */
 export interface EngagementRingControl {
   kind: "ring";
   id?: string;
@@ -10414,7 +10414,7 @@ export interface EngagementRingControl {
   onSelect?: (id: string) => void;
 }
 
-/** @emoji 🔘️ One discrete option on an engagement {@link EngagementToggleGroupControl}. */
+/** 🔘️ One discrete option on an engagement {@link EngagementToggleGroupControl}. */
 export interface EngagementToggleGroupOption {
   id: string;
   label: string;
@@ -10422,7 +10422,7 @@ export interface EngagementToggleGroupOption {
   disabled?: boolean;
 }
 
-/** @emoji 🔘️ Engagement toggle button group for small unordered enums. */
+/** 🔘️ Engagement toggle button group for small unordered enums. */
 export interface EngagementToggleGroupControl {
   kind: "toggleGroup";
   id?: string;
@@ -10433,14 +10433,14 @@ export interface EngagementToggleGroupControl {
   onSelect?: (id: string) => void;
 }
 
-/** @emoji 🔽️ One item on an engagement {@link EngagementSelectControl}. */
+/** 🔽️ One item on an engagement {@link EngagementSelectControl}. */
 export interface EngagementSelectItem {
   id: string;
   value: string;
   label: string;
 }
 
-/** @emoji 🔽️ Engagement select dropdown for large enums. */
+/** 🔽️ Engagement select dropdown for large enums. */
 export interface EngagementSelectControl {
   kind: "select";
   id?: string;
@@ -10452,20 +10452,20 @@ export interface EngagementSelectControl {
   onChange?: (value: string) => void;
 }
 
-/** @emoji 🎛️ Optional engagement UI control for the active action step. */
+/** 🎛️ Optional engagement UI control for the active action step. */
 export type EngagementControl = EngagementSliderControl | EngagementStepperControl | EngagementRingControl | EngagementToggleGroupControl | EngagementSelectControl;
 
-/** @emoji 🏷️ i18n keys for window engagement chrome (`ui.engagement.*` in {@link uiChromeTranslationBundles}). */
+/** 🏷️ i18n keys for window engagement chrome (`ui.engagement.*` in {@link uiChromeTranslationBundles}). */
 export const UI_ENGAGEMENT = {
   actions: "ui.engagement.actions",
 } as const satisfies Record<string, UiTranslationKey>;
 
-/** @emoji 🏷️ Default English copy for window engagement chrome (matches `ui.engagement.*` en bundle). */
+/** 🏷️ Default English copy for window engagement chrome (matches `ui.engagement.*` en bundle). */
 export const ENGAGEMENT_USER = {
   actionsAria: "Actions",
 } as const;
 
-/** @emoji 🏷️ i18n keys for the window search pane (`ui.windowSearch.*` in {@link uiChromeTranslationBundles}; distinct from the `ui.search.*` command palette). */
+/** 🏷️ i18n keys for the window search pane (`ui.windowSearch.*` in {@link uiChromeTranslationBundles}; distinct from the `ui.search.*` command palette). */
 export const UI_WINDOW_SEARCH = {
   title: "ui.windowSearch.title",
   action: "ui.windowSearch.action",
@@ -10474,7 +10474,7 @@ export const UI_WINDOW_SEARCH = {
   noMatches: "ui.windowSearch.noMatches",
 } as const satisfies Record<string, UiTranslationKey>;
 
-/** @emoji 🏷️ Default English copy for the window search pane (matches `ui.windowSearch.*` en bundle) — for standalone REPL surfaces that build a {@link SearchSpec} outside {@link Search}'s own `useLabel` resolution. */
+/** 🏷️ Default English copy for the window search pane (matches `ui.windowSearch.*` en bundle) — for standalone REPL surfaces that build a {@link SearchSpec} outside {@link Search}'s own `useLabel` resolution. */
 export const WINDOW_SEARCH_USER = {
   actionPlaceholder: "Action",
   actionPlaceholderActive: "Action or value",
@@ -10482,7 +10482,7 @@ export const WINDOW_SEARCH_USER = {
   noMatches: "No matches",
 } as const;
 
-/** @emoji ⌨️ Normalizes an action NAME for display and matching: no separators, PascalCase tokens (`set height` → `SetHeight`, `box` → `Box`), preserving decimal points inside numbers (`3.5` stays `3.5`, not `35`). Names only — the typed engagement line reaches the program verbatim (a grammar like `move <dx> <dy>` needs its spaces), so this never touches {@link SearchInput.onChange}/`onSubmit` payloads. */
+/** ⌨️ Normalizes an action NAME for display and matching: no separators, PascalCase tokens (`set height` → `SetHeight`, `box` → `Box`), preserving decimal points inside numbers (`3.5` stays `3.5`, not `35`). Names only — the typed engagement line reaches the program verbatim (a grammar like `move <dx> <dy>` needs its spaces), so this never touches {@link SearchInput.onChange}/`onSubmit` payloads. */
 export function normalizeEngagementActionText(text: string): string {
   const decimalMarker = "\u0001";
   const withProtectedDecimals = text.replace(/(\d)\.(\d)/g, `$1${decimalMarker}$2`);
@@ -10497,28 +10497,28 @@ export function normalizeEngagementActionText(text: string): string {
   return words.map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join("");
 }
 
-/** @emoji ⚖️ True when two engagement action tokens match after {@link normalizeEngagementActionText} (case-insensitive). */
+/** ⚖️ True when two engagement action tokens match after {@link normalizeEngagementActionText} (case-insensitive). */
 export function engagementActionTokenEquals(a: string, b: string): boolean {
   return normalizeEngagementActionText(a).toLowerCase() === normalizeEngagementActionText(b).toLowerCase();
 }
 
 // #region 🔎️WindowSearch
 
-/** @emoji ⌨️ One typed action line for a window's {@link SearchSpec}. */
+/** ⌨️ One typed action line for a window's {@link SearchSpec}. */
 export interface SearchInput {
   id?: string;
   value?: string;
   placeholder?: UiLabel;
   onChange?: (value: string) => void;
   onSubmit?: (value: string) => void;
-  /** @emoji 🔁️ Restarts the last finalized engagement when Space is pressed with an empty action. */
+  /** 🔁️ Restarts the last finalized engagement when Space is pressed with an empty action. */
   onRepeatLast?: () => void;
-  /** @emoji ⎋️ Cancels the active engagement session (Escape), e.g. abort interaction or clear action. */
+  /** ⎋️ Cancels the active engagement session (Escape), e.g. abort interaction or clear action. */
   onAbort?: () => void;
   disabled?: boolean;
 }
 
-/** @emoji 🔎️ One autocomplete row for {@link SearchSpec.possibles} (interaction, transition, …). */
+/** 🔎️ One autocomplete row for {@link SearchSpec.possibles} (interaction, transition, …). */
 export interface SearchPossible {
   id: string;
   label: string;
@@ -10540,7 +10540,7 @@ function searchPossibleRankScore(query: string, item: SearchPossible): number {
   return -1;
 }
 
-/** @emoji 🎯️ Resolves a pointer event target to an element for search suggestion hit-testing. */
+/** 🎯️ Resolves a pointer event target to an element for search suggestion hit-testing. */
 function searchSuggestionPointerTarget(event: Pick<PointerEvent, "target">): Element | null {
   const target = event.target;
   if (target instanceof Element) return target;
@@ -10548,12 +10548,12 @@ function searchSuggestionPointerTarget(event: Pick<PointerEvent, "target">): Ele
   return null;
 }
 
-/** @emoji 🎯️ True when a pointer event targets a search suggestion action row. */
+/** 🎯️ True when a pointer event targets a search suggestion action row. */
 export function isSearchSuggestionActionTarget(event: Pick<PointerEvent, "target">): boolean {
   return Boolean(searchSuggestionPointerTarget(event)?.closest('[data-slot="command-item"]'));
 }
 
-/** @emoji 🔎️ Filters {@link SearchPossible} rows by label, detail, and id for the window search action line. */
+/** 🔎️ Filters {@link SearchPossible} rows by label, detail, and id for the window search action line. */
 export function filterSearchPossibles(query: string, items: readonly SearchPossible[]): SearchPossible[] {
   const trimmed = normalizeEngagementActionText(query).toLowerCase();
   if (!trimmed) return [...items];
@@ -10564,13 +10564,13 @@ export function filterSearchPossibles(query: string, items: readonly SearchPossi
     .map((row) => row.item);
 }
 
-/** @emoji ⌨️ Inline completion segments for one {@link SearchPossible} using label casing for the matched name prefix. */
+/** ⌨️ Inline completion segments for one {@link SearchPossible} using label casing for the matched name prefix. */
 export interface SearchInlineCompletion {
   readonly prefix: string;
   readonly suffix: string;
 }
 
-/** @emoji ⌨️ Returns PascalCase inline completion when query prefix-matches the possible's name, detail, or id. */
+/** ⌨️ Returns PascalCase inline completion when query prefix-matches the possible's name, detail, or id. */
 export function searchInlineCompletion(query: string, item: SearchPossible | undefined): SearchInlineCompletion | null {
   if (!query.trim() || !item) return null;
   const q = query;
@@ -10590,12 +10590,12 @@ export function searchInlineCompletion(query: string, item: SearchPossible | und
   return best;
 }
 
-/** @emoji ⌨️ Inline completion suffix for one {@link SearchPossible} (longest prefix match on label, detail, or id). */
+/** ⌨️ Inline completion suffix for one {@link SearchPossible} (longest prefix match on label, detail, or id). */
 export function searchCompletionSuffix(query: string, item: SearchPossible | undefined): string {
   return searchInlineCompletion(query, item)?.suffix ?? "";
 }
 
-/** @emoji ⌨️ First non-empty inline completion across ranked {@link SearchPossible} matches. */
+/** ⌨️ First non-empty inline completion across ranked {@link SearchPossible} matches. */
 export function searchActiveInlineCompletion(query: string, matches: readonly SearchPossible[], index: number): SearchInlineCompletion | null {
   if (!query.trim() || !matches.length) return null;
   const order = [matches[Math.min(index, matches.length - 1)]!, ...matches];
@@ -10609,12 +10609,12 @@ export function searchActiveInlineCompletion(query: string, matches: readonly Se
   return null;
 }
 
-/** @emoji ⌨️ First non-empty inline completion suffix across ranked {@link SearchPossible} matches. */
+/** ⌨️ First non-empty inline completion suffix across ranked {@link SearchPossible} matches. */
 export function searchActiveCompletionSuffix(query: string, matches: readonly SearchPossible[], index: number): string {
   return searchActiveInlineCompletion(query, matches, index)?.suffix ?? "";
 }
 
-/** @emoji 🔎️ Renders a possible name with the query prefix emphasized using label casing (e.g. **B**ox). */
+/** 🔎️ Renders a possible name with the query prefix emphasized using label casing (e.g. **B**ox). */
 export function searchHighlightedLabel(label: string, query: string, detail?: string): React.ReactNode {
   const displayLabel = normalizeEngagementActionText(label);
   const trimmed = normalizeEngagementActionText(query);
@@ -10634,9 +10634,9 @@ export function searchHighlightedLabel(label: string, query: string, detail?: st
   );
 }
 
-/** @emoji 🚫️ React props that disable native browser affordances on editable UI controls. */
+/** 🚫️ React props that disable native browser affordances on editable UI controls. */
 
-/** @emoji 🚫️ Applies {@link uiFormControlBrowserDefaultProps} to a live form control (idempotent). */
+/** 🚫️ Applies {@link uiFormControlBrowserDefaultProps} to a live form control (idempotent). */
 export function applyUiFormControlBrowserDefaults(element: HTMLInputElement | HTMLTextAreaElement): void {
   if (element.dataset.uiBrowserDefaults === "true") return;
   const kind = element instanceof HTMLInputElement ? (element.type || "text").toLowerCase() : "textarea";
@@ -10650,7 +10650,7 @@ export function applyUiFormControlBrowserDefaults(element: HTMLInputElement | HT
   element.dataset.uiBrowserDefaults = "true";
 }
 
-/** @emoji ⌨️ True when the event target should receive typed characters (skip engagement routing and global REPL capture). */
+/** ⌨️ True when the event target should receive typed characters (skip engagement routing and global REPL capture). */
 export function isUiTypingTarget(t: EventTarget | null): boolean {
   if (!(t instanceof HTMLElement)) return false;
   if (t instanceof HTMLTextAreaElement || t instanceof HTMLSelectElement) return true;
@@ -10666,7 +10666,7 @@ export function isUiTypingTarget(t: EventTarget | null): boolean {
   return Boolean(t.closest('[data-slot="search"] input, [data-slot="search"] textarea'));
 }
 
-/** @emoji 🚫️ Capture-phase listeners: native context menu off everywhere; form-control browser defaults on focus.
+/** 🚫️ Capture-phase listeners: native context menu off everywhere; form-control browser defaults on focus.
  *
  * ⌨️ Tab focus traversal stays the browser's. It used to be suppressed everywhere outside a typing target, which left
  * every chrome control of the shell — navbar, Home, footer, panels, window chips — unreachable without a mouse
@@ -10688,13 +10688,13 @@ export function installElementsSurfaceBrowserDefaultSuppression(bindings: Return
   bindings.listen(document, "focusin", onFocusIn as EventListener, true);
 }
 
-/** @emoji ⌨️ True when the event target is already the active window search action field. */
+/** ⌨️ True when the event target is already the active window search action field. */
 export function isWindowSearchTypingTarget(t: EventTarget | null): boolean {
   if (!(t instanceof HTMLElement)) return false;
   return Boolean(t.closest('[data-slot="window"][data-active="true"] [data-slot="search"][data-active="true"] [data-slot="input"], [data-slot="window"][data-active="true"] [data-slot="search"][data-active="true"] textarea'));
 }
 
-/** @emoji ⌨️ True when printable keys should route to the active window search action (skip other text fields). */
+/** ⌨️ True when printable keys should route to the active window search action (skip other text fields). */
 export function shouldRouteKeysToWindowSearch(t: EventTarget | null): boolean {
   if (isWindowSearchTypingTarget(t)) return false;
   const searchField = queryWindowSearchInput(true) ?? queryWindowSearchInput(false);
@@ -10705,13 +10705,13 @@ export function shouldRouteKeysToWindowSearch(t: EventTarget | null): boolean {
   return true;
 }
 
-/** @emoji ⌨️ Returns the window search action input, optionally requiring {@link SearchProps.active}. */
+/** ⌨️ Returns the window search action input, optionally requiring {@link SearchProps.active}. */
 export function queryWindowSearchInput(activeOnly = false): HTMLInputElement | null {
   const searchActive = activeOnly ? '[data-active="true"]' : "";
   return document.querySelector<HTMLInputElement>(`[data-slot="window"][data-active="true"] [data-slot="search"]${searchActive} [data-slot="input"]`);
 }
 
-/** @emoji ⌨️ Focuses the action input in the active window search overlay, if present. */
+/** ⌨️ Focuses the action input in the active window search overlay, if present. */
 export function focusActiveSearchInput(): boolean {
   const active = document.activeElement;
   if (active instanceof HTMLElement && active.closest('[data-slot="engagement-control"]')) return false;
@@ -10721,7 +10721,7 @@ export function focusActiveSearchInput(): boolean {
   return true;
 }
 
-/** @emoji ✍️ One local edit of a controlled search line: the text the user typed, the published value
+/** ✍️ One local edit of a controlled search line: the text the user typed, the published value
  * that stood when the edit began, and every line this edit already dispatched through `onChange` (a
  * program that echoes the line back republishes exactly those). */
 export interface SearchLineEdit {
@@ -10730,12 +10730,12 @@ export interface SearchLineEdit {
   readonly sent?: readonly string[];
 }
 
-/** @emoji 🧾️ How many dispatched lines one edit remembers for echo detection — a slow program may still be
+/** 🧾️ How many dispatched lines one edit remembers for echo detection — a slow program may still be
  * echoing the first keystrokes of a long verb when the last ones are typed. */
 export const SEARCH_LINE_EDIT_SENT_LIMIT = 64;
 
 /**
- * @emoji ✍️ Which line a controlled window search field shows. The published value is a program's
+ * ✍️ Which line a controlled window search field shows. The published value is a program's
  * property, and a program that stores the line without republishing it (or that answers a full round trip
  * later) used to make the field unwritable: every keystroke dispatched `onChange` and the field snapped
  * straight back to the stale `value`, so every submit carried an empty line. The local edit therefore
@@ -10752,14 +10752,14 @@ export function searchControlledLineV1(published: string, edit: SearchLineEdit |
   return edit.sent?.includes(published) ? edit.text : published;
 }
 
-/** @emoji ✅️ True when Space/Enter should pick the active filtered {@link SearchPossible} instead of submitting the raw draft. */
+/** ✅️ True when Space/Enter should pick the active filtered {@link SearchPossible} instead of submitting the raw draft. */
 export function shouldActivateSearchPossibleOnConfirm(draft: string, showPossiblesList: boolean, filteredCount: number): boolean {
   if (!filteredCount) return false;
   return showPossiblesList || Boolean(draft.trim());
 }
 
 /**
- * @emoji ␣️ Whether Space CONFIRMS the line inside the action field instead of typing a separator.
+ * ␣️ Whether Space CONFIRMS the line inside the action field instead of typing a separator.
  * An empty line confirms (repeat-last when idle, step submit during a session) and a live engagement
  * session keeps the step-value grammar where each Space commits the typed number. A typed line with no
  * session is prose the program tokenizes itself (`move 50 25`), so Space belongs in the text.
@@ -10768,7 +10768,7 @@ export function searchSpaceConfirmsLine(draft: string, sessionActive: boolean): 
   return !draft.trim() || sessionActive;
 }
 
-/** @emoji ␣️ Applies Space on a window search action line (step submit vs repeat-last when idle). */
+/** ␣️ Applies Space on a window search action line (step submit vs repeat-last when idle). */
 export function applySearchSpaceAction(input: SearchInput, draft: string, sessionActive: boolean): boolean {
   if (input.disabled) return false;
   if (!draft.trim()) {
@@ -10786,7 +10786,7 @@ export function applySearchSpaceAction(input: SearchInput, draft: string, sessio
   return true;
 }
 
-/** @emoji 🔁️ Routes Space outside the search field: idle empty → {@link SearchInput.onRepeatLast}; session or typed draft → {@link SearchInput.onSubmit}. */
+/** 🔁️ Routes Space outside the search field: idle empty → {@link SearchInput.onRepeatLast}; session or typed draft → {@link SearchInput.onSubmit}. */
 export function routeWindowSearchSpace(search: SearchSpec | undefined, event: Pick<KeyboardEvent, "key" | "ctrlKey" | "metaKey" | "altKey" | "defaultPrevented" | "isComposing" | "target">): boolean {
   const input = search?.input;
   if (!input || event.defaultPrevented || event.isComposing) return false;
@@ -10797,7 +10797,7 @@ export function routeWindowSearchSpace(search: SearchSpec | undefined, event: Pi
   return applySearchSpaceAction(input, draft, Boolean(search?.sessionActive));
 }
 
-/** @emoji ⌨️ Routes a printable key to the active window search action when focus is elsewhere in the window. */
+/** ⌨️ Routes a printable key to the active window search action when focus is elsewhere in the window. */
 export function routeWindowSearchKeydown(search: SearchSpec | undefined, event: Pick<KeyboardEvent, "key" | "ctrlKey" | "metaKey" | "altKey" | "defaultPrevented" | "isComposing" | "target">): boolean {
   const input = search?.input;
   if (!input || input.disabled || event.defaultPrevented || event.isComposing) return false;
@@ -10811,7 +10811,7 @@ export function routeWindowSearchKeydown(search: SearchSpec | undefined, event: 
   return true;
 }
 
-/** @emoji ⎋️ Routes Escape to {@link SearchInput.onAbort} when window search chrome is active (skips other typing targets). */
+/** ⎋️ Routes Escape to {@link SearchInput.onAbort} when window search chrome is active (skips other typing targets). */
 export function routeWindowSearchEscape(search: SearchSpec | undefined, event: Pick<KeyboardEvent, "key" | "defaultPrevented" | "isComposing" | "target">, zone: { readonly chromeVisible: boolean; readonly actionActive: boolean }): boolean {
   if (event.key !== "Escape" || event.defaultPrevented || event.isComposing) return false;
   const onAbort = search?.input?.onAbort;
@@ -10824,9 +10824,9 @@ export function routeWindowSearchEscape(search: SearchSpec | undefined, event: P
   return true;
 }
 
-/** @emoji 🔎️ Floating top-middle window search payload: typed action input and autocomplete possibles. */
+/** 🔎️ Floating top-middle window search payload: typed action input and autocomplete possibles. */
 export interface SearchSpec {
-  /** @emoji 🎯️ Ongoing engagement: chrome stays visible; action input accepts step values. */
+  /** 🎯️ Ongoing engagement: chrome stays visible; action input accepts step values. */
   sessionActive?: boolean;
   input?: SearchInput;
   possibles?: SearchPossible[];
@@ -10834,20 +10834,20 @@ export interface SearchSpec {
 
 export interface SearchProps extends SearchSpec {
   className?: string;
-  /** @emoji 🎯️ When true, focuses the action input whenever this search pane belongs to the globally active window. */
+  /** 🎯️ When true, focuses the action input whenever this search pane belongs to the globally active window. */
   active?: boolean;
 }
 
 // #endregion 🔎️WindowSearch
 
-/** @emoji 💬️ Floating window engagement payload with options, status, and controls. */
+/** 💬️ Floating window engagement payload with options, status, and controls. */
 export interface EngagementSpec {
-  /** @emoji 🎯️ Ongoing engagement: chrome stays visible; {@link options} are step transitions. */
+  /** 🎯️ Ongoing engagement: chrome stays visible; {@link options} are step transitions. */
   sessionActive?: boolean;
   options?: EngagementOption[];
-  /** @emoji 🎛️ Optional slider, stepper, or ring control for the active step. */
+  /** 🎛️ Optional slider, stepper, or ring control for the active step. */
   control?: EngagementControl;
-  /** @emoji 🎛️ Optional additional controls rendered below the primary control. */
+  /** 🎛️ Optional additional controls rendered below the primary control. */
   controls?: readonly EngagementControl[];
   status?: EngagementStatus[];
 }
@@ -10875,10 +10875,10 @@ export interface WindowLayoutAxisNode {
   children: readonly (WindowLayoutAxisNode | WindowLayoutStackNode)[];
 }
 
-/** @emoji 🪟️ Recursive resizable window layout tree for {@link Mode}. */
+/** 🪟️ Recursive resizable window layout tree for {@link Mode}. */
 export type WindowLayoutNode = WindowLayoutAxisNode | WindowLayoutStackNode | WindowLayoutWindowNode;
 
-/** @emoji 🪟️ Builds an even horizontal split layout for the given window ids. */
+/** 🪟️ Builds an even horizontal split layout for the given window ids. */
 export function createEvenWindowLayout(windowIds: readonly string[]): WindowLayoutNode {
   if (windowIds.length === 0) return { kind: "stack", children: [] };
   if (windowIds.length === 1) return { kind: "stack", children: [{ kind: "window", id: windowIds[0]! }] };
@@ -10905,7 +10905,7 @@ function engagementControlIsNumeric(control: EngagementControl): control is Enga
   return control.kind === "slider" || control.kind === "stepper";
 }
 
-/** @emoji 🎛️ Renders one engagement {@link EngagementControl} using Slider, Stepper, Ring, toggle group, or Select. */
+/** 🎛️ Renders one engagement {@link EngagementControl} using Slider, Stepper, Ring, toggle group, or Select. */
 function EngagementControlView({ control }: { readonly control: EngagementControl }): React.ReactElement | null {
   const label = engagementControlLabel(control);
   const selectLabel = useLabel("ui.common.select");
@@ -11013,7 +11013,7 @@ function EngagementControlView({ control }: { readonly control: EngagementContro
 
 // #region 🔎️WindowSearch
 
-/** @emoji 🔎️ Floating top-middle window search pane: action input with optional right chevron for possibles. */
+/** 🔎️ Floating top-middle window search pane: action input with optional right chevron for possibles. */
 const Search: React.FC<SearchProps> = ({ sessionActive = false, input, possibles, className = "", active = false }) => {
   const { inline } = useFlow();
   const actionPlaceholderLabel = useLabel(UI_WINDOW_SEARCH.action);
@@ -11245,7 +11245,7 @@ export { Search };
 
 // #endregion 🔎️WindowSearch
 
-/** @emoji 💬️ Top-aligned engagement: status heading, optional control, and option buttons. */
+/** 💬️ Top-aligned engagement: status heading, optional control, and option buttons. */
 const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options, control, controls, status, className = "" }) => {
   const stepOptionsAriaLabel = useLabel(UI_ENGAGEMENT.actions);
   const primaryStepStatus = sessionActive ? status?.find((row) => row.id === "engagement-step") : undefined;

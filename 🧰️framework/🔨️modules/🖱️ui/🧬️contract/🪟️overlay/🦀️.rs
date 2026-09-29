@@ -1,4 +1,4 @@
-//! @emoji 🪟️ The ONE anchored-overlay positioner every renderer resolves a floating surface with —
+//! 🪟️ The ONE anchored-overlay positioner every renderer resolves a floating surface with —
 //! the renderer-neutral port of React's `resolvePopoverPlacement`
 //! (`🧱️elements/🗨️Popover/🟦️.tsx:216-259`).
 //!

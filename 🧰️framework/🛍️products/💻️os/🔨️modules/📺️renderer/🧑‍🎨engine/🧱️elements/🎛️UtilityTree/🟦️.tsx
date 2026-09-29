@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/UtilityTree/component.tsx
-/** @emoji 🌳️ `UtilityTree` — the ribbon/tree renderer for an app's `utilities` taxonomy
+/** 🌳️ `UtilityTree` — the ribbon/tree renderer for an app's `utilities` taxonomy
  * (`groupUtilityNodesByCategory` groups+sorts `UtilityNode`s by `UtilityCategory`, `UtilityTree`
  * renders the grouped result as a `Ribbon`). Used by the framework chrome's utility panel and by
  * `ShellSync`'s sync-scoped variant.
@@ -33,13 +33,13 @@ type UtilityTreeProps = {
   readonly utilities: readonly UtilityNode[];
   readonly onAction: (action: ActionDescriptor) => void;
   readonly id?: string;
-  /** @emoji 🎀️ `up` stacks a new ribbon line above the base row per pressed collection (window utility bar); `inline` keeps the horizontal drill-down (footer). */
+  /** 🎀️ `up` stacks a new ribbon line above the base row per pressed collection (window utility bar); `inline` keeps the horizontal drill-down (footer). */
   readonly direction?: RibbonDirection;
-  /** @emoji 🎓️ A utility id the introduction walkthrough is anchored on — when it names a leaf nested inside
+  /** 🎓️ A utility id the introduction walkthrough is anchored on — when it names a leaf nested inside
    * a collapsed group picker, the picker auto-drills into that group so the leaf actually mounts (see
    * {@link findUtilityGroupPath}). `null`/not-found leaves `activePath` alone. */
   readonly revealUtilityId?: string | null;
-  /** @emoji 🎯️ Utility-scoped measure chrome for the active utility — rendered as an extra ribbon row under the utilities. */
+  /** 🎯️ Utility-scoped measure chrome for the active utility — rendered as an extra ribbon row under the utilities. */
   readonly utilityOptions?: ReactNode;
 };
 
@@ -53,7 +53,7 @@ function resolveLeafAction(node: UtilityLeaf | Extract<UtilityNode, { readonly k
   return null;
 }
 
-/** @emoji 🔢️ Sorts utility nodes by `order`. */
+/** 🔢️ Sorts utility nodes by `order`. */
 export function sortUtilityNodes(nodes: readonly UtilityNode[]): UtilityNode[] {
   return [...nodes].sort((left, right) => (left.order ?? 0) - (right.order ?? 0));
 }
@@ -62,7 +62,7 @@ export function sortUtilityNodes(nodes: readonly UtilityNode[]): UtilityNode[] {
 
 const UTILITY_CATEGORY_ORDER: readonly UtilityCategory[] = ["selection", "utilities", "history", "sync"];
 
-/** @emoji 🪟️ Categories that are scoped to whatever window/pane the user is interacting with — selecting or editing content varies per window, so these live in each window's own bottom-left panel. */
+/** 🪟️ Categories that are scoped to whatever window/pane the user is interacting with — selecting or editing content varies per window, so these live in each window's own bottom-left panel. */
 export const UTILITY_CATEGORIES: readonly UtilityCategory[] = ["selection", "utilities"];
 
 export const UTILITY_CATEGORY_ICON_ID: Readonly<Record<UtilityCategory, IconName>> = {
@@ -78,7 +78,7 @@ function utilityNodeCategory(node: UtilityNode): UtilityCategory {
   return "utilities";
 }
 
-/** @emoji 🗂️ Buckets top-level utility nodes into the given categories (default: all) so activating a category expands the panel with another line, matching {@link buildUtilityRibbonSegments}'s one-active-group-per-level picker. A category with a single already-meaningful collection is used as-is instead of being re-wrapped in a synthetic one, avoiding a redundant picker level with a duplicate-looking label (e.g. a lone "Selection" collection nested under a "Selection" category chip). Separators default to `utilities` (mirrors Rust `UtilityNode::category()`), so dividers between same-category runs survive; dividers that only separated different categories become redundant once those categories are separate picker lines. */
+/** 🗂️ Buckets top-level utility nodes into the given categories (default: all) so activating a category expands the panel with another line, matching {@link buildUtilityRibbonSegments}'s one-active-group-per-level picker. A category with a single already-meaningful collection is used as-is instead of being re-wrapped in a synthetic one, avoiding a redundant picker level with a duplicate-looking label (e.g. a lone "Selection" collection nested under a "Selection" category chip). Separators default to `utilities` (mirrors Rust `UtilityNode::category()`), so dividers between same-category runs survive; dividers that only separated different categories become redundant once those categories are separate picker lines. */
 export function groupUtilityNodesByCategory(nodes: readonly UtilityNode[], categories: readonly UtilityCategory[] = UTILITY_CATEGORY_ORDER): UtilityNode[] {
   const buckets = new Map<UtilityCategory, UtilityNode[]>();
   for (const node of nodes) {
@@ -97,7 +97,7 @@ export function groupUtilityNodesByCategory(nodes: readonly UtilityNode[], categ
     });
 }
 
-/** @emoji 🦶️ Deduplicates utility nodes by id across every window's utility set (mode-wide utilities are attached identically to each window kind when a plugin doesn't differentiate per window), for a single shared footer entry per utility. */
+/** 🦶️ Deduplicates utility nodes by id across every window's utility set (mode-wide utilities are attached identically to each window kind when a plugin doesn't differentiate per window), for a single shared footer entry per utility. */
 export function dedupeUtilityNodesById(nodeLists: readonly (readonly UtilityNode[])[]): UtilityNode[] {
   const seen = new Map<string, UtilityNode>();
   for (const nodes of nodeLists) {
@@ -128,7 +128,7 @@ type UtilityCollectionNode = Extract<UtilityNode, { readonly kind: "collection" 
 
 export type UtilityRibbonSegment = { readonly kind: "picker"; readonly collections: readonly UtilityCollectionNode[]; readonly depth: number } | { readonly kind: "utilities"; readonly items: readonly UtilityLeaf[]; readonly depth: number };
 
-/** @emoji 🎀️ Builds drill-down ribbon segments from a utility tree and active collection path; `depth` marks how many collections were drilled into to reach a segment. Collections never auto-activate: a level only recurses when `path[depth]` names one of its enabled collections, so at most one group per level is active and an unresolved level simply shows its picker. */
+/** 🎀️ Builds drill-down ribbon segments from a utility tree and active collection path; `depth` marks how many collections were drilled into to reach a segment. Collections never auto-activate: a level only recurses when `path[depth]` names one of its enabled collections, so at most one group per level is active and an unresolved level simply shows its picker. */
 export function buildUtilityRibbonSegments(nodes: readonly UtilityNode[], path: readonly string[], depth = 0): UtilityRibbonSegment[] {
   const sorted = sortUtilityNodes(nodes);
   const collections = sorted.filter((node): node is UtilityCollectionNode => node.kind === "collection" && !node.disabled);
@@ -145,7 +145,7 @@ export function buildUtilityRibbonSegments(nodes: readonly UtilityNode[], path: 
   return [...segments, ...buildUtilityRibbonSegments(active.children, path, depth + 1)];
 }
 
-/** @emoji 🎀️ Validates an active-group path against the current utility tree: keeps each entry only while it still names an enabled collection at that level, truncating at the first miss rather than substituting a default. */
+/** 🎀️ Validates an active-group path against the current utility tree: keeps each entry only while it still names an enabled collection at that level, truncating at the first miss rather than substituting a default. */
 export function reconcileUtilityPath(nodes: readonly UtilityNode[], path: readonly string[]): readonly string[] {
   let current = nodes;
   const reconciled: string[] = [];
@@ -161,7 +161,7 @@ export function reconcileUtilityPath(nodes: readonly UtilityNode[], path: readon
   return reconciled;
 }
 
-/** @emoji 🎛️ Id of the pressed utility leaf in a derived utility tree, if any. */
+/** 🎛️ Id of the pressed utility leaf in a derived utility tree, if any. */
 export function findPressedUtilityLeafId(nodes: readonly UtilityNode[]): string | undefined {
   for (const node of nodes) {
     if (node.kind === "collection") {
@@ -174,7 +174,7 @@ export function findPressedUtilityLeafId(nodes: readonly UtilityNode[]): string 
   return undefined;
 }
 
-/** @emoji 🧰️ First `setActiveUtility` descriptor in a utility tree — used to deactivate when a collection that owns the pressed leaf is collapsed. */
+/** 🧰️ First `setActiveUtility` descriptor in a utility tree — used to deactivate when a collection that owns the pressed leaf is collapsed. */
 /** 🔢️ The register generation the tree's own `setActiveUtility` descriptors were stamped with (`expectedGeneration`), so the method picker presses against the same register the chips rendered. */
 function expectedGenerationOf(template: ActionDescriptor | undefined): number | undefined {
   const args = template?.args;
@@ -194,7 +194,7 @@ function findSetActiveUtilityDescriptor(nodes: readonly UtilityNode[]): ActionDe
   return undefined;
 }
 
-/** @emoji 🎓️ Finds the group-id path (in {@link reconcileUtilityPath} shape) leading down to a utility leaf,
+/** 🎓️ Finds the group-id path (in {@link reconcileUtilityPath} shape) leading down to a utility leaf,
  * so a folded picker can drill straight to it. Returns `[]` when the id is a top-level (ungrouped) node,
  * `null` when the tree has no node with that id at all. */
 export function findUtilityGroupPath(nodes: readonly UtilityNode[], targetId: string, prefix: readonly string[] = []): readonly string[] | null {

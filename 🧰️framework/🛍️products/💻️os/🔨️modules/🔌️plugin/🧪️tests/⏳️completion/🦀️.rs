@@ -319,7 +319,6 @@ async fn test_restart_publish_and_close(command: TestCommand, meta: &ActionMeta,
             if let Some(completion) = app.take_typed_operation_completion().await? {
                 if !matches!(completion.ui_scope, semio_framework::kernel::UiDirtyScope::Full) { return Err(Fault::from("restart completion changed its declared full UI scope")); }
                 if completion.operation == 0 { return Err(Fault::from("restart completion lost its exact operation id")); }
-                eprintln!("[DEBUG] restart typed-operation completion operation={} revision={} history={}", completion.operation, completion.revision, completion.history_patch.is_some());
                 completions += 1;
             }
             if !app.has_pending_typed_operations() { return Ok((artifact, ui, scopes, terminal, completions, app.snapshot()?.count)); }
@@ -341,7 +340,7 @@ async fn test_restart_publish_and_close(command: TestCommand, meta: &ActionMeta,
         std::thread::yield_now();
     }
     let closed = app.close_terminal_is_empty();
-    eprintln!("[DEBUG] restart retained publication outcome={outcome:?}, closed={closed}, close_fault={close_fault:?}");
+    eprintln!("restart retained publication outcome={outcome:?}, closed={closed}, close_fault={close_fault:?}");
     assert!(closed, "original restart app must retire before the collected publication result is asserted");
     drop(app);
     assert!(close_fault.is_none(), "{close_fault:?}");

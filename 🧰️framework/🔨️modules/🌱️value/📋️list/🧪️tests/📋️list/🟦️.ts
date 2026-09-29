@@ -27,6 +27,4 @@ export function testPagedListOwnership(): void {
     assert.deepEqual(result, { allocated: row.retained, result: row.result });
     assert.equal(retained - BigInt(row.actual), BigInt(row.before));
   }
-  console.log("[DEBUG] Neutral paged-list ownership fixture and 600-item order agree with Ajv and fast-json-patch");
-  console.log("[DEBUG] 32/64-bit actual allocation rejection and exact retained release agree with Ajv and fast-json-patch");
 }

@@ -9,7 +9,7 @@ class TestScript extends BundleScript {
   }
 }
 
-/** @emoji 🛰️ Regenerates the committed `📚️examples/🛰️synthetic-orbit` assets (ten rendered PNG views,
+/** 🛰️ Regenerates the committed `📚️examples/🛰️synthetic-orbit` assets (ten rendered PNG views,
  * their ground-truth JSON and the remodeling document) from the seeded generator in that example's
  * `🧪️tests/🦀️.rs`. Deterministic: a second run leaves the working tree unchanged. */
 class RegenerateExampleScript extends BundleScript {

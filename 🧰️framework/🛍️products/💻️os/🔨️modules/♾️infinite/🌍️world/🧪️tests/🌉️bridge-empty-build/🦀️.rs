@@ -56,6 +56,8 @@ fn drive_bridge_to_terminal(state: &mut World3dState) -> World3dSceneBridgeStep 
     unreachable!("the bridge terminates")
 }
 
+/// 🩸️ The republication the guest emits while it recomputes — same camera, so no camera page
+/// can carry the build, which is exactly the shape that used to fault.
 #[test]
 fn a_republication_with_nothing_drawable_completes_and_keeps_the_last_geometry() {
     for case in empty_build_fixture()["cases"].as_array().expect("cases") {
@@ -68,8 +70,6 @@ fn a_republication_with_nothing_drawable_completes_and_keeps_the_last_geometry()
         let settled_meshes = state.meshes.len;
         assert!(settled_draws > 0, "{name}: the committed payload publishes draws");
 
-        // 🩸️ The republication the guest emits while it recomputes — same camera, so no camera page
-        // can carry the build, which is exactly the shape that used to fault.
         let mut degenerate = scene_from_bridge_fixture(&settled);
         let world = degenerate.world_3d.as_mut().expect("world scene");
         world.meshes_json = case["meshesJson"].to_string();
@@ -81,7 +81,6 @@ fn a_republication_with_nothing_drawable_completes_and_keeps_the_last_geometry()
         assert_eq!(state.snapshot_fault(), None, "{name}: and records no snapshot fault");
         assert_eq!(state.draws.len, settled_draws, "{name}: the surface keeps the geometry it last had");
         assert_eq!(state.meshes.len, settled_meshes, "{name}: and keeps its published meshes");
-        println!("[DEBUG] bridge-empty-build {name}: step={step:?} {}", state.ingest_census());
         retire(state);
     }
 }

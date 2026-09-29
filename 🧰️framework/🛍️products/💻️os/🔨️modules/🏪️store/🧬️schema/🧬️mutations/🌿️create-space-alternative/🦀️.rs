@@ -6,7 +6,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
-/// @emoji 🌿️ serde stays TEST-ONLY: feeds `SpaceHistoryMutation`'s own `cfg_attr(test)` oracle
+/// 🌿️ serde stays TEST-ONLY: feeds `SpaceHistoryMutation`'s own `cfg_attr(test)` oracle
 /// derive (its sibling `serde_json` differential test). Production never serializes through serde.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]

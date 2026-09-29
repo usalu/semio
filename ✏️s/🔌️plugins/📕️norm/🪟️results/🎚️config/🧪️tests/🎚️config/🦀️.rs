@@ -67,7 +67,6 @@ fn config_mutation_fixture_matches_serde_and_round_trips() {
             assert_eq!(mutation.encode_op().unwrap(), bytes, "{}", row["id"]);
         }
     }
-    eprintln!("[DEBUG] Norm config public protocol: 5 fixtures, 5 hostile payloads, 13 text and 25 binary vectors, serde oracle, inverse/text/binary laws passed");
 }
 
 fn assert_wire_transition(mutation: &NormResultsWindowConfigMutation, expected: &serde_json::Value) {

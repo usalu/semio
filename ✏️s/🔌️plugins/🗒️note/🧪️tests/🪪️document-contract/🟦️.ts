@@ -35,5 +35,4 @@ export async function testNoteDocumentContractOracle(): Promise<void> {
     assert.equal(validate(diff), true, JSON.stringify(validate.errors));
     assert.deepEqual(facets[2].module.parseNoteDiff(diff), diff);
   }
-  console.log(`[DEBUG] Note shared link and identified block additions matched ${vectors.validDiffs.length} independent delta vectors`);
 }

@@ -61,5 +61,4 @@ export function testOrderedScrollFixture(): void {
   assert.equal(validate(merged), true, "schema validates shape while the neutral oracle rejects semantic coalescing");
   assert.notDeepEqual(retainedQueueEvents(merged.cases[0]!.physical), merged.cases[0]!.expectedQueue);
   assert.equal(validate({ ...fixture, extra: true }), false);
-  console.log(`[DEBUG] ordered Scroll oracle: ${fixture.cases.length} sequences preserve physical wheels through fixed capacity ${fixture.capacity}`);
 }

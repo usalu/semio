@@ -55,6 +55,5 @@ fn empty_transient_retirement_waits_for_read_release_and_matches_neutral_vectors
         "terminalIsEmpty": vector["terminalIsEmpty"],
         "zeroGrantReleasedItems": vector["zeroGrantReleasedItems"],
     });
-    eprintln!("[DEBUG] Empty transient read retirement: {actual}");
     assert_eq!(actual, expected);
 }

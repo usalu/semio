@@ -42,7 +42,6 @@ fn flow_window_ownership_runtime_isolates_restores_and_resets_exact_windows() {
                 async fn drain(app: &mut FlowRuntime) -> Result<(usize, usize), String> {
                     use semio_framework_plugin::app::TypedOperationResultLane;
                     let receipt = artifact_app_laws::settle_registered_typed_operation(app, FLOW_WINDOW_OWNERSHIP_INSTANCE).await.map_err(|error| format!("{error:?}"))?;
-                    eprintln!("[DEBUG] Flow exact-window settle lanes: {:?}", receipt.lanes);
                     let count = |wanted: TypedOperationResultLane| receipt.lanes.iter().filter(|lane| **lane == wanted).count();
                     Ok((count(TypedOperationResultLane::WindowConfig), count(TypedOperationResultLane::WindowTransient)))
                 }
@@ -154,10 +153,9 @@ fn flow_window_ownership_runtime_isolates_restores_and_resets_exact_windows() {
                     if addressed(&wrong, FlowMainWindowConfig::default()).is_ok() { return Err("Flow accepted wrong-kind window identity".into()); }
                     Ok(())
                 }.await;
-                if let Err(error) = &outcome { eprintln!("[DEBUG] Flow exact-window runtime failure before close: {error}"); }
+                if let Err(error) = &outcome { eprintln!("[TRACE] Flow exact-window runtime failure before close: {error}"); }
                 artifact_app_laws::close_registered_fixture_app(&mut *app);
                 outcome.expect("Flow exact-window ownership runtime law");
-                eprintln!("[DEBUG] Flow runtime isolated two same-kind cameras/settings, restored config, preserved document bytes, cleared transient on reload, and rejected stale/wrong windows");
             })
         })
         .expect("spawn Flow window ownership law")
@@ -214,7 +212,6 @@ fn flow_two_window_config_commands_in_one_turn_both_land() {
                     app.dispatch_typed(FlowCommand::SetGridFactor(set_grid_factor::SetGridFactor { value: 20.0 }), &meta).await.map_err(|error| format!("{error:?}"))?;
                     let receipt = artifact_app_laws::settle_registered_typed_operation(&mut *app, FLOW_ONE_TURN_INSTANCE).await.map_err(|error| format!("{error:?}"))?;
                     let pages = receipt.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::WindowConfig).count();
-                    eprintln!("[DEBUG] Flow one-turn window-config lanes: {:?}", receipt.lanes);
                     let measures = app.window_measures(&window).await;
                     let rows = measures.get(window_id).map_or(&[][..], Vec::as_slice);
                     let children = rows
@@ -248,11 +245,10 @@ fn flow_two_window_config_commands_in_one_turn_both_land() {
                 }
                 .await;
                 if let Err(error) = &outcome {
-                    eprintln!("[DEBUG] Flow one-turn window-config failure before close: {error}");
+                    eprintln!("Flow one-turn window-config failure before close: {error}");
                 }
                 artifact_app_laws::close_registered_fixture_app(&mut *app);
                 outcome.expect("Flow two window-config commands in one turn");
-                eprintln!("[DEBUG] Flow published both window-config commands dispatched in one turn, in order");
             })
         })
         .expect("spawn Flow one-turn window config law")
@@ -281,5 +277,4 @@ fn flow_window_ownership_mutations_match_neutral_fixture_and_codecs() {
         assert_eq!(FlowWindowTransientMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
         assert_eq!(FlowWindowTransientMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
     }
-    eprintln!("[DEBUG] Flow config/transient mutations matched neutral fixture inverse, text, and binary laws");
 }

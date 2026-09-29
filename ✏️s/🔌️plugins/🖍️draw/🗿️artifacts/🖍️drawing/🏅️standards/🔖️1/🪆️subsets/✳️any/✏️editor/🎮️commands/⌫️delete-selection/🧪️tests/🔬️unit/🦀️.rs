@@ -29,7 +29,6 @@ fn multi_path_deletion_preserves_style_and_is_reversible() {
     assert_eq!(first.segments,vec![crate::PathSegment::Move {to:[10.0,10.0]}]);
     for group in inverses.into_iter().rev() {for mutation in group {crate::mutations::apply_drawing_mutation(&mut after,&mutation).unwrap();}}
     assert_eq!(after,before);
-    eprintln!("[DEBUG] selected anchors on two paths delete atomically and inverse restores both paths");
 }
 
 #[test]

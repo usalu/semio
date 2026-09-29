@@ -31,6 +31,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     expect(childRejectionReason("load", ["activate"], "plain string").message).toBe("plain string");
     expect(childRejectionReason("invoke", [1, "poll", null], new Error("x")).path).toBe("poll");
     expect(childRejectionText(childRejectionReason("invoke", [], new Error("x")))).toContain("invoke -: ");
+    const component = Object.assign(new Error("[object Object] (see error.payload)"), { name: "ComponentError", payload: { tag: "fault", val: { code: "duplicate mutation id", at: 7n, bytes: new Uint8Array(3) } } });
+    expect(childRejectionReason("invoke", ["reactor", "poll"], component).message).toBe('{"tag":"fault","val":{"code":"duplicate mutation id","at":"7","bytes":"<3 bytes>"}}');
 
     const hostile = {
       get name() {

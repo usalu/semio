@@ -431,7 +431,7 @@ fn controller_step([slot, generation]: [u64; 2]) -> WorkerMaintenanceStep {
     }
 }
 
-/// @emoji 📣️ Coalesces one retirement request into the backend's pre-admitted maintenance hook; it
+/// 📣️ Coalesces one retirement request into the backend's pre-admitted maintenance hook; it
 /// never allocates, never queues a closure, and cannot be lost to lane contention.
 pub(crate) fn request_retirement(backend: DbIoBackendControl) -> Result<bool, DbError> {
     let (slot, _) = db_io_backend_parts(backend);
@@ -441,14 +441,14 @@ pub(crate) fn request_retirement(backend: DbIoBackendControl) -> Result<bool, Db
     row.pool.request_maintenance(ticket).map(|request| request == WorkerMaintenanceRequest::Requested).map_err(|error| DbError::Unavailable(format!("DB I/O backend retirement request refused: {error:?}")))
 }
 
-/// @emoji 🔔️ The backend hook's own waker, handed to owners whose terminal event must resume retirement.
+/// 🔔️ The backend hook's own waker, handed to owners whose terminal event must resume retirement.
 pub(crate) fn retirement_waker(backend: DbIoBackendControl) -> Option<Waker> {
     let (slot, _) = db_io_backend_parts(backend);
     let row = WAL_WRITER_CONTROLLERS[usize::from(slot)].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     row.as_ref().filter(|row| row.backend == backend).map(|row| row.waker.clone())
 }
 
-/// @emoji 🪦️ Runs inside the backend's own hook turn: the hook returns `Retire`, so its slot is released
+/// 🪦️ Runs inside the backend's own hook turn: the hook returns `Retire`, so its slot is released
 /// by the pool without an external removal racing the running invocation.
 pub(crate) fn retire_controller(backend: DbIoBackendControl) -> Result<bool, DbError> {
     let (slot, _) = db_io_backend_parts(backend);

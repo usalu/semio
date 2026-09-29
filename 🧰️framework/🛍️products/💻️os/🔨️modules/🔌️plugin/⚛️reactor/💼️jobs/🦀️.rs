@@ -431,7 +431,7 @@ impl TwoPhaseBoundedJob {
         Self { fault_prefix, state, input: input.to_vec(), decode, execute, cancelled: false }
     }
 
-    // 🚫️async: E1 pure price table consumed by `step`'s sync budget gate.
+    /// 🚫️async: E1 pure price table consumed by `step`'s sync budget gate.
     fn price(&self) -> u64 {
         match self.state {
             TwoPhaseState::Decode => WORK_UNITS_VALIDATE,

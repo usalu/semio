@@ -19,7 +19,7 @@
     "xml"
   ],
   "fullArtifactCount": 36,
-  "nativeCodecCount": 26,
+  "nativeCodecCount": 29,
   "surfaceCases": [
     { "id": "home-library", "selected": ["home-io"], "catalog": 8, "apps": false, "exports": false },
     { "id": "native-full-catalog", "selected": ["full-artifact-catalog"], "catalog": 36, "apps": false, "exports": false },

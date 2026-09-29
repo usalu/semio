@@ -42,5 +42,4 @@ export function testCadDocumentContractOracle(): void {
   mismatchedChild.shapeModel.childId = "foreign-id";
   assert.throws(() => parseCadSnapshot(mismatchedChild), /childId must equal target.artifactId/);
   assert.deepEqual(parseCadDiff(vectors.diff), vectors.diff);
-  console.log("[DEBUG] CAD exact document contract matched model/drawing child identity vectors and the committed mutation corpus");
 }

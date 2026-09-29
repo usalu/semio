@@ -18,7 +18,7 @@ fn direct_owner_descriptor_surfaces_and_catalog_correspond() {
     assert_eq!(descriptor["payloadSchema"], "🧬️schema/🔣️.json");
     assert_eq!(descriptor["textOpcode"], "change-catalog-generation");
     assert_eq!(descriptor["binaryTag"], 0);
-    assert_eq!(descriptor["outcomeClasses"], pack::json!(["applied", "warning"]));
+    assert_eq!(descriptor["outcomeClasses"], pack::json!(["applied", "no-op"]));
     assert_eq!(descriptor["requiredLanguageSurfaces"], pack::json!(["rust", "typescript", "graphql", "protobuf", "json-schema", "text", "binary"]));
     {
         assert!(owner.join("🧬️schema/🔣️.json").is_file());

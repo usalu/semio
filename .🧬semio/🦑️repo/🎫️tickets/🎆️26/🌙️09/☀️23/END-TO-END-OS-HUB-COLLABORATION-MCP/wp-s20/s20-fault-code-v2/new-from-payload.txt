@@ -1,0 +1,32 @@
+        /// 🧾️ Retains a terminal job fault's detail (bounded) so the publication that follows a cancelled lease
+        /// reports the real cause instead of a generic cancellation. A detail in the typed-operation fault framing
+        /// ([`typed_operation_fault_detail`], `<code>\u{1f}<message>`) keeps the app's code in its own field, so the
+        /// fault page carries it structurally; any other detail is message only.
+        fn from_payload(detail: &semio_framework_job::RetainedJobPayload) -> Self {
+            let mut framed = [0; TYPED_OPERATION_FAULT_PAGE_BYTES];
+            let mut length = 0;
+            'pages: for page in 0..detail.page_count() {
+                let Some(bytes) = detail.page(page) else { break };
+                for byte in bytes {
+                    if length == framed.len() {
+                        break 'pages;
+                    }
+                    framed[length] = *byte;
+                    length += 1;
+                }
+            }
+            let mut bounded = Self { bytes: [0; TYPED_OPERATION_FAULT_BYTES], len: 0, code: [0; TYPED_OPERATION_FAULT_CODE_BYTES], code_len: 0 };
+            let message = match framed[..length].iter().position(|byte| *byte == TYPED_OPERATION_FAULT_SEPARATOR) {
+                Some(index) if index != 0 && index <= TYPED_OPERATION_FAULT_CODE_BYTES => {
+                    bounded.code[..index].copy_from_slice(&framed[..index]);
+                    bounded.code_len = index;
+                    &framed[index + 1..length]
+                }
+                Some(0) => &framed[1..length],
+                _ => &framed[..length],
+            };
+            bounded.len = message.len().min(TYPED_OPERATION_FAULT_BYTES);
+            bounded.bytes[..bounded.len].copy_from_slice(&message[..bounded.len]);
+            bounded
+        }
+

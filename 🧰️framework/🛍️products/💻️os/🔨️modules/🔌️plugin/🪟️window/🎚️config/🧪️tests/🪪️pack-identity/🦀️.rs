@@ -69,7 +69,7 @@ fn window_config_pack_identity_rejects_foreign_inner_window_without_changing_or_
             }
             let id = row["id"].as_str().unwrap().to_owned();
             let terminal_empty = closed && registry.terminal_is_empty();
-            eprintln!("[DEBUG] Window Pack identity {id}: admitted={admitted}, target_exists={target_exists}, target_unchanged_or_absent={unchanged}, terminal_empty={terminal_empty}");
+            eprintln!("Window Pack identity {id}: admitted={admitted}, target_exists={target_exists}, target_unchanged_or_absent={unchanged}, terminal_empty={terminal_empty}");
             observed.push((id, admitted, row["accepted"].as_bool().unwrap(), unchanged, terminal_empty));
         }
         observed

@@ -1,4 +1,4 @@
-/** @emoji 🧪️ jsdom polyfills for `@semio-tech/hub-admin` vitest — mirrors `ui-react`'s own
+/** 🧪️ jsdom polyfills for `@semio-tech/hub-admin` vitest — mirrors `ui-react`'s own
  * `🟦️.ts` (Radix `Select`/`Dialog` call these during tests, jsdom implements neither). */
 //#region 🔌️Adapters
 import { cleanup } from "@testing-library/react";

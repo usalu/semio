@@ -579,8 +579,8 @@ impl StructuralMutationCopy<SemioMeshSnapshot, SemioMeshMutation> for MeshStruct
                 }
                 if source.id == target.mesh_id {
                     let primitive_index = self.mesh.as_ref().map_or(0, |cursor| cursor.primitive_index);
-                    let primitive_not_started = self.mesh.as_ref().is_none_or(|cursor| cursor.primitive.is_none());
-                    if primitive_not_started {
+                    let primitive_starts = self.mesh.as_ref().is_some_and(|cursor| cursor.phase == 1 && cursor.primitive.is_none());
+                    if primitive_starts {
                         if let Some(primitive) = source.primitives.get(primitive_index).filter(|primitive| primitive.id == target.primitive_id) {
                             let point = *primitive.positions.get(target.vertex_index).ok_or_else(|| format!("{PREFIX}-vertex-index"))?;
                             self.primitive_matches += 1;

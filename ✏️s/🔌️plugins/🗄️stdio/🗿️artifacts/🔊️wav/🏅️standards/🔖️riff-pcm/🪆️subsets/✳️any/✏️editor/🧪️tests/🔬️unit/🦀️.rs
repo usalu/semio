@@ -1,6 +1,12 @@
 use super::*;
 use crate::standards::riff_pcm::subsets::any::schema::mutations::set_snapshot;
 
+/// 🧬️ Registers the document schema wav's declaration contributes — the registered contract every snapshot edit validates
+/// against; a fixture editor runs without the plugin assembly that publishes it.
+fn register_document_schema() {
+    framework_schema::register_artifact_schema_descriptors(vec![crate::standards::riff_pcm::subsets::any::schema::wav_artifact_schema_descriptor()]).expect("the wav document schema registers");
+}
+
 #[semio_framework_async_macros::async_test]
 async fn create_editor_builds_a_definition_for_the_editor_role() {
     let def = create_wav_editor();
@@ -17,13 +23,14 @@ async fn editor_dialect_matches_the_artifact_coordinate() {
 async fn editor_registers_every_natural_audio_action_as_retained_work() {
     let definition = create_wav_editor();
     for action_id in edit_audio::TOOL_IDS {
-        let action = definition.actions.iter().find(|action| action.id == *action_id).expect("natural audio action");
+        let action = definition.actions.iter().chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter())).find(|action| action.id == *action_id).expect("natural audio action");
         assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated);
     }
 }
 
 #[semio_framework_async_macros::async_test]
 async fn one_mebibyte_sample_lane_edits_without_generic_value_expansion() {
+    register_document_schema();
     let samples = vec![7u8; 1_048_576];
     let snapshot = WavSnapshot { data: WavData::Raw(samples.clone()), ..WavSnapshot::default() };
     let event = editing::SnapshotEditEvent::SetValue { path: "/fmt/sampleRate".into(), value: dsl::DslValue::Number(dsl::Number::UInt(48_000)) };
@@ -35,6 +42,7 @@ async fn one_mebibyte_sample_lane_edits_without_generic_value_expansion() {
 
 #[semio_framework_async_macros::async_test]
 async fn data_kind_edit_publishes_the_requested_variant_and_reopens_natively() {
+    register_document_schema();
     let mut snapshot = WavSnapshot::default();
     snapshot.fmt.bits_per_sample = 8;
     snapshot.fmt.byte_rate = snapshot.fmt.sample_rate;
@@ -54,6 +62,7 @@ async fn data_kind_edit_publishes_the_requested_variant_and_reopens_natively() {
 
 #[semio_framework_async_macros::async_test]
 async fn chunk_layout_and_pad_bytes_are_visible_and_editable_details() {
+    register_document_schema();
     let snapshot = WavSnapshot {
         data: WavData::Raw(vec![7]),
         data_pad_byte: 0xA5,
@@ -101,11 +110,14 @@ async fn sample_edit_set_snapshot_replays_and_inverts_without_losing_siblings() 
 
 #[semio_framework_async_macros::async_test]
 async fn large_sample_edit_publishes_cancels_undoes_redoes_and_preserves_metadata() {
+    register_document_schema();
     let sample_count = 2_097_152;
     let edit_index = 1_500_000;
     let snapshot = WavSnapshot { data: WavData::Raw(vec![7; sample_count]), ..WavSnapshot::default() };
     let event = editing::SnapshotEditEvent::SetValue { path: format!("/data/value/{edit_index}"), value: dsl::DslValue::Number(dsl::Number::UInt(9)) };
+    let started = std::time::Instant::now();
     let emit = <WavEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &snapshot).expect("sample edit emits");
+    assert!(started.elapsed() < std::time::Duration::from_secs(2), "one sample edit of a {sample_count}-sample document took {:?}", started.elapsed());
     let [mutation] = emit.artifact_mutations.as_slice() else { panic!("sample edit must emit one mutation") };
     assert!(matches!(mutation, WavMutation::PatchData(_)));
     assert!(<WavMutation as protocol::OpBinary>::encode_op(mutation).expect("patch encodes").len() < store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);

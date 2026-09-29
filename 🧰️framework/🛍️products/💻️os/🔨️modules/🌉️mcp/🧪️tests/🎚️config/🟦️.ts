@@ -16,7 +16,7 @@ const repoRoot = resolve(root, "../../../../../../..");
  * measures a stranger's browser instead of the binary. */
 const SUITE_AGENT_BRIDGE_DIR = mkdtempSync(join(tmpdir(), "semio-mcp-suite-bridge-"));
 
-/** @emoji 🧪️ Vitest for `@semio-tech/framework-os-mcp` — in-source tests (`import.meta.vitest`) on
+/** 🧪️ Vitest for `@semio-tech/framework-os-mcp` — in-source tests (`import.meta.vitest`) on
  * the pure surface in `../../🟦️.ts`, plus three real-process integration suites that spawn
  * the compiled `semio-os-mcp` binary directly: legacy era (real `@modelcontextprotocol/sdk`
  * `Client`), modern era (hand-rolled raw JSON-RPC, `📓️design-decisions.md` D1), stdio hygiene, and the

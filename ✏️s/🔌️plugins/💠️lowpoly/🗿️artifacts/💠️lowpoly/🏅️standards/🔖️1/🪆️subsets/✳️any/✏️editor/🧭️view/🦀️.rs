@@ -17,7 +17,7 @@ use crate::{LowpolyObject, LowpolySelection, LowpolySelectionTargets, LowpolySna
 use semio_framework_plugin::app::InteractionView;
 
 //#region 🔖️View
-/// @emoji 🧭️ A borrowed read view — the document projection plus the config — threaded into the
+/// 🧭️ A borrowed read view — the document projection plus the config — threaded into the
 /// render/panel/utility/scene builders.
 #[derive(Clone, Copy)]
 pub struct LowpolyView<'a> {

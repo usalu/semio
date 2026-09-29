@@ -21,7 +21,7 @@ use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
 use semio_framework::{PackageDescriptor, ASSEMBLY_FAILED_PLUGIN_ID};
-use semio_framework_plugin_host::{GuestRuntime, OwnedRuntime, PackageHash, PackageId, PackageRef, TurnFault};
+use semio_framework_plugin_host::{CompiledHandle, GuestRuntime, OwnedRuntime, PackageHash, PackageId, PackageRef, TurnFault};
 
 //#region 🔖️ActorBindings
 #[cfg(test)]
@@ -88,8 +88,8 @@ impl actor_bindings::semio::framework::instance_lifetime::Host for DescribeHostS
 
 #[cfg(test)]
 impl actor_bindings::semio::framework::ui::HostSurface for DescribeHostState {
-    // 🚫️async: E1 — `bindgen!` fixes this resource-destructor signature. No host function here ever
-    // hands a `surface` handle to the guest, so no handle exists to drop.
+    /// 🚫️async: E1 — `bindgen!` fixes this resource-destructor signature. No host function here ever
+    /// hands a `surface` handle to the guest, so no handle exists to drop.
     fn drop(&mut self, _rep: wasmtime::component::Resource<actor_bindings::semio::framework::ui::Surface>) -> wasmtime::Result<()> {
         Ok(())
     }
@@ -116,7 +116,7 @@ fn describe_must_be_pure(name: &str) -> Vec<u8> {
 /// same contract violation the 24 refusals above cover.
 #[cfg(test)]
 impl actor_bindings::semio::framework::host_async::Host for DescribeHostState {
-    // 🚫️async: E1 — the WIT declares both sync (deliberate one-way doors); `bindgen!` mirrors that.
+    /// 🚫️async: E1 — the WIT declares both sync (deliberate one-way doors); `bindgen!` mirrors that.
     fn emit(&mut self, _value: actor_bindings::semio::framework::effects::Effect) {
         eprintln!("[describe] ignoring host-async emit(): describe() must be pure");
     }
@@ -408,42 +408,125 @@ async fn execute_describe_wasmtime(wasm_bytes: &[u8], source: &Path) -> Result<V
         .map_err(|error| DescribeError(format!("calling describe() on {}: {error}", source.display())))
 }
 
-async fn execute_describe_owned(wasm_bytes: &[u8], source: &Path) -> Result<Vec<u8>, DescribeError> {
+async fn execute_describe_owned(wasm_bytes: &[u8], source: &Path) -> Result<(Vec<u8>, OwnedRuntime, CompiledHandle), DescribeError> {
     let started = std::time::Instant::now();
     eprintln!("[describe] owned phase=compile bytes={} elapsed_ms=0", wasm_bytes.len());
     let runtime = OwnedRuntime::new();
     let package = PackageRef { package: PackageId(source.display().to_string()), hash: PackageHash([0; 32]) };
     let compiled = runtime.compile(&package, wasm_bytes).await.map_err(|error| DescribeError(format!("compiling {} with the owned interpreter: {error}", source.display())))?;
     eprintln!("[describe] owned phase=execute fuel=0 elapsed_ms={}", started.elapsed().as_millis());
-    runtime
+    let descriptor = runtime
         .describe_observed(
             &compiled,
             semio_framework::kernel::Budget { fuel: DESCRIBE_FUEL_BUDGET, deadline_ms: DESCRIBE_DEADLINE_MS, max_effects: 0, max_patch_bytes: 0, max_frames: 0 },
             |fuel, elapsed| eprintln!("[describe] owned phase=execute fuel={fuel} elapsed_ms={}", elapsed.as_millis()),
         )
         .await
-        .map_err(|error| DescribeError(format!("calling owned describe() on {}: {error}", source.display())))
+        .map_err(|error| DescribeError(format!("calling owned describe() on {}: {error}", source.display())))?;
+    Ok((descriptor, runtime, compiled))
+}
+
+/// 🪪️ One app's kind-identity projection: its surface id, the artifact its `io` presents (`ArtifactPresentation.id` and
+/// `io.artifact_schema`), and the `(id, schema)` of every ArtifactKindSpec it or its plugin declares.
+pub struct KindIdentityApp<'a> {
+    pub app_id: &'a str,
+    pub presented_kind: &'a str,
+    pub presented_schema: &'a str,
+    pub declared: Vec<(&'a str, &'a str)>,
+}
+
+/// 🪪️ The static kind-identity law: an app whose `io` presents a document artifact declares that kind with the ONE schema
+/// its `io.artifact_schema` names — the identity the hub's codec rows, document-open targets and genesis, the MCP
+/// workspace store and host-media contributions all key on (ticket 26/09/23 W4: nine packages carried a distinct
+/// "media schema", owned no codec, and the trusted catalog refused them). An app presenting no artifact is not judged.
+pub fn kind_identity_faults(apps: &[KindIdentityApp<'_>]) -> Vec<String> {
+    apps.iter()
+        .filter(|app| !app.presented_kind.is_empty())
+        .filter_map(|app| match app.declared.iter().find(|(kind, _)| *kind == app.presented_kind) {
+            None => Some(format!("{}: io presents artifact kind {:?} that no ArtifactKindSpec declares", app.app_id, app.presented_kind)),
+            Some((_, schema)) if *schema != app.presented_schema => Some(format!("{}: artifact kind {:?} declares schema {schema:?}, its io names {:?}", app.app_id, app.presented_kind, app.presented_schema)),
+            Some(_) => None,
+        })
+        .collect()
+}
+
+/// 🪪️ [`KindIdentityApp`] rows of one described package — each app's own specs followed by the plugin-level ones.
+pub fn descriptor_kind_identity_apps(descriptor: &PackageDescriptor) -> Vec<KindIdentityApp<'_>> {
+    let manifest = &descriptor.manifest;
+    manifest
+        .apps
+        .iter()
+        .map(|app| KindIdentityApp {
+            app_id: &app.id,
+            presented_kind: &app.io.artifact.id,
+            presented_schema: &app.io.artifact_schema,
+            declared: app.artifact_kinds.iter().chain(manifest.artifact_kinds.iter()).map(|kind| (kind.id.as_str(), kind.schema.as_str())).collect(),
+        })
+        .collect()
+}
+
+/// 🗂️ Every `(kind, schema)` one described package declares — plugin-level specs first, then each app's, deduplicated
+/// by kind id in declaration order (the same union the trusted-catalog publish asks the component about).
+pub fn declared_artifact_kind_pairs(descriptor: &PackageDescriptor) -> Vec<(String, String)> {
+    let manifest = &descriptor.manifest;
+    let mut pairs: Vec<(String, String)> = Vec::new();
+    for kind in manifest.artifact_kinds.iter().chain(manifest.apps.iter().flat_map(|app| app.artifact_kinds.iter())) {
+        if !pairs.iter().any(|(id, _)| *id == kind.id) {
+            pairs.push((kind.id.clone(), kind.schema.clone()));
+        }
+    }
+    pairs
+}
+
+/// 🧬️ Whether the compiled component owns a codec for at least one of `pairs` — the `codec.pack-schema-hash` probe
+/// [`component_codec_rows`] asks, on the instance `describe` already compiled, stopping at the first owned kind (one
+/// throwaway instance for almost every package; a full census of a large bundle would cost minutes per describe).
+/// Unowned kinds are expected (inputs, companions); the faults of every kind probed before the first owned one are
+/// returned so a refusal names them.
+async fn first_owned_codec(runtime: &OwnedRuntime, compiled: &CompiledHandle, pairs: &[(String, String)]) -> Result<(), Vec<String>> {
+    let budget = semio_framework::kernel::Budget { fuel: DESCRIBE_FUEL_BUDGET, deadline_ms: DESCRIBE_DEADLINE_MS, max_effects: 0, max_patch_bytes: 0, max_frames: 0 };
+    let mut faults = Vec::new();
+    for (kind, schema) in pairs {
+        match runtime.codec_pack_schema_hash(compiled, schema, budget).await {
+            Ok(hash) if hash != [0; 32] => return Ok(()),
+            Ok(_) => faults.push(format!("{kind}={schema}: no structural record specification")),
+            Err(TurnFault::Guest(fault)) if fault.message == UNOWNED_ARTIFACT_CODEC_SCHEMA => faults.push(format!("{kind}={schema}: unowned")),
+            Err(error) => faults.push(format!("{kind}={schema}: {error}")),
+        }
+    }
+    Err(faults)
 }
 
 /// 🛂️ Instantiates `wasm_path` once (fuel-capped, `pure`-only imports), calls its `describe()`
 /// export, patches independent raw-component and extracted-core `hashes` in, and writes
-/// both output files under `out_dir`. Returns the patched descriptor for the caller to print/verify.
+/// both output files under `out_dir` — only after the kind-identity law and the codec census pass on the same
+/// compiled component ([`kind_identity_faults`], [`first_owned_codec`]). Returns the patched descriptor for the caller to print/verify.
+///
+/// 🪪️ `descriptor_sha256` self-hashes the descriptor's own encoded pack MINUS this very field
+/// (a self-referential hash cannot include itself) — encode once with an empty
+/// `descriptor_sha256`, hash THAT, then patch the real value in before the final write. Any
+/// consumer re-deriving `descriptor_sha256` for verification must reproduce this exact two-pass
+/// convention.
+///
+/// 🛡️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (registrar): refuse to write a descriptor whose
+/// assembly failed. `plugin_manifest()` mints a `pluginId: "assembly-failed"` stub when
+/// `PLUGIN_ASSEMBLY_ERROR` is set, carrying the real error in `label` — a shape that looks like a
+/// descriptor, passes JSON parsing, and feeds the generated registry catalog with fabricated
+/// contributions. Three were committed this session by packets that emitted and then stalled
+/// before verifying: the "never commit a placeholder" rule held only while an agent reached its
+/// verification step, and enforced nothing when it did not. Failing at the writer makes the
+/// invalid state unrepresentable instead of relying on every caller to remember.
 pub async fn describe_component(wasm_path: &Path, core_wasm_path: &Path, out_dir: &Path) -> Result<PackageDescriptor, DescribeError> {
     let (wasm_bytes, wasm_sha256) = read_artifact(wasm_path, "raw component")?;
     let (_, core_wasm_sha256) = read_artifact(core_wasm_path, "extracted core module")?;
     let (wasm_sha256, core_wasm_sha256) = artifact_hashes(wasm_sha256, core_wasm_sha256)?;
-    let descriptor_bytes = execute_describe_owned(&wasm_bytes, wasm_path).await?;
+    let (descriptor_bytes, runtime, compiled) = execute_describe_owned(&wasm_bytes, wasm_path).await?;
 
     let decoded = store::pack_rt::decode_wire_value(&descriptor_bytes).map_err(|error| DescribeError(format!("decoding describe() output as a pack: {error}")))?;
     let mut descriptor: PackageDescriptor = dsl::from_dsl_value(decoded).map_err(|error| DescribeError(format!("decoding describe() output as a PackageDescriptor: {error}")))?;
 
     descriptor.hashes.wasm_sha256 = wasm_sha256;
     descriptor.hashes.core_wasm_sha256 = core_wasm_sha256;
-    // 🪪️ `descriptor_sha256` self-hashes the descriptor's own encoded pack MINUS this very field
-    // (a self-referential hash cannot include itself) — encode once with an empty
-    // `descriptor_sha256`, hash THAT, then patch the real value in before the final write. Any
-    // consumer re-deriving `descriptor_sha256` for verification must reproduce this exact two-pass
-    // convention.
     descriptor.hashes.descriptor_sha256 = String::new();
     let prehash_value = dsl::to_dsl_value(&descriptor).map_err(|error| DescribeError(format!("encoding descriptor for hashing: {error}")))?;
     let prehash_bytes = store::pack_rt::encode_wire_value(&prehash_value);
@@ -453,16 +536,18 @@ pub async fn describe_component(wasm_path: &Path, core_wasm_path: &Path, out_dir
     let final_bytes = store::pack_rt::encode_wire_value(&final_value);
     let final_json = store::json::to_string_pretty(&store::json::from_dsl_value(&final_value));
 
-    // 🛡️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (registrar): refuse to write a descriptor whose
-    // assembly failed. `plugin_manifest()` mints a `pluginId: "assembly-failed"` stub when
-    // `PLUGIN_ASSEMBLY_ERROR` is set, carrying the real error in `label` — a shape that looks like a
-    // descriptor, passes JSON parsing, and feeds the generated registry catalog with fabricated
-    // contributions. Three were committed this session by packets that emitted and then stalled
-    // before verifying: the "never commit a placeholder" rule held only while an agent reached its
-    // verification step, and enforced nothing when it did not. Failing at the writer makes the
-    // invalid state unrepresentable instead of relying on every caller to remember.
     if descriptor.manifest.plugin_id == ASSEMBLY_FAILED_PLUGIN_ID {
         return Err(DescribeError(format!("refusing to write a placeholder descriptor for {}: plugin assembly failed — {}", wasm_path.display(), descriptor.manifest.label)));
+    }
+    let identity_faults = kind_identity_faults(&descriptor_kind_identity_apps(&descriptor));
+    if !identity_faults.is_empty() {
+        return Err(DescribeError(format!("refusing to write the descriptor of {}: {}", wasm_path.display(), identity_faults.join("; "))));
+    }
+    let pairs = declared_artifact_kind_pairs(&descriptor);
+    if !pairs.is_empty() {
+        if let Err(faults) = first_owned_codec(&runtime, &compiled, &pairs).await {
+            return Err(DescribeError(format!("refusing to write the descriptor of {}: none of its {} declared artifact kinds is owned by an app of the bundle, so no hub can create or open its documents ({})", wasm_path.display(), pairs.len(), faults.join("; "))));
+        }
     }
     write_descriptor_pair_atomic(out_dir, &final_bytes, format!("{final_json}\n").as_bytes())?;
 

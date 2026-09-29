@@ -31,7 +31,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** @emoji 🌳️ {@link SortableTreeItems} only wires dnd-kit's `DndContext`/`SortableContext` — the drag handle
+/** 🌳️ {@link SortableTreeItems} only wires dnd-kit's `DndContext`/`SortableContext` — the drag handle
  * itself belongs to each `TreeItem` (via `sortable`/`sortableId`), which needs the same `TreeContext` a real
  * `Tree` section provides. `TreeDataSection`/`TreeDataItem` have no free-form "content" slot, so this hosts
  * the sortable block via a single item's `control` (same mechanism as `Panel.stories.tsx`'s `leafTab` helper),

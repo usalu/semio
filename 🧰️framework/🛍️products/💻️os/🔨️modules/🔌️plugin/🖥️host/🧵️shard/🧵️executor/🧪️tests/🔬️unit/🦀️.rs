@@ -97,7 +97,6 @@ async fn registration_acknowledgement_and_terminal_refusal_preserve_exact_owners
         }
         assert_eq!(executor.state.lock().unwrap().registrations.bytes, 0);
         assert_eq!(mock.drop_admissions.load(Ordering::Acquire), usize::from(stage != "pending"));
-        eprintln!("[DEBUG] registration ownership stage={stage} hidden-credit=0 exact-owner=1");
     }
 }
 
@@ -137,7 +136,6 @@ async fn terminal_registration_reply_wakes_outside_the_state_lock() {
     assert_eq!(owner.instance.actor, actor);
     mock.drop_instance(owner.instance).await;
     executor.state.lock().unwrap().shard = Some(shard);
-    eprintln!("[DEBUG] registration terminal reply inline-wake=1 mutex-free=1 exact-owner=1");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -178,7 +176,6 @@ async fn admitted_registration_reply_wakes_outside_the_state_lock() {
     shard.unregister(actor).await;
     assert_eq!(mock.drop_admissions.load(Ordering::Acquire), 1);
     executor.state.lock().unwrap().shard = Some(shard);
-    eprintln!("[DEBUG] registration admitted reply inline-wake=1 mutex-free=1 exact-owner=1");
 }
 
 fn test_pool() -> Arc<WorkerPool> {

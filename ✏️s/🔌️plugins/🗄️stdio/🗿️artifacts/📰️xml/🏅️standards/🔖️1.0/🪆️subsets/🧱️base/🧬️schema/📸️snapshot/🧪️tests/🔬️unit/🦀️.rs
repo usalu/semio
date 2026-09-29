@@ -83,7 +83,6 @@ fn neutral_document_boundary_fixture_round_trips_all_doctype_positions() {
         let reopened = xml_document_from_text(&exported).expect("exported XML reopens");
         assert_eq!(reopened, doc, "{}", case["id"]);
     }
-    println!("[DEBUG] XML exported prolog/doctype/root/epilog boundary order and content match independent quick-xml input projection");
 }
 
 #[test]

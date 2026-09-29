@@ -50,7 +50,6 @@ fn held_watchdog(id: &str) {
     assert!(verdict.is_fault());
     assert_eq!(violation.is_some(), law["violationRetained"].as_bool().unwrap());
     assert!(violation.is_some_and(|row| interactive_step_contract_violated(row.elapsed_us)));
-    eprintln!("[DEBUG] telemetry contention {id} returns_while_held={returned} exact_violation_retained=true");
     assert_eq!(returned, law["returnsWhileHeld"].as_bool().unwrap());
 }
 //#endregion 🧰️Fixture
@@ -62,7 +61,6 @@ fn microsecond_telemetry_contention_timer_site_does_not_wait() {
     let timer = StepTimer::start("test.contention.timer");
     let guard = site_registry().lock().unwrap_or_else(PoisonError::into_inner);
     let (returned, ()) = callback_returns_while_held(|| drop(timer), || drop(guard));
-    eprintln!("[DEBUG] telemetry contention timer-site-held returns_while_held={returned}");
     assert_eq!(returned, law["returnsWhileHeld"].as_bool().unwrap());
 }
 
@@ -89,7 +87,6 @@ fn microsecond_telemetry_contention_event_returns_exact_event_without_waiting() 
     assert_eq!(event.stage, TraceStage::Failed);
     assert!(event.sequence > 0);
     assert_eq!(law["returnedEvent"], true);
-    eprintln!("[DEBUG] telemetry contention event-ring-held returns_while_held={returned} exact_event=true");
     assert_eq!(returned, law["returnsWhileHeld"].as_bool().unwrap());
 }
 
@@ -119,7 +116,6 @@ fn microsecond_telemetry_exact_verdict_survives_saturation_and_invalid_clock() {
     assert!(verdict.is_fault());
     assert_eq!(guard.report(Some(99)).clock_fault(), Some(CallbackClockFault::Backward));
     assert_eq!(guard.report(None).clock_fault(), Some(CallbackClockFault::Missing));
-    eprintln!("[DEBUG] exact callback verdict survives full/contended telemetry and rejects backward/missing clocks");
 }
 //#endregion 🔒️Contention
 
@@ -153,7 +149,7 @@ fn microsecond_sustained_overrun_ledger_quarantines_only_attributable_steps() {
         assert_eq!(u64::from(ledger.total_overruns()), law["total"].as_u64().unwrap(), "{}", law["id"]);
         assert_eq!(ledger.worst_elapsed_us(), law["worstElapsedUs"].as_u64().unwrap(), "{}", law["id"]);
         eprintln!(
-            "[DEBUG] sustained overrun ledger {} terminal_index={terminal_index:?} consecutive={} longest={} total={} worst={}us",
+            "sustained overrun ledger {} terminal_index={terminal_index:?} consecutive={} longest={} total={} worst={}us",
             law["id"],
             ledger.consecutive_overruns(),
             ledger.longest_overrun_run(),
@@ -175,6 +171,6 @@ fn microsecond_unusable_clock_reading_stays_terminal_and_resets_the_overrun_run(
     assert!(matches!(ledger.admit(&guard.verdict_at(Some(99))), StepQuarantine::ClockFault(CallbackClockFault::Backward)));
     let (recorded, quarantines) = step_overrun_counts();
     assert!(recorded > 0);
-    eprintln!("[DEBUG] process overrun counters recorded={recorded} sustained_quarantines={quarantines}");
+    eprintln!("process overrun counters recorded={recorded} sustained_quarantines={quarantines}");
 }
 //#endregion 📒️SustainedOverrun

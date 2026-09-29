@@ -70,7 +70,6 @@ export function testRemodelWindowOwnershipOracle(): void {
   assert.notDeepEqual(actual["remodel-report-left"], actual["remodel-report-right"]);
   assert.equal(JSON.stringify(fixture.document), documentBytes);
   for (const rejection of fixture.rejections) assert.throws(() => target(fixture.windowInstances, rejection.windowId, rejection.claimedWindowKindId), new RegExp(rejection.code));
-  console.log("[DEBUG] remodel-window-ownership windows=6 owners=3 schemas=ajv implementation=typescript oracle=json-patch document=stable");
 }
 
 testRemodelWindowOwnershipOracle();

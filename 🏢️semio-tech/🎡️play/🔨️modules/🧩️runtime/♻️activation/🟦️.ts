@@ -12,15 +12,15 @@ import { FONT_ASSET } from "../../../../../🧰️framework/🛍️products/💻
 import { PLAY_RUNTIME_TARGETS, playPaneClosureRoot, playRuntimeComponentIds } from "../🟦️.ts";
 
 //#region 🛣️PlayActivationLanes
-/** @emoji 📦️ Repository-relative root of the `@semio-tech/framework-os-dev` package every lane's
+/** 📦️ Repository-relative root of the `@semio-tech/framework-os-dev` package every lane's
  * `activate-<lane>-react-dev` target writes its receipt below. */
 const OS_DEV_PACKAGE_ROOT = "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript";
 
-/** @emoji 🧾️ The play-owned directory holding the merged receipt its Vite server consumes — no single
+/** 🧾️ The play-owned directory holding the merged receipt its Vite server consumes — no single
  * framework lane can produce play's cross-app union, because each one publishes one variant's closure. */
 export const PLAY_UNION_RECEIPT_DIRECTORY = "🏢️semio-tech/🎡️play/dist/♻️activation/dev";
 
-/** @emoji 🛣️ The fewest pane variants whose activation closures together cover every pane component —
+/** 🛣️ The fewest pane variants whose activation closures together cover every pane component —
  * greedy by newly covered components, ties broken by grid order, so the result is deterministic. Pane
  * variants are the only candidates: the `s` host lane is the launcher play itself replaces, and every
  * component play needs — the stdio one included, since its own `stdio` pane activates it — is reachable
@@ -42,17 +42,17 @@ export function playActivationLanes(): readonly string[] {
   return lanes;
 }
 
-/** @emoji 🗂️ One lane's framework-owned development runtime root. */
+/** 🗂️ One lane's framework-owned development runtime root. */
 function playLaneRuntimeRoot(workspace: string, lane: string): string {
   return developmentRuntimeRoot(join(workspace, OS_DEV_PACKAGE_ROOT), lane, "dev", "react");
 }
 
-/** @emoji 🗂️ Every lane's receipt directory, in lane order — what the union watcher subscribes to. */
+/** 🗂️ Every lane's receipt directory, in lane order — what the union watcher subscribes to. */
 export function playActivationLaneReceiptDirectories(workspace: string): readonly string[] {
   return playActivationLanes().map(lane => join(playLaneRuntimeRoot(workspace, lane), "activation"));
 }
 
-/** @emoji 🧩️ Maps every installed extension directory name to the first lane that staged it. */
+/** 🧩️ Maps every installed extension directory name to the first lane that staged it. */
 export function playExtensionDirectories(workspace: string): ReadonlyMap<string, string> {
   const byId = new Map(EXTENSION_TARGETS.map(row => [row.pluginId, row]));
   const directories = new Map<string, string>(), lanes = playActivationLanes();
@@ -67,7 +67,7 @@ export function playExtensionDirectories(workspace: string): ReadonlyMap<string,
 //#endregion 🛣️PlayActivationLanes
 
 //#region 🔏️PlayInstalledArtifact
-/** @emoji 🔏️ The file-identity rule an activation receipt row carries, restated SYNCHRONOUSLY: every file
+/** 🔏️ The file-identity rule an activation receipt row carries, restated SYNCHRONOUSLY: every file
  * of a staged directory in name order, each preceded by its `[name, size]` header, exactly as
  * `♻️activation/📥️installation/🟦️.ts`'s `activationFilesDigest` streams it. Restated rather than imported
  * because that module pulls the whole materialization tool-chain in and answers asynchronously, while play
@@ -82,7 +82,7 @@ function activationFilesDigestSync(files: ReadonlyMap<string, string>): string {
   return hash.digest("hex");
 }
 
-/** @emoji 💿️ What the ONE `🔌️plugin-modules` root ACTUALLY holds for a component right now, as the
+/** 💿️ What the ONE `🔌️plugin-modules` root ACTUALLY holds for a component right now, as the
  * `artifactSha256` an activation of it would record: `sha256(<support digest> + <component digest>)`, the
  * identity `♻️activation/🏃️execution/🟦️.ts` publishes. Every lane stages into that one root, so exactly one
  * artifact per component exists on disk and this answer decides WHICH disagreeing lane is the served one.
@@ -111,17 +111,17 @@ export function playInstalledArtifactSha256(workspace: string): (pluginId: strin
 //#region 🔖️PlayUnionReceipt
 export type PlayActivationLaneReceipt = { readonly lane: string; readonly receipt: ActivationReceipt; readonly receiptMtimeMs?: number };
 
-/** @emoji ⚖️ How a union merge resolves a lane disagreement and where it says so. Both are injected, so
+/** ⚖️ How a union merge resolves a lane disagreement and where it says so. Both are injected, so
  * the whole rule stays pure and a fixture can drive every outcome without a staged workspace. */
 export type PlayActivationMergeOptions = {
-  /** @emoji 💿️ The sha the staged artifact on disk carries, or `undefined` when it cannot be read. */
+  /** 💿️ The sha the staged artifact on disk carries, or `undefined` when it cannot be read. */
   readonly installedArtifactSha256?: (pluginId: string) => string | undefined;
   readonly warn?: (line: string) => void;
 };
 
 type PlayActivationCandidate = { readonly lane: string; readonly row: ActivationReceipt["plugins"][number]; readonly receiptMtimeMs: number };
 
-/** @emoji ⚖️ Picks the row a component is SERVED from when its lanes disagree. All 28 lanes stage into one
+/** ⚖️ Picks the row a component is SERVED from when its lanes disagree. All 28 lanes stage into one
  * `🔌️plugin-modules` root, so a disagreement never means two artifacts — it means one lane re-activated
  * (a peer running `activate-<lane>-react-dev` after the coordinator's full activation) and its siblings
  * still carry the previous sha. Refusing the whole merge there killed :6033 at three serve starts in two
@@ -141,7 +141,7 @@ function playServedActivationRow(pluginId: string, candidates: readonly PlayActi
   return { ...newest.row, rebuiltAt: earliest(served) };
 }
 
-/** @emoji 🧾️ Merges every lane's completion receipt into the ONE receipt describing play's exact runtime
+/** 🧾️ Merges every lane's completion receipt into the ONE receipt describing play's exact runtime
  * union — pure, so the rule is testable without a staged workspace. Disagreements are resolved against the
  * installed artifact by {@link playServedActivationRow}. */
 export function mergePlayActivationReceipts(lanes: readonly PlayActivationLaneReceipt[], expectedPluginIds: readonly string[], variant: string, options: PlayActivationMergeOptions = {}): ActivationReceipt {
@@ -161,7 +161,7 @@ export function mergePlayActivationReceipts(lanes: readonly PlayActivationLaneRe
   return parseActivationReceipt({ schema: "semio.dev.activation/v1", variant, profile: "dev", plugins: present.map(id => playServedActivationRow(id, candidates.get(id)!, options)) });
 }
 
-/** @emoji 📖️ Reads one lane's receipt, naming the exact target that produces it when it is absent. Its
+/** 📖️ Reads one lane's receipt, naming the exact target that produces it when it is absent. Its
  * mtime rides along: when two lanes activated the same installed bytes, the newer receipt is the one that
  * describes the current staging pass. */
 function readPlayActivationLane(workspace: string, lane: string): PlayActivationLaneReceipt {
@@ -173,7 +173,7 @@ function readPlayActivationLane(workspace: string, lane: string): PlayActivation
   }
 }
 
-/** @emoji 📬️ Publishes the merged union receipt into play's own `dist` and returns it. Lane drift is
+/** 📬️ Publishes the merged union receipt into play's own `dist` and returns it. Lane drift is
  * WARNED about on the serve's own console, next to the `[stale]` freshness lines that name the same lane. */
 export function publishPlayUnionReceipt(workspace: string, options: PlayActivationMergeOptions = { installedArtifactSha256: playInstalledArtifactSha256(workspace), warn: line => console.warn(line) }): { readonly receiptDirectory: string; readonly receipt: ActivationReceipt } {
   const lanes = playActivationLanes();
@@ -184,14 +184,14 @@ export function publishPlayUnionReceipt(workspace: string, options: PlayActivati
   return { receiptDirectory, receipt };
 }
 
-/** @emoji 🧾️ Requires the exact completed union before starting the development host. */
+/** 🧾️ Requires the exact completed union before starting the development host. */
 export function readPlayActivation(workspace: string): { readonly receiptDirectory: string; readonly extensionsDirectory: string; readonly extensionDirectories: ReadonlyMap<string, string>; readonly receipt: ActivationReceipt } {
   const { receiptDirectory, receipt } = publishPlayUnionReceipt(workspace);
   return { receiptDirectory, extensionsDirectory: join(playLaneRuntimeRoot(workspace, playActivationLanes()[0]!), "extensions"), extensionDirectories: playExtensionDirectories(workspace), receipt };
 }
 //#endregion 🔖️PlayUnionReceipt
 
-/** @emoji 🗂️ Where one installed extension's module directory is served from. A dev server reads it from the
+/** 🗂️ Where one installed extension's module directory is served from. A dev server reads it from the
  * lane that staged it ({@link playExtensionDirectories}); a production build has no activation lane at all
  * and every component sits under the release `🔌️plugin-modules` root — the same fallback the demonstrator's
  * `installedExtensionsDir` makes, expressed once so the build mode is a tested rule, not a `??` in a config. */
@@ -199,7 +199,7 @@ export function playExtensionDirectory(name: string, pluginModulesDirectory: str
   return laneDirectories?.get(name) ?? join(pluginModulesDirectory, name);
 }
 
-/** @emoji 🔎️ Describes every union component for the activation-receipt freshness watcher. */
+/** 🔎️ Describes every union component for the activation-receipt freshness watcher. */
 export function playActivationComponents(workspace: string, extensionDirectories: ReadonlyMap<string, string>): readonly ActivationComponentSpec[] {
   const byId = new Map([...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS].map(row => [row.pluginId, row]));
   return playRuntimeComponentIds().map(id => {

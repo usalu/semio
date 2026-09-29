@@ -1,0 +1,971 @@
+{
+  "schemaVersion": 1,
+  "oracle": "Chromium DOM width, font-kerning: none",
+  "tolerancePx": 0.5,
+  "faces": {
+    "sans": "Anta",
+    "mono": "Share Tech Mono"
+  },
+  "rows": [
+    {
+      "face": "sans",
+      "sizeToken": "2xs",
+      "sizePx": 9.6,
+      "locale": "en",
+      "text": "Settings",
+      "unkernedWidthPx": 38.484375
+    },
+    {
+      "face": "sans",
+      "sizeToken": "2xs",
+      "sizePx": 9.6,
+      "locale": "de",
+      "text": "Einstellungen",
+      "unkernedWidthPx": 61.078125
+    },
+    {
+      "face": "sans",
+      "sizeToken": "2xs",
+      "sizePx": 9.6,
+      "locale": "en",
+      "text": "Marketplace · 1.2.0 · loaded",
+      "unkernedWidthPx": 120.96875
+    },
+    {
+      "face": "sans",
+      "sizeToken": "2xs",
+      "sizePx": 9.6,
+      "locale": "de",
+      "text": "Marktplatz · 1.2.0 · geladen",
+      "unkernedWidthPx": 119.140625
+    },
+    {
+      "face": "sans",
+      "sizeToken": "2xs",
+      "sizePx": 9.6,
+      "locale": "en",
+      "text": "feature-editor",
+      "unkernedWidthPx": 62.75
+    },
+    {
+      "face": "sans",
+      "sizeToken": "2xs",
+      "sizePx": 9.6,
+      "locale": "de",
+      "text": "Grüße aus Zürich",
+      "unkernedWidthPx": 77.578125
+    },
+    {
+      "face": "sans",
+      "sizeToken": "2xs",
+      "sizePx": 9.6,
+      "locale": "en",
+      "text": "The quick brown fox jumps over the lazy dog",
+      "unkernedWidthPx": 201.765625
+    },
+    {
+      "face": "sans",
+      "sizeToken": "2xs",
+      "sizePx": 9.6,
+      "locale": "de",
+      "text": "Größenänderung übernehmen",
+      "unkernedWidthPx": 133.328125
+    },
+    {
+      "face": "sans",
+      "sizeToken": "2xs",
+      "sizePx": 9.6,
+      "locale": "en",
+      "text": "0123456789 +-*/%",
+      "unkernedWidthPx": 92.40625
+    },
+    {
+      "face": "sans",
+      "sizeToken": "2xs",
+      "sizePx": 9.6,
+      "locale": "de",
+      "text": "Straße, Maß & Fuß",
+      "unkernedWidthPx": 83.203125
+    },
+    {
+      "face": "sans",
+      "sizeToken": "xs",
+      "sizePx": 11.2,
+      "locale": "en",
+      "text": "Settings",
+      "unkernedWidthPx": 44.90625
+    },
+    {
+      "face": "sans",
+      "sizeToken": "xs",
+      "sizePx": 11.2,
+      "locale": "de",
+      "text": "Einstellungen",
+      "unkernedWidthPx": 71.265625
+    },
+    {
+      "face": "sans",
+      "sizeToken": "xs",
+      "sizePx": 11.2,
+      "locale": "en",
+      "text": "Marketplace · 1.2.0 · loaded",
+      "unkernedWidthPx": 141.125
+    },
+    {
+      "face": "sans",
+      "sizeToken": "xs",
+      "sizePx": 11.2,
+      "locale": "de",
+      "text": "Marktplatz · 1.2.0 · geladen",
+      "unkernedWidthPx": 138.984375
+    },
+    {
+      "face": "sans",
+      "sizeToken": "xs",
+      "sizePx": 11.2,
+      "locale": "en",
+      "text": "feature-editor",
+      "unkernedWidthPx": 73.21875
+    },
+    {
+      "face": "sans",
+      "sizeToken": "xs",
+      "sizePx": 11.2,
+      "locale": "de",
+      "text": "Grüße aus Zürich",
+      "unkernedWidthPx": 90.5
+    },
+    {
+      "face": "sans",
+      "sizeToken": "xs",
+      "sizePx": 11.2,
+      "locale": "en",
+      "text": "The quick brown fox jumps over the lazy dog",
+      "unkernedWidthPx": 235.390625
+    },
+    {
+      "face": "sans",
+      "sizeToken": "xs",
+      "sizePx": 11.2,
+      "locale": "de",
+      "text": "Größenänderung übernehmen",
+      "unkernedWidthPx": 155.546875
+    },
+    {
+      "face": "sans",
+      "sizeToken": "xs",
+      "sizePx": 11.2,
+      "locale": "en",
+      "text": "0123456789 +-*/%",
+      "unkernedWidthPx": 107.796875
+    },
+    {
+      "face": "sans",
+      "sizeToken": "xs",
+      "sizePx": 11.2,
+      "locale": "de",
+      "text": "Straße, Maß & Fuß",
+      "unkernedWidthPx": 97.0625
+    },
+    {
+      "face": "sans",
+      "sizeToken": "sm",
+      "sizePx": 12.8,
+      "locale": "en",
+      "text": "Settings",
+      "unkernedWidthPx": 51.3125
+    },
+    {
+      "face": "sans",
+      "sizeToken": "sm",
+      "sizePx": 12.8,
+      "locale": "de",
+      "text": "Einstellungen",
+      "unkernedWidthPx": 81.4375
+    },
+    {
+      "face": "sans",
+      "sizeToken": "sm",
+      "sizePx": 12.8,
+      "locale": "en",
+      "text": "Marketplace · 1.2.0 · loaded",
+      "unkernedWidthPx": 161.28125
+    },
+    {
+      "face": "sans",
+      "sizeToken": "sm",
+      "sizePx": 12.8,
+      "locale": "de",
+      "text": "Marktplatz · 1.2.0 · geladen",
+      "unkernedWidthPx": 158.84375
+    },
+    {
+      "face": "sans",
+      "sizeToken": "sm",
+      "sizePx": 12.8,
+      "locale": "en",
+      "text": "feature-editor",
+      "unkernedWidthPx": 83.671875
+    },
+    {
+      "face": "sans",
+      "sizeToken": "sm",
+      "sizePx": 12.8,
+      "locale": "de",
+      "text": "Grüße aus Zürich",
+      "unkernedWidthPx": 103.4375
+    },
+    {
+      "face": "sans",
+      "sizeToken": "sm",
+      "sizePx": 12.8,
+      "locale": "en",
+      "text": "The quick brown fox jumps over the lazy dog",
+      "unkernedWidthPx": 269.015625
+    },
+    {
+      "face": "sans",
+      "sizeToken": "sm",
+      "sizePx": 12.8,
+      "locale": "de",
+      "text": "Größenänderung übernehmen",
+      "unkernedWidthPx": 177.765625
+    },
+    {
+      "face": "sans",
+      "sizeToken": "sm",
+      "sizePx": 12.8,
+      "locale": "en",
+      "text": "0123456789 +-*/%",
+      "unkernedWidthPx": 123.203125
+    },
+    {
+      "face": "sans",
+      "sizeToken": "sm",
+      "sizePx": 12.8,
+      "locale": "de",
+      "text": "Straße, Maß & Fuß",
+      "unkernedWidthPx": 110.921875
+    },
+    {
+      "face": "sans",
+      "sizeToken": "base",
+      "sizePx": 14.4,
+      "locale": "en",
+      "text": "Settings",
+      "unkernedWidthPx": 57.734375
+    },
+    {
+      "face": "sans",
+      "sizeToken": "base",
+      "sizePx": 14.4,
+      "locale": "de",
+      "text": "Einstellungen",
+      "unkernedWidthPx": 91.625
+    },
+    {
+      "face": "sans",
+      "sizeToken": "base",
+      "sizePx": 14.4,
+      "locale": "en",
+      "text": "Marketplace · 1.2.0 · loaded",
+      "unkernedWidthPx": 181.453125
+    },
+    {
+      "face": "sans",
+      "sizeToken": "base",
+      "sizePx": 14.4,
+      "locale": "de",
+      "text": "Marktplatz · 1.2.0 · geladen",
+      "unkernedWidthPx": 178.703125
+    },
+    {
+      "face": "sans",
+      "sizeToken": "base",
+      "sizePx": 14.4,
+      "locale": "en",
+      "text": "feature-editor",
+      "unkernedWidthPx": 94.125
+    },
+    {
+      "face": "sans",
+      "sizeToken": "base",
+      "sizePx": 14.4,
+      "locale": "de",
+      "text": "Grüße aus Zürich",
+      "unkernedWidthPx": 116.359375
+    },
+    {
+      "face": "sans",
+      "sizeToken": "base",
+      "sizePx": 14.4,
+      "locale": "en",
+      "text": "The quick brown fox jumps over the lazy dog",
+      "unkernedWidthPx": 302.640625
+    },
+    {
+      "face": "sans",
+      "sizeToken": "base",
+      "sizePx": 14.4,
+      "locale": "de",
+      "text": "Größenänderung übernehmen",
+      "unkernedWidthPx": 199.984375
+    },
+    {
+      "face": "sans",
+      "sizeToken": "base",
+      "sizePx": 14.4,
+      "locale": "en",
+      "text": "0123456789 +-*/%",
+      "unkernedWidthPx": 138.59375
+    },
+    {
+      "face": "sans",
+      "sizeToken": "base",
+      "sizePx": 14.4,
+      "locale": "de",
+      "text": "Straße, Maß & Fuß",
+      "unkernedWidthPx": 124.796875
+    },
+    {
+      "face": "sans",
+      "sizeToken": "lg",
+      "sizePx": 16,
+      "locale": "en",
+      "text": "Settings",
+      "unkernedWidthPx": 64.140625
+    },
+    {
+      "face": "sans",
+      "sizeToken": "lg",
+      "sizePx": 16,
+      "locale": "de",
+      "text": "Einstellungen",
+      "unkernedWidthPx": 101.796875
+    },
+    {
+      "face": "sans",
+      "sizeToken": "lg",
+      "sizePx": 16,
+      "locale": "en",
+      "text": "Marketplace · 1.2.0 · loaded",
+      "unkernedWidthPx": 201.609375
+    },
+    {
+      "face": "sans",
+      "sizeToken": "lg",
+      "sizePx": 16,
+      "locale": "de",
+      "text": "Marktplatz · 1.2.0 · geladen",
+      "unkernedWidthPx": 198.546875
+    },
+    {
+      "face": "sans",
+      "sizeToken": "lg",
+      "sizePx": 16,
+      "locale": "en",
+      "text": "feature-editor",
+      "unkernedWidthPx": 104.578125
+    },
+    {
+      "face": "sans",
+      "sizeToken": "lg",
+      "sizePx": 16,
+      "locale": "de",
+      "text": "Grüße aus Zürich",
+      "unkernedWidthPx": 129.28125
+    },
+    {
+      "face": "sans",
+      "sizeToken": "lg",
+      "sizePx": 16,
+      "locale": "en",
+      "text": "The quick brown fox jumps over the lazy dog",
+      "unkernedWidthPx": 336.265625
+    },
+    {
+      "face": "sans",
+      "sizeToken": "lg",
+      "sizePx": 16,
+      "locale": "de",
+      "text": "Größenänderung übernehmen",
+      "unkernedWidthPx": 222.203125
+    },
+    {
+      "face": "sans",
+      "sizeToken": "lg",
+      "sizePx": 16,
+      "locale": "en",
+      "text": "0123456789 +-*/%",
+      "unkernedWidthPx": 154
+    },
+    {
+      "face": "sans",
+      "sizeToken": "lg",
+      "sizePx": 16,
+      "locale": "de",
+      "text": "Straße, Maß & Fuß",
+      "unkernedWidthPx": 138.65625
+    },
+    {
+      "face": "sans",
+      "sizeToken": "2xl",
+      "sizePx": 21.6,
+      "locale": "en",
+      "text": "Settings",
+      "unkernedWidthPx": 86.59375
+    },
+    {
+      "face": "sans",
+      "sizeToken": "2xl",
+      "sizePx": 21.6,
+      "locale": "de",
+      "text": "Einstellungen",
+      "unkernedWidthPx": 137.421875
+    },
+    {
+      "face": "sans",
+      "sizeToken": "2xl",
+      "sizePx": 21.6,
+      "locale": "en",
+      "text": "Marketplace · 1.2.0 · loaded",
+      "unkernedWidthPx": 272.171875
+    },
+    {
+      "face": "sans",
+      "sizeToken": "2xl",
+      "sizePx": 21.6,
+      "locale": "de",
+      "text": "Marktplatz · 1.2.0 · geladen",
+      "unkernedWidthPx": 268.046875
+    },
+    {
+      "face": "sans",
+      "sizeToken": "2xl",
+      "sizePx": 21.6,
+      "locale": "en",
+      "text": "feature-editor",
+      "unkernedWidthPx": 141.1875
+    },
+    {
+      "face": "sans",
+      "sizeToken": "2xl",
+      "sizePx": 21.6,
+      "locale": "de",
+      "text": "Grüße aus Zürich",
+      "unkernedWidthPx": 174.53125
+    },
+    {
+      "face": "sans",
+      "sizeToken": "2xl",
+      "sizePx": 21.6,
+      "locale": "en",
+      "text": "The quick brown fox jumps over the lazy dog",
+      "unkernedWidthPx": 453.96875
+    },
+    {
+      "face": "sans",
+      "sizeToken": "2xl",
+      "sizePx": 21.6,
+      "locale": "de",
+      "text": "Größenänderung übernehmen",
+      "unkernedWidthPx": 299.984375
+    },
+    {
+      "face": "sans",
+      "sizeToken": "2xl",
+      "sizePx": 21.6,
+      "locale": "en",
+      "text": "0123456789 +-*/%",
+      "unkernedWidthPx": 207.890625
+    },
+    {
+      "face": "sans",
+      "sizeToken": "2xl",
+      "sizePx": 21.6,
+      "locale": "de",
+      "text": "Straße, Maß & Fuß",
+      "unkernedWidthPx": 187.1875
+    },
+    {
+      "face": "mono",
+      "sizeToken": "2xs",
+      "sizePx": 9.6,
+      "locale": "en",
+      "text": "Settings",
+      "unkernedWidthPx": 41.484375
+    },
+    {
+      "face": "mono",
+      "sizeToken": "2xs",
+      "sizePx": 9.6,
+      "locale": "de",
+      "text": "Einstellungen",
+      "unkernedWidthPx": 67.40625
+    },
+    {
+      "face": "mono",
+      "sizeToken": "2xs",
+      "sizePx": 9.6,
+      "locale": "en",
+      "text": "Marketplace · 1.2.0 · loaded",
+      "unkernedWidthPx": 145.15625
+    },
+    {
+      "face": "mono",
+      "sizeToken": "2xs",
+      "sizePx": 9.6,
+      "locale": "de",
+      "text": "Marktplatz · 1.2.0 · geladen",
+      "unkernedWidthPx": 145.15625
+    },
+    {
+      "face": "mono",
+      "sizeToken": "2xs",
+      "sizePx": 9.6,
+      "locale": "en",
+      "text": "feature-editor",
+      "unkernedWidthPx": 72.578125
+    },
+    {
+      "face": "mono",
+      "sizeToken": "2xs",
+      "sizePx": 9.6,
+      "locale": "de",
+      "text": "Grüße aus Zürich",
+      "unkernedWidthPx": 82.953125
+    },
+    {
+      "face": "mono",
+      "sizeToken": "2xs",
+      "sizePx": 9.6,
+      "locale": "en",
+      "text": "The quick brown fox jumps over the lazy dog",
+      "unkernedWidthPx": 222.921875
+    },
+    {
+      "face": "mono",
+      "sizeToken": "2xs",
+      "sizePx": 9.6,
+      "locale": "de",
+      "text": "Größenänderung übernehmen",
+      "unkernedWidthPx": 129.609375
+    },
+    {
+      "face": "mono",
+      "sizeToken": "2xs",
+      "sizePx": 9.6,
+      "locale": "en",
+      "text": "0123456789 +-*/%",
+      "unkernedWidthPx": 82.953125
+    },
+    {
+      "face": "mono",
+      "sizeToken": "2xs",
+      "sizePx": 9.6,
+      "locale": "de",
+      "text": "Straße, Maß & Fuß",
+      "unkernedWidthPx": 88.140625
+    },
+    {
+      "face": "mono",
+      "sizeToken": "xs",
+      "sizePx": 11.2,
+      "locale": "en",
+      "text": "Settings",
+      "unkernedWidthPx": 48.390625
+    },
+    {
+      "face": "mono",
+      "sizeToken": "xs",
+      "sizePx": 11.2,
+      "locale": "de",
+      "text": "Einstellungen",
+      "unkernedWidthPx": 78.625
+    },
+    {
+      "face": "mono",
+      "sizeToken": "xs",
+      "sizePx": 11.2,
+      "locale": "en",
+      "text": "Marketplace · 1.2.0 · loaded",
+      "unkernedWidthPx": 169.34375
+    },
+    {
+      "face": "mono",
+      "sizeToken": "xs",
+      "sizePx": 11.2,
+      "locale": "de",
+      "text": "Marktplatz · 1.2.0 · geladen",
+      "unkernedWidthPx": 169.34375
+    },
+    {
+      "face": "mono",
+      "sizeToken": "xs",
+      "sizePx": 11.2,
+      "locale": "en",
+      "text": "feature-editor",
+      "unkernedWidthPx": 84.671875
+    },
+    {
+      "face": "mono",
+      "sizeToken": "xs",
+      "sizePx": 11.2,
+      "locale": "de",
+      "text": "Grüße aus Zürich",
+      "unkernedWidthPx": 96.78125
+    },
+    {
+      "face": "mono",
+      "sizeToken": "xs",
+      "sizePx": 11.2,
+      "locale": "en",
+      "text": "The quick brown fox jumps over the lazy dog",
+      "unkernedWidthPx": 260.078125
+    },
+    {
+      "face": "mono",
+      "sizeToken": "xs",
+      "sizePx": 11.2,
+      "locale": "de",
+      "text": "Größenänderung übernehmen",
+      "unkernedWidthPx": 151.203125
+    },
+    {
+      "face": "mono",
+      "sizeToken": "xs",
+      "sizePx": 11.2,
+      "locale": "en",
+      "text": "0123456789 +-*/%",
+      "unkernedWidthPx": 96.78125
+    },
+    {
+      "face": "mono",
+      "sizeToken": "xs",
+      "sizePx": 11.2,
+      "locale": "de",
+      "text": "Straße, Maß & Fuß",
+      "unkernedWidthPx": 102.828125
+    },
+    {
+      "face": "mono",
+      "sizeToken": "sm",
+      "sizePx": 12.8,
+      "locale": "en",
+      "text": "Settings",
+      "unkernedWidthPx": 55.296875
+    },
+    {
+      "face": "mono",
+      "sizeToken": "sm",
+      "sizePx": 12.8,
+      "locale": "de",
+      "text": "Einstellungen",
+      "unkernedWidthPx": 89.859375
+    },
+    {
+      "face": "mono",
+      "sizeToken": "sm",
+      "sizePx": 12.8,
+      "locale": "en",
+      "text": "Marketplace · 1.2.0 · loaded",
+      "unkernedWidthPx": 193.546875
+    },
+    {
+      "face": "mono",
+      "sizeToken": "sm",
+      "sizePx": 12.8,
+      "locale": "de",
+      "text": "Marktplatz · 1.2.0 · geladen",
+      "unkernedWidthPx": 193.546875
+    },
+    {
+      "face": "mono",
+      "sizeToken": "sm",
+      "sizePx": 12.8,
+      "locale": "en",
+      "text": "feature-editor",
+      "unkernedWidthPx": 96.78125
+    },
+    {
+      "face": "mono",
+      "sizeToken": "sm",
+      "sizePx": 12.8,
+      "locale": "de",
+      "text": "Grüße aus Zürich",
+      "unkernedWidthPx": 110.59375
+    },
+    {
+      "face": "mono",
+      "sizeToken": "sm",
+      "sizePx": 12.8,
+      "locale": "en",
+      "text": "The quick brown fox jumps over the lazy dog",
+      "unkernedWidthPx": 297.21875
+    },
+    {
+      "face": "mono",
+      "sizeToken": "sm",
+      "sizePx": 12.8,
+      "locale": "de",
+      "text": "Größenänderung übernehmen",
+      "unkernedWidthPx": 172.8125
+    },
+    {
+      "face": "mono",
+      "sizeToken": "sm",
+      "sizePx": 12.8,
+      "locale": "en",
+      "text": "0123456789 +-*/%",
+      "unkernedWidthPx": 110.59375
+    },
+    {
+      "face": "mono",
+      "sizeToken": "sm",
+      "sizePx": 12.8,
+      "locale": "de",
+      "text": "Straße, Maß & Fuß",
+      "unkernedWidthPx": 117.515625
+    },
+    {
+      "face": "mono",
+      "sizeToken": "base",
+      "sizePx": 14.4,
+      "locale": "en",
+      "text": "Settings",
+      "unkernedWidthPx": 62.21875
+    },
+    {
+      "face": "mono",
+      "sizeToken": "base",
+      "sizePx": 14.4,
+      "locale": "de",
+      "text": "Einstellungen",
+      "unkernedWidthPx": 101.09375
+    },
+    {
+      "face": "mono",
+      "sizeToken": "base",
+      "sizePx": 14.4,
+      "locale": "en",
+      "text": "Marketplace · 1.2.0 · loaded",
+      "unkernedWidthPx": 217.734375
+    },
+    {
+      "face": "mono",
+      "sizeToken": "base",
+      "sizePx": 14.4,
+      "locale": "de",
+      "text": "Marktplatz · 1.2.0 · geladen",
+      "unkernedWidthPx": 217.734375
+    },
+    {
+      "face": "mono",
+      "sizeToken": "base",
+      "sizePx": 14.4,
+      "locale": "en",
+      "text": "feature-editor",
+      "unkernedWidthPx": 108.875
+    },
+    {
+      "face": "mono",
+      "sizeToken": "base",
+      "sizePx": 14.4,
+      "locale": "de",
+      "text": "Grüße aus Zürich",
+      "unkernedWidthPx": 124.421875
+    },
+    {
+      "face": "mono",
+      "sizeToken": "base",
+      "sizePx": 14.4,
+      "locale": "en",
+      "text": "The quick brown fox jumps over the lazy dog",
+      "unkernedWidthPx": 334.375
+    },
+    {
+      "face": "mono",
+      "sizeToken": "base",
+      "sizePx": 14.4,
+      "locale": "de",
+      "text": "Größenänderung übernehmen",
+      "unkernedWidthPx": 194.40625
+    },
+    {
+      "face": "mono",
+      "sizeToken": "base",
+      "sizePx": 14.4,
+      "locale": "en",
+      "text": "0123456789 +-*/%",
+      "unkernedWidthPx": 124.421875
+    },
+    {
+      "face": "mono",
+      "sizeToken": "base",
+      "sizePx": 14.4,
+      "locale": "de",
+      "text": "Straße, Maß & Fuß",
+      "unkernedWidthPx": 132.203125
+    },
+    {
+      "face": "mono",
+      "sizeToken": "lg",
+      "sizePx": 16,
+      "locale": "en",
+      "text": "Settings",
+      "unkernedWidthPx": 69.125
+    },
+    {
+      "face": "mono",
+      "sizeToken": "lg",
+      "sizePx": 16,
+      "locale": "de",
+      "text": "Einstellungen",
+      "unkernedWidthPx": 112.328125
+    },
+    {
+      "face": "mono",
+      "sizeToken": "lg",
+      "sizePx": 16,
+      "locale": "en",
+      "text": "Marketplace · 1.2.0 · loaded",
+      "unkernedWidthPx": 241.921875
+    },
+    {
+      "face": "mono",
+      "sizeToken": "lg",
+      "sizePx": 16,
+      "locale": "de",
+      "text": "Marktplatz · 1.2.0 · geladen",
+      "unkernedWidthPx": 241.921875
+    },
+    {
+      "face": "mono",
+      "sizeToken": "lg",
+      "sizePx": 16,
+      "locale": "en",
+      "text": "feature-editor",
+      "unkernedWidthPx": 120.96875
+    },
+    {
+      "face": "mono",
+      "sizeToken": "lg",
+      "sizePx": 16,
+      "locale": "de",
+      "text": "Grüße aus Zürich",
+      "unkernedWidthPx": 138.25
+    },
+    {
+      "face": "mono",
+      "sizeToken": "lg",
+      "sizePx": 16,
+      "locale": "en",
+      "text": "The quick brown fox jumps over the lazy dog",
+      "unkernedWidthPx": 371.53125
+    },
+    {
+      "face": "mono",
+      "sizeToken": "lg",
+      "sizePx": 16,
+      "locale": "de",
+      "text": "Größenänderung übernehmen",
+      "unkernedWidthPx": 216
+    },
+    {
+      "face": "mono",
+      "sizeToken": "lg",
+      "sizePx": 16,
+      "locale": "en",
+      "text": "0123456789 +-*/%",
+      "unkernedWidthPx": 138.25
+    },
+    {
+      "face": "mono",
+      "sizeToken": "lg",
+      "sizePx": 16,
+      "locale": "de",
+      "text": "Straße, Maß & Fuß",
+      "unkernedWidthPx": 146.890625
+    },
+    {
+      "face": "mono",
+      "sizeToken": "2xl",
+      "sizePx": 21.6,
+      "locale": "en",
+      "text": "Settings",
+      "unkernedWidthPx": 93.3125
+    },
+    {
+      "face": "mono",
+      "sizeToken": "2xl",
+      "sizePx": 21.6,
+      "locale": "de",
+      "text": "Einstellungen",
+      "unkernedWidthPx": 151.640625
+    },
+    {
+      "face": "mono",
+      "sizeToken": "2xl",
+      "sizePx": 21.6,
+      "locale": "en",
+      "text": "Marketplace · 1.2.0 · loaded",
+      "unkernedWidthPx": 326.59375
+    },
+    {
+      "face": "mono",
+      "sizeToken": "2xl",
+      "sizePx": 21.6,
+      "locale": "de",
+      "text": "Marktplatz · 1.2.0 · geladen",
+      "unkernedWidthPx": 326.59375
+    },
+    {
+      "face": "mono",
+      "sizeToken": "2xl",
+      "sizePx": 21.6,
+      "locale": "en",
+      "text": "feature-editor",
+      "unkernedWidthPx": 163.296875
+    },
+    {
+      "face": "mono",
+      "sizeToken": "2xl",
+      "sizePx": 21.6,
+      "locale": "de",
+      "text": "Grüße aus Zürich",
+      "unkernedWidthPx": 186.625
+    },
+    {
+      "face": "mono",
+      "sizeToken": "2xl",
+      "sizePx": 21.6,
+      "locale": "en",
+      "text": "The quick brown fox jumps over the lazy dog",
+      "unkernedWidthPx": 501.5625
+    },
+    {
+      "face": "mono",
+      "sizeToken": "2xl",
+      "sizePx": 21.6,
+      "locale": "de",
+      "text": "Größenänderung übernehmen",
+      "unkernedWidthPx": 291.609375
+    },
+    {
+      "face": "mono",
+      "sizeToken": "2xl",
+      "sizePx": 21.6,
+      "locale": "en",
+      "text": "0123456789 +-*/%",
+      "unkernedWidthPx": 186.625
+    },
+    {
+      "face": "mono",
+      "sizeToken": "2xl",
+      "sizePx": 21.6,
+      "locale": "de",
+      "text": "Straße, Maß & Fuß",
+      "unkernedWidthPx": 198.296875
+    }
+  ]
+}

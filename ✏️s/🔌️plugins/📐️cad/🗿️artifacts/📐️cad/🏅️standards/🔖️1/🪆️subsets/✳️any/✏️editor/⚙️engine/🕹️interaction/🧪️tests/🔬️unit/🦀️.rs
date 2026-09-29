@@ -319,7 +319,6 @@ async fn every_model_definition_interaction_drives_to_a_commit_outcome() {
             None => stuck.push(format!("{}@commit", entry.id)),
         }
     }
-    eprintln!("[DEBUG] interactions reached={reached} objects={} transforms={} unsupported={} stuck={stuck:?}\n[DEBUG] unsupported={unsupported:?}", objects.len(), transforms.len(), unsupported.len());
     // 🧩️ Three mode-chooser assets delegate to a nested `interaction.call` (composition the
     // interpreter does not run yet); `measure.area` gates on a `kernel.query` effect and
     // `surface.extrudeCrv` on `command.assignExtrusionDistance` over an existing curve — exact, so a

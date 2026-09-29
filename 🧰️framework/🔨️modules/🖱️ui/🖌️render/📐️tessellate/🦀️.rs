@@ -1,4 +1,4 @@
-//! @emoji 📐️ CPU tessellation: ear clipping, dashed-line/thick-line expansion, triangle fans, pixel
+//! 📐️ CPU tessellation: ear clipping, dashed-line/thick-line expansion, triangle fans, pixel
 //! snapping and silhouette mask geometry. Every function here is pure — same inputs, same outputs,
 //! no GPU type in sight — which is what makes [`crate::scene::Scene::finish`]'s `snap`/`batch` steps
 //! deterministic and unit-testable without a device.

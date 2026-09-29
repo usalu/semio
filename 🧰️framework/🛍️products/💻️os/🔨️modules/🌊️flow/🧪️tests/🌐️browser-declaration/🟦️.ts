@@ -52,5 +52,5 @@ export async function testFlowBrowserDeclaration(packageRoot: string): Promise<v
   for (const name of fixture.excluded) assert.equal(names.includes(name), false);
   for (const mutate of [(value: typeof fixture) => { value.operationMethods = 111; }, (value: typeof fixture) => { value.result = "void"; }, (value: typeof fixture) => { value.extra = true; }, (value: typeof fixture) => { delete value.package.exports["."]; }, (value: typeof fixture) => { value.package.files.push(value.package.files[0]); }]) { const bad = structuredClone(fixture); mutate(bad); assert.equal(validate(bad), false); }
   assert.equal(readFileSync(declarationPath, "utf8"), text);
-  console.log(`[DEBUG] Flow browser declarations: ${fixture.operationMethods} schema methods, runtime prototype and TypeScript parser parity; 3 package exports and 2 TypeScript resolutions; 5 hostile fixtures rejected`);
+  console.log(`Flow browser declarations: ${fixture.operationMethods} schema methods, runtime prototype and TypeScript parser parity; 3 package exports and 2 TypeScript resolutions; 5 hostile fixtures rejected`);
 }

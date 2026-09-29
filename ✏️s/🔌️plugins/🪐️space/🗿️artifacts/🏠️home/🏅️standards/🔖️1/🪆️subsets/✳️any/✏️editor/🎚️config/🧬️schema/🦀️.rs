@@ -6,13 +6,7 @@ use ::semio_framework_schema::ArtifactSchema;
 #[artifact_schema(id = "s.space.home.config")]
 pub struct HomeConfig {
     #[state(config)]
-    pub directory_json: String,
-    #[state(config)]
-    pub directory_session_binding_sha256: String,
-    #[state(config)]
-    pub directory_authorization_generation: u64,
-    #[state(config)]
-    pub directory_receipt_sha256: String,
+    pub retired_local_studio_ids: Vec<String>,
 }
 
 //region 📎 App-schema descriptor

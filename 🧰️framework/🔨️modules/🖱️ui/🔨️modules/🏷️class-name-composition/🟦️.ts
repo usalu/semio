@@ -5,7 +5,7 @@
 // #endregion 🧲️Header
 
 // #region 🎨️ClassNameComposition
-/** @emoji 🧬️ Repository-owned recursive input for CSS class composition. */
+/** 🧬️ Repository-owned recursive input for CSS class composition. */
 export type ClassNameInput = string | number | bigint | boolean | null | undefined | { readonly [className: string]: unknown } | ClassNameInput[];
 
 type ClassGroup = readonly [id: string, pattern: RegExp];
@@ -255,7 +255,7 @@ const appendClassTokens = (input: ClassNameInput, tokens: string[]): void => {
   }
 };
 
-/** @emoji 🪢️ Composes the finite utility families used by repository UI source. */
+/** 🪢️ Composes the finite utility families used by repository UI source. */
 export function cn(...inputs: ClassNameInput[]): string {
   const tokens: string[] = [];
   for (const input of inputs) appendClassTokens(input, tokens);

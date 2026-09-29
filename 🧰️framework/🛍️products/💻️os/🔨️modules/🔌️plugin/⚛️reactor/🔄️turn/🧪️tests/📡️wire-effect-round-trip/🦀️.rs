@@ -31,6 +31,7 @@ fn effect_wire_kind(effect: &Effect) -> &'static str {
         Effect::SetPanel { .. } => "setPanel",
         Effect::DownloadMediaExport { .. } => "downloadMediaExport",
         Effect::IconRenderExport { .. } => "iconRenderExport",
+        Effect::VideoRenderExport { .. } => "videoRenderExport",
         Effect::RequestFileOpen { .. } => "requestFileOpen",
         Effect::RequestMediaFrames { .. } => "requestMediaFrames",
         Effect::SpawnPluginInstance { .. } => "spawnPluginInstance",
@@ -69,7 +70,7 @@ fn effect_wire_kind(effect: &Effect) -> &'static str {
 }
 
 fn all_effect_wire_fixtures() -> Vec<Effect> {
-    use semio_framework::kernel::{ArtifactHandle, CapabilityId, CapabilityRequest, ClipboardFragment, IconRenderExportItem, InferenceProposalKind, JobPlacement, MessageEndpoint, RequestOutcome, WindowHandle, WindowKindId};
+    use semio_framework::kernel::{ArtifactHandle, CapabilityId, CapabilityRequest, ClipboardFragment, IconRenderExportItem, InferenceProposalKind, JobPlacement, MessageEndpoint, RequestOutcome, VideoRenderProgram, VideoRenderRun, VideoRenderScene, WindowHandle, WindowKindId};
     use semio_framework::{MediaClass, MediaForm, MediaType};
     let req = RequestId(7);
     let media = MediaType { class: MediaClass::Data, form: MediaForm::Value };
@@ -85,6 +86,7 @@ fn all_effect_wire_fixtures() -> Vec<Effect> {
         Effect::SetPanel { panel_json: "{}".into() },
         Effect::DownloadMediaExport { filename: "a.bin".into(), mime_type: "application/octet-stream".into(), data: "AA==".into(), encoding: None },
         Effect::IconRenderExport { items: vec![IconRenderExportItem { filename: "i.png".into(), request: dsl::DslValue::Null }] },
+        Effect::VideoRenderExport { filename: "v.mp4".into(), program: VideoRenderProgram { schema: semio_framework::kernel::VIDEO_RENDER_PROGRAM_SCHEMA.into(), width: 32, height: 16, fps: 30, background: [0.0, 0.0, 0.0, 1.0], paths: Vec::new(), images: Vec::new(), scenes: vec![VideoRenderScene::default()], timeline: vec![VideoRenderRun { scene: 0, frames: 1 }] } },
         Effect::RequestFileOpen { req, accept: "*".into(), read_as: None, import_action: "import".into(), multiple: false },
         Effect::RequestMediaFrames {
             req,
@@ -148,5 +150,5 @@ fn every_effect_kind_survives_wire_effect_round_trip() {
         assert_eq!(effect_wire_kind(&decoded), kind, "{kind} decoded as a different arm");
     }
     assert_eq!(seen.len(), fixtures.len(), "wire-table completeness fixtures must be unique");
-    assert_eq!(fixtures.len(), 45, "every Effect kind must have a leftover wire-table fixture");
+    assert_eq!(fixtures.len(), 46, "every Effect kind must have a leftover wire-table fixture");
 }

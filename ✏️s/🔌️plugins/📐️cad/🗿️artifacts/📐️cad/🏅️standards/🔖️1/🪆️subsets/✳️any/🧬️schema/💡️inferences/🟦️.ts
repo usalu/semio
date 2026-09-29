@@ -17,7 +17,7 @@ export interface CadInference {
 // #region 🔍️ConstructQueryLanguage
 /** 🔍️ Promoted from the dissolved artifact ⚙️engine (D4 — derived compute over a Model snapshot, no mutable state): Cypher-inspired `construct` query/transformation DSL. */
 // #region 🧲️Header
-/** @emoji 🔍️ `@semio-tech/cad-js/query` — Cypher-inspired `construct` language: `MATCH (Object {typology: '…'})`, `KernelIndex` on `Model`, `defaultConstructRunner` for `InteractionRuntime.query` (view `CALL` removed). */
+/** 🔍️ `@semio-tech/cad-js/query` — Cypher-inspired `construct` language: `MATCH (Object {typology: '…'})`, `KernelIndex` on `Model`, `defaultConstructRunner` for `InteractionRuntime.query` (view `CALL` removed). */
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
@@ -561,7 +561,7 @@ function assertConstructAst(ast: ConstructAst, activeModelDefinitionId?: string 
   }
 }
 
-/** @emoji 🔍️ Resolves one `YIELD` key (supports dot paths into `data`) from an `ActionResult`. */
+/** 🔍️ Resolves one `YIELD` key (supports dot paths into `data`) from an `ActionResult`. */
 export function resolveActionYield(result: ActionResult, key: string): unknown {
   if (!key.includes(".")) {
     if (key === "diff") return result.diff;
@@ -593,12 +593,12 @@ function tokenText(t: IToken): string {
   return t.image;
 }
 
-/** @emoji 🪪️ Narrows a `CstElement` to its `IToken` case (a rule's terminal child). */
+/** 🪪️ Narrows a `CstElement` to its `IToken` case (a rule's terminal child). */
 function asToken(e: CstElement | undefined): IToken | undefined {
   return e !== undefined && "tokenType" in e ? e : undefined;
 }
 
-/** @emoji 🪪️ Narrows a `CstElement` to its `CstNode` case (a rule's subrule child). */
+/** 🪪️ Narrows a `CstElement` to its `CstNode` case (a rule's subrule child). */
 function asNode(e: CstElement | undefined): CstNode | undefined {
   return e !== undefined && "children" in e ? e : undefined;
 }
@@ -901,7 +901,7 @@ function cstToAst(cst: CstNode): ConstructAst {
   return { clauses, ...(returnClause ? { returnClause } : {}) };
 }
 
-/** @emoji 🔍️ Parses `construct` source into `ConstructAst` (throws on syntax error). */
+/** 🔍️ Parses `construct` source into `ConstructAst` (throws on syntax error). */
 export function parseConstruct(text: string, activeModelDefinitionId?: string | null): ConstructAst {
   const lex = constructLexer.tokenize(text);
   if (lex.errors.length) throw new Error(lex.errors.map((e) => e.message).join("; "));
@@ -1191,7 +1191,7 @@ export interface ExecutionPlan {
   readonly returnClause?: ReturnClauseAst;
 }
 
-/** @emoji 🧭️ Flattens `MATCH` comma patterns into sequential steps (cartesian product handled in executor). */
+/** 🧭️ Flattens `MATCH` comma patterns into sequential steps (cartesian product handled in executor). */
 export function planConstruct(ast: ConstructAst): ExecutionPlan {
   const steps: PlanStepAst[] = [];
   for (const cl of ast.clauses) {
@@ -1217,7 +1217,7 @@ function rowVarsToEnv(row: Row, model: Model, meta: AttributeTable, preview: Spa
   return { context: {}, vars, model, metadata: meta, activeModelDefinitionId, preview };
 }
 
-/** @emoji 🔄️ Runs a shipped transformation against the construct context model. */
+/** 🔄️ Runs a shipped transformation against the construct context model. */
 function runTransformationCall(actionId: string, ctx: ConstructQueryContext): ActionResult {
   const spec = loadTransformation(actionId);
   if (!spec) throw new Error(`unknown transformation ${actionId}`);
@@ -1394,7 +1394,7 @@ async function* executeConstruct(plan: ExecutionPlan, ctx: ConstructQueryContext
 // #endregion Executor
 
 // #region Api
-/** @emoji 🔍️ Materializes `executeConstruct` into `ConstructQueryResult`. */
+/** 🔍️ Materializes `executeConstruct` into `ConstructQueryResult`. */
 export async function runConstruct(text: string, ctx: ConstructQueryContext): Promise<ConstructQueryResult> {
   const ast = parseConstruct(text, ctx.activeModelDefinitionId);
   const plan = planConstruct(ast);
@@ -1409,10 +1409,10 @@ export async function runConstruct(text: string, ctx: ConstructQueryContext): Pr
   return { rows, ...(data !== undefined ? { data } : {}), ...(diff !== undefined ? { diff } : {}) };
 }
 
-/** @emoji 🔍️ Default `InteractionRuntimeOptions.query` bridge (`@semio-tech/cad-js/core`). */
+/** 🔍️ Default `InteractionRuntimeOptions.query` bridge (`@semio-tech/cad-js/core`). */
 export const defaultConstructRunner: ConstructRunner = (text, ctx) => runConstruct(text, ctx);
 
-/** @emoji 🔍️ Cached `KernelIndex` wrapper for repeated `construct` scripts on one document revision. */
+/** 🔍️ Cached `KernelIndex` wrapper for repeated `construct` scripts on one document revision. */
 export class ConstructEngine {
   private index: KernelIndex | null = null;
   private rev = -1;
@@ -1427,7 +1427,7 @@ export class ConstructEngine {
     return this.index;
   }
 
-  /** @emoji 🧭️ Ensures `KernelIndex` matches current `model.revision` (side-effect on cache). */
+  /** 🧭️ Ensures `KernelIndex` matches current `model.revision` (side-effect on cache). */
   warmIndex(): void {
     this.ix().ensure();
   }
@@ -1438,9 +1438,22 @@ export class ConstructEngine {
 const __spatialQueryTestRuntime = import.meta.vitest ? await import("../../✏️editor/⚙️engine/🏃️runtime/🟦️.ts") : null;
 const __spatialQueryTestKernel = import.meta.vitest ? await import("../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️.ts") : null;
 
+/** 🎒️ The values this module hands its extracted suite `./🧪️tests/🧪️semio-tech-cad-js-query-parse/🟦️.ts`. */
+export type InferencesTestDependencies = {
+  readonly Model: typeof Model;
+  readonly __spatialQueryTestKernel: typeof __spatialQueryTestKernel;
+  readonly __spatialQueryTestRuntime: typeof __spatialQueryTestRuntime;
+  readonly applyModelDiff: typeof applyModelDiff;
+  readonly emptyMeshTransfer: typeof emptyMeshTransfer;
+  readonly modelDefinitionActionRegistry: typeof modelDefinitionActionRegistry;
+  readonly parseConstruct: typeof parseConstruct;
+  readonly runConstruct: typeof runConstruct;
+  readonly solidRef: typeof solidRef;
+};
+
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️semio-tech-cad-js-query-parse/🟦️.ts");
-  await registerTests1(import.meta.vitest, { Model, __spatialQueryTestKernel, __spatialQueryTestRuntime, applyModelDiff, emptyMeshTransfer, modelDefinitionActionRegistry, parseConstruct, runConstruct, solidRef }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { Model, __spatialQueryTestKernel, __spatialQueryTestRuntime, applyModelDiff, emptyMeshTransfer, modelDefinitionActionRegistry, parseConstruct, runConstruct, solidRef }, { url: import.meta.url });
 }
 // #endregion 🧪️Tests
 // #endregion 🔍️ConstructQueryLanguage
@@ -1492,10 +1505,16 @@ export const cadCadInferenceGuardConstant = <T extends string | number | boolean
   value === expected ? expected : cadCadInferenceGuardReject(at, `value is not ${String(expected)}`);
 //#endregion 🚪️Parsers
 
+/** 📐️ One `[x, y, z]` corner the schema admits as exactly three finite numbers. */
+const parseCadBoundsCorner = (value: unknown, at: string): [number, number, number] => {
+  const [x, y, z] = cadCadInferenceGuardArray(value, at, {"minItems": 3, "maxItems": 3}).map((item, index) => cadCadInferenceGuardNumber(item, `${at}[${index}]`));
+  return [x, y, z];
+};
+
 export function parseCadBounds(value: unknown, at = "$"): CadBounds {
   const row = cadCadInferenceGuardObject(value, at);
   return {
-    min: cadCadInferenceGuardArray(row["min"], `${at}.min`, {"minItems": 3, "maxItems": 3}).map((item, index) => cadCadInferenceGuardNumber(item, `${at}.min[${index}]`)),
-    max: cadCadInferenceGuardArray(row["max"], `${at}.max`, {"minItems": 3, "maxItems": 3}).map((item, index) => cadCadInferenceGuardNumber(item, `${at}.max[${index}]`)),
+    min: parseCadBoundsCorner(row["min"], `${at}.min`),
+    max: parseCadBoundsCorner(row["max"], `${at}.max`),
   };
 }

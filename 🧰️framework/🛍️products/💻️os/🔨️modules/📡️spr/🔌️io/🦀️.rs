@@ -17,7 +17,7 @@ mod native {
     use crate::os_spr::history::{decode_history, encode_composition, encode_conflicts, encode_doc, encode_edit, encode_transition, DecodeOptions, HistoryAppender, HistoryEdit, HistoryReader};
     use crate::os_spr::wire::{DictBuilder, ProtocolError, ProtocolLimits, RecordHasher};
 
-    /// @emoji 🚨️ Wraps a `std::io::Error` into the crate-wide `ProtocolError::Io` variant — the
+    /// 🚨️ Wraps a `std::io::Error` into the crate-wide `ProtocolError::Io` variant — the
     /// only place `std::io::Error` is allowed to appear, per the family's no-`std::io::Error`-in-
     /// public-signatures rule.
     #[allow(clippy::needless_pass_by_value)] // used as a `map_err` callback, which passes the error by value
@@ -28,7 +28,7 @@ mod native {
     }
 
     //#region 🔖️File
-    /// @emoji 📍️ Where a `.spr` file's trusted content currently ends, and the commit-chain state
+    /// 📍️ Where a `.spr` file's trusted content currently ends, and the commit-chain state
     /// at that point — everything a caller needs to keep appending or to report file health.
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub struct ResumeState {
@@ -37,7 +37,7 @@ mod native {
         pub chain_hash: [u8; 32],
     }
 
-    /// @emoji 📖️ Re-derives a `ResumeState` from whatever `path` currently contains: runs
+    /// 📖️ Re-derives a `ResumeState` from whatever `path` currently contains: runs
     /// `crate::os_spr::format::recover` (`RecoveryMode::LastCommit`), then reads back either the
     /// header-only `chain_0` (no commit yet) or the trusted tail's `REC_COMMIT` payload.
     async fn resume_state_for(path: &Path, limits: &ProtocolLimits) -> Result<ResumeState, ProtocolError> {
@@ -59,7 +59,7 @@ mod native {
         Ok(ResumeState { end_offset: recovery.bytes_recovered, last_commit_seq: commit.commit_seq, chain_hash: commit.chain_hash })
     }
 
-    /// @emoji 📼️ A live `.spr` file handle: either a fresh/resumed write path (`appender` set) or a
+    /// 📼️ A live `.spr` file handle: either a fresh/resumed write path (`appender` set) or a
     /// pure inspection handle (`open_read_only`, `appender` unset). One struct for both so
     /// `resume_state()` reports uniformly regardless of how the handle was opened.
     pub struct HistoryFile {
@@ -68,7 +68,7 @@ mod native {
     }
 
     impl HistoryFile {
-        /// @emoji 🆕️ Creates `path` fresh (truncating any existing file) and writes the header plus
+        /// 🆕️ Creates `path` fresh (truncating any existing file) and writes the header plus
         /// the `REC_DOC` record. No commit has happened yet — `resume_state().last_commit_seq == 0`
         /// until the caller's first `appender().commit().await`.
         pub async fn create(path: &Path, doc_id: &str, schema: &str, options: &WriteOptions) -> Result<Self, ProtocolError> {
@@ -81,7 +81,7 @@ mod native {
             Ok(Self { appender: Some(appender), resume })
         }
 
-        /// @emoji ▶️ Opens an existing `.spr` file to keep appending to it.
+        /// ▶️ Opens an existing `.spr` file to keep appending to it.
         ///
         /// 🎯️ Design choice (forced by the crate boundary): `crate::os_spr::format::SprWriter::begin` and
         /// `crate::os_spr::history::HistoryAppender::begin` are the ONLY public constructors for those
@@ -137,7 +137,7 @@ mod native {
             Ok(Self { appender: Some(appender), resume })
         }
 
-        /// @emoji 👓️ Opens an existing `.spr` file purely for inspection: computes `resume_state()`
+        /// 👓️ Opens an existing `.spr` file purely for inspection: computes `resume_state()`
         /// via `crate::os_spr::format::recover` without writing a single byte to `path`. `appender()` must
         /// never be called on a handle opened this way (see its doc).
         pub async fn open_read_only(path: &Path, limits: &ProtocolLimits) -> Result<Self, ProtocolError> {
@@ -149,7 +149,7 @@ mod native {
             &self.resume
         }
 
-        /// @emoji ✍️ The live append handle. Panics if called on a handle from `open_read_only` —
+        /// ✍️ The live append handle. Panics if called on a handle from `open_read_only` —
         /// that constructor never builds a write path (see its doc); this mirrors the frozen
         /// contract's non-`Option` return type while keeping "read only" an honest guarantee (never
         /// touching the file) rather than a polite suggestion.
@@ -160,7 +160,7 @@ mod native {
     //#endregion 🔖️File
 
     //#region 🔖️Sidecar
-    /// @emoji 🧾️ `.sprc` sidecar checkpoint bodies live beside the `.spr` file, named
+    /// 🧾️ `.sprc` sidecar checkpoint bodies live beside the `.spr` file, named
     /// `<stem>.<hex8-of-body-hash>.sprc`.
     pub async fn sidecar_path(protocol_path: &Path, body_hash: &[u8; 32]) -> PathBuf {
         let stem = protocol_path.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default();
@@ -171,7 +171,7 @@ mod native {
         protocol_path.with_file_name(format!("{stem}.{hex8}.sprc"))
     }
 
-    /// @emoji 💾️ Writes a complete `.spk` pack file as a sidecar, atomically (`crate::os_pack::io::write_atomic`
+    /// 💾️ Writes a complete `.spk` pack file as a sidecar, atomically (`crate::os_pack::io::write_atomic`
     /// — temp file + fsync + rename, so a reader never observes a torn sidecar).
     pub async fn write_sidecar(protocol_path: &Path, body_hash: &[u8; 32], pack_bytes: &[u8]) -> Result<(), ProtocolError> {
         crate::os_pack::io::write_atomic(&sidecar_path(protocol_path, body_hash).await, pack_bytes)?;
@@ -191,11 +191,11 @@ mod native {
     //#endregion 🔖️Recover
 
     //#region 🔖️Sync
-    /// @emoji 🐌️ Poll-based live tailing, runtime-neutral (no tokio dependency in the type itself —
+    /// 🐌️ Poll-based live tailing, runtime-neutral (no tokio dependency in the type itself —
     /// the caller drives `poll()` from whatever scheduler it likes).
     pub struct TailFollower {
         path: PathBuf,
-        /// @emoji 🔖️ The ordinal boundary this follower has consumed through: `poll()` returns
+        /// 🔖️ The ordinal boundary this follower has consumed through: `poll()` returns
         /// edits starting at this ordinal and advances it past everything it returns. Equals the
         /// `from_edit_ordinal` given to `open` until the first `poll()` that returns at least one
         /// edit — a deliberate, documented reading of `last_edit_ordinal` given the contract leaves
@@ -204,7 +204,7 @@ mod native {
     }
 
     impl TailFollower {
-        /// @emoji 📖️ Validates `path` looks like a real `.spr` file (header check) up front, so a
+        /// 📖️ Validates `path` looks like a real `.spr` file (header check) up front, so a
         /// bad path fails fast at `open` rather than on the first `poll`.
         pub async fn open(path: &Path, from_edit_ordinal: u64) -> Result<Self, ProtocolError> {
             let source = crate::os_pack::io::FilePackSource::open(path)?;
@@ -212,7 +212,7 @@ mod native {
             Ok(Self { path: path.to_path_buf(), next_edit_ordinal: from_edit_ordinal })
         }
 
-        /// @emoji 🔁️ Re-reads the whole file and re-decodes from the start every call.
+        /// 🔁️ Re-reads the whole file and re-decodes from the start every call.
         ///
         /// 🎯️ Design choice: `crate::os_spr::history::HistoryReader::edits()` always begins its own fresh
         /// `DictReader`/edit-id table at the start of the trusted record stream (`REC_*_DICT` deltas
@@ -250,7 +250,7 @@ mod native {
         LatestN(u32),
     }
 
-    /// @emoji 🗂️ `REC_COMPACTION` payload layout — this crate's own choice (the contract fixes the
+    /// 🗂️ `REC_COMPACTION` payload layout — this crate's own choice (the contract fixes the
     /// `REC_COMPACTION` kind byte in `protocol_core` but defines no payload codec for it anywhere in
     /// the family): `format: u8 (=1), drop_ephemeral: u8 (0/1), keep_snapshots_tag: u8
     /// (0=All, 1=LatestPerAlternative, 2=LatestN), [latest_n: varint u64 iff tag==2]`.
@@ -269,7 +269,7 @@ mod native {
         out.into_bytes()
     }
 
-    /// @emoji ✂️ Flushes a `REC_STR_DICT` delta record if `dict` grew since `*base` — byte-for-byte
+    /// ✂️ Flushes a `REC_STR_DICT` delta record if `dict` grew since `*base` — byte-for-byte
     /// the same wire format `protocol_history`'s own (private) writer uses, reimplemented here since
     /// `compact` cannot drive `crate::os_spr::history::encode_history`/`HistoryAppender` as a black box (it
     /// needs to interleave one extra `REC_COMPACTION` record into the same commit generation, and
@@ -292,7 +292,7 @@ mod native {
         Ok(())
     }
 
-    /// @emoji 🧹️ Atomic rewrite via `crate::os_pack::io::write_atomic` (temp file + fsync + rename — a reader
+    /// 🧹️ Atomic rewrite via `crate::os_pack::io::write_atomic` (temp file + fsync + rename — a reader
     /// never observes a partially-compacted file): decodes the trusted prefix to a `HistoryLog`,
     /// re-encodes it into a brand-new single-generation `.spr` byte stream carrying one
     /// `REC_COMPACTION` provenance record, and swaps it in.

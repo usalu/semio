@@ -9,7 +9,7 @@ import {
   wgpuHostStorageCarriesKey,
 } from "../../🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts";
 
-/** @emoji 🗄️ The PAGE half of packet W5a's preference door, tested where it runs. The Rust half's own
+/** 🗄️ The PAGE half of packet W5a's preference door, tested where it runs. The Rust half's own
  * laws live in `🧱️elements/🐚️Shell/🧪️tests/🗄️browser-prefs-persistence/🦀️.rs`; what only this suite can
  * prove is that the servicer really reaches the browser's two stores, really refuses a key outside the
  * census, and that the boot snapshot a page reads is the one the frame Worker is handed.

@@ -1,4 +1,4 @@
-//! @emoji 🎫 The enqueue-only UI-thread contract: [`UiThreadToken`]/[`WorkerContext`] (the
+//! 🎫 The enqueue-only UI-thread contract: [`UiThreadToken`]/[`WorkerContext`] (the
 //! non-interchangeable capability split ticket `26/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR` Phase 3
 //! calls for) plus [`EventQueue`] — the fixed-capacity, allocation-free-for-replaceable-state sink a
 //! [`crate::window::WindowDelegate`] host writes into instead of processing an event synchronously.

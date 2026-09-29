@@ -27,25 +27,25 @@ pub struct OsClock {
 }
 
 impl OsClock {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    /// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     #[cfg(not(target_arch = "wasm32"))]
     pub fn new() -> Self {
         Self { origin: std::time::Instant::now() }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    /// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     #[cfg(target_arch = "wasm32")]
     pub fn new() -> Self {
         Self { origin_ms: performance_now_ms() }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    /// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     #[cfg(not(target_arch = "wasm32"))]
     pub fn now_seconds(&self) -> f64 {
         self.origin.elapsed().as_secs_f64()
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    /// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     #[cfg(target_arch = "wasm32")]
     pub fn now_seconds(&self) -> f64 {
         (performance_now_ms() - self.origin_ms) / 1000.0
@@ -609,7 +609,7 @@ impl PairedEngineSurfaceClose {
 }
 
 impl OsHost {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    /// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(crate) fn new(runtime: RuntimeMailbox, presenter: AppPresenter) -> Self {
         Self {
             animation_clock: crate::deadlines::AcceptedAnimationClock::default(),
@@ -633,7 +633,7 @@ impl OsHost {
     }
 
     /// ⏱️ Convenience — every `winit_app.rs` callback needs "now" in this host's clock at least once.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    /// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn now_seconds(&self) -> f64 {
         self.clock.now_seconds()
     }

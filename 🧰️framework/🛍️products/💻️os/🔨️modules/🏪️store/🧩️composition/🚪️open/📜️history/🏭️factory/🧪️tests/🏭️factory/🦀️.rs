@@ -305,7 +305,7 @@ fn member_factory_selection_uses_only_complete_closed_declarations() {
         run_case::<Generated>(&complete, &row, 1);
     }
     assert_eq!(FACTORY_CALLS.get(), 0);
-    println!("[DEBUG] selected factory:18 source-cohort fixture declarations,21 hostile selection cases x3 grants,2 actual space_members macro rows; full table before one retained handoff; open/create calls0");
+    println!("selected factory:18 source-cohort fixture declarations,21 hostile selection cases x3 grants,2 actual space_members macro rows; full table before one retained handoff; open/create calls0");
 }
 
 async fn semantic_history(fixture: &Value, row: &Value) -> Vec<u8> {
@@ -540,7 +540,5 @@ async fn member_factory_selection_retains_input_through_denial_and_handoff() {
         }
     }
     assert_eq!(FACTORY_CALLS.get(), 0);
-    println!(
-        "[DEBUG] selected factory lifecycle:7 selection +5 semantic authority transitions,9 production HistoryLog schema/document/owner/dialect cases x3 grants; selected static schema only, exact close, private one-use handoff; open/create calls0"
-    );
+    println!("selected factory lifecycle:7 selection +5 semantic authority transitions,9 production HistoryLog schema/document/owner/dialect cases x3 grants; selected static schema only, exact close, private one-use handoff; open/create calls0");
 }

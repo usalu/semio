@@ -8,7 +8,7 @@
   "production": {
     "feature": "native-artifact-execution",
     "providerId": "stdio+gis+vcs/native-codecs/v1",
-    "receiptCount": 29,
+    "receiptCount": 32,
     "pluginDependencies": ["stdio/full-artifact-catalog", "gis", "vcs"]
   },
   "configuredWithoutProvider": "reject"

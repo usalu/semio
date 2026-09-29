@@ -7,7 +7,7 @@ const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
 
-/** @emoji 🧪️ Vitest for `@semio-tech/repo-sqlite`: the owner module's per-case suites under
+/** 🧪️ Vitest for `@semio-tech/repo-sqlite`: the owner module's per-case suites under
  * `🪶️sqlite/🧪️tests`, which assert that `🧬️schema/🔣️.json` and the native `🧬️schema/🗄️.sql`
  * declare the same columns with the same nullability. */
 export default {

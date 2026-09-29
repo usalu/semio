@@ -3938,7 +3938,7 @@ export function artifactFacetPathIsDeclared(facetPath: string, taxonomy: Taxonom
   return true;
 }
 
-/** @emoji 🚧️ The only opaque subtrees the taxonomy admits, in their declared order: two user-owned
+/** 🚧️ The only opaque subtrees the taxonomy admits, in their declared order: two user-owned
  * scratch trees, and the one tracked nested-repository gitlink (`git ls-files -s` mode `160000`),
  * which must be filtered lexically before source admission or `inventoryTaxonomyWithSourceParentPruning`
  * refuses to classify anything at all. Every entry here is a whole opaque subtree, so nothing the
@@ -4929,6 +4929,8 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
           const key = `generatorContracts[${JSON.stringify(id)}].outputRoots[${index}]`;
           if (workspacePath(output.path, `${key}.path`) && exactTouchesOpaque(output.path)) problems.push(`${key}.path crosses an opaque boundary.`);
           if (!["tracked", "ignored"].includes(output.inclusion)) problems.push(`${key}.inclusion must be tracked or ignored.`);
+          if (output.inclusion === "tracked" && typeof output.path === "string" && output.path.split("/").some((part: string) => part.replace("\uFE0F", "") === "🤖generated")) problems.push(`${key} declares a tracked output inside 🤖️generated, which .gitignore ignores and the indexed-generated-output law never indexes: no clone has it.`);
+          if (contract.ownership === "external" && output.inclusion !== "tracked") problems.push(`${key} is an external input that is not tracked: nothing produces it, so no clone has it.`);
           if (output.producer !== undefined) {
             exactKeys(output.producer, ["ownerPath", "target"], `${key}.producer`);
             if (!runnable) problems.push(`${key}.producer requires an owned generator.`);
@@ -5259,7 +5261,7 @@ export interface SemanticPackageBrowserProfile {
 export function parseSemanticPackageBrowserProfile(input: unknown, genericEmojiIdentities: readonly string[]): SemanticPackageBrowserProfile {
   const exact = (value: unknown, keys: readonly string[]): value is Record<string, unknown> => value !== null && typeof value === "object" && !Array.isArray(value) && Object.keys(value).sort().join("\0") === [...keys].sort().join("\0");
   if (!exact(input, ["schemaVersion", "kind", "inlineTestDefine", "ownerPath", "entries", "workspaceImports", "sourceModulePaths"]) || input.schemaVersion !== 1 || input.kind !== "wgpu-browser-esm-v1" || input.inlineTestDefine !== "undefined" || !exactOwnerPath(input.ownerPath)) throw new Error("Invalid WGPU browser profile");
-  const expected = [{ id: "frame-worker", inclusion: "tracked" }, { id: "browser-boot", inclusion: "ignored" }];
+  const expected = [{ id: "frame-worker", inclusion: "ignored" }, { id: "browser-boot", inclusion: "ignored" }];
   if (!Array.isArray(input.entries) || input.entries.length !== expected.length || input.entries.some((entry, index) => !exact(entry, ["id", "sourceRelativePath", "outputRelativePath", "inclusion"]) || entry.id !== expected[index]!.id || entry.inclusion !== expected[index]!.inclusion || !exactOwnerPath(entry.sourceRelativePath) || !exactOwnerPath(entry.outputRelativePath))) throw new Error("WGPU browser entry authority drift");
   const directories = input.entries.map((entry) => ({ path: dirname(entry.sourceRelativePath).replaceAll("\\", "/"), nodeKind: "directory" as const }));
   if (pathEmojiStatuteFindings(directories, genericEmojiIdentities).length || input.entries.some((entry, index) => directories[index]!.path.includes("/") || leadingEmojiIdentity(directories[index]!.path).rest !== entry.id || entry.sourceRelativePath !== directories[index]!.path + "/🟦️.ts" || entry.outputRelativePath !== directories[index]!.path + "/🤖️generated/🟨️.js")) throw new Error("WGPU browser entry requires one explicit semantic source and output owner");

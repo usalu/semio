@@ -27,7 +27,7 @@ use crate::db_ids::GenerationId;
 use crate::*;
 
 //#region 🔖️Envelope
-/// @emoji ✉️ One message in flight through a `Mailbox`: its admitted lane, an ever-increasing
+/// ✉️ One message in flight through a `Mailbox`: its admitted lane, an ever-increasing
 /// per-mailbox sequence number (assigned at admission time, useful for tie-breaking/tracing), and
 /// the caller's payload.
 pub struct Envelope<M> {
@@ -38,7 +38,7 @@ pub struct Envelope<M> {
 //#endregion 🔖️Envelope
 
 //#region 🔖️Mailbox
-/// @emoji 📭️ Outcome of one admission attempt against a `MailboxInner`, hands the payload back on
+/// 📭️ Outcome of one admission attempt against a `MailboxInner`, hands the payload back on
 /// every failure path so a caller never loses a message it still owns.
 enum Admission<M> {
     Accepted,
@@ -49,7 +49,7 @@ enum Admission<M> {
     Stale(M, GenerationId, GenerationId),
 }
 
-/// @emoji 🚫️ `Address::try_send`'s non-blocking failure modes; every variant hands the rejected
+/// 🚫️ `Address::try_send`'s non-blocking failure modes; every variant hands the rejected
 /// payload back (mirrors `std::sync::mpsc::TrySendError`) so a caller can retry, requeue, or
 /// downgrade priority without cloning.
 #[derive(Debug)]
@@ -63,14 +63,14 @@ pub enum TrySendError<M> {
 }
 
 impl<M> TrySendError<M> {
-    /// @emoji 🎁️ Recovers the rejected payload, discarding the failure reason.
+    /// 🎁️ Recovers the rejected payload, discarding the failure reason.
     pub fn into_payload(self) -> M {
         match self {
             TrySendError::Full(payload) | TrySendError::Closed(payload) | TrySendError::Stale(payload, _, _) => payload,
         }
     }
 
-    /// @emoji 🔀️ Maps to the crate family's shared error type (dropping the payload), for callers
+    /// 🔀️ Maps to the crate family's shared error type (dropping the payload), for callers
     /// that just want a `Result<(), DbError>`.
     pub fn into_db_error(self) -> DbError {
         match self {
@@ -81,7 +81,7 @@ impl<M> TrySendError<M> {
     }
 }
 
-/// @emoji 🌀️ Deficit-round-robin bookkeeping plus the six lane queues themselves; always accessed
+/// 🌀️ Deficit-round-robin bookkeeping plus the six lane queues themselves; always accessed
 /// under `MailboxInner::state`'s lock, so this struct's fields need no atomics of their own.
 struct MailboxState<M> {
     lanes: [VecDeque<Envelope<M>>; 6],
@@ -98,7 +98,7 @@ struct MailboxState<M> {
     shed_previews: u64,
 }
 
-/// @emoji 📮️ Shared mailbox state, reference-counted between every `Address` clone and the one
+/// 📮️ Shared mailbox state, reference-counted between every `Address` clone and the one
 /// `Receiver`. Outlives any single actor incarnation: a supervised restart reuses the same
 /// `MailboxInner` (see `bump_generation`) rather than allocating a fresh one, so messages already
 /// admitted before a crash survive the restart.
@@ -137,7 +137,7 @@ impl<M: Send + 'static> MailboxInner<M> {
         GenerationId(self.generation.load(Ordering::Acquire))
     }
 
-    /// @emoji 🔁️ Bumps the live generation for a supervised restart. Every `Address` cloned
+    /// 🔁️ Bumps the live generation for a supervised restart. Every `Address` cloned
     /// *before* this call is now stale: its next send fails loudly with
     /// `DbError::StaleGeneration` instead of silently enqueuing into a mailbox the old actor
     /// incarnation will never drain again (see `GenerationId`'s doc).
@@ -149,7 +149,7 @@ impl<M: Send + 'static> MailboxInner<M> {
         self.closed.load(Ordering::Acquire)
     }
 
-    /// @emoji 🚪️ Marks the mailbox closed and wakes every parked receiver so a blocked `recv`
+    /// 🚪️ Marks the mailbox closed and wakes every parked receiver so a blocked `recv`
     /// observes the closure (and drains anything still queued) instead of hanging forever.
     fn close(&self) {
         self.closed.store(true, Ordering::Release);
@@ -163,7 +163,7 @@ impl<M: Send + 'static> MailboxInner<M> {
         self.wake_consumer();
     }
 
-    /// @emoji 🔓️ Reverses `close` for a fresh post-restart incarnation (only called by
+    /// 🔓️ Reverses `close` for a fresh post-restart incarnation (only called by
     /// `Supervisor`, which owns the close/reopen lifecycle around a restart).
     fn reopen(&self) {
         self.closed.store(false, Ordering::Release);
@@ -196,7 +196,7 @@ impl<M: Send + 'static> MailboxInner<M> {
         }
     }
 
-    /// @emoji 🎫️ The crate's core admission law: reject on a stale generation or a closed
+    /// 🎫️ The crate's core admission law: reject on a stale generation or a closed
     /// mailbox; otherwise admit if the lane has room, else — for `Priority::Preview` only — shed
     /// the lane's own oldest message to make room (previews are never durable and never allowed
     /// to delay anything else, so they coalesce down to "latest wins" under pressure rather than
@@ -247,7 +247,7 @@ impl<M: Send + 'static> MailboxInner<M> {
         }
     }
 
-    /// @emoji 🥇️ `System` then `Recovery`, strictly — "never queued behind anything" per
+    /// 🥇️ `System` then `Recovery`, strictly — "never queued behind anything" per
     /// `Priority`'s own doc — then deficit-round-robin across the remaining four lanes.
     fn try_recv(&self) -> Option<Envelope<M>> {
         let mut state = self.state.lock().unwrap();
@@ -294,7 +294,7 @@ impl<M: Send + 'static> MailboxInner<M> {
     }
 }
 
-/// @emoji 📬️ A clone-cheap handle for sending into a `Mailbox`, bound to the generation it was
+/// 📬️ A clone-cheap handle for sending into a `Mailbox`, bound to the generation it was
 /// obtained at. Every clone shares the same binding — a fresh, current-generation `Address` is
 /// only produced by `mailbox()` (a new mailbox) or by `Supervisor` on a restart.
 pub struct Address<M> {
@@ -309,12 +309,12 @@ impl<M> Clone for Address<M> {
 }
 
 impl<M: Send + 'static> Address<M> {
-    /// @emoji 🪪️ The generation this handle was obtained at (see `GenerationId`).
+    /// 🪪️ The generation this handle was obtained at (see `GenerationId`).
     pub fn generation(&self) -> GenerationId {
         self.bound_generation
     }
 
-    /// @emoji ⚡️ Non-blocking send: returns immediately, either admitted or rejected with the
+    /// ⚡️ Non-blocking send: returns immediately, either admitted or rejected with the
     /// payload handed back.
     pub fn try_send(&self, priority: Priority, payload: M) -> Result<(), TrySendError<M>> {
         match self.inner.try_admit(self.bound_generation, priority, payload) {
@@ -325,25 +325,25 @@ impl<M: Send + 'static> Address<M> {
         }
     }
 
-    /// @emoji 📤️ A `SendFuture` that resolves as soon as `priority`'s lane admits `payload` —
+    /// 📤️ A `SendFuture` that resolves as soon as `priority`'s lane admits `payload` —
     /// immediately if there is room (or the lane sheds), or once a `Receiver::recv` frees a slot.
     pub fn send(&self, priority: Priority, payload: M) -> SendFuture<M> {
         SendFuture { inner: self.inner.clone(), bound_generation: self.bound_generation, priority, payload: Some(payload) }
     }
 
-    /// @emoji 🚪️ Closes the mailbox: further sends fail with `DbError::Closed`/`TrySendError::Closed`,
+    /// 🚪️ Closes the mailbox: further sends fail with `DbError::Closed`/`TrySendError::Closed`,
     /// and a parked `recv` resolves once every lane has drained.
     pub fn close(&self) {
         self.inner.close();
     }
 
-    /// @emoji 📊️ How many `Priority::Preview` messages this mailbox has shed to admit newer ones
+    /// 📊️ How many `Priority::Preview` messages this mailbox has shed to admit newer ones
     /// (see `try_admit`'s doc) — exposed for tests/observability, not part of the hot path.
     pub fn shed_preview_count(&self) -> u64 {
         self.inner.shed_preview_count()
     }
 
-    /// @emoji 🔔️ Installs the finite-turn scheduler wake used by pool-hosted actors. Admission
+    /// 🔔️ Installs the finite-turn scheduler wake used by pool-hosted actors. Admission
     /// and close call it after releasing mailbox locks, so scheduling can never recurse under the
     /// mailbox mutex.
     pub(crate) fn set_consumer_wake(&self, wake: Arc<dyn Fn() + Send + Sync>) {
@@ -359,7 +359,7 @@ impl<M: Send + 'static> Address<M> {
     }
 }
 
-/// @emoji 📥️ The single-consumer half of a mailbox. Nothing in this crate enforces uniqueness at
+/// 📥️ The single-consumer half of a mailbox. Nothing in this crate enforces uniqueness at
 /// the type level (the underlying `MailboxInner` is safe under concurrent `recv`), but the
 /// convention — and every constructor in this crate — hands out exactly one per mailbox.
 pub struct Receiver<M> {
@@ -367,13 +367,13 @@ pub struct Receiver<M> {
 }
 
 impl<M: Send + 'static> Receiver<M> {
-    /// @emoji ⚡️ Non-blocking receive: `None` means "nothing queued right now", not "closed" —
+    /// ⚡️ Non-blocking receive: `None` means "nothing queued right now", not "closed" —
     /// use `recv`/`recv_blocking` to also observe closure.
     pub fn try_recv(&self) -> Option<Envelope<M>> {
         self.inner.try_recv()
     }
 
-    /// @emoji 📥️ A `RecvFuture` resolving to the next message by priority order, or `None` once
+    /// 📥️ A `RecvFuture` resolving to the next message by priority order, or `None` once
     /// the mailbox is closed and every lane has drained.
     pub fn recv(&self) -> RecvFuture<'_, M> {
         RecvFuture { inner: &self.inner }
@@ -384,21 +384,21 @@ impl<M: Send + 'static> Receiver<M> {
     }
 }
 
-/// @emoji 🆕️ A fresh mailbox at `GenerationId::INITIAL`, split into its sender/receiver halves —
+/// 🆕️ A fresh mailbox at `GenerationId::INITIAL`, split into its sender/receiver halves —
 /// the `db_actor` analogue of `std::sync::mpsc::channel`.
 pub fn mailbox<M: Send + 'static>(capacities: MailboxCapacities) -> (Address<M>, Receiver<M>) {
     let inner = Arc::new(MailboxInner::new(capacities));
     (Address { inner: inner.clone(), bound_generation: GenerationId::INITIAL }, Receiver { inner })
 }
 
-/// @emoji ⚙️ Convenience over `mailbox` that pulls lane capacities out of a `DbConfig`.
+/// ⚙️ Convenience over `mailbox` that pulls lane capacities out of a `DbConfig`.
 pub fn mailbox_from_config<M: Send + 'static>(config: &DbConfig) -> (Address<M>, Receiver<M>) {
     mailbox(config.mailbox_capacities)
 }
 //#endregion 🔖️Mailbox
 
 //#region 🔖️Futures
-/// @emoji 📤️ Hand-rolled future backing `Address::send`. Polls the same admission law
+/// 📤️ Hand-rolled future backing `Address::send`. Polls the same admission law
 /// `try_send` uses; on `Full`, registers a waker and re-polls once more before actually returning
 /// `Pending`, closing the classic lost-wakeup race window (a `Receiver::recv` that already ran
 /// between the first admission attempt and the registration would otherwise never be observed).
@@ -439,7 +439,7 @@ impl<M: Send + 'static + Unpin> Future for SendFuture<M> {
     }
 }
 
-/// @emoji 📥️ Hand-rolled future backing `Receiver::recv`, with the same register-then-re-check
+/// 📥️ Hand-rolled future backing `Receiver::recv`, with the same register-then-re-check
 /// pattern as `SendFuture` to close the symmetric lost-wakeup window on the receive side.
 pub struct RecvFuture<'a, M> {
     inner: &'a Arc<MailboxInner<M>>,
@@ -468,26 +468,26 @@ impl<'a, M: Send + 'static> Future for RecvFuture<'a, M> {
 //#endregion 🔖️Futures
 
 //#region 🔖️Reply
-/// @emoji 🎁️ Shared state for one `ask`-style request/response pair.
+/// 🎁️ Shared state for one `ask`-style request/response pair.
 struct OneshotState<R> {
     value: Option<R>,
     waker: Option<Waker>,
     sender_dropped: bool,
 }
 
-/// @emoji 📮️ The write-once half of a `Reply` channel; an actor's `handle` calls `send` exactly
+/// 📮️ The write-once half of a `Reply` channel; an actor's `handle` calls `send` exactly
 /// once to answer an `Address::ask`.
 pub struct ReplySender<R> {
     inner: Arc<Mutex<OneshotState<R>>>,
 }
 
-/// @emoji 📭️ The read-once half; also a `Future` (`Output = Result<R, DbError>`) so it can be
+/// 📭️ The read-once half; also a `Future` (`Output = Result<R, DbError>`) so it can be
 /// ``ed directly or driven through `block_on`.
 pub struct ReplyReceiver<R> {
     inner: Arc<Mutex<OneshotState<R>>>,
 }
 
-/// @emoji ✂️ A fresh `Reply` pair, unconnected to any particular message shape — `Address::ask`
+/// ✂️ A fresh `Reply` pair, unconnected to any particular message shape — `Address::ask`
 /// is the usual way one gets created and threaded through a message.
 pub fn oneshot<R>() -> (ReplySender<R>, ReplyReceiver<R>) {
     let inner = Arc::new(Mutex::new(OneshotState { value: None, waker: None, sender_dropped: false }));
@@ -507,7 +507,7 @@ impl<R> ReplySender<R> {
 }
 
 impl<R> Drop for ReplySender<R> {
-    /// @emoji 🥀️ An abandoned `ReplySender` (dropped without `send`) resolves the receiver to
+    /// 🥀️ An abandoned `ReplySender` (dropped without `send`) resolves the receiver to
     /// `DbError::Closed` instead of hanging it forever — mirrors `std::sync::mpsc`'s disconnect
     /// behavior for the ask/reply pattern.
     fn drop(&mut self) {
@@ -524,7 +524,7 @@ impl<R> Drop for ReplySender<R> {
 }
 
 impl<R> ReplyReceiver<R> {
-    /// @emoji ⚡️ Non-blocking peek, used by `Supervisor::reap` to check a child's terminal outcome
+    /// ⚡️ Non-blocking peek, used by `Supervisor::reap` to check a child's terminal outcome
     /// without parking.
     fn try_recv(&self) -> Option<R> {
         self.inner.lock().unwrap().value.take()
@@ -547,7 +547,7 @@ impl<R> Future for ReplyReceiver<R> {
     }
 }
 
-/// @emoji 🎣️ Two-phase state machine backing `Address::ask`: first drive the underlying
+/// 🎣️ Two-phase state machine backing `Address::ask`: first drive the underlying
 /// `SendFuture` to completion, then the `ReplyReceiver` — composing `Send` and `Reply` futures
 /// into one awaitable exactly like a hand-rolled `fn` would, without `async`/``
 /// syntax (this crate stays on stable `Future` impls throughout, no nightly generators needed).
@@ -595,7 +595,7 @@ impl<M: Send + 'static + Unpin, R: Send + 'static> Future for AskFuture<M, R> {
 }
 
 impl<M: Send + 'static> Address<M> {
-    /// @emoji ❓️ Request/response over the mailbox: builds the outgoing message from a fresh
+    /// ❓️ Request/response over the mailbox: builds the outgoing message from a fresh
     /// `ReplySender`, sends it, and resolves once the actor replies (or the mailbox/reply channel
     /// closes first).
     pub fn ask<R: Send + 'static>(&self, priority: Priority, build: impl FnOnce(ReplySender<R>) -> M) -> AskFuture<M, R> {
@@ -607,7 +607,7 @@ impl<M: Send + 'static> Address<M> {
 //#endregion 🔖️Reply
 
 //#region 🔖️BlockingRuntime
-/// @emoji 🧵️ A `Waker` that unparks the thread which was polling when it went `Pending` — the
+/// 🧵️ A `Waker` that unparks the thread which was polling when it went `Pending` — the
 /// mechanism behind `block_on`. Uses the stable `std::task::Wake` trait; `std::thread::park`'s
 /// unpark-token semantics already close the wake-before-park race, so no extra synchronization is
 /// needed here.
@@ -625,7 +625,7 @@ impl std::task::Wake for ThreadWaker {
     }
 }
 
-/// @emoji 🛑️ Drives `future` to completion on the calling thread — the "blocking" half of this
+/// 🛑️ Drives `future` to completion on the calling thread — the "blocking" half of this
 /// crate's dual blocking/async futures, in the `pack_async` spirit but hand-rolled (no external
 /// executor dependency: `db_actor`'s only dependency is `db_core`, per the contract).
 ///
@@ -666,25 +666,25 @@ impl<M: Send + 'static> Receiver<M> {
 //#endregion 🔖️BlockingRuntime
 
 //#region 🔖️Actor
-/// @emoji 🎭️ One unit of the `db` family's execution model: owns its private state, is driven
+/// 🎭️ One unit of the `db` family's execution model: owns its private state, is driven
 /// exclusively by messages off its own `Mailbox`, and never shares mutable state with another
 /// actor except through further messages.
 pub trait Actor: Send + 'static {
     type Message: Send + 'static;
 
-    /// @emoji 🌱️ Runs once per incarnation before the message loop starts; an `Err` here poisons
+    /// 🌱️ Runs once per incarnation before the message loop starts; an `Err` here poisons
     /// the incarnation exactly like a panicking `handle` would.
     fn on_start(&mut self, _ctx: &mut ActorContext<Self::Message>) -> Result<(), DbError> {
         Ok(())
     }
 
-    /// @emoji 📨️ Handles one message. An `Err` return is an ordinary application-level failure
+    /// 📨️ Handles one message. An `Err` return is an ordinary application-level failure
     /// (logged/reported, incarnation stays alive); a *panic* is what poisons the incarnation and
     /// triggers supervision.
     fn handle(&mut self, msg: Self::Message, ctx: &mut ActorContext<Self::Message>) -> Result<(), DbError>;
 }
 
-/// @emoji 🧭️ What an `Actor` sees while handling a message: its own address (for self-sends),
+/// 🧭️ What an `Actor` sees while handling a message: its own address (for self-sends),
 /// which generation it is, and the observability seam.
 // 🔀️ dedyn-emit-runtime, O1/R11(c): `emit: Arc<NullEmit>`, not `Arc<dyn Emit>` or a generic `E:
 // Emit` param — this whole `Actor`/`Supervisor` mechanism has no production caller (`db_artifact`'s
@@ -699,7 +699,7 @@ pub struct ActorContext<M: Send + 'static> {
 //#endregion 🔖️Actor
 
 //#region 🔖️Supervision
-/// @emoji 🌳️ How a `Supervisor` reacts to one poisoned child.
+/// 🌳️ How a `Supervisor` reacts to one poisoned child.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum RestartStrategy {
     /// 1⃣ Only the failed child restarts; siblings are undisturbed.
@@ -710,7 +710,7 @@ pub enum RestartStrategy {
     Escalate,
 }
 
-/// @emoji 📣️ What `Supervisor::reap` did (or recommends) in response to one poisoned child.
+/// 📣️ What `Supervisor::reap` did (or recommends) in response to one poisoned child.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum SupervisionDecision {
     RestartOne(usize),
@@ -719,7 +719,7 @@ pub enum SupervisionDecision {
 }
 
 impl RestartStrategy {
-    /// @emoji ⚖️ The pure decision law, independent of any actual thread/mailbox machinery — kept
+    /// ⚖️ The pure decision law, independent of any actual thread/mailbox machinery — kept
     /// free-standing so it stays `wasm32`-clean and is trivially unit-testable.
     pub fn decide(self, failed_index: usize) -> SupervisionDecision {
         match self {
@@ -732,7 +732,7 @@ impl RestartStrategy {
 //#endregion 🔖️Supervision
 
 //#region 🔖️Runner
-/// @emoji 🏁️ Why an actor incarnation's message loop ended.
+/// 🏁️ Why an actor incarnation's message loop ended.
 #[cfg(not(target_arch = "wasm32"))]
 enum ActorOutcome {
     /// 🚪️ The mailbox closed and drained normally (graceful shutdown, e.g. `RestartAll`'s stop
@@ -755,7 +755,7 @@ struct ActorRunnerState<A: Actor> {
     started: bool,
 }
 
-/// @emoji 🏃️ A finite actor-turn driver. Mailbox admission schedules at most one pool job; that
+/// 🏃️ A finite actor-turn driver. Mailbox admission schedules at most one pool job; that
 /// job processes a bounded number of messages and resubmits only when work remains. No worker is
 /// parked waiting for a message, and cancellation/restart only flips atomics plus schedules one
 /// final turn.
@@ -847,7 +847,7 @@ impl<A: Actor> ActorRunner<A> {
     }
 }
 
-/// @emoji 👨️‍👩️‍👧️ Owns `N` incarnations of the same `Actor` type, restarting them per
+/// 👨️‍👩️‍👧️ Owns `N` incarnations of the same `Actor` type, restarting them per
 /// `RestartStrategy` when `reap` observes a poisoned outcome. Scoped to a homogeneous child set
 /// (one actor type) deliberately — a heterogeneous supervision tree composes multiple
 /// `Supervisor`s, each escalating to whatever owns the next level up.
@@ -872,7 +872,7 @@ pub struct Supervisor<A: Actor> {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl<A: Actor> Supervisor<A> {
-    /// @emoji 🆕️ Spawns `children` fresh incarnations of `factory()`'s actor at
+    /// 🆕️ Spawns `children` fresh incarnations of `factory()`'s actor at
     /// `GenerationId::INITIAL`, each with its own mailbox sized by `capacities`.
     pub fn new(strategy: RestartStrategy, capacities: MailboxCapacities, pool: Arc<semio_framework_async::WorkerPool>, emit: Arc<NullEmit>, factory: impl Fn() -> A + Send + Sync + 'static, children: usize) -> Self {
         let supervisor = Supervisor { strategy, capacities, pool, emit, factory: Box::new(factory), slots: Mutex::new(Vec::new()) };
@@ -884,7 +884,7 @@ impl<A: Actor> Supervisor<A> {
         supervisor
     }
 
-    /// @emoji 🌱️ Spawns one incarnation. `existing` is `None` for the initial spawn (fresh
+    /// 🌱️ Spawns one incarnation. `existing` is `None` for the initial spawn (fresh
     /// mailbox, generation 0) or `Some(mailbox)` for a restart (same mailbox, bumped generation —
     /// this is what makes pre-restart `Address` clones go stale).
     fn spawn_slot(&self, existing: Option<Arc<MailboxInner<A::Message>>>) -> SupervisorSlot<A::Message> {
@@ -927,7 +927,7 @@ impl<A: Actor> Supervisor<A> {
         self.slots.lock().unwrap().len()
     }
 
-    /// @emoji ♻️ Non-blocking health check: reaps the join handle of any child whose incarnation
+    /// ♻️ Non-blocking health check: reaps the join handle of any child whose incarnation
     /// has terminated, and — for the first `Panicked` one found — applies `strategy` and reports
     /// what happened. Returns `None` when nothing terminated since the last call. Callers (e.g.
     /// `db_engine`'s catalog actor) are expected to poll this periodically or after every send

@@ -8,7 +8,7 @@ import { PLAY_RUNTIME_PANES, playRuntimeModuleLayout } from "./🟦️.ts";
 import { readPlayActivation } from "./♻️activation/🟦️.ts";
 import { PLAY_E2E_OWNER, playE2eInvocationPid, playE2eSessionRoot } from "./🧪️e2e/🟦️.ts";
 
-/** @emoji 🎡️ Verifies every runtime component the outer Nx preparation graph staged for the profile. */
+/** 🎡️ Verifies every runtime component the outer Nx preparation graph staged for the profile. */
 class PreparationScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     const profile = args[0];
@@ -23,7 +23,7 @@ class PreparationScript extends BundleScript {
   }
 }
 
-/** @emoji 📡️ Validates the host-lane activation after its Nx prerequisites have completed. */
+/** 📡️ Validates the host-lane activation after its Nx prerequisites have completed. */
 class ActivationScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Play activation accepts no arguments");
@@ -32,7 +32,7 @@ class ActivationScript extends BundleScript {
   }
 }
 
-/** @emoji 🖥️ Serves completed runtime artifacts for the lifetime owned by Nx. */
+/** 🖥️ Serves completed runtime artifacts for the lifetime owned by Nx. */
 class ServeScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Play serving accepts no arguments");
@@ -46,7 +46,7 @@ class ServeScript extends BundleScript {
   }
 }
 
-/** @emoji 🆕️ Prepares an invocation-specific E2E generation after its runtime and browser prerequisites. */
+/** 🆕️ Prepares an invocation-specific E2E generation after its runtime and browser prerequisites. */
 class PrepareTestScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Play E2E preparation accepts no arguments");
@@ -56,7 +56,7 @@ class PrepareTestScript extends BundleScript {
   }
 }
 
-/** @emoji 🧪️ Owns the isolated E2E listener and announces its prepared generation over HTTP; frozen (no file watching) so concurrent edits never restart it mid-suite. */
+/** 🧪️ Owns the isolated E2E listener and announces its prepared generation over HTTP; frozen (no file watching) so concurrent edits never restart it mid-suite. */
 class ServeTestScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Play E2E serving accepts no arguments");

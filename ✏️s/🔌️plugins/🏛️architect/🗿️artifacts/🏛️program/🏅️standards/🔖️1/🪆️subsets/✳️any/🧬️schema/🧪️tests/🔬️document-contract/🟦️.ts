@@ -107,5 +107,4 @@ export function testProgramDocumentContract(): void {
   assert.throws(() => parseProgramSnapshot({ ...neutral, project: { ...neutral.project, foreign: true } }), /unknown field/, "nested register primitives reject foreign fields");
   assert.throws(() => assertChild({ ...neutral.knowledge, target: { ...neutral.knowledge.target, artifactId: "wrong" } }, "wrong-child"), /target identity/, "child identity mismatch is rejected");
   assert.equal(neutral.meta.locale, "en", "ProgramMeta.locale remains document content language");
-  console.log(`[DEBUG] program-document-contract snapshots=${snapshotPaths.length} diffs=${diffPaths.length} registers=${registerFields.length} childIdentities=${snapshotPaths.length * 2}`);
 }

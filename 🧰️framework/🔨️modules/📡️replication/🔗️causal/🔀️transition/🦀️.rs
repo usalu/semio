@@ -14,11 +14,11 @@
 use crate::ids::{ActorId, ArtifactId, HybridLogicalTimestamp, MutationId, SchemaId};
 
 //#region 🔖️Vocabulary
-/// @emoji 🏷️ `diff.schema` of every transition envelope. Operation envelopes carry their
+/// 🏷️ `diff.schema` of every transition envelope. Operation envelopes carry their
 /// artifact's own schema, so the tag alone routes an envelope to the transition fold.
 pub const HISTORY_TRANSITION_SCHEMA: &str = "semio.history.transition";
 
-/// @emoji 🧑‍🎨️ Author stamped on a committed checkpoint.
+/// 🧑‍🎨️ Author stamped on a committed checkpoint.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct TransitionAuthor {
     pub id: String,
@@ -26,7 +26,7 @@ pub struct TransitionAuthor {
     pub avatar: Option<String>,
 }
 
-/// @emoji 🚩️ The facts one checkpoint commit introduces: the change grouping the operations that
+/// 🚩️ The facts one checkpoint commit introduces: the change grouping the operations that
 /// were uncommitted at the author, and the checkpoint stacking that change onto `parent_id`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct TransitionCheckpoint {
@@ -41,14 +41,14 @@ pub struct TransitionCheckpoint {
     pub timestamp: String,
 }
 
-/// @emoji 📌️ One owned child's checkpoint pin, as `(child artifact uri, child checkpoint id)`.
+/// 📌️ One owned child's checkpoint pin, as `(child artifact uri, child checkpoint id)`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct TransitionPin {
     pub child_uri: String,
     pub checkpoint_id: String,
 }
 
-/// @emoji 🔀️ One structural history step. Every variant is a pure function of the fold state it
+/// 🔀️ One structural history step. Every variant is a pure function of the fold state it
 /// lands on, so replicas holding the same event set converge regardless of arrival order.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum HistoryTransition {
@@ -115,7 +115,7 @@ fn read_ids(bytes: &[u8], pos: &mut usize) -> Result<Vec<MutationId>, crate::Pro
     Ok(ids)
 }
 
-/// @emoji 🎯️ `tag varint | variant fields in declaration order` — the transition payload bytes.
+/// 🎯️ `tag varint | variant fields in declaration order` — the transition payload bytes.
 pub fn encode_history_transition(transition: &HistoryTransition) -> Vec<u8> {
     let mut out = Vec::new();
     match transition {
@@ -169,7 +169,7 @@ pub fn encode_history_transition(transition: &HistoryTransition) -> Vec<u8> {
     out
 }
 
-/// @emoji 🎯️ Inverse of [`encode_history_transition`]; refuses trailing bytes.
+/// 🎯️ Inverse of [`encode_history_transition`]; refuses trailing bytes.
 pub fn decode_history_transition(bytes: &[u8]) -> Result<HistoryTransition, crate::ProtocolError> {
     let mut pos = 0usize;
     let transition = match crate::wire::read_varint_u64(bytes, &mut pos)? {
@@ -219,7 +219,7 @@ pub fn decode_history_transition(bytes: &[u8]) -> Result<HistoryTransition, crat
 //#endregion 🔖️Codec
 
 //#region 🔖️Envelope
-/// @emoji 🪪️ Content-addressed transition id: `transition-{hex16(blake3(actor | hlc | payload))}`.
+/// 🪪️ Content-addressed transition id: `transition-{hex16(blake3(actor | hlc | payload))}`.
 pub fn history_transition_id(actor: &ActorId, timestamp: &HybridLogicalTimestamp, payload: &[u8]) -> MutationId {
     let mut material = Vec::with_capacity(payload.len() + actor.0.len() + 32);
     crate::write_str(&mut material, &actor.0);
@@ -236,7 +236,7 @@ pub fn history_transition_id(actor: &ActorId, timestamp: &HybridLogicalTimestamp
     MutationId(id)
 }
 
-/// @emoji ✉️ Wraps `transition` as a causal envelope: schema-tagged payload, empty inverse (a
+/// ✉️ Wraps `transition` as a causal envelope: schema-tagged payload, empty inverse (a
 /// transition is undone by a later transition, never by an inverse payload).
 pub fn history_transition_envelope(transition: &HistoryTransition, document_id: &ArtifactId, actor: &ActorId, dependencies: Vec<MutationId>, timestamp: HybridLogicalTimestamp) -> super::MutationEnvelope {
     let payload = encode_history_transition(transition);
@@ -255,12 +255,12 @@ pub fn history_transition_envelope(transition: &HistoryTransition, document_id: 
     }
 }
 
-/// @emoji 🔎️ Whether `envelope` is a history transition rather than a domain operation.
+/// 🔎️ Whether `envelope` is a history transition rather than a domain operation.
 pub fn is_history_transition(envelope: &super::MutationEnvelope) -> bool {
     envelope.diff.schema.0 == HISTORY_TRANSITION_SCHEMA
 }
 
-/// @emoji 📤️ Decodes `envelope`'s transition, or `None` for a domain-operation envelope.
+/// 📤️ Decodes `envelope`'s transition, or `None` for a domain-operation envelope.
 pub fn history_transition_from_envelope(envelope: &super::MutationEnvelope) -> Result<Option<HistoryTransition>, crate::ProtocolError> {
     if !is_history_transition(envelope) {
         return Ok(None);
@@ -270,7 +270,7 @@ pub fn history_transition_from_envelope(envelope: &super::MutationEnvelope) -> R
 //#endregion 🔖️Envelope
 
 //#region 🔖️Fold
-/// @emoji ✏️ One edit as the fold sees it: its replica-local id, author, HLC and the wire
+/// ✏️ One edit as the fold sees it: its replica-local id, author, HLC and the wire
 /// operations it owns.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FoldEdit {
@@ -280,7 +280,7 @@ pub struct FoldEdit {
     pub mutation_ids: Vec<MutationId>,
 }
 
-/// @emoji 📦️ A change fact the fold materialized from a [`HistoryTransition::Commit`].
+/// 📦️ A change fact the fold materialized from a [`HistoryTransition::Commit`].
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FoldChange {
     pub id: String,
@@ -289,7 +289,7 @@ pub struct FoldChange {
     pub saved_at: String,
 }
 
-/// @emoji 🚩️ A checkpoint fact the fold materialized, with its full change chain and pins.
+/// 🚩️ A checkpoint fact the fold materialized, with its full change chain and pins.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FoldCheckpoint {
     pub id: String,
@@ -301,7 +301,7 @@ pub struct FoldCheckpoint {
     pub pins: Vec<TransitionPin>,
 }
 
-/// @emoji 🌿️ An alternative fact with the checkpoint chain the fold grew it to.
+/// 🌿️ An alternative fact with the checkpoint chain the fold grew it to.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FoldAlternative {
     pub id: String,
@@ -309,12 +309,15 @@ pub struct FoldAlternative {
     pub checkpoint_ids: Vec<String>,
 }
 
-/// @emoji 🧮️ Everything a document's history projects to: the active edits in HLC order, the redo
-/// stack, the current checkpoint and alternative, and every change/checkpoint/alternative fact.
+/// 🧮️ Everything a document's history projects to: the active edits in HLC order, the redo
+/// stack, the undo/redo transitions refused because they name an operation another actor authored
+/// (`refused`, transition ids in fold order), the current checkpoint and alternative, and every
+/// change/checkpoint/alternative fact.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct HistoryFold {
     pub applied: Vec<String>,
     pub redo: Vec<String>,
+    pub refused: Vec<String>,
     pub checkpoint: Option<String>,
     pub alternative: Option<String>,
     pub changes: Vec<FoldChange>,
@@ -324,17 +327,19 @@ pub struct HistoryFold {
 
 enum FoldEvent<'a> {
     Edit(&'a FoldEdit),
-    Transition(HistoryTransition),
+    Transition { id: &'a str, actor: &'a str, transition: HistoryTransition },
 }
 
 fn fold_error(detail: impl Into<String>) -> crate::ProtocolError {
     crate::ProtocolError::Malformed { what: "history fold", offset: 0, detail: detail.into() }
 }
 
-/// @emoji 🧮️ Folds `edits` and the transition envelopes in `transitions` in `(hlc, id)` order into
+/// 🧮️ Folds `edits` and the transition envelopes in `transitions` in `(hlc, id)` order into
 /// the document's history projection. A pure function of the event SET: replicas holding the same
 /// events derive the same projection whatever order they received them in. `excluded` names edits
-/// withheld by a merge policy (quarantined); they never become active.
+/// withheld by a merge policy (quarantined); they never become active. An undo belongs to its author: a
+/// `Revert` or `Reinstate` naming any operation another actor authored withdraws or restores nothing
+/// and is listed in `refused` (an edit whose author is unknown — a local-only one — belongs to anyone).
 pub fn fold_history(edits: &[FoldEdit], transitions: &[super::MutationEnvelope], excluded: &std::collections::HashSet<String>) -> Result<HistoryFold, crate::ProtocolError> {
     let mut owners: std::collections::HashMap<&str, &str> = std::collections::HashMap::new();
     let mut authors: std::collections::HashMap<&str, Option<&str>> = std::collections::HashMap::new();
@@ -357,7 +362,7 @@ pub fn fold_history(edits: &[FoldEdit], transitions: &[super::MutationEnvelope],
             return Err(fold_error(format!("history repeats transition {}", envelope.mutation_id.0)));
         }
         let transition = history_transition_from_envelope(envelope)?.ok_or_else(|| fold_error(format!("{} is not a history transition", envelope.mutation_id.0)))?;
-        events.push((envelope.timestamp.cmp_key(), envelope.mutation_id.0.as_str(), FoldEvent::Transition(transition)));
+        events.push((envelope.timestamp.cmp_key(), envelope.mutation_id.0.as_str(), FoldEvent::Transition { id: envelope.mutation_id.0.as_str(), actor: envelope.actor.0.as_str(), transition }));
     }
     events.sort_by(|left, right| (left.0, left.1).cmp(&(right.0, right.1)));
     let owned = |mutation_ids: &[MutationId]| -> Result<Vec<String>, crate::ProtocolError> {
@@ -370,6 +375,7 @@ pub fn fold_history(edits: &[FoldEdit], transitions: &[super::MutationEnvelope],
         }
         Ok(edit_ids)
     };
+    let foreign = |edit_ids: &[String], actor: &str| edit_ids.iter().any(|edit_id| authors.get(edit_id.as_str()).copied().flatten().is_some_and(|author| author != actor));
     let mut fold = HistoryFold::default();
     let mut active: std::collections::HashSet<String> = std::collections::HashSet::new();
     for (_, _, event) in events {
@@ -381,22 +387,32 @@ pub fn fold_history(edits: &[FoldEdit], transitions: &[super::MutationEnvelope],
                 active.insert(edit.id.clone());
                 fold.redo.retain(|redo| authors.get(redo.as_str()).copied().flatten() != edit.actor.as_deref());
             }
-            FoldEvent::Transition(HistoryTransition::Revert { mutation_ids }) => {
-                for edit_id in owned(&mutation_ids)? {
+            FoldEvent::Transition { id, actor, transition: HistoryTransition::Revert { mutation_ids } } => {
+                let edit_ids = owned(&mutation_ids)?;
+                if foreign(&edit_ids, actor) {
+                    fold.refused.push(id.to_string());
+                    continue;
+                }
+                for edit_id in edit_ids {
                     if active.remove(&edit_id) {
                         fold.redo.push(edit_id);
                     }
                 }
             }
-            FoldEvent::Transition(HistoryTransition::Reinstate { mutation_ids }) => {
-                for edit_id in owned(&mutation_ids)? {
+            FoldEvent::Transition { id, actor, transition: HistoryTransition::Reinstate { mutation_ids } } => {
+                let edit_ids = owned(&mutation_ids)?;
+                if foreign(&edit_ids, actor) {
+                    fold.refused.push(id.to_string());
+                    continue;
+                }
+                for edit_id in edit_ids {
                     if let Some(position) = fold.redo.iter().position(|redo| *redo == edit_id) {
                         fold.redo.remove(position);
                         active.insert(edit_id);
                     }
                 }
             }
-            FoldEvent::Transition(HistoryTransition::Commit(checkpoint)) => {
+            FoldEvent::Transition { transition: HistoryTransition::Commit(checkpoint), .. } => {
                 let mut change_ids = match &checkpoint.parent_id {
                     Some(parent_id) => fold.checkpoints.iter().find(|known| known.id == *parent_id).ok_or_else(|| fold_error(format!("checkpoint {} names unknown parent {parent_id}", checkpoint.checkpoint_id)))?.change_ids.clone(),
                     None => Vec::new(),
@@ -411,16 +427,16 @@ pub fn fold_history(edits: &[FoldEdit], transitions: &[super::MutationEnvelope],
                 }
                 fold.checkpoint = Some(checkpoint.checkpoint_id);
             }
-            FoldEvent::Transition(HistoryTransition::Branch { alternative_id, name, checkpoint_id }) => {
+            FoldEvent::Transition { transition: HistoryTransition::Branch { alternative_id, name, checkpoint_id }, .. } => {
                 checkout(&mut fold, &mut active, &checkpoint_id, excluded)?;
                 fold.alternatives.push(FoldAlternative { id: alternative_id.clone(), name, checkpoint_ids: vec![checkpoint_id] });
                 fold.alternative = Some(alternative_id);
             }
-            FoldEvent::Transition(HistoryTransition::Checkout { checkpoint_id, alternative_id }) => {
+            FoldEvent::Transition { transition: HistoryTransition::Checkout { checkpoint_id, alternative_id }, .. } => {
                 checkout(&mut fold, &mut active, &checkpoint_id, excluded)?;
                 fold.alternative = alternative_id;
             }
-            FoldEvent::Transition(HistoryTransition::Repin { checkpoint_id, pinned_checkpoint_id, pins }) => {
+            FoldEvent::Transition { transition: HistoryTransition::Repin { checkpoint_id, pinned_checkpoint_id, pins }, .. } => {
                 let checkpoint = fold.checkpoints.iter_mut().find(|known| known.id == checkpoint_id).ok_or_else(|| fold_error(format!("repin names unknown checkpoint {checkpoint_id}")))?;
                 checkpoint.id = pinned_checkpoint_id.clone();
                 checkpoint.pins = pins;

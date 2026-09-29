@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** @emoji ⚙️ Runs the `semio-framework-ui-render` suite, the browser-target gate, and the dependency
+/** ⚙️ Runs the `semio-framework-ui-render` suite, the browser-target gate, and the dependency
  * boundary assertion that keeps this crate backend-neutral.
  *
  * `boundaries` is the load-bearing one: the whole point of this crate is that it describes frames
@@ -11,7 +11,7 @@ import { BundleScript, ScriptRouter, buildBudgetMs, resolveTestLevel, runBundleS
 
 const packageRoot = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
 
-/** @emoji 🚫️ Crates that must never appear in this crate's dependency tree, and why. */
+/** 🚫️ Crates that must never appear in this crate's dependency tree, and why. */
 const FORBIDDEN_DEPENDENCIES: ReadonlyArray<readonly [string, string]> = [
   ["wgpu", "belongs to the browser backend target only — natively we hand-write D3D12/Metal/Vulkan"],
   ["winit", "windowing belongs to semio-framework-ui-host"],
@@ -38,7 +38,7 @@ class CheckWasmScript extends BundleScript {
 //#endregion 🔖️check-wasm
 
 //#region 🔖️boundaries
-/** @emoji 🧭️ Fails when a forbidden crate reaches this crate's normal (non-dev, non-build) dep tree. */
+/** 🧭️ Fails when a forbidden crate reaches this crate's normal (non-dev, non-build) dep tree. */
 class BoundariesScript extends BundleScript {
   run(): void {
     const violations: string[] = [];

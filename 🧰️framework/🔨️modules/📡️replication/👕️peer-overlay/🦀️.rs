@@ -1,4 +1,4 @@
-//! @emoji 👕️ Pure peer-overlay derivation from `PresencePeer` roster + local window
+//! 👕️ Pure peer-overlay derivation from `PresencePeer` roster + local window
 //! (contract-freeze §C7.8). Ephemeral shared only — never persisted. Twin of `🟦️.ts`.
 
 use crate::{PresencePeer, PresenceViewKind};

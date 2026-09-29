@@ -51,5 +51,4 @@ export function testWriterWindowStateOracle(): void {
   assert.deepEqual(transients, fixture.expectedTransients);
   assert.deepEqual(configGenerations, fixture.expectedConfigGenerations);
   assert.deepEqual(transientGenerations, fixture.expectedTransientGenerations);
-  console.log("[DEBUG] Writer window state oracle matched Ajv, TypeScript folds, and independent JSON Patch per-window generations");
 }

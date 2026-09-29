@@ -5,7 +5,7 @@ import { readServiceSession, waitForServiceReady } from "../../../../🧰️fram
 import { repoCacheDirectory } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { PLAY_E2E_OWNER, playE2eInvocationPid, playE2eSessionRoot } from "../🧩️runtime/🧪️e2e/🟦️.ts";
 
-/** @emoji 🎭️ Runs acceptance tests only against the server generation prepared and owned by Nx. */
+/** 🎭️ Runs acceptance tests only against the server generation prepared and owned by Nx. */
 class TestScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Play E2E accepts no compiler or server arguments");

@@ -17,7 +17,7 @@ import { BrowserAssetCancellationCursor, assertBrowserAssetResponseContinuation 
 import { browserAssetFailureDisposition } from "./🧩️asset-failure/🟦️.ts";
 
 //#region 🔖️Bindings
-/** @emoji 🔢️ `generation` and `sequence` are `u64` on the renderer's own `#[wasm_bindgen]` exports
+/** 🔢️ `generation` and `sequence` are `u64` on the renderer's own `#[wasm_bindgen]` exports
  * (`🌐️browser-worker/🦀️.rs` `enqueue_batch`/`tick`), and wasm-bindgen lowers a `u64` parameter
  * straight into the wasm `i64` slot — a JS `number` there throws
  * `TypeError: Cannot convert <n> to a BigInt` out of the generated glue, faulting the Worker on its
@@ -61,6 +61,9 @@ type RendererBindings = {
   /** 🎯️ The shell chrome's pointer registry and its dispatched-action ledger — the chrome twin of the DOM a
    * React parity probe reads. Diagnostics-gated in the renderer, so an unarmed page answers `armed: false`. */
   dumpChrome?: (windowId?: string) => string;
+  /** 🛰️ The shell's agent-bridge offer scope (`{hubOrigin, spaceId, agentPrincipalIds}` or `null`) for the page's offer
+   * watcher — production, not a probe; the session capability stays in this isolate. */
+  dumpAgentBridgeOfferScope?: () => string;
   /** 🧭️ The ONE boot-axis door of the renderer wasm (`🧊️renderer/🦀️.rs` `WgpuBootDescriptor`), fed the
    * JSON `../🧭️boot-descriptor/🟦️.ts` resolved. It replaced four per-axis setters, which is what let the
    * three wgpu entry points carry three different subsets of the same vocabulary. */
@@ -89,7 +92,7 @@ type RendererBindings = {
    * first frame's appearance, tour-seen and dock-skeleton reads synchronous — and the shell writes back
    * through the host-io door. */
   semioWgpuSetHostStorage?: (snapshotJson: string) => void;
-  /** 🩺️ Arms the renderer's own per-frame `[DEBUG]` dumps — `semio_framework_trace::set_runtime_diagnostics`,
+  /** 🩺️ Arms the renderer's own per-frame `[TRACE]` dumps — `semio_framework_trace::set_runtime_diagnostics`,
    * the wasm door of the `SEMIO_RUNTIME_DIAGNOSTICS` switch a native process reads from its environment
    * and React reads from `localStorage`. */
   semioWgpuSetRuntimeDiagnostics?: (enabled: boolean) => void;
@@ -106,7 +109,7 @@ type RendererBindings = {
 //#endregion 🔖️Bindings
 
 //#region ⏱️StepAuthority
-/** @emoji ⏱️ This Worker's step law, declared once for both browser isolates in
+/** ⏱️ This Worker's step law, declared once for both browser isolates in
  * `../⏱️turn-budget/🟦️.ts`. A step is priced against the EXECUTING spans it actually ran for, an
  * isolated breach is recorded and the work continues, {@link SUSTAINED_TURN_OVERRUN_TURNS} breaches in
  * a row degrade the boot to yielding cadence — and NOTHING here may terminate the Worker. Only a throw
@@ -118,7 +121,7 @@ type RendererBindings = {
  * the surface's only frame path — with it. The UI isolate's ledger recorded `0/0` overruns across that
  * same boot, which is the measurement that settles the attribution. */
 const BOOT_HEARTBEAT_MS = 2;
-/** @emoji 💓️ How often a still-running browser-owned suspension re-posts liveness to the UI isolate, from
+/** 💓️ How often a still-running browser-owned suspension re-posts liveness to the UI isolate, from
  * the shared law in `../🫀️boot-liveness/🟦️.ts`. Posts `boot-liveness`, NOT `boot-progress`: the latter runs
  * the UI isolate's `progress-hook`, whose DOM work overran `FRAME_UI_TURN_BUDGET_MS` (2 ms) once it fired
  * every second — no longer fatal there (`../⏱️turn-budget/🟦️.ts` records and degrades instead of failing),
@@ -130,27 +133,27 @@ const BOOT_HEARTBEAT_MS = 2;
  * of life for those is the `boot-phase` DECLARATION {@link monitoredSuspension} posts before it blocks. */
 const BOOT_LIVENESS_INTERVAL_MS = FRAME_WORKER_BOOT_LIVENESS_POLICY.livenessIntervalMs;
 let lastProgressValue = 0;
-/** @emoji 🧭️ Whether phase declarations are still meaningful. They exist for ONE reader — the UI isolate's
+/** 🧭️ Whether phase declarations are still meaningful. They exist for ONE reader — the UI isolate's
  * boot watchdog — which stops listening the moment it sees `booted`. `monitoredSuspension` is also the
  * asset pump's suspension wrapper (`asset-fetch`, `asset-stream-read`, once per 16 KiB page), so leaving
  * declarations open past boot would post two ignored messages per page across the whole session's hot
  * asset path. Closed exactly where the watchdog stops caring. */
 let bootDeclarationsOpen = true;
-/** @emoji 🧮️ Fixed boot credit taken from the generated catalog itself. A boot plan is by construction a
+/** 🧮️ Fixed boot credit taken from the generated catalog itself. A boot plan is by construction a
  * subset of the catalog's own plugin and extension rows, so no legitimate plan can exceed it, and unlike a
  * magic number it cannot go stale as the product grows — a hardcoded 32 rejected the `s` plan's 57 rows
  * outright and made every wgpu boot impossible. */
 const PLUGIN_BOOT_CAPACITY = PLUGIN_CATALOG.plugins.length + PLUGIN_CATALOG.extensions.length;
 const ASSET_RESPONSE_BYTE_CAPACITY = 16 * 1024 * 1024;
 const ASSET_RESPONSE_PAGE_BYTES = 16 * 1024;
-/** @emoji 🔁️ How many macrotasks one response seal may wait for the renderer to free its interaction
+/** 🔁️ How many macrotasks one response seal may wait for the renderer to free its interaction
  * state. Bounded on purpose: a seal that never lands is a renderer defect, not something to spin on. */
 const ASSET_SEAL_ATTEMPTS = 64;
-/** @emoji 🔬️ Introspection walks the whole retained tree, so it earns a wider turn than a frame step —
+/** 🔬️ Introspection walks the whole retained tree, so it earns a wider turn than a frame step —
  * and a breach is reported on the answer instead of faulting the shell, because a diagnostic must never
  * be the thing that takes the surface down. */
 const INTROSPECTION_STEP_BUDGET_MS = 64;
-/** @emoji 🧱️ Ceiling for the boot stages whose blocking time is spent inside the browser itself — the module
+/** 🧱️ Ceiling for the boot stages whose blocking time is spent inside the browser itself — the module
  * loader, the WebAssembly compiler, and the GPU driver. `WORKER_STEP_BUDGET_MS` prices turns *this* Worker
  * owns and can slice; a `WebAssembly.instantiate` of the renderer module or a `requestDevice` is neither
  * ours nor sliceable (measured: a COLD instantiate of the multi-MB renderer 1093 ms, the font-atlas
@@ -162,18 +165,18 @@ const INTROSPECTION_STEP_BUDGET_MS = 64;
 const BROWSER_OWNED_SUSPENSION_BUDGET_MS = 30_000;
 
 const stepClock = new TurnClock(() => performance.now());
-/** @emoji 📒️ Prices the turns this Worker OWNS and can slice, against {@link WORKER_STEP_BUDGET_MS}. */
+/** 📒️ Prices the turns this Worker OWNS and can slice, against {@link WORKER_STEP_BUDGET_MS}. */
 const stepLedger = new TurnLedger(WORKER_STEP_BUDGET_MS, "worker-step");
-/** @emoji 🧱️ Prices the stages whose blocking time belongs to the browser itself — the module loader,
+/** 🧱️ Prices the stages whose blocking time belongs to the browser itself — the module loader,
  * the WebAssembly compiler, the GPU driver. None of it is ours to slice, so it is measured against the
  * wedge ceiling instead of the interactive one and never degrades the boot's cadence. */
 const suspensionLedger = new TurnLedger(BROWSER_OWNED_SUSPENSION_BUDGET_MS, "browser-owned-suspension");
 
-/** @emoji 🧾️ The verdict the most recently CLOSED owned step earned, so a caller that must report its own
+/** 🧾️ The verdict the most recently CLOSED owned step earned, so a caller that must report its own
  * step's price — the frame reply — reads the executing measurement instead of taking a second wall sample. */
 let lastStepOutcome: TurnOutcome | undefined;
 
-/** @emoji ⏱️ Runs one owned step inside the executing clock and admits it to its ledger. The measurement
+/** ⏱️ Runs one owned step inside the executing clock and admits it to its ledger. The measurement
  * happens whether the callback returns or throws; the THROW is the only thing that propagates. */
 function ownedStep<T>(stage: string, callback: () => T, ledger: TurnLedger = stepLedger): T {
   stepClock.enter();
@@ -184,7 +187,7 @@ function ownedStep<T>(stage: string, callback: () => T, ledger: TurnLedger = ste
   }
 }
 
-/** @emoji 🧭️ One SYNCHRONOUS owned step long enough to be worth declaring. A blocking Rust bootstrap phase
+/** 🧭️ One SYNCHRONOUS owned step long enough to be worth declaring. A blocking Rust bootstrap phase
  * (`font-atlas` measured at 12 002 ms) posts nothing while it runs — the same blindness a browser-owned
  * suspension has — so it declares itself to the UI-isolate watchdog first and withdraws afterwards, and its
  * real cost rides out on the withdrawal. */
@@ -198,19 +201,19 @@ function declaredStep<T>(stage: string, callback: () => T, ledger: TurnLedger = 
   }
 }
 
-/** @emoji 🐢️ Whether this Worker's owned steps have sustained a run of overruns and the boot should hand
+/** 🐢️ Whether this Worker's owned steps have sustained a run of overruns and the boot should hand
  * the isolate back between chunks. Latches on the run and clears itself on the first admitted step. */
 function stepsDegraded(): boolean {
   return stepLedger.degraded();
 }
 
-/** @emoji 📊️ What the UI isolate is told about this Worker's own step ledger on every boot report. */
+/** 📊️ What the UI isolate is told about this Worker's own step ledger on every boot report. */
 function stepLedgerReport(): { readonly degraded: boolean; readonly recordedOverruns: number; readonly sustainedOverruns: number; readonly worstStepMs: number; readonly worstStepSite: string } {
   const snapshot = stepLedger.snapshot();
   return { degraded: snapshot.degraded, recordedOverruns: snapshot.recordedOverruns, sustainedOverruns: snapshot.sustainedOverruns, worstStepMs: snapshot.worstExecutingMs, worstStepSite: snapshot.worstSite };
 }
 
-/** @emoji ⏸️ Awaits one browser-owned operation. The synchronous prologue is an owned step; the blocking
+/** ⏸️ Awaits one browser-owned operation. The synchronous prologue is an owned step; the blocking
  * gap the heartbeat measures is admitted to {@link suspensionLedger} as an observation — a Worker that did
  * not run is the machine's report about the machine, never evidence about this step's own work, so it can
  * no longer end the boot. `FRAME_WORKER_BOOT_TIMEOUT_MS` in the UI isolate remains the outer bound and the
@@ -251,11 +254,11 @@ async function macrotask(): Promise<void> {
   if (closed || closing) throw new Error("worker-boot-cancelled");
 }
 
-/** @emoji 🧩️ A unit of boot work that can be performed one bounded chunk at a time — the shape
+/** 🧩️ A unit of boot work that can be performed one bounded chunk at a time — the shape
  * `PlaygroundBootPlanner` and the Rust `BrowserRendererBootstrap` phase machine both take. */
 type ResumableBootUnit = { stage(): string; completion(): number; step(): boolean };
 
-/** @emoji ⏭️ Drives one resumable unit to completion, one chunk per owned step, reporting each chunk as
+/** ⏭️ Drives one resumable unit to completion, one chunk per owned step, reporting each chunk as
  * boot progress and handing the isolate back between chunks whenever the ledger says this Worker's own
  * steps are running long. Chunk size is the unit's own business; the ceiling is never the unit's. */
 async function driveChunks(unit: ResumableBootUnit, base: number, span: number): Promise<void> {
@@ -273,14 +276,14 @@ async function driveChunks(unit: ResumableBootUnit, base: number, span: number):
 //#region 🧵️Worker
 const scope = self as DedicatedWorkerGlobalScope;
 
-/** @emoji 🩺️ The diagnostics preference the UI isolate stamped on THIS worker's url — the only channel
- * that exists before the boot message, and the one the renderer wasm's own per-frame `[DEBUG]` dumps are
+/** 🩺️ The diagnostics preference the UI isolate stamped on THIS worker's url — the only channel
+ * that exists before the boot message, and the one the renderer wasm's own per-frame `[TRACE]` dumps are
  * armed from. A Worker owns no storage, so the page resolves `SEMIO_RUNTIME_DIAGNOSTICS` and stamps;
  * `undefined` (no stamp) leaves the build-time switch in charge. */
 const diagnosticsStamp = stampedTurnDiagnostics(scope.location.search);
 setTurnDiagnostics(diagnosticsStamp);
 
-/** @emoji 🧭️ A wasm panic spends V8's default ten stack frames entirely inside the panic machinery
+/** 🧭️ A wasm panic spends V8's default ten stack frames entirely inside the panic machinery
  * (`capacity_overflow` → `panic_fmt` → `rust_begin_unwind` → the hook), so the Rust frame that
  * actually asked for the allocation is always the one cut off. The renderer's panic hook mints an
  * `Error` to capture that stack (`🌐️browser-worker/🦀️.rs` `install_worker_panic_trace`), and this is
@@ -312,7 +315,7 @@ let pageImageDecode: { readonly requestId: number; readonly resolve: (bitmap: Im
 
 scope.onmessage = (event: MessageEvent<BrowserFrameUiMessage>) => void receive(event.data);
 
-/** @emoji 🧯️ Last-resort seam for a throw that escapes every awaited step — a trap raised inside a wasm
+/** 🧯️ Last-resort seam for a throw that escapes every awaited step — a trap raised inside a wasm
  * callback the renderer scheduled itself, or a rejection nothing awaited. Without this the UI isolate only
  * sees `worker.onerror`'s bare message as `worker-message-failed`, with no stack and no code to triage; the
  * protocol already carries a typed fault, so route it there instead and let the close ladder run. */
@@ -426,7 +429,7 @@ function runFrameTurn(): boolean {
   }
 }
 
-/** @emoji 🩺️ Projects the accepted World3d visual inputs into a changed-only page-visible receipt. */
+/** 🩺️ Projects the accepted World3d visual inputs into a changed-only page-visible receipt. */
 function publishWorld3dAcceptedFrameDiagnostic(generation: number): void {
   if (diagnosticsStamp !== true || !bindings?.dumpMeshStats) return;
   try {
@@ -466,7 +469,7 @@ function runAssetDecodeTurn(): boolean {
   }
 }
 
-/** @emoji 🔬️ Answers one read-only introspection request from the renderer's own thread-local, which only
+/** 🔬️ Answers one read-only introspection request from the renderer's own thread-local, which only
  * exists in this isolate. It never faults the Worker: a missing export, a throwing export, or a turn wider
  * than `INTROSPECTION_STEP_BUDGET_MS` all come back as `json: null` plus a `detail`, so a probe can tell
  * "no hooks" from "empty dump" while the surface keeps running. */
@@ -477,7 +480,7 @@ function answerIntrospection(message: Extract<BrowserFrameUiMessage, { kind: "in
     respond(null, "renderer bindings are not mounted in this Worker");
     return;
   }
-  const hook = message.probe === "structure" ? bindings.dumpStructure : message.probe === "accessibility" ? bindings.dumpAccessibility : message.probe === "mesh-stats" ? bindings.dumpMeshStats : message.probe === "chrome" ? bindings.dumpChrome : bindings.dumpFrameStats;
+  const hook = message.probe === "structure" ? bindings.dumpStructure : message.probe === "accessibility" ? bindings.dumpAccessibility : message.probe === "mesh-stats" ? bindings.dumpMeshStats : message.probe === "chrome" ? bindings.dumpChrome : message.probe === "agent-bridge-scope" ? bindings.dumpAgentBridgeOfferScope : bindings.dumpFrameStats;
   if (!hook) {
     respond(null, `renderer bindings expose no ${message.probe} introspection export`);
     return;
@@ -539,7 +542,7 @@ function beginClose(): void {
 
 type PluginHandleMount = { readonly pluginId: string; readonly handle: ReturnType<typeof pluginHandleForBridge> };
 
-/** @emoji 🧩️ Mounts every plugin the boot plan names, isolating each one. A module that fails to load, or
+/** 🧩️ Mounts every plugin the boot plan names, isolating each one. A module that fails to load, or
  * whose manifest overruns its fixed credits, is reported as a `plugin-fault:` boot-progress stage and
  * skipped — the same per-plugin isolation the React shell's router gives a descriptor fault, rather than
  * taking the whole surface down. The catalogue cache legitimately carries stale or missing descriptors
@@ -563,12 +566,12 @@ async function mountPluginHandles(targets: readonly { readonly pluginId: string;
   return mounted;
 }
 
-/** @emoji 📶️ How many buckets the 76 MB download reports itself in — one `boot-progress` every 2 %, which
+/** 📶️ How many buckets the 76 MB download reports itself in — one `boot-progress` every 2 %, which
  * is real streamed progress rather than a stage name that sits still for the whole transfer, and is far
  * below the rate at which the UI isolate's `progress-hook` would become the expensive thing. */
 const WASM_FETCH_PROGRESS_BUCKETS = 50;
 
-/** @emoji 🧱️ Compiles the renderer wasm WHILE it downloads, reporting the transfer as it goes.
+/** 🧱️ Compiles the renderer wasm WHILE it downloads, reporting the transfer as it goes.
  * `compileStreaming` over a counting `TransformStream` keeps the browser's streaming compilation — the
  * bytes are never buffered into one 76 MB array — while every 2 % of the body posts a `boot-progress`, so
  * the longest phase of the boot stops being a stage name that sits still. Answers `undefined` for every
@@ -602,7 +605,7 @@ async function compileRendererModule(url: string): Promise<{ readonly module: We
   }
 }
 
-/** @emoji 🧱️ Brings the renderer wasm up in DECLARED phases instead of one opaque `init(url)`.
+/** 🧱️ Brings the renderer wasm up in DECLARED phases instead of one opaque `init(url)`.
  *
  * 🩸️ What this replaces: `loaded.default(url)` — one call that fetched, compiled, instantiated and linked
  * 76 048 601 B behind a single stage name, reported nothing while it ran, and re-did all of it on every
@@ -667,7 +670,7 @@ async function boot(message: Extract<BrowserFrameUiMessage, { kind: "boot" }>): 
     while (true) {
       await macrotask();
       const step = declaredStep("renderer-bootstrap", () => JSON.parse(bootstrap.step()) as BrowserRendererBootStep, suspensionLedger);
-      if (diagnosticsStamp === true) console.debug(`[DEBUG] wgpu boot stage=${step.stage} phaseUs=${step.elapsedUs} progress=${step.progress}`);
+      if (diagnosticsStamp === true) console.debug(`[TRACE] wgpu boot stage=${step.stage} phaseUs=${step.elapsedUs} progress=${step.progress}`);
       progress(step.stage, 0.65 + step.progress * 0.3);
       if (step.shellBoot) {
         bootstrap = await monitoredSuspension("shell-boot", () => bootstrap.bootShell(), suspensionLedger);
@@ -883,14 +886,14 @@ async function pumpAsset(): Promise<void> {
   }
 }
 
-/** @emoji 📣️ Reports one boot stage AND this Worker's own step ledger with it, so the boot UI shows the
+/** 📣️ Reports one boot stage AND this Worker's own step ledger with it, so the boot UI shows the
  * degraded state instead of only the stage that happened to be running when the isolate was descheduled. */
 function progress(stage: string, value: number): void {
   lastProgressValue = value;
   if (!closed && !closing && !failed) post({ kind: "boot-progress", lifecycle, stage, progress: value, worker: stepLedgerReport() });
 }
 
-/** @emoji 🧭️ DECLARES that this Worker is about to block on one browser-owned phase — or that it has left
+/** 🧭️ DECLARES that this Worker is about to block on one browser-owned phase — or that it has left
  * it. Posted while the event loop still runs, which is the whole point: a `postMessage` issued a tick
  * before a multi-second `WebAssembly.compile` reaches the UI isolate, a `boot-liveness` issued DURING it
  * never does. The UI-isolate watchdog measures a declared phase against its own ceiling
@@ -912,7 +915,7 @@ function declarePhase(phase: string, state: "enter" | "leave", elapsedMs: number
   if (parent) post({ kind: "boot-phase", lifecycle, phase: parent, state: "enter", elapsedMs: 0 });
 }
 
-/** @emoji 🧭️ Nested `boot-phase` under an already-declared parent. Re-enters the parent on leave so the watchdog never sees an undeclared Worker. */
+/** 🧭️ Nested `boot-phase` under an already-declared parent. Re-enters the parent on leave so the watchdog never sees an undeclared Worker. */
 function declareBootSubphase(phase: string, state: "enter" | "leave", elapsedMs: number): void {
   declarePhase(phase, state, elapsedMs);
 }
@@ -978,7 +981,7 @@ const lazyPluginInstalls = createLazyPluginInstallDoor({
     return handle;
   },
   progress: (pluginId, phase) => {
-    if (diagnosticsStamp === true) console.debug(`[DEBUG] wgpu lazy plugin install ${pluginId} ${phase}`);
+    if (diagnosticsStamp === true) console.debug(`[TRACE] wgpu lazy plugin install ${pluginId} ${phase}`);
   },
 });
 

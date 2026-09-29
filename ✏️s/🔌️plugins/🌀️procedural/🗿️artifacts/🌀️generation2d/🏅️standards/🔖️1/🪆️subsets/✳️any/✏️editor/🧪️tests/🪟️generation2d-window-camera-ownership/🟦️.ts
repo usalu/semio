@@ -104,5 +104,4 @@ export function testGeneration2dWindowCameraOwnershipOracle(): void {
   for (const rejected of fixture.rejections) {
     assert.throws(() => exactTarget(rejected.windowId, rejected.claimedWindowKindId), new RegExp(rejected.code));
   }
-  console.log(`[DEBUG] generation2d-window-camera-ownership owners=${schemaIds.size} instances=${Object.keys(configs).length} canvasNoOps=${fixture.canvasCommands.length} appCamera=absent`);
 }

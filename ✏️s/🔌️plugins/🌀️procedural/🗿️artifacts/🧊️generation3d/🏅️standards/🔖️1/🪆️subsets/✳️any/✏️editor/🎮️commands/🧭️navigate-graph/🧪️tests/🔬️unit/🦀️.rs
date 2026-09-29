@@ -105,7 +105,6 @@ fn every_arrow_walk_lands_where_the_fixture_says() {
         }
     }
     assert!(walked >= 20, "the fixture must carry a real walk, not a token one: {walked} steps");
-    eprintln!("[DEBUG] graph keyboard walks asserted {walked} steps");
 }
 
 /// ⚖️ LAW: a traversal step publishes the framework's selection lane and NOTHING else. A keyboard
@@ -174,7 +173,6 @@ async fn activate_opens_the_selected_nodes_ports_and_an_arrow_closes_them() {
     dispatch(&mut app, Generation3dCommand::ActivateSelection(activate_selection::ActivateSelection {})).await;
     let opened = app.interaction_state().await.selection.get("graph").map(|selection| selection.ids.clone()).unwrap_or_default();
     assert!(!opened.is_empty() && opened.iter().all(|id| id.starts_with("extrude@")), "activate selects the node's own ports: {opened:?}");
-    eprintln!("[DEBUG] activateSelection opened {} ports of `extrude`: {opened:?}", opened.len());
     dispatch(&mut app, Generation3dCommand::SelectDownstreamNode(select_downstream_node::SelectDownstreamNode {})).await;
     assert_eq!(
         app.interaction_state().await.selection.get("graph").map(|selection| selection.ids.clone()),

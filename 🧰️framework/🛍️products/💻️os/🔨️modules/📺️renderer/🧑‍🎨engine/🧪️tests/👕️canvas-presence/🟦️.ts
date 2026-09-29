@@ -1,4 +1,4 @@
-/** @emoji 👕️ The canvas-presence contract (`🧬️schema/👕️canvas-presence`) held against React's own board presence:
+/** 👕️ The canvas-presence contract (`🧬️schema/👕️canvas-presence`) held against React's own board presence:
  * `Board2dHost`'s `puzzle2dScreenToWorld` publishes the fixture's views, `peersForWindow` + the canvas overlay math paint
  * its cursors, viewports and marks exactly as `CanvasPresenceOverlayV1` does, and `PEER_OVERLAY_LABELS` names them.
  * gl-matrix's `mat2d` inverse of the board transform is the third-party oracle of the publish half. The wgpu twin

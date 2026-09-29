@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🩺️ The runtime-diagnostics door a shard worker — and through it every wasm GUEST it hosts —
+/** 🩺️ The runtime-diagnostics door a shard worker — and through it every wasm GUEST it hosts —
  * is armed by. A Worker realm owns no `localStorage`, so the preference the PAGE resolved has to
  * cross the worker boundary on the worker's own URL; the worker reads the stamp back and hands it to
  * each component through `wasi:cli/environment`, where the guest's `std::env::var` (Rust
@@ -47,7 +47,7 @@ export function shardRuntimeDiagnosticsArmed(): boolean {
 /** 🩺️ `url`, plus the diagnostics stamp when THIS realm armed them. The stamp belongs to the realm
  * that CONSTRUCTS the worker, because that is the realm holding the preference: wgpu spawns its
  * shards from the UI isolate on a url its FRAME WORKER named, and a frame worker owns no storage, so
- * a url stamped at the naming site was never stamped at all and every guest `[DEBUG]` trace site was
+ * a url stamped at the naming site was never stamped at all and every guest `[TRACE]` trace site was
  * unreachable on that target. Idempotent, so an already-stamped url crosses unchanged. */
 export function stampShardWorkerDiagnostics(url: string, armed = shardRuntimeDiagnosticsArmed()): string {
   if (!armed || url.includes(`${SHARD_WORKER_DIAGNOSTICS_PARAM}=1`)) return url;

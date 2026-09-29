@@ -11,9 +11,9 @@ test("world scene carriers and presentation match their language-neutral schema"
   expect(validatePresentation(fixture.presentation.defaults)).toBe(true);
   expect(validatePresentation(fixture.presentation.icon)).toBe(true);
   for (const invalid of fixture.presentation.rejections) expect(validatePresentation(invalid)).toBe(false);
-  expect(WORLD3D_SCENE_LANES).toEqual(fixture.lanes);
+  expect(WORLD3D_SCENE_LANES).toEqual<typeof fixture.lanes>(fixture.lanes);
   expect(parseWorld3dPresentation(undefined)).toEqual(DEFAULT_WORLD3D_PRESENTATION);
-  expect(parseWorld3dPresentation(JSON.stringify(fixture.presentation.icon))).toEqual(fixture.presentation.icon);
+  expect(parseWorld3dPresentation(JSON.stringify(fixture.presentation.icon))).toEqual<typeof fixture.presentation.icon>(fixture.presentation.icon);
   for (const invalid of fixture.presentation.rejections) expect(parseWorld3dPresentation(JSON.stringify(invalid))).toEqual(DEFAULT_WORLD3D_PRESENTATION);
 });
 

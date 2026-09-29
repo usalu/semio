@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🌐️ `HistoryEntry.label`'s own promise, for the rows that cannot keep it by themselves:
+/** 🌐️ `HistoryEntry.label`'s own promise, for the rows that cannot keep it by themselves:
  * "a locale switch re-renders the whole ledger instead of leaving logged rows in their dispatch
  * locale". A plugin row carries a real `LocalizedLabel`, so re-resolving it is enough. A CHROME row
  * carries `LocalizedLabel::data(<one resolved string>)` — `noteShellCommand` takes a `string` and

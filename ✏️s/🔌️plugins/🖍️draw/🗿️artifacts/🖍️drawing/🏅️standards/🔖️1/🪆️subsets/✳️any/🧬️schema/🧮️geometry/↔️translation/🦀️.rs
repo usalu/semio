@@ -18,7 +18,7 @@ mod tests {
             let expected: Option<[f64;5]> = serde_json::from_value(case["after"].clone()).unwrap();
             assert_eq!(result,expected,"{}",case["name"]);
         }
-        eprintln!("[DEBUG] world translation agrees with all nested-parent fixtures");
+        eprintln!("[TRACE] world translation agrees with all nested-parent fixtures");
     }
 }
 

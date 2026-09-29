@@ -977,7 +977,7 @@ fn patched_field_value(entity: &Value, field: &str, value: Option<&Value>, delta
     delta.and_then(Value::as_f64).map(|delta| json!(entity.get(field).and_then(Value::as_f64).unwrap_or(0.0) + delta))
 }
 
-/** @emoji 📐️ Patches `field` on every addressed node — and, for an id that names a handle instead,
+/** 📐️ Patches `field` on every addressed node — and, for an id that names a handle instead,
  * on that handle inside its node, so the inspector's handle rows (angle, radius) are editable through
  * the same one verb the node rows use. An empty `ids` addresses every node, the pre-existing
  * whole-selection behaviour. */
@@ -1705,7 +1705,7 @@ pub fn puzzle2d_select_scope() -> UiDirtyScope {
 //#endregion 🔖️UiScopes
 
 //#region 🔖️Puzzle2dCommand
-/// @emoji 🎯️ B1: `Puzzle2dPlayApp::Command` — the SOLE dispatch surface, one variant per declared
+/// 🎯️ B1: `Puzzle2dPlayApp::Command` — the SOLE dispatch surface, one variant per declared
 /// action (mirrors every `.mutation(...)`/`.view_action(...)`/`.action_with(...)` id
 /// `create_puzzle2d_app` registers below, plus the framework-injected `setActiveUtility` and the
 /// action's original `{...}` JSON payload, unchanged) — `handle` reconstructs the exact

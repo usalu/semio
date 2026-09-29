@@ -32,7 +32,6 @@ fn retained_window_input_preserves_owner_generation() {
         }
     }
     assert!(disposer.terminal_is_empty(&owner));
-    eprintln!("[DEBUG] retained window input keeps distinct concrete owner and generation tuples and retires its tracked read leases");
 }
 
 struct ReplacementWindow;
@@ -108,7 +107,6 @@ fn retained_window_input_replacement_rejects_old_authority_and_publication() {
         }
         assert!(registry.terminal_is_empty());
     }
-    eprintln!("[DEBUG] document replacement resets both concrete windows, fences old publications, and retires every owner under one-item grants");
 }
 
 struct PausedPartitionDisposer {
@@ -161,7 +159,6 @@ fn retained_window_input_retirement_reaches_later_partitions_and_kinds() {
         }
     }
     assert!(registry.terminal_is_empty());
-    eprintln!("[DEBUG] blocked partition and owner kind do not starve later owners; zero grants preserve both cursors");
 }
 
 #[test]
@@ -204,5 +201,4 @@ fn retained_window_input_refresh_admits_live_generation_after_a_committed_write(
         }
     }
     assert!(registry.terminal_is_empty());
-    eprintln!("[DEBUG] window-transient refresh rebinds a captured authority onto the live generation so evaluate publication is not retiring a rejected write");
 }

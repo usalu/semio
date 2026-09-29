@@ -4,11 +4,12 @@ anchor source) and `stage/` (edited by P9) — unless it is staged already. `p9-
 later tree edit never turns into a hunk that reverts it; the dry run on the live tree proves every anchor still holds.
 Usage: p9-stage.py <repo-relative path>... | --status"""
 import shutil
+import os
 import sys
 from pathlib import Path
 
 TREE = Path("/Users/ueli/Documents/semio")
-STAGE = TREE / ".🧬semio/🌐hub/s14-p9-stage"
+STAGE = TREE / os.environ.get("P9_STAGE", ".🧬semio/🌐hub/s14-p9-stage")
 
 if sys.argv[1:] == ["--status"]:
     for base in sorted((STAGE / "base").rglob("*")):

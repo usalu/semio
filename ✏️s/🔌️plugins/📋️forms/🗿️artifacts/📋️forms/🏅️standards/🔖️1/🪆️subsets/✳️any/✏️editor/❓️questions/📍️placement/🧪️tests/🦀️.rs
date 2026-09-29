@@ -41,7 +41,6 @@ fn move_commands_apply_the_requested_sibling_order() {
             assert_eq!(serde_json::to_value(order).unwrap(), case["order"], "{}", case["name"]);
         }
     }
-    println!("[DEBUG] Forms move commands preserved requested sibling order and rejected stale targets");
 }
 
 #[test]

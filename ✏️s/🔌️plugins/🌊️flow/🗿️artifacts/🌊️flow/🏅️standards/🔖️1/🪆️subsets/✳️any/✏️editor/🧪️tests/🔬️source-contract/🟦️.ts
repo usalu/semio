@@ -47,7 +47,6 @@ for (const source of flowEditorSources) {
   assert(!/\.replace_fixture\s*\(/.test(source), "FlowHost must use replace_host_snapshot");
   assert(!/\bFlowHostDocument\b|\bHostDocument\b|hostDocumentJson|host_document/.test(source), "forbidden host-document vocabulary; use HostSnapshot / host_snapshot");
 }
-console.log("[DEBUG] Flow snapshot/fixture terminology lint: 3 sources, 0 forbidden patterns");
 //#endregion 🗣️Terminology
 
 //#region 🧒️ChildAddWidget
@@ -90,7 +89,6 @@ assert(addWidgetSource.includes("let child_id = &doc.snapshot.content.child_id")
 assert(addWidgetSource.includes('ChildEmit::of::<SemioFlowSnapshot, _>("content"'), "addWidget must emit a typed Semio Flow child mutation");
 assert(addWidgetSource.includes("SemioFlowMutation::InsertNode"), "addWidget must produce one typed insert-node mutation");
 assert(!addWidgetSource.includes("host_operations(doc.snapshot"), "addWidget must not route content through the parent FlowDiff");
-console.log("[DEBUG] Flow child add-widget contract: 2 typed node rows, 1 reconstructed-host repeat, 6 denials, 6 hostile fixture rejections; native dispatch remains separate");
 //#endregion 🧒️ChildAddWidget
 
 const treeProjection = await Bun.file(new URL("../../🧫️fixtures/🖼️tree-projection/🔣️.json", import.meta.url)).json();
@@ -117,7 +115,6 @@ for (const invalid of [{ ...treeProjection, maximumDepth: 65 }, { ...treeProject
 const treeFixtureSource = await Bun.file(new URL("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs", import.meta.url)).text();
 assert(treeFixtureSource.includes("pub fn project_and_retire_fixture_tree("), "shared retained tree fixture observer is not implemented");
 assert(treeFixtureSource.includes("FIXTURE_TREE_MAX_NODES * (semio_framework_ui_contract::UI_BUILT_CHILDREN_MAX + 1)"), "retirement must cover every retained page, including unobserved rejected descendants");
-console.log("[DEBUG] Retained UI tree projection: 2 trees, 2 structural denials, 3 hostile contracts, AJV/stable JSON oracle; native ownership remains separate");
 
 //#region 🔎️ActualHostWire
 const hostWire = await Bun.file(new URL("../../🧫️fixtures/📡️host-wire/🔣️.json", import.meta.url)).json();
@@ -133,7 +130,6 @@ for (const row of hostWire.cases) {
   for (const grant of hostWire.grants) assert.deepEqual(Buffer.concat(Array.from({length:Math.ceil(actual.bytes.length/grant)}, (_, index) => actual.bytes.subarray(index*grant, (index+1)*grant))), oracle.bytes);
 }
 for (const invalid of [{...hostWire, terminalEmpty:false}, {...hostWire, grants:[4097]}, {...hostWire, extra:1}]) assert.equal(validateHostWire(invalid), false);
-console.log("[DEBUG] Flow actual operation-wire source: 6 binary shapes, 3 hostile fixtures, native OpBinary/cursor laws remain separate");
 //#endregion 🔎️ActualHostWire
 
 //#region 🧬️ArtifactRecipes
@@ -171,7 +167,6 @@ for (const mutate of [
   (value: any) => { value.label.expectedBytes = 4096; },
   (value: any) => { value.terminalEmpty = false; },
 ]) { const value = structuredClone(recipes); mutate(value); assert(!validateRecipes(value)); }
-console.log("[DEBUG] Flow artifact recipe fixtures=4 hostileRejections=4 semanticLabelBytes=4800 oracle=immer runtimeClaims=0");
 //#endregion 🧬️ArtifactRecipes
 
 //#region 🎚️ParameterIntent
@@ -200,8 +195,6 @@ for (const grant of parameter.retirement.grants.filter((value: number) => value 
   for (const bytes of parameterBytes) for (let offset = 0; offset < bytes.length; offset += grant) released += bytes.subarray(offset, offset + grant).byteLength;
   assert.equal(released, parameterBytes.reduce((sum, bytes) => sum + bytes.length, 0));
 }
-console.log("[DEBUG] Flow parameter intent cases=4 hostileRejections=10 oracle=fast-json-stable-stringify runtimeClaims=0");
-console.log("[DEBUG] Shared parameter retirement byteOracles=2 hostileFixtureRejections=3 oracle=Node.Buffer runtimeClaims=0");
 //#endregion 🎚️ParameterIntent
 
 //#region 🔣️Contract
@@ -333,7 +326,6 @@ for (const mutate of [
   (value: any) => { value.scene.widgets[1].unknown = true; },
   (value: any) => { value.label.expectedBytes = 4096; },
 ]) { const mutant = structuredClone(cascade); mutate(mutant); assert(!validateCascade(mutant)); }
-console.log("[DEBUG] Flow delete-cascade oracle=immer semanticLabelBytes=4800 inverseIndices=1,3 hostileRejections=3 runtimeClaims=0");
 //#endregion ↩️DeleteCascadeOracle
 //#region 🪪️ContentIdentityOracle
 const identity = await Bun.file(new URL("../../🧫️fixtures/🪪️content-identity/🔣️.json", import.meta.url)).json();
@@ -341,7 +333,6 @@ const validateIdentity = flowExport("FlowContentIdentity");
 assert(validateIdentity(identity), JSON.stringify(validateIdentity.errors));
 assert.equal(new Set(identity.cases.map((row: any) => row.id)).size, 5);
 const digests = identity.cases.map((row: any) => createHash("sha256").update(identity.domain, "utf8").update(row.canonicalJson, "utf8").digest("hex"));
-console.log("[DEBUG] Flow content identity oracle=" + JSON.stringify(digests));
 assert.deepEqual(identity.cases.map((row: any) => row.expectedSha256), digests);
 assert.equal(new Set(digests).size, 5);
 const contentSource = await Bun.file(new URL("../../../../../../../🦀️.rs", import.meta.url)).text();
@@ -364,7 +355,6 @@ for (const snapshot of assetSnapshots) {
   const exactTarget = new Ajv({ strict: true }).compile({ const: { artifactId: snapshot.content.childId, dialect: identity.dialect } });
   assert(exactTarget(snapshot.content.target), JSON.stringify(exactTarget.errors));
 }
-console.log(`[DEBUG] Flow persisted parent child/target equality: ${assetSnapshots.length} source assets checked with AJV; payload availability unverified`);
 for (const row of identity.cases) {
   const childId = identity.childIdPrefix + row.expectedSha256;
   const exact = { artifactId: childId, dialect: identity.dialect };
@@ -430,7 +420,6 @@ for (const lane of ["document", "config", "draft"]) {
   assert(editorOwnerSource.includes(`fn build_${lane}_store_owners(`), `Flow ${lane} must supply its typed store retirement catalog`);
   assert(editorOwnerSource.includes(`fn build_${lane}_store_disposer(`), `Flow ${lane} must supply its bounded store close adapter`);
 }
-console.log("[DEBUG] Flow store-owner oracle: 3 lanes, 3 grants, independent UTF-8/page retirement; native store lifecycle remains separate");
 //#endregion 🧹️StoreOwnerOracle
 //#region 👥️PresenceOwnerOracle
 const presenceOwners = await Bun.file(new URL("../../🧫️fixtures/👥️presence-owners/🔣️.json", import.meta.url)).json();
@@ -449,7 +438,6 @@ for (const row of presenceOwners.cases) {
 for (const hook of ["build_presence_local_root_retirement_factory", "build_presence_peer_retirement_factory", "build_presence_store_disposer"]) {
   assert(editorOwnerSource.includes(`fn ${hook}(`), `Flow must explicitly supply ${hook}`);
 }
-console.log("[DEBUG] Flow presence-owner oracle: 3 rosters, 3 grants, UTF-8 counts checked independently; native lifecycle remains separate");
 //#endregion 👥️PresenceOwnerOracle
 //#region 🫧️TransientOwnerOracle
 const transientOwners = await Bun.file(new URL("../../🧫️fixtures/🫧️transient-owners/🔣️.json", import.meta.url)).json();
@@ -463,7 +451,6 @@ for (const [index, row] of transientOwners.trace.entries()) {
 assert.equal(new TextEncoder().encode("").byteLength, transientOwners.payloadBytes);
 assert.equal(Buffer.byteLength(""), transientOwners.payloadBytes);
 assert(editorOwnerSource.includes("fn build_transient_store_disposer("), "Flow must supply an exact NoTransient store close adapter");
-console.log("[DEBUG] Flow transient-owner oracle: 11 exact zero-payload owner-transfer steps; native weak/terminal identities remain separate");
 //#endregion 🫧️TransientOwnerOracle
 //#region 🗃️SharedDocumentOwnerAuthority
 const documentOwnerFile = Bun.file(new URL("../../../../../../../♻️retirement/🦀️.rs", import.meta.url));
@@ -487,7 +474,6 @@ assert(viewerOwnerSource.includes("crate::retirement::store_owners()"));
 const flowPluginSource = await Bun.file(new URL("../../../../../../../../../🦀️.rs", import.meta.url)).text();
 assert(flowPluginSource.includes(".viewer::<crate::viewer::flow::FlowViewer>"));
 assert(viewerOwnerSource.includes("type Members = semio_s_artifact_stdio_semio::SemioMembers;"), "the viewer itself must declare the roster its composed children open through");
-console.log("[DEBUG] Flow viewer five-lane contract rejects write authority; native VCS lifecycle remains separate");
 //#endregion 👁️ViewerOwnerAuthority
 //#region 🏭️PublicSurfaceOwners
 const surfaceOwners = await Bun.file(new URL("../../../../../../../../../🧫️fixtures/🧹️surface-owners/🔣️.json", import.meta.url)).json();
@@ -509,12 +495,7 @@ for (const changed of [
 ]) assert(!validateSurfaceOwners(changed));
 const flowSurfaceTestSource = await Bun.file(new URL("../../../../../../../../../🧪️tests/🔬️surface/🦀️.rs", import.meta.url)).text();
 assert(flowSurfaceTestSource.includes("async fn flow_actual_surface_factories_close_all_owners_under_neutral_grants("), "both real Flow surface factories require the shared native lifecycle law");
-console.log("[DEBUG] Flow surface-owner oracle: 2 real factory roles, 3 byte grants, 4 hostile contracts; native factory execution remains separate");
 //#endregion 🏭️PublicSurfaceOwners
-console.log("[DEBUG] Flow source fixtures=" + fixture.cases.length + " hostileRejections=" + rejected + " runtimeClaims=0");
-console.log("[DEBUG] Flow slider label fixtures=" + labels.cases.length + " hostileRejections=3 runtimeClaims=0");
-console.log("[DEBUG] Flow canonical widgetVariants=9 mutationVariants=10 hostileRejections=5 runtimeClaims=0");
-console.log("[DEBUG] Flow content identity cases=5 grants=1,64,4096 runtimeClaims=0");
 
 //#region 🧮️InteractiveJobCatalog
 /**
@@ -556,5 +537,4 @@ for (const hostile of [
   { ...interactiveJob, migrated: interactiveJob.migrated.slice(1) },
   { ...interactiveJob, batchOnlyPendingRewrite: ["addGeneration"] },
 ]) assert.notDeepEqual(JSON.parse(stableStringify(hostile)), JSON.parse(stableStringify(interactiveJob)));
-console.log("[DEBUG] Flow interactive-job oracle: " + owned.size + " tool ids over " + interactiveJob.factories.length + " factories, batchOnly=" + interactiveJob.batchOnlyPendingRewrite.length + " runtimeClaims=0");
 //#endregion 🧮️InteractiveJobCatalog

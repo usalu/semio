@@ -57,7 +57,7 @@ const SceneFrameControl: React.FC = () => {
 
 const getComputedColor = (variable: string): string => resolveSemanticColorHex(variable, "gray");
 
-/** @emoji 📐️ Scene floor grid — element gray strokes, not emphasized foreground. */
+/** 📐️ Scene floor grid — element gray strokes, not emphasized foreground. */
 const readSceneGridColors = (): { sectionColor: string; cellColor: string } => ({
   sectionColor: resolveColorHex(themeColorVar("element"), "gray"),
   cellColor: resolveColorHex(themeColorVar("muted-foreground"), "gray"),
@@ -412,20 +412,20 @@ export const resolveSceneGizmoViewportPlacement = (viewport: { width: number; he
 };
 
 // #region 🔖️UnifiedGumball
-/** @emoji 🎛️ World-space pose snapshot for gumball drag commits. */
+/** 🎛️ World-space pose snapshot for gumball drag commits. */
 export type GumballPose = {
   readonly position: readonly [number, number, number];
   readonly quaternion: readonly [number, number, number, number];
   readonly scale: readonly [number, number, number];
 };
 
-/** @emoji 🎛️ Per-handle drag kinds for the unified gumball. */
+/** 🎛️ Per-handle drag kinds for the unified gumball. */
 export type GumballHandleKind = "moveX" | "moveY" | "moveZ" | "moveXY" | "moveYZ" | "moveXZ" | "rotateX" | "rotateY" | "rotateZ" | "scaleX" | "scaleY" | "scaleZ" | "scaleXY" | "scaleYZ" | "scaleXZ" | "scaleUniform";
 
-/** @emoji 🎛️ Drafting plane that restricts the gumball to the in-plane handle subset (two axes, view plane, normal rotation). */
+/** 🎛️ Drafting plane that restricts the gumball to the in-plane handle subset (two axes, view plane, normal rotation). */
 export type GumballPlaneId = "xy" | "yz" | "xz";
 
-/** @emoji 🎛️ Visibility and snap settings for {@link UnifiedGumball}. */
+/** 🎛️ Visibility and snap settings for {@link UnifiedGumball}. */
 export interface GumballConfig {
   readonly moveAxes?: boolean;
   readonly movePlanes?: boolean;
@@ -444,14 +444,14 @@ export interface GumballConfig {
   readonly size?: number;
 }
 
-/** @emoji 🎛️ Handles that remain visible for each drafting plane (in-plane move/scale + normal-axis rotate + uniform). */
+/** 🎛️ Handles that remain visible for each drafting plane (in-plane move/scale + normal-axis rotate + uniform). */
 export const GUMBALL_PLANE_HANDLES: Readonly<Record<GumballPlaneId, ReadonlySet<GumballHandleKind>>> = {
   xy: new Set(["moveX", "moveY", "moveXY", "rotateZ", "scaleX", "scaleY", "scaleXY", "scaleUniform"]),
   yz: new Set(["moveY", "moveZ", "moveYZ", "rotateX", "scaleY", "scaleZ", "scaleYZ", "scaleUniform"]),
   xz: new Set(["moveX", "moveZ", "moveXZ", "rotateY", "scaleX", "scaleZ", "scaleXZ", "scaleUniform"]),
 };
 
-/** @emoji 🎛️ Default unified gumball: every handle group visible. */
+/** 🎛️ Default unified gumball: every handle group visible. */
 export const DEFAULT_GUMBALL_CONFIG: Readonly<Required<Pick<GumballConfig, "moveAxes" | "movePlanes" | "rotate" | "scaleAxes" | "scalePlanes" | "scaleUniform">>> = {
   moveAxes: true,
   movePlanes: true,
@@ -475,7 +475,7 @@ const gumballNorm = (a: GumballVec3): GumballVec3 => {
   return [a[0] / l, a[1] / l, a[2] / l];
 };
 
-/** @emoji 🎛️ Resolves partial {@link GumballConfig} with defaults. */
+/** 🎛️ Resolves partial {@link GumballConfig} with defaults. */
 export function resolveGumballConfig(config?: GumballConfig): Required<Pick<GumballConfig, "moveAxes" | "movePlanes" | "rotate" | "scaleAxes" | "scalePlanes" | "scaleUniform">> & GumballConfig {
   return {
     ...DEFAULT_GUMBALL_CONFIG,
@@ -490,13 +490,13 @@ export function resolveGumballConfig(config?: GumballConfig): Required<Pick<Gumb
   };
 }
 
-/** @emoji 🎛️ True when a handle is allowed by an optional drafting-plane subset. */
+/** 🎛️ True when a handle is allowed by an optional drafting-plane subset. */
 export function gumballHandleAllowedByPlane(kind: GumballHandleKind, plane: GumballPlaneId | undefined): boolean {
   if (!plane) return true;
   return GUMBALL_PLANE_HANDLES[plane].has(kind);
 }
 
-/** @emoji 🎛️ True when a handle's visibility group is enabled in the resolved config. */
+/** 🎛️ True when a handle's visibility group is enabled in the resolved config. */
 export function gumballHandleGroupEnabled(kind: GumballHandleKind, config: ReturnType<typeof resolveGumballConfig>): boolean {
   if (kind === "moveX" || kind === "moveY" || kind === "moveZ") return config.moveAxes;
   if (kind === "moveXY" || kind === "moveYZ" || kind === "moveXZ") return config.movePlanes;
@@ -506,12 +506,12 @@ export function gumballHandleGroupEnabled(kind: GumballHandleKind, config: Retur
   return config.scaleUniform;
 }
 
-/** @emoji 🎛️ True when a handle should render for the resolved config (group flags ∩ plane subset). */
+/** 🎛️ True when a handle should render for the resolved config (group flags ∩ plane subset). */
 export function gumballHandleEnabled(kind: GumballHandleKind, config: ReturnType<typeof resolveGumballConfig>): boolean {
   return gumballHandleGroupEnabled(kind, config) && gumballHandleAllowedByPlane(kind, config.plane);
 }
 
-/** @emoji 🎛️ True when at least one gumball handle group is enabled. */
+/** 🎛️ True when at least one gumball handle group is enabled. */
 export function gumballConfigVisible(config?: GumballConfig): boolean {
   const resolved = resolveGumballConfig(config);
   if (!(resolved.moveAxes || resolved.movePlanes || resolved.rotate || resolved.scaleAxes || resolved.scalePlanes || resolved.scaleUniform)) return false;
@@ -520,14 +520,14 @@ export function gumballConfigVisible(config?: GumballConfig): boolean {
   return kinds.some((kind) => gumballHandleEnabled(kind, resolved));
 }
 
-/** @emoji 🎛️ Maps a handle drag to translate / rotate / scale for host commit payloads. */
+/** 🎛️ Maps a handle drag to translate / rotate / scale for host commit payloads. */
 export function gumballHandleKindToTransformMode(kind: GumballHandleKind): "translate" | "rotate" | "scale" {
   if (kind.startsWith("move")) return "translate";
   if (kind.startsWith("rotate")) return "rotate";
   return "scale";
 }
 
-/** @emoji 🎛️ Reads pose from a three.js object. */
+/** 🎛️ Reads pose from a three.js object. */
 export function gumballPoseFromObject3D(object: THREE.Object3D): GumballPose {
   return {
     position: [object.position.x, object.position.y, object.position.z],
@@ -536,14 +536,14 @@ export function gumballPoseFromObject3D(object: THREE.Object3D): GumballPose {
   };
 }
 
-/** @emoji 🎛️ Writes pose to a three.js object. */
+/** 🎛️ Writes pose to a three.js object. */
 export function applyGumballPose(object: THREE.Object3D, pose: GumballPose): void {
   object.position.set(pose.position[0], pose.position[1], pose.position[2]);
   object.quaternion.set(pose.quaternion[0], pose.quaternion[1], pose.quaternion[2], pose.quaternion[3]);
   object.scale.set(pose.scale[0], pose.scale[1], pose.scale[2]);
 }
 
-/** @emoji 🎛️ Closest-axis parameter for a world ray (axis translate drag). */
+/** 🎛️ Closest-axis parameter for a world ray (axis translate drag). */
 export function gumballRayAxisParameter(rayOrigin: GumballVec3, rayDir: GumballVec3, axisPoint: GumballVec3, axisDir: GumballVec3): number {
   const w0 = gumballSub(rayOrigin, axisPoint);
   const a = gumballDot(rayDir, rayDir);
@@ -556,14 +556,14 @@ export function gumballRayAxisParameter(rayOrigin: GumballVec3, rayDir: GumballV
   return (b * d - a * e) / denom;
 }
 
-/** @emoji 👁️ Unit vector from a pivot toward the active camera (TransformControls-style eye). */
+/** 👁️ Unit vector from a pivot toward the active camera (TransformControls-style eye). */
 export function gumballEyeFromPivot(camera: THREE.Camera, pivot: GumballVec3): GumballVec3 {
   const cam = new THREE.Vector3();
   camera.getWorldPosition(cam);
   return gumballNorm(gumballSub([cam.x, cam.y, cam.z], pivot));
 }
 
-/** @emoji 🎛️ Drag plane normal for constrained axis move/scale (matches three.js TransformControls). */
+/** 🎛️ Drag plane normal for constrained axis move/scale (matches three.js TransformControls). */
 export function gumballAxisDragPlaneNormal(axisDir: GumballVec3, eye: GumballVec3): GumballVec3 {
   const axis = gumballNorm(axisDir);
   const align = gumballCross(eye, axis);
@@ -573,7 +573,7 @@ export function gumballAxisDragPlaneNormal(axisDir: GumballVec3, eye: GumballVec
   return eye;
 }
 
-/** @emoji 🎛️ Projects a screen ray onto an axis using a camera-aligned plane through the pivot. */
+/** 🎛️ Projects a screen ray onto an axis using a camera-aligned plane through the pivot. */
 export function gumballProjectRayOntoAxis(rayOrigin: GumballVec3, rayDir: GumballVec3, pivot: GumballVec3, axisDir: GumballVec3, eye: GumballVec3): number | null {
   const planeNormal = gumballAxisDragPlaneNormal(axisDir, eye);
   const hit = gumballRayPlanePoint(rayOrigin, rayDir, pivot, planeNormal);
@@ -581,7 +581,7 @@ export function gumballProjectRayOntoAxis(rayOrigin: GumballVec3, rayDir: Gumbal
   return gumballDot(gumballSub(hit, pivot), gumballNorm(axisDir));
 }
 
-/** @emoji 🎛️ Ray-plane intersection for plane translate drags. */
+/** 🎛️ Ray-plane intersection for plane translate drags. */
 export function gumballRayPlanePoint(rayOrigin: GumballVec3, rayDir: GumballVec3, planePoint: GumballVec3, planeNormal: GumballVec3): GumballVec3 | null {
   const denom = gumballDot(planeNormal, rayDir);
   if (Math.abs(denom) < 1e-10) return null;
@@ -589,7 +589,7 @@ export function gumballRayPlanePoint(rayOrigin: GumballVec3, rayDir: GumballVec3
   return gumballAdd(rayOrigin, gumballScale(rayDir, t));
 }
 
-/** @emoji 🎛️ Signed rotation angle between two vectors around an axis. */
+/** 🎛️ Signed rotation angle between two vectors around an axis. */
 export function gumballAxisRotateAngle(startVec: GumballVec3, currentVec: GumballVec3, axisDir: GumballVec3): number {
   const axis = gumballNorm(axisDir);
   const project = (v: GumballVec3): GumballVec3 => gumballSub(v, gumballScale(axis, gumballDot(v, axis)));
@@ -600,32 +600,32 @@ export function gumballAxisRotateAngle(startVec: GumballVec3, currentVec: Gumbal
   return angle;
 }
 
-/** @emoji 🎛️ Scale factor from projected distances along an axis. */
+/** 🎛️ Scale factor from projected distances along an axis. */
 export function gumballAxisScaleFactor(startProj: number, currentProj: number): number {
   if (Math.abs(startProj) < 1e-10) return 1;
   return currentProj / startProj;
 }
 
-/** @emoji 🎛️ Snaps a scalar when snap step is positive. */
+/** 🎛️ Snaps a scalar when snap step is positive. */
 export function gumballSnapScalar(value: number, snap: number | undefined): number {
   if (!snap || snap <= 0) return value;
   return Math.round(value / snap) * snap;
 }
 
-/** @emoji 🎛️ Default rotation snap while Shift is held (15°). */
+/** 🎛️ Default rotation snap while Shift is held (15°). */
 export const GUMBALL_DEFAULT_SHIFT_ROTATION_SNAP = Math.PI / 12;
 
-/** @emoji 🎛️ Default uniform scale snap while Shift is held (10%). */
+/** 🎛️ Default uniform scale snap while Shift is held (10%). */
 export const GUMBALL_DEFAULT_SHIFT_SCALE_SNAP = 0.1;
 
-/** @emoji 🎛️ Resolves an active snap step from config and Shift modifier. */
+/** 🎛️ Resolves an active snap step from config and Shift modifier. */
 export function gumballEffectiveSnapValue(configSnap: number | undefined, shiftKey: boolean, shiftFallback: number): number | undefined {
   if (configSnap != null && configSnap > 0) return configSnap;
   if (shiftKey && shiftFallback > 0) return shiftFallback;
   return undefined;
 }
 
-/** @emoji 🎛️ Active gumball drag snap steps for translate / rotate / scale. */
+/** 🎛️ Active gumball drag snap steps for translate / rotate / scale. */
 export function gumballResolveDragSnaps(config: GumballConfig, shiftKey: boolean): { readonly translationSnap: number | undefined; readonly rotationSnap: number | undefined; readonly scaleSnap: number | undefined } {
   return {
     translationSnap: gumballEffectiveSnapValue(config.translationSnap, shiftKey, config.shiftTranslationSnap ?? 0),
@@ -677,7 +677,7 @@ const GUMBALL_AXIS_BY_KIND: Readonly<Record<GumballHandleKind, GumballVec3 | nul
 
 type GumballScalePlane = "xy" | "yz" | "xz";
 
-/** @emoji 📐️ Local scale axis pair for a 2D plane scale handle. */
+/** 📐️ Local scale axis pair for a 2D plane scale handle. */
 export function gumballScalePlaneAxisIndices(kind: GumballHandleKind): readonly [0 | 1 | 2, 0 | 1 | 2] | null {
   if (kind === "scaleXY") return [0, 1];
   if (kind === "scaleYZ") return [1, 2];
@@ -685,7 +685,7 @@ export function gumballScalePlaneAxisIndices(kind: GumballHandleKind): readonly 
   return null;
 }
 
-/** @emoji 📐️ Inner corner of an L-shaped plane scale bracket (beyond the move plane square). */
+/** 📐️ Inner corner of an L-shaped plane scale bracket (beyond the move plane square). */
 export function gumballPlaneScaleCorner(plane: GumballScalePlane): GumballVec3 {
   const c = GUMBALL_PLANE_OFFSET + GUMBALL_PLANE_SIZE * 0.5 + GUMBALL_PLANE_SCALE_INSET;
   if (plane === "xy") return [c, c, 0];
@@ -699,7 +699,7 @@ function gumballWorldPointToLocalOffset(point: GumballVec3, pivot: GumballVec3, 
   return [v.x, v.y, v.z];
 }
 
-/** @emoji 📐️ Scale factors for a 2D plane scale drag; uniform uses radial distance in the plane. */
+/** 📐️ Scale factors for a 2D plane scale drag; uniform uses radial distance in the plane. */
 export function gumballPlaneScaleFactors(startLocal: readonly [number, number], currentLocal: readonly [number, number], uniform = false): readonly [number, number] {
   if (uniform) {
     const factor = gumballAxisScaleFactor(Math.hypot(startLocal[0], startLocal[1]), Math.hypot(currentLocal[0], currentLocal[1]));
@@ -769,7 +769,7 @@ function gumballScaleShaftLength(): number {
   return GUMBALL_SCALE_OFFSET - GUMBALL_RING_RADIUS;
 }
 
-/** @emoji 📏️ Outer scale reach along an axis (beyond move arrows and rotate rings). */
+/** 📏️ Outer scale reach along an axis (beyond move arrows and rotate rings). */
 export function gumballScaleAxisOffset(): number {
   return GUMBALL_SCALE_OFFSET;
 }
@@ -831,7 +831,7 @@ const GUMBALL_PREVIEW_DISK_SEGMENTS = 64;
 const _gumballPreviewCamPos = new THREE.Vector3();
 const _gumballPreviewPivot = new THREE.Vector3();
 
-/** @emoji 👁️ World half-extent for gumball axis line previews (fills the viewport at the pivot).
+/** 👁️ World half-extent for gumball axis line previews (fills the viewport at the pivot).
  * Duck-types `isOrthographicCamera` / `isPerspectiveCamera` (not `instanceof`) so R3F cameras from a
  * duplicate `three` copy still resolve the correct frustum. */
 export function gumballPreviewWorldExtent(camera: THREE.Camera, pivotWorld: THREE.Vector3): number {
@@ -870,7 +870,7 @@ function gumballAxisPreviewPoints(axis: GumballPreviewAxis, half: number): [numb
   ];
 }
 
-/** @emoji 🎨️ Resolved gumball chrome from direction accents; hover/active only raise opacity. */
+/** 🎨️ Resolved gumball chrome from direction accents; hover/active only raise opacity. */
 export interface GumballVisualPalette {
   readonly axisX: string;
   readonly axisY: string;
@@ -885,7 +885,7 @@ export interface GumballVisualPalette {
   readonly previewActiveOpacity: number;
 }
 
-/** @emoji 🎨️ Reads gumball palette from design tokens (X/Y/Z → primary / secondary / tertiary permanently). */
+/** 🎨️ Reads gumball palette from design tokens (X/Y/Z → primary / secondary / tertiary permanently). */
 export function resolveGumballVisualPalette(): GumballVisualPalette {
   const axes = resolveSpatialAxisColors();
   return {
@@ -903,10 +903,10 @@ export function resolveGumballVisualPalette(): GumballVisualPalette {
   };
 }
 
-/** @emoji 🎛️ Per-handle visual state for gumball hover / drag feedback. */
+/** 🎛️ Per-handle visual state for gumball hover / drag feedback. */
 export type GumballHandleVisualState = "idle" | "hover" | "active" | "dimmed";
 
-/** @emoji 🎛️ Resolves handle chrome from hover and active drag kind. */
+/** 🎛️ Resolves handle chrome from hover and active drag kind. */
 export function gumballHandleVisualState(kind: GumballHandleKind, hovered: GumballHandleKind | null, active: GumballHandleKind | null): GumballHandleVisualState {
   if (active === kind) return "active";
   if (active !== null) return "dimmed";
@@ -915,7 +915,7 @@ export function gumballHandleVisualState(kind: GumballHandleKind, hovered: Gumba
   return "idle";
 }
 
-/** @emoji 🎨️ Handle tint + opacity for a resolved visual state. Keeps direction color; only opacity changes. */
+/** 🎨️ Handle tint + opacity for a resolved visual state. Keeps direction color; only opacity changes. */
 export function gumballResolveHandleVisual(baseColor: string, state: GumballHandleVisualState, palette: GumballVisualPalette): { readonly color: string; readonly opacity: number } {
   if (state === "active") return { color: baseColor, opacity: palette.activeOpacity };
   if (state === "hover") return { color: baseColor, opacity: palette.hoverOpacity };
@@ -1047,7 +1047,7 @@ function gumballWorldAxis(localAxis: GumballVec3, quat: THREE.Quaternion): Gumba
   return [v.x, v.y, v.z];
 }
 
-/** @emoji 📡️ World-space camera ray through an NDC point — orthographic uses parallel near→far unproject rays;
+/** 📡️ World-space camera ray through an NDC point — orthographic uses parallel near→far unproject rays;
  * perspective uses the pinhole from `camera.position`. Duck-types `isOrthographicCamera` (not `instanceof`) so
  * R3F-swapped cameras from a duplicate `three` copy stay correct (otherwise ortho drags fly away from the cursor). */
 export function gumballRayFromNdc(ndcX: number, ndcY: number, camera: THREE.Camera): { origin: GumballVec3; dir: GumballVec3 } {
@@ -1079,10 +1079,10 @@ function gumballNdcFromPointer(clientX: number, clientY: number, rect: DOMRect):
 const _gumballPickRaycaster = new THREE.Raycaster();
 const _gumballPickNdc = new THREE.Vector2();
 
-/** @emoji 🎯️ World-space depth bias so gumball handles win picking over occluding scene geometry (see puzzle vortex pick priority). */
+/** 🎯️ World-space depth bias so gumball handles win picking over occluding scene geometry (see puzzle vortex pick priority). */
 const GUMBALL_PICK_DEPTH_BIAS = 1.5;
 
-/** @emoji 🎯️ Mesh raycast biasing gumball hits closer so occluding meshes do not swallow handle interaction. */
+/** 🎯️ Mesh raycast biasing gumball hits closer so occluding meshes do not swallow handle interaction. */
 export function gumballHandleRaycast(this: THREE.Mesh, raycaster: THREE.Raycaster, intersects: THREE.Intersection[]): void {
   const local: THREE.Intersection[] = [];
   THREE.Mesh.prototype.raycast.call(this, raycaster, local);
@@ -1100,7 +1100,7 @@ function gumballBindHandleRaycast(root: THREE.Object3D): void {
   });
 }
 
-/** @emoji 🎛️ Raycasts a gumball root subtree for a handle at a client-space pointer. */
+/** 🎛️ Raycasts a gumball root subtree for a handle at a client-space pointer. */
 export function gumballRaycastOwnedAtClientPoint(camera: THREE.Camera, canvas: HTMLElement, clientX: number, clientY: number, root: THREE.Object3D): { readonly kind: GumballHandleKind; readonly object: THREE.Object3D } | null {
   const rect = canvas.getBoundingClientRect();
   if (rect.width <= 0 || rect.height <= 0) return null;
@@ -1116,10 +1116,10 @@ export function gumballRaycastOwnedAtClientPoint(camera: THREE.Camera, canvas: H
   return null;
 }
 
-/** @emoji 🎛️ True while a gumball handle owns the active canvas pointer (blocks marquee / background pick). */
+/** 🎛️ True while a gumball handle owns the active canvas pointer (blocks marquee / background pick). */
 export const gumballPointerConsumesCanvasEventRef = { current: false };
 
-/** @emoji 🎛️ Reads a gumball handle kind from a raycast hit object or its parents. */
+/** 🎛️ Reads a gumball handle kind from a raycast hit object or its parents. */
 export function gumballKindFromRaycastObject(object: THREE.Object3D | null): GumballHandleKind | null {
   let node: THREE.Object3D | null = object;
   while (node) {
@@ -1130,7 +1130,7 @@ export function gumballKindFromRaycastObject(object: THREE.Object3D | null): Gum
   return null;
 }
 
-/** @emoji 🎛️ Raycasts the scene for a gumball handle at a client-space pointer (any depth; not limited to the closest scene hit). */
+/** 🎛️ Raycasts the scene for a gumball handle at a client-space pointer (any depth; not limited to the closest scene hit). */
 export function gumballRaycastAtClientPoint(scene: THREE.Scene, camera: THREE.Camera, canvas: HTMLElement, clientX: number, clientY: number): { readonly kind: GumballHandleKind; readonly object: THREE.Object3D } | null {
   const rect = canvas.getBoundingClientRect();
   if (rect.width <= 0 || rect.height <= 0) return null;
@@ -1145,7 +1145,7 @@ export function gumballRaycastAtClientPoint(scene: THREE.Scene, camera: THREE.Ca
   return null;
 }
 
-/** @emoji 🎛️ Raycasts the scene for a gumball handle kind at a client-space pointer. */
+/** 🎛️ Raycasts the scene for a gumball handle kind at a client-space pointer. */
 export function gumballRaycastKindAtClientPoint(scene: THREE.Scene, camera: THREE.Camera, canvas: HTMLElement, clientX: number, clientY: number): GumballHandleKind | null {
   return gumballRaycastAtClientPoint(scene, camera, canvas, clientX, clientY)?.kind ?? null;
 }
@@ -1162,7 +1162,7 @@ interface GumballDragState {
   readonly scalePlaneAxes: readonly [0 | 1 | 2, 0 | 1 | 2] | null;
 }
 
-/** @emoji 🎛️ Props for {@link UnifiedGumball}. */
+/** 🎛️ Props for {@link UnifiedGumball}. */
 export interface UnifiedGumballProps {
   readonly target: THREE.Object3D;
   readonly config?: GumballConfig;
@@ -1377,7 +1377,7 @@ function GumballHandles(props: {
   );
 }
 
-/** @emoji 🎛️ Rhino-style unified move / rotate / scale gumball for R3F scenes. */
+/** 🎛️ Rhino-style unified move / rotate / scale gumball for R3F scenes. */
 export function UnifiedGumball(props: UnifiedGumballProps): React.ReactElement | null {
   const config = reactHostPort.useMemo(() => resolveGumballConfig(props.config), [props.config]);
   const palette = useGumballVisualPalette();

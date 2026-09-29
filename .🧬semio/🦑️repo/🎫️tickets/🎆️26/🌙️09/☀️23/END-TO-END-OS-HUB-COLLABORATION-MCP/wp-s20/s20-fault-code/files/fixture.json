@@ -1,0 +1,467 @@
+{
+  "why": "The typed-operation fault record (`semio.typed-operation-fault.v1`, `🧬️schema/🧯️typed-operation-fault/🔣️.json`), written once and read by two implementations: the Rust law `app::typed_operation_fault_tests` drives `TypedOperationFault::of_fault`/`encode`/`decode`, and the AJV twin (`🧪️tests/🧯️typed-operation-fault/🟦️.ts`) validates every expected record against the schema and drives the host decoder `decodeTypedOperationFaultV1`. `records` states what one `Fault` becomes: a frozen code is non-empty and at most `limits.codeBytes` UTF-8 bytes, else the record answers `limits.untypedCode`; the message is clipped to `limits.messageBytes` UTF-8 bytes on a character boundary; the parameters (added as `Fault::with_parameter` adds them: at most `limits.parameters`, each value clipped to `limits.parameterValueBytes` UTF-8 bytes on a character boundary, control characters as spaces) ride along; the encoded record fits one result page (`limits.pageBytes`). `decodes` states which byte strings are a record: only an object of exactly the schema's five members, of this schema, with a frozen code, a known origin, a bounded message and at most `limits.parameters` well-formed, bounded parameters; framed text (`<code>\\u001f<message>`) and prose are not. `…Repeat` spells a long string as `text` repeated `count` times.",
+  "limits": {
+    "codeBytes": 64,
+    "messageBytes": 256,
+    "pageBytes": 4096,
+    "untypedCode": "interactive-job.app-owned-output",
+    "parameters": 8,
+    "parameterNameBytes": 32,
+    "parameterValueBytes": 64
+  },
+  "records": [
+    {
+      "name": "an app refusal keeps its own code, origin and message",
+      "fault": {
+        "code": "remodeling.qc-report.missing",
+        "origin": "app",
+        "message": "Run the quality check before exporting its report.",
+        "parameters": []
+      },
+      "record": {
+        "code": "remodeling.qc-report.missing",
+        "origin": "app",
+        "message": "Run the quality check before exporting its report.",
+        "parameters": []
+      }
+    },
+    {
+      "name": "a refusal carries the parameters its declared text shows",
+      "fault": {
+        "code": "process3d.media.export-format",
+        "origin": "app",
+        "message": "",
+        "parameters": [
+          {
+            "name": "format",
+            "value": "step"
+          }
+        ]
+      },
+      "record": {
+        "code": "process3d.media.export-format",
+        "origin": "app",
+        "message": "",
+        "parameters": [
+          {
+            "name": "format",
+            "value": "step"
+          }
+        ]
+      }
+    },
+    {
+      "name": "parameters past the maximum are not kept",
+      "fault": {
+        "code": "x",
+        "origin": "app",
+        "message": "",
+        "parameters": [
+          {
+            "name": "p0",
+            "value": "0"
+          },
+          {
+            "name": "p1",
+            "value": "1"
+          },
+          {
+            "name": "p2",
+            "value": "2"
+          },
+          {
+            "name": "p3",
+            "value": "3"
+          },
+          {
+            "name": "p4",
+            "value": "4"
+          },
+          {
+            "name": "p5",
+            "value": "5"
+          },
+          {
+            "name": "p6",
+            "value": "6"
+          },
+          {
+            "name": "p7",
+            "value": "7"
+          },
+          {
+            "name": "p8",
+            "value": "8"
+          }
+        ]
+      },
+      "record": {
+        "code": "x",
+        "origin": "app",
+        "message": "",
+        "parameters": [
+          {
+            "name": "p0",
+            "value": "0"
+          },
+          {
+            "name": "p1",
+            "value": "1"
+          },
+          {
+            "name": "p2",
+            "value": "2"
+          },
+          {
+            "name": "p3",
+            "value": "3"
+          },
+          {
+            "name": "p4",
+            "value": "4"
+          },
+          {
+            "name": "p5",
+            "value": "5"
+          },
+          {
+            "name": "p6",
+            "value": "6"
+          },
+          {
+            "name": "p7",
+            "value": "7"
+          }
+        ]
+      }
+    },
+    {
+      "name": "a parameter value narrows on a character boundary and its control characters become spaces",
+      "fault": {
+        "code": "x",
+        "origin": "app",
+        "message": "",
+        "parameters": [
+          {
+            "name": "path",
+            "valueRepeat": {
+              "text": "ü\n",
+              "count": 40
+            }
+          }
+        ]
+      },
+      "record": {
+        "code": "x",
+        "origin": "app",
+        "message": "",
+        "parameters": [
+          {
+            "name": "path",
+            "valueRepeat": {
+              "text": "ü ",
+              "count": 21
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "a framework refusal keeps its own code",
+      "fault": {
+        "code": "interactive-job.publication-stalled",
+        "origin": "framework",
+        "message": "typed operation 'x' advanced 4096 publication units without moving its ladder",
+        "parameters": []
+      },
+      "record": {
+        "code": "interactive-job.publication-stalled",
+        "origin": "framework",
+        "message": "typed operation 'x' advanced 4096 publication units without moving its ladder",
+        "parameters": []
+      }
+    },
+    {
+      "name": "a message above the byte bound narrows on a character boundary",
+      "fault": {
+        "code": "x",
+        "origin": "app",
+        "messageRepeat": {
+          "text": "ü",
+          "count": 4096
+        },
+        "parameters": []
+      },
+      "record": {
+        "code": "x",
+        "origin": "app",
+        "messageRepeat": {
+          "text": "ü",
+          "count": 128
+        },
+        "parameters": []
+      }
+    },
+    {
+      "name": "an empty code is no frozen code",
+      "fault": {
+        "code": "",
+        "origin": "framework",
+        "message": "m",
+        "parameters": []
+      },
+      "record": {
+        "code": "interactive-job.app-owned-output",
+        "origin": "framework",
+        "message": "m",
+        "parameters": []
+      }
+    },
+    {
+      "name": "a code above the code bound is no frozen code",
+      "fault": {
+        "codeRepeat": {
+          "text": "c",
+          "count": 65
+        },
+        "origin": "app",
+        "message": "m",
+        "parameters": []
+      },
+      "record": {
+        "code": "interactive-job.app-owned-output",
+        "origin": "app",
+        "message": "m",
+        "parameters": []
+      }
+    },
+    {
+      "name": "a code holding the unit separator is carried as it is — a record needs no separator",
+      "fault": {
+        "code": "a\u001fb",
+        "origin": "app",
+        "message": "m",
+        "parameters": []
+      },
+      "record": {
+        "code": "a\u001fb",
+        "origin": "app",
+        "message": "m",
+        "parameters": []
+      }
+    },
+    {
+      "name": "the worst-case record, eight quoted parameters included, still fits one result page",
+      "fault": {
+        "codeRepeat": {
+          "text": "c",
+          "count": 64
+        },
+        "origin": "framework",
+        "messageRepeat": {
+          "text": "\"",
+          "count": 300
+        },
+        "parameters": [
+          {
+            "name": "parameter0",
+            "valueRepeat": {
+              "text": "\"",
+              "count": 64
+            }
+          },
+          {
+            "name": "parameter1",
+            "valueRepeat": {
+              "text": "\"",
+              "count": 64
+            }
+          },
+          {
+            "name": "parameter2",
+            "valueRepeat": {
+              "text": "\"",
+              "count": 64
+            }
+          },
+          {
+            "name": "parameter3",
+            "valueRepeat": {
+              "text": "\"",
+              "count": 64
+            }
+          },
+          {
+            "name": "parameter4",
+            "valueRepeat": {
+              "text": "\"",
+              "count": 64
+            }
+          },
+          {
+            "name": "parameter5",
+            "valueRepeat": {
+              "text": "\"",
+              "count": 64
+            }
+          },
+          {
+            "name": "parameter6",
+            "valueRepeat": {
+              "text": "\"",
+              "count": 64
+            }
+          },
+          {
+            "name": "parameter7",
+            "valueRepeat": {
+              "text": "\"",
+              "count": 64
+            }
+          }
+        ]
+      },
+      "record": {
+        "codeRepeat": {
+          "text": "c",
+          "count": 64
+        },
+        "origin": "framework",
+        "messageRepeat": {
+          "text": "\"",
+          "count": 256
+        },
+        "parameters": [
+          {
+            "name": "parameter0",
+            "valueRepeat": {
+              "text": "\"",
+              "count": 64
+            }
+          },
+          {
+            "name": "parameter1",
+            "valueRepeat": {
+              "text": "\"",
+              "count": 64
+            }
+          },
+          {
+            "name": "parameter2",
+            "valueRepeat": {
+              "text": "\"",
+              "count": 64
+            }
+          },
+          {
+            "name": "parameter3",
+            "valueRepeat": {
+              "text": "\"",
+              "count": 64
+            }
+          },
+          {
+            "name": "parameter4",
+            "valueRepeat": {
+              "text": "\"",
+              "count": 64
+            }
+          },
+          {
+            "name": "parameter5",
+            "valueRepeat": {
+              "text": "\"",
+              "count": 64
+            }
+          },
+          {
+            "name": "parameter6",
+            "valueRepeat": {
+              "text": "\"",
+              "count": 64
+            }
+          },
+          {
+            "name": "parameter7",
+            "valueRepeat": {
+              "text": "\"",
+              "count": 64
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "decodes": [
+    {
+      "name": "a typed record decodes to itself",
+      "bytes": "{\"schema\":\"semio.typed-operation-fault.v1\",\"code\":\"toolRun.busy\",\"origin\":\"framework\",\"message\":\"the fill run is busy\",\"parameters\":[]}",
+      "record": {
+        "code": "toolRun.busy",
+        "origin": "framework",
+        "message": "the fill run is busy",
+        "parameters": []
+      }
+    },
+    {
+      "name": "framed text is no record",
+      "bytes": "toolRun.busy\u001fthe fill run is busy",
+      "record": null
+    },
+    {
+      "name": "prose is no record",
+      "bytes": "retained command reducer rejected operation: remodeling.qc-report.missing Run the quality check",
+      "record": null
+    },
+    {
+      "name": "a record of another schema is no fault record",
+      "bytes": "{\"schema\":\"semio.other.v1\",\"code\":\"x\",\"origin\":\"app\",\"message\":\"m\"}",
+      "record": null
+    },
+    {
+      "name": "an unknown origin is no record",
+      "bytes": "{\"schema\":\"semio.typed-operation-fault.v1\",\"code\":\"x\",\"origin\":\"moon\",\"message\":\"m\"}",
+      "record": null
+    },
+    {
+      "name": "an empty code is no record",
+      "bytes": "{\"schema\":\"semio.typed-operation-fault.v1\",\"code\":\"\",\"origin\":\"app\",\"message\":\"m\"}",
+      "record": null
+    },
+    {
+      "name": "a missing member is no record",
+      "bytes": "{\"schema\":\"semio.typed-operation-fault.v1\",\"code\":\"x\",\"origin\":\"app\"}",
+      "record": null
+    },
+    {
+      "name": "a record with parameters decodes to itself",
+      "bytes": "{\"schema\":\"semio.typed-operation-fault.v1\",\"code\":\"process3d.media.export-format\",\"origin\":\"app\",\"message\":\"\",\"parameters\":[{\"name\":\"format\",\"value\":\"step\"}]}",
+      "record": {
+        "code": "process3d.media.export-format",
+        "origin": "app",
+        "message": "",
+        "parameters": [
+          {
+            "name": "format",
+            "value": "step"
+          }
+        ]
+      }
+    },
+    {
+      "name": "a record without its parameters member is no record",
+      "bytes": "{\"schema\":\"semio.typed-operation-fault.v1\",\"code\":\"x\",\"origin\":\"app\",\"message\":\"m\"}",
+      "record": null
+    },
+    {
+      "name": "nine parameters are no record",
+      "bytes": "{\"schema\":\"semio.typed-operation-fault.v1\",\"code\":\"x\",\"origin\":\"app\",\"message\":\"\",\"parameters\":[{\"name\":\"p0\",\"value\":\"0\"},{\"name\":\"p1\",\"value\":\"1\"},{\"name\":\"p2\",\"value\":\"2\"},{\"name\":\"p3\",\"value\":\"3\"},{\"name\":\"p4\",\"value\":\"4\"},{\"name\":\"p5\",\"value\":\"5\"},{\"name\":\"p6\",\"value\":\"6\"},{\"name\":\"p7\",\"value\":\"7\"},{\"name\":\"p8\",\"value\":\"8\"}]}",
+      "record": null
+    },
+    {
+      "name": "a malformed parameter name is no record",
+      "bytes": "{\"schema\":\"semio.typed-operation-fault.v1\",\"code\":\"x\",\"origin\":\"app\",\"message\":\"\",\"parameters\":[{\"name\":\"Format\",\"value\":\"step\"}]}",
+      "record": null
+    }
+  ]
+}

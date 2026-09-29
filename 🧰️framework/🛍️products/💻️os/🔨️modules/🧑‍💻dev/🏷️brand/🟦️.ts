@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🏷️ Shell brand catalog — every brand this shell host can ship as, selected via `SEMIO_BRAND` / a playground registry row's `brand` column. */
+/** 🏷️ Shell brand catalog — every brand this shell host can ship as, selected via `SEMIO_BRAND` / a playground registry row's `brand` column. */
 // #endregion 🧲️Header
 
 import type { ShellBrand } from "@semio-tech/framework";

@@ -20,7 +20,7 @@ for(const row of fixture.cases)test(row.name,async()=>{
     let done=false;
     for(let step=0;step<1000&&!done;step++)done=job.advance(grant).done;
     expect(done).toBe(true);
-    const result=job.result();expect(result.origin).toEqual(row.origin);expect(result.image.width).toBe(3);expect(result.image.height).toBe(1);
+    const result=job.result();expect(result.origin).toEqual<readonly number[]>(row.origin);expect(result.image.width).toBe(3);expect(result.image.height).toBe(1);
     for(let pixel=0;pixel<3;pixel++){
       expect(result.image.pixels[pixel*4+3]).toBe(row.alpha[pixel]);
       expect(Math.abs(result.image.pixels[pixel*4+3]!-reference[pixel*4+3]!)).toBeLessThanOrEqual(1);

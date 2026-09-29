@@ -144,7 +144,6 @@ mod tests {
         pool.shutdown();
         assert_eq!(pool.occupancy(), 0);
         assert_eq!(pool.install_maintenance_hook(Lane::Io, step, [31, 41]), Err(WorkerMaintenanceError::Shutdown));
-        eprintln!("[DEBUG] native idle worker serviced two preallocated Io maintenance turns without any queued job or subsequent task ingress");
     }
 
     #[test]
@@ -173,7 +172,6 @@ mod tests {
             assert!(pool.remove_maintenance_hook(ticket).unwrap());
         }
         assert_eq!(pool.shutdown(), Ok(()));
-        eprintln!("[DEBUG] running maintenance callbacks retired themselves after return and reused every fixed slot across 64 generations");
     }
 
     #[test]
@@ -226,7 +224,6 @@ mod tests {
             }
             assert_eq!(pool.occupancy(), 0);
         }
-        eprintln!("[DEBUG] native running hook retained the exact second-remove witness and shutdown prevented More or concurrent wake from rearming");
     }
 
     #[test]
@@ -274,7 +271,6 @@ mod tests {
         pool.shutdown();
         assert_eq!(serde_json::to_value(&*ORDER.lock().unwrap()).unwrap(), fixture["competingWork"]["order"]);
         assert_eq!(pool.occupancy(), 0);
-        eprintln!("[DEBUG] native Io DRR alternated actual queued jobs with two rotating fixed hooks after interactive work released the worker");
     }
 
     #[test]

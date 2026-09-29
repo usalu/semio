@@ -1,4 +1,4 @@
-/** @emoji 🧪️ Laws of the React World3d tool run trace store and its instancing: the record store reproduces
+/** 🧪️ Laws of the React World3d tool run trace store and its instancing: the record store reproduces
  * the ledger's resident set from the language-neutral `📼️trace-pages.json` through real base64url lanes,
  * and a `THREE.InstancedMesh` per `(mesh, verdict)` carries exactly the resident records (three.js is the
  * oracle for counts and for matrix composition). */

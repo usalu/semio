@@ -22,7 +22,7 @@ pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, Fem3dSnapshot>
         _ => None,
     };
     let document = text.map(|text| <Fem3dSnapshot as store::ArtifactDsl>::parse_dsl(text).unwrap_or_default()).unwrap_or_default();
-    eprintln!("[DEBUG] fem3d setActiveExample id={} nodes={} elements={} solids={}", payload.example_id, document.nodes.len(), document.elements.len(), document.solids.len());
+    eprintln!("[TRACE] fem3d setActiveExample id={} nodes={} elements={} solids={}", payload.example_id, document.nodes.len(), document.elements.len(), document.solids.len());
     Ok(Emit { effects: vec![crate::editor::fem3d::reset_document_effect(&document)], ..Default::default() })
 }
 

@@ -1,4 +1,4 @@
-/** @emoji 🫀️ The plugin-load liveness clock — the ONE place that decides whether a program load that
+/** 🫀️ The plugin-load liveness clock — the ONE place that decides whether a program load that
  * is taking minutes is still moving or has stopped.
  *
  * It exists as its own leaf because both halves of that decision live in different files: the deadline

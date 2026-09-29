@@ -24,21 +24,21 @@ export interface NavbarItem {
   content: React.ReactNode;
   className?: string;
   key?: React.Key;
-  /** @emoji 🎯️ When true, positions the item absolutely so it is centered relative to the full navbar width, independent of sibling item widths — but never across the flow row's own chrome; see {@link navbarCenteredLeftV1}. */
+  /** 🎯️ When true, positions the item absolutely so it is centered relative to the full navbar width, independent of sibling item widths — but never across the flow row's own chrome; see {@link navbarCenteredLeftV1}. */
   centered?: boolean;
 }
 
-/** @emoji ↔️ One horizontal interval of a chrome band, in whole pixels measured from the band's own left edge. */
+/** ↔️ One horizontal interval of a chrome band, in whole pixels measured from the band's own left edge. */
 export type NavbarSpanV1 = { readonly left: number; readonly right: number };
 
-/** @emoji 🧱️ Whether one flow-row child actually OCCUPIES its box. A filler ({@link navbarFillItem}) renders
+/** 🧱️ Whether one flow-row child actually OCCUPIES its box. A filler ({@link navbarFillItem}) renders
  * nothing, so its wide `flex-1` box is exactly the room a centered item may use; every other child paints
  * chrome a centered item must stay clear of. */
 export function navbarFlowChildOccupiesV1(child: { readonly childElementCount: number; readonly textContent: string | null }): boolean {
   return child.childElementCount > 0 || (child.textContent ?? "").trim().length > 0;
 }
 
-/** @emoji 🛟️ The widest horizontal band of a `width`-wide chrome bar that no occupied span covers.
+/** 🛟️ The widest horizontal band of a `width`-wide chrome bar that no occupied span covers.
  *
  * A centered navbar item is absolutely positioned, so it is invisible to the flow row's own layout and
  * will happily paint (and swallow clicks for) the chrome parked at the bar's edges. Measured on
@@ -68,7 +68,7 @@ export function navbarFreeBandV1(width: number, occupied: readonly NavbarSpanV1[
   return band.right > band.left ? band : { left: 0, right: width };
 }
 
-/** @emoji 🎯️ Left offset of a centered item: the bar's own centre whenever the item fits there without
+/** 🎯️ Left offset of a centered item: the bar's own centre whenever the item fits there without
  * crossing {@link navbarFreeBandV1}'s edges, and otherwise the nearest position inside the band. An item
  * wider than the band starts at the band's left edge — its own `max-width` is what makes it fit, so this
  * is a fixed point rather than a step that re-measures into a different answer. */
@@ -86,7 +86,7 @@ export interface NavbarProps {
   className?: string;
   showFullscreenToggle?: boolean;
   onFullscreenToggle?: () => void;
-  /** @emoji 💬 Chrome parked immediately left of the fullscreen control (e.g. chat panel toggle). */
+  /** 💬 Chrome parked immediately left of the fullscreen control (e.g. chat panel toggle). */
   trailingBeforeFullscreen?: React.ReactNode;
 }
 
@@ -100,12 +100,12 @@ export interface NavbarProps {
  * `z-index: var(--z-base) !important` here; this class said `z-navbar` and was simply never the truth —
  * a contradiction that cost ticket 26/09/02 three waves of "the navbar covers the catalogue".
  **/
-/** @emoji 🛟️ The measured placement of every centered item of one chrome band, in band-relative pixels.
+/** 🛟️ The measured placement of every centered item of one chrome band, in band-relative pixels.
  * `null` until the first layout pass — a band that has not been measured centers by transform, so the
  * first painted frame is already centered and nothing flashes in from the left edge. */
 type NavbarCenteredPlacementV1 = { readonly left: number; readonly maxWidth: number };
 
-/** @emoji 🪜️ The shared body of {@link Navbar} and {@link Footer}: one flow row of ordinary items plus one
+/** 🪜️ The shared body of {@link Navbar} and {@link Footer}: one flow row of ordinary items plus one
  * absolutely positioned layer per centered item, each placed by {@link navbarCenteredLeftV1} against the
  * free band the flow row leaves. Measured live, because which chrome the row carries — panel tab bars
  * above all — is a runtime user choice, and a band computed once boots stale the first time a panel
@@ -211,7 +211,7 @@ function Navbar({ items, className, showFullscreenToggle = true, onFullscreenTog
 export { Navbar, NavbarBandBody };
 
 //#region 🩺️SemioLogo
-/** @emoji 🎨️ Round dark semio emblem for navbar and chrome. */
+/** 🎨️ Round dark semio emblem for navbar and chrome. */
 export function SemioLogo({ className, style }: { className?: string; style?: React.CSSProperties }) {
   return (
     <svg viewBox="0 0 350 350" className={className} style={style} xmlns="http://www.w3.org/2000/svg">
@@ -229,16 +229,16 @@ export function SemioLogo({ className, style }: { className?: string; style?: Re
 //#endregion 🩺️SemioLogo
 
 //#region 🏷️ShellBrandLogo
-/** @emoji 🏷️ Renders a shell brand's raw inline-SVG mark in navbar chrome (first-party repo content authored in `framework/os/dev/brand`, injected as markup). */
+/** 🏷️ Renders a shell brand's raw inline-SVG mark in navbar chrome (first-party repo content authored in `framework/os/dev/brand`, injected as markup). */
 export function ShellBrandLogo({ svg, className, style }: { svg: string; className?: string; style?: React.CSSProperties }) {
   return <span className={cn("inline-flex items-center [&>svg]:h-full [&>svg]:w-auto", className)} style={style} dangerouslySetInnerHTML={{ __html: svg }} />;
 }
 //#endregion 🏷️ShellBrandLogo
 
-/** @emoji ↔ Flex grow class that pushes trailing navbar chrome to the right edge. */
+/** ↔ Flex grow class that pushes trailing navbar chrome to the right edge. */
 const navbarFillClassName = "flex-1 min-w-0";
 
-/** @emoji ↔ Invisible navbar filler; use before trailing toggles when no center slot consumes the flex region. */
+/** ↔ Invisible navbar filler; use before trailing toggles when no center slot consumes the flex region. */
 export function navbarFillItem(key = "navbarFill"): NavbarItem {
   return { key, className: navbarFillClassName, content: null };
 }

@@ -10,7 +10,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 //#endregion 📖️SemioGrammar
 
 //#region 🔖️HandcraftedOpCodecs
-/// @emoji 📝️ Compact JSON-line OpText for `ProgramMutation` (collection wrappers block DslEnum).
+/// 📝️ Compact JSON-line OpText for `ProgramMutation` (collection wrappers block DslEnum).
 impl protocol::OpText for ProgramMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         dsl::json::from_json_str(line.trim()).map_err(|e| store::TextError::new(format!("invalid program mutation: {e}"), store::TextSpan::at(1, 1)))
@@ -26,7 +26,7 @@ impl protocol::OpText for ProgramMutation {
 const WIRE_PROTOCOL: &str = include_str!("../💾️binary/📡️.protocol.semio");
 //#endregion 🏷️WireTags
 
-/// @emoji 🌱️ Binary twin of the OpText escape hatch — plain JSON bytes.
+/// 🌱️ Binary twin of the OpText escape hatch — plain JSON bytes.
 impl protocol::OpBinary for ProgramMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::tagged_value_binary::encode_op(WIRE_PROTOCOL, dsl::tagged_value_binary::VariantTag::Field("mutation"), self)

@@ -1,4 +1,4 @@
-//! @emoji 📬️ Per-frame growable upload buffers — the Metal counterpart of the wgpu target's
+//! 📬️ Per-frame growable upload buffers — the Metal counterpart of the wgpu target's
 //! `GrowBuffer`/`FrameBuffers` (`🎯️targets/🧊️wgpu/🦀️draw.rs`). Every buffer here is `Shared` storage
 //! (CPU-visible, no explicit `didModifyRange` sync needed — that flag only matters for `Managed`
 //! storage on Intel Macs) and is reallocated only when a frame's data outgrows the current capacity,

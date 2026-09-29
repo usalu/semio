@@ -15,7 +15,7 @@ use crate::os_pack::{write_varint_i64, write_varint_u64, ByteReader, ChunkId, Co
 use std::collections::{HashMap, HashSet};
 
 //#region 🔖️Tags
-/// @emoji 🕳️ `FieldValue::Absent` — never written at record-field granularity (canonical mode
+/// 🕳️ `FieldValue::Absent` — never written at record-field granularity (canonical mode
 /// omits it entirely) but valid as a decode target, e.g. inside a sparse `TableSoA` fallback
 /// column or a hand-crafted non-canonical file.
 const TAG_ABSENT: u8 = 0x00;
@@ -45,7 +45,7 @@ const TAG_EXPR: u8 = 0x17;
 //#endregion 🔖️Tags
 
 //#region 🔖️Canonical
-/// @emoji ✂️ Extracts a `List`/`Tuple` field's element `Shape`, if `shape` is one of those two
+/// ✂️ Extracts a `List`/`Tuple` field's element `Shape`, if `shape` is one of those two
 /// variants — the seam shared by encode and decode so both walk exactly the same element type.
 fn elem_shape_of(shape: Option<&Shape>) -> Option<&Shape> {
     match shape {
@@ -54,7 +54,7 @@ fn elem_shape_of(shape: Option<&Shape>) -> Option<&Shape> {
     }
 }
 
-/// @emoji 📊️ Extracts a `Table` field's lazy element-spec constructor, if `shape` is `Table`.
+/// 📊️ Extracts a `Table` field's lazy element-spec constructor, if `shape` is `Table`.
 fn table_spec_of(shape: Option<&Shape>) -> Option<fn() -> RecordSpec> {
     match shape {
         Some(Shape::Table(spec_fn)) => Some(*spec_fn),
@@ -62,7 +62,7 @@ fn table_spec_of(shape: Option<&Shape>) -> Option<fn() -> RecordSpec> {
     }
 }
 
-/// @emoji 🧾️ Resolves a `Record` field's nested spec, if `shape` is `Record`.
+/// 🧾️ Resolves a `Record` field's nested spec, if `shape` is `Record`.
 fn record_spec_of(shape: Option<&Shape>) -> Option<RecordSpec> {
     match shape {
         Some(Shape::Record(spec_fn)) => Some(spec_fn()),
@@ -91,7 +91,7 @@ fn map_inner_shape(shape: Option<&Shape>) -> Option<&Shape> {
     }
 }
 
-/// @emoji 🚧️ Every shape whose `FieldValue` representation is `Tuple` rather than `List` — the
+/// 🚧️ Every shape whose `FieldValue` representation is `Tuple` rather than `List` — the
 /// packed-numeric-array fast path (`TAG_PACKED_F64`/`TAG_PACKED_VARINT`) collapses both to the
 /// same bytes on the wire (a run of numbers has no other distinguishing feature), so `shape` is
 /// the ONLY signal decode has left to reconstruct the right `FieldValue` variant. Every shape here
@@ -101,7 +101,7 @@ fn is_tuple_shape(shape: Option<&Shape>) -> bool {
     matches!(shape, Some(Shape::Tuple(_, _)) | Some(Shape::Coord(_)) | Some(Shape::Dir) | Some(Shape::Dim(_)) | Some(Shape::Range))
 }
 
-/// @emoji 🛡️ Depth-limit check shared by every recursive encode/decode entry point.
+/// 🛡️ Depth-limit check shared by every recursive encode/decode entry point.
 fn check_depth(max_depth: u16, depth: u16) -> Result<(), PackError> {
     if depth > max_depth {
         return Err(PackError::LimitExceeded("max_depth exceeded"));
@@ -109,7 +109,7 @@ fn check_depth(max_depth: u16, depth: u16) -> Result<(), PackError> {
     Ok(())
 }
 
-/// @emoji 🔢️ Canonical `f64` normalization preserves signed zero and maps any `NaN` to the
+/// 🔢️ Canonical `f64` normalization preserves signed zero and maps any `NaN` to the
 /// single quiet-NaN bit pattern `0x7ff8_0000_0000_0000`.
 fn normalize_f64(value: f64) -> f64 {
     if value.is_nan() {
@@ -119,13 +119,13 @@ fn normalize_f64(value: f64) -> f64 {
     }
 }
 
-/// @emoji 🔢️ Which packed form a homogeneous numeric sequence is eligible for.
+/// 🔢️ Which packed form a homogeneous numeric sequence is eligible for.
 enum NumKind {
     F64,
     Varint,
 }
 
-/// @emoji 🧮️ A sequence is packed-eligible iff every element is the same numeric `FieldValue`
+/// 🧮️ A sequence is packed-eligible iff every element is the same numeric `FieldValue`
 /// variant (`Float`, `Int`, `Enum`) or every element is `UInt` and fits in `i64` (so the zigzag
 /// round trip through `PackedVarint` is lossless). Empty sequences are never eligible — there is
 /// no element to infer a kind from, so they fall through to the plain `0x0B`/`0x0C` forms.
@@ -148,7 +148,7 @@ fn homogeneous_numeric_kind(items: &[FieldValue]) -> Option<NumKind> {
     None
 }
 
-/// @emoji ✒️ Mutable state threaded through one `encode_document` call: the precomputed symbol
+/// ✒️ Mutable state threaded through one `encode_document` call: the precomputed symbol
 /// table (built by [`build_symbols`] in a deterministic pre-pass), the live segment/chunk writer,
 /// and the caller's options.
 struct EncCtx<'a> {
@@ -157,7 +157,7 @@ struct EncCtx<'a> {
     options: &'a EncodeOptions,
 }
 
-/// @emoji 📖️ Encodes a string using the precomputed interning decision: `TAG_STR` + symref if
+/// 📖️ Encodes a string using the precomputed interning decision: `TAG_STR` + symref if
 /// `s` made it into the symbol table, else `TAG_STR_INLINE` + length-prefixed UTF-8 bytes.
 fn encode_string(ctx: &mut EncCtx<'_>, s: &str, out: &mut Vec<u8>) {
     if let Some(&idx) = ctx.symbol_index.get(s) {
@@ -168,7 +168,7 @@ fn encode_string(ctx: &mut EncCtx<'_>, s: &str, out: &mut Vec<u8>) {
     }
 }
 
-/// @emoji 📌️ Forces `TAG_STR_INLINE` regardless of the interning decision — the wire rule for
+/// 📌️ Forces `TAG_STR_INLINE` regardless of the interning decision — the wire rule for
 /// `Value`/`DslValue::Object` keys, which are never symrefs.
 fn encode_string_inline(s: &str, out: &mut Vec<u8>) {
     out.push(TAG_STR_INLINE);
@@ -176,7 +176,7 @@ fn encode_string_inline(s: &str, out: &mut Vec<u8>) {
     out.extend_from_slice(s.as_bytes());
 }
 
-/// @emoji 🔗️ Writes a bare symref varint with NO leading tag — the wire rule for `Statements`
+/// 🔗️ Writes a bare symref varint with NO leading tag — the wire rule for `Statements`
 /// keywords and `TableSoA` `Str` columns, both of which are unconditionally interned.
 fn write_symref_forced(ctx: &mut EncCtx<'_>, s: &str, out: &mut Vec<u8>) -> Result<(), PackError> {
     let idx = *ctx.symbol_index.get(s).ok_or_else(|| PackError::Schema(format!("symbol {s:?} missing from precomputed table")))?;
@@ -184,7 +184,7 @@ fn write_symref_forced(ctx: &mut EncCtx<'_>, s: &str, out: &mut Vec<u8>) -> Resu
     Ok(())
 }
 
-/// @emoji 🔎️ Deterministic string-interning pre-pass: walks the whole document once (shape-aware
+/// 🔎️ Deterministic string-interning pre-pass: walks the whole document once (shape-aware
 /// where a shape is known, generically otherwise) counting string occurrences and marking forced
 /// interns (`Statements` keywords, `TableSoA` `Text` columns), then returns the sorted symbol
 /// table — a `len <= 128 || count >= 2` string, or any forced one, is interned; everything else
@@ -311,7 +311,7 @@ fn walk_value_for_symbols(counts: &mut HashMap<String, u64>, forced: &mut HashSe
     }
 }
 
-/// @emoji 🌱️ `DslValue::Object` keys are always inline (never interned) per the wire contract, so
+/// 🌱️ `DslValue::Object` keys are always inline (never interned) per the wire contract, so
 /// only `String` leaves and array/object values are walked here.
 fn walk_dsl_value_for_symbols(counts: &mut HashMap<String, u64>, v: &DslValue) {
     match v {
@@ -332,7 +332,7 @@ fn walk_dsl_value_for_symbols(counts: &mut HashMap<String, u64>, v: &DslValue) {
 //#endregion 🔖️Canonical
 
 //#region 🔖️Encode
-/// @emoji 🧾️ Encodes one record's fields as `field_count varint, (field_id varint, value)*` —
+/// 🧾️ Encodes one record's fields as `field_count varint, (field_id varint, value)*` —
 /// the shared body used both for the top-level document and for nested `FieldValue::Record`
 /// (behind its own `0x0D` tag). Always sorts by field id (the purity LAW: byte-identical output
 /// regardless of `HashMap` iteration order) and always omits `Absent`. `spec` is `None` for a
@@ -355,7 +355,7 @@ fn encode_record_fields(ctx: &mut EncCtx<'_>, spec: Option<&RecordSpec>, record:
     Ok(buf)
 }
 
-/// @emoji ✍️ Encodes one field value, tag-prefixed and self-describing. `shape` is the field's
+/// ✍️ Encodes one field value, tag-prefixed and self-describing. `shape` is the field's
 /// declared `Shape` when known (disambiguates `Tuple` vs `List`, selects `TableSoA` for
 /// `Shape::Table`, and resolves nested `Record`/`Block`/`Statements`/`Map` sub-shapes); `None`
 /// encodes the value generically from its runtime `FieldValue` variant alone — the path used for
@@ -427,7 +427,7 @@ fn encode_value(ctx: &mut EncCtx<'_>, shape: Option<&Shape>, value: &FieldValue,
     Ok(())
 }
 
-/// @emoji 🧱️ Encodes a `Bytes64` payload direct (`TAG_BYTES`) or, once it reaches
+/// 🧱️ Encodes a `Bytes64` payload direct (`TAG_BYTES`) or, once it reaches
 /// `options.chunk_threshold`, split into `options.chunk_size`-sized chunks written through the
 /// live `PackWriter` (`TAG_BYTES_CHUNKED` + the resulting `ChunkId`s).
 fn encode_bytes(ctx: &mut EncCtx<'_>, bytes: &[u8], out: &mut Vec<u8>) -> Result<(), PackError> {
@@ -457,7 +457,7 @@ fn encode_bytes(ctx: &mut EncCtx<'_>, bytes: &[u8], out: &mut Vec<u8>) -> Result
     Ok(())
 }
 
-/// @emoji 📚️ Encodes a `Tuple`/`List` sequence: the mandatory packed `0x15`/`0x16` form when
+/// 📚️ Encodes a `Tuple`/`List` sequence: the mandatory packed `0x15`/`0x16` form when
 /// every element is the same numeric kind, else the plain self-describing `0x0B`/`0x0C` form.
 fn encode_seq(ctx: &mut EncCtx<'_>, items: &[FieldValue], elem_shape: Option<&Shape>, is_tuple: bool, depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
     if let Some(kind) = homogeneous_numeric_kind(items) {
@@ -495,7 +495,7 @@ fn encode_seq(ctx: &mut EncCtx<'_>, items: &[FieldValue], elem_shape: Option<&Sh
     Ok(())
 }
 
-/// @emoji 🗺️ Encodes `Map`/object entries sorted by key bytes (canonical, always — not just when
+/// 🗺️ Encodes `Map`/object entries sorted by key bytes (canonical, always — not just when
 /// `options.canonical`, per the purity LAW), each key using the conditional interning rule.
 fn encode_map(ctx: &mut EncCtx<'_>, entries: &[(String, FieldValue)], inner_shape: Option<&Shape>, depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
     check_depth(ctx.options.limits.max_depth, depth)?;
@@ -510,7 +510,7 @@ fn encode_map(ctx: &mut EncCtx<'_>, entries: &[(String, FieldValue)], inner_shap
     Ok(())
 }
 
-/// @emoji 📜️ Encodes `Statements`: `count, (keyword symref, Record-payload)*`. The keyword is
+/// 📜️ Encodes `Statements`: `count, (keyword symref, Record-payload)*`. The keyword is
 /// always a bare forced symref (never a self-describing string tag) per the wire contract.
 fn encode_statements(ctx: &mut EncCtx<'_>, variants: Option<&Vec<(String, fn() -> RecordSpec)>>, items: &[(String, RecordValue)], depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
     check_depth(ctx.options.limits.max_depth, depth)?;
@@ -525,7 +525,7 @@ fn encode_statements(ctx: &mut EncCtx<'_>, variants: Option<&Vec<(String, fn() -
     Ok(())
 }
 
-/// @emoji 🌱️ Encodes a `DslValue` using the same self-describing tag set recursively; object
+/// 🌱️ Encodes a `DslValue` using the same self-describing tag set recursively; object
 /// entries sorted by key bytes with keys FORCED inline (`encode_string_inline`, never a symref) —
 /// the one deliberate carve-out from the general conditional-interning rule.
 ///
@@ -572,7 +572,7 @@ fn encode_dsl_value(ctx: &mut EncCtx<'_>, v: &DslValue, depth: u16, out: &mut Ve
     Ok(())
 }
 
-/// @emoji 🕸️ Encodes a `Wire` literal. Wire sub-format (presence bitmask + node layout) is this
+/// 🕸️ Encodes a `Wire` literal. Wire sub-format (presence bitmask + node layout) is this
 /// crate's own choice — the contract pins only the outer `0x13` tag and the constituent parts
 /// (`from`, optional `to`, `props`); everything here just needs to round-trip, which it does.
 fn encode_wire(ctx: &mut EncCtx<'_>, w: &WireValue, depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
@@ -1950,7 +1950,7 @@ impl Drop for RetainedRecordBodyCursor {
 //#endregion 🔖️RetainedValue
 
 //#region 🔖️Decode
-/// @emoji 🧭️ Where symrefs and chunk ids resolve during one decode: a full opened `PackFile`
+/// 🧭️ Where symrefs and chunk ids resolve during one decode: a full opened `PackFile`
 /// (the `decode_document` path) or a container-less inline symbol table (the
 /// `decode_record_body` path, which has no chunk table by construction).
 enum DecSource<'a> {
@@ -1958,7 +1958,7 @@ enum DecSource<'a> {
     Inline { symbols: Vec<String> },
 }
 
-/// @emoji 📖️ Mutable state threaded through one `decode_document`/`decode_record_body` call: the
+/// 📖️ Mutable state threaded through one `decode_document`/`decode_record_body` call: the
 /// symref/chunk resolution source, the caller's limits/verification/preserve-unknown choices, and
 /// the accumulated unknown-field-id report.
 struct DecCtx<'a> {
@@ -2031,7 +2031,7 @@ fn resolve_symref(ctx: &DecCtx<'_>, symref: u64) -> Result<String, PackError> {
     copy_decoded_string(value, ctx.materialization.as_ref())
 }
 
-/// @emoji 📏️ Reads a `varint` length then that many raw bytes, rejecting an oversized length
+/// 📏️ Reads a `varint` length then that many raw bytes, rejecting an oversized length
 /// against `limits.max_segment_len` BEFORE allocating/slicing.
 fn read_len_prefixed_bytes<'b>(reader: &mut ByteReader<'b>, limits: &PackLimits) -> Result<&'b [u8], PackError> {
     let len = reader.read_varint_u64()?;
@@ -2054,7 +2054,7 @@ fn read_inline_bytes(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<Ve
     Ok(read_len_prefixed_bytes(reader, &ctx.limits)?.to_vec())
 }
 
-/// @emoji 🧱️ Reads `count` chunk ids and concatenates their decoded (and, per `verification`,
+/// 🧱️ Reads `count` chunk ids and concatenates their decoded (and, per `verification`,
 /// integrity-checked) content via the open `PackFile`'s chunk table.
 fn read_chunked_bytes(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<Vec<u8>, PackError> {
     let count = reader.read_varint_u64()?;
@@ -2076,7 +2076,7 @@ fn read_chunked_bytes(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<V
     Ok(out)
 }
 
-/// @emoji 📖️ Reads one self-describing string value (`TAG_STR` or `TAG_STR_INLINE`) — used for
+/// 📖️ Reads one self-describing string value (`TAG_STR` or `TAG_STR_INLINE`) — used for
 /// `Map`/object keys and `DslValue::String`, where the tag itself (not any external shape) is
 /// what disambiguates interned vs inline.
 fn decode_string(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<String, PackError> {
@@ -2091,7 +2091,7 @@ fn decode_string(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<String
     }
 }
 
-/// @emoji 🧾️ Decodes one record's fields: `field_count, (field_id, value)*`. Any field id not
+/// 🧾️ Decodes one record's fields: `field_count, (field_id, value)*`. Any field id not
 /// found in `spec` is decoded generically (`shape = None`) and reported into
 /// `ctx.unknown_field_ids`; when `ctx.preserve_unknown` is `false` it is still consumed (to stay
 /// byte-aligned) but dropped from the returned `RecordValue`. Every `spec` field not seen on the
@@ -2126,7 +2126,7 @@ fn decode_record_fields(reader: &mut ByteReader<'_>, spec: Option<&RecordSpec>, 
     Ok(record)
 }
 
-/// @emoji 📖️ Decodes one tag-prefixed value. `shape`, when known, disambiguates `Tuple` vs
+/// 📖️ Decodes one tag-prefixed value. `shape`, when known, disambiguates `Tuple` vs
 /// `List`, resolves nested `Record`/`Block`/`Statements`/`Map` sub-shapes, and reinterprets
 /// `PackedVarint` payloads as `UInt`/`Enum` where the shape says so; `None` decodes generically
 /// straight from the wire tag — every tag is self-describing enough for this to always succeed,
@@ -2186,7 +2186,7 @@ fn decode_value(reader: &mut ByteReader<'_>, shape: Option<&Shape>, ctx: &mut De
     }
 }
 
-/// @emoji 📚️ Decodes a plain (non-packed) `Tuple`/`List` body: `count, values*`.
+/// 📚️ Decodes a plain (non-packed) `Tuple`/`List` body: `count, values*`.
 fn decode_seq_body(reader: &mut ByteReader<'_>, elem_shape: Option<&Shape>, is_tuple: bool, ctx: &mut DecCtx<'_>, depth: u16) -> Result<FieldValue, PackError> {
     let count = reader.read_varint_u64()?;
     ctx.check_items(count)?;
@@ -2206,7 +2206,7 @@ fn decode_packed_f64_body(reader: &mut ByteReader<'_>, is_tuple: bool) -> Result
     Ok(if is_tuple { FieldValue::Tuple(items) } else { FieldValue::List(items) })
 }
 
-/// @emoji 🔢️ Decodes a `PackedVarint` body. `elem_shape` (the field's `List(UInt)`/`List(Enum)`/
+/// 🔢️ Decodes a `PackedVarint` body. `elem_shape` (the field's `List(UInt)`/`List(Enum)`/
 /// `Tuple(..)` element shape, when known) picks the reconstruction type; unknown context always
 /// defaults to `Int`, which is also what makes an unknown field's homogeneous-`Int` list
 /// re-encode to the exact same bytes (round-trip preserved even without the original schema).
@@ -2333,7 +2333,7 @@ fn decode_wire_node(reader: &mut ByteReader<'_>, ctx: &mut DecCtx<'_>) -> Result
 //#endregion 🔖️Decode
 
 //#region 🔖️Table
-/// @emoji 🏷️ `TableSoA` per-column element-type tags — local to this crate's columnar encoding,
+/// 🏷️ `TableSoA` per-column element-type tags — local to this crate's columnar encoding,
 /// distinct from (and not overlapping the meaning of) the top-level wire tag space.
 const ELEM_FALLBACK: u8 = 0;
 const ELEM_BOOL: u8 = 1;
@@ -2355,7 +2355,7 @@ fn elem_tag_for_shape(shape: &Shape) -> u8 {
     }
 }
 
-/// @emoji 📊️ Encodes `Shape::Table`'s `List(Record)` value as columnar `TableSoA`: `row_count,
+/// 📊️ Encodes `Shape::Table`'s `List(Record)` value as columnar `TableSoA`: `row_count,
 /// col_count`, then per column (sorted by field id) `field_id, presence (0=dense/1=sparse+bitmap),
 /// elem_tag, packed payload`. Fixed-width/varint columns write only present-row values
 /// (compacted, in row order); `Bool` columns instead write one ceil(rows/8)-byte row-aligned value
@@ -2478,7 +2478,7 @@ fn encode_table(ctx: &mut EncCtx<'_>, spec_fn: fn() -> RecordSpec, items: &[Fiel
     Ok(())
 }
 
-/// @emoji 📖️ Decodes `TableSoA` fully self-describing — `field_id`/`presence`/`elem_tag` are
+/// 📖️ Decodes `TableSoA` fully self-describing — `field_id`/`presence`/`elem_tag` are
 /// stored per column on the wire, so no `RecordSpec` is ever required to reconstruct the rows
 /// (this is what lets an unknown `Table`-shaped field still round-trip). When the caller DOES
 /// know the table's element `RecordSpec` (`spec_fn` is `Some`), it is threaded into the
@@ -2576,7 +2576,7 @@ fn decode_table_soa(reader: &mut ByteReader<'_>, spec_fn: Option<fn() -> RecordS
 //#endregion 🔖️Table
 
 //#region 🔖️SchemaHash
-/// @emoji 🧭️ One field value shape of a [`PackSchemaGraph`]: `Shape` with every lazy nested record
+/// 🧭️ One field value shape of a [`PackSchemaGraph`]: `Shape` with every lazy nested record
 /// resolved to the index of its canonical record, enum and statement tables sorted by their
 /// schema-declared ordinal/keyword, and unit/ref/language refinements carried by name.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -2610,7 +2610,7 @@ pub enum PackSchemaShape {
     EmbedFrom(String),
 }
 
-/// @emoji 🪪️ One field of a [`PackSchemaGraph`] record: everything that decides what the pack bytes
+/// 🪪️ One field of a [`PackSchemaGraph`] record: everything that decides what the pack bytes
 /// of that field mean. Text-only presentation (`keyword`, `layout`, `position`, `call_name`,
 /// `defines`) is not part of the pack identity.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -2622,7 +2622,7 @@ pub struct PackSchemaField {
     pub shape: PackSchemaShape,
 }
 
-/// @emoji 🕸️ The canonical structural form of a `RecordSpec` tree: the minimal record graph of the
+/// 🕸️ The canonical structural form of a `RecordSpec` tree: the minimal record graph of the
 /// fully unfolded schema (bisimulation quotient, so recursion and duplicated `fn() -> RecordSpec`
 /// items collapse to the same graph), numbered by breadth-first first visit from the root in
 /// schema order (fields by id, statements by keyword). Record `0` is the root; nested records and
@@ -2778,7 +2778,7 @@ impl PackSchemaShape {
 }
 
 impl PackSchemaGraph {
-    /// @emoji 🕸️ Builds the canonical graph of `spec`. Discovery follows each distinct
+    /// 🕸️ Builds the canonical graph of `spec`. Discovery follows each distinct
     /// `fn() -> RecordSpec` once (so it terminates on recursive schemas), then Moore partition
     /// refinement merges every pair of structurally identical records, which makes the result
     /// independent of how often the compiler duplicated a spec function.
@@ -2854,7 +2854,7 @@ impl PackSchemaGraph {
         Self { records }
     }
 
-    /// @emoji 🗺️ The language-neutral JSON form of this graph (`🧫️fixtures/🔑️schema-hash`): one array
+    /// 🗺️ The language-neutral JSON form of this graph (`🧫️fixtures/🔑️schema-hash`): one array
     /// of field objects per record, each shape `{ "kind": .., payload }`, so any language can
     /// recompute [`Self::canonical_bytes`] and the hash from it.
     pub fn to_json(&self) -> crate::os_pack::json::Value {
@@ -2915,7 +2915,7 @@ impl PackSchemaGraph {
         )
     }
 
-    /// @emoji 🧾️ The canonical byte encoding hashed by [`schema_hash`]: `varint(records)`, then per
+    /// 🧾️ The canonical byte encoding hashed by [`schema_hash`]: `varint(records)`, then per
     /// record `varint(fields)`, then per field `varint(id) text(key) flags(optional=1|flatten=2)
     /// shape`, where `text = varint(len) utf8` and `shape = tag payload` (tags 1..=27 in
     /// `PackSchemaShape` declaration order; see `🧫️fixtures/🔑️schema-hash`).
@@ -2936,7 +2936,7 @@ impl PackSchemaGraph {
     }
 }
 
-/// @emoji 🔑️ `blake3` over [`PackSchemaGraph::canonical_bytes`] of `spec`: a nested record, enum
+/// 🔑️ `blake3` over [`PackSchemaGraph::canonical_bytes`] of `spec`: a nested record, enum
 /// table, collection, option or composed child/link change flips the hash; declaration order,
 /// text-only presentation and memory layout do not.
 pub fn schema_hash(spec: &RecordSpec) -> [u8; 32] {
@@ -2945,7 +2945,7 @@ pub fn schema_hash(spec: &RecordSpec) -> [u8; 32] {
 //#endregion 🔖️SchemaHash
 
 //#region 🔖️Document
-/// @emoji ⚙️ Knobs for [`encode_document`]. `canonical` gates only the `OPTIONAL_CANONICAL`
+/// ⚙️ Knobs for [`encode_document`]. `canonical` gates only the `OPTIONAL_CANONICAL`
 /// header bit — the sorted-fields/omitted-Absent/sorted-map-keys/minimal-varint/normalized-f64/
 /// interning/packed-numeric rules are applied unconditionally (the purity LAW demands determinism
 /// regardless of `HashMap` iteration order, so there is no looser "non-canonical" code path).
@@ -2966,7 +2966,7 @@ impl Default for EncodeOptions {
     }
 }
 
-/// @emoji ⚙️ Knobs for [`decode_document`].
+/// ⚙️ Knobs for [`decode_document`].
 #[derive(Clone, Debug)]
 pub struct DecodeOptions {
     pub verification: crate::os_pack::format::VerificationLevel,
@@ -2980,7 +2980,7 @@ impl Default for DecodeOptions {
     }
 }
 
-/// @emoji 🩺️ What [`decode_document`] observed beyond the plain `RecordValue`: field ids present
+/// 🩺️ What [`decode_document`] observed beyond the plain `RecordValue`: field ids present
 /// on the wire but absent from the caller's `RecordSpec`, any unrecognized segment kinds,
 /// whether the manifest's stored `schema_hash` disagrees with the caller's `spec`, and the
 /// verification level actually applied.
@@ -2992,7 +2992,7 @@ pub struct DecodeReport {
     pub verified: crate::os_pack::format::VerificationLevel,
 }
 
-/// @emoji 🚪️ The single entry point every other `pack_*`/`vcs`/`dsl_derive` crate encodes a
+/// 🚪️ The single entry point every other `pack_*`/`vcs`/`dsl_derive` crate encodes a
 /// `RecordValue` through. Pre-pass computes the deterministic symbol table, then writes
 /// `Symbols`, one-or-more `Document` frames (split at `options.frame_size`), any `Bytes64` chunks
 /// produced along the way, and finally the `Manifest`/`End`/`Footer` via `PackWriter::finish`.
@@ -3040,7 +3040,7 @@ pub fn encode_document(spec: &RecordSpec, record: &RecordValue, options: &Encode
     crate::os_io::resolve_ready(writer.finish(&manifest))
 }
 
-/// @emoji 🚪️ The single entry point every other `pack_*`/`vcs`/`dsl_derive` crate decodes a
+/// 🚪️ The single entry point every other `pack_*`/`vcs`/`dsl_derive` crate decodes a
 /// `RecordValue` through. Opens the pack file at manifest level, reads and concatenates the
 /// `Document` frame(s), then decodes the top-level record body against `spec` — self-describing
 /// enough that any field id `spec` doesn't recognize still decodes and is preserved (subject to
@@ -3059,7 +3059,7 @@ pub fn decode_document(bytes: &[u8], spec: &RecordSpec, options: &DecodeOptions)
     Ok((record, report))
 }
 
-/// @emoji 🎯️ Container-less twin of [`encode_document`] for small payloads (operation/command
+/// 🎯️ Container-less twin of [`encode_document`] for small payloads (operation/command
 /// records): `symbol_count varint, (len varint, utf8)*, record fields` — no header, segments,
 /// manifest, or footer, and never any `Bytes64` chunking (oversized bytes stay inline via
 /// `TAG_BYTES`). Deterministic by the same purity rules as the document path: byte-identical
@@ -3088,7 +3088,7 @@ pub fn encode_record_body(spec: &RecordSpec, record: &RecordValue, options: &Enc
     Ok(out)
 }
 
-/// @emoji 🎯️ Decodes an [`encode_record_body`] payload against `spec`. Unknown fields decode,
+/// 🎯️ Decodes an [`encode_record_body`] payload against `spec`. Unknown fields decode,
 /// are preserved (subject to `options.preserve_unknown`), and are reported exactly like the
 /// document path; a `TAG_BYTES_CHUNKED` value is malformed here by construction.
 pub fn decode_record_body(bytes: &[u8], spec: &RecordSpec, options: &DecodeOptions) -> Result<(RecordValue, DecodeReport), PackError> {

@@ -43,7 +43,7 @@ fn font_for<'a>(fonts: &'a FontSet<'_>, kind: FontKind) -> Option<&'a Font<'a>> 
     }
 }
 
-/// @emoji 📐️ A `PlacedItem::Glyph`'s fields bundled into one struct purely to keep [`write_glyph`]
+/// 📐️ A `PlacedItem::Glyph`'s fields bundled into one struct purely to keep [`write_glyph`]
 /// under clippy's argument-count lint — no behavior beyond that.
 struct GlyphPlacement {
     font: FontKind,
@@ -81,7 +81,7 @@ fn write_image(out: &mut String, data: &[u8], x: f32, y: f32, width: f32, height
     out.push_str(&format!(r#"<image x="{px:.3}" y="{py:.3}" width="{pw:.3}" height="{ph:.3}" href="data:image/png;base64,{encoded}"/>"#));
 }
 
-/// @emoji 🖨️ Renders `math_box` as a complete, standalone SVG document string.
+/// 🖨️ Renders `math_box` as a complete, standalone SVG document string.
 pub fn render_svg(math_box: &MathBox, fonts: &FontSet<'_>, options: SvgOptions) -> String {
     let width_pt = math_box.width * options.font_size_pt + options.margin_pt * 2.0;
     let height_pt = (math_box.height + math_box.depth) * options.font_size_pt + options.margin_pt * 2.0;

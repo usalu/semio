@@ -4,7 +4,7 @@ import { GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES } from "../⏱️trace/🧮️me
 import { surfaceAppId, parseSurfaceAppId, type AppRole, type AppRef } from "../🛂️manifest/🧬️schema/🟦️.ts";
 // #region 🎠️Kernel
 /// <reference types="vitest/importMeta" />
-/** @emoji 🎠️ `@semio-tech/framework` — plugin runtime, leases, invocation responses, and playground boot. */
+/** 🎠️ `@semio-tech/framework` — plugin runtime, leases, invocation responses, and playground boot. */
 import type { IconName } from "@semio-tech/assets";
 import type { ShellLocale, ShellTerminology, LocalizedLabel } from "../🛂️manifest/🤖️generated/🎚️ui-axes/🟦️.ts";
 
@@ -28,7 +28,7 @@ export { KernelReturnUiOperationHeader, type KernelReturnUiOperationFields, type
 /** 🫧 Process-local box for module ephemeral values. */
 export type EphemeralBox<T> = { current: T };
 
-/** @emoji 🫧️ OS-owned authority for ephemeral local-only state. It deliberately has no storage,
+/** 🫧️ OS-owned authority for ephemeral local-only state. It deliberately has no storage,
  * serialization, history, sync, or undo surface; a shell/runtime may own an isolated instance while
  * module-level helpers share {@link defaultOsTransient}. */
 export class OsTransient {
@@ -110,7 +110,7 @@ export function ephemeralWeakMap<K extends object, V>(key: string): WeakMap<K, V
 
 //#region 📇️DescriptorAdmission
 /** 📇️ Requires a published descriptor with the requested owner before any actor runtime is started. */
-/** @emoji 📏️ Admission ceiling for one plugin's `🔣️.json`, measured on the response text the parse
+/** 📏️ Admission ceiling for one plugin's `🔣️.json`, measured on the response text the parse
  * already needs — so the bound costs nothing, where re-serializing the parsed manifest to measure it cost a
  * full 5.4 MB `JSON.stringify` per plugin per boot and blew the frame budget on `puzzle` alone. */
 export const PLUGIN_DESCRIPTOR_CODE_UNIT_CAPACITY = 16 * 1024 * 1024;
@@ -317,161 +317,33 @@ export function buildContributionsJson(loaded: ReadonlyArray<{ readonly pluginId
   return JSON.stringify(entries);
 }
 
-const CONTRIBUTION_KIND_KEYS = new Set(["kind", "neuron-kind", "neuronKind", "operator", "operatorKind", "operator-kind", "id"]);
-const CONTRIBUTION_KIND_RE = /^[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)+$/;
-/** 🗝️ The same keyed rule in a document's DSL notation: `kind="state.set"` is the text form of the JSON `{ "kind": "state.set" }`
- * the object walk already reads (an imperative procedure step, measured 2026-09-27: its document is DSL text only, so its
- * `imperative.module` operators were never reachable and no imperative extension was ever pushed). */
-const KEYED_DSL_KIND_RE = new RegExp(`(?:^|[\\s{,])(?:${[...CONTRIBUTION_KIND_KEYS].map((key) => key.replace(/-/g, "\\-")).join("|")})="?([A-Za-z][A-Za-z0-9]*(?:\\.[A-Za-z][A-Za-z0-9]*)+)"?(?=[\\s},]|$)`, "gm");
-
-function collectOperatorKinds(value: unknown, into: Set<string>, keyed = false): void {
-  if (value == null) return;
-  if (typeof value === "string") {
-    if (keyed && CONTRIBUTION_KIND_RE.test(value) && value !== "flow.extension") into.add(value);
-    for (const match of value.matchAll(/neuronKind"\s*:\s*"([A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)+)/g)) into.add(match[1]!);
-    for (const match of value.matchAll(/neuron-kind=([A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)+)/g)) into.add(match[1]!);
-    for (const match of value.matchAll(/neuron_kind=([A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)+)/g)) into.add(match[1]!);
-    for (const match of value.matchAll(/neuronKind=([A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)+)/g)) into.add(match[1]!);
-    for (const match of value.matchAll(KEYED_DSL_KIND_RE)) if (match[1] !== "flow.extension") into.add(match[1]!);
-    if (/create-widget|neuron-kind|neuron_kind|neuronKind|widgets\s*\{/.test(value)) {
-      for (const match of value.matchAll(/\b([A-Za-z][A-Za-z0-9]+(?:\.[A-Za-z][A-Za-z0-9]+)+)\b/g)) {
-        if (match[1] !== "flow.extension") into.add(match[1]!);
-      }
-    }
-    const trimmed = value.trim();
-    if ((trimmed.startsWith("{") || trimmed.startsWith("[")) && trimmed.length <= 524288) {
-      try { collectOperatorKinds(JSON.parse(trimmed) as unknown, into, keyed); } catch { /* not JSON */ }
-    }
-    return;
-  }
-  if (typeof value === "number" || typeof value === "boolean") return;
-  if (Array.isArray(value)) {
-    for (const item of value) collectOperatorKinds(item, into, keyed);
-    return;
-  }
-  if (typeof value === "object") {
-    for (const [key, item] of Object.entries(value as Record<string, unknown>)) {
-      collectOperatorKinds(item, into, keyed || CONTRIBUTION_KIND_KEYS.has(key) || key === "hostSnapshotJson" || key === "fixtureJson" || key === "fixture");
-    }
-  }
-}
-
-/** 🕸️ Operator kinds reachable from a document/UI tree — keyed dotted identifiers, never an allowlist. */
-export function reachableKindsFromUnknown(values: readonly unknown[]): string[] {
-  const kinds = new Set<string>();
-  for (const value of values) collectOperatorKinds(value, kinds);
-  return [...kinds];
-}
-
 /**
- * 🎛️ A CAPABILITY pack — a contribution that names no operator kind at all.
+ * ✂️ Host→guest contributions cut to exactly the topics the receiver consumes, plus its own.
  *
- * ⚖️ Operator reachability is the right cut for an OPERATOR-KEYED topic (`flow.extension`, whose
- * payloads carry the dotted kinds a document graph instantiates) and structurally impossible for a
- * capability topic: `process.machines`, `cad.computer` and `sourcing.module` declare ZERO operator
- * kinds (measured 2026-09-16, ticket 26/08/28/DEMONSTRATOR-END-TO-END-ALL-APPS), so no document
- * graph can ever reach one and every such pack was cut to `[]` — process's "11 machines" were the
- * app's own `builtin_installed_catalogs()`, never a host push.
- */
-export function contributionIsCapabilityPack(topicContribution: unknown): boolean {
-  const contributed = new Set<string>();
-  collectOperatorKinds(topicContribution, contributed);
-  return contributed.size === 0;
-}
-
-function topicOf(topicContribution: unknown): string | undefined {
-  if (topicContribution == null || typeof topicContribution !== "object") return undefined;
-  const topic = (topicContribution as { readonly topic?: unknown }).topic;
-  return typeof topic === "string" && topic.length > 0 ? topic : undefined;
-}
-
-function contributionPassesScope(topicContribution: unknown, kinds: ReadonlySet<string>, consumed: ReadonlySet<string>): boolean {
-  const contributed = new Set<string>();
-  collectOperatorKinds(topicContribution, contributed);
-  if (contributed.size === 0) {
-    const topic = topicOf(topicContribution);
-    return topic !== undefined && consumed.has(topic);
-  }
-  for (const kind of contributed) {
-    if (kinds.has(kind)) return true;
-  }
-  return false;
-}
-
-/**
- * ✂️ Host→guest contributions cut to what the receiver can actually act on, plus its own.
+ * ⚖️ `consumedTopics` is the receiver's `consumes` row in the plugin registry — the one authority for
+ * what a plugin acts on — and an empty set forwards NO foreign contribution: passing every pack put
+ * `gis`'s 196 400-byte `stdio.artifact-catalog.v1` (a topic no plugin consumes) into all four
+ * demonstrator apps and blew their wire admission (measured 2026-09-16: 226 310-byte pack).
  *
- * Two cuts, one per topic kind. An OPERATOR-KEYED contribution is cut by reachability from the open
- * document's graph. A CAPABILITY pack ({@link contributionIsCapabilityPack}) no graph can ever reach
- * is cut by `consumedTopics` — the receiver's `consumes` row in the plugin registry, which is the
- * authority the framework already keeps for exactly this.
- *
- * ⚖️ `consumedTopics` is not optional in spirit: an empty set forwards NO foreign capability pack.
- * Passing every capability pack instead put `gis`'s 196 400-byte `stdio.artifact-catalog.v1` — a
- * topic no plugin consumes — into all four demonstrator apps and blew their wire admission
- * (measured 2026-09-16: 226 310-byte pack, `typed command raw JSON exceeds its registered
- * retained-page admission`). With the registry's own `consumes` the demonstrator pack is the three
- * topics it declares and nothing else.
+ * 🧩️ A consumed topic crosses WHOLE. A palette can only offer an extension the push carried, so the
+ * operator-reachability cut this replaces offered a document only the extensions it already used
+ * (measured 2026-09-27: a fresh flow document could never gain a brep node, its catalogue's extension
+ * group stayed empty), and made the pack depend on a guest document read the push had to await.
  */
 export function scopeContributionsJson(
   loaded: ReadonlyArray<{ readonly pluginId: string; readonly manifest: Pick<PluginManifest, "topicContributions"> }>,
   receiverPluginId: string,
-  reachableKinds: readonly string[],
-  consumedTopics: readonly string[] = [],
+  consumedTopics: readonly string[],
 ): string {
-  const kinds = new Set(reachableKinds);
   const consumed = new Set(consumedTopics);
   const entries: ProgramContributionEntry[] = [];
   for (const entry of loaded) {
     const own = entry.pluginId === receiverPluginId;
     for (const topicContribution of entry.manifest.topicContributions ?? []) {
-      if (own || contributionPassesScope(topicContribution, kinds, consumed)) {
-        entries.push({ pluginId: entry.pluginId, topicContribution });
-      }
+      if (own || consumed.has(topicContribution.topic)) entries.push({ pluginId: entry.pluginId, topicContribution });
     }
   }
   return JSON.stringify(entries);
-}
-
-/** 🕸️ True when `value` is a flow graph (or DSL text of one), including a graph with no operators. */
-export function documentFlowGraphPresent(value: unknown): boolean {
-  if (typeof value === "string") return /neuron-kind=/.test(value) || /neuron_kind=/.test(value) || /widgets\s*\{/.test(value) || /"widgets"\s*:/.test(value);
-  if (value == null || typeof value !== "object") return false;
-  const record = value as Record<string, unknown>;
-  if (Array.isArray(record.widgets)) return true;
-  const fixture = record.fixture;
-  return fixture != null && typeof fixture === "object" && Array.isArray((fixture as Record<string, unknown>).widgets);
-}
-
-export type DocumentOperatorScope =
-  | { readonly status: "resolved"; readonly kinds: readonly string[] }
-  | { readonly status: "unresolved"; readonly reason: string };
-
-/** 📚️ Published example graphs on the host — the live ReadDocument envelope can still be genesis.
- * Scoped by DIALECT, so the editor and the viewer of one artifact read the exact same graphs; the
- * app-id stem fallback this used to need is gone because an example now carries the coordinate
- * itself (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
-export function exampleArtifactSources(
-  examples: readonly { readonly id?: string; readonly dialect?: ArtifactDialect; readonly artifactJson?: string }[],
-  dialect?: ArtifactDialect,
-  exampleId?: string,
-): string[] {
-  const wanted = dialect === undefined ? undefined : dialectCoordinate(dialect);
-  const sources: string[] = [];
-  for (const example of examples) {
-    if (wanted !== undefined && (example.dialect === undefined || dialectCoordinate(example.dialect) !== wanted)) continue;
-    if (exampleId !== undefined && example.id !== exampleId) continue;
-    if (typeof example.artifactJson === "string" && example.artifactJson.length > 0) sources.push(example.artifactJson);
-  }
-  return sources;
-}
-
-/** 📄️ Kinds from an open document. Empty kinds with a present graph is resolved; a missing graph is not. */
-export function resolveDocumentOperatorKinds(sources: readonly unknown[]): DocumentOperatorScope {
-  if (sources.length === 0) return { status: "unresolved", reason: "no-document-sources" };
-  const kinds = reachableKindsFromUnknown(sources);
-  if (sources.some(documentFlowGraphPresent) || kinds.length > 0) return { status: "resolved", kinds };
-  return { status: "unresolved", reason: "no-operator-graph" };
 }
 
 export function resolveLayoutForMode(
@@ -1285,16 +1157,16 @@ export function activationReasonForAppId(appId: string): ActivationReason {
 //#endregion 🗂️PluginCatalog
 
 //#region InvocationResponse
-/** @emoji 🕰️ Exact replication HLC carried by every packed kernel operation. */
+/** 🕰️ Exact replication HLC carried by every packed kernel operation. */
 export type HybridLogicalTimestamp = { readonly actor: number; readonly physical_ms: number; readonly logical: number };
 
-/** @emoji 🩹️ A schema-tagged artifact mutation payload (forward diff or inverse diff). */
+/** 🩹️ A schema-tagged artifact mutation payload (forward diff or inverse diff). */
 export type ArtifactDiff = { readonly schema: string; readonly payload: readonly number[] };
 
-/** @emoji ↩️ Undo semantics for a single kernel operation. */
+/** ↩️ Undo semantics for a single kernel operation. */
 export type UndoPolicy = "ExactBaseOnly" | "TransformAgainstConcurrent" | "SemanticUndo" | "CompensatingAction";
 
-/** @emoji ↩️ The true inverse of a kernel operation, recorded from the store's `Edit.backwards`. */
+/** ↩️ The true inverse of a kernel operation, recorded from the store's `Edit.backwards`. */
 export type InverseMutation = {
   readonly targetMutation: string;
   readonly inverseDiff: ArtifactDiff;
@@ -1303,7 +1175,7 @@ export type InverseMutation = {
   readonly undoPolicy: UndoPolicy;
 };
 
-/** @emoji 🔁️ One typed document operation with its true inverse — the CQRS wire unit. */
+/** 🔁️ One typed document operation with its true inverse — the CQRS wire unit. */
 export type KernelMutation = {
   readonly id: string;
   readonly document: string;
@@ -1316,14 +1188,14 @@ export type KernelMutation = {
   readonly timestamp: HybridLogicalTimestamp;
 };
 
-/** @emoji 🧩️ One member edit folded into a group undo — pairs the owning document handle with the
+/** 🧩️ One member edit folded into a group undo — pairs the owning document handle with the
  * edit id inside it (composite/child-document dispatch). Mirrors Rust `kernel::EditRef`. */
 export type EditRef = {
   readonly document: string;
   readonly editId: string;
 };
 
-/** @emoji 🎁️ The undo group binding an invocation (action or command) to its operations + inverses. */
+/** 🎁️ The undo group binding an invocation (action or command) to its operations + inverses. */
 export type UndoGroup = {
   readonly invocationId: string;
   readonly mutations: readonly string[];
@@ -1331,10 +1203,10 @@ export type UndoGroup = {
   readonly memberEdits?: readonly EditRef[];
 };
 
-/** @emoji 📣️ An out-of-band app event surfaced to the shell (e.g. history changed). */
+/** 📣️ An out-of-band app event surfaced to the shell (e.g. history changed). */
 export type AppEvent = { readonly kind: string; readonly payload: unknown };
 
-/** @emoji 🩺️ Canonical severity for faults and diagnostics — TS twin of Rust `os_dsl::Severity`
+/** 🩺️ Canonical severity for faults and diagnostics — TS twin of Rust `os_dsl::Severity`
  * (`🗣️dsl/⚠️diagnostic/🦀️.rs`, `#[serde(rename_all = "camelCase")]`). Declaration order
  * `Info < Warning < Error < Fatal` (0..3, `as_u8`/`from_u8`) mirrors Rust's `derive(Ord)`; `Hint` was
  * removed repo-wide by ticket `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`
@@ -1353,7 +1225,7 @@ export function severityFromU8(value: number): Severity | undefined {
   return SEVERITY_ORDER[value];
 }
 
-/** @emoji 🧭️ Layer that produced a fault. `"framework"` mirrors Rust `FaultOrigin::Framework`
+/** 🧭️ Layer that produced a fault. `"framework"` mirrors Rust `FaultOrigin::Framework`
  * (`💻️os/🔨️modules/🗣️dsl/⚠️diagnostic/🦀️.rs:149`) — the origin for the five ticket
  * 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET `surface.*`/`viewer.*` fault codes. */
 export type FaultOrigin = "edge" | "renderer" | "os" | "module" | "plugin" | "app" | "extension" | "framework";
@@ -1370,7 +1242,7 @@ export type FaultCause = { readonly message: string; readonly code?: string };
 
 export type TextSpan = { readonly line: number; readonly column: number; readonly length: number };
 
-/** @emoji 🧯️ Structured abort report shared across Rust, WIT, and TypeScript. */
+/** 🧯️ Structured abort report shared across Rust, WIT, and TypeScript. */
 export type Fault = {
   readonly origin: FaultOrigin;
   readonly code: string;
@@ -1382,7 +1254,7 @@ export type Fault = {
   readonly retryable: boolean;
 };
 
-/** @emoji 🩺️ A diagnostic emitted alongside an action result. */
+/** 🩺️ A diagnostic emitted alongside an action result. */
 export type Diagnostic = {
   readonly code: string;
   readonly severity: Severity;
@@ -1391,7 +1263,7 @@ export type Diagnostic = {
   readonly span?: TextSpan;
 };
 
-/** @emoji 🧯️ Error subclass carrying a structured {@link Fault}. */
+/** 🧯️ Error subclass carrying a structured {@link Fault}. */
 export class SemioFaultError extends Error {
   readonly fault: Fault;
   constructor(fault: Fault) {
@@ -1402,7 +1274,7 @@ export class SemioFaultError extends Error {
 }
 
 /**
- * @emoji 🐚️ A typed side effect the guest emits toward the host. Mirrors the Rust `Effect` enum
+ * 🐚️ A typed side effect the guest emits toward the host. Mirrors the Rust `Effect` enum
  * (`🎠️kernel/🦀️.rs` `🔖️Effect` region — replaces `HostEffect` now that plugins and
  * extensions share one `actor` world; externally tagged: unit variants are the plain tag string,
  * struct variants are a single-key object keyed by the camelCase variant name). `openWindow`/
@@ -1415,15 +1287,19 @@ export type Effect =
   | { readonly closeWindow: { readonly window: number } }
   | { readonly notify: { readonly message: string } }
   | { readonly navigate: { readonly uri: string } }
-  /** @emoji 📂️ Replaces the active app instance's document with pack+spr bytes — host-owned
+  /** 📂️ Replaces the active app instance's document with pack+spr bytes — host-owned
    * counterpart of `loadAppArtifactPack` for catalog/example studio opens. */
   | { readonly loadDocument: { readonly pack: readonly number[]; readonly spr: readonly number[] } }
   | { readonly openExternalUrl: { readonly url: string } }
   | { readonly setPanel: { readonly panelJson: string } }
   | { readonly downloadMediaExport: { readonly filename: string; readonly mimeType: string; readonly data: string; readonly encoding?: string } }
   | { readonly iconRenderExport: { readonly items: readonly { readonly filename: string; readonly request: unknown }[] } }
+  /** 🎥️ Asks the host to render `program` frame by frame, encode it as H.264 in an MP4 and download it as `filename`,
+   * as an event-sourced job with progress and cancellation, for a plugin holding {@link MEDIA_VIDEO_RENDER_CAPABILITY}.
+   * Twin of Rust `Effect::VideoRenderExport`. */
+  | { readonly videoRenderExport: { readonly filename: string; readonly program: VideoRenderProgram } }
   | { readonly requestFileOpen: { readonly req: number; readonly accept: string; readonly readAs?: string; readonly importAction: string; readonly multiple?: boolean } }
-  /** @emoji 🎞️ Asks the shell to decode a video (file picker, or `payload` bytes already in hand)
+  /** 🎞️ Asks the shell to decode a video (file picker, or `payload` bytes already in hand)
    * and re-dispatch `frameAction` once per sampled frame with `{payload: dataUrl(image/jpeg), name,
    * frameIndex, timestampMs, index, total, width, height, ...args}`, then `doneAction` once with
    * `{name, durationMs, frameCount, sampledCount, width, height, codec, ...args}`; if the host can't
@@ -1452,13 +1328,13 @@ export type Effect =
    * `setActiveTool`. Empty `toolId` deactivates the current tool. */
   | { readonly setActiveTool: { readonly toolId: string } }
   | { readonly openDialog: { readonly req: number; readonly dialogId: string; readonly args?: Record<string, unknown> } }
-  /** @emoji 🔁️ Re-dispatches `action` onto the same plugin instance after `delayMs` — lets a program
+  /** 🔁️ Re-dispatches `action` onto the same plugin instance after `delayMs` — lets a program
    * advance staged/progressive work over several ticks without blocking the host; the response's own
    * `requestedEffects` are fed back through `applyHostEffects` recursively. */
   | { readonly dispatchAction: { readonly req: number; readonly action: string; readonly args?: unknown; readonly delayMs: number } }
   | { readonly clipboardWrite: { readonly fragment: unknown } }
   | { readonly replayShellCommand: { readonly actionId: string; readonly args?: unknown } }
-  /** @emoji 🔁️ Asks the shell to invoke an extension capability — the SDK resumes the awaiting
+  /** 🔁️ Asks the shell to invoke an extension capability — the SDK resumes the awaiting
    * future on a `completed` event carrying the same `req` instead of a `responseAction` redispatch. */
   | {
       readonly invokeExtension: {
@@ -1482,7 +1358,7 @@ export type Effect =
   | { readonly cacheDerive: { readonly req: number; readonly engineId: string; readonly input: readonly number[] } }
   | { readonly cacheRead: { readonly req: number; readonly engineId: string; readonly key: string } }
   | { readonly setTimer: { readonly id: number; readonly afterMs: number; readonly repeat?: boolean } }
-  /** @emoji 🧵️ Asks the host to run one job on this actor and answer with `Event::JobCompleted`.
+  /** 🧵️ Asks the host to run one job on this actor and answer with `Event::JobCompleted`.
    * `job` is a WIT `u64` and therefore a `bigint` — it IS the parked request id the guest correlates
    * on, so narrowing it to a `number` would silently mis-resolve a long-lived actor's futures; the
    * `startJob`/`stepJob` door refuses a `number` outright. Every framework reserved tool verb
@@ -1490,7 +1366,7 @@ export type Effect =
    * nothing else. */
   | { readonly spawnJob: { readonly job: bigint; readonly kind: string; readonly input: Uint8Array; readonly placement: JobPlacement } }
   | { readonly cancelJob: { readonly job: bigint } }
-  /** @emoji ↩️ Answers ONE inbound `Event::Request { req, … }` — the only `req`-bearing effect that
+  /** ↩️ Answers ONE inbound `Event::Request { req, … }` — the only `req`-bearing effect that
    * completes someone else's request instead of opening its own. `result` keeps the WIT
    * `respond-result` arm names (`ok`/`fault`, not Rust's `RequestOutcome::{Ok,Err}`) because this is
    * the shape the wire carries and the shape the extension-completion door already takes. */
@@ -1502,7 +1378,7 @@ export type Effect =
   | { readonly releaseCapability: { readonly id: unknown } }
   | { readonly subscribe: { readonly topic: string } }
   | { readonly unsubscribe: { readonly topic: string } }
-  /** @emoji 💡️ Asks the shell to open its own host-owned ephemeral inference port for the active
+  /** 💡️ Asks the shell to open its own host-owned ephemeral inference port for the active
    * document and offer one reviewable proposal. It carries no document id, space id, idempotency
    * key, receipt or credential: the shell owns the scope, mints the request identity, holds every
    * lifecycle state, and alone decides whether the document's execution-target lease permits the
@@ -1554,6 +1430,265 @@ export function mediaExportBytes(data: string, encoding?: string): Uint8Array {
   }
 }
 //#endregion ⬇️MediaExportEncoding
+
+//#region 🎞️VideoRenderProgram
+/** 🎟️ The host capability a plugin requests before any host renders its `videoRenderExport` — twin of Rust
+ * `kernel::MEDIA_VIDEO_RENDER_CAPABILITY`. */
+export const MEDIA_VIDEO_RENDER_CAPABILITY = "media.video-render";
+
+/** 🎞️ The schema id every {@link VideoRenderProgram} states — twin of Rust `kernel::VIDEO_RENDER_PROGRAM_SCHEMA`; both drive
+ * `🧫️fixtures/🎞️video-render-program/🔣️.json`. */
+export const VIDEO_RENDER_PROGRAM_SCHEMA = "semio.video-render.program.v1";
+
+/** 📏️ The largest picture edge a program may ask for. */
+export const VIDEO_RENDER_PROGRAM_MAXIMUM_EDGE = 4096;
+
+/** 🎞️ The fastest frame rate a program may ask for. */
+export const VIDEO_RENDER_PROGRAM_MAXIMUM_FPS = 120;
+
+/** ⏱️ The most frames one program may render. */
+export const VIDEO_RENDER_PROGRAM_MAXIMUM_FRAMES = 36_000;
+
+/** ✏️ One path of the shared table: one verb letter per segment (`M`, `L`, `Q`, `C`, `Z`) over flat `x, y` points. */
+export interface VideoRenderPath {
+  readonly verbs: string;
+  readonly points: readonly number[];
+}
+
+/** 🖼️ One picture a program draws from: a same-origin absolute path or a `data:image/…` URL. */
+export interface VideoRenderImage {
+  readonly url: string;
+}
+
+/** 🧮️ `[a, b, c, d, e, f]` into device pixels, y down. */
+export type VideoRenderTransform = readonly [number, number, number, number, number, number];
+
+/** 🎨️ Straight RGBA, every channel `0..=1`. */
+export type VideoRenderColor = readonly [number, number, number, number];
+
+/** 🎨️ One paint operation, composited in list order — twin of Rust `kernel::VideoRenderOp` (tagged by `kind`). */
+export type VideoRenderOp =
+  | { readonly kind: "fill"; readonly path: number; readonly transform: VideoRenderTransform; readonly color: VideoRenderColor }
+  | { readonly kind: "stroke"; readonly path: number; readonly transform: VideoRenderTransform; readonly color: VideoRenderColor; readonly width: number }
+  | { readonly kind: "image"; readonly image: number; readonly crop: readonly [number, number, number, number]; readonly transform: VideoRenderTransform; readonly opacity: number };
+
+/** 🖼️ One distinct picture. */
+export interface VideoRenderScene {
+  readonly ops: readonly VideoRenderOp[];
+}
+
+/** ⏯️ Scene `scene` shown for `frames` consecutive frames. */
+export interface VideoRenderRun {
+  readonly scene: number;
+  readonly frames: number;
+}
+
+/** 🎞️ Everything a host needs to render a video — twin of Rust `kernel::VideoRenderProgram`. */
+export interface VideoRenderProgram {
+  readonly schema: string;
+  readonly width: number;
+  readonly height: number;
+  readonly fps: number;
+  readonly background: VideoRenderColor;
+  readonly paths: readonly VideoRenderPath[];
+  readonly images: readonly VideoRenderImage[];
+  readonly scenes: readonly VideoRenderScene[];
+  readonly timeline: readonly VideoRenderRun[];
+}
+
+/** 🚨️ The fixture's refusal vocabulary — Rust `VideoRenderProgramError::code`. */
+export type VideoRenderProgramErrorCode = "schema" | "dimensions" | "frameRate" | "empty" | "tooLong" | "timeline" | "pathVerbs" | "imageUrl" | "pathIndex" | "imageIndex" | "paint";
+
+/** 🎞️ Frames the timeline plays. */
+export function videoRenderFrameCount(program: VideoRenderProgram): number {
+  return program.timeline.reduce((sum, run) => sum + run.frames, 0);
+}
+
+/** ⏱️ Playing time in milliseconds, rounded half up. */
+export function videoRenderDurationMilliseconds(program: VideoRenderProgram): number {
+  return Math.floor((videoRenderFrameCount(program) * 1000 + Math.floor(program.fps / 2)) / Math.max(1, program.fps));
+}
+
+const VIDEO_RENDER_VERB_POINTS: Readonly<Record<string, number>> = { M: 2, L: 2, Q: 4, C: 6, Z: 0 };
+
+/** ✏️ A path's verbs consume exactly its points, start with a move and every coordinate is finite. */
+export function videoRenderPathIsWellFormed(path: VideoRenderPath): boolean {
+  let needed = 0;
+  for (const [index, verb] of [...path.verbs].entries()) {
+    const points = VIDEO_RENDER_VERB_POINTS[verb];
+    if (points === undefined || (index === 0 && verb !== "M")) return false;
+    needed += points;
+  }
+  return needed === path.points.length && path.points.every(Number.isFinite);
+}
+
+/** 🖼️ A same-origin absolute path (never protocol-relative) or an inline `data:image/…` URL — Rust
+ * `video_render_image_url_is_admitted`. */
+export function videoRenderImageUrlIsAdmitted(url: string): boolean {
+  return (url.startsWith("/") && !url.startsWith("//")) || url.startsWith("data:image/");
+}
+
+/** ✂️ A crop `[x, y, width, height]` inside the unit picture with a non-empty area — Rust `video_render_crop_is_admitted`. */
+export function videoRenderCropIsAdmitted(crop: readonly number[]): boolean {
+  const [x = Number.NaN, y = Number.NaN, width = Number.NaN, height = Number.NaN] = crop;
+  return crop.length === 4 && crop.every(Number.isFinite) && x >= 0 && y >= 0 && width > 0 && height > 0 && x + width <= 1 + 1e-9 && y + height <= 1 + 1e-9;
+}
+
+const videoRenderUnit = (value: number): boolean => Number.isFinite(value) && value >= 0 && value <= 1;
+const videoRenderIndex = (value: number, length: number): boolean => Number.isInteger(value) && value >= 0 && value < length;
+
+/** 🚦️ The ONE admission rule every host applies before it renders a frame — `null` admits, a code refuses. Twin of Rust
+ * `VideoRenderProgram::validate`, same order, same codes. */
+export function videoRenderProgramProblem(program: VideoRenderProgram): VideoRenderProgramErrorCode | null {
+  if (program.schema !== VIDEO_RENDER_PROGRAM_SCHEMA) return "schema";
+  const edge = (value: number): boolean => Number.isInteger(value) && value >= 2 && value <= VIDEO_RENDER_PROGRAM_MAXIMUM_EDGE && value % 2 === 0;
+  if (!edge(program.width) || !edge(program.height)) return "dimensions";
+  if (!Number.isInteger(program.fps) || program.fps <= 0 || program.fps > VIDEO_RENDER_PROGRAM_MAXIMUM_FPS) return "frameRate";
+  const frames = videoRenderFrameCount(program);
+  if (frames === 0) return "empty";
+  if (frames > VIDEO_RENDER_PROGRAM_MAXIMUM_FRAMES) return "tooLong";
+  if (program.timeline.some((run) => !Number.isInteger(run.frames) || run.frames <= 0 || !videoRenderIndex(run.scene, program.scenes.length))) return "timeline";
+  if (!program.paths.every(videoRenderPathIsWellFormed)) return "pathVerbs";
+  if (!program.images.every((image) => videoRenderImageUrlIsAdmitted(image.url))) return "imageUrl";
+  if (!program.background.every(videoRenderUnit)) return "paint";
+  for (const scene of program.scenes) {
+    for (const op of scene.ops) {
+      if (op.kind === "image") {
+        if (!videoRenderIndex(op.image, program.images.length)) return "imageIndex";
+        if (!op.transform.every(Number.isFinite) || !videoRenderCropIsAdmitted(op.crop) || !videoRenderUnit(op.opacity)) return "paint";
+      } else {
+        if (!videoRenderIndex(op.path, program.paths.length)) return "pathIndex";
+        if (!op.transform.every(Number.isFinite) || !op.color.every(videoRenderUnit) || (op.kind === "stroke" && (!Number.isFinite(op.width) || op.width < 0))) return "paint";
+      }
+    }
+  }
+  return null;
+}
+
+/** 🎁️ A program as it leaves the wire decoder (`pack` → plain value, integers possibly `bigint`), normalised to
+ * {@link VideoRenderProgram}'s number fields. Admission stays {@link videoRenderProgramProblem}'s job: an op of an unknown
+ * `kind` makes the whole program schema-less, exactly as the Rust host's failed decode falls back to the default program,
+ * so both hosts refuse it as `schema`. */
+export function videoRenderProgramFromWire(value: unknown): VideoRenderProgram {
+  const record = (raw: unknown): Record<string, unknown> => (raw !== null && typeof raw === "object" ? (raw as Record<string, unknown>) : {});
+  const list = (raw: unknown): readonly unknown[] => (Array.isArray(raw) ? raw : []);
+  const numbers = (raw: unknown): number[] => list(raw).map(Number);
+  const tuple = <T,>(raw: unknown): T => numbers(raw) as unknown as T;
+  const program = record(value);
+  let decodable = true;
+  const op = (raw: unknown): VideoRenderOp => {
+    const fields = record(raw);
+    const transform = tuple<VideoRenderTransform>(fields.transform);
+    if (fields.kind === "image") return { kind: "image", image: Number(fields.image ?? Number.NaN), crop: tuple(fields.crop), transform, opacity: Number(fields.opacity ?? Number.NaN) };
+    if (fields.kind === "stroke") return { kind: "stroke", path: Number(fields.path ?? Number.NaN), transform, color: tuple(fields.color), width: Number(fields.width ?? Number.NaN) };
+    decodable &&= fields.kind === "fill";
+    return { kind: "fill", path: Number(fields.path ?? Number.NaN), transform, color: tuple(fields.color) };
+  };
+  const scenes = list(program.scenes).map((raw) => ({ ops: list(record(raw).ops).map(op) }));
+  return {
+    schema: decodable ? String(program.schema ?? "") : "",
+    width: Number(program.width ?? 0),
+    height: Number(program.height ?? 0),
+    fps: Number(program.fps ?? 0),
+    background: tuple(program.background),
+    paths: list(program.paths).map((raw) => ({ verbs: String(record(raw).verbs ?? ""), points: numbers(record(raw).points) })),
+    images: list(program.images).map((raw) => ({ url: String(record(raw).url ?? "") })),
+    scenes,
+    timeline: list(program.timeline).map((raw) => ({ scene: Number(record(raw).scene ?? 0), frames: Number(record(raw).frames ?? 0) })),
+  };
+}
+//#endregion 🎞️VideoRenderProgram
+
+//#region 🧵️VideoRenderJob
+/** 🧩️ Which encoder produced a finished render — Rust `kernel::VideoRenderEncoderTier`. */
+export type VideoRenderEncoderTier = "platform" | "first-party";
+
+/** 🏁️ How one host video render job ended — Rust `kernel::VideoRenderJobOutcome` (tagged by `status`). */
+export type VideoRenderJobOutcome =
+  | { readonly status: "done"; readonly bytes: number; readonly tier: VideoRenderEncoderTier }
+  | { readonly status: "cancelled"; readonly completed: number }
+  | { readonly status: "refused"; readonly code: string }
+  | { readonly status: "failed"; readonly reason: string };
+
+/** 🧵️ One fact of a host video render job's life — Rust `kernel::VideoRenderJobEvent` (tagged by `kind`). The task list
+ * is the fold of these ({@link VideoRenderJobLedger}); nothing mutates it directly. */
+export type VideoRenderJobEvent =
+  | { readonly kind: "started"; readonly job: number; readonly owner: string; readonly filename: string; readonly frames: number; readonly atMs: number }
+  | { readonly kind: "progressed"; readonly job: number; readonly completed: number }
+  | { readonly kind: "cancelRequested"; readonly job: number }
+  | { readonly kind: "finished"; readonly job: number; readonly outcome: VideoRenderJobOutcome };
+
+/** 🧵️ One running job as a task list shows it — Rust `kernel::VideoRenderJobRow`. */
+export interface VideoRenderJobRow {
+  readonly job: number;
+  readonly owner: string;
+  readonly filename: string;
+  readonly frames: number;
+  readonly completed: number;
+  readonly cancelling: boolean;
+  readonly startedAtMs: number;
+}
+
+/** 🚨️ The fixture's refusal vocabulary — Rust `VideoRenderJobEventError::code`. */
+export type VideoRenderJobEventErrorCode = "staleJob" | "unknownJob" | "progressRegressed" | "progressOverrun" | "alreadyCancelling";
+
+/** 📒️ The fold of a host's {@link VideoRenderJobEvent} log — twin of Rust `kernel::VideoRenderJobLedger`. `running()` keeps
+ * its identity until an event changes it, so a `useSyncExternalStore` reader re-renders only on real change. */
+export class VideoRenderJobLedger {
+  #lastJob = 0;
+  #running: readonly VideoRenderJobRow[] = [];
+
+  /** 📒️ Folds a whole log; a refusal names the index of the first event refused. */
+  static fold(events: readonly VideoRenderJobEvent[]): VideoRenderJobLedger | { readonly index: number; readonly error: VideoRenderJobEventErrorCode } {
+    const ledger = new VideoRenderJobLedger();
+    for (const [index, event] of events.entries()) {
+      const error = ledger.apply(event);
+      if (error !== null) return { index, error };
+    }
+    return ledger;
+  }
+
+  /** ➕️ Applies one event (`null`), or refuses it with a code and leaves the ledger as it was. */
+  apply(event: VideoRenderJobEvent): VideoRenderJobEventErrorCode | null {
+    if (event.kind === "started") {
+      if (event.job <= this.#lastJob) return "staleJob";
+      this.#lastJob = event.job;
+      this.#running = [...this.#running, { job: event.job, owner: event.owner, filename: event.filename, frames: event.frames, completed: 0, cancelling: false, startedAtMs: event.atMs }];
+      return null;
+    }
+    const row = this.#running.find((candidate) => candidate.job === event.job);
+    if (!row) return "unknownJob";
+    if (event.kind === "progressed") {
+      if (event.completed < row.completed) return "progressRegressed";
+      if (event.completed > row.frames) return "progressOverrun";
+      if (event.completed !== row.completed) this.#running = this.#running.map((candidate) => (candidate === row ? { ...row, completed: event.completed } : candidate));
+      return null;
+    }
+    if (event.kind === "cancelRequested") {
+      if (row.cancelling) return "alreadyCancelling";
+      this.#running = this.#running.map((candidate) => (candidate === row ? { ...row, cancelling: true } : candidate));
+      return null;
+    }
+    this.#running = this.#running.filter((candidate) => candidate !== row);
+    return null;
+  }
+
+  /** 🧵️ Every running job, in start order. */
+  running(): readonly VideoRenderJobRow[] {
+    return this.#running;
+  }
+
+  /** 🔎️ Running job `job`, if any. */
+  row(job: number): VideoRenderJobRow | undefined {
+    return this.#running.find((candidate) => candidate.job === job);
+  }
+
+  /** 🔢️ The last job id issued (`0` before the first). */
+  lastJob(): number {
+    return this.#lastJob;
+  }
+}
+//#endregion 🧵️VideoRenderJob
 
 //#region 📤️FileOpenImport
 /** 📥️ Bytes ONE import chunk may carry to the guest — TS twin of Rust `kernel::IMPORT_CHUNK_BYTES`.
@@ -1697,7 +1832,7 @@ export function spawnedJobCompletion(steps: readonly SpawnedJobStep[]): SpawnedJ
 //#endregion 🧵️SpawnedJobDrive
 
 /**
- * @emoji 🐢️ Mirrors the Rust `UiDirtyScope` — which rendered UI sections an action actually
+ * 🐢️ Mirrors the Rust `UiDirtyScope` — which rendered UI sections an action actually
  * invalidates. Absent (`undefined`) on an `InvocationResponse` means the same as the Rust side's missing
  * field: treat as `{kind: "full"}` (see {@link resolveUiDirtyScope}) — every program that doesn't emit
  * this yet keeps today's whole-shell-refresh behavior.
@@ -1716,16 +1851,16 @@ export type UiDirtyScope =
       readonly labels?: boolean;
     };
 
-/** @emoji 🐢️ Normalizes a possibly-absent `UiDirtyScope` — missing (older program, or a response built without one) means `full`. */
+/** 🐢️ Normalizes a possibly-absent `UiDirtyScope` — missing (older program, or a response built without one) means `full`. */
 export function resolveUiDirtyScope(scope: UiDirtyScope | undefined): UiDirtyScope {
   return scope ?? { kind: "full" };
 }
 
-/** @emoji 🔖️ One flag-addressed section of a batched `refresh-ui`, mirrored from Rust `UiDirtySection`. */
+/** 🔖️ One flag-addressed section of a batched `refresh-ui`, mirrored from Rust `UiDirtySection`. */
 export type UiDirtySection = "utilities" | "tools" | "engagements" | "measures" | "labels";
 
 /**
- * @emoji 🐢️ The selection law both shells answer to — the TypeScript twin of Rust
+ * 🐢️ The selection law both shells answer to — the TypeScript twin of Rust
  * `UiDirtyScope::wants_window_body` and siblings, driven by the same fixture
  * `🧫️fixtures/🐢️ui-dirty-scope/🔣️.json`.
  *
@@ -1738,22 +1873,22 @@ export function uiDirtyScopeWantsWindowBody(scope: UiDirtyScope, bodyKey: string
   return scope.kind === "full" || (scope.kind === "partial" && (scope.windowBodies ?? []).includes(bodyKey));
 }
 
-/** @emoji 🐢️ Twin of Rust `UiDirtyScope::wants_panel_body`. */
+/** 🐢️ Twin of Rust `UiDirtyScope::wants_panel_body`. */
 export function uiDirtyScopeWantsPanelBody(scope: UiDirtyScope, bodyKey: string): boolean {
   return scope.kind === "full" || (scope.kind === "partial" && (scope.panelBodies ?? []).includes(bodyKey));
 }
 
-/** @emoji 🐢️ Twin of Rust `UiDirtyScope::wants_section`. */
+/** 🐢️ Twin of Rust `UiDirtyScope::wants_section`. */
 export function uiDirtyScopeWantsSection(scope: UiDirtyScope, section: UiDirtySection): boolean {
   return scope.kind === "full" || (scope.kind === "partial" && scope[section] === true);
 }
 
-/** @emoji 🛍️ Twin of Rust `UiDirtyScope::wants_catalogue` — the app-static catalogue carries no flag of its own, so only a full scope asks the guest for it. */
+/** 🛍️ Twin of Rust `UiDirtyScope::wants_catalogue` — the app-static catalogue carries no flag of its own, so only a full scope asks the guest for it. */
 export function uiDirtyScopeWantsCatalogue(scope: UiDirtyScope): boolean {
   return scope.kind === "full";
 }
 
-/** @emoji 🚫️ Twin of Rust `UiDirtyScope::asks_for_nothing` — no pass may be opened at all. */
+/** 🚫️ Twin of Rust `UiDirtyScope::asks_for_nothing` — no pass may be opened at all. */
 export function uiDirtyScopeAsksForNothing(scope: UiDirtyScope): boolean {
   return scope.kind === "none";
 }
@@ -1762,7 +1897,7 @@ export function uiDirtyScopeAsksForNothing(scope: UiDirtyScope): boolean {
  * mounted?" does not take a dependency on a renderer's whole layout type surface. */
 type ModeLayoutNodeLikeV1 = { readonly kind: string; readonly id?: string; readonly children?: readonly ModeLayoutNodeLikeV1[] };
 
-/** @emoji 🪟️ Every window id the mode layout actually mounts, background tabs of a stack included.
+/** 🪟️ Every window id the mode layout actually mounts, background tabs of a stack included.
  *
  * 🐢️ This is the difference between the windows an app DECLARES and the windows the user is looking
  * at. Asking the guest to re-render all of the declared ones on every `refresh-ui` made a converging
@@ -1784,7 +1919,7 @@ export function windowLayoutWindowIdsV1(layout: unknown): ReadonlySet<string> {
   return ids;
 }
 
-/** @emoji 🪟️ Splits the declared window instances into the ones a refresh pass must fetch and the ones
+/** 🪟️ Splits the declared window instances into the ones a refresh pass must fetch and the ones
  * the layout does not mount. A skipped window's CACHED body must be dropped by the caller, and that is
  * what makes the skip safe: nothing can later serve a stale body, and the pass that fetches the window
  * once it IS mounted asks with no hash and gets a whole one back. An empty `mounted` set means the
@@ -1800,7 +1935,7 @@ export function partitionRefreshWindowInstancesV1<T extends { readonly id: strin
   return { fetched, skipped };
 }
 
-/** @emoji 🤝️ Twin of Rust `UiDirtyScope::merged_with` — the union one coalesced pass owes, in first-seen body-key order. */
+/** 🤝️ Twin of Rust `UiDirtyScope::merged_with` — the union one coalesced pass owes, in first-seen body-key order. */
 export function mergeUiDirtyScopes(first: UiDirtyScope, second: UiDirtyScope): UiDirtyScope {
   if (first.kind === "full" || second.kind === "full") return { kind: "full" };
   if (first.kind === "none") return second;
@@ -1817,11 +1952,11 @@ export function mergeUiDirtyScopes(first: UiDirtyScope, second: UiDirtyScope): U
   };
 }
 
-/** @emoji 🧾️ One host-projectable command-history row, mirrored from Rust `HistoryEntry`. */
+/** 🧾️ One host-projectable command-history row, mirrored from Rust `HistoryEntry`. */
 export type HistoryEntry = {
   readonly seq: number;
   readonly actionId: string;
-  /** @emoji 🏷️ Every locale's text for this row, mirrored from Rust `LocalizedLabel` — the renderer
+  /** 🏷️ Every locale's text for this row, mirrored from Rust `LocalizedLabel` — the renderer
    * resolves it with {@link historyEntryLabelText} against the locale it is showing right now, so a
    * locale switch re-renders the whole ledger instead of leaving logged rows in their dispatch locale. */
   readonly label: LocalizedLabel;
@@ -1833,7 +1968,7 @@ export type HistoryEntry = {
   readonly count?: number;
 };
 
-/** @emoji 🏷️ The one text a history row shows on the requested axes. There is deliberately NO
+/** 🏷️ The one text a history row shows on the requested axes. There is deliberately NO
  * English fallback: `LocalizedLabel` is a `Record<ShellTerminology, Record<ShellLocale, string>>`
  * that the Rust carrier always fills for every axis, so an axis value the carrier does not carry is
  * a wire defect and renders as empty — visibly wrong — rather than silently as English. The shell's
@@ -1858,7 +1993,7 @@ export function historyEntryLabelText(label: LocalizedLabel, terminology: string
   return row?.[locale] ?? "";
 }
 
-/** @emoji 🧾️ Ordered history delta carried with an accepted invocation response. */
+/** 🧾️ Ordered history delta carried with an accepted invocation response. */
 export type HistoryPatch = {
   readonly cursor: number;
   readonly upserts?: readonly HistoryEntry[];
@@ -1870,7 +2005,7 @@ export type HistoryPatch = {
 };
 
 /**
- * @emoji 📤️ Typed result of a plugin `handle-action`/`handle-command` call — mirrors the Rust
+ * 📤️ Typed result of a plugin `handle-action`/`handle-command` call — mirrors the Rust
  * `InvocationResult`. Replaces the legacy `string[]` JSON-patch shape: operations are now typed
  * `KernelMutation`s with true inverses, and the shell applies `requestedEffects` through
  * `applyHostEffects` (WS-E).
@@ -1895,7 +2030,7 @@ const EMPTY_INVOCATION_RESPONSE: InvocationResponse = {
   inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] },
 };
 
-/** @emoji 📥️ Parses a raw program `handle-action`/`handle-command` response string into a typed {@link InvocationResponse}. */
+/** 📥️ Parses a raw program `handle-action`/`handle-command` response string into a typed {@link InvocationResponse}. */
 export function parseInvocationResponse(raw: string): InvocationResponse {
   try {
     const parsed = JSON.parse(raw) as Partial<InvocationResponse> | null;
@@ -1910,7 +2045,7 @@ export function parseInvocationResponse(raw: string): InvocationResponse {
 //#endregion InvocationResponse
 
 //#region 🔖️MergeOutcome
-/** @emoji ⚖️ How strict an authority is about accepting a `MutationOutcome` whose messages reach a
+/** ⚖️ How strict an authority is about accepting a `MutationOutcome` whose messages reach a
  * given {@link Severity} — TS twin of Rust `MergePolicy` (`📡️spr/🧾️wire/🦀️.rs` region
  * `🔖️Policies`). Declaration order IS `as_u8`/`from_u8`'s 0..2 (`LaissezFaire, Normal, Vigilant`).
  * Unlike {@link Severity}, Rust's `MergePolicy` carries no `#[serde(rename_all)]`, so its
@@ -1919,7 +2054,7 @@ export function parseInvocationResponse(raw: string): InvocationResponse {
  * `BackboneMessage`, never part of an artifact's shared history. */
 export type MergePolicy = "LaissezFaire" | "Normal" | "Vigilant";
 
-/** @emoji ⚖️ `#[default]` policy (Rust `MergePolicy::default()`) every fresh instance boots with
+/** ⚖️ `#[default]` policy (Rust `MergePolicy::default()`) every fresh instance boots with
  * until a persisted `🛡️change-merge-policy` config triad overrides it or a caller sends
  * `AppChannelClient.setMergePolicy`. */
 export const DEFAULT_MERGE_POLICY: MergePolicy = "Normal";
@@ -1936,7 +2071,7 @@ export function mergePolicyFromU8(value: number): MergePolicy | undefined {
   return MERGE_POLICY_ORDER[value];
 }
 
-/** @emoji ✅️❌️ What a human/authority decided to do with an `Open` {@link Conflict} — TS twin of
+/** ✅️❌️ What a human/authority decided to do with an `Open` {@link Conflict} — TS twin of
  * Rust `ConflictResolution` (`📡️spr/⚔️conflict/🦀️.rs`, `#[serde(rename_all =
  * "camelCase")]` unit enum — single-word variants so its JSON form is just lowercase). */
 export type ConflictResolution = "accept" | "discard";
@@ -1952,7 +2087,7 @@ export function conflictResolutionFromU8(value: number): ConflictResolution | un
   return CONFLICT_RESOLUTION_ORDER[value];
 }
 
-/** @emoji 📨️ One outcome-carried diagnostic from a `Mutation`/`MutationKind::diff` — TS twin of
+/** 📨️ One outcome-carried diagnostic from a `Mutation`/`MutationKind::diff` — TS twin of
  * Rust `MutationMessage` (`📡️spr/🎮️command/🦀️.rs` region `🔖️Message`,
  * `#[serde(rename_all = "camelCase")]`). `level` reuses {@link Severity}; `code` is one of the
  * frozen seven `mutation.*` codes (contract-freeze §C2 — no per-plugin codes, ever); `message` is
@@ -1967,7 +2102,7 @@ export type MutationMessage = {
   readonly opIndex?: number;
 };
 
-/** @emoji 🚫️ Schema mirror of Rust `MutationApplyError` (`📡️spr/🎮️command/🦀️.rs`,
+/** 🚫️ Schema mirror of Rust `MutationApplyError` (`📡️spr/🎮️command/🦀️.rs`,
  * `#[serde(rename_all = "camelCase")]`). This is the complete cross-implementation contract for
  * a diff rejected against its supplied base: stable machine `code`, diagnostic `message`, and
  * outermost-first `target`. Rust omits an empty target during serialization, so it is optional
@@ -2000,11 +2135,11 @@ export const MUTATION_APPLY_ERROR_WIRE_PARITY_VECTOR = {
   } satisfies MutationApplyError,
 } as const;
 
-/** @emoji 🆔️ Content-addressed conflict identity — TS twin of Rust `ConflictId`
+/** 🆔️ Content-addressed conflict identity — TS twin of Rust `ConflictId`
  * (`#[serde(transparent)]`, decodes to a bare string: `conflict-<blake3 hex>`). */
 export type ConflictId = string;
 
-/** @emoji 🚧️ What kind of conflict this is — TS twin of Rust `ConflictKind`
+/** 🚧️ What kind of conflict this is — TS twin of Rust `ConflictKind`
  * (`#[serde(tag = "kind", rename_all = "camelCase")]`, internally tagged). `rename_all` on an enum
  * renames only the `kind` discriminant, not a struct variant's own fields, so `edit_ids` stays
  * snake_case exactly as Rust declared it. `envelopes` is `Vec<MutationEnvelope>` serialized through
@@ -2013,11 +2148,11 @@ export type ConflictId = string;
  * typed shape for it yet. */
 export type ConflictKind = { readonly kind: "quarantined"; readonly envelopes: readonly unknown[] } | { readonly kind: "degraded"; readonly edit_ids: readonly string[] };
 
-/** @emoji 🚦️ A conflict's own lifecycle, independent of the `MutationMessage`s it carries — TS twin
+/** 🚦️ A conflict's own lifecycle, independent of the `MutationMessage`s it carries — TS twin
  * of Rust `ConflictStatus` (`#[serde(rename_all = "camelCase")]`). */
 export type ConflictStatus = "open" | "accepted" | "discarded";
 
-/** @emoji ⚔️ One first-class conflict — TS twin of Rust `Conflict` (`📡️spr/⚔️conflict/
+/** ⚔️ One first-class conflict — TS twin of Rust `Conflict` (`📡️spr/⚔️conflict/
  * 🦀️.rs`, `#[serde(rename_all = "camelCase")]`). `timestamp` mirrors
  * `HybridLogicalTimestamp` from `📡️spr/🆔️ids/🦀️.rs` (a DIFFERENT shape than this file's
  * own wall/counter {@link HybridLogicalTimestamp} above — that one is the kernel operation clock,
@@ -2031,10 +2166,10 @@ export type Conflict = {
   readonly timestamp: { readonly actor: number; readonly physical_ms: number; readonly logical: number };
 };
 
-/** @emoji 📨️ One edit's worth of `MutationMessage`s — TS twin of Rust `EditMessages`. */
+/** 📨️ One edit's worth of `MutationMessage`s — TS twin of Rust `EditMessages`. */
 export type EditMessages = { readonly edit_id: string; readonly messages: readonly MutationMessage[] };
 
-/** @emoji 📤️ The report one LOCAL dispatch produces — TS twin of Rust `DispatchReport`. Packed onto
+/** 📤️ The report one LOCAL dispatch produces — TS twin of Rust `DispatchReport`. Packed onto
  * the wire as `AppFrame::Invocation.messages` (successful dispatch) and `AppFrame::Error.report`
  * (rejected dispatch, `Fault.code == "mutation.rejected"`). */
 export type DispatchReport = {
@@ -2043,7 +2178,7 @@ export type DispatchReport = {
   readonly messages: readonly MutationMessage[];
 };
 
-/** @emoji 🔀️ The report one `ingest_remote`/`resolve_conflict` merge
+/** 🔀️ The report one `ingest_remote`/`resolve_conflict` merge
  * produces — TS twin of Rust `MergeReport`. Packed onto the wire as `AppFrame::MergeReport.report`,
  * pushed unsolicited after every ingest alongside `DocumentChanged`. */
 export type MergeReport = {
@@ -2071,12 +2206,12 @@ export function relayPluginBackboneOutbound(uri: string, message: Uint8Array): v
   pluginBackboneRoutes.get(pluginBackboneDocumentIdFromUri(uri))?.(uri, message);
 }
 
-/** @emoji 🌉️ A direct-import (main-thread, no-worker) plugin's generated `🟨️.js` runs in this
+/** 🌉️ A direct-import (main-thread, no-worker) plugin's generated `🟨️.js` runs in this
  * same realm but can't import from this module, so it reaches the outbound relay through this
  * well-known global instead — the same relay a worker-backed program reaches via `postMessage`. */
 (globalThis as unknown as { __semioMainThreadPluginBackboneOutbound?: (uri: string, message: Uint8Array) => void }).__semioMainThreadPluginBackboneOutbound = relayPluginBackboneOutbound;
 
-/** @emoji 🌉️ Inbound counterpart: pushes straight into the same global queue a direct-import plugin's
+/** 🌉️ Inbound counterpart: pushes straight into the same global queue a direct-import plugin's
  * `🟨️.js` `backbonePoll` drains, keyed by `uri` (globally unique per document, so no pluginId
  * scoping is needed even though several plugins may share this realm). */
 function pushMainThreadPluginBackboneInbound(uri: string, messages: readonly Uint8Array[]): void {
@@ -2087,7 +2222,7 @@ function pushMainThreadPluginBackboneInbound(uri: string, messages: readonly Uin
 }
 
 /**
- * @emoji 🚧️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (H2) GAP — read before relying on this. The
+ * 🚧️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (H2) GAP — read before relying on this. The
  * per-worker fast path this function used to take (`activeWorkerByPluginId.get(pluginId)` →
  * `PluginWorkerClient.postBackboneInbound`, a raw `"backboneInbound"` postMessage type) is gone along
  * with `PluginWorkerClient` itself, and its counterpart on the guest side is ALSO gone:
@@ -2111,7 +2246,7 @@ export function postPluginBackboneInbound(pluginId: string, uri: string, message
 }
 
 //#region 🐚️PluginBackboneRouting
-/** @emoji 🐚️ Extracts the `<documentId>` a plugin's `actor://<documentId>` backbone uri names — the
+/** 🐚️ Extracts the `<documentId>` a plugin's `actor://<documentId>` backbone uri names — the
  * `framework/sync` `ChannelBackbone::pair` convention (see the react renderer's `openArtifact`). Falls
  * back to the whole uri for any other scheme so an unrecognized realm still gets a routing key instead
  * of being silently dropped. */
@@ -2122,7 +2257,7 @@ function pluginBackboneDocumentIdFromUri(uri: string): string {
 const pluginBackboneRoutes = new Map<string, (uri: string, message: Uint8Array) => void>();
 
 /**
- * @emoji 🐚️ Routes a plugin's outbound backbone bytes for one document to whichever shell instance owns
+ * 🐚️ Routes a plugin's outbound backbone bytes for one document to whichever shell instance owns
  * it — replaces the old page-global relay slot (`setPluginBackboneOutboundRelay`), which a second
  * mounted shell silently overwrote: misrouting the first shell's document sync into the second shell's
  * backbone worker, then severing it entirely the moment that second shell unmounted (it cleared the
@@ -2146,7 +2281,7 @@ export function registerPluginBackboneRoute(documentId: string, relay: (uri: str
 
 //#region 🐚️ActivationRegistry
 /**
- * @emoji 🐚️ Replaces the deleted `LeasePool`/`PluginModuleLease`/`acquirePluginModule` trio
+ * 🐚️ Replaces the deleted `LeasePool`/`PluginModuleLease`/`acquirePluginModule` trio
  * (design-runtime.md §3). Manifest-only records seeded from a `PluginCatalog` (build-time descriptors
  * — no worker/module is touched until an actor actually activates); `events::activation-event` maps
  * onto `activate()`, which calls `ShardClient.activate` (design's `Kernel::activate`, on the web
@@ -2470,7 +2605,7 @@ export class ActivationRegistry {
    * pulled it up. */
   async activate(pluginId: string, actorId: string, reason: ActivationReason): Promise<void> {
     const manifest = this.manifests.get(pluginId);
-    if (!manifest) throw new Error(`[DEBUG] ActivationRegistry.activate: no manifest for plugin ${pluginId}`);
+    if (!manifest) throw new Error(`ActivationRegistry.activate: no manifest for plugin ${pluginId}`);
     await this.evictForMemoryPressure();
     const assets = await this.loadAssets(manifest.moduleUrl);
     await this.shardClient.activate(actorId, manifest.moduleUrl, manifest.caps, this.defaultBudget, assets);
@@ -2604,9 +2739,9 @@ export class ActivationRegistry {
    * (no `restore()` call) if it was never checkpointed. */
   async resume(actorId: string): Promise<void> {
     const pluginId = this.actorPlugin.get(actorId);
-    if (!pluginId) throw new Error(`[DEBUG] ActivationRegistry.resume: unknown actor ${actorId} (never activated)`);
+    if (!pluginId) throw new Error(`ActivationRegistry.resume: unknown actor ${actorId} (never activated)`);
     const manifest = this.manifests.get(pluginId);
-    if (!manifest) throw new Error(`[DEBUG] ActivationRegistry.resume: no manifest for plugin ${pluginId}`);
+    if (!manifest) throw new Error(`ActivationRegistry.resume: no manifest for plugin ${pluginId}`);
     await this.evictForMemoryPressure();
     const assets = await this.loadAssets(manifest.moduleUrl);
     await this.shardClient.activate(actorId, manifest.moduleUrl, manifest.caps, this.defaultBudget, assets);
@@ -2811,7 +2946,7 @@ if (import.meta.vitest) {
 //#endregion 🐚️ActivationRegistry
 
 //#region 🔌️PluginSource
-/** @emoji 🔌️ One entry of an availability stream: either the full set of currently-built plugins sent
+/** 🔌️ One entry of an availability stream: either the full set of currently-built plugins sent
  * once on connect (a reconnecting/late-connecting browser must not miss builds that already finished),
  * or a single plugin's rebuild landing. `rebuiltAt` is the artifact's build timestamp and doubles as
  * the cache-busting query value {@link PluginSource.moduleUrl} mints. */
@@ -2854,7 +2989,7 @@ async function requireServedPluginModule(sourceId: string, pluginId: string, mod
 }
 
 /**
- * @emoji 🔌️ Where the shell's incremental plugin runtime (install/uninstall/reload — see the react
+ * 🔌️ Where the shell's incremental plugin runtime (install/uninstall/reload — see the react
  * renderer's plugin panel) gets its catalog, its modules and its availability notifications from. The
  * dev, bundled and extension sources serve modules staged beside the shell; the hub source
  * (`🔌️plugin/📇️registry/🌎️hub-source`) installs trusted catalog modules on first use. The shell only
@@ -2877,7 +3012,7 @@ export interface PluginSource {
   subscribe(listener: (event: PluginSourceEvent) => void): () => void;
 }
 
-/** @emoji 📡️ One availability stream the source's owner opened for it: every raw event goes to `listener`; answers the
+/** 📡️ One availability stream the source's owner opened for it: every raw event goes to `listener`; answers the
  * unsubscribe. The owner decides the transport (the `s` shell: one route of its page's stream channel, so no watch holds an
  * HTTP/1.1 connection of its origin); the kernel only reads events. */
 export type PluginSourceWatch = (listener: (event: unknown) => void) => () => void;
@@ -2890,7 +3025,7 @@ const pluginSourceEventOf = (event: unknown): PluginSourceEvent | undefined => {
   return undefined;
 };
 
-/** @emoji 🔌️ `PluginSource` backed by an injected dev catalog and the availability stream its owner opens for it
+/** 🔌️ `PluginSource` backed by an injected dev catalog and the availability stream its owner opens for it
  * ({@link PluginSourceWatch}); every subscription is its own stream, and an event that is not an availability event is
  * refused with one warning. */
 export function createDevPluginSource(registry: readonly PluginRegistryEntry[], watch: PluginSourceWatch): PluginSource {
@@ -2919,7 +3054,7 @@ export function createDevPluginSource(registry: readonly PluginRegistryEntry[], 
   };
 }
 
-/** @emoji 📦️ `PluginSource` for shipped static hosts: every registry entry is already materialized
+/** 📦️ `PluginSource` for shipped static hosts: every registry entry is already materialized
  * beside the HTML bundle, so there is no dev-server SSE `/watch` endpoint to announce availability.
  * `subscribe` replays one immediate `snapshot` (same shape the dev endpoint sends on connect) so the
  * shell's install pump loads the full expanded registry — plugins and bundled flow extensions — without
@@ -2956,7 +3091,7 @@ type ExtensionSourceWireEvent =
   | { readonly kind: "installed"; readonly extensionId: string; readonly installedAt: number }
   | { readonly kind: "uninstalled"; readonly extensionId: string };
 
-/** @emoji 🔁️ Converts the extension store's install vocabulary into the runtime's plugin
+/** 🔁️ Converts the extension store's install vocabulary into the runtime's plugin
  * availability vocabulary. Uninstall events have no availability equivalent and are ignored. */
 export function extensionSourceEventToPluginSourceEvent(event: ExtensionSourceWireEvent): PluginSourceEvent | undefined {
   if (event.kind === "snapshot") {
@@ -2968,7 +3103,7 @@ export function extensionSourceEventToPluginSourceEvent(event: ExtensionSourceWi
   throw new Error("unknown extension source event kind");
 }
 
-/** @emoji 🧩️ Registry rows for flow extensions — shared by {@link createExtensionSource} and static
+/** 🧩️ Registry rows for flow extensions — shared by {@link createExtensionSource} and static
  * {@link createBundledPluginSource} hosts. */
 export function extensionRegistryFromCatalog(catalog: PluginCatalog): readonly PluginRegistryEntry[] {
   return catalog.extensions.map((target) => ({
@@ -2980,7 +3115,7 @@ export function extensionRegistryFromCatalog(catalog: PluginCatalog): readonly P
   }));
 }
 
-/** @emoji 🧩️ `PluginSource` backed by an extension catalog and the install stream its owner opens for it
+/** 🧩️ `PluginSource` backed by an extension catalog and the install stream its owner opens for it
  * ({@link PluginSourceWatch}). Catalog rows come from the injected {@link PluginCatalog}'s `extensions`; runtime installs
  * add artifacts under each extension id without changing this list. `subscribe` normalizes the extension wire vocabulary
  * per listener. */
@@ -3012,7 +3147,7 @@ export function createExtensionSource(catalog: PluginCatalog, watch: PluginSourc
   };
 }
 
-/** @emoji 🔌️ Merges multiple {@link PluginSource} implementations into one catalog the shell's
+/** 🔌️ Merges multiple {@link PluginSource} implementations into one catalog the shell's
  * incremental runtime can treat as a single source. */
 export function multiplexPluginSources(...sources: readonly PluginSource[]): PluginSource {
   if (sources.length === 0) throw new Error("multiplexPluginSources requires at least one source");
@@ -3049,17 +3184,17 @@ export function multiplexPluginSources(...sources: readonly PluginSource[]): Plu
 //#endregion 🔌️PluginSource
 
 // #region 🎮️PlaygroundResolution
-/** @emoji 🎮️ Finds the injected catalog's playground row for a variant id or one of its aliases. */
+/** 🎮️ Finds the injected catalog's playground row for a variant id or one of its aliases. */
 function findPlaygroundVariant(catalog: PluginCatalog, playgroundPluginId: string): PlaygroundCatalogTarget | undefined {
   return catalog.playgrounds.find((entry) => entry.variant === playgroundPluginId || entry.aliases.includes(playgroundPluginId));
 }
 
-/** @emoji 🎯️ Resolves a playground filter/alias (e.g. "3d", "sourcing") to its underlying wasm component registry id. */
+/** 🎯️ Resolves a playground filter/alias (e.g. "3d", "sourcing") to its underlying wasm component registry id. */
 export function resolvePluginRegistryId(catalog: PluginCatalog, playgroundPluginId: string): string {
   return findPlaygroundVariant(catalog, playgroundPluginId)?.pluginId ?? playgroundPluginId;
 }
 
-/** @emoji 🎯️ Resolves a playground filter/alias to the app id that should be instantiated by default within its plugin's manifest. */
+/** 🎯️ Resolves a playground filter/alias to the app id that should be instantiated by default within its plugin's manifest. */
 export function resolvePlaygroundDefaultAppId(catalog: PluginCatalog, playgroundPluginId: string): string | undefined {
   return findPlaygroundVariant(catalog, playgroundPluginId)?.app;
 }
@@ -3080,12 +3215,12 @@ export type PlaygroundBoot = {
   readonly dependencyErrors: readonly PluginGraphError[];
 };
 
-/** @emoji 🧱️ How many catalog rows one {@link PlaygroundBootPlanner} chunk projects. Sized so a chunk
+/** 🧱️ How many catalog rows one {@link PlaygroundBootPlanner} chunk projects. Sized so a chunk
  * stays an order of magnitude under the frame Worker's 8 ms step ceiling even on the slowest target: the
  * whole 59-row projection executes in 46 µs natively, so a 16-row chunk is ~12 µs. */
 export const PLUGIN_GRAPH_CHUNK_ROWS = 16;
 
-/** @emoji ⏳️ The playground boot plan as a RESUMABLE unit of work, so a caller that owns an interactive
+/** ⏳️ The playground boot plan as a RESUMABLE unit of work, so a caller that owns an interactive
  * budget — the wgpu frame Worker's `plugin-graph` boot step — can hand its isolate back between chunks
  * instead of holding it for the whole graph. {@link resolvePlaygroundBoot} is this planner driven to
  * completion in one turn; there is exactly one implementation of the graph.
@@ -3121,19 +3256,19 @@ export class PlaygroundBootPlanner {
     }
   }
 
-  /** @emoji 🏷️ The chunk `step()` will perform next, as a boot-progress stage id. */
+  /** 🏷️ The chunk `step()` will perform next, as a boot-progress stage id. */
   stage(): string {
     return this.phase === "rows" ? `plugin-graph:rows ${Math.min(this.cursor + PLUGIN_GRAPH_CHUNK_ROWS, this.targets.length)}/${this.targets.length}` : `plugin-graph:${this.phase}`;
   }
 
-  /** @emoji 🧮️ How far the plan is, in `[0, 1]` — a boot-progress share, not a fuel reading. */
+  /** 🧮️ How far the plan is, in `[0, 1]` — a boot-progress share, not a fuel reading. */
   completion(): number {
     if (this.phase === "done") return 1;
     if (this.phase === "rows") return this.targets.length === 0 ? 0.8 : (this.cursor / this.targets.length) * 0.8;
     return this.phase === "closure" ? 0.85 : 0.95;
   }
 
-  /** @emoji ⏭️ Performs ONE chunk and answers whether the plan needs more. Never throws: a dependency
+  /** ⏭️ Performs ONE chunk and answers whether the plan needs more. Never throws: a dependency
    * fault leaves its entry out of the plan and is reported through `dependencyErrors`. */
   step(): boolean {
     if (this.phase === "rows") {
@@ -3170,7 +3305,7 @@ export class PlaygroundBootPlanner {
     return false;
   }
 
-  /** @emoji 🏁️ The finished plan. Drives any remaining chunks itself, so a caller that stops slicing
+  /** 🏁️ The finished plan. Drives any remaining chunks itself, so a caller that stops slicing
    * still gets a complete plan. */
   finish(): PlaygroundBoot {
     while (this.phase !== "done") this.step();
@@ -3178,7 +3313,7 @@ export class PlaygroundBootPlanner {
   }
 }
 
-/** @emoji 🎮️ Resolves the wasm plugin list and default app for one playground variant; when a caller injects
+/** 🎮️ Resolves the wasm plugin list and default app for one playground variant; when a caller injects
  * session rows for a different variant, rebuilds from the authoritative {@link PluginCatalog}. One-turn drive of
  * {@link PlaygroundBootPlanner} for callers that own no interactive budget. */
 export function resolvePlaygroundBoot(catalog: PluginCatalog, variant: string, session?: PlaygroundBootSession): PlaygroundBoot {
@@ -3502,7 +3637,7 @@ export class InstanceDirectory {
 export class ArtifactRouterConflictError extends Error {
   readonly code = "artifact-router.conflict" as const;
   constructor(artifactKind: string, key: string) {
-    super(`[DEBUG] router conflict: ${artifactKind}#${key} already registered with different metadata`);
+    super(`router conflict: ${artifactKind}#${key} already registered with different metadata`);
     this.name = "ArtifactRouterConflictError";
   }
 }
@@ -3513,7 +3648,7 @@ export class ArtifactRouterConflictError extends Error {
 export class ArtifactContributionNotPermittedError extends Error {
   readonly code = "transaction.contribution-not-permitted" as const;
   constructor(contributorPluginId: string, ownerPluginId: string) {
-    super(`[DEBUG] "${contributorPluginId}" may not contribute onto "${ownerPluginId}"'s artifact kind — not a direct dependency`);
+    super(`"${contributorPluginId}" may not contribute onto "${ownerPluginId}"'s artifact kind — not a direct dependency`);
     this.name = "ArtifactContributionNotPermittedError";
   }
 }
@@ -3587,10 +3722,10 @@ export class ArtifactInferenceRouter {
    * target. */
   registerContributed(artifactKind: string, metadata: ContributedInferenceMetadata, contributorDependsOnOwner: boolean): void {
     if (metadata.owner !== metadata.contributor) {
-      throw new Error(`[DEBUG] contributed inference owner/contributor mismatch: ${metadata.owner} !== ${metadata.contributor}`);
+      throw new Error(`contributed inference owner/contributor mismatch: ${metadata.owner} !== ${metadata.contributor}`);
     }
     if (metadata.artifactKind !== artifactKind) {
-      throw new Error(`[DEBUG] contributed inference artifactKind mismatch: ${metadata.artifactKind} !== ${artifactKind}`);
+      throw new Error(`contributed inference artifactKind mismatch: ${metadata.artifactKind} !== ${artifactKind}`);
     }
     if (!contributorDependsOnOwner) throw new ArtifactContributionNotPermittedError(metadata.contributor, artifactKind);
     this.registry.register(artifactKind, metadata.inferenceSchema, { kind: "contributed", pluginId: metadata.contributor }, metadata);
@@ -3634,7 +3769,7 @@ export class ArtifactInferenceRouter {
     }
     if (order.length !== keys.length) {
       const leftover = keys.filter((key) => !order.includes(key)).sort();
-      throw new Error(`[DEBUG] ArtifactInferenceRouter.dependencyOrder: cycle among ${leftover.join(", ")}`);
+      throw new Error(`ArtifactInferenceRouter.dependencyOrder: cycle among ${leftover.join(", ")}`);
     }
     return order;
   }

@@ -62,7 +62,7 @@
               "required": [
                 "rawBytes",
                 "checkpointBytes",
-                "scalarBytes",
+                "configValueBytes",
                 "configBaseBytes",
                 "commandStepBytes",
                 "storeStepBytes",
@@ -76,23 +76,23 @@
                 "checkpointBytes": {
                   "const": 512
                 },
+                "configValueBytes": {
+                  "const": 4096
+                },
                 "configBaseBytes": {
-                  "const": 4194304
+                  "const": 1048576
                 },
                 "commandStepBytes": {
-                  "const": 16777216
+                  "const": 1048576
                 },
                 "storeStepBytes": {
-                  "const": 16777216
+                  "const": 1048576
                 },
                 "workItems": {
                   "const": 1
                 },
                 "preparationPhases": {
                   "const": 3
-                },
-                "scalarBytes": {
-                  "const": 4096
                 }
               }
             },
@@ -103,8 +103,8 @@
                 },
                 {
                   "type": "array",
-                  "minItems": 17,
-                  "maxItems": 17,
+                  "minItems": 18,
+                  "maxItems": 18,
                   "items": [
                     {
                       "type": "object",
@@ -124,7 +124,33 @@
                         },
                         "lanes": {
                           "const": [
-                            "Config"
+                            "Transient"
+                          ]
+                        },
+                        "blocker": {
+                          "const": ""
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "id",
+                        "disposition",
+                        "lanes",
+                        "blocker"
+                      ],
+                      "properties": {
+                        "id": {
+                          "const": "applyLocalCatalogDocument"
+                        },
+                        "disposition": {
+                          "const": "Migrated"
+                        },
+                        "lanes": {
+                          "const": [
+                            "Artifact"
                           ]
                         },
                         "blocker": {
@@ -172,13 +198,15 @@
                           "const": "bindSpaceFile"
                         },
                         "disposition": {
-                          "const": "BatchOnlyPendingRewrite"
+                          "const": "Migrated"
                         },
                         "lanes": {
-                          "const": []
+                          "const": [
+                            "Artifact"
+                          ]
                         },
                         "blocker": {
-                          "const": "filesystem binding and studio port registration still execute in one direct handler"
+                          "const": ""
                         }
                       }
                     },
@@ -196,13 +224,15 @@
                           "const": "importSpace"
                         },
                         "disposition": {
-                          "const": "BatchOnlyPendingRewrite"
+                          "const": "Migrated"
                         },
                         "lanes": {
-                          "const": []
+                          "const": [
+                            "Artifact"
+                          ]
                         },
                         "blocker": {
-                          "const": "payload decode and authored document import still execute in one direct handler"
+                          "const": ""
                         }
                       }
                     },
@@ -272,13 +302,15 @@
                           "const": "deleteVirtualFileSystemNode"
                         },
                         "disposition": {
-                          "const": "BatchOnlyPendingRewrite"
+                          "const": "Migrated"
                         },
                         "lanes": {
-                          "const": []
+                          "const": [
+                            "Config"
+                          ]
                         },
                         "blocker": {
-                          "const": "filesystem deletion still executes in one direct handler"
+                          "const": ""
                         }
                       }
                     },

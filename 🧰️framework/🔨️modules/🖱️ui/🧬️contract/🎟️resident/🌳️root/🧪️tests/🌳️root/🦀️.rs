@@ -68,7 +68,6 @@ fn retained_document_root_permit_nine_surfaces_share_one_aggregate() {
     assert_eq!(UiResidentPermit::snapshot().unwrap(), before);
     assert_eq!(during.used_slots - before.used_slots, count);
     assert_eq!(during.bytes - before.bytes, count * bytes);
-    eprintln!("[DEBUG] document-root-permit actual-surfaces={count} exact-bytes={} final-credit=0", count * bytes);
 }
 
 #[test]
@@ -85,7 +84,6 @@ fn retained_document_root_permit_last_reader_keeps_credit_and_typed_payload() {
         assert!(released >= fixture()["payloadUtf8Bytes"].as_u64().unwrap() as usize);
         assert_eq!(UiResidentPermit::snapshot().unwrap(), before);
     }
-    eprintln!("[DEBUG] document-root-reader grants=1,64,4096 credit-until-final=true typed-descendants-before-credit=true");
 }
 
 #[test]
@@ -170,7 +168,6 @@ fn retained_document_root_permit_reader_pressure_refuses_then_retries_exact_slot
         close(root, 64);
     }
     assert_eq!(UiResidentPermit::snapshot().unwrap(), before);
-    eprintln!("[DEBUG] document-root-pressure aggregate={UI_RESIDENT_AGGREGATE_BYTES} captured-reader-keeps-credit=true exact-slot-epoch-retry=true");
 }
 #[test]
 fn retained_document_root_permit_seal_transfers_output_without_detaching_root_credit() {
@@ -204,6 +201,5 @@ fn retained_document_root_permit_seal_transfers_output_without_detaching_root_cr
         }
         assert_eq!(UiResidentPermit::snapshot().unwrap(), before);
     }
-    eprintln!("[DEBUG] document-root-output shrink-before-split=true output-first-and-root-first=true exact-final-return=32768");
 }
 //#endregion 🧪️RootPermit

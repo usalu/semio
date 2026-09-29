@@ -1427,7 +1427,7 @@ pub(crate) fn dag_node_label_fill(theme: &CanvasPalette, dimmed: bool, selected:
     }
 }
 
-/// @emoji 🧱️ Internal column/row chrome inside a node body; selection/hover matches label emphasis.
+/// 🧱️ Internal column/row chrome inside a node body; selection/hover matches label emphasis.
 pub(crate) fn dag_node_internal_chrome_stroke(body_stroke: canvas::Color, label_fill: canvas::Color, emphasized: bool) -> canvas::Color {
     if emphasized {
         label_fill
@@ -1490,7 +1490,7 @@ fn dag_node_stroke_screen_px(dimmed: bool, selected: bool, highlighted: bool, ho
     }
 }
 
-/// @emoji 🎨️ Node body fill when painted; `None` means stroke/text only (puzzle 2d overview+).
+/// 🎨️ Node body fill when painted; `None` means stroke/text only (puzzle 2d overview+).
 pub(crate) fn dag_node_paint_fill(lod: DagDrawLod, theme: &CanvasPalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> Option<canvas::Color> {
     if lod == DagDrawLod::Minimap {
         return Some(dag_node_body_stroke(theme, dimmed, selected, highlighted, hovered));
@@ -2765,6 +2765,11 @@ impl DagHostRetirement {
         self.payload_retirement.push(DagRetirementOwner::FixtureNode(node));
     }
 
+    /// 🔗️ An undrained wire edit still owns its ids; retire them through the same string ladder
+    /// every other owned id goes through rather than dropping them in one unbounded free.
+    ///
+    /// 🧷️ Fixed forward for the wire-drag lane, which added this row while this retirement
+    /// ladder still named only two: a `Move` owns exactly its node id.
     pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> DagRetirementStep {
         if self.released {
             return DagRetirementStep::Complete;
@@ -2843,14 +2848,10 @@ impl DagHostRetirement {
         if let Some(value) = self.pending_export_click.take() {
             return self.credit_owner(DagRetirementOwner::Text(value), maximum_items, maximum_bytes);
         }
-        // 🔗️ An undrained wire edit still owns its ids; retire them through the same string ladder
-        // every other owned id goes through rather than dropping them in one unbounded free.
         if let Some(edit) = self.pending_graph_edits.pop() {
             let values = match edit {
                 DagGraphEdit::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => vec![source_node_id, source_port_id, target_node_id, target_port_id],
                 DagGraphEdit::Disconnect { synapse_id } => vec![synapse_id],
-                // 🧷️ Fixed forward for the wire-drag lane, which added this row while this retirement
-                // ladder still named only two: a `Move` owns exactly its node id.
                 DagGraphEdit::Move { node_id, .. } => vec![node_id],
             };
             let remaining_backing_bytes = dag_vec_backing_bytes(&values);
@@ -3681,7 +3682,7 @@ impl DagHost {
         None
     }
 
-    /// @emoji 🎯️ All pick targets under a screen point as JSON (`domain`, `id`, `generality`).
+    /// 🎯️ All pick targets under a screen point as JSON (`domain`, `id`, `generality`).
     pub fn pick_targets_at_screen_json(&self, sx: f64, sy: f64) -> String {
         #[derive(ToValue, FromValue)]
         struct Row {
@@ -3993,12 +3994,16 @@ impl DagHost {
         ]))
     }
 
-    /// @emoji 🎯️ Screen-space geometry (canvas-local px) for a live entity in the shell's pick-target
+    /// 🎯️ Screen-space geometry (canvas-local px) for a live entity in the shell's pick-target
     /// grammar (`domain`: `"node"` | `"handle"` | `"edge"`; `id`: a node's widget id, `"widgetId@port"`
     /// for a handle, or a mirrored edge id — `"*"` picks whichever matching entity's screen anchor is
     /// nearest the viewport center) — powers introduction-demonstration semantic targeting
     /// (`IntroductionPoint::Entity`/`Curve`). Never errors: an unresolved domain/id returns
     /// `{"visible":false}`.
+    ///
+    /// 🔌️ A port is published as its CONNECTOR rect — the very rect `port_connector_handle_hit`
+    /// grabs a wire in, so anything that aims at what the host reports (a demonstration, an
+    /// assistive caller, a scripted drag) presses a point that wires.
     pub fn entity_screen_json(&self, domain: &str, id: &str) -> String {
         #[derive(ToValue, FromValue)]
         struct EntityGeometry {
@@ -4024,9 +4029,6 @@ impl DagHost {
             let br = world_to_screen(&cam, &viewport, Point::new(max_x, max_y));
             ([tl.x, tl.y, (br.x - tl.x).max(1.0), (br.y - tl.y).max(1.0)], ((tl.x + br.x) * 0.5, (tl.y + br.y) * 0.5))
         };
-        // 🔌️ A port is published as its CONNECTOR rect — the very rect `port_connector_handle_hit`
-        // grabs a wire in, so anything that aims at what the host reports (a demonstration, an
-        // assistive caller, a scripted drag) presses a point that wires.
         let handle_world_bounds = |widget_id: &str, port: &str| -> Option<(f64, f64, f64, f64)> {
             let node = self.host_snapshot.nodes.iter().find(|node| node.id == widget_id)?;
             if let Some(index) = node.inputs().iter().position(|candidate| candidate.id == port) {
@@ -4873,30 +4875,30 @@ impl DagHost {
             match event {
                 BoardEvent::NodeMoved { id, x, y } => {
                     moved = true;
-                    dag_debug_log(&format!("[DEBUG] dag node moved id={id} x={x:.1} y={y:.1}"));
+                    dag_debug_log(&format!("[TRACE] dag node moved id={id} x={x:.1} y={y:.1}"));
                 }
                 BoardEvent::EdgeConnected { id, source, target } => {
                     wired = true;
-                    dag_debug_log(&format!("[DEBUG] dag edge connected id={id} source={source} target={target}"));
+                    dag_debug_log(&format!("[TRACE] dag edge connected id={id} source={source} target={target}"));
                     self.journal_connect(source, target);
                 }
                 BoardEvent::EdgeRemoved { id } => {
                     wired = true;
-                    dag_debug_log(&format!("[DEBUG] dag edge removed id={id}"));
+                    dag_debug_log(&format!("[TRACE] dag edge removed id={id}"));
                     self.journal_disconnect(id);
                 }
                 BoardEvent::SelectionChanged { node_ids, .. } => {
                     let ids: Vec<String> = node_ids.iter().filter_map(|&nid| self.widget_id_for_node_id(nid)).collect();
-                    dag_debug_log(&format!("[DEBUG] dag selection changed: {}", ids.join(", ")));
+                    dag_debug_log(&format!("[TRACE] dag selection changed: {}", ids.join(", ")));
                 }
                 BoardEvent::PreselectChanged { node_ids, removed_node_ids, .. } => {
                     let ids: Vec<String> = node_ids.iter().filter_map(|&nid| self.widget_id_for_node_id(nid)).collect();
                     let removed: Vec<String> = removed_node_ids.iter().filter_map(|&nid| self.widget_id_for_node_id(nid)).collect();
-                    dag_debug_log(&format!("[DEBUG] dag preselect ids=[{}] removed=[{}]", ids.join(", "), removed.join(", ")));
+                    dag_debug_log(&format!("[TRACE] dag preselect ids=[{}] removed=[{}]", ids.join(", "), removed.join(", ")));
                 }
                 BoardEvent::HoverChanged { id } => {
                     let label = id.and_then(|nid| self.widget_id_for_node_id(nid).or_else(|| self.engine.handles.get(&nid).and_then(|handle| self.widget_id_for_node_id(handle.node_id))));
-                    dag_debug_log(&format!("[DEBUG] dag hover changed: {}", label.as_deref().unwrap_or("—")));
+                    dag_debug_log(&format!("[TRACE] dag hover changed: {}", label.as_deref().unwrap_or("—")));
                 }
             }
         }
@@ -5185,6 +5187,9 @@ impl DagHost {
         }
     }
 
+    /// 🔌️ A press on a port ROW never arrives here any more — `port_pointer_handle_hit` claims it
+    /// first, and the engine's own `HitObject::Endpoint` arm already selects that channel before it
+    /// begins the wire. The channel-row pick this branch used to duplicate is that selection.
     fn try_node_rectangle_pointer_down(&mut self, world_x: f64, world_y: f64, button: u8, shift: bool, ctrl_or_meta: bool, alt: bool) -> bool {
         if button != 0 || alt {
             return false;
@@ -5194,9 +5199,6 @@ impl DagHost {
         };
         use canvas::Point;
 
-        // 🔌️ A press on a port ROW never arrives here any more — `port_pointer_handle_hit` claims it
-        // first, and the engine's own `HitObject::Endpoint` arm already selects that channel before it
-        // begins the wire. The channel-row pick this branch used to duplicate is that selection.
         let point = Point::new(world_x, world_y);
         self.engine.pointer_down_on_draggable_node_at(node_id, point, shift, ctrl_or_meta);
         true
@@ -5458,13 +5460,13 @@ impl DagHost {
                 let node_id = self.host_snapshot.nodes[idx].id.clone();
                 self.widget_drag = Some(idx);
                 if let Some(value) = set_slider_value_from_x(&mut self.host_snapshot.nodes[idx], world_x) {
-                    dag_debug_log(&format!("[DEBUG] dag slider value id={node_id} value={value:.3}"));
+                    dag_debug_log(&format!("[TRACE] dag slider value id={node_id} value={value:.3}"));
                 }
             }
             WidgetPointerKind::SelectClick => {
                 let node_id = self.host_snapshot.nodes[idx].id.clone();
                 if let Some(label) = advance_select_option(&mut self.host_snapshot.nodes[idx]) {
-                    dag_debug_log(&format!("[DEBUG] dag select option id={node_id} label={label}"));
+                    dag_debug_log(&format!("[TRACE] dag select option id={node_id} label={label}"));
                 }
             }
             WidgetPointerKind::PreviewToggle(path) => {
@@ -5499,7 +5501,7 @@ impl DagHost {
         }
     }
 
-    /// @emoji 🧭️ Minimap LOD: pointer-down inside the selection AABB moves the group without a discrete hit.
+    /// 🧭️ Minimap LOD: pointer-down inside the selection AABB moves the group without a discrete hit.
     fn lod_uses_bounded_drag(&self) -> bool {
         matches!(self.draw_lod_for_frame(), DagDrawLod::Minimap)
     }
@@ -5521,7 +5523,7 @@ impl DagHost {
                     self.set_camera(wx, wy, zoom);
                     self.minimap_widget_drag = Some((0.0, 0.0));
                 }
-                dag_debug_log(&format!("[DEBUG] minimap widget pointer down sx={sx:.1} sy={sy:.1} on_viewport={on_viewport}"));
+                dag_debug_log(&format!("[TRACE] minimap widget pointer down sx={sx:.1} sy={sy:.1} on_viewport={on_viewport}"));
                 return;
             }
         }
@@ -5562,7 +5564,7 @@ impl DagHost {
         let (hit_x, hit_y) = self.connection_hit_world(world.x, world.y);
         if self.world_hits_handle(hit_x, hit_y) {
             self.engine.pointer_down_screen(sx, sy, hit_x, hit_y, button, shift, ctrl_or_meta, alt);
-            dag_debug_log(&format!("[DEBUG] dag port press port={:?} interaction={}", self.engine.hover.and_then(|hid| self.handle_key_map.get(&hid).cloned()), dag_interaction_label(&self.engine.interaction)));
+            dag_debug_log(&format!("[TRACE] dag port press port={:?} interaction={}", self.engine.hover.and_then(|hid| self.handle_key_map.get(&hid).cloned()), dag_interaction_label(&self.engine.interaction)));
             self.process_engine_events();
             self.sync_camera_from_engine();
             return;
@@ -5630,7 +5632,7 @@ impl DagHost {
         let world = self.screen_to_world_point(sx, sy);
         if let Some(idx) = self.widget_drag {
             if let Some(value) = set_slider_value_from_x(&mut self.host_snapshot.nodes[idx], world.x) {
-                dag_debug_log(&format!("[DEBUG] dag slider value id={} value={value:.3}", self.host_snapshot.nodes[idx].id));
+                dag_debug_log(&format!("[TRACE] dag slider value id={} value={value:.3}", self.host_snapshot.nodes[idx].id));
             }
             return;
         }
@@ -5810,15 +5812,15 @@ impl DagHost {
         Self::label_overlay_rows_for_node(node, lod, zoom, lod_index, ghost, engine_nid, &self.unresolved_input_ports)
     }
 
+    /// 🏷️ `above_body` is the computation/slider layout, where the caption is drawn ABOVE the
+    /// node rather than inside it (`computation_name_world_center`) — nothing there is clipped
+    /// by the body's own width, and nodes are laid out far enough apart to overhang it. Its
+    /// budget is therefore `NODE_TITLE_WIDTH_FACTOR` node widths, while a caption INSIDE the
+    /// body (the compact tier) and a rotated one keep the extent they actually sit in.
     fn label_overlay_rows_for_node(node: &DagNodeSpec, lod: DagDrawLod, zoom: f64, lod_index: usize, ghost: bool, engine_nid: Option<NodeId>, unresolved_input_ports: &HashSet<(NodeId, String)>) -> Vec<Value> {
         let paint_px = dag_label_paint_px(zoom, lod_index);
         let mut labels = Vec::new();
         if let Some(text) = Self::node_label_text(node, lod).map(str::to_string) {
-            // 🏷️ `above_body` is the computation/slider layout, where the caption is drawn ABOVE the
-            // node rather than inside it (`computation_name_world_center`) — nothing there is clipped
-            // by the body's own width, and nodes are laid out far enough apart to overhang it. Its
-            // budget is therefore `NODE_TITLE_WIDTH_FACTOR` node widths, while a caption INSIDE the
-            // body (the compact tier) and a rotated one keep the extent they actually sit in.
             let above_body = !lod.node_label_is_horizontal()
                 && ((uses_computation_layout(&node.kind) && lod.shows_computation_layout()) || (matches!(node.kind, DagNodeKind::Slider { .. }) && lod.shows_controls()));
             let (layout, x, y) = if lod.node_label_is_horizontal() {
@@ -6385,6 +6387,13 @@ impl DagHost {
         self.paint_computation_channel_row_dividers(scene, *aff, node, chrome_stroke, internal_stroke, body_stroke, label_fill, channel_row_pick);
     }
 
+    /// 🎚️ Track, knob AND value readout live on the HTML `GraphSliderOverlays` control,
+    /// which renders all three off ONE published row (`slider_overlay_state_json`). A
+    /// readout painted here was a SECOND producer of the same number: it could only
+    /// change when a GPU frame was drawn, while `aria-valuenow` moved with the DOM
+    /// control, so a released knob read `10` to a screen reader and `0.0` on the canvas
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+    /// `📓️slider-reevaluation-correctness-2026-09-15.md`).
     #[allow(clippy::too_many_arguments, reason = "internal rendering helper takes scene/camera/viewport/geometry/color context flatly, matching this crate's paint_* convention")]
     fn paint_node_visual(&self, scene: &mut canvas::Scene, aff: &canvas::Affine, cam: &canvas::camera::Camera, viewport: &canvas::camera::Viewport, lod: DagDrawLod, lod_index: usize, node: &DagNodeSpec, chrome: DagNodePaintChrome) {
         use canvas::camera::world_to_screen;
@@ -6458,13 +6467,6 @@ impl DagHost {
                     if let Some(label) = label_text.filter(|_| lod.shows_controls() && !caption_on_overlay) {
                         Self::paint_slider_name(scene, cam, viewport, node, label, paint_px, label_fill, label_halo);
                     }
-                    // 🎚️ Track, knob AND value readout live on the HTML `GraphSliderOverlays` control,
-                    // which renders all three off ONE published row (`slider_overlay_state_json`). A
-                    // readout painted here was a SECOND producer of the same number: it could only
-                    // change when a GPU frame was drawn, while `aria-valuenow` moved with the DOM
-                    // control, so a released knob read `10` to a screen reader and `0.0` on the canvas
-                    // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
-                    // `📓️slider-reevaluation-correctness-2026-09-15.md`).
                 }
                 DagNodeKind::Select { options, selected, .. } => {
                     if lod.shows_controls() {
@@ -6619,7 +6621,7 @@ impl DagHost {
         let prev_lod = self.last_logged_lod.get();
         if prev_lod != lod_index_i8 {
             self.last_logged_lod.set(lod_index_i8);
-            dag_debug_log(&format!("[DEBUG] dag draw lod={} zoom={:.3} icon={} label={:?}", lod.label(), cam.zoom, lod.node_icon_visible(), lod.node_label()));
+            dag_debug_log(&format!("[TRACE] dag draw lod={} zoom={:.3} icon={} label={:?}", lod.label(), cam.zoom, lod.node_icon_visible(), lod.node_label()));
         }
         self.paint_lod_grid(scene, &cam, &viewport, lod);
         let snap = self.engine.render_snapshot();

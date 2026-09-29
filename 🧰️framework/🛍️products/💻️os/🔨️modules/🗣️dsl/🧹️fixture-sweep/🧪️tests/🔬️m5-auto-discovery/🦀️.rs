@@ -2,7 +2,7 @@ use super::pilot_resolve;
 use std::path::{Path, PathBuf};
 
 //#region 🔖️Types
-/// @emoji 🧩️ One discovered `🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio`.
+/// 🧩️ One discovered `🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio`.
 #[derive(Clone, Debug)]
 pub struct DiscoveredGrammarFacet {
     pub plugin: String,
@@ -17,7 +17,7 @@ pub struct DiscoveredGrammarFacet {
     pub label: String,
 }
 
-/// @emoji 🧩️ Which sibling-fixture convention a discovered protocol facet expects.
+/// 🧩️ Which sibling-fixture convention a discovered protocol facet expects.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum ProtocolFacetKind {
     /// `🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio` + sibling `.pack.semio`.
@@ -26,7 +26,7 @@ pub enum ProtocolFacetKind {
     Spr,
 }
 
-/// @emoji 🧩️ One discovered protocol facet (pack or spr — see [`ProtocolFacetKind`]).
+/// 🧩️ One discovered protocol facet (pack or spr — see [`ProtocolFacetKind`]).
 #[derive(Clone, Debug)]
 pub struct DiscoveredProtocolFacet {
     pub kind: ProtocolFacetKind,
@@ -56,7 +56,7 @@ async fn skip_dir_name(name: &str) -> bool {
     name == "node_modules" || name == "target" || name.starts_with('.') || name == "🦑️repo"
 }
 
-/// @emoji 🧭️ P2-M3 scoping decision (full writeup: `p2-m3-report.md`) — discovery walks these
+/// 🧭️ P2-M3 scoping decision (full writeup: `p2-m3-report.md`) — discovery walks these
 /// roots, NOT the entire `✏️s/🔌️plugins` tree. An empirical repo-wide-under-plugins run during
 /// this wave surfaced ~48 unrelated, non-stdio, non-pilot artifacts (writer, mathematical, gis,
 /// vcs, animate, most of the norm family beyond en1992, the block/puzzle families, ...) that ALL
@@ -88,7 +88,7 @@ async fn discovery_roots(repo_root: &Path) -> Vec<PathBuf> {
     roots
 }
 
-/// @emoji 🔎️ True when `path`'s immediate parent/grandparent/great-grandparent directory names
+/// 🔎️ True when `path`'s immediate parent/grandparent/great-grandparent directory names
 /// are exactly `chain` (in that order, nearest first) — the structural fingerprint of one facet
 /// location (e.g. `.../🧬️schema/📸️snapshot/📝️text/<file>`).
 async fn parent_chain_is(path: &Path, chain: &[&str]) -> bool {
@@ -137,7 +137,7 @@ async fn walk(dir: &Path, hits: &mut RawHits) {
     }
 }
 
-/// @emoji 🧭️ Derives `(plugin, artifact, standard, is_stdio, artifact_rel, label)` from a
+/// 🧭️ Derives `(plugin, artifact, standard, is_stdio, artifact_rel, label)` from a
 /// repo-relative path — shared by both grammar and protocol discovery. `None` when the path
 /// doesn't actually sit under a `🗿️artifacts/<artifact>` directory (defensive; every matched
 /// facet path does by construction of the walk root, but a repo layout change should soft-skip
@@ -161,7 +161,7 @@ async fn derive_identity(file_path: &Path, repo_root: &Path) -> Option<(String, 
     Some((plugin, artifact, standard, is_stdio, artifact_rel, label))
 }
 
-/// @emoji 📖️ Every `🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio` under [`discovery_roots`].
+/// 📖️ Every `🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio` under [`discovery_roots`].
 pub async fn discover_grammar_snapshot_facets() -> Vec<DiscoveredGrammarFacet> {
     let repo_root = pilot_resolve::repo_root().await;
     let mut hits = RawHits::default();
@@ -178,7 +178,7 @@ pub async fn discover_grammar_snapshot_facets() -> Vec<DiscoveredGrammarFacet> {
     out
 }
 
-/// @emoji 📡️ Every `🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio` (pack) and
+/// 📡️ Every `🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio` (pack) and
 /// `🧬️schema/🧬️mutations/💾️binary/📡️.protocol.semio` (spr) under [`discovery_roots`].
 pub async fn discover_protocol_facets() -> Vec<DiscoveredProtocolFacet> {
     let repo_root = pilot_resolve::repo_root().await;
@@ -200,7 +200,7 @@ pub async fn discover_protocol_facets() -> Vec<DiscoveredProtocolFacet> {
 //#endregion 🔖️Walk
 
 //#region 🔖️StdioTransition
-/// @emoji 🚧️ P2-M3 stdio-transition decision (full writeup: `p2-m3-report.md`): rather than a
+/// 🚧️ P2-M3 stdio-transition decision (full writeup: `p2-m3-report.md`): rather than a
 /// literal enumerated list of the ~32 official standards, the exempt SET is "all of
 /// `✏️s/🔌️plugins/🗄️stdio`, minus whichever `(artifact, standard, facet)` tuples have GRADUATED
 /// below" — shrink-only IN EFFECT (the exempt set only shrinks as entries are appended), but
@@ -221,7 +221,7 @@ pub enum ConformanceFacet {
 /// Append-only. `("🎞️gif", "🔖️89a", ConformanceFacet::Grammar)` is the shape a graduating
 /// FG-wave would add once gif 89a's real grammar+fixture pair lands and passes for real.
 ///
-/// @emoji 🎓️ P2-PC (pilot closer) graduation: the 6 P1-P3 pilots (json/csv/zip/png/txt/binary)
+/// 🎓️ P2-PC (pilot closer) graduation: the 6 P1-P3 pilots (json/csv/zip/png/txt/binary)
 /// each land a real, dialect-conformant snapshot grammar + `.dsl.semio` fixture (Grammar) and a
 /// real snapshot protocol + `.pack.semio` fixture (ProtocolPack) — graduated for all 6. Only
 /// csv and txt additionally ship a real `.spr.semio` mutations-protocol fixture on disk
@@ -434,13 +434,13 @@ pub const STDIO_CONFORMANCE_GRADUATED: &[(&str, &str, ConformanceFacet)] = &[
     // addition to the tuple list above whenever that follow-up happens.
 ];
 
-/// @emoji 🛟️ Whether a stdio `(artifact, standard)` pair is still exempt (soft) for `facet`.
+/// 🛟️ Whether a stdio `(artifact, standard)` pair is still exempt (soft) for `facet`.
 pub async fn stdio_is_exempt(facet: ConformanceFacet, artifact: &str, standard: Option<&str>) -> bool {
     let standard = standard.unwrap_or("");
     !STDIO_CONFORMANCE_GRADUATED.iter().any(|(a, s, f)| *a == artifact && *s == standard && *f == facet)
 }
 
-/// @emoji 🔎️ P2-M3 real finding, NOT invented to dodge a failure: generalizing protocol
+/// 🔎️ P2-M3 real finding, NOT invented to dodge a failure: generalizing protocol
 /// discovery to the `🧬️mutations` (spr) facet — genuinely new coverage, the pre-P2-M3 harness
 /// only ever checked dag's spr facet, one hardcoded pilot out of six — surfaced that
 /// `📕️norm/📘️en1992`'s mutations protocol file (`.../🧬️mutations/💾️binary/
@@ -457,7 +457,7 @@ pub async fn stdio_is_exempt(facet: ConformanceFacet, artifact: &str, standard: 
 /// intent as [`STDIO_CONFORMANCE_GRADUATED`], scoped to the small number of non-stdio pilots.
 pub const KNOWN_NON_STDIO_GAPS: &[(&str, &str, &str, ConformanceFacet)] = &[("📕️norm", "📘️en1992", "🔖️1", ConformanceFacet::ProtocolSpr)];
 
-/// @emoji 🛟️ Whether a NON-stdio `(plugin, artifact, standard)` triple is a known, documented,
+/// 🛟️ Whether a NON-stdio `(plugin, artifact, standard)` triple is a known, documented,
 /// out-of-this-wave's-ownership gap for `facet` — see [`KNOWN_NON_STDIO_GAPS`].
 pub async fn non_stdio_is_known_gap(facet: ConformanceFacet, plugin: &str, artifact: &str, standard: Option<&str>) -> bool {
     let standard = standard.unwrap_or("");

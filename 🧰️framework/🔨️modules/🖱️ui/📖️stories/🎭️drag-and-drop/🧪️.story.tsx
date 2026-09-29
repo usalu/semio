@@ -51,7 +51,7 @@ export const Transfer: Story = {
 // #region 🧺️ReorderableList
 const initialRows = ["Capsule J", "Capsule L", "Capsule P", "Balcony J"];
 
-/** @emoji 🧺️ Pointer-driven reorder demo pairing {@link DragHandle} with local row initials — no dnd-kit wiring required for the story, just local list state. */
+/** 🧺️ Pointer-driven reorder demo pairing {@link DragHandle} with local row initials — no dnd-kit wiring required for the story, just local list state. */
 const ReorderableList = () => {
   const [rows, setRows] = useState(initialRows);
   const [draggedRow, setDraggedRow] = useState<string | null>(null);

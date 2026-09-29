@@ -46,12 +46,12 @@ import {
 
 
 
-/** @emoji 🐚️ Fixed port for `dev multi` — the multi-shell harness (`🧪️tests/🧪️multi-shell-harness/🟦️.tsx`), free in the 60xx range
+/** 🐚️ Fixed port for `dev multi` — the multi-shell harness (`🧪️tests/🧪️multi-shell-harness/🟦️.tsx`), free in the 60xx range
  * used by every other os-dev variant/launch.json entry. */
 const FRAMEWORK_OS_MULTI_HARNESS_PORT = "6071";
 
 //#region 🔖️PollHelpers
-/** @emoji 🏛️ THE RULE (poll census, W6): a deadline-bounded poll is legitimate here if and only if
+/** 🏛️ THE RULE (poll census, W6): a deadline-bounded poll is legitimate here if and only if
  * the thing it waits on is EXTERNAL — a TCP port or HTTP endpoint belonging to a process we did not
  * instrument, a lease file another `dev` invocation owns, a filesystem lock — and therefore emits no
  * observable event we could await instead. The moment we hold the resource's own handle (a spawned
@@ -66,7 +66,7 @@ const FRAMEWORK_OS_MULTI_HARNESS_PORT = "6071";
 
 type PollOutcome = "ready" | "dead" | "timeout";
 
-/** @emoji ⏳️ Deadline-bounded poll for a TCP `port` on `host` to reach the wanted state — open
+/** ⏳️ Deadline-bounded poll for a TCP `port` on `host` to reach the wanted state — open
  * (`mode: "open"`, the default: something is now listening) or closed (`mode: "closed"`: nothing is
  * listening anymore). Checks every `intervalMs`, capped at `deadlineMs` total from the call, and can
  * race an optional `isDead()` predicate (e.g. `child.exitCode !== null`) so a spawn that already died
@@ -101,7 +101,7 @@ async function awaitTcpReady(
   return "timeout";
 }
 
-/** @emoji 🌐️ Deadline-bounded poll for `url` to answer any HTTP response at all — per THE RULE
+/** 🌐️ Deadline-bounded poll for `url` to answer any HTTP response at all — per THE RULE
  * above, a `fetch` that throws (connection refused, DNS not up yet) just means the server isn't
  * listening yet, not a real failure. Does not inspect `response.ok`; callers that need a specific
  * status/body check the fetched response themselves once they have their own handle to it — this
@@ -135,7 +135,7 @@ async function awaitHttpOk(
   return "timeout";
 }
 
-/** @emoji 🧵️ Resolves once `child` exits — Node's own `'exit'` event, not a poll — or with
+/** 🧵️ Resolves once `child` exits — Node's own `'exit'` event, not a poll — or with
  * `"timeout"` after `deadlineMs`, whichever comes first. This is what THE RULE above means by
  * "await the handle instead": a `ChildProcess` we spawned already tells us when it exits, so
  * re-checking `child.exitCode` on a `Bun.sleep` timer is exactly the "wired but inert" shape this

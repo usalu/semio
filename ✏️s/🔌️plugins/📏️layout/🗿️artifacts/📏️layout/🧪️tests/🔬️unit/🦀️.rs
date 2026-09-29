@@ -80,7 +80,6 @@ fn layout_document_contract_json_text_pack_projection_and_identity() {
     let mut wrong_identity = snapshot.clone();
     wrong_identity.background_drawing.as_mut().expect("background drawing child").handle.target.artifact_id = "wrong".into();
     assert!(store::ChildRestoreProjection::from_snapshot(&wrong_identity).is_err(), "child projection must reject mismatched child identity");
-    println!("[DEBUG] layout-document-contract json=text=pack=projection child-identities=1 unknown-fields=parent,nested");
 }
 
 

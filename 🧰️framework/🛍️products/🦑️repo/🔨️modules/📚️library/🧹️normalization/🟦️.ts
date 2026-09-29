@@ -911,7 +911,7 @@ function fixedExpiry(value: unknown, name: string): string | null {
   return expires;
 }
 
-/** @emoji 🚧️ The exact opaque subtrees `🔣️taxonomy.json` may declare, in order: two user-owned scratch
+/** 🚧️ The exact opaque subtrees `🔣️taxonomy.json` may declare, in order: two user-owned scratch
  * trees plus the one tracked nested-repository gitlink (`git ls-files -s` mode `160000`), which must be
  * filtered lexically here or `inventoryTaxonomyWithSourceParentPruning` refuses to classify anything at
  * all. Mirrors `🔍️discovery/🟦️.ts`'s `OPAQUE_PATH_EXCLUSIONS`; the two files are separate bundles with

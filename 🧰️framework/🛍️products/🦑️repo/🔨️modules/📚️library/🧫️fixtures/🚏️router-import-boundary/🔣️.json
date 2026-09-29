@@ -7,5 +7,5 @@
     { "owner": "DevScript", "method": "parseStorybookSegments", "binding": "resolveActiveScopes", "caller": "runStorybook" },
     { "owner": "VerifyScript", "method": "checkStorybookFreshness", "binding": "STORY_SCOPES", "caller": "runGate" }
   ],
-  "runtimeMarker": "[DEBUG] router import completed without catalog enumeration"
+  "runtimeMarker": "router import completed without catalog enumeration"
 }

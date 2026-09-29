@@ -101,6 +101,19 @@ replace_once(SDK, ROW_DOC_OLD, ROW_DOC_NEW, lambda current: "row actions\n    //
 replace_once(SDK, ROW_OLD, ROW_NEW, lambda current: "let action_buttons = table_row_action_buttons" not in current)
 replace_once(SDK, EDITABLE_OLD, EDITABLE_NEW, lambda current: "children.extend(table_row_action_buttons" not in current)
 replace_once(INTERPRETER, FILTER_OLD, FILTER_NEW, lambda current: FILTER_NEW in current)
+WINDOWED_OLD = """        let action = &node.children[0].children[1];
+        let Component::Button(action_props) = &action.component else { panic!("row action is its own focusable button") };
+        assert_eq!(action_props.label.0.as_str(), "Remove row");
+        let binding = action.bindings.iter().find(|binding| binding.trigger == Trigger::Activate).expect("remove binding");
+"""
+WINDOWED_NEW = """        let Component::TableRow(row_props) = &node.children[0].component else { panic!("editable row is a TableRow") };
+        let mut row_actions = row_props.row_actions.iter();
+        let (Some(action), None) = (row_actions.next(), row_actions.next()) else { panic!("the row carries exactly its remove action, as a prop") };
+        assert_eq!(action.label.as_ref().map(|label| label.0.as_str()), Some("Remove row"));
+        let binding = &action.action;
+        assert_eq!(binding.trigger, Trigger::Activate);
+"""
+replace_once(TESTS, WINDOWED_OLD, WINDOWED_NEW, lambda current: WINDOWED_NEW in current)
 law = (PAYLOAD / "law.rs").read_text(encoding="utf-8")
 replace_once(TESTS, LAW_ANCHOR, LAW_ANCHOR + law, lambda current: "fn home_shaped_rows_carry_actions_as_props_and_fill_the_default_window" in current)
 for rel, source in [(FIXTURE, "fixture.json"), (SCHEMA, "schema.json")]:

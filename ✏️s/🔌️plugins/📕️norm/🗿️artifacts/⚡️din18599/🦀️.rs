@@ -502,7 +502,7 @@ pub mod subjects {
 /// lifted out of the pre-migration manifest's inline `.artifact_kind(ArtifactKindSpec { .. })` so the
 /// artifact node, not the app, owns its own kind declaration.
 pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
-    app_surface::artifact_kind_spec("din18599", "DIN V 18599")
+    app_surface::artifact_kind_spec("din18599", "DIN V 18599", DIN18599_DOCUMENT_SCHEMA)
 }
 
 /// 🪪️ This subset's canonical `(artifact_kind, standard, subset)` coordinate (ticket

@@ -120,5 +120,4 @@ export function testInputWriterFixture(): void {
     { ...fixture, extra: true },
   ];
   for (const hostile of hostiles) assert.equal(validate(hostile), false);
-  console.log(`[DEBUG] input writer oracle: ${fixture.copy.byteGrants.length} byte-copy frontiers, ${fixture.close.byteGrants.length} retained-backing frontiers, ${fixture.utf8.length} incremental UTF-8 vectors, ${hostiles.length} schema hostiles; native writer, admission, unwind and allocation are separate gates`);
 }

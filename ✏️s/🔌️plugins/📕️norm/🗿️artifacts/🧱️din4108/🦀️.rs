@@ -139,7 +139,7 @@ pub struct ThermalBridge {
 /// lifted out of the pre-migration manifest's inline `.artifact_kind(ArtifactKindSpec { .. })` so the
 /// artifact node, not the app, owns its own kind declaration.
 pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
-    app_surface::artifact_kind_spec("din4108", "DIN 4108")
+    app_surface::artifact_kind_spec("din4108", "DIN 4108", DIN4108_DOCUMENT_SCHEMA)
 }
 //#endregion 🔖️ArtifactKind
 

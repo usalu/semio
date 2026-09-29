@@ -299,7 +299,7 @@ describe("🔠️ the diagnostic code table is the single vocabulary", () => {
   const everyExpectedCode = [...expectedCodes(cases.treeCases.flatMap((entry) => entry.expect)), ...expectedCodes(cases.catalogCases.flatMap((entry) => entry.expect)), ...cases.resolutionCases.flatMap((row) => row.expect.codes), ...cases.pipelineCases.flatMap((row) => (row.expect.code === null || row.expect.code === undefined ? [] : [row.expect.code]))];
 
   test("the exported table and the protocol enum declare exactly the same codes", () => {
-    expect([...SCHEMA_DIAGNOSTIC_CODES].sort()).toEqual([...protocolCodes].sort());
+    expect([...SCHEMA_DIAGNOSTIC_CODES].sort()).toEqual<readonly string[]>([...protocolCodes].sort());
   });
 
   test("every code carries a one-line description a reader can act on", () => {
@@ -310,7 +310,7 @@ describe("🔠️ the diagnostic code table is the single vocabulary", () => {
   });
 
   test("every code names the emitters that raise it, out of the vocabulary the protocol declares", () => {
-    expect([...SCHEMA_DIAGNOSTIC_EMITTERS].sort()).toEqual([...protocolEmitters].sort());
+    expect([...SCHEMA_DIAGNOSTIC_EMITTERS].sort()).toEqual<readonly string[]>([...protocolEmitters].sort());
     for (const code of SCHEMA_DIAGNOSTIC_CODES) {
       const { emitters } = SCHEMA_DIAGNOSTIC_CODE_TABLE[code];
       const unknown = (emitters as readonly string[]).filter((emitter) => !(SCHEMA_DIAGNOSTIC_EMITTERS as readonly string[]).includes(emitter));

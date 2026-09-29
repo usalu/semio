@@ -29,7 +29,7 @@ pub use crate::os_dsl::grammar::{
 pub use crate::os_dsl::schema::{from_dsl_value, to_dsl_value};
 
 //#region 🔖️Field
-/// @emoji 🔗️ Bridges a concrete Rust field type to the engine's `Shape`/`FieldValue` — every
+/// 🔗️ Bridges a concrete Rust field type to the engine's `Shape`/`FieldValue` — every
 /// primitive implements it directly; `#[derive(DslRecord)]`/`#[derive(DslScalar)]` implement it
 /// for technology-declared nested types, so composition (a record field whose type is another
 /// derived record or enum) works transparently through the same trait.
@@ -134,7 +134,7 @@ impl DslField for f64 {
     }
 }
 
-/// @emoji 🔤️ `String` binds as `Shape::Text` — the one string shape. The parser accepts either a
+/// 🔤️ `String` binds as `Shape::Text` — the one string shape. The parser accepts either a
 /// bare `Ident` token or a quoted `Text` token wherever `Text` is expected; the printer emits bare
 /// (unquoted) whenever `crate::os_dsl::is_bare_ident` holds for the value, quoted+escaped otherwise —
 /// so bare-vs-quoted is entirely a printing decision now, not a separate shape a field opts into.
@@ -154,7 +154,7 @@ impl DslField for String {
     }
 }
 
-/// @emoji 🔌️ A wire literal as a plain struct field (or inside a `#[dsl(table)]` `Vec` as a
+/// 🔌️ A wire literal as a plain struct field (or inside a `#[dsl(table)]` `Vec` as a
 /// `WIRE`-typed column) — thin `DslField` wrapper around `crate::os_dsl::schema::WireValue` so adopter
 /// technologies never need to hand-roll their own `Shape::Wire` binding.
 #[derive(Clone, Debug, PartialEq)]
@@ -175,7 +175,7 @@ impl DslField for Wire {
         }
     }
 }
-/// @emoji 📚️ General recursion seam: `#[derive(DslRecord)]`/`#[derive(DslScalar)]` fields classify
+/// 📚️ General recursion seam: `#[derive(DslRecord)]`/`#[derive(DslScalar)]` fields classify
 /// `Vec<T>`/`[T; N]` directly (so their own printed shape stays field-specific), but a NESTED
 /// collection — `Vec<Vec<T>>`, a fixed-size array field, ... — needs its inner element type to
 /// satisfy `DslField` itself. These two blanket impls close that gap generically instead of adding
@@ -209,7 +209,7 @@ impl<T: DslField> DslField for Vec<T> {
     }
 }
 
-/// @emoji 🗺️ Same recursion seam as `Vec<T>`, for a `BTreeMap<String, T>` that's itself nested
+/// 🗺️ Same recursion seam as `Vec<T>`, for a `BTreeMap<String, T>` that's itself nested
 /// (e.g. `Option<BTreeMap<String, T>>`) rather than a bare top-level field — `#[derive(DslRecord)]`
 /// classifies a *bare* `BTreeMap<String, T>` field directly via its own dedicated `FieldKind`
 /// (same `Shape::Map` this produces), so the two never conflict.
@@ -240,7 +240,7 @@ impl<T: DslField> DslField for std::collections::BTreeMap<String, T> {
     }
 }
 
-/// @emoji 📐️ Fixed-arity `Shape::Tuple(_, Some(N))` — a packed `x,y,z`-style literal for any `N`.
+/// 📐️ Fixed-arity `Shape::Tuple(_, Some(N))` — a packed `x,y,z`-style literal for any `N`.
 impl<T: DslField, const N: usize> DslField for [T; N] {
     // 🚫️async: E4 — see `DslField::shape`'s tag above.
     fn shape() -> Shape {
@@ -268,7 +268,7 @@ impl<T: DslField, const N: usize> DslField for [T; N] {
     }
 }
 
-/// @emoji 🌱️ Schema-less dynamic literal — binds as `Shape::Value`.
+/// 🌱️ Schema-less dynamic literal — binds as `Shape::Value`.
 impl DslField for DslValue {
     // 🚫️async: E4 — see `DslField::shape`'s tag above.
     fn shape() -> Shape {
@@ -287,18 +287,18 @@ impl DslField for DslValue {
 //#endregion 🔖️Field
 
 //#region 🔖️Variants
-/// @emoji 🌿️ Bridges an enum whose variants are each their own keyword-tagged record — the type
+/// 🌿️ Bridges an enum whose variants are each their own keyword-tagged record — the type
 /// bound for `#[dsl(statements)] Vec<T>` collection fields and for `#[derive(DslOps)]` operation
 /// enums. `#[derive(DslEnum)]`-with-struct-variants and `#[derive(DslOps)]` both implement this.
 pub trait DslVariants: Sized {
-    /// @emoji 🐌️ Lazy: each entry is a zero-capture `fn` pointer, not an eagerly-built `RecordSpec`
+    /// 🐌️ Lazy: each entry is a zero-capture `fn` pointer, not an eagerly-built `RecordSpec`
     /// — a self-referential grammar's own `variants()` would otherwise need to recurse infinitely
     /// just to construct this list. See [`Shape::Statements`]'s doc comment for the full rationale.
     // 🚫️async: E4 — the returned `Vec<(String, fn() -> RecordSpec)>` IS a fn-pointer table, and
     // `Shape::Statements(<T>::variants())` is itself called from inside a sync `__dsl_spec` — see R9.
     fn variants() -> Vec<(String, fn() -> RecordSpec)>;
     fn to_named_record(&self) -> (String, RecordValue);
-    /// @emoji ⚠️ Returns `TextError` (not `String`, unlike [`DslField::from_value`]) so
+    /// ⚠️ Returns `TextError` (not `String`, unlike [`DslField::from_value`]) so
     /// generated bodies can `?`-propagate it directly — this is the same error type
     /// `crate::os_spr::OpText::parse_op`/`crate::os_store::ArtifactDsl::parse_dsl` already return, and the derive's
     /// `#[dsl(statements)]` field codegen composes it without any conversion at every nesting depth.
@@ -307,7 +307,7 @@ pub trait DslVariants: Sized {
 //#endregion 🔖️Variants
 
 //#region 🔖️Runtime
-/// @emoji ⚙️ Helpers remaining after P6 flag day — DslField/DslVariants derive bodies only (codec paths deleted).
+/// ⚙️ Helpers remaining after P6 flag day — DslField/DslVariants derive bodies only (codec paths deleted).
 pub mod __rt {
     use super::*;
 
@@ -317,7 +317,7 @@ pub mod __rt {
         TextError::new(message, TextSpan::at(1, 1))
     }
 
-    /// @emoji 📐️ Resolves a `#[dsl(unit = "...")]`/`#[dsl(angle = "...")]` symbol at spec-build
+    /// 📐️ Resolves a `#[dsl(unit = "...")]`/`#[dsl(angle = "...")]` symbol at spec-build
     /// time. An unknown symbol is a derive-time misuse (a typo'd unit string, caught the first time
     /// the generated `__dsl_spec` runs — every RecordSpec-law test exercises this), so it panics
     /// rather than threading a `Result` through the whole spec-building call chain, matching
@@ -326,7 +326,7 @@ pub mod __rt {
         unit_by_symbol(symbol).unwrap_or_else(|| panic!("dsl: unknown unit symbol '{symbol}' in #[dsl(unit = ...)]/#[dsl(angle = ...)]"))
     }
 
-    /// @emoji 📦️ Single-field tuple ("newtype") enum variant support — `Variant(Body)` delegates its
+    /// 📦️ Single-field tuple ("newtype") enum variant support — `Variant(Body)` delegates its
     /// whole `RecordSpec`/value to `Body`'s own `DslField` impl rather than wrapping it in one
     /// positional field, so `Body` prints/parses identically whether reached through the enum or on
     /// its own. `Body` must have `Shape::Record` (i.e. itself come from `#[derive(DslRecord)]` or
@@ -356,7 +356,7 @@ pub mod __rt {
 //#endregion 🔖️Runtime
 
 //#region 🔖️OpTextRt
-/// @emoji 🔤️ Handcrafted `OpText` helper — the text twin of [`variants_binary`].
+/// 🔤️ Handcrafted `OpText` helper — the text twin of [`variants_binary`].
 ///
 /// An operation line is ONE terminal keyword-tagged record, so it parses through
 /// [`parse_exact`], which rejects every token outside the variant's own schema body: a trailing
@@ -388,7 +388,7 @@ pub mod variants_text {
 //#endregion 🔖️OpTextRt
 
 //#region 🏷️ProtocolRecord
-/// @emoji 🏷️ The one source of a mutation vocabulary's op tags: the `record <kind> tag=<n>` lines of its
+/// 🏷️ The one source of a mutation vocabulary's op tags: the `record <kind> tag=<n>` lines of its
 /// `💾️binary/📡️.protocol.semio`. Every codec derives its tags from here at compile time, so a kind whose
 /// record is missing or duplicated fails the build instead of drifting from the wire.
 /// See [`crate::os_dsl::grammar::parse_protocol`] for the full dialect this scanner agrees with.
@@ -527,7 +527,7 @@ pub mod protocol_record {
 //#endregion 🏷️ProtocolRecord
 
 //#region 🔖️OpRt
-/// @emoji 🎯️ Handcrafted OpBinary helper (P6): layout `format u8 (=1) | tag varint | record body`.
+/// 🎯️ Handcrafted OpBinary helper (P6): layout `format u8 (=1) | tag varint | record body`.
 /// `encode_tagged_op`/`decode_tagged_op` take the tag from the vocabulary's `📡️.protocol.semio` record
 /// ([`super::protocol_record`]); `encode_op`/`decode_op` serve the ephemeral layers that carry no wire
 /// protocol facet, whose tag is the variant ordinal.
@@ -609,7 +609,7 @@ pub mod variants_binary {
 //#endregion 🔖️OpRt
 
 //#region 🏷️TaggedValueRt
-/// @emoji 🏷️ Op frame for a mutation aggregate whose payload is its `ToValue` tree: `format u8 (=1) | tag varint
+/// 🏷️ Op frame for a mutation aggregate whose payload is its `ToValue` tree: `format u8 (=1) | tag varint
 /// | wire value (`pack_rt::encode_wire_value`) of the variant's value with its variant name removed`. The tag is
 /// the variant kind's `record <kind> tag=<n>` in the vocabulary's `📡️.protocol.semio` ([`super::protocol_record`]),
 /// so the wire never spells the variant name and the protocol file is the only source of tags.
@@ -717,7 +717,7 @@ pub mod tagged_value_binary {
 //#endregion 🏷️TaggedValueRt
 
 //#region 🏷️TaggedTextRt
-/// @emoji 🏷️ Op frame for a mutation aggregate whose canonical payload is its own `OpText` line `<kind> <args>`:
+/// 🏷️ Op frame for a mutation aggregate whose canonical payload is its own `OpText` line `<kind> <args>`:
 /// `format u8 (=1) | tag varint | args utf-8`. The tag is the kind's `record <kind> tag=<n>`, so the keyword never
 /// travels and the protocol file stays the only source of tags. Used where the `ToValue` tree is lossy.
 pub mod tagged_text_binary {
@@ -755,7 +755,7 @@ pub mod tagged_text_binary {
 //#endregion 🏷️TaggedTextRt
 
 //#region 🔖️Idiom
-/// @emoji 🗣️ A custom front-end language layered on this engine: its own lexer/parser/printer/AST,
+/// 🗣️ A custom front-end language layered on this engine: its own lexer/parser/printer/AST,
 /// sharing only the laws (round-trip, canonicalize idempotence) and — via `register_idiom` — the
 /// editor plumbing (`LanguageService` fence delegation, semantic tokens). Formalizes the technique
 /// Jack (`math_graph_dsl`) already used by hand: pre-scan tokens `crate::os_dsl::lex`'s fixed alphabet
@@ -790,7 +790,7 @@ pub trait DslIdiom {
     }
 }
 
-/// @emoji 🧩️ Placeholder until `crate::os_dsl::schema::LanguageService` grows a real completion type — kept
+/// 🧩️ Placeholder until `crate::os_dsl::schema::LanguageService` grows a real completion type — kept
 /// as a named type now so `DslIdiom::complete`'s signature doesn't need to change when it does.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CompletionItem {
@@ -798,7 +798,7 @@ pub struct CompletionItem {
     pub detail: Option<String>,
 }
 
-/// @emoji 📇️ Type-erased vtable for one registered idiom — what `Shape::Embed` canonicalization
+/// 📇️ Type-erased vtable for one registered idiom — what `Shape::Embed` canonicalization
 /// and `LanguageService` fence delegation call through, without depending on the idiom's own crate
 /// (which would be a dependency cycle: the idiom depends on `dsl`, not the reverse).
 #[derive(Clone, Copy)]
@@ -810,7 +810,7 @@ pub struct IdiomHooks {
     pub complete: fn(&str, usize) -> Vec<CompletionItem>,
 }
 
-/// @emoji 🏗️ Derives an `IdiomHooks` vtable from a `DslIdiom` impl — the one place `Self::Ast`
+/// 🏗️ Derives an `IdiomHooks` vtable from a `DslIdiom` impl — the one place `Self::Ast`
 /// needs to be named, so every other caller works with the type-erased `IdiomHooks` instead.
 // 🚫️async: E4 fn-pointer slot — builds an `IdiomHooks` whose fields are plain `fn` pointers; an
 // `fn`'s captured closure cannot coerce to `fn`, so this stays sync. See R2 E4.
@@ -818,7 +818,7 @@ pub fn hooks_for<I: DslIdiom>() -> IdiomHooks {
     IdiomHooks { lang: I::LANG, canonicalize: |text| I::parse(text).map(|ast| I::print(&ast)), classify: I::classify, complete: I::complete }
 }
 
-/// @emoji 🪞 Minimal hooks for binary/text facets that register a [`LanguageSpec`] without a custom
+/// 🪞 Minimal hooks for binary/text facets that register a [`LanguageSpec`] without a custom
 /// [`DslIdiom`] front-end — canonicalize is identity; classify/complete are empty.
 // 🚫️async: E4 fn-pointer slot — see `hooks_for` above
 pub fn passthrough_hooks(lang: &'static str) -> IdiomHooks {
@@ -832,7 +832,7 @@ fn idiom_registry() -> &'static Mutex<HashMap<&'static str, IdiomHooks>> {
     IDIOM_REGISTRY.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
-/// @emoji 📌️ Registers an idiom's hooks under its `LANG` id — called once at host/plugin init.
+/// 📌️ Registers an idiom's hooks under its `LANG` id — called once at host/plugin init.
 /// Re-registering the same `lang` overwrites the previous hooks rather than erroring, so a
 /// hot-reloaded dev build never deadlocks on itself.
 // 🚫️async: E1 pure accessor consumed by the E4 `IdiomHooks` cluster — see R9
@@ -841,7 +841,7 @@ pub fn register_idiom(hooks: IdiomHooks) {
     registry.insert(hooks.lang, hooks);
 }
 
-/// @emoji 🔍️ Looks up a previously-registered idiom's hooks by `lang` id. `None` for an
+/// 🔍️ Looks up a previously-registered idiom's hooks by `lang` id. `None` for an
 /// unregistered (or not-yet-registered) lang — callers must treat that as "pass through verbatim",
 /// never as an error, since `Shape::Embed` text must remain parseable before any plugin has run
 /// its own registration.
@@ -851,7 +851,7 @@ pub fn idiom(lang: &str) -> Option<IdiomHooks> {
     registry.get(lang).copied()
 }
 
-/// @emoji 🎭️ Which surface a registered [`LanguageSpec`] describes for the
+/// 🎭️ Which surface a registered [`LanguageSpec`] describes for the
 /// `handcrafted-grammar-for-every-artifact` program.
 ///
 /// Text roles carry a `.grammar.semio` (`grammar` / `grammar_path`): `Document` (`🗣️dsl`),
@@ -869,7 +869,7 @@ pub enum LanguageRole {
     Spr,
 }
 
-/// @emoji 📖️ One artifact facet language, registered once at plugin init: identity, the extension
+/// 📖️ One artifact facet language, registered once at plugin init: identity, the extension
 /// it opens (documents/configs only), optional hand-authored **grammar** text for text surfaces
 /// (`🗣️dsl` / `🔧️op` / `🔺️diff`, `dialect grammar`), optional hand-authored **protocol** text for
 /// binary surfaces (`🎒️pack` / `📡️spr`, `dialect protocol`), and the [`IdiomHooks`] vtable used by
@@ -887,19 +887,19 @@ pub struct LanguageSpec {
 }
 
 impl LanguageSpec {
-    /// @emoji 📝 Whether this role is a text grammar surface (dsl/op/diff/config/embed).
+    /// 📝 Whether this role is a text grammar surface (dsl/op/diff/config/embed).
     // 🚫️async: E1 pure accessor — trivial enum match, no suspension point — see R9
     pub fn is_text_role(self) -> bool {
         matches!(self.role, LanguageRole::Document | LanguageRole::Config | LanguageRole::Ops | LanguageRole::Embedded | LanguageRole::Diff)
     }
 
-    /// @emoji 📡️ Whether this role is a binary protocol surface (pack/spr).
+    /// 📡️ Whether this role is a binary protocol surface (pack/spr).
     // 🚫️async: E1 pure accessor — trivial enum match, no suspension point — see R9
     pub fn is_binary_role(self) -> bool {
         matches!(self.role, LanguageRole::Pack | LanguageRole::Spr)
     }
 
-    /// @emoji 📖️ Parses `grammar` via [`parse_grammar`], requiring [`SemioDialect::Grammar`].
+    /// 📖️ Parses `grammar` via [`parse_grammar`], requiring [`SemioDialect::Grammar`].
     pub fn parsed_grammar(&self) -> Result<Option<GrammarFile>, TextError> {
         let Some(text) = self.grammar else {
             return Ok(None);
@@ -911,7 +911,7 @@ impl LanguageSpec {
         Ok(Some(file))
     }
 
-    /// @emoji 📡️ Parses `protocol` via [`parse_protocol`].
+    /// 📡️ Parses `protocol` via [`parse_protocol`].
     pub fn parsed_protocol(&self) -> Result<Option<ProtocolFile>, TextError> {
         let Some(text) = self.protocol else {
             return Ok(None);
@@ -919,7 +919,7 @@ impl LanguageSpec {
         Ok(Some(parse_protocol(text)?))
     }
 
-    /// @emoji ✅ Verifies encoded bytes against this language's protocol when protocol text is present.
+    /// ✅ Verifies encoded bytes against this language's protocol when protocol text is present.
     pub fn verify_protocol(&self, bytes: &[u8]) -> Result<(), String> {
         let Some(text) = self.protocol else {
             return Ok(());
@@ -928,7 +928,7 @@ impl LanguageSpec {
     }
 }
 
-/// @emoji 🪪 Pass-through [`IdiomHooks`] for binary facets (pack/spr) and text facets without a
+/// 🪪 Pass-through [`IdiomHooks`] for binary facets (pack/spr) and text facets without a
 /// dedicated `DslIdiom` yet — canonicalize is identity; classify/complete are empty.
 
 static LANGUAGE_REGISTRY: OnceLock<Mutex<HashMap<&'static str, LanguageSpec>>> = OnceLock::new();
@@ -1007,7 +1007,7 @@ pub fn register_languages(specs: Vec<LanguageSpec>) -> Result<(), LanguageRegist
     Ok(())
 }
 
-/// @emoji 📌️ Registers one grammar under its `id` — called once per grammar at plugin init,
+/// 📌️ Registers one grammar under its `id` — called once per grammar at plugin init,
 /// alongside (not instead of) `register_document_codec_for_app`. Overwrites on re-registration,
 /// matching `register_idiom`'s hot-reload-safe behavior.
 // 🚫️async: E1 pure accessor — see `language_registry` above
@@ -1016,14 +1016,14 @@ pub fn register_language(spec: LanguageSpec) {
     registry.insert(spec.id, spec);
 }
 
-/// @emoji 🔍️ Looks up a registered grammar by its `id` (e.g. `"fem2d"`, `"fem2dcfg"`, `"jack"`).
+/// 🔍️ Looks up a registered grammar by its `id` (e.g. `"fem2d"`, `"fem2dcfg"`, `"jack"`).
 // 🚫️async: E1 pure accessor — see `language_registry` above
 pub fn language(id: &str) -> Option<LanguageSpec> {
     let registry = language_registry().lock().unwrap_or_else(|poison| poison.into_inner());
     registry.get(id).copied()
 }
 
-/// @emoji 🔍️ Looks up a registered grammar by legacy file-extension suffix (e.g. `"note"`, `"jack"`).
+/// 🔍️ Looks up a registered grammar by legacy file-extension suffix (e.g. `"note"`, `"jack"`).
 // 🚫️async: E1 pure accessor — see `language_registry` above
 pub fn language_for_extension(extension: &str) -> Option<LanguageSpec> {
     let suffix = extension.strip_prefix('.').unwrap_or(extension);
@@ -1031,7 +1031,7 @@ pub fn language_for_extension(extension: &str) -> Option<LanguageSpec> {
     registry.values().find(|spec| spec.extension == Some(suffix)).copied()
 }
 
-/// @emoji 🔍️ Resolves a registered language from `.semio` file bytes (content-derived envelope).
+/// 🔍️ Resolves a registered language from `.semio` file bytes (content-derived envelope).
 /// Text components (`dsl`/`op`) prefer grammar registrations; binary components (`pack`/`spr`)
 /// prefer protocol registrations.
 // 🚫️async: E1 pure accessor — see `language_registry` above
@@ -1059,13 +1059,13 @@ fn language_for_suffix_candidates(base: &str, plugin: &str, artifact: &str, suff
 //#endregion 🔖️Idiom
 
 //#region 🔖️TestSupport
-/// @emoji 🧪️ Round-trip/property helpers every derived (or hand-declared) grammar's own tests
+/// 🧪️ Round-trip/property helpers every derived (or hand-declared) grammar's own tests
 /// call — the facade-level analogue of `crate::os_store::test_support`, scoped to the engine's own laws
 /// rather than the VCS store's.
 pub mod test_support {
     use super::*;
 
-    /// @emoji 🔁️ `parse(print(value)) == value` for a `RecordSpec` and an already-built `RecordValue`.
+    /// 🔁️ `parse(print(value)) == value` for a `RecordSpec` and an already-built `RecordValue`.
     pub fn assert_schema_round_trip(value: &RecordValue, spec: &RecordSpec) {
         let printed = print(value, spec, JoinMode::Document);
         let opts = ParseOptions::default();
@@ -1073,14 +1073,14 @@ pub mod test_support {
         assert_eq!(value, &reparsed, "schema round trip diverged;\nprinted:\n{printed}");
     }
 
-    /// @emoji ♻️ `canonicalize(canonicalize(x)) == canonicalize(x)`.
+    /// ♻️ `canonicalize(canonicalize(x)) == canonicalize(x)`.
     pub fn assert_idempotent(text: &str, spec: &RecordSpec) {
         let once = canonicalize(text, spec, &ParseOptions::default()).unwrap_or_else(|e| panic!("canonicalize failed: {e}"));
         let twice = canonicalize(&once, spec, &ParseOptions::default()).unwrap_or_else(|e| panic!("second canonicalize failed: {e}"));
         assert_eq!(once, twice, "canonicalization must be idempotent");
     }
 
-    /// @emoji 📏️ Document and Inline renders of the same value must parse back to equal values,
+    /// 📏️ Document and Inline renders of the same value must parse back to equal values,
     /// and the Inline render must be exactly one line — the newline law, checked generically.
     pub fn assert_document_inline_agree(value: &RecordValue, spec: &RecordSpec) {
         let inline_text = print(value, spec, JoinMode::Inline);

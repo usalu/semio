@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/✏️TextEditor/component.tsx
-/** @emoji 📝️ `✏️TextEditor` — the text/code document scene host: wasm editor-engine canvas surface
+/** 📝️ `✏️TextEditor` — the text/code document scene host: wasm editor-engine canvas surface
  * (grammar highlighting, hover tokens, F2 rename with multi-span preview, alt-click completions),
  * its context menu and keyboard-editing wiring, and the SSR-safe `Textarea`-based fallback. */
 // #endregion 🧲️Header
@@ -10,7 +10,7 @@ import { useCallback, useContext, useEffect, useMemo, useRef, useState, type Rea
 import { GraphWasmCanvas, type GraphWasmSession } from "@semio-tech/infinite-canvas-react-renderer";
 import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
 import { cn, ContextMenuController, glassClass, Textarea, useCanvasAppearanceSync, useLabel, useShellScopeOptional, type ContextMenuItem, type UiTranslationKey } from "@semio-tech/ui-react";
-import { TEXT_EDITOR_SCENE_LANES, textEditorActions, type ActionDescriptor, type ComponentSceneHostProps, type ContextMenuItemSpec, type PluginContextMenuRequest, type TextEditorScene } from "@semio-tech/framework";
+import { receiveTextEditorSceneV1, refuseTextEditorSpliceV1, scalarOfUtf8OffsetV1, sendTextEditorSpliceV1, TEXT_EDITOR_SCENE_LANES, textEditorActions, textEditorAppliedSpliceV1, textEditorSpliceHostV1, textEditorTypingV1, utf8OffsetOfScalarV1, type ActionDescriptor, type ComponentSceneHostProps, type ContextMenuItemSpec, type PluginContextMenuRequest, type TextEditorScene, type TextEditorSpliceHostV1, type TextEditorSpliceViewV1 } from "@semio-tech/framework";
 import { encodePackValue } from "@semio-tech/framework-os";
 import { openSurfaceContextMenu, parseSceneJsonField, useShellContextMenuFallback, type SurfaceContextMenuResult } from "../🗣️Interpreter/🟦️.tsx";
 import { mapContextMenuSpecs } from "../🌐️World3dHost/🟦️.tsx";
@@ -119,11 +119,11 @@ function identifierPrefixStart(text: string, caret: number): number {
   return start;
 }
 
-/** @emoji 🔁️ What one editor host knows about its own edits in flight: the texts it sent and has not seen echoed yet (oldest
+/** 🔁️ What one editor host knows about its own edits in flight: the texts it sent and has not seen echoed yet (oldest
  * first) and the last text an echo acknowledged. */
 export type TextEditorEchoStateV1 = { readonly pending: readonly string[]; readonly acknowledged: string | null };
 
-/** @emoji 🔁️ The host's optimistic local echo (fixture `🧫️fixtures/🔁️local-echo/🔣️.json`). While this editor types, its OWN text and
+/** 🔁️ The host's optimistic local echo (fixture `🧫️fixtures/🔁️local-echo/🔣️.json`). While this editor types, its OWN text and
  * caret are the newest state: a scene that only echoes what the host delivered — a buffer equal to a pending sent text (it
  * acknowledges that text and every older one) or to the last acknowledged text (the guest re-publishing a state it already
  * echoed, e.g. when a job finishes) — applies neither its buffer nor its selection, because both lag the editor (ticket
@@ -137,7 +137,7 @@ export function reconcileTextEditorEchoV1(state: TextEditorEchoStateV1, buffer: 
   return { external: true, pending: [], acknowledged: buffer };
 }
 
-/** @emoji 🕳️ The hidden textarea is the editor's INPUT SINK (focus, IME, clipboard): the wasm session owns the text and the
+/** 🕳️ The hidden textarea is the editor's INPUT SINK (focus, IME, clipboard): the wasm session owns the text and the
  * caret, so the textarea's own value changes are never an edit — typing, compositions, pastes and text inserted without a
  * key of its own (a dead key, the emoji picker, dictation: `beforeinput` `insertText`) arrive as key, composition,
  * clipboard and input events and are applied at the session's caret. */
@@ -153,7 +153,7 @@ export type TextEditorCaretCadenceV1 = Readonly<{
   armed: () => boolean;
 }>;
 
-/** @emoji ⌨️ Gives the canvas editor the focus-owned caret cadence native HTML inputs receive from
+/** ⌨️ Gives the canvas editor the focus-owned caret cadence native HTML inputs receive from
  * the browser. The hidden textarea remains the focus/IME authority; the canvas session receives
  * only visible-state transitions and paints the caret itself. */
 export function installTextEditorCaretCadenceV1(target: HTMLTextAreaElement, present: (visible: boolean) => void): TextEditorCaretCadenceV1 {
@@ -215,7 +215,7 @@ export function installTextEditorCaretCadenceV1(target: HTMLTextAreaElement, pre
   };
 }
 
-/** @emoji 🚫️ A refused edit never reaches the guest: it leaves the pending set, and once nothing is pending any more the host
+/** 🚫️ A refused edit never reaches the guest: it leaves the pending set, and once nothing is pending any more the host
  * re-applies the guest's own buffer (`resync`) — the typed text the guest did not take disappears together with the
  * shell's refusal notice instead of lingering as an edit that looks saved (ticket 26/09/23 F1: every keystroke after the
  * 64th of the trinity query was refused while the editor kept showing it). */
@@ -226,7 +226,7 @@ export function refuseTextEditorEditV1(state: TextEditorEchoStateV1, text: strin
   return { pending, acknowledged: state.acknowledged, resync: pending.length === 0 };
 }
 
-/** @emoji 🧾️ The refusal reason of a dispatch outcome (the input ledger's `applied | refused | superseded`), or `null` when the
+/** 🧾️ The refusal reason of a dispatch outcome (the input ledger's `applied | refused | superseded`), or `null` when the
  * input was not refused. */
 function refusalReason(outcome: unknown): string | null {
   if (typeof outcome !== "object" || outcome === null) return null;
@@ -234,18 +234,18 @@ function refusalReason(outcome: unknown): string | null {
   return answer.kind === "refused" ? String(answer.reason ?? "") : null;
 }
 
-/** @emoji 🔒️ Refusals that mean the window takes no text edits at all — a derived view (a compiled DSL, a script projection)
+/** 🔒️ Refusals that mean the window takes no text edits at all — a derived view (a compiled DSL, a script projection)
  * declares no `textEdit`, a viewer is read-only: the editor turns read-only instead of refusing every further keystroke
  * (ticket 26/09/23 F1: typing 158 keys into the dag/flow/sequence compiled windows raised 300 refusals). */
 export const TEXT_EDITOR_READ_ONLY_REFUSALS: ReadonlySet<string> = new Set(["undeclared-action", "viewer-read-only"]);
 
-/** @emoji ✍️ Whether a key edits the text (so a read-only editor swallows it): a printable key, Enter, Tab, Backspace, Delete. */
+/** ✍️ Whether a key edits the text (so a read-only editor swallows it): a printable key, Enter, Tab, Backspace, Delete. */
 function isTextEditingKey(event: { readonly key: string; readonly metaKey: boolean; readonly ctrlKey: boolean; readonly altKey: boolean }): boolean {
   if (event.key === "Enter" || event.key === "Tab" || event.key === "Backspace" || event.key === "Delete") return !event.metaKey && !event.ctrlKey;
   return event.key.length === 1 && !event.metaKey && !event.ctrlKey && !event.altKey;
 }
 
-/** @emoji ⏪️ The document history verb a key chord asks for inside the editor (`mod+z` undo, `mod+shift+z` / `ctrl+y` redo). The
+/** ⏪️ The document history verb a key chord asks for inside the editor (`mod+z` undo, `mod+shift+z` / `ctrl+y` redo). The
  * shell's own chords stand down while a text field has focus — right for a native field, which undoes itself — but the
  * editor's input sink is not a field of its own: its text lives in the document, so its undo is the document's
  * (ticket 26/09/23 F1: Cmd+Z in the writer and query editors did nothing). */
@@ -257,36 +257,36 @@ export function documentHistoryChord(event: { readonly key: string; readonly met
   return null;
 }
 
-/** @emoji 📮️ What the editor owes the guest: its latest text and selection (byte offsets of the session). */
+/** 📮️ What the editor owes the guest: its latest text and selection (byte offsets of the session). */
 type TextEditorOutboxV1 = { readonly text: string; readonly start: number; readonly end: number };
 
-/** @emoji 🧮️ Most edits one editor keeps in flight before an echo acknowledges them. */
+/** 🧮️ Most edits one editor keeps in flight before an echo acknowledges them. */
 const TEXT_EDITOR_PENDING_EDIT_LIMIT = 256;
 
-/** @emoji 🪞️ The scene fields an echo of the editor's own state carries back — its text and its selection. */
+/** 🪞️ The scene fields an echo of the editor's own state carries back — its text and its selection. */
 const TEXT_EDITOR_ECHOED_FIELDS: ReadonlySet<string> = new Set(["buffer", "selectionJson"]);
 
-/** @emoji 🧾️ Whether a paged-carrier lane transports an echoed field: its ref (`bytes` + `hash` of the buffer) changes with
+/** 🧾️ Whether a paged-carrier lane transports an echoed field: its ref (`bytes` + `hash` of the buffer) changes with
  * every keystroke, so an echo that kept it would re-sync — and repaint — an unchanged editor once per key. Read at call time:
  * the lane table is imported through a module cycle and is not initialised while this module evaluates. */
 function textEditorEchoedLaneV1(lane: string): boolean {
   return TEXT_EDITOR_SCENE_LANES.some((entry) => entry.lane === lane && TEXT_EDITOR_ECHOED_FIELDS.has(entry.field));
 }
 
-/** @emoji ✂️ A scene without what an echo of the editor's own state must not apply — its buffer, its selection and the
+/** ✂️ A scene without what an echo of the editor's own state must not apply — its buffer, its selection and the
  * lane refs that describe the buffer; every other field (tokens, diagnostics, completions…) stays and syncs. */
 export function sceneWithoutEchoedTextV1(scene: TextEditorScene): Record<string, unknown> {
   const lanes = scene.lanes?.filter((ref) => !textEditorEchoedLaneV1(ref.lane));
   return Object.fromEntries(Object.entries(scene).flatMap(([key, value]): [string, unknown][] => (TEXT_EDITOR_ECHOED_FIELDS.has(key) ? [] : key === "lanes" ? (lanes?.length ? [[key, lanes]] : []) : [[key, value]])));
 }
 
-/** @emoji 📦️ The pack the editor syncs for `scene`: the whole scene when it is external (another author's text), else the
+/** 📦️ The pack the editor syncs for `scene`: the whole scene when it is external (another author's text), else the
  * scene without the echo of its own state (ticket 26/09/23 F3: the buffer's lane ref made every echo re-sync). */
 export function textEditorSyncPackV1(scene: TextEditorScene, external: boolean): Uint8Array {
   return new Uint8Array(encodePackValue(external ? scene : sceneWithoutEchoedTextV1(scene)));
 }
 
-/** @emoji 🟰️ Whether two encoded scene packs carry the same bytes. */
+/** 🟰️ Whether two encoded scene packs carry the same bytes. */
 export function sameScenePackV1(left: Uint8Array, right: Uint8Array): boolean {
   if (left.length !== right.length) return false;
   for (let index = 0; index < left.length; index++) if (left[index] !== right[index]) return false;
@@ -367,8 +367,22 @@ export function changeTextEditorExplicitDraft(state: TextEditorExplicitDraftStat
 
 //#endregion EditingHelpers
 
+/** 🔢️ A wasm editor session's selection in scalars of `text` (the session speaks UTF-8 bytes); the text's end without one. */
+function textEditorSessionSelectionV1(session: FrameworkEditorSession | null, text: string): { readonly anchor: number; readonly caret: number } {
+  const end = Array.from(text).length;
+  return session === null ? { anchor: end, caret: end } : { anchor: scalarOfUtf8OffsetV1(text, session.anchor()), caret: scalarOfUtf8OffsetV1(text, session.caret()) };
+}
+
+/** 🖼️ Shows what splice typing answered (ticket 26/09/23 C12, `semio.ui.scene.text-splice.v1`): the text, then the selection in
+ * the session's UTF-8 bytes; nothing for `null` (the editor already shows it). */
+function showTextEditorSpliceViewV1(session: FrameworkEditorSession | null, view: TextEditorSpliceViewV1): void {
+  if (session === null || view === null) return;
+  session.setText(view.text);
+  session.setSelectionRange(utf8OffsetOfScalarV1(view.text, view.anchor), utf8OffsetOfScalarV1(view.text, view.caret));
+}
+
 //#region WasmEditorSurface
-/** @emoji 🖋️ The canvas text editor. It never paints on its own: the session {@link GraphWasmCanvas} hands it is the
+/** 🖋️ The canvas text editor. It never paints on its own: the session {@link GraphWasmCanvas} hands it is the
  * frame-demanding handle, where every call invalidates and the canvas paints once at the next frame. Its handlers used to
  * call `renderFrame` (a synchronous paint) after every change on top of that, and every echo of its own edit was synced
  * again even when its pack was byte-identical to the one already applied (the selection round trip), so one keystroke
@@ -422,6 +436,10 @@ function WasmEditorSurface({
   const readOnlyRef = useRef(false);
   const [readOnly, setReadOnly] = useState(false);
   const selectionUndeclaredRef = useRef(false);
+  const spliceHostRef = useRef<TextEditorSpliceHostV1 | null>(null);
+  const spliceTyping = useMemo(() => textEditorTypingV1(scene.settingsJson) !== null, [scene.settingsJson]);
+  const spliceTypingRef = useRef(false);
+  spliceTypingRef.current = spliceTyping && !explicitDraft;
   /** 📮️ ONE round trip in flight per editor, latest state wins: a typed run is delivered as the newest full text (plus the
    * selection that goes with it) whenever the previous delivery settled, never one `textEdit` + one `textSelect` per key —
    * sustained typing at 40 keys/s filled the per-actor command queue (`queue-full`, > 256 pending turns) and dropped keys
@@ -441,6 +459,29 @@ function WasmEditorSurface({
             if (history.current !== next.text) explicitHistoryRef.current = { past: [...history.past, history.current].slice(-256), current: next.text, future: [] };
             echoStateRef.current = { pending: [], acknowledged: next.text };
             onDraftChange?.(next.text);
+            return;
+          }
+          const spliceHost = spliceHostRef.current;
+          if (spliceTypingRef.current && spliceHost !== null) {
+            const sent = readOnlyRef.current ? null : sendTextEditorSpliceV1(spliceHost, next.text);
+            if (sent !== null) {
+              spliceHostRef.current = sent.host;
+              const reason = refusalReason(await onAction({ controllerId, action: textEditorActions.splice, args: { surfaceId, ...sent.splice, seq: sent.seq, anchor: next.start, caret: next.end } }));
+              if (reason === null) return;
+              if (TEXT_EDITOR_READ_ONLY_REFUSALS.has(reason)) {
+                readOnlyRef.current = true;
+                setReadOnly(true);
+              }
+              const session = sessionRef.current;
+              const local = session?.text() ?? next.text;
+              const refused = refuseTextEditorSpliceV1(spliceHostRef.current ?? sent.host, sent.seq, local, textEditorSessionSelectionV1(session, local));
+              spliceHostRef.current = refused.host;
+              showTextEditorSpliceViewV1(session, refused.show);
+              return;
+            }
+            if (selectionUndeclaredRef.current) return;
+            const reason = refusalReason(await onAction({ controllerId, action: textEditorActions.select, args: { surfaceId, start: next.start, end: next.end, splice: spliceHost.seq } }));
+            if (reason === "undeclared-action") selectionUndeclaredRef.current = true;
             return;
           }
           const echo = echoStateRef.current;
@@ -495,6 +536,32 @@ function WasmEditorSurface({
   const syncSession = useCallback(
     (resync = false) => {
       if (renameActiveRef.current) return;
+      if (spliceTypingRef.current) {
+        const session = sessionRef.current;
+        let show: TextEditorSpliceViewV1 = null;
+        if (resync || spliceHostRef.current === null) {
+          spliceHostRef.current = textEditorSpliceHostV1(scene.buffer, textEditorAppliedSpliceV1(scene.selectionJson));
+          reconciledRef.current = { scene, pack: textEditorSyncPackV1(scene, true) };
+        } else if (reconciledRef.current?.scene !== scene) {
+          const local = session?.text() ?? scene.buffer;
+          const received = receiveTextEditorSceneV1(spliceHostRef.current, scene.buffer, textEditorAppliedSpliceV1(scene.selectionJson), local, textEditorSessionSelectionV1(session, local));
+          spliceHostRef.current = received.host;
+          reconciledRef.current = { scene, pack: textEditorSyncPackV1(scene, false) };
+          show = received.show;
+        }
+        const pack = reconciledRef.current.pack;
+        if (session === null) return;
+        if (resync || syncedRef.current?.session !== session || !sameScenePackV1(syncedRef.current.pack, pack)) {
+          syncedRef.current = { session, pack };
+          try {
+            session.syncFromScenePack?.(pack);
+          } catch {
+            return;
+          }
+        }
+        showTextEditorSpliceViewV1(session, show);
+        return;
+      }
       if (resync) {
         echoStateRef.current = { pending: [], acknowledged: scene.buffer };
         reconciledRef.current = { scene, pack: textEditorSyncPackV1(scene, true) };

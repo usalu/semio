@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🧪️ Unit suite for `👆️gesture` — `pointerId`-keyed tracking, pinch diffing, and the
+/** 🧪️ Unit suite for `👆️gesture` — `pointerId`-keyed tracking, pinch diffing, and the
  * wheel/camera conversions every viewport host shares. */
 // #endregion 🧲️Header
 

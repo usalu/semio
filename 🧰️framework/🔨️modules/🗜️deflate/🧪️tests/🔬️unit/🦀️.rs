@@ -199,7 +199,6 @@ fn retained_inflater_physical_allocation_requires_exact_grant_and_releases_actua
     assert_eq!(inflater.close_retained_step(0, step.allocated_bytes), RetainedInflateCloseStep::Pending { released_items: 0, released_bytes: step.allocated_bytes });
     assert_eq!(inflater.close_retained_step(0, 0), RetainedInflateCloseStep::Complete);
     assert!(inflater.retained_terminal_is_empty());
-    eprintln!("[DEBUG] retained-inflater allocation={} pointer-stable=true exact-release={}", step.allocated_bytes, step.allocated_bytes);
 }
 
 #[test]
@@ -271,7 +270,6 @@ fn retained_inflater_physical_observes_overlap_max_distance_repeats_and_reuses_b
     }
     assert_eq!(close_retained(&mut inflater), allocated);
     assert!(inflater.retained_terminal_is_empty());
-    eprintln!("[DEBUG] retained-inflater distance-1=true distance-32768=true repeat-codes=16,17,18 reuse=true exact-release={allocated}/{allocated}");
 }
 
 //#region 🧪️Oracle

@@ -262,31 +262,31 @@ export type Board2dWasmSession = {
   deleteSelection?(): void;
   cancelAreaSelect?(): boolean;
   brushCycleCandidate?(forward: boolean): void;
-  /** @emoji 💡️ The brush slot the handle-suggestions popup drives locally: opening it paints the first
+  /** 💡️ The brush slot the handle-suggestions popup drives locally: opening it paints the first
    * candidate provisionally, `brushSetCandidateIndex` previews another, `brushCancelSlot` discards. The
    * COMMIT never runs here — accepting goes through the guest so the placement is one document edit. */
   brushOpenSlot?(handleId: string): void;
   brushSetCandidateIndex?(index: number): void;
   brushCancelSlot?(): void;
-  /** @emoji 🕹️ Composes the select utility's gumball handles; scale is deliberately absent on boards. */
+  /** 🕹️ Composes the select utility's gumball handles; scale is deliberately absent on boards. */
   setTransformFlags?(moveEnabled: boolean, rotateEnabled: boolean): void;
-  /** @emoji 🩺️ Gumball vitals (`{move,rotate,ringVisible,dragging,radians,pivot,radius}`). */
+  /** 🩺️ Gumball vitals (`{move,rotate,ringVisible,dragging,radians,pivot,radius}`). */
   transformGumballJson?(): string;
-  /** @emoji 🩺️ Live gesture vitals (`{mode,utility,hoveredId,selectionCount,preselectCount,revision}`). */
+  /** 🩺️ Live gesture vitals (`{mode,utility,hoveredId,selectionCount,preselectCount,revision}`). */
   interactionJson?(): string;
-  /** @emoji 🖍️ World extent one area-brush CLICK paints; a click-drag states its own rectangle. */
+  /** 🖍️ World extent one area-brush CLICK paints; a click-drag states its own rectangle. */
   setAreaBrushExtent?(width: number, height: number): void;
-  /** @emoji 🩺️ Every target region the board holds (`[{id,x,y,width,height,label?,hidden,locked,selected}]`). */
+  /** 🩺️ Every target region the board holds (`[{id,x,y,width,height,label?,hidden,locked,selected}]`). */
   targetRegionsJson?(): string;
-  /** @emoji 🩺️ On-screen handle vitals (`{total,onScreen,published,capped,rows:[[id,x,y,nodeId,handleKind,open]]}`) — the only DOM channel that names a handle. */
+  /** 🩺️ On-screen handle vitals (`{total,onScreen,published,capped,rows:[[id,x,y,nodeId,handleKind,open]]}`) — the only DOM channel that names a handle. */
   handlePositionsJson?(): string;
-  /** @emoji 🖱️ Transitive same-kind hover: every element of `kindId` in `domain` paints hovered, with no board event and no guest round trip. Both `null` clears it. */
+  /** 🖱️ Transitive same-kind hover: every element of `kindId` in `domain` paints hovered, with no board event and no guest round trip. Both `null` clears it. */
   setHoveredKindSilent?(domain: string | null, kindId: string | null): void;
   setFixtureDropPreviewJson?(json: string): void;
   clearFixtureDropPreview?(): void;
   defersDescriptorSyncFromJs?(): boolean;
   isDraggingAreaSelect?(): boolean;
-  /** @emoji 🐢️ Silent cross-pane mirror setters (WS-live-sync round 4) — move nodes/set preselect/set the marquee outline without emitting board events or a fixture reset, so a peer pane can mirror another pane's live gesture without round-tripping through the program. */
+  /** 🐢️ Silent cross-pane mirror setters (WS-live-sync round 4) — move nodes/set preselect/set the marquee outline without emitting board events or a fixture reset, so a peer pane can mirror another pane's live gesture without round-tripping through the program. */
   setNodePositionsJson?(json: string): void;
   setPreselectStateJsonSilent?(json: string): void;
   setSelectionScreenPreview?(flatXy: Float64Array): void;

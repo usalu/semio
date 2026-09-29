@@ -120,5 +120,4 @@ fn world_point_nudges_follow_the_complete_affine_basis() {
         if row["after"].is_null() {assert!(actual.is_err());} else {assert_eq!(actual.unwrap(),serde_json::from_value::<Vec<PathSegment>>(row["after"].clone()).unwrap(),"{}",row["name"]);}
         assert_eq!(source,saved);
     }
-    eprintln!("[DEBUG] world point nudges match neutral affine fixtures");
 }

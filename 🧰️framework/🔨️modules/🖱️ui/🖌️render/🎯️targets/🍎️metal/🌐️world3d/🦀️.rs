@@ -1,4 +1,4 @@
-//! @emoji 🌐️ World3d mesh/lines encoding: the dynamic-offset globals ring plus per-`SurfacePass`
+//! 🌐️ World3d mesh/lines encoding: the dynamic-offset globals ring plus per-`SurfacePass`
 //! instance/line upload and draw replay. Mirrors the wgpu target's `WorldGlobalsRing`/
 //! `prepare_world_passes`/`draw_world_pass_at` (`🎯️targets/🧊️wgpu/🦀️draw.rs`), minus the textured-quad
 //! variant — the wgpu reference builds `world3d_textured_pipeline` for the reference underlay since

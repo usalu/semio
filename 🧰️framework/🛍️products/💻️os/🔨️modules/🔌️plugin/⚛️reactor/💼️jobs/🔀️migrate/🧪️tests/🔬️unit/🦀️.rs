@@ -10,14 +10,14 @@ fn append_job_test_marker(bytes: &[u8]) -> Result<Vec<u8>, String> {
     Ok(out)
 }
 
+/// 🧬️ Idempotent on purpose: several tests in this module register the SAME (from, to) pair —
+/// `register_dialect_migration` treats a byte-identical re-registration as `Ok(())`, matching
+/// `📓️terra-jobs-runtime-report.md`'s own "last-writer overwrites, identical is not a conflict"
+/// convention one layer up in `register_job_kind`.
 async fn register_job_test_migration() -> (String, String) {
     let from = semio_framework::io_schema::ArtifactDialect { artifact_kind: "s.jobtest.migrate".to_string(), standard: "1".to_string(), subset: "*".to_string() };
     let to = semio_framework::io_schema::ArtifactDialect { artifact_kind: "s.jobtest.migrate".to_string(), standard: "2".to_string(), subset: "*".to_string() };
     let migration = store::DialectMigration { from: from.clone(), to: to.clone(), lossless: true, migrate_pack: append_job_test_marker };
-    // 🧬️ Idempotent on purpose: several tests in this module register the SAME (from, to) pair —
-    // `register_dialect_migration` treats a byte-identical re-registration as `Ok(())`, matching
-    // `📓️terra-jobs-runtime-report.md`'s own "last-writer overwrites, identical is not a conflict"
-    // convention one layer up in `register_job_kind`.
     let _ = store::register_dialect_migration(migration);
     (from.to_coordinate(), to.to_coordinate())
 }

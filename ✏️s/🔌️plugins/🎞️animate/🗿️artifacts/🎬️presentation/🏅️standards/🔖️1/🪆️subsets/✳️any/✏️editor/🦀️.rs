@@ -286,6 +286,7 @@ const ANIMATE_PRESENTATION_RETAINED_TOOL_IDS: &[&str] = &[
     "canvasPointerDown",
     "noMutation",
     "copyPrompt",
+    "exportVideoFromDeck",
 ];
 const ANIMATE_PRESENTATION_RETAINED_PAYLOAD_SCHEMA: &str = "animate.presentation.tool-command.v1";
 const ANIMATE_PRESENTATION_RETAINED_RAW_BYTES: usize = 8_192;
@@ -317,6 +318,7 @@ const ANIMATE_PRESENTATION_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublica
     ArtifactToolPublicationContract { tool_id: "canvasPointerDown", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "noMutation", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "copyPrompt", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: "exportVideoFromDeck", lanes: &[ArtifactToolPublicationLane::HostOnly] },
 ];
 
 /// 🧾️ The ONE execution contract this app's retained factory publishes AND declares in its
@@ -355,7 +357,7 @@ fn animate_presentation_retained_extent(command: &PresentationCommand, _snapshot
         PresentationCommand::EngagementSubmit(payload) => bounded(payload.value.len()),
         PresentationCommand::EngagementInput(payload) => (payload.value.len() <= ANIMATE_PRESENTATION_CONFIG_VALUE_BYTES).then_some(1),
         PresentationCommand::CanvasPointerDown(payload) => bounded(payload.layer_id.as_ref().map_or(0, String::len)),
-        PresentationCommand::ExportVideoFromDeck(_) => None,
+        PresentationCommand::ExportVideoFromDeck(payload) => bounded(payload.scene_json.len()),
     }
 }
 
@@ -966,7 +968,8 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
             "engagementInput",
             "canvasPointerDown",
             "noMutation",
-            "copyPrompt"
+            "copyPrompt",
+            "exportVideoFromDeck"
         ]
     }
 
@@ -1109,7 +1112,13 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
             "canvasPointerDown" => Ok(PresentationCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { layer_id: text_arg(&["layerId", "layer_id", "id"]) })),
             "noMutation" => Ok(PresentationCommand::NoOperation(no_operation::NoOperation {})),
             "copyPrompt" => Ok(PresentationCommand::CopyPrompt(copy_prompt::CopyPrompt {})),
-            "exportVideoFromDeck" => Ok(PresentationCommand::ExportVideoFromDeck(export_video_from_deck::ExportVideoFromDeck { output_dir: text_arg(&["outputDir", "output_dir"]).unwrap_or_default(), scene_json: args.and_then(|value| value.get("scene")).map_or_else(|| "null".into(), dsl::json::to_json_string) })),
+            "exportVideoFromDeck" => Ok(PresentationCommand::ExportVideoFromDeck(export_video_from_deck::ExportVideoFromDeck {
+                scene_json: match args.and_then(|value| value.get("scene")) {
+                    Some(dsl::DslValue::String(text)) => text.clone(),
+                    Some(dsl::DslValue::Null) | None => String::new(),
+                    Some(value) => dsl::json::to_json_string(value),
+                },
+            })),
             other => Err(Fault::from(format!("presentation: unhandled action id {other}"))),
         }
     }
@@ -1228,6 +1237,7 @@ pub fn create_animate_presentation_app() -> semio_framework_plugin::AppDefinitio
             .action_args("setFrame", vec![
                 ActionArgDef::object("frame", LocalizedLabel::native("Frame", "Rahmen"), figure_tile_frame_arg_fields()).required(),
             ])
+            .action_args("exportVideoFromDeck", vec![ActionArgDef::text("scene", LocalizedLabel::native("Presentation Scene (JSON)", "Präsentationsszene (JSON)"))])
             .action_args("setActiveExample", vec![
                 ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![ActionArgOption::new("demo", LocalizedLabel::native("Demo", "Demo"))])
                     .required()
@@ -1253,7 +1263,7 @@ pub fn create_animate_presentation_app() -> semio_framework_plugin::AppDefinitio
             .action_interactive_job("canvasPointerDown", InteractiveJobClassification::Migrated)
             .action_interactive_job("noMutation", InteractiveJobClassification::Migrated)
             .action_interactive_job("copyPrompt", InteractiveJobClassification::Migrated)
-            .action_interactive_job("exportVideoFromDeck", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("exportVideoFromDeck", InteractiveJobClassification::Migrated)
             .action_destructive("exportVideoFromDeck")
             // 🕹️ The framework-owned "tiles" interaction domain (ticket
             // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — covers both the document panel
@@ -1294,7 +1304,7 @@ pub fn create_animate_presentation_app() -> semio_framework_plugin::AppDefinitio
             .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole presentation with the bundled demo deck; any other example id changes nothing.", "Ersetzt die gesamte Präsentation durch das mitgelieferte Demo-Deck; jede andere Beispiel-Id ändert nichts."))
             .action_describe("clearTiles", LocalizedLabel::native("Removes every tile from the deck and keeps only the source image.", "Entfernt alle Kacheln aus dem Deck und behält nur das Quellbild."))
             .action_describe("copyPrompt", LocalizedLabel::native("Writes a tile-morph prompt describing the source image and every tile to a downloaded tile-morph-prompt.md file on the user's machine.", "Schreibt einen Tile-Morph-Prompt, der das Quellbild und jede Kachel beschreibt, in eine heruntergeladene Datei tile-morph-prompt.md auf dem Rechner des Nutzers."))
-            .action_describe("exportVideoFromDeck", LocalizedLabel::native("Renders a presentation scene (JSON) to video assets in the given output directory and downloads their list as animate-video-export.ops.", "Rendert eine Präsentationsszene (JSON) als Videodateien in das angegebene Ausgabeverzeichnis und lädt deren Liste als animate-video-export.ops herunter."))
+            .action_describe("exportVideoFromDeck", LocalizedLabel::native("Renders the deck (one slide per tile), or the presentation scene given as JSON in scene, to an H.264 MP4 video on this device and downloads it; its progress and a cancel control are in the Task Manager.", "Rendert das Deck (eine Folie pro Kachel) oder die als JSON in scene übergebene Präsentationsszene auf diesem Gerät als H.264-MP4-Video und lädt es herunter; Fortschritt und Abbruch stehen im Task-Manager."))
             .action_describe("resetGrid", LocalizedLabel::native("Replaces every tile of the deck with the default 3 by 5 grid cut from the source image; the previous tiles are discarded.", "Ersetzt alle Kacheln des Decks durch das Standardraster von 3 mal 5 aus dem Quellbild; die bisherigen Kacheln werden verworfen."))
             .action_audience("noMutation", semio_framework_plugin::CapabilityAudience::Chrome)
             .action_destructive("seedGrid")

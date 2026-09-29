@@ -182,6 +182,7 @@ where
     P: Clone + Default + store::ArtifactDsl + Send + Sync + 'static,
     M: protocol::Mutation<P> + Send + 'static,
 {
+    /// 🎒️ Same paging as the root retirement above.
     fn close_step(&mut self, owner: &mut store::TransientStore<P, M>, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
         if self.terminal_root.is_none() {
             if maximum_items == 0 {
@@ -197,7 +198,6 @@ where
             if maximum_items == 0 {
                 return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
             }
-            // 🎒️ Same paging as the root retirement above.
             if self.retained_bytes > maximum_bytes {
                 self.retained_bytes -= maximum_bytes;
                 return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: maximum_bytes });
@@ -265,6 +265,10 @@ where
     P: Clone + Default + Send + Sync + 'static,
     M: protocol::Mutation<P> + Send + 'static,
 {
+    /// 🧹️ The retained transient's own retirement gets the caller's WHOLE grant: the close ladder
+    /// prices a step in PAGES, and clamping it to one item here is what made a mesh-scale transient
+    /// answer `Pending { 0, 0 }` — eight of those in a row and the structural accountant kills the
+    /// close with `plugin.internal.zero-progress` (ticket 26/09/09).
     fn close_step(&mut self, owner: &mut store::TransientStore<P, M>, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
         if self.retirement.is_none() {
             if self.terminal_root.is_some() {
@@ -279,10 +283,6 @@ where
             return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
         }
         let retirement = self.retirement.as_mut().expect("checked transient retirement remains present");
-        // 🧹️ The retained transient's own retirement gets the caller's WHOLE grant: the close ladder
-        // prices a step in PAGES, and clamping it to one item here is what made a mesh-scale transient
-        // answer `Pending { 0, 0 }` — eight of those in a row and the structural accountant kills the
-        // close with `plugin.internal.zero-progress` (ticket 26/09/09).
         match retirement.close_step(maximum_items, maximum_bytes).map_err(Fault::from)? {
             store::SnapshotRetirementStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
             store::SnapshotRetirementStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "transient read remains live" }),

@@ -30,11 +30,28 @@ use std::time::Duration;
 /// itself compute or need one for `instantiate`, which only runs once at startup).
 const INSTANTIATE_BUDGET: Budget = Budget { fuel: 200_000_000, deadline_ms: 500, max_effects: 32, max_patch_bytes: 1 << 16, max_frames: 8 };
 
+/// 🎚️ P1f: this process hosts exactly ONE `ShardLoop`, pumped directly on THIS thread (below) —
+/// never submitted to `semio_framework_plugin_host::plugin_host_worker_pool()`. That pool's only
+/// tenant here is `StdioTransport`'s heartbeat sender (a sub-millisecond periodic job), so it
+/// needs exactly one worker, not `available_parallelism()-1`.
+///
+/// 👶️ host-dedyn: `fn main` (E3) is this process's thread root — every async startup step below
+/// crosses the sync↔async boundary via its own `block_on`, same bridge the pump loop uses.
+///
+/// 🌀️ `ShardLoop::pump` only drains what is ALREADY buffered and never blocks (its own doc
+/// comment) — this loop is the thing that keeps calling it, exactly the role a thread shard's
+/// OS-thread loop plays for a `ThreadTransport`-backed `ShardLoop` (not built in this repo yet,
+/// see the P1 report's `## gaps`; this binary is that loop's process-shard sibling). Per-turn
+/// budgets now arrive via `ShardFrame::Grant` on the wire (terra-shard-grants) — until a real
+/// caller sends one, envelopes for this actor run under `lane_defaults::budget_for(Lane::
+/// Maintenance)` (`ShardLoop::granted_budget`'s own documented fallback), a behavior change
+/// from the previous hardcoded 200M-fuel constant, and an honest one: this binary never
+/// computed a real per-turn budget itself either.
+///
+/// 👶️ host-dedyn: ONE `block_on` wrapping the whole loop — `fn main` (E3) is this process's
+/// thread root, exactly `poll_ready`'s replacement the packet brief describes
+/// ("each shard thread runs block_on(loop.run())").
 fn main() {
-    // 🎚️ P1f: this process hosts exactly ONE `ShardLoop`, pumped directly on THIS thread (below) —
-    // never submitted to `semio_framework_plugin_host::plugin_host_worker_pool()`. That pool's only
-    // tenant here is `StdioTransport`'s heartbeat sender (a sub-millisecond periodic job), so it
-    // needs exactly one worker, not `available_parallelism()-1`.
     let args: Vec<String> = std::env::args().collect();
     let [_, wasm_path, package_id, actor_id_arg] = args.as_slice() else {
         eprintln!("[semio-shard] usage: semio-shard <component.wasm> <package-id> <actor-id>");
@@ -45,8 +62,6 @@ fn main() {
         std::process::exit(2);
     });
 
-    // 👶️ host-dedyn: `fn main` (E3) is this process's thread root — every async startup step below
-    // crosses the sync↔async boundary via its own `block_on`, same bridge the pump loop uses.
     let runtime = Arc::new(GuestRuntimes::Owned(OwnedRuntime::new()));
     let bytes = std::fs::read(wasm_path).unwrap_or_else(|error| {
         eprintln!("[semio-shard] read {wasm_path}: {error}");
@@ -72,19 +87,6 @@ fn main() {
     }
     eprintln!("[semio-shard] pid={} package={package_id} actor={actor_id} ready", std::process::id());
 
-    // 🌀️ `ShardLoop::pump` only drains what is ALREADY buffered and never blocks (its own doc
-    // comment) — this loop is the thing that keeps calling it, exactly the role a thread shard's
-    // OS-thread loop plays for a `ThreadTransport`-backed `ShardLoop` (not built in this repo yet,
-    // see the P1 report's `## gaps`; this binary is that loop's process-shard sibling). Per-turn
-    // budgets now arrive via `ShardFrame::Grant` on the wire (terra-shard-grants) — until a real
-    // caller sends one, envelopes for this actor run under `lane_defaults::budget_for(Lane::
-    // Maintenance)` (`ShardLoop::granted_budget`'s own documented fallback), a behavior change
-    // from the previous hardcoded 200M-fuel constant, and an honest one: this binary never
-    // computed a real per-turn budget itself either.
-    //
-    // 👶️ host-dedyn: ONE `block_on` wrapping the whole loop — `fn main` (E3) is this process's
-    // thread root, exactly `poll_ready`'s replacement the packet brief describes
-    // ("each shard thread runs block_on(loop.run())").
     semio_framework_async::block_on(async {
         loop {
             if let Err(error) = shard.pump().await {

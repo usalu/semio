@@ -282,3 +282,36 @@ async fn unwired_otel_exporter_reports_unimplemented_rather_than_panicking() {
     assert!(matches!(err, DbError::Unimplemented(_)));
 }
 //#endregion 🔖️Otel
+
+//#region 🔖️Emit
+struct RecordingEmit {
+    events: Mutex<Vec<EmitEvent>>,
+}
+
+impl Emit for RecordingEmit {
+    async fn emit(&self, event: EmitEvent) {
+        self.events.lock().unwrap().push(event);
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+// 🔀️ dedyn-emit-runtime, O1/R11: was `emit_trait_object_records_events_with_fields_and_document`
+// (asserted `&dyn Emit` construction) — O1 removed the trait object; the equivalent coverage is
+// that a bare `RecordingEmit` still satisfies `Emit::emit` directly, which is exactly what every
+// real call site now relies on (generic `E: Emit` params, or a concrete `NullEmit`).
+async fn emit_satisfies_the_emit_trait_directly_and_records_events() {
+    let sink = RecordingEmit { events: Mutex::new(Vec::new()) };
+    sink.emit(EmitEvent::new("command.applied").with_document("doc-1".into()).field("bytes", EmitField::U64(128)).field("ok", EmitField::Bool(true))).await;
+    let events = sink.events.lock().unwrap();
+    assert_eq!(events.len(), 1);
+    assert_eq!(events[0].name, "command.applied");
+    assert_eq!(events[0].document, Some(ArtifactId::from("doc-1")));
+    assert_eq!(events[0].fields.len(), 2);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn null_emit_discards_without_panicking() {
+    let emit = NullEmit;
+    emit.emit(EmitEvent::new("noop")).await;
+}
+//#endregion 🔖️Emit

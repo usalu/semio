@@ -83,7 +83,7 @@ export function parsePanelState(viewState: { readonly panelJson?: string }): Spa
 }
 
 /**
- * @emoji 🪟️ Returns a studio panel with `spawned` present and focused as `activeSpawnedId`.
+ * 🪟️ Returns a studio panel with `spawned` present and focused as `activeSpawnedId`.
  * Host-effect application must fold this into the in-flight `nextViewState` before the final
  * `SET_SESSION` write — a separate panel dispatch is overwritten by that write and leaves the shell
  * stuck on the studio surface.
@@ -94,7 +94,7 @@ export function studioPanelFocusingSpawned(panel: SpacePanelState, spawned: Spaw
   return buildSpacePanelState(spawnedApps, panel.activePanelTab, spawned.id);
 }
 
-/** @emoji 🐚️ Commits a studio panel into a view state's `panelJson` for a single host-effect session write. */
+/** 🐚️ Commits a studio panel into a view state's `panelJson` for a single host-effect session write. */
 export function viewStateWithSpacePanel<T extends { readonly panelJson?: string }>(viewState: T, panel: SpacePanelState): T {
   return { ...viewState, panelJson: panelJsonFromState(panel) };
 }

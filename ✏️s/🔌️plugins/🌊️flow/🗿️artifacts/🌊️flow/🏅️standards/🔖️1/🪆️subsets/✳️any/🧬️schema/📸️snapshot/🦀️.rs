@@ -14,8 +14,9 @@ use framework_schema::ArtifactSchema;
 /// Distinct from `semio_framework_artifact_flow_flow::FlowHostSnapshot` in `semio-framework-os-flow`, which remains the framework
 /// host/kernel document type. This plugin snapshot converts at the host boundary via
 /// `to_host_snapshot`/`from_host_snapshot`, now bridging through the composed child + working-scene cache.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
+#[dsl(extension = "flow")]
 #[artifact_schema(id = "s.flow.flow")]
 pub struct FlowSnapshot {
     #[state(artifact)]
@@ -119,8 +120,14 @@ impl store::ArtifactPack for FlowSnapshot {
         let value: dsl::DslValue = json.into();
         dsl::FromValue::from_value(value).map_err(|error| store::PackError::Schema(error.to_string()))
     }
+    /// 🧬️ The structural fingerprint `ArtifactCodec::pack_schema_hash` (`codec.pack-schema-hash`), the describe gate and the
+    /// hub's trusted catalog pin the `flow.host_snapshot` kind by — the snapshot record's own fields (`schema` + the composed
+    /// `content` child handle), derived by `dsl::DslRecord` above, exactly as stdio's hand-rolled `txt` codec does. The JSON
+    /// pack body is unaffected: the hash fingerprints the SNAPSHOT RECORD, not the pack container. `None` here made describe
+    /// refuse the whole bundle ("none of its 1 declared artifact kinds is owned"), since W4's identity set keyed the kind on
+    /// `FLOW_DOCUMENT_SCHEMA`.
     fn record_spec() -> Option<dsl::RecordSpec> {
-        None
+        Some(Self::__dsl_spec())
     }
 }
 //#endregion 🔹HandcraftedArtifactCodecs

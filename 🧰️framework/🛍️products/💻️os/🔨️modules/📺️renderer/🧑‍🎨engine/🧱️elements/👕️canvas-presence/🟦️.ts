@@ -1,4 +1,4 @@
-/** @emoji 👕️ Local presence window-view registry + artifact-roster fan-in for canvas hosts.
+/** 👕️ Local presence window-view registry + artifact-roster fan-in for canvas hosts.
  * Ephemeral shared only — hosts publish throttled views; Shell heartbeat collects them into
  * `ArtifactPresencePeer.views`; hosts subscribe to the full roster to paint peer overlays.
  */

@@ -167,7 +167,7 @@ fn trailing_garbage_is_an_error() {
     assert!(parse_formula("x y )").is_err());
 }
 
-/// @emoji 🪞️ This crate's own normative `.grammar` file parses under `dsl_grammar`'s parser and
+/// 🪞️ This crate's own normative `.grammar` file parses under `dsl_grammar`'s parser and
 /// round-trips — the self-conformance proof for the *format* of the spec (not a recognizer
 /// check against real math text, which `os_dsl::grammar::Recognizer` cannot do here since it
 /// matches `os_dsl::lex` tokens directly and has no visibility into this crate's own

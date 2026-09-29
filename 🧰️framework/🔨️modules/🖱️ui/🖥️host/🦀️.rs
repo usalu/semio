@@ -1,4 +1,4 @@
-//! @emoji 🖥️ The platform layer: the only crate that knows about windows, event loops and which
+//! 🖥️ The platform layer: the only crate that knows about windows, event loops and which
 //! graphics backend this target actually compiles.
 //!
 //! It is where the cfg-exclusive backend choice is resolved into a concrete [`ActiveBackend`] alias —

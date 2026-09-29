@@ -1,56 +1,84 @@
 {
   "format": "semio.shell.contributions-push",
   "version": 1,
-  "note": "The contributions push is an owned per-instance unit, not a projection of one refreshUi. Every scenario below drives refreshes that supersede one another while the guest document read is still pending; the push must still land exactly once per (instanceId, content).",
-  "session": { "pluginId": "procedural", "instanceId": 7 },
-  "scopeKinds": ["brep.curve.polygon", "brep.solid.extrude", "math.vector"],
+  "note": "The contributions push is an owned per-instance unit, not a projection of one refreshUi, and awaits nothing before the crossing: the pack is a function of the receiver's consumes row and the loaded closure. Every scenario drives repeated or overlapping refreshes; the push must land exactly once per (instanceId, content).",
+  "session": {
+    "pluginId": "procedural",
+    "instanceId": 7
+  },
   "pack": "[{\"pluginId\":\"flow-extension-brep\"},{\"pluginId\":\"flow-extension-math\"}]",
-  "capabilityPack": "[{\"pluginId\":\"process-extension-wood\"}]",
   "scenarios": [
     {
-      "id": "superseded-mid-document-read",
-      "note": "The live defect: a guest re-arming a faulting flowEvalTick settles into a new refresh every few seconds, so every refresh that started a push was superseded while the document read was still in flight.",
+      "id": "overlapping-refreshes-install-once",
+      "note": "Refreshes that start while the first crossing is still in flight must not push the same content twice.",
       "refreshes": 4,
-      "supersedeEveryRefresh": true,
-      "documentReadResolves": "after-all-refreshes",
-      "expected": { "documentReads": 1, "pushes": 1, "installedKeys": ["7::PACK"], "outcomes": ["installed", "installed", "installed", "installed"] }
+      "overlapping": true,
+      "packEmpty": false,
+      "expected": {
+        "pushes": 1,
+        "installed": [
+          "7::PACK"
+        ],
+        "outcomes": [
+          "installed",
+          "unchanged",
+          "unchanged",
+          "unchanged"
+        ]
+      }
     },
     {
       "id": "repeat-refresh-installs-once",
       "note": "Once installed, later refreshes must not re-push the same content into the same instance.",
       "refreshes": 3,
-      "supersedeEveryRefresh": false,
-      "documentReadResolves": "immediately",
-      "expected": { "documentReads": 1, "pushes": 1, "installedKeys": ["7::PACK"], "outcomes": ["installed", "unchanged", "unchanged"] }
+      "overlapping": false,
+      "packEmpty": false,
+      "expected": {
+        "pushes": 1,
+        "installed": [
+          "7::PACK"
+        ],
+        "outcomes": [
+          "installed",
+          "unchanged",
+          "unchanged"
+        ]
+      }
     },
     {
-      "id": "session-switch-retires-the-resolving-unit",
-      "note": "A push whose session went away must be abandoned, never installed into an instance nobody is looking at. The next session resolves its own scope and installs under its own key.",
+      "id": "retired-instance-installs-again-under-a-new-id",
+      "note": "A session switch retires the instance that went away; the next instance installs under its own key.",
       "refreshes": 1,
-      "supersedeEveryRefresh": false,
-      "documentReadResolves": "after-retire",
+      "overlapping": false,
+      "packEmpty": false,
       "retireInstanceId": 7,
       "nextInstanceId": 8,
-      "expected": { "documentReads": 2, "pushes": 1, "installedKeys": ["8::PACK"], "outcomes": ["retired", "installed"] }
+      "expected": {
+        "pushes": 2,
+        "installed": [
+          "7::PACK",
+          "8::PACK"
+        ],
+        "outcomes": [
+          "installed",
+          "installed"
+        ]
+      }
     },
     {
-      "id": "unresolved-scope-pushes-nothing",
-      "note": "A genesis document with no example fallback resolves no operator kinds, and the loaded closure holds only operator-keyed contributions; the unit reports the reason instead of pushing an unscoped closure.",
+      "id": "an-empty-pack-pushes-nothing",
+      "note": "A receiver that consumes nothing the closure contributes gets no crossing at all.",
       "refreshes": 2,
-      "supersedeEveryRefresh": true,
-      "documentReadResolves": "unresolved",
-      "unresolvedReason": "no-document-pack",
-      "expected": { "documentReads": 1, "pushes": 0, "installedKeys": [], "outcomes": ["unresolved", "unresolved"] }
-    },
-    {
-      "id": "unresolved-scope-still-pushes-capability-packs",
-      "note": "A curation/machine/computer document resolves no operator graph AT ALL, which is its normal state. An operator graph never scoped a capability pack in the first place, so the unit must still install what the closure holds for that topic instead of skipping the whole push.",
-      "refreshes": 2,
-      "supersedeEveryRefresh": true,
-      "documentReadResolves": "unresolved",
-      "unresolvedReason": "no-operator-graph",
-      "capabilityClosure": true,
-      "expected": { "documentReads": 1, "pushes": 1, "installedKeys": ["7::CAPABILITY"], "outcomes": ["installed", "installed"] }
+      "overlapping": false,
+      "packEmpty": true,
+      "expected": {
+        "pushes": 0,
+        "installed": [],
+        "outcomes": [
+          "empty",
+          "empty"
+        ]
+      }
     }
   ]
 }

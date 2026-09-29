@@ -227,19 +227,19 @@ pub fn empty_xlsx_snapshot() -> XlsxSnapshot {
     XlsxSnapshot::default()
 }
 
-/// 📄️ FG-wave: the demo `stdio.xlsx` document — a genuinely non-trivial `XlsxSnapshot` exercising
-/// every `XlsxCellValue` variant (`SharedString`, `Number`, `Boolean`, `Formula` with a cached
-/// value, `InlineString`), two sheets, and one unmodeled raw OPC part (`xl/styles.xml`,
-/// verbatim-retained). The single source of truth for
-/// `📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`/`🎒️.pack.semio` (both are literally
-/// this snapshot's `print_dsl`/`encode_pack` output, asserted equal by `fixture_honesty_law`
-/// below) — same shape docx's own `demo_docx_snapshot()` establishes (this wave's OPC
-/// pattern-setter).
+/// 📄️ The demo `stdio.xlsx` document — a genuinely non-trivial `XlsxSnapshot` with `SharedString`, `Number`, `Boolean`,
+/// `Formula` (with a cached value) and `InlineString` cells on two sheets, plus one unmodeled XML part (`xl/styles.xml`)
+/// carried verbatim in the XML authority lane. Stated in the package
+/// normal form (XML parts path-ascending), so it is a fixed point of `encode_xlsx`/`decode_xlsx`. The single source of truth
+/// for `📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`/`🎒️.pack.semio` (literally this snapshot's `print_dsl`/`encode_pack`
+/// output, asserted by `fixture_honesty_law`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_xlsx_snapshot() -> XlsxSnapshot {
     use crate::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet};
-    use crate::standards::v_ecma_376::subsets::base::io::export::serializers::{build_minimal_xlsx, encode_xlsx};
-    use crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_xlsx;
+    use crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx;
+    use semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text;
+    const STYLES_PART: &str = "xl/styles.xml";
+    const STYLES_CONTENT_TYPE: &str = "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml";
     let workbook = XlsxWorkbook {
         sheets: vec![
             XlsxSheet {
@@ -258,19 +258,14 @@ pub fn demo_xlsx_snapshot() -> XlsxSnapshot {
         shared_strings: vec!["Name".into(), "Score".into(), "Alice".into()],
     };
     let mut snap = build_minimal_xlsx(workbook);
-    snap.opc.set_part("xl/styles.xml", "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml", b"<styleSheet/>".to_vec());
-    // 🩹 Normalize `opc.parts`' ORDER to the canonical post-regeneration shape `encode_xlsx`
-    // always produces (`regenerate_workbook_parts`'s `retain` keeps any unmodeled part -- here
-    // `xl/styles.xml` -- in its CURRENT relative position, then re-appends `workbook.xml`/
-    // `sharedStrings.xml`/every worksheet AFTER it; that shape is a fixed point of a further
-    // `encode_xlsx`/`decode_xlsx` round trip, but the pre-round-trip in-memory order this
-    // function would otherwise return is NOT). Without this, `fixture_honesty_law`'s direct
-    // `parsed == demo()` comparison fails on part ORDER alone even though every part's CONTENT
-    // round-trips correctly (`XlsxSnapshot`'s derived `PartialEq` is order-sensitive on
-    // `opc.parts: Vec<OpcPart>`) -- a real, previously-undiscovered fixture-construction bug this
-    // wave's own `fixture_honesty_law` caught live, not assumed.
-    let bytes = encode_xlsx(&snap).expect("encode demo xlsx for part-order normalization");
-    decode_xlsx(&bytes).expect("decode demo xlsx for part-order normalization")
+    snap.opc.content_types.set_override(STYLES_PART, STYLES_CONTENT_TYPE);
+    snap.xml_parts.push(XlsxXmlPart {
+        path: STYLES_PART.into(),
+        content_type: STYLES_CONTENT_TYPE.into(),
+        document: xml_document_from_text("<styleSheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"/>").expect("valid demo styles XML"),
+    });
+    snap.xml_parts.sort_by(|left, right| left.path.cmp(&right.path));
+    snap
 }
 //#endregion 🔖️DocumentHelpers
 

@@ -3,7 +3,7 @@
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::op::RemodelingMutation;
 use crate::RemodelingSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
@@ -11,8 +11,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub struct ExportQcReport {}
 
 pub fn handle(_payload: &ExportQcReport, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<RemodelingMutation, NoConfigMutation>, Fault> {
-    match &doc.snapshot.results.qc {
-        Some(qc) => Ok(Emit::effect(Effect::DownloadMediaExport { filename: "remodeling-qc-report.ops".into(), mime_type: "text/plain".into(), data: serde_json::to_string_pretty(qc).unwrap_or_default(), encoding: None })),
-        None => Ok(Emit::default()),
-    }
+    let qc = doc.snapshot.results.qc.as_ref().ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("remodeling.qc-report.missing"), "Run the quality check before exporting its report."))?;
+    let data = serde_json::to_string_pretty(qc).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("remodeling.qc-report.encode"), format!("The quality report could not be written: {error}")))?;
+    Ok(Emit::effect(Effect::DownloadMediaExport { filename: "remodeling-qc-report.json".into(), mime_type: "application/json".into(), data, encoding: None }))
 }

@@ -113,8 +113,8 @@ function lifecycleFixture(): { root: string; baselineCommit: string; ticketDir: 
     'const command=process.argv[2];',
     `if(command!=="preview-generated"&&process.env[${JSON.stringify(generatorEnvironment.name)}]!==${JSON.stringify(generatorEnvironment.value)})throw new Error("missing current generator environment");`,
     'if(command==="preview-generated") process.stdout.write(`${JSON.stringify({contractId:"fixture-generator",nodes,schemaVersion:1,staleRemovals:[]})}\\n`);',
-    'else if(command==="generate"){mkdirSync(root,{recursive:true,mode:0o755});writeFileSync(file,bytes,{mode:0o644});console.log("[DEBUG] support fixture generated");}',
-    'else if(command==="check-generated"){if(!existsSync(file)||!readFileSync(file).equals(bytes))throw new Error("stale generated fixture");console.log("[DEBUG] support fixture checked");}',
+    'else if(command==="generate"){mkdirSync(root,{recursive:true,mode:0o755});writeFileSync(file,bytes,{mode:0o644});console.log("support fixture generated");}',
+    'else if(command==="check-generated"){if(!existsSync(file)||!readFileSync(file).equals(bytes))throw new Error("stale generated fixture");console.log("support fixture checked");}',
     'else throw new Error(`unknown command ${command}`);',
     "",
   ].join("\n"));
@@ -123,7 +123,7 @@ function lifecycleFixture(): { root: string; baselineCommit: string; ticketDir: 
   put(consumer, [
     `/** 🧬️ Fixture documentation reads \`${paths[0]}\`. */`,
     ...paths.map((path, index) => `const source${index} = await Bun.file(new URL(${JSON.stringify(path)}, import.meta.url)).text();`),
-    'console.log(`[DEBUG] ${JSON.stringify({events:JSON.parse(source0).events.length,dsl:source1.split("\\n")[0],payload:JSON.parse(source2).title})}`);',
+    'console.log(`${JSON.stringify({events:JSON.parse(source0).events.length,dsl:source1.split("\\n")[0],payload:JSON.parse(source2).title})}`);',
     "",
   ].join("\n"));
   const commit = Bun.spawnSync(["git", "-c", "user.name=Semio Fixture", "-c", "user.email=fixture@invalid.example", "-c", "commit.gpgsign=false", "commit", "--quiet", "--allow-empty", "-m", "support fixture"], { cwd: root, stdout: "pipe", stderr: "pipe" });
@@ -159,7 +159,7 @@ async function verifyRustPointerAssertion(repo: string, aggregate: string, descr
     "    let owner = std::path::Path::new(&args[1]);",
     "    let descriptor: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&args[2]).unwrap()).unwrap();",
     `    ${assertions[0]}`,
-    '    println!("[DEBUG] descriptor pointer checked: {}", owner.display());',
+    '    println!("descriptor pointer checked: {}", owner.display());',
     "}",
     "",
   ].join("\n"));
@@ -168,7 +168,7 @@ async function verifyRustPointerAssertion(repo: string, aggregate: string, descr
     const child = Bun.spawn(["cargo", "run", "--offline", "--quiet", "--manifest-path", join(root, "Cargo.toml"), "--target-dir", join(root, "🎯️target"), "--", dirname(join(repo, descriptor)), join(repo, descriptor)], { cwd: root, env: { ...process.env }, stdout: "pipe", stderr: "pipe" });
     const [code, stdout, stderr] = await Promise.all([child.exited, new Response(child.stdout).text(), new Response(child.stderr).text()]);
     expect(code, stderr).toBe(0);
-    expect(stdout).toBe(`[DEBUG] descriptor pointer checked: ${dirname(join(repo, descriptor))}\n`);
+    expect(stdout).toBe(`[TRACE] descriptor pointer checked: ${dirname(join(repo, descriptor))}\n`);
     completed = true;
   } finally { retireRustOracleOutputs(root, completed); }
 }
@@ -238,7 +238,7 @@ describe("artifact support leaf authority", () => {
 
   test("matches the language-neutral owner contracts and exact production inputs", () => {
     expect(validateTaxonomy(taxonomy)).toEqual([]);
-    expect(taxonomy.mutationPayloadSchemaAuthority).toEqual(vector.payloadAuthority);
+    expect(taxonomy.mutationPayloadSchemaAuthority).toEqual<typeof vector.payloadAuthority>(vector.payloadAuthority);
     const validate = new Ajv({ strict: true }).compile({ type: "array", minItems: 3, maxItems: 3, items: { type: "object", additionalProperties: false, required: ["id", "source", "destination", "kindId", "size", "sha256"], properties: { id: { type: "string" }, source: { type: "string" }, destination: { type: "string" }, kindId: { type: "string" }, size: { type: "integer", minimum: 1 }, sha256: { type: "string", pattern: "^[a-f0-9]{64}$" } } } });
     expect(validate(vector.cases), JSON.stringify(validate.errors)).toBe(true);
     for (const row of vector.cases) {
@@ -283,7 +283,7 @@ describe("artifact support leaf authority", () => {
     const markdown = new MarkdownIt();
     for (const row of vector.documentationCases) {
       const actual = typescriptLeadingDocumentationReferenceAuthority(row.content);
-      expect(actual.map((entry) => entry.value), row.id).toEqual(row.values);
+      expect(actual.map((entry) => entry.value), row.id).toEqual<readonly string[]>(row.values);
       for (const token of actual) {
         expect(row.content.slice(token.start, token.end)).toBe(token.value);
         expect(token.structuredLocation.startsWith("typescript-leading-jsdoc-path:")).toBe(true);
@@ -314,7 +314,7 @@ describe("artifact support leaf authority", () => {
     const runReader = (): void => {
       const result = Bun.spawnSync([process.execPath, join(row.root, row.consumer)], { cwd: row.root, stdout: "pipe", stderr: "pipe" });
       expect(result.exitCode, result.stderr.toString()).toBe(0);
-      expect(result.stdout.toString().trim()).toBe('[DEBUG] {"events":6,"dsl":"semio energy.model.dsl v1","payload":"ReplaceModel"}');
+      expect(result.stdout.toString().trim()).toBe('[TRACE] {"events":6,"dsl":"semio energy.model.dsl v1","payload":"ReplaceModel"}');
     };
     runReader();
     const apply = { ...options, expectedBaselineCommit: row.baselineCommit, expectedPlanDigest: plan.planDigest, planArtifactPath: planPath };

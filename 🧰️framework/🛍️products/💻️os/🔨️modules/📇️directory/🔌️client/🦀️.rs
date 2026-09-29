@@ -2285,6 +2285,11 @@ mod canonical_checkpoint_pair;
 pub use canonical_checkpoint_pair::{canonical_checkpoint_pair_path, CANONICAL_CHECKPOINT_PAIR_TRANSIENT_ATTEMPTS, CANONICAL_CHECKPOINT_PAIR_TRANSIENT_STATUSES};
 //#endregion 🌱️SpaceArtifactCreation
 
+//#region 🤖️AgentDelegations
+#[path = "🤖️agent-delegations/🦀️.rs"]
+pub mod agent_delegations;
+//#endregion 🤖️AgentDelegations
+
 //#region 🧩️ExecutionTargetModule
 #[path = "🧩️execution-target-module/🦀️.rs"]
 mod execution_target_module;

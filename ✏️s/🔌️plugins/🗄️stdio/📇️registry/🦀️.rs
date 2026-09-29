@@ -252,6 +252,11 @@ pub fn format_descriptors() -> Result<Vec<FormatDescriptor>, PluginAssemblyError
     contributions.iter().map(|contribution| (contribution.formats)().map_err(PluginAssemblyError::definition)).collect::<Result<Vec<_>, _>>().map(|groups| groups.into_iter().flatten().collect())
 }
 
+/// 🏭️ Native document codecs of the full catalog: every artifact whose documents the hub opens through a linked codec;
+/// the seven definition-only artifacts (binary, bmp, epw, gif, ifc, semio, wav) own none.
+#[cfg(feature = "full-artifact-catalog")]
+const NATIVE_CODEC_FACTORY_COUNT: usize = 29;
+
 fn native_codec_factories() -> Vec<NativeCodecFactory> {
     selected_contributions().into_iter().flat_map(|contribution| (contribution.native_codecs)()).collect()
 }
@@ -410,8 +415,8 @@ impl NativeCatalogProjectionBudget {
 
 #[cfg(feature = "full-artifact-catalog")]
 fn preflight_native_catalog_projection(assemblies: &[ArtifactAssembly], receipts: &[NativeCodecFactoryReceipt], factories: &[NativeCodecFactory]) -> Result<NativeCatalogProjectionBudget, PluginAssemblyError> {
-    if assemblies.len() != 36 || receipts.len() != 26 {
-        return Err(failure("native catalog projection requires 36 definitions and 26 codecs"));
+    if assemblies.len() != 36 || receipts.len() != NATIVE_CODEC_FACTORY_COUNT {
+        return Err(failure(format!("native catalog projection requires 36 definitions and {NATIVE_CODEC_FACTORY_COUNT} codecs")));
     }
     let mut budget = NativeCatalogProjectionBudget::new();
     budget.object(&["schema", "pluginId", "packageId", "packageVersion", "definitions", "codecs"])?;
@@ -503,10 +508,10 @@ fn native_artifact_catalog(assemblies: &[ArtifactAssembly]) -> Result<NativeArti
     }
     definitions.sort_by(|left, right| left.identity.cmp(&right.identity));
     let identities = definitions.iter().map(|definition| definition.identity.as_str()).collect::<BTreeSet<_>>();
-    if identities.len() != 36 || receipts.len() != 26 {
+    if identities.len() != 36 || receipts.len() != NATIVE_CODEC_FACTORY_COUNT {
         return Err(failure("native catalog definition and codec ownership is incomplete"));
     }
-    let mut codecs = Vec::with_capacity(26);
+    let mut codecs = Vec::with_capacity(NATIVE_CODEC_FACTORY_COUNT);
     for receipt in receipts {
         let factory = factories.iter().find(|factory| factory.id == receipt.factory_id).ok_or_else(|| failure("native catalog codec has no private artifact owner"))?;
         let definition_identity = format!("s.stdio.{}", factory.artifact);
@@ -597,7 +602,7 @@ fn compiled_native_catalog_expectation() -> Result<&'static CompiledNativeCatalo
         .map_err(Clone::clone)
 }
 
-/// 🔐️ Admits only the exact guest-committed 36-definition/26-codec semantic projection.
+/// 🔐️ Admits only the exact guest-committed 36-definition/29-codec semantic projection.
 #[cfg(feature = "full-artifact-catalog")]
 pub fn validate_native_artifact_catalog_contributions(contributions: &[semio_framework::TopicContribution]) -> Result<(), PluginAssemblyError> {
     if contributions.len() > 256 {
@@ -623,7 +628,7 @@ pub fn validate_native_artifact_catalog_contributions(contributions: &[semio_fra
 #[cfg(feature = "full-artifact-catalog")]
 pub fn validate_native_codec_artifact_kinds(kinds: &[semio_framework_plugin::ArtifactKindSpec]) -> Result<(), PluginAssemblyError> {
     let expected = native_codec_artifact_kinds();
-    if expected.len() != 26 || kinds.len() != expected.len() {
+    if expected.len() != NATIVE_CODEC_FACTORY_COUNT || kinds.len() != expected.len() {
         return Err(failure("decoded descriptor omits or adds native artifact kinds"));
     }
     let actual = kinds.iter().map(|kind| (kind.id.as_str(), kind)).collect::<BTreeMap<_, _>>();
@@ -670,7 +675,7 @@ fn native_codec_factory_receipts_for(assemblies: &[ArtifactAssembly]) -> Result<
             return Err(failure(format!("receipt {} is not bijective with one selected runtime artifact", receipt.factory_id)));
         }
     }
-    if receipts.len() != 26 || factories.len() != 26 || factory_ids.len() != 26 || descriptor_ids.len() != 26 || receipt_keys.len() != 26 {
+    if [receipts.len(), factories.len(), factory_ids.len(), descriptor_ids.len(), receipt_keys.len()].iter().any(|count| *count != NATIVE_CODEC_FACTORY_COUNT) {
         return Err(failure("native codec receipts and selected artifact factories are not a complete bijection"));
     }
     validate_native_openable_projection(&receipts, &factories)?;

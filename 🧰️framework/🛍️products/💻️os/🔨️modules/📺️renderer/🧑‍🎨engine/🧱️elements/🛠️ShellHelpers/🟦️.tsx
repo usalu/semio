@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/ShellHelpers/component.tsx
-/** @emoji 🧰️ `ShellHelpers` — shared plumbing behind the framework OS shell orchestrator
+/** 🧰️ `ShellHelpers` — shared plumbing behind the framework OS shell orchestrator
  * ({@link ../ShellHost}): action-history/reserved-id bookkeeping, presence identity, UI history,
  * media-export download helpers, `requestMediaFrames`'s WebCodecs/`<video>` tiered decode pipeline,
  * window-layout-change classification, the utility-tree/command/tool registries, the tutorial UI
@@ -224,18 +224,18 @@ export function syncDocumentId(session: ActiveSession, panel: SpacePanelState | 
   return `${session.pluginId}-${session.instanceId}`;
 }
 
-/** @emoji ↔ Shared starting width for every panel anchor, one compact step wider than the former 280px Document panel. */
+/** ↔ Shared starting width for every panel anchor, one compact step wider than the former 280px Document panel. */
 export const DEFAULT_PANEL_WIDTH_PX = 300;
 
-/** @emoji 🌳️ Root category id for the nested dock tab tree — the top row of {@link defaultDock}'s bottom-left (Display) anchor tabs; top-left (Workbench), top-right (Details) and bottom-right (Settings) render their tabs flat instead of under a category branch. */
+/** 🌳️ Root category id for the nested dock tab tree — the top row of {@link defaultDock}'s bottom-left (Display) anchor tabs; top-left (Workbench), top-right (Details) and bottom-right (Settings) render their tabs flat instead of under a category branch. */
 export const FRAMEWORK_CATEGORY_DISPLAY_ID = "framework.category.display";
-/** @emoji 🎛️ Root category id bundling every command-category leaf under one expandable Command toggle on bottom-middle (mirrors Display on bottom-left). */
+/** 🎛️ Root category id bundling every command-category leaf under one expandable Command toggle on bottom-middle (mirrors Display on bottom-left). */
 export const FRAMEWORK_CATEGORY_COMMAND_ID = "framework.category.command";
-/** @emoji 🛠️ Root category id bundling every mode-level tool leaf under one expandable Tool toggle on
+/** 🛠️ Root category id bundling every mode-level tool leaf under one expandable Tool toggle on
  * bottom-middle, ordered left of the Command branch (mirrors Command's own bundling on the same anchor). */
 export const FRAMEWORK_CATEGORY_TOOL_ID = "framework.category.tool";
 
-/** @emoji 🎛️ Corner/top-middle/bottom-middle anchors park their *folded* root tab row in navbar/footer chrome (via {@link PanelChromeTabBar}); while open, the floating {@link Panel} hosts the full strip on its {@link WindowChrome}. The two side-middle anchors have no navbar/footer slot, so they're absent here and fall back to `"panel"` (see the `?..:"panel"` read site), carrying their own tab bar when folded too. */
+/** 🎛️ Corner/top-middle/bottom-middle anchors park their *folded* root tab row in navbar/footer chrome (via {@link PanelChromeTabBar}); while open, the floating {@link Panel} hosts the full strip on its {@link WindowChrome}. The two side-middle anchors have no navbar/footer slot, so they're absent here and fall back to `"panel"` (see the `?..:"panel"` read site), carrying their own tab bar when folded too. */
 export const PANEL_TAB_BAR_HOSTS: Partial<Record<Anchor, "navbar" | "footer">> = {
   "top-left": "navbar",
   "top-middle": "navbar",
@@ -796,14 +796,14 @@ export function useUIHistory(initialUri = "/", syncBrowser = false) {
 
 export const DOWNLOAD_MEDIA_EXPORT_REVOKE_MS = 10_000;
 
-/** @emoji 📥️ Recovers the guest's `encoding` from the wire, whatever shape the WIT `option<string>`
+/** 📥️ Recovers the guest's `encoding` from the wire, whatever shape the WIT `option<string>`
  * arrived in — the SAME reader both renderer doors use (`🖼️wire-turn.ts`). Reading it flat here is
  * what dropped it for every binary export (`📓️io-surface-2026-09-13.md` §7.3). What the string MEANS
  * is `kernel::mediaExportBytes`; a `SEGMENTED_DOWNLOAD_MARKER_PREFIX` value is a handle, not an
  * encoding, and is consumed by the segmented lane before either reaches the bytes. */
 export const mediaExportEncodingText = wireMediaExportEncoding;
 
-/** @emoji 📥️ Host download of guest `download-media-export`. The bytes come from the kernel's own
+/** 📥️ Host download of guest `download-media-export`. The bytes come from the kernel's own
  * `(data, encoding)` contract — not a local `atob` branch — so text stays text, base64 becomes bytes,
  * and an encoding no shell knows is a loud typed refusal rather than a corrupt file. The anchor must
  * be in the document and the object URL must outlive the click or the browser drops the file. */
@@ -812,7 +812,7 @@ export function downloadMediaExport(filename: string, mimeType: string, data: st
   downloadMediaExportBytes(filename, mimeType, mediaExportBytes(data, encoding));
 }
 
-/** @emoji 📥️ Host delivery of already-assembled bytes — the blob-and-anchor half of {@link downloadMediaExport}, reached by the segmented lane once its chunks are drained. */
+/** 📥️ Host delivery of already-assembled bytes — the blob-and-anchor half of {@link downloadMediaExport}, reached by the segmented lane once its chunks are drained. */
 export function downloadMediaExportBytes(filename: string, mimeType: string, bytes: Uint8Array): void {
   if (typeof document === "undefined") return;
   // 🧭️ `slice()` because a `Uint8Array` may be backed by a `SharedArrayBuffer`, which is not a
@@ -831,7 +831,7 @@ export function downloadMediaExportBytes(filename: string, mimeType: string, byt
   }, DOWNLOAD_MEDIA_EXPORT_REVOKE_MS);
 }
 
-/** @emoji 🌊 The sink factory every shell drain uses: assembled chunks delivered as one file through {@link downloadMediaExportBytes}. */
+/** 🌊 The sink factory every shell drain uses: assembled chunks delivered as one file through {@link downloadMediaExportBytes}. */
 export const shellSegmentedDownloadSinkFactory: SegmentedDownloadSinkFactory = segmentedDownloadSinkFactory(downloadMediaExportBytes);
 
 export {
@@ -1534,7 +1534,7 @@ function isStudioMode(catalog: PluginCatalog, pluginFilter?: string): boolean {
 
 export type ShellRoute = { readonly kind: "landing" } | { readonly kind: "space"; readonly spaceId: string; readonly instanceId?: string } | { readonly kind: "notFound"; readonly path: string };
 
-/** @emoji 🧭️ Classifies shell history paths into landing, studio space, or unknown routes. */
+/** 🧭️ Classifies shell history paths into landing, studio space, or unknown routes. */
 export function parseShellRoute(path: string): ShellRoute {
   const normalized = (path.split("?")[0] ?? "/").trim() || "/";
   if (normalized === "/") return { kind: "landing" };
@@ -1582,7 +1582,7 @@ export function appWindowLabel(app: Pick<AppDefinition, "label" | "breadcrumb" |
 // here so every existing call site keeps one import.
 export { buildSpacePanelState, isSpacePanelState, panelJsonFromState, parsePanelState, studioPanelFocusingSpawned, viewStateWithSpacePanel } from "./📌️panel/🟦️.ts";
 
-/** @emoji 🧭️ Default anchor a plugin-declared panel-tab `group` docks into — groups only ever map to the four corners; the four edge-middle anchors start empty and are user-populated via drag-and-drop or a dock skeleton override. */
+/** 🧭️ Default anchor a plugin-declared panel-tab `group` docks into — groups only ever map to the four corners; the four edge-middle anchors start empty and are user-populated via drag-and-drop or a dock skeleton override. */
 export function panelAnchorForGroup(group: string): Anchor {
   if (group === "workbench" || group === "document") return "top-left";
   if (group === "details") return "top-right";
@@ -1593,7 +1593,7 @@ export function panelAnchorForGroup(group: string): Anchor {
 
 const FRAMEWORK_SETTINGS_BRANCH_ID = "framework.settings";
 
-/** @emoji ⚙️ Nests every app-declared Settings-group panel tab under the framework Settings branch so the
+/** ⚙️ Nests every app-declared Settings-group panel tab under the framework Settings branch so the
  * bottom-right anchor exposes one Settings toggle instead of a duplicate beside it. */
 export function integrateAppSettingsPanelTabsIntoFrameworkBranch(frameworkSettingsTab: PanelTabNode, appSettingsTabs: readonly PanelTabNode[]): PanelTabNode {
   if (appSettingsTabs.length === 0) return frameworkSettingsTab;
@@ -1604,7 +1604,7 @@ export function integrateAppSettingsPanelTabsIntoFrameworkBranch(frameworkSettin
 }
 
 /**
- * @emoji 🕰️ Panel tab ids the shell mounts as its own chrome, so an app-declared tab carrying one of them
+ * 🕰️ Panel tab ids the shell mounts as its own chrome, so an app-declared tab carrying one of them
  * must never be mounted a second time out of `AppDefinition.panelTabs`. `framework.panel.history` is
  * injected into EVERY app (`🔌️plugin/🦀️.rs` `AppBuilder::build_definition`) so the guest renders the
  * history body, while the shell also builds that tab host-side; mounting both puts two identically-named
@@ -1614,12 +1614,12 @@ export function integrateAppSettingsPanelTabsIntoFrameworkBranch(frameworkSettin
  */
 export const SHELL_OWNED_PANEL_TAB_IDS: readonly string[] = [FRAMEWORK_PANEL_TAB_HISTORY_ID];
 
-/** @emoji 🕰️ True when {@link SHELL_OWNED_PANEL_TAB_IDS} already covers this panel tab id — the one gate the dock's app-declared anchors filter on. */
+/** 🕰️ True when {@link SHELL_OWNED_PANEL_TAB_IDS} already covers this panel tab id — the one gate the dock's app-declared anchors filter on. */
 export function shellRendersPanelTabItself(panelTabId: string): boolean {
   return SHELL_OWNED_PANEL_TAB_IDS.includes(panelTabId);
 }
 
-/** @emoji 🪟️ One leaf in a framework layout tree, with optional instance/template binding for multi-pane world views. */
+/** 🪟️ One leaf in a framework layout tree, with optional instance/template binding for multi-pane world views. */
 type FrameworkLayoutWindowSeed = {
   readonly windowId: string;
   readonly windowKindId: string;
@@ -1629,7 +1629,7 @@ type FrameworkLayoutWindowSeed = {
   readonly corner?: WindowStackCorner;
 };
 
-/** @emoji 🪟️ Walks a framework layout and collects every window leaf, preferring `instanceId` as the live pane id. */
+/** 🪟️ Walks a framework layout and collects every window leaf, preferring `instanceId` as the live pane id. */
 function collectFrameworkLayoutWindowSeeds(node: WindowLayoutAxisNode | WindowLayoutStackNode | WindowLayoutWindowNode, parentSize = 100): FrameworkLayoutWindowSeed[] {
   if (node.kind === "window") {
     return [
@@ -1737,7 +1737,7 @@ export function retitleWindowLayoutNode(
   } as WindowLayoutNode;
 }
 
-/** @emoji 🪟️ The window instances a framework layout DECLARES beyond one per kind — every leaf whose instance id differs
+/** 🪟️ The window instances a framework layout DECLARES beyond one per kind — every leaf whose instance id differs
  * from its window kind id, for a kind the app declares — as `{ id, windowKindId }`, in layout order, labels untouched.
  * The identity half of {@link resolveFrameworkLayoutSeed}'s `extraInstances`, for a program whose windows the shell
  * namespaces itself (a spawned program inside `s`). */
@@ -1749,7 +1749,7 @@ export function frameworkLayoutDeclaredInstances(layout: WindowLayout | undefine
     .map((seed) => ({ id: seed.windowId, windowKindId: seed.windowKindId }));
 }
 
-/** @emoji 🪟️ Resolves a framework layout into the live mode tree, extra instances, and pending projection templates without inferring window focus (no side effects). */
+/** 🪟️ Resolves a framework layout into the live mode tree, extra instances, and pending projection templates without inferring window focus (no side effects). */
 export function resolveFrameworkLayoutSeed(
   layout: WindowLayout | undefined,
   windowKinds: readonly { readonly id: string; readonly label: unknown }[],
@@ -1792,7 +1792,7 @@ export function resolveFrameworkLayoutSeed(
   };
 }
 
-/** @emoji 🪟️ Applies a resolved framework layout seed: registers one-shot world projections, then returns the live layout payload. */
+/** 🪟️ Applies a resolved framework layout seed: registers one-shot world projections, then returns the live layout payload. */
 export function applyFrameworkLayoutSeed(
   layout: WindowLayout | undefined,
   windowKinds: readonly { readonly id: string; readonly label: unknown }[],
@@ -1940,7 +1940,7 @@ function windowEngagementControlToSpec(control: WindowEngagementControl | undefi
 
 export { pluginLoadRemainingMs };
 
-/** @emoji 🔌️ Result of {@link installPlugin} — the boot effect must not infer success from
+/** 🔌️ Result of {@link installPlugin} — the boot effect must not infer success from
  * `loadedPluginsRef`, which only updates after the next React commit. */
 export type PluginInstallOutcome = "loaded" | "already-loaded" | "in-flight" | "missing-registry" | "failed";
 
@@ -2097,7 +2097,7 @@ export function windowEngagementToSpec(engagement: WindowEngagement | undefined,
   return { sessionActive: engagement.sessionActive, options, control, controls, status };
 }
 
-/** @emoji 🔎️ Builds the top-middle window {@link SearchSpec} from the same Rust engagement payload: typed action input and autocomplete possibles. */
+/** 🔎️ Builds the top-middle window {@link SearchSpec} from the same Rust engagement payload: typed action input and autocomplete possibles. */
 export function windowEngagementToSearchSpec(engagement: WindowEngagement | undefined, onAction: (action: ActionDescriptor) => void): SearchSpec | undefined {
   if (!engagement) return undefined;
   const input = engagement.input
@@ -2134,7 +2134,7 @@ function panelTabIcon(tabId: string, group: string): React.FC<{ size?: number }>
   return shellTabIcon(tabId);
 }
 
-/** @emoji 🌳️ Category-row icon: the first child's icon, or `fallback` when the category has no tabs yet. */
+/** 🌳️ Category-row icon: the first child's icon, or `fallback` when the category has no tabs yet. */
 export function categoryTabIcon(tabs: readonly PanelTabNode[], fallback: IconName): React.FC<{ size?: number }> {
   const FirstIcon = tabs[0]?.icon;
   return function CategoryTabIcon({ size = 16 }: { size?: number }) {
@@ -2142,7 +2142,7 @@ export function categoryTabIcon(tabs: readonly PanelTabNode[], fallback: IconNam
   };
 }
 
-/** @emoji 🌳️ Depth-first leaves of a recursive panel-tab tree — the nodes that actually carry a `bodyKey`
+/** 🌳️ Depth-first leaves of a recursive panel-tab tree — the nodes that actually carry a `bodyKey`
  * to render. `PanelTabDefinition` (required `children: T[]`, no leaf variant) satisfies this
  * constraint directly; `PanelTabNode` (`PanelTabLeaf | PanelTabBranch`, `PanelTabLeaf` carrying no
  * `children` key at all) is a TS "weak type" mismatch against a constraint of only-optional
@@ -2152,7 +2152,7 @@ export function flattenPanelTabLeaves<T extends { readonly children?: readonly T
   return tabs.flatMap((tab) => (tab.children && tab.children.length > 0 ? flattenPanelTabLeaves(tab.children) : [tab]));
 }
 
-/** @emoji 🌳️ Converts one plugin-declared {@link AppPanelTabDefinition} (recursively) into a {@link PanelTabNode}.
+/** 🌳️ Converts one plugin-declared {@link AppPanelTabDefinition} (recursively) into a {@link PanelTabNode}.
  *
  * 🪟️ `treeWindows`/`cache` are the windowed-tree plumbing: the tab's own `bodyKey` is what the guest
  * and `UiDirtyScope.panelBodies` name, and `cache` keeps a tab whose body did not change on exactly the
@@ -2353,7 +2353,7 @@ export function resolveUtilityNodes(
 }
 //#endregion 🧰️UtilityRegistry
 
-/** @emoji 💬️ Builds spawned-window engagement, search, measures, and utility-options chrome for one window instance. */
+/** 💬️ Builds spawned-window engagement, search, measures, and utility-options chrome for one window instance. */
 export function spawnedWindowChromeForKind(
   kind: Pick<AppDefinition["windowKinds"][number], "options">,
   windowId: string,
@@ -2399,13 +2399,13 @@ function uiIntentPayload(intent: UiIntent): unknown {
   return named;
 }
 
-/** @emoji 🌉️ Bridges one semantic UI intent onto the existing plugin action address. Version one is the direct `ActionFactory` mapping; later versions stay explicit in the action name until the host wire owns a version field. */
+/** 🌉️ Bridges one semantic UI intent onto the existing plugin action address. Version one is the direct `ActionFactory` mapping; later versions stay explicit in the action name until the host wire owns a version field. */
 export function uiIntentToActionDescriptor(intent: UiIntent): ActionDescriptor {
   const payload = uiIntentPayload(intent);
   return { ...actionBindingToActionDescriptor({ action: intent.action, args: null }), ...(payload === undefined ? {} : { args: payload }) };
 }
 
-/** @emoji 🌉️ The plugin action address an authored binding fires — the mapping {@link uiIntentToActionDescriptor} applies
+/** 🌉️ The plugin action address an authored binding fires — the mapping {@link uiIntentToActionDescriptor} applies
  * to a fired intent, for a host control that re-offers a guest's own binding (the Tasks window pausing a tool run with
  * the run's own ToolRun-panel Pause). */
 export function actionBindingToActionDescriptor(binding: { readonly action: UiIntent["action"]; readonly args: unknown }): ActionDescriptor {
@@ -2685,7 +2685,7 @@ function pendingPanelUiNodeV1(): BuiltNode {
 }
 //#endregion 🪟️TreeWindows
 
-/** @emoji 🌲️ Hosts an authored semantic {@link BuiltNode} in the shell's panel-tree leaf without reviving the removed recursive `UiNode` compatibility model.
+/** 🌲️ Hosts an authored semantic {@link BuiltNode} in the shell's panel-tree leaf without reviving the removed recursive `UiNode` compatibility model.
  *
  * 🪟️ `bodyKey` is the GUEST's panel body key (`AppPanelTabDefinition.bodyKey`, what `UiDirtyScope`'s
  * `panelBodies` and `ViewModel::tree_windows.body_key` both name) — not the tab id the host caches
@@ -2748,7 +2748,7 @@ export function shellTabIcon(iconId: IconName | string): React.FC<{ size?: numbe
   };
 }
 
-/** @emoji 🌐️ Resolves a chrome translation key outside hook context (tree builders run there). Both bundles
+/** 🌐️ Resolves a chrome translation key outside hook context (tree builders run there). Both bundles
  * are guaranteed complete for every key via `satisfies UiTranslationSchema`, so `?? key` is unreachable in
  * practice — kept only as a last-resort literal rather than a thrown error. `options` supports i18next
  * interpolation for keys with `{{placeholders}}`. */
@@ -2756,14 +2756,14 @@ export function shellLabel(key: UiTranslationKey, options?: Record<string, unkno
   return wireLabel(resolveTranslationLabel(uiI18n.t(key, options)) ?? key);
 }
 
-/** @emoji 🌐️ {@link shellLabel} for a key the chrome bundles actually define, or `null` — for a caller holding an open
+/** 🌐️ {@link shellLabel} for a key the chrome bundles actually define, or `null` — for a caller holding an open
  * id space (a control id) that only sometimes names a chrome label. */
 export function shellLabelIfDefined(key: string): UiLabel | null {
   return uiI18n.exists(key) ? shellLabel(key as UiTranslationKey) : null;
 }
 
 /**
- * @emoji 🌐️ Points the shared port {@link shellLabel} reads at `locale`. A shell has TWO i18n ports: its own
+ * 🌐️ Points the shared port {@link shellLabel} reads at `locale`. A shell has TWO i18n ports: its own
  * `ShellScope` instance, which `useUiTranslation`/`useLabel` resolve through, and this shared module port,
  * which is the only thing a tree builder running outside hook context can read. Moving the scope instance
  * alone relabels the hook-rendered chrome (fullscreen, the sync pill, the fold buttons) and pins every
@@ -2775,7 +2775,7 @@ export function syncShellLabelLocale(locale: Parameters<typeof uiI18n.changeLang
   void uiI18n.changeLanguage(locale);
 }
 
-/** @emoji 🌐️ The language the shared port {@link shellLabel} reads is standing at RIGHT NOW. Every
+/** 🌐️ The language the shared port {@link shellLabel} reads is standing at RIGHT NOW. Every
  * builder memo in `🏛️ShellHost` that calls `shellLabel` — the OS command catalogue, the command and
  * tool category trees, the panel tab names — resolves its text during render, while
  * {@link syncShellLabelLocale} used to be called only from a post-paint effect. So on the render in
@@ -3172,7 +3172,7 @@ export function syncPillText(state: SyncPillState, locale: string): string {
 }
 //#endregion 🔖️CheckInAndSyncStatus
 
-/** @emoji 🧭️ The five panel tabs the framework itself owns (never app-supplied) — routed through the typed chrome schema instead of the plugin overlay so a locale-locked shell can never show their English manifest label. */
+/** 🧭️ The five panel tabs the framework itself owns (never app-supplied) — routed through the typed chrome schema instead of the plugin overlay so a locale-locked shell can never show their English manifest label. */
 const FRAMEWORK_PANEL_TAB_LABEL_KEYS: Readonly<Record<string, UiTranslationKey>> = {
   [FRAMEWORK_PANEL_TAB_ARTIFACT_ID]: "ui.panel.artifact",
   [FRAMEWORK_PANEL_TAB_CATALOGUE_ID]: "ui.panel.catalogue",
@@ -3181,13 +3181,13 @@ const FRAMEWORK_PANEL_TAB_LABEL_KEYS: Readonly<Record<string, UiTranslationKey>>
   [FRAMEWORK_PANEL_TAB_HISTORY_ID]: "ui.panel.history",
 };
 
-/** @emoji 🧭️ Framework-owned panel tabs resolve through the chrome schema (`shellLabel`); every other app-declared tab still resolves through the plugin overlay (`resolveAppLabel`). */
+/** 🧭️ Framework-owned panel tabs resolve through the chrome schema (`shellLabel`); every other app-declared tab still resolves through the plugin overlay (`resolveAppLabel`). */
 export function resolvePanelTabLabel(overlay: PluginAppLabelsOverlay, tabId: string, fallback: string): string {
   const chromeKey = FRAMEWORK_PANEL_TAB_LABEL_KEYS[tabId];
   return chromeKey ? shellLabel(chromeKey) : resolveAppLabel(overlay, "panelTab", tabId, fallback);
 }
 
-/** @emoji 🗣️ Stable empty overlay reference so components depending on it don't re-render before the first `appLabels` fetch resolves. */
+/** 🗣️ Stable empty overlay reference so components depending on it don't re-render before the first `appLabels` fetch resolves. */
 export const EMPTY_APP_LABELS_OVERLAY: PluginAppLabelsOverlay = {
   windowKindLabels: {},
   panelTabLabels: {},
@@ -3201,7 +3201,7 @@ export const EMPTY_APP_LABELS_OVERLAY: PluginAppLabelsOverlay = {
   groupLabels: {},
 };
 
-/** @emoji 🛍️ Stable empty catalogue reference so scene hosts depending on `AppCatalogueContext` don't
+/** 🛍️ Stable empty catalogue reference so scene hosts depending on `AppCatalogueContext` don't
  * re-render before the first `catalogue` section fetch resolves. */
 export const EMPTY_APP_CATALOGUE: AppCatalogue = Object.freeze({});
 
@@ -3226,7 +3226,7 @@ export function resolveManifestLabel(label: unknown, terminology: string, locale
   return typeof value === "string" ? value : "";
 }
 
-/** @emoji 🗣️ Resolves a window-kind/panel-tab/mode/action/utility/example/actionArg/dialog/introduction/group id's locale-aware label from the active app's overlay, falling back to the static manifest label. */
+/** 🗣️ Resolves a window-kind/panel-tab/mode/action/utility/example/actionArg/dialog/introduction/group id's locale-aware label from the active app's overlay, falling back to the static manifest label. */
 export function resolveAppLabel(overlay: PluginAppLabelsOverlay, kind: "windowKind" | "panelTab" | "mode" | "action" | "utility" | "example" | "actionArg" | "dialog" | "introduction" | "group", id: string, fallback: string): string {
   const map =
     kind === "windowKind"
@@ -3251,7 +3251,7 @@ export function resolveAppLabel(overlay: PluginAppLabelsOverlay, kind: "windowKi
   return map[id] ?? fallback;
 }
 
-/** @emoji 🗣️ Resolves one action-arg's label + (for `select` controls) its options' labels from the overlay's `actionArgLabels` map, keyed `"{scopeId}.{argId}"` / `"{scopeId}.{argId}.option.{value}"`. `scopeId` is an action id for staged/palette forms, a dialog id for dialog args, or a command id for command args. `ActionArgDef.label`/`ActionArgOption.label` are manifest `LocalizedLabel` fields, resolved for `terminology`/`locale` before the overlay's (always-empty, see the `AppLabelsOverlay` deletion note) fallback lookup even applies. */
+/** 🗣️ Resolves one action-arg's label + (for `select` controls) its options' labels from the overlay's `actionArgLabels` map, keyed `"{scopeId}.{argId}"` / `"{scopeId}.{argId}.option.{value}"`. `scopeId` is an action id for staged/palette forms, a dialog id for dialog args, or a command id for command args. `ActionArgDef.label`/`ActionArgOption.label` are manifest `LocalizedLabel` fields, resolved for `terminology`/`locale` before the overlay's (always-empty, see the `AppLabelsOverlay` deletion note) fallback lookup even applies. */
 export type ResolvedActionArgDef = Omit<ActionArgDef, "label" | "schema"> & {
   readonly label: string;
   readonly schema: Exclude<ActionArgDef["schema"], { kind: "string" }> | (Omit<Extract<ActionArgDef["schema"], { kind: "string" }>, "options"> & { readonly options: { value: string; label: string }[] });
@@ -3286,7 +3286,7 @@ function resolveActionArgDef(def: ActionArgDef, scopeId: string, overlay: Plugin
   return { ...def, label, schema: { ...def.schema, options } };
 }
 
-/** @emoji 🗣️ Resolves a `DialogDefinition`'s title/body/submitLabel/cancelLabel/args from the overlay's `dialogLabels`/`actionArgLabels` maps, keyed by the dialog's own id. `title`/`body`/`submitLabel`/`cancelLabel` are all manifest `LocalizedLabel` fields. */
+/** 🗣️ Resolves a `DialogDefinition`'s title/body/submitLabel/cancelLabel/args from the overlay's `dialogLabels`/`actionArgLabels` maps, keyed by the dialog's own id. `title`/`body`/`submitLabel`/`cancelLabel` are all manifest `LocalizedLabel` fields. */
 export function resolveDialogDefinition(dialog: DialogDefinition, overlay: PluginAppLabelsOverlay, terminology: string, locale: string, manifests: readonly { readonly apps: readonly unknown[] }[] = [], selectedArtifactKinds?: readonly ArtifactKindChoice[]): Omit<DialogDefinition, "args"> & { readonly args: ResolvedActionArgDef[] } {
   return {
     ...dialog,
@@ -3298,7 +3298,7 @@ export function resolveDialogDefinition(dialog: DialogDefinition, overlay: Plugi
   };
 }
 
-/** @emoji 🗣️ Resolves an `IntroductionDefinition`'s title and every step's title/body labels from the
+/** 🗣️ Resolves an `IntroductionDefinition`'s title and every step's title/body labels from the
  * overlay's `introductionLabels` map. `title`/`body` are manifest `LocalizedLabel` fields;
  * `IntroductionInteraction.label` is a short checklist caption that is still a plain `String` on the Rust
  * side (not part of the `LocalizedLabel` migration), so it is left as-is. */
@@ -3321,7 +3321,7 @@ export function resolveIntroductionDefinition(introduction: IntroductionDefiniti
 }
 
 //#region 🎥️TutorialUiBridge
-/** @emoji 🕹️ Copies the exact typed selection projection without retaining mutable manifest arrays or invoking special object keys. */
+/** 🕹️ Copies the exact typed selection projection without retaining mutable manifest arrays or invoking special object keys. */
 function captureInteractionSelection(interaction: InteractionState): TutorialUiSnapshot["interactionSelection"] {
   const selection: Record<string, { granularity: string; ids: string[]; anchorId?: string }> = {};
   for (const [domainId, current] of Object.entries(interaction.selection)) {
@@ -3331,7 +3331,7 @@ function captureInteractionSelection(interaction: InteractionState): TutorialUiS
   return selection;
 }
 
-/** @emoji 🛡️ Converts the generated optional-value map into the total runtime selection projection. */
+/** 🛡️ Converts the generated optional-value map into the total runtime selection projection. */
 function tutorialInteractionSelection(selection: TutorialUiSnapshot["interactionSelection"]): InteractionState["selection"] {
   const result: Record<string, DomainSelection> = {};
   for (const [domainId, current] of Object.entries(selection)) {
@@ -3342,7 +3342,7 @@ function tutorialInteractionSelection(selection: TutorialUiSnapshot["interaction
   return result;
 }
 
-/** @emoji 🎥️ Captures the shell's current `ShellState`, its local interaction (`LocalInteractionStoreV1`) and the active session as a renderer-neutral `TutorialUiSnapshot` — the recorder's periodic full-snapshot keyframes and the `TutorialBar`'s "record" path both call this. See the Rust doc comment on `TutorialUiSnapshot` for why this is deliberately NOT a serialization of `ShellState` itself. */
+/** 🎥️ Captures the shell's current `ShellState`, its local interaction (`LocalInteractionStoreV1`) and the active session as a renderer-neutral `TutorialUiSnapshot` — the recorder's periodic full-snapshot keyframes and the `TutorialBar`'s "record" path both call this. See the Rust doc comment on `TutorialUiSnapshot` for why this is deliberately NOT a serialization of `ShellState` itself. */
 export function captureTutorialUiSnapshot(state: ShellState, interaction: InteractionState, session: ActiveSession | null): TutorialUiSnapshot {
   const activeUtilityByWindowId: Record<string, string> = {};
   for (const [windowId, utilityId] of Object.entries(state.actionPane.activeUtilityByWindowId)) {
@@ -3369,7 +3369,7 @@ export function captureTutorialUiSnapshot(state: ShellState, interaction: Intera
   };
 }
 
-/** @emoji 🎥️ Context every `applyTutorialUiSnapshotToShell`/`applyTutorialUiChangeToShell` call needs beyond `dispatch` itself — resolved once per render by the caller (the director/seek/deviation-converge paths all share it). */
+/** 🎥️ Context every `applyTutorialUiSnapshotToShell`/`applyTutorialUiChangeToShell` call needs beyond `dispatch` itself — resolved once per render by the caller (the director/seek/deviation-converge paths all share it). */
 export type TutorialUiBridgeContext = {
   readonly session: ActiveSession | null;
   readonly restoreDialog: (dialogId: string, seedArgs?: Readonly<Record<string, unknown>>) => ShellDialogV1 | null;
@@ -3380,7 +3380,7 @@ export type TutorialUiBridgeContext = {
   readonly publishInteractionSelection: (selection: InteractionState["selection"]) => void;
 };
 
-/** @emoji 🎥️ Applies a full `TutorialUiSnapshot` (a `TutorialUiSample::Snapshot`, or the composed target of a seek/deviation-converge) onto the live `ShellState` — snaps every field instantly (camera is the only interpolated track, applied separately by the director). Dispatches the atomic `APPLY_TUTORIAL_UI_SNAPSHOT` for shell-owned fields, including typed interaction selection, plus one `SET_SESSION` for `ActiveSession.viewState`'s `activeModeId`/`panelJson`. */
+/** 🎥️ Applies a full `TutorialUiSnapshot` (a `TutorialUiSample::Snapshot`, or the composed target of a seek/deviation-converge) onto the live `ShellState` — snaps every field instantly (camera is the only interpolated track, applied separately by the director). Dispatches the atomic `APPLY_TUTORIAL_UI_SNAPSHOT` for shell-owned fields, including typed interaction selection, plus one `SET_SESSION` for `ActiveSession.viewState`'s `activeModeId`/`panelJson`. */
 export function applyTutorialUiSnapshotToShell(dispatch: (action: ShellAction) => void, snapshot: TutorialUiSnapshot, ctx: TutorialUiBridgeContext): void {
   const windowKinds = ctx.session?.app.windowKinds.map((kind) => ({ id: kind.id, label: kind.label })) ?? [];
   const seed = applyFrameworkLayoutSeed(snapshot.layout, windowKinds, ctx.appLabelsOverlay, ctx.terminology, ctx.locale);
@@ -3428,7 +3428,7 @@ export function applyTutorialUiSnapshotToShell(dispatch: (action: ShellAction) =
   }
 }
 
-/** @emoji 🎥️ Applies one sparse `TutorialUiChange` (a `TutorialUiSample::Delta` entry, replayed by the director's per-tick `tutorialSlice`) onto the live `ShellState` by dispatching the SAME existing, targeted `ShellAction`s the real UI's own interactions use — never a bespoke tutorial-only mutation channel. */
+/** 🎥️ Applies one sparse `TutorialUiChange` (a `TutorialUiSample::Delta` entry, replayed by the director's per-tick `tutorialSlice`) onto the live `ShellState` by dispatching the SAME existing, targeted `ShellAction`s the real UI's own interactions use — never a bespoke tutorial-only mutation channel. */
 export function applyTutorialUiChangeToShell(dispatch: (action: ShellAction) => void, change: TutorialUiChange, ctx: TutorialUiBridgeContext): void {
   switch (change.kind) {
     case "activeMode":
@@ -3484,13 +3484,13 @@ export function applyTutorialUiChangeToShell(dispatch: (action: ShellAction) => 
 }
 //#endregion 🎥️TutorialUiBridge
 
-/** @emoji 🗣️ Resolves a terminology id's display name; chrome-known ids get a translated label, app-declared ids fall back to their raw id. */
+/** 🗣️ Resolves a terminology id's display name; chrome-known ids get a translated label, app-declared ids fall back to their raw id. */
 export function shellTerminologyLabel(id: string): string {
   const isChromeKnown = id === "native" || id === "reuse";
   return isChromeKnown ? shellLabel(`ui.settings.terminology.${id as UiChromeTerminologyId}`) : id;
 }
 
-/** @emoji 🎚️ Serializes async updates while retaining only the newest value requested during an in-flight update. */
+/** 🎚️ Serializes async updates while retaining only the newest value requested during an in-flight update. */
 export function createLatestAsyncDispatcher<T>(dispatchValue: (value: T) => unknown): (value: T) => void {
   let running = false;
   let queued: T | undefined;
@@ -3514,7 +3514,7 @@ export function createLatestAsyncDispatcher<T>(dispatchValue: (value: T) => unkn
   return dispatchLatest;
 }
 
-/** @emoji ↕️ Serializes numeric slider updates while retaining every direction change and coalescing movement within one direction. */
+/** ↕️ Serializes numeric slider updates while retaining every direction change and coalescing movement within one direction. */
 export function createDirectionalAsyncDispatcher(dispatchValue: (value: number) => unknown): (value: number) => void {
   let running = false;
   let active = 0;
@@ -3554,7 +3554,7 @@ export function createDirectionalAsyncDispatcher(dispatchValue: (value: number) 
   };
 }
 
-/** @emoji 🖱️ Overlay chrome for a world-3d marquee method. `lasso` draws a polygon; `rectangle` and
+/** 🖱️ Overlay chrome for a world-3d marquee method. `lasso` draws a polygon; `rectangle` and
  * `pick` (click picks, drag sweeps a box — puzzle3d's default) both draw the axis-aligned rectangle. */
 export function world3dMarqueeOverlayShape(method: string): "rect" | "polygon" | null {
   if (method === "lasso") return "polygon";
@@ -3564,7 +3564,7 @@ export function world3dMarqueeOverlayShape(method: string): "rect" | "polygon" |
 
 //#region 🛑️ExtensionRequestCancellation
 /**
- * @emoji 🛑️ Every extension request currently in flight, keyed by the REQUESTING actor
+ * 🛑️ Every extension request currently in flight, keyed by the REQUESTING actor
  * (`<pluginId>:<instanceId>`) — the same key `serializePerActor` already serializes those requests
  * under, because they are the same set of calls.
  *
@@ -3577,7 +3577,7 @@ export function world3dMarqueeOverlayShape(method: string): "rect" | "polygon" |
 const inFlightExtensionRequestsByActor = new Map<string, Set<AbortController>>();
 
 /**
- * @emoji 🛑️ Action ids a mounted surface has DECLARED as its cancel affordance — the surface reads
+ * 🛑️ Action ids a mounted surface has DECLARED as its cancel affordance — the surface reads
  * the id off its own status contract (`World3dScene.statusJson`'s `cancelAction`) and registers it
  * here while that status says `cancellable`. This is what keeps the shell domain-neutral: it never
  * learns a plugin's verb from code, only from the surface that is currently offering it.
@@ -3642,7 +3642,7 @@ export function isDeclaredSurfaceCancelAction(actionId: string): boolean {
 //#endregion 🛑️ExtensionRequestCancellation
 
 /**
- * @emoji 🚦️ Fires `run` at most once at a time — interval ticks that arrive while a previous run is still
+ * 🚦️ Fires `run` at most once at a time — interval ticks that arrive while a previous run is still
  * in flight are dropped (not queued), so a slow program tick cannot unbounded-queue into the serialized
  * WASM handle.
  */
@@ -3674,7 +3674,7 @@ export function createInFlightSkippingInterval<Timer>(run: () => unknown, delayM
 export { beginIsolatedJobDrive, endIsolatedJobDrive, isolatedJobDriveIsActive, isolatedJobDriveSnapshot, requestIsolatedJobUiPoll, subscribeIsolatedJobDrive, takeIsolatedJobUiPoll } from "../🔌️PluginRuntime/🟦️.tsx";
 
 /**
- * @emoji 🎯️ Coalesces rapid dispatches to the latest value — skips when unchanged and keeps at most one
+ * 🎯️ Coalesces rapid dispatches to the latest value — skips when unchanged and keeps at most one
  * in-flight round trip (used by World3dHost hover so pointermove cannot flood the WASM handle).
  */
 export function createCoalescingActionDispatcher<T>(dispatch: (value: T) => unknown, isEqual: (a: T, b: T) => boolean = (a, b) => Object.is(a, b)): (value: T) => void {
@@ -4011,7 +4011,7 @@ export async function drainPuzzle3dBrushMeshQueue(
 }
 //#endregion 🥽️Puzzle3dBrushMeshUpload
 
-/** @emoji 🎚️ Whether any measure (including nested group children) declares `id`. */
+/** 🎚️ Whether any measure (including nested group children) declares `id`. */
 export function windowMeasureTreeContainsId(measures: readonly WindowMeasure[], id: string): boolean {
   for (const measure of measures) {
     if (measure.id === id) return true;
@@ -4020,7 +4020,7 @@ export function windowMeasureTreeContainsId(measures: readonly WindowMeasure[], 
   return false;
 }
 
-/** @emoji 📊️ Probability weights (0–1 simplex sliders) read out as whole-percent labels, not raw fractions. */
+/** 📊️ Probability weights (0–1 simplex sliders) read out as whole-percent labels, not raw fractions. */
 function windowMeasureUsesProbabilityReadout(measure: Extract<WindowMeasure, { kind: "slider" }>): boolean {
   const step = measure.step ?? 1;
   return measure.min === 0 && measure.max <= 1 && step < 1;
@@ -4030,7 +4030,7 @@ function windowMeasureProbabilityReadout(value: number): string {
   return `${Math.round(value * 100)}%`;
 }
 
-/** @emoji 🎚️ Keeps a measure slider live without accumulating stale document actions behind the pointer. */
+/** 🎚️ Keeps a measure slider live without accumulating stale document actions behind the pointer. */
 function WindowMeasureSlider({ measure, onAction }: { readonly measure: Extract<WindowMeasure, { kind: "slider" }>; readonly onAction: (action: ActionDescriptor) => unknown }) {
   const dispatchValue = useMemo(
     () => createDirectionalAsyncDispatcher((value) => onAction({ ...measure.onChange, args: { ...(measure.onChange.args as object | undefined), value } })),
@@ -4190,7 +4190,7 @@ function windowMeasuresOverlay(measures: readonly WindowMeasure[] | undefined, o
   return <WindowMeasuresTree direction={direction}>{measures.map((measure) => renderWindowMeasure(measure, onAction))}</WindowMeasuresTree>;
 }
 
-/** @emoji 🪟️ Public window-options tree for measures rails and tests — icon before label, checkbox for toggles. */
+/** 🪟️ Public window-options tree for measures rails and tests — icon before label, checkbox for toggles. */
 export function renderWindowMeasuresTree(measures: readonly WindowMeasure[], onAction: (action: ActionDescriptor) => unknown, direction: "up" | "down" = "down"): ReactNode | undefined {
   return windowMeasuresOverlay(measures, onAction, direction);
 }
@@ -4267,7 +4267,7 @@ export function SelectionUtilityOptions({ activeUtilityId, windowId, onAction, g
   );
 }
 
-/** @emoji 🪪️ THE DOM identity of one window-measure control: the WINDOW INSTANCE it is rendered for, then the
+/** 🪪️ THE DOM identity of one window-measure control: the WINDOW INSTANCE it is rendered for, then the
  * program-authored measure id. Same rule and same separator as `uiNodeDomId` — a window kind's measure tree is
  * authored ONCE for the kind (`world3d_projection_measures` takes a kind-level `id_prefix`, and puzzle3d passes
  * the literal `"puzzle3d"`) and then rendered once per OPEN INSTANCE of that kind, so the authored id alone puts
@@ -4280,7 +4280,7 @@ export function windowMeasureDomId(windowId: string, measureId: string): string 
   return `${windowId}/${measureId}`;
 }
 
-/** @emoji 🪪️ {@link windowMeasureDomId} applied to a whole authored measure subtree — ids only, every other field
+/** 🪪️ {@link windowMeasureDomId} applied to a whole authored measure subtree — ids only, every other field
  * (labels, values, `reveal` group, `onChange`) verbatim, so the authored id stays the one integration key the
  * program, `windowMeasureTreeContainsId` and the `activeUtilityId` routing all speak. */
 export function qualifyWindowMeasureIds(measures: readonly WindowMeasure[], windowId: string): WindowMeasure[] {
@@ -4310,7 +4310,7 @@ export function windowMeasuresChrome(
   };
 }
 
-/** @emoji 🎓️ Whether a utility node tree has a node (leaf or group) with the given id anywhere in it — used
+/** 🎓️ Whether a utility node tree has a node (leaf or group) with the given id anywhere in it — used
  * to decide if this window's utility bar is the one an introduction step's `Utility` anchor targets. */
 export function utilityNodeTreeContainsId(nodes: readonly UtilityNode[], targetId: string): boolean {
   return nodes.some((node) => node.id === targetId || (node.kind === "collection" && utilityNodeTreeContainsId(node.children, targetId)));
@@ -4916,7 +4916,7 @@ function selectCommandArg(id: string, label: string, options: readonly { readonl
   return { id, label, schema: { kind: "string", options: options.map((option) => ({ ...option })) }, required: true };
 }
 
-/** @emoji 🚗️ Translated display name for a built-in driver id; a custom (user-authored) driver has no
+/** 🚗️ Translated display name for a built-in driver id; a custom (user-authored) driver has no
  * translation key, so its own {@link UiDriver.label} (genuine runtime data) is the correct fallback. */
 export function driverDisplayLabel(driver: UiDriver): string {
   if (driver.id === "default") return shellLabel("settings.driver.default");
@@ -5161,7 +5161,7 @@ export function dispatchOsCommand(
   }
 }
 
-/** @emoji 🎛️ Fallback icon for every command-category leaf — categories are open-set strings any plugin/app/mode author can invent, so there's no per-category icon metadata to key off (unlike the framework's own Workbench/Details/Display/Settings categories). */
+/** 🎛️ Fallback icon for every command-category leaf — categories are open-set strings any plugin/app/mode author can invent, so there's no per-category icon metadata to key off (unlike the framework's own Workbench/Details/Display/Settings categories). */
 const COMMAND_CATEGORY_ICON = shellTabIcon("wrench");
 
 /**
@@ -5429,7 +5429,7 @@ export function toolLeafInactiveRepress(previousPath: readonly string[], nextPat
 }
 //#endregion 🛠️ToolRegistry
 
-/** @emoji 🐢️ Structural equality over plain JSON-shaped values (the shape every `UiNode`/`WindowEngagement`/`WindowMeasure` program payload takes) — no cycles, no non-JSON types. */
+/** 🐢️ Structural equality over plain JSON-shaped values (the shape every `UiNode`/`WindowEngagement`/`WindowMeasure` program payload takes) — no cycles, no non-JSON types. */
 function uiJsonDeepEqual(a: unknown, b: unknown): boolean {
   if (a === b) return true;
   if (typeof a !== "object" || typeof b !== "object" || a === null || b === null) return false;
@@ -5454,7 +5454,7 @@ function uiJsonDeepEqual(a: unknown, b: unknown): boolean {
 }
 
 /**
- * @emoji 🐢️ Reuses `previous`'s object identity when it's structurally equal to `next` — every program
+ * 🐢️ Reuses `previous`'s object identity when it's structurally equal to `next` — every program
  * `render()`/`utilities()`/`windowEngagements()`/`windowMeasures()` call re-parses a fresh JSON payload
  * every time, even when nothing about that body actually changed (e.g. a camera-only or selection-only
  * action still returns byte-identical panel/utility JSON). Without this, every downstream `React.memo`
@@ -5465,7 +5465,7 @@ export function preserveJsonIdentity<T>(previous: T | undefined, next: T): T {
 }
 
 /**
- * @emoji 🐢️ Builds a `Record<string, V>` from `entries`, reusing `prev`'s per-key value reference where
+ * 🐢️ Builds a `Record<string, V>` from `entries`, reusing `prev`'s per-key value reference where
  * `preserveJsonIdentity` finds no structural change, and reusing `prev` itself (the whole record) when
  * no key actually changed — so a no-operation action's `dispatch` doesn't hand `windowUiByWindowId`/etc. a new
  * object reference and cascade an unmemoizable re-render through every downstream consumer.
@@ -5482,7 +5482,7 @@ export function mergeRecordPreservingIdentity<V>(prev: Readonly<Record<string, V
 }
 
 //#region UiRefresh
-/** @emoji 🐢️ One cached section value keyed by `${section}:${key}` (e.g. `window:2d-overview`, `engagements`) — the hash is what gets sent back to the plugin next time so it can skip re-serializing unchanged content. */
+/** 🐢️ One cached section value keyed by `${section}:${key}` (e.g. `window:2d-overview`, `engagements`) — the hash is what gets sent back to the plugin next time so it can skip re-serializing unchanged content. */
 export type UiRefreshCache = Map<string, { readonly hash: string; readonly value: unknown }>;
 
 /** 🖼️ How much of the shell one direct browser-actor dispatch dirtied.
@@ -5846,13 +5846,13 @@ export function introductionTargetsWindow(
   return false;
 }
 
-/** @emoji 🧰️ Materializes the shell's per-window utility map for batched `refresh-ui` — omits null entries. */
+/** 🧰️ Materializes the shell's per-window utility map for batched `refresh-ui` — omits null entries. */
 export function buildActiveUtilityByWindowId(activeUtilityByWindowId: Readonly<Record<string, string | null>>): Record<string, string> {
   return Object.fromEntries(Object.entries(activeUtilityByWindowId).flatMap(([windowId, utilityId]) => (utilityId ? [[windowId, utilityId]] : [])));
 }
 
 /**
- * @emoji 🐢️ Builds one batched `refresh-ui` request restricted to `scope` — `null` when the scope
+ * 🐢️ Builds one batched `refresh-ui` request restricted to `scope` — `null` when the scope
  * resolves to nothing worth fetching (`none`, or a `partial` whose fields all miss this app's actual
  * bodies/instances). Every requested entry carries the host's cached hash so the plugin can omit payloads
  * for sections that didn't change. `windowInstances` is keyed by window INSTANCE id (base windows plus any
@@ -5880,7 +5880,7 @@ export function buildUiRefreshRequest(
   return { viewState, windows, panels, engagements, measures, tools, catalogue, labels };
 }
 
-/** @emoji 🐢️ Writes every changed section (`value !== undefined`) from a `refresh-ui` response into `cache`; unchanged sections are left as-is since the cached value is still current. */
+/** 🐢️ Writes every changed section (`value !== undefined`) from a `refresh-ui` response into `cache`; unchanged sections are left as-is since the cached value is still current. */
 function applyUiRefreshSectionsToCache(cache: UiRefreshCache, prefix: string, entries: readonly PluginUiRefreshSectionResponse[] | undefined): void {
   for (const entry of entries ?? []) {
     if (entry.value !== undefined) cache.set(`${prefix}:${entry.key}`, { hash: entry.hash, value: entry.value });

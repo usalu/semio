@@ -95,7 +95,7 @@ export function collectPxViolations(repoRoot: string, roots: readonly string[] =
 
 export const COLOR_SCAN_ROOTS = [...PX_SCAN_ROOTS.filter((root) => root !== "🧰️framework/🔨️modules/🖱️ui/🎨️styling"), ".storybook"] as const;
 
-/** @emoji 📋️ Files with pre-existing hardcoded-color usage surfaced by the full-palette/manual-dark-variant patterns
+/** 📋️ Files with pre-existing hardcoded-color usage surfaced by the full-palette/manual-dark-variant patterns
  * and the widened scan roots — tracked for follow-up migration, not fixed here. */
 const COLOR_SCAN_LEGACY_ALLOWLIST = [
   "🧰️framework/🛍️products/💻️os/📖️stories/🧭️coordination/🟦️.tsx",

@@ -355,7 +355,7 @@ fn revision_arg() -> ActionArgDef {
 }
 
 pub fn extra_actions() -> Vec<ActionDefinition> {
-    vec![
+    [
         ActionDefinition::bounded_catalog(INSERT_FRAME_ACTION_ID, LocalizedLabel::native("Insert frame", "Frame einfügen"), ActionKind::Mutation)
             .with_args([number_arg("frame", "Frame", "Frame", 0.0, u32::MAX as f64), revision_arg()])
             .in_palette(false),
@@ -366,6 +366,11 @@ pub fn extra_actions() -> Vec<ActionDefinition> {
             .with_args([revision_arg(), ActionArgDef::text("value", LocalizedLabel::native("Sample rate (Hz)", "Abtastrate (Hz)")).required()])
             .in_palette(false),
     ]
+    .map(|mut action| {
+        action.semantics.execution.interactive_job = semio_framework_plugin::InteractiveJobClassification::Migrated;
+        action
+    })
+    .into()
 }
 
 fn data_payload_len(data: &WavData) -> usize {

@@ -18,7 +18,6 @@ fn shared_fill_samples() {
             count+=1;
         }
     }
-    eprintln!("[DEBUG] prepared fill sampler matched {count} neutral samples");
 }
 
 #[test]

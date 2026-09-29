@@ -1098,6 +1098,57 @@
       "reproducible": true,
       "family": "structural",
       "notes": ""
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-snapshot-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.bcf",
+        "standard": "2.1",
+        "subset": "markup"
+      },
+      "mutation": "set-snapshot",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-bcf",
+          "path": "../🧫️fixtures/🗃️set-snapshot-applied/⬅️before.bcf",
+          "mediaType": "application/octet-stream",
+          "sha256": "sha256:c6a5e0efbc206065523469bcbd2c95051022590cc2020725ae2970babaad4d02",
+          "bytes": 1555
+        },
+        {
+          "role": "expected-after-bcf",
+          "path": "../🧫️fixtures/🗃️set-snapshot-applied/➡️after.bcf",
+          "mediaType": "application/octet-stream",
+          "sha256": "sha256:c2fbae919061bc25e4c96af763102cec1c60acdb7631040bc83e3dd722f1342c",
+          "bytes": 713
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-bcf-2-1-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts generate --only set-snapshot-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-bcf-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The whole two-topic base review is replaced by a one-topic snapshot (no comments, viewpoints or parts) — set-snapshot{version,topics,parts}."
     }
   ]
 }

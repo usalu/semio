@@ -236,7 +236,7 @@ describe("📐️ canonical test layout", () => {
       };
       visit(file);
       const expected = vector.expected.find(finding => finding.path === source.path)?.line;
-      expect(lines[0]).toBe(expected);
+      expect(lines[0]).toBe<typeof expected>(expected);
       expect(inspectTestLayoutSources(taxonomy, [source]).find(finding => finding.code === "inline-test-body")?.line).toBe(lines[0]);
     }
   });

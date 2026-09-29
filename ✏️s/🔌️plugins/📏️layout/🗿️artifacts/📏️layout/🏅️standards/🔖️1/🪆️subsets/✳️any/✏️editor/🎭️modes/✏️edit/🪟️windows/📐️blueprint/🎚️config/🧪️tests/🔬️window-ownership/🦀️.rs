@@ -99,10 +99,9 @@ fn layout_window_ownership_runtime_isolates_restores_and_resets_exact_windows() 
                 if mutation.window_id() != "layout-preview" { return Err("Layout preview config lost exact identity".into()); }
                 Ok(())
             }.await;
-            if let Err(error) = &outcome { eprintln!("[DEBUG] Layout exact-window runtime failure before close: {error}"); }
+            if let Err(error) = &outcome { eprintln!("[TRACE] Layout exact-window runtime failure before close: {error}"); }
             artifact_app_laws::close_registered_fixture_app(&mut *app);
             outcome.expect("Layout exact-window runtime law");
-            eprintln!("[DEBUG] Layout runtime isolated two Blueprint windows, restored persisted config, cleared transient on reload, and preserved document bytes");
         }))
         .expect("spawn Layout window ownership law")
         .join()
@@ -130,5 +129,4 @@ fn layout_window_ownership_mutations_match_neutral_fixture_and_codecs() {
         assert_eq!(LayoutWindowTransientMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
         assert_eq!(LayoutWindowTransientMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
     }
-    eprintln!("[DEBUG] Layout config/transient mutations matched neutral fixture inverse, text, and binary laws");
 }

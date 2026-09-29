@@ -62,6 +62,13 @@
         "runExtensionAction",
         "setActiveExample"
       ]
+    },
+    {
+      "factory": "FlowContributionsJobFactory",
+      "rawWireBytes": 16384,
+      "tools": [
+        "setContributions"
+      ]
     }
   ],
   "migrated": [
@@ -91,6 +98,7 @@
     "selectGeneration",
     "setActiveExample",
     "setCatalogueSections",
+    "setContributions",
     "setGridFactor",
     "setGridSnapEnabled",
     "setGridVisible",

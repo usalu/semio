@@ -400,7 +400,7 @@ pub struct Anchor {
 //#region 🔖️ArtifactKind
 /// 🗿️ The computed-compliance artifact this standard publishes on its app's `report:out` port.
 pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
-    app_surface::artifact_kind_spec("en1992", "EN 1992")
+    app_surface::artifact_kind_spec("en1992", "EN 1992", EN1992_DOCUMENT_SCHEMA)
 }
 //#endregion 🔖️ArtifactKind
 

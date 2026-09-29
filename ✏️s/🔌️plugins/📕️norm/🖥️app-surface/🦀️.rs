@@ -761,6 +761,25 @@ where
 }
 //#endregion 🔖️ValuePath
 
+//#region 🔖️Examples
+/// 🎨️ Resolves `setActiveExample` through the editor's OWN example roster — the list its navbar picker
+/// offers — so every example the picker shows loads, and nothing outside it does. An empty id is the
+/// empty document, an id outside the roster is `None` (the no-op a picker's stale selection needs),
+/// and an example body that does not parse is a named fault, never a silent fallback.
+pub fn roster_example_snapshot<D: store::ArtifactDsl + Default>(examples: Vec<ExampleSource>, example_id: &str) -> Result<Option<D>, Fault> {
+    let id = example_id.trim();
+    if id.is_empty() {
+        return Ok(Some(D::default()));
+    }
+    let Some(example) = examples.into_iter().find(|example| example.id() == id) else {
+        return Ok(None);
+    };
+    D::parse_dsl(&example.document())
+        .map(Some)
+        .map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("norm.set-active-example-invalid"), format!("example '{id}' does not parse: {error:?}")))
+}
+//#endregion 🔖️Examples
+
 //#region 🔖️Render
 fn render_text(value: impl Into<String>) -> UiAssemblyResult<BuiltNode> {
     let label = ui::Label::try_from(value.into()).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "norm UI label admission failed"))?;
@@ -1430,8 +1449,10 @@ pub fn panel_definition(id: &str, label: LocalizedLabel, group: PanelGroup, body
     PanelTabDefinition { kind: PanelTabKind::App(id.into()), label, group, body_key: Some(body_key.into()), children: Vec::new() }
 }
 
-/// 🗿️ A norm artifact kind — Data × Value document per owner-table (IO coverage lattice).
-pub fn artifact_kind_spec(variant: &str, label: &str) -> ArtifactKindSpec {
+/// 🗿️ A norm artifact kind — Data × Value document per owner-table (IO coverage lattice). `artifact_schema` is the
+/// family's DOCUMENT_SCHEMA — the ONE schema identity the hub's codec rows, open targets and genesis key on (the same
+/// value [`norm_io`] declares); the former `norm.<variant>.document` media string stays declared as `source_format`.
+pub fn artifact_kind_spec(variant: &str, label: &str, artifact_schema: &str) -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: artifact_kind_id(variant),
         label: semio_framework_plugin::LocalizedLabel::data(label),
@@ -1440,7 +1461,7 @@ pub fn artifact_kind_spec(variant: &str, label: &str) -> ArtifactKindSpec {
         dimension: "data".into(),
         media_capability: OsMediaCapability::MeshOnly,
         media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
-        schema: format!("norm.{variant}.document"),
+        schema: artifact_schema.into(),
         export_formats: vec![],
         import_formats: vec![],
         export_stdio_kinds: vec![],

@@ -28,7 +28,7 @@
 use crate::db_durability::Frontier;
 use crate::*;
 use db_storage::SnapshotStorage;
-/// @emoji ✉️ This crate's own convention for `db_wal::WalRecord::Command`'s payload bytes:
+/// ✉️ This crate's own convention for `db_wal::WalRecord::Command`'s payload bytes:
 /// `protocol_causal::encode_envelope`'s binary record — the same primitive codec `protocol_wire`
 /// uses for `ClientFrame::Commands`/`ServerFrame::Commands`, so a WAL command's bytes are
 /// byte-identical to its on-wire form (M-C's "communication AND storage both binary"). `db_wal`
@@ -43,7 +43,7 @@ pub async fn encode_command_envelope(envelope: &protocol::MutationEnvelope) -> V
     out
 }
 
-/// @emoji 📖️ Inverse of `encode_command_envelope`. Validates the byte length against
+/// 📖️ Inverse of `encode_command_envelope`. Validates the byte length against
 /// `DbLimits::default().max_command_bytes` BEFORE decoding anything sized by it (mirrors
 /// `pack_core`'s stated invariant), then maps a decode failure to `DbError::Corrupt` rather than
 /// leaking `protocol::ProtocolError`.
@@ -96,7 +96,7 @@ pub fn wal_command_id(bytes: &db_wal::WalBytes, control: &mut db_wal::WalCursorC
 //#endregion 🔖️Codec
 
 //#region 🔖️ReplicaState
-/// @emoji 🧾️ One document's currently-retained sync state, replayed fresh from its WAL — the
+/// 🧾️ One document's currently-retained sync state, replayed fresh from its WAL — the
 /// shared input every negotiation function below works from.
 ///
 /// 🎯️ Design choice (`Frontier` field derivation, since `db_artifact` doesn't exist yet to supply
@@ -112,14 +112,14 @@ pub fn wal_command_id(bytes: &db_wal::WalBytes, control: &mut db_wal::WalCursorC
 pub struct ArtifactSyncState {
     pub frontier: Frontier,
     pub commands: Vec<protocol::MutationEnvelope>,
-    /// @emoji 🚧️ The lowest `head_seq` this crate can still serve via tail (missing-command)
+    /// 🚧️ The lowest `head_seq` this crate can still serve via tail (missing-command)
     /// transfer — the `head_seq` of the most recent `WAL_SNAPSHOT_PUB` record replayed, or `0` if
     /// none (nothing has ever been compacted away). A replica behind this floor needs
     /// `decide_bootstrap`'s snapshot path instead.
     pub floor_head_seq: u64,
 }
 
-/// @emoji 🔁️ Replays committed transactions via `db_wal::replay_committed_document` and
+/// 🔁️ Replays committed transactions via `db_wal::replay_committed_document` and
 /// derives its `ArtifactSyncState` — see the struct's doc for exactly how each field is derived.
 pub async fn replay_sync_state(storage: &impl db_storage::WalStorage, document: ArtifactId) -> Result<ArtifactSyncState, DbError> {
     let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
@@ -182,7 +182,7 @@ pub async fn replay_sync_state(storage: &impl db_storage::WalStorage, document: 
 //#endregion 🔖️ReplicaState
 
 //#region 🔖️Frontier
-/// @emoji ➖️ `FrontierDelta::between`, re-exposed under this crate's own name for
+/// ➖️ `FrontierDelta::between`, re-exposed under this crate's own name for
 /// discoverability — frontier-delta computation is this crate's stated responsibility, so
 /// `db_sync::frontier_delta` is the expected first stop even though the primitive itself lives in
 /// `db_core`.
@@ -190,7 +190,7 @@ pub async fn frontier_delta(from: &Frontier, to: &Frontier) -> Result<FrontierDe
     FrontierDelta::between(from, to).await
 }
 
-/// @emoji 🌉️ `Frontier` -> `protocol::RuntimeFrontierSummary` (the wire-frame shape
+/// 🌉️ `Frontier` -> `protocol::RuntimeFrontierSummary` (the wire-frame shape
 /// `ServerFrame::{Welcome, Commands, Ack}.*frontier` fields carry). `head_edit_id` has no
 /// `Frontier` counterpart (see `ArtifactSyncState`'s doc); callers pass whatever they
 /// consider the frontier's tip identity (`state_frontier_summary` below supplies the natural
@@ -199,7 +199,7 @@ pub async fn to_frontier_summary(frontier: &Frontier, head_edit_id: String) -> p
     protocol::RuntimeFrontierSummary { document_id: protocol::ArtifactId(frontier.document.0.clone()), head_edit_ordinal: frontier.head_seq, head_edit_id, last_commit_seq: frontier.commit_seq, chain_hash: frontier.chain_hash }
 }
 
-/// @emoji 🌉️ Inverse bridge direction: `protocol::RuntimeFrontierSummary` -> `Frontier`,
+/// 🌉️ Inverse bridge direction: `protocol::RuntimeFrontierSummary` -> `Frontier`,
 /// the primitive `handle_hello`/`handle_frontier_advertise` use to turn a replica's advertised
 /// wire frontier into something `missing_commands`/`decide_bootstrap` can compare against a
 /// `ArtifactSyncState`. `epoch` is always `0` (see `ArtifactSyncState`'s doc: `RuntimeFrontierSummary`
@@ -209,7 +209,7 @@ pub fn from_frontier_summary(summary: &protocol::RuntimeFrontierSummary) -> Fron
     Frontier { document: ArtifactId(summary.document_id.0.clone()), head_seq: summary.head_edit_ordinal, commit_seq: summary.last_commit_seq, chain_hash: summary.chain_hash, epoch: 0 }
 }
 
-/// @emoji 🌉️ `state`'s own frontier as a `RuntimeFrontierSummary`, with `head_edit_id` filled from
+/// 🌉️ `state`'s own frontier as a `RuntimeFrontierSummary`, with `head_edit_id` filled from
 /// the last replayed command's `mutation_id` (empty string for a genesis document with no
 /// commands yet).
 pub async fn state_frontier_summary(state: &ArtifactSyncState) -> protocol::RuntimeFrontierSummary {
@@ -219,7 +219,7 @@ pub async fn state_frontier_summary(state: &ArtifactSyncState) -> protocol::Runt
 //#endregion 🔖️Frontier
 
 //#region 🔖️MissingCommands
-/// @emoji 📦️ The missing-command-transfer primitive: every command `state` holds strictly after
+/// 📦️ The missing-command-transfer primitive: every command `state` holds strictly after
 /// `replica`'s `head_seq`, in replay order — what `db_sync` ships a reconnecting/catching-up
 /// replica via `ServerFrame::Commands`.
 ///
@@ -244,7 +244,7 @@ pub async fn missing_commands(state: &ArtifactSyncState, replica: &Frontier) -> 
     Ok(state.commands[replica.head_seq as usize..].to_vec())
 }
 
-/// @emoji 📨️ Wraps `envelopes` (typically `missing_commands`' result) as a `ServerFrame::Commands`
+/// 📨️ Wraps `envelopes` (typically `missing_commands`' result) as a `ServerFrame::Commands`
 /// stamped with `state`'s current frontier — `origin` is the relaying actor identity the caller
 /// (the semio_hub session layer, which owns its own actor identity) supplies; this crate has no opinion
 /// on it beyond passing it through.
@@ -254,23 +254,23 @@ pub async fn commands_server_frame(state: &ArtifactSyncState, envelopes: Vec<pro
 //#endregion 🔖️MissingCommands
 
 //#region 🔖️Bootstrap
-/// @emoji 🚀️ How a (re)connecting replica should be caught up, decided by `decide_bootstrap` —
+/// 🚀️ How a (re)connecting replica should be caught up, decided by `decide_bootstrap` —
 /// the pre-wire-encoding twin of `protocol::Bootstrap` (kept separate so this crate's core
 /// decision logic stays testable without constructing full `ServerFrame`s; `build_welcome` below
 /// lowers it to the wire shape).
 #[derive(Debug, PartialEq)]
 pub enum BootstrapPlan {
-    /// @emoji ✅️ The replica is already fully caught up — nothing to send.
+    /// ✅️ The replica is already fully caught up — nothing to send.
     None,
-    /// @emoji 🚚️ The replica is within the retained WAL floor: ship it the missing commands
+    /// 🚚️ The replica is within the retained WAL floor: ship it the missing commands
     /// directly, no snapshot needed.
     Tail { envelopes: Vec<protocol::MutationEnvelope> },
-    /// @emoji 📸️ The replica is behind the retained WAL floor (or brand new against a compacted
+    /// 📸️ The replica is behind the retained WAL floor (or brand new against a compacted
     /// document): ship it a whole snapshot generation first.
     Snapshot { generation: u64, pages: db_storage::DbIoPages, pack_hash: [u8; 32] },
 }
 
-/// @emoji 🧭️ Decides `BootstrapPlan` for `replica` (`None` meaning a totally fresh replica with no
+/// 🧭️ Decides `BootstrapPlan` for `replica` (`None` meaning a totally fresh replica with no
 /// prior frontier at all) against `state`, consulting `snapshots` only when the replica's
 /// `head_seq` has fallen behind `state.floor_head_seq`.
 pub async fn decide_bootstrap(state: &ArtifactSyncState, snapshots: &impl SnapshotStorage, replica: Option<&Frontier>) -> Result<BootstrapPlan, DbError> {
@@ -293,7 +293,7 @@ pub async fn decide_bootstrap(state: &ArtifactSyncState, snapshots: &impl Snapsh
 //#endregion 🔖️Bootstrap
 
 //#region 🔖️ResumeToken
-/// @emoji 🎫️ Issues a fresh resume token for `frontier` — the send-path half of resume tokens (see
+/// 🎫️ Issues a fresh resume token for `frontier` — the send-path half of resume tokens (see
 /// module doc for why the receive path uses `SocketHelloV1.frontier` instead). `Welcome.resume_token` is
 /// always populated from this.
 pub async fn issue_resume_token(frontier: &Frontier) -> Result<String, DbError> {
@@ -310,13 +310,13 @@ const DATABASE_SYNC_HELLO_RETRY_LIMIT: u8 = 8;
 const DATABASE_SYNC_HELLO_DEADLINE_MS: u64 = 30_000;
 const DATABASE_SYNC_HELLO_TURN_MS: u64 = 8;
 
-/// @emoji ⏱️ How long one worker turn keeps re-polling a greeting that woke itself while it was
+/// ⏱️ How long one worker turn keeps re-polling a greeting that woke itself while it was
 /// polled (every decoded field and WAL record yields once): each such wake used to be a whole
 /// worker-pool round trip, ~10 per replayed envelope.
 const DATABASE_SYNC_HELLO_POLL_TURN_MICROS: u64 = 2_000;
 const DATABASE_SYNC_HELLO_FRAME_UNIT_BYTES: usize = 4 * 1024;
 
-/// @emoji 📦️ The most envelopes one hello tail frame carries before it ends on the next commit boundary: the tail a replica
+/// 📦️ The most envelopes one hello tail frame carries before it ends on the next commit boundary: the tail a replica
 /// lacks streams as a sequence of such frames — each with the exact frontier after its last commit, as a peer's relay
 /// carries — so no hello holds more than one frame of it, however long the document's history (ticket 26/09/23 session
 /// 14c: a 13 201-edit document could no longer be opened, its whole tail was decoded into one frame first).
@@ -437,7 +437,7 @@ impl Drop for DatabaseSyncHelloAdmission {
     }
 }
 
-/// @emoji ⏳️ Resolves once a sync-hello admission slot is free (or at `deadline_ms` on the pool's
+/// ⏳️ Resolves once a sync-hello admission slot is free (or at `deadline_ms` on the pool's
 /// clock), so a hello beyond the process's `DATABASE_SYNC_HELLO_SLOTS` concurrent hellos waits its
 /// turn instead of being refused: two dozen document sockets reopening together after a hub
 /// restart are all welcomed (ticket 26/09/23 H9 session 12, growth e2e g15). The slot is not
@@ -450,7 +450,7 @@ pub struct DatabaseSyncHelloAdmissionReady {
 }
 
 impl DatabaseSyncHelloAdmissionReady {
-    /// @emoji 🎟️ Waits for a free slot until `deadline_ms` on `pool`'s clock.
+    /// 🎟️ Waits for a free slot until `deadline_ms` on `pool`'s clock.
     pub fn new(pool: std::sync::Arc<semio_framework_async::WorkerPool>, deadline_ms: u64) -> Self {
         Self { pool, deadline_ms, waiter: None, deadline_armed: false }
     }
@@ -490,7 +490,7 @@ impl Drop for DatabaseSyncHelloAdmissionReady {
     }
 }
 
-/// @emoji 🔢️ How many tasks wait for a sync-hello admission slot right now.
+/// 🔢️ How many tasks wait for a sync-hello admission slot right now.
 pub fn database_sync_hello_admission_waiters() -> usize {
     DATABASE_SYNC_HELLO_ADMISSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner).waiters.len()
 }
@@ -947,69 +947,86 @@ async fn replay_sync_state_retained(
     Ok(DatabaseSyncHelloReplay { frontier: Frontier { document, head_seq, commit_seq, chain_hash, epoch: 0 }, head_edit_id, floor_head_seq })
 }
 
-/// @emoji 🧭️ Where a hello tail's next frame starts reading: the segment holding the first command it has not emitted (`None`
-/// until a page read the document's first retained segment), how many commands and transactions precede that segment, how
-/// far the chain has hashed and the replica has received, where the tail ends (the head and commit sequence of the server
-/// frontier the welcome announced), and the chain over every hashed command.
-struct DatabaseSyncHelloTailCursor {
-    segment: Option<u64>,
-    segment_head_seq: u64,
-    segment_commit_seq: u64,
-    hashed_head_seq: u64,
-    emitted_head_seq: u64,
-    end_head_seq: u64,
-    end_commit_seq: u64,
-    chain: semio_framework_hash::Hasher,
+/// 📄️ One tail frame the reader handed over: its envelopes and the frontier after its last commit (head, head id, commit
+/// sequence, chain hash).
+type DatabaseSyncHelloTailPage = (Vec<protocol::MutationEnvelope>, (u64, String, u64, [u8; 32]));
+
+/// 🤝️ The one-page slot between the tail reader and the hello driver: the reader parks here while the previous frame is still
+/// in the slot, and the driver wakes it when it takes that frame.
+#[derive(Default)]
+struct DatabaseSyncHelloTailHandoff {
+    page: Option<DatabaseSyncHelloTailPage>,
+    reader: Option<std::task::Waker>,
 }
 
-/// @emoji 📄️ One read tail frame: its envelopes, the frontier after its last commit (`None` when nothing remained) and the
-/// cursor the next frame resumes from.
-struct DatabaseSyncHelloTailPage {
-    cursor: DatabaseSyncHelloTailCursor,
-    envelopes: Vec<protocol::MutationEnvelope>,
-    frontier: Option<(u64, String, u64, [u8; 32])>,
+/// ⏳️ Resolves once the tail slot is empty.
+struct DatabaseSyncHelloTailSlotFree<'slot>(&'slot std::sync::Mutex<DatabaseSyncHelloTailHandoff>);
+
+impl std::future::Future for DatabaseSyncHelloTailSlotFree<'_> {
+    type Output = ();
+
+    fn poll(self: std::pin::Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<()> {
+        let mut handoff = self.0.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if handoff.page.is_none() {
+            return std::task::Poll::Ready(());
+        }
+        handoff.reader = Some(context.waker().clone());
+        std::task::Poll::Pending
+    }
 }
 
-type DatabaseSyncHelloTailPageFuture = std::pin::Pin<Box<dyn std::future::Future<Output = Result<DatabaseSyncHelloTailPage, DbError>> + Send>>;
+type DatabaseSyncHelloTailReaderFuture = std::pin::Pin<Box<dyn std::future::Future<Output = Result<(), DbError>> + Send>>;
 
-/// @emoji 🚰️ The tail a replica lacks, streamed from the WAL one frame at a time: each frame is read by one page future
-/// ([`database_sync_hello_tail_page`]) and carries the exact frontier after its last commit; its backing is charged while
-/// it is out and released when it closes, so a hello holds at most one frame of the tail however long it is.
+/// 🚰️ The tail a replica lacks, streamed from the WAL one frame at a time: ONE reader ([`database_sync_hello_tail_reader`])
+/// walks the WAL once and hands each frame over through a one-page slot; each frame carries the exact frontier after its last
+/// commit and its backing is charged while it is out and released when it closes, so a hello holds at most about two frames of
+/// the tail however long it is.
 struct DatabaseSyncHelloTail {
-    storage: Option<std::sync::Arc<db_storage::DbBackend>>,
     document: ArtifactId,
     origin: protocol::ActorId,
-    cancelled: std::sync::Arc<std::sync::atomic::AtomicBool>,
-    expired: std::sync::Arc<std::sync::atomic::AtomicBool>,
-    cursor: Option<DatabaseSyncHelloTailCursor>,
-    page: Option<DatabaseSyncHelloTailPageFuture>,
+    handoff: std::sync::Arc<std::sync::Mutex<DatabaseSyncHelloTailHandoff>>,
+    reader: Option<DatabaseSyncHelloTailReaderFuture>,
     done: bool,
 }
 
 impl DatabaseSyncHelloTail {
-    /// 🚚️ Starts, polls or finishes the next frame's page read.
+    fn new(storage: std::sync::Arc<db_storage::DbBackend>, document: ArtifactId, origin: protocol::ActorId, replica_head: u64, server: &Frontier, cancelled: std::sync::Arc<std::sync::atomic::AtomicBool>, expired: std::sync::Arc<std::sync::atomic::AtomicBool>) -> Self {
+        let handoff = std::sync::Arc::new(std::sync::Mutex::new(DatabaseSyncHelloTailHandoff::default()));
+        let reader = Box::pin(database_sync_hello_tail_reader(storage, document.clone(), replica_head, server.head_seq, server.commit_seq, handoff.clone(), cancelled, expired));
+        Self { document, origin, handoff, reader: Some(reader), done: false }
+    }
+
+    fn take_page(&self) -> Option<DatabaseSyncHelloTailPage> {
+        let mut handoff = self.handoff.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let page = handoff.page.take()?;
+        if let Some(reader) = handoff.reader.take() {
+            reader.wake();
+        }
+        Some(page)
+    }
+
+    /// 🚚️ Advances the reader and hands out the next frame it produced.
     fn drive(&mut self, ledger: &mut DatabaseSyncHelloBackingLedger, context: &mut std::task::Context<'_>) -> Result<DatabaseSyncHelloFollowUpStep, DbError> {
         if self.done {
             return Ok(DatabaseSyncHelloFollowUpStep::Done);
         }
-        if self.page.is_none() {
-            let cursor = self.cursor.take().ok_or_else(|| DbError::Internal("database sync hello tail cursor missing".to_string()))?;
-            if cursor.emitted_head_seq >= cursor.end_head_seq {
-                self.cursor = Some(cursor);
+        let finished = match self.reader.as_mut() {
+            Some(reader) => match std::future::Future::poll(reader.as_mut(), context) {
+                std::task::Poll::Pending => false,
+                std::task::Poll::Ready(read) => {
+                    self.reader = None;
+                    read?;
+                    true
+                }
+            },
+            None => true,
+        };
+        let Some((envelopes, (head_edit_ordinal, head_edit_id, last_commit_seq, chain_hash))) = self.take_page() else {
+            if finished {
                 self.done = true;
                 return Ok(DatabaseSyncHelloFollowUpStep::Done);
             }
-            let storage = self.storage.clone().ok_or_else(|| DbError::Internal("database sync hello tail storage missing".to_string()))?;
-            self.page = Some(Box::pin(database_sync_hello_tail_page(storage, self.document.clone(), cursor, self.cancelled.clone(), self.expired.clone())));
-        }
-        let page = self.page.as_mut().ok_or_else(|| DbError::Internal("database sync hello tail page missing".to_string()))?;
-        let std::task::Poll::Ready(read) = std::future::Future::poll(page.as_mut(), context) else { return Ok(DatabaseSyncHelloFollowUpStep::Waiting) };
-        self.page = None;
-        let DatabaseSyncHelloTailPage { cursor, envelopes, frontier } = read?;
-        self.cursor = Some(cursor);
-        let Some((head_edit_ordinal, head_edit_id, last_commit_seq, chain_hash)) = frontier else {
-            self.done = true;
-            return Ok(DatabaseSyncHelloFollowUpStep::Done);
+            return Ok(DatabaseSyncHelloFollowUpStep::Waiting);
         };
         let frontier = protocol::RuntimeFrontierSummary { document_id: protocol::ArtifactId(self.document.0.clone()), head_edit_ordinal, head_edit_id, last_commit_seq, chain_hash };
         let frame = protocol::ServerFrame::Commands { envelopes, origin: self.origin.clone(), frontier };
@@ -1019,48 +1036,48 @@ impl DatabaseSyncHelloTail {
     }
 
     fn close_one(&mut self) -> bool {
-        if self.page.take().is_some() || self.cursor.take().is_some() {
+        if self.reader.take().is_some() || self.handoff.lock().unwrap_or_else(std::sync::PoisonError::into_inner).page.take().is_some() {
             return true;
         }
-        if database_sync_hello_retire_string(&mut self.origin.0) || database_sync_hello_retire_string(&mut self.document.0) {
-            return true;
-        }
-        self.storage.take().is_some()
+        database_sync_hello_retire_string(&mut self.origin.0) || database_sync_hello_retire_string(&mut self.document.0)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.page.is_none() && self.cursor.is_none() && self.origin.0.capacity() == 0 && self.document.0.capacity() == 0 && self.storage.is_none()
+        self.reader.is_none() && self.handoff.lock().unwrap_or_else(std::sync::PoisonError::into_inner).page.is_none() && self.origin.0.capacity() == 0 && self.document.0.capacity() == 0
     }
 }
 
-/// @emoji 🚰️ Reads one frame of a hello tail: replays the WAL from `cursor`'s segment, skips the commands the chain already
-/// covers, hashes the rest, decodes those the replica lacks and stops on the first commit boundary after
-/// [`DATABASE_SYNC_HELLO_TAIL_FRAME_ENVELOPES`] envelopes or at the tail's end. The cursor it answers resumes in the segment
-/// of the last transaction it read, so a frame reads at most that segment again.
-async fn database_sync_hello_tail_page(
+/// 🚰️ Walks the document's WAL once from its first retained segment: hashes every command into the chain, decodes those past
+/// `replica_head` and, on the first commit boundary after [`DATABASE_SYNC_HELLO_TAIL_FRAME_ENVELOPES`] envelopes (or at the
+/// tail's end, `end_head_seq`), hands the frame over — waiting while the previous one is still in the slot. The frame that
+/// emits the last command carries the server's commit sequence `end_commit_seq`: transactions without a command after it
+/// count in the frontier the welcome announced.
+#[allow(clippy::too_many_arguments)]
+async fn database_sync_hello_tail_reader(
     storage: std::sync::Arc<db_storage::DbBackend>,
     document: ArtifactId,
-    mut cursor: DatabaseSyncHelloTailCursor,
+    replica_head: u64,
+    end_head_seq: u64,
+    end_commit_seq: u64,
+    handoff: std::sync::Arc<std::sync::Mutex<DatabaseSyncHelloTailHandoff>>,
     cancelled: std::sync::Arc<std::sync::atomic::AtomicBool>,
     expired: std::sync::Arc<std::sync::atomic::AtomicBool>,
-) -> Result<DatabaseSyncHelloTailPage, DbError> {
+) -> Result<(), DbError> {
     let deadline = std::time::Instant::now() + std::time::Duration::from_millis(DATABASE_SYNC_HELLO_TURN_MS);
     let control = db_wal::WalCursorControl::new(cancelled.clone(), deadline, DATABASE_SYNC_HELLO_MAX_ITEMS)?;
     database_sync_hello_control(&cancelled, &expired)?;
     let wal = storage.wal().await;
     database_sync_hello_control(&cancelled, &expired)?;
-    let mut records = match cursor.segment {
-        Some(segment) => db_wal::replay_committed_segment(&wal, &document, segment, control).await?,
-        None => db_wal::replay_committed_document(&wal, &document, control).await?,
-    };
+    let mut records = db_wal::replay_committed_document(&wal, &document, control).await?;
     let mut decode_control = db_wal::WalCursorControl::stall_bounded(cancelled.clone(), db_wal::WAL_REPLAY_STEP_STALL_BOUND, db_wal::WAL_REPLAY_STEP_FUEL)?;
+    let mut chain = semio_framework_hash::Hasher::new();
     let mut envelopes: Vec<protocol::MutationEnvelope> = Vec::new();
-    let mut head_seq = cursor.segment_head_seq;
-    let mut commit_seq = cursor.segment_commit_seq;
+    let mut head_seq = 0u64;
+    let mut commit_seq = 0u64;
     let mut head_edit_id = String::new();
     let mut turn = db_wal::WalTurn::start();
     let read = async {
-        while head_seq < cursor.end_head_seq && envelopes.len() < DATABASE_SYNC_HELLO_TAIL_FRAME_ENVELOPES {
+        while head_seq < end_head_seq {
             records.replenish(std::time::Instant::now() + std::time::Duration::from_millis(DATABASE_SYNC_HELLO_TURN_MS), DATABASE_SYNC_HELLO_MAX_ITEMS)?;
             database_sync_hello_control(&cancelled, &expired)?;
             let mut transaction = match records.next_transaction_step().await {
@@ -1076,11 +1093,6 @@ async fn database_sync_hello_tail_page(
                 }
                 Err(error) => return Err(error),
             };
-            if cursor.segment != Some(transaction.segment_index()) {
-                cursor.segment = Some(transaction.segment_index());
-                cursor.segment_head_seq = head_seq;
-                cursor.segment_commit_seq = commit_seq;
-            }
             loop {
                 transaction.replenish(std::time::Instant::now() + std::time::Duration::from_millis(DATABASE_SYNC_HELLO_TURN_MS), DATABASE_SYNC_HELLO_MAX_ITEMS)?;
                 decode_control.renew_step()?;
@@ -1088,14 +1100,11 @@ async fn database_sync_hello_tail_page(
                 match transaction.next_record_step() {
                     Ok(db_wal::WalCommittedRecordStep::Record(db_wal::WalRecord::Command(bytes))) => {
                         head_seq = head_seq.checked_add(1).ok_or(DbError::LimitExceeded("database sync hello tail head sequence"))?;
-                        if head_seq > cursor.hashed_head_seq {
-                            cursor.chain.update(&bytes.hash());
-                            cursor.hashed_head_seq = head_seq;
-                            if head_seq > cursor.emitted_head_seq {
-                                let envelope = decode_wal_command(bytes, &mut decode_control)?;
-                                head_edit_id.clone_from(&envelope.mutation_id.0);
-                                envelopes.push(envelope);
-                            }
+                        chain.update(&bytes.hash());
+                        if head_seq > replica_head {
+                            let envelope = decode_wal_command(bytes, &mut decode_control)?;
+                            head_edit_id.clone_from(&envelope.mutation_id.0);
+                            envelopes.push(envelope);
                         }
                     }
                     Ok(db_wal::WalCommittedRecordStep::Record(_)) => {}
@@ -1117,6 +1126,13 @@ async fn database_sync_hello_tail_page(
             }
             transaction.finish()?;
             commit_seq = commit_seq.checked_add(1).ok_or(DbError::LimitExceeded("database sync hello tail commit sequence"))?;
+            if envelopes.len() >= DATABASE_SYNC_HELLO_TAIL_FRAME_ENVELOPES || (head_seq >= end_head_seq && !envelopes.is_empty()) {
+                let frame_commit_seq = if head_seq >= end_head_seq { end_commit_seq } else { commit_seq };
+                let frontier = (head_seq, std::mem::take(&mut head_edit_id), frame_commit_seq, *chain.finalize().as_bytes());
+                DatabaseSyncHelloTailSlotFree(&handoff).await;
+                database_sync_hello_control(&cancelled, &expired)?;
+                handoff.lock().unwrap_or_else(std::sync::PoisonError::into_inner).page = Some((std::mem::take(&mut envelopes), frontier));
+            }
             turn.step().await;
         }
         database_sync_hello_control(&cancelled, &expired)?;
@@ -1130,15 +1146,7 @@ async fn database_sync_hello_tail_page(
         Ok::<(), DbError>(())
     }
     .await;
-    read.and(close)?;
-    if envelopes.is_empty() {
-        cursor.emitted_head_seq = cursor.end_head_seq;
-        return Ok(DatabaseSyncHelloTailPage { cursor, envelopes, frontier: None });
-    }
-    cursor.emitted_head_seq = head_seq;
-    let commit_seq = if head_seq == cursor.end_head_seq { cursor.end_commit_seq } else { commit_seq };
-    let chain_hash = *cursor.chain.finalize().as_bytes();
-    Ok(DatabaseSyncHelloTailPage { cursor, envelopes, frontier: Some((head_seq, head_edit_id, commit_seq, chain_hash)) })
+    read.and(close)
 }
 
 enum DatabaseSyncHelloFollowUp {
@@ -1174,7 +1182,7 @@ impl DatabaseSyncHelloGrant {
     }
 }
 
-/// @emoji 🪜️ What one drive of a hello follow-up produced: a frame, the end of the stream, progress toward a frame (drive
+/// 🪜️ What one drive of a hello follow-up produced: a frame, the end of the stream, progress toward a frame (drive
 /// again), or a read in flight whose completion wakes the hello.
 enum DatabaseSyncHelloFollowUpStep {
     Frame(protocol::ServerFrame),
@@ -1324,8 +1332,7 @@ async fn database_sync_hello_execute(
                 let storage = owners.storage.clone().ok_or_else(|| DbError::Internal("database sync hello storage owner missing".to_string()))?;
                 let document = ArtifactId(database_sync_hello_clone_string(&server.document.0, &mut ledger, "database sync hello tail document backing")?);
                 let origin = protocol::ActorId(std::mem::take(&mut owners.origin.0));
-                let cursor = DatabaseSyncHelloTailCursor { segment: None, segment_head_seq: 0, segment_commit_seq: 0, hashed_head_seq: 0, emitted_head_seq: replica_head, end_head_seq: server.head_seq, end_commit_seq: server.commit_seq, chain: semio_framework_hash::Hasher::new() };
-                let tail = DatabaseSyncHelloTail { storage: Some(storage), document, origin, cancelled: cancelled.clone(), expired: expired.clone(), cursor: Some(cursor), page: None, done: false };
+                let tail = DatabaseSyncHelloTail::new(storage, document, origin, replica_head, &server, cancelled.clone(), expired.clone());
                 (protocol::Bootstrap::Tail, DatabaseSyncHelloFollowUp::Tail(Box::new(tail)))
             }
         } else {
@@ -1518,7 +1525,8 @@ struct DatabaseSyncHelloState {
     retry_job: std::sync::Mutex<Option<(semio_framework_async::Job, u8)>>,
     cancelled: std::sync::Arc<std::sync::atomic::AtomicBool>,
     expired: std::sync::Arc<std::sync::atomic::AtomicBool>,
-    deadline_ms: u64,
+    progress_deadline_ms: std::sync::atomic::AtomicU64,
+    deadline_armed_ms: std::sync::atomic::AtomicU64,
     progress: std::sync::Arc<std::sync::atomic::AtomicU8>,
     wake_requested: std::sync::atomic::AtomicBool,
     demand: std::sync::atomic::AtomicBool,
@@ -1654,7 +1662,7 @@ impl DatabaseSyncHelloState {
 
     fn retry(self: std::sync::Arc<Self>) {
         let Some((job, attempt)) = self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() else { return };
-        if self.pool.now_ms() >= self.deadline_ms || attempt >= DATABASE_SYNC_HELLO_RETRY_LIMIT {
+        if self.pool.now_ms() >= self.progress_deadline_ms.load(std::sync::atomic::Ordering::Acquire) || attempt >= DATABASE_SYNC_HELLO_RETRY_LIMIT {
             self.expired.store(true, std::sync::atomic::Ordering::Release);
             self.cancelled.store(true, std::sync::atomic::Ordering::Release);
         }
@@ -1810,7 +1818,10 @@ impl DatabaseSyncHelloState {
         };
         let waiting = matches!(step, Ok(DatabaseSyncHelloFollowUpStep::Waiting));
         match step {
-            Ok(DatabaseSyncHelloFollowUpStep::Frame(frame)) => core.frame = Some(Ok(Some(frame))),
+            Ok(DatabaseSyncHelloFollowUpStep::Frame(frame)) => {
+                self.progress_deadline_ms.store(self.pool.now_ms().saturating_add(DATABASE_SYNC_HELLO_DEADLINE_MS), std::sync::atomic::Ordering::Release);
+                core.frame = Some(Ok(Some(frame)));
+            }
             Ok(DatabaseSyncHelloFollowUpStep::Done) => {
                 core.frame = Some(Ok(None));
                 self.progress.store(DatabaseSyncHelloProgress::Completed as u8, std::sync::atomic::Ordering::Release);
@@ -1926,13 +1937,25 @@ impl DatabaseSyncHelloState {
         pending
     }
 
-    /// ⏳️ Expires one hello that is still running at its deadline. The `WorkerPool` timer holds the
+    /// ⏳️ Expires one hello that made no progress for `DATABASE_SYNC_HELLO_DEADLINE_MS`: every frame it produced renewed its
+    /// deadline, so a long streamed tail that keeps moving is never cut and the callback re-arms at the renewed one. The
+    /// `WorkerPool` timer holds the
     /// state WEAKLY: `callback_at` cannot be cancelled, so an owning clone would pin the state — and
     /// with it the `Database`'s `WorkerPoolUse` — for the full `DATABASE_SYNC_HELLO_DEADLINE_MS`
     /// after the hello finished, long past the registry slot being cleared. A database that
     /// completed a sync could then not shut down inside its own deadline. A hello whose owners are
     /// all gone has nothing left to expire, so the upgrade failing is the terminal case.
     fn deadline_callback(self: &std::sync::Arc<Self>) {
+        let renewed = self.progress_deadline_ms.load(std::sync::atomic::Ordering::Acquire);
+        if renewed > self.deadline_armed_ms.swap(renewed, std::sync::atomic::Ordering::AcqRel) {
+            let deadline = std::sync::Arc::downgrade(self);
+            self.pool.callback_at(renewed, move || {
+                if let Some(state) = deadline.upgrade() {
+                    state.deadline_callback();
+                }
+            });
+            return;
+        }
         if self.current() && !matches!(self.progress(), DatabaseSyncHelloProgress::Completed | DatabaseSyncHelloProgress::Cancelled | DatabaseSyncHelloProgress::Fault) {
             self.expired.store(true, std::sync::atomic::Ordering::Release);
             self.cancelled.store(true, std::sync::atomic::Ordering::Release);
@@ -2015,7 +2038,8 @@ impl DatabaseSyncHelloFuture {
             retry_job: std::sync::Mutex::new(None),
             cancelled,
             expired,
-            deadline_ms,
+            progress_deadline_ms: std::sync::atomic::AtomicU64::new(deadline_ms),
+            deadline_armed_ms: std::sync::atomic::AtomicU64::new(deadline_ms),
             progress,
             wake_requested: std::sync::atomic::AtomicBool::new(false),
             demand: std::sync::atomic::AtomicBool::new(false),
@@ -2577,7 +2601,7 @@ pub struct DatabaseSyncHelloRejected {
 }
 
 impl DatabaseSyncHelloRejected {
-    /// @emoji 🚦️ Whether this hello was refused only because every admission slot was taken, so
+    /// 🚦️ Whether this hello was refused only because every admission slot was taken, so
     /// the same hello is admitted once [`DatabaseSyncHelloAdmissionReady`] resolves.
     pub fn admission_saturated(&self) -> bool {
         matches!(&self.error, Some(DbError::Unavailable(message)) if message == DATABASE_SYNC_HELLO_ADMISSION_SATURATED)
@@ -2639,7 +2663,7 @@ impl Drop for DatabaseSyncHelloRejected {
 }
 //#endregion 👋️RetainedHello
 
-/// @emoji 🚀️ What `handle_hello` produces: the `Welcome` frame itself, plus whatever follow-up
+/// 🚀️ What `handle_hello` produces: the `Welcome` frame itself, plus whatever follow-up
 /// frames the chosen bootstrap needs (a single `Commands` frame for `Tail`; one `SnapshotChunk`
 /// per chunk plus a trailing `SnapshotDone` for a non-inlined `Snapshot`; none for `None` or an
 /// inlined `Snapshot`, whose bytes already travel inside `Welcome.bootstrap`).
@@ -2699,7 +2723,7 @@ fn bootstrap_page_range_copy(pages: &db_storage::DbIoPages, start: usize, len: u
     Ok(BootstrapPageRangeCopy { pages, skip: start, remaining: len, page: 0, output: Some(output) })
 }
 
-/// @emoji 🏗️ Lowers a `BootstrapPlan` to the wire `protocol::Bootstrap` shape plus its follow-up
+/// 🏗️ Lowers a `BootstrapPlan` to the wire `protocol::Bootstrap` shape plus its follow-up
 /// frames. A `Snapshot` whose bytes fit within `snapshot_chunk_bytes` is inlined directly into
 /// `Bootstrap::Snapshot.inline` (no follow-up frames); a larger one is chunked instead — this
 /// crate's own choice of threshold behavior, since the contract fixes `Bootstrap::Snapshot`'s two
@@ -2734,7 +2758,7 @@ async fn lower_bootstrap_plan(plan: &BootstrapPlan, state: &ArtifactSyncState, o
     }
 }
 
-/// @emoji 🏗️ Builds the full `WelcomeResponse` for `plan` against `state`. `snapshot_chunk_bytes`
+/// 🏗️ Builds the full `WelcomeResponse` for `plan` against `state`. `snapshot_chunk_bytes`
 /// must be non-zero (validated before `lower_bootstrap_plan` could otherwise divide the snapshot
 /// into a runaway number of zero-progress chunks).
 #[cfg(test)]
@@ -2748,7 +2772,7 @@ pub async fn build_welcome(state: &ArtifactSyncState, plan: &BootstrapPlan, sess
     Ok(WelcomeResponse { welcome, follow_up })
 }
 
-/// @emoji 👋️ The top-level entry point for a `protocol::ClientFrame::SocketHelloV1`: replays `document`'s
+/// 👋️ The top-level entry point for a `protocol::ClientFrame::SocketHelloV1`: replays `document`'s
 /// current sync state, decides a bootstrap plan against `hello_frontier` (the replica's advertised
 /// `RuntimeFrontierSummary`, `None` for a totally fresh replica — see module doc for why this
 /// crate reads `SocketHelloV1.frontier` rather than decoding `SocketHelloV1.resume_token`), and lowers it to a
@@ -2776,7 +2800,7 @@ pub async fn handle_hello(
     Ok(WelcomeResponse { welcome, follow_up })
 }
 
-/// @emoji 📡️ Mid-session catch-up: a connected replica sends `ClientFrame::FrontierAdvertise`
+/// 📡️ Mid-session catch-up: a connected replica sends `ClientFrame::FrontierAdvertise`
 /// (e.g. after a period of being caught up passively via broadcast, to confirm its position) and
 /// the semio_hub replies with whatever commands it's still missing, or `None` if it's already current.
 pub async fn handle_frontier_advertise(storage: &impl db_storage::WalStorage, document: ArtifactId, advertised: &protocol::RuntimeFrontierSummary, origin: protocol::ActorId) -> Result<Option<protocol::ServerFrame>, DbError> {

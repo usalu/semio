@@ -3439,7 +3439,7 @@ type NativeArtifactProviderFrontierFixture = {
   readonly production: {
     readonly feature: "native-artifact-execution";
     readonly providerId: "stdio+gis+vcs/native-codecs/v1";
-    readonly receiptCount: 29;
+    readonly receiptCount: 32;
     readonly pluginDependencies: readonly ["stdio/full-artifact-catalog", "gis", "vcs"];
   };
   readonly configuredWithoutProvider: "reject";
@@ -3453,7 +3453,7 @@ async function proveNativeArtifactProviderFrontier(repoRoot: string): Promise<nu
   if (!headlessProfile(fixture.headless) || !providerIdentity(fixture.production)) throw new Error("native artifact provider frontier fixture violates its owning scope contract");
   if (String(fixture.schema) !== "semio.hub.native-artifact-provider-frontier/v1" || String(fixture.configuredWithoutProvider) !== "reject") throw new Error("native artifact provider frontier envelope differs");
   if (Boolean(fixture.headless.defaultFeatures) || JSON.stringify(fixture.headless.features) !== JSON.stringify(["sqlite"]) || fixture.headless.directPluginDependencies.length !== 0) throw new Error("headless hub profile is no longer provider-free");
-  if (String(fixture.production.feature) !== "native-artifact-execution" || String(fixture.production.providerId) !== "stdio+gis+vcs/native-codecs/v1" || Number(fixture.production.receiptCount) !== 29
+  if (String(fixture.production.feature) !== "native-artifact-execution" || String(fixture.production.providerId) !== "stdio+gis+vcs/native-codecs/v1" || Number(fixture.production.receiptCount) !== 32
     || JSON.stringify(fixture.production.pluginDependencies) !== JSON.stringify(["stdio/full-artifact-catalog", "gis", "vcs"])) throw new Error("production native artifact provider frontier differs");
   const manifest = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/Cargo.toml"), "utf8");
   const feature = fixture.production.feature.replace(/[.*+?^$()|[\]\\]/gu, "\\$&");
@@ -4347,7 +4347,7 @@ async function proveNativeOpenableCatalogProviderFixture(repoRoot: string): Prom
   const admitsOpenTarget = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.native-openable-provider/NativeOpenableOpenTargetV1");
   const admitsAttestation = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.native-openable-provider/NativeOpenableAttestationV1");
   const admitsHostileExpectation = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.native-openable-provider/NativeOpenableHostileExpectationV1");
-  if (fixture.schema !== "semio.hub.native-openable-catalog-provider-fixture/v1" || fixture.receiptCount !== 26 || fixture.hostileCases.length !== 13
+  if (fixture.schema !== "semio.hub.native-openable-catalog-provider-fixture/v1" || fixture.receiptCount !== 29 || fixture.hostileCases.length !== 13
     || new Set(fixture.hostileCases.map((row: any) => row.mutation)).size !== 13 || typeof fixture.providerProjection !== "string" || typeof fixture.artifactDefinitionsRoot !== "string") throw new Error("native-openable catalog provider envelope differs");
   if (!admitsOpenTarget(fixture.openTarget) || !admitsAttestation(fixture.attestation)) throw new Error("native-openable open target or attestation violates its owning scope contract");
   for (const row of fixture.hostileCases) if (!admitsHostileExpectation(row)) throw new Error(`native-openable hostile expectation is malformed: ${row.name}`);
@@ -4581,7 +4581,7 @@ async function proveVcsNativeProviderSelectionFixture(repoRoot: string): Promise
   if (accepted !== 1) throw new Error("VCS provider corpus must admit exactly one selection");
   for (const profile of fixture.unconsumedProfiles) if (!admitsProfile(profile)) throw new Error(`VCS unconsumed profile violates its owning scope contract: ${profile.name}`);
   const linked = new Map<string, number>([
-    ["semio:stdio", 26],
+    ["semio:stdio", 29],
     ["semio:gis", 2],
     ["semio:vcs", receipts.receipts.length],
   ]);
@@ -4593,8 +4593,8 @@ async function proveVcsNativeProviderSelectionFixture(repoRoot: string): Promise
   const provider = readFileSync(join(repoRoot, "🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🦀️.rs"), "utf8");
   if (!provider.includes('NativeCodecProviderEntryV1 { plugin_id: "vcs", package_id: "semio:vcs", preview: preview_vcs_bindings }') || !provider.includes('identity.factory_id != "vcs.vcs.v1"') || !provider.includes('identity.schema != "vcs.vcs"'))
     throw new Error("linked VCS provider entry or its exact identity fences are absent");
-  if ([...linked.values()].reduce((sum, count) => sum + count, 0) !== 29 || !provider.includes("pub const NATIVE_OPENABLE_PROVIDER_SET_V1_RECEIPTS: usize = 29;")) throw new Error("linked provider closure is not the exact stdio+GIS+VCS sum");
-  console.log(`vcs-native-provider-selection-oracle: cases=${fixture.cases.length} accepted=${accepted} unconsumed-profiles=${fixture.unconsumedProfiles.length} linked-receipts=29 scope-exports=2; no native or catalog activation claim`);
+  if ([...linked.values()].reduce((sum, count) => sum + count, 0) !== 32 || !provider.includes("pub const NATIVE_OPENABLE_PROVIDER_SET_V1_RECEIPTS: usize = 32;")) throw new Error("linked provider closure is not the exact stdio+GIS+VCS sum");
+  console.log(`vcs-native-provider-selection-oracle: cases=${fixture.cases.length} accepted=${accepted} unconsumed-profiles=${fixture.unconsumedProfiles.length} linked-receipts=32 scope-exports=2; no native or catalog activation claim`);
 }
 
 const HEADLESS_STDIO_METADATA_MAX_BYTES = 2 * 1024 * 1024 * 1024;
@@ -4926,7 +4926,7 @@ class NativeOpenableCatalogProviderCheckScript extends BundleScript {
             "linked_consumer_descriptors_bind_their_actual_compiled_stdio_dependency_and_catalog",
             "linked_stdio_gis_descriptor_failures_never_publish_a_partial_codec_closure",
             "trusted_descriptor_wire_materialization_matches_neutral_boundaries",
-            "local_stdio_gis_profile_is_exact_two_packages_twenty_eight_codecs_and_one_map_editor_and_viewer",
+            "local_stdio_gis_profile_is_exact_two_packages_thirty_one_codecs_and_opens_every_package_target",
             "trusted_profile_generation_binds_zero_target_package_and_every_codec_row",
           ],
         },
@@ -4974,7 +4974,7 @@ class NativeCatalogSelectionCheckScript extends BundleScript {
             "linked_consumer_descriptors_bind_their_actual_compiled_stdio_dependency_and_catalog",
             "linked_stdio_gis_descriptor_failures_never_publish_a_partial_codec_closure",
             "trusted_descriptor_wire_materialization_matches_neutral_boundaries",
-            "local_stdio_gis_profile_is_exact_two_packages_twenty_eight_codecs_and_one_map_editor_and_viewer",
+            "local_stdio_gis_profile_is_exact_two_packages_thirty_one_codecs_and_opens_every_package_target",
             "trusted_profile_generation_binds_zero_target_package_and_every_codec_row",
           ],
         },
@@ -5396,7 +5396,7 @@ async function proveExecutionTargetLeaseCorpus(repoRoot: string): Promise<void> 
   if (!/^(?:[0-9a-f]{2})+$/u.test(fixture.componentHex) || !/^(?:[0-9a-f]{2})+$/u.test(fixture.descriptorHex)) throw new Error("execution target lease corpus asset bytes are not canonical hex");
   if (!hubSchemaExport(repoRoot, "schema://hub.directory/DocumentOpenIntentV1")(fixture.intent)) throw new Error("execution target lease corpus intent is not the owned document-open-intent contract");
   if (!hubSchemaExport(repoRoot, "schema://os.directory/DocumentSocketGrantReceiptV1")(fixture.socketGrant)) throw new Error("execution target lease corpus socket grant is not the owned document-socket-grant contract");
-  const leaseStatusKeys = ["verifying", "retrying", "integrity-failed", "stale", "cancelled", "renderer-unavailable", "link-expired", "access-revoked"];
+  const leaseStatusKeys = ["verifying", "retrying", "catching-up", "integrity-failed", "stale", "cancelled", "renderer-unavailable", "link-expired", "access-revoked"];
   const localizedText = hubSchemaExport(repoRoot, "schema://hub.directory/LocalizedTextV1");
   const expected = fixture.expected as Record<string, any>;
   if (Object.keys(expected).sort().join(",") !== "assetBody,assetMethod,assetPaths,componentMaxBytes,descriptorMaxBytes,forbiddenStatusFragments,manifestMaxBytes,openPlanPath,progressStages,progressUnitBytes,rendererClaims,rendererState,rotation,socketGrantPath,status,statusRoles,viewerWriteRejectedLocally")
@@ -5531,7 +5531,7 @@ async function proveExecutionTargetLeaseCorpus(repoRoot: string): Promise<void> 
     if (!text.en || !text.de || text.en === text.de) throw new Error(`execution target lease corpus status ${code} is not explicitly bilingual`);
     for (const fragment of fixture.expected.forbiddenStatusFragments) if (text.en.includes(fragment) || text.de.includes(fragment)) throw new Error(`execution target lease corpus status ${code} leaked ${fragment}`);
     const role = fixture.expected.statusRoles[code];
-    if (role !== (code === "verifying" || code === "retrying" ? "status" : "alert")) throw new Error(`execution target lease corpus status ${code} has the wrong live-region role`);
+    if (role !== (code === "verifying" || code === "retrying" || code === "catching-up" ? "status" : "alert")) throw new Error(`execution target lease corpus status ${code} has the wrong live-region role`);
   }
   if (Object.values(fixture.expected.rendererClaims).some((claim) => claim !== false)) throw new Error("execution target lease corpus claims a renderer it does not have");
   console.log(
@@ -7969,6 +7969,52 @@ function trustedBootstrapResolveClosure(profileId: string, claims: ReadonlyMap<s
   return resolved;
 }
 
+/** 🛫️ The selection-level rules the final staging and the hub's `validate_bundle` hold a publication to, judged from the package
+ * rows and their COMMITTED descriptors alone, so a violation surfaces in seconds instead of after the release builds (ticket
+ * 26/09/23 W4: a hosted-only stdio family and a 260-byte profile id each failed only after 15–44 min): the profile id is a
+ * bounded `local-…-open-v1` name (`TRUSTED_IDENTITY_MAX_BYTES`); every package identity and declared kind id/schema is a bounded
+ * trusted identity; a package without linked codecs declares at least one artifact kind — its component can only answer codec
+ * rows for kinds it declares, and the catalog has no hosted-package model — (which of them its apps OWN is the `describe` gate's
+ * `first_owned_codec` law); a linked package's codec registry exists; no artifact kind is owned by editors of two packages (the hub's
+ * `artifact_creation_selection` needs one unambiguous editor — c9's GIS probe got 409 when demonstrator re-owned `s.gis.gismap`). Law + fixture: `🌎️hub/🧪️tests/🛫️catalog-selection-preflight`. */
+export function trustedBootstrapSelectionFindingsV1(profileId: string, packages: readonly Readonly<{ pluginId: string; componentPackageId: string; outputName: string; linkedCodecRegistry: string | null; linkedCodecRegistryPresent: boolean; descriptor: Record<string, any> }>[]): readonly string[] {
+  const bounded = (value: unknown): boolean => typeof value === "string" && value.length > 0 && new TextEncoder().encode(value).length <= 256 && value.trim() === value;
+  const findings: string[] = [];
+  if (!bounded(profileId) || !/^local-(?:[a-z0-9]+-)+open-v1$/u.test(profileId)) findings.push(`profile id ${JSON.stringify(profileId.slice(0, 96))} is not a bounded local-…-open-v1 name (${new TextEncoder().encode(profileId).length} bytes, bound 256)`);
+  const editorOwners = new Map<string, string[]>();
+  for (const row of packages) {
+    for (const [field, value] of [["pluginId", row.pluginId], ["componentPackageId", row.componentPackageId], ["outputName", row.outputName]] as const) if (!bounded(value)) findings.push(`${row.pluginId}: ${field} is not a bounded trusted identity`);
+    const kinds = trustedBootstrapDescriptorKindsV1(row.descriptor);
+    const editors = ((row.descriptor.manifest?.apps ?? []) as Record<string, any>[]).filter((app) => app.role === "editor");
+    for (const kind of kinds) {
+      if (!bounded(kind.id) || !bounded(kind.schema)) findings.push(`${row.pluginId}: artifact kind ${JSON.stringify(String(kind.id).slice(0, 96))} has an unbounded id or schema`);
+      if (editors.some((app) => app.io?.artifactSchema === kind.schema || app.dialect?.artifactKind === kind.schema)) editorOwners.set(String(kind.id), [...(editorOwners.get(String(kind.id)) ?? []), row.pluginId]);
+    }
+    if (row.linkedCodecRegistry !== null) {
+      if (!row.linkedCodecRegistryPresent) findings.push(`${row.pluginId}: linked codec registry ${row.linkedCodecRegistry} is missing`);
+    } else if (kinds.length === 0) findings.push(`${row.pluginId}: declares no artifact kind — its apps host kinds another package owns, and a trusted-catalog package must answer at least one codec row of its own (no hosted-package model)`);
+  }
+  for (const [kindId, owners] of editorOwners) if (owners.length > 1) findings.push(`artifact kind ${kindId} is owned by editors of ${owners.join(" and ")} — the hub creates a kind only through one unambiguous editor (host, don't own, another package's kind)`);
+  return Object.freeze(findings);
+}
+
+/** 🛫️ [[trustedBootstrapSelectionFindingsV1]] over the selected packages' committed owner-root `🔣️.json` descriptors; throws every
+ * finding at once. First step of `trusted-catalog-preflight` and `trusted-catalog-bootstrap`. */
+export function trustedBootstrapPreflightSelectionV1(repoRoot: string, selection: readonly TrustedBootstrapPackageSpecV1[]): void {
+  const registryPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🔌️plugins.json");
+  if (!existsSync(registryPath)) throw new Error(`trusted catalog preflight needs the generated plugin registry ${relative(repoRoot, registryPath)}; run bun nx run @semio-tech/plugin-registry:generate`);
+  const registry = JSON.parse(readFileSync(registryPath, "utf8")) as readonly { pluginId?: unknown; cratePath?: unknown }[];
+  const packages = selection.map((spec) => {
+    const row = registry.find((entry) => entry.pluginId === spec.pluginId);
+    if (typeof row?.cratePath !== "string") throw new Error(`trusted catalog preflight: ${spec.pluginId} is not a row of the generated plugin registry`);
+    const descriptor = JSON.parse(readFileSync(join(repoRoot, row.cratePath, "..", "..", "🔣️.json"), "utf8")) as Record<string, any>;
+    return { ...spec, linkedCodecRegistryPresent: spec.linkedCodecRegistry !== null && existsSync(join(repoRoot, spec.linkedCodecRegistry)), descriptor };
+  });
+  const findings = trustedBootstrapSelectionFindingsV1(trustedBootstrapProfileIdV1(selection), packages);
+  if (findings.length > 0) throw new Error(`trusted catalog preflight: selection refused before any build:\n${findings.map((finding) => `  - ${finding}`).join("\n")}`);
+  console.log(`trusted-catalog-preflight: selection of ${selection.length} packages publishes as ${trustedBootstrapProfileIdV1(selection)} with bounded identities and a codec of its own per package`);
+}
+
 /** 🛫️ Fails a publication in seconds, before any build or codec probe: every selected package's COMMITTED owner-root
  * descriptor must pass the same claim rules its fresh build is held to later (canonical bounded Pack, exact `=x.y.z`
  * dependency pins, every dependency inside the selected closure at that package's own version). A stale or malformed
@@ -7991,7 +8037,7 @@ export function trustedBootstrapPreflightDescriptorsV1(repoRoot: string, selecti
   });
   const closure = claims.map((row) => ({ pluginId: row.spec.pluginId, packageId: row.spec.componentPackageId, version: row.claims.identity.version }));
   try {
-    trustedBootstrapResolveClosure(`local-${selection.map((spec) => spec.pluginId).join("-")}-open-v1`, new Map(claims.map((row) => [row.spec.pluginId, row.claims])), closure);
+    trustedBootstrapResolveClosure(trustedBootstrapProfileIdV1(selection), new Map(claims.map((row) => [row.spec.pluginId, row.claims])), closure);
   } catch (error) {
     throw new Error(`trusted catalog preflight: dependencies refused (${error instanceof Error ? error.message : String(error)})`);
   }
@@ -8721,7 +8767,7 @@ async function proveTrustedStdioGisBootstrapFixture(repoRoot: string): Promise<v
   bootstrapAssert.deepEqual(Object.keys(fixture), ["schema", "profile", "sources", "limits", "framing", "cancellationStages", "hostile", "publication", "rotation"]);
   bootstrapAssert.equal(fixture.schema, "semio.hub.trusted-stdio-gis-bootstrap/v1");
   bootstrapAssert.equal(fixture.profile.id, "local-stdio-gis-open-v1");
-  bootstrapAssert.deepEqual(fixture.limits, { descriptorBytes: 4_194_304, descriptorBytesPlusOne: 4_194_305, componentBytes: 67_108_864, ioChunkBytes: 65_536, packageCount: 2, codecCount: 28, openTargetCount: 1 });
+  bootstrapAssert.deepEqual(fixture.limits, { descriptorBytes: 4_194_304, descriptorBytesPlusOne: 4_194_305, componentBytes: 67_108_864, ioChunkBytes: 65_536, packageCount: 2, codecCount: 31, openTargetCount: 1 });
   bootstrapAssert.deepEqual(fixture.framing, { closureDomain: "semio/hub/trusted-profile-selected-closure/v1\u0000", generationDomain: "semio/hub/trusted-profile-generation/v1\u0000", integerEndian: "big", lengthBytes: 8 });
   bootstrapAssert.deepEqual(fixture.cancellationStages, ["build", "extract-core", "inspect-wit", "emit-descriptor", "stage-component", "stage-descriptor", "hash", "pre-publication"]);
   bootstrapAssert.deepEqual(fixture.hostile, [
@@ -8751,7 +8797,7 @@ async function proveTrustedStdioGisBootstrapFixture(repoRoot: string): Promise<v
   const profile = fixture.profile;
   const unique = (rows: readonly TrustedBootstrapCodec[]): boolean =>
     rows.length === new Set(rows.map((row) => JSON.stringify([row.artifactKind, row.artifactSchema, row.packSchemaHash]))).size && rows.every((row) => /^(?!0{64}$)[0-9a-f]{64}$/u.test(row.packSchemaHash));
-  if (stdio.plugin_id !== "stdio" || stdio.package_id !== "semio:stdio" || codecs.stdio.length !== 26 || !unique(codecs.stdio)) throw new Error("stdio bootstrap closure is not exact 26");
+  if (stdio.plugin_id !== "stdio" || stdio.package_id !== "semio:stdio" || codecs.stdio.length !== 29 || !unique(codecs.stdio)) throw new Error("stdio bootstrap closure is not exact 29");
   if (
     gis.pluginId !== "gis" ||
     gis.packageId !== "semio:gis" ||
@@ -8768,7 +8814,7 @@ async function proveTrustedStdioGisBootstrapFixture(repoRoot: string): Promise<v
     profile.packages[0].codecCount !== 2 ||
     profile.packages[0].targetCount !== 1 ||
     profile.packages[1].pluginId !== "stdio" ||
-    profile.packages[1].codecCount !== 26 ||
+    profile.packages[1].codecCount !== 29 ||
     profile.packages[1].targetCount !== 0
   )
     throw new Error("trusted bootstrap package/target cardinality drifted");
@@ -9053,7 +9099,7 @@ function projectTrustedBootstrapCodecsV1(stdio: unknown, gis: unknown): Readonly
   const digest = (value: unknown): value is string => typeof value === "string" && /^(?!0{64}$)[0-9a-f]{64}$/u.test(value);
   const s = record(stdio, ["schema", "provider_id", "plugin_id", "package_id", "receipts"]);
   const g = record(gis, ["schema", "pluginId", "packageId", "packageVersion", "receipts", "hostile"]);
-  if (s.schema !== "semio.stdio.native-openable-catalog-provider/v1" || s.provider_id !== "stdio/native-codecs/v1" || s.plugin_id !== "stdio" || s.package_id !== "semio:stdio" || !Array.isArray(s.receipts) || s.receipts.length !== 26) return fail();
+  if (s.schema !== "semio.stdio.native-openable-catalog-provider/v1" || s.provider_id !== "stdio/native-codecs/v1" || s.plugin_id !== "stdio" || s.package_id !== "semio:stdio" || !Array.isArray(s.receipts) || s.receipts.length !== 29) return fail();
   const hostile = ["missing", "duplicate", "foreign-package", "wrong-version", "bare-kind", "wrong-schema", "wrong-extension", "zero-hash"];
   if (
     g.schema !== "semio.gis.native-codec-receipts/v1" ||
@@ -9896,8 +9942,9 @@ type TrustedBootstrapPackageSpecV1 = Readonly<{
 /** 🎯️ What `trusted-catalog-bootstrap` publishes when no `--packages` list is given. */
 const TRUSTED_BOOTSTRAP_DEFAULT_PACKAGES = "stdio,gis,note";
 
-/** 🌎️ Every selectable top-level `s` plugin package, in publication order. */
-const TRUSTED_BOOTSTRAP_ALL_PACKAGES = "stdio,gis,animate,architect,block,cad,dag,demonstrator,draw,energy,fem,flow,forms,imperative,layout,lowpoly,mathematical,norm,note,playbook,procedural,process,puzzle,raster,reasoning,remodel,sequence,shooting,sourcing,space,trinity,vcs,wfc,writer";
+/** 🌎️ Every selectable `s` plugin package — the top-level plugins and the stdio family components right after the `stdio`
+ * package they depend on — in publication order. */
+const TRUSTED_BOOTSTRAP_ALL_PACKAGES = "stdio,stdio-image,stdio-media,stdio-cad,stdio-bim,stdio-mesh,stdio-pdf,stdio-office,stdio-semio,stdio-binary,gis,animate,architect,block,cad,dag,demonstrator,draw,energy,fem,flow,forms,imperative,layout,lowpoly,mathematical,norm,note,playbook,procedural,process,puzzle,raster,reasoning,remodel,sequence,shooting,sourcing,space,trinity,vcs,wfc,writer";
 
 /** 🔗️ The closure every gate, rotation and process law in this file proves: exactly the packages
  * this hub binary links Rust codecs for. They keep minting `local-stdio-gis-open-v1`, so the hub's
@@ -9906,6 +9953,15 @@ export const TRUSTED_BOOTSTRAP_LINKED_PACKAGES = "stdio,gis";
 
 const TRUSTED_BOOTSTRAP_PACKAGES: readonly TrustedBootstrapPackageSpecV1[] = Object.freeze([
   Object.freeze({ pluginId: "stdio", cargoPackage: "semio-s-plugin-stdio", componentPackageId: "semio:stdio", outputName: "semio_s_plugin_stdio.wasm", linkedCodecRegistry: "✏️s/🔌️plugins/🗄️stdio/📇️registry/📜️native-codec-factories.json", opensDocuments: true }),
+  Object.freeze({ pluginId: "stdio-image", cargoPackage: "semio-s-plugin-stdio-image", componentPackageId: "semio:stdio-image", outputName: "semio_s_plugin_stdio_image.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "stdio-media", cargoPackage: "semio-s-plugin-stdio-media", componentPackageId: "semio:stdio-media", outputName: "semio_s_plugin_stdio_media.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "stdio-cad", cargoPackage: "semio-s-plugin-stdio-cad", componentPackageId: "semio:stdio-cad", outputName: "semio_s_plugin_stdio_cad.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "stdio-bim", cargoPackage: "semio-s-plugin-stdio-bim", componentPackageId: "semio:stdio-bim", outputName: "semio_s_plugin_stdio_bim.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "stdio-mesh", cargoPackage: "semio-s-plugin-stdio-mesh", componentPackageId: "semio:stdio-mesh", outputName: "semio_s_plugin_stdio_mesh.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "stdio-pdf", cargoPackage: "semio-s-plugin-stdio-pdf", componentPackageId: "semio:stdio-pdf", outputName: "semio_s_plugin_stdio_pdf.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "stdio-office", cargoPackage: "semio-s-plugin-stdio-office", componentPackageId: "semio:stdio-office", outputName: "semio_s_plugin_stdio_office.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "stdio-semio", cargoPackage: "semio-s-plugin-stdio-semio", componentPackageId: "semio:stdio-semio", outputName: "semio_s_plugin_stdio_semio.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "stdio-binary", cargoPackage: "semio-s-plugin-stdio-binary", componentPackageId: "semio:stdio-binary", outputName: "semio_s_plugin_stdio_binary.wasm", linkedCodecRegistry: null, opensDocuments: true }),
   Object.freeze({ pluginId: "gis", cargoPackage: "semio-s-plugin-gis", componentPackageId: "semio:gis", outputName: "semio_s_plugin_gis.wasm", linkedCodecRegistry: "✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🔣️.json", opensDocuments: true }),
   Object.freeze({ pluginId: "animate", cargoPackage: "semio-s-plugin-animate", componentPackageId: "semio:animate", outputName: "semio_s_plugin_animate.wasm", linkedCodecRegistry: null, opensDocuments: true }),
   Object.freeze({ pluginId: "architect", cargoPackage: "semio-s-plugin-architect", componentPackageId: "semio:architect", outputName: "semio_s_plugin_architect.wasm", linkedCodecRegistry: null, opensDocuments: true }),
@@ -9942,6 +9998,23 @@ const TRUSTED_BOOTSTRAP_PACKAGES: readonly TrustedBootstrapPackageSpecV1[] = Obj
 ]);
 
 /** 🧾️ Resolves a comma-separated `--packages` list against the selectable closure, in list order. */
+/** 📏️ The hub's bound on every trusted identity it holds, a profile id included (`TRUSTED_IDENTITY_MAX_BYTES`,
+ * `🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs`). */
+const TRUSTED_PROFILE_ID_MAX_BYTES = 256;
+
+/** 🏷️ The profile name one selection publishes under — a name only: the bundle's profile carries the exact selected closure and its
+ * digest. `local-all-open-v1` for the whole selectable closure ([[TRUSTED_BOOTSTRAP_ALL_PACKAGES]]); otherwise the REQUESTED order,
+ * `local-<plugin>-…-open-v1` (`--packages stdio,gis` keeps minting `local-stdio-gis-open-v1`), while that fits the hub's identity
+ * bound, and `local-<count>-packages-<16 hex of the requested list's sha256>-open-v1` beyond it (ticket 26/09/23 W4: a 34-package
+ * list minted a 260-byte name the pointer reader refused after the whole publication). */
+export function trustedBootstrapProfileIdV1(selection: readonly TrustedBootstrapPackageSpecV1[]): string {
+  const all = TRUSTED_BOOTSTRAP_ALL_PACKAGES.split(",");
+  const ids = selection.map((spec) => spec.pluginId);
+  if (ids.length === all.length && all.every((pluginId) => ids.includes(pluginId))) return "local-all-open-v1";
+  const listed = `local-${ids.join("-")}-open-v1`;
+  return Buffer.byteLength(listed, "utf8") <= TRUSTED_PROFILE_ID_MAX_BYTES ? listed : `local-${ids.length}-packages-${createHash("sha256").update(ids.join(",")).digest("hex").slice(0, 16)}-open-v1`;
+}
+
 export function trustedBootstrapSelectPackages(list: string): readonly TrustedBootstrapPackageSpecV1[] {
   const requested = (list.trim() === "all" ? TRUSTED_BOOTSTRAP_ALL_PACKAGES : list)
     .split(",")
@@ -9987,8 +10060,8 @@ function trustedBootstrapComponentCodecRowsV1(repoRoot: string, emitter: string,
 /** ⛓️ The declared kinds a LINKED package does not own. The hub executes a linked package's documents only through
  * the native codecs it links (`linkedCodecRegistry`), and every document-open target must bind one of them
  * (`validate_bundle`: "trusted document-open target is bound to no native codec of its own package"), so a kind the
- * descriptor declares without a linked row (Stdio's definition-only `s.stdio.txt`/`tsv`/`html`, whose editors declare
- * the kind they edit) is unowned: declared, never a hub open target. A declared kind whose linked row carries another
+ * descriptor declares without a linked row (an editor declaring a kind its package links no codec for) is unowned:
+ * declared, never a hub open target; Stdio and GIS link a codec for every kind they declare. A declared kind whose linked row carries another
  * schema is an identity conflict, not an unowned kind. Law + fixture: `🌎️hub/🧪️tests/⛓️linked-codec-ownership`. */
 export function trustedBootstrapLinkedUnownedKindsV1(pairs: readonly (readonly [string, string])[], linked: readonly TrustedBootstrapCodec[]): ReadonlySet<string> {
   const unowned = new Set<string>();
@@ -10242,7 +10315,7 @@ export async function materializeTrustedCatalogBundle(repoRoot: string, dataRoot
     const selectedClosure = selection
       .map((spec) => ({ pluginId: spec.pluginId, packageId: spec.componentPackageId, version: receipts.get(spec.pluginId)!.version }))
       .sort((left, right) => trustedBootstrapTupleOrder([left.pluginId, left.packageId, left.version], [right.pluginId, right.packageId, right.version]));
-    const dependencies = trustedBootstrapResolveClosure(`local-${selection.map((spec) => spec.pluginId).join("-")}-open-v1`, descriptorClaims, selectedClosure);
+    const dependencies = trustedBootstrapResolveClosure(trustedBootstrapProfileIdV1(selection), descriptorClaims, selectedClosure);
     const packageSummary = selectedClosure.map((identity) => {
       const receipt = receipts.get(identity.pluginId)!;
       return {
@@ -10261,7 +10334,7 @@ export async function materializeTrustedCatalogBundle(repoRoot: string, dataRoot
         targetCount: openTargets.filter((declared) => declared.pluginId === identity.pluginId).length,
       };
     });
-    const profileSummary = { id: `local-${selection.map((spec) => spec.pluginId).join("-")}-open-v1`, selectedClosure, packages: packageSummary, openTargets };
+    const profileSummary = { id: trustedBootstrapProfileIdV1(selection), selectedClosure, packages: packageSummary, openTargets };
     const selectedClosureSha256 = createHash("sha256").update(trustedBootstrapClosureEncoding(profileSummary)).digest("hex");
     const generationId = createHash("sha256").update(trustedBootstrapProfileEncoding(profileSummary, codecs)).digest("hex");
     const file = (plugin: string, receipt: FreshComponentReceiptV1) => ({
@@ -13279,7 +13352,7 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
     await proveGisMapTwoAuthorCompositionFixture(this.repoRoot);
     const describeSource = readFileSync(resolve(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"), "utf8");
     const producerStart = describeSource.indexOf("function freshStage(");
-    const producerEnd = describeSource.indexOf("\n/** @emoji 🛂️ The ONE describe route", producerStart);
+    const producerEnd = describeSource.indexOf("\n/** 🛂️ The ONE describe route", producerStart);
     const producer = describeSource.slice(producerStart, producerEnd);
     if (
       producerStart < 0 ||
@@ -13311,7 +13384,7 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
       !catalogSource.includes("trusted_profile_generation(&bundle, &profile)") ||
       !catalogSource.includes("selected profile must resolve at least one document-open target") ||
       !catalogSource.includes("selected profile resolved a different number of document-open targets than it declares") ||
-      !providerSource.includes("NATIVE_OPENABLE_PROVIDER_SET_V1_RECEIPTS: usize = 29") ||
+      !providerSource.includes("NATIVE_OPENABLE_PROVIDER_SET_V1_RECEIPTS: usize = 32") ||
       !providerSource.includes("receipt.package_version != version") ||
       !registrySource.includes("CATALOG_DESCRIPTOR_MAX_BYTES = 4 * 1024 * 1024") ||
       runtimeSource.split("catalog.generation_id() != authority.catalog.generation_id").length - 1 !== 2 ||
@@ -13488,6 +13561,7 @@ function trustedCatalogPackagesArgument(segments: readonly string[], verb: strin
 class TrustedCatalogPreflightScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const selection = trustedCatalogPackagesArgument(segments, "trusted-catalog-preflight");
+    trustedBootstrapPreflightSelectionV1(this.repoRoot, selection);
     trustedBootstrapPreflightDescriptorsV1(this.repoRoot, selection);
     trustedBootstrapPreflightComponentsV1(this.repoRoot, selection);
   }
@@ -13496,6 +13570,7 @@ class TrustedCatalogPreflightScript extends BundleScript {
 class TrustedCatalogBootstrapScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const selection = trustedCatalogPackagesArgument(segments, "trusted-catalog-bootstrap");
+    trustedBootstrapPreflightSelectionV1(this.repoRoot, selection);
     trustedBootstrapPreflightDescriptorsV1(this.repoRoot, selection);
     trustedBootstrapPreflightComponentsV1(this.repoRoot, selection);
     const dataRoot = process.env.OS_HUB_DATA ? resolve(process.env.OS_HUB_DATA) : resolve(this.repoRoot, ".🧬semio", "🌐hub");

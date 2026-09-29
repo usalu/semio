@@ -43,7 +43,6 @@ fn every_component_implies_the_role_the_shared_fixture_declares() {
         seen.insert(row["component"]["type"].as_str().expect("fixture component type tag"));
     }
     assert_eq!(seen.len(), 19, "the fixture covers every one of the contract's 19 components");
-    eprintln!("[DEBUG] ui contract accessibility: {} role rows over all {} components", rows.len(), seen.len());
 }
 
 /// 🔀️ A retained Toggle keeps the semantic state channel of the React control selected by its
@@ -105,7 +104,6 @@ fn every_published_record_projects_the_way_the_shared_fixture_declares() {
     }
     let declared: Vec<u64> = fixture["announced"].as_array().expect("fixture announced").iter().map(|id| id.as_u64().expect("fixture announced id")).collect();
     assert_eq!(announced, declared, "exactly the reachable, named nodes");
-    eprintln!("[DEBUG] ui contract accessibility: {} projected nodes, {} reachable by name", expected.len(), announced.len());
 }
 
 /// ♿️ A hidden node is KEPT, carrying `hidden`, never dropped — a consumer that dropped it would
@@ -119,7 +117,6 @@ fn a_hidden_node_is_marked_not_dropped() {
     let node = accessibility_projection_node(ornament, 1);
     assert!(node.hidden);
     assert_eq!(node.role, "img", "a hidden node still carries the role it would have had");
-    eprintln!("[DEBUG] ui contract accessibility: the decorative node projects as hidden, not absent");
 }
 
 #[test]

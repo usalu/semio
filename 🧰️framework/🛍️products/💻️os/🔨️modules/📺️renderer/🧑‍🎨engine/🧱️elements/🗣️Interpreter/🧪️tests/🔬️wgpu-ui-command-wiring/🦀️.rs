@@ -77,7 +77,6 @@ fn retained_document_page_budget_refusal_preserves_the_cursor_and_retries_the_sa
         assert!(matches!(engine.document_status("budget-refusal", 1), ui_wgpu::wgpu::engine::UiDocumentIngressStatus::Pending { next_page: 1, .. }));
         while !document.close_step() {}
     }
-    eprintln!("[DEBUG] retained document pages retry exact source records after fuel, deadline and cancellation refusal");
 }
 
 #[test]
@@ -126,7 +125,6 @@ fn window_action_context_retained_commands_preserve_the_clicked_window() {
         let actual: Option<Value> = queued[0].args.as_ref().map(|args| serde_json::from_str(&dsl::json::from_dsl_value(args).to_string()).unwrap());
         assert_eq!(actual, Some(case["expected"].clone()));
     }
-    eprintln!("[DEBUG] retained native actions preserved clicked window identity and replaced conflicting descriptor targets");
 }
 
 fn stack_with(id: &str, drop_action: Option<ActionDescriptor>, children: Vec<UiNode>) -> UiNode {
@@ -753,12 +751,12 @@ fn canvas2d_pointer_payload_is_react_shaped_screen_logical_with_a_world_lane() {
     crate::collect_fixture_actions(&mut input);
 }
 
+/// 🎨️ `ink_wheel` reads straight from the scene's own `ink_canvas` payload (unlike TextEditor,
+/// it needs no separate lazily-render-created host state) — mirrors `RenderEntry::ink_scene`'s
+/// own fixture (`apply_scene_wheel_dispatches_actions_for_a_previously_dead_surface`).
 #[test]
 fn scene_command_dispatches_an_ink_canvas_scroll_action() {
     let window_id = "apply-ui-commands-scene-ink-canvas-scroll";
-    // 🎨️ `ink_wheel` reads straight from the scene's own `ink_canvas` payload (unlike TextEditor,
-    // it needs no separate lazily-render-created host state) — mirrors `RenderEntry::ink_scene`'s
-    // own fixture (`apply_scene_wheel_dispatches_actions_for_a_previously_dead_surface`).
     let mut scene_node = component_scene_ui("s1", ui_wgpu::wgpu::SurfaceKind::InkCanvas);
     if let UiNode::ComponentScene(scene) = &mut scene_node {
         scene.ink_canvas = Some(ui_wgpu::wgpu::InkCanvasScene { document_json: "{}".into(), selection_json: "[]".into(), hovered_id: None, active_utility: String::new(), view_mode: "canvas".into(), interactive: true, interaction_domain: None });

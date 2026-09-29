@@ -1,8 +1,8 @@
 @capability-bcf-2-1-mutate
 @oracle-jszip-bcf-2-1-mutate-reader
-@comparison-semantic-bcf-v1
+@comparison-semantic-bcf-jszip-v1
 @mutations-bcf-2-1-any
-Feature: Apply every typed BCF 2.1 mutation to a real-world coordination review
+Feature: Apply every typed BCF 2.1 markup mutation and round-trip a real-world coordination review
 
   A BCF file IS a ZIP of XML markup, viewpoint and snapshot files — no standalone BCF crate exists
   in the Rust ecosystem (BCF support only appears bundled inside much larger MPL-licensed IFC
@@ -61,9 +61,15 @@ Feature: Apply every typed BCF 2.1 mutation to a real-world coordination review
   PNG snapshot projects as size+digest (never raw bytes) under `semantic-bcf-v1`, matching the fleet
   brief's own raster precedent for opaque binary payloads.
 
-  Every scenario copies the real fixture into the case work directory before touching it; the
-  committed package is never written to.
-
+  THE JUDGE. `jszip-bcf-2-1-mutate-reader` is a third-party READER (jszip + fast-xml-parser): each mutation row's
+  expected document is not computed, it is the COMMITTED `➡️after.bcf` of a before/after pair this subset's own
+  generator (`../../🏭️generator/📜️script.ts`) builds DIRECTLY with jszip + fast-xml-parser from its small two-topic base
+  (`⬅️before.bcf` for an inverse row), and the `bcf-2-1-jszip-compare-v1` pipeline reads it and the subject's
+  `actual-bcf` with the same reader (`bcf-import` admits both, `bcf-compare` compares the projection). The mutation
+  rows therefore run on those small committed pairs — the parameters state exactly each pair's one change — while the
+  real coordination review above is judged by the identity round trip, whose expected document is the real review
+  itself. The cross-semio `zip`+`quick-xml` composition (`../../🔮️oracles/🦀️.rs`) stays as the Rust supplement and
+  asserts its own laws in role.
 
   📌️ Every Examples row below other than `no-mutation` is required to MOVE the semantic projection,
   and the adapter fails the scenario in role when it does not: a row whose parameters make the
@@ -73,66 +79,68 @@ Feature: Apply every typed BCF 2.1 mutation to a real-world coordination review
   @id-mutate
   @level-exhaustive
   @mode-differential
-  Scenario Outline: Apply <id> to the real coordination review
-    Given the real input document shared://🏥️wellness-center-coordination-review.bcf
+  Scenario Outline: Apply <id> to the committed review pair
+    Given the real input document shared://<fixture>/⬅️before.bcf
+    And the committed after-document shared://<fixture>/➡️after.bcf
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
       """
-    Then the oracle and the subject agree on the semantic projection
+    Then the jszip reader reads the subject's review and the committed after-document as the same BCF
     Examples:
-      | id                        | params                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-      | set-snapshot              | {"version": "2.1", "topics": [{"guid": "3b1f6a1e-0a1b-4c2e-9a2f-6b1c2d3e4f41", "title": "Floor:Generic 150mm - Filled clashes with M_Rectangular Column:10*10", "description": "Slab 'Floor:Generic 150mm - Filled:348347' (IFC GUID 0ZRQUHwuv8SOaxY18jH6Mu) clashes with rectangular column 'M_Rectangular Column:10*10:572147' (IFC GUID 1eu4XPbTzBchVWRGaY34FW).", "status": "Open", "priority": "High", "labels": ["Clash"], "creationDate": "2026-08-23T09:30:00+00:00", "creationAuthor": "ueli.saluz@iek.uni-hannover.de", "comments": [], "viewpoints": []}], "parts": []}                                                                                       |
-      | set-version               | {"version": "2.2"}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-      | insert-topic              | {"topic": {"guid": "3b1f6a1e-0a1b-4c2e-9a2f-6b1c2d3e4f31", "title": "Slab 348347 clashes with Column 572147 near stair core", "description": "Slab 'Floor:Generic 150mm - Filled:348347' (IFC GUID 0ZRQUHwuv8SOaxY18jH6Mu) clashes with rectangular column 'M_Rectangular Column:10*10:572147' (IFC GUID 1eu4XPbTzBchVWRGaY34FW).", "status": "Open", "priority": "High", "labels": ["Clash", "Structural"], "creationDate": "2026-08-23T09:35:00+00:00", "creationAuthor": "ueli.saluz@iek.uni-hannover.de", "comments": [], "viewpoints": [{"guid": "3b1f6a1e-0a1b-4c2e-9a2f-6b1c2d3e4f32", "camera": {"kind": "perspective", "viewPoint": {"x": 5, "y": 5, "z": 3}, "direction": {"x": -1, "y": -1, "z": -0.5}, "upVector": {"x": 0, "y": 0, "z": 1}, "fieldOfView": 55}, "components": {"selection": ["0ZRQUHwuv8SOaxY18jH6Mu", "1eu4XPbTzBchVWRGaY34FW"], "visibility": {"defaultVisibility": false, "exceptions": ["0ZRQUHwuv8SOaxY18jH6Mu", "1eu4XPbTzBchVWRGaY34FW"]}, "coloring": [{"color": "FFFFFF00", "components": ["1eu4XPbTzBchVWRGaY34FW"]}]}, "snapshot": "89504e470d0a1a0a0000000d4948445200000040000000400802000000250be6890000007d49444154789cd5ce410d002000c4b031ff9a2f88e04156053ddb28933889933889933889933889933889933889933889933889933889933889933889933889933889933889933889933889933889933889933889933889933889933889933889933889933889933889933889933889933889933889933889f377e0d505e1e1037a40fb9a070000000049454e44ae426082"}]}} |
-      | remove-topic              | {"guid": "3b1f6a1e-0a1b-4c2e-9a2f-6b1c2d3e4f21"}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-      | set-topic-markup          | {"guid": "3b1f6a1e-0a1b-4c2e-9a2f-6b1c2d3e4f11", "title": "Door 388452 swing conflict escalated to design team", "status": "Closed", "priority": "Low", "labels": ["Clash", "Facade", "Resolved"]}                                                                                                                                                                                                                                                                                                                                         |
-      | insert-comment            | {"topicGuid": "3b1f6a1e-0a1b-4c2e-9a2f-6b1c2d3e4f01", "comment": {"guid": "3b1f6a1e-0a1b-4c2e-9a2f-6b1c2d3e4f33", "date": "2026-08-23T09:40:00+00:00", "author": "ueli.saluz@iek.uni-hannover.de", "text": "Structural engineer proposes moving column 0PfeWE7Aj7GBHCsLa67379 by 150mm to clear wall 0HG2A49bzDARlPHy2ZDHwJ.", "viewpointRef": "3b1f6a1e-0a1b-4c2e-9a2f-6b1c2d3e4f03"}}                                                                                                                                                    |
-      | remove-comment            | {"topicGuid": "3b1f6a1e-0a1b-4c2e-9a2f-6b1c2d3e4f11", "guid": "3b1f6a1e-0a1b-4c2e-9a2f-6b1c2d3e4f13"}                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-      | set-comment               | {"topicGuid": "3b1f6a1e-0a1b-4c2e-9a2f-6b1c2d3e4f01", "guid": "3b1f6a1e-0a1b-4c2e-9a2f-6b1c2d3e4f02", "text": "Superseded -- see the follow-up comment proposing a 150mm column offset.", "viewpointRef": null}                                                                                                                                                                                                                                                                                                                            |
+      | id               | fixture                    | params |
+      | set-snapshot     | 🗃️set-snapshot-applied     | {"version": "2.1", "topics": [{"guid": "topic-replacement-04", "title": "Slab clash near the stair core", "description": "Replacement review: the slab intersects the stair-core column.", "status": "Open", "priority": "High", "labels": ["structural"], "creationDate": "2026-01-08T09:00:00Z", "creationAuthor": "dave@example.com", "comments": [], "viewpoints": []}], "parts": []} |
+      | set-version      | 🔢️set-version-applied      | {"version": "2.2"} |
+      | insert-topic     | 📌️insert-topic-applied     | {"topic": {"guid": "topic-new-03", "title": "New topic", "description": "", "status": "Open", "priority": "", "labels": [], "creationDate": "2026-01-07T09:00:00Z", "creationAuthor": "carol@example.com", "comments": [], "viewpoints": []}} |
+      | remove-topic     | 🗑️remove-topic-applied     | {"guid": "topic-review-02"} |
+      | set-topic-markup | 🖊️set-topic-markup-applied | {"guid": "topic-clash-01", "status": "Closed", "priority": "Low"} |
+      | insert-comment   | 🗨️insert-comment-applied   | {"topicGuid": "topic-clash-01", "comment": {"guid": "comment-02", "date": "2026-01-05T11:00:00Z", "author": "bob@example.com", "text": "Confirmed, rerouting duct.", "viewpointRef": null}} |
+      | remove-comment   | 🧹️remove-comment-applied   | {"topicGuid": "topic-clash-01", "guid": "comment-01"} |
+      | set-comment      | ✏️set-comment-applied      | {"topicGuid": "topic-clash-01", "guid": "comment-01", "text": "Please review — updated."} |
 
   @id-no-mutation-baseline-mutate
   @level-exhaustive
   @mode-differential
-  Scenario: Apply no-mutation to the real coordination review
-    Given the real input document shared://🏥️wellness-center-coordination-review.bcf
+  Scenario: Apply no-mutation to the committed review pair
+    Given the real input document shared://⏸️no-mutation-applied/⬅️before.bcf
+    And the committed after-document shared://⏸️no-mutation-applied/➡️after.bcf
     When the no-mutation mutation is applied with its parameters
       """
       {"kind": "no-mutation", "params": {}}
       """
-    Then the oracle and the subject agree on the semantic projection
+    Then the jszip reader reads the subject's review and the committed after-document as the same BCF
 
   @id-inverse
   @level-exhaustive
   @mode-differential
-  Scenario Outline: Undoing <id> restores the coordination review
-    Given the real input document shared://🏥️wellness-center-coordination-review.bcf
+  Scenario Outline: Undoing <id> restores the committed review
+    Given the real input document shared://<fixture>/⬅️before.bcf
     When the <id> mutation is applied and then undone
       """
       {"kind": "<id>", "params": <params>}
       """
-    Then the oracle and the subject agree on the semantic projection
+    Then the jszip reader reads the restored review and the committed before-document as the same BCF
     Examples:
-      | id                        | params                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-      | set-snapshot              | {"version": "2.1", "topics": [{"guid": "3b1f6a1e-0a1b-4c2e-9a2f-6b1c2d3e4f41", "title": "Floor:Generic 150mm - Filled clashes with M_Rectangular Column:10*10", "description": "Slab 'Floor:Generic 150mm - Filled:348347' (IFC GUID 0ZRQUHwuv8SOaxY18jH6Mu) clashes with rectangular column 'M_Rectangular Column:10*10:572147' (IFC GUID 1eu4XPbTzBchVWRGaY34FW).", "status": "Open", "priority": "High", "labels": ["Clash"], "creationDate": "2026-08-23T09:30:00+00:00", "creationAuthor": "ueli.saluz@iek.uni-hannover.de", "comments": [], "viewpoints": []}], "parts": []}                                                                                       |
-      | set-version               | {"version": "2.2"}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-      | insert-topic              | {"topic": {"guid": "3b1f6a1e-0a1b-4c2e-9a2f-6b1c2d3e4f31", "title": "Slab 348347 clashes with Column 572147 near stair core", "description": "Slab 'Floor:Generic 150mm - Filled:348347' (IFC GUID 0ZRQUHwuv8SOaxY18jH6Mu) clashes with rectangular column 'M_Rectangular Column:10*10:572147' (IFC GUID 1eu4XPbTzBchVWRGaY34FW).", "status": "Open", "priority": "High", "labels": ["Clash", "Structural"], "creationDate": "2026-08-23T09:35:00+00:00", "creationAuthor": "ueli.saluz@iek.uni-hannover.de", "comments": [], "viewpoints": [{"guid": "3b1f6a1e-0a1b-4c2e-9a2f-6b1c2d3e4f32", "camera": {"kind": "perspective", "viewPoint": {"x": 5, "y": 5, "z": 3}, "direction": {"x": -1, "y": -1, "z": -0.5}, "upVector": {"x": 0, "y": 0, "z": 1}, "fieldOfView": 55}, "components": {"selection": ["0ZRQUHwuv8SOaxY18jH6Mu", "1eu4XPbTzBchVWRGaY34FW"], "visibility": {"defaultVisibility": false, "exceptions": ["0ZRQUHwuv8SOaxY18jH6Mu", "1eu4XPbTzBchVWRGaY34FW"]}, "coloring": [{"color": "FFFFFF00", "components": ["1eu4XPbTzBchVWRGaY34FW"]}]}, "snapshot": "89504e470d0a1a0a0000000d4948445200000040000000400802000000250be6890000007d49444154789cd5ce410d002000c4b031ff9a2f88e04156053ddb28933889933889933889933889933889933889933889933889933889933889933889933889933889933889933889933889933889933889933889933889933889933889933889933889933889933889933889933889933889933889933889f377e0d505e1e1037a40fb9a070000000049454e44ae426082"}]}} |
-      | remove-topic              | {"guid": "3b1f6a1e-0a1b-4c2e-9a2f-6b1c2d3e4f21"}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-      | set-topic-markup          | {"guid": "3b1f6a1e-0a1b-4c2e-9a2f-6b1c2d3e4f11", "title": "Door 388452 swing conflict escalated to design team", "status": "Closed", "priority": "Low", "labels": ["Clash", "Facade", "Resolved"]}                                                                                                                                                                                                                                                                                                                                         |
-      | insert-comment            | {"topicGuid": "3b1f6a1e-0a1b-4c2e-9a2f-6b1c2d3e4f01", "comment": {"guid": "3b1f6a1e-0a1b-4c2e-9a2f-6b1c2d3e4f33", "date": "2026-08-23T09:40:00+00:00", "author": "ueli.saluz@iek.uni-hannover.de", "text": "Structural engineer proposes moving column 0PfeWE7Aj7GBHCsLa67379 by 150mm to clear wall 0HG2A49bzDARlPHy2ZDHwJ.", "viewpointRef": "3b1f6a1e-0a1b-4c2e-9a2f-6b1c2d3e4f03"}}                                                                                                                                                    |
-      | remove-comment            | {"topicGuid": "3b1f6a1e-0a1b-4c2e-9a2f-6b1c2d3e4f11", "guid": "3b1f6a1e-0a1b-4c2e-9a2f-6b1c2d3e4f13"}                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-      | set-comment               | {"topicGuid": "3b1f6a1e-0a1b-4c2e-9a2f-6b1c2d3e4f01", "guid": "3b1f6a1e-0a1b-4c2e-9a2f-6b1c2d3e4f02", "text": "Superseded -- see the follow-up comment proposing a 150mm column offset.", "viewpointRef": null}                                                                                                                                                                                                                                                                                                                            |
+      | id               | fixture                    | params |
+      | set-snapshot     | 🗃️set-snapshot-applied     | {"version": "2.1", "topics": [{"guid": "topic-replacement-04", "title": "Slab clash near the stair core", "description": "Replacement review: the slab intersects the stair-core column.", "status": "Open", "priority": "High", "labels": ["structural"], "creationDate": "2026-01-08T09:00:00Z", "creationAuthor": "dave@example.com", "comments": [], "viewpoints": []}], "parts": []} |
+      | set-version      | 🔢️set-version-applied      | {"version": "2.2"} |
+      | insert-topic     | 📌️insert-topic-applied     | {"topic": {"guid": "topic-new-03", "title": "New topic", "description": "", "status": "Open", "priority": "", "labels": [], "creationDate": "2026-01-07T09:00:00Z", "creationAuthor": "carol@example.com", "comments": [], "viewpoints": []}} |
+      | remove-topic     | 🗑️remove-topic-applied     | {"guid": "topic-review-02"} |
+      | set-topic-markup | 🖊️set-topic-markup-applied | {"guid": "topic-clash-01", "status": "Closed", "priority": "Low"} |
+      | insert-comment   | 🗨️insert-comment-applied   | {"topicGuid": "topic-clash-01", "comment": {"guid": "comment-02", "date": "2026-01-05T11:00:00Z", "author": "bob@example.com", "text": "Confirmed, rerouting duct.", "viewpointRef": null}} |
+      | remove-comment   | 🧹️remove-comment-applied   | {"topicGuid": "topic-clash-01", "guid": "comment-01"} |
+      | set-comment      | ✏️set-comment-applied      | {"topicGuid": "topic-clash-01", "guid": "comment-01", "text": "Please review — updated."} |
 
   @id-no-mutation-baseline-inverse
   @level-exhaustive
   @mode-differential
-  Scenario: Undoing no-mutation restores the coordination review
-    Given the real input document shared://🏥️wellness-center-coordination-review.bcf
+  Scenario: Undoing no-mutation restores the committed review
+    Given the real input document shared://⏸️no-mutation-applied/⬅️before.bcf
     When the no-mutation mutation is applied and then undone
       """
       {"kind": "no-mutation", "params": {}}
       """
-    Then the oracle and the subject agree on the semantic projection
+    Then the jszip reader reads the restored review and the committed before-document as the same BCF
 
   @id-identity-round-trip
   @level-long
@@ -140,5 +148,5 @@ Feature: Apply every typed BCF 2.1 mutation to a real-world coordination review
   Scenario: Decode and re-encode the real coordination review without passing bytes through
     Given the real input document shared://🏥️wellness-center-coordination-review.bcf
     When the document is fully parsed into the subset's own snapshot model and re-encoded from it alone
-    Then the oracle and the subject agree on the semantic projection
+    Then the jszip reader reads the re-encoded review and the real review as the same BCF
     And the re-encoded bytes are not bit-identical to the input

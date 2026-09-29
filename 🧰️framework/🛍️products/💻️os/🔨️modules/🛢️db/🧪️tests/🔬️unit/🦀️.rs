@@ -44,7 +44,7 @@ async fn envelope(id: &str, deps: &[&str], actor: &str, document: &protocol::Art
 //#endregion 🧸️Fixtures
 
 //#region 🔖️Facade round trip
-/// @emoji 🧪️ The facade's own core law: everything needed for a real submit -> durable ->
+/// 🧪️ The facade's own core law: everything needed for a real submit -> durable ->
 /// query -> frontier -> history round trip is reachable through THIS crate's re-exported
 /// names alone (`db::Database`, `db::ArtifactSpec`, `db::Consistency`, `db::Query`,
 /// `db::document::CommandBatch`/`SubmitOptions`) — never by reaching past the facade into
@@ -104,7 +104,7 @@ async fn database_error_type_is_reachable_at_the_facade_root() {
 //#endregion 🔖️Facade round trip
 
 //#region 🔖️Family submodule smoke
-/// @emoji 🧪️ One representative construction per `db_*` family submodule, proving the facade's
+/// 🧪️ One representative construction per `db_*` family submodule, proving the facade's
 /// glob re-exports actually surface each crate's headline public items at the path this
 /// crate's module doc promises (`db::core::…`, `db::state::…`, …) — a wiring/rename regression
 /// in `//#region 🔖️Family` breaks this test to compile, independent of any single crate's own

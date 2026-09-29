@@ -1,0 +1,81 @@
+{
+  "schema": "semio.os.shell-replay-refusal/v1",
+  "description": "Every way a shell refuses a guest's replayShellCommand — a durable gesture the user made — with the notice text each reason shows (en, de; any other locale reads en) and the fault code a probe, a law and the console name it by (codePrefix + reason). One reason per gate, so a notice names what the user can act on. Read by React's ShellHost (📣️replay-refusal/🟦️.ts) and by the wgpu shell (🐚️Shell/🎯️targets/🧊️wgpu); vectors are answered by both implementations' laws.",
+  "codePrefix": "shell.replayShellCommand.",
+  "reasons": {
+    "sign-in-required": {
+      "en": "Sign in to run that command.",
+      "de": "Zum Ausführen dieses Befehls bitte anmelden."
+    },
+    "space-required": {
+      "en": "Open a space first — that command needs one.",
+      "de": "Zuerst einen Space öffnen — dieser Befehl braucht einen."
+    },
+    "space-index-required": {
+      "en": "Open the space itself to create a document there.",
+      "de": "Zum Anlegen eines Dokuments den Space selbst öffnen."
+    },
+    "invalid-request": {
+      "en": "That command was incomplete and was not run.",
+      "de": "Dieser Befehl war unvollständig und wurde nicht ausgeführt."
+    },
+    "router-not-ready": {
+      "en": "The workspace is still loading — try again in a moment.",
+      "de": "Der Arbeitsbereich lädt noch — bitte gleich erneut versuchen."
+    },
+    "open-rejected": {
+      "en": "That document could not be opened.",
+      "de": "Dieses Dokument konnte nicht geöffnet werden."
+    },
+    "view-only-access": {
+      "en": "You can only view documents in this space — editing needs the Author role.",
+      "de": "In diesem Space können Sie Dokumente nur ansehen — zum Bearbeiten ist die Rolle Autor nötig."
+    },
+    "unrouted-command": {
+      "en": "This shell has no route for that command.",
+      "de": "Diese Shell kennt keinen Weg für diesen Befehl."
+    },
+    "local-catalog-unavailable": {
+      "en": "This shell cannot keep a studio on this device — open it in the web shell or keep it in a hub space.",
+      "de": "Diese Shell kann kein Studio auf diesem Gerät behalten — in der Web-Shell öffnen oder in einem Hub-Space behalten."
+    }
+  },
+  "vectors": [
+    {
+      "reason": "local-catalog-unavailable",
+      "locale": "de",
+      "text": "Diese Shell kann kein Studio auf diesem Gerät behalten — in der Web-Shell öffnen oder in einem Hub-Space behalten.",
+      "code": "shell.replayShellCommand.local-catalog-unavailable"
+    },
+    {
+      "reason": "local-catalog-unavailable",
+      "locale": "en",
+      "text": "This shell cannot keep a studio on this device — open it in the web shell or keep it in a hub space.",
+      "code": "shell.replayShellCommand.local-catalog-unavailable"
+    },
+    {
+      "reason": "sign-in-required",
+      "locale": "de",
+      "text": "Zum Ausführen dieses Befehls bitte anmelden.",
+      "code": "shell.replayShellCommand.sign-in-required"
+    },
+    {
+      "reason": "space-index-required",
+      "locale": "en",
+      "text": "Open the space itself to create a document there.",
+      "code": "shell.replayShellCommand.space-index-required"
+    },
+    {
+      "reason": "unrouted-command",
+      "locale": "fr",
+      "text": "This shell has no route for that command.",
+      "code": "shell.replayShellCommand.unrouted-command"
+    },
+    {
+      "reason": "invalid-request",
+      "locale": "de",
+      "text": "Dieser Befehl war unvollständig und wurde nicht ausgeführt.",
+      "code": "shell.replayShellCommand.invalid-request"
+    }
+  ]
+}

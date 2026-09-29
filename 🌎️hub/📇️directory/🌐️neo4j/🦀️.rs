@@ -412,7 +412,7 @@ const CONSTRAINTS: &[&str] = &[
     "CREATE CONSTRAINT IF NOT EXISTS FOR (e:DirectoryEvent) REQUIRE e.seq IS UNIQUE",
 ];
 
-/// @emoji 🕸️ Neo4j-backed `HubDirectory`.
+/// 🕸️ Neo4j-backed `HubDirectory`.
 pub struct Neo4jDirectory {
     graph: Graph,
     #[cfg(test)]
@@ -1050,7 +1050,7 @@ impl Default for ArtifactGenesisTestControlV1 {
 }
 
 impl Neo4jDirectory {
-    /// @emoji 🔌️ Connects to `uri` with `user`/`password` and bootstraps uniqueness constraints.
+    /// 🔌️ Connects to `uri` with `user`/`password` and bootstraps uniqueness constraints.
     pub async fn connect(uri: &str, user: &str, password: &str) -> DirectoryResult<Self> {
         let graph = Graph::new(uri, user, password).await.map_err(backend)?;
         for statement in CONSTRAINTS {
@@ -1205,7 +1205,7 @@ impl Neo4jDirectory {
         }
     }
 
-    /// @emoji 🌱️ Seeds a default `studio`/`private` space authored by a `seed` system user node,
+    /// 🌱️ Seeds a default `studio`/`private` space authored by a `seed` system user node,
     /// through the event log (`user.created` + `space.created` + `member.upserted`) like any other
     /// write.
     pub async fn seed(&self) -> DirectoryResult<()> {
@@ -3078,7 +3078,7 @@ impl HubDirectory for Neo4jDirectory {
     }
 
     //#region EventLog
-    /// @emoji ➕️ Assigns a dense `seq` via a `(:DirectoryCounter {id:'singleton'})` node
+    /// ➕️ Assigns a dense `seq` via a `(:DirectoryCounter {id:'singleton'})` node
     /// incremented in the same transaction as the `(:DirectoryEvent)` node and the projection —
     /// the write's atomicity comes from `Txn`, not from any Neo4j auto-increment primitive (Neo4j
     /// has none).

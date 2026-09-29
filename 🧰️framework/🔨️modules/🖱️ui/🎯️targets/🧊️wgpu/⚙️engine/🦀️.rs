@@ -1258,11 +1258,11 @@ impl Ui {
     /// witness. A live presented capture holds publication until its matching terminal event.
     pub fn seal_presented_input_candidate(&mut self, witness: u64, visible_windows: &[String]) -> bool {
         if self.sealed_visibility_candidate.is_some() || self.windows.values().any(|window| window.sealed_input_candidate.is_some()) {
-            eprintln!("[DEBUG] seal refuse: existing seals visible={visible_windows:?}");
+            eprintln!("[TRACE] seal refuse: existing seals visible={visible_windows:?}");
             return false;
         }
         if visible_windows.iter().any(|window_id| self.windows.get(window_id).is_some_and(|window| window.closing.is_none() && window.presented_ready && !window.candidate_ready)) {
-            eprintln!("[DEBUG] seal refuse: presented without candidate visible={visible_windows:?}");
+            eprintln!("[TRACE] seal refuse: presented without candidate visible={visible_windows:?}");
             return false;
         }
         self.sealed_visibility_candidate = Some(UiSealedVisibilityCandidate {
@@ -3294,7 +3294,8 @@ impl Ui {
             let record = tree.document()?.record(document_id)?;
             let virtual_select_value = (record.key.as_str() != node_key).then(|| crate::wgpu::accessibility::select_accessibility_option_value(record, node_key)).flatten();
             let virtual_slider_editor = record.key.as_str() != node_key && crate::wgpu::accessibility::is_slider_accessibility_editor(record, node_key);
-            if record.key.as_str() != node_key && virtual_select_value.is_none() && !virtual_slider_editor {
+            let virtual_row_action = (record.key.as_str() != node_key).then(|| crate::wgpu::accessibility::row_accessibility_action(record, node_key)).flatten();
+            if record.key.as_str() != node_key && virtual_select_value.is_none() && !virtual_slider_editor && virtual_row_action.is_none() {
                 return None;
             }
             let target = tree.document_node(document_id)?;
@@ -3308,10 +3309,11 @@ impl Ui {
             router.set_control_border(self.theme.stroke_hairline);
             router.set_control_gap(self.theme.gap_standard);
             let mut commands = router.set_tree_drag_policy(tree, driver_drag, metrics.with_inline(inline));
-            commands.extend(match virtual_select_value {
-                Some(value) => router.dispatch_accessibility_select_option(tree, target, &value, &event),
-                None if virtual_slider_editor => router.dispatch_accessibility_slider_editor(tree, target, &event),
-                None => router.dispatch_accessibility(tree, target, &event),
+            commands.extend(match (virtual_select_value, virtual_row_action) {
+                (Some(value), _) => router.dispatch_accessibility_select_option(tree, target, &value, &event),
+                (None, _) if virtual_slider_editor => router.dispatch_accessibility_slider_editor(tree, target, &event),
+                (None, Some(index)) => router.dispatch_accessibility_row_action(tree, target, index, &event),
+                (None, None) => router.dispatch_accessibility(tree, target, &event),
             });
             router.synchronize_retained_caret(tree, matches!(&event, AccessibilityUiEvent::Focus | AccessibilityUiEvent::Activate | AccessibilityUiEvent::Value(_)));
             (commands, tree.take_disclosure_changed())
@@ -3373,7 +3375,7 @@ impl Ui {
         chrome
     }
 
-    /** @emoji 🪟️ Republishes every portal-backed OPEN overlay's resolved placement onto the window's
+    /** 🪟️ Republishes every portal-backed OPEN overlay's resolved placement onto the window's
      * own tree, so this frame's paint walk, scene walk, hit registry and
      * `events::hit_test`/`absolute_rect` all read ONE origin for a floating surface
      * (`UiTree::overlay_origins`). A SelectPopup stays at its in-flow trigger because its Select

@@ -1,14 +1,14 @@
 //#region 🔔️WaitForEvent
-/** @emoji 🔔️ Subscribes `handler` to fire on the next occurrence and returns an unsubscribe. */
+/** 🔔️ Subscribes `handler` to fire on the next occurrence and returns an unsubscribe. */
 export type EventSubscribe<T> = (handler: (value: T) => void) => () => void;
 
-/** @emoji 🔔️ Options for {@link waitForEvent}. */
+/** 🔔️ Options for {@link waitForEvent}. */
 export interface WaitForEventOptions {
   readonly signal?: AbortSignal;
 }
 
 /**
- * @emoji 🔔️ One-shot event-driven gate: resolves with the first value `subscribe` delivers, or
+ * 🔔️ One-shot event-driven gate: resolves with the first value `subscribe` delivers, or
  * rejects if `signal` aborts first (including if it is already aborted). The subscription is torn
  * down on both exit paths — no listener survives past this call, unlike a fixed `setTimeout` wait
  * that either fires early/late or leaks if nothing ever arrives.

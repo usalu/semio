@@ -1,4 +1,4 @@
-//! @emoji 🧱️ GPU-layout mirrors this crate needs that `ui_render::scene` does not already export as
+//! 🧱️ GPU-layout mirrors this crate needs that `ui_render::scene` does not already export as
 //! `#[repr(C)]`/`Pod` — `ui_render::{QuadInstance, VectorVertex, GlassInstance}` are byte-identical to
 //! their D3D12 buffer layout already and are used directly via `bytemuck::cast_slice`; only the
 //! world3d instance/vertex/uniform shapes and the blur mip scalar need a D3D12-side GPU form, built

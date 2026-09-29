@@ -179,6 +179,19 @@ mod wasm_program_exchange {
     /// Per field, never wholesale: an admission that carried mutations or a history patch must not be
     /// blanked by a completion frame that carries neither, and only the CORRELATED frame satisfies
     /// "the plugin answered this sequence".
+    ///
+    /// 🧾️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END §C5 — `history_patch` used to
+    /// be silently discarded here (the native wgpu shell tracked no history/uncommitted-edit
+    /// projection at all, see `📓️w3-a-report.md`'s "reduced, honestly-scoped" section); now decoded
+    /// and threaded onto `InvocationResult` so `🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`'s check-in tracking has a real
+    /// signal to fold, exactly like every other wire payload this module already decodes.
+    ///
+    /// 🐢️ The wire frame has always CARRIED `ui_scope` (`📡️spr/🧵️channel/🦀️.rs`'s
+    /// `AppFrame::Invocation`); this decoder pattern-matched past it with `..` and handed the shell
+    /// a hardcoded `UiDirtyScope::default()`, so the native shell could only ever refresh
+    /// everything. An absent/undecodable field is still `Full` — the safe default the type's own
+    /// `Default` names — but a scope the guest actually published now reaches the shell
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     fn invocation_from_frames(outcome: &mut crate::kernel_runtime::ExchangeOutcome, seq: u64) -> Result<InvocationResult, String> {
         let mut output = DslValue::Null;
         let mut diagnostics = Vec::new();
@@ -186,18 +199,7 @@ mod wasm_program_exchange {
         let mut mutations = Vec::new();
         let mut inverse_group = UndoGroup { invocation_id: InvocationId(String::new()), mutations: Vec::new(), inverse_mutations: Vec::new(), member_edits: Vec::new() };
         let mut saw_invocation = false;
-        // 🧾️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END §C5 — `history_patch` used to
-        // be silently discarded here (the native wgpu shell tracked no history/uncommitted-edit
-        // projection at all, see `📓️w3-a-report.md`'s "reduced, honestly-scoped" section); now decoded
-        // and threaded onto `InvocationResult` so `🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`'s check-in tracking has a real
-        // signal to fold, exactly like every other wire payload this module already decodes.
         let mut history_patch: Option<semio_framework::kernel::HistoryPatch> = None;
-        // 🐢️ The wire frame has always CARRIED `ui_scope` (`📡️spr/🧵️channel/🦀️.rs`'s
-        // `AppFrame::Invocation`); this decoder pattern-matched past it with `..` and handed the shell
-        // a hardcoded `UiDirtyScope::default()`, so the native shell could only ever refresh
-        // everything. An absent/undecodable field is still `Full` — the safe default the type's own
-        // `Default` names — but a scope the guest actually published now reaches the shell
-        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
         let mut ui_scope = semio_framework::kernel::UiDirtyScope::default();
         for frame in &outcome.frames {
             match frame {
@@ -730,9 +732,9 @@ impl ProgramBridgeEntry {
     }
 
     #[cfg(target_arch = "wasm32")]
-    pub async fn push_scoped_contributions(&self, instance_id: u32, app_id: &str, reachability_json: &str, view_state_json: &str) -> Result<semio_framework::kernel::InvocationResult, String> {
+    pub async fn push_scoped_contributions(&self, instance_id: u32, app_id: &str, view_state_json: &str) -> Result<semio_framework::kernel::InvocationResult, String> {
         match &self.backend {
-            ProgramBridgeBackend::Js(handle) => push_scoped_contributions_js(handle, instance_id, app_id, reachability_json, view_state_json).await,
+            ProgramBridgeBackend::Js(handle) => push_scoped_contributions_js(handle, instance_id, app_id, view_state_json).await,
         }
     }
 
@@ -1227,12 +1229,11 @@ async fn dispatch_invoke_extension_js(handle: &Rc<JsValue>, instance_id: u32, ex
 }
 
 #[cfg(target_arch = "wasm32")]
-async fn push_scoped_contributions_js(handle: &Rc<JsValue>, instance_id: u32, app_id: &str, reachability_json: &str, view_state_json: &str) -> Result<semio_framework::kernel::InvocationResult, String> {
+async fn push_scoped_contributions_js(handle: &Rc<JsValue>, instance_id: u32, app_id: &str, view_state_json: &str) -> Result<semio_framework::kernel::InvocationResult, String> {
     let push = get_fn(handle.as_ref(), "pushScopedContributions")?;
     let args = Array::new();
     args.push(&JsValue::from_f64(instance_id as f64));
     args.push(&JsValue::from_str(app_id));
-    args.push(&JsValue::from_str(reachability_json));
     args.push(&JsValue::from_str(view_state_json));
     let result = push.apply(&JsValue::NULL, &args).map_err(|error| format!("pushScopedContributions failed: {}", describe_js_rejection(&error)))?;
     let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() { JsFuture::from(promise.clone()).await.map_err(|error| format!("pushScopedContributions promise failed: {}", describe_js_rejection(&error)))? } else { result };
@@ -1240,14 +1241,14 @@ async fn push_scoped_contributions_js(handle: &Rc<JsValue>, instance_id: u32, ap
     dsl::os_pack::json::from_json_str::<semio_framework::kernel::InvocationResult>(&text).map_err(|error| format!("pushScopedContributions result parse failed: {error}"))
 }
 
+/// 🩺️ The cause, not the verb: a swallowed rejection here reported only `handleCommand promise
+/// failed` for every guest fault, command-address mistake and host-side throw alike
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[cfg(target_arch = "wasm32")]
 async fn handle_command_js(handle: &Rc<JsValue>, instance_id: u32, command_json: &str, view_state: &ViewModel) -> Result<semio_framework::kernel::InvocationResult, String> {
     let command = Reflect::get(handle.as_ref(), &JsValue::from_str("handleCommand")).map_err(|_| "handleCommand missing")?.dyn_into::<Function>().map_err(|_| "handleCommand is not callable")?;
     let context_json = serde_json::json!({ "viewStatePack": view_state_pack_base64(view_state)?, "actor": "local" }).to_string();
     let invocation_pack = invocation_pack_base64(command_json)?;
-    // 🩺️ The cause, not the verb: a swallowed rejection here reported only `handleCommand promise
-    // failed` for every guest fault, command-address mistake and host-side throw alike
-    // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     let result = command.call3(&JsValue::NULL, &JsValue::from_f64(instance_id as f64), &JsValue::from_str(&invocation_pack), &JsValue::from_str(&context_json)).map_err(|error| format!("handleCommand failed: {}", describe_js_rejection(&error)))?;
     let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() { JsFuture::from(promise.clone()).await.map_err(|error| format!("handleCommand promise failed: {}", describe_js_rejection(&error)))? } else { result };
     let text = resolved.as_string().ok_or_else(|| "handleCommand result not string".to_string())?;

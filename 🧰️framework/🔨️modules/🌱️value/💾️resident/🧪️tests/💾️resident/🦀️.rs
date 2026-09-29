@@ -144,7 +144,6 @@ fn resident_capacity_constructor_owns_no_heap_backing() {
     let allocations = ALLOCATIONS.with(std::cell::Cell::get);
     assert!(value.is_ok());
     assert_eq!(allocations, 0, "capacity vocabulary must not allocate a hidden ledger or backing");
-    eprintln!("[DEBUG] native resident capacity header={} allocations={allocations} permit_mounted=false", std::mem::size_of::<ResidentCapacity>());
 }
 //#endregion 🧪️Capacity
 
@@ -253,7 +252,7 @@ fn resident_admission_native_layout_has_one_fixed_root_and_separate_move_costs()
     }
     assert_eq!(admission_fixture()["nativeOwnership"]["layout"].as_array().unwrap().len(), 8);
     eprintln!(
-        "[DEBUG] resident root={} admission={} record={} consumerMove={} shellMove={} descriptorMove={} finalRoot={} bootstrapHeap=0",
+        "resident root={} admission={} record={} consumerMove={} shellMove={} descriptorMove={} finalRoot={} bootstrapHeap=0",
         layout.root_bytes, layout.admission_page_bytes, layout.record_page_bytes, layout.consumer_move_bytes, layout.shell_move_bytes, layout.descriptor_move_bytes, layout.final_root_bytes
     );
     close_admission_root(&root);
@@ -338,7 +337,7 @@ fn resident_admission_caller_loss_and_parent_move_preserve_original_page_and_con
         }
         let ordinary_return = ledger.prepared_admission(&consumer).unwrap().unwrap();
         drop(ordinary_return);
-        panic!("[DEBUG] after actual preparation and lost ordinary return");
+        panic!("after actual preparation and lost ordinary return");
     }));
     assert!(result.is_err());
     drop(result);
@@ -398,7 +397,7 @@ fn resident_admission_record_mutation_unwind_and_exact_parent_handoffs_never_col
     assert_eq!(source.as_ref().unwrap().pointer(), shell_pointer);
     let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         assert_eq!(record.install(&mut source, grant).unwrap().kind, ResidentStepKind::Ready);
-        panic!("[DEBUG] after actual typed shell placement into retained record");
+        panic!("after actual typed shell placement into retained record");
     }));
     assert!(outcome.is_err());
     drop(outcome);
@@ -414,7 +413,7 @@ fn resident_admission_record_mutation_unwind_and_exact_parent_handoffs_never_col
     assert!(shell_parent.is_none());
     let transferred = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         assert_eq!(record.handoff_into(&mut shell_parent, grant).unwrap().kind, ResidentStepKind::Pending);
-        panic!("[DEBUG] after exact record-to-parent handoff");
+        panic!("after exact record-to-parent handoff");
     }));
     assert!(transferred.is_err());
     drop(transferred);
@@ -476,7 +475,7 @@ fn resident_admission_first_access_refusal_allocation_boundary() {
     COUNT_ALLOCATIONS.with(|value| value.set(false));
     let events = ALLOCATION_LAYOUTS.with(std::cell::Cell::get);
     close_admission_root(&root);
-    eprintln!("[DEBUG] resident first-access root={after_root} first={} second={} layouts={events:?}", after_first - after_root, after_second - after_first);
+    eprintln!("resident first-access root={after_root} first={} second={} layouts={events:?}", after_first - after_root, after_second - after_first);
     assert_eq!(first.unwrap().kind, ResidentStepKind::Blocked);
     assert_eq!(second.unwrap().kind, ResidentStepKind::Blocked);
     let expected = admission_fixture()["nativeOwnership"]["firstAccessAllocations"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as usize).collect::<Vec<_>>();
@@ -508,7 +507,7 @@ fn resident_admission_inline_gate_keeps_poison_sticky_after_callback_unwind() {
     let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         let mut held = gate.try_lock().ok().unwrap();
         *held = 91;
-        panic!("[DEBUG] actual inline gate mutation before callback unwind");
+        panic!("actual inline gate mutation before callback unwind");
     }));
     assert!(outcome.is_err());
     drop(outcome);
@@ -581,7 +580,6 @@ fn resident_admission_foreign_repopulation_cannot_trigger_last_consumer_drop() {
     close_admission_root(&root);
     let actual_drops = drops.load(Ordering::SeqCst);
     drop(attempted.take());
-    eprintln!("[DEBUG] resident foreign repopulation accepted={accepted} consumerDropsDuringRelease={actual_drops} originalRootTerminal={}", root.terminal_is_empty());
     let expected = &admission_fixture()["nativeOwnership"]["foreignRepopulation"];
     assert_eq!(actual_drops as u64, expected["consumerDropsDuringRelease"].as_u64().unwrap());
     assert_eq!(accepted, expected["accepted"].as_bool().unwrap());

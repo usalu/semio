@@ -22,7 +22,7 @@ struct Fonts {
     emoji: Font<'static>,
 }
 
-/// @emoji 🌍️ Lazily parses the embedded font set once per process — every `compile_snippet_to_svg`
+/// 🌍️ Lazily parses the embedded font set once per process — every `compile_snippet_to_svg`
 /// call after the first reuses the same parsed `Font`s.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 fn fonts() -> &'static Fonts {
@@ -81,7 +81,7 @@ fn render_to_svg(box_: &crate::math::MathBox, options: SnippetOptions) -> SvgSni
     SvgSnippet { svg }
 }
 
-/// @emoji 🎯️ Parses `src` as a semio math notation snippet ([`syntax::parse_formula`]) and renders
+/// 🎯️ Parses `src` as a semio math notation snippet ([`syntax::parse_formula`]) and renders
 /// it to a standalone SVG string — the functional replacement for
 /// `typst::compile::<PagedDocument>` + `typst_svg::svg_merged` at both existing Typst call sites.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
@@ -93,7 +93,7 @@ pub fn compile_snippet_to_svg(src: &str, options: SnippetOptions) -> Result<SvgS
     Ok(render_to_svg(&box_, options))
 }
 
-/// @emoji 🔤️ Renders arbitrary `text` (not parsed as math notation — see
+/// 🔤️ Renders arbitrary `text` (not parsed as math notation — see
 /// [`crate::math::layout_raw_text`]) to a standalone SVG string. For callers with a plain string
 /// to render as an icon/label, where `text` isn't guaranteed to be valid math notation syntax.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
@@ -104,7 +104,7 @@ pub fn compile_text_to_svg(text: &str, options: SnippetOptions) -> SvgSnippet {
     render_to_svg(&box_, options)
 }
 
-/// @emoji 😀️ Renders arbitrary emoji `text` (see [`crate::math::layout_raw_emoji`]) to a
+/// 😀️ Renders arbitrary emoji `text` (see [`crate::math::layout_raw_emoji`]) to a
 /// standalone SVG string.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub fn compile_emoji_to_svg(text: &str, options: SnippetOptions) -> SvgSnippet {
@@ -114,7 +114,7 @@ pub fn compile_emoji_to_svg(text: &str, options: SnippetOptions) -> SvgSnippet {
     render_to_svg(&box_, options)
 }
 
-/// @emoji 💻️ Renders arbitrary `code` (not parsed — see [`crate::math::layout_raw_code`]) via the
+/// 💻️ Renders arbitrary `code` (not parsed — see [`crate::math::layout_raw_code`]) via the
 /// Mono font to a standalone SVG string. For callers rendering a monospace code/source snippet.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub fn compile_code_to_svg(code: &str, options: SnippetOptions) -> SvgSnippet {
@@ -124,7 +124,7 @@ pub fn compile_code_to_svg(code: &str, options: SnippetOptions) -> SvgSnippet {
     render_to_svg(&box_, options)
 }
 
-/// @emoji ↔ `wasm32-wasip2` arm shared by all four `compile_*_to_svg` entry points: no
+/// ↔ `wasm32-wasip2` arm shared by all four `compile_*_to_svg` entry points: no
 /// glyph-shaping engine (`rustybuzz`) is linked on this target (see this crate's Cargo.toml
 /// docstring). Estimates the SVG's declared box from `char_count` using the same
 /// character-width-to-font-size ratio already established for the identical class of heuristic

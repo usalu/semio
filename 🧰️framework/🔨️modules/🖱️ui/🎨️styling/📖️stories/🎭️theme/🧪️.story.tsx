@@ -18,7 +18,7 @@ const APPEARANCES: readonly ThemeAppearanceName[] = ["light", "dark"];
 //#endregion 🔖️Groups
 
 //#region 🔖️ThemeAppearanceCard
-/** @emoji 🌓️ One theme resolved for one appearance — every palette group's swatches stacked in a bordered card. */
+/** 🌓️ One theme resolved for one appearance — every palette group's swatches stacked in a bordered card. */
 function ThemeAppearanceCard({ theme, appearance }: { readonly theme: UiTheme; readonly appearance: ThemeAppearanceName }): ReactElement {
   const palettes = resolveThemeAppearancePalettes(theme, appearance);
   return (
@@ -50,7 +50,7 @@ function ThemeSection({ theme }: { readonly theme: UiTheme }): ReactElement {
 //#endregion 🔖️ThemeSection
 
 //#region 🔖️Gallery
-/** @emoji 🖼️ Every builtin theme (semio + any `framework/ui/styling/theme/*.theme.json` premade) rendered light+dark. `component` is this gallery itself — the story exercises `builtinUiThemes()`/`resolveThemeAppearancePalettes` data, not a UI widget. */
+/** 🖼️ Every builtin theme (semio + any `framework/ui/styling/theme/*.theme.json` premade) rendered light+dark. `component` is this gallery itself — the story exercises `builtinUiThemes()`/`resolveThemeAppearancePalettes` data, not a UI widget. */
 function ThemeGallery(): ReactElement {
   const themes = builtinUiThemes();
   return (

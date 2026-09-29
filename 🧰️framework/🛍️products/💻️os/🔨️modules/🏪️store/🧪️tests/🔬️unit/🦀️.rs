@@ -1517,12 +1517,12 @@ where
     async fn is_dirty(&self) -> bool {
         SpaceMember::is_dirty(&self.0).await
     }
-    // 🎯️ Overrides the trait default (`MergePolicy::default()`, always `Normal`) the same way
-    // the REAL `super::ArtifactStore`'s own `impl SpaceMember` block does (see that block's
-    // `merge_policy` for the full rationale) — without this override, `.merge_policy()` called
-    // on THIS wrapper (whether directly, or generically inside `CompositionCoordinator::
-    // dispatch_group`'s `M: SpaceMember` body) silently reads the trait's `Normal`-only default
-    // instead of whatever `set_merge_policy` set on the real inner store.
+    /// 🎯️ Overrides the trait default (`MergePolicy::default()`, always `Normal`) the same way
+    /// the REAL `super::ArtifactStore`'s own `impl SpaceMember` block does (see that block's
+    /// `merge_policy` for the full rationale) — without this override, `.merge_policy()` called
+    /// on THIS wrapper (whether directly, or generically inside `CompositionCoordinator::
+    /// dispatch_group`'s `M: SpaceMember` body) silently reads the trait's `Normal`-only default
+    /// instead of whatever `set_merge_policy` set on the real inner store.
     async fn merge_policy(&self) -> crate::os_spr::MergePolicy {
         SpaceMember::merge_policy(&self.0).await
     }
@@ -2090,7 +2090,6 @@ async fn member_factory_closed_dialect_matches_neutral_admission_corpus() {
         assert!(RetainedTestMembers::open(&expected, None, bytes).await.is_err());
         assert_eq!(MEMBER_SNAPSHOT_DECODE_COUNT.get(), 0);
     }
-    eprintln!("[DEBUG] member factory closed dialect: 13 neutral vectors, 3 malformed frames, real typed create/open and serde values");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -2123,7 +2122,6 @@ async fn member_factory_closed_dialect_rejects_identity_and_owner_substitution()
             close_member_dialect_fixture(&mut member);
         }
     }
-    eprintln!("[DEBUG] member factory exact identity: 9 neutral owner/id vectors over separate persisted envelopes");
 }
 
 fn close_erased_member_publication(publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: ArtifactStoreOneItemGrant) {
@@ -2272,7 +2270,6 @@ fn member_open_partial_parse_and_initialization_owners_retire_exactly() {
         assert_eq!(snapshots.load(Ordering::SeqCst), row["snapshots"].as_u64().unwrap() as usize, "{}", row["id"]);
         assert_eq!(mutations.load(Ordering::SeqCst), row["mutations"].as_u64().unwrap() as usize, "{}", row["id"]);
     }
-    eprintln!("[DEBUG] member-open retained ownership: six interruption stages, exact snapshot/mutation factory terminal counts, zero-budget preservation; parser activation remains separate");
 }
 
 struct DemoMemberWirePreparationFactory;
@@ -2519,7 +2516,7 @@ async fn retained_member_publication_preserves_order_group_identity_and_exact_ma
         assert_eq!(oracle as i64, row["expected"].as_i64().unwrap());
         assert_eq!(SpaceMember::tail_group_id(concrete).await.as_deref(), fixture["groupId"].as_str());
         observed.push(oracle);
-        eprintln!("[DEBUG] retained member sequence={sequence} wire={wire_ptr:p} bytes={byte_count} value={oracle}");
+        eprintln!("retained member sequence={sequence} wire={wire_ptr:p} bytes={byte_count} value={oracle}");
     }
     assert_eq!(observed, vec![17, -23, 42]);
     for member in &mut members {
@@ -2580,7 +2577,6 @@ async fn retained_member_publication_rejects_wrong_owner_staleness_and_cancels_w
     }
     close_demo_artifact_store(&mut member);
     close_demo_artifact_store(&mut wrong);
-    eprintln!("[DEBUG] retained member wrong-owner/stale/cancel laws reached terminal-empty");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -2662,7 +2658,6 @@ async fn retained_member_group_preparation_reserves_real_history_without_partial
     for member in &mut members {
         close_demo_artifact_store(member);
     }
-    eprintln!("[DEBUG] two-member retained preparation reserved real slots, exposed no edits, and aborted stale/cancelled owners without undo");
 }
 //#endregion 🧩️RetainedMemberPublicationLaws
 
@@ -3678,20 +3673,20 @@ async fn artifact_store_reset_preserves_capacity_for_retained_batch_publication(
         close_demo_artifact_store(&mut store);
         assert_eq!(outcome.unwrap(), row["after"]);
     }
-    eprintln!("[DEBUG] Store reset: two neutral empty-history reloads accept a retained durable batch and match serde projections");
 }
 
 /// 🧺️ ONE gesture of 200 mutations is ONE `Edit` in ONE ledger slot and ONE undo step — the
 /// `ARTIFACT_HISTORY_LEDGER_CAPACITY = 64` ceiling that used to fault a `setActiveExample` load at
 /// its 65th mutation is structurally out of reach, and the staged edit is byte-for-byte the edit
 /// `ArtifactCommand::Apply` records for the same mutation list.
+///
+/// 🧮️ `SetN`, not `AddN`: `AddN` emits one info message per operation and 200 of them exceed the
+/// edit-message byte authority `ArtifactCommand::Apply` records — a limit of the message lane, not
+/// of the staged edit, and the oracle below must apply the very same list.
 #[semio_framework_async_macros::async_test]
 async fn artifact_store_batch_publication_stages_two_hundred_mutations_into_one_ledger_slot_and_one_undo_step() {
     const ITEMS: usize = 200;
     const { assert!(ITEMS > crate::os_vcs::ARTIFACT_HISTORY_LEDGER_CAPACITY, "the fixture must exceed the fixed edit ledger capacity to prove the ceiling is gone") };
-    // 🧮️ `SetN`, not `AddN`: `AddN` emits one info message per operation and 200 of them exceed the
-    // edit-message byte authority `ArtifactCommand::Apply` records — a limit of the message lane, not
-    // of the staged edit, and the oracle below must apply the very same list.
     let mutations = (0..ITEMS).map(|index| DemoMutation::SetN(SetN { n: index as i32 + 1 })).collect::<Vec<_>>();
     let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "batched-gesture", DemoSnapshot { n: Some(0) }, None)).await;
     store.install_document_store_owners_exact(demo_closable_store_owners());
@@ -3792,7 +3787,6 @@ async fn artifact_store_batch_fold_refuses_a_one_work_item_declaration_and_accep
     assert!(publication.acknowledge());
     close_durable_publication(&mut publication);
     close_demo_artifact_store(&mut exact);
-    eprintln!("[DEBUG] fold contract: work_items counts forward+inverse ROWS; 1 refuses a point-invertible item, 2 stages it");
 }
 
 /// 🧺️ The SAME law for the multi-item gesture, and the reason the defect stayed invisible until a
@@ -3839,7 +3833,6 @@ async fn artifact_store_batch_commit_refuses_an_under_declared_multi_item_gestur
     assert!(publication.acknowledge());
     close_durable_publication(&mut publication);
     close_demo_artifact_store(&mut exact);
-    eprintln!("[DEBUG] fold contract batched: {ITEMS} under-declared items pass the per-item fold and die at the commit gate; the invertible declaration stages {} rows", ITEMS * 2);
 }
 
 /// 🧺️ A gesture whose fourth mutation cannot prepare against the running post root commits
@@ -3917,7 +3910,6 @@ async fn retained_latest_wins_cold_rebase_preserves_admitted_cursor_capacity_for
     assert!(publication.acknowledge());
     close_durable_publication(&mut publication);
     close_demo_artifact_store(&mut store);
-    eprintln!("[DEBUG] cold cursor reconstruction preserved its admitted capacity for a real retained second publication");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -4198,7 +4190,6 @@ fn ephemeral_transfer_preparation_faults_close_presence_and_transient_owners() {
         }
         assert!(retirement.terminal_is_empty());
     }
-    eprintln!("[DEBUG] ephemeral preparation faults: task errors and invalid prepared receipts close both presence and transient owners while preserving neutral state");
 }
 
 /// 📍️ An ephemeral one-item publication's `progress()` is MONOTONE across its whole life. It used to
@@ -4245,7 +4236,6 @@ async fn an_ephemeral_one_item_publication_reports_monotone_progress_across_owne
     }
     assert_eq!(publication.progress(), published, "a fully retired ephemeral publication still reports the gesture it completed");
     close_ephemeral_publication(&mut publication);
-    eprintln!("[DEBUG] ephemeral one-item progress stayed monotone through advance, publication, acknowledgement and owner release");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -4467,7 +4457,6 @@ fn retained_group_envelope_read_captures_history_and_cursor_before_serializer_co
         }
         assert!(retirement.terminal_is_empty());
         close_group_read_fixture(envelope);
-        eprintln!("[DEBUG] compound envelope read {} serialized one captured history/cursor decision across injected commit", case["id"]);
     }
 }
 
@@ -4636,7 +4625,7 @@ async fn canonical_revision_distinguishes_interior_aba_across_load_and_reset() {
     close_demo_artifact_store(&mut original);
 }
 
-/// @emoji 🛰️ Builds a foreign {@link MutationEnvelope} (as if authored by `actor` on another peer) by
+/// 🛰️ Builds a foreign {@link MutationEnvelope} (as if authored by `actor` on another peer) by
 
 /// applying `operation` in a throwaway peer store and stamping the envelope's actor id.
 async fn foreign_mutation_envelope(actor: &str, operation: DemoMutation) -> crate::os_spr::MutationEnvelope {
@@ -4932,15 +4921,16 @@ async fn ledger_matches_a_fresh_replay_of_the_same_envelopes() {
     assert_eq!(first.snapshot().expect("snapshot"), replay.snapshot().expect("snapshot"));
 }
 
+/// ⏱️ Local edits get large physical-ms HLCs (the local clock ticks off the real wall clock).
+///
+/// A remote edit stamped with a tiny HLC — guaranteed to sort before both local edits.
 #[semio_framework_async_macros::async_test]
 async fn applied_edit_ids_stay_sorted_by_hlc_after_a_backdated_remote_insert() {
     let mut store = fresh_demo_store().await;
-    // Local edits get large physical-ms HLCs (the local clock ticks off the real wall clock).
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], description: None }).await.expect("local apply 1");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], description: None }).await.expect("local apply 2");
     let local_ids = store.applied_edit_ids().to_vec();
 
-    // A remote edit stamped with a tiny HLC — guaranteed to sort before both local edits.
     let backdated = mutation_envelope_at("backdated-actor", "op-backdated", DemoMutation::SetN(SetN { n: 99 }), HybridLogicalTimestamp::new(9, 1), Vec::new());
     store.ingest_remote(backdated).await.expect("backdated insert");
 
@@ -5026,6 +5016,10 @@ async fn testkit_law_quarantine_accept_equals_laissez_faire_via_real_store() {
     crate::os_spr::protocol_laws::assert_quarantine_accept_equals_laissez_faire(&accepted_state, &laissez_faire_state).await;
 }
 
+/// 🗃️ `relayed`: every edit id this store's persisted history (`applied_edit_ids`) could ever
+/// ship onward via `flush_outbound`/`snapshot_pack` — a discarded batch is only `seed_
+/// applied` on the dag, never added to `applied_edit_ids`/`vcs.edits`, so it can never appear
+/// here; this is the real set flush_outbound draws from, not a fabricated stand-in.
 #[semio_framework_async_macros::async_test]
 async fn testkit_law_quarantine_discard_preserves_state_via_real_store() {
     let mut store = fresh_demo_store().await;
@@ -5037,10 +5031,6 @@ async fn testkit_law_quarantine_discard_preserves_state_via_real_store() {
     let conflict_id = reject_report.conflict.expect("conflict raised");
     store.resolve_conflict(&conflict_id.0, crate::os_spr::ConflictResolution::Discard).await.expect("discard");
     let post_discard = store.snapshot().expect("post-discard snapshot");
-    // `relayed`: every edit id this store's persisted history (`applied_edit_ids`) could ever
-    // ship onward via `flush_outbound`/`snapshot_pack` — a discarded batch is only `seed_
-    // applied` on the dag, never added to `applied_edit_ids`/`vcs.edits`, so it can never appear
-    // here; this is the real set flush_outbound draws from, not a fabricated stand-in.
     let relayed = store.applied_edit_ids().to_vec();
     crate::os_spr::protocol_laws::assert_quarantine_discard_preserves_state(&pre_discard, &post_discard, std::slice::from_ref(&modify.mutation_id.0), &relayed).await;
 }
@@ -5103,23 +5093,23 @@ async fn testkit_law_conflict_spr_round_trip_via_real_store() {
 // robustness audit findings HIGH-1, HIGH-2, MEDIUM-3, MEDIUM-4 (`📓️j1-robustness-fixes.md`).
 // Every test here FAILS without its corresponding fix.
 
+/// 👻️ HIGH-1: an id named in `order[k..]` but absent from `edits` means `applied_edit_ids`/
+/// `vcs.edits` fell out of sync (crash/recovery, a partially-applied ingest) — a bare
+/// `continue` here used to silently compute a WRONG snapshot instead of failing loudly.
 #[semio_framework_async_macros::async_test]
 async fn replay_suffix_partitioned_errors_loudly_on_a_ghost_edit_id_instead_of_silently_dropping_it() {
-    // HIGH-1: an id named in `order[k..]` but absent from `edits` means `applied_edit_ids`/
-    // `vcs.edits` fell out of sync (crash/recovery, a partially-applied ingest) — a bare
-    // `continue` here used to silently compute a WRONG snapshot instead of failing loudly.
     let edits: HashMap<String, Edit<DemoMutation>> = HashMap::new();
     let order = vec!["ghost-edit".to_string()];
     let error = super::ArtifactStore::<DemoSnapshot, DemoMutation>::replay_suffix_partitioned(&DemoSnapshot { n: Some(0) }, &order, 0, &edits, crate::os_spr::MergePolicy::Normal).expect_err("a ghost edit id must be a loud, typed VcsError");
     assert_eq!(error, VcsError::UnknownEdit("ghost-edit".into()));
 }
 
+/// 🔦️ HIGH-2: minting a `ConflictId` from a `filter_map` that silently drops missing ids can
+/// (if every id is missing) hash an EMPTY mutation-id set into a content-addressed conflict
+/// id — a content address that addresses no content, so unrelated conflicts can collide on
+/// it. `edits_for_ids` is the strict replacement both `ingest_remote` mint sites now use.
 #[semio_framework_async_macros::async_test]
 async fn edits_for_ids_errors_loudly_on_a_ghost_edit_id_instead_of_silently_filtering_it() {
-    // HIGH-2: minting a `ConflictId` from a `filter_map` that silently drops missing ids can
-    // (if every id is missing) hash an EMPTY mutation-id set into a content-addressed conflict
-    // id — a content address that addresses no content, so unrelated conflicts can collide on
-    // it. `edits_for_ids` is the strict replacement both `ingest_remote` mint sites now use.
     let edits: HashMap<String, Edit<DemoMutation>> = HashMap::new();
     let error = super::ArtifactStore::<DemoSnapshot, DemoMutation>::edits_for_ids(&["ghost-edit".to_string()], &edits).expect_err("an id that resolves to nothing must fail loudly, never vanish from the mutation-id set");
     assert_eq!(error, VcsError::UnknownEdit("ghost-edit".into()));
@@ -5174,12 +5164,12 @@ async fn conflict_retirement_cursors_quarantined_payloads_messages_actors_and_id
     }
 }
 
+/// 🚧️ MEDIUM-3: a peer that keeps sending a batch this replica keeps quarantining can grow
+/// `envelope.conflicts` without bound (the dag never advances on quarantine, so the SAME
+/// envelope is eligible for redelivery forever). Hitting the open-conflict cap must be a
+/// loud, typed refusal — atomic, nothing applied — never a silent drop or overwrite.
 #[semio_framework_async_macros::async_test]
 async fn ingest_remote_refuses_a_new_open_conflict_once_the_backlog_is_at_capacity() {
-    // MEDIUM-3: a peer that keeps sending a batch this replica keeps quarantining can grow
-    // `envelope.conflicts` without bound (the dag never advances on quarantine, so the SAME
-    // envelope is eligible for redelivery forever). Hitting the open-conflict cap must be a
-    // loud, typed refusal — atomic, nothing applied — never a silent drop or overwrite.
     let mut store = fresh_demo_store().await;
     store.set_merge_policy(crate::os_spr::MergePolicy::Normal);
     let (delete, modify) = modify_vs_delete_envelopes().await;
@@ -5203,11 +5193,11 @@ async fn ingest_remote_refuses_a_new_open_conflict_once_the_backlog_is_at_capaci
     assert_eq!(store.open_conflicts().count(), cap, "the backlog must stay exactly at capacity, never silently grow past it");
 }
 
+/// ✂️ MEDIUM-3: resolved (`Accepted`/`Discarded`) conflicts are closed historical facts, so
+/// unlike `Open` ones they are prunable — oldest push order evicted first, capped, while an
+/// `Open` conflict is never touched no matter how far over cap the resolved backlog grows.
 #[semio_framework_async_macros::async_test]
 async fn resolved_conflicts_are_pruned_oldest_first_once_the_ledger_exceeds_its_cap_while_open_ones_survive() {
-    // MEDIUM-3: resolved (`Accepted`/`Discarded`) conflicts are closed historical facts, so
-    // unlike `Open` ones they are prunable — oldest push order evicted first, capped, while an
-    // `Open` conflict is never touched no matter how far over cap the resolved backlog grows.
     let mut store = fresh_demo_store().await;
     let cap = super::ArtifactStore::<DemoSnapshot, DemoMutation>::RESOLVED_CONFLICT_CAP;
     let open = synthetic_open_conflict(u64::MAX).await;
@@ -5233,13 +5223,18 @@ async fn resolved_conflicts_are_pruned_oldest_first_once_the_ledger_exceeds_its_
     assert!(surviving_seeds.contains(&(resolved_count - 1)), "the newest resolved conflict must survive pruning");
 }
 
+/// 🧼️ MEDIUM-4: one `ingest_remote` batch that quarantines BOTH a brand-new edit (`op-c`, never
+/// committed before) AND a previously-committed edit a rewind now retroactively invalidates
+/// (`op-a`, which carried a REAL non-empty `mutation.cascade` message from its first commit)
+/// — proving `replace_edit_messages(.., empty)` clears the stale ledger entry correctly even
+/// when it runs in the same pass as a never-populated one, regardless of which kind an id is.
+///
+/// `op-b` (earlier HLC than `op-a`) forces a rewind that replays `op-a` against a DELETED
+/// target the second time around. `op-c` (later HLC, brand new) is submitted FIRST but
+/// depends on `op-b`, so it buffers in the dag and is released alongside `op-b` in the SAME
+/// `ingest_remote` call/batch — the mixed-kind scenario MEDIUM-4 asks for.
 #[semio_framework_async_macros::async_test]
 async fn quarantine_message_clearing_is_correct_for_a_mixed_new_and_retroactive_batch() {
-    // MEDIUM-4: one `ingest_remote` batch that quarantines BOTH a brand-new edit (`op-c`, never
-    // committed before) AND a previously-committed edit a rewind now retroactively invalidates
-    // (`op-a`, which carried a REAL non-empty `mutation.cascade` message from its first commit)
-    // — proving `replace_edit_messages(.., empty)` clears the stale ledger entry correctly even
-    // when it runs in the same pass as a never-populated one, regardless of which kind an id is.
     let mut store = fresh_demo_store().await;
     store.set_merge_policy(crate::os_spr::MergePolicy::Normal);
 
@@ -5248,10 +5243,6 @@ async fn quarantine_message_clearing_is_correct_for_a_mixed_new_and_retroactive_
     assert!(!store.messages_for_edit("op-a").is_empty(), "fixture must carry real prior ledger content for this test to be meaningful");
     assert_eq!(store.snapshot().expect("snapshot"), DemoSnapshot { n: Some(5) });
 
-    // `op-b` (earlier HLC than `op-a`) forces a rewind that replays `op-a` against a DELETED
-    // target the second time around. `op-c` (later HLC, brand new) is submitted FIRST but
-    // depends on `op-b`, so it buffers in the dag and is released alongside `op-b` in the SAME
-    // `ingest_remote` call/batch — the mixed-kind scenario MEDIUM-4 asks for.
     let b = mutation_envelope_at("actor-b", "op-b", DemoMutation::DeleteN(DeleteN {}), HybridLogicalTimestamp::new(1, 50), Vec::new());
     let c = mutation_envelope_at("actor-c", "op-c", DemoMutation::AddN(AddN { delta: 1 }), HybridLogicalTimestamp::new(2, 150), vec![MutationId("op-b".into())]);
     store.ingest_remote(c).await.expect("op-c buffers behind its unmet dependency on op-b");
@@ -5326,9 +5317,18 @@ async fn history_lane_defaults_to_document() {
     assert_eq!(HistoryLane::default(), HistoryLane::Document);
 }
 
-/// @emoji 🛤️ The design's headline acceptance case: undoing after an interleaved run of
+/// 🛤️ The design's headline acceptance case: undoing after an interleaved run of
 /// document/interaction edits reverts the last DOCUMENT edit, skipping past trailing (and even
 /// mid-history) `Interaction`-lane entries in both directions, which stay applied throughout.
+///
+/// Default undo skips the TRAILING interaction2 edit to revert doc2 instead.
+///
+/// A second default undo reverts doc1 — the only remaining Document-lane entry — even though
+/// it now sits BEFORE two still-applied interaction edits in `applied_edit_ids`.
+///
+/// Default redo mirrors it: restores doc1 first (nearest Document entry in the redo stack),
+/// then doc2, never touching either interaction edit's own applied/redo membership; each lands
+/// back at its own HLC position in the applied order.
 #[semio_framework_async_macros::async_test]
 async fn history_lane_default_undo_and_redo_skip_interaction_entries() {
     let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
@@ -5347,20 +5347,14 @@ async fn history_lane_default_undo_and_redo_skip_interaction_entries() {
     assert!(store.envelope().lanes.get(&doc1_id).is_none(), "an ordinary Document-lane edit never gets a `lanes` entry (sparse ledger)");
     assert!(store.envelope().lanes.get(&doc2_id).is_none());
 
-    // Default undo skips the TRAILING interaction2 edit to revert doc2 instead.
     store.dispatch(ArtifactCommand::Undo).await.expect("undo skips interaction2 to revert doc2");
     assert_eq!(store.applied_edit_ids(), &[doc1_id.clone(), interaction1_id.clone(), interaction2_id.clone()], "doc2 removed; both interaction edits remain applied");
     assert_eq!(store.redo_edit_ids(), std::slice::from_ref(&doc2_id));
 
-    // A second default undo reverts doc1 — the only remaining Document-lane entry — even though
-    // it now sits BEFORE two still-applied interaction edits in `applied_edit_ids`.
     store.dispatch(ArtifactCommand::Undo).await.expect("undo doc1 despite interaction edits between it and the tail");
     assert_eq!(store.applied_edit_ids(), &[interaction1_id.clone(), interaction2_id.clone()]);
     assert_eq!(store.redo_edit_ids(), &[doc2_id.clone(), doc1_id.clone()]);
 
-    // Default redo mirrors it: restores doc1 first (nearest Document entry in the redo stack),
-    // then doc2, never touching either interaction edit's own applied/redo membership; each lands
-    // back at its own HLC position in the applied order.
     store.dispatch(ArtifactCommand::Redo).await.expect("redo doc1");
     assert_eq!(store.applied_edit_ids(), &[doc1_id.clone(), interaction1_id.clone(), interaction2_id.clone()]);
     assert_eq!(store.redo_edit_ids(), std::slice::from_ref(&doc2_id));
@@ -5369,8 +5363,14 @@ async fn history_lane_default_undo_and_redo_skip_interaction_entries() {
     assert!(store.redo_edit_ids().is_empty());
 }
 
-/// @emoji 🛤️ The completing half of the mechanism: `UndoInLane`/`RedoInLane` walk a NON-`Document`
+/// 🛤️ The completing half of the mechanism: `UndoInLane`/`RedoInLane` walk a NON-`Document`
 /// lane explicitly and independently of the document lane's own cursor position.
+///
+/// Explicit lane-scoped undo reverts ONLY the interaction edit, leaving the document edit
+/// applied — the mirror image of default `Undo` skipping it.
+///
+/// Redoing the Document lane from here has nothing to redo — only the Interaction lane's
+/// cursor moved, proving the two lanes' redo stacks are independent, not one shared position.
 #[semio_framework_async_macros::async_test]
 async fn history_lane_undo_in_lane_and_redo_in_lane_walk_only_the_requested_lane() {
     let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
@@ -5380,15 +5380,11 @@ async fn history_lane_undo_in_lane_and_redo_in_lane_walk_only_the_requested_lane
     let doc_id = store.applied_edit_ids()[0].clone();
     let interaction_id = store.applied_edit_ids()[1].clone();
 
-    // Explicit lane-scoped undo reverts ONLY the interaction edit, leaving the document edit
-    // applied — the mirror image of default `Undo` skipping it.
     store.dispatch(ArtifactCommand::UndoInLane { lane: HistoryLane::Interaction }).await.expect("undo in interaction lane");
     assert_eq!(store.applied_edit_ids(), std::slice::from_ref(&doc_id));
     assert_eq!(store.redo_edit_ids(), std::slice::from_ref(&interaction_id));
     assert_eq!(store.snapshot().expect("snapshot").n, Some(1), "reverting the interaction edit restores the document edit's own value");
 
-    // Redoing the Document lane from here has nothing to redo — only the Interaction lane's
-    // cursor moved, proving the two lanes' redo stacks are independent, not one shared position.
     assert_eq!(store.dispatch(ArtifactCommand::RedoInLane { lane: HistoryLane::Document }).await.unwrap_err(), VcsError::NothingToRedo);
 
     store.dispatch(ArtifactCommand::RedoInLane { lane: HistoryLane::Interaction }).await.expect("redo in interaction lane");
@@ -5396,9 +5392,11 @@ async fn history_lane_undo_in_lane_and_redo_in_lane_walk_only_the_requested_lane
     assert!(store.redo_edit_ids().is_empty());
 }
 
-/// @emoji 🛤️ Acceptance: a history made ENTIRELY of `Interaction`-lane edits is a no-op for
+/// 🛤️ Acceptance: a history made ENTIRELY of `Interaction`-lane edits is a no-op for
 /// default `Undo` (no `Document`-lane entry exists at all), while the lane-scoped API still
 /// reaches them.
+///
+/// The explicit lane-scoped API can still walk them.
 #[semio_framework_async_macros::async_test]
 async fn history_lane_default_undo_is_a_no_op_when_every_edit_is_interaction_lane() {
     let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
@@ -5411,13 +5409,12 @@ async fn history_lane_default_undo_is_a_no_op_when_every_edit_is_interaction_lan
     assert_eq!(error, VcsError::NothingToUndo, "no Document-lane entry exists to undo; both interaction edits must stay untouched");
     assert_eq!(store.applied_edit_ids().len(), 2, "default undo must not remove either interaction edit");
 
-    // The explicit lane-scoped API can still walk them.
     store.dispatch(ArtifactCommand::UndoInLane { lane: HistoryLane::Interaction }).await.expect("undo in interaction lane");
     assert_eq!(store.applied_edit_ids().len(), 1);
     assert_eq!(store.snapshot().expect("snapshot").n, Some(1));
 }
 
-/// @emoji 🛤️ `Interaction`-lane entries are ordinary persisted `Edit`s — they survive a plain
+/// 🛤️ `Interaction`-lane entries are ordinary persisted `Edit`s — they survive a plain
 /// owned pack+SPR round trip, and a reloaded store's default undo still skips them.
 #[semio_framework_async_macros::async_test]
 async fn history_lane_interaction_entries_survive_owned_document_round_trip() {
@@ -5442,7 +5439,7 @@ async fn history_lane_interaction_entries_survive_owned_document_round_trip() {
 //#endregion 🔖️HistoryLaneTests
 
 //#region 🔖️InteractionStoreTests
-/// @emoji 🕹️ `InteractionStore::apply` mutates the local hover value and bumps `generation`,
+/// 🕹️ `InteractionStore::apply` mutates the local hover value and bumps `generation`,
 /// mirroring `PresenceStore`/`TransientStore` — the same `Mutation<S>::diff().apply()` seam,
 /// reused here with the file's existing `DemoSnapshot`/`DemoMutation` fixtures standing in for
 /// an app's hover-shaped type.
@@ -5460,7 +5457,7 @@ async fn interaction_store_apply_updates_hover_and_bumps_generation() {
     assert_eq!(store.generation().await, 1, "an empty mutation batch must not bump generation, same as PresenceStore/TransientStore");
 }
 
-/// @emoji 🔄️ `reset` discards the current hover outright (a host clears hover when a
+/// 🔄️ `reset` discards the current hover outright (a host clears hover when a
 /// view/window closes) and still bumps `generation` so a pending broadcast reflects the clear.
 #[semio_framework_async_macros::async_test]
 async fn interaction_store_reset_discards_hover_and_bumps_generation() {
@@ -5473,7 +5470,7 @@ async fn interaction_store_reset_discards_hover_and_bumps_generation() {
     assert_eq!(store.generation().await, 2, "reset bumps generation even though the value returns to default");
 }
 
-/// @emoji 🏗️ `Default` seeds from `S::default()`, same convention as `PresenceStore`/`TransientStore`.
+/// 🏗️ `Default` seeds from `S::default()`, same convention as `PresenceStore`/`TransientStore`.
 #[semio_framework_async_macros::async_test]
 async fn interaction_store_default_seeds_from_hover_default() {
     let store = InteractionStore::<DemoSnapshot, DemoMutation>::default();
@@ -5983,10 +5980,10 @@ async fn register_document_codec_rejects_a_duplicate_schema_without_replacing_th
     assert_eq!(resolved.pack_schema_hash, first.pack_schema_hash, "the first codec remains authoritative after a conflict");
 }
 
+/// 🚫️async: E4 fn-pointer slot — `DialectMigration.migrate_pack` is `fn(&[u8]) ->
+/// Result<Vec<u8>, String>` (unnameable if async) — see R9/E4.
 #[semio_framework_async_macros::async_test]
 async fn dialect_migration_preflight_and_batch_commit_are_conflict_free_or_noop() {
-    // 🚫️async: E4 fn-pointer slot — `DialectMigration.migrate_pack` is `fn(&[u8]) ->
-    // Result<Vec<u8>, String>` (unnameable if async) — see R9/E4.
     fn append_marker(bytes: &[u8]) -> Result<Vec<u8>, String> {
         Ok([bytes, b"-migrated"].concat())
     }
@@ -6214,11 +6211,14 @@ async fn transform_against_concurrent_undo_skips_over_a_foreign_tail() {
     assert_eq!(store.snapshot().expect("snapshot").n, Some(2), "the later concurrent edit still wins");
 }
 
+/// ↩️ Builds on the existing Revert/Reinstate ledger (S11/S12 history_row_applied_v1): plain Undo is
+/// selective; pack+.spr reload folds the same cursor; the session rebinds local_actor_id so Redo
+/// can reinstate this author's entry from the shared redo stack (hub restart model).
+///
+/// Session rebind: construct seeds local_actor from the applied tail (here foreign). Real apps
+/// call set_local_actor_id from the signed-in actor before Undo/Redo — same as hub restart.
 #[semio_framework_async_macros::async_test]
 async fn plain_undo_is_selective_and_durable_across_event_log_reload() {
-    // Builds on the existing Revert/Reinstate ledger (S11/S12 history_row_applied_v1): plain Undo is
-    // selective; pack+.spr reload folds the same cursor; the session rebinds local_actor_id so Redo
-    // can reinstate this author's entry from the shared redo stack (hub restart model).
     let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None)).await;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], description: None }).await.expect("local a1");
     let local_a1 = store.applied_edit_ids()[0].clone();
@@ -6238,8 +6238,6 @@ async fn plain_undo_is_selective_and_durable_across_event_log_reload() {
     let mut reloaded = ArtifactStore::new(parsed.envelope).await;
     assert_eq!(reloaded.applied_edit_ids(), &[local_a1.clone(), foreign_id.clone()], "reload preserves selective undo projection");
     assert_eq!(reloaded.redo_edit_ids(), std::slice::from_ref(&local_a2), "durable collaborative redo stack survives reload");
-    // Session rebind: construct seeds local_actor from the applied tail (here foreign). Real apps
-    // call set_local_actor_id from the signed-in actor before Undo/Redo — same as hub restart.
     reloaded.set_local_actor_id(Some(author)).expect("rebind session actor");
     reloaded.dispatch(ArtifactCommand::Redo).await.expect("redo after reload reinstates the local edit");
     assert_eq!(reloaded.applied_edit_ids(), &[local_a1, foreign_id, local_a2]);
@@ -6280,12 +6278,12 @@ async fn amend_last_absorbs_into_matching_coalesce_key() {
     assert_eq!(store.snapshot().expect("snapshot after undo").n, Some(0), "undo restores pre-gesture state in one step");
 }
 
+/// 🪢️ Regression guard for the incremental `AmendLast` path (see `AmendCache`): many sequential
+/// amends into the same coalesced edit — e.g. a long slider drag — must still produce exactly the
+/// same edit (forwards/inverse/mutation_meta length, final snapshot, one-step undo) as the
+/// previous full-replay-every-time implementation, just without re-replaying history each time.
 #[semio_framework_async_macros::async_test]
 async fn amend_last_incremental_path_matches_full_replay_over_many_amends() {
-    // 🪢️ Regression guard for the incremental `AmendLast` path (see `AmendCache`): many sequential
-    // amends into the same coalesced edit — e.g. a long slider drag — must still produce exactly the
-    // same edit (forwards/inverse/mutation_meta length, final snapshot, one-step undo) as the
-    // previous full-replay-every-time implementation, just without re-replaying history each time.
     let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
     let mut store = ArtifactStore::new(envelope).await;
     for n in 1..=50 {
@@ -6301,11 +6299,11 @@ async fn amend_last_incremental_path_matches_full_replay_over_many_amends() {
     assert_eq!(store.snapshot().expect("snapshot after undo").n, Some(0), "one undo reverts the whole 50-step coalesced gesture");
 }
 
+/// 🪢️ Undo/redo only move edit ids between `applied_edit_ids`/`redo_edit_ids` — they never mutate
+/// an edit's own `forwards`, so a cached post-snapshot keyed by `(edit_id, forwards_len)` stays
+/// valid across an undo immediately followed by a redo of the very same coalesced edit.
 #[semio_framework_async_macros::async_test]
 async fn amend_last_incremental_cache_survives_undo_redo_round_trip() {
-    // 🪢️ Undo/redo only move edit ids between `applied_edit_ids`/`redo_edit_ids` — they never mutate
-    // an edit's own `forwards`, so a cached post-snapshot keyed by `(edit_id, forwards_len)` stays
-    // valid across an undo immediately followed by a redo of the very same coalesced edit.
     let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
     let mut store = ArtifactStore::new(envelope).await;
     store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], coalesce_key: Some("drag".into()) }).await.expect("first amend");
@@ -6382,7 +6380,7 @@ async fn test_support_round_trip_helpers_pass_for_demo_operation() {
     test_support::assert_command_envelope_round_trip::<DemoSnapshot, DemoMutation>(&edit, &ArtifactId("doc-command-envelope".into()), &SchemaId("demo/v1".into())).await;
 }
 
-/// @emoji 🪤️ Proves `assert_command_envelope_round_trip` is not a trivially-true check: a hand-rolled
+/// 🪤️ Proves `assert_command_envelope_round_trip` is not a trivially-true check: a hand-rolled
 /// `Mutation` whose `Deserialize` impl silently drops its own field (encodes `n` faithfully but
 /// always decodes to `n: 0`) must trip law (2) of the doc comment on
 /// `assert_command_envelope_round_trip` — the same "deliberately lossy impl" pattern
@@ -6476,32 +6474,38 @@ async fn parse_document_text_rejects_invalid_op_line_with_span() {
     assert_eq!(error.span.line, 3);
 }
 
-/// @emoji 🩺️ Stresses the stateful `current`/`tail_undo_cache` fast paths — multi-op edits, amend
+/// 🩺️ Stresses the stateful `current`/`tail_undo_cache` fast paths — multi-op edits, amend
 /// gestures, undo/redo, and a checkpoint (cold-path recompute) all interleaved — against the
 /// full-replay differential oracle, so any divergence between the incremental paths and a
 /// from-scratch replay fails loudly here rather than surfacing as a silent snapshot bug later.
+///
+/// Multi-operation edit: current must fold both ops, matching a from-scratch replay.
+///
+/// Amend gesture: the first `AmendLast` cannot merge into the preceding `Apply`-created edit
+/// (`Apply` never sets a `coalesce_key`, so it can never match), so it starts a NEW edit; the
+/// second `AmendLast` shares that edit's key and merges into it — two edits total, the second
+/// one carrying two coalesced increments (3 then 4).
+///
+/// Undo the whole amended edit (O(1) tail-cache path) restores the `Apply`-edit's state, not
+/// the initial snapshot — only the amend gesture's edit is undone here.
+///
+/// Checkpoint (cold path through `checkout_checkpoint_internal` is NOT exercised by commit
+/// itself, but a following apply + a second, older undo still must agree with replay).
 #[semio_framework_async_macros::async_test]
 async fn stateful_current_matches_full_replay_across_interleaved_commands() {
     let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
     let mut store = ArtifactStore::new(envelope).await;
 
-    // Multi-operation edit: current must fold both ops, matching a from-scratch replay.
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 }), DemoMutation::SetN(SetN { n: 2 })], description: None }).await.expect("apply multi-op edit");
     test_support::assert_live_equals_replay(&store).await;
     assert_eq!(store.snapshot().expect("snapshot").n, Some(2));
 
-    // Amend gesture: the first `AmendLast` cannot merge into the preceding `Apply`-created edit
-    // (`Apply` never sets a `coalesce_key`, so it can never match), so it starts a NEW edit; the
-    // second `AmendLast` shares that edit's key and merges into it — two edits total, the second
-    // one carrying two coalesced increments (3 then 4).
     store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN(SetN { n: 3 })], coalesce_key: Some("drag".into()) }).await.expect("amend 1");
     store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN(SetN { n: 4 })], coalesce_key: Some("drag".into()) }).await.expect("amend 2");
     test_support::assert_live_equals_replay(&store).await;
     assert_eq!(store.snapshot().expect("snapshot").n, Some(4));
     assert_eq!(store.envelope().vcs.edits.len(), 2, "the amend gesture started its own edit, not a third");
 
-    // Undo the whole amended edit (O(1) tail-cache path) restores the `Apply`-edit's state, not
-    // the initial snapshot — only the amend gesture's edit is undone here.
     store.dispatch(ArtifactCommand::Undo).await.expect("undo");
     test_support::assert_live_equals_replay(&store).await;
     assert_eq!(store.snapshot().expect("snapshot").n, Some(2));
@@ -6509,8 +6513,6 @@ async fn stateful_current_matches_full_replay_across_interleaved_commands() {
     test_support::assert_live_equals_replay(&store).await;
     assert_eq!(store.snapshot().expect("snapshot").n, Some(4));
 
-    // Checkpoint (cold path through `checkout_checkpoint_internal` is NOT exercised by commit
-    // itself, but a following apply + a second, older undo still must agree with replay).
     store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() }).await.expect("commit");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 5 })], description: None }).await.expect("apply after checkpoint");
     test_support::assert_live_equals_replay(&store).await;
@@ -6520,7 +6522,7 @@ async fn stateful_current_matches_full_replay_across_interleaved_commands() {
 }
 
 //#region 🏛️SpaceTests
-/// @emoji ⏱️ Like `DemoMutation` but with an explicit, test-controlled `timestamp()` override, so
+/// ⏱️ Like `DemoMutation` but with an explicit, test-controlled `timestamp()` override, so
 /// undo-ordering-by-HLT tests don't depend on real wall-clock resolution.
 
 //#region 🔖️OpCodec
@@ -6579,18 +6581,18 @@ impl OpBinary for TimestampedMutation {
 }
 //#endregion 🔖️OpCodec
 
-/// @emoji 🪄️ Downcasts a registered `dyn SpaceMember` back to its concrete demo store.
+/// 🪄️ Downcasts a registered `dyn SpaceMember` back to its concrete demo store.
 async fn demo_member<'a, Mutation: self::Mutation<DemoSnapshot> + 'static, M: SpaceMember + 'static>(host: &'a mut SpaceHost<M>, document_id: &str) -> &'a mut ArtifactStore<DemoSnapshot, Mutation> {
     host.member_mut(document_id).await.expect("member registered").as_any_mut().await.downcast_mut::<ArtifactStore<DemoSnapshot, Mutation>>().expect("concrete member type matches")
 }
 
+/// 🎯️ Every member below gets at least one uncommitted edit (dirty), mirroring
+/// `space_checkpoint_commits_dirty_members_and_pins_their_checkpoints`'s `member_a` — a fresh
+/// member with zero edits and zero checkpoints has no `current_checkpoint_id` yet, which
+/// `commit_space_checkpoint` requires of every registered member (dirty ones are auto-committed,
+/// already-clean ones just need a prior checkpoint).
 #[semio_framework_async_macros::async_test]
 async fn register_space_documents_registers_manifest_collections_and_artifacts_together() {
-    // 🎯️ Every member below gets at least one uncommitted edit (dirty), mirroring
-    // `space_checkpoint_commits_dirty_members_and_pins_their_checkpoints`'s `member_a` — a fresh
-    // member with zero edits and zero checkpoints has no `current_checkpoint_id` yet, which
-    // `commit_space_checkpoint` requires of every registered member (dirty ones are auto-committed,
-    // already-clean ones just need a prior checkpoint).
     let mut manifest = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "space-manifest", DemoSnapshot { n: Some(0) }, None)).await;
     manifest.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], description: None }).await.expect("apply manifest edit");
     let mut collection_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "collection-a", DemoSnapshot { n: Some(0) }, None)).await;
@@ -6769,7 +6771,7 @@ async fn space_history_op_round_trips() {
 //#endregion 🏛️StudioTests
 
 //#region 🔖️PreviewWireTests
-/// @emoji 🧪️ Fixture producing one message per non-clean variant, each using one of the frozen
+/// 🧪️ Fixture producing one message per non-clean variant, each using one of the frozen
 /// seven `mutation.*` codes (`📋️contract-freeze.md` §C2's table) — `preview_wire`'s and
 /// `CompositionCoordinator` phase 1's shared dry-run fixture. `WarnN` ⇒ `mutation.clamped`
 /// (Warning, non-empty diff), `ErrorN` ⇒ `mutation.target-missing` (Error, empty diff — LAW 2),
@@ -6880,7 +6882,7 @@ async fn document_text_round_trips_authoritative_metadata_messages_conflicts_and
     test_support::retire_parsed_document(parsed);
 }
 
-/// @emoji 🔬️ `print_ops_log`'s `metadata `/`message `/`conflict ` records now build their `data`
+/// 🔬️ `print_ops_log`'s `metadata `/`message `/`conflict ` records now build their `data`
 /// payload with `crate::os_pack::json::to_json_string` instead of `serde_json::to_string`
 /// (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/02) — direct proof the two
 /// encode the same ordered first-party values byte-identically, exercising both the
@@ -7076,12 +7078,17 @@ async fn a_remote_event_rejected_by_policy_stays_quarantined_out_of_history() {
     assert_eq!(local.conflicts()[0].status, crate::os_spr::ConflictStatus::Open);
 }
 
-/// @emoji 🧪️ `preview_wire`'s headline law (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-
+/// 🧪️ `preview_wire`'s headline law (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-
 /// FIRST-CLASS-CONFLICTS` §C6): its output is exactly what independently folding the same ops
 /// through the diff engine (`apply_mutation`, the same primitive `replay_mutations` itself calls
 /// on the real apply path) computes, stamped with `op_index`, and the live store is byte-
 /// identical before and after — a pure dry run all the way through, never applying anything even
 /// though it threads state forward internally to preview op `i` against `0..i`'s outcome.
+///
+/// 🧮️ Independently folds the SAME ops through the exact primitive the real apply path
+/// (`replay_mutations`) itself calls (`apply_mutation`) — the ground truth `preview_wire`
+/// must match. `replay_mutations` does not yet surface its own messages (lane 1-A's pending
+/// C6 work, see `📓️w1-e-report.md`), so this recomputation is the closest available proof.
 #[semio_framework_async_macros::async_test]
 async fn preview_wire_reports_the_same_messages_the_real_apply_would_produce_and_changes_nothing() {
     let envelope: ArtifactEnvelope<DemoSnapshot, SeverityMutation> = create_document_envelope("demo/v1", "preview-demo", DemoSnapshot { n: Some(0) }, None);
@@ -7097,10 +7104,6 @@ async fn preview_wire_reports_the_same_messages_the_real_apply_would_produce_and
 
     let messages = store.preview_wire(&ops).await;
 
-    // 🧮️ Independently folds the SAME ops through the exact primitive the real apply path
-    // (`replay_mutations`) itself calls (`apply_mutation`) — the ground truth `preview_wire`
-    // must match. `replay_mutations` does not yet surface its own messages (lane 1-A's pending
-    // C6 work, see `📓️w1-e-report.md`), so this recomputation is the closest available proof.
     let mut expected = Vec::new();
     let mut running = DemoSnapshot { n: Some(0) };
     for (index, op) in ops.iter().enumerate() {
@@ -7279,6 +7282,8 @@ async fn document_text_round_trips_with_an_active_alternative_and_a_quoted_descr
     test_support::assert_document_pack_round_trip(&store).await;
 }
 
+/// 🔁️ E1 is withdrawn by a revert transition and stays withdrawn once the same author's e2 lands:
+/// the text states the events, the reload folds them into the same position.
 #[semio_framework_async_macros::async_test]
 async fn document_text_round_trips_a_cursor_after_undo_then_apply_interleaving() {
     let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
@@ -7286,8 +7291,6 @@ async fn document_text_round_trips_a_cursor_after_undo_then_apply_interleaving()
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], description: None }).await.expect("apply e1");
     store.dispatch(ArtifactCommand::Undo).await.expect("undo e1");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], description: None }).await.expect("apply e2");
-    // e1 is withdrawn by a revert transition and stays withdrawn once the same author's e2 lands:
-    // the text states the events, the reload folds them into the same position.
     assert_eq!(store.applied_edit_ids().len(), 1, "only e2 is applied");
     let files = print_document_text(store.envelope()).await.expect("print document text");
     assert!(files.ops.lines().any(|line| line.starts_with("revert ")), "the undo must print as a `revert` transition line: {}", files.ops);
@@ -7297,8 +7300,17 @@ async fn document_text_round_trips_a_cursor_after_undo_then_apply_interleaving()
     test_support::retire_parsed_document(parsed);
 }
 
-/// @emoji 🔐️ The save→load→undo proof (contract's runtime-behavior requirement): a store's
+/// 🔐️ The save→load→undo proof (contract's runtime-behavior requirement): a store's
 /// undo/redo position survives a full pack+spr save/load cycle, not just its snapshot value.
+///
+/// Save: print_document_pack persists pack (initial snapshot) + spr (real inverse/meta,
+/// AND the cursor reflecting exactly "e1 applied, e2 in redo").
+///
+/// Load: a FRESH store built only from persisted bytes — no access to the original `store`.
+///
+/// Redo restores e2 — proving the redo stack (not just applied_edit_ids) survived.
+///
+/// Undo twice from here reaches the true initial state.
 #[semio_framework_async_macros::async_test]
 async fn save_load_undo_proof_pack_spr_round_trip_preserves_undo_redo_position() {
     let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
@@ -7311,12 +7323,9 @@ async fn save_load_undo_proof_pack_spr_round_trip_preserves_undo_redo_position()
     assert_eq!(store.snapshot().expect("live snapshot"), post_e1, "precondition: live store is back at post-e1");
     test_support::assert_live_equals_replay(&store).await;
 
-    // Save: print_document_pack persists pack (initial snapshot) + spr (real inverse/meta,
-    // AND the cursor reflecting exactly "e1 applied, e2 in redo").
     let pack_files = print_document_pack(store.envelope()).await.expect("print document pack");
     assert!(!pack_files.spr.is_empty(), "spr bytes must be non-empty once an edit exists");
 
-    // Load: a FRESH store built only from persisted bytes — no access to the original `store`.
     let parsed: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&pack_files.pack, &pack_files.spr).await.unwrap_or_else(|error| panic!("parse document pack failed: {error}"));
     assert_eq!(parsed.snapshot, post_e1, "loaded snapshot must equal post-e1, proving undo position survived the save");
     let mut reloaded = ArtifactStore::new(parsed.envelope).await;
@@ -7324,12 +7333,10 @@ async fn save_load_undo_proof_pack_spr_round_trip_preserves_undo_redo_position()
     assert_eq!(reloaded.applied_edit_ids(), store.applied_edit_ids(), "applied_edit_ids must survive the round trip");
     test_support::assert_live_equals_replay(&reloaded).await;
 
-    // Redo restores e2 — proving the redo stack (not just applied_edit_ids) survived.
     reloaded.dispatch(ArtifactCommand::Redo).await.expect("redo e2 after reload");
     assert_eq!(reloaded.snapshot().expect("post-redo snapshot"), post_e2);
     test_support::assert_live_equals_replay(&reloaded).await;
 
-    // Undo twice from here reaches the true initial state.
     reloaded.dispatch(ArtifactCommand::Undo).await.expect("undo e2 again");
     reloaded.dispatch(ArtifactCommand::Undo).await.expect("undo e1");
     assert_eq!(reloaded.snapshot().expect("final snapshot"), DemoSnapshot { n: Some(0) });
@@ -7772,7 +7779,7 @@ async fn pack_value_fixture_corpus() -> Vec<(&'static str, DslValue)> {
     ]
 }
 
-/// @emoji 🎯️ Variant-exact `DslValue` equality. `Number`'s own `PartialEq` calls a fitting
+/// 🎯️ Variant-exact `DslValue` equality. `Number`'s own `PartialEq` calls a fitting
 /// `UInt`/`Int` pair equal, so it cannot witness that the wire preserved the WRITER's variant —
 /// which is exactly what `TAG_UINT` versus `TAG_INT` decides, and what the canonical bytes and
 /// every hash over them depend on. `Float` compares by bits so `-0.0` and `NaN` are exact too.
@@ -7790,7 +7797,7 @@ fn dsl_value_variant_exact_eq(a: &DslValue, b: &DslValue) -> bool {
     }
 }
 
-/// @emoji 🔣️ Reads one `semio.pack.dynamic-integer/v1` value node — integers arrive as exact
+/// 🔣️ Reads one `semio.pack.dynamic-integer/v1` value node — integers arrive as exact
 /// decimal STRINGS and floats as little-endian hex, so no fixture number ever passes through a
 /// JSON `f64` on its way into the corpus.
 // 🚫️async: E1 pure recursive fixture reader consumed inside sync iterator closures — see R9
@@ -7822,7 +7829,7 @@ fn dynamic_integer_fixture_bytes(hex: &str) -> Vec<u8> {
     (0..hex.len() / 2).map(|index| u8::from_str_radix(&hex[index * 2..index * 2 + 2], 16).expect("corpus wireHex byte")).collect()
 }
 
-/// @emoji 🧾️ Hex-dumps `pack_rt::encode_pack_value` over a representative `DslValue`
+/// 🧾️ Hex-dumps `pack_rt::encode_pack_value` over a representative `DslValue`
 /// corpus — ground truth for `HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS`'s TS
 /// `PackValueCodec` mirror (`framework/product/os/ts/index.ts`). Run with `--nocapture` to
 /// capture the printed `name -> hex` lines; also asserts `decode_pack_value(encode_pack_value(v))
@@ -7851,7 +7858,7 @@ async fn interaction_state_pack_matches_first_party_value_and_json_oracle() {
     assert_eq!(serde_json::Value::from(&<protocol::InteractionState as ToValue>::to_value(&decoded)), oracle);
 }
 
-/// @emoji 🪶️ Hex-dumps `pack_rt::encode_wire_value` over the SAME fixture corpus — ground
+/// 🪶️ Hex-dumps `pack_rt::encode_wire_value` over the SAME fixture corpus — ground
 /// truth for the container-less wire codec mirror in TS.
 #[semio_framework_async_macros::async_test]
 async fn pack_wire_value_fixture_corpus_hex_dump() {
@@ -7864,7 +7871,7 @@ async fn pack_wire_value_fixture_corpus_hex_dump() {
     }
 }
 
-/// @emoji 🔢️ Exact-variant law for the dynamic `Shape::Value` grammar over the shared,
+/// 🔢️ Exact-variant law for the dynamic `Shape::Value` grammar over the shared,
 /// language-neutral `semio.pack.dynamic-integer/v1` corpus
 /// (`💻️os/🧫️fixtures/🎒️pack-dynamic-integer-v1`, whose `wireHex` is independently generated
 /// by a third-party LEB128 oracle). Asserts the emitted TAG, the exact `Number` variant, and
@@ -7976,7 +7983,7 @@ impl OpBinary for ValidatedMutation {
     }
 }
 
-/// @emoji 🛂️ The composition fixture's negative value is a fatal outcome, so the dry-run
+/// 🛂️ The composition fixture's negative value is a fatal outcome, so the dry-run
 /// rejects it before group dispatch can alter either member's history.
 
 impl MemberStoreOwner<ValidatedMutation> for DemoSnapshot {
@@ -8154,12 +8161,12 @@ async fn member_close_rejects_missing_owner_and_preserves_the_installed_disposer
     close_member_dialect_fixture(&mut missing);
 }
 
+/// 🏠️ owner ⇒ dialect: an envelope that is somebody's child but names no dialect cannot be
+/// typed by its parent, so `open` must fail closed rather than hand back an untypable member.
 #[semio_framework_async_macros::async_test]
 async fn typed_child_store_factory_rejects_empty_genesis_and_dialect_less_owned_child() {
     assert!(matches!(create_member_store::<DemoSnapshot, DemoMutation>("demo/v1", "child-empty", &demo_child_dialect(), &[]).await, Err(VcsError::Deserialize(_))), "an empty genesis pack must never silently default");
 
-    // 🏠️ owner ⇒ dialect: an envelope that is somebody's child but names no dialect cannot be
-    // typed by its parent, so `open` must fail closed rather than hand back an untypable member.
     let mut envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "child-no-dialect", DemoSnapshot { n: Some(1) }, None);
     envelope.owner = Some(OwnerRef { parent: crate::os_io::ArtifactRef { artifact_id: "parent".into(), dialect: demo_child_dialect() }, slot: "mesh".into(), child_id: "child-no-dialect".into() });
     let files = print_document_pack(&envelope).await.expect("print");
@@ -8286,7 +8293,6 @@ async fn member_factory_closed_dialect_parent_projection_matches_neutral_corpus(
         let admitted = projection.as_ref().is_ok_and(|projection| projection.admit_complete(row["incoming"].as_array().unwrap().iter().map(|row| (row["slot"].as_str().unwrap(), fields(row)))).is_ok());
         assert_eq!(admitted, row["accepted"].as_bool().unwrap(), "{}", row["id"]);
     }
-    eprintln!("[DEBUG] member parent projection: 15 neutral loaded-parent and complete-set admission rows");
 }
 
 /// 🧹️ A grant narrower than one identifier still retires the whole graph: every edge leaves its map
@@ -8352,7 +8358,6 @@ async fn member_factory_closed_dialect_graph_admission_matches_neutral_corpus() 
     let previous = graph.owns.clone();
     assert!(std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| graph.commit_owns_admitted(ticket))).is_err());
     assert_eq!(graph.owns, previous);
-    eprintln!("[DEBUG] member graph native admission: {} neutral vectors", rows.len());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -8414,7 +8419,6 @@ async fn member_factory_closed_dialect_graph_sync_preserves_prior_state_on_rejec
         assert_eq!(graph.owns, prior_owns);
         assert_eq!(graph.links, prior_links);
     }
-    eprintln!("[DEBUG] graph sync: seven neutral replacement vectors and late link/child-across-slots rejection preserve prior graph state");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -8472,7 +8476,13 @@ async fn mint_child_id_converges_across_two_replicas_and_varies_by_ordinal_and_s
     assert_ne!(id_replica_1, id_different_slot, "a different slot must mint a different id");
 }
 
-/// @emoji 🧪️ One fatal preview anywhere ⇒ nothing applied on ANY member, parent included.
+/// 🧪️ One fatal preview anywhere ⇒ nothing applied on ANY member, parent included.
+///
+/// 🎞️ `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C6: an
+/// ordinary mutation-level (message-based) rejection now travels as `VcsError::Rejected`,
+/// not `ValidationFailed` (reserved for structural failures only — see its own doc
+/// comment). The default policy (`Normal`, via `SpaceMember::merge_policy`'s trait
+/// default, since neither member's policy is configured here) rejects Fatal.
 #[semio_framework_async_macros::async_test]
 async fn dispatch_group_validate_all_atomicity_one_bad_member_applies_nothing() {
     let parent_ref = crate::os_io::ArtifactRef { artifact_id: "parent-atomic-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
@@ -8493,11 +8503,6 @@ async fn dispatch_group_validate_all_atomicity_one_bad_member_applies_nothing() 
     let result = coordinator.dispatch_group(&parent_ref, &mut parent_store, &mut children, parent_ops, Vec::new(), GroupMeta::default());
     match result.await {
         Ok(_) => panic!("expected the group dispatch to fail phase-1 validation, but it succeeded"),
-        // 🎞️ `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C6: an
-        // ordinary mutation-level (message-based) rejection now travels as `VcsError::Rejected`,
-        // not `ValidationFailed` (reserved for structural failures only — see its own doc
-        // comment). The default policy (`Normal`, via `SpaceMember::merge_policy`'s trait
-        // default, since neither member's policy is configured here) rejects Fatal.
         Err(VcsError::Rejected { policy, messages }) => {
             assert_eq!(policy, crate::os_spr::MergePolicy::Normal);
             assert!(messages.iter().any(|message| message.level == crate::os_dsl::Severity::Fatal));
@@ -8508,9 +8513,12 @@ async fn dispatch_group_validate_all_atomicity_one_bad_member_applies_nothing() 
     assert!(child_store.envelope().vcs.edits.is_empty(), "child must have zero edits after a failed group dispatch");
 }
 
-/// @emoji 🧪️ TASK 2's ownership-check law: `dispatch_group` refuses to touch a `ChildDispatch`
+/// 🧪️ TASK 2's ownership-check law: `dispatch_group` refuses to touch a `ChildDispatch`
 /// whose claimed parent the coordinator's own `CompositionGraph` does not currently track —
 /// zero side effects, same as any other phase-1 failure.
+///
+/// Deliberately NOT seeding `coordinator.graph_mut().insert_owns(..)` — the graph has no
+/// record that `parent_ref` owns `child_ref`.
 #[semio_framework_async_macros::async_test]
 async fn dispatch_group_rejects_a_child_the_graph_does_not_track_as_owned() {
     let parent_ref = crate::os_io::ArtifactRef { artifact_id: "parent-unowned-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
@@ -8519,8 +8527,6 @@ async fn dispatch_group_rejects_a_child_the_graph_does_not_track_as_owned() {
     let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, ValidatedMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
     let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, ValidatedMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
     let coordinator = CompositionCoordinator::new();
-    // Deliberately NOT seeding `coordinator.graph_mut().insert_owns(..)` — the graph has no
-    // record that `parent_ref` owns `child_ref`.
 
     let op = ValidatedMutation::SetN(ValidatedSetN { n: 1 }).encode_op().expect("encode");
     let child_dispatch = ChildDispatch { child: child_ref.clone(), ops: vec![op], op_schema: SchemaId("demo/v1".into()), labels: Vec::new() };
@@ -8536,7 +8542,7 @@ async fn dispatch_group_rejects_a_child_the_graph_does_not_track_as_owned() {
     assert!(child_store.envelope().vcs.edits.is_empty());
 }
 
-/// @emoji 🧪️ Directly exercises `CompositionCoordinator::compensate` (private, visible to this
+/// 🧪️ Directly exercises `CompositionCoordinator::compensate` (private, visible to this
 /// nested test module) — the reverse-order rollback `dispatch_group`'s phase 2 falls back to on
 /// a late failure. Proves the order (parent first, then children in reverse dispatch order) and
 /// that a clean rollback restores every member's pre-group snapshot.
@@ -8576,17 +8582,18 @@ async fn compensate_undoes_applied_members_in_reverse_order() {
     assert_eq!(child_b.snapshot().expect("b snapshot").n, Some(0), "child b's edit was undone");
 }
 
-/// @emoji 🧪️ TASK 2's "if compensation itself fails" law: a member whose own rollback errors is
+/// 🧪️ TASK 2's "if compensation itself fails" law: a member whose own rollback errors is
 /// recorded in `GroupUndoReport.skipped` (never panics, never aborts compensating the rest),
 /// and `fold_compensation_error` upgrades the original failure into `VcsError::CompensationFailed`
 /// carrying both facts.
+///
+/// Parent has NOTHING applied, so `parent.undo()` deterministically fails with
+/// `NothingToUndo` — simulating a member whose own rollback errors mid-compensation.
 #[semio_framework_async_macros::async_test]
 async fn compensate_reports_skipped_when_a_members_own_undo_fails_and_folds_to_compensation_failed() {
     let parent_ref = crate::os_io::ArtifactRef { artifact_id: "parent-comp-fail-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
     let child_ref = crate::os_io::ArtifactRef { artifact_id: "child-comp-fail-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
-    // Parent has NOTHING applied, so `parent.undo()` deterministically fails with
-    // `NothingToUndo` — simulating a member whose own rollback errors mid-compensation.
     let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
     let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
     child_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 4 })], description: None }).await.expect("apply child");
@@ -8608,10 +8615,14 @@ async fn compensate_reports_skipped_when_a_members_own_undo_fails_and_folds_to_c
     assert!(matches!(folded, VcsError::CompensationFailed(_)), "a non-empty skipped list must fold into CompensationFailed, got {folded}");
 }
 
-/// @emoji 🧪️ TASK 2's "deterministic child id minting across two simulated replicas" law,
+/// 🧪️ TASK 2's "deterministic child id minting across two simulated replicas" law,
 /// end-to-end through `dispatch_group` itself (not just the bare `mint_child_id` helper): two
 /// independent coordinators/parents dispatching the IDENTICAL genesis converge on the identical
 /// minted child id and the identical `invocation_id`.
+///
+/// 🎯️ Empty array literal: with `dispatch_group`'s `Mp`/`Mc` split, `Mc` no longer has
+/// `parent`'s type to piggyback inference off of, so an empty `children` list needs an
+/// explicit element type — the same local test wrapper `parent_1` uses.
 #[semio_framework_async_macros::async_test]
 async fn dispatch_group_mints_genesis_child_ids_deterministically_across_replicas() {
     let parent_ref = crate::os_io::ArtifactRef { artifact_id: "parent-genesis-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
@@ -8620,9 +8631,6 @@ async fn dispatch_group_mints_genesis_child_ids_deterministically_across_replica
 
     let mut parent_1 = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
     let mut coordinator_1 = CompositionCoordinator::new().await;
-    // 🎯️ Empty array literal: with `dispatch_group`'s `Mp`/`Mc` split, `Mc` no longer has
-    // `parent`'s type to piggyback inference off of, so an empty `children` list needs an
-    // explicit element type — the same local test wrapper `parent_1` uses.
     let mut children_1: [(&mut ArtifactStore<DemoSnapshot, DemoMutation>, ChildDispatch); 0] = [];
     let receipt_1 = coordinator_1.dispatch_group(&parent_ref, &mut parent_1, &mut children_1, parent_ops.clone(), genesis.clone(), GroupMeta::default()).await.expect("replica 1 dispatch");
 
@@ -8642,7 +8650,7 @@ async fn dispatch_group_mints_genesis_child_ids_deterministically_across_replica
     assert_eq!(receipt_1.member_edits[0].0.artifact_id, parent_ref.artifact_id);
 }
 
-/// @emoji 🧪️ TASK 2's group-undo law: a member whose tail belongs to a DIFFERENT (foreign)
+/// 🧪️ TASK 2's group-undo law: a member whose tail belongs to a DIFFERENT (foreign)
 /// group is skipped, never aborting the rest of the group's undo.
 #[semio_framework_async_macros::async_test]
 async fn undo_group_skips_a_foreign_tail_member_but_still_undoes_the_rest() {
@@ -8677,7 +8685,7 @@ async fn undo_group_skips_a_foreign_tail_member_but_still_undoes_the_rest() {
     assert_eq!(foreign_store.snapshot().expect("foreign snapshot").n, Some(3), "the foreign member's own edit must be left untouched");
 }
 
-/// @emoji 🧪️ `redo_group`'s mirror of the same law: a foreign-group member's redo stack is left
+/// 🧪️ `redo_group`'s mirror of the same law: a foreign-group member's redo stack is left
 /// untouched while a matching member is reapplied.
 #[semio_framework_async_macros::async_test]
 async fn redo_group_skips_a_foreign_tail_member_but_still_redoes_the_rest() {
@@ -8708,7 +8716,7 @@ async fn redo_group_skips_a_foreign_tail_member_but_still_redoes_the_rest() {
 }
 
 //#region 🔖️TransactionPeerTests
-/// @emoji 🧪️ W1-C's headline `Peer`-relation law (contract-freeze §5): two artifacts with NO
+/// 🧪️ W1-C's headline `Peer`-relation law (contract-freeze §5): two artifacts with NO
 /// ownership relation commit through `dispatch_peer_group` as ONE atomic transaction — both
 /// members end up carrying the SAME `MutationMeta.group_id` (the shared minted
 /// `invocation_id`), the peer's tail edit is stamped `MutationOrigin::Transaction { initiator }`,
@@ -8750,7 +8758,7 @@ async fn dispatch_peer_group_commits_both_members_with_one_shared_group_id() {
     }
 }
 
-/// @emoji 🧪️ W1-C's compensation law for `Peer`: `compensate` is relation-agnostic (see its own
+/// 🧪️ W1-C's compensation law for `Peer`: `compensate` is relation-agnostic (see its own
 /// doc comment) — exercising it with a two-PEER (no ownership) scenario proves the SAME
 /// reverse-order rollback `dispatch_peer_group`'s phase 2 falls back to on a late failure works
 /// identically to the `Owned` case `compensate_undoes_applied_members_in_reverse_order` already
@@ -8790,7 +8798,7 @@ async fn compensate_undoes_applied_peer_members_in_reverse_order() {
     assert_eq!(peer_a.snapshot().expect("a snapshot").n, Some(0), "peer A's edit was compensated");
 }
 
-/// @emoji 🧪️ Task 2's group-undo law, exercised through a REAL `Peer` transaction end-to-end:
+/// 🧪️ Task 2's group-undo law, exercised through a REAL `Peer` transaction end-to-end:
 /// `undo_group` (unmodified — see its own doc comment on being relation-agnostic) reverses BOTH
 /// members of a `dispatch_peer_group` group as ONE, using the exact `invocation_id` that call
 /// minted, with no code path specific to `Peer` needed.
@@ -8822,7 +8830,7 @@ async fn undo_group_reverses_both_members_of_a_real_peer_transaction() {
     assert_eq!(peer_store.snapshot().expect("peer snapshot after undo").n, Some(0));
 }
 
-/// @emoji 🧪️ `Peer`'s cycle guard law (`MemberRelation::Peer`'s doc comment): a SECOND, separate
+/// 🧪️ `Peer`'s cycle guard law (`MemberRelation::Peer`'s doc comment): a SECOND, separate
 /// `dispatch_peer_group` call that would close a link cycle across the coordinator's persisted
 /// `Links` graph is rejected — `CompositionGraph::would_cycle_links`, the same primitive
 /// `would_cycle_owns` is to `Owned`'s genesis cycle guard. Transaction 1 (A initiates, B is the
@@ -8857,7 +8865,7 @@ async fn dispatch_peer_group_rejects_a_transaction_that_would_close_a_peer_link_
     assert_eq!(store_a.snapshot().expect("a snapshot").n, Some(0), "A must have zero new edits after a rejected cycle");
 }
 
-/// @emoji 🧪️ W1-C's "Owned reproduces today's behaviour EXACTLY" law: `CompositionCoordinator`
+/// 🧪️ W1-C's "Owned reproduces today's behaviour EXACTLY" law: `CompositionCoordinator`
 /// (the `TransactionCoordinator` alias) dispatching through the ordinary `Owned`-relation
 /// `dispatch_group` produces EXACTLY what it did before `MemberRelation` existed — including
 /// that `MutationMeta.origin` is NEVER touched (stays the ordinary `Apply`-assigned `Owner`
@@ -8892,25 +8900,26 @@ async fn dispatch_group_owned_path_never_stamps_a_transaction_origin() {
 //#endregion 🔖️TransactionPeerTests
 
 //#region 🔖️PhasePolicyTests
-/// @emoji 🧪️ Normal (the default policy) rejects an Error-level message exactly like it already
+/// 🧪️ Normal (the default policy) rejects an Error-level message exactly like it already
 /// rejects Fatal (`dispatch_group_validate_all_atomicity_one_bad_member_applies_nothing` above)
 /// — the SAME all-or-nothing law, now driven by `reject_if_policy_rejects` off the UNIONED
 /// `preview_wire` messages rather than an immediate per-member `Err`. Exercises lane 1-A's REAL
 /// `ArtifactStore::set_merge_policy` (§C6, landed) end to end — no test-only policy fixture
 /// needed now that it exists.
+///
+/// 🎯️ `dispatch_group<Mp: SpaceMember, Mc: SpaceMember + MemberFactory>`: `MemberFactory` is
+/// only required on the CHILDREN type (`Mc`) now — the parent/`Mp` bound dropped it (see
+/// `dispatch_group`'s own doc comment for why: only children are ever genesis-constructed).
+/// `parent_store` still uses this module's test wrapper regardless: `set_merge_policy`/
+/// `merge_policy` are inherent methods the wrapper's own `impl SpaceMember` block
+/// deliberately does not re-declare, so calling them on the wrapper autoderefs (via
+/// `Deref`/`DerefMut`) straight to the real type's inherent method — no `SpaceMember`
+/// vtable indirection, no `Normal`-default trap.
 #[semio_framework_async_macros::async_test]
 async fn dispatch_group_phase1_rejects_under_normal_when_a_member_yields_an_error_and_nothing_applies() {
     let parent_ref = crate::os_io::ArtifactRef { artifact_id: "policy-parent-normal".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
     let child_ref = crate::os_io::ArtifactRef { artifact_id: "policy-child-normal".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
-    // 🎯️ `dispatch_group<Mp: SpaceMember, Mc: SpaceMember + MemberFactory>`: `MemberFactory` is
-    // only required on the CHILDREN type (`Mc`) now — the parent/`Mp` bound dropped it (see
-    // `dispatch_group`'s own doc comment for why: only children are ever genesis-constructed).
-    // `parent_store` still uses this module's test wrapper regardless: `set_merge_policy`/
-    // `merge_policy` are inherent methods the wrapper's own `impl SpaceMember` block
-    // deliberately does not re-declare, so calling them on the wrapper autoderefs (via
-    // `Deref`/`DerefMut`) straight to the real type's inherent method — no `SpaceMember`
-    // vtable indirection, no `Normal`-default trap.
     let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
     parent_store.set_merge_policy(crate::os_spr::MergePolicy::Normal);
     assert_eq!(parent_store.merge_policy().await, crate::os_spr::MergePolicy::Normal, "Normal is also the default, but set it explicitly so this test does not rely on that");
@@ -8937,7 +8946,7 @@ async fn dispatch_group_phase1_rejects_under_normal_when_a_member_yields_an_erro
     assert!(child_store.envelope().vcs.edits.is_empty(), "child must have zero edits after a policy-rejected group dispatch");
 }
 
-/// @emoji 🧪️ The SAME Error-level scenario `dispatch_group_phase1_rejects_under_normal_when_a_
+/// 🧪️ The SAME Error-level scenario `dispatch_group_phase1_rejects_under_normal_when_a_
 /// member_yields_an_error_and_nothing_applies` rejects is accepted end-to-end under
 /// `LaissezFaire` (only `Fatal` is rejected) — both members get a real edit, and the child's own
 /// diff stays empty (§C2 LAW 2: an `Error` message's diff carries no change for the target) even
@@ -8949,19 +8958,20 @@ async fn dispatch_group_phase1_rejects_under_normal_when_a_member_yields_an_erro
 /// which (lane 1-A's now-landed C6 `ArtifactStore::dispatch`) independently enforces THAT
 /// member's own `merge_policy()` — a child left at the Normal default would still reject its own
 /// Error-level op right here, even though the coordinator's gate already accepted the group.
+///
+/// 🎯️ `dispatch_group<Mp: SpaceMember, Mc: SpaceMember + MemberFactory>`: `MemberFactory` is
+/// only required on the CHILDREN type (`Mc`) now — the parent/`Mp` bound dropped it (see
+/// `dispatch_group`'s own doc comment for why: only children are ever genesis-constructed).
+/// `parent_store` still uses this module's test wrapper regardless: `set_merge_policy`/
+/// `merge_policy` are inherent methods the wrapper's own `impl SpaceMember` block
+/// deliberately does not re-declare, so calling them on the wrapper autoderefs (via
+/// `Deref`/`DerefMut`) straight to the real type's inherent method — no `SpaceMember`
+/// vtable indirection, no `Normal`-default trap.
 #[semio_framework_async_macros::async_test]
 async fn dispatch_group_phase1_accepts_the_same_error_scenario_under_laissez_faire() {
     let parent_ref = crate::os_io::ArtifactRef { artifact_id: "policy-parent-lf".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
     let child_ref = crate::os_io::ArtifactRef { artifact_id: "policy-child-lf".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
-    // 🎯️ `dispatch_group<Mp: SpaceMember, Mc: SpaceMember + MemberFactory>`: `MemberFactory` is
-    // only required on the CHILDREN type (`Mc`) now — the parent/`Mp` bound dropped it (see
-    // `dispatch_group`'s own doc comment for why: only children are ever genesis-constructed).
-    // `parent_store` still uses this module's test wrapper regardless: `set_merge_policy`/
-    // `merge_policy` are inherent methods the wrapper's own `impl SpaceMember` block
-    // deliberately does not re-declare, so calling them on the wrapper autoderefs (via
-    // `Deref`/`DerefMut`) straight to the real type's inherent method — no `SpaceMember`
-    // vtable indirection, no `Normal`-default trap.
     let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
     parent_store.set_merge_policy(crate::os_spr::MergePolicy::LaissezFaire);
     let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
@@ -8983,21 +8993,22 @@ async fn dispatch_group_phase1_accepts_the_same_error_scenario_under_laissez_fai
     assert!(receipt.messages.iter().any(|message| message.code.0 == "mutation.target-missing" && message.level == crate::os_dsl::Severity::Error), "the child's Error message must still be reported, even on acceptance");
 }
 
-/// @emoji 🧪️ `Vigilant` rejects a plain `Warning` — the strictest of the three policies, and the
+/// 🧪️ `Vigilant` rejects a plain `Warning` — the strictest of the three policies, and the
 /// one level `Normal` (the OTHER two policy tests above/below use) would have accepted.
+///
+/// 🎯️ `dispatch_group<Mp: SpaceMember, Mc: SpaceMember + MemberFactory>`: `MemberFactory` is
+/// only required on the CHILDREN type (`Mc`) now — the parent/`Mp` bound dropped it (see
+/// `dispatch_group`'s own doc comment for why: only children are ever genesis-constructed).
+/// `parent_store` still uses this module's test wrapper regardless: `set_merge_policy`/
+/// `merge_policy` are inherent methods the wrapper's own `impl SpaceMember` block
+/// deliberately does not re-declare, so calling them on the wrapper autoderefs (via
+/// `Deref`/`DerefMut`) straight to the real type's inherent method — no `SpaceMember`
+/// vtable indirection, no `Normal`-default trap.
 #[semio_framework_async_macros::async_test]
 async fn dispatch_group_phase1_rejects_under_vigilant_on_a_members_warning() {
     let parent_ref = crate::os_io::ArtifactRef { artifact_id: "policy-parent-vigilant".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
     let child_ref = crate::os_io::ArtifactRef { artifact_id: "policy-child-vigilant".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
-    // 🎯️ `dispatch_group<Mp: SpaceMember, Mc: SpaceMember + MemberFactory>`: `MemberFactory` is
-    // only required on the CHILDREN type (`Mc`) now — the parent/`Mp` bound dropped it (see
-    // `dispatch_group`'s own doc comment for why: only children are ever genesis-constructed).
-    // `parent_store` still uses this module's test wrapper regardless: `set_merge_policy`/
-    // `merge_policy` are inherent methods the wrapper's own `impl SpaceMember` block
-    // deliberately does not re-declare, so calling them on the wrapper autoderefs (via
-    // `Deref`/`DerefMut`) straight to the real type's inherent method — no `SpaceMember`
-    // vtable indirection, no `Normal`-default trap.
     let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
     parent_store.set_merge_policy(crate::os_spr::MergePolicy::Vigilant);
     let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
@@ -9021,23 +9032,24 @@ async fn dispatch_group_phase1_rejects_under_vigilant_on_a_members_warning() {
     assert!(child_store.envelope().vcs.edits.is_empty(), "child must have zero edits after a policy-rejected group dispatch");
 }
 
-/// @emoji 🧪️ `GroupReceipt.messages` carries the FULL union (both parent's own and the child's),
+/// 🧪️ `GroupReceipt.messages` carries the FULL union (both parent's own and the child's),
 /// each `target` prefixed with the ORIGINATING member's own `crate::os_io::ArtifactRef::
 /// to_uri()` — the discipline that lets a caller with several members in flight tell messages
 /// apart. Parent-first ordering matches phase 1's own collection order.
+///
+/// 🎯️ `dispatch_group<Mp: SpaceMember, Mc: SpaceMember + MemberFactory>`: `MemberFactory` is
+/// only required on the CHILDREN type (`Mc`) now — the parent/`Mp` bound dropped it (see
+/// `dispatch_group`'s own doc comment for why: only children are ever genesis-constructed).
+/// `parent_store` still uses this module's test wrapper regardless: `set_merge_policy`/
+/// `merge_policy` are inherent methods the wrapper's own `impl SpaceMember` block
+/// deliberately does not re-declare, so calling them on the wrapper autoderefs (via
+/// `Deref`/`DerefMut`) straight to the real type's inherent method — no `SpaceMember`
+/// vtable indirection, no `Normal`-default trap.
 #[semio_framework_async_macros::async_test]
 async fn group_receipt_messages_contains_the_union_with_member_path_prefixed_targets() {
     let parent_ref = crate::os_io::ArtifactRef { artifact_id: "policy-parent-union".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
     let child_ref = crate::os_io::ArtifactRef { artifact_id: "policy-child-union".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
-    // 🎯️ `dispatch_group<Mp: SpaceMember, Mc: SpaceMember + MemberFactory>`: `MemberFactory` is
-    // only required on the CHILDREN type (`Mc`) now — the parent/`Mp` bound dropped it (see
-    // `dispatch_group`'s own doc comment for why: only children are ever genesis-constructed).
-    // `parent_store` still uses this module's test wrapper regardless: `set_merge_policy`/
-    // `merge_policy` are inherent methods the wrapper's own `impl SpaceMember` block
-    // deliberately does not re-declare, so calling them on the wrapper autoderefs (via
-    // `Deref`/`DerefMut`) straight to the real type's inherent method — no `SpaceMember`
-    // vtable indirection, no `Normal`-default trap.
     let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
     parent_store.set_merge_policy(crate::os_spr::MergePolicy::LaissezFaire);
     let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;

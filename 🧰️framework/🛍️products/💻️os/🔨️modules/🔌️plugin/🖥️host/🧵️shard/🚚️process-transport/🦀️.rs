@@ -210,7 +210,7 @@ pub struct ProcessTransport {
 
 impl ProcessTransport {
     /// 🚀️ Spawns `program args…` with piped stdin/stdout (stderr inherited — the child's own
-    /// `[DEBUG]`/panic output belongs in the PARENT's own log, not silently swallowed) and starts the
+    /// `[TRACE]`/panic output belongs in the PARENT's own log, not silently swallowed) and starts the
     /// stdout in nonblocking mode. [`ShardTransport::recv`] performs at most one 64 KiB read and 32
     /// frame decodes per turn, so pipe I/O consumes finite shared-pool work and owns no thread.
     pub async fn spawn(program: &Path, args: &[String]) -> io::Result<Self> {
@@ -333,15 +333,15 @@ pub struct StdioTransport {
 }
 
 impl StdioTransport {
+    /// 🧵️ P1f: a periodic sleep+write, not a blocking pipe read — driven off the shared
+    /// `WorkerPool`'s timer wheel ([`super::PeriodicPoolTimer`]) instead of a dedicated
+    /// `"semio-shard-heartbeat"` OS thread, on the process-wide `super::plugin_host_worker_pool()`.
     pub async fn new(heartbeat_interval_ms: u64) -> Self {
         let stdout = Arc::new(Mutex::new(io::stdout()));
         let stdin = io::stdin();
         prepare_nonblocking(&stdin).expect("configure shard stdin as nonblocking");
         let alive = Arc::new(AtomicBool::new(true));
 
-        // 🧵️ P1f: a periodic sleep+write, not a blocking pipe read — driven off the shared
-        // `WorkerPool`'s timer wheel ([`super::PeriodicPoolTimer`]) instead of a dedicated
-        // `"semio-shard-heartbeat"` OS thread, on the process-wide `super::plugin_host_worker_pool()`.
         let heartbeat = {
             let alive = alive.clone();
             let stdout = stdout.clone();

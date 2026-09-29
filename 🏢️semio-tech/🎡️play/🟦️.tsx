@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🎡️ semio-tech play landing — introduction, every app as a live pane in one grid, glass card overlay. */
+/** 🎡️ semio-tech play landing — introduction, every app as a live pane in one grid, glass card overlay. */
 // #endregion 🧲️Header
 
 import { createUiErrorBoundary, mountUiRoot, useUiCallback as useCallback, useUiEffect as useEffect, useUiMemo as useMemo, useUiRef as useRef, useUiState as useState, type UiNode } from "@semio-tech/ui-react/runtime";
@@ -40,11 +40,11 @@ const playStorage = createBrowserStoragePort();
 bootstrapElementsSurfaceChromeDocument(readStoredUiChromeAppearance(playStorage));
 initUiLocaleSync(PLAY_LOCALE);
 
-/** @emoji 📱️ Touch-first viewports use the vertical snap list even when wider than {@link UI_MOBILE_MEDIA_QUERY}. */
+/** 📱️ Touch-first viewports use the vertical snap list even when wider than {@link UI_MOBILE_MEDIA_QUERY}. */
 const PLAY_TOUCH_LIST_MEDIA_QUERY = `${UI_MOBILE_MEDIA_QUERY} and (hover: none) and (pointer: coarse)`;
 
 //#region 🌐️PlayLandingLabels
-/** @emoji 🌐️ The landing's own chrome strings. Play locks its shells to {@link PLAY_LOCALE}, but chrome
+/** 🌐️ The landing's own chrome strings. Play locks its shells to {@link PLAY_LOCALE}, but chrome
  * never carries a default language: every key is registered for English AND German, and the page reads
  * them through `useLabel` like any other shell — so the same landing serves a German lock unchanged. */
 export const playLandingUiLabel = registerUiTranslationBundles({
@@ -78,10 +78,10 @@ export const playLandingUiLabel = registerUiTranslationBundles({
 //#endregion 🌐️PlayLandingLabels
 
 //#region 🎡️PlayGridGeometry
-/** @emoji 🔢️ Columns and rows of the play grid; the strip spans `columns * 100vw` by `rows` of the available viewport height. */
+/** 🔢️ Columns and rows of the play grid; the strip spans `columns * 100vw` by `rows` of the available viewport height. */
 const { columns: PLAY_GRID_COLUMNS, rows: PLAY_GRID_ROWS } = playGridDimensions(PLAY_PANES.length);
 
-/** @emoji 📍️ Every pane's cell, row-major with the short trailing row centred — the single source both the
+/** 📍️ Every pane's cell, row-major with the short trailing row centred — the single source both the
  * pane strip, the card overlay and every scroll offset read, so a centred pane still pins under its card. */
 const PLAY_GRID_CELLS: readonly { readonly column: number; readonly row: number }[] = PLAY_PANES.map((_, paneIndex) => playPaneGridCell(paneIndex, PLAY_PANES.length));
 
@@ -103,13 +103,13 @@ function paneIdFromLocationHash(): string | null {
   return PLAY_PANES.some((pane) => pane.id === raw) ? raw : null;
 }
 
-/** @emoji 🧭️ Horizontal (vw) and vertical (vh) scroll offset into the grid. */
+/** 🧭️ Horizontal (vw) and vertical (vh) scroll offset into the grid. */
 type ScrollOffset = { readonly x: number; readonly y: number };
 
-/** @emoji 🧭️ Largest scroll offset that still keeps the last column and row flush with the viewport edge. */
+/** 🧭️ Largest scroll offset that still keeps the last column and row flush with the viewport edge. */
 const PLAY_MAX_SCROLL: ScrollOffset = { x: (PLAY_GRID_COLUMNS - 1) * 100, y: (PLAY_GRID_ROWS - 1) * 100 };
 
-/** @emoji 🧭️ Keeps a free pan on occupied ground ({@link playOccupiedColumnRange}): the flanks beside a
+/** 🧭️ Keeps a free pan on occupied ground ({@link playOccupiedColumnRange}): the flanks beside a
  * short trailing row are never a viewport of their own, so the overview has no reachable empty cell. */
 function clampScrollOffset(offset: ScrollOffset): ScrollOffset {
   const y = Math.min(PLAY_MAX_SCROLL.y, Math.max(0, offset.y));
@@ -117,26 +117,26 @@ function clampScrollOffset(offset: ScrollOffset): ScrollOffset {
   return { x: Math.min(last * 100, Math.max(first * 100, offset.x)), y };
 }
 
-/** @emoji 🎞 Programmatic pane pin / focus glide duration — one rAF timeline owns the transform. */
+/** 🎞 Programmatic pane pin / focus glide duration — one rAF timeline owns the transform. */
 const PLAY_SCROLL_GLIDE_MS = 500;
 
-/** @emoji 🎞 Exponential follow factor while the cursor freely pans the overview. */
+/** 🎞 Exponential follow factor while the cursor freely pans the overview. */
 const PLAY_SCROLL_FOLLOW_LERP = 0.12;
 
-/** @emoji 🎞 Settle epsilon (vw/vh) for the free-pan follow loop. */
+/** 🎞 Settle epsilon (vw/vh) for the free-pan follow loop. */
 const PLAY_SCROLL_FOLLOW_EPSILON = 0.01;
 
-/** @emoji 🎞 Either free-pan follow (exponential) or a timed ease-in-out glide to a pane — mutually exclusive so the grid never fights itself. */
+/** 🎞 Either free-pan follow (exponential) or a timed ease-in-out glide to a pane — mutually exclusive so the grid never fights itself. */
 type ScrollDrive =
   | { readonly mode: "follow" }
   | { readonly mode: "glide"; readonly from: ScrollOffset; readonly to: ScrollOffset; readonly startedAt: number; readonly durationMs: number };
 
-/** @emoji 🎞 Cubic ease-in-out for focus / hover pin glides. */
+/** 🎞 Cubic ease-in-out for focus / hover pin glides. */
 function easeInOutCubic(t: number): number {
   return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
 }
 
-/** @emoji 🧭️ Scroll offset that brings the given pane fully into the viewport. */
+/** 🧭️ Scroll offset that brings the given pane fully into the viewport. */
 function scrollOffsetForPaneIndex(paneIndex: number): ScrollOffset {
   return {
     x: Math.min(PLAY_MAX_SCROLL.x, Math.max(0, paneColumn(paneIndex) * 100)),
@@ -144,14 +144,14 @@ function scrollOffsetForPaneIndex(paneIndex: number): ScrollOffset {
   };
 }
 
-/** @emoji 🧭️ Linear blend of two scroll offsets. */
+/** 🧭️ Linear blend of two scroll offsets. */
 function lerpScrollOffset(from: ScrollOffset, to: ScrollOffset, t: number): ScrollOffset {
   return { x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t };
 }
 
 type PaneAxisBounds = { readonly start: number; readonly end: number; readonly visible: boolean };
 
-/** @emoji 📐 Maps one axis of a grid cell into the current viewport after scrolling (percent of that axis). */
+/** 📐 Maps one axis of a grid cell into the current viewport after scrolling (percent of that axis). */
 function paneAxisBounds(cellIndex: number, scrollPercent: number): PaneAxisBounds {
   const cellStart = cellIndex * 100 - scrollPercent;
   const start = Math.max(0, cellStart);
@@ -161,13 +161,13 @@ function paneAxisBounds(cellIndex: number, scrollPercent: number): PaneAxisBound
 
 type RectPx = { readonly top: number; readonly left: number; readonly width: number; readonly height: number };
 
-/** @emoji 📐 Available viewport in pixels — the visible area, not the screen behind the browser toolbar. */
+/** 📐 Available viewport in pixels — the visible area, not the screen behind the browser toolbar. */
 function playViewportPx(): { readonly width: number; readonly height: number } {
   const visual = window.visualViewport;
   return { width: visual && visual.width > 0 ? visual.width : window.innerWidth, height: availableViewportHeightPx({ innerHeight: window.innerHeight, visualHeight: visual?.height }) };
 }
 
-/** @emoji 👁 Visible on-screen bounds of a grid pane — the region that stays untinted while its card is hovered. */
+/** 👁 Visible on-screen bounds of a grid pane — the region that stays untinted while its card is hovered. */
 function playPaneRevealRect(paneIndex: number, scrollOffset: ScrollOffset): RectPx {
   const horizontal = paneAxisBounds(paneColumn(paneIndex), scrollOffset.x);
   const vertical = paneAxisBounds(paneRow(paneIndex), scrollOffset.y);
@@ -178,7 +178,7 @@ function playPaneRevealRect(paneIndex: number, scrollOffset: ScrollOffset): Rect
   return { top, left, width: Math.max(0, (horizontal.end / 100) * vw - left), height: Math.max(0, (vertical.end / 100) * vh - top) };
 }
 
-/** @emoji 🪟️ Full-viewport veil pieces; optional rectangular cutout leaves the hovered app pane untinted. */
+/** 🪟️ Full-viewport veil pieces; optional rectangular cutout leaves the hovered app pane untinted. */
 function playTintSegmentsPx(revealRect: RectPx | null): readonly RectPx[] {
   const { width: vw, height: vh } = playViewportPx();
   if (!revealRect) return [{ top: 0, left: 0, width: vw, height: vh }];
@@ -197,27 +197,27 @@ function playTintSegmentsPx(revealRect: RectPx | null): readonly RectPx[] {
 //#endregion 🎡️PlayGridGeometry
 
 //#region 🎡️PlayPaneLifecycle
-/** @emoji 🧮️ At most this many shells stay live at once — every other booted pane is released to a poster. */
+/** 🧮️ At most this many shells stay live at once — every other booted pane is released to a poster. */
 const PLAY_LIVE_PANE_BUDGET = 4;
 
-/** @emoji ⏱️ How often idle live panes are re-checked for release. */
+/** ⏱️ How often idle live panes are re-checked for release. */
 const PLAY_SUSPENSION_SWEEP_MS = 5_000;
 
-/** @emoji ⏱️ A pristine pane nobody has looked at for this long is released even within budget. */
+/** ⏱️ A pristine pane nobody has looked at for this long is released even within budget. */
 const PLAY_IDLE_SUSPEND_MS = 2 * 60_000;
 
-/** @emoji ⏱️ Grace period before the background warm-boot queue starts, so the first paint and the
+/** ⏱️ Grace period before the background warm-boot queue starts, so the first paint and the
  * introduction are never fighting a wasm plugin boot for the main thread. */
 const PLAY_WARM_BOOT_START_MS = 4_000;
 
-/** @emoji ⏱️ Distance between two warm boots — one pane's 30-second plugin-load budget must be over
+/** ⏱️ Distance between two warm boots — one pane's 30-second plugin-load budget must be over
  * before the next shell starts competing with it. */
 const PLAY_WARM_BOOT_INTERVAL_MS = 35_000;
 
-/** @emoji 📋️ Warm-boot order IS grid order. */
+/** 📋️ Warm-boot order IS grid order. */
 const PLAY_PANE_IDS: readonly string[] = PLAY_PANES.map((pane) => pane.id);
 
-/** @emoji 🖼️ Composites every canvas inside a pane's container into one offscreen 2D canvas and returns
+/** 🖼️ Composites every canvas inside a pane's container into one offscreen 2D canvas and returns
  * it as a data URL — synchronously, before a `preserveDrawingBuffer: false` backbuffer is cleared. */
 function capturePanePoster(container: HTMLElement): string | null {
   const canvases = container.querySelectorAll("canvas");
@@ -248,7 +248,7 @@ function capturePanePoster(container: HTMLElement): string | null {
   }
 }
 
-/** @emoji 🎡️ Boots panes on demand (hash, hover, focus, keyboard) plus a slow background warm-boot queue
+/** 🎡️ Boots panes on demand (hash, hover, focus, keyboard) plus a slow background warm-boot queue
  * ({@link playNextWarmBootPane}), and keeps at most {@link PLAY_LIVE_PANE_BUDGET} of them live: the least
  * recently touched PRISTINE pane is released to a poster first. A pane the user interacted with is never
  * released, because its document would be lost. A warm-booted pane carries no touch timestamp, so it sorts
@@ -281,7 +281,7 @@ function usePaneLifecycle(initialFocusId: string | null, focusedId: string | nul
     });
   }, []);
 
-  /** @emoji 🐢️ Only the very first warm boot waits the short start grace; every later one waits a full interval. */
+  /** 🐢️ Only the very first warm boot waits the short start grace; every later one waits a full interval. */
   const warmedRef = useRef(false);
 
   const warm = useCallback((id: string) => {
@@ -342,7 +342,7 @@ function usePaneLifecycle(initialFocusId: string | null, focusedId: string | nul
 //#endregion 🎡️PlayPaneLifecycle
 
 //#region 🛟️PaneErrorBoundary
-/** @emoji 🛟️ One pane crashing must never take down the others or the landing chrome around them. */
+/** 🛟️ One pane crashing must never take down the others or the landing chrome around them. */
 type PaneErrorBoundaryProps = { readonly paneLabel: string; readonly failedLabel: string; readonly children: UiNode };
 type PaneErrorBoundaryState = { readonly error: Error | null };
 
@@ -364,7 +364,7 @@ const PaneErrorBoundary = createUiErrorBoundary<PaneErrorBoundaryProps, PaneErro
 //#endregion 🛟️PaneErrorBoundary
 
 //#region 🎡️PlayPane
-/** @emoji 🎡️ One grid cell: the logo placeholder (not booted), the live shell, or its poster once released —
+/** 🎡️ One grid cell: the logo placeholder (not booted), the live shell, or its poster once released —
  * `inert` while not focused so it never steals pointer, keyboard or focus from the overview. */
 function PlayPane({
   pane,
@@ -381,7 +381,7 @@ function PlayPane({
   readonly focused: boolean;
   readonly suspended: boolean;
   readonly posterDataUrl: string | null;
-  /** @emoji 📍️ Explicit grid placement — the trailing row is centred, so cells are never auto-flowed. */
+  /** 📍️ Explicit grid placement — the trailing row is centred, so cells are never auto-flowed. */
   readonly style?: { readonly gridColumn: number; readonly gridRow: number };
   readonly onDirty: () => void;
   readonly onContainerElement: (id: string, el: HTMLDivElement | null) => void;
@@ -458,7 +458,7 @@ function PlayLanding() {
   const scrollTargetRef = useRef<ScrollOffset>(initialFocusId ? scrollOffsetForPaneIndex(paneIndexById(initialFocusId)) : { x: 0, y: 0 });
   const scrollCurrentRef = useRef<ScrollOffset>(scrollTargetRef.current);
   const scrollDriveRef = useRef<ScrollDrive>({ mode: "follow" });
-  /** @emoji 🎞 Bumped on every drive change so a stale follow `setScrollOffset` cannot paint after a glide has taken ownership. */
+  /** 🎞 Bumped on every drive change so a stale follow `setScrollOffset` cannot paint after a glide has taken ownership. */
   const scrollEpochRef = useRef(0);
   const [scrollOffset, setScrollOffset] = useState<ScrollOffset>(scrollTargetRef.current);
   const listScrollRef = useRef<HTMLDivElement | null>(null);

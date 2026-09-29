@@ -5638,6 +5638,7 @@ dependencies = [
  "miniz_oxide",
  "serde",
  "serde_json",
+ "zip 2.4.2",
 ]
 
 [[package]]
@@ -5791,8 +5792,10 @@ dependencies = [
  "semio-framework-artifact-workflow-workflow",
  "semio-framework-async",
  "semio-framework-async-macros",
+ "semio-framework-deflate",
  "semio-framework-io-base64",
  "semio-framework-os-kernel",
+ "semio-framework-pixels",
  "semio-framework-plugin",
  "semio-framework-plugin-host",
  "semio-framework-ui",
@@ -5802,7 +5805,6 @@ dependencies = [
  "tiny-skia",
  "tokio",
  "usvg 0.45.1",
- "zip 2.4.2",
 ]
 
 [[package]]
@@ -5976,6 +5978,7 @@ dependencies = [
  "semio-framework-actor",
  "semio-framework-async",
  "semio-framework-async-macros",
+ "semio-framework-deflate",
  "semio-framework-hash",
  "semio-framework-io-base64",
  "semio-framework-job",
@@ -5993,7 +5996,6 @@ dependencies = [
  "ureq",
  "wasm-bindgen",
  "web-sys",
- "zip 2.4.2",
 ]
 
 [[package]]
@@ -6004,7 +6006,6 @@ dependencies = [
  "rusqlite",
  "semio-framework-async",
  "semio-framework-async-macros",
- "semio-framework-dispatch-macros",
  "semio-framework-hash",
  "semio-framework-os-kernel",
  "semio-framework-pack",
@@ -6259,6 +6260,8 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-async-macros",
  "semio-framework-geometry",
+ "semio-framework-hash",
+ "serde_json",
  "vello",
  "wgpu",
 ]
@@ -8448,6 +8451,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-async-macros",
+ "semio-framework-hash",
  "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-pack",
@@ -8610,6 +8614,7 @@ dependencies = [
  "semio-framework-plugin",
  "semio-framework-schema",
  "semio-framework-ui-contract",
+ "semio-framework-ui-scene",
  "semio-framework-value-derive",
  "semio-s-artifact-stdio-binary",
  "semio-s-artifact-stdio-contract",
@@ -8804,6 +8809,7 @@ name = "semio-s-artifact-stdio-tsv"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async-macros",
+ "semio-framework-hash",
  "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
@@ -8821,6 +8827,7 @@ dependencies = [
  "semio-framework",
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
+ "semio-framework-hash",
  "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-pack",
@@ -10328,8 +10335,127 @@ dependencies = [
  "semio-s-artifact-stdio-xlsx",
  "semio-s-artifact-stdio-xml",
  "semio-s-artifact-stdio-zip",
+ "semio-s-plugin-stdio-bim",
+ "semio-s-plugin-stdio-binary",
+ "semio-s-plugin-stdio-cad",
+ "semio-s-plugin-stdio-image",
+ "semio-s-plugin-stdio-media",
+ "semio-s-plugin-stdio-mesh",
+ "semio-s-plugin-stdio-office",
+ "semio-s-plugin-stdio-pdf",
+ "semio-s-plugin-stdio-semio",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "semio-s-plugin-stdio-bim"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-dispatch-macros",
+ "semio-framework-plugin",
+ "semio-s-artifact-stdio-bcf",
+ "semio-s-artifact-stdio-ifc",
+]
+
+[[package]]
+name = "semio-s-plugin-stdio-binary"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-dispatch-macros",
+ "semio-framework-plugin",
+ "semio-s-artifact-stdio-binary",
+ "semio-s-artifact-stdio-deflate",
+ "semio-s-artifact-stdio-epw",
+ "semio-s-artifact-stdio-zip",
+]
+
+[[package]]
+name = "semio-s-plugin-stdio-cad"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-dispatch-macros",
+ "semio-framework-plugin",
+ "semio-s-artifact-stdio-dwg",
+ "semio-s-artifact-stdio-dxf",
+ "semio-s-artifact-stdio-step",
+]
+
+[[package]]
+name = "semio-s-plugin-stdio-image"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-dispatch-macros",
+ "semio-framework-plugin",
+ "semio-s-artifact-stdio-bmp",
+ "semio-s-artifact-stdio-gif",
+ "semio-s-artifact-stdio-jpg",
+ "semio-s-artifact-stdio-png",
+ "semio-s-artifact-stdio-svg",
+ "semio-s-artifact-stdio-tiff",
+]
+
+[[package]]
+name = "semio-s-plugin-stdio-media"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-dispatch-macros",
+ "semio-framework-plugin",
+ "semio-s-artifact-stdio-avi",
+ "semio-s-artifact-stdio-mp3",
+ "semio-s-artifact-stdio-mp4",
+ "semio-s-artifact-stdio-wav",
+]
+
+[[package]]
+name = "semio-s-plugin-stdio-mesh"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-dispatch-macros",
+ "semio-framework-plugin",
+ "semio-s-artifact-stdio-gltf",
+ "semio-s-artifact-stdio-las",
+ "semio-s-artifact-stdio-obj",
+ "semio-s-artifact-stdio-ply",
+ "semio-s-artifact-stdio-stl",
+]
+
+[[package]]
+name = "semio-s-plugin-stdio-office"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-dispatch-macros",
+ "semio-framework-plugin",
+ "semio-s-artifact-stdio-docx",
+ "semio-s-artifact-stdio-pptx",
+ "semio-s-artifact-stdio-xlsx",
+]
+
+[[package]]
+name = "semio-s-plugin-stdio-pdf"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-dispatch-macros",
+ "semio-framework-plugin",
+ "semio-s-artifact-stdio-pdf",
+]
+
+[[package]]
+name = "semio-s-plugin-stdio-semio"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-dispatch-macros",
+ "semio-framework-plugin",
+ "semio-s-artifact-stdio-semio",
 ]
 
 [[package]]

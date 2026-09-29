@@ -21,7 +21,6 @@ async fn adding_a_question_recovers_after_removing_the_last_page() {
         (0, 0),
         (1, 1),
     ).await;
-    println!("[DEBUG] Adding a question recovered an empty form through undoable page creation");
 }
 
 #[semio_framework_async_macros::async_test]

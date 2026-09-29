@@ -1,4 +1,4 @@
-//! @emoji 🧩️ The semantic `Component` enum and its per-component prop structs — the closed set of
+//! 🧩️ The semantic `Component` enum and its per-component prop structs — the closed set of
 //! things a [`crate::UiNodeRecord`] can render. Every prop struct carries only the data specific to
 //! that component: identity lives on the record (`key`), actions live on the record (`bindings`),
 //! visual state lives on the record (`activity`/`disabled`/`transition`) or its `layout`/`style`. A

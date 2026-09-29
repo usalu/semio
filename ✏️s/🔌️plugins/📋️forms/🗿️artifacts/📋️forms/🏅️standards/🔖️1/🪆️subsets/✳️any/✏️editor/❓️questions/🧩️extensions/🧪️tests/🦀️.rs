@@ -16,5 +16,4 @@ fn extension_render_inputs_match_shared_vectors() {
         let actual: serde_json::Value = serde_json::from_str(&result.to_string()).unwrap();
         assert_eq!(actual, item["expected"], "{}", item["name"]);
     }
-    println!("[DEBUG] Forms extension inputs preserved fixture selection and exact answers");
 }

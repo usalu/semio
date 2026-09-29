@@ -9,7 +9,7 @@ use protocol::Mutation;
 use protocol::MutationDiff;
 
 //#region 🔖️Config
-/// @emoji 🧮️ B1: `ArchitectPlayApp`'s `ArtifactEditor::Config` — the pure replacement for the pre-B1
+/// 🧮️ B1: `ArchitectPlayApp`'s `ArtifactEditor::Config` — the pure replacement for the pre-B1
 /// `RefCell<ArchitectPlayRuntime>` app-struct field (mirrors `norm::NormConfig`'s single-shared-shape
 /// precedent for a monolithic, non-crate-split app).
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslArtifact)]

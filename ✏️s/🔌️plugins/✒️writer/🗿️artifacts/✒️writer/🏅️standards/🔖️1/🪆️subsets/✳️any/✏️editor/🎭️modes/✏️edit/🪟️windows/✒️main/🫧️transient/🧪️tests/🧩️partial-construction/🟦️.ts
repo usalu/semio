@@ -28,5 +28,4 @@ export function testWriterPartialConstructionOracle(): void {
     assert.deepEqual(actual, expected);
     assert.equal(before.engagementInput, input);
   }
-  console.log("[DEBUG] Writer partial construction: three 12KiB UTF-8 vectors match TypeScript, Ajv and JSON Patch");
 }

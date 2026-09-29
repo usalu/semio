@@ -1,4 +1,4 @@
-//! @emoji 🧱️ The `Element` trait, stable `ElementId` identity, and the per-frame arena that erases
+//! 🧱️ The `Element` trait, stable `ElementId` identity, and the per-frame arena that erases
 //! concrete `Element` types without `dyn Element` (ruling U3).
 //!
 //! **Erasure mechanism (U3):** `dyn Element` is banned because `Element` carries two associated

@@ -1,4 +1,4 @@
-//! @emoji 📐️ The 5D flatten solver — the Rust twin of the React target
+//! 📐️ The 5D flatten solver — the Rust twin of the React target
 //! `✏️s/🔌️plugins/🧩️puzzle/🎯️targets/⚛️5d-react/🟦️.tsx`'s `🔖️Flatten` region, ported rule for rule.
 //!
 //! That 638-line file is the whole 5D visualisation layer React has: a pure geometry module (no JSX,

@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/🧵️TaskManager/component.test.tsx
-/** @emoji 🧪️ `🧵️TaskManager` tests: the pure scene-JSON builders (`taskManagerColumns`/
+/** 🧪️ `🧵️TaskManager` tests: the pure scene-JSON builders (`taskManagerColumns`/
  * `taskManagerRows`/`buildTaskManagerTableScene`/`taskManagerRowAction`) plus a render +
  * action-dispatch test for the standalone `TaskManagerPanel`. Run directly the same way
  * `🤖️AgentApprovals/🧪️component.test.tsx` documents (see `📓️terra-T1-report.md`) — not (yet) picked

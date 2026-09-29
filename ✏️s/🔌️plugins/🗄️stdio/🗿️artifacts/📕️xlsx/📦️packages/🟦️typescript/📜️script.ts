@@ -16,7 +16,7 @@ if ((process.argv[2] ?? "test") === "test") {
   assert.equal(fixture.expectedKeys.length, fixture.rows);
   assert.equal(fixture.expectedCells.length, fixture.rows);
   assert(fixture.expectedCells.every((row: string[]) => row.length === fixture.columns));
-  console.log(`[DEBUG] XLSX viewer neutral fixture validated with Ajv: rows=${fixture.rows} columns=${fixture.columns} locales=${Object.keys(fixture.labels).join(",")}`);
+  console.log(`XLSX viewer neutral fixture validated with Ajv: rows=${fixture.rows} columns=${fixture.columns} locales=${Object.keys(fixture.labels).join(",")}`);
   const draftRoot = resolve(root, "../✍️unchanged-cell-draft");
   const draftFixture = JSON.parse(readFileSync(resolve(draftRoot, "🔣️.json"), "utf8"));
   const snapshotSchema = JSON.parse(readFileSync(resolve(root, "../../🧬️schema/📸️snapshot/🔣️.json"), "utf8"));
@@ -25,5 +25,5 @@ if ((process.argv[2] ?? "test") === "test") {
   assert(validateDrafts(draftFixture), JSON.stringify(validateDrafts.errors));
   assert.equal(new Set(draftFixture.cases.map((entry: { id: string }) => entry.id)).size, draftFixture.cases.length);
   assert(draftFixture.sharedStringConflict.index < draftFixture.sharedStrings.length);
-  console.log(`[DEBUG] XLSX unchanged draft neutral fixture validated with Ajv: cases=${draftFixture.cases.length} sharedStringConflict=true`);
+  console.log(`XLSX unchanged draft neutral fixture validated with Ajv: cases=${draftFixture.cases.length} sharedStringConflict=true`);
 }

@@ -6,7 +6,7 @@
 use crate::standards::v1::subsets::any::schema::mutations::text::SHomeMutation;
 use crate::SHomeSnapshot;
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, FaultOrigin};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
@@ -20,7 +20,7 @@ pub struct RenameSpace {
 //#region 🔖️Handle
 /// 🚫️ The direct lane has no directory projection to seed the dialog from: renaming runs only as the retained job.
 pub fn handle(_payload: &RenameSpace, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
-    Err(Fault::from("s.home.rename-space.requires-retained-job"))
+    Err(Fault::new(FaultOrigin::App, "s.home.rename-space.requires-retained-job", "renaming a space runs only as the retained job"))
 }
 
 /// 🏷️ The retained route: `row` is the space's one folded directory row from the job's captured projection, if listed.

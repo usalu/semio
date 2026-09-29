@@ -24,5 +24,4 @@ export function testJobPayloadPhysicalClose(): void {
     };
     assert.deepEqual(output, fixture.expected, row.name);
   }
-  console.log("[DEBUG] Job payload physical release agrees with Ajv and fast-json-patch for empty, one-byte, short and full pages");
 }

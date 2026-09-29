@@ -45,7 +45,6 @@ fn empty_and_unit_enum_decoding_matches_neutral_cases_and_serde() {
         assert_eq!(empty, serde_json::from_value::<EmptyEnumOracle>(case["value"].clone()).is_ok());
         assert_eq!(unit, serde_json::from_value::<UnitEnumOracle>(case["value"].clone()).is_ok());
     }
-    eprintln!("[DEBUG] Empty and unit enum decoding agrees with all neutral cases and serde");
 }
 
 #[test]

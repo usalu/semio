@@ -17,13 +17,13 @@ pub mod scene_json {
         pub id: String,
         pub source: String,
         pub target: String,
-        /// @emoji 🧩️ Semantic edge-kind id for compatibility at `edge` specificity.
+        /// 🧩️ Semantic edge-kind id for compatibility at `edge` specificity.
         #[serde(default)]
         pub edge_kind: Option<String>,
-        /// @emoji 🔺️ Per-instance source tip id from the edge tip registry (`none` disables).
+        /// 🔺️ Per-instance source tip id from the edge tip registry (`none` disables).
         #[serde(default)]
         pub source_tip: Option<String>,
-        /// @emoji 🔺️ Per-instance target tip id from the edge tip registry (`none` disables).
+        /// 🔺️ Per-instance target tip id from the edge tip registry (`none` disables).
         #[serde(default)]
         pub target_tip: Option<String>,
         #[serde(default)]
@@ -110,7 +110,7 @@ pub mod scene_json {
         }
     }
 
-    /// @emoji 🧵️ Transient cubic link from a handle to another handle or a free world point (descriptor + link gesture).
+    /// 🧵️ Transient cubic link from a handle to another handle or a free world point (descriptor + link gesture).
     ///
     /// 🌉️ Hand-written, not derived: `user_data: Option<serde_json::Value>` — same reason as
     /// `EdgeDescJson` above.
@@ -119,7 +119,7 @@ pub mod scene_json {
     pub struct WireDescJson {
         pub id: String,
         pub source: String,
-        /// @emoji 🧩️ Semantic wire-kind id (defaults from catalog when omitted in fixtures).
+        /// 🧩️ Semantic wire-kind id (defaults from catalog when omitted in fixtures).
         #[serde(default)]
         pub wire_kind: Option<String>,
         #[serde(default)]
@@ -247,12 +247,12 @@ pub mod scene_json {
         #[serde(default)]
         #[value(default)]
         pub wires: Vec<WireDescJson>,
-        /// @emoji 🎯️ Fill-constraining rectangles painted beneath every entity and hit-tested after
+        /// 🎯️ Fill-constraining rectangles painted beneath every entity and hit-tested after
         /// all of them — absent on a board that declares none.
         #[serde(default)]
         #[value(default)]
         pub regions: Vec<RegionDescJson>,
-        /// @emoji 💠️ JS‑authored ids to paint with secondary “left selection” chrome (not in current `selected` flags).
+        /// 💠️ JS‑authored ids to paint with secondary “left selection” chrome (not in current `selected` flags).
         #[serde(default)]
         #[value(default)]
         pub selection_exit_highlight_ids: Vec<String>,
@@ -264,14 +264,14 @@ pub mod scene_json {
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct FixtureJson {
         pub schema: String,
-        /// @emoji 🎥️ Absent in every document whose camera is session state the host owns (puzzle 2d
+        /// 🎥️ Absent in every document whose camera is session state the host owns (puzzle 2d
         /// since its `setCamera` became a View-kind verb): the parse keeps the camera it is looking
         /// through instead of refusing the document and blanking the board.
         #[serde(default)]
         pub camera: Option<CameraJson>,
         pub nodes: Vec<serde_json::Value>,
         pub edges: Vec<serde_json::Value>,
-        /// @emoji 🎯️ The document's fill-constraining rectangles. Absent (never `[]`) on a board that
+        /// 🎯️ The document's fill-constraining rectangles. Absent (never `[]`) on a board that
         /// has none, exactly as the owning artifact's snapshot omits an empty `targetRegions`.
         #[serde(default, rename = "targetRegions")]
         pub target_regions: Vec<serde_json::Value>,
@@ -470,7 +470,7 @@ pub mod types {
     pub enum ActiveUtility {
         Select,
         Brush,
-        /// @emoji 🖍️ Paints target regions: a click-drag rectangle, or a click that drops one of the
+        /// 🖍️ Paints target regions: a click-drag rectangle, or a click that drops one of the
         /// configured brush extent. Never picks, never marquees.
         AreaBrush,
     }
@@ -678,7 +678,7 @@ pub mod types {
     }
 
     impl CanvasPalette {
-        /// @emoji 🎨️ Builds a palette from centralized board theme tokens.
+        /// 🎨️ Builds a palette from centralized board theme tokens.
         pub fn from_board_palette(t: &ui_styling::BoardPalette) -> Self {
             Self {
                 raster_clear: Color::new(t.raster_clear),
@@ -736,7 +736,7 @@ pub mod types {
             infinite::canvas::theme::merge_color_field(next, v, key);
         }
 
-        /// @emoji 🎨️ Replaces this palette from the React host UI theme JSON payload.
+        /// 🎨️ Replaces this palette from the React host UI theme JSON payload.
         pub fn merge_from_json(&mut self, json: &str) -> Result<(), String> {
             let v: serde_json::Value = serde_json::from_str(json).map_err(|e| e.to_string())?;
             let mut next = Self::default();
@@ -1089,7 +1089,7 @@ pub mod types {
             format!("v8|r|{w}x{h}|{hx:x}|{}", rgba.len())
         }
 
-        /// @emoji 🖌️ Builds (or reuses a cached) icon paint — rasterizes SVG via `usvg`/`vello_svg`
+        /// 🖌️ Builds (or reuses a cached) icon paint — rasterizes SVG via `usvg`/`vello_svg`
         /// or decodes raster bytes via `image`, producing real pixels/vector paint for `Scene`.
         /// Host/browser only: a `wasm32-wasip2` guest has no display to paint onto, so this
         /// target has its own arm below that returns `None` unconditionally — the same value
@@ -1192,7 +1192,7 @@ pub mod types {
             None
         }
 
-        /// @emoji 🖼️ Paints an icon centered in a screen-space rectangle.
+        /// 🖼️ Paints an icon centered in a screen-space rectangle.
         pub fn append_icon_at_screen_rect(&self, scene: &mut Scene, icon_kind: &str, rect: IconScreenRect, fg: Color, bg: Color, preserve_original_style: bool) {
             let IconScreenRect { center, width: avail_w, height: avail_h } = rect;
             let Some(paint) = self.get_or_build(icon_kind, fg, bg, preserve_original_style) else {
@@ -1225,7 +1225,7 @@ pub mod types {
             scene.pop_layer();
         }
 
-        /// @emoji 🎨️ Themed SVG icon fg/bg from centralized canvas tokens (not node chrome stroke/fill).
+        /// 🎨️ Themed SVG icon fg/bg from centralized canvas tokens (not node chrome stroke/fill).
         pub fn board_icon_paint_colors(canvas_theme: &CanvasPalette) -> (Color, Color) {
             let rgba = canvas_theme.raster_clear.to_rgba8();
             let lum = f64::from(rgba.r) * 0.299 + f64::from(rgba.g) * 0.587 + f64::from(rgba.b) * 0.114;
@@ -1419,7 +1419,7 @@ pub mod hierarchical_tree {
 
     const TREE_SUPER_ID: &str = "__tree_super__";
 
-    /** @emoji 🌲️ Buchheim et al. (GD 2002) tidy tree: O(n) Reingold–Tilford with even sibling spacing (after pymag-trees listing 12). */
+    /** 🌲️ Buchheim et al. (GD 2002) tidy tree: O(n) Reingold–Tilford with even sibling spacing (after pymag-trees listing 12). */
     #[derive(Debug)]
     struct BuchheimNode {
         id: String,

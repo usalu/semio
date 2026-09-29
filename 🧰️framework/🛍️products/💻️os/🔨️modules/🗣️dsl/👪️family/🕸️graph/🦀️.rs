@@ -1,4 +1,4 @@
-//! @emoji 🕸️ `dsl_family_graph` — the graph family notation kit: shared statement piece-parsers
+//! 🕸️ `dsl_family_graph` — the graph family notation kit: shared statement piece-parsers
 //! for graph-shaped app grammars (trinity, dag, flow, sequence, wires, puzzle2d/3d/5d, space,
 //! architect, procedural2d/3d). Builds on `dsl_notation`'s edge/arrow literal and adds the one
 //! genuinely graph-family-specific convenience that literal isn't responsible for: node **chains**
@@ -13,7 +13,7 @@ pub use crate::os_dsl::notation::{print_edge, EdgeLabel, EdgeLink, EdgeNode, Edg
 use crate::os_dsl::{lex, Limits, TextError, TokenKind};
 
 //#region 🔖️Chain
-/// @emoji ⛓️ A run of nodes joined by uniformly-directed, unlabeled edges: `v1 -- v2 -- v3 -- v1`
+/// ⛓️ A run of nodes joined by uniformly-directed, unlabeled edges: `v1 -- v2 -- v3 -- v1`
 /// or `a -> b -> c`. Chains never carry per-edge ids/kinds/properties — an edge that needs any of
 /// those breaks the chain and must be written as its own statement (see `expand`/`contract`).
 #[derive(Clone, Debug, PartialEq)]
@@ -23,14 +23,14 @@ pub struct ChainValue {
 }
 
 impl ChainValue {
-    /// @emoji 📤️ Lowers a chain into the individual edges it's sugar for — `n-1` edges over `n`
+    /// 📤️ Lowers a chain into the individual edges it's sugar for — `n-1` edges over `n`
     /// nodes — so the semantic model only ever needs to store plain edges, never chain structure.
     pub async fn expand(&self) -> Vec<EdgeValue> {
         self.nodes.windows(2).map(|pair| EdgeValue { from: pair[0].clone(), link: Some(EdgeLink { directed: self.directed, label: EdgeLabel::default(), to: pair[1].clone() }) }).collect()
     }
 }
 
-/// @emoji 📥️ The printer-side inverse of `expand`: contracts a maximal PREFIX of `edges` that
+/// 📥️ The printer-side inverse of `expand`: contracts a maximal PREFIX of `edges` that
 /// shares one direction, carries no labels, and threads consecutive endpoints (each edge's `to`
 /// equals the next edge's `from`) into one `ChainValue`, returning how many edges it consumed.
 /// Returns `None` if `edges` doesn't even start such a run (the caller should print `edges[0]` as
@@ -71,7 +71,7 @@ fn node_text(node: &EdgeNode) -> String {
     s
 }
 
-/// @emoji 🖨️ Canonical printer for one chain: `v1--v2--v3` (directed: `v1->v2->v3`) — matches the
+/// 🖨️ Canonical printer for one chain: `v1--v2--v3` (directed: `v1->v2->v3`) — matches the
 /// existing no-space style of plain unlabeled edges, since a chain of unlabeled edges never hits
 /// the label-adjacent dash-fusion issue `crate::os_dsl::notation::print_edge` documents.
 pub async fn print_chain(chain: &ChainValue) -> String {
@@ -79,7 +79,7 @@ pub async fn print_chain(chain: &ChainValue) -> String {
     chain.nodes.iter().map(node_text).collect::<Vec<_>>().join(joiner)
 }
 
-/// @emoji 🔌️ Parses one standalone chain literal — at least two nodes, uniformly directed,
+/// 🔌️ Parses one standalone chain literal — at least two nodes, uniformly directed,
 /// unlabeled throughout. A single edge (`a->b`, no third node) still parses here and round-trips
 /// fine; whether the caller treats a 2-node chain as "just an edge" is a printing-style choice
 /// (`contract` naturally returns a 2-node chain for any single unlabeled edge — call sites that

@@ -36,10 +36,10 @@ impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for SetLineEndingMu
 
     fn diff(&self, base: &TxtSnapshot) -> protocol::MutationOutcome<TxtDiff> {
         if let Some(reason) = native_snapshot_error(base) {
-            return protocol::MutationOutcome::error("mutation.invariant", reason, Vec::<String>::new());
+            return protocol::MutationOutcome::fatal("mutation.invariant", reason, Vec::<String>::new());
         }
         if let Some(reason) = native_lines_error(&base.lines, base.trailing_newline, self.value) {
-            return protocol::MutationOutcome::error("mutation.invariant", reason, Vec::<String>::new());
+            return protocol::MutationOutcome::fatal("mutation.invariant", reason, Vec::<String>::new());
         }
         protocol::MutationOutcome::new(if base.line_ending == self.value { TxtDiff::default() } else { TxtDiff { line_ending: Some(self.value), ..Default::default() } })
     }

@@ -104,7 +104,7 @@ test("resolves every cleanup and scaffold owner through its exact semantic conte
   }
 });
 
-test("typechecks every cleanup and scaffold owner with the installed TypeScript compiler", { timeout: 30_000 }, () => {
+test("typechecks every cleanup and scaffold owner with the installed TypeScript compiler", () => {
   const paths = fixture.owners.map((owner) => resolve(repoRoot, owner.path));
   const program = ts.createProgram(paths, {
     target: ts.ScriptTarget.ESNext,
@@ -128,7 +128,7 @@ test("typechecks every cleanup and scaffold owner with the installed TypeScript 
       return `${diagnostic.file?.fileName ?? "unknown"}${position ? `:${position.line + 1}:${position.character + 1}` : ""}: ${ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")}`;
     }),
   ).toEqual([]);
-});
+}, { timeout: 30_000 });
 
 test("removes root implementations and binds every direct and source-text consumer", () => {
   const moved = new Set(fixture.owners.flatMap((owner) => owner.declarations));

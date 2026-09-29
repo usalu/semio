@@ -263,6 +263,24 @@ impl ActiveFrameBuild {
         applied
     }
 
+    /// 📮️ The mailbox is pumped at EVERY advance, not only in `ApplyPending`.
+    ///
+    /// 🩸️ It used to be one phase, visited once per build: the build drained the queue, then walked
+    /// on. A transaction that parked on `!interaction_available()` therefore held the one live
+    /// session forever — no new build could be admitted (`FrameBuildHandle::poll_runtime_and_resubmit`
+    /// admits only when `session.is_none()`), so the `ResumeDispatch` carrying the interaction state
+    /// home was never applied, and `DispatchEvents` behind it never reached
+    /// `winit_app::dispatch_normalized_event` at all (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+    /// `📓️wgpu-server-input-present-2026-09-13.md` §5.2). Draining from every advance is what makes
+    /// "applied within the next frame" true for `DispatchEvents` and `Resize` alike.
+    ///
+    /// 🌀️ Superseded inputs end THIS build with no frame and no fault; the caller's next
+    /// opportunity admits a fresh one against the current witness. The transaction is
+    /// DROPPED here rather than closed after its exact external input witness is
+    /// returned. Every action its authorities take belongs to `AppRuntime::frame_actions`
+    /// (`🧊️renderer/🦀️.rs`), which outlives every candidate.
+    ///
+    /// 🩺️ A refused preparation is the ONE terminal this build cannot explain by itself.
     fn advance(&mut self) -> ActiveFrameStep {
         if self.cancel.is_cancelled_now() {
             if self.retire_cancelled_phase() {
@@ -271,16 +289,6 @@ impl ActiveFrameBuild {
             }
             return ActiveFrameStep::Pending;
         }
-        // 📮️ The mailbox is pumped at EVERY advance, not only in `ApplyPending`.
-        //
-        // 🩸️ It used to be one phase, visited once per build: the build drained the queue, then walked
-        // on. A transaction that parked on `!interaction_available()` therefore held the one live
-        // session forever — no new build could be admitted (`FrameBuildHandle::poll_runtime_and_resubmit`
-        // admits only when `session.is_none()`), so the `ResumeDispatch` carrying the interaction state
-        // home was never applied, and `DispatchEvents` behind it never reached
-        // `winit_app::dispatch_normalized_event` at all (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
-        // `📓️wgpu-server-input-present-2026-09-13.md` §5.2). Draining from every advance is what makes
-        // "applied within the next frame" true for `DispatchEvents` and `Resize` alike.
         if self.pump_runtime_mailbox_step() {
             return ActiveFrameStep::Pending;
         }
@@ -364,11 +372,6 @@ impl ActiveFrameBuild {
                         ActiveFrameStep::Pending
                     }
                     crate::AppFrameTransactionStep::Pending => ActiveFrameStep::Pending,
-                    // 🌀️ Superseded inputs end THIS build with no frame and no fault; the caller's next
-                    // opportunity admits a fresh one against the current witness. The transaction is
-                    // DROPPED here rather than closed after its exact external input witness is
-                    // returned. Every action its authorities take belongs to `AppRuntime::frame_actions`
-                    // (`🧊️renderer/🦀️.rs`), which outlives every candidate.
                     crate::AppFrameTransactionStep::Superseded => {
                         if !transaction.discard_presented_input_candidate(&self.runtime) {
                             return ActiveFrameStep::Pending;
@@ -397,7 +400,6 @@ impl ActiveFrameBuild {
                     }
                     StepOutcome::Yield | StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_) => ActiveFrameStep::Pending,
                     StepOutcome::Cancelled | StepOutcome::Fault(_) => {
-                        // 🩺️ A refused preparation is the ONE terminal this build cannot explain by itself.
                         crate::log_debug_once_per_transition("frame-prepare-refused", true, &format!("os_host frame preparation refused: {}", preparation.fault().unwrap_or("unnamed")));
                         self.cancel.cancel_now();
                         ActiveFrameStep::Pending
@@ -587,6 +589,37 @@ impl FrameBuildHandle {
         None
     }
 
+    /// 🌀️ A superseded build is RETIRED HERE, in this Worker turn — never parked.
+    ///
+    /// 🩸️ This used to cancel the session and `return None`, which drove the close ladder by one
+    /// step per CALL. On the browser the caller is an event-driven tick, so a shell that is
+    /// settled between inputs ticks about once a second: one superseded build then held
+    /// `self.session` for tens of seconds, no replacement build could be admitted
+    /// (`self.session.is_none()` is the admission gate), and therefore NOTHING pumped the runtime
+    /// mailbox — measured on 6118 as `frame build cancelled: session generation Generation(3) !=
+    /// requested Generation(4)` followed by 74 seconds with no further `frame build admitted`,
+    /// no `render begin`, and 75 undelivered `DispatchEvents`
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-runtime-mailbox-dispatch-2026-09-13.md`).
+    /// Falling through spends one bounded Worker turn retiring it, so a later callback can admit
+    /// a fresh build without borrowing work from the page or running an uncharged close loop.
+    ///
+    /// 🌐️ The dedicated `semio-frame-worker` scheduler owns this opportunity. Wasm has no
+    /// second thread for the `Send`-gated pool path, so `try_step_on_worker` executes one exact
+    /// retained owner turn in this isolate. Checkout and resume are ownership bookkeeping for
+    /// that SAME turn; they do not run another job unit. A later scheduler callback owns every
+    /// subsequent unit or close step.
+    ///
+    /// 🔁️ No live session means the previous frame finished (or never started), and the caller
+    /// already refuses to produce while a presentation is pending — so the next frame build starts
+    /// HERE, every opportunity.
+    ///
+    /// 🩸️ This used to admit only when `generation` differed from the last admitted one. The browser
+    /// frame generation advances on host EVENTS, not on redraws, so an idle shell admitted exactly
+    /// one build for its whole life: the first frame completed with its retained window bodies still
+    /// mid-ingress, and no second frame was ever built to finish them — a permanently blank canvas
+    /// that still asked for frames (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+    /// `📓️wgpu-blank-paint-2026-09-12.md`). One-build-at-a-time is enforced by `self.session`, which
+    /// is the authority that gate was standing in for.
     #[cfg(target_arch = "wasm32")]
     pub(crate) fn poll_runtime_and_resubmit(&mut self, runtime: crate::RuntimeMailbox, inputs: FrameBuildInputs, operation: OperationId, generation: Generation) -> Option<crate::AppFramePresentation> {
         if self.closing || web_sys::window().is_some() {
@@ -601,33 +634,15 @@ impl FrameBuildHandle {
             return None;
         }
         if let Some(session) = self.session.as_ref() {
-            // 🌀️ A superseded build is RETIRED HERE, in this Worker turn — never parked.
-            //
-            // 🩸️ This used to cancel the session and `return None`, which drove the close ladder by one
-            // step per CALL. On the browser the caller is an event-driven tick, so a shell that is
-            // settled between inputs ticks about once a second: one superseded build then held
-            // `self.session` for tens of seconds, no replacement build could be admitted
-            // (`self.session.is_none()` is the admission gate), and therefore NOTHING pumped the runtime
-            // mailbox — measured on 6118 as `frame build cancelled: session generation Generation(3) !=
-            // requested Generation(4)` followed by 74 seconds with no further `frame build admitted`,
-            // no `render begin`, and 75 undelivered `DispatchEvents`
-            // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-runtime-mailbox-dispatch-2026-09-13.md`).
-            // Falling through spends one bounded Worker turn retiring it, so a later callback can admit
-            // a fresh build without borrowing work from the page or running an uncharged close loop.
             if session.generation() != generation {
-                crate::log_debug_once_per_transition("frame-session-generation", true, &format!("[DEBUG] frame build superseded: session generation {:?} != requested {generation:?}", session.generation()));
+                crate::log_debug_once_per_transition("frame-session-generation", true, &format!("[TRACE] frame build superseded: session generation {:?} != requested {generation:?}", session.generation()));
                 self.cancel.cancel_now();
                 if !matches!(session.poll(), semio_framework_job::WorkerJobPoll::Closing | semio_framework_job::WorkerJobPoll::TerminalEmpty) {
                     let _ = session.begin_close();
                 }
             } else {
-                crate::log_debug_once_per_transition("frame-session-generation", false, "[DEBUG] frame build session generation matches the requested one again");
+                crate::log_debug_once_per_transition("frame-session-generation", false, "[TRACE] frame build session generation matches the requested one again");
             }
-            // 🌐️ The dedicated `semio-frame-worker` scheduler owns this opportunity. Wasm has no
-            // second thread for the `Send`-gated pool path, so `try_step_on_worker` executes one exact
-            // retained owner turn in this isolate. Checkout and resume are ownership bookkeeping for
-            // that SAME turn; they do not run another job unit. A later scheduler callback owns every
-            // subsequent unit or close step.
             let poll = match session.poll() {
                 semio_framework_job::WorkerJobPoll::Idle => match session.try_step_on_worker() {
                     Ok((ticket, poll)) => {
@@ -673,18 +688,7 @@ impl FrameBuildHandle {
             }
             return presentation;
         }
-        // 🔁️ No live session means the previous frame finished (or never started), and the caller
-        // already refuses to produce while a presentation is pending — so the next frame build starts
-        // HERE, every opportunity.
-        //
-        // 🩸️ This used to admit only when `generation` differed from the last admitted one. The browser
-        // frame generation advances on host EVENTS, not on redraws, so an idle shell admitted exactly
-        // one build for its whole life: the first frame completed with its retained window bodies still
-        // mid-ingress, and no second frame was ever built to finish them — a permanently blank canvas
-        // that still asked for frames (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
-        // `📓️wgpu-blank-paint-2026-09-12.md`). One-build-at-a-time is enforced by `self.session`, which
-        // is the authority that gate was standing in for.
-        crate::log_debug_diagnostic(&format!("[DEBUG] frame build admitted generation={generation:?}"));
+        crate::log_debug_diagnostic(&format!("[TRACE] frame build admitted generation={generation:?}"));
         self.cancel = root_cancel_token();
         self.admit_active(ActiveFrameBuild::new(runtime, inputs, operation, generation, self.cancel.clone()));
         self.last_submitted_generation = Some(generation);

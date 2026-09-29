@@ -1,6 +1,6 @@
 // #region 🖼️ImageWindowKit
 /// <reference types="vitest/importMeta" />
-/** @emoji 🖼️ `@semio-tech/plugin-window-kits` — TS twin of Rust `ImageWindowKit` (`framework.window.image`).
+/** 🖼️ `@semio-tech/plugin-window-kits` — TS twin of Rust `ImageWindowKit` (`framework.window.image`).
  * ⚠️ The Rust twin (`🔌️plugin/🦀️.rs` `#region 🔖️WindowKits`) is deliberately still on the old
  * `ui_wgpu::wgpu::UiNode` return type this wave (see its own doc comment, ticket
  * SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY packet `sdk-helpers`) — this file gets ahead of it onto

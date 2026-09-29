@@ -6,7 +6,7 @@ use store::{ArtifactEphemeralPreparationTask, ArtifactEphemeralPreparationTaskSt
     ArtifactStoreOneItemGrant, SnapshotRetirementStep, retirement::RetireOwned};
 
 impl RetireOwned for WriterEditorSelection {
-    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> { store::retirement::leaf((self.start, self.end)) }
+    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> { store::retirement::leaf((self.start, self.end, self.splice)) }
 }
 
 impl RetireOwned for WriterMainWindowTransient {

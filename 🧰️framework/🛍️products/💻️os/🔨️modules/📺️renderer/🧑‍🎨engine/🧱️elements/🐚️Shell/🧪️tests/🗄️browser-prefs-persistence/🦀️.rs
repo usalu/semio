@@ -192,7 +192,6 @@ fn a_seeded_snapshot_answers_the_first_frames_reads() {
     let document = serde_json::json!({
         "version": 1,
         "preferences": { UI_PREFERENCES_CONFIG_SCHEMA: r#"{"version":1,"events":[{"mutation":"setAppearance","appearance":"light"}]}"# },
-        "namedLayouts": {},
         "dockLayouts": { "apps": {} },
         "dockUi": { "apps": {} },
         "windowPanes": { "apps": {} }
@@ -281,7 +280,7 @@ fn every_carried_key_round_trips_in_reacts_own_encoding() {
     prefs_set_in(&mut store, UI_PREFERENCES_CONFIG_SCHEMA, &log);
     let document: Value = serde_json::from_str(&store.get(OS_SHELL_CONFIG_STORAGE_KEY).expect("the document lands under React's own key")).expect("json");
     assert_eq!(document["version"], Value::from(1), "React's `OsShellConfig` refuses any other version");
-    for projection in ["namedLayouts", "dockLayouts", "dockUi", "windowPanes"] {
+    for projection in ["dockLayouts", "dockUi", "windowPanes"] {
         assert!(document[projection].is_object(), "a preference write must never drop the sibling projection {projection}");
     }
     assert_eq!(document["preferences"][UI_PREFERENCES_CONFIG_SCHEMA].as_str(), Some(log.as_str()));
@@ -296,6 +295,10 @@ fn every_carried_key_round_trips_in_reacts_own_encoding() {
 ///
 /// 🩸️ This is `📓️w4a` §5 item 3 closed: the write used to go through `WebLocalStorage`, so the tour
 /// was answered once per LOAD and returned on every reload of the browser build.
+///
+/// 🗄️ `stored_field_set` is what the maintenance step calls (pinned by
+/// `the_browser_preference_lane_is_the_page_door`); on a native test binary its arm is the file
+/// store, so the BROWSER arm is driven directly here — the one this packet owns.
 #[test]
 fn the_tour_answer_is_written_where_reacts_next_boot_reads_it() {
     let app_id = "s.puzzle.puzzle3d@1/*#editor";
@@ -314,9 +317,6 @@ fn the_tour_answer_is_written_where_reacts_next_boot_reads_it() {
     assert!(chrome.tour_state.is_none(), "Skip and Done both end the tour");
     assert_eq!(chrome.introduction_seen_writes, vec![app_id.to_string()], "and both queue the ONE bounded write the maintenance step drains");
 
-    // 🗄️ `stored_field_set` is what the maintenance step calls (pinned by
-    // `the_browser_preference_lane_is_the_page_door`); on a native test binary its arm is the file
-    // store, so the BROWSER arm is driven directly here — the one this packet owns.
     host_storage_set(&seen_key, "true");
     let reloaded = host_storage_get(&seen_key).as_deref() == Some("true");
     assert!(reloaded, "the answer is in the store the page will hand the next boot");
@@ -391,3 +391,27 @@ fn every_page_door_hands_the_census_across() {
     assert!(embedded.contains("semioWgpuSetHostStorage?.(JSON.stringify(readWgpuHostStorageSnapshot(window)))"), "the embeddable door runs ON the page and seeds the same store itself");
 }
 //#endregion 🚪️Wiring
+
+/// ⚖️ LAW (ticket 26/09/23 S18 §14b): a stored preference log this renderer cannot read whole — here one event a
+/// newer renderer wrote — is a typed refusal, never an empty log: the write refuses and the stored text stays
+/// byte-identical, while reads still replay every event this renderer understands.
+#[test]
+fn a_preference_log_with_an_unknown_event_is_never_overwritten() {
+    let stored = serde_json::json!({ "version": 1, "events": [{ "mutation": "setAppearance", "appearance": "dark" }, { "mutation": "setSomethingNewer", "value": 1 }] }).to_string();
+    let refusal = decode_ui_preferences_event_log(&stored).expect_err("an unknown event refuses the whole log");
+    assert_eq!((refusal.reason, refusal.event_index), ("event", Some(1)));
+    assert_eq!(replay_ui_preferences(&refusal.readable).appearance, Some(OsUiAppearance::Dark), "reads keep what this renderer understands");
+
+    let mut store = MemoryPrefsStore::default();
+    prefs_set_in(&mut store, UI_PREFERENCES_CONFIG_SCHEMA, &stored);
+    let written = ui_preferences_log_write(prefs_get_from(&store, UI_PREFERENCES_CONFIG_SCHEMA).as_deref(), |log| log.events.push(set_locale(Some(OsUiLocale::De))));
+    assert!(written.is_err(), "the write refuses");
+    assert_eq!(prefs_get_from(&store, UI_PREFERENCES_CONFIG_SCHEMA).as_deref(), Some(stored.as_str()), "the stored log is byte-identical");
+    for broken in ["not json", r#"{"version":2,"events":[]}"#, r#"{"version":1}"#] {
+        assert!(ui_preferences_log_write(Some(broken), |log| log.events.push(set_locale(None))).is_err(), "{broken} refuses too");
+    }
+
+    let fresh = ui_preferences_log_write(None, |log| log.events.push(set_locale(Some(OsUiLocale::De)))).expect("an absent log is an empty log").expect("one event written");
+    assert_eq!(replay_ui_preferences(&decode_ui_preferences_event_log(&fresh).expect("the written log decodes")).locale, Some(OsUiLocale::De));
+    assert_eq!(ui_preferences_log_write(Some(&fresh), |_| {}).expect("readable"), None, "a write that adds nothing stores nothing");
+}

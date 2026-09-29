@@ -1,4 +1,4 @@
-//! @emoji 🧮️ Byte-exact GPU uniform/instance layouts for the canonical WGSL's `Globals`/`BlurGlobals`
+//! 🧮️ Byte-exact GPU uniform/instance layouts for the canonical WGSL's `Globals`/`BlurGlobals`
 //! structs and the world3d instance/line-vertex shapes. `ui_render::shader_contract` deliberately
 //! carries no Rust mirror of a WGSL `struct` — only [`ui_render::PipelineSpec`] metadata — so these
 //! belong to this backend, the one crate that actually builds buffers against them. Ported field-for-

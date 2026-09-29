@@ -9,13 +9,13 @@
 use rustybuzz::ttf_parser::{self, GlyphId};
 
 //#region 🔖️Font
-/// @emoji 🔤️ One loaded font face.
+/// 🔤️ One loaded font face.
 pub struct Font<'a> {
     face: rustybuzz::Face<'a>,
 }
 
 impl<'a> Font<'a> {
-    /// @emoji 📂️ Parses font `index` (usually `0`) out of `data` (a whole OTF/TTF/TTC file).
+    /// 📂️ Parses font `index` (usually `0`) out of `data` (a whole OTF/TTF/TTC file).
     pub fn from_bytes(data: &'a [u8], index: u32) -> Option<Self> {
         Some(Self { face: rustybuzz::Face::from_slice(data, index)? })
     }
@@ -35,7 +35,7 @@ impl<'a> Font<'a> {
         self.face.descender()
     }
 
-    /// @emoji 🔍️ Maps a Unicode scalar to a glyph ID via the font's `cmap`, `None` if unmapped.
+    /// 🔍️ Maps a Unicode scalar to a glyph ID via the font's `cmap`, `None` if unmapped.
     pub fn glyph_index(&self, ch: char) -> Option<u16> {
         self.face.glyph_index(ch).map(|id| id.0)
     }
@@ -44,7 +44,7 @@ impl<'a> Font<'a> {
         self.face.glyph_hor_advance(GlyphId(glyph_id))
     }
 
-    /// @emoji 📦️ `(x_min, y_min, x_max, y_max)` in font design units — `None` for glyphs with no
+    /// 📦️ `(x_min, y_min, x_max, y_max)` in font design units — `None` for glyphs with no
     /// outline (space). Used to size a placed glyph's real ascent/descent instead of falling back
     /// to whole-font ascender/descender for every atom.
     pub fn glyph_bounding_box(&self, glyph_id: u16) -> Option<(i16, i16, i16, i16)> {
@@ -55,7 +55,7 @@ impl<'a> Font<'a> {
 //#endregion 🔖️Font
 
 //#region 🔖️Shaping
-/// @emoji 🧾️ One shaped glyph, positioned relative to its run's origin — font design units.
+/// 🧾️ One shaped glyph, positioned relative to its run's origin — font design units.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ShapedGlyph {
     pub glyph_id: u16,
@@ -66,14 +66,14 @@ pub struct ShapedGlyph {
     pub y_offset: i32,
 }
 
-/// @emoji 📏️ A shaped run of glyphs plus its total advance — font design units.
+/// 📏️ A shaped run of glyphs plus its total advance — font design units.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct GlyphRun {
     pub glyphs: Vec<ShapedGlyph>,
     pub advance: i32,
 }
 
-/// @emoji ✍️ Shapes `text` (left-to-right, no script/language override — every current caller is
+/// ✍️ Shapes `text` (left-to-right, no script/language override — every current caller is
 /// short math/Latin/Greek runs where HarfBuzz's own auto-detection is correct) against `font`.
 pub fn shape(font: &Font<'_>, text: &str) -> GlyphRun {
     let mut buffer = rustybuzz::UnicodeBuffer::new();
@@ -93,7 +93,7 @@ pub fn shape(font: &Font<'_>, text: &str) -> GlyphRun {
 //#endregion 🔖️Shaping
 
 //#region 🔖️Outline
-/// @emoji ✏️ One glyph outline as an SVG path `d` string, font design units, Y-up (SVG's own Y-down
+/// ✏️ One glyph outline as an SVG path `d` string, font design units, Y-up (SVG's own Y-down
 /// convention is the caller's problem — the caller already has to apply a translate/scale transform
 /// per placement, and folding a Y-flip into that one transform is simpler than flipping every curve
 /// control point here).
@@ -119,7 +119,7 @@ impl ttf_parser::OutlineBuilder for PathBuilder {
     }
 }
 
-/// @emoji ✏️ Extracts `glyph_id`'s outline from `font` as an SVG path `d` string in font design
+/// ✏️ Extracts `glyph_id`'s outline from `font` as an SVG path `d` string in font design
 /// units (Y-up) — `None` for glyphs with no outline (space, or a color/raster-only glyph).
 pub fn outline_glyph_path(font: &Font<'_>, glyph_id: u16) -> Option<String> {
     let mut builder = PathBuilder { d: String::new() };
@@ -129,7 +129,7 @@ pub fn outline_glyph_path(font: &Font<'_>, glyph_id: u16) -> Option<String> {
 //#endregion 🔖️Outline
 
 //#region 🔖️Raster
-/// @emoji 🖼️ One extracted color/bitmap glyph — already-encoded image bytes (PNG for the CBDT path
+/// 🖼️ One extracted color/bitmap glyph — already-encoded image bytes (PNG for the CBDT path
 /// this crate's only raster consumer, Noto Color Emoji, uses) plus placement metrics in font design
 /// units at the returned `pixels_per_em` strike.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -142,7 +142,7 @@ pub struct RasterGlyph {
     pub pixels_per_em: u16,
 }
 
-/// @emoji 🖼️ Looks up `glyph_id`'s embedded raster image (CBDT/CBLC or `sbix`) at the strike
+/// 🖼️ Looks up `glyph_id`'s embedded raster image (CBDT/CBLC or `sbix`) at the strike
 /// closest to `pixels_per_em` — `None` for fonts/glyphs with no embedded raster data.
 pub fn glyph_raster_image(font: &Font<'_>, glyph_id: u16, pixels_per_em: u16) -> Option<RasterGlyph> {
     let image = font.face.glyph_raster_image(GlyphId(glyph_id), pixels_per_em)?;
@@ -151,7 +151,7 @@ pub fn glyph_raster_image(font: &Font<'_>, glyph_id: u16, pixels_per_em: u16) ->
 //#endregion 🔖️Raster
 
 //#region 🔖️Math
-/// @emoji 🧮️ The OpenType `MATH` table's `MathConstants` subtable, extracted into an owned struct —
+/// 🧮️ The OpenType `MATH` table's `MathConstants` subtable, extracted into an owned struct —
 /// field names match the spec's own snake_case names 1:1. All device-table-adjusted values (font
 /// design units, or thousandths-of-a-percent for the two `*_percent_scale_down` fields, matching the
 /// spec) — see <https://learn.microsoft.com/en-us/typography/opentype/spec/math#mathconstants-table>.
@@ -212,7 +212,7 @@ pub struct MathConstants {
     pub radical_degree_bottom_raise_percent: i16,
 }
 
-/// @emoji 🧮️ Reads `font`'s `MATH` table constants — `None` if the font has no `MATH` table.
+/// 🧮️ Reads `font`'s `MATH` table constants — `None` if the font has no `MATH` table.
 pub fn math_constants(font: &Font<'_>) -> Option<MathConstants> {
     let math = font.face.tables().math?;
     let c = math.constants?;
@@ -273,20 +273,20 @@ pub fn math_constants(font: &Font<'_>) -> Option<MathConstants> {
     })
 }
 
-/// @emoji 📐️ `MathGlyphInfo.MathItalicsCorrectionInfo` for one glyph — `0` if the font has no entry
+/// 📐️ `MathGlyphInfo.MathItalicsCorrectionInfo` for one glyph — `0` if the font has no entry
 /// (correct default: no correction).
 pub fn math_italics_correction(font: &Font<'_>, glyph_id: u16) -> i16 {
     font.face.tables().math.and_then(|m| m.glyph_info).and_then(|info| info.italic_corrections).and_then(|table| table.get(GlyphId(glyph_id))).map_or(0, |v| v.value)
 }
 
-/// @emoji 🎯️ `MathGlyphInfo.MathTopAccentAttachment` for one glyph — the X position (font design
+/// 🎯️ `MathGlyphInfo.MathTopAccentAttachment` for one glyph — the X position (font design
 /// units, from the glyph's own origin) an accent should be centered over. `None` falls back to the
 /// glyph's horizontal midpoint (the spec's own documented default).
 pub fn math_top_accent_attachment(font: &Font<'_>, glyph_id: u16) -> Option<i16> {
     font.face.tables().math?.glyph_info?.top_accent_attachments?.get(GlyphId(glyph_id)).map(|v| v.value)
 }
 
-/// @emoji 📏️ One alternate glyph from `MathVariants` — progressively larger/taller stand-ins for a
+/// 📏️ One alternate glyph from `MathVariants` — progressively larger/taller stand-ins for a
 /// base glyph (e.g. bigger parentheses), ordered smallest-first by the font itself.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct StretchVariant {
@@ -295,7 +295,7 @@ pub struct StretchVariant {
     pub advance: u16,
 }
 
-/// @emoji 📏️ `MathVariants.VerticalGlyphCoverage`/`HorizontalGlyphCoverage` for `base_glyph` —
+/// 📏️ `MathVariants.VerticalGlyphCoverage`/`HorizontalGlyphCoverage` for `base_glyph` —
 /// empty if the font declares no variants for it (every current caller then falls back to scaling
 /// the base glyph's own outline).
 pub fn math_stretch_variants(font: &Font<'_>, base_glyph_id: u16, vertical: bool) -> Vec<StretchVariant> {
@@ -306,7 +306,7 @@ pub fn math_stretch_variants(font: &Font<'_>, base_glyph_id: u16, vertical: bool
     construction.variants.into_iter().map(|v| StretchVariant { glyph_id: v.variant_glyph.0, advance: v.advance_measurement }).collect()
 }
 
-/// @emoji 📏️ The minimum vertical extent (ascent + descent) `MATH` guarantees for `glyph_id` — used
+/// 📏️ The minimum vertical extent (ascent + descent) `MATH` guarantees for `glyph_id` — used
 /// to size a placed glyph's box when no shaped run gives us one (e.g. a directly-picked stretch
 /// variant). Falls back to the font's global ascender/descender when the glyph has no per-glyph
 /// vertical extents in `MATH` (`MathVariants` doesn't carry per-glyph bounding boxes, so this uses

@@ -43,7 +43,6 @@ fn the_catalogue_carrier_fixture_pins_a_reordered_javascript_object() {
     let mut sorted = fixture.javascript_keys.clone();
     sorted.sort();
     assert_eq!(sorted, fixture.ascending_keys, "the same keys, in a different order");
-    println!("[DEBUG] catalogue-carrier-map javascript-order first={} last={}", fixture.javascript_keys[0], fixture.javascript_keys[UI_FIXED_LIST_ITEMS - 1]);
 }
 
 /// 📜️ The defect: the wgpu shell refused the whole catalogue document with `UiFixedMap requires at
@@ -55,7 +54,6 @@ fn a_javascript_ordered_carrier_map_decodes_into_the_sorted_map() {
     assert_eq!(map.len(), UI_FIXED_LIST_ITEMS, "every entry is admitted");
     let keys: Vec<String> = map.iter().map(|(key, _)| key.as_str().to_string()).collect();
     assert_eq!(keys, fixture.ascending_keys, "a decoded fixed map is sorted regardless of wire order");
-    println!("[DEBUG] catalogue-carrier-map decoded entries={}", map.len());
 }
 
 /// 📜️ The same wire shape embedded in `UiValue::Map` must decode in JavaScript key order — action args
@@ -67,7 +65,6 @@ fn a_javascript_ordered_ui_map_decodes_into_the_sorted_map() {
     assert_eq!(map.len(), UI_FIXED_LIST_ITEMS, "every entry is admitted");
     let keys: Vec<String> = map.iter().map(|(key, _)| key.as_str().to_string()).collect();
     assert_eq!(keys, fixture.ascending_keys, "a decoded UiMap is sorted regardless of wire order");
-    println!("[DEBUG] catalogue-carrier-map ui-map decoded entries={}", map.len());
 }
 
 /// 📜️ …and each value round-trips as the text slice the carrier stores.
@@ -81,7 +78,6 @@ fn a_javascript_ordered_ui_map_preserves_text_values() {
         let expected = parsed[key].as_str().expect("fixture entry");
         assert_eq!(value, UiValue::Text(UiText::try_from_str(expected).expect("bounded fixture text")));
     }
-    println!("[DEBUG] catalogue-carrier-map ui-map value-check keys={}", fixture.ascending_keys.len());
 }
 
 /// 📜️ A duplicate key is still a refusal for `UiMap`.
@@ -90,7 +86,6 @@ fn a_ui_map_still_refuses_duplicate_keys() {
     let duplicated = r#"{"02":"b","01":"a","02":"c"}"#;
     let error = serde_json::from_str::<UiMap>(duplicated).expect_err("a duplicate key must be refused");
     assert!(error.to_string().contains("unique"), "the decoder names duplication: {error}");
-    println!("[DEBUG] catalogue-carrier-map ui-map duplicate-refusal {error}");
 }
 
 /// 📜️ …and so is one entry past capacity, whatever order it arrives in.
@@ -100,7 +95,7 @@ fn a_ui_map_still_refuses_one_entry_past_capacity() {
     let overflowing = format!("{{{}}}", entries.join(","));
     let error = serde_json::from_str::<UiMap>(&overflowing).expect_err("one entry past capacity must be refused");
     assert!(error.to_string().contains("capacity"), "the decoder surfaces capacity: {error}");
-    println!("[DEBUG] catalogue-carrier-map ui-map capacity-refusal entries={} {error}", UI_VALUE_MAX_ITEMS + 1);
+    println!("catalogue-carrier-map ui-map capacity-refusal entries={} {error}", UI_VALUE_MAX_ITEMS + 1);
 }
 
 /// 📜️ …and the whole leaf reassembles byte-for-byte, which is what `UiDocumentLease::read_paged_text` and the
@@ -111,7 +106,6 @@ fn a_javascript_ordered_carrier_leaf_recovers_its_payload() {
     let attributes: UiFixedMap<UiText> = serde_json::from_str(&fixture.data_attributes_json).expect("carrier map decodes");
     let props = TextProps { value: Label(UiText::try_from_str(&fixture.value).expect("carrier leaf label")), emphasize: None, data_attributes: Some(attributes) };
     assert_eq!(props.packed_payload(), fixture.payload, "the carrier leaf must recover the catalogue payload byte-for-byte");
-    println!("[DEBUG] catalogue-carrier-map payload-bytes={}", fixture.payload.len());
 }
 
 /// 📜️ A duplicate key is still a refusal — an unordered wire must not silently collapse two entries.
@@ -119,7 +113,6 @@ fn a_javascript_ordered_carrier_leaf_recovers_its_payload() {
 fn a_carrier_map_still_refuses_duplicate_keys() {
     let duplicated = r#"{"02":"b","01":"a","02":"c"}"#;
     let error = serde_json::from_str::<UiFixedMap<UiText>>(duplicated).expect_err("a duplicate key must be refused");
-    println!("[DEBUG] catalogue-carrier-map duplicate-refusal {error}");
 }
 
 /// 📜️ …and so is one entry past capacity, whatever order it arrives in.
@@ -128,7 +121,6 @@ fn a_carrier_map_still_refuses_one_entry_past_capacity() {
     let entries: Vec<String> = (0..=UI_FIXED_LIST_ITEMS).rev().map(|index| format!(r#""{index:02}":"v{index}""#)).collect();
     let overflowing = format!("{{{}}}", entries.join(","));
     let error = serde_json::from_str::<UiFixedMap<UiText>>(&overflowing).expect_err("one entry past capacity must be refused");
-    println!("[DEBUG] catalogue-carrier-map capacity-refusal entries={} {error}", UI_FIXED_LIST_ITEMS + 1);
 }
 
 /// 📜️ A refusal must NAME its cause. The two are different defects with different owners — a producer
@@ -155,7 +147,6 @@ fn a_carrier_map_refusal_names_capacity_and_page_grant_apart() {
     let entries: Vec<String> = (0..=UI_FIXED_LIST_ITEMS).rev().map(|index| format!(r#""{index:02}":"v{index}""#)).collect();
     let error = serde_json::from_str::<UiFixedMap<UiText>>(&format!("{{{}}}", entries.join(","))).expect_err("one entry past capacity must be refused");
     assert!(error.to_string().contains("capacity"), "the decoder surfaces the same vocabulary: {error}");
-    println!("[DEBUG] catalogue-carrier-map refusal vocabulary: capacity={at_capacity:?} grant={below_capacity:?}");
 }
 
 /// 📜️ The `FromValue` decoder is the same wire in the pack codec the guest speaks, so it carries the
@@ -171,7 +162,6 @@ fn a_javascript_ordered_carrier_map_decodes_through_from_value() {
     let map = <UiFixedMap<UiText> as protocol::value::FromValue>::from_value(protocol::value::DslValue::Object(entries)).unwrap_or_else(|error| panic!("a carrier map must decode from any pack object order: {error:?}"));
     let keys: Vec<String> = map.iter().map(|(key, _)| key.as_str().to_string()).collect();
     assert_eq!(keys, fixture.ascending_keys, "a decoded fixed map is sorted regardless of pack order");
-    println!("[DEBUG] catalogue-carrier-map from-value entries={}", map.len());
 }
 
 /// 📜️ The producer's own ascending path is unchanged — a full pack built the way
@@ -184,5 +174,4 @@ fn an_ascending_carrier_leaf_still_round_trips_through_json() {
     let text = serde_json::to_string(&Component::Text(props.clone())).expect("carrier leaf serializes");
     let read: Component = serde_json::from_str(&text).expect("carrier leaf round-trips");
     assert_eq!(read, Component::Text(props), "an ascending carrier leaf survives the reader byte-for-byte");
-    println!("[DEBUG] catalogue-carrier-map ascending-round-trip json-bytes={}", text.len());
 }

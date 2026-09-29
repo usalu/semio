@@ -156,7 +156,6 @@ describe("UIDialog accessibility", () => {
     expect(submit).toHaveBeenLastCalledWith({ name: "Map C", kindChoice: "terrain" });
     fireEvent.keyDown(picker, { key: "Escape" });
     expect(cancel).toHaveBeenCalledTimes(1);
-    console.log("[DEBUG] UIDialog accessibility: owned-picker focus=1 child-first-escape=1 selection=terrain");
   });
 
   it.each(fixture.cases)("implements the neutral modal contract in $locale with an independent accessibility oracle", async row => {
@@ -203,7 +202,6 @@ describe("UIDialog accessibility", () => {
     expect(document.activeElement === opener).toBe(fixture.expected.focusReturns);
     expect(view.container.hasAttribute("inert")).toBe(false);
     opener.remove();
-    console.log(`[DEBUG] UIDialog accessibility: locale=${row.locale} modal=1 named-fields=2 exact-escape=1 focus-return=1`);
   });
 
   it("keeps remapped chords local to the modal and routes outside dismissal once", async () => {

@@ -41,7 +41,7 @@ pub(crate) fn xlsx_flat_cells(document: &XlsxSnapshot) -> Vec<(String, u32, u32,
     document.project_workbook().map_or_else(|_| Vec::new(), |workbook| workbook.sheets.into_iter().flat_map(|sheet| sheet.cells.into_iter().map(move |cell| (sheet.name.clone(), cell.row, cell.col, cell.value))).collect())
 }
 
-pub(crate) use crate::editor::xlsx::standards::v_ecma_376::subsets::base::{parse_xlsx_cell_value, render_xlsx_cell_value, xlsx_cell_revision};
+pub(crate) use crate::editor::xlsx::standards::v_ecma_376::subsets::base::{parse_xlsx_cell_value, render_xlsx_cell_value};
 //#endregion 🔖️TableProjection
 
 //#region 🔖️Command

@@ -157,7 +157,6 @@ fn world3d_scene_splits_into_the_declared_lanes_and_merges_back() {
     assert!(!merged.merge_lane("puzzle3d-main-top", String::new()));
     merged.lanes = Vec::new();
     assert_eq!(merged, assembled);
-    println!("[DEBUG] world-3d scene split into {} lanes and merged back byte-exactly", lanes.len());
 }
 
 #[test]
@@ -180,7 +179,6 @@ fn world3d_scene_spine_changes_only_for_the_lanes_that_changed() {
     assert_eq!(changed, vec!["selection"]);
     let changed_payloads: Vec<&str> = first_lanes.iter().zip(&selection_lanes).filter(|(before, after)| before != after).map(|(before, _)| before.key).collect();
     assert_eq!(changed_payloads, vec![World3dSceneLane::Selection.body_key()]);
-    println!("[DEBUG] a selection edit moved exactly 1 of {} lane refs; a camera move moved none", first_spine.lanes.len());
 }
 
 #[test]
@@ -206,7 +204,6 @@ fn world3d_scene_spine_survives_the_pack_and_value_codecs_with_its_lane_manifest
     assert!(packed.len() <= contract["carrier"]["docBytesMax"].as_u64().expect("docBytesMax") as usize);
     assert_eq!(World3dScene::decode_pack(&packed).expect("spine unpacks"), spine);
     assert_eq!(World3dScene::from_value(spine.to_value()).expect("spine round-trips as a value"), spine);
-    println!("[DEBUG] world-3d spine packs to {} bytes carrying {} lane refs", packed.len(), spine.lanes.len());
 }
 
 #[test]
@@ -258,7 +255,6 @@ fn a_nakagin_scale_world3d_scene_pages_per_lane_and_reassembles_losslessly() {
     }
     merged.lanes = Vec::new();
     assert_eq!(merged, scene);
-    println!("[DEBUG] Nakagin-scale scene packed {} bytes into a {}-byte spine plus {} lane pages", packed.len(), spine_pack.len(), lanes.len());
 }
 
 #[test]

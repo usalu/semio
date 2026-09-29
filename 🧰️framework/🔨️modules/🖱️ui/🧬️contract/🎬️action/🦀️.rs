@@ -1,4 +1,4 @@
-//! @emoji 🎬️ Versioned \`ActionId\`, \`Trigger\`, \`ActionBinding\`, \`UiIntent\` and neutral \`UiValue\`.
+//! 🎬️ Versioned \`ActionId\`, \`Trigger\`, \`ActionBinding\`, \`UiIntent\` and neutral \`UiValue\`.
 //!
 //! 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md. Every \`fn\`
 //! below is plain sync by owner ruling U1, which supersedes this program's general async-everything

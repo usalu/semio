@@ -1,0 +1,19 @@
+{
+  "mutation": "setNamedLayout",
+  "appId": "draw",
+  "layoutId": "user-1",
+  "layout": {
+    "label": "Wide",
+    "layout": {
+      "root": {
+        "kind": "stack",
+        "children": [
+          {
+            "kind": "window",
+            "windowKindId": "main"
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,9 +1,8 @@
 {
   "extends": "../../../../../../../tsconfig.json",
   "compilerOptions": {
-    "noEmit": true,
-    "baseUrl": ".",
-    "allowImportingTsExtensions": true
+    "tsBuildInfoFile": "../../../../../../../node_modules/.cache/tsconfig.cad-spatial-shape.tsbuildinfo",
+    "noEmit": true
   },
   "include": ["🟦️.ts", "../../🟦️.ts"]
 }

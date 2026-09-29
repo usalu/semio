@@ -20,7 +20,7 @@ const playwrightTimeoutMs = playwrightTestTimeoutMs();
 if (!process.env.PLAYWRIGHT_BASE_URL) throw new Error("Run the play test-e2e target through Nx");
 const baseURL = process.env.PLAYWRIGHT_BASE_URL.endsWith("/") ? process.env.PLAYWRIGHT_BASE_URL : `${process.env.PLAYWRIGHT_BASE_URL}/`;
 
-/** @emoji 🖥️ Map and wgpu panes need a real adapter; `PLAY_E2E_GPU=swiftshader` forces the software stack for hosts without one. */
+/** 🖥️ Map and wgpu panes need a real adapter; `PLAY_E2E_GPU=swiftshader` forces the software stack for hosts without one. */
 function browserLaunchArgs(): readonly string[] {
   if (process.env.PLAY_E2E_GPU === "swiftshader") return ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"];
   return [process.platform === "darwin" ? "--use-angle=metal" : "--use-angle=gl", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu"];

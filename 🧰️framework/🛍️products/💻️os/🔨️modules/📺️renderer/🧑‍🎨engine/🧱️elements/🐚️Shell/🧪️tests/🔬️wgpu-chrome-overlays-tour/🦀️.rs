@@ -6,13 +6,13 @@ fn chrome_state() -> ShellChromeBuildState {
 }
 
 //#region ThreadBoundary
+/// 🎯️ `content_focus` records WHICH node holds focus, not a bare bool (ticket 26/09/17 packet W2k),
+/// so the fixture mints a real arena id rather than `true`.
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn chrome_build_state_moves_across_threads_without_losing_state() {
     assert_shell_chrome_build_state_is_send();
     let mut chrome = chrome_state();
-    // 🎯️ `content_focus` records WHICH node holds focus, not a bare bool (ticket 26/09/17 packet W2k),
-    // so the fixture mints a real arena id rather than `true`.
     let mut focus_arena = ui_wgpu::wgpu::Arena::<u8>::default();
     chrome.content_focus.insert("main".to_string(), Some(RetainedContentFocus { node: focus_arena.insert(0), key: ui_wgpu::wgpu::NodeKey::Explicit("tour-focus".into()), kind: RetainedNodeFocusKind::Button }));
     chrome.register_tooltip("nav.help", "Help");
@@ -184,6 +184,8 @@ fn dialog_stack_supports_nesting_close_order() {
 
 /// 🧪️ `render_chrome_dialog`'s scrim-click dismissal (`DismissPolicy::outside_press_swallow`) — a
 /// click outside the centered dialog box closes it without dispatching `confirm_action`.
+///
+/// A click far in the top-left corner, well outside the centered ~360x168 box on an 800x600 viewport.
 #[test]
 fn dialog_scrim_click_dismisses_without_confirm_action() {
     let mut shell = ShellState::new(Vec::new(), String::new());
@@ -199,7 +201,6 @@ fn dialog_scrim_click_dismisses_without_confirm_action() {
         confirm_action: ActionDescriptor { controller_id: "test".into(), action: "delete".into(), args: None },
         cancel_label: "Cancel".into(),
     });
-    // A click far in the top-left corner, well outside the centered ~360x168 box on an 800x600 viewport.
     input.pointer_x = 4.0;
     input.pointer_y = 4.0;
     shell.chrome_build.compute_click_edge(false);
@@ -210,6 +211,8 @@ fn dialog_scrim_click_dismisses_without_confirm_action() {
 
 /// 🧪️ Focus-trap-equivalent modality: while a dialog is open, the chrome-owned tour trigger and the
 /// sync-detach-confirmation click handlers must not fire — both are gated on `!chrome_dialog_open()`.
+///
+/// The guard every other chrome-owned click handler in this region checks first.
 #[test]
 fn dialog_open_blocks_other_chrome_owned_click_handlers() {
     let mut chrome = chrome_state();
@@ -222,7 +225,6 @@ fn dialog_open_blocks_other_chrome_owned_click_handlers() {
         cancel_label: "Cancel".into(),
     });
     assert!(chrome.dialog_open());
-    // The guard every other chrome-owned click handler in this region checks first.
     assert!(!(!chrome.dialog_open()));
 }
 //#endregion Dialog
@@ -293,18 +295,20 @@ fn tour_advance_and_back_reset_completed_interactions() {
 /// 🧪️ Ordered interactions gate out-of-order completions (the not-yet-reached one is ignored, no
 /// dedup entry added) and a repeated already-completed gesture is a no-operation — both fall out of
 /// `chrome_tour_complete_interaction`'s `!completed.contains(i)` + `index != completed.len()` checks.
+///
+/// Pan is index 1; out of order while zoom (index 0) hasn't completed — ignored.
+///
+/// Repeating zoom after it's already completed is a no-operation.
 #[test]
 fn chrome_tour_complete_interaction_respects_order_and_dedups() {
     let mut shell = ShellState::new(Vec::new(), String::new());
     shell.chrome_build.start_introduction();
     let step = semio_framework::IntroductionStepDefinition::new("viewport", LocalizedLabel::data("Viewport"), LocalizedLabel::data("…"))
         .interact_ordered(vec![semio_framework_async::block_on(semio_framework::IntroductionInteraction::zoom("main", "Zoom")), semio_framework_async::block_on(semio_framework::IntroductionInteraction::pan("main", "Pan"))]);
-    // Pan is index 1; out of order while zoom (index 0) hasn't completed — ignored.
     shell.chrome_tour_complete_interaction(&step, |kind| matches!(kind, semio_framework::IntroductionInteractionKind::Pan(id) if id == "main"));
     assert_eq!(shell.chrome_build.tour_state.as_ref().unwrap().completed_interactions, Vec::<usize>::new());
     shell.chrome_tour_complete_interaction(&step, |kind| matches!(kind, semio_framework::IntroductionInteractionKind::Zoom(id) if id == "main"));
     assert_eq!(shell.chrome_build.tour_state.as_ref().unwrap().completed_interactions, vec![0]);
-    // Repeating zoom after it's already completed is a no-operation.
     shell.chrome_tour_complete_interaction(&step, |kind| matches!(kind, semio_framework::IntroductionInteractionKind::Zoom(id) if id == "main"));
     assert_eq!(shell.chrome_build.tour_state.as_ref().unwrap().completed_interactions, vec![0]);
     shell.chrome_tour_complete_interaction(&step, |kind| matches!(kind, semio_framework::IntroductionInteractionKind::Pan(id) if id == "main"));
@@ -388,6 +392,9 @@ fn pulse_thickness_is_periodic() {
     assert_eq!(introduced_pulse_thickness(100.0, hairline, focus), introduced_pulse_thickness(100.0 + INTRODUCED_PULSE_PERIOD_MS, hairline, focus));
 }
 
+/// 🪟️ Gap baseline sits at y = bounds.y + cap_h - stroke
+///
+/// Top of controls starts at x = bounds.x + bounds.w - controls_w
 #[test]
 fn window_silhouette_border_emits_notched_outline_segments() {
     let mut draw = DrawList::default();
@@ -395,9 +402,7 @@ fn window_silhouette_border_emits_notched_outline_segments() {
     push_window_silhouette_border(&mut draw, &silhouette, 2.0, Rgba::new(1.0, 0.0, 0.0, 1.0));
     let solids: Vec<[f32; 4]> = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter().map(|instance| instance.rect)).collect();
     assert!(solids.len() >= 8, "silhouette must paint every outline segment");
-    // Gap baseline sits at y = bounds.y + cap_h - stroke
     assert!(solids.iter().any(|r| (r[1] - (20.0 + 24.0 - 2.0)).abs() < 0.01 && r[0] >= 10.0 + 60.0 - 0.01), "gap baseline must sit under the cutout between tabs and controls");
-    // Top of controls starts at x = bounds.x + bounds.w - controls_w
     assert!(solids.iter().any(|r| (r[0] - (10.0 + 200.0 - 40.0)).abs() < 0.01 && (r[1] - 20.0).abs() < 0.01), "controls cap top must be part of the silhouette");
 }
 //#endregion Pulse
@@ -416,10 +421,10 @@ fn placement_center_variant_ignores_the_anchor() {
     assert_eq!((x, y), ((800.0 - 320.0) / 2.0, (600.0 - 168.0) / 2.0));
 }
 
+/// 🧭️ Anchor near the top-left in a wide viewport: space_right (750) exceeds space_bottom (580),
+/// space_top (0), and space_left (0), so "right" wins.
 #[test]
 fn placement_auto_picks_the_side_with_the_most_free_space() {
-    // Anchor near the top-left in a wide viewport: space_right (750) exceeds space_bottom (580),
-    // space_top (0), and space_left (0), so "right" wins.
     let anchor = Rect::new(0.0, 0.0, 50.0, 20.0);
     let (x, y) = resolve_introduction_placement(semio_framework::IntroductionPlacement::Auto, Some(anchor), (100.0, 50.0), (800.0, 600.0));
     assert_eq!(x, anchor.x + anchor.w + INTRODUCTION_INFO_BOX_GAP);
@@ -493,12 +498,13 @@ fn engagement_completion_suffix_matches_label_prefix() {
     assert_eq!(engagement_completion_suffix("bo", Some(&possibles)), "x");
 }
 
+/// 🔚️ Fully typed: no suffix left
 #[test]
 fn engagement_completion_suffix_empty_when_query_is_empty_or_unmatched() {
     let possibles = vec![ui_wgpu::wgpu::WindowEngagementPossible { id: "box".into(), label: "Box".into(), detail: None, action: None }];
     assert_eq!(engagement_completion_suffix("", Some(&possibles)), "");
     assert_eq!(engagement_completion_suffix("zz", Some(&possibles)), "");
-    assert_eq!(engagement_completion_suffix("Box", Some(&possibles)), ""); // fully typed: no suffix left
+    assert_eq!(engagement_completion_suffix("Box", Some(&possibles)), "");
     assert_eq!(engagement_completion_suffix("Bo", None), "");
 }
 

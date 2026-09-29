@@ -1,9 +1,0 @@
-{
-  "path": ".devcontainer/post-start.sh",
-  "forbidden": [
-    "git stash clear",
-    "git reset --hard",
-    "git clean -"
-  ],
-  "expected": []
-}

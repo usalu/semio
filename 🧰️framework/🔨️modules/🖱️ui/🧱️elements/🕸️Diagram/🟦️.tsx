@@ -883,7 +883,7 @@ const diagramForcePort: DiagramForcePort = {
   },
 };
 
-/** @emoji 🧲️ Creates the owned force-simulation handle used by the Diagram interaction loop. */
+/** 🧲️ Creates the owned force-simulation handle used by the Diagram interaction loop. */
 export function createDiagramForceSimulation<NodeType extends DiagramForceNode, LinkType extends DiagramForceLink<NodeType>>(nodes: NodeType[], links: LinkType[], config: DiagramForceConfig): DiagramForceSimulation<NodeType> {
   return diagramForcePort.create(nodes, links, config);
 }

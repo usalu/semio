@@ -123,7 +123,7 @@ export async function testNativeTrunkLockfile(workspace: string, generated: stri
       await new Promise((accept) => setTimeout(accept, 100));
     }
   };
-  const progress = setInterval(() => console.log("[DEBUG] Native Trunk watch lockfile probe running"), 10000);
+  const progress = setInterval(() => console.log("[TRACE] Native Trunk watch lockfile probe running"), 10000);
   try {
     await until("success");
     const files = readdirSync(join(root, "dist"), { recursive: true, withFileTypes: true }).filter((file) => file.isFile()).map((file) => join(file.parentPath, file.name)).sort();

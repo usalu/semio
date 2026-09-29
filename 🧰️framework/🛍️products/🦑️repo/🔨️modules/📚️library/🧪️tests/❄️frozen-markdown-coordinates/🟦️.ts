@@ -125,7 +125,7 @@ test("all 21 reviewed historical spans retain exact physical bytes and independe
 });
 
 test("a scoped transaction preserves Markdown and escaped JSON history while rewriting its live neighboring reference", () => {
-  const started = performance.now(), checkpoint = (phase: string) => console.log("[DEBUG] Historical coordinate fixture phase", JSON.stringify({ phase, milliseconds: performance.now() - started }));
+  const started = performance.now(), checkpoint = (phase: string) => console.log("[TRACE] Historical coordinate fixture phase", JSON.stringify({ phase, milliseconds: performance.now() - started }));
   const parent = join(root, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️frozen-markdown-coordinates/🧾️runs");
   expect(lstatSync(parent).isDirectory() && !lstatSync(parent).isSymbolicLink()).toBe(true);
   const owner = mkdtempSync(join(parent, "🔖️transaction-")), fixture = join(owner, "🧪️fixture");

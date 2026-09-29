@@ -344,17 +344,19 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     /// STUDIOS, lane 2-0 — the bound was blocking every non-`SemanticMutation` document app, e.g.
     /// `semio-s-plugin-space`'s `SpaceApp`/`WorkflowMutation` and `semio-s-plugin-playbook-procedural`'s
     /// `ModuleApp`/`ModulePayloadMutation`, from linking at all).
+    ///
+    /// 🚫️async: E4 fn-pointer slot
+    ///
+    /// 🚫️async: E4 fn-pointer slot — bare, non-capturing (see `PluginBuilder`'s own doc); rebuilds
+    /// the registry from `def` inside the fn body instead of capturing it, same trick
+    /// `crate::app::declarations::editor_surface`'s inner `factory` uses.
     pub fn document_app<A: ArtifactApp>(mut self, app: App) -> Self
     where
         PA: From<crate::app::VcsArtifactApp<A>>,
     {
-        // 🚫️async: E4 fn-pointer slot
         fn app_schema<A: ArtifactApp>() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
             resolve_ready(A::app_schema())
         }
-        // 🚫️async: E4 fn-pointer slot — bare, non-capturing (see `PluginBuilder`'s own doc); rebuilds
-        // the registry from `def` inside the fn body instead of capturing it, same trick
-        // `crate::app::declarations::editor_surface`'s inner `factory` uses.
         fn factory<A: ArtifactApp, PA: PluginApp + From<crate::app::VcsArtifactApp<A>>>(def: &crate::app::AppDefinition) -> PA {
             PA::from(resolve_ready(crate::app::VcsArtifactApp::with_registry(A::default(), crate::app::AppActionRegistry::from_definition(def))))
         }
@@ -371,16 +373,17 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     /// after `.document_app::<A>(app)` for a document app whose `Mutation` already derives it; skip
     /// it for the rest — they still register and route through `.document_app::<A>(app)` alone, they
     /// just do not contribute a roster row.
+    ///
+    /// 📖️ Non-capturing thunk pairing `A::DOCUMENT_SCHEMA` with its `SemanticMutation::kinds()`
+    /// table — `try_build()` commits these into the process-wide owner mutation roster
+    /// (`crate::app::commit_owner_mutation_roster`), the "owner half" of
+    /// `contributor.list-artifact-mutations`.
+    /// 🚫️async: E4 fn-pointer slot — `owner_mutation_rosters: Vec<fn() -> ...>` is a bare fn
+    /// pointer table; `kinds()` is a pure static-table accessor.
     pub fn document_app_mutation_roster<A: ArtifactApp>(mut self) -> Self
     where
         A::Mutation: protocol::SemanticMutation<A::Snapshot>,
     {
-        /// 📖️ Non-capturing thunk pairing `A::DOCUMENT_SCHEMA` with its `SemanticMutation::kinds()`
-        /// table — `try_build()` commits these into the process-wide owner mutation roster
-        /// (`crate::app::commit_owner_mutation_roster`), the "owner half" of
-        /// `contributor.list-artifact-mutations`.
-        // 🚫️async: E4 fn-pointer slot — `owner_mutation_rosters: Vec<fn() -> ...>` is a bare fn
-        // pointer table; `kinds()` is a pure static-table accessor.
         fn owner_mutation_roster<A: ArtifactApp>() -> (&'static str, &'static [protocol::SemanticDescriptor])
         where
             A::Mutation: protocol::SemanticMutation<A::Snapshot>,
@@ -400,17 +403,25 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     /// and routes regardless of what `V::Mutation` is. See `viewer_mutation_roster` for the separate
     /// opt-in `contributor.list-artifact-mutations` capability (ticket 26/08/16/ARTIFACT-VIEWERS-
     /// AND-EDITORS-PER-SUBSET report `📓️w2-sdk2-report.md`).
+    ///
+    /// 🚫️async: E4 fn-pointer slot
+    ///
+    /// 🚫️async: E4 fn-pointer slot — see `document_app`'s `factory` doc.
+    ///
+    /// 🎯️ C8.2 — schema-first: `io.artifact_schema` names the schema this surface opens without
+    /// relying on the `artifact_kinds[0].schema` convention. Stamped only when the app left it
+    /// empty, so an app that already set a different `io.artifact_schema` keeps its own choice.
+    ///
+    /// 🔒️ Contract §2.3 clause 4 — a viewer's document store attaches Read only, never Write.
     pub fn viewer<V>(mut self, mut def: crate::app::AppDefinition) -> Self
     where
         V: crate::app::ArtifactViewer,
         PA: From<crate::app::VcsArtifactApp<crate::app::ViewerApp<V>, V::Members>>,
     {
         use semio_framework::kernel::{ArtifactKind, Rights, Scope};
-        // 🚫️async: E4 fn-pointer slot
         fn app_schema<V: crate::app::ArtifactViewer>() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
             V::app_schema()
         }
-        // 🚫️async: E4 fn-pointer slot — see `document_app`'s `factory` doc.
         fn factory<V, PA>(def: &crate::app::AppDefinition) -> PA
         where
             V: crate::app::ArtifactViewer,
@@ -418,16 +429,12 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         {
             PA::from(resolve_ready(crate::app::VcsArtifactApp::<crate::app::ViewerApp<V>, V::Members>::with_registry(crate::app::ViewerApp::<V>::default(), crate::app::AppActionRegistry::from_definition(def))))
         }
-        // 🎯️ C8.2 — schema-first: `io.artifact_schema` names the schema this surface opens without
-        // relying on the `artifact_kinds[0].schema` convention. Stamped only when the app left it
-        // empty, so an app that already set a different `io.artifact_schema` keeps its own choice.
         if def.io.artifact_schema.is_empty() {
             def.io.artifact_schema = V::DOCUMENT_SCHEMA.to_string();
         }
         let app = App { definition: def.clone(), examples: Vec::new() };
         self.app_defs.push((app, crate::app::declarations::AppFactory { definition: def, create: factory::<V, PA>, document_schema: V::DOCUMENT_SCHEMA, codec: crate::app::artifact_codec_table::<crate::app::ViewerApp<V>>() }));
         self.app_schema_descriptors.push(app_schema::<V>);
-        // 🔒️ Contract §2.3 clause 4 — a viewer's document store attaches Read only, never Write.
         self.capability(CapabilityRequirement { artifact: ArtifactKind::Document, rights: Rights::Read, scope: Scope::App })
     }
 
@@ -437,11 +444,12 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     /// not yet every dispatch enum. Chain right after `.viewer::<V>(def)` for a subset whose
     /// `Mutation` already derives it; skip it for the rest — they still register and route through
     /// `.viewer::<V>(def)` alone, they just do not contribute a roster row.
+    ///
+    /// 🚫️async: E4 fn-pointer slot — see `document_app`'s `owner_mutation_roster` doc.
     pub fn viewer_mutation_roster<V: crate::app::ArtifactViewer>(mut self) -> Self
     where
         V::Mutation: protocol::SemanticMutation<V::Snapshot>,
     {
-        // 🚫️async: E4 fn-pointer slot — see `document_app`'s `owner_mutation_roster` doc.
         fn owner_mutation_roster<V: crate::app::ArtifactViewer>() -> (&'static str, &'static [protocol::SemanticDescriptor])
         where
             V::Mutation: protocol::SemanticMutation<V::Snapshot>,
@@ -466,38 +474,42 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         self.editor_app::<E>(def, E::examples())
     }
 
+    /// 🚫️async: E4 fn-pointer slot
+    ///
+    /// 🚫️async: E4 fn-pointer slot — see `document_app`'s `factory` doc.
+    ///
+    /// 🎯️ C8.2 — schema-first: `io.artifact_schema` names the schema this surface opens without
+    /// relying on the `artifact_kinds[0].schema` convention. Stamped only when the app left it
+    /// empty, so an app that already set a different `io.artifact_schema` keeps its own choice.
+    ///
+    /// 🔒️ Contract §2.3 clause 4 — an editor's document store attaches both Read and Write.
     fn editor_app<E: crate::app::ArtifactEditor>(mut self, mut def: crate::app::AppDefinition, examples: Vec<crate::app::ExampleSource>) -> Self
     where
         PA: From<crate::app::VcsArtifactApp<crate::app::EditorApp<E>, E::Members>>,
     {
         use semio_framework::kernel::{ArtifactKind, Rights, Scope};
-        // 🚫️async: E4 fn-pointer slot
         fn app_schema<E: crate::app::ArtifactEditor>() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
             E::app_schema()
         }
-        // 🚫️async: E4 fn-pointer slot — see `document_app`'s `factory` doc.
         fn factory<E: crate::app::ArtifactEditor, PA: PluginApp + From<crate::app::VcsArtifactApp<crate::app::EditorApp<E>, E::Members>>>(def: &crate::app::AppDefinition) -> PA {
             PA::from(resolve_ready(crate::app::VcsArtifactApp::<crate::app::EditorApp<E>, E::Members>::with_registry(crate::app::EditorApp::<E>::default(), crate::app::AppActionRegistry::from_definition(def))))
         }
-        // 🎯️ C8.2 — schema-first: `io.artifact_schema` names the schema this surface opens without
-        // relying on the `artifact_kinds[0].schema` convention. Stamped only when the app left it
-        // empty, so an app that already set a different `io.artifact_schema` keeps its own choice.
         if def.io.artifact_schema.is_empty() {
             def.io.artifact_schema = E::DOCUMENT_SCHEMA.to_string();
         }
         let app = App { definition: def.clone(), examples };
         self.app_defs.push((app, crate::app::declarations::AppFactory { definition: def, create: factory::<E, PA>, document_schema: E::DOCUMENT_SCHEMA, codec: crate::app::artifact_codec_table::<crate::app::EditorApp<E>>() }));
         self.app_schema_descriptors.push(app_schema::<E>);
-        // 🔒️ Contract §2.3 clause 4 — an editor's document store attaches both Read and Write.
         self.capability(CapabilityRequirement { artifact: ArtifactKind::Document, rights: Rights::Read, scope: Scope::App }).capability(CapabilityRequirement { artifact: ArtifactKind::Document, rights: Rights::Write, scope: Scope::App })
     }
 
     /// 🗂️ Opt-in: registers `E`'s owner-mutation roster — see `viewer_mutation_roster`.
+    ///
+    /// 🚫️async: E4 fn-pointer slot — see `document_app`'s `owner_mutation_roster` doc.
     pub fn editor_mutation_roster<E: crate::app::ArtifactEditor>(mut self) -> Self
     where
         E::Mutation: protocol::SemanticMutation<E::Snapshot>,
     {
-        // 🚫️async: E4 fn-pointer slot — see `document_app`'s `owner_mutation_roster` doc.
         fn owner_mutation_roster<E: crate::app::ArtifactEditor>() -> (&'static str, &'static [protocol::SemanticDescriptor])
         where
             E::Mutation: protocol::SemanticMutation<E::Snapshot>,
@@ -569,6 +581,15 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     }
 
     /// ✅️ Builds plugin-local runtime authority before one all-registry commit.
+    ///
+    /// 🗂️ Resolve every declared contribution against this plugin's own (now-final) id — pure,
+    /// no registry side effects — then gate-check the WHOLE candidate set (contract freeze §4)
+    /// before anything commits.
+    ///
+    /// 💼️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-jobs-runtime) — "registered on bundle
+    /// install like other builder registrations" per this packet's brief: folded here, in the
+    /// SAME `try_build()` call that installs every other builder registration, rather than
+    /// deferred to a separate hook.
     pub fn try_build(self) -> Result<Plugin<PA>, PluginAssemblyError> {
         let Self {
             plugin_id,
@@ -659,9 +680,6 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         let plan = crate::app::ArtifactRegistrationPlan::from_declarations(&artifacts, app_schemas, &foreign_document_codecs, &plugin_id, host_media_handlers, flow_extensions, routed_inferences);
         let (mut runtime, registry_plan) = plan.into_runtime(definitions)?;
 
-        // 🗂️ Resolve every declared contribution against this plugin's own (now-final) id — pure,
-        // no registry side effects — then gate-check the WHOLE candidate set (contract freeze §4)
-        // before anything commits.
         let mut contribution_descriptors = Vec::with_capacity(contributions.len());
         let mut contributed_inference_services = Vec::new();
         let mut contributed_mutation_runtime = Vec::new();
@@ -690,10 +708,6 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         for (command, handler) in commands {
             plugin = plugin.plugin_command(command, handler);
         }
-        // 💼️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-jobs-runtime) — "registered on bundle
-        // install like other builder registrations" per this packet's brief: folded here, in the
-        // SAME `try_build()` call that installs every other builder registration, rather than
-        // deferred to a separate hook.
         for (kind, factory) in jobs {
             crate::reactor::jobs::register_bounded_job_kind(kind, factory);
         }

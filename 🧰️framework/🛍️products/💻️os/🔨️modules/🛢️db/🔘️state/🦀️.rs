@@ -27,7 +27,7 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 //#region 🔖️Pages
-/// @emoji 📇️ A type that can serialize itself into a byte buffer in a canonical, deterministic
+/// 📇️ A type that can serialize itself into a byte buffer in a canonical, deterministic
 /// order — the basis every persistent structure's `content_hash` is built on. Implemented for the
 /// handful of primitive value types the `db` family's overlays actually store; a higher crate
 /// (`db_artifact`) that needs to content-address an application-level value implements this for
@@ -72,13 +72,13 @@ impl CanonicalEncode for () {
     fn encode_canonical(&self, _out: &mut Vec<u8>) {}
 }
 
-/// @emoji 🔑️ Hashes `bytes` with blake3, the family's hashing algorithm throughout (matches
+/// 🔑️ Hashes `bytes` with blake3, the family's hashing algorithm throughout (matches
 /// `pack`/`protocol`'s `ContentHash`).
 fn hash_bytes(bytes: &[u8]) -> pack::ContentHash {
     pack::ContentHash(*semio_framework_hash::hash(bytes).as_bytes())
 }
 
-/// @emoji 📦️ An immutable, content-addressed byte page: its `hash` is the blake3 digest of
+/// 📦️ An immutable, content-addressed byte page: its `hash` is the blake3 digest of
 /// `bytes`, computed once at construction. `db_snapshot` will use pages of this shape as the
 /// unit written into `KIND_CHUNK` segments.
 pub struct Page {
@@ -383,7 +383,7 @@ impl Default for RetainedStateMap {
     }
 }
 
-/// @emoji 🗃️ An in-memory content-addressed page cache: interning identical byte content twice
+/// 🗃️ An in-memory content-addressed page cache: interning identical byte content twice
 /// returns the same hash and shares the one underlying allocation — the structural-sharing/dedup
 /// mechanism `db_snapshot`'s incremental generations build on.
 #[derive(Default)]
@@ -398,7 +398,7 @@ impl PageStore {
         Self::default()
     }
 
-    /// @emoji ➕️ Interns `bytes`, returning its content hash. A byte-identical page already
+    /// ➕️ Interns `bytes`, returning its content hash. A byte-identical page already
     /// present is reused (no duplicate allocation, no duplicate `PageStore` entry).
     pub fn intern(&mut self, bytes: Vec<u8>) -> pack::ContentHash {
         let hash = hash_bytes(&bytes);
@@ -421,7 +421,7 @@ impl PageStore {
 //#endregion 🔖️Pages
 
 //#region 🔖️PMap
-/// @emoji 🔀️ Internal, deterministic (unseeded) hash used only to route keys to HAMT buckets —
+/// 🔀️ Internal, deterministic (unseeded) hash used only to route keys to HAMT buckets —
 /// see the module doc's design-choice note on why this is not blake3.
 fn hash_key<K: std::hash::Hash>(key: &K) -> u64 {
     use std::hash::Hasher;
@@ -430,9 +430,9 @@ fn hash_key<K: std::hash::Hash>(key: &K) -> u64 {
     hasher.finish()
 }
 
-/// @emoji 🪜️ 5 bits routed per HAMT level (32-way branching, per the contract).
+/// 🪜️ 5 bits routed per HAMT level (32-way branching, per the contract).
 const HAMT_BITS: u32 = 5;
-/// @emoji 🛑️ Beyond this depth, the 64-bit routing hash is exhausted (13 × 5 = 65 > 64); further
+/// 🛑️ Beyond this depth, the 64-bit routing hash is exhausted (13 × 5 = 65 > 64); further
 /// entries that would need a 13th level instead fall into a linear `Collision` bucket. Depths
 /// `0..HAMT_MAX_DEPTH` may branch; depth `HAMT_MAX_DEPTH` never does.
 const HAMT_MAX_DEPTH: u8 = 12;
@@ -449,7 +449,7 @@ enum HamtNode<K, V> {
         key: K,
         value: V,
     },
-    /// @emoji 💥️ A bucket of entries that share a routing hash (or that ran out of depth to
+    /// 💥️ A bucket of entries that share a routing hash (or that ran out of depth to
     /// split further) — degrades to a linear scan, which is fine since real-world key
     /// distributions make this vanishingly rare.
     Collision {
@@ -616,7 +616,7 @@ fn hamt_collect<'a, K, V>(node: &'a HamtNode<K, V>, out: &mut Vec<(&'a K, &'a V)
     }
 }
 
-/// @emoji 🗺️ A persistent (immutable, structurally-shared) hash map: a 32-way HAMT. Every
+/// 🗺️ A persistent (immutable, structurally-shared) hash map: a 32-way HAMT. Every
 /// mutating method returns a new `PMap`; unaffected subtrees are shared via `Arc` with the map(s)
 /// it was derived from, so a chain of `n` single-key edits allocates `O(n log n)` nodes total,
 /// not `O(n²)`.
@@ -638,7 +638,7 @@ impl<K, V> PMap<K, V> {
         self.len == 0
     }
 
-    /// @emoji 🚶️ Eagerly materializes every entry — simple to reason about at this crate's scope;
+    /// 🚶️ Eagerly materializes every entry — simple to reason about at this crate's scope;
     /// a lazy tree-walking iterator is a straightforward future optimization if profiling ever
     /// shows this matters.
     pub fn iter(&self) -> impl Iterator<Item = (&K, &V)> {
@@ -690,7 +690,7 @@ impl<K: Clone + Eq + std::hash::Hash, V: Clone> PMap<K, V> {
 }
 
 impl<K: Clone + Eq + std::hash::Hash + Ord + CanonicalEncode, V: Clone + CanonicalEncode> PMap<K, V> {
-    /// @emoji 🔑️ Content hash over `(key, value)` pairs in sorted-by-key order — sorted so the
+    /// 🔑️ Content hash over `(key, value)` pairs in sorted-by-key order — sorted so the
     /// hash is independent of insertion order/HAMT bucket layout, only of logical content.
     pub fn content_hash(&self) -> pack::ContentHash {
         let mut entries: Vec<(&K, &V)> = self.iter().collect();
@@ -706,7 +706,7 @@ impl<K: Clone + Eq + std::hash::Hash + Ord + CanonicalEncode, V: Clone + Canonic
 //#endregion 🔖️PMap
 
 //#region 🔖️PVec
-/// @emoji 🪜️ 5 bits routed per `PVec` trie level (32-way branching, matching `PMap`).
+/// 🪜️ 5 bits routed per `PVec` trie level (32-way branching, matching `PMap`).
 const PVEC_BITS: u32 = 5;
 
 enum VecNode<T> {
@@ -724,7 +724,7 @@ fn pvec_get<T>(node: &VecNode<T>, shift: u32, index: usize) -> &T {
     }
 }
 
-/// @emoji 🌱️ Builds a fresh single-child chain down to a one-element leaf holding `value`. Only
+/// 🌱️ Builds a fresh single-child chain down to a one-element leaf holding `value`. Only
 /// ever called at the exact next append position of a brand-new subtree, where every lower-order
 /// bit of `index` is guaranteed zero relative to that subtree — see the module's push_back note.
 fn pvec_new_path<T: Clone>(shift: u32, value: T) -> Rc<VecNode<T>> {
@@ -761,7 +761,7 @@ fn pvec_set<T: Clone>(node: &Rc<VecNode<T>>, shift: u32, index: usize, value: T)
     }
 }
 
-/// @emoji 🧵️ A persistent (immutable, structurally-shared) vector: a bitmapped trie, 32-way
+/// 🧵️ A persistent (immutable, structurally-shared) vector: a bitmapped trie, 32-way
 /// branching. `push_back`/`set`/`pop_back` are `O(log₃₂ n)`; unaffected subtrees are shared.
 pub struct PVec<T> {
     root: Rc<VecNode<T>>,
@@ -838,7 +838,7 @@ impl<T: Clone> PVec<T> {
 }
 
 impl<T: Clone + CanonicalEncode> PVec<T> {
-    /// @emoji 🔑️ Content hash over elements in index order (order-sensitive, unlike `PMap`'s).
+    /// 🔑️ Content hash over elements in index order (order-sensitive, unlike `PMap`'s).
     pub fn content_hash(&self) -> pack::ContentHash {
         let mut buf = Vec::new();
         for item in self.iter() {
@@ -872,7 +872,7 @@ fn rope_collect(node: &RopeNode, out: &mut String) {
     }
 }
 
-/// @emoji ➕️ Concatenates two rope nodes, dropping an empty side rather than wrapping it — keeps
+/// ➕️ Concatenates two rope nodes, dropping an empty side rather than wrapping it — keeps
 /// repeated split/rejoin (as `insert`/`delete` do) from growing unbounded chains of empty leaves.
 fn rope_concat_nodes(left: Rc<RopeNode>, right: Rc<RopeNode>) -> Rc<RopeNode> {
     let left_chars = rope_chars(&left);
@@ -886,7 +886,7 @@ fn rope_concat_nodes(left: Rc<RopeNode>, right: Rc<RopeNode>) -> Rc<RopeNode> {
     Rc::new(RopeNode::Concat { left, right, chars: left_chars + right_chars })
 }
 
-/// @emoji ✂️ Splits at char offset `at` (`0 <= at <= rope_chars(node)`, checked by every public
+/// ✂️ Splits at char offset `at` (`0 <= at <= rope_chars(node)`, checked by every public
 /// caller before this is reached).
 fn rope_split(node: &Rc<RopeNode>, at: usize) -> (Rc<RopeNode>, Rc<RopeNode>) {
     match node.as_ref() {
@@ -914,7 +914,7 @@ fn rope_split(node: &Rc<RopeNode>, at: usize) -> (Rc<RopeNode>, Rc<RopeNode>) {
     }
 }
 
-/// @emoji 📜️ A persistent (immutable, structurally-shared) text rope. `insert`/`delete`/`slice`
+/// 📜️ A persistent (immutable, structurally-shared) text rope. `insert`/`delete`/`slice`
 /// are expressed as `split` + `concat`, sharing every untouched leaf with the rope(s) they were
 /// derived from.
 ///
@@ -972,7 +972,7 @@ impl PText {
         Ok(PText(left).concat(&PText(right)))
     }
 
-    /// @emoji 🔑️ Content hash of the rope's flattened UTF-8 bytes.
+    /// 🔑️ Content hash of the rope's flattened UTF-8 bytes.
     pub fn content_hash(&self) -> pack::ContentHash {
         hash_bytes(self.to_string().as_bytes())
     }
@@ -1027,7 +1027,7 @@ fn tree_rotate_left<K: Clone, V: Clone>(node: &TreeNode<K, V>) -> Rc<TreeNode<K,
     tree_make(right.key.clone(), right.value.clone(), Some(new_left), right.right.clone())
 }
 
-/// @emoji ⚖️ Restores the AVL invariant (`|balance_factor| <= 1`) at `node`'s root via at most one
+/// ⚖️ Restores the AVL invariant (`|balance_factor| <= 1`) at `node`'s root via at most one
 /// single or double rotation — the standard AVL rebalance, applied bottom-up after every
 /// insert/remove so `PTree`'s height stays `O(log n)`.
 fn tree_balance<K: Clone, V: Clone>(node: Rc<TreeNode<K, V>>) -> Rc<TreeNode<K, V>> {
@@ -1127,7 +1127,7 @@ fn tree_collect<'a, K, V>(node: Option<&'a Rc<TreeNode<K, V>>>, out: &mut Vec<(&
     }
 }
 
-/// @emoji 🌳️ A persistent (immutable, structurally-shared) ordered map: an AVL tree. Unlike
+/// 🌳️ A persistent (immutable, structurally-shared) ordered map: an AVL tree. Unlike
 /// `PMap`, iteration order is the key order (`K: Ord`), and height is kept `O(log n)` by
 /// rebalancing on every insert/remove — the property `db_index`'s sorted-run merges will lean on.
 pub struct PTree<K, V> {
@@ -1148,7 +1148,7 @@ impl<K, V> PTree<K, V> {
         self.len == 0
     }
 
-    /// @emoji 📏️ The tree's current height — exposed so tests (and callers with their own
+    /// 📏️ The tree's current height — exposed so tests (and callers with their own
     /// balance-sensitive assumptions) can assert the `O(log n)` bound directly.
     pub fn height(&self) -> u32 {
         tree_height(self.root.as_ref())
@@ -1198,7 +1198,7 @@ impl<K: Clone + Ord, V: Clone> PTree<K, V> {
 }
 
 impl<K: Clone + Ord + CanonicalEncode, V: Clone + CanonicalEncode> PTree<K, V> {
-    /// @emoji 🔑️ Content hash over `(key, value)` pairs in ascending key order (already the
+    /// 🔑️ Content hash over `(key, value)` pairs in ascending key order (already the
     /// tree's natural iteration order).
     pub fn content_hash(&self) -> pack::ContentHash {
         let mut buf = Vec::new();
@@ -1212,7 +1212,7 @@ impl<K: Clone + Ord + CanonicalEncode, V: Clone + CanonicalEncode> PTree<K, V> {
 //#endregion 🔖️PTree
 
 //#region 🔖️PGraph
-/// @emoji 🕸️ A persistent (immutable, structurally-shared) directed graph: node data plus
+/// 🕸️ A persistent (immutable, structurally-shared) directed graph: node data plus
 /// adjacency, both backed by `PMap` so every mutation shares everything it didn't touch. Keeps
 /// both `out_edges` and `in_edges` so neighbor and predecessor lookups are both `O(log n)`
 /// (trading extra edge-side storage for that symmetry).
@@ -1255,7 +1255,7 @@ impl<N: Clone + Eq + std::hash::Hash, ND: Clone, ED: Clone> PGraph<N, ND, ED> {
         PGraph { nodes: self.nodes.insert(id, data), out_edges: self.out_edges.clone(), in_edges: self.in_edges.clone() }
     }
 
-    /// @emoji 🧹️ Removes `id` and every edge touching it (both directions) — the persistent
+    /// 🧹️ Removes `id` and every edge touching it (both directions) — the persistent
     /// "cascade delete", threading each intermediate persistent map through sequential
     /// (but still `O(log n)`-per-step) `insert`/`remove` calls.
     pub fn remove_node(&self, id: &N) -> Self {
@@ -1334,7 +1334,7 @@ impl<N: Clone + Eq + std::hash::Hash, ND: Clone, ED: Clone> PGraph<N, ND, ED> {
 }
 
 impl<N: Clone + Eq + std::hash::Hash + Ord + CanonicalEncode, ND: Clone + CanonicalEncode, ED: Clone + CanonicalEncode> PGraph<N, ND, ED> {
-    /// @emoji 🔑️ Content hash over the node set (sorted, via `PMap::content_hash`) followed by
+    /// 🔑️ Content hash over the node set (sorted, via `PMap::content_hash`) followed by
     /// the edge set sorted by `(from, to)`.
     pub fn content_hash(&self) -> pack::ContentHash {
         let mut buf = Vec::new();
@@ -1357,14 +1357,14 @@ impl<N: Clone + Eq + std::hash::Hash + Ord + CanonicalEncode, ND: Clone + Canoni
 //#endregion 🔖️PGraph
 
 //#region 🔖️Overlay
-/// @emoji 🫧️ The read side of a document's immutable base — typically a lazily-decoded `pack`
+/// 🫧️ The read side of a document's immutable base — typically a lazily-decoded `pack`
 /// document. `db_artifact` implements this over the real pack reader; `db_state` only depends on
 /// the trait, keeping this crate `pack`-decoder-free (it depends on `pack_core`, not `pack`).
 pub trait BaseSource {
     fn load(&self, path: &str) -> Result<Option<Vec<u8>>, DbError>;
 }
 
-/// @emoji 🫙️ A `BaseSource` with nothing in it — the base for a brand-new document, and useful in
+/// 🫙️ A `BaseSource` with nothing in it — the base for a brand-new document, and useful in
 /// tests that only care about overlay behavior.
 pub struct EmptyBase;
 
@@ -1374,7 +1374,7 @@ impl BaseSource for EmptyBase {
     }
 }
 
-/// @emoji ✏️ What an overlay records at a path: either an explicit value that shadows the base,
+/// ✏️ What an overlay records at a path: either an explicit value that shadows the base,
 /// or an explicit tombstone that hides a base value without touching the base itself.
 #[derive(Clone)]
 enum OverlayValue {
@@ -1382,7 +1382,7 @@ enum OverlayValue {
     Deleted,
 }
 
-/// @emoji 🏗️ A document's live, mutable-by-replacement state: an immutable base (read lazily,
+/// 🏗️ A document's live, mutable-by-replacement state: an immutable base (read lazily,
 /// never written) plus a `PMap` overlay of edits on top. Reads fall through overlay → base, per
 /// the contract; every mutation returns a new `OverlayRoot` (the base `Rc` is shared, only the
 /// overlay `PMap` grows/shrinks) alongside the `TouchedRegion` it touched, for `db_conflict`.
@@ -1414,7 +1414,7 @@ impl<B: BaseSource> OverlayRoot<B> {
         (OverlayRoot { base: self.base.clone(), overlay }, TouchedRegion::write(path))
     }
 
-    /// @emoji 🔢️ How many paths the overlay has explicitly recorded (set or tombstoned) — every
+    /// 🔢️ How many paths the overlay has explicitly recorded (set or tombstoned) — every
     /// other path still falls through to `base` untouched.
     pub fn overlay_len(&self) -> usize {
         self.overlay.len()
@@ -1429,7 +1429,7 @@ impl<B: BaseSource> Clone for OverlayRoot<B> {
 //#endregion 🔖️Overlay
 
 //#region 🔖️TouchedRegion
-/// @emoji 👣️ Whether a `TouchedRegion` records a read or a write — two reads of the same region
+/// 👣️ Whether a `TouchedRegion` records a read or a write — two reads of the same region
 /// never conflict; a write against anything intersecting it does.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum TouchKind {
@@ -1437,7 +1437,7 @@ pub enum TouchKind {
     Write,
 }
 
-/// @emoji 🗺️ A single access against one path in an overlay — `db_conflict`'s primitive unit for
+/// 🗺️ A single access against one path in an overlay — `db_conflict`'s primitive unit for
 /// touched-region intersection (bloom filters and the command-kind matrix build on top of this,
 /// they are `db_conflict`'s own concern). `path` is a `/`-separated segment string (matching
 /// `OverlayRoot`'s path shape), so a coarse write to a container path is detected as conflicting
@@ -1457,7 +1457,7 @@ impl TouchedRegion {
         TouchedRegion { path: path.into(), kind: TouchKind::Write }
     }
 
-    /// @emoji 🔀️ True iff `self` and `other` name the same path, or one path is a `/`-boundary
+    /// 🔀️ True iff `self` and `other` name the same path, or one path is a `/`-boundary
     /// prefix of the other (so a whole-subtree write is treated as touching everything beneath
     /// it, and vice versa).
     pub fn path_intersects(&self, other: &TouchedRegion) -> bool {
@@ -1472,7 +1472,7 @@ fn path_is_prefix(prefix: &str, path: &str) -> bool {
     path.len() > prefix.len() && path.starts_with(prefix) && path.as_bytes()[prefix.len()] == b'/'
 }
 
-/// @emoji 🧾️ The accumulated reads/writes of one command/transaction against an `OverlayRoot` —
+/// 🧾️ The accumulated reads/writes of one command/transaction against an `OverlayRoot` —
 /// what `db_conflict` intersects two of (from concurrent commands against the same base frontier)
 /// to decide whether they conflict.
 #[derive(Clone, Default, Debug)]
@@ -1489,7 +1489,7 @@ impl TouchedSet {
         self.regions.push(region);
     }
 
-    /// @emoji ⚔️ True iff any region in `self` and any region in `other` intersect with at least
+    /// ⚔️ True iff any region in `self` and any region in `other` intersect with at least
     /// one side being a `Write` — read/read intersections never conflict.
     pub fn conflicts_with(&self, other: &TouchedSet) -> bool {
         self.regions.iter().any(|a| other.regions.iter().any(|b| (a.kind == TouchKind::Write || b.kind == TouchKind::Write) && a.path_intersects(b)))

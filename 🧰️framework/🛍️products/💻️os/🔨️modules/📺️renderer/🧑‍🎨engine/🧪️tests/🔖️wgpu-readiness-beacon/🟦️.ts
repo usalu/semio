@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { WGPU_READINESS_BEACON_UNKNOWN_PLUGIN, wgpuReadinessBeacon } from "../../🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts";
 
-/** @emoji 🚦️ LAW: the wgpu page publishes React's own readiness beacon — `data-semio-os-ready` /
+/** 🚦️ LAW: the wgpu page publishes React's own readiness beacon — `data-semio-os-ready` /
  * `data-semio-os-error` on the document element, each carrying the plugin id and each clearing the
  * other — so one probe, one e2e runner and one CI gate work unchanged on both renderers.
  *

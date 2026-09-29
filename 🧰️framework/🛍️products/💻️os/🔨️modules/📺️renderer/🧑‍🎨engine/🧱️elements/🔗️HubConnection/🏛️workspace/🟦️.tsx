@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/🔗️HubConnection/🏛️workspace/component.tsx
-/** @emoji 🏛️ `HubWorkspace` — the one composed surface a shell mounts: `🔐️HubSignIn` above
+/** 🏛️ `HubWorkspace` — the one composed surface a shell mounts: `🔐️HubSignIn` above
  * `🏘️SpaceBrowser` above `🤖️AgentDelegations`, all driven by a single `useHubConnection` lane. It
  * lives in its own leaf rather than beside the hook because every pane imports that file's label
  * bundle, and a composition placed there would close an import cycle around

@@ -1,4 +1,4 @@
-//! @emoji 🧬️ The semantic UI contract — the single language-neutral boundary between the headless UI
+//! 🧬️ The semantic UI contract — the single language-neutral boundary between the headless UI
 //! runtime and every renderer (React DOM, the custom GPU family, anything later).
 //!
 //! Three properties define this crate:

@@ -17,7 +17,7 @@ test("explicit output identities preserve independent manifest IDs and reject am
   const parsed = parseGraphOutputCatalog(fixture.catalog, fixture.manifestIds);
   expect([...Object.values(parsed.shared), ...parsed.manifests.flatMap((row) => [row.rust, row.typescript])]).toEqual(fixture.expectedPaths);
   expect(validate(current)).toBe(true);
-  expect(parseGraphOutputCatalog(current, current.manifests.map((row) => row.id))).toEqual(current);
+  expect(parseGraphOutputCatalog(current, current.manifests.map((row) => row.id))).toEqual<typeof current>(current);
   for (const row of fixture.invalid) {
     const invalid = structuredClone(fixture.catalog) as unknown as Record<string | number, unknown>;
     let owner = invalid;
@@ -125,7 +125,7 @@ test("the actual generated registry loads every declared manifest through its cu
   expect(rustReferences.map((url) => url.href).sort()).toEqual(current.manifests.map((row) => new URL(`../../🤖️generated/${row.rust}`, import.meta.url).href).sort());
   for (const url of rustReferences) expect(readFileSync(url, "utf8").length).toBeGreaterThan(0);
   const registry = await import("../../🤖️generated/🟦️.ts");
-  expect([...registry.MANIFEST_IDS].sort()).toEqual(current.manifests.map((row) => row.id).sort());
+  expect([...registry.MANIFEST_IDS].sort()).toEqual<readonly string[]>(current.manifests.map((row) => row.id).sort());
   for (const row of current.manifests) {
     const manifest = registry.manifestById(row.id);
     expect(manifest?.id).toBe(row.id);

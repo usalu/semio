@@ -49,7 +49,6 @@ async fn drawing_viewer_camera_ownership_and_restore() {
     artifact_app_laws::close_registered_fixture_app(&mut *reopened);
     artifact_app_laws::close_registered_fixture_app(&mut *app);
     outcome.expect("Drawing viewer camera ownership and restoration");
-    eprintln!("[DEBUG] Drawing viewer cameras remain isolated, restore from packs and leave artifact bytes unchanged");
 }
 
 #[test]

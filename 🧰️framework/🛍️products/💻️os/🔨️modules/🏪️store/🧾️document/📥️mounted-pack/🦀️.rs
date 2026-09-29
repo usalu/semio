@@ -5,7 +5,7 @@
 
 use super::mounted_pack_rt as mounted;
 
-/// @emoji 🧬️ The artifact-specific half of a mounted pack session: consumes catalog/value events
+/// 🧬️ The artifact-specific half of a mounted pack session: consumes catalog/value events
 /// straight into typed domain owners, never into a schema-erased record tree.
 pub trait RetainedTypedPackOwner {
     type Value;
@@ -27,14 +27,14 @@ enum RetainedTypedPackPhase {
     Closed,
 }
 
-/// @emoji 🧾️ One close grant's outcome.
+/// 🧾️ One close grant's outcome.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RetainedTypedPackCloseStep {
     Pending { released_items: usize, released_bytes: usize },
     Complete,
 }
 
-/// @emoji 🧵️ Worker-owned mounted session over one exact byte count: `header` is matched byte by
+/// 🧵️ Worker-owned mounted session over one exact byte count: `header` is matched byte by
 /// byte and rejected before the owner or any cursor is allocated; every byte after it is handed
 /// unchanged to the canonical retained page source.
 pub struct RetainedTypedPackSession<O: RetainedTypedPackOwner> {
@@ -65,7 +65,7 @@ pub struct RetainedTypedPackSession<O: RetainedTypedPackOwner> {
 }
 
 impl<O: RetainedTypedPackOwner> RetainedTypedPackSession<O> {
-    /// @emoji 🚪️ Preflights exact credits only; nothing semantic exists until `header` has passed.
+    /// 🚪️ Preflights exact credits only; nothing semantic exists until `header` has passed.
     pub fn new(header: Vec<u8>, expected_bytes: usize, maximum_items: usize, maximum_depth: u16, owner_factory: fn() -> Result<O, &'static str>) -> Result<Self, &'static str> {
         if expected_bytes <= header.len() || expected_bytes > super::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES || maximum_items == 0 || maximum_depth == 0 {
             return Err("mounted-pack.exact-credits");
@@ -118,7 +118,7 @@ impl<O: RetainedTypedPackOwner> RetainedTypedPackSession<O> {
         Ok(())
     }
 
-    /// @emoji 📥️ Admits one byte; a refused byte is handed back unchanged.
+    /// 📥️ Admits one byte; a refused byte is handed back unchanged.
     pub fn admit_byte(&mut self, value: u8) -> Result<(), u8> {
         if !matches!(self.phase, RetainedTypedPackPhase::Header | RetainedTypedPackPhase::Ingress) || self.admitted == self.expected_bytes {
             return Err(value);
@@ -168,7 +168,7 @@ impl<O: RetainedTypedPackOwner> RetainedTypedPackSession<O> {
         Ok(())
     }
 
-    /// @emoji 🔏️ Seals ingress after exactly `expected_bytes`.
+    /// 🔏️ Seals ingress after exactly `expected_bytes`.
     pub fn seal(&mut self) -> Result<(), &'static str> {
         if self.admitted != self.expected_bytes || self.header_len != self.header.len() {
             return Err("mounted-pack.exact-byte-seal");
@@ -179,7 +179,7 @@ impl<O: RetainedTypedPackOwner> RetainedTypedPackSession<O> {
         Ok(())
     }
 
-    /// @emoji ⏱️ One bounded unit of retained decode work; `true` once the typed value is ready.
+    /// ⏱️ One bounded unit of retained decode work; `true` once the typed value is ready.
     pub fn grant(&mut self) -> Result<bool, &'static str> {
         if matches!(self.phase, RetainedTypedPackPhase::Ready | RetainedTypedPackPhase::Published) {
             return Ok(true);
@@ -257,7 +257,7 @@ impl<O: RetainedTypedPackOwner> RetainedTypedPackSession<O> {
         }
     }
 
-    /// @emoji 🤝️ Hands the typed value over exactly once.
+    /// 🤝️ Hands the typed value over exactly once.
     pub fn take(&mut self) -> Option<O::Value> {
         if self.phase != RetainedTypedPackPhase::Ready {
             return None;
@@ -275,7 +275,7 @@ impl<O: RetainedTypedPackOwner> RetainedTypedPackSession<O> {
         self.typed.is_some()
     }
 
-    /// @emoji 📏️ The exact allocation the next grant needs, bounded by the envelope close budget.
+    /// 📏️ The exact allocation the next grant needs, bounded by the envelope close budget.
     pub fn next_retained_allocation_bytes(&mut self) -> Result<Option<usize>, &'static str> {
         let requested = match self.phase {
             RetainedTypedPackPhase::Ingress => match self.source.as_ref() {
@@ -297,7 +297,7 @@ impl<O: RetainedTypedPackOwner> RetainedTypedPackSession<O> {
         Ok(requested)
     }
 
-    /// @emoji 🧱️ Reserves at most `maximum_bytes` of the pending allocation.
+    /// 🧱️ Reserves at most `maximum_bytes` of the pending allocation.
     pub fn reserve_retained_allocation(&mut self, maximum_bytes: usize) -> Result<mounted::RetainedPackSourceAllocationStep, mounted::RetainedPackSourceAllocationError> {
         let remaining = super::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES.saturating_sub(self.retained_allocated_bytes());
         let fault = |reason: &'static str| mounted::RetainedPackSourceAllocationError { allocated_bytes: 0, reason };
@@ -340,7 +340,7 @@ impl<O: RetainedTypedPackOwner> RetainedTypedPackSession<O> {
         self.phase = RetainedTypedPackPhase::Closing;
     }
 
-    /// @emoji 🧹️ Releases one owner per grant, typed owner first, source last.
+    /// 🧹️ Releases one owner per grant, typed owner first, source last.
     pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<RetainedTypedPackCloseStep, &'static str> {
         let one = RetainedTypedPackCloseStep::Pending { released_items: 1, released_bytes: 0 };
         let retained = |step: mounted::RetainedPackCloseStep| match step {

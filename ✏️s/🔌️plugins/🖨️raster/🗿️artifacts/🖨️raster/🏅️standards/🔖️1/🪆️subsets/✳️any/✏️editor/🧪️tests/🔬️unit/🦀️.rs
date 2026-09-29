@@ -1329,7 +1329,6 @@ async fn a_demo_edit_archive_loads_back_through_the_document_archive_door() {
     let mut app = mounted::mounted_app();
     mounted::dispatch(&mut app, RasterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::examples::art_raster_demo::ID.into() })).await;
     let archive = PluginApp::document_archive(&*app).await.expect("the demo document reads as one archive");
-    eprintln!("[DEBUG] raster demo archive pack={} spr={} members={}", archive.parent_pack.len(), archive.parent_spr.len(), archive.members.len());
     let envelope = store::parse_document_pack::<crate::RasterSnapshot, crate::op::RasterMutation>(&archive.parent_pack, &archive.parent_spr).await.expect("the archive's pack/spr pair parses").into_envelope();
     let edits = envelope.vcs.edits.len();
     let operation = semio_framework_job::OperationId(4_401);
@@ -1348,7 +1347,6 @@ async fn a_demo_edit_archive_loads_back_through_the_document_archive_door() {
             break;
         }
     }
-    eprintln!("[DEBUG] raster demo initializer edits={edits} steps={steps} terminal={}", terminal.is_some());
     let mut outcome = terminal.unwrap_or_else(|| panic!("the raster store initializer replaying {edits} edit(s) of the demo archive reached no terminal in {steps} steps"));
     assert!(matches!(outcome, semio_framework_job::StepOutcome::Complete(_)), "the initializer completes the demo archive");
     while !outcome.terminal_is_empty() {
@@ -1377,7 +1375,6 @@ async fn a_demo_edit_archive_loads_back_through_the_document_archive_door() {
         }
         let _ = PluginApp::maintenance_step(&mut *app, 1, 4_096).expect("archive maintenance step");
     }
-    eprintln!("[DEBUG] raster demo archive load polls={polls} last={last:?} ms={}", started.elapsed().as_millis());
     let status = status.unwrap_or_else(|| panic!("the demo archive load reached no terminal in {polls} polls (last progress {}/{})", last.0, last.1));
     assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "{}", String::from_utf8_lossy(&status.fault));
     PluginApp::acknowledge_document_archive_load(&mut *app, 91).expect("archive acknowledgement");

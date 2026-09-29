@@ -7,14 +7,14 @@ thread_local! { static PANIC_AFTER_PRODUCER_STEP: std::cell::Cell<bool> = const 
 pub(super) fn after_output_transfer() {
     PANIC_AFTER_OUTPUT_TRANSFER.with(|pending| {
         if pending.replace(false) {
-            panic!("[DEBUG] actual mounted direct-output transfer unwind");
+            panic!("actual mounted direct-output transfer unwind");
         }
     });
 }
 
 pub(super) fn after_producer_step() {
     if PANIC_AFTER_PRODUCER_STEP.with(|pending| pending.replace(false)) {
-        panic!("[DEBUG] actual mounted producer partial-step unwind");
+        panic!("actual mounted producer partial-step unwind");
     }
 }
 
@@ -205,7 +205,6 @@ fn mounted_output_admission_cancel_and_drop_keep_the_original_close_generation()
         assert_eq!(preserved, fixture["generationPreserved"].as_bool().unwrap());
         assert_eq!(revision, fixture["revision"].as_u64().unwrap());
         assert_eq!(tracker.terminal_is_empty(), fixture["terminal"].as_bool().unwrap());
-        eprintln!("[DEBUG] mounted-uncommitted-close drop={drop_grant} generation={generation} preserved={preserved} revision={revision} terminal=true");
     }
 }
 
@@ -235,7 +234,6 @@ fn mounted_output_admission_refuses_before_tree_when_shared_output_pool_is_full(
     while !outputs.close_step(1, 4096).unwrap().complete {}
     close_instance_to_empty(&tracker, 71);
     assert_eq!(admitted, fixture["extraInvocation"].as_bool().unwrap());
-    eprintln!("[DEBUG] mounted-output-admission accepted={admitted} tree-constructed=false shared-entries=64");
 }
 
 #[test]
@@ -265,7 +263,6 @@ fn mounted_output_admission_partial_producer_step_unwind_retains_original_slot_a
     }
     close_instance_to_empty(&tracker, 72);
     assert_eq!(retained, fixture["partialProducerUnwindRetainsOwner"].as_bool().unwrap(), "actual producer step must not remove the structural slot before invoking the child");
-    eprintln!("[DEBUG] mounted-producer-unwind exact-slot-and-box-retained={retained}");
 }
 
 #[test]
@@ -304,7 +301,6 @@ fn mounted_output_admission_incomplete_producer_sources_preserve_remaining_owner
     };
     close_instance_to_empty(&tracker, 73);
     assert_eq!(reservation_retained && tree_retained, fixture["incompleteProducerSourcesPreserveRemainingOwners"].as_bool().unwrap(), "one missing source must not consume other completed owners");
-    eprintln!("[DEBUG] mounted-producer-incomplete reservation-retained={reservation_retained} tree-retained={tree_retained}");
 }
 
 #[test]
@@ -346,7 +342,7 @@ fn mounted_output_admission_direct_receiver_preserves_captured_lifetime_generati
     assert!(target.is_none());
     let caught = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         assert!(tracker.take_ready_patch_into(key, generation, &mut target, 32768).unwrap());
-        panic!("[DEBUG] actual Pending receiver callback retains exact Ready");
+        panic!("actual Pending receiver callback retains exact Ready");
     }));
     assert!(caught.is_err());
     assert_eq!(target.as_ref().unwrap().generation(), generation);
@@ -354,7 +350,6 @@ fn mounted_output_admission_direct_receiver_preserves_captured_lifetime_generati
     while !target.as_mut().unwrap().close_step_with_grant(1, 4096).unwrap().complete {}
     close_instance_to_empty(&tracker, instance);
     assert_eq!(tracker.terminal_is_empty(), law["terminal"].as_bool().unwrap());
-    eprintln!("[DEBUG] live-output exact-lifetime=true admission-generation={generation} producer-callback-roots={exact_roots} occupied-busy-zero-refusal=true pending-callback-retained=true terminal=true");
 }
 
 #[test]
@@ -374,7 +369,6 @@ fn mounted_output_admission_close_waits_for_the_original_uncommitted_grant() {
     let returned = grant.commit_source(root.root).expect_err("closing lifetime rejects producer invocation");
     assert_eq!(returned.children.get(0).unwrap().key.as_ptr(), pointer);
     close_instance_to_empty(&tracker, 76);
-    eprintln!("[DEBUG] live-output close-waits-for-original-grant=true rejected-tree-pointer-preserved=true");
 }
 
 #[test]
@@ -441,7 +435,6 @@ fn mounted_output_admission_concurrent_trackers_share_one_fixed_pool_without_ove
         while !reservation.close_step(1).unwrap().complete {}
     }
     while !reused.close_step(1, 4096).unwrap().complete {}
-    eprintln!("[DEBUG] live-output same-process-workers=2 preoccupied=63 accepted={accepted} exact-refusal=true full64-restored=true");
 }
 
 #[test]
@@ -787,7 +780,7 @@ fn issued_obsolete_reconcile_feedback_retires_only_the_old_pending_owner() {
         assert!(!pending.has_unpublished());
         assert!(pending.has_capacity());
         close_instance_to_empty(&tracker, 7);
-        eprintln!("[DEBUG] obsolete real reconcile feedback rejection={} old={} current={} exact old owner retired", rejection, first, second);
+        eprintln!("obsolete real reconcile feedback rejection={} old={} current={} exact old owner retired", rejection, first, second);
     }
 }
 
@@ -938,7 +931,7 @@ fn mounted_reservation_precedes_tree_and_cap_plus_one_returns_exact_owner() {
     }
     assert_eq!(tracker.terminal_is_empty(), law["terminal"].as_bool().unwrap());
     assert_eq!(ui_contract::UiResidentPermit::snapshot().unwrap(), ui_contract::UiResidentSnapshot { bytes: fixed_bytes, items: 0, used_slots: 0 });
-    eprintln!("[DEBUG] mounted-resident-capacity fixed={fixed_bytes} floor={floor} ceiling={} ceiling-sized-accepted={capacity} full={} cap-plus-one=false exact-refusal=true restored={fixed_bytes}", limits.max_bytes, full.bytes);
+    eprintln!("mounted-resident-capacity fixed={fixed_bytes} floor={floor} ceiling={} ceiling-sized-accepted={capacity} full={} cap-plus-one=false exact-refusal=true restored={fixed_bytes}", limits.max_bytes, full.bytes);
 }
 
 #[test]
@@ -1279,6 +1272,10 @@ fn a_deferred_surface_awaiting_the_hosts_acknowledgement_does_not_hold_more_work
 /// retained surface still at revision 1 (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B46 §5/§8.1, wave
 /// B48 §3). The loop below runs past [`READY_PATCH_CAPACITY`] because each such exit also leaked one
 /// output slot, and once those are gone `reserve_mounted` refuses EVERY surface in the shell.
+///
+/// 🧹️ A released output is CLOSED, not yet retired — retirement is incremental and a turn drives
+/// it, so the law drives it too. Without this the loop would only prove the surface slot is free;
+/// with it, it also proves the released output returns to the fixed `ready` pool.
 #[test]
 fn a_dropped_render_reservation_releases_its_surface_slot_and_its_output() {
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -1291,9 +1288,6 @@ fn a_dropped_render_reservation_releases_its_surface_slot_and_its_output() {
             Err(_refused) => panic!("attempt {attempt} must still be reservable after {attempt} dropped reservations: {}", tracker.debug_state()),
         };
         drop(grant);
-        // 🧹️ A released output is CLOSED, not yet retired — retirement is incremental and a turn drives
-        // it, so the law drives it too. Without this the loop would only prove the surface slot is free;
-        // with it, it also proves the released output returns to the fixed `ready` pool.
         for _ in 0..1_024 {
             tracker.drive_one();
             if tracker.close_step(1, 4_096) {
@@ -1366,7 +1360,6 @@ fn the_refused_reconcile_reservation_names_the_resident_credit_ledger_not_the_ha
     assert!(state.contains(&format!("of {}B", ui_contract::UI_RESIDENT_AGGREGATE_BYTES)), "the census must price the refusal against the aggregate budget: {state}");
     let refused_census = semio_framework_ui_runtime::surface_reconcile_registry_census();
     assert!(refused_census.handback_free > 0, "the handback registry must still have headroom when credit runs out: {refused_census:?}");
-    eprintln!("[DEBUG] ceiling-sized credit ceiling={ceiling} surfaces; refusal={state}");
     release_resident_aggregate(held);
 }
 
@@ -1406,7 +1399,6 @@ fn two_hundred_publications_leave_the_reconcile_registries_holding_nothing() {
         "resident credit leaked across 200 publications (the reconcile runtime backing registers once, on the first reservation, and is fixed thereafter): {after:?} against {baseline:?}"
     );
     assert_eq!(after.handback_free, baseline.handback_free, "handback slots leaked across 200 publications: {after:?} against {baseline:?}");
-    eprintln!("[DEBUG] 200 publications returned every reservation: {after:?}");
 }
 
 /// 🧮️ WAVE B52 LAW: the retirement ladder of a published surface must not be priced by a grant
@@ -1523,7 +1515,7 @@ fn twelve_mounted_surfaces_at_their_real_sizes_all_hold_a_reconcile_reservation_
         tracker.debug_state()
     );
     eprintln!(
-        "[DEBUG] {} surfaces admitted at floor={}B each; reserved={}B for {} slots (mean {}B); peak while reconciling and publishing all of them={}B (mean {}B per surface) of {}B aggregate against a {}B per-surface ceiling; baseline={}B",
+        "{} surfaces admitted at floor={}B each; reserved={}B for {} slots (mean {}B); peak while reconciling and publishing all of them={}B (mean {}B per surface) of {}B aggregate against a {}B per-surface ceiling; baseline={}B",
         mounted.len(),
         semio_framework_ui_runtime::SURFACE_RECONCILE_FLOOR_BYTES,
         census.resident_bytes - baseline.resident_bytes,

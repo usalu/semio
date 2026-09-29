@@ -121,11 +121,13 @@ async function projectResources(absPath: string): Promise<Record<string, unknown
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ParsedGltf = { scene: THREE.Group; scenes: THREE.Group[]; animations: THREE.AnimationClip[]; cameras: THREE.Camera[]; parser: { json: any } };
 
+/** 📥️ Hands the file's bytes to `GLTFLoader.parse` as an ArrayBuffer, which reads a `.glb` container by its `glTF` magic and
+ *  decodes anything else as `.gltf` JSON text — decoding every input as text would refuse every `.glb`. */
 async function readGltf(absPath: string): Promise<ParsedGltf> {
   const bytes = readFileSync(absPath);
-  const text = new TextDecoder().decode(bytes);
+  const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
   return new Promise((resolve, reject) => {
-    new GLTFLoader().parse(text, "", (result) => resolve(result as unknown as ParsedGltf), reject);
+    new GLTFLoader().parse(buffer, "", (result) => resolve(result as unknown as ParsedGltf), reject);
   });
 }
 
@@ -307,8 +309,8 @@ function parseArgv(argv: readonly string[]): { probe: string; inputs: string[] }
 async function main(argv: readonly string[]): Promise<number> {
   const { probe, inputs } = parseArgv(argv);
   const started = Date.now();
-  const emit = (report: ProbeReport): number => {
-    process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
+  const emit = async (report: ProbeReport): Promise<number> => {
+    await new Promise<void>((resolve, reject) => process.stdout.write(`${JSON.stringify(report, null, 2)}\n`, (error) => (error ? reject(error) : resolve())));
     return report.status === "failed" ? 1 : 0;
   };
   const budgetMs = Number(process.env.SEMIO_PROBE_TIMEOUT_MS ?? 60_000);

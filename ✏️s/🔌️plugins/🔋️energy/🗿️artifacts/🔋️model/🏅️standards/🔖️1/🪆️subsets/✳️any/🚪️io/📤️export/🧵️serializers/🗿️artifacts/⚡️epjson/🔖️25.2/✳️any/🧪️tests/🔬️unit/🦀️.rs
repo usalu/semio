@@ -12,6 +12,7 @@ async fn writes_every_contract_object_type_for_case_600() {
         "Version",
         "SimulationControl",
         "Building",
+        "ShadowCalculation",
         "Site:Location",
         "GlobalGeometryRules",
         "Timestep",
@@ -20,6 +21,8 @@ async fn writes_every_contract_object_type_for_case_600() {
         "Schedule:Constant",
         "Material",
         "Material:NoMass",
+        "WindowMaterial:Glazing",
+        "WindowMaterial:Gas",
         "WindowMaterial:SimpleGlazingSystem",
         "Construction",
         "Zone",
@@ -74,6 +77,83 @@ async fn outward_normals_survive_the_documented_counterclockwise_winding() {
         for axis in 0..3 {
             assert!((computed[axis] - normal[axis]).abs() < 1e-9, "{name} normal {computed:?} != {normal:?}");
         }
+    }
+}
+
+fn object<'a>(root: &'a Object, kind: &str, name: &str) -> &'a Object {
+    let Some(Value::Object(group)) = root.get(kind) else { panic!("{kind} is missing") };
+    let Some(Value::Object(entry)) = group.get(name) else { panic!("{kind} {name:?} is missing") };
+    entry
+}
+
+fn corner(entry: &Object, index: usize) -> Vec3 {
+    let read = |axis: &str| entry.get(&format!("vertex_{index}_{axis}_coordinate")).and_then(Value::as_f64).expect("aperture corner");
+    [read("x"), read("y"), read("z")]
+}
+
+fn first_vertex(entry: &Object) -> Vec3 {
+    let Some(Value::Array(vertices)) = entry.get("vertices") else { panic!("vertices") };
+    let Some(Value::Object(vertex)) = vertices.first() else { panic!("first vertex") };
+    let read = |key: &str| vertex.get(key).and_then(Value::as_f64).expect("coordinate");
+    [read("vertex_x_coordinate"), read("vertex_y_coordinate"), read("vertex_z_coordinate")]
+}
+
+/// 💨️ The engine runs `ScheduledAch` as schedule × rate, so the document states a constant design
+/// flow whatever the model's (unused) coefficient fields hold — case 600 carries zeros there.
+#[semio_framework_async_macros::async_test]
+async fn a_scheduled_air_change_rate_is_a_constant_design_flow() {
+    let model = case("600");
+    assert!(model.infiltrations.iter().all(|entry| entry.constant_term_coefficient == 0.0), "case 600's infiltration carries the unused zero coefficients");
+    let Value::Object(root) = encode_model(&model) else { panic!("object") };
+    let Some(Value::Object(group)) = root.get("ZoneInfiltration:DesignFlowRate") else { panic!("infiltration") };
+    for (_, value) in group.iter() {
+        let Value::Object(entry) = value else { panic!("object") };
+        let read = |key: &str| entry.get(key).and_then(Value::as_f64).expect("coefficient");
+        assert_eq!([read("constant_term_coefficient"), read("temperature_term_coefficient"), read("velocity_term_coefficient"), read("velocity_squared_term_coefficient")], CONSTANT_DESIGN_FLOW_COEFFICIENTS);
+    }
+}
+
+/// 🪟️ Case 600's windows name the two-pane `Double Clear Glazing` stack, so their apertures are that
+/// stack; the simple-glazing fallback travels as a material only, with no construction of its own.
+#[semio_framework_async_macros::async_test]
+async fn a_window_with_a_glazing_construction_is_its_layered_stack() {
+    let model = case("600");
+    let Value::Object(root) = encode_model(&model) else { panic!("object") };
+    for window in &model.fenestrations {
+        let stack = glazing_stack(&model, window).expect("case 600 binds its windows to a glazing construction");
+        assert_eq!(object(&root, "FenestrationSurface:Detailed", &window.name).get("construction_name").and_then(Value::as_str), Some(stack.name.as_str()));
+        let Some(Value::Object(constructions)) = root.get("Construction") else { panic!("Construction") };
+        assert!(!constructions.contains_key(&glazing_construction_name(&window.name)), "{}: a bound window writes no simple-glazing construction", window.name);
+        assert_eq!(object(&root, "WindowMaterial:SimpleGlazingSystem", &glazing_material_name(&window.name)).get("u_factor").and_then(Value::as_f64), Some(window.u_value_w_m2k));
+    }
+    let unbound = Model { fenestrations: model.fenestrations.iter().cloned().map(|window| Fenestration { glazing_construction_id: None, ..window }).collect(), ..model.clone() };
+    let Value::Object(root) = encode_model(&unbound) else { panic!("object") };
+    for window in &unbound.fenestrations {
+        assert_eq!(object(&root, "FenestrationSurface:Detailed", &window.name).get("construction_name").and_then(Value::as_str), Some(glazing_construction_name(&window.name).as_str()));
+    }
+}
+
+/// 📐️ Every ring starts at its upper-left corner seen from outside — exactly where NREL's own ASHRAE
+/// 140 encoding (honeybee → OpenStudio, the committed reference's producer) starts it.
+#[semio_framework_async_macros::async_test]
+async fn every_ring_starts_at_its_upper_left_corner_seen_from_outside() {
+    let model = case("600");
+    let Value::Object(root) = encode_model(&model) else { panic!("object") };
+    for (surface, expected) in [("South Wall", [0.0, 0.0, 2.7]), ("East Wall", [8.0, 0.0, 2.7]), ("North Wall", [8.0, 6.0, 2.7]), ("West Wall", [0.0, 6.0, 2.7]), ("Roof", [0.0, 6.0, 2.7]), ("Floor", [8.0, 6.0, 0.0])] {
+        let first = first_vertex(object(&root, "BuildingSurface:Detailed", surface));
+        assert!((0..3).all(|axis| (first[axis] - expected[axis]).abs() < 1e-9), "{surface} starts at {first:?}, not its upper-left corner {expected:?}");
+    }
+    for (window, upper_left, lower_left) in [("South Window West", [0.5, 0.0, 2.2], [0.5, 0.0, 0.2]), ("South Window East", [4.5, 0.0, 2.2], [4.5, 0.0, 0.2])] {
+        let entry = object(&root, "FenestrationSurface:Detailed", window);
+        for (index, expected) in [(1, upper_left), (2, lower_left)] {
+            let found = corner(entry, index);
+            assert!((0..3).all(|axis| (found[axis] - expected[axis]).abs() < 1e-9), "{window} corner {index} is {found:?}, not {expected:?}");
+        }
+    }
+    for surface in &model.surfaces {
+        let rotated = upper_left_first(&surface.vertices_m);
+        let offset = rotated.iter().position(|vertex| *vertex == surface.vertices_m[0]).expect("a rotation keeps every vertex");
+        assert!((0..rotated.len()).all(|index| rotated[(offset + index) % rotated.len()] == surface.vertices_m[index]), "{} keeps its winding", surface.name);
     }
 }
 

@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🧪️ Component tests for `@semio-tech/hub-admin` at its fetch boundary. */
+/** 🧪️ Component tests for `@semio-tech/hub-admin` at its fetch boundary. */
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
@@ -287,6 +287,49 @@ describe("SpacesPage", () => {
     expect(screen.getByText("first@example.test")).toBeTruthy();
     expect(requests.some((request) => new URL(request).searchParams.get("cursor") === spaceCursor)).toBe(true);
     expect(requests.some((request) => new URL(request).pathname === "/admin/api/spaces/sp-1" && new URL(request).searchParams.get("cursor") === memberCursor)).toBe(true);
+  });
+
+  it("reloads the first space page after a created space's terminal receipt", async () => {
+    const existing = { id: "sp-1", name: "First Space", kind: "studio", visibility: "private", ownerUserId: "u-1", memberCount: 1, documentCount: 0, activeConnections: 0, createdAtMs: 0, updatedAtMs: 0 };
+    const created = { ...existing, id: "sp-2", name: "Created Space" };
+    const spaceRequests: URL[] = [];
+    let createdSpace = false;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL, init?: RequestInit) => {
+        const url = new URL(String(input));
+        const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
+        if (url.pathname === "/admin/api/overview") return json(OVERVIEW_BODY);
+        if (url.pathname === "/admin/api/spaces") {
+          spaceRequests.push(url);
+          return json({ rows: createdSpace ? [existing, created] : [existing], observedAtMs: spaceRequests.length });
+        }
+        if (url.pathname === "/admin/api/intents") {
+          const body = JSON.parse(String(init?.body)) as Record<string, unknown>;
+          createdSpace = body.kind === "create-space";
+          return json({ operationId: "operation:create-space", correlationId: "correlation:test", state: "succeeded", outcome: { code: "ok", durable: true } });
+        }
+        return new Response("not found", { status: 404 });
+      }),
+    );
+
+    render(
+      <AdminLocaleProvider>
+        <AdminSessionProvider baseUrl="http://hub.test">
+          <SpacesPage />
+        </AdminSessionProvider>
+      </AdminLocaleProvider>,
+    );
+
+    await screen.findByText("First Space");
+    fireEvent.click(document.getElementById("admin-space-create-open")!);
+    await screen.findByRole("dialog");
+    fireEvent.change(document.getElementById("admin-space-create-name")!, { target: { value: "Created Space" } });
+    fireEvent.click(document.getElementById("admin-space-create-submit")!);
+    await screen.findByText("Created Space");
+    expect(screen.getByText("First Space")).toBeTruthy();
+    expect(spaceRequests.length).toBeGreaterThanOrEqual(2);
+    expect(spaceRequests.map((request) => request.searchParams.get("cursor"))).toEqual(spaceRequests.map(() => null));
   });
 });
 

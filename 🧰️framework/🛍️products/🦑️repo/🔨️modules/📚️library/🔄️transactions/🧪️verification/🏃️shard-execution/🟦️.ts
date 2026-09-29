@@ -140,7 +140,7 @@ export async function runTransactionV2Shards(options: TransactionV2ShardOptions)
         child.once("exit", (code, signal) => {
           const milliseconds = performance.now() - startedAt;
           outcomes.push({ ordinal, filter, concurrency, milliseconds, code, signal });
-          console.error(`[DEBUG] Transaction v2 shard ${ordinal} finished in ${(milliseconds / 1_000).toFixed(2)}s`);
+          console.error(`[TRACE] Transaction v2 shard ${ordinal} finished in ${(milliseconds / 1_000).toFixed(2)}s`);
           if (code !== 0 || signal) stop(new Error(`Transaction v2 shard ${ordinal} failed with ${signal ?? code}`));
           accept();
         });

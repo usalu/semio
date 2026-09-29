@@ -247,24 +247,20 @@ impl<T> ReactorFixedSlots<T> {
         }
     }
 
+    /// 🔍️ SAFETY: occupancy is set only after `write` and cleared before `assume_init_read`.
     fn get(&self, index: usize) -> Option<&T> {
         if !self.occupied(index) {
             return None;
         }
-        self.values.get(index).map(|value| {
-            // SAFETY: occupancy is set only after `write` and cleared before `assume_init_read`.
-            unsafe { value.assume_init_ref() }
-        })
+        self.values.get(index).map(|value| unsafe { value.assume_init_ref() })
     }
 
+    /// 🖊️ SAFETY: occupancy is set only after `write` and cleared before `assume_init_read`.
     fn get_mut(&mut self, index: usize) -> Option<&mut T> {
         if !self.occupied(index) {
             return None;
         }
-        self.values.get_mut(index).map(|value| {
-            // SAFETY: occupancy is set only after `write` and cleared before `assume_init_read`.
-            unsafe { value.assume_init_mut() }
-        })
+        self.values.get_mut(index).map(|value| unsafe { value.assume_init_mut() })
     }
 
     fn insert(&mut self, index: usize, value: T) -> Result<(), T> {
@@ -282,12 +278,12 @@ impl<T> ReactorFixedSlots<T> {
         self.set_occupied(index, true);
     }
 
+    /// 🫴️ SAFETY: occupancy was checked and is now cleared before the exact initialized read.
     fn take(&mut self, index: usize) -> Option<T> {
         if !self.occupied(index) {
             return None;
         }
         self.set_occupied(index, false);
-        // SAFETY: occupancy was checked and is now cleared before the exact initialized read.
         Some(unsafe { self.values[index].assume_init_read() })
     }
 
@@ -686,9 +682,10 @@ async fn instance_task_quota(instance: u32) -> u64 {
 /// `RequestRegistry`, scoped to `instance` (`RequestRegistry::for_instance` — design-abi.md §4's
 /// per-request instance tagging, so `Event::InstanceClose` can cancel exactly this instance's
 /// pending host round-trips and no other's) — see `host::Host::new`.
+///
+/// 🌉️ `LocalKey::with`'s closure is sync — bridged via `resolve_ready` (`for_instance` is a
+/// pure clone-and-scope, no real suspension); `Host::new` itself is awaited normally outside.
 pub async fn host_for_instance(instance: u32) -> crate::host::Host {
-    // 🌉️ `LocalKey::with`'s closure is sync — bridged via `resolve_ready` (`for_instance` is a
-    // pure clone-and-scope, no real suspension); `Host::new` itself is awaited normally outside.
     let registry = REGISTRY.with(|registry| registry.for_instance(instance));
     crate::host::Host::new(registry).await
 }
@@ -719,6 +716,22 @@ pub(crate) fn drain_queued_effects(instance: u32) -> Vec<Effect> {
 /// (whatever correlation the app put there — a `nodeHash`, a handle, an operator id) merged with
 /// this invocation's outcome. Domain-neutral by construction: the SDK never invents a key the app
 /// did not already send, it only adds `ok` plus either `outputJson` or `faultCode`/`faultMessage`.
+///
+/// 📏️ CORRELATION, not the body: the SDK echoes the app's own request fields back so the
+/// response action can find its node/window/handle again, and a request BODY (a serialized
+/// operator input, a geometry blob) is not correlation — echoing it would carry the payload
+/// into the guest a second time, on top of the outcome
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). The bound is the one every structurally
+/// addressed argument already crosses: a string the shell could not have SENT as a command
+/// argument is not a string this may hand back as one.
+///
+/// 📦️ The ABI carries the answer as a `pack` (`🔌️plugin/🧬️schema/📜️.wit`'s `type pack =
+/// list<u8>`: "no JSON string … anywhere on this ABI's data path"), so the SDK DECODES it
+/// into the response action's declared `outputJson` text. Lossy-stringifying the container
+/// bytes instead — which is what this did — handed every browser-served answer to the app as
+/// mojibake, because the shell packs (`encodePackValue(JSON.parse(outputJson))`,
+/// `🏛️ShellHost/🟦️.tsx`) while only a native fixture ever sent raw JSON
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 pub fn extension_response_args(request_json: &str, outcome: &Result<Vec<u8>, semio_framework::Fault>) -> dsl::DslValue {
     let mut fields: Vec<(String, dsl::DslValue)> = match dsl::json::from_json_str::<dsl::DslValue>(request_json) {
         Ok(dsl::DslValue::Object(object)) => object,
@@ -728,27 +741,13 @@ pub fn extension_response_args(request_json: &str, outcome: &Result<Vec<u8>, sem
         if key == "ok" || key == "outputJson" || key == "faultCode" || key == "faultMessage" {
             return false;
         }
-        // 📏️ CORRELATION, not the body: the SDK echoes the app's own request fields back so the
-        // response action can find its node/window/handle again, and a request BODY (a serialized
-        // operator input, a geometry blob) is not correlation — echoing it would carry the payload
-        // into the guest a second time, on top of the outcome
-        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). The bound is the one every structurally
-        // addressed argument already crosses: a string the shell could not have SENT as a command
-        // argument is not a string this may hand back as one.
         let over_bound = matches!(value, dsl::DslValue::String(text) if text.chars().map(semio_framework::public_invocation_char_cost).sum::<usize>() > semio_framework::PUBLIC_INVOCATION_STRING_BYTES);
         if over_bound && semio_framework_trace::runtime_diagnostics_enabled() {
-            eprintln!("[DEBUG] extension response dropped the oversized request field {key:?} from the echoed correlation");
+            eprintln!("[TRACE] extension response dropped the oversized request field {key:?} from the echoed correlation");
         }
         !over_bound
     });
     match outcome {
-        // 📦️ The ABI carries the answer as a `pack` (`🔌️plugin/🧬️schema/📜️.wit`'s `type pack =
-        // list<u8>`: "no JSON string … anywhere on this ABI's data path"), so the SDK DECODES it
-        // into the response action's declared `outputJson` text. Lossy-stringifying the container
-        // bytes instead — which is what this did — handed every browser-served answer to the app as
-        // mojibake, because the shell packs (`encodePackValue(JSON.parse(outputJson))`,
-        // `🏛️ShellHost/🟦️.tsx`) while only a native fixture ever sent raw JSON
-        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
         Ok(bytes) => match store::pack_rt::decode_wire_value(bytes) {
             Ok(value) => {
                 fields.push(("ok".to_string(), dsl::DslValue::Bool(true)));
@@ -809,6 +808,10 @@ pub async fn host() -> crate::host::Host {
 /// on `TASK_RESUMES` — no `M`/`C`/`D` generic ever crosses into the executor or the resume queue,
 /// which is what lets ALL of this actor's apps (each with its own concrete `A`) share ONE
 /// `LocalExecutor`/`TASK_RESUMES` pair.
+///
+/// 🔑️ Latest-wins dedupe: a task spawned with the same `(instance, key)` as one still live
+/// cancels the live one FIRST — its future (and anything it owns, including a parked
+/// `RequestFuture`) is dropped without ever completing, so no resume is ever queued for it.
 pub(crate) async fn spawn_task<M, C, D>(instance: u32, meta: &crate::app::ActionMeta, task: crate::app::AsyncTask<M, C, D>) -> Result<(), semio_framework::Fault>
 where
     M: ::protocol::OpBinary + 'static,
@@ -833,9 +836,6 @@ where
         return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.task.key-too-large"), format!("task key exceeds {REACTOR_TASK_KEY_BYTES} bytes")));
     }
 
-    // 🔑️ Latest-wins dedupe: a task spawned with the same `(instance, key)` as one still live
-    // cancels the live one FIRST — its future (and anything it owns, including a parked
-    // `RequestFuture`) is dropped without ever completing, so no resume is ever queued for it.
     if let Some(key) = &key {
         if let Some(previous) = TASK_RECORDS.with(|records| records.borrow().find_key(instance, key)) {
             let detached = TASK_EXECUTOR.with(|executor| executor.detach(previous));
@@ -1074,14 +1074,15 @@ pub(crate) fn cancel_instance_tasks(instance: u32) {
 
 /// 📸️ `checkpoint::checkpoint` body — unconditional (no WIT type in its signature, only
 /// `Vec<u8>`/kernel types), unlike `poll`/the `wit_*`/`kernel_*_to_wit` bridge below.
+///
+/// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): the task itself is never
+/// serialized (`TASK_RECORDS`/`EXECUTOR` are process memory, not pack state) — only the
+/// `restart` command bytes of every LIVE task that declared one via `.restartable(..)` survive
+/// into the pack, one `TaskRestart{instance, command}` per such task.
 pub async fn checkpoint_now<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>) -> Result<Vec<u8>, semio_framework::Fault> {
     let instances = INSTANCE_METADATA.with(|metadata| metadata.borrow().checkpoint_rows());
     let timers = ARMED_TIMERS.with(|timers| timers.borrow().rows());
     let pending = REGISTRY.with(|registry| registry.pending_ids().into_iter().map(|id| id.0).collect());
-    // 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): the task itself is never
-    // serialized (`TASK_RECORDS`/`EXECUTOR` are process memory, not pack state) — only the
-    // `restart` command bytes of every LIVE task that declared one via `.restartable(..)` survive
-    // into the pack, one `TaskRestart{instance, command}` per such task.
     let task_restarts: Vec<checkpoint::TaskRestart> =
         TASK_RECORDS.with(|records| records.borrow().iter().filter_map(|(_, record)| record.restart.as_ref().map(|command| checkpoint::TaskRestart { instance: record.instance, command: command.clone() })).collect());
     checkpoint::checkpoint(runtime, &instances, timers, pending, task_restarts).await
@@ -1449,6 +1450,13 @@ mod wit_bridge {
         }
     }
 
+    /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): previously always
+    /// `default()` — `spawn_task`'s quota gate is the first real reader of this field, so a
+    /// decode failure (malformed/empty pack) also falls back to `default()` rather than
+    /// failing `InstanceOpen` outright; a missing quota is "no limit declared", not a fault.
+    ///
+    /// 🎬️ `wit-flip` (26/08/20): UI intents no longer masquerade as `app-command` — see kernel
+    /// `Event::UiIntent`'s own doc.
     fn wit_event_to_kernel(event: crate::component::wasip2::exports::semio::framework::reactor::Event) -> Event {
         use crate::component::wasip2::exports::semio::framework::reactor::Event as W;
         match event {
@@ -1459,10 +1467,6 @@ mod wit_bridge {
                 config: payload.config,
                 assets: payload.assets,
                 capabilities: Vec::new(),
-                // 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): previously always
-                // `default()` — `spawn_task`'s quota gate is the first real reader of this field, so a
-                // decode failure (malformed/empty pack) also falls back to `default()` rather than
-                // failing `InstanceOpen` outright; a missing quota is "no limit declared", not a fault.
                 quotas: decode_wire_quotas(&payload.quotas),
             },
             W::InstanceClose(payload) => Event::InstanceClose(semio_framework::kernel::ActorInstanceCloseRequest { lifetime: wit_lifetime_to_kernel(payload.lifetime), request_sequence: payload.request_sequence }),
@@ -1471,8 +1475,6 @@ mod wit_bridge {
             W::SuspendRequest(_) => Event::SuspendRequest,
             W::CapabilityChanged(_) => Event::SuspendRequest,
             W::QuotaChanged(_) => Event::SuspendRequest,
-            // 🎬️ `wit-flip` (26/08/20): UI intents no longer masquerade as `app-command` — see kernel
-            // `Event::UiIntent`'s own doc.
             W::UiIntent(payload) => Event::UiIntent { instance: semio_framework::kernel::PluginInstanceId(payload.instance.to_string()), intent: payload.intent },
             W::SurfaceVisible(payload) => Event::SurfaceVisible { surface: format!("{}:{}", payload.surface.instance, payload.surface.surface), body_key: payload.body_key, view_state: payload.view_state },
             W::SurfaceHidden(payload) => Event::SurfaceHidden { surface: format!("{}:{}", payload.surface.instance, payload.surface.surface) },
@@ -1623,13 +1625,14 @@ mod wit_bridge {
     /// Rust-only field types (`WindowKindId`, `DslValue`, `MediaType`, `ClipboardFragment`, ...) are
     /// wire-encoded through the SAME `store::pack_rt::encode_wire_value`/`dsl::to_dsl_value` idiom
     /// every existing host boundary in this crate already uses.
+    ///
+    /// 🚫️async: E5 executor bridge — `store::pack_rt::encode_wire_value` is genuinely `async fn`
+    /// (out of this packet's `path_scope`, `🏪️store/**`), but every caller in this match below is
+    /// itself sync (R9: `kernel_effect_to_wit`'s only consumer is the WIT-fixed sync `world actor`
+    /// boundary, no suspension point of its own) — `resolve_ready` is safe here because `world
+    /// actor` imports no `host-async`, so this store call never has anything real to suspend on.
     fn kernel_effect_to_wit(effect: Effect) -> Result<crate::component::wasip2::exports::semio::framework::reactor::Effect, semio_framework::Fault> {
         use crate::component::wasip2::exports::semio::framework::reactor as wit;
-        // 🚫️async: E5 executor bridge — `store::pack_rt::encode_wire_value` is genuinely `async fn`
-        // (out of this packet's `path_scope`, `🏪️store/**`), but every caller in this match below is
-        // itself sync (R9: `kernel_effect_to_wit`'s only consumer is the WIT-fixed sync `world actor`
-        // boundary, no suspension point of its own) — `resolve_ready` is safe here because `world
-        // actor` imports no `host-async`, so this store call never has anything real to suspend on.
         fn pack<T: serde::Serialize>(value: &T) -> Vec<u8> {
             let value = serde_json::to_value(value).map_or(dsl::DslValue::Null, |json| dsl::DslValue::from(&json));
             store::pack_rt::encode_wire_value(&value)
@@ -1646,6 +1649,7 @@ mod wit_bridge {
             Effect::SetPanel { panel_json } => wit::Effect::SetPanel(wit_effects::SetPanelEffect { panel_json }),
             Effect::DownloadMediaExport { filename, mime_type, data, encoding } => wit::Effect::DownloadMediaExport(wit_effects::DownloadMediaExportEffect { filename, mime_type, data, encoding }),
             Effect::IconRenderExport { items } => wit::Effect::IconRenderExport(wit_effects::IconRenderExportEffect { items: pack(&items) }),
+            Effect::VideoRenderExport { filename, program } => wit::Effect::VideoRenderExport(wit_effects::VideoRenderExportEffect { filename, program: pack(&program) }),
             Effect::RequestFileOpen { req, accept, read_as, import_action, multiple } => {
                 wit::Effect::RequestFileOpen(wit_effects::RequestFileOpenEffect { req: req.0, params: wit_effects::RequestFileOpenParams { accept, read_as, multiple, import_action } })
             }

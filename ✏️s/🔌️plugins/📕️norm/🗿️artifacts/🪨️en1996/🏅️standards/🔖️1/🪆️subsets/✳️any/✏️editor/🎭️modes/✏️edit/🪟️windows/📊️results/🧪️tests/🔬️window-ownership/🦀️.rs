@@ -77,7 +77,6 @@ fn norm_results_window_ownership_mutations_match_neutral_fixture_and_codecs() {
         let expected: NormResultsWindowConfig = dsl::json::from_json_str(&expected.to_string()).unwrap();
         assert_eq!(windows.get(id), Some(&expected));
     }
-    eprintln!("[DEBUG] Norm Results-window config matched neutral fixture, inverse, text, Pack, and two-instance undo/redo laws");
 }
 
 #[test]
@@ -177,7 +176,7 @@ fn norm_results_window_ownership_runtime_isolates_focused_inspection_and_reopens
                     Ok((reopened_left, reopened_right))
                 }
                 .await;
-                if let Err(error) = &reopened_outcome { eprintln!("[DEBUG] Norm Results reopened-app failure before close: {error}"); }
+                if let Err(error) = &reopened_outcome { eprintln!("[TRACE] Norm Results reopened-app failure before close: {error}"); }
                 drop(reopened);
                 let (reopened_left, reopened_right) = reopened_outcome?;
                 if reopened_left.selected_check_index != Some(3) || reopened_right != right_config { return Err("Norm edit after reload lost same-kind instance isolation".into()); }
@@ -191,10 +190,9 @@ fn norm_results_window_ownership_runtime_isolates_focused_inspection_and_reopens
                 Ok(())
             }
             .await;
-            if let Err(error) = &outcome { eprintln!("[DEBUG] Norm Results exact-window runtime failure before close: {error}"); }
+            if let Err(error) = &outcome { eprintln!("[TRACE] Norm Results exact-window runtime failure before close: {error}"); }
             drop(app);
             outcome.expect("Norm Results exact-window ownership runtime law");
-            eprintln!("[DEBUG] Norm Results selection isolated and reopened two same-kind windows, rendered focused Inspection, preserved document/app config bytes, rejected invalid identities, and closed on an 8 MiB stack");
         }))
         .expect("spawn Norm Results window ownership law")
         .join()

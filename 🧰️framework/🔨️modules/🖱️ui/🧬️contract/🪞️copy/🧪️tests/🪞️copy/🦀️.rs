@@ -45,7 +45,6 @@ fn retained_component_copy_all_variants_match_native_serde() {
         assert_eq!(serde_json::to_value(owner.candidate().unwrap()).unwrap(), expected);
         assert_eq!(serde_json::to_value(owner.source().unwrap()).unwrap(), expected);
         close(&mut owner, 64);
-        eprintln!("[DEBUG] retained-component-copy type={} turns={turns} allocated={allocated} exact-serde=true", row["component"]["type"]);
     }
 }
 
@@ -69,7 +68,6 @@ fn retained_component_copy_large_list_cancel_preserves_source_and_partial_candid
             close(&mut owner, grant.as_u64().unwrap() as usize);
         }
     }
-    eprintln!("[DEBUG] retained-component-cancel list-items=32 payload-bytes=32768 frontiers=8 close-grants=3 terminal=true");
 }
 #[test]
 fn retained_component_copy_surface_advances_under_real_4096_work_grant() {
@@ -97,7 +95,7 @@ fn retained_component_copy_surface_advances_under_real_4096_work_grant() {
         assert_eq!(serde_json::to_value(owner.candidate().unwrap()).unwrap(), expected);
     }
     close(&mut owner, 64);
-    eprintln!("[DEBUG] component-copy-real-grant inline={} work-max={maximum_work} complete={complete}", size_of::<crate::Component>());
+    eprintln!("component-copy-real-grant inline={} work-max={maximum_work} complete={complete}", size_of::<crate::Component>());
     assert!(maximum_work <= grant);
     assert!(complete, "valid Surface must progress under the actual runtime 4096-byte work grant");
 }

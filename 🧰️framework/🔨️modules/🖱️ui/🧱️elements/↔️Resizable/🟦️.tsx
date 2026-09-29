@@ -15,13 +15,13 @@ import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
 
 // #region 🪬️Resizable
 
-/** @emoji ↔ Fine-pointer hit target for splitters and corner joins (VS Code–style). */
+/** ↔ Fine-pointer hit target for splitters and corner joins (VS Code–style). */
 export const RESIZABLE_HIT_TARGET_MIN_FINE_PX = 20;
 
-/** @emoji ↔ Coarse-pointer hit target for splitters and corner joins. */
+/** ↔ Coarse-pointer hit target for splitters and corner joins. */
 export const RESIZABLE_HIT_TARGET_MIN_COARSE_PX = 28;
 
-/** @emoji ↔ Corner grab square at perpendicular split intersections. */
+/** ↔ Corner grab square at perpendicular split intersections. */
 export const RESIZABLE_CORNER_GRAB_PX = domSizePx("resizableCornerGrabUiSpacing");
 
 const RESIZABLE_HIT_TARGET_MINIMUM_SIZE = {
@@ -56,7 +56,7 @@ function writeResizableJoinCornerSpec(element: HTMLElement, spec: ResizableJoinC
 
 //#region ↔ResizableCornerInterceptor
 
-/** @emoji ↔ Window capture hook so corner grabs win over react-resizable-panels and survive hot reloads. */
+/** ↔ Window capture hook so corner grabs win over react-resizable-panels and survive hot reloads. */
 function installResizableCornerInterceptor(): void {
   if (typeof window === "undefined") return;
   const interceptorWindow = window as ResizableCornerWindow;
@@ -104,10 +104,10 @@ installResizableCornerInterceptor();
 
 //#endregion ↔ResizableCornerInterceptor
 
-/** @emoji ↔ Corner grab at a perpendicular split intersection (dual-axis resize). */
+/** ↔ Corner grab at a perpendicular split intersection (dual-axis resize). */
 export type ResizableJoinEdgeSide = "leading" | "trailing";
 
-/** @emoji ↔ Corner join wiring for a main-axis separator and a cross-axis child split. */
+/** ↔ Corner join wiring for a main-axis separator and a cross-axis child split. */
 export interface ResizableJoinCornerSpec {
   parentKind: "row" | "column";
   mainAxisPath: string;
@@ -118,7 +118,7 @@ export interface ResizableJoinCornerSpec {
   alongFraction: number;
 }
 
-/** @emoji ↔ Pixel placement for a corner grab on a separator strip. */
+/** ↔ Pixel placement for a corner grab on a separator strip. */
 export function resizableJoinCornerPlacementStyle(orientation: "horizontal" | "vertical", edgeSide: ResizableJoinEdgeSide, alongFraction: number, sizePx = RESIZABLE_CORNER_GRAB_PX): React.CSSProperties {
   const along = `${Math.round(Math.min(1, Math.max(0, alongFraction)) * 100)}%`;
   if (orientation === "horizontal") {

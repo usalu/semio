@@ -16,7 +16,7 @@ fn generation3d_declares_one_work_capacity_for_extent_footprint_and_preflight() 
     assert_eq!(generation3d_one_item_footprint(0).work_items, capacity.rows_for_items(1).expect("one item fits the route capacity"), "the footprint a preflight declares and the extent a work answers are the SAME quantity");
     assert!(capacity.admits(generation3d_one_item_footprint(0).work_items), "a route whose footprint is N rows must admit an extent of N");
     eprintln!(
-        "[DEBUG] generation3d work capacity: items={} work_items={} one-item rows={} footprint rows={}",
+        "generation3d work capacity: items={} work_items={} one-item rows={} footprint rows={}",
         capacity.invertible_items(),
         capacity.work_items(),
         capacity.rows_for_items(1).expect("one item fits"),
@@ -49,7 +49,6 @@ async fn every_bounded_retained_route_answers_an_admissible_extent() {
         };
         let extent = extent.unwrap_or_else(|| panic!("{tool_id}: extent refused the command outright — preflight reports that as a capacity fault"));
         assert!(capacity.admits(extent), "{tool_id}: extent {extent} exceeds the declared capacity {}", capacity.work_items());
-        eprintln!("[DEBUG] retained route {tool_id}: extent={extent} maximum_work_items={}", capacity.work_items());
     }
     context::retire_instance_operation_owner(&instance_owner);
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
@@ -65,7 +64,6 @@ async fn set_active_example_passes_the_retained_preflight() {
     app.handle_action("setActiveExample", Some(&serde_json::json!({ "exampleId": PROCEDURAL_EXAMPLE_BOX_SHELL }).into()), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("setActiveExample dispatches");
     let receipt = context::settle(&mut app).await;
     assert!(!receipt.lanes.contains(&TypedOperationResultLane::Fault), "setActiveExample faulted in the retained job ladder");
-    eprintln!("[DEBUG] setActiveExample preflight admitted: lanes={:?}", receipt.lanes);
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
 }
 
@@ -82,7 +80,7 @@ async fn interaction_select_passes_the_reserved_preflight() {
     // selection and asserting nothing (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     let settled = context::select_graph(&mut app, "node", &[node_id.as_str()]).await;
     assert_eq!(app.interaction_state().await.selection.get("graph").map(|selection| selection.ids.as_slice()), Some([node_id].as_slice()));
-    eprintln!("[DEBUG] interactionSelect reserved work items={} effects={}", ArtifactRetainedWorkCapacity::for_invertible_items(1).work_items(), settled.requested_effects.len());
+    eprintln!("interactionSelect reserved work items={} effects={}", ArtifactRetainedWorkCapacity::for_invertible_items(1).work_items(), settled.requested_effects.len());
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
 }
 
@@ -108,7 +106,6 @@ async fn an_unaddressed_flow_eval_tick_is_refused_not_over_capacity() {
         Ok(receipt) => format!("{:?}", receipt.lanes),
         Err(fault) => format!("{fault:?}"),
     };
-    eprintln!("[DEBUG] unaddressed flowEvalTick: {detail}");
     assert!(!detail.contains("exceeds semantic work capacity"), "an addressing refusal must not be reported as a work-capacity fault: {detail}");
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
 }

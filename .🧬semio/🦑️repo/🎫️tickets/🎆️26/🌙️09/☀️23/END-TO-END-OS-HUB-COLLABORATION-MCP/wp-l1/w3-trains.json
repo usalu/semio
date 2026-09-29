@@ -405,37 +405,58 @@
    "laws": "LB2: fixture writers (xlsx zzz_write_demo_fixtures, docx zzz_write_native_docx_fixture) → docx/xlsx lib (11 reds → 0)"
   },
   {
-   "id": "lb2-p5-fixtures",
+   "id": "u6-dead-docx-xlsx",
    "train": "T2",
-   "owner": "LB2",
-   "dry": "",
-   "write": "{NATIVE} zsh -c 'cargo test -p semio-s-artifact-stdio-xlsx --lib -- --ignored zzz_write_demo_fixtures && cargo test -p semio-s-artifact-stdio-docx --lib -- --ignored zzz_write_native_docx_fixture'",
-   "scope": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/"
-   ],
-   "revert": "l1-land",
+   "owner": "U6",
+   "dry": "python3 T/wp-u6/u6-dead-docx-xlsx.py --dry-run",
+   "write": "python3 T/wp-u6/u6-dead-docx-xlsx.py --write",
+   "revert": "own --revert (.🧬semio/🌐hub/s14-u6-backup) + l1-land",
    "crates": [
     "semio-s-artifact-stdio-docx",
     "semio-s-artifact-stdio-xlsx"
    ],
-   "laws": "LB2: docx/xlsx lib"
+   "laws": "U6: check --lib (+component-app-assembly), lib unit, 0 dead/unused",
+   "notes": "U6 03:3x: 339 edits / 10 files, ~2 800 lines of compiler-dead items; right after lb2-p5, before the p5 fixture writers"
   },
   {
-   "id": "lb2-p3-wg11",
+   "id": "u6-txt-replace-lowering",
    "train": "T2",
-   "owner": "LB2 + WG11",
-   "dry": "python3 T/wp-lb2/lb2-p3-row-actions.py --dry-run && python3 T/wp-wg11/wg11-table-row-painter-patch.py",
-   "write": "python3 T/wp-lb2/lb2-p3-row-actions.py --write && python3 T/wp-wg11/wg11-table-row-painter-patch.py --apply",
-   "revert": "l1-land (+ WG11 --revert)",
+   "owner": "U6",
+   "dry": "python3 T/wp-u6/u6-txt-replace-lowering.py --dry-run",
+   "write": "python3 T/wp-u6/u6-txt-replace-lowering.py --write",
+   "revert": "own --revert + l1-land",
    "crates": [
-    "semio-framework-plugin",
-    "semio-framework-ui (wgpu-engine)"
+    "semio-s-artifact-stdio-txt"
    ],
-   "ts": [
-    "@semio-tech/framework-renderer-react (Interpreter)"
+   "laws": "U6: txt lib 76/76 + 2 new laws",
+   "notes": "U6 03:4x"
+  },
+  {
+   "id": "u6-wav-kind-retag",
+   "train": "T2",
+   "owner": "U6",
+   "dry": "python3 T/wp-u6/u6-wav-kind-retag.py --dry-run",
+   "write": "python3 T/wp-u6/u6-wav-kind-retag.py --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "semio-s-artifact-stdio-contract",
+    "semio-s-artifact-stdio-wav"
    ],
-   "laws": "LB2: SDK table laws; WG11: ui table_row_grid/reconcile/flex/accessibility; renderer-react typecheck + Interpreter vitest; Home boot"
+   "laws": "U6: contract 46/46, wav data_kind law",
+   "notes": "U6 03:4x"
+  },
+  {
+   "id": "l1-stdio-semio-strip",
+   "train": "T2",
+   "owner": "L1 (for ST2)",
+   "dry": "python3 T/wp-l1/l1-stdio-semio-strip.py",
+   "write": "python3 T/wp-l1/l1-stdio-semio-strip.py --write",
+   "revert": "l1-land",
+   "crates": [
+    "semio-s-plugin-stdio-semio (wasm-dev profile)"
+   ],
+   "laws": "stdio-semio describe",
+   "notes": "T2 describe 04:20: stdio-semio dev component 330 MiB > 256 MiB bound; W4's stdio precedent"
   },
   {
    "id": "c13-p1",
@@ -468,6 +489,47 @@
    ],
    "laws": "C13: semio-framework-os --lib -- app_builder_tests",
    "notes": "coordinator 23:3x: FRONT of T3 with c13-p1 (live-proven security defect)"
+  },
+  {
+   "id": "u6-fragment-annotation-siblings",
+   "train": "T3",
+   "owner": "U6",
+   "dry": "python3 T/wp-u6/u6-fragment-annotation-siblings.py --dry-run",
+   "write": "python3 T/wp-u6/u6-fragment-annotation-siblings.py --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "semio-framework-schema",
+    "semio-s-artifact-stdio-wav (laws)"
+   ],
+   "laws": "U6: schema lib 29/29, AJV oracle, wav 2M-sample edit law",
+   "notes": "U6 03:4x: framework, next train after u6-wav-kind-retag"
+  },
+  {
+   "id": "u6-bcf-mesh-publication",
+   "train": "T3",
+   "owner": "U6",
+   "dry": "python3 T/wp-u6/u6-bcf-mesh-publication.py --dry-run",
+   "write": "python3 T/wp-u6/u6-bcf-mesh-publication.py --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "semio-s-artifact-stdio-bcf",
+    "semio-s-artifact-stdio-semio"
+   ],
+   "laws": "U6: semio 2782/0, bcf 53/0",
+   "notes": "U6 04:0x (arrived during T2's proof → T3)"
+  },
+  {
+   "id": "u6-publication-fault-terminal",
+   "train": "T3",
+   "owner": "U6",
+   "dry": "python3 T/wp-u6/u6-publication-fault-terminal.py --dry-run",
+   "write": "python3 T/wp-u6/u6-publication-fault-terminal.py --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "semio-framework-plugin (all apps)"
+   ],
+   "laws": "U6: plugin check; no phantom History row after a refused typed operation",
+   "notes": "U6 04:0x"
   },
   {
    "id": "sh2-space-home",
@@ -632,7 +694,22 @@
     "os (TextEditor)",
     "ui scene TS"
    ],
-   "laws": "C12: ui-scene text_splice; writer lib (quintet, concurrent typing); bun test ✂️text-splice; mutate-writer-1; tsc os + boot"
+   "laws": "C12: ui-scene text_splice; writer lib (quintet, concurrent typing); bun test ✂️text-splice; mutate-writer-1; tsc os + boot",
+   "notes": " | REVERTED 04:58 in T3 (fem name:/c12 payload test missing) → re-land T3-late after owner fix"
+  },
+  {
+   "id": "c12-child-payload",
+   "train": "T3",
+   "owner": "C12",
+   "dry": "python3 T/wp-c12/child-payload/c12-child-payload-patch.py",
+   "write": "python3 T/wp-c12/child-payload/c12-child-payload-patch.py --apply",
+   "revert": "l1-land",
+   "crates": [],
+   "ts": [
+    "plugin browser bundle TS (childRejectionReason)"
+   ],
+   "laws": "C12: law case in its check.ts",
+   "notes": "C12 23:3x"
   },
   {
    "id": "av2",
@@ -801,7 +878,7 @@
     "semio-s-plugin-fem"
    ],
    "laws": "W4: artifact_kind_names_the_store_schema laws, norm app-surface, shooting io; next chain describe gate + w4-codec-probe.py 0 NO-CODEC",
-   "notes": "42 edits (W4 22:0x)"
+   "notes": "42 edits (W4 22:0x) | REVERTED 04:58 in T3 (fem name:/c12 payload test missing) → re-land T3-late after owner fix"
   },
   {
    "id": "w4-codec-gate",
@@ -814,7 +891,101 @@
     "semio-framework-plugin-describe"
    ],
    "laws": "W4: kind_identity_law_matches_the_fixture",
-   "notes": "8 edits + fixture; after w4-kind-specs"
+   "notes": "8 edits + fixture; after w4-kind-specs | REVERTED 04:58 in T3 (fem name:/c12 payload test missing) → re-land T3-late after owner fix"
+  },
+  {
+   "id": "t14-kind-choices",
+   "train": "T3",
+   "owner": "T14",
+   "dry": "python3 T/wp-t14/kind-choices/kind-choices.py --dry-run",
+   "write": "python3 T/wp-t14/kind-choices/kind-choices.py --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "Rust twin of artifactKindChoices (crate from record)"
+   ],
+   "ts": [
+    "manifest TS artifactKindChoices"
+   ],
+   "laws": "T14: vitest 2/2; post-T3 kind-label-check rc 0 except s.home",
+   "notes": "T14 03:4x: right after W4 identity + gate | REVERTED 04:58 in T3 (fem name:/c12 payload test missing) → re-land T3-late after owner fix"
+  },
+  {
+   "id": "lb2-p3-wg11",
+   "train": "T3",
+   "owner": "LB2 + WG11",
+   "dry": "python3 T/wp-lb2/lb2-p3-row-actions.py --dry-run && python3 T/wp-wg11/wg11-table-row-painter-patch.py",
+   "write": "python3 T/wp-lb2/lb2-p3-row-actions.py --write && python3 T/wp-wg11/wg11-table-row-painter-patch.py --apply",
+   "revert": "l1-land (+ WG11 --revert)",
+   "crates": [
+    "semio-framework-plugin",
+    "semio-framework-ui (wgpu-engine)"
+   ],
+   "ts": [
+    "@semio-tech/framework-renderer-react (Interpreter)"
+   ],
+   "laws": "LB2: SDK table laws; WG11: ui table_row_grid/reconcile/flex/accessibility; renderer-react typecheck + Interpreter vitest; Home boot",
+   "notes": "reverted 04:04 (T2 native: new-test compile errors); U6 fixed both compile errors 04:1x but 2 SDK laws red (p3 capacity design: Home 27 rows vs default window 48; windowed editable rows regress) → HELD until LB2/WG11 fix the design | U6 04:4x: capacity-true laws; re-landed in T3-late"
+  },
+  {
+   "id": "u6-xlsx-canonical-save",
+   "train": "T3",
+   "owner": "U6",
+   "dry": "python3 T/wp-u6/u6-xlsx-canonical-save.py --dry-run",
+   "write": "python3 T/wp-u6/u6-xlsx-canonical-save.py --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "semio-s-artifact-stdio-xlsx"
+   ],
+   "laws": "U6 C7",
+   "notes": "T3-late"
+  },
+  {
+   "id": "u6-docx-set-page-owner",
+   "train": "T3",
+   "owner": "U6",
+   "dry": "python3 T/wp-u6/u6-docx-set-page-owner.py --dry-run",
+   "write": "python3 T/wp-u6/u6-docx-set-page-owner.py --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "semio-s-artifact-stdio-docx"
+   ],
+   "laws": "U6 C8",
+   "notes": "T3-late"
+  },
+  {
+   "id": "lb2-p5-fixtures",
+   "train": "T3",
+   "owner": "LB2",
+   "dry": "",
+   "write": "{NATIVE} zsh -c 'cargo test -p semio-s-artifact-stdio-xlsx --lib -- --ignored zzz_write_demo_fixtures && cargo test -p semio-s-artifact-stdio-docx --lib -- --ignored zzz_write_native_docx_fixture'",
+   "scope": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/"
+   ],
+   "revert": "l1-land",
+   "crates": [
+    "semio-s-artifact-stdio-docx",
+    "semio-s-artifact-stdio-xlsx"
+   ],
+   "laws": "LB2: docx/xlsx lib",
+   "notes": "after u6 C7/C8 (U6 04:4x); docx/xlsx lib tests compile since U6 A6"
+  },
+  {
+   "id": "c12-catchup-status",
+   "train": "T4",
+   "owner": "C12",
+   "dry": "python3 T/wp-c12/catchup-status/c12-catchup-status-patch.py",
+   "write": "python3 T/wp-c12/catchup-status/c12-catchup-status-patch.py --apply",
+   "revert": "l1-land",
+   "crates": [
+    "semio-framework-os-kernel (lib tests: corpus replay law)"
+   ],
+   "ts": [
+    "os worker flushPendingBackbone, lease corpus TS twin",
+    "hub oracle"
+   ],
+   "laws": "C12: worker + os root vitest, hub execution-target-lease-check",
+   "notes": "C12 05:2x"
   },
   {
    "id": "h13-refill",
@@ -946,6 +1117,84 @@
     "bun.lock"
    ],
    "laws": "R10: bun install --frozen-lockfile --dry-run; verify dependencies literal-external"
+  },
+  {
+   "id": "l1-c12-test-import",
+   "train": "T5",
+   "owner": "L1 (for C12)",
+   "dry": "python3 T/wp-l1/l1-c12-test-import.py",
+   "write": "python3 T/wp-l1/l1-c12-test-import.py --write",
+   "revert": "l1-land",
+   "crates": [
+    "semio-s-artifact-writer-writer (lib test)"
+   ],
+   "laws": "C12 concurrent-typing law",
+   "notes": "pre-chain native: E0432 wrong module path for settle_framework_reserved_admission"
+  },
+  {
+   "id": "lb2-p9-hosted-artifacts",
+   "train": "T6-HOLD",
+   "owner": "LB2",
+   "dry": "python3 T/wp-lb2/lb2-p9-hosted-artifacts.py --dry-run",
+   "write": "python3 T/wp-lb2/lb2-p9-hosted-artifacts.py --write",
+   "revert": "own --revert (.🧬semio/🌐hub/s14-lb2-backup/p9/) + l1-land",
+   "crates": [
+    "semio-framework-plugin",
+    "semio-framework-schema",
+    "semio-framework-schema-registry",
+    "semio-framework-os-kernel (store/io schema docs; Cargo.toml gains schema-registry)",
+    "semio-s-plugin-stdio",
+    "semio-s-plugin-stdio-* ×9",
+    "semio-s-artifact-stdio-{bmp,wav,epw,binary,ifc,gif,semio}"
+   ],
+   "laws": "LB2: shipped_fleet laws d + e (every_registered_snapshot_contract_resolves_in_each_package_process), SDK builder:: tests; T6 describe: stdio + stdio-image + stdio-pdf descriptors change (p12), 7 families unchanged",
+   "notes": "LB2 07:5x: grown to 55 files (schema-document half: framework schema inference export, SDK schema_documents channel, kernel store/io schema docs); dry run 55/0 on live; kernel-wide → full guest proof in T6 | LB2 08:0x: 56 files incl. root Cargo.lock (2 dependency edges) so `--locked` stays valid; re-dry-run right before T6 (Cargo.lock anchors drift easily) | LB2 08:3x: HOLD — scratch s9 red (shipped_fleet 4/6: law e office→xml refs, law d schema-export claim namespace; editor_catalog 59/90); p9 grows again; wait for LB2's next RELAY"
+  },
+  {
+   "id": "lb2-p11-editor-documents",
+   "train": "T6-HOLD",
+   "owner": "LB2",
+   "dry": "python3 T/wp-lb2/lb2-p11-editor-documents.py --dry-run",
+   "write": "python3 T/wp-lb2/lb2-p11-editor-documents.py --write",
+   "revert": "own --revert + l1-land (revert in reverse order: p12 → p11 → p9)",
+   "crates": [
+    "stdio artifacts las/dwg/ifc/dxf/png/xml/binary/avi/wav/pptx/jpg/tiff/gif/epw"
+   ],
+   "laws": "LB2: editor documents valid (real-codec fixed points)",
+   "notes": "LB2 07:3x: after p9 (shared files); 32 files; dry run 0 problems on live | LB2 08:3x: HOLD — scratch s9 red (shipped_fleet 4/6: law e office→xml refs, law d schema-export claim namespace; editor_catalog 59/90); p9 grows again; wait for LB2's next RELAY"
+  },
+  {
+   "id": "lb2-p12-document-schema-identity",
+   "train": "T6-HOLD",
+   "owner": "LB2",
+   "dry": "python3 T/wp-lb2/lb2-p12-document-schema-identity.py --dry-run",
+   "write": "python3 T/wp-lb2/lb2-p12-document-schema-identity.py --write",
+   "revert": "own --revert + l1-land (reverse order)",
+   "crates": [
+    "semio-s-artifact-stdio-pdf",
+    "semio-s-artifact-stdio-gif"
+   ],
+   "laws": "LB2: pdf ×20 + gif 89a ×2 snapshot-model schema identity",
+   "notes": "LB2 07:3x: after p11; 24 files; coordinator-approved rule | LB2 08:3x: HOLD — scratch s9 red (shipped_fleet 4/6: law e office→xml refs, law d schema-export claim namespace; editor_catalog 59/90); p9 grows again; wait for LB2's next RELAY"
+  },
+  {
+   "id": "p9-fail-closed",
+   "train": "T6",
+   "owner": "P9",
+   "dry": "cd T/wp-p9/patches && python3 p9-fail-closed.py --dry-run",
+   "write": "cd T/wp-p9/patches && python3 p9-fail-closed.py --write",
+   "revert": "l1-land",
+   "crates": [
+    "semio-framework-plugin (every plugin's agent lane)",
+    "semio-framework-os-mcp (🌉️mcp/🔀️dispatch arm + law)",
+    "semio-s-artifact-flow-flow (declared-verbs pin)",
+    "semio-s-artifact-puzzle-2d/3d/5d (agent-lane pins)"
+   ],
+   "ts": [
+    "plugin TS twins, 🔌️plugin 📜️script.ts"
+   ],
+   "laws": "P9: verdict 31 + carriage 8 twins; overlay law proof of SDK + 8 plugins with declared-verb/agent-lane laws (pending); S19 flips flow's evaluate pin after",
+   "notes": "P9 08:1x: 20 hunks / 8 files, dry run clean on live | P9 08:4x: grew to 30 hunks / 14 files (no-effect refusal + app.notice causes; os-mcp dispatch arm; test pins puzzle ×3 + flow [evaluate, focusSelection] — S19 does NOT flip evaluate separately); overlay run 4 pending"
   }
  ]
 }

@@ -26,7 +26,7 @@ import { type Anchor, flowFromAnchor, useNativeDragArm, usePanelDockContext, use
 // #region 📑️PanelTabBar
 export type PanelTabBarVariant = "panel" | "mobile" | "chrome";
 
-/** @emoji 🧭️ Validates a path's segments against a node tree, truncating at the first segment that no longer exists at its level — no first-sibling substitution, no auto-descend (progressive reveal owns how deep a path goes). `[]` is a valid result. */
+/** 🧭️ Validates a path's segments against a node tree, truncating at the first segment that no longer exists at its level — no first-sibling substitution, no auto-descend (progressive reveal owns how deep a path goes). `[]` is a valid result. */
 export function reconcileActivePath<T extends { readonly id: string }>(nodes: readonly T[], path: readonly string[], childrenOf: (node: T) => readonly T[] | undefined): string[] {
   let current = nodes;
   const reconciled: string[] = [];
@@ -39,7 +39,7 @@ export function reconcileActivePath<T extends { readonly id: string }>(nodes: re
   return reconciled;
 }
 
-/** @emoji 🧭️ Eight anchors a panel or pane can grow from: the display's four corners, plus the four edge middles (top/bottom/left/right) — no center anchor, since floating chrome must never fully occlude the canvas. */
+/** 🧭️ Eight anchors a panel or pane can grow from: the display's four corners, plus the four edge middles (top/bottom/left/right) — no center anchor, since floating chrome must never fully occlude the canvas. */
 export interface PanelTreeUnit {
   readonly id: string;
   readonly tree: TreePanelSource;
@@ -48,24 +48,24 @@ export interface PanelTreeUnit {
   readonly order?: number;
 }
 
-/** @emoji 🍃️ Leaf tab — its `trees` are the panel-body units shown when active, each rendered as its own section. */
+/** 🍃️ Leaf tab — its `trees` are the panel-body units shown when active, each rendered as its own section. */
 export interface PanelTabLeaf {
   readonly kind: "leaf";
   readonly id: string;
   readonly icon: React.ComponentType<{ size?: number }>;
-  /** @emoji 🏷️ Mandatory tab label shown after the icon. */
+  /** 🏷️ Mandatory tab label shown after the icon. */
   readonly name: string;
   readonly order?: number;
-  /** @emoji 🌲️ Tree units for this tab — draggable between leaf tabs, rendered as sections. */
+  /** 🌲️ Tree units for this tab — draggable between leaf tabs, rendered as sections. */
   readonly trees: readonly PanelTreeUnit[];
 }
 
-/** @emoji 🍃️ Builds a {@link PanelTabLeaf} with exactly one tree, wrapped as a single {@link PanelTreeUnit} (unit id: `` `${id}.tree` ``). */
+/** 🍃️ Builds a {@link PanelTabLeaf} with exactly one tree, wrapped as a single {@link PanelTreeUnit} (unit id: `` `${id}.tree` ``). */
 export function singleTreeLeaf(leaf: { readonly id: string; readonly icon: React.ComponentType<{ size?: number }>; readonly name: string; readonly order?: number; readonly tree: TreePanelSource }): PanelTabLeaf {
   return { kind: "leaf", id: leaf.id, icon: leaf.icon, name: leaf.name, order: leaf.order, trees: [{ id: `${leaf.id}.tree`, tree: leaf.tree }] };
 }
 
-/** @emoji 🌳️ Branch tab — its `children` render as the row below this one when active. */
+/** 🌳️ Branch tab — its `children` render as the row below this one when active. */
 export interface PanelTabBranch {
   readonly kind: "branch";
   readonly id: string;
@@ -75,15 +75,15 @@ export interface PanelTabBranch {
   readonly children: readonly PanelTabNode[];
 }
 
-/** @emoji 🌲️ One node in the arbitrarily nestable panel tab tree. */
+/** 🌲️ One node in the arbitrarily nestable panel tab tree. */
 export type PanelTabNode = PanelTabLeaf | PanelTabBranch;
 
-/** @emoji 🌳️ `childrenOf` for {@link reconcileActivePath} over a {@link PanelTabNode} tree. */
+/** 🌳️ `childrenOf` for {@link reconcileActivePath} over a {@link PanelTabNode} tree. */
 export function panelTabChildren(node: PanelTabNode): readonly PanelTabNode[] | undefined {
   return node.kind === "branch" ? node.children : undefined;
 }
 
-/** @emoji 🔍️ Walks a path from the root, returning the node at its end (or undefined if the path doesn't resolve). */
+/** 🔍️ Walks a path from the root, returning the node at its end (or undefined if the path doesn't resolve). */
 export function findPanelTabNode(tabs: readonly PanelTabNode[], path: readonly string[]): PanelTabNode | undefined {
   let nodes = tabs;
   let found: PanelTabNode | undefined;
@@ -95,7 +95,7 @@ export function findPanelTabNode(tabs: readonly PanelTabNode[], path: readonly s
   return found;
 }
 
-/** @emoji 🔍️ Depth-first path from the root to the tab with `id`, or undefined if absent. */
+/** 🔍️ Depth-first path from the root to the tab with `id`, or undefined if absent. */
 export function findPanelTabPath(tabs: readonly PanelTabNode[], id: string): string[] | undefined {
   for (const node of tabs) {
     if (node.id === id) return [node.id];
@@ -107,7 +107,7 @@ export function findPanelTabPath(tabs: readonly PanelTabNode[], id: string): str
   return undefined;
 }
 
-/** @emoji 🌱️ A node's own id plus every descendant's id — the memory entries a collapsed/reset branch must forget. */
+/** 🌱️ A node's own id plus every descendant's id — the memory entries a collapsed/reset branch must forget. */
 function panelTabSubtreeIds(node: PanelTabNode): string[] {
   const children = panelTabChildren(node);
   return children ? [node.id, ...children.flatMap(panelTabSubtreeIds)] : [node.id];
@@ -138,7 +138,7 @@ export function resolvePanelBranchBodyLeaf(node: PanelTabNode, memory: Readonly<
   }
 }
 
-/** @emoji 🌱️ Result of interpreting one raw tab press: the next active path, the next per-branch drill-down memory, and whether the press should fold the hosting panel instead. */
+/** 🌱️ Result of interpreting one raw tab press: the next active path, the next per-branch drill-down memory, and whether the press should fold the hosting panel instead. */
 export interface PanelTabSelectionResult {
   readonly path: readonly string[];
   readonly memory: Readonly<Record<string, string>>;
@@ -188,15 +188,15 @@ export function progressPanelTabSelection(tabs: readonly PanelTabNode[], current
   return { path, memory: nextMemory, fold: false };
 }
 
-/** @emoji 🌱️ Controlled/uncontrolled selection state shared by every {@link PanelTabBar} host ({@link Panel}, {@link PanelChromeTabBar}, and Layout's private mobile panel). */
+/** 🌱️ Controlled/uncontrolled selection state shared by every {@link PanelTabBar} host ({@link Panel}, {@link PanelChromeTabBar}, and Layout's private mobile panel). */
 export interface PanelTabSelectionOptions {
   readonly tabs: readonly PanelTabNode[];
   readonly visible: boolean;
-  /** @emoji 🎛️ Fired when a tab press opens or folds the hosting surface (see {@link usePanelTabSelection}). */
+  /** 🎛️ Fired when a tab press opens or folds the hosting surface (see {@link usePanelTabSelection}). */
   readonly onVisibleChange?: (visible: boolean) => void;
   readonly activeTabPath?: readonly string[];
   readonly onActiveTabPathChange?: (path: readonly string[]) => void;
-  /** @emoji 🌱️ Per-branch drill-down memory (see {@link progressPanelTabSelection}) — which child was last active under each branch, so returning to it restores the drill-down. */
+  /** 🌱️ Per-branch drill-down memory (see {@link progressPanelTabSelection}) — which child was last active under each branch, so returning to it restores the drill-down. */
   readonly pathMemory?: Readonly<Record<string, string>>;
   readonly onPathMemoryChange?: (memory: Readonly<Record<string, string>>) => void;
   /** 🛠️ Extra drill-down applied only when a closed host opens — Tool category lands on Fill in one press. */
@@ -263,7 +263,7 @@ export function usePanelTabSelection({ tabs, visible, onVisibleChange, activeTab
   return { resolvedPath, memory, handlePathChange };
 }
 
-/** @emoji 🗄️ Full arrangement of tabs across all eight anchors — the pure, draggable dock model. */
+/** 🗄️ Full arrangement of tabs across all eight anchors — the pure, draggable dock model. */
 export interface PanelDock {
   readonly anchors: Record<Anchor, readonly PanelTabNode[]>;
 }
@@ -273,7 +273,7 @@ function panelTabNodeToSkeleton(node: PanelTabNode): DockTabSkeleton {
   return node.trees.length > 0 ? { id: node.id, trees: node.trees.map((unit) => unit.id) } : { id: node.id };
 }
 
-/** @emoji 🗄️ Reduces a full {@link PanelDock} to the id-only {@link DockSkeleton} persisted across sessions. */
+/** 🗄️ Reduces a full {@link PanelDock} to the id-only {@link DockSkeleton} persisted across sessions. */
 export function dockSkeletonOf(dock: PanelDock): DockSkeleton {
   const anchors = {} as Record<Anchor, readonly DockTabSkeleton[]>;
   for (const anchor of ANCHORS) anchors[anchor] = dock.anchors[anchor].map(panelTabNodeToSkeleton);
@@ -290,7 +290,7 @@ function dockTabSkeletonsEqual(a: DockTabSkeleton, b: DockTabSkeleton): boolean 
   return aTrees.length === bTrees.length && aTrees.every((id, index) => id === bTrees[index]);
 }
 
-/** @emoji 🗄️ Structural equality between two {@link DockSkeleton} values — used to decide whether an arrangement equals its computed default and therefore needs no persistence. */
+/** 🗄️ Structural equality between two {@link DockSkeleton} values — used to decide whether an arrangement equals its computed default and therefore needs no persistence. */
 export function dockSkeletonsEqual(a: DockSkeleton | null, b: DockSkeleton | null): boolean {
   if (a === b) return true;
   if (!a || !b) return false;
@@ -301,7 +301,7 @@ export function dockSkeletonsEqual(a: DockSkeleton | null, b: DockSkeleton | nul
   });
 }
 
-/** @emoji 🗄️ Every node/unit in a default {@link PanelDock}, indexed by id, for identity-preserving reconciliation. */
+/** 🗄️ Every node/unit in a default {@link PanelDock}, indexed by id, for identity-preserving reconciliation. */
 function indexPanelDockById(dock: PanelDock): { readonly nodes: Map<string, PanelTabNode>; readonly units: Map<string, PanelTreeUnit> } {
   const nodes = new Map<string, PanelTabNode>();
   const units = new Map<string, PanelTreeUnit>();
@@ -320,7 +320,7 @@ function indexPanelDockById(dock: PanelDock): { readonly nodes: Map<string, Pane
  * to the default's own shape, and any default tab/unit the skeleton doesn't mention is appended at its default
  * location. Subtrees untouched by the skeleton keep their exact default object identity.
  **/
-/** @emoji 🗄️ Collects every tab id and tree-unit id the skeleton explicitly mentions (across all anchors), gated by whether the corresponding default node's own kind agrees — a mismatched entry's `children`/`trees` are never recursed into. */
+/** 🗄️ Collects every tab id and tree-unit id the skeleton explicitly mentions (across all anchors), gated by whether the corresponding default node's own kind agrees — a mismatched entry's `children`/`trees` are never recursed into. */
 function collectDockSkeletonMentions(entries: readonly DockTabSkeleton[], nodes: ReadonlyMap<string, PanelTabNode>, tabIds: Set<string>, unitIds: Set<string>): void {
   for (const entry of entries) {
     tabIds.add(entry.id);
@@ -330,7 +330,7 @@ function collectDockSkeletonMentions(entries: readonly DockTabSkeleton[], nodes:
   }
 }
 
-/** @emoji 🗄️ True if `node` itself, or any node in its default subtree, is explicitly mentioned somewhere in the persisted skeleton — distinguishes "this whole branch was deliberately emptied out by a move" (some descendant reappears elsewhere) from "this branch is simply missing from a stale skeleton" (nothing under it is mentioned anywhere, safe to re-seed from defaults). */
+/** 🗄️ True if `node` itself, or any node in its default subtree, is explicitly mentioned somewhere in the persisted skeleton — distinguishes "this whole branch was deliberately emptied out by a move" (some descendant reappears elsewhere) from "this branch is simply missing from a stale skeleton" (nothing under it is mentioned anywhere, safe to re-seed from defaults). */
 function defaultSubtreeMentioned(node: PanelTabNode, mentionedTabIds: ReadonlySet<string>): boolean {
   if (mentionedTabIds.has(node.id)) return true;
   return node.kind === "branch" && node.children.some((child) => defaultSubtreeMentioned(child, mentionedTabIds));
@@ -381,11 +381,11 @@ export function applyDockSkeleton(defaultDock: PanelDock, skeleton: DockSkeleton
   return { anchors };
 }
 
-/** @emoji ↔ Insert-position indicator shown between tab buttons while a drag hovers a row. */
+/** ↔ Insert-position indicator shown between tab buttons while a drag hovers a row. */
 const panelTabInsertPreviewClass = "w-0.5 self-stretch rounded-full bg-accent shrink-0";
 
 /**
- * @emoji 📑️ One tab button; a child component (not inlined in {@link PanelTabRow}'s `.map`) so it can call
+ * 📑️ One tab button; a child component (not inlined in {@link PanelTabRow}'s `.map`) so it can call
  * driver-aware hooks per tab.
  *
  * ♿️ Which tab is open was carried by `data-active`/`data-state` alone — styling hooks a screen reader
@@ -492,26 +492,26 @@ const PanelTabButton: React.FC<{
   );
 };
 
-/** @emoji 📑️ Props for {@link PanelTabRow}. */
+/** 📑️ Props for {@link PanelTabRow}. */
 interface PanelTabRowProps {
   readonly variant: PanelTabBarVariant;
-  /** @emoji 🧲️ Present only for {@link Panel} rows — enables drag-and-drop wiring via {@link usePanelDockContext}. */
+  /** 🧲️ Present only for {@link Panel} rows — enables drag-and-drop wiring via {@link usePanelDockContext}. */
   readonly anchor?: Anchor;
   readonly parentPath?: readonly string[];
   readonly tabs: readonly PanelTabNode[];
   readonly activeId?: string;
   readonly onSelect: (tabId: string) => void;
-  /** @emoji 🎨️ Paints the active tab's fill/border — off for a folded {@link Panel}, whose button group shouldn't claim a tab is "active" while nothing is showing. */
+  /** 🎨️ Paints the active tab's fill/border — off for a folded {@link Panel}, whose button group shouldn't claim a tab is "active" while nothing is showing. */
   readonly showActiveColor?: boolean;
-  /** @emoji 🎀️ Stacking direction from {@link PanelTabBar} — flips the row's divider to the content-facing side for `"panel"` variant. */
+  /** 🎀️ Stacking direction from {@link PanelTabBar} — flips the row's divider to the content-facing side for `"panel"` variant. */
   readonly direction?: "up" | "down";
-  /** @emoji 📏️ Extends a body-hosted tab line across the panel instead of sizing it like a silhouette cap chip. */
+  /** 📏️ Extends a body-hosted tab line across the panel instead of sizing it like a silhouette cap chip. */
   readonly fullWidth?: boolean;
-  /** @emoji 🗜️ Icon-only chips whose names stay the buttons' accessible names — see {@link PanelTabBarProps.compactLabels}. */
+  /** 🗜️ Icon-only chips whose names stay the buttons' accessible names — see {@link PanelTabBarProps.compactLabels}. */
   readonly compactLabels?: boolean;
 }
 
-/** @emoji 📑️ One row of sibling tabs; stacked by {@link PanelTabBar} into a {@link Ribbon}. Tab rows keep declared left-to-right order independently of a right anchor's spatially mirrored panel flow, so folding and unfolding never reverses visual or keyboard progression. */
+/** 📑️ One row of sibling tabs; stacked by {@link PanelTabBar} into a {@link Ribbon}. Tab rows keep declared left-to-right order independently of a right anchor's spatially mirrored panel flow, so folding and unfolding never reverses visual or keyboard progression. */
 const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, anchor, parentPath = [], tabs, activeId, onSelect, showActiveColor = true, direction = "down", fullWidth = false, compactLabels = false }) => {
   const barRef = reactHostPort.useRef<HTMLDivElement>(null);
   const dock = usePanelDockContext();
@@ -589,29 +589,29 @@ const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, anchor, parentPath =
   );
 };
 
-/** @emoji 📑️ Props for {@link PanelTabBar}. */
+/** 📑️ Props for {@link PanelTabBar}. */
 export interface PanelTabBarProps {
   readonly variant: PanelTabBarVariant;
-  /** @emoji 🧲️ Present only when hosted by a {@link Panel} under a {@link PanelDockProvider}. */
+  /** 🧲️ Present only when hosted by a {@link Panel} under a {@link PanelDockProvider}. */
   readonly anchor?: Anchor;
   readonly tabs: readonly PanelTabNode[];
   readonly activePath: readonly string[];
   readonly onActivePathChange: (path: readonly string[]) => void;
-  /** @emoji 🎀️ Stacking direction for nested rows — `"up"` for bottom panels (rows grow toward the display center), `"down"` otherwise. */
+  /** 🎀️ Stacking direction for nested rows — `"up"` for bottom panels (rows grow toward the display center), `"down"` otherwise. */
   readonly direction?: "up" | "down";
-  /** @emoji 🗜️ Skips rows above this depth without skipping the descent through them — used when a host intentionally starts mid-tree (e.g. a secondary strip that continues after another bar already showed shallower rows). */
+  /** 🗜️ Skips rows above this depth without skipping the descent through them — used when a host intentionally starts mid-tree (e.g. a secondary strip that continues after another bar already showed shallower rows). */
   readonly startDepth?: number;
-  /** @emoji 🗜️ Stops after this many emitted rows — `1` is the generalization of the old "root row only" (a folded {@link Panel}'s button group, or a chrome-hosted bar, both of which only ever show one row). */
+  /** 🗜️ Stops after this many emitted rows — `1` is the generalization of the old "root row only" (a folded {@link Panel}'s button group, or a chrome-hosted bar, both of which only ever show one row). */
   readonly maxRows?: number;
-  /** @emoji 🎨️ Paints the active tab's fill/border — off for a folded {@link Panel}, whose button group shouldn't claim a tab is "active" while nothing is showing. */
+  /** 🎨️ Paints the active tab's fill/border — off for a folded {@link Panel}, whose button group shouldn't claim a tab is "active" while nothing is showing. */
   readonly showActiveColor?: boolean;
-  /** @emoji 🗜️ Renders every chip icon-only, its name kept as the button's accessible name (visually hidden, never
+  /** 🗜️ Renders every chip icon-only, its name kept as the button's accessible name (visually hidden, never
    * dropped) — the tablet footer, whose full labelled chrome is wider than a 768–1023 px viewport and would clip its
    * trailing tabs out of reach (measured live at 768×1024, ticket 26/09/18 session 11 U5). */
   readonly compactLabels?: boolean;
 }
 
-/** @emoji 📑️ Panel tab strip shared by {@link Panel}, {@link PanelChromeTabBar}, and Layout's private mobile panel — one {@link PanelTabRow} per tree level (within `[startDepth, startDepth + maxRows)`), stacked in a {@link Ribbon}. */
+/** 📑️ Panel tab strip shared by {@link Panel}, {@link PanelChromeTabBar}, and Layout's private mobile panel — one {@link PanelTabRow} per tree level (within `[startDepth, startDepth + maxRows)`), stacked in a {@link Ribbon}. */
 export const PanelTabBar: React.FC<PanelTabBarProps> = ({ variant, anchor, tabs, activePath, onActivePathChange, direction = "down", startDepth = 0, maxRows = Infinity, showActiveColor = true, compactLabels = false }) => {
   const rows: RibbonRow[] = [];
   let level = tabs;

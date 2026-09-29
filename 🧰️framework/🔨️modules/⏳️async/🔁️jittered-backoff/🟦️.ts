@@ -1,5 +1,5 @@
 //#region 🔁️RetryWithJitteredBackoff
-/** @emoji 🔁️ Options for {@link retryWithJitteredBackoff}. */
+/** 🔁️ Options for {@link retryWithJitteredBackoff}. */
 export interface JitteredBackoffOptions {
   readonly minMs: number;
   readonly maxMs: number;
@@ -33,7 +33,7 @@ function abortableDelay(ms: number, signal: AbortSignal | undefined): Promise<vo
 }
 
 /**
- * @emoji 🔁️ Retries `fn` with full-jitter exponential backoff (delay is a random value drawn from
+ * 🔁️ Retries `fn` with full-jitter exponential backoff (delay is a random value drawn from
  * `[minMs, min(maxMs, minMs * 2^attempt)]`, not a fixed exponential curve — this is what stops many
  * reconnecting clients from ever synchronizing into a hammering herd) until it resolves, `signal`
  * aborts, or `signal` is already aborted. Never returns while looping silently: an abort always

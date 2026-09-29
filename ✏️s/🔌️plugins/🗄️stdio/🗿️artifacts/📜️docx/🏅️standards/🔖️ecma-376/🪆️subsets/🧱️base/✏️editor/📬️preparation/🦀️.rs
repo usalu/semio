@@ -8,8 +8,11 @@ use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDocument, XmlNode
 use std::{mem::ManuallyDrop, sync::Arc};
 
 const PREFIX: &str = "stdio-docx-base-set-page";
-const OWNER_BYTES: usize = 2_048;
-const OWNER_ITEMS: usize = 128;
+/// 📏️ The one-item store preparation copies the whole document in one step, so an owner (the document, or one mutation)
+/// plus one turn fits the one-item store budget exactly — one measured item per 16 owned bytes — and larger owners refuse
+/// typed (`paged-owner-required`) before the store ever sees an inadmissible footprint.
+const OWNER_BYTES: usize = app_store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES - TURN_BYTES;
+const OWNER_ITEMS: usize = OWNER_BYTES / 16;
 const OWNER_DEPTH: usize = 32;
 const TURN_BYTES: usize = 4_096;
 
@@ -182,10 +185,6 @@ pub(super) fn measure_mutation(mutation: &DocxMutation) -> Result<usize, String>
     Ok(measure.bytes)
 }
 
-pub(super) fn snapshot_is_admitted(snapshot: &DocxSnapshot) -> Result<(), String> {
-    measure_snapshot(snapshot).map(|_| ())
-}
-
 pub(super) fn set_run_text_is_admitted(address: &DocxXmlAddress, text: &str) -> Result<(), String> {
     let mut measure = Measure::default();
     measure.add(std::mem::size_of::<DocxMutation>())?;
@@ -194,7 +193,6 @@ pub(super) fn set_run_text_is_admitted(address: &DocxXmlAddress, text: &str) -> 
 }
 
 pub(crate) fn prepare_set_run_text(snapshot: &DocxSnapshot, address: &DocxXmlAddress, text: &str) -> Result<Option<DocxMutation>, String> {
-    snapshot_is_admitted(snapshot)?;
     set_run_text_is_admitted(address, text)?;
     let mutation = DocxMutation::SetRunText(crate::schema::mutations::set_run_text::SetRunText { address: address.clone(), text: text.to_owned() });
     let prepared = crate::schema::mutations::prepare_addressed_xml_mutation(snapshot, &mutation)?;

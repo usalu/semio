@@ -27,7 +27,7 @@ pub fn derive_dsl_document(input: TokenStream) -> TokenStream {
 //#endregion 🔖️DslArtifact
 
 //#region 🔖️DslDiff
-/// @emoji 🧬️ W1 foundation of the `handcrafted-grammar-for-every-artifact` diff track (design ruling
+/// 🧬️ W1 foundation of the `handcrafted-grammar-for-every-artifact` diff track (design ruling
 /// B-R4): emits a `protocol::DiffCodec` impl from the SAME `RecordSpec`-generation machinery
 /// `#[derive(DslRecord)]`/`#[derive(DslArtifact)]` already use — a diff is structurally just another
 /// record, so this reuses `record_codegen` verbatim rather than reinventing field lowering. Unlike
@@ -57,7 +57,7 @@ pub fn derive_dsl_ops(input: TokenStream) -> TokenStream {
 }
 
 //#region 🔖️DslEnum
-/// @emoji 🌳️ Tagged-record enum whose variants are plain data (a recursive block tree, a wire
+/// 🌳️ Tagged-record enum whose variants are plain data (a recursive block tree, a wire
 /// node kind, ...) rather than a `Mutation` — implements `::dsl::DslVariants` only, so it can be
 /// used inside `#[dsl(statements)]`/`#[dsl(statements, block)]` collection fields without also
 /// gaining (and having to satisfy the bounds of) `store::OpText`.
@@ -74,7 +74,7 @@ pub fn derive_mutations(input: TokenStream) -> TokenStream {
     component::expand_derive_mutations(input)
 }
 
-/// @emoji 🌉️ Wires a composite mutation kind's delegating `::semio_framework_os_kernel::MutationKind` impl from its
+/// 🌉️ Wires a composite mutation kind's delegating `::semio_framework_os_kernel::MutationKind` impl from its
 /// handcrafted `::semio_framework_os_kernel::CompositeMutationKind` impl — `#[composite(snapshot = YourSnapshot, op =
 /// YourOpEnum)]` on the payload struct that already `impl CompositeMutationKind<YourSnapshot,
 /// YourOpEnum> for` itself. `diff`/`inverse`/`foreign_steps` delegate to the free

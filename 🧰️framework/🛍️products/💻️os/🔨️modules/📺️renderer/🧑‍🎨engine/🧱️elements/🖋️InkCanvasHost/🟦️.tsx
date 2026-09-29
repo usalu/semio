@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/InkCanvasHost/component.tsx
-/** @emoji 🖊️ `InkCanvasHost` — the freeform ink/note canvas scene host: block document model (text,
+/** 🖊️ `InkCanvasHost` — the freeform ink/note canvas scene host: block document model (text,
  * image, table, math, stroke, group), local-first gesture application for optimistic in-gesture
  * rendering, KaTeX-backed math rendering with a plain-text fallback, and pointer/keyboard/clipboard
  * wiring for direct-select, marquee-select, pan, pencil, eraser, and block-placement utilities. */
@@ -173,7 +173,7 @@ export function parseSelectionIds(json: string | undefined): readonly string[] {
 //#region GeometryHelpers
 let inkHostIdCounter = 0;
 
-/** @emoji 🆔️ Host-generated ids only need to be unique client-side (Rust re-derives its own on the next round-trip). */
+/** 🆔️ Host-generated ids only need to be unique client-side (Rust re-derives its own on the next round-trip). */
 export function createInkHostId(prefix: string): string {
   inkHostIdCounter += 1;
   return `${prefix}-host-${inkHostIdCounter}`;
@@ -373,13 +373,13 @@ function inkHitsPoint(block: InkStrokeItem, x: number, y: number, threshold: num
   return false;
 }
 
-/** @emoji 🧹️ Whole-stroke eraser: returns removeBlock events for every ink stroke under the point. */
+/** 🧹️ Whole-stroke eraser: returns removeBlock events for every ink stroke under the point. */
 export function eraseInkStrokeEventsAtPoint(doc: InkDocument, x: number, y: number, threshold = 8): readonly InkCanvasEvent[] {
   const hits = flattenInkItems(doc.blocks).filter((block): block is InkStrokeItem => block.kind === "stroke" && inkHitsPoint(block, x, y, threshold));
   return hits.map((block) => ({ operation: "removeBlock", blockId: block.id }));
 }
 
-/** @emoji ✂️ Splits an ink stroke into surviving point-runs after removing points within `radius` of (x, y). */
+/** ✂️ Splits an ink stroke into surviving point-runs after removing points within `radius` of (x, y). */
 export function eraseInkStrokePointsInItem(block: InkStrokeItem, x: number, y: number, radius: number): InkStrokeItem[] {
   const keptIndices: number[] = [];
   for (let index = 0; index < block.points.length; index += 1) {
@@ -402,7 +402,7 @@ export function eraseInkStrokePointsInItem(block: InkStrokeItem, x: number, y: n
   return runs.map((points, index) => ({ ...block, id: index === 0 ? block.id : createInkHostId("stroke"), name: index === 0 ? block.name : `${block.name} fragment`, points }));
 }
 
-/** @emoji ✂️ Point-eraser events: removeBlock for the original stroke, addBlock for each surviving fragment (skipped if untouched). */
+/** ✂️ Point-eraser events: removeBlock for the original stroke, addBlock for each surviving fragment (skipped if untouched). */
 export function eraseInkStrokePointEventsNearPoint(doc: InkDocument, x: number, y: number, radius: number): readonly InkCanvasEvent[] {
   const events: InkCanvasEvent[] = [];
   const inkBlocks = flattenInkItems(doc.blocks).filter((block): block is InkStrokeItem => block.kind === "stroke");
@@ -549,7 +549,7 @@ export function createInkItemByKind(kind: InkItemKind, x: number, y: number): In
   return { ...base, kind: "text", name: hostLabel("ui.host.blockText"), paragraphs: [{ runs: [{ text: "" }] }], fontSize: 18, fontWeight: "normal", align: "left" };
 }
 
-/** @emoji 🖊️ Local pure application of the generic ink-apply-events operation vocabulary — mirrors the note plugin's event-apply function for optimistic in-gesture rendering. */
+/** 🖊️ Local pure application of the generic ink-apply-events operation vocabulary — mirrors the note plugin's event-apply function for optimistic in-gesture rendering. */
 export function applyInkCanvasEventLocal(doc: InkDocument, event: InkCanvasEvent): InkDocument {
   switch (event.operation) {
     case "addBlock": {
@@ -613,7 +613,7 @@ let inkMathRenderer: InkMathRenderer = {
   },
 };
 
-/** @emoji ∑ Sets the active ink math renderer adapter (defaults to a plain-text fallback until KaTeX loads). */
+/** ∑ Sets the active ink math renderer adapter (defaults to a plain-text fallback until KaTeX loads). */
 export function setInkMathRenderer(renderer: InkMathRenderer): void {
   inkMathRenderer = renderer;
 }
@@ -1178,7 +1178,7 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
     [doc, selectedIds, selectedSet],
   );
 
-  /** @emoji 🤏️ Every contact reaches the shared recognizer in the CAPTURE phase — before a block's own
+  /** 🤏️ Every contact reaches the shared recognizer in the CAPTURE phase — before a block's own
    * `pointerdown` can stop it — so a second finger landing on a block still starts the pinch. The pinch
    * cancels whatever the first finger began (its live stroke/move preview is dropped, never committed). */
   const handlePointerDownCapture = useCallback(
@@ -1350,7 +1350,7 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
     [dispatch, doc, dragState, gestureRecognizer, interactive, liveGesture, publishInteractionHover, publishInkPresenceView],
   );
 
-  /** @emoji 🤏️ Routes a lifted/cancelled contact through the shared recognizer: the LAST finger of a pinch
+  /** 🤏️ Routes a lifted/cancelled contact through the shared recognizer: the LAST finger of a pinch
    * commits its camera exactly once; any other contact of a latched gesture is swallowed. Answers whether
    * the single-pointer lane may handle the release. */
   const releaseContact = useCallback(

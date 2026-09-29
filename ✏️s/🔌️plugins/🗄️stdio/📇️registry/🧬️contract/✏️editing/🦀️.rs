@@ -753,9 +753,15 @@ pub trait SnapshotEditingEditor: ArtifactEditor {
     }
     fn snapshot_edit_mutations(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault>;
 
+    /// 🎯️ The document an edit must publish, which the emitted mutations are checked against: the generic in-place snapshot
+    /// patch. An editor whose document has typed edits the generic path refuses by design (switching a tagged union's variant)
+    /// answers those itself and delegates every other edit to [`generic_snapshot_edit_expected`].
+    fn snapshot_edit_expected(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Self::Snapshot, Fault> {
+        generic_snapshot_edit_expected::<Self>(event, snapshot)
+    }
+
     fn snapshot_edit_emit(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        let patch = prepare_snapshot_patch(snapshot, event).map_err(|error| edit_fault(error.code, error.to_string()))?;
-        let expected = apply_snapshot_patch_for_dialect(snapshot, &patch, Self::DIALECT, Self::DOCUMENT_SCHEMA).map_err(|error| edit_fault(error.code, error.to_string()))?;
+        let expected = Self::snapshot_edit_expected(event, snapshot)?;
         if &expected == snapshot {
             return Ok(Emit::default());
         }
@@ -763,6 +769,12 @@ pub trait SnapshotEditingEditor: ArtifactEditor {
         validate_snapshot_edit_publication(snapshot, &expected, &emit.artifact_mutations)?;
         Ok(emit)
     }
+}
+
+/// 🎯️ The generic in-place snapshot patch of one edit — the default of [`SnapshotEditingEditor::snapshot_edit_expected`].
+pub fn generic_snapshot_edit_expected<E: SnapshotEditingEditor>(event: &SnapshotEditEvent, snapshot: &E::Snapshot) -> Result<E::Snapshot, Fault> {
+    let patch = prepare_snapshot_patch(snapshot, event).map_err(|error| edit_fault(error.code, error.to_string()))?;
+    apply_snapshot_patch_for_dialect(snapshot, &patch, E::DIALECT, E::DOCUMENT_SCHEMA).map_err(|error| edit_fault(error.code, error.to_string()))
 }
 
 /// 🧵️ Supplies native mutations to the same retained, cancelable execution lane as snapshot edits.

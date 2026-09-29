@@ -1,4 +1,4 @@
-/** @emoji 📐️ Actual Three SVGRenderer and Sharp oracle for first-party Icon SVG export. */
+/** 📐️ Actual Three SVGRenderer and Sharp oracle for first-party Icon SVG export. */
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";

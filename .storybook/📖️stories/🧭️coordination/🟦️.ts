@@ -23,7 +23,7 @@ import type { OwnedBuildPlugin } from "../../../🧰️framework/🔨️modules/
 export type { PlaygroundAssetSpec };
 
 // #region 🔖️ScopeModel
-/** @emoji 🗂️ One composable Storybook slice. */
+/** 🗂️ One composable Storybook slice. */
 export type StoryScope = {
   readonly id: string;
   /** Emoji-namespaced `meta.title` prefix every owned story must start with. */
@@ -49,7 +49,7 @@ export type StoryScope = {
 const repoRelative = (path: string) => path;
 
 /**
- * @emoji 🗂️ Every HAND-CURATED Storybook scope — scopes that cannot (yet) be derived from a package's
+ * 🗂️ Every HAND-CURATED Storybook scope — scopes that cannot (yet) be derived from a package's
  * own opt-in (custom `aliases`/`assets`/`vitePlugins`, a cross-owner `sourceRoots` entry, more than one
  * scope per package, or an owner under an area that hasn't migrated to `📦️packages` yet — `framework`,
  * `infinite`). Add a row here only for those; everything else should
@@ -180,7 +180,7 @@ export const HAND_CURATED_SCOPES: readonly StoryScope[] = [
 
 // #region 🔖️GeneratedScopes
 /**
- * @emoji 🏷️ Opt-in Storybook coverage a package declares in its OWN manifest — rust
+ * 🏷️ Opt-in Storybook coverage a package declares in its OWN manifest — rust
  * `[package.metadata.semio.storybook]`, TS `package.json`'s `"semio": {"storybook": {...}}` (read via
  * `readSemioMarkerSubTable`, the generic per-package opt-in mechanism in the shared repo-lib discovery
  * module). `sourceRoots`/`storyGlobs` entries are OWNER-relative (joined against the discovered
@@ -198,7 +198,7 @@ type StorybookOptIn = {
   readonly storyGlobs?: readonly string[];
 };
 
-/** @emoji 🧹️ Narrows the untyped `Record<string, unknown>` `readSemioMarkerSubTable` returns down to the fields `StorybookOptIn` actually understands, dropping anything else silently (a package's opt-in table is its own manifest's business — this generator only reads what it needs). */
+/** 🧹️ Narrows the untyped `Record<string, unknown>` `readSemioMarkerSubTable` returns down to the fields `StorybookOptIn` actually understands, dropping anything else silently (a package's opt-in table is its own manifest's business — this generator only reads what it needs). */
 function coerceStorybookOptIn(raw: Record<string, unknown> | undefined): StorybookOptIn | undefined {
   if (!raw) return undefined;
   const strings = (value: unknown): readonly string[] | undefined => (Array.isArray(value) ? value.filter((v): v is string => typeof v === "string") : undefined);
@@ -210,7 +210,7 @@ function coerceStorybookOptIn(raw: Record<string, unknown> | undefined): Storybo
   };
 }
 
-/** @emoji 📖️ Every package-catalog-derived scope: walks `discoverPackages(repoRoot)`, keeps only packages whose manifest opts into `storybook`, and resolves each declared owner-relative `sourceRoots`/`storyGlobs` entry against that package's real, freshly-discovered `ownerRel` — never a literal path baked in here. */
+/** 📖️ Every package-catalog-derived scope: walks `discoverPackages(repoRoot)`, keeps only packages whose manifest opts into `storybook`, and resolves each declared owner-relative `sourceRoots`/`storyGlobs` entry against that package's real, freshly-discovered `ownerRel` — never a literal path baked in here. */
 export function buildGeneratedScopes(repoRoot: string): readonly StoryScope[] {
   const taxonomy = loadTaxonomy();
   const scopes: StoryScope[] = [];
@@ -233,17 +233,17 @@ export function buildGeneratedScopes(repoRoot: string): readonly StoryScope[] {
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
-/** @emoji 🏠️ Resolves the repository root from the Storybook story-coordination owner. */
+/** 🏠️ Resolves the repository root from the Storybook story-coordination owner. */
 export function repoRootFromHere(): string {
   return resolve(HERE, "../../..");
 }
 
-/** @emoji 🗂️ Every package-catalog-derived scope, resolved against the real on-disk repo root. */
+/** 🗂️ Every package-catalog-derived scope, resolved against the real on-disk repo root. */
 export const GENERATED_SCOPES: readonly StoryScope[] = buildGeneratedScopes(repoRootFromHere());
 // #endregion 🔖️GeneratedScopes
 
 // #region 🔖️ScopeMerge
-/** @emoji 🗂️ Every registered Storybook scope: `HAND_CURATED_SCOPES` plus every package-catalog opt-in (`GENERATED_SCOPES`). Throws on an id collision (config-time conflict, never silent last-wins — same discipline as `buildScopeAliases`). */
+/** 🗂️ Every registered Storybook scope: `HAND_CURATED_SCOPES` plus every package-catalog opt-in (`GENERATED_SCOPES`). Throws on an id collision (config-time conflict, never silent last-wins — same discipline as `buildScopeAliases`). */
 export const STORY_SCOPES: readonly StoryScope[] = (() => {
   const merged: StoryScope[] = [...HAND_CURATED_SCOPES];
   const seenIds = new Set(merged.map((s) => s.id));
@@ -257,12 +257,12 @@ export const STORY_SCOPES: readonly StoryScope[] = (() => {
 // #endregion 🔖️ScopeMerge
 
 // #region 🔖️ScopeResolution
-/** @emoji 🎯️ A scope token matches a registered scope's id or any of its descendants (`puzzle` matches `puzzle/2d`). */
+/** 🎯️ A scope token matches a registered scope's id or any of its descendants (`puzzle` matches `puzzle/2d`). */
 function scopeTokenMatches(token: string, scopeId: string): boolean {
   return scopeId === token || scopeId.startsWith(`${token}/`);
 }
 
-/** @emoji 🧵️ Parses `STORYBOOK_SCOPE` (comma-separated scope ids/prefixes) into the active `StoryScope[]`. Empty → every scope. Throws listing registered ids on an unknown token. */
+/** 🧵️ Parses `STORYBOOK_SCOPE` (comma-separated scope ids/prefixes) into the active `StoryScope[]`. Empty → every scope. Throws listing registered ids on an unknown token. */
 export function resolveActiveScopes(expr: string): StoryScope[] {
   const tokens = expr
     .split(",")
@@ -278,14 +278,14 @@ export function resolveActiveScopes(expr: string): StoryScope[] {
   return STORY_SCOPES.filter((s) => tokens.some((token) => scopeTokenMatches(token, s.id)));
 }
 
-/** @emoji 📖️ One or more story globs per active scope; parent scopes provide the complete owned population. */
+/** 📖️ One or more story globs per active scope; parent scopes provide the complete owned population. */
 export function buildScopeStoryGlobs(activeScopes: readonly StoryScope[]): string[] {
   const ids = activeScopes.map((s) => s.id);
   const topLevel = activeScopes.filter((s) => !ids.some((other) => other !== s.id && scopeTokenMatches(other, s.id)));
   return topLevel.flatMap((s) => s.storyGlobs ?? []);
 }
 
-/** @emoji 🔗️ Merges auto-derived workspace aliases with each active scope's irregular `aliases`. Throws on a key registered with two different values (config-time conflict, not silent last-wins). */
+/** 🔗️ Merges auto-derived workspace aliases with each active scope's irregular `aliases`. Throws on a key registered with two different values (config-time conflict, not silent last-wins). */
 export function buildScopeAliases(activeScopes: readonly StoryScope[], workspaceAliases: Readonly<Record<string, string>>): Record<string, string> {
   const alias: Record<string, string> = { ...workspaceAliases };
   for (const scope of activeScopes) {
@@ -299,7 +299,7 @@ export function buildScopeAliases(activeScopes: readonly StoryScope[], workspace
   return alias;
 }
 
-/** @emoji 👁️ Watch-ignore inversion: ignore every source root NOT owned by an active scope, so adding a scope automatically shrinks/grows everyone's ignore set correctly. */
+/** 👁️ Watch-ignore inversion: ignore every source root NOT owned by an active scope, so adding a scope automatically shrinks/grows everyone's ignore set correctly. */
 export function buildScopeWatchIgnores(activeScopes: readonly StoryScope[]): string[] {
   const activeRoots = new Set(activeScopes.flatMap((s) => s.sourceRoots));
   const allRoots = new Set(STORY_SCOPES.flatMap((s) => s.sourceRoots));
@@ -307,7 +307,7 @@ export function buildScopeWatchIgnores(activeScopes: readonly StoryScope[]): str
   return inactiveRoots.map((root) => `**/${root}/**`);
 }
 
-/** @emoji 🎯️ True when `prefix` is (a prefix of) an active scope id — used by `preview.tsx` to gate scope-specific behavior via `__STORYBOOK_ACTIVE_SCOPES__`. */
+/** 🎯️ True when `prefix` is (a prefix of) an active scope id — used by `preview.tsx` to gate scope-specific behavior via `__STORYBOOK_ACTIVE_SCOPES__`. */
 export function scopeActive(activeScopeIds: readonly string[], prefix: string): boolean {
   return activeScopeIds.some((id) => scopeTokenMatches(prefix, id));
 }

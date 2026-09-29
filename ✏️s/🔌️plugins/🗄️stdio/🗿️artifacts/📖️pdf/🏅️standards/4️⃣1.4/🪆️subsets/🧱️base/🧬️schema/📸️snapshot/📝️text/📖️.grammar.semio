@@ -7,7 +7,7 @@ start document
 # ../../../../../⚙️engine/🦀️.rs's `impl store::ArtifactDsl for PdfSnapshot`: `print_dsl`
 # hex-encodes the REAL `encode_pdf(self)` byte output (the actual `%PDF-1.4...` file bytes),
 # verbatim -- no COS-text reserialization at the DSL-text layer. Confirmed by direct read AND a
-# real `[DEBUG]` dump of `print_dsl`, not assumed: the body is a CONTINUOUS run of lowercase hex
+# real `[TRACE]` dump of `print_dsl`, not assumed: the body is a CONTINUOUS run of lowercase hex
 # digit pairs, e.g. `255044462d312e340a...` (= `%PDF-1.4\n...` in hex). Same shape binary/raw's
 # own snapshot grammar documents for the identical reason (`ArtifactDsl` chose a hex-dump text
 # form here, not a reserialized-native-format text form) -- replaces the old one-line

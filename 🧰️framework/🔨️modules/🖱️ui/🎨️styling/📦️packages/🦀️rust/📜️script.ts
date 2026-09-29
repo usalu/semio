@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** @emoji ⚙️ Routes styling generation, verification, font acquisition, and tests. */
+/** ⚙️ Routes styling generation, verification, font acquisition, and tests. */
 import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runVitest } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { fetchElementsFonts } from "../../🔤️fonts/🟦️.ts";
 import { checkStylingArtifacts, generateStylingArtifacts, previewStylingArtifacts } from "../../📽️projection/🟦️.ts";

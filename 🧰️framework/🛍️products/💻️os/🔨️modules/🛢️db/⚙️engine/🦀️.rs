@@ -40,7 +40,7 @@ use std::collections::HashMap;
 use std::future::Future;
 use std::sync::{Arc, Mutex};
 
-use crate::db_ids::{ActorId, ArtifactId, DbError};
+use crate::db_ids::{ArtifactId, DbError};
 use crate::*;
 use db_storage::CatalogStorage as _;
 use semio_framework_async::{Lane, WorkerPool, WorkerPoolUse};
@@ -4040,17 +4040,11 @@ pub fn take_database_catalog_bootstrap_terminal(generation: u64) -> Option<Datab
 //#endregion 🔖️CatalogBootstrapCas
 
 //#region 🔖️Ids
-/// @emoji 🌉️ `protocol::ArtifactId` → `ArtifactId`, the lossless single-`String` bridge
+/// 🌉️ `protocol::ArtifactId` → `ArtifactId`, the lossless single-`String` bridge
 /// `db_core`'s module doc promises — see `db_artifact`'s identical helper for the rationale (this
 /// crate is the other place in the family that depends on both `db_core` and `protocol`).
 async fn to_core_document_id(id: &protocol::ArtifactId) -> ArtifactId {
     ArtifactId(id.0.clone())
-}
-
-/// @emoji 🌉️ `protocol::ActorId` → `ActorId`, same bridge as `to_core_document_id`.
-// 🚫️async: E4 fn-pointer slot (used as `Iterator::map(to_core_actor_id)`) — see R9
-fn to_core_actor_id(id: &protocol::ActorId) -> ActorId {
-    ActorId(id.0.clone())
 }
 
 async fn now_ms() -> u64 {
@@ -4066,7 +4060,7 @@ fn test_worker_pool() -> Arc<WorkerPool> {
 //#endregion 🔖️Ids
 
 //#region 🔖️Frontier
-/// @emoji 🧭️ The facade-level frontier: identical shape to `Frontier` except keyed by
+/// 🧭️ The facade-level frontier: identical shape to `Frontier` except keyed by
 /// `protocol::ArtifactId` (not `ArtifactId`) — the frozen contract's exact
 /// `Frontier{document, head_seq, commit_seq, chain_hash, epoch}` shape.
 #[derive(Clone, Debug, PartialEq)]
@@ -4087,7 +4081,7 @@ pub struct CheckpointPublicationSnapshot {
 }
 
 impl Frontier {
-    /// @emoji 🏔️ True iff `self` has observed everything `other` has — mirrors
+    /// 🏔️ True iff `self` has observed everything `other` has — mirrors
     /// `Frontier::dominates`, re-derived here since this type's `document` field has a
     /// different type than `Frontier`'s.
     // 🚫️async: E1 pure accessor consumed by a sync Iterator::filter — see R9
@@ -4105,7 +4099,7 @@ fn to_engine_frontier(core: &db_durability::Frontier, document: protocol::Artifa
 //#endregion 🔖️Frontier
 
 //#region 🔖️Receipt
-/// @emoji 🧾️ The frozen `CommandReceipt` shape: `ArtifactHandle::submit`'s resolved output.
+/// 🧾️ The frozen `CommandReceipt` shape: `ArtifactHandle::submit`'s resolved output.
 #[derive(Clone, Debug, PartialEq)]
 pub struct CommandReceipt {
     pub command_id: protocol::MutationId,
@@ -4122,7 +4116,7 @@ fn to_engine_receipt(receipt: db_artifact::CommandReceipt, document: protocol::A
 //#endregion 🔖️Receipt
 
 //#region 🔖️Consistency
-/// @emoji 🎚️ The frozen `Consistency` enum: which frontier/view `ArtifactHandle::query` must
+/// 🎚️ The frozen `Consistency` enum: which frontier/view `ArtifactHandle::query` must
 /// resolve against.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Consistency {
@@ -4136,7 +4130,7 @@ pub enum Consistency {
 //#endregion 🔖️Consistency
 
 //#region 🔖️Query
-/// @emoji 🔎️ What `ArtifactHandle::query` can ask for — this crate's own choice (the contract fixes
+/// 🔎️ What `ArtifactHandle::query` can ask for — this crate's own choice (the contract fixes
 /// `query`'s signature, not `Query`'s shape): single or multi-path point lookups against the
 /// document's schema-erased path/value convention (see `db_artifact`'s module doc), matching what
 /// `ArtifactAuthority`'s mailbox actually exposes (`ArtifactMessage::Query { path, .. }`).
@@ -4146,7 +4140,7 @@ pub enum Query {
     GetMany { paths: Vec<String> },
 }
 
-/// @emoji 📬️ One resolved `query`: every requested path paired with its current value bytes (`None`
+/// 📬️ One resolved `query`: every requested path paired with its current value bytes (`None`
 /// if unset/tombstoned).
 #[derive(Debug)]
 pub struct QueryResultEntry {
@@ -4463,21 +4457,21 @@ impl Drop for HistoryView {
 //#endregion 🔖️History
 
 //#region 🔖️LiveQuery + Preview
-/// @emoji 📡️ What `ArtifactHandle::subscribe` would filter on — defined for API-shape completeness
+/// 📡️ What `ArtifactHandle::subscribe` would filter on — defined for API-shape completeness
 /// even though every construction path currently returns `DbError::Unimplemented` (see module doc).
 #[derive(Clone, Debug, PartialEq)]
 pub struct LiveQuerySpec {
     pub since: Option<Frontier>,
 }
 
-/// @emoji 📡️ A live subscription handle — see `LiveQuerySpec`'s doc on why this is currently
+/// 📡️ A live subscription handle — see `LiveQuerySpec`'s doc on why this is currently
 /// unreachable except through the documented `Unimplemented` error.
 #[derive(Clone, Debug, PartialEq)]
 pub struct LiveQuery {
     pub id: String,
 }
 
-/// @emoji 🌫️ An ephemeral preview overlay handle — see `LiveQuerySpec`'s doc; same deferral reason.
+/// 🌫️ An ephemeral preview overlay handle — see `LiveQuerySpec`'s doc; same deferral reason.
 #[derive(Clone, Debug, PartialEq)]
 pub struct PreviewHandle {
     pub id: String,
@@ -4486,7 +4480,7 @@ pub struct PreviewHandle {
 //#endregion 🔖️LiveQuery + Preview
 
 //#region 🔖️Snapshot
-/// @emoji 📸️ What kind of snapshot `ArtifactHandle::snapshot_now` was asked to build — defined for
+/// 📸️ What kind of snapshot `ArtifactHandle::snapshot_now` was asked to build — defined for
 /// API-shape completeness (see module doc: this crate does not yet build real pack snapshots).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SnapshotKind {
@@ -4494,7 +4488,7 @@ pub enum SnapshotKind {
     Incremental,
 }
 
-/// @emoji 📸️ What a successful `snapshot_now` would resolve to — currently unreachable, see above.
+/// 📸️ What a successful `snapshot_now` would resolve to — currently unreachable, see above.
 #[derive(Clone, Debug, PartialEq)]
 pub struct SnapshotReceipt {
     pub generation: u64,
@@ -4504,873 +4498,8 @@ pub struct SnapshotReceipt {
 pub type SnapshotFuture = db_actor::ReplyReceiver<Result<SnapshotReceipt, DbError>>;
 //#endregion 🔖️Snapshot
 
-//#region 🔖️VersionGraph
-/// @emoji 🌿️ The real `vcs`-backed `VersionGraph` — the ONLY place in the whole `db`
-/// family allowed to depend on `vcs` (hard dependency rule; gated behind this crate's default-on
-/// `vcs` Cargo feature).
-#[cfg(feature = "vcs")]
-pub mod vcs_integration {
-    use crate::db_ids::*;
-    use crate::db_version_graph::*;
-    use std::collections::HashMap;
-    use std::future::Future;
-    use std::pin::Pin;
-    use std::sync::Mutex;
-    use std::task::{Context, Poll, Waker};
-
-    //#region 🔖️SchemaErasedTypes
-    /// @emoji #⃣ The `VersionGraph` seam (`ChangeRecord`/`CheckpointRequest`) is already
-    /// schema-erased — it carries a `pack::ContentHash`, never document semantics — so this
-    /// crate drives the real `store::ArtifactStore<P, Mutation>` with the smallest concrete `P`/
-    /// `Mutation` pair that can faithfully round-trip exactly that: a projection that IS the
-    /// latest recorded hash, and an operation that overwrites it (its `inverse` recovering the
-    /// PRIOR hash from the pre-state, a real, correct inverse — not a placeholder). This mirrors
-    /// `db_artifact`'s own schema-erased-JSON convention one layer up: neither crate has (or needs)
-    /// compile-time knowledge of any real document schema.
-    #[derive(Clone, Debug, Default, PartialEq, store::ToValue, store::FromValue)]
-    pub struct HashProjection {
-        pub latest_hash: [u8; 32],
-    }
-
-    impl store::os_schema_composition::ArtifactCompositionFields for HashProjection {
-        fn visit_child_refs<'a, V: store::os_schema_composition::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {
-            Ok(())
-        }
-    }
-
-    impl store::ArtifactDsl for HashProjection {
-        const EXTENSION: &'static str = "dbhash";
-
-        fn parse_dsl(text: &str) -> Result<HashProjection, store::TextError> {
-            let trimmed = text.trim();
-            if trimmed.len() != 64 || !trimmed.bytes().all(|byte| byte.is_ascii_hexdigit()) {
-                return Err(store::TextError::new("expected 64 lowercase hex characters", store::TextSpan::at(1, 1)));
-            }
-            let mut latest_hash = [0u8; 32];
-            for (index, slot) in latest_hash.iter_mut().enumerate() {
-                *slot = u8::from_str_radix(&trimmed[index * 2..index * 2 + 2], 16).map_err(|_| store::TextError::new("invalid hex byte", store::TextSpan::at(1, (index * 2 + 1) as u32)))?;
-            }
-            Ok(HashProjection { latest_hash })
-        }
-
-        fn print_dsl(&self) -> String {
-            let mut out = String::with_capacity(64);
-            for byte in self.latest_hash {
-                use std::fmt::Write;
-                let _ = write!(out, "{byte:02x}");
-            }
-            out
-        }
-    }
-
-    impl store::ArtifactPack for HashProjection {
-        fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-            Ok(self.latest_hash.to_vec())
-        }
-        fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-            let latest_hash: [u8; 32] = bytes.try_into().map_err(|_| store::PackError::Schema("HashProjection pack must be exactly 32 bytes".to_string()))?;
-            Ok(HashProjection { latest_hash })
-        }
-    }
-
-    #[derive(Clone, Debug, Default, store::ToValue, store::FromValue)]
-    pub struct HashDiff {
-        pub hash: Option<[u8; 32]>,
-    }
-
-    impl protocol::MutationDiff<HashProjection> for HashDiff {
-        fn apply(&self, base: &HashProjection) -> protocol::MutationApplyResult<HashProjection> {
-            Ok(match self.hash {
-                Some(hash) => HashProjection { latest_hash: hash },
-                None => base.clone(),
-            })
-        }
-
-        fn absorb(&mut self, other: HashDiff) {
-            if other.hash.is_some() {
-                self.hash = other.hash;
-            }
-        }
-    }
-
-    #[derive(Clone, Debug, PartialEq, store::ToValue, store::FromValue)]
-    pub struct HashMutation {
-        pub hash: [u8; 32],
-        pub author: Option<protocol::ActorId>,
-        pub timestamp: Option<protocol::HybridLogicalTimestamp>,
-    }
-
-    const HASH_MUTATION_DESCRIPTOR: protocol::MutationLeafDescriptor = protocol::MutationLeafDescriptor {
-        schema_version: 1,
-        owner: "framework/os/db/version-graph/hash-mutation",
-        semantic_kind: "set-hash",
-        display_name: "Set Hash",
-        emoji: "#️⃣",
-        aggregate_variant: "HashMutation",
-        payload_schema: "db.hash/v1",
-        text_opcode: None,
-        binary_tag: None,
-        invertibility: protocol::MutationInvertibility::ExplicitMutation,
-        diff_participation: protocol::MutationDiffParticipation::Detect,
-        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
-        composition: protocol::MutationComposition::Atomic,
-        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust],
-    };
-
-    impl protocol::Mutation<HashProjection> for HashMutation {
-        type Diff = HashDiff;
-        const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[HASH_MUTATION_DESCRIPTOR];
-
-        fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
-            &HASH_MUTATION_DESCRIPTOR
-        }
-
-        fn diff(&self, _base: &HashProjection) -> protocol::MutationOutcome<HashDiff> {
-            protocol::MutationOutcome::new(HashDiff { hash: Some(self.hash) })
-        }
-
-        /// @emoji ↩️ The true inverse: an operation that would restore `base`'s hash — not a
-        /// no-op placeholder.
-        fn inverse(&self, base: &HashProjection) -> Vec<HashMutation> {
-            vec![HashMutation { hash: base.latest_hash, author: self.author.clone(), timestamp: self.timestamp }]
-        }
-
-        fn author_id(&self) -> Option<protocol::ActorId> {
-            self.author.clone()
-        }
-
-        fn timestamp(&self) -> Option<protocol::HybridLogicalTimestamp> {
-            self.timestamp
-        }
-    }
-
-    // 🚫️async: E1 pure accessor consumed synchronously inside `format!` — see R9
-    fn hex_encode(bytes: &[u8; 32]) -> String {
-        use std::fmt::Write;
-        let mut out = String::with_capacity(64);
-        for byte in bytes {
-            let _ = write!(out, "{byte:02x}");
-        }
-        out
-    }
-
-    fn hex_decode(text: &str) -> Result<[u8; 32], String> {
-        if text.len() != 64 || !text.bytes().all(|byte| byte.is_ascii_hexdigit()) {
-            return Err("expected 64 lowercase hex characters".to_string());
-        }
-        let mut out = [0u8; 32];
-        for (index, slot) in out.iter_mut().enumerate() {
-            *slot = u8::from_str_radix(&text[index * 2..index * 2 + 2], 16).map_err(|error| error.to_string())?;
-        }
-        Ok(out)
-    }
-
-    /// @emoji 🎯️ Single-line text form: `hash=<hex64>[ author=<id>][ ts=<actor>,<physical_ms>,<logical>]`.
-    impl protocol::OpText for HashMutation {
-        fn print_op(&self) -> String {
-            let mut out = format!("hash={}", hex_encode(&self.hash));
-            if let Some(author) = &self.author {
-                out.push_str(&format!(" author={}", author.0));
-            }
-            if let Some(ts) = &self.timestamp {
-                out.push_str(&format!(" ts={},{},{}", ts.actor, ts.physical_ms, ts.logical));
-            }
-            out
-        }
-        fn parse_op(line: &str) -> Result<Self, store::TextError> {
-            let err = |detail: String| store::TextError::new(detail, store::TextSpan::at(1, 1));
-            let mut hash = None;
-            let mut author = None;
-            let mut timestamp = None;
-            for token in line.split_whitespace() {
-                let (key, value) = token.split_once('=').ok_or_else(|| err(format!("malformed token '{token}'")))?;
-                match key {
-                    "hash" => hash = Some(hex_decode(value).map_err(err)?),
-                    "author" => author = Some(protocol::ActorId(value.to_string())),
-                    "ts" => {
-                        let parts: Vec<&str> = value.split(',').collect();
-                        if parts.len() != 3 {
-                            return Err(err(format!("malformed ts '{value}'")));
-                        }
-                        let actor = parts[0].parse::<u64>().map_err(|error| err(error.to_string()))?;
-                        let physical_ms = parts[1].parse::<u64>().map_err(|error| err(error.to_string()))?;
-                        let logical = parts[2].parse::<u64>().map_err(|error| err(error.to_string()))?;
-                        timestamp = Some(protocol::HybridLogicalTimestamp { actor, physical_ms, logical });
-                    }
-                    other => return Err(err(format!("unknown key '{other}'"))),
-                }
-            }
-            Ok(HashMutation { hash: hash.ok_or_else(|| err("missing hash".to_string()))?, author, timestamp })
-        }
-    }
-
-    /// @emoji 🎯️ Binary form: `hash 32 bytes | presence u8 (bit0=author, bit1=timestamp) | [author
-    /// len varint + utf8 bytes] | [timestamp: actor/physical_ms/logical varint each]`.
-    impl protocol::OpBinary for HashMutation {
-        fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-            let mut out = self.hash.to_vec();
-            let presence = (self.author.is_some() as u8) | ((self.timestamp.is_some() as u8) << 1);
-            out.push(presence);
-            if let Some(author) = &self.author {
-                pack::os_pack::write_varint_u64(&mut out, author.0.len() as u64);
-                out.extend_from_slice(author.0.as_bytes());
-            }
-            if let Some(ts) = &self.timestamp {
-                pack::os_pack::write_varint_u64(&mut out, ts.actor);
-                pack::os_pack::write_varint_u64(&mut out, ts.physical_ms);
-                pack::os_pack::write_varint_u64(&mut out, ts.logical);
-            }
-            Ok(out)
-        }
-        fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-            let malformed = |detail: String| protocol::ProtocolError::Malformed { what: "hash op", offset: 0, detail };
-            if bytes.len() < 33 {
-                return Err(malformed("truncated hash op".to_string()));
-            }
-            let hash: [u8; 32] = bytes[..32].try_into().expect("checked len");
-            let presence = bytes[32];
-            let mut pos = 33usize;
-            let author = if presence & 0b01 != 0 {
-                let len = pack::os_pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))? as usize;
-                let end = pos + len;
-                let text = std::str::from_utf8(bytes.get(pos..end).ok_or_else(|| malformed("truncated author".to_string()))?).map_err(|error| malformed(error.to_string()))?.to_string();
-                pos = end;
-                Some(protocol::ActorId(text))
-            } else {
-                None
-            };
-            let timestamp = if presence & 0b10 != 0 {
-                let actor = pack::os_pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))?;
-                let physical_ms = pack::os_pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))?;
-                let logical = pack::os_pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))?;
-                Some(protocol::HybridLogicalTimestamp { actor, physical_ms, logical })
-            } else {
-                None
-            };
-            Ok(HashMutation { hash, author, timestamp })
-        }
-    }
-
-    struct HashOwnedRetirement<T>(Option<T>);
-
-    impl<T: Send> store::ErasedSnapshotRetirement for HashOwnedRetirement<T> {
-        fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
-            if maximum_items == 0 {
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-            }
-            if self.0.take().is_some() {
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-            }
-            Ok(store::SnapshotRetirementStep::Complete)
-        }
-
-        fn terminal_is_empty(&self) -> bool {
-            self.0.is_none()
-        }
-    }
-
-    struct HashOwnedRetirementFactory;
-
-    impl<T: Send + 'static> store::ArtifactOwnedValueRetirementFactory<T> for HashOwnedRetirementFactory {
-        fn retire_owned(&self, value: T) -> Box<dyn store::ErasedSnapshotRetirement> {
-            Box::new(HashOwnedRetirement(Some(value)))
-        }
-    }
-
-    struct HashSnapshotRetirement(Option<std::sync::Arc<HashProjection>>);
-
-    impl store::ErasedSnapshotRetirement for HashSnapshotRetirement {
-        fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
-            if maximum_items == 0 {
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-            }
-            if self.0.take().is_some() {
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-            }
-            Ok(store::SnapshotRetirementStep::Complete)
-        }
-
-        fn terminal_is_empty(&self) -> bool {
-            self.0.is_none()
-        }
-    }
-
-    struct HashSnapshotRetirementFactory;
-
-    impl store::SnapshotRetirementFactory<HashProjection> for HashSnapshotRetirementFactory {
-        fn retire(&self, snapshot: std::sync::Arc<HashProjection>) -> Box<dyn store::ErasedSnapshotRetirement> {
-            Box::new(HashSnapshotRetirement(Some(snapshot)))
-        }
-    }
-
-    impl store::retirement::RetireOwned for HashProjection {
-        fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
-            store::retirement::RetireOwned::retirement(self.latest_hash)
-        }
-    }
-
-    impl store::MemberStoreOwner<HashMutation> for HashProjection {
-        /// 📦️ The version graph's projection opens as an owned member through its own `ArtifactPack`
-        /// codec. It declared `UnsupportedMemberSnapshotOpen` until 2026-09-21, whose `step` has exactly
-        /// one answer — `Rejected(MemberOpenDiagnostic::Decode)` — so a composed document owning a
-        /// version-graph member was refused at member-open step 0, always.
-        type SnapshotOpen = store::PackMemberSnapshotOpen<Self>;
-
-        fn member_store_owners() -> store::DocumentStoreOwners<Self, HashMutation> {
-            store::DocumentStoreOwners::new(
-                std::sync::Arc::new(HashSnapshotRetirementFactory),
-                std::sync::Arc::new(HashOwnedRetirementFactory),
-                std::sync::Arc::new(HashOwnedRetirementFactory),
-                Box::new(store::ArtifactStoreCursorDisposer::<HashProjection, HashMutation>::new()),
-            )
-        }
-    }
-    //#endregion 🔖️SchemaErasedTypes
-
-    //#region 🔖️Store
-    type HashStore = store::ArtifactStore<HashProjection, HashMutation>;
-
-    /// @emoji 🪟️ Close steps one change (or one shutdown step) spends retiring folded version-graph
-    /// windows: a full 64-edit window retires in about 5 000 steps, so it is gone well within the next
-    /// window while no single commit turn carries it.
-    const VCS_WINDOW_RETIREMENT_STEPS_PER_TURN: usize = 256;
-
-    /// @emoji 🧹️ Advances the oldest retiring window by at most `steps` close steps, dropping it once
-    /// its terminal witness holds. It stays owned by the cell between turns, never by a future that
-    /// could be dropped mid-close.
-    fn retire_window_steps(retiring: &mut Vec<HashStore>, steps: usize) -> Result<(), DbError> {
-        for _ in 0..steps {
-            let Some(store) = retiring.first_mut() else { return Ok(()) };
-            match store::SpaceMember::close_owned_step(store, 1, VCS_OPERATION_BYTES as usize).map_err(|error| DbError::Internal(format!("vcs window retirement: {error}")))? {
-                store::SnapshotRetirementStep::Pending { .. } => {}
-                store::SnapshotRetirementStep::Blocked => return Ok(()),
-                store::SnapshotRetirementStep::Complete => {
-                    if !store::SpaceMember::close_owned_terminal_is_empty(store) {
-                        return Err(DbError::Internal("vcs window retirement completed without a terminal store witness".to_string()));
-                    }
-                    drop(retiring.remove(0));
-                }
-            }
-        }
-        Ok(())
-    }
-
-    const VCS_OPERATION_ITEMS: usize = 64;
-    const VCS_OPERATION_PAGE_BYTES: u64 = 16 * 1024;
-    const VCS_OPERATION_PAGES: u64 = 4;
-    const VCS_OPERATION_BYTES: u64 = VCS_OPERATION_PAGE_BYTES * VCS_OPERATION_PAGES;
-    const VCS_TOTAL_PAGES: u64 = 256;
-    const VCS_TOTAL_BYTES: u64 = VCS_OPERATION_PAGE_BYTES * VCS_TOTAL_PAGES;
-
-    #[derive(Clone, Copy)]
-    struct VcsAdmissionSlot {
-        generation: u64,
-        bytes: u64,
-        items: usize,
-        occupied: bool,
-    }
-
-    const EMPTY_VCS_ADMISSION_SLOT: VcsAdmissionSlot = VcsAdmissionSlot { generation: 0, bytes: 0, items: 0, occupied: false };
-
-    struct VcsAdmissionState {
-        slots: [VcsAdmissionSlot; VCS_OPERATION_ITEMS],
-        bytes: u64,
-        next_generation: u64,
-    }
-
-    static VCS_ADMISSION: Mutex<VcsAdmissionState> = Mutex::new(VcsAdmissionState { slots: [EMPTY_VCS_ADMISSION_SLOT; VCS_OPERATION_ITEMS], bytes: 0, next_generation: 1 });
-
-    struct VcsOperationAdmission {
-        slot: usize,
-        generation: u64,
-        bytes: u64,
-        items: usize,
-    }
-
-    impl VcsOperationAdmission {
-        fn try_claim(items: usize, bytes: u64) -> Result<Self, DbError> {
-            if items == 0 || items > VCS_OPERATION_ITEMS {
-                return Err(DbError::LimitExceeded("vcs operation item credit"));
-            }
-            if bytes == 0 || bytes > VCS_OPERATION_BYTES {
-                return Err(DbError::LimitExceeded("vcs operation byte credit"));
-            }
-            let mut state = VCS_ADMISSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            let Some(slot) = state.slots.iter().position(|entry| !entry.occupied) else {
-                return Err(DbError::Unavailable("vcs operation capacity exhausted".to_string()));
-            };
-            if state.bytes.checked_add(bytes).is_none_or(|next| next > VCS_TOTAL_BYTES) {
-                return Err(DbError::Unavailable("vcs operation byte capacity exhausted".to_string()));
-            }
-            let generation = state.next_generation;
-            state.next_generation = state.next_generation.checked_add(1).ok_or(DbError::LimitExceeded("vcs operation generation"))?;
-            state.slots[slot] = VcsAdmissionSlot { generation, bytes, items, occupied: true };
-            state.bytes += bytes;
-            Ok(Self { slot, generation, bytes, items })
-        }
-
-        fn is_current(slot: usize, generation: u64) -> bool {
-            let state = VCS_ADMISSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            state.slots.get(slot).is_some_and(|entry| entry.occupied && entry.generation == generation)
-        }
-    }
-
-    impl Drop for VcsOperationAdmission {
-        fn drop(&mut self) {
-            let mut state = VCS_ADMISSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            let entry = &mut state.slots[self.slot];
-            if !entry.occupied || entry.generation != self.generation || entry.bytes != self.bytes || entry.items != self.items {
-                return;
-            }
-            *entry = EMPTY_VCS_ADMISSION_SLOT;
-            state.bytes = state.bytes.checked_sub(self.bytes).expect("vcs operation byte credit underflow");
-        }
-    }
-
-    fn vcs_credit(items: usize, owner_bytes: impl IntoIterator<Item = usize>) -> Result<(usize, u64), DbError> {
-        if items == 0 || items > VCS_OPERATION_ITEMS {
-            return Err(DbError::LimitExceeded("vcs operation nested item credit"));
-        }
-        let mut bytes = VCS_OPERATION_PAGE_BYTES;
-        for owner_bytes in owner_bytes {
-            bytes = bytes.checked_add(owner_bytes as u64).ok_or(DbError::LimitExceeded("vcs operation nested byte credit"))?;
-        }
-        let pages = bytes.checked_add(VCS_OPERATION_PAGE_BYTES - 1).ok_or(DbError::LimitExceeded("vcs operation page rounding"))? / VCS_OPERATION_PAGE_BYTES;
-        let admitted = pages.checked_mul(VCS_OPERATION_PAGE_BYTES).ok_or(DbError::LimitExceeded("vcs operation page credit"))?;
-        if admitted > VCS_OPERATION_BYTES {
-            return Err(DbError::LimitExceeded("vcs operation byte credit"));
-        }
-        Ok((items, admitted))
-    }
-
-    fn record_credit(document: &ArtifactId, change: &ChangeRecord) -> Result<(usize, u64), DbError> {
-        vcs_credit(1 + usize::from(change.parent.is_some()), [document.0.capacity(), change.parent.as_ref().map_or(0, String::capacity), change.author.0.capacity(), change.message.capacity(), size_of::<HashMutation>()])
-    }
-
-    fn checkpoint_credit(document: &ArtifactId, request: &CheckpointRequest) -> Result<(usize, u64), DbError> {
-        let derived_author_items = request.authors.len();
-        let items = 1usize
-            .checked_add(usize::from(request.parent_checkpoint.is_some()))
-            .and_then(|value| value.checked_add(request.change_ids.len()))
-            .and_then(|value| value.checked_add(request.authors.len()))
-            .and_then(|value| value.checked_add(derived_author_items))
-            .ok_or(DbError::LimitExceeded("vcs checkpoint item credit"))?;
-        let change_owner_bytes = request.change_ids.capacity().checked_mul(size_of::<String>()).ok_or(DbError::LimitExceeded("vcs checkpoint change owner bytes"))?;
-        let author_owner_bytes = request.authors.capacity().checked_mul(size_of::<ActorId>()).ok_or(DbError::LimitExceeded("vcs checkpoint author owner bytes"))?;
-        let derived_author_owner_bytes = request.authors.capacity().checked_mul(size_of::<vcs::Author>()).ok_or(DbError::LimitExceeded("vcs checkpoint derived author owner bytes"))?;
-        let derived_author_id_bytes = request.authors.iter().try_fold(0usize, |bytes, author| bytes.checked_add(author.0.capacity())).ok_or(DbError::LimitExceeded("vcs checkpoint derived author id bytes"))?;
-        let fixed = [document.0.capacity(), request.parent_checkpoint.as_ref().map_or(0, String::capacity), request.message.capacity(), change_owner_bytes, author_owner_bytes, derived_author_owner_bytes, derived_author_id_bytes];
-        vcs_credit(items, fixed.into_iter().chain(request.change_ids.iter().map(String::capacity)).chain(request.authors.iter().map(|author| author.0.capacity())))
-    }
-
-    fn relation_credit(document: &ArtifactId, values: &[&str]) -> Result<(usize, u64), DbError> {
-        vcs_credit(1 + values.len(), std::iter::once(document.0.capacity()).chain(values.iter().map(|value| value.len())))
-    }
-
-    struct VcsStoreWaiter {
-        generation: u64,
-        waker: Waker,
-    }
-
-    struct VcsStoreCellState {
-        store: Option<HashStore>,
-        rolled_checkpoint: Option<String>,
-        retiring: Vec<HashStore>,
-        busy_generation: Option<u64>,
-        waiters: [Option<VcsStoreWaiter>; VCS_OPERATION_ITEMS],
-    }
-
-    struct VcsStoreCell {
-        state: Mutex<VcsStoreCellState>,
-        #[cfg(test)]
-        shutdown_failures: std::sync::atomic::AtomicUsize,
-    }
-
-    impl VcsStoreCell {
-        fn new() -> Self {
-            Self {
-                state: Mutex::new(VcsStoreCellState { store: None, rolled_checkpoint: None, retiring: Vec::new(), busy_generation: None, waiters: std::array::from_fn(|_| None) }),
-                #[cfg(test)]
-                shutdown_failures: std::sync::atomic::AtomicUsize::new(0),
-            }
-        }
-
-        fn take_next_waker(state: &mut VcsStoreCellState) -> Option<(u64, Waker)> {
-            let next = state.waiters.iter().enumerate().filter_map(|(slot, waiter)| waiter.as_ref().map(|waiter| (slot, waiter.generation))).min_by_key(|(_, generation)| *generation).map(|(slot, _)| slot)?;
-            state.waiters[next].take().map(|waiter| (waiter.generation, waiter.waker))
-        }
-
-        fn release(&self, generation: u64, store: Option<HashStore>) {
-            let wake = {
-                let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-                if state.busy_generation != Some(generation) {
-                    return;
-                }
-                if let Some(store) = store {
-                    state.store = Some(store);
-                }
-                state.busy_generation = None;
-                let next = Self::take_next_waker(&mut state);
-                if let Some((generation, _)) = &next {
-                    state.busy_generation = Some(*generation);
-                }
-                next.map(|(_, waker)| waker)
-            };
-            if let Some(waker) = wake {
-                waker.wake();
-            }
-        }
-
-        fn close_store_step(&self) -> Result<bool, DbError> {
-            #[cfg(test)]
-            let inject_failure = self.shutdown_failures.try_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |remaining| remaining.checked_sub(1)).is_ok();
-            let mut store = {
-                let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-                if state.busy_generation.is_some() || state.waiters.iter().any(Option::is_some) {
-                    return Err(DbError::Conflict("VCS store still has a retained operation during shutdown".to_string()));
-                }
-                if !state.retiring.is_empty() {
-                    retire_window_steps(&mut state.retiring, VCS_WINDOW_RETIREMENT_STEPS_PER_TURN)?;
-                    return Ok(false);
-                }
-                let Some(store) = state.store.take() else { return Ok(true) };
-                store
-            };
-            #[cfg(test)]
-            if inject_failure {
-                self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner).store = Some(store);
-                return Err(DbError::Internal("injected retained VCS shutdown fault".to_string()));
-            }
-            let step = store::SpaceMember::close_owned_step(&mut store, 1, VCS_OPERATION_BYTES as usize).map_err(|error| DbError::Internal(format!("vcs shutdown: {error}")));
-            match step {
-                Ok(store::SnapshotRetirementStep::Complete) => {
-                    if !store::SpaceMember::close_owned_terminal_is_empty(&store) {
-                        let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-                        state.store = Some(store);
-                        return Err(DbError::Internal("vcs shutdown completed without a terminal store witness".to_string()));
-                    }
-                    Ok(true)
-                }
-                Ok(store::SnapshotRetirementStep::Pending { .. } | store::SnapshotRetirementStep::Blocked) => {
-                    let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-                    state.store = Some(store);
-                    Ok(false)
-                }
-                Err(error) => {
-                    let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-                    state.store = Some(store);
-                    Err(error)
-                }
-            }
-        }
-    }
-
-    struct VcsStoreAcquire {
-        cell: std::sync::Arc<VcsStoreCell>,
-        slot: usize,
-        generation: u64,
-        resolved: bool,
-    }
-
-    enum VcsStoreClaim {
-        Build(VcsStoreBuildPermit),
-        Ready(VcsStoreLease),
-    }
-
-    struct VcsStoreBuildPermit {
-        cell: std::sync::Arc<VcsStoreCell>,
-        generation: u64,
-        resolved: bool,
-    }
-
-    struct VcsStoreLease {
-        cell: std::sync::Arc<VcsStoreCell>,
-        generation: u64,
-        store: Option<HashStore>,
-    }
-
-    impl Future for VcsStoreAcquire {
-        type Output = Result<VcsStoreClaim, DbError>;
-
-        fn poll(mut self: Pin<&mut Self>, context: &mut Context<'_>) -> Poll<Self::Output> {
-            if !VcsOperationAdmission::is_current(self.slot, self.generation) {
-                self.resolved = true;
-                return Poll::Ready(Err(DbError::Closed));
-            }
-            let mut state = self.cell.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            if state.busy_generation.is_none() || state.busy_generation == Some(self.generation) {
-                state.busy_generation = Some(self.generation);
-                state.waiters[self.slot] = None;
-                let store = state.store.take();
-                drop(state);
-                self.resolved = true;
-                let claim = match store {
-                    Some(store) => VcsStoreClaim::Ready(VcsStoreLease { cell: self.cell.clone(), generation: self.generation, store: Some(store) }),
-                    None => VcsStoreClaim::Build(VcsStoreBuildPermit { cell: self.cell.clone(), generation: self.generation, resolved: false }),
-                };
-                return Poll::Ready(Ok(claim));
-            }
-            let waiter = &mut state.waiters[self.slot];
-            if waiter.as_ref().is_none_or(|waiter| waiter.generation != self.generation || !waiter.waker.will_wake(context.waker())) {
-                *waiter = Some(VcsStoreWaiter { generation: self.generation, waker: context.waker().clone() });
-            }
-            Poll::Pending
-        }
-    }
-
-    impl Drop for VcsStoreAcquire {
-        fn drop(&mut self) {
-            if self.resolved {
-                return;
-            }
-            let mut state = self.cell.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            if state.waiters[self.slot].as_ref().is_some_and(|waiter| waiter.generation == self.generation) {
-                state.waiters[self.slot] = None;
-            }
-            let wake = if state.busy_generation == Some(self.generation) {
-                state.busy_generation = None;
-                let next = VcsStoreCell::take_next_waker(&mut state);
-                if let Some((generation, _)) = &next {
-                    state.busy_generation = Some(*generation);
-                }
-                next.map(|(_, waker)| waker)
-            } else {
-                None
-            };
-            drop(state);
-            if let Some(waker) = wake {
-                waker.wake();
-            }
-        }
-    }
-
-    impl VcsStoreBuildPermit {
-        fn install(mut self, store: HashStore) -> VcsStoreLease {
-            self.resolved = true;
-            VcsStoreLease { cell: self.cell.clone(), generation: self.generation, store: Some(store) }
-        }
-    }
-
-    impl Drop for VcsStoreBuildPermit {
-        fn drop(&mut self) {
-            if !self.resolved {
-                self.cell.release(self.generation, None);
-            }
-        }
-    }
-
-    impl VcsStoreLease {
-        fn store_mut(&mut self) -> &mut HashStore {
-            self.store.as_mut().expect("vcs store lease owner already returned")
-        }
-
-        /// @emoji 🪟️ Keeps a document's version graph a bounded window: when its store's applied-edit
-        /// ledger is full, every applied change is folded into one checkpoint, the folded store is handed
-        /// to its cell for bounded retirement (`retire_window_steps`) and a fresh store starts from the
-        /// folded hash. The graph then answers `merge_base`/`head` within
-        /// the current window (`head` falls back to the last folded checkpoint); history older than the
-        /// window is the durable WAL's, never this in-memory graph's. A full ledger used to refuse every
-        /// later change — after the change was already durable in the WAL.
-        async fn roll_window_when_full(&mut self, document: &ArtifactId) -> Result<(), DbError> {
-            if self.store_mut().envelope().vcs.edits.has_capacity() {
-                return Ok(());
-            }
-            self.store_mut().dispatch(store::ArtifactCommand::CommitCheckpoint { message: Some("version graph window".to_string()), authors: Vec::new() }).await.map_err(map_vcs_error)?;
-            let folded = self.store_mut().current_checkpoint_id().map(str::to_string);
-            let latest_hash = self.store_mut().envelope().vcs.initial_snapshot.latest_hash;
-            let latest_hash = self.store_mut().snapshot().map_or(latest_hash, |snapshot| snapshot.latest_hash);
-            let retired = self.store.take().expect("vcs store lease owner already returned");
-            self.cell.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner).retiring.push(retired);
-            let envelope = store::create_document_envelope::<HashProjection, HashMutation>("db_engine.version_graph", &document.0, HashProjection { latest_hash }, None);
-            let mut fresh = store::ArtifactStore::new(envelope).await.map_err(map_vcs_error)?;
-            fresh.install_document_store_owners_exact(<HashProjection as store::MemberStoreOwner<HashMutation>>::member_store_owners());
-            self.store = Some(fresh);
-            self.cell.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner).rolled_checkpoint = folded;
-            Ok(())
-        }
-
-        /// 🧹️ Advances the folded windows' retirement by a bounded number of close steps — work that
-        /// used to run to completion inside one commit turn, where a turn dropped mid-way dropped a
-        /// half-closed store.
-        fn advance_retirements(&self) -> Result<(), DbError> {
-            let mut state = self.cell.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            retire_window_steps(&mut state.retiring, VCS_WINDOW_RETIREMENT_STEPS_PER_TURN)
-        }
-
-        fn rolled_checkpoint(&self) -> Option<String> {
-            self.cell.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner).rolled_checkpoint.clone()
-        }
-    }
-
-    impl Drop for VcsStoreLease {
-        fn drop(&mut self) {
-            self.cell.release(self.generation, self.store.take());
-        }
-    }
-
-    // 🔒️ Used as a bare fn-pointer error mapper (`.map_err(map_vcs_error)`) below — same rationale
-    // as `db_artifact`'s `json_err`: `Result::map_err`'s `FnOnce(E) -> F2` bound always calls the
-    // mapper with an owned `E`, so a by-reference signature would not type-check at those sites.
-    #[allow(clippy::needless_pass_by_value)]
-    // 🚫️async: E4 fn-pointer slot
-    fn map_vcs_error(err: vcs::VcsError) -> DbError {
-        DbError::Internal(format!("vcs: {err}"))
-    }
-
-    /// @emoji 🌿️ One real `store::ArtifactStore` per document, driven by real `Apply`/
-    /// `CommitCheckpoint` dispatches — `VersionGraph`'s real implementation.
-    pub struct VcsVersionGraph {
-        stores: Mutex<HashMap<String, std::sync::Arc<VcsStoreCell>>>,
-    }
-
-    impl Default for VcsVersionGraph {
-        fn default() -> VcsVersionGraph {
-            VcsVersionGraph { stores: Mutex::new(HashMap::new()) }
-        }
-    }
-
-    impl VcsVersionGraph {
-        pub async fn new() -> VcsVersionGraph {
-            VcsVersionGraph::default()
-        }
-
-        async fn store(&self, document: &ArtifactId, admission: &VcsOperationAdmission) -> Result<VcsStoreLease, DbError> {
-            let cell = {
-                let mut stores = self.stores.lock().map_err(|_| DbError::Internal("vcs_integration: store registry mutex poisoned".to_string()))?;
-                stores.entry(document.0.clone()).or_insert_with(|| std::sync::Arc::new(VcsStoreCell::new())).clone()
-            };
-            match (VcsStoreAcquire { cell, slot: admission.slot, generation: admission.generation, resolved: false }).await? {
-                VcsStoreClaim::Ready(lease) => Ok(lease),
-                VcsStoreClaim::Build(permit) => {
-                    let envelope = store::create_document_envelope::<HashProjection, HashMutation>("db_engine.version_graph", &document.0, HashProjection::default(), None);
-                    let mut store = store::ArtifactStore::new(envelope).await.map_err(map_vcs_error)?;
-                    store.install_document_store_owners_exact(<HashProjection as store::MemberStoreOwner<HashMutation>>::member_store_owners());
-                    Ok(permit.install(store))
-                }
-            }
-        }
-
-        #[cfg(test)]
-        pub(super) fn fail_next_shutdown_step(&self) {
-            let stores = self.stores.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            if let Some(cell) = stores.values().next() {
-                cell.shutdown_failures.store(1, std::sync::atomic::Ordering::Release);
-            }
-        }
-    }
-
-    impl VersionGraph for VcsVersionGraph {
-        fn record_change<'a>(&'a self, document: &'a ArtifactId, change: ChangeRecord) -> VersionGraphFuture<'a, String> {
-            Box::pin(async move {
-                let admission = record_credit(document, &change).and_then(|(items, bytes)| VcsOperationAdmission::try_claim(items, bytes))?;
-                let mut lease = self.store(document, &admission).await?;
-                lease.roll_window_when_full(document).await?;
-                lease.advance_retirements()?;
-                let ChangeRecord { content_hash, author, message, timestamp_ms, .. } = change;
-                let operation = HashMutation { hash: content_hash.0, author: Some(protocol::ActorId(author.0)), timestamp: Some(protocol::HybridLogicalTimestamp::new(0, timestamp_ms)) };
-                let mutations = Vec::from([operation]);
-                lease.store_mut().dispatch(store::ArtifactCommand::Apply { mutations, description: Some(message) }).await.map_err(map_vcs_error)?;
-                Ok(lease.store_mut().envelope().vcs.edits.last().map(|edit| edit.id.clone()).unwrap_or_default())
-            })
-        }
-
-        /// @emoji 🎯️ Design choice: `request.parent_checkpoint`/`change_ids` are NOT threaded
-        /// through — `store::ArtifactCommand::CommitCheckpoint` always folds every edit applied
-        /// since the store's OWN current checkpoint (tracked internally by `ArtifactStore`,
-        /// advanced by `record_change`'s `Apply` calls above), which is the only value that could
-        /// ever be consistent with this store's real history. `request.timestamp_ms` is similarly
-        /// unused: `vcs`'s own `CommitCheckpoint` handler stamps its own `now_iso()` timestamp into
-        /// the checkpoint (part of what its content-addressed id hashes over) — this crate cannot
-        /// override that without reaching into `vcs`'s private state.
-        fn checkpoint<'a>(&'a self, document: &'a ArtifactId, request: CheckpointRequest) -> VersionGraphFuture<'a, String> {
-            Box::pin(async move {
-                let admission = checkpoint_credit(document, &request).and_then(|(items, bytes)| VcsOperationAdmission::try_claim(items, bytes))?;
-                let mut lease = self.store(document, &admission).await?;
-                let CheckpointRequest { message, authors: source_authors, .. } = request;
-                let mut authors = Vec::with_capacity(source_authors.capacity());
-                for author in source_authors {
-                    let name = author.0;
-                    authors.push(vcs::Author { id: name.clone(), name, avatar: None });
-                }
-                lease.store_mut().dispatch(store::ArtifactCommand::CommitCheckpoint { message: Some(message), authors }).await.map_err(map_vcs_error)?;
-                lease.store_mut().current_checkpoint_id().map(str::to_string).ok_or_else(|| DbError::Internal("vcs: commit_checkpoint produced no checkpoint id".to_string()))
-            })
-        }
-
-        fn merge_base<'a>(&'a self, document: &'a ArtifactId, a: &'a str, b: &'a str) -> VersionGraphFuture<'a, Option<String>> {
-            Box::pin(async move {
-                let admission = relation_credit(document, &[a, b]).and_then(|(items, bytes)| VcsOperationAdmission::try_claim(items, bytes))?;
-                let mut lease = self.store(document, &admission).await?;
-                Ok(store::merge_base(lease.store_mut().envelope(), a, b).await)
-            })
-        }
-
-        fn head<'a>(&'a self, document: &'a ArtifactId, alternative: &'a str) -> VersionGraphFuture<'a, Option<String>> {
-            Box::pin(async move {
-                let admission = relation_credit(document, &[alternative]).and_then(|(items, bytes)| VcsOperationAdmission::try_claim(items, bytes))?;
-                let mut lease = self.store(document, &admission).await?;
-                let envelope = lease.store_mut().envelope();
-                if let Some(found) = envelope.vcs.alternatives.iter().find(|candidate| candidate.id == alternative || candidate.name == alternative) {
-                    return Ok(found.checkpoint_ids.last().cloned());
-                }
-                Ok(lease.store_mut().current_checkpoint_id().map(str::to_string).or_else(|| lease.rolled_checkpoint()))
-            })
-        }
-
-        fn shutdown_step(&self) -> VersionGraphFuture<'_, VersionGraphShutdownStep> {
-            Box::pin(async move {
-                let next = self.stores.lock().map_err(|_| DbError::Internal("vcs_integration: store registry mutex poisoned".to_string()))?.iter().next().map(|(document, cell)| (document.clone(), cell.clone()));
-                let Some((document, cell)) = next else { return Ok(VersionGraphShutdownStep::Complete) };
-                if !cell.close_store_step()? {
-                    return Ok(VersionGraphShutdownStep::Progress);
-                }
-                let mut stores = self.stores.lock().map_err(|_| DbError::Internal("vcs_integration: store registry mutex poisoned".to_string()))?;
-                if stores.get(&document).is_some_and(|current| std::sync::Arc::ptr_eq(current, &cell)) {
-                    stores.remove(&document);
-                }
-                if stores.is_empty() {
-                    Ok(VersionGraphShutdownStep::Complete)
-                } else {
-                    Ok(VersionGraphShutdownStep::Progress)
-                }
-            })
-        }
-    }
-
-    #[cfg(test)]
-    include!("🧪️tests/🔬️vcs-integration-retained/🦀️.rs");
-    //#endregion 🔖️Store
-}
-//#endregion 🔖️VersionGraph
-
-//#region 🔖️VersionGraphs
-// 🔀️ dedyn-fw-os-misc, O1/R11: closes `VersionGraph`'s 2-implementor set — `NullVersionGraph`
-// always, `VcsVersionGraph` only when the `vcs` feature is on (mirrors the two `#[cfg]` branches
-// `Database`'s constructors already had to pick between). `dyn_enum_close!`'s variant DSL has no
-// per-variant `#[cfg]` (see `semio_framework_dispatch_macros`'s own `DynEnumVariant::parse`), so the
-// whole closing site is duplicated per feature state instead of gating one variant inside it —
-// still ONE concrete `VersionGraphs` type per build, never a generic thread through
-// `ArtifactEngineConfig`/`ArtifactEngine`/`Database`. Replaces `Arc<dyn VersionGraph>`.
-use semio_framework_dispatch_macros::dyn_enum_close;
-
-#[cfg(feature = "vcs")]
-dyn_enum_close! {
-    pub enum VersionGraphs: VersionGraph {
-        Null(NullVersionGraph),
-        Vcs(vcs_integration::VcsVersionGraph),
-    }
-}
-
-#[cfg(not(feature = "vcs"))]
-dyn_enum_close! {
-    pub enum VersionGraphs: VersionGraph {
-        Null(NullVersionGraph),
-    }
-}
-//#endregion 🔖️VersionGraphs
-
 //#region 🔖️Observe
-/// @emoji 📡️ The default observability wiring `Database::open`/`open_at` build when the caller
+/// 📡️ The default observability wiring `Database::open`/`open_at` build when the caller
 /// doesn't supply their own: an in-memory `db_observe::StructuredSink` (real JSON-lines encoding,
 /// just not flushed anywhere durable by default — a caller wanting file/pipe output constructs
 /// `db_observe::WriterSink` themselves and passes it via `Database::open_with_emit`).
@@ -5382,20 +4511,20 @@ async fn default_emit() -> Arc<db_observe::StructuredSink<db_observe::MemorySink
 //#endregion 🔖️Observe
 
 //#region 🔖️Catalog
-/// @emoji 📇️ One document known to this `Database`'s catalog.
+/// 📇️ One document known to this `Database`'s catalog.
 #[derive(Clone, Debug, PartialEq)]
 pub struct CatalogEntry {
     pub document: protocol::ArtifactId,
     pub created_at_ms: u64,
 }
 
-/// @emoji 📇️ A point-in-time read of every document this `Database` knows about.
+/// 📇️ A point-in-time read of every document this `Database` knows about.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct CatalogView {
     pub artifacts: Vec<CatalogEntry>,
 }
 
-/// @emoji 💾️ The catalog root's on-disk shape — a plain JSON array, deliberately NOT reusing
+/// 💾️ The catalog root's on-disk shape — a plain JSON array, deliberately NOT reusing
 /// `CatalogEntry` directly (keeps the public type free of a `serde` bound it doesn't otherwise need).
 #[derive(serde::Serialize, serde::Deserialize)]
 struct CatalogRootEntry {
@@ -7589,7 +6718,7 @@ pub fn take_database_create_catalog_terminal(generation: u64) -> Option<Database
 //#endregion 🔖️CreateDocumentCatalogCas
 
 //#region 🔖️ArtifactSpec
-/// @emoji 📄️ What `Database::create_document` needs to mint a brand-new document — this crate's own
+/// 📄️ What `Database::create_document` needs to mint a brand-new document — this crate's own
 /// choice (the contract fixes `create_document`'s signature, not `ArtifactSpec`'s shape).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ArtifactSpec {
@@ -7604,7 +6733,7 @@ impl ArtifactSpec {
 //#endregion 🔖️ArtifactSpec
 
 //#region 🔖️Health
-/// @emoji 🩺️ The frozen `Database::health()` return shape, wrapping a real
+/// 🩺️ The frozen `Database::health()` return shape, wrapping a real
 /// `db_observe::HealthRegistry` snapshot plus this crate's own catalog-level fact (open document
 /// count) that no lower crate could know.
 #[derive(Clone, Debug)]
@@ -7641,8 +6770,8 @@ impl DatabaseShutdownControl {
             DbError::Closed
         } else {
             DbError::Unavailable(format!(
-                "database shutdown deadline elapsed in phase {:?}: open artifacts {}, version graph complete {}, emit started {}, retained pool-use owners {}, retained slots {:?}",
-                witness.phase, witness.open_artifacts, witness.graph_complete, witness.emit_started, witness.pool_use_owners, witness.retained_slots
+                "database shutdown deadline elapsed in phase {:?}: open artifacts {}, emit started {}, retained pool-use owners {}, retained slots {:?}",
+                witness.phase, witness.open_artifacts, witness.emit_started, witness.pool_use_owners, witness.retained_slots
             ))
         }
     }
@@ -7653,7 +6782,6 @@ impl DatabaseShutdownControl {
 struct DatabaseShutdownInterruptionWitness {
     phase: Option<DatabaseShutdownPhase>,
     open_artifacts: usize,
-    graph_complete: bool,
     emit_started: bool,
     pool_use_owners: usize,
     retained_slots: DatabaseRetainedPoolUseCensus,
@@ -7686,15 +6814,13 @@ impl Drop for DatabaseMountFutureLiveGuardV1 {
 }
 
 static DATABASE_POOL_USE_MOUNT_WAIT_LIVE: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
-static DATABASE_POOL_USE_CHECKPOINT_LIVE: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
 
 /// 🔬️ One live BARE `require_open_use` clone that never reaches a registered owner. `mount_document`
-/// and `checkpoint_document` clone the Database's use into a plain local and hold it across their
-/// awaits: the mount waiter parks on another caller's `Opening` slot, the checkpoint parks on the
-/// version graph. Neither clone is in any slot table, in any `live_*` struct family or in a mount
-/// future, so both are invisible to every other census family while they pin the use. `require_open_use`
-/// has exactly four call sites; the other two hand their clone to a counted future, so these two
-/// guards close the census over every carrier of `Database::pool_use`.
+/// clones the Database's use into a plain local and holds it across its awaits while the mount waiter
+/// parks on another caller's `Opening` slot. That clone is in no slot table, in no `live_*` struct family
+/// and in no mount future, so it is invisible to every other census family while it pins the use.
+/// `require_open_use` has exactly three call sites; the other two hand their clone to a counted future, so
+/// this guard closes the census over every carrier of `Database::pool_use`.
 struct DatabasePoolUseSiteGuardV1(&'static std::sync::atomic::AtomicUsize);
 
 impl DatabasePoolUseSiteGuardV1 {
@@ -7762,7 +6888,6 @@ struct DatabaseRetainedPoolUseCensus {
     live_mount_future: usize,
     live_sync_hello: usize,
     mount_wait: usize,
-    checkpoint: usize,
 }
 
 impl DatabaseRetainedPoolUseCensus {
@@ -7784,7 +6909,6 @@ impl DatabaseRetainedPoolUseCensus {
             live_mount_future: DATABASE_MOUNT_FUTURE_LIVE.load(std::sync::atomic::Ordering::Acquire),
             live_sync_hello: db_sync::database_sync_hello_live_states(),
             mount_wait: DATABASE_POOL_USE_MOUNT_WAIT_LIVE.load(std::sync::atomic::Ordering::Acquire),
-            checkpoint: DATABASE_POOL_USE_CHECKPOINT_LIVE.load(std::sync::atomic::Ordering::Acquire),
         }
     }
 }
@@ -7793,7 +6917,6 @@ impl DatabaseRetainedPoolUseCensus {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum DatabaseShutdownPhase {
     Authority,
-    VersionGraph,
     Emit,
     PoolUse,
 }
@@ -7802,7 +6925,6 @@ pub enum DatabaseShutdownPhase {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum DatabaseShutdownBlock {
     Authorities(usize),
-    VersionGraph,
     Executor(semio_framework_async::WorkerSubmitErrorKind),
     ArtifactClose(db_artifact::ArtifactCloseRetryProgress),
 }
@@ -7910,7 +7032,7 @@ struct DatabaseDocumentMountReply {
 
 /// 🎫️ Counts the caller-held `ArtifactHandle`s of one mounted document. The last one to drop
 /// unmounts the document: its `Ready` slot becomes `Closing` and its authority retires, so a
-/// document holds its WAL writer, retained state and version graph only while someone holds it, and
+/// document holds its WAL writer and retained state only while someone holds it, and
 /// the mount capacity bounds concurrently open documents instead of every document a process ever
 /// opened. A mount that finds the slot `Closing` waits for that retirement before it replays the
 /// WAL. Leases are only ever created under the registry lock. Database shutdown blocks on these
@@ -8395,9 +7517,9 @@ impl DatabaseDocumentMountOwner {
 }
 
 //#region 🔖️Database
-/// @emoji 🗄️ The catalog: owns the storage substrate, the shared config/capabilities/authz/
-/// version-graph/observability wiring every document actor is constructed with, and the registry of
-/// currently-open `ArtifactAuthority` actors.
+/// 🗄️ The catalog: owns the storage substrate, the shared config/capabilities/authz/observability
+/// wiring every document actor is constructed with, and the registry of currently-open
+/// `ArtifactAuthority` actors.
 ///
 /// 🎯️ Design choice: the catalog registry itself is a plain `Mutex`-guarded `HashMap`, not a
 /// separate `db_actor::Actor`-driven process. `Database`'s own public surface (`open`/
@@ -8417,10 +7539,6 @@ pub struct Database<E: Emit + 'static = db_observe::StructuredSink<db_observe::M
     storage: Arc<db_storage::DbBackend>,
     config: DbConfig,
     capabilities: DbCapabilities,
-    /// @emoji 🌿️ Never `None`: `NullVersionGraph` (an `Unimplemented`-on-every-call
-    /// placeholder, not an `Option` layer — see its own doc) is the default when the `vcs` feature
-    /// is disabled, exactly matching `db_artifact::ArtifactEngineConfig::default`'s own choice.
-    version_graph: Arc<VersionGraphs>,
     emit: Arc<E>,
     health: Arc<db_observe::HealthRegistry>,
     catalog: Arc<Mutex<CatalogState>>,
@@ -8432,11 +7550,10 @@ pub struct Database<E: Emit + 'static = db_observe::StructuredSink<db_observe::M
     #[cfg(test)]
     mount_parked_hook: Arc<Mutex<Option<DatabaseDocumentMountParkedHook>>>,
     closing_authority: Option<(String, Arc<db_artifact::ArtifactAuthority>)>,
-    shutdown_graph_complete: bool,
     shutdown_emit_started: bool,
     shutdown_complete: bool,
     pool_use: Option<Arc<WorkerPoolUse>>,
-    /// @emoji 🧵️ The process WorkerPool every document authority and submit bridge uses.
+    /// 🧵️ The process WorkerPool every document authority and submit bridge uses.
     /// Construction without this owner is intentionally impossible: no database path may execute
     /// blocking storage or authority work inline on its caller.
     pool: Arc<WorkerPool>,
@@ -8495,14 +7612,13 @@ impl std::fmt::Debug for DatabaseOpenAtRejected {
 }
 
 impl Database {
-    /// @emoji 🚀️ The frozen entry point: opens (or initializes, if `storage` is fresh) a `Database`
-    /// over an arbitrary `Arc<db_storage::DbBackend>` backend, wired with the default in-memory emit sink
-    /// and (behind the default-on `vcs` feature) a real `VcsVersionGraph`.
+    /// 🚀️ The frozen entry point: opens (or initializes, if `storage` is fresh) a `Database`
+    /// over an arbitrary `Arc<db_storage::DbBackend>` backend, wired with the default in-memory emit sink.
     pub async fn open(pool: Arc<WorkerPool>, config: DbConfig, storage: Arc<db_storage::DbBackend>) -> Result<Database, DbError> {
         Database::open_with(pool, config, storage, default_emit().await).await
     }
 
-    /// @emoji 🚀️ The zero-touch filesystem entry point. The caller supplies the process pool
+    /// 🚀️ The zero-touch filesystem entry point. The caller supplies the process pool
     /// before storage construction, so opening can never take a pool-less inline path.
     pub async fn open_at(pool: Arc<WorkerPool>, root: &std::path::Path, profile: Profile) -> Result<Database, DatabaseOpenAtRejected> {
         let fs = db_storage::FsStorage::open(pool.clone(), root).await.map_err(DatabaseOpenAtRejected::Storage)?;
@@ -8513,7 +7629,7 @@ impl Database {
         }
     }
 
-    /// @emoji 🚀️ Like `open`, but with a caller-supplied `Emit` sink (e.g. a `db_observe::WriterSink`
+    /// 🚀️ Like `open`, but with a caller-supplied `Emit` sink (e.g. a `db_observe::WriterSink`
     /// over a real file) instead of the default in-memory one.
     // 🔀️ dedyn-emit-runtime, O1/R11(a): generic over `E: Emit` (the function's own type param, not
     // `Database`'s default) so the returned `Database<E>` carries the caller's concrete sink type —
@@ -8604,18 +7720,12 @@ impl<E: Emit + 'static> Database<E> {
         };
         health.set("db_engine.catalog", db_observe::HealthState::Healthy);
 
-        #[cfg(feature = "vcs")]
-        let version_graph: Arc<VersionGraphs> = Arc::new(VersionGraphs::Vcs(vcs_integration::VcsVersionGraph::new().await));
-        #[cfg(not(feature = "vcs"))]
-        let version_graph: Arc<VersionGraphs> = Arc::new(VersionGraphs::Null(NullVersionGraph));
-
         emit.emit(EmitEvent::new("db_engine.database_opened").field("documents", EmitField::U64(entries.len() as u64))).await;
 
         Ok(Database {
             storage,
             config,
             capabilities,
-            version_graph,
             emit,
             health,
             catalog: Arc::new(Mutex::new(CatalogState { epoch, revision: 1, entries: Arc::new(entries), pending: None })),
@@ -8627,7 +7737,6 @@ impl<E: Emit + 'static> Database<E> {
             #[cfg(test)]
             mount_parked_hook: Arc::new(Mutex::new(None)),
             closing_authority: None,
-            shutdown_graph_complete: false,
             shutdown_emit_started: false,
             shutdown_complete: false,
             pool_use: Some(pool_use),
@@ -8635,28 +7744,13 @@ impl<E: Emit + 'static> Database<E> {
         })
     }
 
-    /// @emoji ⚙️ Builds one `ArtifactEngineConfig`. Sets the 3 fields this crate has ALWAYS
-    /// constructed (`limits`/`version_graph`/`preview_ttl_ms`, per the module doc's
-    /// compatibility-surface note) explicitly, and spreads `..db_artifact::ArtifactEngineConfig::
-    /// default()` for every other field db_artifact has since grown (e.g. `security`/`emit`/
-    /// `projections`) — this crate has no opinion on those yet (`db_artifact`'s own real
-    /// `db_security::SecurityGate`-backed default policy is permissive single-tenant), and the spread keeps this call site correct across further additive
-    /// growth without another coordinated edit.
-    fn document_engine_config(&self) -> db_artifact::ArtifactEngineConfig<VersionGraphs> {
-        // 🔀️ Can't `..db_artifact::ArtifactEngineConfig::default()` spread here: that default is
-        // only defined for `ArtifactEngineConfig<NullVersionGraph>` (see its `impl Default`), a
-        // different concrete type from `ArtifactEngineConfig<VersionGraphs>` — struct-update syntax
-        // requires an exact type match. Pull the `V`-independent defaults (`security`/`emit`/
-        // `projections`) from the default instantiation by value instead.
-        let other_defaults = db_artifact::ArtifactEngineConfig::default();
-        db_artifact::ArtifactEngineConfig {
-            limits: self.config.limits.clone(),
-            version_graph: self.version_graph.clone(),
-            preview_ttl_ms: self.config.limits.max_preview_ttl_ms,
-            security: other_defaults.security,
-            emit: other_defaults.emit,
-            projections: other_defaults.projections,
-        }
+    /// ⚙️ Builds one `ArtifactEngineConfig`: this database's own `limits` and preview TTL, and
+    /// `..db_artifact::ArtifactEngineConfig::default()` for every other field (`security`/`emit`/
+    /// `projections`) — this crate has no opinion on those (`db_artifact`'s own real
+    /// `db_security::SecurityGate`-backed default policy is permissive single-tenant), and the spread keeps
+    /// this call site correct across further additive growth without another coordinated edit.
+    fn document_engine_config(&self) -> db_artifact::ArtifactEngineConfig {
+        db_artifact::ArtifactEngineConfig { limits: self.config.limits.clone(), preview_ttl_ms: self.config.limits.max_preview_ttl_ms, ..db_artifact::ArtifactEngineConfig::default() }
     }
 
     fn retained_mount_rejection(rejected: db_artifact::ArtifactEngineOpenRejected, resume: Option<DatabaseDocumentMountFuture>) -> DatabaseDocumentMountFailure {
@@ -8700,7 +7794,7 @@ impl<E: Emit + 'static> Database<E> {
         pool_use: Arc<WorkerPoolUse>,
         storage: Arc<db_storage::DbBackend>,
         document: protocol::ArtifactId,
-        config: db_artifact::ArtifactEngineConfig<VersionGraphs>,
+        config: db_artifact::ArtifactEngineConfig,
         mailbox_capacities: MailboxCapacities,
         emit: Arc<E>,
     ) -> Result<DatabaseDocumentMountReply, DatabaseDocumentMountFailure> {
@@ -8731,8 +7825,8 @@ impl<E: Emit + 'static> Database<E> {
         document: protocol::ArtifactId,
         policy: DatabaseDocumentMountPolicy,
         catalog_known: bool,
-        create_config: db_artifact::ArtifactEngineConfig<VersionGraphs>,
-        open_config: db_artifact::ArtifactEngineConfig<VersionGraphs>,
+        create_config: db_artifact::ArtifactEngineConfig,
+        open_config: db_artifact::ArtifactEngineConfig,
         mailbox_capacities: MailboxCapacities,
         emit: Arc<E>,
         #[cfg(test)] mount_catalog_published_hook: Arc<Mutex<Option<DatabaseDocumentMountPublishedHook>>>,
@@ -8894,7 +7988,7 @@ impl<E: Emit + 'static> Database<E> {
         DatabaseCreateCatalogFuture::try_prepare_with_use(self.pool.clone(), pool_use, self.catalog.clone(), self.storage.clone(), document, true).map_err(DatabaseRetainedActivityRejected::Retained)
     }
 
-    /// @emoji 🌱️ The frozen `create_document`: mints a brand-new document, durably records it in the
+    /// 🌱️ The frozen `create_document`: mints a brand-new document, durably records it in the
     /// catalog root (CAS-fenced), spawns its `ArtifactAuthority`, and returns a live handle.
     pub async fn create_document(&self, spec: ArtifactSpec) -> Result<ArtifactHandle, DatabaseDocumentOpenRejected> {
         self.mount_document(spec.document, DatabaseDocumentMountPolicy::Create).await
@@ -8905,14 +7999,14 @@ impl<E: Emit + 'static> Database<E> {
         self.mount_document(id.clone(), DatabaseDocumentMountPolicy::Ensure).await
     }
 
-    /// @emoji 📄️ The frozen `document`: returns a live handle to an already-cataloged document,
+    /// 📄️ The frozen `document`: returns a live handle to an already-cataloged document,
     /// reusing an already-open `ArtifactAuthority` if one exists, else recovering it fresh from its
     /// WAL.
     pub async fn document(&self, id: &protocol::ArtifactId) -> Result<ArtifactHandle, DatabaseDocumentOpenRejected> {
         self.mount_document(id.clone(), DatabaseDocumentMountPolicy::Open).await
     }
 
-    /// @emoji 📇️ The frozen `catalog`: a point-in-time read of every document this `Database`
+    /// 📇️ The frozen `catalog`: a point-in-time read of every document this `Database`
     /// knows about.
     pub async fn catalog(&self) -> CatalogView {
         let entries = {
@@ -8922,14 +8016,14 @@ impl<E: Emit + 'static> Database<E> {
         CatalogView { artifacts: entries.as_ref().clone() }
     }
 
-    /// @emoji 🩺️ The frozen `health`: this `Database`'s `HealthRegistry` snapshot plus its own open
+    /// 🩺️ The frozen `health`: this `Database`'s `HealthRegistry` snapshot plus its own open
     /// document count.
     pub async fn health(&self) -> DbHealth {
         DbHealth { report: self.health.report(), open_artifacts: self.open_artifacts.lock().expect("db_engine: open_artifacts mutex poisoned").ready_count() }
     }
 
     /// 🚪️ Advances at most one retained shutdown owner. Cancellation, deadline, and every error
-    /// return leave the exact authority or version-graph Store mounted on this Database for retry.
+    /// return leave the exact authority mounted on this Database for retry.
     pub async fn shutdown_step(&mut self, control: &DatabaseShutdownControl) -> Result<DatabaseShutdownProgress, DbError> {
         if self.shutdown_complete {
             return Ok(DatabaseShutdownProgress::Complete);
@@ -8997,18 +8091,6 @@ impl<E: Emit + 'static> Database<E> {
         if shared_authorities != 0 {
             return Ok(DatabaseShutdownProgress::Blocked(DatabaseShutdownBlock::Authorities(shared_authorities)));
         }
-        if !self.shutdown_graph_complete {
-            if Arc::strong_count(&self.version_graph) != 1 {
-                return Ok(DatabaseShutdownProgress::Blocked(DatabaseShutdownBlock::VersionGraph));
-            }
-            match self.version_graph.shutdown_step().await? {
-                VersionGraphShutdownStep::Progress => {
-                    return Ok(DatabaseShutdownProgress::Progress { phase: DatabaseShutdownPhase::VersionGraph, remaining_authorities: 0 });
-                }
-                VersionGraphShutdownStep::Complete => self.shutdown_graph_complete = true,
-            }
-            return Ok(DatabaseShutdownProgress::Progress { phase: DatabaseShutdownPhase::VersionGraph, remaining_authorities: 0 });
-        }
         if !self.shutdown_emit_started {
             self.shutdown_emit_started = true;
             self.emit.emit(EmitEvent::new("db_engine.database_shutdown")).await;
@@ -9055,9 +8137,6 @@ impl<E: Emit + 'static> Database<E> {
                 DatabaseShutdownProgress::Blocked(DatabaseShutdownBlock::Authorities(count)) => {
                     return Err(DbError::Conflict(format!("database shutdown retains {count} shared artifact authorities")));
                 }
-                DatabaseShutdownProgress::Blocked(DatabaseShutdownBlock::VersionGraph) => {
-                    return Err(DbError::Conflict("database shutdown retains a shared version graph".to_string()));
-                }
                 DatabaseShutdownProgress::Blocked(DatabaseShutdownBlock::Executor(kind)) => {
                     return Err(DbError::Unavailable(format!("database shutdown retains a non-runnable document-mount job: {kind:?}")));
                 }
@@ -9071,7 +8150,6 @@ impl<E: Emit + 'static> Database<E> {
                     return Err(control.interruption_error(DatabaseShutdownInterruptionWitness {
                         phase: reached,
                         open_artifacts: self.open_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).len(),
-                        graph_complete: self.shutdown_graph_complete,
                         emit_started: self.shutdown_emit_started,
                         pool_use_owners: self.pool_use.as_ref().map_or(0, Arc::strong_count),
                         retained_slots: DatabaseRetainedPoolUseCensus::observe(),
@@ -9082,12 +8160,12 @@ impl<E: Emit + 'static> Database<E> {
         }
     }
 
-    /// @emoji 🧰️ What this `Database` instance negotiated at `open` time.
+    /// 🧰️ What this `Database` instance negotiated at `open` time.
     pub async fn capabilities(&self) -> DbCapabilities {
         self.capabilities
     }
 
-    /// @emoji 🔌️ The underlying storage substrate this `Database` was opened with — an escape
+    /// 🔌️ The underlying storage substrate this `Database` was opened with — an escape
     /// hatch for callers below the document-actor boundary that need direct `PayloadStorage`/
     /// `WalStorage` access (e.g. `os-semio_hub`'s content-addressed blob routes, or a wire-v2 semio_hub
     /// session driving `db_sync::handle_frontier_advertise` directly). Additive: not part of the
@@ -9160,18 +8238,6 @@ impl<E: Emit + 'static> Database<E> {
             };
             return hello.await?.close_and_take_session();
         }
-    }
-
-    /// @emoji 🌿️ A real, `vcs`-backed checkpoint over every change `record_change` has recorded for
-    /// `document` since its last checkpoint (see `db_artifact::ArtifactEngine::submit`'s "vcs"
-    /// pipeline stage, which calls `record_change` on every commit when a `VersionGraph` is wired).
-    /// Errs `Unimplemented` if the `vcs` feature is disabled (no `VersionGraph` configured).
-    pub async fn checkpoint_document(&self, document: &protocol::ArtifactId, message: String, authors: &[protocol::ActorId]) -> Result<String, DbError> {
-        let _pool_use = self.require_open_use()?;
-        let _pool_use_site = DatabasePoolUseSiteGuardV1::new(&DATABASE_POOL_USE_CHECKPOINT_LIVE);
-        let core_document = to_core_document_id(document).await;
-        let core_authors = authors.iter().map(to_core_actor_id).collect();
-        self.version_graph.checkpoint(&core_document, CheckpointRequest { parent_checkpoint: None, change_ids: Vec::new(), message, authors: core_authors, timestamp_ms: now_ms().await }).await
     }
 }
 
@@ -10806,7 +9872,7 @@ impl Drop for ArtifactHistoryTerminalWork {
     }
 }
 
-/// @emoji 🎭️ The frozen `ArtifactHandle`: a clone-cheap live handle to one open document.
+/// 🎭️ The frozen `ArtifactHandle`: a clone-cheap live handle to one open document.
 #[derive(Clone)]
 pub struct ArtifactHandle {
     authority: Arc<db_artifact::ArtifactAuthority>,
@@ -10854,7 +9920,7 @@ impl ArtifactHandle {
         self.authority.resume_durable_group_recovery(owner)
     }
 
-    /// @emoji ✍️ The frozen `submit`: commits `batch` through the document's real
+    /// ✍️ The frozen `submit`: commits `batch` through the document's real
     /// `ArtifactAuthority` mailbox. Admission retains the exact request owner, and every I/O-lane
     /// grant advances either request-to-mailbox handoff or one actor-future poll.
     pub fn submit(&self, batch: db_artifact::CommandBatch, options: db_artifact::SubmitOptions) -> SubmitFuture {
@@ -10878,7 +9944,7 @@ impl ArtifactHandle {
         self.compact_retained(holder, consolidate_snapshots, db_compact::CompactionBudget::default(), now_ms().await, cancelled).await?
     }
 
-    /// @emoji 🔎️ The frozen `query`. `Consistency::Canonical` reads the document's live state
+    /// 🔎️ The frozen `query`. `Consistency::Canonical` reads the document's live state
     /// directly. `AtLeast`/`Exact` read canonical too, then verify the resulting frontier actually
     /// satisfies the request (`DbError::Unavailable` if not — a true wait-for-frontier primitive
     /// would need a `ArtifactMessage` variant `db_artifact`'s mailbox doesn't expose yet).
@@ -10950,14 +10016,14 @@ impl ArtifactHandle {
         Ok(results)
     }
 
-    /// @emoji 📡️ The frozen `subscribe` — see module doc's `//🎯️ Design choice`: always
+    /// 📡️ The frozen `subscribe` — see module doc's `//🎯️ Design choice`: always
     /// `DbError::Unimplemented`, a real (not faked) extension seam pending a `ArtifactMessage`
     /// variant `db_artifact` doesn't expose yet.
     pub async fn subscribe(&self, _spec: LiveQuerySpec) -> Result<LiveQuery, DbError> {
         Err(DbError::Unimplemented("live-query subscription is not yet reachable: ArtifactAuthority's mailbox only exposes Submit/Query/Frontier messages"))
     }
 
-    /// @emoji 🧭️ The frozen `frontier`.
+    /// 🧭️ The frozen `frontier`.
     pub async fn frontier(&self) -> Result<Frontier, DbError> {
         let core_frontier = self.authority.frontier().await?;
         Ok(to_engine_frontier(&core_frontier, self.document.clone()))
@@ -10969,12 +10035,12 @@ impl ArtifactHandle {
         Ok(CheckpointPublicationSnapshot { authority_generation: self.authority.generation().0, frontier: to_engine_frontier(&snapshot.frontier, self.document.clone()), head_edit_id: snapshot.head_edit_id })
     }
 
-    /// @emoji 🌫️ The frozen `preview` — see `subscribe`'s doc; same deferral reason.
+    /// 🌫️ The frozen `preview` — see `subscribe`'s doc; same deferral reason.
     pub async fn preview(&self, _base: Frontier) -> Result<PreviewHandle, DbError> {
         Err(DbError::Unimplemented("preview publish/query is not yet reachable: ArtifactAuthority's mailbox only exposes Submit/Query/Frontier messages"))
     }
 
-    /// @emoji 📜️ Replays history through the document authority. Each accepted process-pool grant
+    /// 📜️ Replays history through the document authority. Each accepted process-pool grant
     /// advances one retained mailbox, WAL, envelope, or result-mapping opportunity.
     pub fn history(&self) -> HistoryFuture {
         HistoryFuture::submit(self)
@@ -10984,7 +10050,7 @@ impl ArtifactHandle {
         artifact_history_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner).iter().find_map(|slot| slot.as_ref().filter(|state| state.generation == generation).map(|state| ArtifactHistoryTerminalHandle { state: state.clone() }))
     }
 
-    /// @emoji 📸️ The frozen `snapshot_now` — see module doc's `//🎯️ Design choice`: always resolves
+    /// 📸️ The frozen `snapshot_now` — see module doc's `//🎯️ Design choice`: always resolves
     /// to `DbError::Unimplemented`, a real extension seam (no full-state enumeration exists yet to
     /// serialize, and `db_snapshot` is not a direct dependency of this crate).
     pub async fn snapshot_now(&self, _kind: SnapshotKind) -> SnapshotFuture {

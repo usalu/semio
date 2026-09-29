@@ -156,6 +156,6 @@ fn deformation_solves_balanced_and_stacks() {
     let expected = 1.35 * tz(dead, "uv5") + 1.5 * tz(live, "uv5");
     assert!((tz(uls, "uv5") - expected).abs() < 1e-12, "ULS superposes the solved cases linearly");
     for row in &sls.displacements {
-        eprintln!("[DEBUG] concrete-forest sls {} ux={:.6e} uy={:.6e} uz={:.6e}", row.node_id, row.values[0], row.values[1], row.values[2]);
+        eprintln!("concrete-forest sls {} ux={:.6e} uy={:.6e} uz={:.6e}", row.node_id, row.values[0], row.values[1], row.values[2]);
     }
 }

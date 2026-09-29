@@ -28,5 +28,4 @@ export function testFormsExtensionInputs(): void {
     assert.equal(validateContribution(incomplete), false);
   }
   assert.equal(validateContribution({ ...contributionVectors.payload, label: "Building Component" }), false);
-  console.log("[DEBUG] Forms extension inputs matched shared vectors and independent JSON Schema validation");
 }

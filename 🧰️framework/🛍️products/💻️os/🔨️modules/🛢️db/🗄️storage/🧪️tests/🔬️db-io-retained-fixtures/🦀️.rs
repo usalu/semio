@@ -206,7 +206,6 @@ async fn wal_writer_mounted_controller_fences_at_signal_and_wakes_outside_regist
     retire_db_io_backend(control).unwrap();
     close_db_io_backend(control).await.unwrap();
     assert_eq!(ledger_witness(), before);
-    eprintln!("[DEBUG] mounted writer controller fenced before its first callback, retained the pin without new tasks, woke outside the registry and returned exact backend credit");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -248,7 +247,6 @@ async fn wal_writer_mounted_controller_fault_returns_exact_retry_owner_without_p
     retire_db_io_backend(control).unwrap();
     close_db_io_backend(control).await.unwrap();
     assert_eq!(ledger_witness(), before);
-    eprintln!("[DEBUG] exact failed writer kept its guard and retry owner while another writer remained valid; explicit retry retired both without cross-writer faults");
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -331,7 +329,6 @@ async fn wal_writer_mounted_stale_controller_defers_cross_key_wake_and_fences_re
     close_db_io_backend(control).await.unwrap();
     pool.shutdown();
     assert_eq!(ledger_witness(), before);
-    eprintln!("[DEBUG] stale controller refusal moved B's exact waiter to the fixed pool slot, blocked Ready/retry until drain, and retained both guards through explicit retry");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -357,7 +354,6 @@ async fn wal_writer_mounted_controller_rerequests_after_async_executor_handback(
     retire_db_io_backend(control).unwrap();
     close_db_io_backend(control).await.unwrap();
     assert_eq!(ledger_witness(), before);
-    eprintln!("[DEBUG] leased async writer remained retained through both lease and admission, then its existing hook retired it after exact handback without a new DB task");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -387,7 +383,6 @@ async fn wal_writer_mounted_controller_coalesced_fault_does_not_strand_healthy_r
     retire_db_io_backend(control).unwrap();
     close_db_io_backend(control).await.unwrap();
     assert_eq!(ledger_witness(), before);
-    eprintln!("[DEBUG] coalesced healthy writer completed while its peer retained an unlock fault; exact retry later returned all backend credit");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -436,7 +431,6 @@ async fn wal_writer_mounted_controller_outer_panic_faults_waiters_once_and_stops
         release.await.unwrap();
     }
     assert_eq!(ledger_witness(), before);
-    eprintln!("[DEBUG] unexpected writer executor panic woke every retained owner outside registry locks, stopped after one executor turn, and backend close retired both guards");
 }
 
 struct BlockingFaultTaxonomyLawExecutor {
@@ -1933,7 +1927,6 @@ async fn db_io_lost_result_lease_retains_every_page_and_final_handback() {
     close_db_io_backend(control).await.unwrap();
     assert_eq!(ledger_witness(), before);
     assert_eq!(serde_json::to_value(trace).unwrap(), fixture["resultRetirement"]["terminal"]);
-    eprintln!("[DEBUG] lost DB result retained both pages, shell, terminal result, and final lease handback across separate close opportunities");
 }
 
 #[test]
@@ -1967,7 +1960,6 @@ fn db_io_maintenance_rotates_ready_and_faulted_classes_without_starvation() {
     })
     .unwrap());
     assert_eq!(attempted, DB_IO_MAINTENANCE_CLASSES);
-    eprintln!("[DEBUG] mounted DB maintenance rotates every continuously-ready or faulted class and bounds a fully idle scan to one round");
 }
 
 struct RejectedBackendPressureLawSlots;
@@ -2073,7 +2065,6 @@ async fn db_io_lost_backend_retains_exact_owner_under_rejected_registry_pressure
     }
     assert_eq!(ledger_witness(), before);
     DB_IO_RETIREMENT_PRESSURE_FAULT.store(pressure, std::sync::atomic::Ordering::Release);
-    eprintln!("[DEBUG] full rejected-backend registry preserved the exact lost executor, pool, operation, and credit until normal lane retirement returned every owner");
 }
 
 #[test]
@@ -2474,7 +2465,6 @@ async fn db_io_real_storage_open_drop_retires_queued_backend_and_allows_reopen()
         assert_eq!(ledger_witness(), before);
         assert_eq!(lock(db_io_backend_registry()).free_len, slots_before);
         let _ = std::fs::remove_dir_all(&root);
-        eprintln!("[DEBUG] real-storage-open: backend={backend} cause=queued-drop close-requested={close_requested} ledger=baseline reopened=true pool=terminal");
     }
 }
 
@@ -2517,7 +2507,6 @@ async fn db_io_real_storage_open_fault_drop_retires_registered_backend_without_r
         assert_eq!(ledger_witness(), before);
         assert_eq!(lock(db_io_backend_registry()).free_len, slots_before);
         let _ = std::fs::remove_dir_all(&root);
-        eprintln!("[DEBUG] real-storage-open: backend={backend} cause=path-type-conflict close-requested={close_requested} ledger=baseline reopened=true pool=terminal");
     }
 }
 

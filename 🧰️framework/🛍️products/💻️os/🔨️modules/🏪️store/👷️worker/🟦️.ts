@@ -199,6 +199,7 @@ import { fetchWithTimeout, latestWins, retryWithJitteredBackoff, type FetchTimeo
 /** 🪪️ Identity config facet (ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS
  * §C3) — self-contained TS twin (see that module's header doc for why); never redefined here. */
 import type { Identity } from "../../../🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🟦️";
+import { LOCAL_CATALOG_CONFIG_SCHEMA } from "../../../🎚️config/🧬️schema/🧬️mutations/📥️admit-local-document/🟦️.ts";
 import { spaceArtifactCreationPollDelayV1, spaceArtifactCreationUnreachableV1 } from "./🌱️creation-polling/🟦️.ts";
 import { executionTargetRetrySleepV1, requestExecutionTargetAssetV1 } from "./🔁️execution-target-retry/🟦️.ts";
 import { closeHubSocketV1 } from "../../📇️directory/🔌️client/🚪️socket-close/🟦️.ts";
@@ -420,6 +421,7 @@ export type BackboneWorkerTestDependencies = {
   readonly documentOpenPlanAuthority: typeof documentOpenPlanAuthority;
   readonly documentRuntimeKeyForConfig: typeof documentRuntimeKeyForConfig;
   readonly newArtifactState: typeof newArtifactState;
+  readonly documentCatchingUpV1: typeof documentCatchingUpV1;
   readonly requestDocumentActorRecoveryV1: typeof requestDocumentActorRecoveryV1;
   readonly documentRuntimeKeyV1: typeof documentRuntimeKeyV1;
   readonly driveInferencePort: typeof driveInferencePort;
@@ -2384,7 +2386,8 @@ class DocumentBrowserActorReservation {
     }
   }
 
-  /** 📥️ Delivers the backbone retained before the binding (a catch-up tail among it) in arrival order, then opens the
+  /** 📥️ Delivers the backbone retained before the binding (a catch-up tail among it) in arrival order — reporting
+   * `catching-up` progress per delivered message, which the mounted surface clears — then opens the
    * port for live traffic. The guest answers each ingested batch on the bound port (its `remote-ingest-receipt`), so the
    * bound port accepts the guest's sends while the retained backlog drains. */
   private async flushPendingBackbone(): Promise<void> {
@@ -2392,11 +2395,18 @@ class DocumentBrowserActorReservation {
     if (binding === null) throw new Error("actor-document-port.unbound");
     this.backboneDraining = true;
     try {
+      const hub = hubBinding(this.state.config);
+      let delivered = 0;
       while (this.pendingBackboneBeforeBinding.length > 0) {
         const queued = this.pendingBackboneBeforeBinding;
         this.pendingBackboneBeforeBinding = [];
         this.pendingBackboneBeforeBindingBytes = 0;
-        for (const payload of queued) if (!(await binding.port.receive(this.currentDocumentSource(), payload))) throw new Error("actor-document-port.stale-queued-message");
+        const retained = delivered + queued.length;
+        for (const payload of queued) {
+          if (hub !== null) emitExecutionTargetStatus(this.state, hub, "catching-up", { stage: "catch-up", completedBytes: delivered, totalBytes: retained });
+          if (!(await binding.port.receive(this.currentDocumentSource(), payload))) throw new Error("actor-document-port.stale-queued-message");
+          delivered += 1;
+        }
       }
     } finally {
       this.backboneDraining = false;
@@ -2466,15 +2476,19 @@ class DocumentBrowserActorReservation {
           request.activationGeneration !== this.generation.toString() ||
           request.instanceId !== 0 ||
           !painted ||
-          request.actionSequence <= this.lastActionSequence ||
-          this.documentBinding === null ||
-          !this.documentBackboneReady ||
-          this.state.artifactBootstrap !== null ||
-          this.state.artifactRebootstrapRequired ||
-          this.state.requiredTailFrontier !== null ||
-          this.coldApplied === null ||
-          this.coldTransfer !== null
+          request.actionSequence <= this.lastActionSequence
         ) throw new Error("action-owner-mismatch");
+        if (
+          documentCatchingUpV1({
+            bound: this.documentBinding !== null,
+            backboneReady: this.documentBackboneReady,
+            bootstrap: this.state.artifactBootstrap !== null,
+            rebootstrap: this.state.artifactRebootstrapRequired,
+            tail: this.state.requiredTailFrontier !== null,
+            coldApplied: this.coldApplied !== null,
+            coldTransfer: this.coldTransfer !== null,
+          })
+        ) throw new Error("action-catching-up");
         const child = this.child;
         if (child === null) throw new Error("action-child-unavailable");
         this.lastActionSequence = request.actionSequence;
@@ -2514,7 +2528,7 @@ class DocumentBrowserActorReservation {
         this.close();
         requestDocumentActorRecoveryV1(this.state, "action-unconfirmed");
       }
-      const reason = explicitRefusal ? browserActorGuestRefusalReasonV1(error.detail) : error instanceof Error && /^(action-owner-mismatch|action-child-unavailable)$/u.test(error.message) ? error.message : invoked ? "action-state-unconfirmed" : "action-refused";
+      const reason = explicitRefusal ? browserActorGuestRefusalReasonV1(error.detail) : error instanceof Error && /^(action-owner-mismatch|action-catching-up|action-child-unavailable)$/u.test(error.message) ? error.message : invoked ? "action-state-unconfirmed" : "action-refused";
       return browserActorActionDisposition(request, "rejected", 0, [], reason);
     }
   }
@@ -3605,6 +3619,15 @@ export function identityActorConfig(actor: string, dataDir?: string): ArtifactAc
   return { documentId: IDENTITY_CONFIG_SCHEMA, schema: IDENTITY_CONFIG_SCHEMA, bindings, actor };
 }
 
+/** 🗂️ Builds the {@link ArtifactActorConfig} that opens the OS-wide local document catalog facet
+ * (`os.config.local-catalog`, persisted local-only): the same folder lane under `${dataDir}/os` as the identity facet, so
+ * the list of documents this device keeps survives a reload; a shell with no `S_DATA_DIR` keeps it in memory only.
+ * @see ../../📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🗂️local-catalog/🟦️.ts */
+export function localCatalogActorConfig(actor: string, dataDir?: string): ArtifactActorConfig {
+  const bindings: PersistenceBinding[] = dataDir ? [{ kind: "folder", dataClass: "persistedLocalOnly", path: `${dataDir}/os` }] : [];
+  return { documentId: LOCAL_CATALOG_CONFIG_SCHEMA, schema: LOCAL_CATALOG_CONFIG_SCHEMA, bindings, actor };
+}
+
 /** 🧮️ Reduces one {@link ArtifactEvent} onto a materialized `Identity | null` — event-sourced,
  * mirrors {@link foldOpeningPreferencesEvent}: `applyIdentityConfigMutation`'s diff is whole-record
  * too (`🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🟦️.ts`), so a `remoteMutations` envelope's
@@ -4131,6 +4154,14 @@ function connectHub(state: ArtifactState, binding: Extract<PersistenceBinding, {
 
 function sendWireFrame(state: ArtifactState, frame: ClientFrame, lane: WireLane): void {
   if (state.socket?.readyState === WebSocket.OPEN) state.socket.send(encodeClientFrame(frame, lane));
+}
+
+/** ⏳️ Whether a mounted document is still catching up with the hub: its actor is not bound to the document port or the retained
+ * catch-up tail has not drained into it, an artifact bootstrap or rebuild is in flight, the tail the hub named in its `Welcome` is
+ * not reached yet, or the cold pair is not applied. An input then would apply to a document older than the hub's — a whole-value
+ * verb (typing's `textEdit`) would overwrite what the tail brings — so it is refused typed (`action-catching-up`), never applied. */
+export function documentCatchingUpV1(facts: Readonly<{ bound: boolean; backboneReady: boolean; bootstrap: boolean; rebootstrap: boolean; tail: boolean; coldApplied: boolean; coldTransfer: boolean }>): boolean {
+  return !facts.bound || !facts.backboneReady || facts.bootstrap || facts.rebootstrap || facts.tail || !facts.coldApplied || facts.coldTransfer;
 }
 
 function documentBackboneAdmissionReady(state: ArtifactState): boolean {
@@ -7687,9 +7718,9 @@ if (import.meta.vitest) {
     get workerPostTestSink() { return workerPostTestSink; },
     set workerPostTestSink(value: typeof workerPostTestSink) { workerPostTestSink = value; },
   };
-  await registerTests1(import.meta.vitest, { testSeams, DOCUMENT_BACKBONE_RETENTION_LIMITS, handleAck, ARTIFACT_BOOTSTRAP_DIAGNOSTIC_MAX_BYTES, ArtifactBootstrapAssembler, DIRECTORY_COMMAND_TRANSPORT_CAPACITY, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, DirectoryClient, DirectoryEventPageBootstrapV1, DocumentExecutionTargetLease, HUB_RECONNECT_MAX_MS, IDENTITY_CONFIG_SCHEMA, PENDING_MUTATIONS_QUEUE_LIMIT, SANITY_POLL_MIN_MS, SUSTAINED_HEALTHY_MS, VerifiedColdDocumentPair, abortArtifactBootstrap, installStreamMuxEndpoint, artifactBootstrapFailure, artifactState, artifacts, bindInferenceApprovalUndoToMountedPair, browserActorChildCapacity, browserDirectoryRequest, browserExecutionTargetAssetRequest, bytesHex, clearHubSessionCapability, closeArtifact, closeArtifactRuntime, closeDirectory, connectHubOnce, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeClientFrame, decodePackPayload, decodePackValue, decodeServerFrame, directoryAdministration, directoryClient, directoryCommandOperations, directoryCommandQueue, directoryCommandSha256, directorySessionEpoch, directoryWorkerEpoch, dispatchBackboneWorkerRequest, documentExecutionOwners, documentExecutionTargetLeaseMintToken, documentExecutionTargetStatusRoleV1, documentOpenPlanAuthority, documentRuntimeKeyForConfig, documentRuntimeKeyV1, driveInferencePort, newArtifactState, requestDocumentActorRecoveryV1, dropDocumentExecutionTargetLease, dropVerifiedColdDocumentPair, emitEvent, encodeActorUiPatchReceipt, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentBackboneEnvelopeBatchExact, encodePackValue, encodeServerFrame, executionTargetHex, executionTargetSha256Hex, executionTargetStatusObserver, extractServerCommandsDocumentBackboneBatchExact, flushDirectoryQueue, foldIdentityEvent, fromWireEnvelope, handleHubFrame, handleTsRequest, hubBinding, identityActorConfig, idleGisMapInferencePortStatusV1, inferenceApprovalUndoEpoch, inferenceApprovalUndoOwner, installHubSessionCapability, hubSessionFetch, hubSessionQueued, openArtifact, ownedArrayBuffer, parseDocumentBackboneMessage, parseDocumentExecutionTargetLeaseFieldsV1, parseGisMapInferenceApprovalReceiptV1, queueOutbox, readExecutionTargetBody, reissueInferenceApprovalUndoForRebootstrap, relayMutationsToHub, requestDocumentSocketAuthority, reserveDocumentBrowserActorChild, retainInferenceApprovalUndo, revokeDirectoryAdministrationForScope, rollbackEnvelope, sameLeaseFieldsV1, scopedDirectoryStreams, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1, settleDirectoryCommand, socketGrantTestIssue, spaceArtifactCreationCatalogOperations, spaceArtifactCreationOperations, spaceArtifactCreationTestFetch, stampSession, toWireEnvelope, undoInferenceApproval, verifiedColdDocumentPairMintToken, verifyBrowserActorDescribeV1, workerPostTestSink }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { testSeams, DOCUMENT_BACKBONE_RETENTION_LIMITS, handleAck, ARTIFACT_BOOTSTRAP_DIAGNOSTIC_MAX_BYTES, ArtifactBootstrapAssembler, DIRECTORY_COMMAND_TRANSPORT_CAPACITY, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, DirectoryClient, DirectoryEventPageBootstrapV1, DocumentExecutionTargetLease, HUB_RECONNECT_MAX_MS, IDENTITY_CONFIG_SCHEMA, PENDING_MUTATIONS_QUEUE_LIMIT, SANITY_POLL_MIN_MS, SUSTAINED_HEALTHY_MS, VerifiedColdDocumentPair, abortArtifactBootstrap, installStreamMuxEndpoint, artifactBootstrapFailure, artifactState, artifacts, bindInferenceApprovalUndoToMountedPair, browserActorChildCapacity, browserDirectoryRequest, browserExecutionTargetAssetRequest, bytesHex, clearHubSessionCapability, closeArtifact, closeArtifactRuntime, closeDirectory, connectHubOnce, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeClientFrame, decodePackPayload, decodePackValue, decodeServerFrame, directoryAdministration, directoryClient, directoryCommandOperations, directoryCommandQueue, directoryCommandSha256, directorySessionEpoch, directoryWorkerEpoch, dispatchBackboneWorkerRequest, documentExecutionOwners, documentExecutionTargetLeaseMintToken, documentExecutionTargetStatusRoleV1, documentOpenPlanAuthority, documentRuntimeKeyForConfig, documentRuntimeKeyV1, driveInferencePort, documentCatchingUpV1, newArtifactState, requestDocumentActorRecoveryV1, dropDocumentExecutionTargetLease, dropVerifiedColdDocumentPair, emitEvent, encodeActorUiPatchReceipt, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentBackboneEnvelopeBatchExact, encodePackValue, encodeServerFrame, executionTargetHex, executionTargetSha256Hex, executionTargetStatusObserver, extractServerCommandsDocumentBackboneBatchExact, flushDirectoryQueue, foldIdentityEvent, fromWireEnvelope, handleHubFrame, handleTsRequest, hubBinding, identityActorConfig, idleGisMapInferencePortStatusV1, inferenceApprovalUndoEpoch, inferenceApprovalUndoOwner, installHubSessionCapability, hubSessionFetch, hubSessionQueued, openArtifact, ownedArrayBuffer, parseDocumentBackboneMessage, parseDocumentExecutionTargetLeaseFieldsV1, parseGisMapInferenceApprovalReceiptV1, queueOutbox, readExecutionTargetBody, reissueInferenceApprovalUndoForRebootstrap, relayMutationsToHub, requestDocumentSocketAuthority, reserveDocumentBrowserActorChild, retainInferenceApprovalUndo, revokeDirectoryAdministrationForScope, rollbackEnvelope, sameLeaseFieldsV1, scopedDirectoryStreams, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1, settleDirectoryCommand, socketGrantTestIssue, spaceArtifactCreationCatalogOperations, spaceArtifactCreationOperations, spaceArtifactCreationTestFetch, stampSession, toWireEnvelope, undoInferenceApproval, verifiedColdDocumentPairMintToken, verifyBrowserActorDescribeV1, workerPostTestSink }, { directory: import.meta.dir, url: import.meta.url });
   const { registerBackboneParityTests } = await import("../🔄️sync/🧪️tests/🔬️backbone-parity/🟦️.ts");
-  await registerBackboneParityTests(import.meta.vitest, { testSeams, DOCUMENT_BACKBONE_RETENTION_LIMITS, handleAck, ARTIFACT_BOOTSTRAP_DIAGNOSTIC_MAX_BYTES, ArtifactBootstrapAssembler, DIRECTORY_COMMAND_TRANSPORT_CAPACITY, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, DirectoryClient, DirectoryEventPageBootstrapV1, DocumentExecutionTargetLease, HUB_RECONNECT_MAX_MS, IDENTITY_CONFIG_SCHEMA, PENDING_MUTATIONS_QUEUE_LIMIT, SANITY_POLL_MIN_MS, SUSTAINED_HEALTHY_MS, VerifiedColdDocumentPair, abortArtifactBootstrap, installStreamMuxEndpoint, artifactBootstrapFailure, artifactState, artifacts, bindInferenceApprovalUndoToMountedPair, browserActorChildCapacity, hubSessionFetch, browserDirectoryRequest, browserExecutionTargetAssetRequest, bytesHex, clearHubSessionCapability, closeArtifact, closeArtifactRuntime, closeDirectory, connectHubOnce, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeClientFrame, decodePackPayload, decodePackValue, decodeServerFrame, directoryAdministration, directoryClient, directoryCommandOperations, directoryCommandQueue, directoryCommandSha256, directorySessionEpoch, directoryWorkerEpoch, dispatchBackboneWorkerRequest, documentExecutionOwners, documentExecutionTargetLeaseMintToken, documentExecutionTargetStatusRoleV1, documentOpenPlanAuthority, documentRuntimeKeyForConfig, documentRuntimeKeyV1, driveInferencePort, newArtifactState, requestDocumentActorRecoveryV1, dropDocumentExecutionTargetLease, dropVerifiedColdDocumentPair, emitEvent, encodeActorUiPatchReceipt, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentBackboneEnvelopeBatchExact, encodePackValue, encodeServerFrame, executionTargetHex, executionTargetSha256Hex, executionTargetStatusObserver, extractServerCommandsDocumentBackboneBatchExact, flushDirectoryQueue, foldIdentityEvent, fromWireEnvelope, handleHubFrame, handleTsRequest, hubBinding, identityActorConfig, idleGisMapInferencePortStatusV1, inferenceApprovalUndoEpoch, inferenceApprovalUndoOwner, installHubSessionCapability, hubSessionQueued, openArtifact, ownedArrayBuffer, parseDocumentBackboneMessage, parseDocumentExecutionTargetLeaseFieldsV1, parseGisMapInferenceApprovalReceiptV1, queueOutbox, readExecutionTargetBody, reissueInferenceApprovalUndoForRebootstrap, relayMutationsToHub, requestDocumentSocketAuthority, reserveDocumentBrowserActorChild, retainInferenceApprovalUndo, revokeDirectoryAdministrationForScope, rollbackEnvelope, sameLeaseFieldsV1, scopedDirectoryStreams, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1, settleDirectoryCommand, socketGrantTestIssue, spaceArtifactCreationCatalogOperations, spaceArtifactCreationOperations, spaceArtifactCreationTestFetch, stampSession, toWireEnvelope, undoInferenceApproval, verifiedColdDocumentPairMintToken, verifyBrowserActorDescribeV1, workerPostTestSink }, import.meta.url);
+  await registerBackboneParityTests(import.meta.vitest, { testSeams, DOCUMENT_BACKBONE_RETENTION_LIMITS, handleAck, ARTIFACT_BOOTSTRAP_DIAGNOSTIC_MAX_BYTES, ArtifactBootstrapAssembler, DIRECTORY_COMMAND_TRANSPORT_CAPACITY, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, DirectoryClient, DirectoryEventPageBootstrapV1, DocumentExecutionTargetLease, HUB_RECONNECT_MAX_MS, IDENTITY_CONFIG_SCHEMA, PENDING_MUTATIONS_QUEUE_LIMIT, SANITY_POLL_MIN_MS, SUSTAINED_HEALTHY_MS, VerifiedColdDocumentPair, abortArtifactBootstrap, installStreamMuxEndpoint, artifactBootstrapFailure, artifactState, artifacts, bindInferenceApprovalUndoToMountedPair, browserActorChildCapacity, hubSessionFetch, browserDirectoryRequest, browserExecutionTargetAssetRequest, bytesHex, clearHubSessionCapability, closeArtifact, closeArtifactRuntime, closeDirectory, connectHubOnce, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeClientFrame, decodePackPayload, decodePackValue, decodeServerFrame, directoryAdministration, directoryClient, directoryCommandOperations, directoryCommandQueue, directoryCommandSha256, directorySessionEpoch, directoryWorkerEpoch, dispatchBackboneWorkerRequest, documentExecutionOwners, documentExecutionTargetLeaseMintToken, documentExecutionTargetStatusRoleV1, documentOpenPlanAuthority, documentRuntimeKeyForConfig, documentRuntimeKeyV1, driveInferencePort, documentCatchingUpV1, newArtifactState, requestDocumentActorRecoveryV1, dropDocumentExecutionTargetLease, dropVerifiedColdDocumentPair, emitEvent, encodeActorUiPatchReceipt, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentBackboneEnvelopeBatchExact, encodePackValue, encodeServerFrame, executionTargetHex, executionTargetSha256Hex, executionTargetStatusObserver, extractServerCommandsDocumentBackboneBatchExact, flushDirectoryQueue, foldIdentityEvent, fromWireEnvelope, handleHubFrame, handleTsRequest, hubBinding, identityActorConfig, idleGisMapInferencePortStatusV1, inferenceApprovalUndoEpoch, inferenceApprovalUndoOwner, installHubSessionCapability, hubSessionQueued, openArtifact, ownedArrayBuffer, parseDocumentBackboneMessage, parseDocumentExecutionTargetLeaseFieldsV1, parseGisMapInferenceApprovalReceiptV1, queueOutbox, readExecutionTargetBody, reissueInferenceApprovalUndoForRebootstrap, relayMutationsToHub, requestDocumentSocketAuthority, reserveDocumentBrowserActorChild, retainInferenceApprovalUndo, revokeDirectoryAdministrationForScope, rollbackEnvelope, sameLeaseFieldsV1, scopedDirectoryStreams, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1, settleDirectoryCommand, socketGrantTestIssue, spaceArtifactCreationCatalogOperations, spaceArtifactCreationOperations, spaceArtifactCreationTestFetch, stampSession, toWireEnvelope, undoInferenceApproval, verifiedColdDocumentPairMintToken, verifyBrowserActorDescribeV1, workerPostTestSink }, import.meta.url);
 
 }
 //#endregion 🧪️Tests

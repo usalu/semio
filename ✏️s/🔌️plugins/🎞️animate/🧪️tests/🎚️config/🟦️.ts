@@ -10,7 +10,7 @@ const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
 const repoRoot = resolve(root, "../../../../..");
 
-/** @emoji 🧪️ Vitest for `@semio-tech/animate-js`. */
+/** 🧪️ Vitest for `@semio-tech/animate-js`. */
 export default defineConfig({
   root: testRoot,
   plugins: [react()],

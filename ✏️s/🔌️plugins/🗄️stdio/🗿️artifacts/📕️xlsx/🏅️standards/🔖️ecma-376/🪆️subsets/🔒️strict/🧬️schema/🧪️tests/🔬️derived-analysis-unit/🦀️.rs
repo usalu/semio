@@ -55,6 +55,19 @@ mod tests {
         assert!(diagnostics.iter().any(|d| d.code.0 == CODE_VML_FORBIDDEN && d.severity == Severity::Error), "got {diagnostics:?}");
     }
 
+    /// 🗂️ A VML drawing named `.xml` lives in the XML authority lane — the Strict ban reads both lanes.
+    #[semio_framework_async_macros::async_test]
+    async fn vml_drawing_in_the_xml_lane_is_hard() {
+        use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxXmlPart;
+        use semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text;
+        let mut snapshot = snapshot_with_workbook(STRICT_SML_NS, STRICT_R_NS, Some("strict"));
+        snapshot.opc.content_types.set_override("xl/drawings/vmlDrawing1.xml", VML_CONTENT_TYPE);
+        snapshot.xml_parts.push(XlsxXmlPart { path: "xl/drawings/vmlDrawing1.xml".into(), content_type: VML_CONTENT_TYPE.into(), document: xml_document_from_text("<xml/>").expect("valid probe XML") });
+        snapshot.validate_authority().expect("a `.xml`-named VML drawing is an XML-lane part");
+        let diagnostics = check_strict_conformance(&snapshot);
+        assert!(diagnostics.iter().any(|d| d.code.0 == CODE_VML_FORBIDDEN && d.severity == Severity::Error), "got {diagnostics:?}");
+    }
+
     /// 🏷️ The worksheet role comes from the workbook's worksheet relationship, not from the part's path or its
     /// declared content type: a worksheet the package types as plain `application/xml` is the soft violation.
     #[semio_framework_async_macros::async_test]

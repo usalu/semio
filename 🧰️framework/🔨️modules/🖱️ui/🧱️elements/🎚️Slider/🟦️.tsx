@@ -21,13 +21,13 @@ import { useInteractionCommands } from "../../🎯️targets/⚛️react/🟦️
 // Owned range slider.
 // Consumers MUST provide min and max values.
 
-/** @emoji 🎚️ Slider filled range presentation. */
+/** 🎚️ Slider filled range presentation. */
 const sliderRangeClassName = cn("bg-element absolute transition-[background-color] data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full", "group-hover:bg-emphasized", "data-[dragging=true]:bg-active-base");
 
-/** @emoji 🎚️ Slider ready extent presentation. */
+/** 🎚️ Slider ready extent presentation. */
 const sliderReadyClassName = cn("bg-[var(--accent-secondary)] pointer-events-none absolute data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full");
 
-/** @emoji 🎚️ Slider thumb presentation (extent token applied per instance). */
+/** 🎚️ Slider thumb presentation (extent token applied per instance). */
 const sliderThumbBaseClassName = cn(
   "block shrink-0 rounded-[9999px] bg-element transition-[background-color] outline-hidden",
   "hover:bg-emphasized group-hover:bg-emphasized",
@@ -36,7 +36,7 @@ const sliderThumbBaseClassName = cn(
   "disabled:pointer-events-none disabled:opacity-50",
 );
 
-/** @emoji 🎚️ Slider numeric readout presentation. */
+/** 🎚️ Slider numeric readout presentation. */
 const sliderValueClassName = cn("text-element w-large text-end text-xs leading-none select-none transition-colors", "hover:text-emphasized group-hover:text-emphasized");
 
 // #region 📐️Contract
@@ -111,20 +111,20 @@ interface SliderGestureStart {
   thumbIds: string[];
 }
 
-/** @emoji 🎚️ Whether two slider value tuples match within a step-aware epsilon. */
+/** 🎚️ Whether two slider value tuples match within a step-aware epsilon. */
 export function sliderValuesMatch(lhs: readonly number[], rhs: readonly number[], step?: number): boolean {
   if (lhs.length !== rhs.length) return false;
   const epsilon = step != null && step > 0 ? step * 0.25 : 1e-9;
   return lhs.every((value, index) => Math.abs(value - (rhs[index] ?? value)) <= epsilon);
 }
 
-/** @emoji 🎚️ Clears a pending draft once the controlled `value` prop catches up. */
+/** 🎚️ Clears a pending draft once the controlled `value` prop catches up. */
 export function resolveSliderDraftClear(pending: number[] | null, external: readonly number[], step?: number): number[] | null {
   if (pending === null) return null;
   return sliderValuesMatch(pending, external, step) ? null : pending;
 }
 
-/** @emoji 🪣️ Clamps every value to `ready` (a preloaded/planned extent, e.g. a background fill plan's
+/** 🪣️ Clamps every value to `ready` (a preloaded/planned extent, e.g. a background fill plan's
  * progress) — the thumb must never be draggable past what's actually available, and `min` is the floor
  * so a `ready` of 0 still leaves the slider at its resting position rather than collapsing below `min`. */
 export function clampSliderValuesToReady(values: readonly number[], ready: number | undefined, min: number): number[] {

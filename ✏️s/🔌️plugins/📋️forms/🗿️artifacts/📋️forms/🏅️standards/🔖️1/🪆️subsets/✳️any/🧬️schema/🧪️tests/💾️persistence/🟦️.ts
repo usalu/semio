@@ -18,5 +18,4 @@ export function testFormsPersistence(): void {
   assert.deepEqual(decoded, fixture);
   assert.equal(decoded.definition.steps[0].blocks[0].required, true);
   assert.equal(decoded.responses[0].answers[0].value, "Ada");
-  console.log("[DEBUG] Forms definition and responses survived fresh JSON decoding and Ajv");
 }

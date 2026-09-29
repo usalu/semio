@@ -56,5 +56,4 @@ fn archive_comment_only_diff_and_snapshot_replay_preserve_exact_text() {
     }
     let oracle: serde_json::Value = serde_json::from_str(&protocol::os_pack::json::to_json_string(&after.to_value())).unwrap();
     assert_eq!(oracle["opc"]["comment"], fixture["after"]);
-    println!("[DEBUG] Xlsx archive comment text/binary diff, inverse, absorption and snapshot replay preserve Unicode and empty text");
 }

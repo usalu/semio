@@ -135,7 +135,7 @@ async fn op_text_binary_roundtrip_law() {
 //#region 🧪️SemanticKinds
 #[semio_framework_async_macros::async_test]
 async fn semantic_kinds_cover_every_variant() {
-    assert_eq!(SemioMeshMutation::kinds().len(), 17);
+    assert_eq!(SemioMeshMutation::kinds().len(), 18);
     let mutation = SemioMeshMutation::DeleteMesh(delete_mesh::DeleteMesh { id: "mesh-a".into() });
     assert_eq!(mutation.semantics().kind, "delete-mesh");
     assert_eq!(mutation.semantics().record, "DeletedMesh");

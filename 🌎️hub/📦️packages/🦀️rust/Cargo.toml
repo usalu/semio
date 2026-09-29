@@ -64,9 +64,8 @@ semio-framework-plugin.workspace = true
 protocol = { path = "../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
 # 📇️ `os_directory` is hub domain vocabulary still mounted in the os kernel; Wave 3 relocates it here.
 directory = { path = "../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
-# 🛢️ The document database without its `vcs` version graph: the hub never reads one (no checkpoint, merge base or head
-# call), and recording one change per committed envelope into it was the commit path's largest cost (ticket 26/09/23
-# session 14c: 56% of commit CPU, a 64-edit window replayed and re-digested per envelope).
+# 🛢️ The document database over filesystem storage with deflate-compressed snapshots; relational and graph backends
+# join through this crate's own storage features.
 db = { path = "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-framework-os-kernel-db", default-features = false, features = ["fs", "deflate"] }
 # 🖥️ The generic server product hub is instance #1 of: `🗄️stores/🦀️.rs` defines `HubInstance`
 # and the four durable storage roles it closes the product's ports over. The crate's lib is named

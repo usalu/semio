@@ -17,7 +17,7 @@ const STORY_CHECKER_COLOR_A = "#1d4ed8";
 const STORY_CHECKER_COLOR_B = "#93c5fd";
 const STORY_POINTER_COLOR = "#f97316";
 
-/** @emoji 🕸️ Pure-JS stand-in for a leaf bundle's `cdylib` session: paints a deterministic checkerboard sized to the logical canvas plus a marker at the last pointer position — enough to exercise `GraphWasmCanvas`'s attach/resize/RAF/pointer wiring with zero WASM. */
+/** 🕸️ Pure-JS stand-in for a leaf bundle's `cdylib` session: paints a deterministic checkerboard sized to the logical canvas plus a marker at the last pointer position — enough to exercise `GraphWasmCanvas`'s attach/resize/RAF/pointer wiring with zero WASM. */
 function createMockGraphWasmSession(onPointerCount: (count: number) => void): GraphWasmSession {
   let ctx: CanvasRenderingContext2D | null = null;
   let logicalWidth = 0;

@@ -1,7 +1,7 @@
 /// <reference types="vitest/importMeta" />
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/🔌️PluginRuntime/component.tsx
-/** @emoji 🔌️ `🔌️PluginRuntime` — the `PluginWasmHandle` binary-channel adapter (`loadPluginModule`/
+/** 🔌️ `🔌️PluginRuntime` — the `PluginWasmHandle` binary-channel adapter (`loadPluginModule`/
  * `adaptPluginHandle`) that wraps a leased `framework-core` plugin wasm module's `enqueue`/`outcomes`
  * turn ABI behind the wider action/command/refreshUi/contextMenu/document-sync surface the rest of the
  * shell calls, plus the `AppChannelClient` frame-reassembly helpers (`🔖️ChannelAdapter`) that back it.
@@ -112,7 +112,7 @@ import { TurnScheduler, type Lane } from "../../../../../../../🔨️modules/�
 import { hostContinuations } from "../../../../../../../🔨️modules/⏳️async/🪃️continuation/🟦️.ts";
 import { createCommandStallWatchV1, type CommandStallWatchV1 } from "./⏱️command-stall/🟦️.ts";
 import { hopTrace } from "../../../../../../../🔨️modules/⏱️trace/🟦️.ts";
-import { drainTypedOperationTurns as driveTypedOperationDrain, driveInboundRequest, INBOUND_REQUEST_TURN_BUDGET, isRoutedWireSendMessage, leftoverShellInvocationFrames as wireLeftoverShellInvocationFrames, shellFrameBytes as wireShellFrameBytes, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_LANE_FAULT, TYPED_OPERATION_LANE_TERMINAL, TYPED_OPERATION_PAGE_MAGIC, typedOperationAcknowledgements as wireTypedOperationAcknowledgements, typedOperationResult as wireTypedOperationResult, WIRE_SEND_MESSAGE_ROUTED_TARGETS, wireDownloadMediaExport, wireIconRenderExport, wireExtensionInvocation, wireOptionValue, wireRespondAnswer, wireSendMessageTargetTag, wireTurnStatusTag } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
+import { drainTypedOperationTurns as driveTypedOperationDrain, driveInboundRequest, INBOUND_REQUEST_TURN_BUDGET, isRoutedWireSendMessage, leftoverShellInvocationFrames as wireLeftoverShellInvocationFrames, shellFrameBytes as wireShellFrameBytes, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_LANE_FAULT, TYPED_OPERATION_LANE_TERMINAL, TYPED_OPERATION_PAGE_MAGIC, typedOperationAcknowledgements as wireTypedOperationAcknowledgements, typedOperationResult as wireTypedOperationResult, WIRE_SEND_MESSAGE_ROUTED_TARGETS, wireDownloadMediaExport, wireIconRenderExport, wireExtensionInvocation, wireOptionValue, wireRespondAnswer, wireSendMessageTargetTag, wireTurnStatusTag, wireVideoRenderExport } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
 import { type PluginManifest, type ViewModel } from "../🐚️Shell/🟦️.tsx";
 import { SEGMENTED_DOWNLOAD_MARKER_PREFIX } from "../📤️SegmentedDownload/🟦️.ts";
 import { BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, decodeBackboneMessage } from "@semio-tech/framework-os";
@@ -282,7 +282,7 @@ export type { PluginRegistryEntry };
 
 //#region 🔖️ActorAdapter
 /**
- * @emoji 🧵️ H1-react — replaces the deleted `acquirePluginModule`/`PluginModuleLease` (one Worker per
+ * 🧵️ H1-react — replaces the deleted `acquirePluginModule`/`PluginModuleLease` (one Worker per
  * plugin, `📓️terra-H2-web-shard-report.md`'s "must not exist" list) with the pooled `ShardClient` +
  * `ActivationRegistry` design-runtime.md §1/§3 specifies. ONE `ShardClient` (bounded worker pool,
  * `min(hardwareConcurrency-1,4)` shards) and ONE `ActivationRegistry` (manifest-only activation, LRU
@@ -505,7 +505,7 @@ function buildShardClientOptions(createWorker: () => ShardWorkerLike = () => new
     // wider native `MessageEvent`/`ErrorEvent` handler types down to the interface's minimal
     // `{data: unknown}`/`unknown` shape, which a `MessageEvent`/`ErrorEvent` handler always satisfies.
     createWorker,
-    // [DEBUG] temporary watchdog widening — measures whether the setContributions turn is a HANG or a
+    // [TRACE] temporary watchdog widening — measures whether the setContributions turn is a HANG or a
     // long-but-finite install. REMOVE with the measurement (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     heartbeatTimeoutMs: 120_000,
     onActorTrap: (actorId, message) => undefined,
@@ -938,7 +938,7 @@ function normalizeWireUiNodeRecord(raw: unknown): UiNodeRecord {
 export type RetainedSurface = UiDocumentState;
 
 /**
- * @emoji 🖼️ H1-react (design-runtime.md §1 `SceneStore` / packet brief item 2) — reconciles one
+ * 🖼️ H1-react (design-runtime.md §1 `SceneStore` / packet brief item 2) — reconciles one
  * `UiPatch`'s ops onto `previous` (the last body this file retained for the surface), so the UI
  * thread reads an already-reconciled tree instead of awaiting a plugin turn. Reuses the transactional
  * `📃️UiDocumentStore` patch applicator so revision checks, graph validation, quotas, and every semantic
@@ -1006,7 +1006,7 @@ function ownedUiComponentToBuilt(component: RetainedUiNodeRecord["component"]): 
  * declares — Rust `kernel::Effect`'s externally-tagged serde shape (`{effectName: {...fields}}` /
  * `"requestSync"`), which is what every downstream consumer (`applyHostEffects` and friends) already
  * expects. Covers the effect kinds this renderer actually branches on; an effect kind with no case
- * here degrades to an honest `[DEBUG]`-logged drop rather than guessing an unverified shape. */
+ * here degrades to an honest `[TRACE]`-logged drop rather than guessing an unverified shape. */
 function wireEffectToFriendly(effect: WireVariant): Effect | null {
   const val = (effect.val ?? {}) as Record<string, unknown>;
   // 🧬️ Every `request-id`-carrying effect nests its payload in a `*-params` record (`🔌️plugin/🧬️schema/📜️.wit`,
@@ -1042,6 +1042,8 @@ function wireEffectToFriendly(effect: WireVariant): Effect | null {
       return wireDownloadMediaExport(effect);
     case "icon-render-export":
       return wireIconRenderExport(effect, decodePackWire);
+    case "video-render-export":
+      return wireVideoRenderExport(effect, (bytes) => decodePackWire(bytes, "$.program"));
     case "notify":
       return { notify: { message: str("message") } };
     case "navigate":
@@ -1469,7 +1471,7 @@ const pendingCoalescedTurns = new Map<string, PluginTurnPayload>();
 const pendingLifecycleTurns = new Map<string, number>();
 const tearingDownPluginActors = new Set<string>();
 
-/** 🧾️ [DEBUG] Crossing census — every worker round trip this host posts, classified by the events it
+/** 🧾️ [TRACE] Crossing census — every worker round trip this host posts, classified by the events it
  * carried and by what came back, so "172 `message` crossings carrying nothing" becomes a taxonomy
  * instead of one bucket. Read off `globalThis.__semioCrossingCensus` by `🐍️react-hop-cost-probe.mjs`. */
 type CrossingCensusRowV1 = { crossings: number; events: number; patches: number; effects: number; width: Record<number, number> };
@@ -1602,13 +1604,13 @@ function submitPluginTurn(actorId: string, events: readonly ShardEventEnvelope[]
       const backpressure = enqueuePluginTurn(actorId, payload, lane, coalesceKey);
       if (backpressure.kind === "rejected") {
         pendingCoalescedTurns.delete(mapKey);
-        reject(new Error(`[DEBUG] PluginRuntime: actor ${actorId}'s turn queue is full — rejected rather than growing unbounded`));
+        reject(new Error(`PluginRuntime: actor ${actorId}'s turn queue is full — rejected rather than growing unbounded`));
       }
       return;
     }
     const payload: PluginTurnPayload = { kind: "operation", events, waiters: [waiter], commandPage, activation };
     const backpressure = enqueuePluginTurn(actorId, payload, lane);
-    if (backpressure.kind === "rejected") reject(new Error(`[DEBUG] PluginRuntime: actor ${actorId}'s turn queue is full — rejected rather than growing unbounded`));
+    if (backpressure.kind === "rejected") reject(new Error(`PluginRuntime: actor ${actorId}'s turn queue is full — rejected rather than growing unbounded`));
   });
 }
 
@@ -1996,7 +1998,7 @@ async function settlePluginTurn(actorId: string, initial: WireTurnResult, lane: 
   if (!quiesced && !sliced && (acknowledgements.length > 0 || hasWork())) {
     const published = results.flatMap((result) => result.uiPatches.map(wirePatchSurfaceId).filter((surface): surface is string => surface !== null));
     throw new Error(
-      `[DEBUG] PluginRuntime: actor ${actorId} did not publish its requested UI surfaces within ${PLUGIN_UI_CONTINUATION_LIMIT} continuations ` +
+      `[TRACE] PluginRuntime: actor ${actorId} did not publish its requested UI surfaces within ${PLUGIN_UI_CONTINUATION_LIMIT} continuations ` +
         `(required=${JSON.stringify([...(requiredSurfaceIds ?? [])])}, published=${JSON.stringify(published)}, ` +
         `effects=${results.reduce((count, result) => count + result.effects.length, 0)}, status=${wireTurnStatusTag(results.at(-1)?.status)}, faults=${JSON.stringify(settleShellFaultMessages(actorId, results))})`,
     );
@@ -2004,7 +2006,7 @@ async function settlePluginTurn(actorId: string, initial: WireTurnResult, lane: 
   if (requiredSurfaceIds?.size && !hasRequiredUiPatches(results, requiredSurfaceIds)) {
     const published = new Set(results.flatMap((result) => result.uiPatches.map(wirePatchSurfaceId).filter((surface): surface is string => surface !== null)));
     const missing = [...requiredSurfaceIds].filter((surface) => !published.has(surface));
-    throw new Error(`[DEBUG] PluginRuntime: actor ${actorId} stopped without publishing requested UI surfaces (missing=${JSON.stringify(missing)}, status=${wireTurnStatusTag(results.at(-1)?.status)}, faults=${JSON.stringify(settleShellFaultMessages(actorId, results))})`);
+    throw new Error(`PluginRuntime: actor ${actorId} stopped without publishing requested UI surfaces (missing=${JSON.stringify(missing)}, status=${wireTurnStatusTag(results.at(-1)?.status)}, faults=${JSON.stringify(settleShellFaultMessages(actorId, results))})`);
   }
   activation?.assertActive();
   report?.({
@@ -2617,7 +2619,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         // 🧯️ A requested body that has no retained surface at all, or one the guest has not rooted yet,
         // is omitted from the response — and the shell's own merge keeps whatever it had (its loading
         // placeholder, on a first refresh). That is indistinguishable from a healthy refresh, so it is
-        // recorded: one console record per dropped body, permanent (not a `[DEBUG]` trace), the same
+        // recorded: one console record per dropped body, permanent (not a `[TRACE]` trace), the same
         // way `AppRouter` records a plugin it excluded. A panel that renders forever empty in the
         // browser (measured 2026-09-09 21:05 on `framework.panel.inspection`) is either named here or
         // is a real guest render — no third possibility.
@@ -2719,7 +2721,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
   const requireActorId = (instanceId: number): string => {
     const actorId = actorIdByInstance.get(instanceId);
     if (disposing) throw new Error("plugin-handle.closed");
-    if (!actorId || closingInstances.has(instanceId)) throw markPluginInstanceRetiredV1(new Error(`[DEBUG] program ${pluginId}: no actor for instance ${instanceId} (createApp not called, or already destroyed)`));
+    if (!actorId || closingInstances.has(instanceId)) throw markPluginInstanceRetiredV1(new Error(`program ${pluginId}: no actor for instance ${instanceId} (createApp not called, or already destroyed)`));
     return actorId;
   };
   const releaseInstanceMaps = (instanceId: number, actorId: string): void => {
@@ -3086,8 +3088,8 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
           let lastTurnStatus = wireTurnStatusTag(results.at(-1)?.status);
           let continuations = 0;
           for (; terminal !== "command-complete" && continuations < ceiling; continuations += 1) {
-            if (terminal === "fault") throw new Error(`[DEBUG] plugin ${pluginId}: command ingress fault: ${commandIngressFaultDisplay(results.at(-1)?.commandIngress)}`);
-            if (terminal === "backpressure") throw new Error(`[DEBUG] plugin ${pluginId}: command ingress backpressure after serialized submission`);
+            if (terminal === "fault") throw new Error(`plugin ${pluginId}: command ingress fault: ${commandIngressFaultDisplay(results.at(-1)?.commandIngress)}`);
+            if (terminal === "backpressure") throw new Error(`plugin ${pluginId}: command ingress backpressure after serialized submission`);
             if (commandIngressUnownedV1(terminal, lastTurnStatus)) break;
             const continued = await submitTurn(actorId, acknowledgements, { activation });
             await acceptTurn(continued);
@@ -3881,7 +3883,7 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
     if (disposing) throw new Error("plugin-handle.closed");
     const client = channels.get(instanceId);
     if (!client) {
-      const missing = new Error(`[DEBUG] program ${pluginId}: no channel for instance ${instanceId} (createApp not called, or already destroyed)`);
+      const missing = new Error(`program ${pluginId}: no channel for instance ${instanceId} (createApp not called, or already destroyed)`);
       throw pluginInstanceWasRetiredV1(pluginId, instanceId) ? markPluginInstanceRetiredV1(missing) : missing;
     }
     return client;
@@ -3922,7 +3924,7 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
     // entirely — out of `ShellHost`'s `onAction` and into React's nearest error boundary, which tears
     // the surface down. Measured on the served 16:57 guest: a role switch destroyed instance 1, the
     // node-graph surface dispatched one more action at it, and the typed retirement arrived as
-    // `[DEBUG] shell fault surface-node-graph` instead of the drop the ledger had already earned
+    // `[TRACE] shell fault surface-node-graph` instead of the drop the ledger had already earned
     // (`🗑️generated/host-refresh/served-journey/console.txt`, +147.5 s). A refusal is a rejection.
     handleAction: async (instanceId, actionJson, viewState, dispatch) => performInvocation(requireChannel(instanceId), instanceId, JSON.parse(actionJson), "action", viewState, dispatch),
     handleCommand: async (instanceId, commandJson, viewState, dispatch) => performInvocation(requireChannel(instanceId), instanceId, JSON.parse(commandJson), "command", viewState, dispatch),

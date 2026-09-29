@@ -741,7 +741,7 @@ describe("transaction plan journal v2 aggregate", () => {
       (drift as { planDigest: string }).planDigest = "0".repeat(64);
       expect(() => parseTaxonomyPlan(drift)).toThrow();
       expect(taxonomyPlanDigest(value)).toBe(value.planDigest);
-      const failed = registerChild(spawn(process.execPath, ["-e", 'process.stderr.write("[DEBUG] deliberate fixture child failure\\n"); process.exit(7);'], { stdio: ["ignore", "pipe", "pipe"] }));
+      const failed = registerChild(spawn(process.execPath, ["-e", 'process.stderr.write("deliberate fixture child failure\\n"); process.exit(7);'], { stdio: ["ignore", "pipe", "pipe"] }));
       await expect(waitFor(join(row.root, "missing-marker"), 1_000, failed)).rejects.toThrow("deliberate fixture child failure");
       expect(failed.exitCode).toBe(7);
     } finally { retainFixture(row.root); }

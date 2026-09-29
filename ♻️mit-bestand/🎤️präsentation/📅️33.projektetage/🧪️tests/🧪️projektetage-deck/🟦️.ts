@@ -1,6 +1,6 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
-/** @emoji 🎞️ The projektetage deck contract: chapter order, German bookmarks, Zukunft Bau bookends and catalogue morphs. */
+/** 🎞️ The projektetage deck contract: chapter order, German bookmarks, Zukunft Bau bookends and catalogue morphs. */
 export async function registerProjektetageDeckTests(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
   const { BAUKOMPONENTEN_ITEMS, CATALOGUE_COL1, CATALOGUE_COL2, CATALOGUE_COL3, INTRO_TITLE_MORPH_FRAME, PRESENTATION_DEFAULT_SLIDE_ASPECT, ZUKUNFT_BAU_EMBODIMENT, ZUKUNFT_BAU_FRAME, ZUKUNFT_BAU_PARTICIPANT, arrangementRestDispositions, buildResolutionScope, collectPresentationSlides, columnLabelMorphFrom, countArrangements, deck, expandThoughtSlides, inlineColumnLabelPosition, resolveArrangement } = dependencies;
   type Presentation = any;

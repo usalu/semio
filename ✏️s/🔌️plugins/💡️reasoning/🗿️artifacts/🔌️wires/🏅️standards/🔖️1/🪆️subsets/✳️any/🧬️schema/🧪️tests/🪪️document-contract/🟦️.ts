@@ -61,7 +61,4 @@ export function testWiresDocumentContractOracle(): void {
     assert.equal(validateMutation({ ...mutation, locale: "de" }), false);
   }
   assert.equal(fixtures.length > 0, true);
-  console.log("[DEBUG] Wires document contract matched canonical native artifact/snapshot/diff fixtures and rejected editor-era boardFixture fields");
-  console.log(`[DEBUG] Wires document contract admitted ${snapshotFixtures.length} exact s.stdio.semio content child identities`);
-  console.log(`[DEBUG] Wires aggregate mutation schema validated ${fixtures.length} committed wire inputs through their leaf-owned payload definitions`);
 }

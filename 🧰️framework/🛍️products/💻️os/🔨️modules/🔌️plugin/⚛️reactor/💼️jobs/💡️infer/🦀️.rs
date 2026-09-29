@@ -316,7 +316,7 @@ impl InteractiveInferenceJob {
         })
     }
 
-    // 🚫️async: E1 pure price table consumed by `step`'s sync budget gate.
+    /// 🚫️async: E1 pure price table consumed by `step`'s sync budget gate.
     fn price(&self) -> u64 {
         match self.phase {
             InteractivePhase::Dispatch => WORK_UNITS_EXECUTE,
@@ -328,8 +328,8 @@ impl InteractiveInferenceJob {
 
     /// 🧹️ Drives every deep owner this machine still holds through its own bounded close protocol
     /// so the wrapper left behind is shallow — the property `step_job`/`cancel_job` assert on.
-    // 🚫️async: E1 retirement driver consumed by `cancel` (an externally-declared sync trait method)
-    // and by `fail`; every close protocol it drives is itself synchronous.
+    /// 🚫️async: E1 retirement driver consumed by `cancel` (an externally-declared sync trait method)
+    /// and by `fail`; every close protocol it drives is itself synchronous.
     fn retire(&mut self) {
         if let Some(outcome) = self.outcome.as_mut() {
             for _ in 0..RETIRE_STEP_CEILING {
@@ -364,7 +364,7 @@ impl InteractiveInferenceJob {
         }
     }
 
-    // 🚫️async: E1 pure terminal constructor consumed by every sync state action below.
+    /// 🚫️async: E1 pure terminal constructor consumed by every sync state action below.
     fn fail(&mut self, error: semio_framework::Fault) -> JobStep {
         self.retire();
         self.phase = InteractivePhase::Complete;
@@ -373,7 +373,7 @@ impl InteractiveInferenceJob {
 
     /// 🚀️ `Dispatch`: publishes the request's identity preview, resolves the ActionBus factory for
     /// `semio.infer/<schema>`, and mounts one worker session for it.
-    // 🚫️async: E1 state action consumed by the sync `BoundedJob::step` dispatch table.
+    /// 🚫️async: E1 state action consumed by the sync `BoundedJob::step` dispatch table.
     fn dispatch(&mut self) -> JobStep {
         if let Err(error) = self.bridge.publish_preview(dsl::os_pack::json::to_json_string(&(self.request.artifact_kind.clone(), self.request.inference_schema.clone())).into_bytes()) {
             return self.fail(bridge_fault(&error));
@@ -424,7 +424,7 @@ impl InteractiveInferenceJob {
     /// that settles natively in 16.6 s crossed 541 650 times in 582 s over the semio MCP without
     /// finishing (ticket 26/09/23, `📓️wp-g5.md`). Without a clock the grant is one transition, as before.
     /// The deadline is checked against the step driver's own exit reading, never a read of its own.
-    // 🚫️async: E1 state action consumed by the sync `BoundedJob::step` dispatch table.
+    /// 🚫️async: E1 state action consumed by the sync `BoundedJob::step` dispatch table.
     fn pump(&mut self, budget: JobBudget) -> JobStep {
         let deadline_us = semio_framework_job::default_now_us().and_then(|now_us| now_us.checked_add(u64::from(budget.deadline_ms).saturating_mul(1_000)));
         let mut granted = budget.fuel;
@@ -448,7 +448,7 @@ impl InteractiveInferenceJob {
 
     /// 🔁️ One mounted-session transition of [`Self::pump`]: submits and settles one worker step,
     /// then either absorbs its non-terminal outcome in place or hands the crossing back.
-    // 🚫️async: E1 state action body consumed by the sync `pump` loop above.
+    /// 🚫️async: E1 state action body consumed by the sync `pump` loop above.
     fn pump_transition(&mut self) -> PumpTransition {
         match crate::app::inference_cancelled(&self.request.cancellation_id) {
             Ok(true) => self.cancel.cancel_now(),
@@ -538,7 +538,7 @@ impl InteractiveInferenceJob {
     /// 🧾️ `OutcomeClose`: one page of the checked-out outcome's retained payload authority. On
     /// completion the machine either closes a terminal session or resumes the worker for the next
     /// pump, exactly as the former future's inner close loop did.
-    // 🚫️async: E1 state action consumed by the sync `BoundedJob::step` dispatch table.
+    /// 🚫️async: E1 state action consumed by the sync `BoundedJob::step` dispatch table.
     fn close_outcome(&mut self) -> JobStep {
         let Some(outcome) = self.outcome.as_mut() else {
             return self.fail(super::fault("job.infer.outcome-missing", "interactive inference lost the outcome it was retiring"));
@@ -567,7 +567,7 @@ impl InteractiveInferenceJob {
     }
 
     /// 🧾️ `SessionClose`: one page of the mounted session's retirement after a terminal outcome.
-    // 🚫️async: E1 state action consumed by the sync `BoundedJob::step` dispatch table.
+    /// 🚫️async: E1 state action consumed by the sync `BoundedJob::step` dispatch table.
     fn close_session(&mut self) -> JobStep {
         let Some(session) = self.session.as_mut() else {
             return self.fail(super::fault("job.infer.session-missing", "interactive inference lost the session it was retiring"));
@@ -589,7 +589,7 @@ impl InteractiveInferenceJob {
 
     /// 🧾️ `RejectedClose`: one page of an admission rejection's retirement, after which the
     /// capacity refusal is reported — the former future's own rejection loop, state by state.
-    // 🚫️async: E1 state action consumed by the sync `BoundedJob::step` dispatch table.
+    /// 🚫️async: E1 state action consumed by the sync `BoundedJob::step` dispatch table.
     fn close_rejected(&mut self) -> JobStep {
         let Some(rejected) = self.rejected.as_mut() else {
             return self.fail(super::fault("job.infer.admission", "interactive inference lost the rejection it was retiring"));
@@ -608,7 +608,7 @@ impl InteractiveInferenceJob {
     /// 📈️ A fresh scheduled bridge item for a retirement state, so every `Running` this machine
     /// reports carries monotonic progress bytes and the stall guard never mistakes a bounded close
     /// walk for a wedged job.
-    // 🚫️async: E1 pure bridge read consumed by the sync state actions above.
+    /// 🚫️async: E1 pure bridge read consumed by the sync state actions above.
     fn retirement_progress(&mut self) -> Vec<u8> {
         let item = self.bridge.scheduled();
         encode_bridge_item(&item)

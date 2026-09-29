@@ -1,5 +1,5 @@
 // #region 🧭️Canvas2dGumballOverlay
-/** @emoji 🧭️ Screen-space 2D transform gumball driven by the plugin `meta:gumball` layer. */
+/** 🧭️ Screen-space 2D transform gumball driven by the plugin `meta:gumball` layer. */
 import { useCallback, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { SPATIAL_AXIS_COLOR_REFS } from "@semio-tech/ui-styling";
 import { type CanvasCamera, screenToWorldLogical, worldToScreenLogical } from "./🟦️.tsx";

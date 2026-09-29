@@ -26,7 +26,7 @@ pub enum FontKind {
     Emoji,
 }
 
-/// @emoji 🖼️ One item to draw, already positioned in the containing [`MathBox`]'s own em-space:
+/// 🖼️ One item to draw, already positioned in the containing [`MathBox`]'s own em-space:
 /// `x` rightward from the box's left edge, `y` UPWARD from the box's baseline (so `y > 0` is above
 /// the baseline, matching height/depth's own sign convention).
 #[derive(Clone, Debug, PartialEq)]
@@ -36,7 +36,7 @@ pub enum PlacedItem {
     Image { data: Vec<u8>, x: f32, y: f32, width: f32, height: f32 },
 }
 
-/// @emoji 📦️ A laid-out box: its own metrics (`width`, `height` above baseline, `depth` below) plus
+/// 📦️ A laid-out box: its own metrics (`width`, `height` above baseline, `depth` below) plus
 /// every item placed inside it, in the box's own local em-space.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct MathBox {
@@ -51,7 +51,7 @@ impl MathBox {
         Self::default()
     }
 
-    /// @emoji ➕️ Offsets every item in `self` by `(dx, dy)` — used when placing an already-built box
+    /// ➕️ Offsets every item in `self` by `(dx, dy)` — used when placing an already-built box
     /// inside a larger one.
     fn translated(mut self, dx: f32, dy: f32) -> Self {
         for item in &mut self.items {
@@ -66,7 +66,7 @@ impl MathBox {
     }
 }
 
-/// @emoji 🎯️ The fonts a formula lays out against. Borrowed, not owned — callers keep the
+/// 🎯️ The fonts a formula lays out against. Borrowed, not owned — callers keep the
 /// underlying `compiler_world` bytes (or their own) alive for the layout's lifetime.
 pub struct FontContext<'a> {
     pub math: &'a Font<'a>,
@@ -75,7 +75,7 @@ pub struct FontContext<'a> {
     pub emoji: &'a Font<'a>,
 }
 
-/// @emoji 📐️ TeX-classic fixed spacing constants (eighteenths of an em) — the `MATH` table has no
+/// 📐️ TeX-classic fixed spacing constants (eighteenths of an em) — the `MATH` table has no
 /// dedicated inter-atom spacing table, so these are the same conventional values TeX itself hardcodes.
 const THIN_SPACE_EM: f32 = 3.0 / 18.0;
 const MEDIUM_SPACE_EM: f32 = 4.0 / 18.0;
@@ -98,7 +98,7 @@ fn scale_down(percent: i16) -> f32 {
 //#endregion 🔖️Units
 
 //#region 🔖️Symbols
-/// @emoji 🔤️ Multi-letter identifiers that resolve to a single symbol glyph, shaped via the Math
+/// 🔤️ Multi-letter identifiers that resolve to a single symbol glyph, shaped via the Math
 /// font (so they render in the font's own italic/symbol design, matching `sin`-style upright names'
 /// *opposite* treatment below). Not exhaustive — grows as real usage needs more.
 fn named_symbol(name: &str) -> Option<char> {
@@ -165,13 +165,13 @@ fn named_symbol(name: &str) -> Option<char> {
     })
 }
 
-/// @emoji 🔤️ Multi-letter identifiers that render upright via the text (serif) font, per math
+/// 🔤️ Multi-letter identifiers that render upright via the text (serif) font, per math
 /// typesetting convention for named functions.
 fn is_upright_function_name(name: &str) -> bool {
     matches!(name, "sin" | "cos" | "tan" | "cot" | "sec" | "csc" | "sinh" | "cosh" | "tanh" | "lim" | "log" | "ln" | "exp" | "min" | "max" | "det" | "gcd" | "arg" | "sup" | "inf" | "mod" | "dim" | "ker" | "hom")
 }
 
-/// @emoji 😀️ A curated common-name subset of emoji shortcodes — not exhaustive, grows with usage.
+/// 😀️ A curated common-name subset of emoji shortcodes — not exhaustive, grows with usage.
 fn emoji_codepoint(name: &str) -> Option<char> {
     Some(match name {
         "rocket" => '🚀',
@@ -195,7 +195,7 @@ fn emoji_codepoint(name: &str) -> Option<char> {
 //#endregion 🔖️Symbols
 
 //#region 🔖️Atoms
-/// @emoji ✍️ Shapes `text` against `font`'s own vocabulary and returns a box for the run, with
+/// ✍️ Shapes `text` against `font`'s own vocabulary and returns a box for the run, with
 /// per-glyph bounding boxes (not blanket font ascender/descender) sizing `height`/`depth`.
 fn text_box(font: &Font<'_>, font_kind: FontKind, text: &str) -> MathBox {
     let run = crate::text::shape(font, text);
@@ -229,7 +229,7 @@ fn quoted_text_box(fonts: &FontContext<'_>, text: &str) -> MathBox {
     text_box(fonts.serif, FontKind::Serif, text)
 }
 
-/// @emoji 🔤️ A `Symbol` atom: a single character always goes through the Math font (whose default
+/// 🔤️ A `Symbol` atom: a single character always goes through the Math font (whose default
 /// glyph shapes for Latin/Greek letters ARE italic — the standard OpenType MATH convention, not a
 /// synthetic slant); a known multi-letter name resolves via [`named_symbol`] (also Math font); a
 /// known function name renders upright via the Serif font; anything else falls back to the Math
@@ -275,7 +275,7 @@ fn emoji_box(fonts: &FontContext<'_>, name: &str) -> MathBox {
 //#endregion 🔖️Atoms
 
 //#region 🔖️Raw
-/// @emoji 🔤️ Shapes arbitrary `text` via the Serif font and lays it out left to right — for callers
+/// 🔤️ Shapes arbitrary `text` via the Serif font and lays it out left to right — for callers
 /// rendering a plain caller-supplied string (e.g. an icon label), not parsed math notation. Unlike
 /// [`crate::syntax::parse_formula`]-driven layout, this never fails and never interprets `text`'s
 /// characters as notation syntax (`_ ; < > !` included) — appropriate since arbitrary text is not
@@ -284,13 +284,13 @@ pub fn layout_raw_text(fonts: &FontContext<'_>, text: &str) -> MathBox {
     text_box(fonts.serif, FontKind::Serif, text)
 }
 
-/// @emoji 💻️ Shapes arbitrary `text` via the Mono font — for monospace code/source snippets, same
+/// 💻️ Shapes arbitrary `text` via the Mono font — for monospace code/source snippets, same
 /// non-parsing guarantee as [`layout_raw_text`].
 pub fn layout_raw_code(fonts: &FontContext<'_>, text: &str) -> MathBox {
     text_box(fonts.mono, FontKind::Mono, text)
 }
 
-/// @emoji 😀️ Shapes arbitrary `text` (typically one emoji, possibly a multi-codepoint ZWJ/skin-tone
+/// 😀️ Shapes arbitrary `text` (typically one emoji, possibly a multi-codepoint ZWJ/skin-tone
 /// sequence — HarfBuzz shaping via [`crate::text::shape`] already collapses those into the
 /// sequence's own ligature glyph where the font supports it) against the Emoji font, laying out
 /// each resulting glyph as a raster image where the font provides one (every glyph in the vendored
@@ -327,7 +327,7 @@ pub fn layout_raw_emoji(fonts: &FontContext<'_>, text: &str) -> MathBox {
 //#endregion 🔖️Raw
 
 //#region 🔖️Combinators
-/// @emoji ↔️ Lays `children` left to right along a shared baseline (each child's own `y = 0` is the
+/// ↔️ Lays `children` left to right along a shared baseline (each child's own `y = 0` is the
 /// baseline), summing widths and combining `height`/`depth` as the max over all children.
 fn hbox(children: Vec<MathBox>) -> MathBox {
     let mut out = MathBox::empty();
@@ -345,7 +345,7 @@ fn hbox(children: Vec<MathBox>) -> MathBox {
     out
 }
 
-/// @emoji ↕️ Stacks `top` above `bottom` on one shared center column, `gap` apart (vertical
+/// ↕️ Stacks `top` above `bottom` on one shared center column, `gap` apart (vertical
 /// whitespace between `top`'s depth and `bottom`'s height), returning the combined box with
 /// `axis_y` as the resulting box's own baseline-relative placement of the stack's vertical center.
 fn vstack_centered(top: MathBox, bottom: MathBox, gap: f32, axis_y: f32) -> MathBox {
@@ -443,7 +443,7 @@ impl WithExtentFromShift for MathBox {
 //#endregion 🔖️Scripts
 
 //#region 🔖️Stretch
-/// @emoji 📏️ Picks the smallest declared vertical stretch variant of `base_glyph_id` that covers
+/// 📏️ Picks the smallest declared vertical stretch variant of `base_glyph_id` that covers
 /// `target_extent` (em units); falls back to `(base_glyph_id, natural_scale)` with a computed
 /// `scale_y` when the font declares no variant tall enough (or none at all) — the documented
 /// glyph-scale fallback in place of full non-linear assembly.
@@ -463,7 +463,7 @@ fn pick_vertical_stretch(font: &Font<'_>, base_glyph_id: u16, target_extent: f32
     (base_glyph_id, scale)
 }
 
-/// @emoji 📏️ Places a vertically-stretched glyph so its own (possibly asymmetric — a radical sign
+/// 📏️ Places a vertically-stretched glyph so its own (possibly asymmetric — a radical sign
 /// is almost all ascent, a paren has more ascent than descent too) bounding box is vertically
 /// CENTERED at `center_y`, deriving `height`/`depth` from that real bounding box rather than
 /// assuming the glyph splits evenly around its origin. Used for stretchy delimiters and radical
@@ -496,7 +496,7 @@ fn layout_paren(fonts: &FontContext<'_>, open: char, inner: &MathNode) -> MathBo
     delimited(fonts, open, close, inner_box)
 }
 
-/// @emoji 📎️ Wraps `inner` in a matching stretchy delimiter pair, sized to `inner`'s own
+/// 📎️ Wraps `inner` in a matching stretchy delimiter pair, sized to `inner`'s own
 /// height+depth, vertically centered on the math axis.
 fn delimited(fonts: &FontContext<'_>, open: char, close: char, inner: MathBox) -> MathBox {
     let axis = crate::text::math_constants(fonts.math).map_or(0.25, |c| mc_em(fonts.math, c.axis_height));
@@ -552,7 +552,7 @@ fn layout_fraction(fonts: &FontContext<'_>, rows: &[Vec<MathNode>]) -> MathBox {
     out
 }
 
-/// @emoji √ Radical: `degree` is `Some` only for `root(degree, radicand)`.
+/// √ Radical: `degree` is `Some` only for `root(degree, radicand)`.
 fn layout_radical(fonts: &FontContext<'_>, degree: Option<&MathNode>, radicand: Option<&MathNode>) -> MathBox {
     let inner = radicand.map_or_else(MathBox::empty, |n| layout(fonts, n));
     let Some(constants) = crate::text::math_constants(fonts.math) else {
@@ -592,7 +592,7 @@ fn layout_radical(fonts: &FontContext<'_>, degree: Option<&MathNode>, radicand: 
     out
 }
 
-/// @emoji ˆ Accent (`hat`/`bar`/`vec`/`dot`/`ddot`/`tilde`): places a combining accent glyph over
+/// 🎩️ Accent (`hat`/`bar`/`vec`/`dot`/`ddot`/`tilde`): places a combining accent glyph over
 /// `base`, centered on `base`'s own `MathTopAccentAttachment` (or its horizontal midpoint).
 fn layout_accent(fonts: &FontContext<'_>, kind: &str, base_node: Option<&MathNode>) -> MathBox {
     let base = base_node.map_or_else(MathBox::empty, |n| layout(fonts, n));
@@ -629,7 +629,7 @@ fn layout_accent(fonts: &FontContext<'_>, kind: &str, base_node: Option<&MathNod
     out
 }
 
-/// @emoji 🔍️ Best-effort: only single-character `Symbol` bases have a resolvable glyph id for a
+/// 🔍️ Best-effort: only single-character `Symbol` bases have a resolvable glyph id for a
 /// `MathTopAccentAttachment` lookup; anything else falls back to the horizontal-midpoint default.
 fn base_glyph_id_for_top_accent(fonts: &FontContext<'_>, node: &MathNode) -> Option<u16> {
     match node {
@@ -638,7 +638,7 @@ fn base_glyph_id_for_top_accent(fonts: &FontContext<'_>, node: &MathNode) -> Opt
     }
 }
 
-/// @emoji 🔢️ Any `name(...)` call this crate doesn't special-case: render `name` upright, followed
+/// 🔢️ Any `name(...)` call this crate doesn't special-case: render `name` upright, followed
 /// by its rows/cells wrapped in stretchy parens, comma/semicolon separated — never a silent drop.
 fn layout_generic_call(fonts: &FontContext<'_>, name: &str, rows: &[Vec<MathNode>]) -> MathBox {
     let label = text_box(fonts.serif, FontKind::Serif, name);
@@ -666,7 +666,7 @@ fn layout_generic_call(fonts: &FontContext<'_>, name: &str, rows: &[Vec<MathNode
     hbox(vec![label, delimited(fonts, '(', ')', inner)])
 }
 
-/// @emoji ▦️ A grid of cells (rows × columns), each own-laid-out and column/row aligned by max
+/// ▦️ A grid of cells (rows × columns), each own-laid-out and column/row aligned by max
 /// extent, `GRID_GAP_EM` apart — shared by `mat` (bracketed, optional delimiter pair) and `cases`.
 fn layout_grid(fonts: &FontContext<'_>, rows: &[Vec<MathNode>]) -> MathBox {
     let cell_boxes: Vec<Vec<MathBox>> = rows.iter().map(|row| row.iter().map(|cell| layout(fonts, cell)).collect()).collect();
@@ -774,7 +774,7 @@ fn layout_sequence(fonts: &FontContext<'_>, items: &[crate::syntax::SeqItem]) ->
 //#endregion 🔖️Sequence
 
 //#region 🔖️Entry
-/// @emoji 🎯️ Lays out any [`MathNode`] into a [`MathBox`] — the crate's main entry point, called
+/// 🎯️ Lays out any [`MathNode`] into a [`MathBox`] — the crate's main entry point, called
 /// recursively by every structure above for sub-expressions.
 pub fn layout(fonts: &FontContext<'_>, node: &MathNode) -> MathBox {
     match node {

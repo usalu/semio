@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/🔐️HubSignIn/component.tsx
-/** @emoji 🔐️ `🔐️HubSignIn` — the shell's hub connection and sign-in pane: choose between the local
+/** 🔐️ `🔐️HubSignIn` — the shell's hub connection and sign-in pane: choose between the local
  * bootstrap hub and any remote hub this device knows, sign in with an email and password against
  * `POST /auth/sessions`, cancel a slow attempt, sign out, and re-authenticate an expired session.
  * Purely presentational — every effect is a callback prop, so the same element renders under a fake

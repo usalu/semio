@@ -174,7 +174,7 @@ pub struct AccidentalCase {
 //#region 🔖️ArtifactKind
 /// 🗿️ The computed-compliance artifact this standard publishes on its app's `report:out` port.
 pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
-    app_surface::artifact_kind_spec("en1991", "EN 1991")
+    app_surface::artifact_kind_spec("en1991", "EN 1991", EN1991_DOCUMENT_SCHEMA)
 }
 //#endregion 🔖️ArtifactKind
 

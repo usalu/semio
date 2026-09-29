@@ -91,7 +91,6 @@ export function testInputAdmissionFixture(): void {
   }
   assert.equal(validate({ ...fixture, extra: true }), false);
   assert.equal(validate({ ...fixture, limits: { ...fixture.limits, exclusiveCallbackCeilingUs: 8001 } }), false);
-  console.log(`[DEBUG] input admission oracle: ${fixture.cases.length} neutral cases, 7 schema hostiles, 3 logical-close frontiers over retained 64-byte backing; native ownership and actual Watchdog execution remain separate`);
   testInputRootFixture();
   testInputWriterFixture();
   testInputCommitObserverFixture();

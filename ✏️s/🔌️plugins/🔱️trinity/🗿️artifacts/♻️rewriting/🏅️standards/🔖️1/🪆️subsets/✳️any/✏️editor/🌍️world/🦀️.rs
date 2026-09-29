@@ -299,7 +299,7 @@ impl TrinityBridge {
         let world = self.screen_to_world(x, y);
         self.engine.pointer_up(world.x, world.y);
         if let Err(err) = self.commit_drag_positions().await {
-            eprintln!("[DEBUG] trinity drag commit failed: {err}");
+            eprintln!("[TRACE] trinity drag commit failed: {err}");
         }
         self.rebuild_engine();
     }
@@ -454,7 +454,7 @@ impl TrinityBridge {
         let _ = self.board.set_board_kind_catalogs_from_json(TRINITY_BOARD_KIND_CATALOGS_JSON);
         let fixture = trinity_graph_to_board_fixture(&self.graph);
         if !self.board.parse_fixture_json(&pack::json_to_string(&fixture)) {
-            eprintln!("[DEBUG] trinity board fixture parse failed");
+            eprintln!("[TRACE] trinity board fixture parse failed");
         }
         self.board.set_size(self.width, self.height, self.dpr);
         self.board.canvas_theme = self.canvas_theme;

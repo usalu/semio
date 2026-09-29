@@ -28,7 +28,6 @@ fn dag_document_contract_exact_json_and_sparse_edits() {
         let after = diff.apply(&before).expect("valid sparse change");
         assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&after)).unwrap(), case["after"], "{}", case["name"]);
     }
-    println!("[DEBUG] Dag native JSON and sparse deltas match neutral independent JSON values");
 }
 
 #[test]
@@ -40,7 +39,6 @@ fn dag_document_contract_native_codec_identity() {
     assert_eq!(decoded, snapshot);
     let bytes = snapshot.encode_pack();
     assert_eq!(DagSnapshot::decode_pack(&bytes).expect("Pack decode"), snapshot);
-    println!("[DEBUG] Dag native text and Pack retain exact canonical child identities");
 }
 
 #[test]
@@ -51,7 +49,6 @@ fn dag_document_contract_typed_child_refusal() {
     let diff = DagDiff { content: Some(child), ..Default::default() };
     assert!(diff.apply(&before).is_err());
     assert_eq!(before, DagSnapshot::default());
-    println!("[DEBUG] DAG typed invalid child replacement leaves parent unchanged");
 }
 
 #[test]
@@ -64,7 +61,6 @@ fn dag_document_contract_rejects_foreign_text_identity() {
     for marker in vectors()["invalidTextMarkers"].as_array().unwrap() {
         assert!(DagSnapshot::parse_dsl(&text.replace("schema=dag.dag", &format!("schema={}", marker.as_str().unwrap()))).is_err(), "{marker}");
     }
-    println!("[DEBUG] DAG rejects foreign text owner, component, version and document marker");
 }
 
 #[test]
@@ -75,5 +71,4 @@ fn dag_document_contract_rejects_foreign_pack_identity() {
         let envelope = store::semio_format::parse_preamble_line(header.as_str().unwrap()).unwrap();
         assert!(DagSnapshot::decode_pack(&store::semio_format::wrap_binary(&envelope, &body)).is_err(), "{header}");
     }
-    println!("[DEBUG] Dag rejects foreign Pack owner, component and version");
 }

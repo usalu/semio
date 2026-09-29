@@ -6,6 +6,24 @@ use semio_framework_plugin::{artifact_app_laws, AppActionRegistry, AppDefinition
 use semio_s_artifact_stdio_contract::editing::{SnapshotEditingEditor, SNAPSHOT_EDIT_ACTION_IDS};
 use std::collections::BTreeSet;
 
+/// 🧩️ Assembles every stdio package once: assembly publishes the artifact document schemas an editor's snapshot edits
+/// resolve (`snapshot-edit.schema-unregistered` otherwise), exactly as a host that loaded the stdio packages has them.
+fn stdio_packages_assembled() {
+    static ASSEMBLED: std::sync::OnceLock<()> = std::sync::OnceLock::new();
+    ASSEMBLED.get_or_init(|| {
+        semio_s_plugin_stdio::plugin().expect("stdio assembles");
+        semio_s_plugin_stdio_image::plugin().expect("stdio-image assembles");
+        semio_s_plugin_stdio_media::plugin().expect("stdio-media assembles");
+        semio_s_plugin_stdio_cad::plugin().expect("stdio-cad assembles");
+        semio_s_plugin_stdio_bim::plugin().expect("stdio-bim assembles");
+        semio_s_plugin_stdio_mesh::plugin().expect("stdio-mesh assembles");
+        semio_s_plugin_stdio_pdf::plugin().expect("stdio-pdf assembles");
+        semio_s_plugin_stdio_office::plugin().expect("stdio-office assembles");
+        semio_s_plugin_stdio_semio::plugin().expect("stdio-semio assembles");
+        semio_s_plugin_stdio_binary::plugin().expect("stdio-binary assembles");
+    });
+}
+
 fn fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../../🧫️fixtures/✏️editor-catalog/🔣️.json")).expect("neutral editor acceptance fixture")
 }
@@ -31,12 +49,13 @@ fn assert_detail_routes(root: &serde_json::Value, app_id: &str) {
 }
 
 async fn assert_editor<E: ArtifactEditor + SnapshotEditingEditor>(definition: AppDefinition) {
+    stdio_packages_assembled();
     let fixture = fixture();
     let details = fixture["detailsWindow"].as_str().unwrap();
-    assert!(definition.window_kinds.iter().any(|kind| kind.id == details), "{} needs editable details", definition.id);
+    let details_kind = definition.window_kinds.iter().find(|kind| kind.id == details).unwrap_or_else(|| panic!("{} needs editable details", definition.id));
     for row in fixture["actions"].as_array().unwrap() {
         let id = row["id"].as_str().unwrap();
-        let action = definition.actions.iter().find(|action| action.id == id).unwrap_or_else(|| panic!("{} is missing {id}", definition.id));
+        let action = details_kind.actions.iter().find(|action| action.id == id).unwrap_or_else(|| panic!("{} details window is missing {id}", definition.id));
         assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "{} {id}", definition.id);
         assert!(E::Command::TOOL_JOB_IDS.contains(&id), "{} has no retained {id}", definition.id);
         let source = serde_json::to_string(&row["arguments"]).unwrap();
@@ -135,7 +154,6 @@ async fn assert_editor<E: ArtifactEditor + SnapshotEditingEditor>(definition: Ap
     let source = semio_s_artifact_stdio_contract::editing::snapshot_edit_source(&reopened);
     let source_reopened = semio_s_artifact_stdio_contract::editing::snapshot_from_edit_source::<E::Snapshot>(&source).expect("complete editable source reopens");
     assert_eq!(snapshot_json(&source_reopened), after, "{} editable source preserves every saved detail", definition.id);
-    println!("[DEBUG] editor={} native replay, retained edit/undo/redo, and artifact/source reopen passed", definition.id);
     for _ in 0..65_536 {
         if app.close_terminal_is_empty() {
             break;
@@ -153,22 +171,6 @@ fn neutral_catalog_requires_each_edit_operation_once() {
     assert_eq!(actual, expected);
     assert_eq!(actual.len(), fixture["actions"].as_array().unwrap().len());
     assert_eq!(fixture["editorCount"].as_u64().unwrap() as usize, EDITOR_COUNT);
-}
-
-#[test]
-fn assembled_plugin_exposes_every_editable_artifact() {
-    let fixture = fixture();
-    let plugin = semio_s_plugin_stdio::plugin().expect("complete editor plugin assembly");
-    let editors = plugin.manifest.apps.iter().filter(|app| app.id.ends_with("#editor")).collect::<Vec<_>>();
-    assert_eq!(editors.len(), fixture["editorCount"].as_u64().unwrap() as usize);
-    assert_eq!(editors.iter().map(|app| &app.id).collect::<BTreeSet<_>>().len(), editors.len());
-    assert_eq!(editors.iter().map(|app| app.id.as_str()).collect::<BTreeSet<_>>(), fixture["editorApps"].as_array().unwrap().iter().map(|app| app.as_str().unwrap()).collect::<BTreeSet<_>>());
-    for app in editors {
-        assert!(app.window_kinds.iter().any(|window| window.id == fixture["detailsWindow"].as_str().unwrap()), "{} has no complete details window", app.id);
-        for id in SNAPSHOT_EDIT_ACTION_IDS {
-            assert!(app.actions.iter().any(|action| action.id == *id), "{} does not expose {id}", app.id);
-        }
-    }
 }
 
 macro_rules! editor_catalog_laws {

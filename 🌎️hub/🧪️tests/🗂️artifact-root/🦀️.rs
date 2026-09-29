@@ -9,7 +9,7 @@
 
 use std::path::PathBuf;
 
-/// @emoji 🗂️ The artifact root a fixture stages under: `SEMIO_TEST_ARTIFACT_DIR` when a runner named
+/// 🗂️ The artifact root a fixture stages under: `SEMIO_TEST_ARTIFACT_DIR` when a runner named
 /// one, otherwise the crate's own `🗑️generated/test-artifacts`. The directory exists on return and is
 /// canonical: server-owned roots are opened component by component with `O_NOFOLLOW`, so a root
 /// reached through a symlink (a ticket alias, macOS `/tmp`) must never reach a fixture.

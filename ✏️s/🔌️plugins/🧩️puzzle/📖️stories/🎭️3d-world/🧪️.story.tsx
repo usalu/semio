@@ -94,7 +94,7 @@ function storySummarizePuzzle3dConnectionParams(fixture: StoryWorld3dFixture) {
 //#endregion StoryTypes
 
 //#region ReferenceAssetOverrides
-/** @emoji 🖼️ Fixture `references[].source.url` values point at the `/infinite-fixture/*` dev-only static route, which isn't registered for the `puzzle/3d` Storybook scope — remap the two known fixture URLs to real Vite-imported asset URLs so the reference planes actually load instead of 404ing (silently, per `WorldReferenceLayer`'s catch — see `framework/os/kernel/infinite/world/r3f/index.tsx`). */
+/** 🖼️ Fixture `references[].source.url` values point at the `/infinite-fixture/*` dev-only static route, which isn't registered for the `puzzle/3d` Storybook scope — remap the two known fixture URLs to real Vite-imported asset URLs so the reference planes actually load instead of 404ing (silently, per `WorldReferenceLayer`'s catch — see `framework/os/kernel/infinite/world/r3f/index.tsx`). */
 const STORY_REFERENCE_URL_OVERRIDES: Record<string, string> = {
   "/infinite-fixture/abbau-aufbau-masterarbeit-grundriss.jpg": abbauAufbauReferenceUrl,
   "/infinite-fixture/rathaus-ahlen-grundriss.png": rathausAhlenReferenceUrl,
@@ -106,7 +106,7 @@ const STORY_REFERENCE_URL_OVERRIDES: Record<string, string> = {
 //#endregion ReferenceAssetOverrides
 
 //#region WasmFixtureLoader
-/** @emoji 🧵️ Lazily loads+inits `@semio-tech/puzzle-wasm`'s wasm module once (mirrors `framework/product/os/module/renderer/js/react/index.tsx`'s `createEngineSession` caching), then exposes `parse_dsl`'d fixture JSON via the crate's `puzzle3dParseDslJson` free export. */
+/** 🧵️ Lazily loads+inits `@semio-tech/puzzle-wasm`'s wasm module once (mirrors `framework/product/os/module/renderer/js/react/index.tsx`'s `createEngineSession` caching), then exposes `parse_dsl`'d fixture JSON via the crate's `puzzle3dParseDslJson` free export. */
 type Puzzle3dWasmModule = { readonly default: (input?: unknown) => Promise<unknown>; readonly puzzle3dParseDslJson: (dslText: string) => string };
 let puzzle3dWasmModulePromise: Promise<Puzzle3dWasmModule> | null = null;
 function loadPuzzle3dWasm(): Promise<Puzzle3dWasmModule> {
@@ -132,7 +132,7 @@ const STORY_DEFAULT_RUNTIME: StoryWorld3dRuntime = {
   activeUtility: "select",
 };
 
-/** @emoji 🖱️ Story-local mirror of the ONE `MergeMode` set algebra (`🕹️interaction/🧫️fixtures/🎯️merge-modes.json`) — applies a `worldPick`/`worldSelect`/`worldVortexSelect` merge mode to the current selection. */
+/** 🖱️ Story-local mirror of the ONE `MergeMode` set algebra (`🕹️interaction/🧫️fixtures/🎯️merge-modes.json`) — applies a `worldPick`/`worldSelect`/`worldVortexSelect` merge mode to the current selection. */
 function applyStoryWorldMerge(current: readonly string[], id: string, merge: string): string[] {
   const set = new Set(current);
   if (merge === "replace" || merge === "range") return [id];
@@ -149,7 +149,7 @@ function applyStoryWorldMerge(current: readonly string[], id: string, merge: str
   return [...set];
 }
 
-/** @emoji 🧩️ Story-local mirror of a subset of `d3::Puzzle3dPlayApp::handle_action` (`puzzle/plugin/rs/lib.rs`) — enough for the story to click/hover/orbit/delete/duplicate against the real fixtures. */
+/** 🧩️ Story-local mirror of a subset of `d3::Puzzle3dPlayApp::handle_action` (`puzzle/plugin/rs/lib.rs`) — enough for the story to click/hover/orbit/delete/duplicate against the real fixtures. */
 function reduceStoryWorld3dAction(state: StoryWorld3dState, action: string, args: Record<string, unknown> | undefined): StoryWorld3dState {
   const { fixture, runtime } = state;
   switch (action) {

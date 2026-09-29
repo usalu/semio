@@ -25,7 +25,7 @@ fn window_stack(window_kind_id: &str, title: &str, size: Option<f64>) -> WindowL
     })
 }
 
-/// @emoji 🪟️ Nakagin graph left (60%), Jack query over Results stacked right (40%).
+/// 🪟️ Nakagin graph left (60%), Jack query over Results stacked right (40%).
 pub fn layout() -> WindowLayout {
     WindowLayout {
         root: WindowLayoutRoot::Axis(WindowLayoutAxisNode {

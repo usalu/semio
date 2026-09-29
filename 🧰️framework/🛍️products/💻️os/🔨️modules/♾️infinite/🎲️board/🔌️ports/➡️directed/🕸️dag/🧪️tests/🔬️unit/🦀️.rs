@@ -851,6 +851,8 @@ fn dag_host_entity_screen_json_resolves_node_by_id_and_wildcard() {
     assert_eq!(wildcard["visible"], true);
 }
 
+/// 🐢️ A malformed id (no "@port") or a port that doesn't exist on the node must degrade to
+/// unresolved, never panic.
 #[test]
 fn dag_host_entity_screen_json_resolves_handle_by_widget_and_port() {
     let mut host = DagHost::default_demo();
@@ -859,8 +861,6 @@ fn dag_host_entity_screen_json_resolves_handle_by_widget_and_port() {
     assert_eq!(input_json["visible"], true);
     let output_json: Value = dsl::os_pack::json::parse(&host.entity_screen_json("handle", "combine@b")).unwrap();
     assert_eq!(output_json["visible"], true);
-    // 🐢️ A malformed id (no "@port") or a port that doesn't exist on the node must degrade to
-    // unresolved, never panic.
     let malformed: Value = dsl::os_pack::json::parse(&host.entity_screen_json("handle", "scale")).unwrap();
     assert_eq!(malformed["visible"], false);
     let missing_port: Value = dsl::os_pack::json::parse(&host.entity_screen_json("handle", "scale@nope")).unwrap();
@@ -877,6 +877,7 @@ fn dag_host_entity_screen_json_resolves_edge_with_a_two_point_polyline() {
     assert_eq!(polyline.len(), 2);
 }
 
+/// 🛟️ "handle":"*" may legitimately resolve to the demo fixture's first port.
 #[test]
 fn dag_host_entity_screen_json_unresolved_domain_or_id_never_panics() {
     let mut host = DagHost::default_demo();
@@ -884,7 +885,7 @@ fn dag_host_entity_screen_json_unresolved_domain_or_id_never_panics() {
     for (domain, id) in [("node", "nonexistent"), ("handle", "*"), ("edge", "nonexistent"), ("bogus-domain", "*")] {
         let json: Value = dsl::os_pack::json::parse(&host.entity_screen_json(domain, id)).unwrap();
         if json["visible"] == true {
-            continue; // "handle":"*" may legitimately resolve to the demo fixture's first port.
+            continue;
         }
         assert_eq!(json["visible"], false, "domain={domain} id={id}");
     }
@@ -1651,10 +1652,14 @@ fn dag_draw_lod_maps_zoom_to_puzzle2d_bands() {
     assert_eq!(dag_draw_lod(5.0), DagDrawLod::Micro);
 }
 
+/// 🏷️ Zooming IN never shortens a caption: `Detail` sits above `Normal` and says the same word.
+///
+/// 🔌️ Ports are grabbable wherever a node is drawn — the host publishes every port's screen rect
+/// at every zoom (`entity_screen_json("handle", …)`), so every tier but the silhouette must accept
+/// a press on one.
 #[test]
 fn dag_draw_lod_progressive_disclosure_gates() {
     assert_eq!(DagDrawLod::Normal.node_label(), DagNodeLabel::Name);
-    // 🏷️ Zooming IN never shortens a caption: `Detail` sits above `Normal` and says the same word.
     assert_eq!(DagDrawLod::Detail.node_label(), DagNodeLabel::Name);
     assert!(DagDrawLod::Normal.shows_computation_layout());
     assert!(!DagDrawLod::Compact.shows_computation_layout());
@@ -1663,9 +1668,6 @@ fn dag_draw_lod_progressive_disclosure_gates() {
     assert!(DagDrawLod::Detail.uses_channel_row_pick());
     assert!(DagDrawLod::Micro.uses_channel_row_pick());
     assert!(!DagDrawLod::Normal.uses_channel_row_pick());
-    // 🔌️ Ports are grabbable wherever a node is drawn — the host publishes every port's screen rect
-    // at every zoom (`entity_screen_json("handle", …)`), so every tier but the silhouette must accept
-    // a press on one.
     assert!(!DagDrawLod::Minimap.allows_connection_hit_picking());
     assert!(DagDrawLod::Overview.allows_connection_hit_picking());
     assert!(DagDrawLod::Compact.allows_connection_hit_picking());
@@ -1790,6 +1792,11 @@ fn dag_label_paint_px_scales_with_zoom_inside_lod_band() {
     assert!((dag_label_compact_paint_px(1.1, normal) - DAG_LABEL_COMPACT_SCREEN_PX * 1.1 / normal_floor).abs() < 1e-9);
 }
 
+/// 🏷️ A captioned tier DELEGATES its captions to the overlay (`node_caption_delegated_to_js_overlay`),
+/// so "still labelled at a forced low zoom" is a property of the overlay rows, not of the scene's
+/// path count — which is node chrome only, two paths per node. This used to assert `> 12` paths and
+/// measured 10 whichever string the tier served (recorded in
+/// `26/09/09/PROCEDURAL-3D-END-TO-END/📓️node-graph-camera-fit-labels-2026-09-12.md`).
 #[test]
 fn dag_paint_scene_keeps_labels_when_lod_forced_at_low_zoom() {
     let mut host = DagHost::default_demo();
@@ -1799,11 +1806,6 @@ fn dag_paint_scene_keeps_labels_when_lod_forced_at_low_zoom() {
     host.host_snapshot.camera.zoom = 0.25;
     let mut scene = canvas::Scene::new();
     host.paint_scene(&mut scene, 1280, 800, 1.0);
-    // 🏷️ A captioned tier DELEGATES its captions to the overlay (`node_caption_delegated_to_js_overlay`),
-    // so "still labelled at a forced low zoom" is a property of the overlay rows, not of the scene's
-    // path count — which is node chrome only, two paths per node. This used to assert `> 12` paths and
-    // measured 10 whichever string the tier served (recorded in
-    // `26/09/09/PROCEDURAL-3D-END-TO-END/📓️node-graph-camera-fit-labels-2026-09-12.md`).
     assert!(scene.path_count() >= host.host_snapshot.nodes.len() * 2, "a forced compact LOD must still paint every node's chrome");
     let state: dsl::os_pack::json::Value = dsl::os_pack::json::parse(&host.label_overlay_paint_state_json().unwrap()).unwrap();
     let rows = state["labels"].as_array().expect("label overlay rows");

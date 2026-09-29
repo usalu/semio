@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji ⏱️ Browser twin of this module's Rust span vocabulary (`⏱️trace/🦀️.rs`), scoped to the ONE
+/** ⏱️ Browser twin of this module's Rust span vocabulary (`⏱️trace/🦀️.rs`), scoped to the ONE
  * thing the native tracer cannot see: the renderer's per-hop round trip. A "hop" is one
  * guest-command dispatch and everything the host does with its answer — encode, worker crossing,
  * reply decode, ui refresh, React commit, and the arming of the next dispatch.

@@ -36,7 +36,7 @@ function bootstrapYieldOracle(law: BootstrapYield): void {
   scheduler.unstable_flushAllWithoutAsserting();
   stages.push(...scheduler.unstable_clearLog());
   if (allocations !== 1 || scheduler.unstable_hasPendingWork() || JSON.stringify(stages) !== JSON.stringify(law.expectedStages)) throw new Error("React Scheduler failed the bootstrap resume law");
-  console.error(`[DEBUG] Drawing bootstrap third-party React Scheduler oracle: ${stages.join("→")}; allocations before resume=${law.expectedAllocationDelta}`);
+  console.error(`Drawing bootstrap third-party React Scheduler oracle: ${stages.join("→")}; allocations before resume=${law.expectedAllocationDelta}`);
 }
 
 /** 🖍️ Every anchor draw's publication apparatus must carry verbatim: the proof catalogs, both owned
@@ -122,7 +122,7 @@ class TestScript extends BundleScript {
     const validatePatch = ajv.compile(await Bun.file(resolve(patchRoot, "🧬️schema/🔣️.json")).json());
     const patchCases = await Bun.file(resolve(patchRoot, "🔣️.json")).json() as { patch: unknown; accepted: boolean }[];
     for (const test of patchCases) if (validatePatch(test.patch) !== test.accepted) throw new Error(`Draw field-patch oracle disagrees: ${JSON.stringify(test)}`);
-    console.error(`[DEBUG] Draw independent Ajv field-patch oracle: ${patchCases.length} cases`);
+    console.error(`Draw independent Ajv field-patch oracle: ${patchCases.length} cases`);
     const admission = resolve(subset, "🧬️schema/🧰️owned/🧫️fixtures/🧮️mutation-admission");
     const admissionSchema = await Bun.file(resolve(admission, "🧬️schema/🔣️.json")).json() as { $id: string };
     const admissionFixture = await Bun.file(resolve(admission, "🔣️.json")).json() as { cases: unknown[]; bootstrapYield: BootstrapYield };

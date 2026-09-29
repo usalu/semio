@@ -101,13 +101,25 @@
               "directoryName": "🏷️renames-the-document-to-mission-brief"
             }
           ]
+        },
+        {
+          "mutationId": "splice-text",
+          "sourceMutationDirectoryName": "✂️splice-text",
+          "mutationDirectoryName": "✂️splice-text",
+          "scenarios": [
+            {
+              "id": "warns-that-an-already-removed-run-leaves-the-brief-unchanged",
+              "directoryName": "⚠️warns-that-an-already-removed-run-leaves-the-brief-unchanged"
+            }
+          ]
         }
       ],
       "kinds": [
         "rename-writer",
         "change-uri",
         "change-language",
-        "edit-text"
+        "edit-text",
+        "splice-text"
       ]
     }
   ],
@@ -192,6 +204,26 @@
             "operation": "rename-writer",
             "bridgeVersion": 1,
             "variant": "RenameWriter"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "writer-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "splice-text",
+          "capability": "writer-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "splice-text",
+            "bridgeVersion": 1,
+            "variant": "SpliceText"
           },
           "oracleRequirements": [
             {

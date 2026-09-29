@@ -1,5 +1,5 @@
 /**
- * @emoji 🧭️ The TypeScript half of the graph keyboard-navigation laws — a SECOND implementation of
+ * 🧭️ The TypeScript half of the graph keyboard-navigation laws — a SECOND implementation of
  * the traversal, written from `🧫️fixtures/🧭️graph-keyboard-navigation.json` alone and never from the
  * Rust one, answering the very same walks `🔬️unit/🦀️.rs` answers through
  * `FlowHostSnapshot::keyboard_step`.

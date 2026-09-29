@@ -1,0 +1,19 @@
+{
+  "extends": "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-u6-overlay/🧰️framework/🛍️products/💻️os/tsconfig.json",
+  "compilerOptions": { "noEmit": true, "incremental": false },
+  "include": [],
+  "files": [
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-u6-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🟦️.tsx",
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-u6-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🧪️tests/📊️table/🟦️.tsx",
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-u6-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🧪️tests/🪟️tree-windows/🟦️.tsx",
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-u6-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🧪️tests/🪪️container-node-ids/🟦️.tsx",
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-u6-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/📖️stories/🧪️.story.tsx",
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-u6-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🟦️.tsx",
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-u6-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🧪️tests/🪟️tree-windows/🟦️.tsx",
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-u6-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts",
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-u6-overlay/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts",
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-u6-overlay/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🧪️tests/🧪️typednodefields-preflights-every-capture-before-transfer-under-private-r/🟦️.ts",
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-u6-overlay/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🛡️validation/🔬️graph/🟦️.ts",
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-u6-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/🌳️tree/🟦️.ts"
+  ]
+}

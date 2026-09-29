@@ -114,17 +114,37 @@ def oracle_counts(text: str) -> str:
     return text.replace('"routes": 38,', '"routes": 37,').replace('"bounded": 37,', '"bounded": 36,').replace('"migrated": 37,', '"migrated": 36,')
 
 
+
+#: 🏁️ Set-level landing markers `(repo path, text)` — `None` = the set deletes that file. All present → the set is
+#: landed and nothing is applied (per-hunk checks alone cannot see an insert whose text a later codemod reworded).
+LANDED = [('✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️load-request/🦀️.rs', None)]
+
+
+def landed_guard() -> bool:
+    """🏁️ True when every landing marker is in the tree; a partial landing is a conflict, never a second write."""
+    tree = Path("/Users/ueli/Documents/semio")
+    present = [(not (tree / rel).exists()) if marker is None else ((tree / rel).exists() and marker in (tree / rel).read_text()) for rel, marker in LANDED]
+    if all(present):
+        print("landed: every set marker is in the tree — nothing to apply")
+        return True
+    if any(present):
+        raise SystemExit(f"CONFLICT: set partially landed (markers {present}) — nothing written")
+    return False
+
+
 def main() -> None:
+    if landed_guard():
+        return
     texts: dict[str, str] = {}
     notes = []
     for rel, old, new in HUNKS:
         text = texts.setdefault(rel, (ROOT / rel).read_text())
         count = text.count(old)
-        if count == 1:
+        if (new != "" and text.count(new) == 1 and (count == 0 or old in new)) or (new == "" and count == 0):
+            notes.append(f"applied   {rel.split('/')[-1]}: {old.strip().splitlines()[0][:70]}")
+        elif count == 1:
             texts[rel] = text.replace(old, new)
             notes.append(f"apply     {rel.split('/')[-3]}/…/{rel.split('/')[-1]}: {old.strip().splitlines()[0][:70]}")
-        elif count == 0 and (new == "" or new in text):
-            notes.append(f"applied   {rel.split('/')[-1]}: {old.strip().splitlines()[0][:70]}")
         else:
             notes.append(f"CONFLICT  {rel}: anchor found {count}× — {old.strip().splitlines()[0][:70]}")
     limits = f"{SHOOT_EDITOR}/🧫️fixtures/🧫️retained-command-limits/🔣️.json"

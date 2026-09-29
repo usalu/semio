@@ -1,4 +1,4 @@
-//! @emoji 🗺️ The embedded product-`Surface` contract: placement, snapshot, intent, deadline.
+//! 🗺️ The embedded product-`Surface` contract: placement, snapshot, intent, deadline.
 //!
 //! The escape hatch for content the generic widget vocabulary should never try to express — a 3D
 //! world, a node graph, a text editor, a map, a paint canvas. UI core knows only [`SurfacePlacement`]

@@ -1,4 +1,4 @@
-//! @emoji 📑️ wgpu twin of the `Tabs` element — ticket `26/09/17/WGPU-RENDERER-REACT-PARITY` packet
+//! 📑️ wgpu twin of the `Tabs` element — ticket `26/09/17/WGPU-RENDERER-REACT-PARITY` packet
 //! W2k. `Tabs` was one of the elements the plugin/react-only census flagged as "no confirmed product
 //! consumer"; the consumer-hunt this packet ran found a real one —
 //! `🌎️hub/🔨️modules/🛡️admin/🧱️elements/🛡️AdminApp/🟦️.tsx:64-91` renders a live

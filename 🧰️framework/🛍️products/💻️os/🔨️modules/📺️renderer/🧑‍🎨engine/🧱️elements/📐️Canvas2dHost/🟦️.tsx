@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/Canvas2dHost/component.tsx
-/** @emoji 🖌️ `Canvas2dHost` — canvas-2d `ComponentSceneHost`: interprets a `draw.document`-shaped
+/** 🖌️ `Canvas2dHost` — canvas-2d `ComponentSceneHost`: interprets a `draw.document`-shaped
  * `layersJson` scene into an HTML canvas, owns pan/zoom camera math shared with `Paint2dHost`, and
  * dispatches pointer/drag/context-menu actions back to the plugin. */
 // #endregion 🧲️Header
@@ -910,7 +910,7 @@ export function Canvas2dHost({ node, onAction, requestContextMenu }: ComponentSc
   }, [dispatch, publishCatalogueDragOverAt, publishCatalogueDropAt]);
 
   //#region ContextMenu
-  /** @emoji 🖱️ No layer pick/selection is tracked at this level (`Canvas2dScene` carries only camera + `layersJson`) — `hits`/`selection` stay empty per surface convention until layer picking lands here. */
+  /** 🖱️ No layer pick/selection is tracked at this level (`Canvas2dScene` carries only camera + `layersJson`) — `hits`/`selection` stay empty per surface convention until layer picking lands here. */
   const onContextMenu = useCallback(
     (event: MouseEvent<HTMLDivElement>): void => {
       if (!requestContextMenu) return;

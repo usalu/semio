@@ -49,8 +49,8 @@ VALIDATED_CASES = ["600", "600FF", "610", "620", "640", "900", "900FF", "910", "
 SIMULATED_CASES = ["600", "600FF", "900", "900FF"]
 ACCOUNTED_CASES = ["600", "900"]
 
-#: 📏️ Both sides are EnergyPlus 25.2.0 on the same simple glazing, so the documented glazing offset
-#: is common to both and cannot appear here as a difference.
+#: 📏️ Both sides are EnergyPlus 25.2.0 on the same two-pane window stack, so the sibling case's
+#: documented simple-glazing offset does not arise here.
 ANNUAL_TOLERANCE = 0.03
 FREE_FLOAT_TOLERANCE_K = 0.5
 

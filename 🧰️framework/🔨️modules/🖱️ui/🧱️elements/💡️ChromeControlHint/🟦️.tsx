@@ -17,7 +17,7 @@ import { resolvePopoverPlacement } from "../🗨️Popover/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 // #region 💡️ChromeControlHint
-/** @emoji ⏱️ Hover delay before a chrome control tooltip opens — matches dissolved Radix provider default. */
+/** ⏱️ Hover delay before a chrome control tooltip opens — matches dissolved Radix provider default. */
 export const CHROME_CONTROL_TOOLTIP_DELAY_MS = 400;
 
 const chromeControlTooltipSurfaceClass = cn(
@@ -25,7 +25,7 @@ const chromeControlTooltipSurfaceClass = cn(
   glassClass,
 );
 
-/** @emoji 🏷️ Glass menu-tier hover tooltip for chrome controls (outer wrapper avoids Radix-style ref merge loops). */
+/** 🏷️ Glass menu-tier hover tooltip for chrome controls (outer wrapper avoids Radix-style ref merge loops). */
 export function ChromeControlHint({ id, text, always = false, children }: { readonly id?: string; readonly text?: string; readonly always?: boolean; readonly children: React.ReactElement }): React.ReactNode {
   const accessibleLabel = useControlAccessibleLabel(id, text);
   const tooltipText = useControlTooltipText(id, text, { always });

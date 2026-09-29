@@ -119,7 +119,7 @@ def main():
                 "whyNoneQualifies": "`HomeTransient` is a projection defined by this repository over its own hub directory events; generic state containers can hold its rows but cannot adjudicate which page continues a frontier or how an event folds.",
             },
         }],
-        "mutationCatalogs": [{"id": "s-home-1-any-editor-transient", "capability": capability, "standardDirectoryName": "🔖️1", "subsetDirectoryName": "✳️any", "kinds": ["apply-directory-page"], "vectors": []}],
+        "mutationCatalogs": [{"id": "s-home-1-any-editor-transient", "capability": capability, "standardDirectoryName": "🔖️1", "subsetDirectoryName": "✳️any", "kinds": ["apply-directory-page"], "vectors": [{"mutationId": "apply-directory-page", "sourceMutationDirectoryName": "📬️apply-directory-page", "mutationDirectoryName": "📬️apply-directory-page", "scenarios": [{"id": name.split("️", 1)[1], "directoryName": name} for name, *_ in VECTORS]}]}],
         "mutationManifests": [{
             "schema": "semio.repository-test.mutation-manifest/v2",
             "artifact": "s.space.home",

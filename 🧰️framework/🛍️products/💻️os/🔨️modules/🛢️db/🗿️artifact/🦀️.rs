@@ -1,6 +1,6 @@
 //! 🗄️ `db_artifact` — the document authority actor and its command pipeline: admit → dedupe →
 //! base-resolve → authz → deps → validate → conflict → execute → WAL append → durability →
-//! publish → project → vcs → preview-reconcile → receipt. Composes `db_state` (materialized
+//! publish → project → preview-reconcile → receipt. Composes `db_state` (materialized
 //! overlay), `db_wal` (durability), `db_storage` (the pluggable substrate), and `protocol`
 //! (`MutationEnvelope`/`MutationDiff`) into `ArtifactEngine`, the crate's central type, plus a
 //! thin `db_actor`-mailbox wrapper (`ArtifactAuthority`) around it. Frozen contract:
@@ -9,14 +9,13 @@
 //!
 //! 🎯️ Design choice (compatibility surface — re-checked against `db_engine`'s live state, which
 //! was itself being revised concurrently while this file was authored): `db_engine`'s
-//! `document_engine_config` now builds `ArtifactEngineConfig{limits, security, version_graph,
-//! emit, ..ArtifactEngineConfig::default()}` (a real `db_security::SecurityGate` baked directly
-//! in, `version_graph: Arc<dyn VersionGraph>` non-optional, defaulted `..` spread for the rest),
+//! `document_engine_config` now builds `ArtifactEngineConfig{limits, preview_ttl_ms,
+//! ..ArtifactEngineConfig::default()}` (a real `db_security::SecurityGate` baked directly into the
+//! default, defaulted `..` spread for the rest),
 //! `CommandReceipt.conflicts: Vec<db_conflict::ConflictRecord>` (the real type), and
 //! `ArtifactAuthority::run_query(query, consistency)` (two arguments, `db_query::
 //! Consistency`-aware). This revision matches that shape exactly: `security`/`emit` are real
-//! `ArtifactEngineConfig` fields, `version_graph` is required (`NullVersionGraph` is the
-//! "no vcs" default rather than `Option::None`), `submit`'s conflict step is a genuine
+//! `ArtifactEngineConfig` fields, `submit`'s conflict step is a genuine
 //! `db_conflict::ConflictDetector` fed by retained recent-commit `TouchedSet` history (not a local
 //! last-writer stand-in), and `query`/`RunQuery`/`run_query` take a `db_query::
 //! Consistency` and resolve it via `db_query::resolve_consistency` + `db_index::
@@ -53,7 +52,7 @@ use protocol::MutationDiff as _;
 use dsl::DslValue;
 
 //#region 🔖️Ids
-/// @emoji 🌉️ `protocol::ArtifactId` → `ArtifactId`, the lossless single-`String` bridge
+/// 🌉️ `protocol::ArtifactId` → `ArtifactId`, the lossless single-`String` bridge
 /// `db_core`'s module doc promises (see `ArtifactId`'s own doc for the rationale: this
 /// crate is the first one in the family that depends on both `db_core` and `protocol` and so is
 /// where the bridge is actually exercised).
@@ -61,7 +60,7 @@ async fn to_core_document_id(id: &protocol::ArtifactId) -> ArtifactId {
     ArtifactId(id.0.clone())
 }
 
-/// @emoji 🌉️ `protocol::ActorId` → `ActorId`, same bridge as `to_core_document_id`.
+/// 🌉️ `protocol::ActorId` → `ActorId`, same bridge as `to_core_document_id`.
 async fn to_core_actor_id(id: &protocol::ActorId) -> ActorId {
     ActorId(id.0.clone())
 }
@@ -81,7 +80,7 @@ fn dsl_err(err: String) -> DbError {
 }
 
 //#region 🔖️Command
-/// @emoji 📦️ One atomically-submitted group of causally-related operations against a single
+/// 📦️ One atomically-submitted group of causally-related operations against a single
 /// document — the unit `ArtifactEngine::submit` accepts. Every envelope must target the same
 /// `document_id` (checked at construction, and again against the engine's own document at submit
 /// time); the batch's `command_id` (for dedupe/the returned `CommandReceipt`) is its LAST
@@ -91,7 +90,7 @@ pub struct CommandBatch {
 }
 
 impl CommandBatch {
-    /// @emoji 🏗️ Builds a batch, rejecting an empty one or one whose envelopes disagree on
+    /// 🏗️ Builds a batch, rejecting an empty one or one whose envelopes disagree on
     /// `document_id`.
     pub async fn new(envelopes: Vec<protocol::MutationEnvelope>) -> Result<CommandBatch, DbError> {
         let first = envelopes.first().ok_or_else(|| DbError::InvalidArgument("command batch must contain at least one operation".to_string()))?;
@@ -103,7 +102,7 @@ impl CommandBatch {
     }
 }
 
-/// @emoji 🎚️ Per-submit durability override — see `DurabilityClass`'s doc for the
+/// 🎚️ Per-submit durability override — see `DurabilityClass`'s doc for the
 /// strength ordering `ArtifactWal::submit` honors. `policy` is the authority-local `protocol::
 /// MergePolicy` `submit`'s outcome step judges this batch's worst graded conflict/message level
 /// against (contract §C9) — never carried on the wire, never part of shared history (see
@@ -122,7 +121,7 @@ impl Default for SubmitOptions {
 //#endregion 🔖️Command
 
 //#region 🔖️Diff
-/// @emoji 🧬️ The schema tag `db_artifact` reserves for its own generic path-value diff
+/// 🧬️ The schema tag `db_artifact` reserves for its own generic path-value diff
 /// convention (see module doc) — the only `ArtifactDiff`/`InverseMutation` shape this crate
 /// knows how to interpret. 🎯️ W5: `diff`/`inverse` payloads are opaque `Vec<u8>` on the wire now;
 /// `db_artifact` still only understands ITS OWN JSON-object-of-paths convention, tagged with this
@@ -132,17 +131,17 @@ impl Default for SubmitOptions {
 /// that's `db_artifact`-and-above's future typed path).
 pub const DB_PATHMAP_SCHEMA: &str = "db.pathmap.v1";
 
-/// @emoji 🎯️ `DslValue` object pathmap -> `store::pack_rt::encode_wire_value` bytes.
+/// 🎯️ `DslValue` object pathmap -> `store::pack_rt::encode_wire_value` bytes.
 async fn encode_pathmap(value: &DslValue) -> Vec<u8> {
     store::pack_rt::encode_wire_value(value)
 }
 
-/// @emoji 🎯️ Inverse of `encode_pathmap`.
+/// 🎯️ Inverse of `encode_pathmap`.
 async fn decode_pathmap(bytes: &[u8]) -> Result<DslValue, DbError> {
     store::pack_rt::decode_wire_value(bytes).map_err(wire_err)
 }
 
-/// @emoji 🧰️ Public convenience for every crate above this one that hand-builds a `DB_PATHMAP_SCHEMA`
+/// 🧰️ Public convenience for every crate above this one that hand-builds a `DB_PATHMAP_SCHEMA`
 /// `MutationEnvelope` (test fixtures, `db_cli`'s `profile`/`migrate` commands, `db_fault_testing`'s
 /// workload generators) rather than going through `envelope_from_operation`: encodes a
 /// `serde_json::Value::Object` the same way `decode_pathmap`/`apply_one` decode it. Centralizing
@@ -154,7 +153,7 @@ pub async fn encode_pathmap_json(value: &serde_json::Value) -> Result<Vec<u8>, D
     Ok(encode_pathmap(&DslValue::from(value)).await)
 }
 
-/// @emoji 🧰️ Inverse of `encode_pathmap_json` — also the general "read back one stored/queried
+/// 🧰️ Inverse of `encode_pathmap_json` — also the general "read back one stored/queried
 /// value's bytes as JSON" decode every caller above this crate needs: `ArtifactEngine::get`/
 /// `preview_get` and `db_engine::ArtifactHandle::query` all hand back these same `store::pack_rt`
 /// wire bytes (single value OR whole pathmap object, both are just a `DslValue` tree to this
@@ -164,7 +163,7 @@ pub async fn decode_pathmap_json(bytes: &[u8]) -> Result<serde_json::Value, DbEr
     Ok(serde_json::Value::from(decode_pathmap(bytes).await?))
 }
 
-/// @emoji 🧮️ Flattens a diff/inverse pathmap object into `(path, Some(value) | None)` pairs per this
+/// 🧮️ Flattens a diff/inverse pathmap object into `(path, Some(value) | None)` pairs per this
 /// module's generic path-value convention (see module doc). Errors if `value` is not an object —
 /// this crate's own schema-erased documents have no other shape it can interpret.
 async fn entries_from_value(value: &DslValue) -> Result<Vec<(String, Option<DslValue>)>, DbError> {
@@ -172,7 +171,7 @@ async fn entries_from_value(value: &DslValue) -> Result<Vec<(String, Option<DslV
     Ok(object.iter().map(|(path, entry)| (path.clone(), if entry.is_null() { None } else { Some(entry.clone()) })).collect())
 }
 
-/// @emoji ➡️ Entries for an envelope's forward diff — empty (not an error) for any schema other
+/// ➡️ Entries for an envelope's forward diff — empty (not an error) for any schema other
 /// than `DB_PATHMAP_SCHEMA`, see its doc.
 async fn diff_entries(diff: &protocol::ArtifactDiff) -> Result<Vec<(String, Option<DslValue>)>, DbError> {
     if diff.schema.0 != DB_PATHMAP_SCHEMA {
@@ -181,7 +180,7 @@ async fn diff_entries(diff: &protocol::ArtifactDiff) -> Result<Vec<(String, Opti
     entries_from_value(&decode_pathmap(&diff.payload).await?).await
 }
 
-/// @emoji ↩️ Entries for an envelope's inverse diff (the `undo` pipeline's source) — same
+/// ↩️ Entries for an envelope's inverse diff (the `undo` pipeline's source) — same
 /// foreign-schema handling as `diff_entries`.
 async fn inverse_entries(inverse: &protocol::InverseMutation) -> Result<Vec<(String, Option<DslValue>)>, DbError> {
     if inverse.schema.0 != DB_PATHMAP_SCHEMA {
@@ -190,7 +189,7 @@ async fn inverse_entries(inverse: &protocol::InverseMutation) -> Result<Vec<(Str
     entries_from_value(&decode_pathmap(&inverse.payload).await?).await
 }
 
-/// @emoji 🧮️ The inverse of `entries_from_value` — rebuilds a JSON object from path-value pairs,
+/// 🧮️ The inverse of `entries_from_value` — rebuilds a JSON object from path-value pairs,
 /// `None` becoming an explicit `null` tombstone. Used by `undo` to construct a compensating
 /// envelope's diff/inverse payloads.
 // 🚫️async: E1 pure accessor, always used as `&entries_to_value(...)` inline into another call — see R9
@@ -198,7 +197,7 @@ fn entries_to_value(entries: &[(String, Option<DslValue>)]) -> DslValue {
     DslValue::Object(entries.iter().map(|(path, value)| (path.clone(), value.clone().unwrap_or(DslValue::Null))).collect())
 }
 
-/// @emoji 👣️ The `TouchedSet` a set of entries would write — shared by `DocumentState::
+/// 👣️ The `TouchedSet` a set of entries would write — shared by `DocumentState::
 /// apply_entries` and preview publishing.
 // 🚫️async: E1 pure accessor, `db_state::TouchedSet`'s own methods are sync — see R9
 fn entries_touched(entries: &[(String, Option<DslValue>)]) -> db_state::TouchedSet {
@@ -211,7 +210,7 @@ fn entries_touched(entries: &[(String, Option<DslValue>)]) -> db_state::TouchedS
 //#endregion 🔖️Diff
 
 //#region 🔖️Bridge
-/// @emoji 🌉️ The generic ingestion boundary: builds an `MutationEnvelope` (in this crate's own
+/// 🌉️ The generic ingestion boundary: builds an `MutationEnvelope` (in this crate's own
 /// path-value diff convention) from a typed `protocol::Mutation<P>` against a serializable
 /// projection `P`, writing the whole post-state at `path`. Genuinely exercises `Mutation`/
 /// `MutationDiff`'s trait methods (`diff`/`apply`/`mutation_id`/`dependencies`/`author_id`/
@@ -251,7 +250,7 @@ where
 //#endregion 🔖️Bridge
 
 //#region 🔖️Conflict
-/// @emoji ⚔️ One detected write/write intersection between the currently-executing operation and
+/// ⚔️ One detected write/write intersection between the currently-executing operation and
 /// an earlier operation it did not declare as a `dependency`. Detected directly off
 /// `db_state::TouchedRegion::path_intersects` (see `DocumentState::apply_entries`). Resolution
 /// policy is last-writer-wins (the conflicting write still applies) — recorded for the caller's
@@ -267,7 +266,7 @@ pub struct ConflictRecord {
     pub path: String,
 }
 
-/// @emoji ⚔️ Builds the `db_conflict::CommandTouch` `envelope` would produce, without applying it —
+/// ⚔️ Builds the `db_conflict::CommandTouch` `envelope` would produce, without applying it —
 /// shared by `submit`'s outcome-step gate and `preview_conflicts`'s advisory `db_conflict::
 /// ConflictDetector` use. No per-operation conflict-declaration tag anymore (C10 deleted the CRDT-era
 /// vocabulary): a `CommandTouch` carries only what `db_conflict::ConflictDetector` actually needs to detect —
@@ -278,7 +277,7 @@ fn command_touch(envelope: &protocol::MutationEnvelope, touched: &db_state::Touc
     touched.regions.iter().fold(touch, |touch, region| touch.touch(region.clone()))
 }
 
-/// @emoji ⚖️ Grades one `db_conflict::ConflictRecord` into the `protocol::MutationMessage` the
+/// ⚖️ Grades one `db_conflict::ConflictRecord` into the `protocol::MutationMessage` the
 /// outcome step judges against `options.policy` (contract §C9: "region intersection = `Warning`;
 /// constraint violation = `Fatal`") — `db_conflict` deliberately never grades its own findings (see
 /// its module doc), so `db_artifact`, the first crate below it that actually decides what to DO
@@ -297,16 +296,16 @@ async fn grade_conflict_record(record: &db_conflict::ConflictRecord) -> protocol
         }
     }
 }
-/// @emoji 🏷️ `CommandTouch` kind of a durable group decision's marker in the recent commit window: it names
+/// 🏷️ `CommandTouch` kind of a durable group decision's marker in the recent commit window: it names
 /// the decision's edit so a later write can say it observed it, and it is never itself graded.
 const DURABLE_GROUP_TOUCH_KIND: &str = "db.durable-group";
 
-/// @emoji 🧷️ The recent-window marker of one committed durable group decision (see [`DURABLE_GROUP_TOUCH_KIND`]).
+/// 🧷️ The recent-window marker of one committed durable group decision (see [`DURABLE_GROUP_TOUCH_KIND`]).
 fn durable_group_touch(edit_id: &str) -> db_conflict::CommandTouch {
     db_conflict::CommandTouch::new(protocol::MutationId(edit_id.to_string()), protocol::ActorId(String::new()), db_conflict::CommandKind::from(DURABLE_GROUP_TOUCH_KIND), protocol::HybridLogicalTimestamp::new(0, 0))
 }
 
-/// @emoji 🪟️ Appends one committed touch to the bounded recent commit window, oldest out first.
+/// 🪟️ Appends one committed touch to the bounded recent commit window, oldest out first.
 fn remember_recent_touch(window: &mut VecDeque<db_conflict::CommandTouch>, touch: db_conflict::CommandTouch) {
     if window.len() >= MAX_RECENT_TOUCHES {
         window.pop_front();
@@ -314,19 +313,19 @@ fn remember_recent_touch(window: &mut VecDeque<db_conflict::CommandTouch>, touch
     window.push_back(touch);
 }
 
-/// @emoji 👁️ Whether `observed` names `touch`: its command itself, or — for a durable group decision's marker —
+/// 👁️ Whether `observed` names `touch`: its command itself, or — for a durable group decision's marker —
 /// one of the operations its edit folded (`<edit>#<position>`), which reach a replica inside that edit.
 fn touch_is_named(touch: &db_conflict::CommandTouch, observed: &str) -> bool {
     observed == touch.command_id.0 || (touch.kind.0 == DURABLE_GROUP_TOUCH_KIND && observed.strip_prefix(touch.command_id.0.as_str()).is_some_and(|position| position.starts_with('#')))
 }
 
-/// @emoji ✍️ Whether `touch` wrote document fields: history transitions (undo, redo, checkpoints) and durable
+/// ✍️ Whether `touch` wrote document fields: history transitions (undo, redo, checkpoints) and durable
 /// group markers never did.
 fn touch_writes_fields(touch: &db_conflict::CommandTouch) -> bool {
     touch.kind.0 != DURABLE_GROUP_TOUCH_KIND && touch.kind.0 != protocol::HISTORY_TRANSITION_SCHEMA
 }
 
-/// @emoji 🕰️ The writes `envelope` was authored without seeing: in commit order (the recent commit window, then the
+/// 🕰️ The writes `envelope` was authored without seeing: in commit order (the recent commit window, then the
 /// batch's earlier envelopes), every write after the one it names as `observed` — all of them when it observed
 /// nothing in the window — by another actor. A replica stamps each operation it authors with the newest foreign
 /// operation it had applied, and replicas receive commits in commit order, so everything up to that one was seen;
@@ -340,14 +339,14 @@ fn unseen_concurrent_writes<'a>(recent: &'a VecDeque<db_conflict::CommandTouch>,
     window.into_iter().skip(seen).filter(|touch| touch.actor != envelope.actor && touch_writes_fields(touch)).collect()
 }
 
-/// @emoji 🎯️ Whether two declared targets (outermost segment first) can address the same part: an empty target is
+/// 🎯️ Whether two declared targets (outermost segment first) can address the same part: an empty target is
 /// the whole artifact; otherwise they overlap when they share a segment — conservative for path-shaped targets
 /// (`[collection, id]`) and exact for id-set targets.
 fn targets_overlap(a: &[String], b: &[String]) -> bool {
     a.is_empty() || b.is_empty() || a.iter().any(|segment| b.contains(segment))
 }
 
-/// @emoji ⚖️ Grades `written` — authored without seeing the concurrent write `unseen` — into `mutation.clamped`
+/// ⚖️ Grades `written` — authored without seeing the concurrent write `unseen` — into `mutation.clamped`
 /// (contract §C9: region intersection = `Warning`): fields both touch when the database can read both diffs, else
 /// their declared targets overlapping. Disjoint parts are no conflict. `Normal` accepts a clamped write with its
 /// message, `Vigilant` refuses it (ticket 26/09/23 C10: a vigilant hub accepted a same-field write authored
@@ -368,7 +367,7 @@ async fn grade_concurrent_write(written: &db_conflict::CommandTouch, written_tar
 //#endregion 🔖️Conflict
 
 //#region 🔖️Receipt
-/// @emoji 🧾️ What `ArtifactEngine::submit` returns: the committed batch's identity, the document's
+/// 🧾️ What `ArtifactEngine::submit` returns: the committed batch's identity, the document's
 /// new `Frontier`, the durability actually requested, any detected conflicts, and the post-commit
 /// state's content hash. Mirrors the `db` facade's frozen `CommandReceipt` shape, except `frontier`
 /// is `Frontier` (this crate's own internal currency) rather than the facade's
@@ -381,7 +380,7 @@ pub struct CommandReceipt {
     pub durability: DurabilityClass,
     pub conflicts: Vec<ConflictRecord>,
     pub state_hash: Option<ContentHash>,
-    /// @emoji 📨️ Every `protocol::MutationMessage` the outcome step graded this batch's
+    /// 📨️ Every `protocol::MutationMessage` the outcome step graded this batch's
     /// `db_conflict::ConflictRecord`s into (contract §C9) — present even on an accepted-but-degraded
     /// commit (`options.policy` let a `Warning`-or-below worst level through), empty on a clean one.
     pub messages: Vec<protocol::MutationMessage>,
@@ -1027,7 +1026,7 @@ async fn close_wal_record_batch(records: &mut db_wal::WalRecordBatch) -> Result<
 //#region 🔖️StateRetirement
 const ARTIFACT_STATE_RETIREMENT_SLOTS: usize = 64;
 
-/// @emoji 🧹️ Persists one rejected staging graph and advances exactly one refusal,
+/// 🧹️ Persists one rejected staging graph and advances exactly one refusal,
 /// source, slot, page, or text owner for each maintenance grant.
 struct ArtifactStateRetirementCursor {
     rejected: Option<db_state::StateEntryRejected>,
@@ -1187,7 +1186,7 @@ fn retire_artifact_state_owner(owner: ArtifactStateRetirementCursor) -> Result<(
     }
 }
 
-/// @emoji 🧹️ Advances one parked state retirement — a replaced or removed value, or a refused
+/// 🧹️ Advances one parked state retirement — a replaced or removed value, or a refused
 /// staging graph. Every state apply drives it until nothing is parked, so a replaced value's pages
 /// and its I/O operation never outlive the write that replaced it; parked owners used to wait for a
 /// maintenance pass nothing ran, until the process ran out of I/O operations and refused every write.
@@ -1241,7 +1240,7 @@ impl Drop for ArtifactStateRetirementCursor {
 }
 //#endregion 🔖️StateRetirement
 
-/// @emoji 🏗️ A document's materialized state: a flat `db_state::PMap` from path to raw value
+/// 🏗️ A document's materialized state: a flat `db_state::PMap` from path to raw value
 /// bytes, plus a per-path last-writer map for `submit`'s local, path-granular conflict detection
 /// (see `🔖️Conflict`'s doc on why this stays local rather than `db_conflict`-backed). `values` uses
 /// `PMap` (not a mutable `HashMap`) specifically so `content_hash` — the `Frontier.chain_hash`
@@ -1252,7 +1251,7 @@ struct DocumentState {
     last_writer: db_state::PMap<String, protocol::MutationId>,
 }
 
-/// @emoji 🗺️ One envelope planned by `ArtifactEngine::plan_one` and not applied yet: its path entries with every value
+/// 🗺️ One envelope planned by `ArtifactEngine::plan_one` and not applied yet: its path entries with every value
 /// already encoded as the state stores it (`None` deletes), the regions it touches and the conflicts it meets.
 struct PlannedEntries {
     entries: Vec<(String, Option<Vec<u8>>)>,
@@ -1275,7 +1274,7 @@ impl DocumentState {
         self.values.content_hash(&mut control).await
     }
 
-    /// @emoji 🧭️ What applying one envelope's flattened path-value entries would touch and conflict with, decided
+    /// 🧭️ What applying one envelope's flattened path-value entries would touch and conflict with, decided
     /// without applying anything: a path's last writer is `written`'s (an earlier envelope of the same batch) or else
     /// the state's own, and a conflict is a last writer that is neither `mutation_id` itself nor a declared
     /// `dependencies` member. `written` gains this envelope's paths.
@@ -1295,7 +1294,7 @@ impl DocumentState {
         Ok((touched, conflicts))
     }
 
-    /// @emoji ✍️ Applies one planned envelope's entries ([`Self::plan_entries`]): every value, already encoded, set at
+    /// ✍️ Applies one planned envelope's entries ([`Self::plan_entries`]): every value, already encoded, set at
     /// its path, every `None` a deletion, and `mutation_id` recorded as each path's last writer.
     async fn apply_entries(&mut self, mutation_id: &protocol::MutationId, entries: Vec<(String, Option<Vec<u8>>)>) -> Result<(), DbError> {
         if entries.is_empty() {
@@ -1361,41 +1360,27 @@ impl DocumentState {
 //#endregion 🔖️State
 
 //#region 🔖️Engine
-/// @emoji ⚙️ Construction-time configuration for one `ArtifactEngine`. Field shape is FROZEN for
-/// this wave (see module doc): `db_engine` constructs this as a 4-field struct literal with no
-/// `..Default::default()` spread, so a new required field here would be a breaking change to a
-/// sibling crate this session does not own.
-// 🔀️ `V` is the pluggable `VersionGraph` backend (dedyn-fw-os-misc, R11a: a stored, caller-supplied
-// implementation is trivially generic). `VersionGraph`'s own closed 2-implementor set (`NullVersionGraph` here, the
-// `vcs`-feature-gated `VcsVersionGraph`) is closed with `dyn_enum_close!` into `db_engine`'s
-// `VersionGraphs` enum instead — but that enum lives in `db_engine`, one layer above this crate, and
-// the hard dependency rule ("only `db_engine` may depend on `vcs`") means `db_artifact` must stay
-// ignorant of it. Staying generic here (rather than naming `VersionGraphs` directly) preserves
-// exactly the erasure `Arc<dyn VersionGraph>` used to give this crate; `db_engine` is the one layer
-// that instantiates `V = VersionGraphs` concretely (see its `Database::document_engine_config`).
-pub struct ArtifactEngineConfig<V: VersionGraph + 'static = NullVersionGraph> {
+/// ⚙️ Construction-time configuration for one `ArtifactEngine`: `db_engine` sets `limits` and
+/// `preview_ttl_ms` and spreads `..Default::default()` for the rest.
+pub struct ArtifactEngineConfig {
     pub limits: DbLimits,
-    /// @emoji 🔐️ The real authz/dedupe/DoS-budget gate `submit` admits every not-yet-committed
+    /// 🔐️ The real authz/dedupe/DoS-budget gate `submit` admits every not-yet-committed
     /// envelope through and records its committed ones in — see `db_security::SecurityGate::admit_commands`
     /// and `record_committed`. Keyed per-envelope by a `Principal`
     /// synthesized from that envelope's own `actor` (a permissive `"member"` role, `"default"`
     /// tenant) — `SubmitOptions` stays durability-only (see its doc) so this crate's dedupe/authz
     /// story does not require a caller to separately authenticate every submit call.
     pub security: db_security::SecurityGate,
-    /// @emoji 🌿️ The `vcs` seam (see `VersionGraph`'s doc) — `NullVersionGraph`
-    /// (the default) answers every call `Unimplemented` rather than requiring an `Option` layer;
-    /// only `db_engine` behind the `vcs` feature wires a real implementation in.
-    pub version_graph: Arc<V>,
     // 🔀️ dedyn-emit-runtime, O1/R11(c): every real call site (this crate's own `default()`,
     // `db_engine::document_engine_config`'s `other_defaults.emit` spread) constructs `NullEmit` and
     // nothing else — the field is stored but never actually called (`grep '.emit(' this crate: zero
     // hits). Unlike `db_security::SecurityGate` (which genuinely needs `E: Emit` generic so its own
     // tests can inject a `RecordingEmit`), there is no second implementor anywhere in this crate's
     // call graph, so O1 takes the "exactly one impl" branch: concrete `NullEmit`, no `dyn`, no
-    // generic param added to this config type beside `V`.
+    // generic param added to this config type.
     pub emit: Arc<NullEmit>,
     pub preview_ttl_ms: u64,
-    /// @emoji 🧬️ Projection factory: `submit`'s project step registers a fresh
+    /// 🧬️ Projection factory: `submit`'s project step registers a fresh
     /// `db_projection::ProjectionEngine` from this on every call it needs one (see `🔖️Engine`'s doc
     /// for why a factory rather than a stored, already-built engine — `db_projection::
     /// ProjectionEngine::new`'s borrowed-`IndexStorage` + owned-`Vec<E>` shape does not
@@ -1409,7 +1394,7 @@ pub struct ArtifactEngineConfig<V: VersionGraph + 'static = NullVersionGraph> {
     pub projections: Arc<dyn Fn() -> Vec<db_projection::NoProjections> + Send + Sync>,
 }
 
-impl Default for ArtifactEngineConfig<NullVersionGraph> {
+impl Default for ArtifactEngineConfig {
     fn default() -> Self {
         let limits = DbLimits::default();
         let policy = db_security::RoleBasedPolicy::new().with_grant(db_security::Grant::allow("member", &["**"], &[db_security::Action::Read, db_security::Action::Write]));
@@ -1417,25 +1402,23 @@ impl Default for ArtifactEngineConfig<NullVersionGraph> {
             preview_ttl_ms: limits.max_preview_ttl_ms,
             limits,
             security: db_security::SecurityGate::new(policy, db_security::ReplayGuard::new(60_000, 4_096), db_security::BudgetRegistry::new(100_000, 100_000), Arc::new(NullEmit)),
-            version_graph: Arc::new(NullVersionGraph),
             emit: Arc::new(NullEmit),
             projections: Arc::new(Vec::new),
         }
     }
 }
 
-/// @emoji 🎭️ The document authority's real, synchronous pipeline: one open document's WAL,
+/// 🎭️ The document authority's real, synchronous pipeline: one open document's WAL,
 /// materialized state, causal dependency bookkeeping, previews and index backlog — everything
 /// `ArtifactAuthority` (the `db_actor`-mailbox wrapper below) drives in finite process-pool turns.
 /// The engine is moved only between serialized turns; callers can also use it directly wherever a
 /// mailbox is unnecessary (for example this crate's own tests).
-pub struct ArtifactEngine<V: VersionGraph + 'static = NullVersionGraph> {
+pub struct ArtifactEngine {
     document: ArtifactId,
     protocol_document: protocol::ArtifactId,
     storage: Arc<db_storage::DbBackend>,
     wal: db_wal::ArtifactWal,
     state: DocumentState,
-    vcs_head: Option<String>,
     applied: HashMap<String, protocol::MutationEnvelope>,
     applied_receipts: HashMap<String, CommandReceipt>,
     applied_receipt_order: VecDeque<String>,
@@ -1450,10 +1433,10 @@ pub struct ArtifactEngine<V: VersionGraph + 'static = NullVersionGraph> {
     live_queries: HashMap<u64, db_query::LiveQuery>,
     next_live_query_id: u64,
     index_backlog: ArtifactIndexBacklog,
-    config: ArtifactEngineConfig<V>,
+    config: ArtifactEngineConfig,
 }
 
-/// @emoji 🗂️ Index entries of commits that are durable in the WAL but not yet written as index runs.
+/// 🗂️ Index entries of commits that are durable in the WAL but not yet written as index runs.
 /// A commit appends to it; after the commit's receipt was sent the runner writes every full run
 /// (`db_index::RUN_ENTRIES_MAX` entries) through the kinds' owned runs — no listing, level folds
 /// bounded per append — so the four index kinds cost one run write per 64 entries and no Ack waits
@@ -1468,7 +1451,7 @@ struct ArtifactIndexBacklog {
     runs: Option<ArtifactIndexRuns>,
 }
 
-/// @emoji 🗂️ The four kinds' owned runs, listed once on the backlog's first write and kept by its appends; dropped after
+/// 🗂️ The four kinds' owned runs, listed once on the backlog's first write and kept by its appends; dropped after
 /// a failed write, so the next write lists again what storage really holds.
 struct ArtifactIndexRuns {
     commands: db_index::OwnedRuns,
@@ -1477,7 +1460,7 @@ struct ArtifactIndexRuns {
     frontiers: db_index::OwnedRuns,
 }
 
-/// @emoji 🧾️ How far each index kind of one document already records (its newest run's highest
+/// 🧾️ How far each index kind of one document already records (its newest run's highest
 /// command or commit seq): the replay on open re-queues exactly what lies beyond.
 #[derive(Clone, Copy, Default)]
 struct ArtifactIndexWatermarks {
@@ -1487,11 +1470,11 @@ struct ArtifactIndexWatermarks {
     frontiers: u64,
 }
 
-/// @emoji 🛑️ The most entries one index kind may keep waiting for a run write: a `submit` that finds more writes
+/// 🛑️ The most entries one index kind may keep waiting for a run write: a `submit` that finds more writes
 /// them first, and refuses transiently — before any WAL write — while index storage keeps failing.
 const INDEX_BACKLOG_ENTRIES_MAX: usize = 64 * db_index::RUN_ENTRIES_MAX;
 
-/// @emoji 🧾️ How many batch receipts the engine keeps for a whole-batch resend to be answered with its original
+/// 🧾️ How many batch receipts the engine keeps for a whole-batch resend to be answered with its original
 /// receipt; an older resend is answered by the per-envelope dedupe with the current frontier.
 const APPLIED_RECEIPTS_MAX: usize = 1_024;
 
@@ -1527,7 +1510,7 @@ impl ArtifactIndexBacklog {
         self.commands.len().max(self.inverses.len()).max(self.actor_seqs.len()).max(self.frontiers.len())
     }
 
-    /// @emoji 🚚️ Writes this backlog's runs: every full one, or everything including a partial tail
+    /// 🚚️ Writes this backlog's runs: every full one, or everything including a partial tail
     /// (`drain`) before WAL history may be deleted. Each written run leaves the backlog at once, so a
     /// failed write resumes exactly where it stopped, and forgets the owned runs, which the next write
     /// lists again.
@@ -1581,7 +1564,7 @@ impl ArtifactIndexBacklog {
     }
 }
 
-/// @emoji 🧭️ Consistency resolution of a mounted document: its current frontier is the engine's
+/// 🧭️ Consistency resolution of a mounted document: its current frontier is the engine's
 /// own, and a historical frontier is found among the not-yet-written backlog before the index.
 struct ArtifactConsistencyResolver<'a, S: db_storage::IndexStorage> {
     current: Frontier,
@@ -1677,8 +1660,8 @@ impl std::fmt::Debug for ArtifactEngineOpenRejected {
 
 const MAX_RECENT_TOUCHES: usize = 256;
 
-impl<V: VersionGraph + 'static> ArtifactEngine<V> {
-    /// @emoji 🔕️ One close step: progress wakes the caller's waker, a pending writer release parks it
+impl ArtifactEngine {
+    /// 🔕️ One close step: progress wakes the caller's waker, a pending writer release parks it
     /// in the release signal until the backend's terminal notification.
     fn poll_close(&mut self, context: &mut std::task::Context<'_>) -> std::task::Poll<Result<(), DbError>> {
         if self.wal.poll_close(context)?.is_pending() {
@@ -1705,30 +1688,29 @@ impl<V: VersionGraph + 'static> ArtifactEngine<V> {
         self.wal.close_flush(&wal_facet).await
     }
 
-    /// @emoji 🌱️ Retained constructor used by the document authority. Every storage wait remains
+    /// 🌱️ Retained constructor used by the document authority. Every storage wait remains
     /// represented by this future so a pool worker only polls it once before yielding.
-    pub async fn create_retained(document: protocol::ArtifactId, storage: Arc<db_storage::DbBackend>, config: ArtifactEngineConfig<V>, now_ms: u64) -> Result<ArtifactEngine<V>, ArtifactEngineOpenRejected> {
+    pub async fn create_retained(document: protocol::ArtifactId, storage: Arc<db_storage::DbBackend>, config: ArtifactEngineConfig, now_ms: u64) -> Result<ArtifactEngine, ArtifactEngineOpenRejected> {
         let core_id = to_core_document_id(&document).await;
         let wal = db_wal::ArtifactWal::create(&storage.wal().await, core_id.clone(), db_wal::GroupCommitPolicy::default(), now_ms).await.map_err(ArtifactEngineOpenRejected::WalOpen)?;
-        Ok(ArtifactEngine::assemble(document, core_id, storage, wal, None, config).await)
+        Ok(ArtifactEngine::assemble(document, core_id, storage, wal, config).await)
     }
 
-    /// @emoji 🌱️ Creates a brand-new document: a genesis WAL (segment 0) and an empty state.
+    /// 🌱️ Creates a brand-new document: a genesis WAL (segment 0) and an empty state.
     /// Errors `AlreadyExists` if `document` already has WAL segments in `storage`.
     /// Process/test entry-point convenience; live document authorities use `create_retained`.
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) fn create(document: protocol::ArtifactId, storage: Arc<db_storage::DbBackend>, config: ArtifactEngineConfig<V>, now_ms: u64) -> Result<ArtifactEngine<V>, ArtifactEngineOpenRejected> {
+    pub(crate) fn create(document: protocol::ArtifactId, storage: Arc<db_storage::DbBackend>, config: ArtifactEngineConfig, now_ms: u64) -> Result<ArtifactEngine, ArtifactEngineOpenRejected> {
         db_actor::block_on(Self::create_retained(document, storage, config, now_ms))
     }
 
-    /// @emoji 🚑️ Retained materialization as initial ⊕ snapshot ⊕ WAL suffix.
-    pub async fn open_retained(document: protocol::ArtifactId, storage: Arc<db_storage::DbBackend>, config: ArtifactEngineConfig<V>, now_ms: u64) -> Result<(ArtifactEngine<V>, MaterializeReport), ArtifactEngineOpenRejected> {
+    /// 🚑️ Retained materialization as initial ⊕ snapshot ⊕ WAL suffix.
+    pub async fn open_retained(document: protocol::ArtifactId, storage: Arc<db_storage::DbBackend>, config: ArtifactEngineConfig, now_ms: u64) -> Result<(ArtifactEngine, MaterializeReport), ArtifactEngineOpenRejected> {
         let core_id = to_core_document_id(&document).await;
         let mut report = MaterializeReport::default();
 
         let mut state = DocumentState::new();
         let mut applied_head_seq = 0u64;
-        let mut vcs_head = None;
         let snapshot_facet = storage.snapshot().await;
         let snapshot_manager = db_snapshot::SnapshotManager::new(&snapshot_facet).await;
         if let Some((generation, descriptor)) = snapshot_manager.load_latest(&core_id).await? {
@@ -1761,14 +1743,13 @@ impl<V: VersionGraph + 'static> ArtifactEngine<V> {
             }
             let _ = snapshot_cursor.close_step()?;
             applied_head_seq = descriptor.head_seq;
-            vcs_head = descriptor.vcs_head;
         }
         drop(snapshot_manager);
         drop(snapshot_facet);
 
         let (wal, wal_recovery) = db_wal::ArtifactWal::open(&storage.wal().await, core_id.clone(), db_wal::GroupCommitPolicy::default(), now_ms).await.map_err(ArtifactEngineOpenRejected::WalOpen)?;
         report.torn_tail_bytes = wal_recovery.torn_tail_bytes;
-        let mut engine = ArtifactEngine::assemble(document, core_id.clone(), storage.clone(), wal, vcs_head, config).await;
+        let mut engine = ArtifactEngine::assemble(document, core_id.clone(), storage.clone(), wal, config).await;
         engine.state = state;
         engine.frontier.head_seq = applied_head_seq;
 
@@ -1940,13 +1921,13 @@ impl<V: VersionGraph + 'static> ArtifactEngine<V> {
         Ok((engine, report))
     }
 
-    /// @emoji 🚑️ Process/test entry-point convenience; live authorities use `open_retained`.
+    /// 🚑️ Process/test entry-point convenience; live authorities use `open_retained`.
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) fn open(document: protocol::ArtifactId, storage: &Arc<db_storage::DbBackend>, config: ArtifactEngineConfig<V>, now_ms: u64) -> Result<(ArtifactEngine<V>, MaterializeReport), ArtifactEngineOpenRejected> {
+    pub(crate) fn open(document: protocol::ArtifactId, storage: &Arc<db_storage::DbBackend>, config: ArtifactEngineConfig, now_ms: u64) -> Result<(ArtifactEngine, MaterializeReport), ArtifactEngineOpenRejected> {
         db_actor::block_on(Self::open_retained(document, storage.clone(), config, now_ms))
     }
 
-    async fn assemble(protocol_document: protocol::ArtifactId, core_id: ArtifactId, storage: Arc<db_storage::DbBackend>, wal: db_wal::ArtifactWal, vcs_head: Option<String>, config: ArtifactEngineConfig<V>) -> ArtifactEngine<V> {
+    async fn assemble(protocol_document: protocol::ArtifactId, core_id: ArtifactId, storage: Arc<db_storage::DbBackend>, wal: db_wal::ArtifactWal, config: ArtifactEngineConfig) -> ArtifactEngine {
         let preview_budgets = db_preview::PreviewBudgets { default_ttl_ms: config.preview_ttl_ms, max_ttl_ms: config.preview_ttl_ms, ..db_preview::PreviewBudgets::default() };
         ArtifactEngine {
             document: core_id.clone(),
@@ -1954,7 +1935,6 @@ impl<V: VersionGraph + 'static> ArtifactEngine<V> {
             storage,
             wal,
             state: DocumentState::new(),
-            vcs_head,
             applied: HashMap::new(),
             applied_receipts: HashMap::new(),
             applied_receipt_order: VecDeque::new(),
@@ -1973,7 +1953,7 @@ impl<V: VersionGraph + 'static> ArtifactEngine<V> {
         }
     }
 
-    /// @emoji 🧭️ Plans `envelope` against this engine and the batch so far without applying anything: `None` when it is
+    /// 🧭️ Plans `envelope` against this engine and the batch so far without applying anything: `None` when it is
     /// already applied (the per-envelope half of the dedupe law), else its decoded entries — values encoded as the state
     /// stores them — with the regions it touches and the conflicts it meets. Refuses an envelope whose dependency is
     /// neither applied, nor earlier in `batch_ids`, nor folded by a durable group decision.
@@ -1993,7 +1973,7 @@ impl<V: VersionGraph + 'static> ArtifactEngine<V> {
         Ok(Some(PlannedEntries { entries, touched, conflicts }))
     }
 
-    /// @emoji ✍️ Applies one planned envelope to the document state and records it as applied.
+    /// ✍️ Applies one planned envelope to the document state and records it as applied.
     async fn commit_one(&mut self, envelope: &protocol::MutationEnvelope, entries: Vec<(String, Option<Vec<u8>>)>) -> Result<(), DbError> {
         self.state.apply_entries(&envelope.mutation_id, entries).await?;
         self.applied.insert(envelope.mutation_id.0.clone(), envelope.clone());
@@ -2001,13 +1981,13 @@ impl<V: VersionGraph + 'static> ArtifactEngine<V> {
         Ok(())
     }
 
-    /// @emoji 👁️ Whether `dependency` names an operation a committed durable group decision folded: the
+    /// 👁️ Whether `dependency` names an operation a committed durable group decision folded: the
     /// decision's edit itself, or `<edit>#<position>`.
     fn names_durable_group_operation(&self, dependency: &str) -> bool {
         self.durable_group_edit_ids.contains(dependency) || dependency.rsplit_once('#').is_some_and(|(edit, position)| !position.is_empty() && position.bytes().all(|byte| byte.is_ascii_digit()) && self.durable_group_edit_ids.contains(edit))
     }
 
-    /// @emoji 🎯️ Keeps `envelope`'s declared target while its touch is in the recent commit window, so a later
+    /// 🎯️ Keeps `envelope`'s declared target while its touch is in the recent commit window, so a later
     /// concurrent write can be graded against it; targets that left the window are dropped with it.
     fn remember_target(&mut self, envelope: &protocol::MutationEnvelope) {
         if self.recent_targets.len() >= MAX_RECENT_TOUCHES {
@@ -2017,8 +1997,8 @@ impl<V: VersionGraph + 'static> ArtifactEngine<V> {
         self.recent_targets.insert(envelope.mutation_id.0.clone(), envelope.target.clone());
     }
 
-    /// @emoji 🚦️ The full command pipeline: admit → dedupe → base-resolve/deps → authz → validate →
-    /// conflict → execute → WAL append → durability → publish → project → vcs →
+    /// 🚦️ The full command pipeline: admit → dedupe → base-resolve/deps → authz → validate →
+    /// conflict → execute → WAL append → durability → publish → project →
     /// preview-reconcile → live-query notify → receipt.
     // 🔒️ `batch` is taken by value deliberately, not just because the current body happens not to
     // move it: submitting a batch is the one place in this API where the caller's copy is
@@ -2188,23 +2168,6 @@ impl<V: VersionGraph + 'static> ArtifactEngine<V> {
         self.previews.reconcile_with(&db_preview::LandedCommand { frontier: new_frontier.clone(), touched: touched_all }, &db_preview::DbConflictOracle::default());
         self.head_edit_id = Some(command_id.clone());
 
-        // vcs (best-effort: this crate never blocks a commit on the vcs seam's outcome; a disabled
-        // vcs feature supplies `NullVersionGraph`, whose `Unimplemented` is tolerated here)
-        for (envelope, _) in &newly_applied {
-            match self
-                .config
-                .version_graph
-                .record_change(
-                    &self.document,
-                    ChangeRecord { parent: None, content_hash: self.state.content_hash().await?, author: to_core_actor_id(&envelope.actor).await, message: format!("operation {}", envelope.mutation_id.0), timestamp_ms: now_ms },
-                )
-                .await
-            {
-                Ok(_) | Err(DbError::Unimplemented(_)) => {}
-                Err(other) => return Err(other),
-            }
-        }
-
         // live-query notify
         // 🩹️ R13: was `let _ = self.refresh_live_queries();` — silently dropped the future, so
         // this notify step never actually ran. `.await`ed now; the `Vec<(u64, QueryDiff)>` result
@@ -2218,7 +2181,7 @@ impl<V: VersionGraph + 'static> ArtifactEngine<V> {
         Ok(receipt)
     }
 
-    /// @emoji 🧾️ Keeps `receipt` for a whole-batch resend, forgetting the oldest beyond [`APPLIED_RECEIPTS_MAX`].
+    /// 🧾️ Keeps `receipt` for a whole-batch resend, forgetting the oldest beyond [`APPLIED_RECEIPTS_MAX`].
     fn remember_receipt(&mut self, receipt: &CommandReceipt) {
         if self.applied_receipts.insert(receipt.command_id.0.clone(), receipt.clone()).is_none() {
             self.applied_receipt_order.push_back(receipt.command_id.0.clone());
@@ -2230,7 +2193,7 @@ impl<V: VersionGraph + 'static> ArtifactEngine<V> {
         }
     }
 
-    /// @emoji 🗂️ Writes every full index run the commits so far queued — their WAL records are the durable truth
+    /// 🗂️ Writes every full index run the commits so far queued — their WAL records are the durable truth
     /// ([`ArtifactIndexBacklog`]). The document runner calls it after a commit's receipt was sent, so no Ack waits
     /// for index I/O; `submit` calls it first only when the backlog outgrew [`INDEX_BACKLOG_ENTRIES_MAX`].
     pub async fn maintain_index(&mut self) -> Result<(), DbError> {
@@ -2238,7 +2201,7 @@ impl<V: VersionGraph + 'static> ArtifactEngine<V> {
         self.index_backlog.flush(&index_facet, &self.document, false).await
     }
 
-    /// @emoji ↩️ The inverse-undo pipeline: looks up `target`'s already-applied envelope, flips its
+    /// ↩️ The inverse-undo pipeline: looks up `target`'s already-applied envelope, flips its
     /// `inverse` into a compensating envelope's `diff` (and vice versa, so the compensating
     /// envelope's OWN inverse can re-undo the undo), and submits it as a fresh, ordinary command
     /// depending on `target` — undo is just another commit, not a WAL rewrite. This is the crate's
@@ -2406,7 +2369,7 @@ impl<V: VersionGraph + 'static> ArtifactEngine<V> {
     }
 
     //#region 🔖️Snapshot
-    /// @emoji 📸️ Publishes a new `db_snapshot` generation of the whole current `DocumentState` —
+    /// 📸️ Publishes a new `db_snapshot` generation of the whole current `DocumentState` —
     /// new this revision; the counterpart `open` reads back to accelerate materialization.
     pub async fn snapshot_now(&self, now_ms: u64) -> Result<u64, DbError> {
         let cancelled = Arc::new(std::sync::atomic::AtomicBool::new(false));
@@ -2421,7 +2384,6 @@ impl<V: VersionGraph + 'static> ArtifactEngine<V> {
             epoch: self.frontier.epoch,
             chain_hash: self.frontier.chain_hash,
             protocol_version: 1,
-            vcs_head: self.vcs_head.clone(),
             base_pack_hash: None,
             roots: vec![page.hash],
             created_at_ms: now_ms,
@@ -2431,7 +2393,7 @@ impl<V: VersionGraph + 'static> ArtifactEngine<V> {
     //#endregion 🔖️Snapshot
 
     //#region 🔖️Query
-    /// @emoji 🔎️ One-shot query over the document's current materialized state, resolved under
+    /// 🔎️ One-shot query over the document's current materialized state, resolved under
     /// `consistency` via `db_index`'s `CommitIndex`/`FrontierIndex`. `StateQuerySource` always reads
     /// the CURRENT canonical state regardless of what `consistency` resolved to — a true
     /// point-in-time replay is `db_engine`'s documented deferred extension (see its own module doc).
@@ -2458,7 +2420,7 @@ impl<V: VersionGraph + 'static> ArtifactEngine<V> {
         db_query::execute(&query, &source, None::<&db_query::NoFullTextLookup>, &db_query::QueryLimits::default(), &mut control).await
     }
 
-    /// @emoji 📡️ Registers a live query, returning its subscription id — new this revision.
+    /// 📡️ Registers a live query, returning its subscription id — new this revision.
     pub async fn subscribe(&mut self, spec: db_query::LiveQuerySpec) -> u64 {
         let id = self.next_live_query_id;
         self.next_live_query_id += 1;
@@ -2470,7 +2432,7 @@ impl<V: VersionGraph + 'static> ArtifactEngine<V> {
         self.live_queries.remove(&id);
     }
 
-    /// @emoji 📡️ Live-query notify: re-evaluates every registered live query and returns what
+    /// 📡️ Live-query notify: re-evaluates every registered live query and returns what
     /// changed. Called automatically at the end of `submit`; also callable directly.
     pub async fn refresh_live_queries(&mut self) -> Vec<(u64, db_query::QueryDiff)> {
         let source = StateQuerySource(&self.state.values);
@@ -2492,7 +2454,7 @@ impl<V: VersionGraph + 'static> ArtifactEngine<V> {
     //#endregion 🔖️Query
 
     //#region 🔖️Advisory
-    /// @emoji 🔮️ Advisory-only, real `db_conflict::ConflictDetector` integration: runs `batch`'s
+    /// 🔮️ Advisory-only, real `db_conflict::ConflictDetector` integration: runs `batch`'s
     /// envelopes' touched regions against recent commit history WITHOUT executing anything, using
     /// the family's real bloom-filter/kind-matrix machinery — a caller (e.g. a UI) can call this
     /// before `submit` to preview likely conflicts. `submit`'s own returned `ConflictRecord`s stay
@@ -2511,7 +2473,7 @@ impl<V: VersionGraph + 'static> ArtifactEngine<V> {
     //#endregion 🔖️Advisory
 
     //#region 🔖️Preview
-    /// @emoji 🌫️ Publishes a new preview overlaying the CURRENT committed state — never durable
+    /// 🌫️ Publishes a new preview overlaying the CURRENT committed state — never durable
     /// (never touches the WAL), per the contract's preview law. Backed by a real
     /// `db_preview::PreviewStore` this revision (previously a local, minimal stand-in).
     pub async fn publish_preview(&mut self, entries: &[(String, Option<serde_json::Value>)], now_ms: u64) -> Result<db_preview::PreviewId, DbError> {
@@ -2531,7 +2493,7 @@ impl<V: VersionGraph + 'static> ArtifactEngine<V> {
         self.previews.publish(db_preview::PublishPreviewRequest { document: self.document.clone(), actor: ActorId("preview".to_string()), key: format!("preview-{now_ms}"), base: self.frontier.clone(), envelope, touched, ttl_ms: None, now_ms })
     }
 
-    /// @emoji 🌫️ The value a preview would show at `path`: the preview's own diff if it touches
+    /// 🌫️ The value a preview would show at `path`: the preview's own diff if it touches
     /// `path`, else falling through to the committed state.
     pub async fn preview_get(&self, id: &db_preview::PreviewId, path: &str) -> Result<Option<db_query::QueryBytes>, DbError> {
         let preview = self.previews.get(id).ok_or_else(|| DbError::NotFound(format!("preview {id} not found")))?;
@@ -2579,7 +2541,7 @@ impl<V: VersionGraph + 'static> ArtifactEngine<V> {
 //#endregion 🔖️Engine
 
 //#region 🔖️QuerySource
-/// @emoji 🚰️ The `db_query::QuerySource` this crate supplies over its own `DocumentState`: one row
+/// 🚰️ The `db_query::QuerySource` this crate supplies over its own `DocumentState`: one row
 /// per stored path, `{"path": <path>, "value": <text-or-bytes>}`.
 struct StateQuerySource<'a>(&'a db_state::RetainedStateMap);
 
@@ -2841,7 +2803,7 @@ impl<'pages> StatePageDecodeCursor<'pages> {
     }
 }
 
-/// @emoji 📋️ What `ArtifactEngine::open` did to materialize state — "initial ⊕ snapshot ⊕ WAL
+/// 📋️ What `ArtifactEngine::open` did to materialize state — "initial ⊕ snapshot ⊕ WAL
 /// suffix" made observable. New this revision (was `db_wal::WalRecoveryReport` alone before).
 #[derive(Clone, Debug, Default)]
 pub struct MaterializeReport {
@@ -4554,7 +4516,7 @@ impl Drop for HistoryReplayFuture {
 //#endregion 🔖️HistoryReplay
 
 //#region 🔖️Actor
-/// @emoji 📨️ A `Send` message crossing `ArtifactAuthority`'s bounded mailbox.
+/// 📨️ A `Send` message crossing `ArtifactAuthority`'s bounded mailbox.
 pub enum ArtifactMessage {
     AppendDurableGroupDecision {
         record: store::durable_group::DurableOwnedGroupJournalRecordV1,
@@ -4582,7 +4544,7 @@ pub enum ArtifactMessage {
     CheckpointPublicationSnapshot {
         reply: db_actor::ReplySender<CheckpointPublicationSnapshot>,
     },
-    /// @emoji 🔎️ Additive this revision — `db_engine`'s current `ArtifactHandle::query` goes
+    /// 🔎️ Additive this revision — `db_engine`'s current `ArtifactHandle::query` goes
     /// through `Query { path, .. }` above and never constructs this variant, so adding it is safe.
     RunQuery {
         query: db_query::Query,
@@ -4609,7 +4571,7 @@ pub enum ArtifactMessage {
     },
 }
 
-/// @emoji 🎭️ A live handle to one document's authority actor. Each admitted mailbox message wakes
+/// 🎭️ A live handle to one document's authority actor. Each admitted mailbox message wakes
 /// one finite `WorkerPool` turn; no job waits for the next message and no authority owns an OS
 /// thread. `db_state::PMap` uses `Arc`-shared HAMT nodes, making the engine movable between turns
 /// without sharing mutable actor state or weakening its single-consumer mailbox semantics.
@@ -4738,7 +4700,7 @@ impl store::durable_group::DurableOwnedGroupJournalCommitV1 for ArtifactDurableG
 }
 
 /// 🧳️ The runner owns its engine **boxed**, and every future it drives yields the box, never the
-/// engine itself. `ArtifactEngine<VersionGraphs>` measures ~529 KB by value (read off the
+/// engine itself. `ArtifactEngine` measured ~529 KB by value (read off the
 /// two `catch_unwind` shim frames of ticket 26/09/18 slice HS1's crash reports), and `run_turn`
 /// carries each turn's result out through `std::panic::catch_unwind` → `do_call` → its own frame. A
 /// debug build gives every one of those moves its own stack slot, so a by-value engine priced
@@ -4746,16 +4708,16 @@ impl store::durable_group::DurableOwnedGroupJournalCommitV1 for ArtifactDurableG
 /// that own 2 MiB. Moving a pointer instead is what keeps the hub's first document socket from
 /// aborting the process; see `📓️hs1-hub-pool-worker-stack-overflow.md`.
 #[cfg(not(target_arch = "wasm32"))]
-type ArtifactBuildFuture<V> = Pin<Box<dyn Future<Output = Result<Box<ArtifactEngine<V>>, ArtifactEngineOpenRejected>> + Send + 'static>>;
+type ArtifactBuildFuture = Pin<Box<dyn Future<Output = Result<Box<ArtifactEngine>, ArtifactEngineOpenRejected>> + Send + 'static>>;
 
 #[cfg(not(target_arch = "wasm32"))]
-type ArtifactTurnFuture<V> = Pin<Box<dyn Future<Output = Box<ArtifactEngine<V>>> + Send + 'static>>;
+type ArtifactTurnFuture = Pin<Box<dyn Future<Output = Box<ArtifactEngine>> + Send + 'static>>;
 
 #[cfg(not(target_arch = "wasm32"))]
-enum ArtifactTurn<V: VersionGraph + 'static> {
-    Future(ArtifactTurnFuture<V>),
-    CloseFlush(ArtifactTurnFuture<V>),
-    History { engine: Option<Box<ArtifactEngine<V>>>, replay: HistoryReplayFuture, reply: Option<db_actor::ReplySender<Result<ArtifactHistoryView, DbError>>> },
+enum ArtifactTurn {
+    Future(ArtifactTurnFuture),
+    CloseFlush(ArtifactTurnFuture),
+    History { engine: Option<Box<ArtifactEngine>>, replay: HistoryReplayFuture, reply: Option<db_actor::ReplySender<Result<ArtifactHistoryView, DbError>>> },
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -4856,7 +4818,7 @@ impl Drop for ArtifactRunnerHandoff {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl ArtifactRunnerHandoff {
-    /// @emoji ⏲️ Arms the next bounded-backoff re-poll of a faulted close on the pool timer wheel. The
+    /// ⏲️ Arms the next bounded-backoff re-poll of a faulted close on the pool timer wheel. The
     /// timer admits exactly one re-poll through the retirement hook; stray wakes and coalesced
     /// maintenance requests never re-poll a faulted close.
     fn arm_close_retry(self: &Arc<Self>) {
@@ -4914,7 +4876,7 @@ impl ArtifactRunnerHandoff {
         Some(ArtifactCloseRetryProgress { state: retry.state, attempts: retry.attempts, limit: ARTIFACT_CLOSE_RETRY_LIMIT })
     }
 
-    /// @emoji 🔂️ Grants an exhausted or cancelled faulted close a fresh retry budget and admits one re-poll now.
+    /// 🔂️ Grants an exhausted or cancelled faulted close a fresh retry budget and admits one re-poll now.
     fn readmit_close_retry(&self) -> bool {
         if self.close_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none() {
             return false;
@@ -4931,7 +4893,7 @@ impl ArtifactRunnerHandoff {
         true
     }
 
-    /// @emoji 🛑️ Stops automatic re-polls of a faulted close; the exact runner stays retained for re-admission.
+    /// 🛑️ Stops automatic re-polls of a faulted close; the exact runner stays retained for re-admission.
     fn cancel_close_retry(&self) -> bool {
         let mut retry = self.close_retry.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         if !matches!(retry.state, ArtifactCloseRetryState::Scheduled | ArtifactCloseRetryState::Admitted) {
@@ -5165,14 +5127,14 @@ pub struct ArtifactRunnerTerminalJob {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-struct ArtifactRunner<V: VersionGraph + 'static> {
+struct ArtifactRunner {
     pool: Arc<semio_framework_async::WorkerPool>,
     address: db_actor::Address<ArtifactMessage>,
     receiver: db_actor::Receiver<ArtifactMessage>,
     generation: u64,
-    builder: std::sync::Mutex<Option<ArtifactBuildFuture<V>>>,
-    engine: std::sync::Mutex<Option<Box<ArtifactEngine<V>>>>,
-    turn: std::sync::Mutex<Option<ArtifactTurn<V>>>,
+    builder: std::sync::Mutex<Option<ArtifactBuildFuture>>,
+    engine: std::sync::Mutex<Option<Box<ArtifactEngine>>>,
+    turn: std::sync::Mutex<Option<ArtifactTurn>>,
     ready: std::sync::Mutex<Option<db_actor::ReplySender<Result<(), ArtifactEngineOpenRejected>>>>,
     done: std::sync::Mutex<Option<db_actor::ReplySender<()>>>,
     handoff: Arc<ArtifactRunnerHandoff>,
@@ -5184,18 +5146,18 @@ struct ArtifactRunner<V: VersionGraph + 'static> {
     terminal: std::sync::atomic::AtomicBool,
 }
 
-/// @emoji ⏱️ How long one worker turn of a document authority keeps re-polling a self-woken turn
+/// ⏱️ How long one worker turn of a document authority keeps re-polling a self-woken turn
 /// future before it hands the worker back to the pool.
 #[cfg(not(target_arch = "wasm32"))]
 const ARTIFACT_RUNNER_TURN_MICROS: u64 = 2_000;
 
 #[cfg(not(target_arch = "wasm32"))]
-struct ArtifactRunnerPoll<V: VersionGraph + 'static> {
-    runner: Arc<ArtifactRunner<V>>,
+struct ArtifactRunnerPoll {
+    runner: Arc<ArtifactRunner>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl<V: VersionGraph + 'static> Drop for ArtifactRunnerPoll<V> {
+impl Drop for ArtifactRunnerPoll {
     fn drop(&mut self) {
         use std::sync::atomic::Ordering;
         loop {
@@ -5222,13 +5184,13 @@ impl<V: VersionGraph + 'static> Drop for ArtifactRunnerPoll<V> {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-struct ArtifactRunnerWake<V: VersionGraph + 'static> {
-    runner: std::sync::Weak<ArtifactRunner<V>>,
+struct ArtifactRunnerWake {
+    runner: std::sync::Weak<ArtifactRunner>,
     generation: u64,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl<V: VersionGraph + 'static> std::task::Wake for ArtifactRunnerWake<V> {
+impl std::task::Wake for ArtifactRunnerWake {
     fn wake(self: Arc<Self>) {
         self.wake_by_ref();
     }
@@ -5243,7 +5205,7 @@ impl<V: VersionGraph + 'static> std::task::Wake for ArtifactRunnerWake<V> {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl<V: VersionGraph + 'static> ArtifactRunner<V> {
+impl ArtifactRunner {
     fn close_one(self: &Arc<Self>) -> bool {
         use std::sync::atomic::Ordering;
         self.cancelled.store(true, Ordering::Release);
@@ -5503,7 +5465,7 @@ impl<V: VersionGraph + 'static> ArtifactRunner<V> {
         }
     }
 
-    fn start_turn(engine: Box<ArtifactEngine<V>>, message: ArtifactMessage) -> ArtifactTurn<V> {
+    fn start_turn(engine: Box<ArtifactEngine>, message: ArtifactMessage) -> ArtifactTurn {
         match message {
             ArtifactMessage::History { operation_generation, cancelled, reservation, reply } => {
                 let replay = engine.history_replay(operation_generation, cancelled, reservation);
@@ -5562,7 +5524,7 @@ impl<V: VersionGraph + 'static> ArtifactRunner<V> {
         }
     }
 
-    /// @emoji 🔁️ Keeps polling in this worker turn when the future woke itself while it was being
+    /// 🔁️ Keeps polling in this worker turn when the future woke itself while it was being
     /// polled (a cooperative yield, a storage step that completed inline) and the turn budget
     /// remains: every such wake used to cost a full worker-pool round trip.
     fn repoll_within_turn(&self, turn_ends: std::time::Instant) -> bool {
@@ -5764,9 +5726,9 @@ impl<V: VersionGraph + 'static> ArtifactRunner<V> {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl ArtifactAuthority {
-    /// @emoji 🚀️ Builds the engine on the injected pool and resolves only after construction, so
+    /// 🚀️ Builds the engine on the injected pool and resolves only after construction, so
     /// a caller never receives an authority whose engine failed to open.
-    pub async fn spawn<V: VersionGraph + 'static, F: Future<Output = Result<Box<ArtifactEngine<V>>, ArtifactEngineOpenRejected>> + Send + 'static>(
+    pub async fn spawn<F: Future<Output = Result<Box<ArtifactEngine>, ArtifactEngineOpenRejected>> + Send + 'static>(
         pool: Arc<semio_framework_async::WorkerPool>,
         build: impl FnOnce() -> F + Send + 'static,
         capacities: MailboxCapacities,
@@ -5778,7 +5740,7 @@ impl ArtifactAuthority {
     /// 🧵️ Mounts an authority under an already-retained process-pool use. Database document
     /// mounts pass their exact use cell through this boundary, so no second lifecycle admission
     /// can conflict after the catalog transaction has begun.
-    pub(crate) async fn spawn_with_pool_use<V: VersionGraph + 'static, F: Future<Output = Result<Box<ArtifactEngine<V>>, ArtifactEngineOpenRejected>> + Send + 'static>(
+    pub(crate) async fn spawn_with_pool_use<F: Future<Output = Result<Box<ArtifactEngine>, ArtifactEngineOpenRejected>> + Send + 'static>(
         pool: Arc<semio_framework_async::WorkerPool>,
         pool_use: Arc<semio_framework_async::WorkerPoolUse>,
         build: impl FnOnce() -> F + Send + 'static,
@@ -5906,7 +5868,7 @@ impl ArtifactAuthority {
         Ok(())
     }
 
-    /// @emoji 📨️ Nonblocking retained submit cursor used by `db_engine::SubmitFuture`.
+    /// 📨️ Nonblocking retained submit cursor used by `db_engine::SubmitFuture`.
     pub fn submit_retained(&self, batch: CommandBatch, options: SubmitOptions, now_ms: u64) -> db_actor::AskFuture<ArtifactMessage, Result<CommandReceipt, DbError>> {
         self.address.ask(Priority::Command, |reply| ArtifactMessage::Submit { batch, options, now_ms, reply })
     }
@@ -6021,7 +5983,7 @@ impl ArtifactAuthority {
 
     /// 🚪️ Requests closure and advances one finite retained runner turn. The authority remains
     /// caller-owned until the returned terminal acknowledgement is `true`.
-    /// @emoji 🏁️ Takes the one signal that resolves once this authority's runner is terminal — its WAL
+    /// 🏁️ Takes the one signal that resolves once this authority's runner is terminal — its WAL
     /// closed and its writer released — so a successor mount of the same document can wait for it.
     pub fn take_terminal_signal(&self) -> Option<db_actor::ReplyReceiver<()>> {
         self.done.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take()

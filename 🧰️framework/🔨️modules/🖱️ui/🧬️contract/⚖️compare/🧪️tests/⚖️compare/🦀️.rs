@@ -28,7 +28,7 @@ fn retained_component_compare_frame_storage_matches_exact_bounded_domains() {
     for position in [2 * UI_TEXT_MAX_BYTES + 1, usize::from(u16::MAX) + 1, usize::MAX] {
         assert!(ValueFrame::checked_position(position).is_err());
     }
-    eprintln!("[DEBUG] comparison-frame bytes={} depth={} cursor={}", size_of::<ValueFrame>(), UI_VALUE_NESTING_DEPTH, size_of::<UiComponentComparisonCursor>());
+    eprintln!("comparison-frame bytes={} depth={} cursor={}", size_of::<ValueFrame>(), UI_VALUE_NESTING_DEPTH, size_of::<UiComponentComparisonCursor>());
 }
 fn close(owner: &mut UiComponentCompare) {
     for _ in 0..500_000 {
@@ -75,7 +75,6 @@ fn retained_component_compare_matches_all_native_variants_and_hostile_values() {
             assert_eq!(compare(left, right, grant.as_u64().unwrap() as usize), expected);
         }
     }
-    eprintln!("[DEBUG] retained-component-compare variants=18 hostile-values=7 byte-grants=1,64,4096 exact-serde=true");
 }
 
 #[test]
@@ -110,6 +109,5 @@ fn retained_component_compare_cancellation_and_arena_contention_keep_both_roots(
     holder.join().unwrap();
     close(&mut owner);
     assert!(blocked);
-    eprintln!("[DEBUG] retained-component-compare cancel-frontiers=7 contended-owner-preserved=true no-wait=true");
 }
 //#endregion 🧪️TypedComparison

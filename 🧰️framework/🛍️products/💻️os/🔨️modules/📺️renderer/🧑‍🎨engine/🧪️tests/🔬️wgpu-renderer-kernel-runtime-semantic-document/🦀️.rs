@@ -1310,7 +1310,6 @@ fn kernel_pool_future_releases_its_owner_lock_before_polling_and_resumes_every_w
         let task = KernelPoolFuture::spawn(crate::renderer_worker_pool(), semio_framework_async::Lane::Interactive, trace_future(pending, output));
         let actual = input.recv_timeout(std::time::Duration::from_secs(2)).expect("a pending future must release its lock and resume its admitted wake");
         assert_eq!(actual, oracle, "kernel trace {}", case["id"]);
-        eprintln!("[DEBUG] kernel-pool-future case={} polls={:?}", case["id"], actual);
         drop(task);
     }
 }
@@ -1399,6 +1398,5 @@ fn kernel_response_delivery_never_parks_without_a_wake() {
             boundary,
         );
         assert_eq!(actual.0, oracle.0, "delivery {boundary}");
-        eprintln!("[DEBUG] kernel-response boundary={boundary} value={} wakes={}", actual.0, actual.1);
     }
 }

@@ -13,7 +13,7 @@ use crate::async_::{AsyncPackSource, CancellationToken, LoadPriority, ReadReques
 use crate::{ByteRange, PackError};
 use semio_framework_async::WorkerPool;
 
-/// @emoji 📨️ One range-request against `url`, optionally revalidated against a previously seen
+/// 📨️ One range-request against `url`, optionally revalidated against a previously seen
 /// etag via `if_range_etag`.
 pub struct RangeRequest {
     pub url: String,
@@ -21,7 +21,7 @@ pub struct RangeRequest {
     pub if_range_etag: Option<String>,
 }
 
-/// @emoji 📬️ The bytes a `RangeTransport` fetched for a `RangeRequest`, plus the metadata needed
+/// 📬️ The bytes a `RangeTransport` fetched for a `RangeRequest`, plus the metadata needed
 /// for retry/revalidation decisions upstream.
 pub struct RangeResponse {
     pub bytes: Vec<u8>,
@@ -30,7 +30,7 @@ pub struct RangeResponse {
     pub range_satisfied: bool,
 }
 
-/// @emoji 🔌️ The injection seam: no concrete HTTP client type may appear in any public
+/// 🔌️ The injection seam: no concrete HTTP client type may appear in any public
 /// signature outside an implementor of this trait. Browser `fetch`, native `ureq`, or a test
 /// double all implement this identically.
 // 🚪️ R8: plain AFIT — single genuinely-`async fn` method, zero `dyn RangeTransport` anywhere in
@@ -42,7 +42,7 @@ pub trait RangeTransport: Send + Sync {
 //#endregion 🔖️Transport
 
 //#region 🔖️Source
-/// @emoji ♻️ Retry/backoff tuning for `HttpPackSource`; transient transport failures are
+/// ♻️ Retry/backoff tuning for `HttpPackSource`; transient transport failures are
 /// retried up to `max_retries` times with exponentially growing delay starting at
 /// `initial_backoff`, capped at `max_backoff`.
 #[derive(Clone, Debug)]
@@ -60,7 +60,7 @@ impl Default for RetryPolicy {
     }
 }
 
-/// @emoji ⏱️ The process runtime used for retry deadlines. The clock must use the same
+/// ⏱️ The process runtime used for retry deadlines. The clock must use the same
 /// millisecond epoch supplied to `WorkerPool::pump` on wasm; native callers can use `native`.
 #[derive(Clone)]
 pub struct RetryRuntime {
@@ -69,12 +69,12 @@ pub struct RetryRuntime {
 }
 
 impl RetryRuntime {
-    /// @emoji 🧩️ Injects the process pool and its matching monotonic clock.
+    /// 🧩️ Injects the process pool and its matching monotonic clock.
     pub fn new(pool: Arc<WorkerPool>, now_ms: Arc<dyn Fn() -> u64 + Send + Sync>) -> Self {
         Self { pool, now_ms }
     }
 
-    /// @emoji 🖥️ Binds retry deadlines to a native pool's monotonic clock.
+    /// 🖥️ Binds retry deadlines to a native pool's monotonic clock.
     #[cfg(not(target_arch = "wasm32"))]
     pub fn native(pool: Arc<WorkerPool>) -> Self {
         let clock_pool = pool.clone();
@@ -88,11 +88,11 @@ impl RetryRuntime {
     }
 }
 
-/// @emoji 🚦️ `u64::MAX` sentinel meaning "length not yet observed" for `SharedState::known_len`,
+/// 🚦️ `u64::MAX` sentinel meaning "length not yet observed" for `SharedState::known_len`,
 /// since `AtomicU64` has no built-in `Option`.
 const LEN_UNKNOWN: u64 = u64::MAX;
 
-/// @emoji 🗄️ State shared between the public `HttpPackSource` (which must answer
+/// 🗄️ State shared between the public `HttpPackSource` (which must answer
 /// `AsyncPackSource::len` synchronously) and the private `InnerSource` living inside its
 /// internal `ReadScheduler` (which performs the actual retrying, etag-revalidating physical
 /// fetches and is the only thing that ever observes a fresh etag/length from the transport).
@@ -111,7 +111,7 @@ impl SharedState {
         Self { last_etag: Mutex::new(None), known_len: AtomicU64::new(LEN_UNKNOWN) }
     }
 
-    /// @emoji 📏️ The best length known so far, or `0` if nothing has been observed yet — mirrors
+    /// 📏️ The best length known so far, or `0` if nothing has been observed yet — mirrors
     /// `AsyncPackSource::len`'s infallible-`u64` contract.
     // 🚫️async: no suspension point — `AsyncPackSource::len` (see `⏳️async/🦀️.rs`) is
     // deliberately sync by contract, so every path reaching it must stay sync too.
@@ -123,7 +123,7 @@ impl SharedState {
     }
 }
 
-/// @emoji 🔧️ The `AsyncPackSource` actually wrapped by `HttpPackSource`'s internal
+/// 🔧️ The `AsyncPackSource` actually wrapped by `HttpPackSource`'s internal
 /// `ReadScheduler`: owns the transport and retry policy, performs one logical range fetch per
 /// `read_at` (revalidating against `shared`'s last-seen etag, retrying transient failures with
 /// backoff), and updates `shared` from every response it observes.
@@ -136,7 +136,7 @@ struct InnerSource<T: RangeTransport> {
 }
 
 impl<T: RangeTransport> InnerSource<T> {
-    /// @emoji 🔁️ True iff `error` represents a transient condition worth retrying (currently:
+    /// 🔁️ True iff `error` represents a transient condition worth retrying (currently:
     /// any `PackError::Io`, which is how transport failures are surfaced across the trait
     /// boundary).
     // 🚫️async: the only call site is the `match` guard in `fetch_with_retry` below
@@ -146,7 +146,7 @@ impl<T: RangeTransport> InnerSource<T> {
         matches!(error, PackError::Io(_))
     }
 
-    /// @emoji ⏱️ The backoff delay before retry attempt `attempt` (0-indexed), doubling from
+    /// ⏱️ The backoff delay before retry attempt `attempt` (0-indexed), doubling from
     /// `initial_backoff` and capped at `max_backoff`.
     async fn backoff_for(&self, attempt: u32) -> Duration {
         let scale = 1u64.checked_shl(attempt).unwrap_or(u64::MAX);
@@ -155,7 +155,7 @@ impl<T: RangeTransport> InnerSource<T> {
         Duration::from_millis(delay).min(self.retry_policy.max_backoff)
     }
 
-    /// @emoji 📡️ Performs one logical range fetch: revalidates with the cached etag (if any),
+    /// 📡️ Performs one logical range fetch: revalidates with the cached etag (if any),
     /// retries transient failures per `retry_policy`, and remembers the response's etag/length
     /// in `shared` for next time.
     async fn fetch_with_retry(&self, range: ByteRange) -> Result<RangeResponse, PackError> {
@@ -203,7 +203,7 @@ impl<T: RangeTransport> AsyncPackSource for InnerSource<T> {
     }
 }
 
-/// @emoji 🌐️ An `AsyncPackSource` backed by HTTP range requests through an injected
+/// 🌐️ An `AsyncPackSource` backed by HTTP range requests through an injected
 /// `RangeTransport`. Caches the last-seen `etag` and revalidates on every subsequent fetch;
 /// retries transient transport failures with exponential backoff; coalesces/dedups concurrent
 /// overlapping reads through an internal `crate::async_::ReadScheduler` wrapping an `InnerSource`.
@@ -213,7 +213,7 @@ pub struct HttpPackSource<T: RangeTransport> {
 }
 
 impl<T: RangeTransport> HttpPackSource<T> {
-    /// @emoji 🆕️ A source fetching `url` through `transport`, with default retry policy and no
+    /// 🆕️ A source fetching `url` through `transport`, with default retry policy and no
     /// known length or etag yet.
     // 🚫️async: no suspension point — construction only; kept sync so existing plain-sync test
     // call sites (`let source = HttpPackSource::new(...);`, unawaited) keep compiling.
@@ -221,7 +221,7 @@ impl<T: RangeTransport> HttpPackSource<T> {
         Self::with_retry_policy(url, transport, RetryPolicy::default(), runtime)
     }
 
-    /// @emoji 🆕️ As `new`, but with an explicit `RetryPolicy`.
+    /// 🆕️ As `new`, but with an explicit `RetryPolicy`.
     // 🚫️async: no suspension point — same constructor reasoning as `new` above.
     pub fn with_retry_policy(url: String, transport: T, retry_policy: RetryPolicy, runtime: RetryRuntime) -> Self {
         let shared = Arc::new(SharedState::new());
@@ -248,7 +248,7 @@ impl<T: RangeTransport> AsyncPackSource for HttpPackSource<T> {
 //#region 🔖️Ureq
 #[cfg(feature = "ureq")]
 mod ureq_transport {
-    //! @emoji 🚚️ Native `RangeTransport` impl over the blocking `ureq` HTTP client, gated
+    //! 🚚️ Native `RangeTransport` impl over the blocking `ureq` HTTP client, gated
     //! behind the `ureq` feature so wasm/browser builds of the facade stay lean.
     use super::{RangeRequest, RangeResponse, RangeTransport};
     use crate::PackError;
@@ -257,7 +257,7 @@ mod ureq_transport {
     use std::sync::Arc;
 
     //#region 🔖️OneshotBridge
-    /// @emoji 🌉️ Shared state behind [`OneshotSender`]/[`OneshotReceiver`] — mirrors
+    /// 🌉️ Shared state behind [`OneshotSender`]/[`OneshotReceiver`] — mirrors
     /// `db_storage`'s identically-shaped, independently hand-rolled bridge (this crate names no
     /// `tokio`/`futures` executor of its own either, see module doc's "no concrete HTTP client
     /// type" rule extended to "no concrete executor type").
@@ -299,7 +299,7 @@ mod ureq_transport {
     }
     //#endregion 🔖️OneshotBridge
 
-    /// @emoji 🐎️ A `RangeTransport` backed by `ureq`, issuing a single blocking HTTP `Range`
+    /// 🐎️ A `RangeTransport` backed by `ureq`, issuing a single blocking HTTP `Range`
     /// request per `fetch_range` call. `pool: Some(..)` (see [`UreqRangeTransport::with_pool`])
     /// dispatches that call onto the process-wide `WorkerPool`'s `Lane::Io` — Phase 1
     /// (`26/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR`) replaced the old per-request
@@ -316,7 +316,7 @@ mod ureq_transport {
     }
 
     impl UreqRangeTransport {
-        /// @emoji 🆕️ A transport using `ureq`'s default agent configuration, with no shared
+        /// 🆕️ A transport using `ureq`'s default agent configuration, with no shared
         /// `WorkerPool` (every `fetch_range` call resolves inline — see the struct's doc).
         // 🚫️async: no suspension point — `ureq::Agent::new()` itself is a plain sync
         // constructor; also called from `Default::default` below, an E1 impl of the
@@ -325,7 +325,7 @@ mod ureq_transport {
             Self { agent: ureq::Agent::new(), pool: None }
         }
 
-        /// @emoji 🧵️ Like [`UreqRangeTransport::new`], but every `fetch_range` call dispatches
+        /// 🧵️ Like [`UreqRangeTransport::new`], but every `fetch_range` call dispatches
         /// onto `pool`'s `Lane::Io` instead of resolving inline.
         pub fn with_pool(pool: Arc<WorkerPool>) -> Self {
             Self { agent: ureq::Agent::new(), pool: Some(pool) }

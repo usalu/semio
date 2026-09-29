@@ -173,6 +173,9 @@
         assert_eq!(oversized.write_events_json(&mut json), Err(BoardPointerPlanFault::ByteCredits));
     }
 
+/// 🪜️ The tail is cooperative and bounded, never a fixed ladder length: every commit phase a
+/// gesture gains (the proximity pair, …) adds a turn, and pinning the exact count made this law
+/// red for every such addition while proving nothing the `Pending`-until-`Complete` shape does not.
 #[cfg(test)]
     #[test]
     fn drag_commit_obeys_zero_budget_one_delta_turn_cancel_and_publication_witness() {
@@ -188,9 +191,6 @@
         let live = semio_framework_job::root_cancel_token();
         assert_eq!(with_board_step_context(1, live.clone(), |context| host.step_pointer_commit(context)), BoardAuthorityStep::Pending);
         assert_ne!(host.nodes.get("node-a").map(|node| (node.x, node.y)), before, "the FIRST live turn applies the delta");
-        // 🪜️ The tail is cooperative and bounded, never a fixed ladder length: every commit phase a
-        // gesture gains (the proximity pair, …) adds a turn, and pinning the exact count made this law
-        // red for every such addition while proving nothing the `Pending`-until-`Complete` shape does not.
         let mut turns = 1usize;
         loop {
             turns += 1;
@@ -376,6 +376,9 @@
         host
     }
 
+/// 🪜️ Cooperative and bounded, never an exact ladder length: the first turn above is already
+/// proven not to close, and how many more a cancelled delete needs is a property of the planner's
+/// pending state, not of this law (it was pinned at `> 4` and went red the moment that shrank).
 #[cfg(test)]
     #[test]
     fn delete_plan_retains_fifo_until_exact_credits_and_rejects_stale_or_oversized() {
@@ -434,9 +437,6 @@
         assert_eq!(with_board_step_context(1, cancel.clone(), |context| interrupted.step_event_authority(context)), BoardAuthorityStep::Pending);
         assert_eq!(with_board_step_context(1, cancel.clone(), |context| interrupted.step_event_authority(context)), BoardAuthorityStep::Pending);
         assert!(!with_board_step_context(1, cancel.clone(), |context| interrupted.close_event_authority_step(context)));
-        // 🪜️ Cooperative and bounded, never an exact ladder length: the first turn above is already
-        // proven not to close, and how many more a cancelled delete needs is a property of the planner's
-        // pending state, not of this law (it was pinned at `> 4` and went red the moment that shrank).
         let mut close_turns = 1usize;
         loop {
             close_turns += 1;
@@ -449,6 +449,8 @@
         assert!(interrupted.event_authority_terminal_is_empty());
     }
 
+/// 🧮️ One audited property node per turn: the hostile array is `BOARD_POINTER_ITEM_CAPACITY + 1`
+/// entries, so the fault lands after that many turns — the budget follows the constant.
 #[cfg(test)]
     #[test]
     fn delete_property_pre_admission_rejects_hostile_nodes_without_transfer_or_mutation() {
@@ -456,8 +458,6 @@
         host.nodes.get_mut("node-a").unwrap().properties.insert("hostile".into(), graph::manifest::PropertyValue::Array((0..=BOARD_POINTER_ITEM_CAPACITY).map(|_| graph::manifest::PropertyValue::Null).collect()));
         host.delete_selection();
         let live = semio_framework_job::root_cancel_token();
-        // 🧮️ One audited property node per turn: the hostile array is `BOARD_POINTER_ITEM_CAPACITY + 1`
-        // entries, so the fault lands after that many turns — the budget follows the constant.
         for _ in 0..BOARD_POINTER_ITEM_CAPACITY * 4 {
             if matches!(with_board_step_context(1, live.clone(), |context| host.step_event_authority(context)), BoardAuthorityStep::Fault) {
                 break;

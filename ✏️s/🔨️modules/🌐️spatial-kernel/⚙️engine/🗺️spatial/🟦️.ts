@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🧭️ `@semio-tech/cad-js` — CAD domain module facet. See `cad/AGENTS.md`. */
+/** 🧭️ `@semio-tech/cad-js` — CAD domain module facet. See `cad/AGENTS.md`. */
 import { ephemeralBox, ephemeralMap, ephemeralWeakMap } from "@semio-tech/framework";
 import type { ArcPlaneFrame, EdgeCurve, EdgeGroup, EdgeInfo, FaceGroup, FaceInfo, MeshTransfer, Vec3 } from "@semio-tech/s-3d-js";
 import { emptyMeshTransfer, kernelGeometry, solidRef } from "@semio-tech/s-3d-js";
@@ -19,21 +19,21 @@ export type WireRecordDiff = { readonly id: WireRef } & Partial<Pick<WireRecord,
 export type FaceRecordDiff = { readonly id: FaceRef } & Partial<Pick<FaceRecord, "wireIds" | "surface">>;
 export type ShellRecordDiff = { readonly id: ShellRef } & Partial<Pick<ShellRecord, "faceIds">>;
 export type SolidRecordDiff = { readonly id: SolidRef } & Partial<Pick<SolidRecord, "shellIds" | "solid">>;
-/** @emoji 🧮️ Forward patch bucket for one geometry table (`added` / `modified` / `removed` arrays). */
+/** 🧮️ Forward patch bucket for one geometry table (`added` / `modified` / `removed` arrays). */
 export interface EntityDiff<TRec, TDiff, TId extends string> {
   readonly added?: readonly TRec[];
   readonly modified?: readonly TDiff[];
   readonly removed?: readonly TId[];
 }
 
-/** @emoji 🧮️ Mutable in-progress view of `EntityDiff` used while accumulating an inverse patch. */
+/** 🧮️ Mutable in-progress view of `EntityDiff` used while accumulating an inverse patch. */
 interface MutableEntityDiff<TRec, TDiff, TId extends string> {
   added?: TRec[];
   modified?: TDiff[];
   removed?: TId[];
 }
 
-/** @emoji 🧮️ Mutable in-progress view of `ModelDiff` used while accumulating an inverse patch. */
+/** 🧮️ Mutable in-progress view of `ModelDiff` used while accumulating an inverse patch. */
 interface MutableModelDiff {
   anchors?: EntityDiff<AnchorRecord, AnchorRecordDiff, AnchorRef>;
   vertices?: EntityDiff<VertexRecord, VertexRecordDiff, VertexRef>;
@@ -44,7 +44,7 @@ interface MutableModelDiff {
   solids?: EntityDiff<SolidRecord, SolidRecordDiff, SolidRef>;
 }
 
-/** @emoji 🧮️ Serializable model diff applied by `applyModelDiff`. */
+/** 🧮️ Serializable model diff applied by `applyModelDiff`. */
 export interface ModelDiff {
   readonly anchors?: EntityDiff<AnchorRecord, AnchorRecordDiff, AnchorRef>;
   readonly vertices?: EntityDiff<VertexRecord, VertexRecordDiff, VertexRef>;
@@ -65,7 +65,7 @@ function isEntityDiffEmpty<TRec, TDiff, TId extends string>(e: EntityDiff<TRec, 
   return a === 0 && m === 0 && r === 0;
 }
 
-/** @emoji 🧮️ True when `diff` has no geometry mutations. */
+/** 🧮️ True when `diff` has no geometry mutations. */
 export function isEmptyModelDiff(d: ModelDiff | undefined): boolean {
   if (!d) return true;
   return isEntityDiffEmpty(d.anchors) && isEntityDiffEmpty(d.vertices) && isEntityDiffEmpty(d.edges) && isEntityDiffEmpty(d.wires) && isEntityDiffEmpty(d.faces) && isEntityDiffEmpty(d.shells) && isEntityDiffEmpty(d.solids);
@@ -79,7 +79,7 @@ function vec3Eq(a: Vec3, b: Vec3): boolean {
   return a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
 }
 
-/** @emoji 🧮️ Re-poles through-nurbs edges anchored on `movedVertexIds` so their endpoints track the live vertex positions. */
+/** 🧮️ Re-poles through-nurbs edges anchored on `movedVertexIds` so their endpoints track the live vertex positions. */
 function modelDiffSyncNurbsThroughEdgesForMovedVertices(model: Model, movedVertexIds: readonly VertexRef[]): ModelDiff {
   const moved = new Set(movedVertexIds.map(String));
   const edgeMods: EdgeRecordDiff[] = [];
@@ -148,7 +148,7 @@ function applyEntityDiff<T extends { id: string }, TDiff extends { id: string }>
   }
 }
 
-/** @emoji 🧮️ Applies `diff` to `model` in place; returns an inverse `ModelDiff` for `applyModelDiff` again. */
+/** 🧮️ Applies `diff` to `model` in place; returns an inverse `ModelDiff` for `applyModelDiff` again. */
 export function applyModelDiff(model: Model, diff: ModelDiff): ModelDiff {
   const inv: MutableModelDiff = {};
   const aInv: MutableEntityDiff<AnchorRecord, AnchorRecordDiff, AnchorRef> = {};
@@ -198,7 +198,7 @@ export function applyModelDiff(model: Model, diff: ModelDiff): ModelDiff {
 // #region 🔌️SpatialKernelInterface
 export type Aabb = { readonly min: Vec3; readonly max: Vec3 };
 
-/** @emoji ⚡️ Fast approximate preview math (sync); subset of `SpatialKernel`. */
+/** ⚡️ Fast approximate preview math (sync); subset of `SpatialKernel`. */
 export interface SpatialPreviewKernel {
   vec3Add(a: Vec3, b: Vec3): Vec3;
   vec3Sub(a: Vec3, b: Vec3): Vec3;
@@ -259,20 +259,20 @@ export interface SpatialPreviewKernel {
   randomTag(prefix: string): string;
 }
 
-/** @emoji 🧩️ Serializable context patch applied after pure box geometry actions (`set` keys merged; `del` removes top-level context keys). */
+/** 🧩️ Serializable context patch applied after pure box geometry actions (`set` keys merged; `del` removes top-level context keys). */
 export interface ActionContextPatch {
   readonly set?: Record<string, unknown>;
   readonly del?: readonly string[];
 }
 
-/** @emoji 🧩️ Pure action output: model `diff` is the committed geometry; optional `data` is auxiliary; `patch` updates session context only. */
+/** 🧩️ Pure action output: model `diff` is the committed geometry; optional `data` is auxiliary; `patch` updates session context only. */
 export interface ActionResult<TData = unknown> {
   readonly diff?: ModelDiff;
   readonly data?: TData;
   readonly patch?: ActionContextPatch;
 }
 
-/** @emoji 🔌️ Precise BREP kernel: preview math + construction, tessellation, derived views. */
+/** 🔌️ Precise BREP kernel: preview math + construction, tessellation, derived views. */
 export interface SpatialKernel extends SpatialPreviewKernel {
   readonly id: string;
   readonly operations: readonly string[];
@@ -305,12 +305,12 @@ export interface SpatialKernel extends SpatialPreviewKernel {
   sharedFacesBetween(a: SolidRef, b: SolidRef, model: Model): Promise<readonly FaceRef[]>;
 }
 
-/** @emoji 🧱️ Appends a tessellated commit as one mesh `face` on `Model` (in-memory scene growth). */
+/** 🧱️ Appends a tessellated commit as one mesh `face` on `Model` (in-memory scene growth). */
 export function appendCommittedMeshFaceToModel(model: Model, mesh: MeshTransfer, idTag: string, math: SpatialPreviewKernel): void {
   applyModelDiff(model, math.meshFaceModelDiff(mesh, idTag));
 }
 
-/** @emoji 🔌️ Optional query context for kernel adapters. */
+/** 🔌️ Optional query context for kernel adapters. */
 export interface KernelQueryContext {
   readonly model: Model;
   readonly activeModelDefinitionId?: string | null;
@@ -320,13 +320,22 @@ export interface KernelQueryContext {
 // #endregion 📦️🗺️spatial
 
 // #region 🧪️Tests
-import { ObjectRef, SelectionTarget, deletableObjectIdsFromSelection, deleteObjectsFromModel } from "../📐️geometry/🟦️.ts";
 
 const __spatialCoreTestRuntime = import.meta.vitest ? await import("../../../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts") : null;
 const __spatialCoreTestKernel = import.meta.vitest ? await import("../🧮️preview/🟦️.ts") : null;
 
+/** 🎒️ The values this module hands its extracted suite `./🧪️tests/🧪️semio-tech-cad-js-core-model-commit-mesh/🟦️.ts`. */
+export type SpatialTestDependencies = {
+  readonly Model: typeof Model;
+  readonly __spatialCoreTestKernel: typeof __spatialCoreTestKernel;
+  readonly __spatialCoreTestRuntime: typeof __spatialCoreTestRuntime;
+  readonly appendCommittedMeshFaceToModel: typeof appendCommittedMeshFaceToModel;
+  readonly applyModelDiff: typeof applyModelDiff;
+  readonly solidRef: typeof solidRef;
+};
+
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️semio-tech-cad-js-core-model-commit-mesh/🟦️.ts");
-  await registerTests1(import.meta.vitest, { Model, ObjectRef, SelectionTarget, TypologyRef, __spatialCoreTestKernel, __spatialCoreTestRuntime, appendCommittedMeshFaceToModel, applyModelDiff, deletableObjectIdsFromSelection, deleteObjectsFromModel, solidRef }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { Model, __spatialCoreTestKernel, __spatialCoreTestRuntime, appendCommittedMeshFaceToModel, applyModelDiff, solidRef }, { url: import.meta.url });
 }
 // #endregion 🧪️Tests

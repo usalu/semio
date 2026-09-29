@@ -3,4 +3,4 @@ type WriterMainWindowTransient {
   lintGeneration: Int! @state(class: TRANSIENT)
   engagementInput: String! @state(class: TRANSIENT)
 }
-type WriterEditorSelection { start: Int! end: Int! }
+type WriterEditorSelection { start: Int! end: Int! splice: Int! }

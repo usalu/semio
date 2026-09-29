@@ -71,7 +71,6 @@ for (const mutate of [
 ]) {
   const mutant = structuredClone(fixture); mutate(mutant); assert(!validate(mutant));
 }
-console.log(`[DEBUG] Local-interaction source cases=${fixture.cases.length} hostileRejections=13 oracle=immer+jsonc-parser privateReplacement=1 emptySparse=1 semanticKeyBytes=${Buffer.byteLength(Object.keys(large.expected.selection)[0])} nativeRuntimeClaims=0`);
 //#endregion 🧬️Contract
 
 //#region 🌳️RetainedRootContract
@@ -195,7 +194,6 @@ assert.equal(rootStringBytes(largeRootSource), rootFixture.largeFinalOwnerRetire
 assert(rootFixture.largeFinalOwnerRetiredBytes > 4096);
 assert.deepEqual(produce(rootSource, () => {}), rootSource);
 assert(rootSource.selection.private && rootSource.selection.graph.anchorId === "b" && rootSource.selection.graph.ids[0] === "a,comma");
-console.log(`[DEBUG] Local-interaction retained-root oracle=lodash+immer bytes=${rootFixture.finalOwnerRetiredBytes}/${rootFixture.largeFinalOwnerRetiredBytes} hostileRejections=5 nativeRuntimeClaims=0`);
 //#endregion 🌳️RetainedRootContract
 
 //#region 🩹️RetainedUpdateContract
@@ -219,7 +217,6 @@ for (const name of updateFixture.cases) {
   });
   assert.deepEqual(oracle, row.expected);
 }
-console.log(`[DEBUG] Local-interaction retained-update cases=${updateFixture.cases.length} cancelBytes=${updateFixture.cancelOwnedStringBytes} hostileRejections=5 oracle=immer+lodash nativeRuntimeClaims=0`);
 //#endregion 🩹️RetainedUpdateContract
 
 //#region 🔁️InteractionMutationLeaf
@@ -241,7 +238,6 @@ assert.equal(mutationDescriptor.binaryTag, null);
 assert(mutationDescriptor.owner.endsWith("/🕹️interaction/🧬️mutations/🔁️set-state"));
 assert.deepEqual(JSON.parse(Buffer.from(JSON.stringify(mutationFixture), "utf8").toString("utf8")), produce(mutationFixture, () => {}));
 for (const invalid of [{ ...mutationFixture, localInteraction: {} }, { ...mutationFixture, activeMode: { graph: "invalid" } }, { ...mutationFixture, selection: { graph: { granularity: "node", ids: [1] } } }]) assert(!validateMutation(invalid));
-console.log("[DEBUG] Interaction mutation leaf schema=actual-four-field-stored-state descriptorFields=14 hostileRejections=3 oracle=ajv+immer nativeCodecClaims=0");
 //#endregion 🔁️InteractionMutationLeaf
 
 //#region ♻️RetirementContract
@@ -264,7 +260,6 @@ for (const row of retirement.cases) {
   assert.equal(sumBy(strings, (value: string) => new TextEncoder().encode(value).length), row.expectedReleasedBytes);
 }
 for (const mutant of [{ ...retirement, terminalOwners: 1 }, { ...retirement, zeroItemMutates: true }]) assert(!validateRetirement(mutant));
-console.log(`[DEBUG] Local-interaction retirement source cases=${retirement.cases.length} hostileRejections=2 grants=1,64,4096 oracle=lodash runtimeClaims=0`);
 //#endregion ♻️RetirementContract
 
 //#region 📃️QueryContract
@@ -295,7 +290,6 @@ for (const sourceCase of query.sourceCases) {
   }
 }
 for (const mutant of [{ ...query, unacknowledgedPageAdvances: true }, { ...query, cancelledPageReadable: true }, { ...query, terminalRequiresReadReturn: false }]) assert(!validateQuery(mutant));
-console.log(`[DEBUG] Local-interaction query source cases=${query.sourceCases.length} partitions=${query.grants.length} hostileRejections=3 oracle=node-crypto nativeRuntimeClaims=0`);
 //#endregion 📃️QueryContract
 
 //#region 🔐️TopologyInputAuthority
@@ -310,7 +304,6 @@ for (const row of topologyAuthority.cases) {
 }
 assert.equal(new Set(topologyAuthority.cases.map((row: any) => row.expected)).size, topologyAuthority.cases.length);
 for (const mutant of [{ ...topologyAuthority, overflowMutatesCache: true }, { ...topologyAuthority, canonicalTopologyHash: true }, { ...topologyAuthority, closedAuthorityReadable: true }]) assert(!validateTopologyAuthority(mutant));
-console.log(`[DEBUG] Local-interaction topology input-authority source cases=${topologyAuthority.cases.length} hostileRejections=3 oracle=node-crypto nativeRuntimeClaims=0`);
 //#endregion 🔐️TopologyInputAuthority
 
 //#region 📡️TransportCodec
@@ -350,5 +343,4 @@ for (const [index, reply] of replies.entries()) {
   assert.throws(() => wire.decodeLocalInteractionQueryReply(Uint8Array.from([...encoded, 0])));
 }
 for (const invalid of [{ ...commands[0], extra: true }, { kind: "acknowledge", token: { ...queryToken, queryGeneration: 41 } }, { kind: "page", page: { ...queryToken, terminal: true, bytes: Array(4097).fill(0) } }]) assert(!validateTransport(invalid));
-console.log(`[DEBUG] Local-interaction transport source unsigned=5 commands=3 replies=4 malformed=3 trailing=7 hostile=3 oracle=@webassemblyjs/leb128 nativeRuntimeClaims=0`);
 //#endregion 📡️TransportCodec

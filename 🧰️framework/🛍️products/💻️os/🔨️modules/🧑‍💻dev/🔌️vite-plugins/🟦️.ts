@@ -1,4 +1,4 @@
-/** @emoji 🔌️ The dev server's own Vite plugins — backbone document IO, the content-addressed blob
+/** 🔌️ The dev server's own Vite plugins — backbone document IO, the content-addressed blob
  * endpoint, the plugin hot-swap SSE stream and the production test boundary — kept in a module of
  * their own so `⚙️vite.config.ts` can mount them without pulling `📜️script.ts`'s task router (and
  * through it the repository library's discovery walk) into Vite's config bundle. `bun:sqlite` stays a
@@ -21,10 +21,10 @@ import { protectOwnerOnly } from "../../../../🦑️repo/🔨️modules/📚️
 import { DEV_LOCAL_HUB_DATA_ENV, DEV_LOCAL_HUB_PROFILE_ENV } from "../🚀️local-hub/🏃️execution/🟦️.ts";
 import { LOCAL_HUB_SESSION_ENDPOINT_V1, localHubSessionAnswerV1 } from "../../📇️directory/🎫️local-session/🟦️.ts";
 import { AGENT_CREDENTIAL_INSTALL_ENDPOINT_V1, AGENT_CREDENTIAL_INSTALL_RECEIPT_SCHEMA_V1, AGENT_CREDENTIAL_INSTALL_SCHEMA_V1, AGENT_CREDENTIAL_SCHEMA_V1, agentCredentialInstallFileNameV1, isAgentDelegationTokenV1 } from "../../📇️directory/🤖️delegations/🟦️.ts";
-/** @emoji 📥️ Filename owned by plugin store installation; inlined so the vite-plugin graph does not pull materialization. */
+/** 📥️ Filename owned by plugin store installation; inlined so the vite-plugin graph does not pull materialization. */
 const EXTENSION_INSTALL_META = "📥️install.json";
 
-/** @emoji 🗂️ Repository root derived from this module's own location — the config bundler must not
+/** 🗂️ Repository root derived from this module's own location — the config bundler must not
  * reach `getWorkspaceRoot` (and the discovery walk behind it) just to place two dev databases. */
 export const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../../..");
 
@@ -36,7 +36,7 @@ export type DescriptorRouteGuardSpec = {
 
 export type DescriptorRouteDecision = { readonly kind: "pass" } | { readonly kind: "missing"; readonly moduleDirectory: string };
 
-/** @emoji 🛂️ Resolves only canonical declared module descriptor requests, without decoding arbitrary filesystem paths. */
+/** 🛂️ Resolves only canonical declared module descriptor requests, without decoding arbitrary filesystem paths. */
 export function descriptorRouteDecision(url: string | undefined, specs: readonly DescriptorRouteGuardSpec[]): DescriptorRouteDecision {
   if (!url) return { kind: "pass" };
   let pathname: string;
@@ -57,7 +57,7 @@ export function descriptorRouteDecision(url: string | undefined, specs: readonly
   return { kind: "pass" };
 }
 
-/** @emoji 🚫️ Prevents a missing plugin descriptor from falling through to Vite's HTML SPA response. */
+/** 🚫️ Prevents a missing plugin descriptor from falling through to Vite's HTML SPA response. */
 export function semioDescriptorRouteGuardVitePlugin(specs: readonly DescriptorRouteGuardSpec[]) {
   return {
     name: "semio-descriptor-route-guard",
@@ -74,7 +74,7 @@ export function semioDescriptorRouteGuardVitePlugin(specs: readonly DescriptorRo
   };
 }
 
-/** @emoji 👷️ Lets a service worker served from the module graph (the plugin module store's, `🌎️hub-source/👷️service-worker`)
+/** 👷️ Lets a service worker served from the module graph (the plugin module store's, `🌎️hub-source/👷️service-worker`)
  * control the whole shell: every script a browser fetches AS a service worker (`Service-Worker: script`) is allowed scope
  * `/`. A deployment answers its service worker script with the same header. */
 export function semioServiceWorkerScopeVitePlugin() {
@@ -271,7 +271,7 @@ export async function retireCanonicalBootstrapFolderMirror(uri: string, document
   retire();
 }
 
-/** @emoji 🗄️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T-P8): per-path `bun:sqlite` handle cache.
+/** 🗄️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T-P8): per-path `bun:sqlite` handle cache.
  * `readBackbonePayload`/`writeBackbonePayload` used to `new Database(dbPath)` — and re-run the
  * (idempotent but non-free) `CREATE TABLE IF NOT EXISTS` — on EVERY single read/write request, so a
  * hot dev-editing loop against one folder-backed document reopened the same file every keystroke's
@@ -295,7 +295,7 @@ export async function backboneDbHandleFor(dbPath: string): Promise<BackboneSqlit
   return db;
 }
 
-/** @emoji 🗂️ Same `.semio/documents.db` convention as `vcs::FolderSqliteStorage` so a folder-bound studio opened by the browser dev path and a
+/** 🗂️ Same `.semio/documents.db` convention as `vcs::FolderSqliteStorage` so a folder-bound studio opened by the browser dev path and a
  * native (wgpu) reader agree on the same file. `documentId` defaults to the studio's own
  * single-document convention (mirrors os-core's `SPACE_FOLDER_DOCUMENT_ID`) when the caller doesn't
  * pass one — app documents (per `OsDocumentRef`) always pass their own id explicitly. */
@@ -403,7 +403,7 @@ type RuntimeWebSocketModule = { readonly WebSocketServer: new (options: { readon
 const RUNTIME_WEBSOCKET_MODULE = "ws";
 const devStreamMuxServers = new WeakMap<object, StreamMuxServerV1>();
 
-/** @emoji 🔀️ The ONE stream channel (`semio.io.stream-mux/v1` at `STREAM_MUX_PATH`) of a dev server, created on first use per
+/** 🔀️ The ONE stream channel (`semio.io.stream-mux/v1` at `STREAM_MUX_PATH`) of a dev server, created on first use per
  * HTTP server: it accepts same-origin WebSocket upgrades (subprotocol `semio.stream-mux.v1`) through the runtime's own `ws` —
  * Bun's `node:http` upgrade socket does not transmit raw writes (measured, ticket 26/09/23 F2) — and every dev plugin that
  * serves a long-lived stream registers its route here instead of holding an HTTP/1.1 response open. Without an HTTP server
@@ -514,7 +514,7 @@ export function semioProductionTestBoundaryVitePlugin(): { name: string; enforce
   };
 }
 
-/** @emoji 💾️ Vite middleware for browser file/folder backbone IO: `GET|PUT ${BACKBONE_ENDPOINT_PATH}?uri=&documentId=&schema=`
+/** 💾️ Vite middleware for browser file/folder backbone IO: `GET|PUT ${BACKBONE_ENDPOINT_PATH}?uri=&documentId=&schema=`
  * for read/write — a document nothing has written yet reads as `204 No Content`, the ordinary first-boot answer, never a
  * `404` in the console of a fresh data root (ticket 26/09/23 U5) — plus the `backbone.folder` stream route (key = the `folder://`
  * uri) on the dev stream channel for external-edit notices; `🏪️store/👷️worker/🟦️.ts`'s folder transport falls back to its slow
@@ -638,10 +638,10 @@ export function semioBackboneVitePlugin() {
 //#endregion BackboneVitePlugin
 
 //#region 🔌️PluginActivationVitePlugin
-/** @emoji 🧩️ One watched component; `installDirectory` overrides `<installRoot>/<directoryName>` when a host serves extensions from several activation lanes. */
+/** 🧩️ One watched component; `installDirectory` overrides `<installRoot>/<directoryName>` when a host serves extensions from several activation lanes. */
 export type ActivationComponentSpec = Readonly<{ pluginId: string; directoryName: string; role: "plugin" | "extension"; sourceRoot: string; installDirectory?: string; cratePath?: string }>;
 
-/** @emoji 🔎️ Re-runs the staged-module freshness rule against the receipt the dev server just observed and
+/** 🔎️ Re-runs the staged-module freshness rule against the receipt the dev server just observed and
  * resolves to one `[stale]` line per component whose served bytes are behind — the live half of the serve-start
  * pass in `📜️script.ts`. A restage that lands while the server runs therefore retires its own warning
  * without a restart, and one that never lands keeps saying so. Asynchronous and bounded (the server keeps answering
@@ -685,7 +685,7 @@ export function semioActivationVitePlugin(options: { readonly receiptDirectory: 
   return {
     name: "semio-activation",
     enforce: "pre" as const,
-    /** @emoji 📣️ The staged-module verdict belongs in the DEVELOPER's console, not only in the server log
+    /** 📣️ The staged-module verdict belongs in the DEVELOPER's console, not only in the server log
      * they are not reading: a guest module staged behind its own source serves a wire contract the host
      * TypeScript in the same page no longer speaks, and the symptom (`actor-ui-patch.pairing`, a window
      * booting a fallback graph) never names its cause. */
@@ -923,7 +923,7 @@ async function blobDatabase(): Promise<InstanceType<typeof import("bun:sqlite").
 type BlobServerRequest = { method?: string; url?: string; on: (event: string, handler: (chunk?: unknown) => void) => void };
 type BlobServerResponse = { statusCode: number; setHeader: (name: string, value: string) => void; end: (body?: string | Buffer) => void };
 
-/** @emoji 📦️ Vite middleware for the dev-only content-addressed blob store: `PUT ${BLOB_ENDPOINT_PATH}?mediaType=`
+/** 📦️ Vite middleware for the dev-only content-addressed blob store: `PUT ${BLOB_ENDPOINT_PATH}?mediaType=`
  * (raw bytes body, BLAKE3-hashed above, returns `{"hash":...}`, idempotent via `INSERT OR IGNORE`) and
  * `GET ${BLOB_ENDPOINT_PATH}/:hash` (raw bytes response, 404 if absent). The browser host-shim's
  * `writeBlob`/`readBlob` (see `hostShimSource`) and `🟦️backbone-🟦️worker.ts`'s IndexedDB cache both talk to
@@ -990,7 +990,7 @@ export function semioBlobVitePlugin() {
 //#endregion BlobVitePlugin
 
 //#region 🔖️SourceFreshnessVitePlugins
-/** @emoji 🚫️ Repository directory names no dev server may ever watch: version control metadata, the Nx
+/** 🚫️ Repository directory names no dev server may ever watch: version control metadata, the Nx
  * workspace store, the package store, the shared build/cache root, compiled output and generated
  * sources. Tools rewrite millions of files inside them while a dev session is open, and every such write
  * would otherwise be delivered into the dev server's event loop.
@@ -1001,7 +1001,7 @@ export function semioBlobVitePlugin() {
  * @see https://github.com/paulmillr/chokidar/blob/3.6.0/lib/fsevents-handler.js */
 export const UNWATCHED_REPOSITORY_SEGMENTS: readonly string[] = [".git", ".nx", ".vscode", ".🧬semio", "node_modules", "dist", "target", "🤖️generated", "🗑️generated"];
 
-/** @emoji 👁️ The repository's top-level source directories — every place a dev server's module graph can
+/** 👁️ The repository's top-level source directories — every place a dev server's module graph can
  * legitimately import from, with the unwatchable stores above removed. Read from disk rather than
  * hardcoded so a new top-level product directory is watched without touching this module. */
 export function repositorySourceWatchRoots(repoRoot: string): readonly string[] {
@@ -1009,14 +1009,14 @@ export function repositorySourceWatchRoots(repoRoot: string): readonly string[] 
   return readdirSync(repoRoot, { withFileTypes: true }).filter((entry) => entry.isDirectory() && !excluded.has(entry.name)).map((entry) => join(repoRoot, entry.name)).sort();
 }
 
-/** @emoji 🧹️ Matches any relative path that crosses an unwatched store, on both `/` and `\` separators.
+/** 🧹️ Matches any relative path that crosses an unwatched store, on both `/` and `\` separators.
  * One precompiled test per filesystem event is the whole per-event budget this watcher may spend. */
 export function unwatchedRepositoryPathMatcher(): RegExp {
   const alternatives = UNWATCHED_REPOSITORY_SEGMENTS.map((segment) => segment.replaceAll(".", "\\.")).join("|");
   return new RegExp(`(?:^|[\\\\/])(?:${alternatives})(?:[\\\\/]|$)`, "u");
 }
 
-/** @emoji 🛰️ Drives Vite's file-change pipeline from `node:fs` recursive watches over the repository's
+/** 🛰️ Drives Vite's file-change pipeline from `node:fs` recursive watches over the repository's
  * source roots, so `⚙️vite.config.ts` can hand Vite `server.watch: null` and run no chokidar watcher of
  * its own.
  *
@@ -1047,7 +1047,7 @@ export function unwatchedRepositoryPathMatcher(): RegExp {
  * devcontainer mount) otherwise named files no module matched and no edit ever reached the page (measured, same ticket). */
 const REACT_REFRESH_RUNTIME = "/@react-refresh";
 
-/** @emoji ⚛️ Preamble copied from `@vitejs/plugin-react` — semio-host-html replaces the whole document in
+/** ⚛️ Preamble copied from `@vitejs/plugin-react` — semio-host-html replaces the whole document in
  * `transformIndexHtml` `order: "pre"`, so the react plugin's own preamble injection must be reinforced in
  * `order: "post"` or `@react-three/fiber` (and every other JSX dep) throws "can't detect preamble". */
 function semioReactRefreshPreambleScript(base: string): string {
@@ -1058,7 +1058,7 @@ window.$RefreshReg$ = () => {};
 window.$RefreshSig$ = () => (type) => type;`;
 }
 
-/** @emoji ⚛️ Aligns Vite 7 / Rolldown OXC JSX refresh with `server.hmr` — `SEMIO_VITE_HMR=0` must not emit
+/** ⚛️ Aligns Vite 7 / Rolldown OXC JSX refresh with `server.hmr` — `SEMIO_VITE_HMR=0` must not emit
  * `$RefreshReg$` wrappers without the HTML preamble, and HMR-on serves must always ship that preamble even
  * after {@link semioHostHtmlVitePlugin} rebuilds `index.html`. */
 export function semioPlaygroundReactRefreshCoherenceVitePlugin() {
@@ -1085,12 +1085,12 @@ export function semioPlaygroundReactRefreshCoherenceVitePlugin() {
   };
 }
 
-/** @emoji 🧾️ The `{mtimeMs, size}` pair a transformed module's file carried when the dev server last read
+/** 🧾️ The `{mtimeMs, size}` pair a transformed module's file carried when the dev server last read
  * it. Two facts rather than one: a same-second rewrite of a different length moves `size` while `mtimeMs`
  * can still round to the same millisecond on some filesystems. */
 export type SourceStamp = { readonly mtimeMs: number; readonly size: number };
 
-/** @emoji 🔍️ Remembers what every transformed module's file looked like on disk when its transform was
+/** 🔍️ Remembers what every transformed module's file looked like on disk when its transform was
  * produced, and answers which of them have moved since.
  *
  * ONLY files the dev server has actually transformed are tracked, so "moved" is exactly "the cached
@@ -1146,7 +1146,7 @@ type FreshnessServer = {
   readonly config?: { readonly root: string; readonly server: { readonly hmr?: unknown } };
 };
 
-/** @emoji ♻️ Retires every cached transform of one file, synchronously for the request in flight and then
+/** ♻️ Retires every cached transform of one file, synchronously for the request in flight and then
  * through Vite's own file-change pipeline for everything downstream of it (plugin `watchChange`, HMR
  * boundaries, config-dependency restarts). `onFileChange` walks importers, so an importer that inlined
  * the edited module's output is retired with it. */
@@ -1193,7 +1193,7 @@ export function semioSourceWatchVitePlugin(options: { readonly repoRoot: string;
   };
 }
 
-/** @emoji 🗺️ The absolute file a dev-server request would be transformed from, or `null` for a request no
+/** 🗺️ The absolute file a dev-server request would be transformed from, or `null` for a request no
  * module graph entry can back (virtual ids, client runtime, the index document). `/@fs/` carries the
  * absolute path the module graph is keyed by; everything else is relative to Vite's `root`. */
 export function requestedTransformFile(url: string, root: string): string | null {
@@ -1210,7 +1210,7 @@ export function requestedTransformFile(url: string, root: string): string | null
   return join(root, decoded);
 }
 
-/** @emoji 🛡️ Proves, at request time, that every transform this dev server is about to serve was produced
+/** 🛡️ Proves, at request time, that every transform this dev server is about to serve was produced
  * from the bytes currently on disk — the guarantee the filesystem watcher alone cannot give.
  *
  * macOS reports a recursive `fs.watch` event by the path whose directory entry changed, and an atomic
@@ -1268,7 +1268,7 @@ export function semioTransformFreshnessVitePlugin(options: { readonly freshness:
   };
 }
 
-/** @emoji 🛰️ The dev server's complete "never serve a stale module" contract: the source watcher that
+/** 🛰️ The dev server's complete "never serve a stale module" contract: the source watcher that
  * pushes edits into Vite's module graph, and the request-time stat guard that verifies what the watcher
  * delivered. They share one {@link createSourceFreshnessRegistry}, so the watcher can resolve a
  * temporary-file event into the module it was renamed onto. Mount both or neither. */
@@ -1279,7 +1279,7 @@ export function semioSourceFreshnessVitePlugins(options: { readonly repoRoot: st
 //#endregion SourceFreshnessVitePlugins
 
 //#region 🛰️AgentBridgeRendezvous
-/** @emoji 🏷️ The carrier that points this dev session and one `semio-os-mcp` gateway at a rendezvous
+/** 🏷️ The carrier that points this dev session and one `semio-os-mcp` gateway at a rendezvous
  * of their own instead of the per-user default — the exact twin of the gateway's own
  * `🛰️rendezvous::RENDEZVOUS_DIR_ENV`. It is a directory path, never a credential (the admission proof
  * stays in the owner-only offer file the supervisor reads), and it is spelled with the `S_` prefix
@@ -1295,7 +1295,7 @@ function agentBridgeRendezvousDir(): string {
   return join(home, ".semio", "agent", "bridge");
 }
 
-/** @emoji 📨️ The live gateway offer a shell of `scope` may dial (`selectAgentBridgeOfferV1`: a hub gateway's offer only
+/** 📨️ The live gateway offer a shell of `scope` may dial (`selectAgentBridgeOfferV1`: a hub gateway's offer only
  * for its human's shell open on its hub and space, a local gateway's offer for any shell). `null` means no MCP gateway is
  * offering this shell a bridge, which is an ordinary state (nobody launched one), never an error. */
 export function liveAgentBridgeOfferFor(scope: AgentBridgeOfferScopeV1, root: string = agentBridgeRendezvousDir()): AgentBridgeOfferRecordV2 | null {
@@ -1319,7 +1319,7 @@ export function liveAgentBridgeOfferFor(scope: AgentBridgeOfferScopeV1, root: st
 type RendezvousServerRequest = { url?: string; method?: string };
 type RendezvousServerResponse = { statusCode: number; setHeader: (name: string, value: string) => void; end: (body?: string) => void };
 
-/** @emoji 🛰️ Publishes THIS dev session as a live os session the stdio MCP gateway can discover, and
+/** 🛰️ Publishes THIS dev session as a live os session the stdio MCP gateway can discover, and
  * serves the browser shell the one offer its request's scope may dial ({@link liveAgentBridgeOfferFor}) on
  * {@link AGENT_BRIDGE_OFFER_ENDPOINT} — always `200`, the offer or the typed "not offered". The admission proof never travels through an environment
  * variable or a build-time define: the dev server reads the owner-only offer file and hands it over
@@ -1365,7 +1365,7 @@ export function semioAgentBridgeRendezvousVitePlugin(options: { readonly shellKi
 //#endregion 🛰️AgentBridgeRendezvous
 
 //#region 🔌️AgentCredentialInstall
-/** @emoji 🗝️ Where this development host installs agent credentials for MCP clients. A directory path,
+/** 🗝️ Where this development host installs agent credentials for MCP clients. A directory path,
  * never a credential, spelled with the `S_` prefix the gateway's process-entry seal admits; unset, the
  * per-user default `~/.semio/agent/credentials` beside the bridge rendezvous. */
 export const AGENT_CREDENTIALS_DIR_ENV = "S_AGENT_CREDENTIALS_DIR";
@@ -1379,7 +1379,7 @@ function agentCredentialsDir(): string {
 
 type CredentialInstallRequest = { url?: string; method?: string; headers: Record<string, string | string[] | undefined>; on(event: "data", handler: (chunk: Buffer) => void): void; on(event: "end" | "error", handler: () => void): void };
 
-/** @emoji 🔐️ The credential file bytes `semio-os-mcp --credential-file` decodes, checked key for key
+/** 🔐️ The credential file bytes `semio-os-mcp --credential-file` decodes, checked key for key
  * before anything reaches the disk. */
 function agentCredentialFileIsWellFormed(contents: string): boolean {
   try {
@@ -1398,7 +1398,7 @@ function agentCredentialFileIsWellFormed(contents: string): boolean {
   }
 }
 
-/** @emoji 🔌️ Turns an agent delegation into a working MCP client on a development host: the delegation
+/** 🔌️ Turns an agent delegation into a working MCP client on a development host: the delegation
  * pane posts the one-time credential here, this server writes it owner-only (`0600` in a `0700`
  * directory) under the delegation's own file name, and answers with its absolute path and the launcher
  * that starts `semio-os-mcp` from this checkout (`bun <repo>/📜️script.ts dev mcp stdio os`, which
@@ -1467,7 +1467,7 @@ export function semioAgentCredentialInstallVitePlugin(options: { readonly repoRo
 }
 //#endregion 🔌️AgentCredentialInstall
 
-/** @emoji 🎫️ Serves the shell a FRESH development session from the local hub owner's broker on every request, for the
+/** 🎫️ Serves the shell a FRESH development session from the local hub owner's broker on every request, for the
  * profile this serve signs in as — so a shell whose 15-minute local session lapsed, or a second user's serve, claims one
  * with no manual sign-in. Always `200` with a `LocalHubSessionAnswerV1`: the typed "not offered" when the serve joined a
  * hub without a broker (the shell's own sign-in stays available).

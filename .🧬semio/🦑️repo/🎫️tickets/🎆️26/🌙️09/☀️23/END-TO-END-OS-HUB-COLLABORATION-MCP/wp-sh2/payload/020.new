@@ -167,7 +167,7 @@ export function homeDirectoryEventPageOwnerOracle(repoRoot: string): number {
     && commandSource.includes("directory.admit_page(&page)?")
     && commandSource.includes("ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral }")
     && commandSource.includes("context.transient.directory()")
-    && commandSource.includes("Err(Fault::from(\"s.home.directory-event-page.requires-retained-job\"))")
+    && commandSource.includes("Err(Fault::new(FaultOrigin::App, \"s.home.directory-event-page.requires-retained-job\"")
     && !commandSource.includes("unwrap_or_default")
     && transientSource.includes("pub fn admit_page")
     && transientSource.includes("page.after_seq_exclusive != self.cursor")
@@ -185,7 +185,7 @@ export function homeDirectoryEventPageOwnerOracle(repoRoot: string): number {
     && crate.includes("pub mod transient {")
     && crate.includes("pub mod apply_directory_event_page;");
   assert(exact(command, transient, page, editor, viewer), "Home directory event-page transient route is incomplete");
-  for (const hostile of [
+  for (const [hostileCommand, hostileTransient, hostilePage, hostileEditor, hostileViewer] of [
     [command.replace("ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral }", "ArtifactCommandWorkStep::Complete(emit)"), transient, page, editor, viewer],
     [`${command}\nlet _ = malformed.unwrap_or_default();`, transient, page, editor, viewer],
     [command, transient.replace("page.after_seq_exclusive != self.cursor", "false"), page, editor, viewer],
@@ -193,7 +193,7 @@ export function homeDirectoryEventPageOwnerOracle(repoRoot: string): number {
     [command, transient, page.replace("Vec::new()", "vec![self.clone().into()]"), editor, viewer],
     [command, transient, page, editor.replace("lanes: &[ArtifactToolPublicationLane::Transient] }", "lanes: &[ArtifactToolPublicationLane::Config] }"), viewer],
     [command, transient, page, editor, viewer.replace("lanes: &[ArtifactToolPublicationLane::Transient]", "lanes: &[ArtifactToolPublicationLane::Config]")],
-  ] as const) assert.equal(exact(...hostile), false);
+  ] as const) assert.equal(exact(hostileCommand, hostileTransient, hostilePage, hostileEditor, hostileViewer), false);
   for (const leafName of ["🦀️.rs", "🟦️.ts", "🔗️.graphql", "🔣️.json", "🛰️.proto"]) {
     assert(!readFileSync(join(base, `🎚️config/🧬️schema/${leafName}`), "utf8").includes("directory"), `config schema leaf ${leafName} still persists directory state`);
   }

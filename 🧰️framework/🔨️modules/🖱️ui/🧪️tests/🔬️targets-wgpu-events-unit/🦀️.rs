@@ -217,7 +217,6 @@ fn wheel_over_an_escaped_select_popup_scrolls_its_accepted_viewport_only() {
     assert!((tree.node(select).unwrap().state.scroll_offset.1 - maximum).abs() < 0.001);
     router.dispatch(&mut tree, root, &UiEvent::Scroll { x: 20.0, y: 33.0, delta_x: 0.0, delta_y: -10_000.0, modifiers: Default::default() });
     assert_eq!(tree.node(select).unwrap().state.scroll_offset.1, 0.0);
-    println!("[DEBUG] escaped Select wheel offset={} outer={}", tree.node(select).unwrap().state.scroll_offset.1, tree.node(root).unwrap().state.scroll_offset.1);
 }
 
 #[test]

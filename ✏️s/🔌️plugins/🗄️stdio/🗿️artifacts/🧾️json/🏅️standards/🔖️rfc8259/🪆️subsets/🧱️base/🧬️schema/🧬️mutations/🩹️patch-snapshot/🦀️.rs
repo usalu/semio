@@ -75,6 +75,6 @@ mod tests {
         assert!(inverse[0].encode_op().unwrap().len() < maximum);
         assert_eq!(JsonMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
         assert_eq!(JsonMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
-        println!("[DEBUG] json compact patch preserves unrelated {} byte field through forward/inverse codecs", row["largeValueBytes"]);
+        println!("[TRACE] json compact patch preserves unrelated {} byte field through forward/inverse codecs", row["largeValueBytes"]);
     }
 }

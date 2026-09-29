@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/PluginRuntime/job-ledger/module.ts
-/** @emoji 💼️ The browser plugin runtime's ledger of LIVE spawned jobs — what `🧵️TaskManager` lists with its
+/** 💼️ The browser plugin runtime's ledger of LIVE spawned jobs — what `🧵️TaskManager` lists with its
  * progress and cancel control. `driveSpawnedJob` (`🔌️PluginRuntime/🟦️.tsx`) opens one entry per job it drives,
  * advances it once per admitted step batch and closes it when the drive ends, so the ledger holds exactly the
  * jobs this tab is stepping right now: ephemeral local state that never crosses a wire.

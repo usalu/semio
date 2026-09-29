@@ -44,7 +44,7 @@ test("resolves every anonymous owner and semantic context", () => {
   }
 });
 
-test("typechecks an acyclic owner graph with no command back edge", { timeout: 30_000 }, () => {
+test("typechecks an acyclic owner graph with no command back edge", () => {
   const paths: string[] = fixture.owners.map((owner: { path: string }) => resolve(repoRoot, owner.path));
   const present = paths.filter(existsSync);
   expect(present).toHaveLength(paths.length);
@@ -88,7 +88,7 @@ test("typechecks an acyclic owner graph with no command back edge", { timeout: 3
   };
   for (const owner of paths) visit(owner);
   expect(seen.size).toBe(paths.length);
-});
+}, { timeout: 30_000 });
 
 test("moves semantic bodies out of the command module and binds real consumers", () => {
   const command = resolve(domainRoot, "📜️script.ts"),

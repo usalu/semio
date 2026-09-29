@@ -130,7 +130,7 @@ export type BreachRecord = {
 
 //#region 🔖️cli
 
-/** @emoji 📎️ Reads `{ hash, items }` collection blocks from kit snapshot JSON. */
+/** 📎️ Reads `{ hash, items }` collection blocks from kit snapshot JSON. */
 export function fixtureItemsOf<T = Record<string, unknown>>(node: unknown): readonly T[] {
   if (node && typeof node === "object" && Array.isArray((node as { items?: unknown[] }).items)) {
     return (node as { items: T[] }).items;
@@ -1440,7 +1440,7 @@ function killBudgetTree(pid: number): void {
   terminateOwnedProcessTree(pid);
 }
 
-/** @emoji 🎭️ Playwright is TEST-ONLY and loaded lazily. The specifier is indirected so no bundler can
+/** 🎭️ Playwright is TEST-ONLY and loaded lazily. The specifier is indirected so no bundler can
  * statically resolve it: this module is reachable from `⚙️vite.config.ts`, and a literal
  * `import("playwright")` makes bun follow it into a browser build, failing on the uninstalled
  * optional `chromium-bidi`. Runtime behaviour is identical. */
@@ -1878,7 +1878,7 @@ export async function runCargoTestBudgeted(packages: string[], cwd: string, extr
         { cwd, env, budgetMs: packageTestBudgetMs(resolvedPackages, level) },
       );
     } finally {
-      if (artifactLocation.retain) console.error(`[DEBUG] Nextest artifacts retained at ${metadataDir}`);
+      if (artifactLocation.retain) console.error(`[TRACE] Nextest artifacts retained at ${metadataDir}`);
       else rmSync(metadataDir, { recursive: true, force: true });
     }
     return;
@@ -2608,7 +2608,7 @@ export function runCargoLint(packages: string[], cwd: string, extraArgs: string[
 
 //#region ⚙️ViteConfigLoader
 /**
- * @emoji ⚙️ Pick Vite's config loader for the current runtime.
+ * ⚙️ Pick Vite's config loader for the current runtime.
  * Node 24+ defaults Vite to `native` strip-only TypeScript, which rejects constructor parameter
  * properties used across monorepo configs — so Node must use `bundle`. Bun already runs full
  * TypeScript, and Vite's `bundle` loader fails on this config with an opaque `undefined` error,
@@ -2619,7 +2619,7 @@ export function viteConfigLoader(): "native" | "bundle" {
   return typeof (globalThis as { Bun?: unknown }).Bun === "object" ? "native" : "bundle";
 }
 
-/** @emoji 🧷️ Prepends {@link viteConfigLoader}'s choice to a Vite CLI argument list. */
+/** 🧷️ Prepends {@link viteConfigLoader}'s choice to a Vite CLI argument list. */
 export function withViteConfigLoader(args: readonly string[]): string[] {
   if (args.includes("--configLoader")) return [...args];
   const loader = viteConfigLoader();
@@ -2755,22 +2755,22 @@ export async function runVitest(bundleRoot: string, segments: string[], config: 
 export { SEMIO_LOCKED_LOCALE_ENV, SEMIO_LOCKED_TERMINOLOGY_ENV, SEMIO_LOCKED_THEME_ENV, SEMIO_LOCKED_APPEARANCE_ENV, SEMIO_BRAND_ENV, SEMIO_DEFAULT_EXAMPLE_ENV, frameworkOsLockedPrefsEnv } from "./🎮️playground/🔒️preferences/🟦️.ts";
 
 //#region 🖥️FrameworkOsPlaygroundDev
-/** @emoji 🔌️ Local dev-time asset server port for wgpu Trunk/native playgrounds (Trunk forwards
+/** 🔌️ Local dev-time asset server port for wgpu Trunk/native playgrounds (Trunk forwards
  * route-scoped requests — e.g. `/osm`, `/vt`, `/dem` — here; driven by each playground's declared
  * `[[package.metadata.semio.assets]]` rows, not any one app's routes). */
 export const SEMIO_ASSET_SERVER_PORT = 6141;
 
-/** @emoji 🔌️ Process env for the absolute asset server URL base (native-bin wgpu route-relative fetches). */
+/** 🔌️ Process env for the absolute asset server URL base (native-bin wgpu route-relative fetches). */
 export const SEMIO_ASSET_BASE_URL_ENV = "SEMIO_ASSET_BASE_URL";
 
-/** @emoji 🔌️ Resolves the default dev port for a given catalog variant and renderer. */
+/** 🔌️ Resolves the default dev port for a given catalog variant and renderer. */
 export function frameworkOsPlaygroundDefaultPort(catalog: readonly PlaygroundVariant[], variant: string, renderer: string): number {
   const row = catalog.find((r) => r.variant === variant);
   if (!row) return 6066;
   return renderer === "wgpu" ? row.ports.wgpu : row.ports.react;
 }
 
-/** @emoji 🎯️ Resolves `bun ./📜️script.ts dev …` segments to a framework OS plugin filter via the catalog. */
+/** 🎯️ Resolves `bun ./📜️script.ts dev …` segments to a framework OS plugin filter via the catalog. */
 export function resolveFrameworkOsPlaygroundPlugin(catalog: readonly PlaygroundVariant[], segments: readonly string[]): { readonly plugin: string; readonly rest: readonly string[] } | null {
   if (segments.length === 0) return null;
   for (let len = segments.length; len >= 1; len--) {
@@ -2783,7 +2783,7 @@ export function resolveFrameworkOsPlaygroundPlugin(catalog: readonly PlaygroundV
   return null;
 }
 
-/** @emoji 🧊️ Env for `@semio-tech/framework-os-dev:dev` with a plugin filter and the renderer an
+/** 🧊️ Env for `@semio-tech/framework-os-dev:dev` with a plugin filter and the renderer an
  * explicit `SEMIO_RENDERER` (launch row, `extra`) selects — wgpu only as the unset default. The value
  * picks the `dev-<variant>-<renderer>-<profile>` target in `resolveNxInvocation`, so a react launch
  * row reaches Vite and never the wgpu browser server. */
@@ -2812,7 +2812,7 @@ export function playPollingEnv(extra: Partial<NodeJS.ProcessEnv> = {}): NodeJS.P
   });
 }
 
-/** @emoji 🔒️ Parses optional `example <id>` argv prefix for playground play scripts. */
+/** 🔒️ Parses optional `example <id>` argv prefix for playground play scripts. */
 export function consumePlaygroundExampleArgv(segments: string[], resolveExampleId: (slug: string) => string | undefined): { readonly segments: string[]; readonly exampleEnv: NodeJS.ProcessEnv } {
   if (segments[0] !== "example" || !segments[1]) {
     return { segments, exampleEnv: {} };
@@ -2833,7 +2833,7 @@ export function runPlaywright(bundleRoot: string, config: string, segments: stri
   runBunx(["playwright", "test", "--config", config, ...segments], bundleRoot, repoToolCacheEnv(findRepoRoot(bundleRoot), playPollingEnv()));
 }
 
-/** @emoji 🔌️ True when host:port already accepts TCP (existing dev server). */
+/** 🔌️ True when host:port already accepts TCP (existing dev server). */
 export function isDevPortInUse(host: string, port: number): boolean {
   const probe = `
 import { createConnection } from "node:net";
@@ -2847,23 +2847,23 @@ socket.once("error", () => process.exit(1));
   return result.status === 0;
 }
 
-/** @emoji 🌐️ Loopback URL for a dev server bound to `host`/`port`. */
+/** 🌐️ Loopback URL for a dev server bound to `host`/`port`. */
 export function devServerUrl(host: string, port: number): string {
   const probeHost = host === "0.0.0.0" ? "127.0.0.1" : host;
   return `http://${probeHost}:${port}/`;
 }
 
-/** @emoji 🧊️ Legacy trunk entry paths still seen on long-running dev servers. */
+/** 🧊️ Legacy trunk entry paths still seen on long-running dev servers. */
 export const WGPU_DEV_LEGACY_ENTRY_PATH = "/renderer-modules/wgpu/";
 
-/** @emoji 🧊️ Play URL for a wgpu trunk entry path and plugin filter. */
+/** 🧊️ Play URL for a wgpu trunk entry path and plugin filter. */
 export function wgpuDevPlayUrl(host: string, port: number, plugin: string, entryPath = "/"): string {
   const probeHost = host === "0.0.0.0" ? "127.0.0.1" : host;
   const base = entryPath.endsWith("/") ? entryPath : `${entryPath}/`;
   return `http://${probeHost}:${port}${base}?plugin=${encodeURIComponent(plugin)}`;
 }
 
-/** @emoji 🧊️ Probes which wgpu trunk entry path responds on `port`, if any. */
+/** 🧊️ Probes which wgpu trunk entry path responds on `port`, if any. */
 export function probeWgpuDevPort(host: string, port: number): { entryPath: string } | null {
   const probeHost = host === "0.0.0.0" ? "127.0.0.1" : host;
   for (const entryPath of ["/", WGPU_DEV_LEGACY_ENTRY_PATH] as const) {
@@ -2876,7 +2876,7 @@ process.exit(res.ok ? 0 : 1);`;
   return null;
 }
 
-/** @emoji 🛑️ Stops a trunk listener on `port` when it is the sole occupant. */
+/** 🛑️ Stops a trunk listener on `port` when it is the sole occupant. */
 export function stopTrunkDevPort(port: number): boolean {
   const occupant = describeDevPortOccupant(port);
   if (!occupant?.startsWith("trunk")) return false;
@@ -2890,7 +2890,7 @@ export function stopTrunkDevPort(port: number): boolean {
   }
 }
 
-/** @emoji 🎯️ Reads `import.meta.env.PLAYGROUND_APP_KIND` baked into a running playground dev server. */
+/** 🎯️ Reads `import.meta.env.PLAYGROUND_APP_KIND` baked into a running playground dev server. */
 export function devServerPlayEntry(host: string, port: number): string | undefined {
   const url = `${devServerUrl(host, port)}index.ts`;
   const probe = `const res = await fetch(${JSON.stringify(url)}, { signal: AbortSignal.timeout(2000) });
@@ -2904,7 +2904,7 @@ process.stdout.write(match?.[1] ?? "");
   return entry || undefined;
 }
 
-/** @emoji 🔎️ Best-effort description of the process listening on `port` (Unix/macOS/Linux). */
+/** 🔎️ Best-effort description of the process listening on `port` (Unix/macOS/Linux). */
 export function describeDevPortOccupant(port: number): string | undefined {
   if (process.platform === "win32") return undefined;
   const result = spawnSync("lsof", ["-nP", `-iTCP:${port}`, "-sTCP:LISTEN"], { encoding: "utf8" });
@@ -2917,7 +2917,7 @@ export function describeDevPortOccupant(port: number): string | undefined {
   return parts.length >= 2 ? `${parts[0]} (PID ${parts[1]})` : line.trim();
 }
 
-/** @emoji ♻️ True when an HTTP server on `port` already responds successfully (reuse existing dev). */
+/** ♻️ True when an HTTP server on `port` already responds successfully (reuse existing dev). */
 export function canReuseDevPort(host: string, port: number, expectedPlayEntry?: string): boolean {
   const url = devServerUrl(host, port);
   const probe = `const res = await fetch(${JSON.stringify(url)}, { signal: AbortSignal.timeout(2000) });
@@ -2928,7 +2928,7 @@ process.exit(res.ok ? 0 : 1);`;
   return devServerPlayEntry(host, port) === expectedPlayEntry;
 }
 
-/** @emoji 🔌️ First free TCP port at or after `preferredPort` (up to `maxAttempts`), skipping `skipPorts`. */
+/** 🔌️ First free TCP port at or after `preferredPort` (up to `maxAttempts`), skipping `skipPorts`. */
 export function resolveDevPort(host: string, preferredPort: number, maxAttempts = 20, skipPorts: ReadonlySet<number> = new Set()): number {
   for (let offset = 0; offset < maxAttempts; offset++) {
     const port = preferredPort + offset;
@@ -3005,10 +3005,11 @@ export function runViteBunxDevPlain(bundleRoot: string, segments: string[]): voi
   spawnBunx(["vite", "--host", host, ...segments], bundleRoot, playPollingEnv());
 }
 
-/** 🦀️Runs `cargo` with inherited stdio. */
+/** 🦀️Runs `cargo` through [[runCmd]] — on POSIX via the cargo relay, which pipes and forwards its output ([[cargoStreamingStatus]]). */
 export function runCargo(args: string[], cwd: string, env: NodeJS.ProcessEnv = process.env): void {
   runCmd("cargo", args, { cwd, env });
 }
+
 
 export type WasmPackWebPkg = {
   name: string;
@@ -3242,7 +3243,7 @@ export function parseExtensionCargoManifest(
   return { packageName, directoryName, version, description, componentPackageId, extends: extendsHost, contributes };
 }
 
-/** @emoji 📦 Builds a wasip2 component and writes a runtime-installable `.sxt` beside the crate (`dist/<id>.sxt` by default). */
+/** 📦 Builds a wasip2 component and writes a runtime-installable `.sxt` beside the crate (`dist/<id>.sxt` by default). */
 export async function runExtensionComponentPackage(opts: { readonly rsDir: string; readonly repoRoot?: string; readonly logPrefix?: string }): Promise<string> {
   const repoRoot = opts.repoRoot ?? getWorkspaceRoot();
   const rsDir = resolve(opts.rsDir);
@@ -3271,7 +3272,7 @@ export async function runExtensionComponentPackage(opts: { readonly rsDir: strin
   const outPath = join(rsDir, "dist", `${parsed.componentPackageId}.sxt`);
   mkdirSync(dirname(outPath), { recursive: true });
   writeFileSync(outPath, packed);
-  console.log(`[DEBUG] ${logPrefix} packaged ${outPath} (${packed.length} bytes)`);
+  console.log(`[TRACE] ${logPrefix} packaged ${outPath} (${packed.length} bytes)`);
   return outPath;
 }
 

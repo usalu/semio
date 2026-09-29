@@ -156,6 +156,15 @@
         "Artifact",
         "Config"
       ]
+    },
+    {
+      "action": "textSplice",
+      "variants": [
+        "text-splice"
+      ],
+      "publication": [
+        "Artifact"
+      ]
     }
   ],
   "batchOnly": [],

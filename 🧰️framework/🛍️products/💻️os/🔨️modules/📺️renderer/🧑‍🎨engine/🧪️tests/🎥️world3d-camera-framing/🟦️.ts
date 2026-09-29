@@ -1,4 +1,4 @@
-/** @emoji 🎥️ Actual Three Box3 oracle for the neutral retained World3d camera-framing fixture. */
+/** 🎥️ Actual Three Box3 oracle for the neutral retained World3d camera-framing fixture. */
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";

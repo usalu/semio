@@ -1,7 +1,7 @@
 {
   "schema": "semio.stdio.native-catalog-surface/v1",
   "definitionCount": 36,
-  "codecCount": 26,
+  "codecCount": 29,
   "cases": [
     { "id": "exact-complete", "mutation": "none", "accepted": true },
     { "id": "order-independent", "mutation": "reverse", "accepted": true },

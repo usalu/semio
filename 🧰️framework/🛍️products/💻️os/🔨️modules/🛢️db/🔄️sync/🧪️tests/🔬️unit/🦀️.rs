@@ -76,7 +76,7 @@ async fn retained_hello_replay_derives_the_server_frontier_without_decoding_the_
     assert_eq!((ledger.items, ledger.bytes), (1, replay.head_edit_id.capacity()), "only the server head id is held");
 }
 
-/// @emoji 🚰️ Drives one retained hello to its end and answers the welcome's server frontier with every tail frame's
+/// 🚰️ Drives one retained hello to its end and answers the welcome's server frontier with every tail frame's
 /// envelopes and frontier, acknowledging each frame, plus the largest backing the hello held while a frame was out.
 async fn stream_hello_tail(storage: std::sync::Arc<db_storage::DbBackend>, document: ArtifactId, replica: Option<protocol::RuntimeFrontierSummary>) -> (protocol::RuntimeFrontierSummary, Vec<(Vec<protocol::MutationEnvelope>, protocol::RuntimeFrontierSummary)>, usize, usize) {
     let pool = std::sync::Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 2)));
@@ -235,7 +235,7 @@ async fn command_record(envelope: &protocol::MutationEnvelope) -> WalRecord {
     WalRecord::Command(bytes)
 }
 
-/// @emoji 🧸️ Creates `document`'s WAL in `storage` and submits `count` sample commands
+/// 🧸️ Creates `document`'s WAL in `storage` and submits `count` sample commands
 /// (ids `"op-0".."op-{count-1}"`), each `Fsync`-durable so replay sees them immediately.
 async fn seed_wal(storage: &MemoryStorage, document: &ArtifactId, count: u64) {
     let mut wal = db_actor::block_on(ArtifactWal::create(storage, document.clone(), GroupCommitPolicy::default(), 0)).unwrap();
@@ -246,7 +246,7 @@ async fn seed_wal(storage: &MemoryStorage, document: &ArtifactId, count: u64) {
     wal.close().await.unwrap();
 }
 
-/// @emoji 🧸️ Reopens `document`'s WAL and appends one `SnapshotPub` marker covering `frontier`.
+/// 🧸️ Reopens `document`'s WAL and appends one `SnapshotPub` marker covering `frontier`.
 async fn publish_snapshot_marker(storage: &MemoryStorage, document: &ArtifactId, generation: u64, frontier: Frontier) {
     let (mut wal, _report) = db_actor::block_on(ArtifactWal::open(storage, document.clone(), GroupCommitPolicy::default(), 1000)).unwrap();
     submit_record(storage, &mut wal, WalRecord::SnapshotPub { generation, frontier }, 1000).await;

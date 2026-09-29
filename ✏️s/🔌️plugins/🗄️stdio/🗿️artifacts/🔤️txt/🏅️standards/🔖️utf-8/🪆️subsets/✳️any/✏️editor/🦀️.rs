@@ -1,14 +1,12 @@
 //! ✏️ Txt editor — the FIRST authored `ArtifactEditor` surface for `s.stdio.txt@utf-8/*` (ticket
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET). One real window, `🪟️main`
-//! (`TextWindowKit`), replacing the document through the direct line, line-ending, and trailing-newline mutations
-//! — a `replace-text` command is inherently whole-buffer, so per-line `InsertLine`/`SetLine` are not
-//! reachable through this window (documented, not silently dropped: a future line-addressable editor
-//! could target those directly).
+//! (`TextWindowKit`), replacing the whole buffer through the direct line, line-ending, and trailing-newline mutations
+//! (`txt_replacement_mutations`: every intermediate document stays a native shape).
 
 use crate::editor::txt::modes::edit;
 use crate::editor::txt::modes::edit::windows::main;
-use crate::schema::mutation_support::txt_usize_to_u32;
-use crate::schema::mutations::{InsertLineMutation, RemoveLineMutation, SetLineEndingMutation, SetTrailingNewlineMutation};
+use crate::schema::mutation_support::{native_snapshot_error, txt_usize_to_u32};
+use crate::schema::mutations::{InsertLineMutation, RemoveLineMutation, SetLineEndingMutation, SetLineMutation, SetTrailingNewlineMutation};
 use crate::{TxtMutation, TxtSnapshot, STDIO_TXT_DOCUMENT_SCHEMA};
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
@@ -213,22 +211,72 @@ fn txt_emit(command: &TxtEditorCommand, snapshot: &TxtSnapshot, canonical_revisi
     if &next == snapshot {
         return Ok(Emit::default());
     }
+    if let Some(reason) = native_snapshot_error(&next) {
+        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.txt.replace-text-unrepresentable"), reason));
+    }
+    Ok(Emit { artifact_mutations: txt_replacement_mutations(snapshot, &next)?, description: Some("Replace text".into()), ..Default::default() })
+}
+
+/// 🪜️ The placeholder an unterminated edge line carries while the document is terminated: non-empty, free of CR and LF, so
+/// it is a native line under both line endings whether or not a separator follows it.
+const REPLACEMENT_PLACEHOLDER_LINE: &str = " ";
+
+/// 🪜️ Lowers a whole-buffer replacement of a native `snapshot` by a native `next` into line mutations whose EVERY intermediate
+/// document is a native shape, so no leaf ever refuses mid-edit: collapse to the neutral pivot `[""]` + terminator (valid for LF
+/// and CRLF), switch the line ending there, then build `next`, carrying an unterminated edge line as the placeholder until the
+/// terminator state matches. Emits `O(old + new)` mutations and never a no-op.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn txt_replacement_mutations(snapshot: &TxtSnapshot, next: &TxtSnapshot) -> Result<Vec<TxtMutation>, Fault> {
+    let index = |line: usize| txt_usize_to_u32(line).map_err(|detail| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("txt.mutation.index-out-of-range"), detail));
     let mut mutations = Vec::new();
-    for index in (0..snapshot.lines.len()).rev() {
-        let index = txt_usize_to_u32(index).map_err(|detail| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("txt.mutation.index-out-of-range"), detail))?;
-        mutations.push(TxtMutation::RemoveLine(RemoveLineMutation { index }));
+    let mut first = snapshot.lines.first().cloned().unwrap_or_default();
+    if snapshot.lines.is_empty() {
+        mutations.push(TxtMutation::InsertLine(InsertLineMutation { index: 0, text: REPLACEMENT_PLACEHOLDER_LINE.into() }));
+        first = REPLACEMENT_PLACEHOLDER_LINE.into();
+    } else if !snapshot.trailing_newline {
+        let last = snapshot.lines.len() - 1;
+        if snapshot.lines[last] != REPLACEMENT_PLACEHOLDER_LINE {
+            mutations.push(TxtMutation::SetLine(SetLineMutation { index: index(last)?, text: REPLACEMENT_PLACEHOLDER_LINE.into() }));
+        }
+        if last == 0 {
+            first = REPLACEMENT_PLACEHOLDER_LINE.into();
+        }
     }
-    for (index, text) in next.lines.iter().cloned().enumerate() {
-        let index = txt_usize_to_u32(index).map_err(|detail| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("txt.mutation.index-out-of-range"), detail))?;
-        mutations.push(TxtMutation::InsertLine(InsertLineMutation { index, text }));
+    if !snapshot.trailing_newline {
+        mutations.push(TxtMutation::SetTrailingNewline(SetTrailingNewlineMutation { value: true }));
     }
-    if next.trailing_newline != snapshot.trailing_newline {
-        mutations.push(TxtMutation::SetTrailingNewline(SetTrailingNewlineMutation { value: next.trailing_newline }));
+    for line in (1..snapshot.lines.len()).rev() {
+        mutations.push(TxtMutation::RemoveLine(RemoveLineMutation { index: index(line)? }));
     }
     if next.line_ending != snapshot.line_ending {
+        if !first.is_empty() {
+            mutations.push(TxtMutation::SetLine(SetLineMutation { index: 0, text: String::new() }));
+            first.clear();
+        }
         mutations.push(TxtMutation::SetLineEnding(SetLineEndingMutation { value: next.line_ending }));
     }
-    Ok(Emit { artifact_mutations: mutations, description: Some("Replace text".into()), ..Default::default() })
+    let Some(last) = next.lines.len().checked_sub(1) else {
+        if first != REPLACEMENT_PLACEHOLDER_LINE {
+            mutations.push(TxtMutation::SetLine(SetLineMutation { index: 0, text: REPLACEMENT_PLACEHOLDER_LINE.into() }));
+        }
+        mutations.push(TxtMutation::SetTrailingNewline(SetTrailingNewlineMutation { value: false }));
+        mutations.push(TxtMutation::RemoveLine(RemoveLineMutation { index: 0 }));
+        return Ok(mutations);
+    };
+    let staged = |line: usize| if line == last && !next.trailing_newline { REPLACEMENT_PLACEHOLDER_LINE } else { next.lines[line].as_str() };
+    if first != staged(0) {
+        mutations.push(TxtMutation::SetLine(SetLineMutation { index: 0, text: staged(0).into() }));
+    }
+    for line in 1..next.lines.len() {
+        mutations.push(TxtMutation::InsertLine(InsertLineMutation { index: index(line)?, text: staged(line).into() }));
+    }
+    if !next.trailing_newline {
+        mutations.push(TxtMutation::SetTrailingNewline(SetTrailingNewlineMutation { value: false }));
+        if next.lines[last] != REPLACEMENT_PLACEHOLDER_LINE {
+            mutations.push(TxtMutation::SetLine(SetLineMutation { index: index(last)?, text: next.lines[last].clone() }));
+        }
+    }
+    Ok(mutations)
 }
 
 #[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]

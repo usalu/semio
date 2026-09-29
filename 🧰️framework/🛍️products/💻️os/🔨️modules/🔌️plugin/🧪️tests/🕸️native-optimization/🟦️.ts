@@ -26,6 +26,5 @@ export async function testPluginCoreOptimization(workspace: string, output: stri
       assert.equal((instance.exports.answer as () => number)(), fixture.expected);
     }
     assert.deepEqual(readFileSync(join(root, fixture.foreign)), bytes);
-    console.log("[DEBUG] Native component optimization selects owned cores, preserves dev outputs and matches JavaScript Binaryen bytes/runtime PASS");
   } finally { rmSync(root, { recursive: true, force: true }); }
 }

@@ -335,7 +335,7 @@ impl Mutation<DemoSnapshot> for DemoMutation {
     }
 }
 
-/// @emoji 🎯️ Idempotently registers the `demo/v1` codec (process-global `OnceLock` registry,
+/// 🎯️ Idempotently registers the `demo/v1` codec (process-global `OnceLock` registry,
 /// shared across every test in this binary) — needed by any test exercising `FolderEndpoint`
 /// end-to-end (both `Sqlite` and `Pack` now go through `document_codec` per the pack+spr flip),
 /// mirroring a real app's program-init-time `register_document_codec_for_app` call. A concurrent
@@ -1024,7 +1024,6 @@ async fn wire_fixtures_stay_byte_identical_across_rust_and_ts() {
         timestamp: crate::os_spr::HybridLogicalTimestamp { actor: 42, physical_ms: 1000, logical: 0 },
     };
 
-    //#region 🔖️ClientFrame
     let hello = ClientFrame::SocketHelloV1 { wire_version: 1, protocol_version: 1, schema: "demo/v1".to_string(), pack_schema_hash: [7u8; 32], resume_token: None, frontier: None };
     let hello_bytes = encode_client_frame(&hello, Lane::Command).await;
     let (hello_lane, decoded_hello) = crate::os_spr::decode_client_frame(&hello_bytes).await.expect("decode current socket hello");
@@ -1038,9 +1037,7 @@ async fn wire_fixtures_stay_byte_identical_across_rust_and_ts() {
     check_client(&fixtures_dir, "🙋️client-presence/💾️.bin", &ClientFrame::Presence { peer: presence_to_bytes(&sample_presence_peer_with_interaction().await).await }, Lane::Preview).await;
     check_client(&fixtures_dir, "🎟️client-credit-grant/💾️.bin", &ClientFrame::CreditGrant { n: 16 }, Lane::Command).await;
     check_client(&fixtures_dir, "👋️client-bye/💾️.bin", &ClientFrame::Bye, Lane::Command).await;
-    //#endregion 🔖️ClientFrame
 
-    //#region 🔖️ServerFrame
     check_server(&fixtures_dir, "🔗️server-welcome-tail/💾️.bin", &ServerFrame::Welcome { session_id: "session-1".to_string(), resume_token: "resume-1".to_string(), server_frontier: frontier.clone(), bootstrap: Bootstrap::Tail }, Lane::Command).await;
     check_server(
         &fixtures_dir,
@@ -1082,7 +1079,6 @@ async fn wire_fixtures_stay_byte_identical_across_rust_and_ts() {
     check_server(&fixtures_dir, "🎫️server-credit-grant/💾️.bin", &ServerFrame::CreditGrant { n: 32 }, Lane::Command).await;
     check_server(&fixtures_dir, "🚨️server-error/💾️.bin", &ServerFrame::Error { code: "rejected".to_string(), message: "bad batch".to_string() }, Lane::Command).await;
     check_server(&fixtures_dir, "🪪️server-session/💾️.bin", &ServerFrame::Session { actor: "actor-1".to_string(), color: 5 }, Lane::Command).await;
-    //#endregion 🔖️ServerFrame
 }
 
 /// 🧸️ A second, distinct `MutationEnvelope` for `🔀️server-ack-transformed/💾️.bin`'s
@@ -1353,6 +1349,16 @@ mod actor_tests {
     }
 
     // 🔬️ External folder edit → RemoteMutations event + the store timeline grows on tick().
+    /// 📁️ A local apply establishes a persisted edit on disk.
+    ///
+    /// Wait until the actor has persisted the local edit to the folder db as real pack+spr bytes.
+    ///
+    /// Out-of-band: append a foreign edit directly to the spr bytes (real binary op
+    /// payloads, no codec, no JSON) before writing pack+spr back.
+    ///
+    /// Deterministically poke the actor to re-read (notify also wired, but timing-independent here).
+    ///
+    /// The store ingests the pushed operation on tick(); the timeline grows and snapshot updates.
     #[tokio::test]
     async fn folder_external_edit_delivers_remote_operations() {
         ensure_demo_codec_registered().await;
@@ -1363,11 +1369,9 @@ mod actor_tests {
         let mut store = crate::os_store::test_support::plain_test_store(demo_envelope("doc-a").await).await;
         store.attach_backbone(Backbones::Channel(channels.channel_backbone)).await.expect("attach");
 
-        // A local apply establishes a persisted edit on disk.
         store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply");
         channels.cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).expect("wake");
 
-        // Wait until the actor has persisted the local edit to the folder db as real pack+spr bytes.
         let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
         let mut archive = wait_until_value("persisted edit on disk", || async {
             let bytes = storage.read_archive("doc-a").await.expect("read archive")?;
@@ -1380,8 +1384,6 @@ mod actor_tests {
         })
         .await;
 
-        // Out-of-band: append a foreign edit directly to the spr bytes (real binary op
-        // payloads, no codec, no JSON) before writing pack+spr back.
         let external_edit = crate::os_spr::HistoryEdit {
             id: "external-1".into(),
             actor: Some("peer".into()),
@@ -1397,7 +1399,6 @@ mod actor_tests {
         let bytes = crate::os_spr::encode_document_archive_bytes(&archive).expect("encode externally changed archive");
         storage.write_archive("doc-a", "demo/v1", &bytes).await.expect("out-of-band archive write");
 
-        // Deterministically poke the actor to re-read (notify also wired, but timing-independent here).
         channels.cmd_tx.send(ArtifactActorMsg::ExternalChanged).expect("poke");
 
         let event = wait_for_event(&mut events, |event| matches!(event, ArtifactEvent::RemoteMutations { .. })).await;
@@ -1409,7 +1410,6 @@ mod actor_tests {
             other => panic!("expected RemoteMutations, got {other:?}"),
         }
 
-        // The store ingests the pushed operation on tick(); the timeline grows and snapshot updates.
         store.tick().await.expect("tick");
         assert_eq!(store.envelope().vcs.edits.len(), 2, "external edit joined the timeline");
         assert_eq!(store.snapshot().expect("snapshot").n, 42);
@@ -1418,7 +1418,7 @@ mod actor_tests {
     }
 
     //#region 🔖️MockHub
-    /// @emoji 🧪️ A minimal in-process semio_hub speaking the real, binary `crate::os_spr::wire::ClientFrame`/
+    /// 🧪️ A minimal in-process semio_hub speaking the real, binary `crate::os_spr::wire::ClientFrame`/
     /// `ServerFrame` protocol, so the semio_hub endpoint is exercised end-to-end without linking a real
     /// `db`-backed semio_hub (that's CW6's job — this mock never touches `db`). Ordinal-indexed log,
     /// mirroring `db_sync`'s replica-catch-up shape (`Hello.frontier` -> filtered backlog ->
@@ -1528,6 +1528,12 @@ mod actor_tests {
         spawn_mock_hub_with_session_gate(false).await
     }
 
+    /// 🎭️ Framework document WS (C4b): client offers `semio.session.v1, <token>`;
+    /// server selects the protocol token only (mirrors gateway `.protocols([SESSION_PROTOCOL_V1])`).
+    ///
+    /// Session actor is derived from the session credential (last segment of
+    /// `session.v1.<selector>.<secret>` → `hub.v1.<secret>`), never from a
+    /// caller-supplied `?actor=` query — mirrors the real hub binding.
     async fn spawn_mock_hub_with_session_gate(gated: bool) -> (std::net::SocketAddr, Arc<MockHub>) {
         ensure_demo_codec_registered().await;
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.expect("bind");
@@ -1548,8 +1554,6 @@ mod actor_tests {
                         move |request: &tokio_tungstenite::tungstenite::handshake::server::Request,
                          mut response: tokio_tungstenite::tungstenite::handshake::server::Response|
                          -> Result<_, tokio_tungstenite::tungstenite::handshake::server::ErrorResponse> {
-                            // Framework document WS (C4b): client offers `semio.session.v1, <token>`;
-                            // server selects the protocol token only (mirrors gateway `.protocols([SESSION_PROTOCOL_V1])`).
                             const SESSION_PROTOCOL_V1: &str = "semio.session.v1";
                             let offered = request
                                 .headers()
@@ -1561,9 +1565,6 @@ mod actor_tests {
                                 return Err(tokio_tungstenite::tungstenite::http::Response::builder().status(400).body(None).expect("static refuse"));
                             };
                             response.headers_mut().insert("Sec-WebSocket-Protocol", selected.parse().expect("static protocol header"));
-                            // Session actor is derived from the session credential (last segment of
-                            // `session.v1.<selector>.<secret>` → `hub.v1.<secret>`), never from a
-                            // caller-supplied `?actor=` query — mirrors the real hub binding.
                             let actor = offered.split_once(", ").and_then(|(_, token)| {
                                 let secret = token.rsplit('.').next()?;
                                 (!secret.is_empty()).then(|| format!("hub.v1.{secret}"))
@@ -1597,9 +1598,14 @@ mod actor_tests {
         (addr, semio_hub)
     }
 
+    /// 🤝️ Expect Hello first.
+    ///
+    /// 👻️ Best-effort fan-out on the uncredited preview lane — this mock
+    /// semio_hub doesn't track per-connection actor identity beyond `Hello`, so
+    /// it stamps a fixed sentinel origin (fine for the round-trip test
+    /// this drives, which only asserts the *other* peer receives it).
     async fn mock_hub_connection(ws: tokio_tungstenite::WebSocketStream<tokio::net::TcpStream>, semio_hub: Arc<MockHub>, actor: String) {
         let (mut write, mut read) = ws.split();
-        // Expect Hello first.
         let requested_ordinal = match read.next().await {
             Some(Ok(WsMessage::Binary(bytes))) => match decode_client_frame(&bytes).await {
                 Ok((_, ClientFrame::SocketHelloV1 { frontier, .. })) => {
@@ -1682,10 +1688,6 @@ mod actor_tests {
                                 }
                                 Ok((_, ClientFrame::PreviewPublish { key, seq, payload })) => {
                                     semio_hub.record("client.preview-publish");
-                                    // 👻️ Best-effort fan-out on the uncredited preview lane — this mock
-                                    // semio_hub doesn't track per-connection actor identity beyond `Hello`, so
-                                    // it stamps a fixed sentinel origin (fine for the round-trip test
-                                    // this drives, which only asserts the *other* peer receives it).
                                     let _ = semio_hub.broadcast.send(ServerFrame::Preview { actor: ActorId("mock-semio_hub-peer".to_string()), key, seq, payload });
                                 }
                                 Ok((_, ClientFrame::Bye)) => semio_hub.record("client.bye"),
@@ -1827,6 +1829,9 @@ mod actor_tests {
 
     // 🔬️ Reconnect with `since` catch-up: after A appends operations while B is offline, B reconnects and
     // its Welcome backlog carries only the operations it missed.
+    /// 📬️ A applies two operations while nobody else is connected.
+    ///
+    /// B connects fresh (since_version 0) and its Welcome backlog replays both operations.
     #[tokio::test]
     async fn reconnect_since_catch_up_replays_backlog() {
         let (addr, hub) = spawn_mock_hub().await;
@@ -1849,14 +1854,12 @@ mod actor_tests {
         store_a.attach_backbone(Backbones::Channel(channels_a.channel_backbone)).await.expect("attach a");
         wait_for_mock_hub_event("A Session", &hub, &mut events_a, |event| matches!(event, ArtifactEvent::Session { .. })).await;
 
-        // A applies two operations while nobody else is connected.
         for n in [3, 4] {
             store_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n }], description: None }).await.expect("apply on a");
             channels_a.cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).expect("wake a");
             tokio::time::sleep(Duration::from_millis(80)).await;
         }
 
-        // B connects fresh (since_version 0) and its Welcome backlog replays both operations.
         let host_b = ArtifactHost::new(test_pool());
         configure_mock_hub(&host_b, &base_url, 'b', &hub);
         let channels_b = host_b
@@ -1881,12 +1884,14 @@ mod actor_tests {
     }
 
     // 🔬️ Detach drains the outbox: an operation applied right before close still reaches the semio_hub (and B).
+    /// 🚿️ Observer B stays connected to witness A's last operation.
+    ///
+    /// Immediately close A without waiting for the poll tick: Detach must flush the outbox first.
     #[tokio::test]
     async fn detach_drains_pending_outbound_operations() {
         let (addr, hub) = spawn_mock_hub().await;
         let base_url = format!("ws://{addr}");
 
-        // Observer B stays connected to witness A's last operation.
         let host_b = ArtifactHost::new(test_pool());
         configure_mock_hub(&host_b, &base_url, 'b', &hub);
         let channels_b = host_b
@@ -1915,7 +1920,6 @@ mod actor_tests {
         wait_for_mock_hub_event("A Session", &hub, &mut events_a, |event| matches!(event, ArtifactEvent::Session { .. })).await;
 
         store_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None }).await.expect("apply on a");
-        // Immediately close A without waiting for the poll tick: Detach must flush the outbox first.
         host_a.close_key(&key_a);
 
         let event = wait_for_event(&mut events_b, |event| matches!(event, ArtifactEvent::DocumentBackbone { .. })).await;
@@ -2013,6 +2017,8 @@ mod actor_tests {
         }
     }
 
+    /// 🎞️ Lockstep: apply each stimulus, then wait for its paired expected event before the next
+    /// (removes any write/poke race). Folder-replayable fixtures pair inbound 1:1 with events.
     async fn replay_fixture(fixture: &ActorFixture) {
         ensure_demo_codec_registered().await;
         let codec = crate::os_store::document_codec(&fixture.schema).await.expect("codec registry available").unwrap_or_else(|| panic!("no codec registered for fixture schema {:?}", fixture.schema));
@@ -2026,8 +2032,6 @@ mod actor_tests {
         let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
         wait_until(&format!("seed snapshot for {} on disk", fixture.document_id), || async { storage.read_archive(&fixture.document_id).await.expect("read archive").is_some() }).await;
 
-        // Lockstep: apply each stimulus, then wait for its paired expected event before the next
-        // (removes any write/poke race). Folder-replayable fixtures pair inbound 1:1 with events.
         assert_eq!(fixture.inbound.len(), fixture.expected_events.len(), "fixture {} must pair each inbound stimulus with one expected event", fixture.name);
         let mut observed: Vec<String> = Vec::new();
         for (inbound, expected) in fixture.inbound.iter().zip(fixture.expected_events.iter()) {
@@ -2089,12 +2093,13 @@ mod actor_tests {
             ArtifactEvent::Preview { .. } => "preview",
             ArtifactEvent::CommandOutcome { .. } => "commandOutcome",
             ArtifactEvent::Conflict(_) => "conflict",
+            ArtifactEvent::RebootstrapRequired { .. } => "rebootstrapRequired",
         }
     }
 }
 //#endregion 🧪️Actor
 
-/// @emoji 🎯️ `FolderEventLogStorage` is a pure `(pack, spr)` event store — schema-agnostic,
+/// 🎯️ `FolderEventLogStorage` is a pure `(pack, spr)` event store — schema-agnostic,
 /// no JSON/codec involvement at this layer (that lives one level up, in `FolderEndpoint`, tested
 /// via `folder_external_edit_delivers_remote_operations`). This test exercises exactly the
 /// storage mechanics: per-id folding, append-only replacement, and the folder-wide index.
@@ -2224,7 +2229,7 @@ async fn document_archive_text_storage_round_trips_complete_owned_bytes() {
     assert_eq!(storage.read_archive("root-1", "test").await.expect("read after malformed refusal").expect("prior archive remains"), persisted);
 }
 
-/// @emoji 🔐️ The endpoint-level save→load→undo proof: a store's undo/redo position survives a
+/// 🔐️ The endpoint-level save→load→undo proof: a store's undo/redo position survives a
 /// full write/read cycle through the ACTUAL `FolderEventLogStorage` byte storage (`store`'s own
 /// `save_load_undo_proof_pack_spr_round_trip_preserves_undo_redo_position` proves the pure
 /// in-memory pack/spr encoding; this proves the folder persistence layer built on top of it).
@@ -2256,7 +2261,7 @@ async fn folder_event_log_storage_round_trips_undo_position_through_pack_spr() {
     crate::os_store::test_support::close_plain_test_store(&mut reloaded);
 }
 
-/// @emoji 🎯️ Seeds the write from a ZERO-edit envelope (no cursor line — a cursor is only
+/// 🎯️ Seeds the write from a ZERO-edit envelope (no cursor line — a cursor is only
 /// synced once an edit is dispatched, see `ArtifactStore::sync_cursor`) so both edits are then
 /// added purely via the raw `append_ops` hot path with no cursor line ever written; a cursor
 /// pinned to an earlier edit count would otherwise cap the reconstructed snapshot at that
@@ -2292,7 +2297,7 @@ async fn folder_text_storage_round_trips_dsl_and_appends_ops() {
     crate::os_store::test_support::close_plain_test_store(&mut store);
 }
 
-/// @emoji 🎯️ Unlike the `.ops`-text hot path (`append_ops`, tested above), `.pack`+`.spr` have
+/// 🎯️ Unlike the `.ops`-text hot path (`append_ops`, tested above), `.pack`+`.spr` have
 /// no incremental-append primitive wired up yet (that's `crate::os_spr::HistoryAppender`, a future
 /// wave's job to thread through this storage layer) — `write_pack` is the whole-file cold path
 /// for the AUTHORITATIVE pair, called again after every edit. `append_ops` still keeps the
@@ -2301,6 +2306,16 @@ async fn folder_text_storage_round_trips_dsl_and_appends_ops() {
 /// `parse_document_text`), which this test verifies explicitly: appending ops text alone,
 /// without an accompanying `write_pack`, does NOT change what `read_pack`/`parse_document_pack`
 /// reconstructs, because pack+spr (not ops text) are authoritative for that path.
+///
+/// Text mirror is current (both edits landed via append_ops).
+///
+/// pack+spr are unaffected by ops-text-only appends — still the zero-edit snapshot from
+/// the initial write_pack, proving read_pack/parse_document_pack never reads .ops.
+///
+/// A fresh whole-file write_pack (the actual cold-path persistence flow) brings pack+spr
+/// current with the live store.
+///
+/// The always-written DSL mirror must also be on disk and agree with the initial-snapshot.
 #[cfg(not(target_arch = "wasm32"))]
 #[semio_framework_async_macros::async_test]
 async fn folder_text_storage_round_trips_pack() {
@@ -2322,21 +2337,16 @@ async fn folder_text_storage_round_trips_pack() {
     let second_edit = store.envelope().vcs.edits.last().expect("second edit");
     storage.append_ops("demo", "demo", &print_edit_lines(second_edit).await.expect("print edit lines")).await.expect("append ops 2");
 
-    // Text mirror is current (both edits landed via append_ops).
     let reloaded_text = storage.read("demo", "demo").await.expect("read text").expect("some text");
     let parsed_text: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_text(&reloaded_text.dsl, &reloaded_text.ops).await.unwrap_or_else(|error| panic!("parse text: {error}"));
     assert_eq!(parsed_text.snapshot.n, 2, "the .ops text mirror reflects every appended edit");
     let _ = parsed_text.into_snapshot();
 
-    // pack+spr are unaffected by ops-text-only appends — still the zero-edit snapshot from
-    // the initial write_pack, proving read_pack/parse_document_pack never reads .ops.
     let reloaded_pack = storage.read_pack("demo", "demo").await.expect("read pack").expect("some pack");
     let parsed_pack: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&reloaded_pack.pack, &reloaded_pack.spr).await.unwrap_or_else(|error| panic!("parse pack: {error}"));
     assert_eq!(parsed_pack.snapshot.n, 0, "pack+spr are authoritative and independent of ops-text-only appends");
     let _ = parsed_pack.into_snapshot();
 
-    // A fresh whole-file write_pack (the actual cold-path persistence flow) brings pack+spr
-    // current with the live store.
     let files2 = print_document_pack(store.envelope()).await.expect("print document pack 2");
     let dsl_mirror2 = store.envelope().vcs.initial_snapshot.print_dsl();
     storage.write_pack("demo", "demo", &files2, &dsl_mirror2).await.expect("write pack 2");
@@ -2345,7 +2355,6 @@ async fn folder_text_storage_round_trips_pack() {
     assert_eq!(parsed_pack2.snapshot.n, 2, "a fresh write_pack brings pack+spr current with the live store");
     let _ = parsed_pack2.into_snapshot();
 
-    // The always-written DSL mirror must also be on disk and agree with the initial-snapshot.
     let mirror_path = dir.path().join(crate::os_store::semio_format::semio_filename("demo", "demo", crate::os_store::semio_format::Component::Dsl));
     let mirror = std::fs::read_to_string(&mirror_path).expect("dsl mirror on disk");
     assert_eq!(DemoSnapshot::parse_dsl(&mirror).expect("parse mirror").n, 0, "mirror captures the initial snapshot, not later edits");
@@ -2401,3 +2410,58 @@ async fn folder_event_log_ignores_an_incomplete_tail_and_coordinates_handles() {
 
 #[path = "../🔬️backbone-parity/🦀️.rs"]
 mod backbone_parity;
+
+/// 🛟️ A hub `RebootstrapRequired` never strands a native document again (LD item 3, WG10 item 6): the actor asks its host for
+/// the pair and does not dial into a Welcome it would have to refuse; the host's reseed restarts it at the pair — unacked local
+/// work handed back to the guest — and its next Hello names the pair's baseline, so the hub's None/Tail Welcome goes Live.
+#[cfg(not(target_arch = "wasm32"))]
+#[tokio::test]
+async fn a_rebootstrap_waits_for_the_hosts_reseed_and_says_hello_at_its_baseline() {
+    let (bootstrap, pair) = demo_artifact_bootstrap(true).await;
+    let baseline = bootstrap.baseline_frontier.clone();
+    let (_, remote) = ChannelBackbone::pair("native-rebootstrap-test").await;
+    let (_, receiver) = artifact_mailbox_pair();
+    let (events, mut event_rx) = broadcast::channel(32);
+    let mut actor = native_actor::ArtifactActor::new(
+        test_pool(),
+        ArtifactActorConfig { document_id: "demo".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url: "http://hub.local".into(), space_id: "space-reseed".into(), surface: None }], watch_external: false, actor: "rebootstrap-test".into() },
+        remote,
+        receiver,
+        events,
+        Arc::new(std::sync::RwLock::new(None)),
+        Arc::new(std::sync::RwLock::new(None)),
+        None,
+        semio_framework_async::CancelToken::root_now(),
+    )
+    .await;
+    let local = sample_operation_envelope("unacked-local", 5).await;
+    actor.queue_test_outbox(vec![local.clone()]);
+    let control = crate::os_spr::RebootstrapRequired { space_id: "space-reseed".into(), document_id: "demo".into(), checkpoint_id: [0x22; 32], descriptor_hash: [0x11; 32], baseline_frontier: baseline.clone() };
+    actor.inject_hub_frame(ServerFrame::RebootstrapRequired { control }).await;
+    let mut asked = None;
+    while let Ok(event) = event_rx.try_recv() {
+        if let ArtifactEvent::RebootstrapRequired { control } = event {
+            asked = Some(control);
+        }
+    }
+    let asked = asked.expect("the actor asks its host for the pair instead of waiting for it inside a Welcome");
+    assert_eq!((asked.scope.document_id.as_str(), asked.checkpoint_id.0, asked.baseline_frontier.head_edit_ordinal), ("demo", [0x22; 32], baseline.head_edit_ordinal));
+    assert!(actor.bootstrap_test_state().8, "the actor waits for its host's reseed");
+    let baseline_frontier = crate::os_directory::ArtifactFrontier { document_id: "demo".into(), head_edit_ordinal: baseline.head_edit_ordinal, head_edit_id: baseline.head_edit_id.clone(), last_commit_seq: baseline.last_commit_seq, chain_hash: crate::os_directory::ArtifactHash(baseline.chain_hash) };
+    let _ = actor.handle_test_cmd(ArtifactActorMsg::Reseed { pack: pair.pack.clone(), spr: pair.spr.clone(), baseline: baseline_frontier }).await;
+    let mut replayed = Vec::new();
+    while let Ok(event) = event_rx.try_recv() {
+        if let ArtifactEvent::RemoteMutations { envelopes } = event {
+            replayed.extend(envelopes.into_iter().map(|envelope| envelope.mutation_id.0));
+        }
+    }
+    assert_eq!(replayed, vec![local.mutation_id.0.clone()], "the unacked local operation goes back to the re-seeded guest");
+    let (pack, spr, frontier, _, resume, _, _, outbox, rebootstrap) = actor.bootstrap_test_state();
+    assert_eq!((pack.as_deref(), spr.as_deref(), frontier, resume, rebootstrap), (Some(pair.pack.as_slice()), Some(pair.spr.as_slice()), Some(baseline.clone()), None, false));
+    assert_eq!(outbox, vec![local.mutation_id.0.clone()], "and stays queued for the hub");
+    let mut socket = connect(&mut actor, "hub.v1.eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee").await;
+    let ClientFrame::SocketHelloV1 { frontier, .. } = receive_frame(&mut socket).await else { panic!("the first frame is the hello") };
+    assert_eq!(frontier, Some(baseline.clone()), "the rebuilt socket says Hello at the pair's baseline");
+    actor.inject_hub_frame(ServerFrame::Welcome { session_id: "session-reseed".into(), resume_token: "resume-reseed".into(), server_frontier: baseline.clone(), bootstrap: Bootstrap::None }).await;
+    assert!(matches!(actor.bootstrap_test_state().6, RemoteState::Live { .. }), "the hub's None Welcome is accepted like a first open");
+}

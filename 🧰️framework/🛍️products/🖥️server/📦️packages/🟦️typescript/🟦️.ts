@@ -1,2 +1,2 @@
-/** @emoji 📦️ `@semio-tech/framework-server` — package glue (reexports only). */
+/** 📦️ `@semio-tech/framework-server` — package glue (reexports only). */
 export * from "../../🟦️.ts";

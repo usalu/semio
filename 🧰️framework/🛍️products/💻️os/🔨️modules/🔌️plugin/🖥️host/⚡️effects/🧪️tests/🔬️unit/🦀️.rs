@@ -107,16 +107,17 @@ async fn activate<R: HostAsyncRuntime>(executor: &AsyncEffectExecutor<RecordingE
 /// 🔑️ Bench budget 8: a revoked capability cancels ONLY the operations holding it — the actor
 /// survives, and the revoked operation's own completion carries a `capability-revoked` error
 /// while a SIBLING operation (different capability) completes normally.
+///
+/// 🐛️ `executor()`'s default `UnwiredRouterEffectHandler` always returns `Err` — this test
+/// needs the NON-revoked operation to actually succeed so the two completions are
+/// distinguishable by more than "which one happened to fail", so it swaps in a handler that
+/// always succeeds.
 #[semio_framework_async_macros::async_test]
 async fn revoked_capability_cancels_only_its_own_operations_and_actor_survives() {
     let runtime = ManualRuntime::new(0).await;
     let runtime_dyn: Arc<ManualRuntime> = Arc::new(runtime.clone());
     let (mut executor, injector, actors) = executor(runtime_dyn.clone()).await;
     let scope = activate(&executor, &actors, runtime_dyn.as_ref(), 1, 0).await;
-    // 🐛️ `executor()`'s default `UnwiredRouterEffectHandler` always returns `Err` — this test
-    // needs the NON-revoked operation to actually succeed so the two completions are
-    // distinguishable by more than "which one happened to fail", so it swaps in a handler that
-    // always succeeds.
     struct AlwaysOkRouterHandler;
     impl RouterEffectHandler for AlwaysOkRouterHandler {
         fn create_job(&self, _effect: RouterEffect) -> Box<dyn InteractiveJob + Send> {

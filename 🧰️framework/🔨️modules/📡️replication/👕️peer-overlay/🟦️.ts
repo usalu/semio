@@ -1,4 +1,4 @@
-/** @emoji 👕️ Pure peer-overlay derivation from presence roster + local window (contract-freeze §C7.8).
+/** 👕️ Pure peer-overlay derivation from presence roster + local window (contract-freeze §C7.8).
  * Ephemeral shared only — never persisted. Twin of `👕️peer-overlay/🦀️.rs`.
  */
 

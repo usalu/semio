@@ -432,6 +432,12 @@ interface effects {
     data: string,
     encoding: option<string>,
   }
+  /// 🎥️ `program` is a `pack` of `semio_framework::kernel::VideoRenderProgram` (`semio.video-render.program.v1`): the
+  /// host renders it frame by frame, encodes H.264 in an MP4 and downloads it as `filename`.
+  record video-render-export-effect {
+    filename: string,
+    program: pack,
+  }
   /// 🧬️ W0: payload half of `request-file-open-effect`, see `blob-load-params`.
   record request-file-open-params {
     accept: string,
@@ -601,6 +607,7 @@ interface effects {
     subscribe(subscribe-effect),
     unsubscribe(subscribe-effect),
     request-inference-proposal(request-inference-proposal-effect),
+    video-render-export(video-render-export-effect),
   }
 }
 

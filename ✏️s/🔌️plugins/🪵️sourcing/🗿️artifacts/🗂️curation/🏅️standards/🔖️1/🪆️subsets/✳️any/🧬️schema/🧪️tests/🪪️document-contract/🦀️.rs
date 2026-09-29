@@ -33,5 +33,4 @@ fn curation_document_contract_exact_children_and_native_transports() {
     let text = snapshot.print_dsl();
     let (_, body) = text.split_once('\n').unwrap();
     for header in ["semio forms.form.dsl v1", "semio curation.curation.dsl v2", "semio curation.curation.pack v1"] { assert!(CurationSnapshot::parse_dsl(&format!("{header}\n{body}")).is_err(), "{header}"); }
-    println!("[DEBUG] Curation native JSON/text/Pack retain exact Kit identity; invalid child replacement leaves the document intact");
 }

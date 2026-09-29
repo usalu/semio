@@ -135,6 +135,7 @@
         }
       ],
       "kinds": [
+        "set-snapshot",
         "insert-run",
         "remove-run",
         "edit-run",

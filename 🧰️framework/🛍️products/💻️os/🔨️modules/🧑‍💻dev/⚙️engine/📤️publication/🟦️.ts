@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 
-/** @emoji 🍎 Prefer Command Line Tools over an unlicensed Xcode.app so cargo/wasm-pack can link. */
+/** 🍎 Prefer Command Line Tools over an unlicensed Xcode.app so cargo/wasm-pack can link. */
 function ensureAppleDeveloperDir(): void {
   if (process.platform !== "darwin" || process.env.FORCE_XCODE === "1") return;
   const clt = "/Library/Developer/CommandLineTools";

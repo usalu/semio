@@ -1,4 +1,4 @@
-//! @emoji 🧠️ The headless UI runtime — presentation state and the reconciler that turns it into
+//! 🧠️ The headless UI runtime — presentation state and the reconciler that turns it into
 //! [`ui_contract`] patches. It renders nothing and knows about no renderer.
 //!
 //! ```text

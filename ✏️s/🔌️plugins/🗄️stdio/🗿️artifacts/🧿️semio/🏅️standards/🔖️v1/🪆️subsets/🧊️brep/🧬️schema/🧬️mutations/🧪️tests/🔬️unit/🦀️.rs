@@ -232,7 +232,7 @@ async fn flattened_transport_discriminants_enforce_create_required_fields() {
 //#region 🧪️SemanticKinds
 #[semio_framework_async_macros::async_test]
 async fn semantic_kinds_cover_every_variant() {
-    assert_eq!(SemioBrepMutation::kinds().len(), 13);
+    assert_eq!(SemioBrepMutation::kinds().len(), 14);
     let mutation = SemioBrepMutation::DeleteVertex(delete_vertex::DeleteVertex { id: "v1".into() });
     assert_eq!(mutation.semantics().kind, "delete-vertex");
     assert_eq!(mutation.semantics().record, "DeletedVertex");

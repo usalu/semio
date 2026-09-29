@@ -536,9 +536,7 @@
       },
       "name": "matA"
     },
-    {
-      "name": "createdMaterial"
-    },
+    {},
     {
       "pbrMetallicRoughness": {
         "baseColorFactor": [
@@ -589,7 +587,7 @@
             "TEXCOORD_0": 7
           },
           "indices": 8,
-          "material": 1
+          "material": 2
         }
       ],
       "extras": {
@@ -608,7 +606,7 @@
             "WEIGHTS_0": 13
           },
           "indices": 14,
-          "material": 1
+          "material": 2
         }
       ],
       "extras": {

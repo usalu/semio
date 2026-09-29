@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 pub const EXAMPLES_DIR_NAME: &str = "📚️examples";
 pub const ASSETS_DIR_NAME: &str = "🖼️assets";
 
-/// @emoji 🏠️ Ascends from `CARGO_MANIFEST_DIR` to the repo root (`nx.json`).
+/// 🏠️ Ascends from `CARGO_MANIFEST_DIR` to the repo root (`nx.json`).
 pub async fn repo_root() -> PathBuf {
     let mut dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     loop {
@@ -31,7 +31,7 @@ async fn collect_files(dir: &Path, out: &mut Vec<PathBuf>) {
     }
 }
 
-/// @emoji 🔎 Finds the first `.semio` under an artifact's examples whose file name ends with `suffix`
+/// 🔎 Finds the first `.semio` under an artifact's examples whose file name ends with `suffix`
 /// (e.g. `.dsl.semio`, `.pack.semio`). Assets-first, then legacy walk.
 pub async fn find_example_asset(artifact_dir: &Path, suffix: &str) -> Option<PathBuf> {
     let examples = artifact_dir.join(EXAMPLES_DIR_NAME);
@@ -65,19 +65,19 @@ pub async fn find_example_asset(artifact_dir: &Path, suffix: &str) -> Option<Pat
     candidates.into_iter().next()
 }
 
-/// @emoji 📄️ Reads UTF-8 text for the first matching example asset under `artifact_dir`.
+/// 📄️ Reads UTF-8 text for the first matching example asset under `artifact_dir`.
 pub async fn read_example_asset_text(artifact_dir: &Path, suffix: &str) -> Option<String> {
     let path = find_example_asset(artifact_dir, suffix).await?;
     std::fs::read_to_string(&path).ok()
 }
 
-/// @emoji 📒️ Reads bytes for the first matching example asset under `artifact_dir`.
+/// 📒️ Reads bytes for the first matching example asset under `artifact_dir`.
 pub async fn read_example_asset_bytes(artifact_dir: &Path, suffix: &str) -> Option<Vec<u8>> {
     let path = find_example_asset(artifact_dir, suffix).await?;
     std::fs::read(&path).ok()
 }
 
-/// @emoji 🗺️ Resolves `✏️s/🔌️plugins/<plugin>/🗿️artifacts/<artifact>`.
+/// 🗺️ Resolves `✏️s/🔌️plugins/<plugin>/🗿️artifacts/<artifact>`.
 pub async fn artifact_dir(plugin: &str, artifact: &str) -> PathBuf {
     repo_root().await.join("✏️s").join("🔌️plugins").join(plugin).join("🗿️artifacts").join(artifact)
 }

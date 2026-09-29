@@ -5,7 +5,7 @@ pub use crate::span::TextSpan;
 use crate::value::{DslValue, FromValue, ToValue, ValueError};
 
 //#region 🔖️Errors
-/// @emoji 🚧️ Span-carrying parse/print failure — the one error type every DSL surface returns.
+/// 🚧️ Span-carrying parse/print failure — the one error type every DSL surface returns.
 #[derive(Clone, Debug, PartialEq)]
 pub struct TextError {
     pub message: String,
@@ -70,7 +70,7 @@ impl TextError {
     }
 }
 
-/// @emoji 🏷️ Stable dotted fault/diagnostic code (e.g. `module.pack.checksum-mismatch`).
+/// 🏷️ Stable dotted fault/diagnostic code (e.g. `module.pack.checksum-mismatch`).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FaultCode(pub String);
 
@@ -102,7 +102,7 @@ impl FromValue for FaultCode {
     }
 }
 
-/// @emoji 🏷️ Stable, greppable diagnostic identifier, e.g. `"DSL0001"`.
+/// 🏷️ Stable, greppable diagnostic identifier, e.g. `"DSL0001"`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct DiagnosticCode(pub &'static str);
 
@@ -181,7 +181,7 @@ impl Severity {
     }
 }
 
-/// @emoji 🧭️ What the parser would have accepted at the failure point — the raw material for
+/// 🧭️ What the parser would have accepted at the failure point — the raw material for
 /// completions and for `TextError.expected`.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct ExpectedSet {
@@ -239,7 +239,7 @@ impl FromValue for ExpectedSet {
     }
 }
 
-/// @emoji 🩺️ A structured diagnostic anchored to a span, with an optional `ExpectedSet` for
+/// 🩺️ A structured diagnostic anchored to a span, with an optional `ExpectedSet` for
 /// completions/fixes. Lowers into `TextError` at API boundaries that predate diagnostics.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Diagnostic {
@@ -318,7 +318,7 @@ impl FromValue for Diagnostic {
 }
 
 //#region 🔖️Fault
-/// @emoji 🧭️ Which layer of the os stack produced a {@link Fault}.
+/// 🧭️ Which layer of the os stack produced a {@link Fault}.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum FaultOrigin {
     Edge,
@@ -335,7 +335,7 @@ pub enum FaultOrigin {
     Framework,
 }
 
-/// @emoji 🎯️ Optional ids locating a fault/diagnostic to a plugin app surface.
+/// 🎯️ Optional ids locating a fault/diagnostic to a plugin app surface.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct FaultScope {
     pub plugin_id: Option<String>,
@@ -345,7 +345,7 @@ pub struct FaultScope {
     pub body_key: Option<String>,
 }
 
-/// @emoji 🔗️ One hop in a {@link Fault} cause chain.
+/// 🔗️ One hop in a {@link Fault} cause chain.
 #[derive(Clone, Debug, PartialEq)]
 pub struct FaultCause {
     pub message: String,
@@ -562,7 +562,7 @@ impl Fault {
         self
     }
 
-    /// @emoji 🗣️ Canonical one-line rendering of a fault for `String` error channels.
+    /// 🗣️ Canonical one-line rendering of a fault for `String` error channels.
     ///
     /// `Fault` deliberately has no `Display`: a structured abort must not be silently interpolated
     /// into prose, and `to_string()` would hide the {@link FaultCode} every triage tool keys on.
@@ -573,7 +573,7 @@ impl Fault {
     }
 }
 
-/// @emoji 🔁️ Maps a domain error enum into a {@link Fault} at a boundary.
+/// 🔁️ Maps a domain error enum into a {@link Fault} at a boundary.
 pub trait FaultFrom {
     fn fault_origin(&self) -> FaultOrigin;
     fn fault_code(&self) -> FaultCode;
@@ -622,17 +622,17 @@ impl FaultFrom for TextError {
     }
 }
 
-/// @emoji 📦️ JSON wire encoding for {@link Fault} crossing host/WIT boundaries.
+/// 📦️ JSON wire encoding for {@link Fault} crossing host/WIT boundaries.
 pub fn encode_fault_bytes(fault: &Fault) -> Vec<u8> {
     serde_json::to_vec(&fault.to_value()).unwrap_or_else(|_| fault.message.as_bytes().to_vec())
 }
 
-/// @emoji 🌐️ Decodes a {@link Fault} from JSON wire bytes; falls back to an os-level message fault.
+/// 🌐️ Decodes a {@link Fault} from JSON wire bytes; falls back to an os-level message fault.
 pub fn decode_fault_bytes(bytes: &[u8]) -> Fault {
     serde_json::from_slice::<DslValue>(bytes).ok().and_then(|value| Fault::from_value(value).ok()).unwrap_or_else(|| Fault::new(FaultOrigin::Os, "os.fault.decode", String::from_utf8_lossy(bytes)))
 }
 
-/// @emoji 🔁️ Maps an error type into {@link Fault} with a stable dotted code namespace.
+/// 🔁️ Maps an error type into {@link Fault} with a stable dotted code namespace.
 #[macro_export]
 macro_rules! fault_from_error {
     ($ty:ty, $origin:expr, $prefix:literal) => {
@@ -657,14 +657,14 @@ macro_rules! fault_from_error {
 }
 
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-/// @emoji 🌐️ Surfaces a structured {@link Fault} to JavaScript callers.
+/// 🌐️ Surfaces a structured {@link Fault} to JavaScript callers.
 pub fn fault_to_js(fault: Fault) -> wasm_bindgen::JsValue {
     let rendered = serde_json::to_string(&fault.to_value()).unwrap_or_else(|_| fault.message.clone());
     wasm_bindgen::JsValue::from_str(&rendered)
 }
 
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-/// @emoji 🌐️ Maps `Result<T, Fault>` into `Result<T, JsValue>` for wasm exports.
+/// 🌐️ Maps `Result<T, Fault>` into `Result<T, JsValue>` for wasm exports.
 pub fn result_fault_to_js<T>(result: Result<T, Fault>) -> Result<T, wasm_bindgen::JsValue> {
     result.map_err(fault_to_js)
 }
@@ -672,7 +672,7 @@ pub fn result_fault_to_js<T>(result: Result<T, Fault>) -> Result<T, wasm_bindgen
 //#endregion 🔖️Errors
 
 //#region 🔖️Limits
-/// @emoji 🛡️ Resource budgets threaded through every parse — exceeding one yields a budget
+/// 🛡️ Resource budgets threaded through every parse — exceeding one yields a budget
 /// diagnostic (`DSL0100`), never a panic or unbounded recursion.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Limits {

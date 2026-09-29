@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🎭️ `@semio-tech/cad-js/stately` — `@semio-tech/machine`-backed `StateEngine` for `InteractionSpec.machine`; transitions mirror spec while `applyTransition` owns effects. See `.🧬semio/🦑️repo/✍️/spatial.md`. Was XState-backed; ported to the in-house statechart kernel (Wave 8, runtime-dependency-elimination) — see the kernel's own flat/guarded fixture tests in `🧰️framework/🔨️modules/🔄️machine/🟦️.ts`. */
+/** 🎭️ `@semio-tech/cad-js/stately` — `@semio-tech/machine`-backed `StateEngine` for `InteractionSpec.machine`; transitions mirror spec while `applyTransition` owns effects. See `.🧬semio/🦑️repo/✍️/spatial.md`. Was XState-backed; ported to the in-house statechart kernel (Wave 8, runtime-dependency-elimination) — see the kernel's own flat/guarded fixture tests in `🧰️framework/🔨️modules/🔄️machine/🟦️.ts`. */
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
@@ -24,7 +24,7 @@ import { createInteractionRuntime, loadSpatialInteraction, type InteractionRunti
 // #endregion 🔌️Adapters
 
 // #region 🎭️AdvanceEvent
-/** @emoji 🎭️ The one wire-level event kind every compiled `StatelyMachineSpec` reacts to; rows for
+/** 🎭️ The one wire-level event kind every compiled `StatelyMachineSpec` reacts to; rows for
  * different `spec.machine` `(state, event)` pairs are disambiguated purely by guard, not by event
  * identity — same encoding the former XState chart used (`__advance` + `interactionKind` + `branch`). */
 interface StatelyAdvanceEvent extends StatechartEvent {
@@ -37,8 +37,8 @@ function makeAdvanceEvent(interactionKind: string, branch: number): StatelyAdvan
   return { type: "__advance", interactionKind, branch, eventCount: 1, eventId: () => ADVANCE_EVENT_ID, eventName: () => "__advance" };
 }
 
-/** @emoji 🎭️ Associated types bound to `@semio-tech/machine`'s generic kernel for the stately adapter. */
-interface StatelyMachineSpec extends MachineSpec {
+/** 🎭️ Associated types bound to `@semio-tech/machine`'s generic kernel for the stately adapter. */
+export interface StatelyMachineSpec extends MachineSpec {
   Context: undefined;
   Event: StatelyAdvanceEvent;
   Input: undefined;
@@ -48,7 +48,7 @@ interface StatelyMachineSpec extends MachineSpec {
 // #endregion 🎭️AdvanceEvent
 
 // #region 🎭️MachineBuild
-/** @emoji 🎭️ Builds a flat, one-level `MachineDefinition` isomorphic to `spec.machine` — every state is
+/** 🎭️ Builds a flat, one-level `MachineDefinition` isomorphic to `spec.machine` — every state is
  * an atomic child of the synthetic root, `initial` selects the root's entry child, and every transition
  * row becomes one `TransitionDef` on the shared `__advance` event id, guarded by `(interactionKind,
  * branch)`. Rebuilt on every state change (cheap: this is a flat table, not a running actor). */
@@ -91,7 +91,7 @@ function buildStatelyMachine(spec: InteractionSpec, initial: string): Machine<St
   return { definition };
 }
 
-/** @emoji 📊️ One transition row for `🔣️machine.json` / Mermaid (matches `__advance` branch order). */
+/** 📊️ One transition row for `🔣️machine.json` / Mermaid (matches `__advance` branch order). */
 export interface SpatialStatelyMachineTransitionView {
   readonly from: string;
   readonly to: string;
@@ -103,14 +103,14 @@ export interface SpatialStatelyMachineTransitionView {
   readonly label?: string;
 }
 
-/** @emoji 📊️ Serializable state node summary. */
+/** 📊️ Serializable state node summary. */
 export interface SpatialStatelyMachineStateView {
   readonly id: string;
   readonly final: boolean;
   readonly selectionAccept?: readonly string[];
 }
 
-/** @emoji 📊️ Single spatial interaction as a viewable state machine (edges + Mermaid). */
+/** 📊️ Single spatial interaction as a viewable state machine (edges + Mermaid). */
 export interface SpatialStatelyMachineView {
   readonly interactionId: string;
   readonly interactionVersion: string;
@@ -123,7 +123,7 @@ export interface SpatialStatelyMachineView {
   readonly statelyRoutingNote: string;
 }
 
-/** @emoji 📊️ Catalog of model-definition interactions for Stately/Mermaid viewers (`🔣️machine.json`). */
+/** 📊️ Catalog of model-definition interactions for Stately/Mermaid viewers (`🔣️machine.json`). */
 export interface SpatialStatelyMachineCatalogView {
   readonly kind: "spatial.stately-machine-view/v1";
   readonly schemaVersion: "1.0";
@@ -132,7 +132,7 @@ export interface SpatialStatelyMachineCatalogView {
   readonly mermaidCombined: string;
 }
 
-/** @emoji 📊️ Collects flat transition rows from `InteractionSpec.machine` (same order as `StatelyStateEngine`). */
+/** 📊️ Collects flat transition rows from `InteractionSpec.machine` (same order as `StatelyStateEngine`). */
 export function collectSpatialStatelyMachineTransitions(spec: InteractionSpec): readonly SpatialStatelyMachineTransitionView[] {
   const out: SpatialStatelyMachineTransitionView[] = [];
   for (const st of spec.machine.states) {
@@ -189,7 +189,7 @@ function mermaidForSpatialInteraction(spec: InteractionSpec, title: string): str
   return lines.join("\n");
 }
 
-/** @emoji 📊️ Builds one view document for a loaded `InteractionSpec` (interaction metadata for labels/keys). */
+/** 📊️ Builds one view document for a loaded `InteractionSpec` (interaction metadata for labels/keys). */
 export function buildSpatialStatelyMachineViewForSpec(spec: InteractionSpec, meta: { readonly hostKey: string; readonly interactionLabel: string }): SpatialStatelyMachineView {
   const edges = collectSpatialStatelyMachineTransitions(spec);
   return {
@@ -206,7 +206,7 @@ export function buildSpatialStatelyMachineViewForSpec(spec: InteractionSpec, met
   };
 }
 
-/** @emoji 📊️ Model-definition-scoped interaction machines from shipped interaction JSON. */
+/** 📊️ Model-definition-scoped interaction machines from shipped interaction JSON. */
 export function buildSpatialStatelyMachineCatalogView(opts: { readonly modelDefinitionId: string; readonly interactionIds?: readonly string[]; readonly generatedAt?: string }): SpatialStatelyMachineCatalogView {
   const want = opts.interactionIds?.length ? new Set(opts.interactionIds) : null;
   const machines: SpatialStatelyMachineView[] = [];
@@ -228,7 +228,7 @@ export function buildSpatialStatelyMachineCatalogView(opts: { readonly modelDefi
 // #endregion 🎭️MachineBuild
 
 // #region 🎭️StatelyStateEngine
-/** @emoji 🎭️ `@semio-tech/machine`-backed `StateEngine`; `send` runs `applyTransition` then syncs the
+/** 🎭️ `@semio-tech/machine`-backed `StateEngine`; `send` runs `applyTransition` then syncs the
  * kernel snapshot via a synchronous `macrostep` of `__advance`. */
 export class StatelyStateEngine implements StateEngine {
   private interactionState: string;
@@ -289,7 +289,7 @@ export class StatelyStateEngine implements StateEngine {
 // #endregion 🎭️StatelyStateEngine
 
 // #region 🎭️Provider
-/** @emoji 🎭️ `StateEngineProvider` wiring `StatelyStateEngine` (`@semio-tech/machine`-backed). */
+/** 🎭️ `StateEngineProvider` wiring `StatelyStateEngine` (`@semio-tech/machine`-backed). */
 export const statelyStateEngineProvider: StateEngineProvider = {
   id: "machine-stately",
   create(spec: InteractionSpec): StateEngine {
@@ -302,8 +302,30 @@ export const statelyStateEngineProvider: StateEngineProvider = {
 const __spatialStatelyTestRuntime = import.meta.vitest ? await import("../🏃️runtime/🟦️.ts") : null;
 const __spatialStatelyTestKernel = import.meta.vitest ? await import("../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️.ts") : null;
 
+/** 🎒️ The values this module hands its extracted suite `./🧪️tests/🧪️semio-tech-cad-js-stately/🟦️.ts`. */
+export type StatelyTestDependencies = {
+  readonly Model: typeof Model;
+  readonly NullInspector: typeof NullInspector;
+  readonly __spatialStatelyTestKernel: typeof __spatialStatelyTestKernel;
+  readonly __spatialStatelyTestRuntime: typeof __spatialStatelyTestRuntime;
+  readonly buildSpatialStatelyMachineCatalogView: typeof buildSpatialStatelyMachineCatalogView;
+  readonly buildStatelyMachine: typeof buildStatelyMachine;
+  readonly createInteractionRuntime: typeof createInteractionRuntime;
+  readonly defaultModelDefinitionId: typeof defaultModelDefinitionId;
+  readonly emptyMeshTransfer: typeof emptyMeshTransfer;
+  readonly init: typeof init;
+  readonly isEmptyModelDiff: typeof isEmptyModelDiff;
+  readonly listSpatialInteractionsForModelDefinition: typeof listSpatialInteractionsForModelDefinition;
+  readonly loadSpatialInteraction: typeof loadSpatialInteraction;
+  readonly macrostep: typeof macrostep;
+  readonly makeAdvanceEvent: typeof makeAdvanceEvent;
+  readonly pureTsStateEngineProvider: typeof pureTsStateEngineProvider;
+  readonly solidRef: typeof solidRef;
+  readonly statelyStateEngineProvider: typeof statelyStateEngineProvider;
+};
+
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️semio-tech-cad-js-stately/🟦️.ts");
-  await registerTests1(import.meta.vitest, { Model, NullInspector, __spatialStatelyTestKernel, __spatialStatelyTestRuntime, buildSpatialStatelyMachineCatalogView, buildStatelyMachine, createInteractionRuntime, defaultModelDefinitionId, emptyMeshTransfer, init, isEmptyModelDiff, listSpatialInteractionsForModelDefinition, loadSpatialInteraction, macrostep, makeAdvanceEvent, pureTsStateEngineProvider, solidRef, statelyStateEngineProvider }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { Model, NullInspector, __spatialStatelyTestKernel, __spatialStatelyTestRuntime, buildSpatialStatelyMachineCatalogView, buildStatelyMachine, createInteractionRuntime, defaultModelDefinitionId, emptyMeshTransfer, init, isEmptyModelDiff, listSpatialInteractionsForModelDefinition, loadSpatialInteraction, macrostep, makeAdvanceEvent, pureTsStateEngineProvider, solidRef, statelyStateEngineProvider }, { url: import.meta.url });
 }
 // #endregion 🧪️Tests

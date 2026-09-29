@@ -353,7 +353,6 @@ fn brush_preview_publications_are_partitioned_by_trusted_window_context() {
                 return Err("placement or leave retained a window brush preview".into());
             }
         }
-        eprintln!("[DEBUG] Block3D runtime: hover and leave preserve exact window ownership; placement publishes one artifact batch, creates one vortex and clears the invoking window");
         Ok(())
     }
     .await;

@@ -15,14 +15,13 @@
     "incremental": true,
     "tsBuildInfoFile": "node_modules/.cache/tsconfig.tsbuildinfo",
     "noEmit": true,
-    "types": ["node"],
+    "types": ["bun", "node"],
     "baseUrl": ".",
     "paths": {
       "@semio-tech/framework-os": ["../../../🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts"]
     }
   },
   "files": [
-    "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🟦️.d.ts",
     "../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📐️ambient.d.ts",
     "../🦀️rust/📐️ambient.d.ts"
   ],

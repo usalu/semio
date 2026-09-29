@@ -6,8 +6,8 @@
 //! `.🧬semio/🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`).
 //!
-//! 🎯️ Design choice: `db_*` crates below `db_artifact` stay decoupled from this crate's concrete
-//! sinks via `db_core`'s `Emit` trait (see its own doc) rather than depending on this crate
+//! 🎯️ Design choice: `db_*` modules below `db_artifact` stay decoupled from this module's concrete
+//! sinks via the `Emit` trait (`🔖️Emit` below, see its own doc) rather than naming the sinks
 //! directly — `db_security` stays generic over `E: Emit`, `db_engine::Database` is generic over
 //! its own `E: Emit` default-`StructuredSink<MemorySink>` (dedyn-emit-runtime, O1/R11(a): replaces
 //! the former `Arc<dyn Emit>` erasure; `db_artifact`/`db_actor` use the concrete `NullEmit` instead,
@@ -22,11 +22,12 @@
 
 use crate::*;
 use std::collections::{HashMap, HashSet, VecDeque};
+use std::future::Future;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Mutex;
 
 //#region 🔖️Util
-/// @emoji 🔓️ Locks `mutex`, recovering the inner value even if a prior holder panicked while
+/// 🔓️ Locks `mutex`, recovering the inner value even if a prior holder panicked while
 /// holding it — an observability sink must never itself become a source of panics-under-panic
 /// for the mailbox/actor code that's often mid-crash-handling when it calls into `Emit::emit`.
 // 🚫️async: E1 pure accessor (no suspension: `Mutex::lock` on a never-genuinely-contended
@@ -36,8 +37,74 @@ fn lock<T>(mutex: &Mutex<T>) -> std::sync::MutexGuard<'_, T> {
 }
 //#endregion 🔖️Util
 
+//#region 🔖️Emit
+/// 🏷️ One field attached to an `EmitEvent`, kept as a small closed set of primitive
+/// shapes (no dynamic `Any`) so a sink can serialize/aggregate without reflection.
+#[derive(Clone, Debug)]
+pub enum EmitField {
+    U64(u64),
+    I64(i64),
+    F64(f64),
+    Bool(bool),
+    Text(String),
+}
+
+/// 📣️ One observability event: a stable name plus an optional document scope and a small
+/// bag of typed fields. `Emit::emit` takes this by value (not by reference) since a mailbox-
+/// adjacent hot path may hand it across a thread boundary to a sink.
+#[derive(Clone, Debug)]
+pub struct EmitEvent {
+    pub name: &'static str,
+    pub document: Option<ArtifactId>,
+    pub fields: Vec<(&'static str, EmitField)>,
+}
+
+impl EmitEvent {
+    /// 🆕️ A bare event with `name` and no document/fields yet.
+    // 🚫️async: E1 pure builder — `Emit::emit`'s real sinks may genuinely await (I/O), but building
+    // the event value itself has no suspension point, and several call sites build one from a sync
+    // context (e.g. `db_actor::run_actor_loop`, a raw OS thread with no executor) — see R9
+    pub fn new(name: &'static str) -> Self {
+        Self { name, document: None, fields: Vec::new() }
+    }
+
+    /// 🪪️ Scopes the event to `document` (builder-style).
+    // 🚫️async: E1 pure builder — see `EmitEvent::new`
+    pub fn with_document(mut self, document: ArtifactId) -> Self {
+        self.document = Some(document);
+        self
+    }
+
+    /// ➕️ Appends one field (builder-style).
+    // 🚫️async: E1 pure builder — see `EmitEvent::new`
+    pub fn field(mut self, key: &'static str, value: EmitField) -> Self {
+        self.fields.push((key, value));
+        self
+    }
+}
+
+/// 📡️ The observability seam: every `db_*` module that wants to emit a metric/span/log event stays
+/// generic over `E: Emit` (`db_security`, `db_engine::Database`) or uses the concrete `NullEmit`
+/// (`db_artifact`, `db_actor` — R11(c): no real call site anywhere threads anything else through
+/// them), so those modules name only this trait and never the concrete sinks below
+/// (structured/audit JSON-lines, metric registries) that implement it — dedyn-emit-runtime,
+/// O1/R11(a): replaces the former `&dyn Emit`/`Arc<dyn Emit>` erasure with trivial generics.
+pub trait Emit: Send + Sync {
+    fn emit(&self, event: EmitEvent) -> impl Future<Output = ()> + Send;
+}
+
+/// 🔇️ An `Emit` that discards every event — the default when no observability sink is
+/// configured, and a convenient no-op for tests that don't care about emitted events.
+#[derive(Clone, Copy, Default, Debug)]
+pub struct NullEmit;
+
+impl Emit for NullEmit {
+    async fn emit(&self, _event: EmitEvent) {}
+}
+//#endregion 🔖️Emit
+
 //#region 🔖️Json
-/// @emoji 📝️ Escapes `raw` per RFC 8259 into `out` (no surrounding quotes).
+/// 📝️ Escapes `raw` per RFC 8259 into `out` (no surrounding quotes).
 fn escape_json_str(raw: &str, out: &mut String) {
     for ch in raw.chars() {
         match ch {
@@ -81,7 +148,7 @@ fn write_json_field_value(field: &EmitField, out: &mut String) {
     }
 }
 
-/// @emoji 🧾️ Encodes `event` as one JSON object line (no trailing newline) — the wire shape both
+/// 🧾️ Encodes `event` as one JSON object line (no trailing newline) — the wire shape both
 /// `StructuredSink` and `AuditSink` write, and what `db_cli`'s log tooling can `jq` over without
 /// a schema. Hand-rolled rather than pulling `serde_json`: keeps this crate's dependency surface
 /// at `db_core` + `pack_core`, matching the family's dependency-light convention.
@@ -112,16 +179,16 @@ pub fn encode_emit_event_json(event: &EmitEvent) -> String {
 //#endregion 🔖️Json
 
 //#region 🔖️Sink
-/// @emoji 🚰️ Where a sink's JSON-lines actually land — implementable over memory (`MemorySink`,
+/// 🚰️ Where a sink's JSON-lines actually land — implementable over memory (`MemorySink`,
 /// tests/introspection), a file/pipe/`Vec<u8>` (`WriterSink`), or anything else ordered and
 /// append-only. Mirrors `pack::PackSink`'s spirit but returns `DbError` (the
 /// family's error type) instead of `PackError`, and writes pre-delimited lines rather than raw
 /// byte ranges.
 pub trait EventSink: Send + Sync {
-    fn write_line(&self, line: &str) -> impl std::future::Future<Output = Result<(), DbError>> + Send;
+    fn write_line(&self, line: &str) -> impl Future<Output = Result<(), DbError>> + Send;
 }
 
-/// @emoji 🧠️ An in-memory `EventSink` — the default for tests and for introspecting what a sink
+/// 🧠️ An in-memory `EventSink` — the default for tests and for introspecting what a sink
 /// would have written without touching the filesystem.
 #[derive(Default)]
 pub struct MemorySink {
@@ -133,7 +200,7 @@ impl MemorySink {
         Self::default()
     }
 
-    /// @emoji 📜️ A snapshot of every line written so far, oldest first.
+    /// 📜️ A snapshot of every line written so far, oldest first.
     pub async fn lines(&self) -> Vec<String> {
         lock(&self.lines).clone()
     }
@@ -146,7 +213,7 @@ impl EventSink for MemorySink {
     }
 }
 
-/// @emoji 📄️ An `EventSink` over any `std::io::Write` (a file, a pipe, `Vec<u8>`, …) — one JSON
+/// 📄️ An `EventSink` over any `std::io::Write` (a file, a pipe, `Vec<u8>`, …) — one JSON
 /// object per line, newline-terminated, flushed on every write (observability sinks favor
 /// visibility over batching throughput; a deployment that wants batched flushing can wrap its own
 /// `std::io::BufWriter` and flush on a timer around this). Wraps every `std::io::Error` into
@@ -172,7 +239,7 @@ impl<W: std::io::Write + Send> EventSink for WriterSink<W> {
 //#endregion 🔖️Sink
 
 //#region 🔖️Structured
-/// @emoji 📡️ A `Emit` implementation that JSON-lines-encodes every event into an
+/// 📡️ A `Emit` implementation that JSON-lines-encodes every event into an
 /// `EventSink`. The family's default observability sink: wiring one of these into a `Database`
 /// deployment is the only thing needed to get structured logs — no `db_observe` dependency leaks
 /// into `db_core..db_cluster`.
@@ -186,7 +253,7 @@ impl<S: EventSink> StructuredSink<S> {
         Self { sink, failed_writes: AtomicU64::new(0) }
     }
 
-    /// @emoji 🚨️ How many `emit` calls lost their event to a sink write failure. `Emit::emit`
+    /// 🚨️ How many `emit` calls lost their event to a sink write failure. `Emit::emit`
     /// cannot return `Result` (it's invoked from hot mailbox paths), so a failed write is counted
     /// here rather than silently dropped-and-forgotten or panicking.
     pub async fn failed_writes(&self) -> u64 {
@@ -205,7 +272,7 @@ impl<S: EventSink> Emit for StructuredSink<S> {
 //#endregion 🔖️Structured
 
 //#region 🔖️Audit
-/// @emoji 🔗️ One link in `AuditSink`'s tamper-evident chain: the sequence number, and the
+/// 🔗️ One link in `AuditSink`'s tamper-evident chain: the sequence number, and the
 /// checksum folding this record's line into every checksum before it.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct AuditLink {
@@ -225,7 +292,7 @@ struct AuditChainState {
     links: VecDeque<AuditLink>,
 }
 
-/// @emoji 🕵️ A `Emit` implementation for the audit trail: same JSON-lines wire shape as
+/// 🕵️ A `Emit` implementation for the audit trail: same JSON-lines wire shape as
 /// `StructuredSink`, but every record is folded into a CRC-32C hash chain
 /// (`pack::crc32c(prev_checksum || line)`) so `verify_chain` can detect a single tampered,
 /// reordered, or dropped line anywhere in the retained window. Deliberately CRC-32C, not a
@@ -243,7 +310,7 @@ pub struct AuditSink<S: EventSink> {
 }
 
 impl<S: EventSink> AuditSink<S> {
-    /// @emoji 🆕️ `max_retained` bounds the in-memory chain window `verify_chain` can check
+    /// 🆕️ `max_retained` bounds the in-memory chain window `verify_chain` can check
     /// against (oldest links are dropped once exceeded, folded into a running `base_checksum` so
     /// the chain math for the surviving window stays exact) — the durable JSON-lines themselves
     /// are unbounded (owned by `S`), only the tamper-evidence window is capped.
@@ -251,19 +318,19 @@ impl<S: EventSink> AuditSink<S> {
         Self { sink, next_seq: AtomicU64::new(0), state: Mutex::new(AuditChainState { base_checksum: 0, links: VecDeque::new() }), max_retained: max_retained.max(1), failed_writes: AtomicU64::new(0) }
     }
 
-    /// @emoji 🚨️ See `StructuredSink::failed_writes` — same rationale (`Emit::emit` has no
+    /// 🚨️ See `StructuredSink::failed_writes` — same rationale (`Emit::emit` has no
     /// `Result`); a failed durable write is never folded into the chain (the chain only ever
     /// covers records that actually made it to `S`).
     pub async fn failed_writes(&self) -> u64 {
         self.failed_writes.load(Ordering::Relaxed)
     }
 
-    /// @emoji 📜️ A snapshot of the retained chain window, oldest first.
+    /// 📜️ A snapshot of the retained chain window, oldest first.
     pub async fn chain(&self) -> Vec<AuditLink> {
         lock(&self.state).links.iter().copied().collect()
     }
 
-    /// @emoji ✅️ Recomputes the checksum chain over `lines` (as read back from durable storage,
+    /// ✅️ Recomputes the checksum chain over `lines` (as read back from durable storage,
     /// oldest-first, aligned to exactly the current retained window — the caller is responsible
     /// for skipping any lines older than the window, e.g. via a companion compaction checkpoint;
     /// out of scope for this sink) and compares it link by link. `Ok(())` iff every retained link
@@ -307,7 +374,7 @@ impl<S: EventSink> Emit for AuditSink<S> {
 //#endregion 🔖️Audit
 
 //#region 🔖️Cardinality
-/// @emoji 🏷️ A canonicalized (key-sorted) label set — the identity `MetricRegistry` and
+/// 🏷️ A canonicalized (key-sorted) label set — the identity `MetricRegistry` and
 /// `CardinalityLimiter` key series by. Sorting on construction means two callers who build the
 /// same labels in different insertion order collide into the same series instead of silently
 /// doubling it.
@@ -331,7 +398,7 @@ impl Labels {
     }
 }
 
-/// @emoji 🚧️ Bounds how many distinct label sets ("series") a metric name may accumulate — an
+/// 🚧️ Bounds how many distinct label sets ("series") a metric name may accumulate — an
 /// unbounded label (a raw document id, a request path with path params) turned directly into a
 /// label value is the classic metrics cardinality-explosion bug; this collapses everything past
 /// the limit into one shared overflow series rather than growing forever.
@@ -345,7 +412,7 @@ impl CardinalityLimiter {
         CardinalityLimiter { max_series_per_metric: max_series_per_metric.max(1), seen: Mutex::new(HashMap::new()) }
     }
 
-    /// @emoji 🚪️ Admits `labels` for `metric`: returns `labels` unchanged if it's already a known
+    /// 🚪️ Admits `labels` for `metric`: returns `labels` unchanged if it's already a known
     /// series or `metric` is still under its limit, otherwise returns the shared overflow series
     /// (`[("cardinality", "overflow")]`) instead — a metric's tracked series count never exceeds
     /// `max_series_per_metric` (the overflow series itself is exactly one of those tracked slots,
@@ -384,7 +451,7 @@ struct HistogramState {
     count: u64,
 }
 
-/// @emoji 📊️ A point-in-time read of one histogram series: `bucket_counts[i]` counts
+/// 📊️ A point-in-time read of one histogram series: `bucket_counts[i]` counts
 /// observations `<= bounds[i]`, and `bucket_counts[bounds.len()]` is the `+Inf` overflow bucket.
 #[derive(Clone, Debug)]
 pub struct HistogramSnapshot {
@@ -394,7 +461,7 @@ pub struct HistogramSnapshot {
     pub count: u64,
 }
 
-/// @emoji 📈️ Counter/gauge/histogram series, each keyed by `(name, Labels)` and admitted through
+/// 📈️ Counter/gauge/histogram series, each keyed by `(name, Labels)` and admitted through
 /// a shared `CardinalityLimiter` so no single metric name can grow the registry unboundedly.
 pub struct MetricRegistry {
     cardinality: CardinalityLimiter,
@@ -408,7 +475,7 @@ impl MetricRegistry {
         MetricRegistry { cardinality: CardinalityLimiter::new(max_series_per_metric).await, counters: Mutex::new(HashMap::new()), gauges: Mutex::new(HashMap::new()), histograms: Mutex::new(HashMap::new()) }
     }
 
-    /// @emoji ➕️ Monotonically increments the counter series `(name, labels)` by `delta`.
+    /// ➕️ Monotonically increments the counter series `(name, labels)` by `delta`.
     pub async fn incr_counter(&self, name: &'static str, labels: Labels, delta: u64) {
         let labels = self.cardinality.admit(name, labels);
         let mut counters = lock(&self.counters);
@@ -419,7 +486,7 @@ impl MetricRegistry {
         lock(&self.counters).get(&(name, labels.clone())).copied().unwrap_or(0)
     }
 
-    /// @emoji 🎚️ Sets the gauge series `(name, labels)` to `value`, overwriting any prior value.
+    /// 🎚️ Sets the gauge series `(name, labels)` to `value`, overwriting any prior value.
     pub async fn set_gauge(&self, name: &'static str, labels: Labels, value: f64) {
         let labels = self.cardinality.admit(name, labels);
         lock(&self.gauges).insert((name, labels.await), value);
@@ -429,7 +496,7 @@ impl MetricRegistry {
         lock(&self.gauges).get(&(name, labels.clone())).copied()
     }
 
-    /// @emoji 📊️ Records `value` into the histogram series `(name, labels)`, creating it with
+    /// 📊️ Records `value` into the histogram series `(name, labels)`, creating it with
     /// `bounds` (ascending upper-inclusive bucket boundaries, must be non-empty) on first
     /// observation. Later calls for the same series reuse the bounds fixed at creation — a
     /// mismatched `bounds.len()` is a caller bug (`DbError::InvalidArgument`), not silently
@@ -458,14 +525,14 @@ impl MetricRegistry {
 //#endregion 🔖️Metrics
 
 //#region 🔖️Span
-/// @emoji ⏱️ Wall-clock seam so `SpanRegistry` durations are testable without real sleeps — the
+/// ⏱️ Wall-clock seam so `SpanRegistry` durations are testable without real sleeps — the
 /// family's `db_fault_testing::SimClock` (not a dependency of this crate) is the deterministic-
 /// simulation analog; this crate only needs the read side.
 pub trait Clock: Send + Sync {
     async fn now_ms(&self) -> u64;
 }
 
-/// @emoji 🕰️ The real wall clock — `Database::open_at`'s default `SpanRegistry` clock.
+/// 🕰️ The real wall clock — `Database::open_at`'s default `SpanRegistry` clock.
 #[derive(Clone, Copy, Default, Debug)]
 pub struct SystemClock;
 
@@ -475,12 +542,12 @@ impl Clock for SystemClock {
     }
 }
 
-/// @emoji 🔖️ A span's identity within its owning `SpanRegistry` (not globally unique — scope it
+/// 🔖️ A span's identity within its owning `SpanRegistry` (not globally unique — scope it
 /// with the registry that issued it).
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub struct SpanId(u64);
 
-/// @emoji 🌳️ A finished span: name, optional parent (for nesting) and document scope, and timing.
+/// 🌳️ A finished span: name, optional parent (for nesting) and document scope, and timing.
 #[derive(Clone, Debug)]
 pub struct CompletedSpan {
     pub id: SpanId,
@@ -499,7 +566,7 @@ struct ActiveSpan {
     start_ms: u64,
 }
 
-/// @emoji 🌲️ Tracks in-flight spans and retains the most recently completed ones in a bounded
+/// 🌲️ Tracks in-flight spans and retains the most recently completed ones in a bounded
 /// ring buffer — unbounded retention would make a long-lived process's span log an unbounded-
 /// memory leak; bounding it is this crate's own choice (the contract doesn't specify a number).
 pub struct SpanRegistry<C: Clock = SystemClock> {
@@ -521,7 +588,7 @@ impl<C: Clock> SpanRegistry<C> {
         SpanRegistry { clock, next_id: AtomicU64::new(0), active: Mutex::new(HashMap::new()), completed: Mutex::new(VecDeque::new()), max_retained: max_retained.max(1) }
     }
 
-    /// @emoji ▶️ Starts a new span, returning its id (pass to `end`).
+    /// ▶️ Starts a new span, returning its id (pass to `end`).
     pub async fn start(&self, name: &'static str, parent: Option<SpanId>, document: Option<ArtifactId>) -> SpanId {
         let id = self.next_id.fetch_add(1, Ordering::Relaxed);
         let start_ms = self.clock.now_ms().await;
@@ -529,7 +596,7 @@ impl<C: Clock> SpanRegistry<C> {
         SpanId(id)
     }
 
-    /// @emoji 🏁️ Ends `id`, moving it from active into the completed ring buffer and returning
+    /// 🏁️ Ends `id`, moving it from active into the completed ring buffer and returning
     /// it. `None` if `id` was never started or was already ended (a caller bug this reports
     /// rather than panics on).
     pub async fn end(&self, id: SpanId) -> Option<CompletedSpan> {
@@ -548,7 +615,7 @@ impl<C: Clock> SpanRegistry<C> {
         lock(&self.active).len()
     }
 
-    /// @emoji 📜️ A snapshot of the retained completed spans, oldest first.
+    /// 📜️ A snapshot of the retained completed spans, oldest first.
     pub async fn completed(&self) -> Vec<CompletedSpan> {
         lock(&self.completed).iter().cloned().collect()
     }
@@ -556,7 +623,7 @@ impl<C: Clock> SpanRegistry<C> {
 //#endregion 🔖️Span
 
 //#region 🔖️Health
-/// @emoji 🩺️ One component's health, worst-of-aggregated by `HealthRegistry::report` into the
+/// 🩺️ One component's health, worst-of-aggregated by `HealthRegistry::report` into the
 /// overall `Database::health()` status.
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum HealthState {
@@ -576,7 +643,7 @@ impl HealthState {
     }
 }
 
-/// @emoji 📋️ A point-in-time health read: every component's individual state plus the worst-of
+/// 📋️ A point-in-time health read: every component's individual state plus the worst-of
 /// overall.
 #[derive(Clone, Debug)]
 pub struct HealthReport {
@@ -584,7 +651,7 @@ pub struct HealthReport {
     pub components: Vec<(&'static str, HealthState)>,
 }
 
-/// @emoji 🩺️ Aggregates named component health into one worst-of-the-set overall status —
+/// 🩺️ Aggregates named component health into one worst-of-the-set overall status —
 /// `Database::health()`'s data source.
 #[derive(Default)]
 pub struct HealthRegistry {
@@ -596,12 +663,12 @@ impl HealthRegistry {
         HealthRegistry::default()
     }
 
-    /// @emoji ✏️ Sets (or overwrites) `component`'s current state.
+    /// ✏️ Sets (or overwrites) `component`'s current state.
     pub fn set(&self, component: &'static str, state: HealthState) {
         lock(&self.components).insert(component, state);
     }
 
-    /// @emoji 📊️ Snapshots every component (sorted by name for determinism) plus the worst-of
+    /// 📊️ Snapshots every component (sorted by name for determinism) plus the worst-of
     /// overall (`Healthy` if no component has ever reported).
     pub fn report(&self) -> HealthReport {
         let components = lock(&self.components);
@@ -614,7 +681,7 @@ impl HealthRegistry {
 //#endregion 🔖️Health
 
 //#region 🔖️Determinism
-/// @emoji ⚠️ What `DeterminismVerifier::record` returns when the labeled digest streams for one
+/// ⚠️ What `DeterminismVerifier::record` returns when the labeled digest streams for one
 /// `seq` disagree — every expected label's digest, sorted by label for a stable diff.
 #[derive(Clone, Debug)]
 pub struct DivergenceReport {
@@ -622,7 +689,7 @@ pub struct DivergenceReport {
     pub digests: Vec<(String, ContentHash)>,
 }
 
-/// @emoji 🧬️ Runtime cross-check that two (or more) independently-produced state-hash streams
+/// 🧬️ Runtime cross-check that two (or more) independently-produced state-hash streams
 /// for the same document agree at every sequence number — e.g. a live execution's per-command
 /// `state_hash` (see the frozen `CommandReceipt`) against a replay's recomputation. Complements
 /// (does not replace) `db_fault_testing::assert_replay_deterministic`, a test-only harness in a crate
@@ -634,14 +701,14 @@ pub struct DeterminismVerifier {
 }
 
 impl DeterminismVerifier {
-    /// @emoji 🆕️ `expected_labels` names every stream that must agree (e.g. `["primary",
+    /// 🆕️ `expected_labels` names every stream that must agree (e.g. `["primary",
     /// "replay"]`); `max_pending` bounds how many not-yet-fully-reported sequence numbers this
     /// verifier holds onto at once — a stream that stalls forever can't grow this unboundedly.
     pub async fn new(expected_labels: impl IntoIterator<Item = impl Into<String>>, max_pending: usize) -> DeterminismVerifier {
         DeterminismVerifier { expected_labels: expected_labels.into_iter().map(Into::into).collect(), pending: Mutex::new(HashMap::new()), max_pending: max_pending.max(1) }
     }
 
-    /// @emoji 📮️ Records `label`'s digest for `seq`. Once every expected label has reported for
+    /// 📮️ Records `label`'s digest for `seq`. Once every expected label has reported for
     /// `seq`: returns `Ok(Some(report))` if any two digests disagree, `Ok(None)` if they all
     /// agree — either way `seq` is pruned afterward, so a completed sequence never grows the
     /// pending set. Errs with `LimitExceeded` if `seq` is new and the pending window is already
@@ -677,7 +744,7 @@ impl DeterminismVerifier {
 //#endregion 🔖️Determinism
 
 //#region 🔖️Otel
-/// @emoji 🛰️ Where a completed span goes for OpenTelemetry export — gated behind the `otel`
+/// 🛰️ Where a completed span goes for OpenTelemetry export — gated behind the `otel`
 /// Cargo feature per the contract. Extension seam: no OTLP/otel crate is a workspace dependency
 /// today, so this defines the trait shape a real exporter would implement without committing to
 /// one yet (repo rule: don't add a dependency that isn't genuinely needed). See
@@ -687,7 +754,7 @@ pub trait OtelSpanExporter: Send + Sync {
     async fn export(&self, span: &CompletedSpan) -> Result<(), DbError>;
 }
 
-/// @emoji 🚫️ An `OtelSpanExporter` that reports `DbError::Unimplemented` rather than silently
+/// 🚫️ An `OtelSpanExporter` that reports `DbError::Unimplemented` rather than silently
 /// dropping spans or panicking — the honest placeholder until a real OTLP exporter crate is added
 /// as a workspace dependency.
 #[cfg(feature = "otel")]

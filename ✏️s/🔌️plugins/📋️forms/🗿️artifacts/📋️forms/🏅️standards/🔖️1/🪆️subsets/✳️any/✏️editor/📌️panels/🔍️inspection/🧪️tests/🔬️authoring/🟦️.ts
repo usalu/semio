@@ -12,5 +12,4 @@ export function testFormsInspectionAuthoring(): void {
     assert.ok(validate(actual), JSON.stringify(validate.errors));
     assert.deepEqual(actual, item.expected, item.name);
   }
-  console.log("[DEBUG] Forms inspection authoring vectors passed with the Ajv schema oracle");
 }

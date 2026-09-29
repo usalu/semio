@@ -205,6 +205,5 @@ fn window_measures_overlay_paints_and_dispatches_every_gesture_like_react() {
         assert!(!crate::interpreter::ui_document_close_pending_for(&surface));
         let mut document = shell.window_measures_documents.remove(window_id).expect("the accepted overlay retains its lease");
         while !document.close_step() {}
-        println!("[DEBUG] accepted Measures gesture {name} dispatched its independent payload oracle");
     }
 }

@@ -52,5 +52,4 @@ export function testWatchdogTailFixture(): void {
     { ...fixture, scope: { ...fixture.scope, terminalAfterTelemetry: false } },
     { ...fixture, scope: { ...fixture.scope, globalTelemetryAuthority: true } },
   ]) assert.equal(validate(hostile), false);
-  console.log(`[DEBUG] watchdog tail oracle: ${fixture.cases.length} same-window vectors, 5 schema hostiles; actual WGPU publication and native guard execution remain separate`);
 }

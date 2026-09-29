@@ -15,7 +15,6 @@ fn artifact_assembly_layout_and_identity_match_neutral_budget() {
     let assembly = definition_only_assembly("binary", definition).expect("definition-only assembly");
     assert_eq!(serde_json::to_value(assembly.definition().identity().as_str()).expect("identity oracle"), fixture["identity"]);
     let bytes = size_of::<ArtifactAssembly>();
-    println!("[DEBUG] Artifact assembly inline bytes={bytes}");
     assert!(bytes as u64 <= fixture["maximumInlineBytes"].as_u64().expect("assembly budget"));
 }
 

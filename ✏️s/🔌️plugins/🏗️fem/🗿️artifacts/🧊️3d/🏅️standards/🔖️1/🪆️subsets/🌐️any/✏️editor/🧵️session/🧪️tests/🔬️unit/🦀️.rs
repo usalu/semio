@@ -71,7 +71,6 @@ fn fem3d_numerical_child_retains_every_outcome_until_bounded_retirement() {
         }
         assert!(complete, "all numerical owners close");
     }
-    eprintln!("[DEBUG] FEM3D retained preview, checkpoint, commit state/output and fault pages through exact bounded close");
 }
 
 fn freshness(generation: u64) -> Fem3dVisualFreshness {
@@ -297,7 +296,6 @@ fn fem3d_numerical_child_absent_lanes_retain_later_close_owners() {
             }
         }
         let emptied = child.model.is_none() && child.analysis_node_ids.len == 0 && child.analysis_node_ids.admitted == 0;
-        eprintln!("[DEBUG] FEM3D absent close lane={lane}, zero={zero:?}, held={held}, first={actual}, cleanup_empty={emptied}");
         observations.push((lane, zero, held, actual, row["expected"].clone(), emptied));
     }
     for (lane, zero, held, actual, expected, emptied) in observations {
@@ -356,7 +354,7 @@ fn fem3d_production_numerical_child_solid_reaction_modal_and_close_are_cursorize
         }
         last_stage = context.stage();
         if verdict.is_fault() {
-            eprintln!("[DEBUG] numerical before={before:?}, after={after:?}, context {}, terminal={terminal}, expired={}, elapsed_us={elapsed_us:?}, admission={admission:?}", context.stage(), context.deadline_exceeded());
+            eprintln!("numerical before={before:?}, after={after:?}, context {}, terminal={terminal}, expired={}, elapsed_us={elapsed_us:?}, admission={admission:?}", context.stage(), context.deadline_exceeded());
         }
         if admission.is_terminal() {
             failure.get_or_insert_with(|| format!("numerical watchdog rejected before={before:?}, after={after:?}, admission={admission:?}"));
@@ -377,10 +375,10 @@ fn fem3d_production_numerical_child_solid_reaction_modal_and_close_are_cursorize
             break;
         }
     }
-    eprintln!("[DEBUG] FEM3D numerical terminal={terminal}, ready={ready}, static={has_static}, modal={has_modal}, closed={closed}, close_lane={}, close_started_jobs={}, turns={turns}/{maximum_turns}, progress={progress:?}, recorded overruns={}, longest run={}, worst elapsed_us={}", child.close_lane, child.close_started_jobs, overruns.total_overruns(), overruns.longest_overrun_run(), overruns.worst_elapsed_us());
+    eprintln!("FEM3D numerical terminal={terminal}, ready={ready}, static={has_static}, modal={has_modal}, closed={closed}, close_lane={}, close_started_jobs={}, turns={turns}/{maximum_turns}, progress={progress:?}, recorded overruns={}, longest run={}, worst elapsed_us={}", child.close_lane, child.close_started_jobs, overruns.total_overruns(), overruns.longest_overrun_run(), overruns.worst_elapsed_us());
     assert!(closed && child.terminal_is_empty(), "numerical child close did not reach exact terminal");
-    assert!(failure.is_none(), "[DEBUG] {failure:?}");
-    assert!(terminal, "[DEBUG] numerical stopped at {progress:?}/{last_stage}");
+    assert!(failure.is_none(), "[TRACE] {failure:?}");
+    assert!(terminal, "[TRACE] numerical stopped at {progress:?}/{last_stage}");
     assert!(ready);
     assert!(has_static);
     assert!(has_modal);
@@ -622,7 +620,6 @@ fn fem3d_window_config_mounted_close_preserves_foreign_instance_in_same_slot() {
             assert_eq!(close_step(remaining, 1, WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY), PluginCloseStep::Complete);
         }
     }
-    eprintln!("[DEBUG] FEM 3D mounted close preserved exact app ownership for three neutral cases");
 }
 
 #[test]
@@ -653,5 +650,4 @@ fn fem3d_visual_close_grants_retain_exact_backing_until_admitted() {
         assert!(candidate.close_step(WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY).0);
         assert!(candidate.terminal_is_empty() && backing.terminal_is_empty());
     }
-    eprintln!("[DEBUG] FEM visual close grants preserve exact backing for all six neutral cases");
 }

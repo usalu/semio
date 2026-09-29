@@ -1,5 +1,5 @@
 // #region 🔖️Protocol
-/** @emoji 🧵️ Browser UI-to-frame-Worker protocol with bounded lossless and latest-wins lanes. */
+/** 🧵️ Browser UI-to-frame-Worker protocol with bounded lossless and latest-wins lanes. */
 
 import { BrowserInteractiveJobPort, type InteractiveJobUiMessage, type InteractiveJobWorkerMessage } from "../🔌️browser-interactive-job-port/🟦️.ts";
 import { TurnClock, TurnLedger, UI_TURN_BUDGET_MS, type TurnLedgerSnapshot, type TurnOutcome, type TurnVerdict } from "../⏱️turn-budget/🟦️.ts";
@@ -12,7 +12,7 @@ import { nextFrameSequence } from "../🧵️frame-turn-scheduler/🟦️.ts";
 export const FRAME_WORKER_LOSSLESS_ITEM_CAPACITY = 64;
 export const FRAME_WORKER_HUB_DOCUMENT_CAPACITY = 64;
 export const FRAME_WORKER_BYTE_CAPACITY = 256 * 1024;
-/** @emoji ⏳️ Outer bound on a Worker that is silent AND has declared no long phase — the only state that
+/** ⏳️ Outer bound on a Worker that is silent AND has declared no long phase — the only state that
  * is really a wedged event loop. It is NOT a total-boot deadline and no longer a bare stall bound either:
  * a Worker blocked inside a browser-owned compile cannot post anything, so silence alone was never
  * evidence of death. The law, its per-phase ceilings and its diagnosis live in `../🫀️boot-liveness/🟦️.ts`;
@@ -22,7 +22,7 @@ export const FRAME_WORKER_POINTER_CAPACITY = 16;
 export const FRAME_WORKER_MESSAGE_BYTE_CAPACITY = 4 * 1024;
 export const FRAME_WORKER_TEXT_CHUNK_CODE_UNITS = 1024;
 export const FRAME_WORKER_ACCESSIBILITY_ID_BYTES = 512;
-/** @emoji ⏱️ Re-exported so a reader of the transport sees the ceiling its turns are priced against;
+/** ⏱️ Re-exported so a reader of the transport sees the ceiling its turns are priced against;
  * the law itself — executing-time pricing and the sustained-run attribution — lives in
  * `../⏱️turn-budget/🟦️.ts`. */
 export const FRAME_UI_TURN_BUDGET_MS = UI_TURN_BUDGET_MS;
@@ -52,7 +52,7 @@ export type BrowserFrameWorkerFaultCode =
 
 export type BrowserFrameWorkerStatus = "booting" | "ready" | "quarantined" | "faulted" | "closed";
 
-/** @emoji 🪂️ The surface's REAL fallback state, reported instead of asserting one. `uiThreadFrames` is
+/** 🪂️ The surface's REAL fallback state, reported instead of asserting one. `uiThreadFrames` is
  * `unavailable-offscreen-transferred` by construction on this path: `transferControlToOffscreen()`
  * detaches the canvas from the UI isolate, so no UI-thread frame path exists to attempt afterwards —
  * a fact the fault banner must state rather than imply a fallback was skipped by choice. The remaining
@@ -65,9 +65,9 @@ export type BrowserFrameFallbackState = {
   readonly inputAccepted: boolean;
   readonly deferredCadence: boolean;
   readonly uiTurns: TurnLedgerSnapshot;
-  /** @emoji 🧵️ The frame Worker's own step ledger, so a banner reports which isolate ran long. */
+  /** 🧵️ The frame Worker's own step ledger, so a banner reports which isolate ran long. */
   readonly workerSteps: BrowserFrameWorkerStepReport;
-  /** @emoji 🧭️ The long boot phase the Worker had declared and not yet left, with how long it had been in
+  /** 🧭️ The long boot phase the Worker had declared and not yet left, with how long it had been in
    * flight — so a fault card names the work that was actually running instead of only the last stage that
    * happened to fit into a `boot-progress` before the isolate blocked. */
   readonly bootPhase: BrowserBootPhase | undefined;
@@ -127,7 +127,7 @@ export type BrowserFrameLosslessEvent =
   | { readonly kind: "hub-document-status"; readonly documentKey: string; readonly remote: BrowserHubDocumentRemote; readonly timestampMs: number }
   | { readonly kind: "hub-document-close"; readonly documentKey: string; readonly timestampMs: number };
 
-/** @emoji 🖱️ One DOM input as the UI isolate observes it on `#semio-wgpu-canvas`, reduced to the fields
+/** 🖱️ One DOM input as the UI isolate observes it on `#semio-wgpu-canvas`, reduced to the fields
  * the wire carries. Deliberately NOT `PointerEvent`/`WheelEvent`/`KeyboardEvent`: this shape is what the
  * language-neutral oracle `🧫️fixtures/🎮️wgpu-browser-input-wire/🔣️.json` names, so the projection below
  * can be exercised without a DOM and the Rust law can read the same rows. */
@@ -145,7 +145,7 @@ export type BrowserFrameDomEvent =
   | ({ readonly type: "keyup" } & BrowserFrameKeyDomFields)
   | { readonly type: "resize"; readonly clientWidth: number; readonly clientHeight: number };
 
-/** @emoji 📏️ The ONE place a CSS pixel becomes a physical pixel — and it is used for the SURFACE
+/** 📏️ The ONE place a CSS pixel becomes a physical pixel — and it is used for the SURFACE
  * EXTENT ONLY. The GPU surface is configured in device pixels; the renderer's layout, hit registry,
  * dock plan and every chrome constant are CSS/logical pixels, exactly like the React host's DOM, so
  * pointer coordinates cross this wire unscaled. Scroll deltas are device-independent either way.
@@ -154,13 +154,13 @@ function physical(css: number, devicePixelRatio: number): number {
   return css * devicePixelRatio;
 }
 
-/** @emoji 🖱️ Names a DOM `button` integer. The wire carries a name so neither side has to agree on
+/** 🖱️ Names a DOM `button` integer. The wire carries a name so neither side has to agree on
  * the DOM's numbering, and an unknown button is the primary one rather than a dropped event. */
 function pointerButtonName(button: number | undefined): "primary" | "secondary" | "middle" {
   return button === 2 ? "secondary" : button === 1 ? "middle" : "primary";
 }
 
-/** @emoji 🖱️ `offsetX`/`offsetY` are CSS pixels relative to the canvas and stay that way: the
+/** 🖱️ `offsetX`/`offsetY` are CSS pixels relative to the canvas and stay that way: the
  * renderer hit-tests in logical pixels. */
 function pointerFields(event: Extract<BrowserFrameDomEvent, { type: "pointermove" | "pointerdown" | "pointerup" | "pointercancel" }>): BrowserFramePointer {
   return {
@@ -178,12 +178,12 @@ function pointerFields(event: Extract<BrowserFrameDomEvent, { type: "pointermove
   };
 }
 
-/** @emoji ⌨️ Reads the event-time modifier snapshot carried by every DOM pointer and wheel event. */
+/** ⌨️ Reads the event-time modifier snapshot carried by every DOM pointer and wheel event. */
 export function browserFrameModifiersFromDom(event: Pick<MouseEvent, "shiftKey" | "ctrlKey" | "altKey" | "metaKey">): BrowserFrameModifiers {
   return { shift: event.shiftKey, ctrl: event.ctrlKey, alt: event.altKey, meta: event.metaKey };
 }
 
-/** @emoji 🖱️ Reduces one real DOM pointer event into the owned input vocabulary. */
+/** 🖱️ Reduces one real DOM pointer event into the owned input vocabulary. */
 export function browserFramePointerDomEvent(event: PointerEvent, type: "pointermove" | "pointerdown" | "pointerup" | "pointercancel"): BrowserFrameDomEvent {
   return {
     type,
@@ -199,12 +199,12 @@ export function browserFramePointerDomEvent(event: PointerEvent, type: "pointerm
   };
 }
 
-/** @emoji 🎡️ Reduces one real DOM wheel event into the owned input vocabulary. */
+/** 🎡️ Reduces one real DOM wheel event into the owned input vocabulary. */
 export function browserFrameWheelDomEvent(event: WheelEvent): BrowserFrameDomEvent {
   return { type: "wheel", offsetX: event.offsetX, offsetY: event.offsetY, deltaX: event.deltaX, deltaY: event.deltaY, ...browserFrameModifiersFromDom(event) };
 }
 
-/** @emoji 🎮️ Projects one observed DOM input onto the single wire event the frame Worker decodes.
+/** 🎮️ Projects one observed DOM input onto the single wire event the frame Worker decodes.
  *
  * This is the UI isolate's whole share of input semantics — the listeners in `🚀️browser-boot/🟦️.ts`
  * add nothing but focus/capture and the lossless-versus-replaceable lane choice. Keeping the projection
@@ -223,7 +223,7 @@ export function browserFrameEventFromDom(event: BrowserFrameDomEvent, devicePixe
   return { kind: event.type === "keydown" ? "key-down" : "key-up", key: event.key, shift: event.shift, ctrl: event.ctrl, alt: event.alt, meta: event.meta };
 }
 
-/** @emoji 🫧 Whether a projected wire event belongs to the coalescing lane (`enqueueReplaceable`) rather
+/** 🫧 Whether a projected wire event belongs to the coalescing lane (`enqueueReplaceable`) rather
  * than the credit-bearing lossless lane. A pointer MOVE, a wheel and a resize are each "the newest one
  * wins"; a button transition and a key transition are not, because dropping one latches shell state. */
 export function browserFrameEventIsReplaceable(event: BrowserFrameReplaceableEvent | BrowserFrameLosslessEvent): event is BrowserFrameReplaceableEvent {
@@ -240,19 +240,19 @@ export type BrowserFrameWorkerBoot = {
   readonly height: number;
   readonly dpr: number;
   readonly locale: "en" | "de";
-  /** @emoji 🧭️ Every boot axis in ONE shape (`../🧭️boot-descriptor/🟦️.ts`), forwarded verbatim to the
+  /** 🧭️ Every boot axis in ONE shape (`../🧭️boot-descriptor/🟦️.ts`), forwarded verbatim to the
    * renderer wasm's `semioWgpuSetBootDescriptor`. It used to be four loose fields here, which is how
    * the three wgpu doors came to carry three different subsets of the same vocabulary. */
   readonly descriptor: WgpuBootDescriptor;
-  /** @emoji 🌓️ The page realm's appearance reads (`../🧭️boot-descriptor/🟦️.ts`), forwarded to the
+  /** 🌓️ The page realm's appearance reads (`../🧭️boot-descriptor/🟦️.ts`), forwarded to the
    * renderer's `semioWgpuSetHostAppearance`. An environment axis beside `locale`/`dpr`, never a boot
    * axis: the Worker cannot make either read itself, and both keep changing after boot. */
   readonly appearance: WgpuHostAppearance;
-  /** @emoji ⌨️ The page realm's platform read (`../🧭️boot-descriptor/🟦️.ts`), forwarded to the
+  /** ⌨️ The page realm's platform read (`../🧭️boot-descriptor/🟦️.ts`), forwarded to the
    * renderer's `semioWgpuSetHostPlatform` so `mod` formats as `⌘️` on Apple and `Ctrl` elsewhere.
    * Constant for the life of a navigation, so unlike `appearance` it never gets a live message. */
   readonly platform: WgpuHostPlatform;
-  /** @emoji 🗄️ The page realm's read of every durable preference key the shell owns
+  /** 🗄️ The page realm's read of every durable preference key the shell owns
    * (`../🧭️boot-descriptor/🟦️.ts`'s 🗄️HostStorage census), forwarded to the renderer's
    * `semioWgpuSetHostStorage`. It travels WITH the boot so the shell's first frame answers
    * appearance, `ui.introduction.seen.*` and the dock skeleton synchronously instead of painting a
@@ -260,18 +260,18 @@ export type BrowserFrameWorkerBoot = {
   readonly storage: WgpuHostStorageSnapshot;
 };
 
-/** @emoji 🗄️ One live storage change made OUTSIDE this page — another tab rewrote a shared key, which
+/** 🗄️ One live storage change made OUTSIDE this page — another tab rewrote a shared key, which
  * is the only way the page learns of one (`storage` never fires for the writer's own document). Carries
  * the whole re-read snapshot rather than a delta: the page's store IS the authority and a delta would
  * need a second ordering guarantee against the door's own write-through. */
 export type BrowserFrameHostStorage = { readonly kind: "host-storage"; readonly lifecycle: number; readonly storage: WgpuHostStorageSnapshot };
 
-/** @emoji 🌓️ One live appearance change — the OS flipped `prefers-color-scheme`, or another tab
+/** 🌓️ One live appearance change — the OS flipped `prefers-color-scheme`, or another tab
  * rewrote the persisted preference. Same shape as the boot field, so the Worker applies both through
  * one call. */
 export type BrowserFrameHostAppearance = { readonly kind: "host-appearance"; readonly lifecycle: number; readonly appearance: WgpuHostAppearance };
 
-/** @emoji 🛰️ The local supervisor's agent-bridge offer as the page last read it (`🔗️AgentBridge/🛰️offer`), `null` once no
+/** 🛰️ The local supervisor's agent-bridge offer as the page last read it (`🔗️AgentBridge/🛰️offer`), `null` once no
  * gateway offers one. The Worker owns no page and dials nothing it discovered itself: the page reads the offer, the
  * Worker hands it to the renderer's `semioWgpuSetAgentBridgeConfig`, and the bridge socket goes through the page door. */
 export type BrowserFrameHostAgentBridge = { readonly kind: "host-agent-bridge"; readonly lifecycle: number; readonly offer: { readonly url: string; readonly admissionProof: string } | null };
@@ -290,7 +290,7 @@ export type BrowserFrameWireLosslessEvent =
   | (Exclude<BrowserFrameLosslessEvent, { readonly kind: "text" | "paste" | "paste-image-data-url" | "ime-update" | "ime-commit" }> & { readonly timestampMs: number })
   | { readonly kind: "text-chunk"; readonly streamId: number; readonly target: "text" | "paste" | "paste-image-data-url" | "ime-update" | "ime-commit"; readonly text: string; readonly totalBytes: number; readonly final: boolean; readonly timestampMs: number; readonly cursor?: number };
 
-/** @emoji 🔬️ The renderer's `#[wasm_bindgen]` introspection exports (`🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs`
+/** 🔬️ The renderer's `#[wasm_bindgen]` introspection exports (`🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs`
  * region `🔬️IntrospectionExports`) read `UI_ENGINE`, a thread-local that lives inside `semio-frame-worker`.
  * The UI isolate therefore cannot call them directly and asks across the same fail-closed seam every other
  * frame message uses. Read-only by construction: no probe mutates renderer state.
@@ -298,17 +298,20 @@ export type BrowserFrameWireLosslessEvent =
  * ♿️ `accessibility` is the one probe that is NOT a test hook: it carries the window's accessibility
  * tree out of the isolate so the UI thread can mirror it into a real ARIA subtree beside the canvas.
  * A DOM renderer writes those attributes onto the elements it already renders; a GPU canvas has no
- * elements, so the tree has to cross this seam as data (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
-export type BrowserFrameIntrospectionProbe = "structure" | "frame-stats" | "accessibility" | "mesh-stats" | "chrome";
+ * elements, so the tree has to cross this seam as data (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+ *
+ * 🛰️ `agent-bridge-scope` is production too: the shell's agent-bridge offer scope (hub origin, space, its human's agent
+ * principals — never the session capability) for the page's offer watcher (ticket 26/09/23, G12 × WG11 session 14c). */
+export type BrowserFrameIntrospectionProbe = "structure" | "frame-stats" | "accessibility" | "mesh-stats" | "chrome" | "agent-bridge-scope";
 
 export type BrowserFrameWorkerIntrospect = { readonly kind: "introspect"; readonly lifecycle: number; readonly requestId: number; readonly probe: BrowserFrameIntrospectionProbe; readonly windowId?: string };
 
-/** @emoji 🧵️ One shard worker the UI isolate spawned on the frame worker's behalf, handed back as a
+/** 🧵️ One shard worker the UI isolate spawned on the frame worker's behalf, handed back as a
  * `MessagePort`. Nested dedicated workers are unavailable in some embedded browsers, so the frame worker
  * never constructs a shard `Worker` itself — see `shardWorkerPortBridge` in the wgpu plugin bridge. */
 export type BrowserFrameShardPort = { readonly kind: "shard-port"; readonly shardIndex: number; readonly port: MessagePort };
 
-/** @emoji 🚪️ The page's answer to one {@link BrowserFrameWorkerHostIo} request — the JSON the shell's
+/** 🚪️ The page's answer to one {@link BrowserFrameWorkerHostIo} request — the JSON the shell's
  * `semioWgpuHostIo` call resolves with, or a `detail` the shell refuses on. Addressed by `requestId`
  * alone, exactly like `introspection`, so no host-side request table beyond the pending map exists. */
 export type BrowserFrameHostIoResult = { readonly kind: "host-io-result"; readonly lifecycle: number; readonly requestId: number; readonly json: string | null; readonly detail?: string };
@@ -317,7 +320,7 @@ export type BrowserFrameImageDecodeResult = { readonly kind: "image-decode-resul
 
 export type BrowserFrameUiMessage = BrowserFrameWorkerBoot | BrowserFrameWorkerBatch | BrowserFrameWorkerIntrospect | InteractiveJobUiMessage | BrowserFrameShardPort | BrowserFrameHostIoResult | BrowserFrameImageDecodeResult | BrowserFrameHostAppearance | BrowserFrameHostStorage | BrowserFrameHostAgentBridge | { readonly kind: "close"; readonly lifecycle: number };
 
-/** @emoji 🧵️ The frame Worker's own step ledger, as the UI isolate sees it. The Worker prices its steps
+/** 🧵️ The frame Worker's own step ledger, as the UI isolate sees it. The Worker prices its steps
  * against `WORKER_STEP_BUDGET_MS` with the same executing-span law the UI isolate uses for its turns
  * (`../⏱️turn-budget/🟦️.ts`), so this is a MEASUREMENT the boot UI renders — never a verdict. */
 export type BrowserFrameWorkerStepReport = {
@@ -331,7 +334,7 @@ export type BrowserFrameWorkerStepReport = {
 export type BrowserFrameWorkerMessage =
   | { readonly kind: "boot-progress"; readonly lifecycle: number; readonly stage: string; readonly progress: number; readonly worker: BrowserFrameWorkerStepReport }
   | { readonly kind: "boot-liveness"; readonly lifecycle: number }
-  /** @emoji 🧭️ The Worker DECLARING that it is about to block on one browser-owned phase, posted while its
+  /** 🧭️ The Worker DECLARING that it is about to block on one browser-owned phase, posted while its
    * event loop still runs so the declaration always arrives — and withdrawing it when the phase ends. This
    * is what lets the watchdog tell a busy Worker from a wedged one: a `WebAssembly` compile of the 76 MB
    * renderer, `semioWgpuWorkerBootstrap`'s synchronous prologue and one Rust bootstrap phase all stop the
@@ -351,7 +354,7 @@ export type BrowserFrameWorkerMessage =
       readonly nextDeadlineDelayMs: number | null;
       readonly progress: number;
       readonly workerDurationMs: number;
-      /** @emoji ⏳️ The step's EXECUTING milliseconds — what the Worker's own ledger priced. */
+      /** ⏳️ The step's EXECUTING milliseconds — what the Worker's own ledger priced. */
       readonly workerExecutingMs: number;
       readonly workerStepVerdict: TurnVerdict;
       readonly quarantined?: boolean;
@@ -364,7 +367,7 @@ export type BrowserFrameWorkerMessage =
   | { readonly kind: "closed"; readonly lifecycle: number }
   | { readonly kind: "shard-spawn"; readonly shardIndex: number; readonly url: string }
   | { readonly kind: "shard-terminate"; readonly shardIndex: number }
-  /** @emoji 🚪️ The Worker asking the PAGE for the one thing it cannot do itself: a `<a download>` or an
+  /** 🚪️ The Worker asking the PAGE for the one thing it cannot do itself: a `<a download>` or an
    * `<input type="file">`. A dedicated Worker has no `window` and no `document`, so the shell's own
    * browser halves used to answer `None` and return silently — an export produced its bytes and handed
    * them to nobody, an import opened nothing (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
@@ -406,11 +409,11 @@ export type BrowserFrameTransportOptions = {
   readonly onDirectives?: (directives: BrowserFrameDirectives) => void;
   readonly onDiagnostic?: (diagnostic: BrowserFrameDiagnostic) => void;
   readonly onFault?: (code: BrowserFrameWorkerFaultCode, detail: string, fallback: BrowserFrameFallbackState) => void;
-  /** @emoji 🐢️ Reported for every UI turn that breached its ceiling — a measured signal, never a verdict. */
+  /** 🐢️ Reported for every UI turn that breached its ceiling — a measured signal, never a verdict. */
   readonly onUiTurn?: (outcome: TurnOutcome) => void;
   readonly requestAnimationFrame?: (callback: FrameRequestCallback) => number;
   readonly cancelAnimationFrame?: (handle: number) => void;
-  /** @emoji 🚪️ The PAGE half of the shell's file door (`🚪️host-io/🟦️.ts`). A dedicated Worker has no
+  /** 🚪️ The PAGE half of the shell's file door (`🚪️host-io/🟦️.ts`). A dedicated Worker has no
    * `document`, so the shell's `<a download>` and `<input type="file">` live on this side of the wire.
    * Absent, a `host-io` request is refused with a named detail rather than silently ignored — a silent
    * ignore is exactly how both io journeys died on this renderer. */
@@ -427,7 +430,7 @@ type QueuedLossless = {
 // #endregion 🔖️Protocol
 
 // #region 📮️Transport
-/** @emoji 📮️ Owns one fail-closed frame Worker lifecycle and its bounded admission state. */
+/** 📮️ Owns one fail-closed frame Worker lifecycle and its bounded admission state. */
 export class BrowserFrameTransport {
   readonly lifecycle = 1;
   readonly interactiveJobs: BrowserInteractiveJobPort;
@@ -441,9 +444,9 @@ export class BrowserFrameTransport {
   private readonly onReady?: () => void;
   private readonly onProgress?: (stage: string, progress: number, worker: BrowserFrameWorkerStepReport) => void;
   private readonly hostIo?: (requestJson: string, bytes: Uint8Array | null) => Promise<string>;
-  /** @emoji 🧵️ The frame Worker's last reported step ledger — a measurement the boot UI renders. */
+  /** 🧵️ The frame Worker's last reported step ledger — a measurement the boot UI renders. */
   private workerSteps: BrowserFrameWorkerStepReport = { degraded: false, recordedOverruns: 0, sustainedOverruns: 0, worstStepMs: 0, worstStepSite: "" };
-  /** @emoji 🧵️ Frame steps the Worker attributed to its OWN work (a sustained run, not one wall sample). */
+  /** 🧵️ Frame steps the Worker attributed to its OWN work (a sustained run, not one wall sample). */
   private workerStepOverruns = 0;
   private readonly onDirectives?: (directives: BrowserFrameDirectives) => void;
   private readonly onDiagnostic?: (diagnostic: BrowserFrameDiagnostic) => void;
@@ -469,7 +472,7 @@ export class BrowserFrameTransport {
   private rafHandle: number | undefined;
   private deadlineTimer: number | undefined;
   private bootTimer: number | undefined;
-  /** @emoji 🫀️ The last instant ANY message arrived from the frame Worker — the clock silence is measured
+  /** 🫀️ The last instant ANY message arrived from the frame Worker — the clock silence is measured
    * against. `NEGATIVE_INFINITY` until the Worker speaks for the first time, so "never sent a single
    * message" stays distinguishable from "went quiet". */
   private lastLivenessAtMs = Number.NEGATIVE_INFINITY;
@@ -516,7 +519,7 @@ export class BrowserFrameTransport {
     }
   }
 
-  /** @emoji 🫧 Coalesces replaceable input without consuming lossless credits. */
+  /** 🫧 Coalesces replaceable input without consuming lossless credits. */
   enqueueReplaceable(event: BrowserFrameReplaceableEvent): boolean {
     if (!this.accepting()) return false;
     this.generation++;
@@ -547,7 +550,7 @@ export class BrowserFrameTransport {
     return true;
   }
 
-  /** @emoji 🔒 Admits a lossless input only while both item and byte credits remain. */
+  /** 🔒 Admits a lossless input only while both item and byte credits remain. */
   enqueueLossless(event: BrowserFrameLosslessEvent): boolean {
     if (!this.accepting()) return false;
     if (event.kind === "hub-document-status") return this.publishHubDocumentStatus(event.documentKey, event.remote);
@@ -592,7 +595,7 @@ export class BrowserFrameTransport {
     return true;
   }
 
-  /** @emoji 🎞️ Coalesces frame requests and schedules at most one UI rAF directive turn. */
+  /** 🎞️ Coalesces frame requests and schedules at most one UI rAF directive turn. */
   requestFrame(): void {
     if (!this.accepting()) return;
     this.clearDeadlineTimer();
@@ -605,7 +608,7 @@ export class BrowserFrameTransport {
     }
   }
 
-  /** @emoji 📤 Transfers one bounded batch; never executes frame work on the caller. */
+  /** 📤 Transfers one bounded batch; never executes frame work on the caller. */
   flush(timestampMs = this.now()): boolean {
     if (this.status !== "ready" || this.inFlight || !this.frameRequested) return false;
     const replaceable: BrowserFrameReplaceableEvent[] = [];
@@ -636,7 +639,7 @@ export class BrowserFrameTransport {
     }
   }
 
-  /** @emoji 🌓️ Republishes the page realm's appearance reads. Fire-and-forget by construction: a
+  /** 🌓️ Republishes the page realm's appearance reads. Fire-and-forget by construction: a
    * theme flip must never fault a surface, and the Worker simply keeps the last value it was given.
    * The frame it requests afterwards is what makes the change visible — the renderer re-resolves its
    * theme every frame build, so nothing else has to be invalidated. */
@@ -650,7 +653,7 @@ export class BrowserFrameTransport {
     }
   }
 
-  /** @emoji 🛰️ Hands the page's latest agent-bridge offer to the Worker. Fire-and-forget like {@link setHostAppearance}:
+  /** 🛰️ Hands the page's latest agent-bridge offer to the Worker. Fire-and-forget like {@link setHostAppearance}:
    * an offer that cannot cross leaves the bridge `Disabled`, never a faulted surface. */
   setHostAgentBridge(offer: { readonly url: string; readonly admissionProof: string } | null): void {
     if (this.status === "faulted" || this.status === "closed") return;
@@ -662,7 +665,7 @@ export class BrowserFrameTransport {
     }
   }
 
-  /** @emoji 🗄️ Re-seeds the Worker's synchronous preference cache from the page's store. Fire-and-forget
+  /** 🗄️ Re-seeds the Worker's synchronous preference cache from the page's store. Fire-and-forget
    * for the same reason {@link setHostAppearance} is: a preference another tab changed must never fault
    * a surface. It requests no frame — nothing repaints on a storage change by itself; the next read of
    * the affected key is what observes it. */
@@ -675,7 +678,7 @@ export class BrowserFrameTransport {
     }
   }
 
-  /** @emoji 🔬️ Requests one read-only introspection dump from the frame Worker's renderer thread-local.
+  /** 🔬️ Requests one read-only introspection dump from the frame Worker's renderer thread-local.
    * Resolves `null` — never rejects and never faults the surface — when the Worker is not ready, when the
    * fixed in-flight credit is exhausted, or when the answer misses `FRAME_WORKER_INTROSPECTION_TIMEOUT_MS`,
    * so a diagnostic can distinguish "no hooks" from "empty dump" without ever taking the shell down. The
@@ -702,7 +705,7 @@ export class BrowserFrameTransport {
     });
   }
 
-  /** @emoji 🛑 Cancels queued work and terminates the dedicated Worker. */
+  /** 🛑 Cancels queued work and terminates the dedicated Worker. */
   close(): void {
     if (this.status === "closed") return;
     if (this.bootTimer !== undefined) this.clearTimer(this.bootTimer);
@@ -714,7 +717,7 @@ export class BrowserFrameTransport {
     this.status = "closed";
   }
 
-  /** @emoji ⏱️ Prices ONE UI turn and records it. Never a verdict: an overrun cannot quarantine, fail or
+  /** ⏱️ Prices ONE UI turn and records it. Never a verdict: an overrun cannot quarantine, fail or
    * close this surface, because on the UI isolate a wall reading over the ceiling is as often the machine
    * descheduling a hidden pane as it is the turn's own work — the attribution lives in `TurnLedger`'s
    * sustained-run law, and its only consequence is deferred cadence. Answers whether the turn was
@@ -725,13 +728,13 @@ export class BrowserFrameTransport {
     return outcome.verdict === "admitted" || outcome.verdict === "clock-fault";
   }
 
-  /** @emoji 🐢️ Whether the surface is running its turns on deferred cadence after a sustained run of
+  /** 🐢️ Whether the surface is running its turns on deferred cadence after a sustained run of
    * overruns. Clears itself on the first turn that fits the ceiling again. */
   degraded(): boolean {
     return this.uiTurns.degraded();
   }
 
-  /** @emoji 🪂️ The surface's real fallback state — what a fault banner must report instead of claiming
+  /** 🪂️ The surface's real fallback state — what a fault banner must report instead of claiming
    * a UI-thread frame path was or was not attempted. */
   fallbackState(): BrowserFrameFallbackState {
     return {
@@ -749,12 +752,12 @@ export class BrowserFrameTransport {
     };
   }
 
-  /** @emoji 📊 Returns bounded fixed-ring p99 telemetry outside the event callback path. */
+  /** 📊 Returns bounded fixed-ring p99 telemetry outside the event callback path. */
   uiTurnP99Ms(): number {
     return this.uiTurns.p99Ms();
   }
 
-  /** @emoji ⏭️ Yields and continues: hands the remainder of an overrunning turn to the next macrotask so
+  /** ⏭️ Yields and continues: hands the remainder of an overrunning turn to the next macrotask so
    * the isolate can paint and pump input between the pieces. Bounded by the caller's own queue — the
    * transport enqueues at most one continuation per hook site. */
   private deferToNextTurn(work: () => void): void {
@@ -780,7 +783,7 @@ export class BrowserFrameTransport {
     }, 0);
   }
 
-  /** @emoji 🫀️ Arms ONE self-rescheduling watchdog wake. Nothing re-arms it on every inbound message any
+  /** 🫀️ Arms ONE self-rescheduling watchdog wake. Nothing re-arms it on every inbound message any
    * more: a message only stamps {@link lastLivenessAtMs}, and the wake below re-reads the whole window and
    * schedules itself for the exact remaining time. One timer for the whole boot instead of one per
    * `boot-progress`, and the deadline is exact rather than a whole window late. */
@@ -789,7 +792,7 @@ export class BrowserFrameTransport {
     this.bootTimer = this.setTimer(() => this.judgeBootLiveness(), Math.max(0, delayMs));
   }
 
-  /** @emoji ⚖️ One watchdog window, decided by `../🫀️boot-liveness/🟦️.ts` and never here — so the same
+  /** ⚖️ One watchdog window, decided by `../🫀️boot-liveness/🟦️.ts` and never here — so the same
    * verdict replays from a timeline with no transport in the picture. A declared long phase inside its own
    * ceiling is BUSY and re-arms; only an undeclared silence past the ceiling is a wedged event loop, and
    * the fault it raises names the phase, its elapsed and its ceiling in the reader's tongue. */
@@ -807,7 +810,7 @@ export class BrowserFrameTransport {
     this.fail("worker-boot-timeout", detail);
   }
 
-  /** @emoji 🫀️ Stamps the instant the Worker last proved it was running. */
+  /** 🫀️ Stamps the instant the Worker last proved it was running. */
   private witnessWorker(): void {
     this.lastLivenessAtMs = this.now();
   }
@@ -816,7 +819,7 @@ export class BrowserFrameTransport {
     return this.status === "booting" || this.status === "ready";
   }
 
-  /** @emoji 🧵️ Spawns one shard worker HERE, on the UI isolate, and hands the frame worker a
+  /** 🧵️ Spawns one shard worker HERE, on the UI isolate, and hands the frame worker a
    * `MessagePort` onto it. The frame worker cannot construct these itself: a nested dedicated worker
    * fails to load outright in some embedded browsers (measured — even a one-line worker), which
    * surfaced as four shards dying with a message-less `error` event and `create_app promise failed:
@@ -1050,7 +1053,7 @@ export class BrowserFrameTransport {
     this.runUiHook("fault-hook", () => this.onFault?.(code, detail, fallback));
   }
 
-  /** @emoji 🪝️ Runs one external UI hook inside the executing clock. A THROW is a real defect and still
+  /** 🪝️ Runs one external UI hook inside the executing clock. A THROW is a real defect and still
    * fails the surface (`ui-hook-failed`); a budget breach is only recorded, and the answer says whether
    * the turn fitted so the caller can defer what is left. */
   private runUiHook(site: string, callback: () => void): boolean {

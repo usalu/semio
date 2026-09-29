@@ -30,7 +30,6 @@ async fn default_fixture_dsl_round_trips() {
     let expected: serde_json::Value = serde_json::from_str(include_str!("../../../../../🖼️assets/📇️contact/🔣️.json")).unwrap();
     let actual: serde_json::Value = serde_json::from_str(&dsl::os_pack::json::to_json_string(&spec)).unwrap();
     assert_eq!(actual, expected);
-    println!("[DEBUG] Forms Contact template imported through the native text codec and matched the independent JSON oracle");
 }
 
 #[semio_framework_async_macros::async_test]

@@ -2,7 +2,7 @@
 
 use crate::{FromValue, ToValue};
 
-/// @emoji 📦️ A content-addressed blob's identity + metadata. Never carries the bytes themselves —
+/// 📦️ A content-addressed blob's identity + metadata. Never carries the bytes themselves —
 /// callers that just put/read a blob already hold those; this is what gets embedded in a document
 /// (e.g. an `ArtifactKind::ContentAddressedBlob` field) to reference it durably.
 /// 🌱️ serde is carried UNCONDITIONALLY here, not `#[cfg_attr(test, …)]`: `🪐️space/🦀️.rs` serializes a

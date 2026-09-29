@@ -57,7 +57,6 @@ async fn flow_viewer_member_factory_and_full_store_close_match_neutral_contract(
     }
     assert_eq!(completed, fixture["expected"]["complete"].as_bool().unwrap());
     assert_eq!(app.close_terminal_is_empty(), fixture["expected"]["terminalEmpty"].as_bool().unwrap());
-    eprintln!("[DEBUG] real Flow viewer factory retained SemioMembers with read-only document rights and closed all five lanes plus framework interaction");
 }
 
 #[semio_framework_async_macros::async_test]

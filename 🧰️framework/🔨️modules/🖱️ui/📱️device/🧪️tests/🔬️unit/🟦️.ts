@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🧪️ Breakpoint-policy laws, plus the byte-parity gate that reads the wgpu dock's OWN Rust
+/** 🧪️ Breakpoint-policy laws, plus the byte-parity gate that reads the wgpu dock's OWN Rust
  * constants off disk — a policy "shared" only by a comment is a policy that drifts. */
 // #endregion 🧲️Header
 

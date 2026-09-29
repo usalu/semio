@@ -35,7 +35,6 @@ test.skipIf(!directory)("native PDF transparency matches independent SVG rasteri
         let maximum = 0;
         for (let index=0;index<actual.length;index++) maximum=Math.max(maximum,Math.abs(actual[index]!-reference[index]!));
         expect(maximum,fixture.name).toBeLessThanOrEqual(2);
-        console.error(`[DEBUG] ${fixture.name}: native PDF.js and Sharp SVG agree within ${maximum}/255 over ${24*16} pixels`);
       } finally { await task.destroy(); }
     }
   } finally { Object.assign(globalThis,previous); }

@@ -99,7 +99,7 @@ fn input_root_native_installed_owner_survives_actual_admission_unwind() {
     let mut queue = EventQueue::new();
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         assert!(queue.try_admit_root_with(&sequence, grant()).unwrap());
-        panic!("[DEBUG] after actual queue root installation");
+        panic!("after actual queue root installation");
     }));
     assert!(result.is_err());
     drop(result);
@@ -158,7 +158,6 @@ fn input_root_native_concurrent_single_attempts_preserve_busy_roots() {
     assert!(accepted as u64 <= fixture["concurrent"]["maximumSuccesses"].as_u64().unwrap());
     assert_eq!(sequence.last.load(Ordering::SeqCst), accepted as u64);
     assert_eq!(successful, (1..=accepted as u64).collect::<Vec<_>>());
-    eprintln!("[DEBUG] input root single-attempt concurrency attempts={attempted} accepted={accepted} busy={}", attempted - accepted);
 }
 
 #[test]
@@ -180,6 +179,6 @@ fn input_root_native_permanent_exhaustion_and_exact_fixed_layout() {
     assert_eq!(atomic, size_of::<AtomicU64>());
     assert!(!std::mem::needs_drop::<InputRootSequence>());
     assert_eq!(size_of_val(&last.root), size_of::<u64>());
-    eprintln!("[DEBUG] input root static={atomic} queue={} rootField={} queueBacking={}", grant(), size_of_val(&last.root), last.discrete.capacity());
+    eprintln!("input root static={atomic} queue={} rootField={} queueBacking={}", grant(), size_of_val(&last.root), last.discrete.capacity());
 }
 //#endregion 🧪️InputRoots

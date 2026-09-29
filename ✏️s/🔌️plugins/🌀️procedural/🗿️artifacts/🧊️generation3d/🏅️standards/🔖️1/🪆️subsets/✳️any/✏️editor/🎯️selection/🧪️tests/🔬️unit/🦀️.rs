@@ -39,7 +39,6 @@ fn mesh_component_cached_validation_rejects_stale_indices_without_evaluation() {
             assert!(validate_cached_components(&host.host_snapshot, session, &ids).is_err());
             assert!(validate_cached_components(&host.host_snapshot, session, &[format!("{id}@meshOut#0.face.0")]).is_err());
         });
-        eprintln!("[DEBUG] cached component validation: uncached geometry and stale indices rejected; pending component transforms retain valid topology");
     });
     snapshot.retire_cold();
 }

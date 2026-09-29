@@ -79,7 +79,6 @@ fn retained_document_assembly_places_exact_pages_and_preserves_wire_and_payload_
     assert_eq!(read.exact_node(1, UiNodeId(41)).map(|_| ()), Err(UiDocumentLeaseError::NodeIdentity));
     drop(read);
     close(&mut lease, 1);
-    eprintln!("[DEBUG] document-assembly allocated={allocated} payload-pointer-preserved=true wire-order=41,9 root-copy=false");
 }
 
 #[test]
@@ -167,7 +166,6 @@ fn retained_document_assembly_reports_metadata_initialization_separately_from_em
     let expected = allocated - size_of::<UiNodeRecord>();
     let mut lease = finish(&mut owner);
     close(&mut lease, 64);
-    eprintln!("[DEBUG] document-metadata allocated={allocated} initialized={initialized} expected-initialized={expected}");
     assert!(expected > 0);
     assert_eq!(initialized, expected, "metadata pages are initialized; reserved payload capacity is not");
 }

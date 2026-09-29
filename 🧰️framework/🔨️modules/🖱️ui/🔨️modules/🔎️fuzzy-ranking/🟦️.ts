@@ -93,7 +93,7 @@ function fuzzyTokenScore(query: string, value: string, threshold: number): numbe
   return score <= threshold ? score : null;
 }
 
-/** @emoji 🔎️ Ranks items with deterministic prefix, substring, subsequence, and bounded typo matching. */
+/** 🔎️ Ranks items with deterministic prefix, substring, subsequence, and bounded typo matching. */
 export function rankFuzzyItems<Item>(items: readonly Item[], query: string, options: FuzzySearchOptions<Item>): FuzzySearchResult<Item>[] {
   const limit = Math.max(0, Math.floor(options.limit));
   if (limit === 0) return [];

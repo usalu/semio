@@ -29,7 +29,7 @@ use protocol::value::{DslValue, FromValue, ValueError};
 pub use protocol::value::ToValue;
 
 //#region 🔖️Errors
-/// @emoji 🚨️ Every parse failure this crate can produce, with a byte offset into the input.
+/// 🚨️ Every parse failure this crate can produce, with a byte offset into the input.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum JsonError {
     UnexpectedEof,
@@ -63,13 +63,13 @@ impl fmt::Display for JsonError {
 
 impl std::error::Error for JsonError {}
 
-/// @emoji 🛡️ Recursion ceiling for nested arrays/objects — matches `serde_json`'s own default
+/// 🛡️ Recursion ceiling for nested arrays/objects — matches `serde_json`'s own default
 /// (128), the value this repo's fixtures were authored against.
 pub const MAX_DEPTH: u32 = 128;
 //#endregion 🔖️Errors
 
 //#region 🔖️Number
-/// @emoji 🔢️ A JSON number, keeping the writer's-eye distinction JSON itself does not: an integer
+/// 🔢️ A JSON number, keeping the writer's-eye distinction JSON itself does not: an integer
 /// literal (`UInt`/`Int`) round-trips without a decimal point, a `Float` always carries one (or an
 /// exponent) so `42` and `42.0` are never confused on the wire.
 #[derive(Clone, Copy, Debug)]
@@ -163,7 +163,7 @@ impl From<i8> for Number {
 //#endregion 🔖️Number
 
 //#region 🔖️Value
-/// @emoji 🗂️ An insertion-order-preserving JSON object. Re-inserting an existing key overwrites
+/// 🗂️ An insertion-order-preserving JSON object. Re-inserting an existing key overwrites
 /// its value in place (last-value-wins) rather than moving it to the end — the same externally
 /// observable behaviour as `serde_json::Map`'s default `BTreeMap` backing, just order-preserving
 /// for the common no-duplicate case instead of key-sorted.
@@ -241,7 +241,7 @@ impl FromIterator<(String, Value)> for Object {
     }
 }
 
-/// @emoji 🌳️ An owned JSON value tree — the `serde_json::Value` replacement. Every framework
+/// 🌳️ An owned JSON value tree — the `serde_json::Value` replacement. Every framework
 /// consumer of dynamically-shaped JSON (schema leaves, protocol probes) reads/writes this type.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Value {
@@ -588,7 +588,7 @@ impl ToValue for Object {
 //#endregion 🔖️DslValueBridge
 
 //#region 🔖️Lexer
-/// @emoji 🪙️ One structural token — the streaming layer everything else is built on. A future
+/// 🪙️ One structural token — the streaming layer everything else is built on. A future
 /// chunked-`Read` streaming API would produce these incrementally across buffer refills; today's
 /// `Lexer` already tokenizes without materializing the whole document as a DOM first, it just still
 /// requires the whole input as one contiguous `&str` (every framework consumer today hands over a
@@ -608,7 +608,7 @@ pub enum Token {
     Colon,
 }
 
-/// @emoji 🔤️ Token-at-a-time reader over a `&str` — zero-copy for structural bytes, allocating
+/// 🔤️ Token-at-a-time reader over a `&str` — zero-copy for structural bytes, allocating
 /// only for string/number token payloads.
 pub struct Lexer<'a> {
     input: &'a str,

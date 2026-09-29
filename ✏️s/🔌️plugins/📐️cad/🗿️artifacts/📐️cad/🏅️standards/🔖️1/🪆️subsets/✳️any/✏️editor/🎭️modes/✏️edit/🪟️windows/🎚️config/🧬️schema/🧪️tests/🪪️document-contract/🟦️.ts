@@ -23,5 +23,4 @@ export function testCadWorldWindowConfigContract(): void {
   assert.equal(patched.camera.zoom, fixture.patchedZoom);
   assert(validate(patched), JSON.stringify(validate.errors));
   assert.deepEqual(parseCadWorldWindowConfig(patched), patched);
-  console.log("[DEBUG] CAD exact world-window config agrees with Ajv and fast-json-patch vectors");
 }

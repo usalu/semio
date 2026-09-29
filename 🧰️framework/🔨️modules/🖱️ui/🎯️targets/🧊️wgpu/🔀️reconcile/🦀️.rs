@@ -619,6 +619,36 @@ fn tree_window(window: Option<&ui_contract::TreeWindow>) -> Option<UiTreeWindow>
     })
 }
 
+/// 📊️ A `Component::Table` as the ONE section of the retained `Tree` it paints through, keyed by the table's own record key:
+/// a table has no section record, so its rows mount directly under the table node, and `TableProps::window` windows it
+/// exactly as it windows a tree section. The column grid stays on the document — `TableProps::columns`/`actions_label` and
+/// every row's `TableRowProps::cells` are read through the node binding (`mounted_layout::document_table`) by the layout, the
+/// painter, the pointer router and the accessibility projection, so no second copy of a cell travels in the retained spec.
+fn table_section(document: &UiDocumentTree, record: &UiNodeRecord, props: &ui_contract::TableProps, controller: &str) -> UiTreeSectionNode {
+    UiTreeSectionNode {
+        header_toolbar: None,
+        window: tree_window(props.window.as_ref()),
+        id: record.key.as_str().to_string(),
+        label: None,
+        default_open: Some(true),
+        presence: UiPresence::default(),
+        items: record.children.iter().filter_map(|child| document.record(*child)).filter_map(|row| table_row_item(row, controller)).collect(),
+    }
+}
+
+/// 📊️ One `Component::TableRow` as its tree item: named by its first cell (React's row name), activated by the record's own
+/// `Trigger::Activate` binding, its `RowAction`s the item's trailing actions — the one representation every target paints.
+fn table_row_item(record: &UiNodeRecord, controller: &str) -> Option<UiTreeItemNode> {
+    let ui_contract::Component::TableRow(props) = &record.component else { return None };
+    let actions: Vec<UiTreeItemAction> = props.row_actions.iter().map(|action| row_action(action, controller)).collect();
+    let mut item = UiTreeItemNode::base(record.key.as_str(), Label::data(props.cells.get(0).map_or(record.key.as_str(), |cell| cell.as_str())));
+    item.presence = record_presence(record);
+    item.action = record_action(record, ui_contract::Trigger::Activate, controller);
+    item.actions = (!actions.is_empty()).then_some(actions);
+    item.menu = menu_ref(record);
+    Some(item)
+}
+
 /// 🌳️ Assembles one `Component::TreeItem` record and its whole subtree into the inline
 /// `UiTreeItemNode` the retained `Tree` spec carries. A child that projects to a control becomes the
 /// row's `control`; the explicit toolbar/detail relations stay out of the nested item list; every
@@ -1122,7 +1152,7 @@ pub fn ui_node_from_record(document: &UiDocumentTree, record: &UiNodeRecord, sur
         // window`/`TreeItemProps.window` are therefore NOT read here: the spacer pitch belongs to the
         // painted spec (`UiTreeSectionNode.window`/`UiTreeItemNode.window`, stamped in the `Tree` arm
         // above), not to the identity row, which has no extent of its own.
-        ui_contract::Component::TreeSection(_) | ui_contract::Component::TreeItem(_) => UiNode::Stack(UiStackNode {
+        ui_contract::Component::TreeSection(_) | ui_contract::Component::TreeItem(_) | ui_contract::Component::TableRow(_) => UiNode::Stack(UiStackNode {
             direction: "vertical".into(),
             gap: None,
             padding: None,
@@ -1134,38 +1164,13 @@ pub fn ui_node_from_record(document: &UiDocumentTree, record: &UiNodeRecord, sur
             menu,
             children: Vec::new(),
         }),
-        ui_contract::Component::Table(_) => UiNode::Stack(UiStackNode {
-            direction: "vertical".into(),
-            gap: None,
-            padding: None,
-            id: Some(record.key.as_str().to_string()),
+        ui_contract::Component::Table(props) => UiNode::Tree(UiTreeNode {
+            presentation: ui_contract::TreePresentation::Standard,
+            sections: vec![table_section(document, record, props, controller)],
             presence,
-            activate: None,
             drop_action: record_action(record, ui_contract::Trigger::Drop, controller),
-            drop_overlay: None,
             menu,
-            children: Vec::new(),
-        }),
-        ui_contract::Component::TableRow(_) if !record.children.is_empty() => UiNode::Stack(UiStackNode {
-            direction: "horizontal".into(),
-            gap: None,
-            padding: None,
-            id: Some(record.key.as_str().to_string()),
-            presence,
-            activate: record_action(record, ui_contract::Trigger::Activate, controller),
-            drop_action: record_action(record, ui_contract::Trigger::Drop, controller),
-            drop_overlay: None,
-            menu,
-            children: Vec::new(),
-        }),
-        ui_contract::Component::TableRow(props) => UiNode::Button(UiButtonNode {
-            id: Some(record.key.as_str().to_string()),
-            icon_id: IconName::ChevronRight,
-            label: Label::data(props.cells.iter().map(|cell| cell.as_str()).collect::<Vec<_>>().join(" · ")),
-            action: record_action(record, ui_contract::Trigger::Activate, controller).unwrap_or_else(|| ActionDescriptor { controller_id: controller.to_string(), action: String::new(), args: None }),
-            style: None,
-            presence,
-            menu,
+            interaction_domain: None,
         }),
         ui_contract::Component::Surface(props) => UiNode::ComponentScene(surface_scene_node(document, record, props, surface, controller)),
         ui_contract::Component::Extension(props) => {

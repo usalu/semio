@@ -2,7 +2,7 @@ use super::*;
 use db_storage::MemoryStorage;
 
 //#region 🔖️Fixtures
-/// @emoji 🔢️ A trivial counting projection: state is "how many times I've actually run" —
+/// 🔢️ A trivial counting projection: state is "how many times I've actually run" —
 /// ignores the envelope's content entirely (this crate is semantics-free, see the module doc),
 /// so a test can tell "did this projection run this step" apart from "did it not" purely from
 /// its state, independent of `reads()`/`dependencies()` gating.
@@ -41,7 +41,7 @@ impl ProjectionClass for CounterProjection {
     }
 }
 
-/// @emoji ➕️ A projection that sums its own counter with a named dependency's counter each
+/// ➕️ A projection that sums its own counter with a named dependency's counter each
 /// step it actually runs — exercises `DepView`/DAG ordering, not just a standalone projection.
 struct SumWithDependencyProjection {
     id: &'static str,
@@ -79,7 +79,7 @@ impl ProjectionClass for SumWithDependencyProjection {
     }
 }
 
-/// @emoji 🎛️ dedyn-fw-os-guestruntime (O1/R1): the closed-set enum letting a `Vec` in this
+/// 🎛️ dedyn-fw-os-guestruntime (O1/R1): the closed-set enum letting a `Vec` in this
 /// module's own tests mix `CounterProjection` AND `SumWithDependencyProjection` — the ONLY
 /// place, repo-wide, that genuinely needs an `ErasedProjection` erased into more than one
 /// concrete shape (see `ErasedProjection`'s own doc). Hand-written, not `#[dyn_enum]`/
@@ -173,7 +173,7 @@ async fn envelope(document: &str, operation: &str, seq: u64) -> MutationEnvelope
     }
 }
 
-/// @emoji 👆️ Builds a `TouchedSet` recording a write against every one of `paths`.
+/// 👆️ Builds a `TouchedSet` recording a write against every one of `paths`.
 async fn touch(paths: &[&str]) -> TouchedSet {
     let mut touched = TouchedSet::new();
     for path in paths {

@@ -13,14 +13,15 @@ already presents) beside the unchanged results kinds; shooting's editor io joins
 forms' editor drops its inline duplicate of `crate::artifact_kind()`; trinity's rewriting io presents its declared kind
 (`crate::artifact_kind().id` = `text.rewriting`, was an undeclared `trinity.rewriting`).
 
-usage: python3 w4-kind-spec-identity.py --dry-run | --write | --revert
+usage: python3 w4-kind-spec-identity.py --dry-run | --write | --revert [--root <tree>]
   --dry-run  every edit reported as pending / applied / MISSING (exit 1 on MISSING or ambiguity)
   --write    applies every pending edit (refuses when any edit is MISSING or ambiguous; idempotent)
   --revert   restores every applied edit
 """
 import os, re, sys
 
-ROOT = "/Users/ueli/Documents/semio/✏️s/🔌️plugins"
+TREE = sys.argv[sys.argv.index("--root") + 1] if "--root" in sys.argv else "/Users/ueli/Documents/semio"
+ROOT = f"{TREE}/✏️s/🔌️plugins"
 LAW_WHY = ("a document kind has ONE schema identity — the hub's codec rows, document-open targets and genesis, the MCP workspace\n"
            "/// store and host-media contributions all key on it (ticket 26/09/23 W4: a distinct \"media schema\" left the package without a\n"
            "/// codec owner, so the trusted catalog refused it).")
@@ -42,7 +43,7 @@ def fem_document_kind(dim, schema_const, media, component, stdio_export, stdio_i
             f"pub fn document_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {{\n"
             f"    semio_framework_plugin::ArtifactKindSpec {{\n"
             f"        id: \"{dim}.fem\".into(),\n"
-            f"        name: \"FEM {dim.upper()}\".into(),\n"
+            f"        label: semio_framework_plugin::LocalizedLabel::native(\"FEM {dim.upper()} Model\", \"FEM-{dim.upper()}-Modell\"),\n"
             f"        source_format: {schema_const}.into(),\n"
             f"        component_kind: \"{component}\".into(),\n"
             f"        dimension: \"{dim}\".into(),\n"
@@ -59,7 +60,7 @@ def fem_document_kind(dim, schema_const, media, component, stdio_export, stdio_i
 
 FEM_EXPORT = '"stdio.csv".into(), "stdio.json".into(), "stdio.obj".into(), "stdio.stl".into(), "stdio.txt".into()'
 FEM_IMPORT = '"stdio.json".into(), "stdio.txt".into()'
-FORMS_INLINE = ('            .artifact_kind(ArtifactKindSpec {\n                id: "form.dictionary".into(),\n                name: "Form Dictionary".into(),\n'
+FORMS_INLINE = ('            .artifact_kind(ArtifactKindSpec {\n                id: "form.dictionary".into(),\n                label: semio_framework_plugin::LocalizedLabel::native("Form Dictionary", "Formularwörterbuch"),\n'
                 '                source_format: "form.dictionary".into(),\n                component_kind: "forms".into(),\n                dimension: "data".into(),\n'
                 '                media_capability: OsMediaCapability::MeshOnly,\n                media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },\n'
                 '                schema: "form.dictionary".into(),\n                export_formats: vec![],\n                import_formats: vec![],\n'

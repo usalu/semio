@@ -213,7 +213,7 @@ async fn usage(message: &str) -> i32 {
 //#endregion 🔖️Format
 
 //#region 🔖️AsyncBridge
-/// @emoji 🚀️ Opens `FsStorage` on this binary's process pool, then synchronously waits only
+/// 🚀️ Opens `FsStorage` on this binary's process pool, then synchronously waits only
 /// at the process entry boundary.
 // 🚫️async: E5 executor bridge — `db_cli` is a single-shot, strictly-sequential process (R4
 // clause 1: a binary entry point IS its own executor), so every `FsStorage` call in this file
@@ -397,7 +397,7 @@ fn cli_command_close_terminal(terminal: &CliCommandCloseTerminal) -> Result<CliC
     }
 }
 
-/// @emoji 🧹️ Mounted WAL-record close state; one poll owns one close opportunity.
+/// 🧹️ Mounted WAL-record close state; one poll owns one close opportunity.
 struct MountedWalRecordCommandClose {
     owner: Option<db::wal::WalRecord>,
     opportunities: u64,
@@ -451,7 +451,7 @@ impl Drop for MountedWalRecordCommandClose {
     }
 }
 
-/// @emoji 🧰️ Mounted WAL-batch close state; the batch cursor retires one record owner per poll.
+/// 🧰️ Mounted WAL-batch close state; the batch cursor retires one record owner per poll.
 struct MountedWalBatchCommandClose {
     owner: Option<db::wal::WalRecordBatch>,
     opportunities: u64,
@@ -505,7 +505,7 @@ impl Drop for MountedWalBatchCommandClose {
     }
 }
 
-/// @emoji 📼️ Mounted replay-cursor close state with one synchronous owner step per poll.
+/// 📼️ Mounted replay-cursor close state with one synchronous owner step per poll.
 struct MountedWalReplayCommandClose<'storage> {
     owner: Option<MountedWalReplayCommandOwner<'storage>>,
     opportunities: u64,
@@ -577,7 +577,7 @@ impl Drop for MountedWalReplayCommandClose<'_> {
     }
 }
 
-/// @emoji 📸️ Mounted snapshot-cursor close state with an exact terminal exit witness.
+/// 📸️ Mounted snapshot-cursor close state with an exact terminal exit witness.
 struct MountedSnapshotCommandClose<'manager, 'storage> {
     owner: Option<db::snapshot::SnapshotChainCursor<'manager, 'storage, db::storage::FsStorage>>,
     opportunities: u64,
@@ -661,7 +661,6 @@ fn wal_record_kind_name(record: &db::wal::WalRecord) -> &'static str {
         db::wal::WalRecord::Event(_) => "event",
         db::wal::WalRecord::Outbox(_) => "outbox",
         db::wal::WalRecord::Frontier(_) => "frontier",
-        db::wal::WalRecord::VcsRef(_) => "vcs_ref",
         db::wal::WalRecord::SnapshotPub { .. } => "snapshot_pub",
         db::wal::WalRecord::IndexCkpt { .. } => "index_ckpt",
         db::wal::WalRecord::Lease { .. } => "lease",
@@ -688,7 +687,6 @@ fn describe_wal_record(record: &db::wal::WalRecord) -> String {
         db::wal::WalRecord::Frontier(frontier) => {
             format!("{kind} head_seq={} commit_seq={} epoch={} chain_hash={}", frontier.head_seq, frontier.commit_seq, frontier.epoch, hex32(&frontier.chain_hash))
         }
-        db::wal::WalRecord::VcsRef(id) => format!("{kind} id={}", id.as_str()),
         db::wal::WalRecord::SnapshotPub { generation, frontier } => format!("{kind} generation={generation} head_seq={}", frontier.head_seq),
         db::wal::WalRecord::IndexCkpt { run_ids } => format!("{kind} run_ids={}", run_ids.len()),
         db::wal::WalRecord::Lease { resource, holder, fence, expires_at_ms } => format!("{kind} resource={} holder={} fence={fence} expires_at_ms={expires_at_ms}", resource.as_str(), holder.as_str()),
@@ -843,7 +841,6 @@ async fn cmd_snapshot_inspect(rest: &[String]) -> i32 {
     println!("  epoch: {}", descriptor.epoch);
     println!("  chain_hash: {}", hex32(&descriptor.chain_hash));
     println!("  protocol_version: {}", descriptor.protocol_version);
-    println!("  vcs_head: {}", descriptor.vcs_head.as_deref().unwrap_or("-"));
     println!("  base_pack_hash: {}", descriptor.base_pack_hash.map_or_else(|| "-".to_string(), |hash| hex32(&hash.0)));
     println!("  roots: {}", descriptor.roots.len());
     println!("  new_pages: {}", descriptor.new_pages.len());

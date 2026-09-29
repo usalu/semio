@@ -44,11 +44,11 @@ fn ffmpeg_args_omit_scale_filter_when_max_long_edge_zero() {
     assert!(!args[4].contains("scale"), "{args:?}");
 }
 
+/// ⏱️ Fps_hint of 0 falls back to a 30 fps default rather than dividing by zero.
 #[test]
 fn approx_timestamp_scales_with_stride_and_fps() {
     assert_eq!(approx_sampled_timestamp_ms(0, 5, 30.0), 0.0);
     assert!((approx_sampled_timestamp_ms(1, 5, 30.0) - (5.0 / 30.0 * 1000.0)).abs() < 1e-9);
-    // fps_hint of 0 falls back to a 30 fps default rather than dividing by zero.
     assert!((approx_sampled_timestamp_ms(1, 5, 0.0) - (5.0 / 30.0 * 1000.0)).abs() < 1e-9);
 }
 
@@ -72,13 +72,13 @@ fn fallback_descriptor_merges_payload_into_base_args() {
     assert!(args.get("payload").and_then(DslValue::as_str).is_some_and(|payload| payload.starts_with("data:application/octet-stream;base64,")));
 }
 
+/// 🧪️ Doesn't assert on `ffmpeg_available()` (may or may not be installed in CI/sandboxes) — only
+/// exercises the `payload`-bytes-in-hand path, which is deterministic regardless of `ffmpeg`
+/// presence when the decoded payload is deliberately not a real video (so even a present `ffmpeg`
+/// fails to extract frames from it and this still falls back).
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn request_media_frames_falls_back_when_ffmpeg_missing_and_payload_given() {
-    // 🧪️ Doesn't assert on `ffmpeg_available()` (may or may not be installed in CI/sandboxes) — only
-    // exercises the `payload`-bytes-in-hand path, which is deterministic regardless of `ffmpeg`
-    // presence when the decoded payload is deliberately not a real video (so even a present `ffmpeg`
-    // fails to extract frames from it and this still falls back).
     use base64::Engine;
     let payload = format!("data:video/mp4;base64,{}", base64::engine::general_purpose::STANDARD.encode(b"not a real video"));
     let actions =

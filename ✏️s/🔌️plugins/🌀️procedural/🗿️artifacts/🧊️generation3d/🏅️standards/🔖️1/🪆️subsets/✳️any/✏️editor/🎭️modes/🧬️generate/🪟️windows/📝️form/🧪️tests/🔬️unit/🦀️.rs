@@ -40,7 +40,6 @@ async fn a_selected_generation_turns_the_form_into_bound_controls() {
     assert!(body.contains("updateGenerationValues"), "every form control must dispatch updateGenerationValues: {body}");
     assert!(body.contains(&format!("generate.form.{question_id}")), "the slider question must render its own field: {body}");
     assert!(body.contains(&generation_id), "each control must carry the generation it edits: {body}");
-    eprintln!("[DEBUG] generate form generation={generation_id} question={question_id}");
 }
 
 /// ⚖️ LAW: editing a form value round-trips into the PATCHED fixture the generate preview evaluates.
@@ -78,7 +77,6 @@ async fn editing_a_form_value_repatches_the_generate_preview_fixture() {
         .expect("the patched generate fixture must still carry the edited slider widget");
     patched.retire_cold();
     assert_eq!(patched_value, next, "the generate preview evaluates the PATCHED fixture, so the edited value has to reach it");
-    eprintln!("[DEBUG] form edit question={question_id} before={before} after={patched_value}");
 
     let body = render_body(&mut app, GENERATION_3D_PLAY_BODY_GENERATE_FORM).await;
     assert!(body.contains(&next.to_string()), "the form must render back the value it just committed: {body}");

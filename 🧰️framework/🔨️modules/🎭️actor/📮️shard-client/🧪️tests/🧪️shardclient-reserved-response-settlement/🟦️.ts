@@ -234,7 +234,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(originalResult !== null, row.id).toBe(row.expected.construct); if (originalResult) expect(originalResult.record).not.toBeNull();
       expect(workers).toHaveLength(1); expect(workers[0]!.sent).toHaveLength(0); client.disposeAll(); completed.push(row.id);
     }
-    expect(completed).toEqual(fixture.gateCases.map(row => row.id)); console.log(`[DEBUG] ShardWorkerBootstrap actual original-cell endings=${completed.length}`);
+    expect(completed).toEqual(fixture.gateCases.map(row => row.id)); console.log(`[TRACE] ShardWorkerBootstrap actual original-cell endings=${completed.length}`);
   });
 
   it("ShardWorkerBootstrap retains every first value after real prepare claim reserve and install", async () => {
@@ -259,7 +259,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(cell.retainFailure(fault, { maxItems: 1, maxBytes: 64 }).kind).toBe("ready"); const distinct = Object.freeze({ distinct: stage }); expect(cell.retainFailure(distinct, { maxItems: 1, maxBytes: 64 }).kind).toBe("rejected"); expect(Object.is(cell.failure, fault)).toBe(true);
       client.disposeAll(); observed++;
     }
-    expect(observed).toBe(fixture.faults.stages.length * fixture.faults.values.length); console.log(`[DEBUG] ShardWorkerBootstrap real post-call first-fault vectors=${observed}`);
+    expect(observed).toBe(fixture.faults.stages.length * fixture.faults.values.length); console.log(`[TRACE] ShardWorkerBootstrap real post-call first-fault vectors=${observed}`);
   });
 
   it("ShardWorkerBootstrap does not infer pending release from a close-wrapper throw and null", async () => {
@@ -765,7 +765,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         }
         client.disposeAll();
       }
-      console.log("[DEBUG] CapturedUnusedReturnRetirement: 13 admission prefixes, exact resident refunds, no native execute/cancel/post");
     });
 
     it("CapturedUnusedReturnRetirement does not discard an executed original return or its private page", async () => {
@@ -2761,7 +2760,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         return { id: vector.id, available };
       });
       expect(observed).toEqual(fixture.jspi.vectors.map((vector) => ({ id: vector.id, available: vector.available })));
-      console.log(`[DEBUG] ShardClient JSPI vectors=${observed.map((row) => `${row.id}:${row.available}`).join(",")}`);
     });
 
     it("names a worker onerror instead of logging a bare Event", async () => {
@@ -2910,7 +2908,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         observed.push(scenario.id);
       }
       expect(observed).toEqual(fixture.scenarios.map((scenario) => scenario.id));
-      console.log(`[DEBUG] ShardClient liveness timelines replayed against client+oracle=${observed.length}`);
     });
 
     it("beats at every generated-worker activation boundary and tickers on through a stalled import", async () => {
@@ -2979,7 +2976,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(beats.slice(3)).toEqual(fixture.worker.activationPhases.slice(1));
       expect(results).toEqual(["a1"]);
       expect(cleared).toHaveLength(1);
-      console.log(`[DEBUG] ShardWorkerLiveness activation beats=${beats.map((phase) => phase ?? "request").join(",")}`);
     });
   });
 
@@ -3323,7 +3319,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const rustUrl = new URL("../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️.rs", testSource.url);
       const source = readFileSync(rustUrl, "utf8");
       const enumMatch = source.match(/pub enum ShardFrame \{([\s\S]*?)\n\}\s*\n\s*impl ShardFrame/);
-      expect(enumMatch).not.toBeNull(); // [DEBUG] `pub enum ShardFrame { ... } impl ShardFrame` shape not found — Rust source changed, update this test's regex
+      expect(enumMatch).not.toBeNull(); // [TRACE] `pub enum ShardFrame { ... } impl ShardFrame` shape not found — Rust source changed, update this test's regex
       const body = enumMatch![1]!.replace(/\/\/\/.*$/gm, "").replace(/\/\/.*$/gm, "");
       const variantPattern = /(\w+)\s*(?:\{([^{}]*)\}|\(([^()]*)\))?\s*,/g;
       const rustVariants: Array<{ readonly name: string; readonly fields: readonly string[] | null }> = [];

@@ -1,4 +1,4 @@
-/** @emoji ⭕️ Three SVGRenderer and Sharp verify exported ellipse coordinates and alpha. */
+/** ⭕️ Three SVGRenderer and Sharp verify exported ellipse coordinates and alpha. */
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";

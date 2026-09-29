@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🛂️ `🛂️SpaceAdministration` — the Shell-owned administration pane for exactly one space
+/** 🛂️ `🛂️SpaceAdministration` — the Shell-owned administration pane for exactly one space
  * (ticket `26/09/02/COMPLETE-SEMIO-END-TO-END`, packet §4). It renders SOLELY from the hub's own
  * canonical `DirectorySpaceAdministrationPageV1`: the member roster, the author-only invite roster,
  * and the receipt/status region. Authority is never derived from a locally stored role — every

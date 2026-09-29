@@ -167,6 +167,9 @@ fn graph_timeline_paints_every_author_and_never_reuses_a_replaced_avatar_source(
     assert!(replaced.layers.iter().all(|layer| layer.raster_instances.is_empty()), "the old Ada pixels must not survive a changed source");
 }
 
+/// 🖊️ Note: the per-row bottom hairline (a separate, legitimate divider) still uses the fully
+/// opaque `theme.separator`, so this only checks that the translucent guide stroke is present
+/// among the parent-connector line's vertices, not that opaque `theme.separator` is absent.
 #[test]
 fn lane_guide_lines_are_translucent_not_the_opaque_separator_token() {
     let mut draw = ui_wgpu::wgpu::DrawList::default();
@@ -211,9 +214,6 @@ fn lane_guide_lines_are_translucent_not_the_opaque_separator_token() {
         let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
         render_graph_timeline(&scene, Rect::new(0.0, 0.0, 400.0, 200.0), &mut ctx);
     }
-    // 🖊️ Note: the per-row bottom hairline (a separate, legitimate divider) still uses the fully
-    // opaque `theme.separator`, so this only checks that the translucent guide stroke is present
-    // among the parent-connector line's vertices, not that opaque `theme.separator` is absent.
     let guide_stroke = theme.separator.with_alpha(theme.separator.a * 0.4);
     let vertex_colors: Vec<[f32; 4]> = draw.layers.iter().flat_map(|layer| layer.vector_vertices.iter()).map(|v| v.color).collect();
     assert!(vertex_colors.contains(&[guide_stroke.r, guide_stroke.g, guide_stroke.b, guide_stroke.a]), "the parent-connector line must use the translucent guide stroke, got {vertex_colors:?}");

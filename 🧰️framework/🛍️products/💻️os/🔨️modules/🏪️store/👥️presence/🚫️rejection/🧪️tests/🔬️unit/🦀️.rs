@@ -63,7 +63,6 @@ fn retained_presence_peer_rejection_keeps_its_minting_factory_after_source_close
         }
     }
     assert!(other.terminal_is_empty());
-    eprintln!("[DEBUG] rejected peer kept its original exact factory after source publication closed; original=1 foreign=0");
 }
 
 #[test]
@@ -142,6 +141,6 @@ fn retained_presence_peer_admission_preserves_rejected_actor_allocation_and_payl
         assert!(publication.terminal_is_empty());
         assert_eq!(bytes, expected_bytes + seeded_bytes);
         assert_eq!(count.load(std::sync::atomic::Ordering::Relaxed), 1);
-        eprintln!("[DEBUG] peer admission case={} retained actor capacity={capacity}, retired initialized bytes={}, exact target snapshots=1", case["name"], expected_bytes);
+        eprintln!("peer admission case={} retained actor capacity={capacity}, retired initialized bytes={}, exact target snapshots=1", case["name"], expected_bytes);
     }
 }

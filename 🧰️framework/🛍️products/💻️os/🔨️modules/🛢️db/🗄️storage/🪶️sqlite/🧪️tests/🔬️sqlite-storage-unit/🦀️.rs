@@ -163,7 +163,6 @@ mod tests {
         after_crash.release().await.unwrap();
         contender.close().await.unwrap();
         storage.close().await.unwrap();
-        eprintln!("[DEBUG] physical SQLite aliases and a separate process shared one stable writer sidecar; terminal close and process exit each permitted exact reacquisition");
     }
 
     /// 📖️ Reads of a file database run on WAL readers: while another connection holds the database's write lock, concurrent

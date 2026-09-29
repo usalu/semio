@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/AgentBridge/component.tsx
-/** @emoji 🌉️ `AgentBridge` — headless hook that dials the `semio-os-mcp` gateway's ShellBridge
+/** 🌉️ `AgentBridge` — headless hook that dials the `semio-os-mcp` gateway's ShellBridge
  * WebSocket, publishes `ShellState` snapshots, receives inbound `ShellCommand` frames and applies
  * them via the `@semio-tech/framework-os-shell` reducer twin, and tracks agent presence + pending
  * capability approvals for `AgentPresence`/`🤖️AgentApprovals` to render. Ticket

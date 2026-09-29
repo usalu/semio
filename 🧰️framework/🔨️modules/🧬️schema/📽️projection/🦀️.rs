@@ -13,7 +13,7 @@
             name: "ActionAddress",
             version: 1,
             typescript: r####"/**
- * @emoji 📍️ Fully qualified address of an action owned by one concrete window instance.
+ * 📍️ Fully qualified address of an action owned by one concrete window instance.
  */
 export type ActionAddress = { pluginId: string, appId: string, modeId: string, windowKindId: string, windowInstanceId: string, actionId: string, };"####,
         },
@@ -21,7 +21,7 @@ export type ActionAddress = { pluginId: string, appId: string, modeId: string, w
             name: "ActionArgControl",
             version: 1,
             typescript: r####"/**
- * @emoji 🎚️ Declarative input control for one action argument — a lean manifest-altitude enum,
+ * 🎚️ Declarative input control for one action argument — a lean manifest-altitude enum,
  * deliberately NOT `ui_wgpu::wgpu::UiControlNode` (whose variants embed live values and immediate-dispatch
  * wiring). Renderers map each variant onto a staged form field. Tagged with `kind` to mirror the
  * sibling `UtilityNode`/`UiControlNode` declarative-tree convention.
@@ -32,7 +32,7 @@ export type ActionArgControl = { "kind": "text", placeholder?: string, } | { "ki
             name: "ActionArgDef",
             version: 1,
             typescript: r####"/**
- * @emoji 📝️ Declares one argument of an action: its `id` (the JSON key sent in `ActionDescriptor.args`),
+ * 📝️ Declares one argument of an action: its `id` (the JSON key sent in `ActionDescriptor.args`),
  * human `label`, stored value `schema` (see `🔖️ArgSchema` — D6: this is the sole persisted truth,
  * `control()` below is derived from it), an optional widget `presentation` hint, whether it is
  * `required`, an optional `default` value, and an optional `description`. An empty
@@ -48,7 +48,7 @@ label: unknown, schema: ArgSchema, presentation?: ArgPresentation, required: boo
             name: "ActionArgOption",
             version: 1,
             typescript: r####"/**
- * @emoji 🔘️ One selectable option of a `Select` argument control — the persisted `value` and its
+ * 🔘️ One selectable option of a `Select` argument control — the persisted `value` and its
  * human `label`.
  */
 export type ActionArgOption = { value: string,
@@ -62,7 +62,7 @@ label: unknown, };"####,
             name: "ActionDefinition",
             version: 1,
             typescript: r####"/**
- * @emoji 📇️ Declares one action an app can receive via `ActionDescriptor.action`.
+ * 📇️ Declares one action an app can receive via `ActionDescriptor.action`.
  */
 export type ActionDefinition = { id: string,
 /**
@@ -86,7 +86,7 @@ semantics: ActionSemantics, };"####,
             name: "ActionInvocation",
             version: 1,
             typescript: r####"/**
- * @emoji 📨️ One addressed action invocation with named JSON arguments.
+ * 📨️ One addressed action invocation with named JSON arguments.
  */
 export type ActionInvocation = { address: ActionAddress, arguments: Record<string, unknown>, };"####,
         },
@@ -94,7 +94,7 @@ export type ActionInvocation = { address: ActionAddress, arguments: Record<strin
             name: "ActionKind",
             version: 1,
             typescript: r####"/**
- * @emoji 🗂️ Classifies a declared action by how it interacts with VCS history.
+ * 🗂️ Classifies a declared action by how it interacts with VCS history.
  */
 export type ActionKind = "mutation" | "view" | "history" | "clipboard" | "shell" | "interaction";"####,
         },
@@ -111,7 +111,7 @@ export type ActionRef = string;"####,
             name: "ActionSemantics",
             version: 1,
             typescript: r####"/**
- * @emoji 🎯️ What an `ActionDefinition`/`CommandDefinition` MEANS to an agent: effects, policy,
+ * 🎯️ What an `ActionDefinition`/`CommandDefinition` MEANS to an agent: effects, policy,
  * execution shape, and natural-language framing (`use_when`/`examples`) — everything the MCP
  * catalog compiler needs beyond the UI-shaped fields already on the definition itself. Defaulted
  * per-kind by `for_kind` at construction time; `#[serde(default)]` on the owning field additionally
@@ -134,7 +134,7 @@ export type ActivationEvent = { "onCommand": { id: string, } } | { "onViewVisibl
             name: "AgentContributions",
             version: 1,
             typescript: r####"/**
- * @emoji 🤖️ What a package OFFERS to agents — see the region header above for the critical
+ * 🤖️ What a package OFFERS to agents — see the region header above for the critical
  * `capability_requests` vs `AgentContributions` distinction. `capabilities` are fully-qualified
  * capability ids (the same grammar `🌉️mcp/🗂️catalog` compiles — `<plugin_id>.<app_id>.
  * <action_id>` / `….cmd.<id>` / `….mode.<mode_id>.<id>`, `📋️master.md` §3.1); `promoted` is the
@@ -288,7 +288,7 @@ export type AppRole = "viewer" | "editor";"####,
             name: "ApprovalMode",
             version: 1,
             typescript: r####"/**
- * @emoji 🚦️ When the gateway must pause for human approval before committing an invocation of this
+ * 🚦️ When the gateway must pause for human approval before committing an invocation of this
  * capability.
  */
 export type ApprovalMode = "never" | "whenDestructive" | "always";"####,
@@ -297,7 +297,7 @@ export type ApprovalMode = "never" | "whenDestructive" | "always";"####,
             name: "ArgFormat",
             version: 1,
             typescript: r####"/**
- * @emoji 🧬️ Semantic refinement of a `String`-typed `ArgSchema` leaf — what KIND of string this is,
+ * 🧬️ Semantic refinement of a `String`-typed `ArgSchema` leaf — what KIND of string this is,
  * beyond "text". Orthogonal to `ArgPresentation` (which is about the WIDGET, not the value's
  * semantics): a `Color` format could still render as free text in a minimal shell.
  */
@@ -307,7 +307,7 @@ export type ArgFormat = { "kind": "artifactRef" } | { "kind": "windowId" } | { "
             name: "ArgPresentation",
             version: 1,
             typescript: r####"/**
- * @emoji 🖼️ How to WIDGET-render an argument beyond what its `ArgSchema` alone implies — consumed by
+ * 🖼️ How to WIDGET-render an argument beyond what its `ArgSchema` alone implies — consumed by
  * `ActionArgDef::control()` (e.g. a bounded `Number` still renders `Slider` without this, but a
  * single-bound one needs it to opt in).
  */
@@ -317,7 +317,7 @@ export type ArgPresentation = { "kind": "slider" } | { "kind": "iconSelect", cla
             name: "ArgSchema",
             version: 1,
             typescript: r####"/**
- * @emoji 🌳️ The stored, engine-neutral shape of one action argument's value — see this region's
+ * 🌳️ The stored, engine-neutral shape of one action argument's value — see this region's
  * header comment for the D6 stored/derived split.
  */
 export type ArgSchema = { "kind": "string", options: Array<ActionArgOption>, minLen?: number, maxLen?: number, pattern?: string, format?: ArgFormat, } | { "kind": "number", min?: number, max?: number, step?: number, integer: boolean, unit?: string, } | { "kind": "boolean" } | { "kind": "vec3", unit?: string, } | { "kind": "array", items: ArgSchema, minItems?: number, maxItems?: number, } | { "kind": "object", fields: Array<ActionArgDef>, } | { "kind": "any" };"####,
@@ -384,7 +384,7 @@ export type AssetDeclaration = { name: string, mediaType: MediaType, sizeBytes: 
             name: "CapabilityEffects",
             version: 1,
             typescript: r####"/**
- * @emoji 🧮️ What one capability touches — read/write resource selectors plus the three coarse flags
+ * 🧮️ What one capability touches — read/write resource selectors plus the three coarse flags
  * the gateway's policy/preview machinery gates on.
  */
 export type CapabilityEffects = { reads: Array<ResourceSelector>, writes: Array<ResourceSelector>, external: boolean, destructive: boolean, reversible: boolean, };"####,
@@ -393,7 +393,7 @@ export type CapabilityEffects = { reads: Array<ResourceSelector>, writes: Array<
             name: "CapabilityExecution",
             version: 1,
             typescript: r####"/**
- * @emoji ⚙️ Preview/undo/idempotency/cancellation shape of one capability invocation.
+ * ⚙️ Preview/undo/idempotency/cancellation shape of one capability invocation.
  */
 export type CapabilityExecution = { preview: PreviewMode, undo: UndoMode, idempotency: IdempotencyMode, expectedRevision: boolean, cancellable: boolean, class: ExecutionClass, interactiveJob: "unclassified" | "migrated" | "batchOnlyPendingRewrite" | "forbiddenFromUi" | "deleted", };"####,
         },
@@ -414,7 +414,7 @@ export type CapabilityId = string;"####,
             name: "CapabilityPolicy",
             version: 1,
             typescript: r####"/**
- * @emoji 🛡️ The scope/approval gate a capability invocation must clear — `scopes` are
+ * 🛡️ The scope/approval gate a capability invocation must clear — `scopes` are
  * `kernel::CapabilityId`s (the Broker's own enforcement primitive, see `🔖️Kernel` below), never a
  * parallel string vocabulary: `ExtensionPointDeclaration.capability_allowance` already establishes
  * that `kernel::CapabilityId` is reachable from this crate with no dependency cycle.
@@ -438,7 +438,7 @@ export type CapabilityRequest = { id: CapabilityId, scope: string, reason: strin
             name: "CommandAddress",
             version: 1,
             typescript: r####"/**
- * @emoji 📍️ Fully qualified address of one command.
+ * 📍️ Fully qualified address of one command.
  */
 export type CommandAddress = { owner: CommandOwnerAddress, commandId: string, };"####,
         },
@@ -446,7 +446,7 @@ export type CommandAddress = { owner: CommandOwnerAddress, commandId: string, };
             name: "CommandDefinition",
             version: 1,
             typescript: r####"/**
- * @emoji 🎛️ Declares one command: a categorized verb offered in the footer command panel.
+ * 🎛️ Declares one command: a categorized verb offered in the footer command panel.
  * Its owner and availability are derived from the containing OS, plugin, app, or mode definition.
  * Handling a command may emit VCS-tracked operations exactly like an operation-kind action — see
  * `ArtifactApp::handle_command`/`ActionEmit`.
@@ -473,7 +473,7 @@ semantics: ActionSemantics, };"####,
             name: "CommandInvocation",
             version: 1,
             typescript: r####"/**
- * @emoji 📨️ One addressed command invocation with named JSON arguments.
+ * 📨️ One addressed command invocation with named JSON arguments.
  */
 export type CommandInvocation = { address: CommandAddress, arguments: Record<string, unknown>, };"####,
         },
@@ -481,7 +481,7 @@ export type CommandInvocation = { address: CommandAddress, arguments: Record<str
             name: "CommandOwnerAddress",
             version: 1,
             typescript: r####"/**
- * @emoji 📍️ Hierarchical owner of a command definition.
+ * 📍️ Hierarchical owner of a command definition.
  */
 export type CommandOwnerAddress = "os" | { "plugin": { pluginId: string, } } | { "app": { pluginId: string, appId: string, } } | { "mode": { pluginId: string, appId: string, modeId: string, } };"####,
         },
@@ -583,7 +583,7 @@ export type DescriptorEntry = { id: string, payload?: unknown, };"####,
             name: "DialogDefinition",
             version: 1,
             typescript: r####"/**
- * @emoji 🗨️ A declared modal form dialog: a glass veil covers the screen and an info box (styled
+ * 🗨️ A declared modal form dialog: a glass veil covers the screen and an info box (styled
  * identically to the introduction walkthrough box, see `ui_react`'s `GLASS_OVERLAY_BOX_CLASS`)
  * presents `args` as a staged form. Submit dispatches `submit_action` with the merged effective
  * args; empty `args` degenerates to a message/confirm dialog. Opened only via
@@ -630,7 +630,7 @@ dialect: ArtifactDialect, };"####,
             name: "ExecutionClass",
             version: 1,
             typescript: r####"/**
- * @emoji ⏱️ How long-running/interactive an invocation of this capability is — the gateway's job
+ * ⏱️ How long-running/interactive an invocation of this capability is — the gateway's job
  * vs. interactive-call dispatch hint.
  */
 export type ExecutionClass = "interactive" | "background" | "job";"####,
@@ -710,7 +710,7 @@ broadcast: boolean, };"####,
             name: "IdempotencyMode",
             version: 1,
             typescript: r####"/**
- * @emoji 🔁️ Whether replaying the same invocation twice is safe, and how the gateway makes it so.
+ * 🔁️ Whether replaying the same invocation twice is safe, and how the gateway makes it so.
  */
 export type IdempotencyMode = "natural" | "key" | "none";"####,
         },
@@ -745,7 +745,7 @@ export type InteractionRef = string;"####,
             name: "IntroductionCursor",
             version: 1,
             typescript: r####"/**
- * @emoji 🖱️ Ghost-cursor glyph, mirroring `🎨️ui.css`'s `--cursor-*` custom cursors.
+ * 🖱️ Ghost-cursor glyph, mirroring `🎨️ui.css`'s `--cursor-*` custom cursors.
  */
 export type IntroductionCursor = "default" | "pointer" | "grab" | "grabbing" | "crosshair" | "move";"####,
         },
@@ -753,7 +753,7 @@ export type IntroductionCursor = "default" | "pointer" | "grab" | "grabbing" | "
             name: "IntroductionDefinition",
             version: 1,
             typescript: r####"/**
- * @emoji 🎓️ A first-run walkthrough an app declares to introduce its UI, utilities, and actions to a
+ * 🎓️ A first-run walkthrough an app declares to introduce its UI, utilities, and actions to a
  * first-time user. Rendered as an ordered sequence of `IntroductionStepDefinition`s over a full-screen
  * glass veil; the shell owns playback (start/advance/skip) as ephemeral chrome state, never the
  * document.
@@ -768,7 +768,7 @@ title: unknown, steps: Array<IntroductionStepDefinition>, };"####,
             name: "IntroductionDemonstration",
             version: 1,
             typescript: r####"/**
- * @emoji 🎬️ A looping ghost-cursor demonstration attached to an interaction-gated
+ * 🎬️ A looping ghost-cursor demonstration attached to an interaction-gated
  * `IntroductionStepDefinition`. Plays only while the user's own pointer is idle — any real pointer
  * movement mutes it and restores the real cursor instantly; going idle again while the step is still
  * active replays it from the beginning. `cursor` overrides the glyph shown over the target; omitted, it
@@ -780,7 +780,7 @@ export type IntroductionDemonstration = { gesture: IntroductionGesture, cursor?:
             name: "IntroductionGesture",
             version: 1,
             typescript: r####"/**
- * @emoji 👆️ A gesture a demonstration plays: the ghost cursor travels to (or between) `IntroductionPoint`s
+ * 👆️ A gesture a demonstration plays: the ghost cursor travels to (or between) `IntroductionPoint`s
  * and performs the visual press/release affordance for the gesture kind.
  */
 export type IntroductionGesture = { "kind": "leftClick", at: IntroductionPoint, } | { "kind": "rightClick", at: IntroductionPoint, } | { "kind": "doubleClick", at: IntroductionPoint, } | { "kind": "drag", from: IntroductionPoint, to: IntroductionPoint, button?: IntroductionPointerButton, modifiers?: Array<IntroductionKeyModifier>, } | { "kind": "scroll", at: IntroductionPoint, deltaY: number, } | { "kind": "orbit", from: IntroductionPoint, to: IntroductionPoint, button?: IntroductionPointerButton, modifiers?: Array<IntroductionKeyModifier>, };"####,
@@ -789,7 +789,7 @@ export type IntroductionGesture = { "kind": "leftClick", at: IntroductionPoint, 
             name: "IntroductionInteraction",
             version: 1,
             typescript: r####"/**
- * @emoji ✅️ One thing the user must do to complete an interaction-gated `IntroductionStepDefinition` —
+ * ✅️ One thing the user must do to complete an interaction-gated `IntroductionStepDefinition` —
  * rendered as a checklist row in the info box and celebrated individually on completion.
  */
 export type IntroductionInteraction = { on: IntroductionInteractionKind,
@@ -806,7 +806,7 @@ celebrate?: string, };"####,
             name: "IntroductionInteractionKind",
             version: 1,
             typescript: r####"/**
- * @emoji 👉️ What one `IntroductionInteraction` requires: `Action`/`Utility`/`Tool`/`Panel`/`Expand`
+ * 👉️ What one `IntroductionInteraction` requires: `Action`/`Utility`/`Tool`/`Panel`/`Expand`
  * complete as soon as the user activates that utility/tool, opens that panel tab, or expands that tree
  * section — teaching by doing. `Pan`/`Zoom`/`Orbit` complete on that camera-navigation gesture over the
  * 3D window named by the payload (a window-kind id) — classified from camera-state deltas by the shell
@@ -818,7 +818,7 @@ export type IntroductionInteractionKind = { "kind": "action", "id": ActionRef } 
             name: "IntroductionKeyModifier",
             version: 1,
             typescript: r####"/**
- * @emoji ⌨️ Keyboard modifier held during a drag-like demonstration.
+ * ⌨️ Keyboard modifier held during a drag-like demonstration.
  */
 export type IntroductionKeyModifier = "alt" | "shift" | "control" | "meta";"####,
         },
@@ -826,7 +826,7 @@ export type IntroductionKeyModifier = "alt" | "shift" | "control" | "meta";"####
             name: "IntroductionLogo",
             version: 1,
             typescript: r####"/**
- * @emoji 🏛️ One institution/partner logo shown in an `IntroductionStepDefinition`'s info box — a plain
+ * 🏛️ One institution/partner logo shown in an `IntroductionStepDefinition`'s info box — a plain
  * URL pair (no DOM/CSS types), optionally linking out when clicked.
  */
 export type IntroductionLogo = { src: string, darkSrc: string | null, alt: string, href: string | null, };"####,
@@ -835,7 +835,7 @@ export type IntroductionLogo = { src: string, darkSrc: string | null, alt: strin
             name: "IntroductionPlacement",
             version: 1,
             typescript: r####"/**
- * @emoji 📍️ Where the info box is placed relative to its anchor.
+ * 📍️ Where the info box is placed relative to its anchor.
  */
 export type IntroductionPlacement = "auto" | "top" | "bottom" | "left" | "right" | "center";"####,
         },
@@ -843,7 +843,7 @@ export type IntroductionPlacement = "auto" | "top" | "bottom" | "left" | "right"
             name: "IntroductionPoint",
             version: 1,
             typescript: r####"/**
- * @emoji 📌️ Where a demonstration gesture points, resolvable to a viewport pixel at play time. One
+ * 📌️ Where a demonstration gesture points, resolvable to a viewport pixel at play time. One
  * point type covers click targets and drag endpoints across every addressing scheme the shell needs:
  * element-relative, absolute/normalized screen space, absolute/normalized window(pane)-local space, and
  * a 3D scene world position projected through that window's live camera.
@@ -854,7 +854,7 @@ export type IntroductionPoint = { "kind": "element", id: string, offset?: [numbe
             name: "IntroductionPointerButton",
             version: 1,
             typescript: r####"/**
- * @emoji 🖱️ Which mouse button a drag-like demonstration presses.
+ * 🖱️ Which mouse button a drag-like demonstration presses.
  */
 export type IntroductionPointerButton = "left" | "middle" | "right";"####,
         },
@@ -862,7 +862,7 @@ export type IntroductionPointerButton = "left" | "middle" | "right";"####,
             name: "IntroductionStepDefinition",
             version: 1,
             typescript: r####"/**
- * @emoji 🪜️ One step of an `IntroductionDefinition`: an info box pointing at `introduce`, with `show`
+ * 🪜️ One step of an `IntroductionDefinition`: an info box pointing at `introduce`, with `show`
  * raising extra elements above the glass veil and `interactions` completing the step.
  */
 export type IntroductionStepDefinition = { id: string,
@@ -992,7 +992,7 @@ commands: Array<CommandDefinition>, };"####,
             name: "OsDefinition",
             version: 1,
             typescript: r####"/**
- * @emoji 💻️ Operating-system command catalog shared by every renderer.
+ * 💻️ Operating-system command catalog shared by every renderer.
  */
 export type OsDefinition = { commands: Array<CommandDefinition>, };"####,
         },
@@ -1063,7 +1063,7 @@ export type PanelTabKind = { "kind": "workbenchCategory" } | { "kind": "displayC
             name: "Platform",
             version: 1,
             typescript: r####"/**
- * @emoji ⌨️ Operating system selector for a platform-specific keybinding.
+ * ⌨️ Operating system selector for a platform-specific keybinding.
  */
 export type Platform = "macOs" | "windows" | "linux";"####,
         },
@@ -1071,7 +1071,7 @@ export type Platform = "macOs" | "windows" | "linux";"####,
             name: "PlatformKeybinding",
             version: 1,
             typescript: r####"/**
- * @emoji ⌨️ One command chord, optionally restricted to a host platform.
+ * ⌨️ One command chord, optionally restricted to a host platform.
  */
 export type PlatformKeybinding = { chord: string, platform?: Platform, };"####,
         },
@@ -1123,7 +1123,7 @@ export type PortMultiplicity = "one" | "many";"####,
             name: "PreviewMode",
             version: 1,
             typescript: r####"/**
- * @emoji 👁️ Whether/how the gateway can show the effect of an invocation before committing it.
+ * 👁️ Whether/how the gateway can show the effect of an invocation before committing it.
  */
 export type PreviewMode = "none" | "dryRun" | "diff";"####,
         },
@@ -1151,7 +1151,7 @@ export type QuotaSchema = { memoryBytes?: bigint, fuelPerTurn?: bigint, turnDead
             name: "ResourceSelector",
             version: 1,
             typescript: r####"/**
- * @emoji 🎯️ A templated resource-selector string identifying what a capability reads/writes —
+ * 🎯️ A templated resource-selector string identifying what a capability reads/writes —
  * documented vocabulary (`"artifact:{self}"`, `"artifact:{arg.<id>}"`, `"config:{self}"`,
  * `"ui:window"`, `"clipboard"`, `"fs:{arg.<id>}"`, `"net:{origin}"`), not a closed enum: a new
  * resource family never needs a manifest schema change.
@@ -1206,7 +1206,7 @@ broadcast: boolean, };"####,
             name: "ToolDefinition",
             version: 1,
             typescript: r####"/**
- * @emoji 🛠️ Declares one mode-level tool: an activatable, stateful capability of a whole app mode.
+ * 🛠️ Declares one mode-level tool: an activatable, stateful capability of a whole app mode.
  * Distinct from `UtilityDefinition` (a per-window pointer mode — a utility is a tool for a specific
  * window) and `CommandDefinition` (a fire-once verb): exactly one tool is active per app at a time,
  * and activation is host-owned session view state (`ViewModel.active_tool_id`), never a document
@@ -1228,7 +1228,7 @@ run?: ToolRunDefinition, };"####,
             name: "ToolRef",
             version: 1,
             typescript: r####"/**
- * @emoji 🛠️ A validated reference into an app's `AppDefinition.tools` registry — the tool mirror of
+ * 🛠️ A validated reference into an app's `AppDefinition.tools` registry — the tool mirror of
  * `UtilityRef`, scoping tools to modes with a typed, resolvable id.
  */
 export type ToolRef = string;"####,
@@ -1322,7 +1322,7 @@ export type TreeWindowRequest = { bodyKey: string, nodeKey: string, open?: boole
             name: "TutorialAssetSrc",
             version: 1,
             typescript: r####"/**
- * @emoji 📦️ Where a tutorial media asset's bytes live. `Blob` is wire-identical to `store::BlobRef`
+ * 📦️ Where a tutorial media asset's bytes live. `Blob` is wire-identical to `store::BlobRef`
  * (content-addressed Blake3 hash + size + media type) — `framework/core` does not depend on
  * `semio-vcs`, so the shape is mirrored rather than reused; conversion between the two is
  * field-for-field.
@@ -1333,7 +1333,7 @@ export type TutorialAssetSrc = { "kind": "url", url: string, } | { "kind": "blob
             name: "TutorialBase",
             version: 1,
             typescript: r####"/**
- * @emoji 🎬️ What must be true at t=0: the document the tutorial sandboxes and the initial UI/camera
+ * 🎬️ What must be true at t=0: the document the tutorial sandboxes and the initial UI/camera
  * state. The player snapshots the user's live document, loads this in its place, and restores the
  * snapshot on exit — a tutorial can never touch real work.
  */
@@ -1352,7 +1352,7 @@ cameras: Array<TutorialCameraKeyframe>, };"####,
             name: "TutorialCameraKeyframe",
             version: 1,
             typescript: r####"/**
- * @emoji 🎥️ One camera track keyframe for a specific window instance.
+ * 🎥️ One camera track keyframe for a specific window instance.
  */
 export type TutorialCameraKeyframe = { at: bigint,
 /**
@@ -1368,7 +1368,7 @@ easing: TutorialEasing, };"####,
             name: "TutorialCameraState",
             version: 1,
             typescript: r####"/**
- * @emoji 🎥️ A camera pose — `Orbit` mirrors `World3dScene.camera_json`/`OrbitController`, `Canvas`
+ * 🎥️ A camera pose — `Orbit` mirrors `World3dScene.camera_json`/`OrbitController`, `Canvas`
  * mirrors `Canvas2dScene`'s `cameraX`/`cameraY`/`zoom`.
  */
 export type TutorialCameraState = { "kind": "orbit", position: [number, number, number], target: [number, number, number], up: [number, number, number], fov?: number, } | { "kind": "canvas", x: number, y: number, zoom: number, };"####,
@@ -1377,7 +1377,7 @@ export type TutorialCameraState = { "kind": "orbit", position: [number, number, 
             name: "TutorialCaption",
             version: 1,
             typescript: r####"/**
- * @emoji 💬️ One timed caption sub-segment of a `TutorialNarrationCue`.
+ * 💬️ One timed caption sub-segment of a `TutorialNarrationCue`.
  */
 export type TutorialCaption = { at: bigint, durationMs: bigint,
 /**
@@ -1389,7 +1389,7 @@ text: unknown, };"####,
             name: "TutorialChapter",
             version: 1,
             typescript: r####"/**
- * @emoji 📖️ One scrub-bar marker in a `TutorialDefinition`'s timeline.
+ * 📖️ One scrub-bar marker in a `TutorialDefinition`'s timeline.
  */
 export type TutorialChapter = { id: string, at: bigint,
 /**
@@ -1401,7 +1401,7 @@ title: unknown, body?: unknown, };"####,
             name: "TutorialDefinition",
             version: 1,
             typescript: r####"/**
- * @emoji 🎬️ A recorded, timed, replayable walkthrough — the timeline sibling of the step-gated
+ * 🎬️ A recorded, timed, replayable walkthrough — the timeline sibling of the step-gated
  * `IntroductionDefinition`. Where an introduction gates progression on the user performing an
  * interaction, a tutorial plays a multi-track recording (narration, video overlay, UI state, document
  * edits, camera, ghost-cursor gestures) against a sandboxed copy of the document while the user watches,
@@ -1436,7 +1436,7 @@ recordedAt?: string, };"####,
             name: "TutorialDocumentEvent",
             version: 1,
             typescript: r####"/**
- * @emoji 🖋️ One document-track entry — mirrors `store::ArtifactCommand` with `Mutation =
+ * 🖋️ One document-track entry — mirrors `store::ArtifactCommand` with `Mutation =
  * serde_json::Value` (opaque per-app mutation JSON, already the wire shape of every `KernelMutation`
  * diff). This is the SOLE source of document mutation during playback: recorded `TutorialEvent`s are
  * annotational only, never re-dispatched, because re-dispatching a plugin action is non-deterministic
@@ -1448,7 +1448,7 @@ export type TutorialDocumentEvent = { at: bigint, kind: TutorialDocumentEventKin
             name: "TutorialDocumentEventKind",
             version: 1,
             typescript: r####"/**
- * @emoji 🖋️ See `TutorialDocumentEvent`. `Edit` carries both `forwards` and `backwards` operations
+ * 🖋️ See `TutorialDocumentEvent`. `Edit` carries both `forwards` and `backwards` operations
  * verbatim from the vcs edit that produced it — the source of exact bidirectional scrubbing.
  */
 export type TutorialDocumentEventKind = { "kind": "edit", forwards: unknown[], backwards: unknown[], description?: string, coalesceKey?: string, } | { "kind": "undo" } | { "kind": "redo" } | { "kind": "checkpoint", message?: string, } | { "kind": "checkoutCheckpoint", checkpointId: string, } | { "kind": "switchAlternative", alternativeId: string, } | { "kind": "load", documentDsl: string, previousDsl: string, };"####,
@@ -1457,7 +1457,7 @@ export type TutorialDocumentEventKind = { "kind": "edit", forwards: unknown[], b
             name: "TutorialEasing",
             version: 1,
             typescript: r####"/**
- * @emoji 🪄️ Interpolation curve into a `TutorialCameraKeyframe` from its predecessor on the same window.
+ * 🪄️ Interpolation curve into a `TutorialCameraKeyframe` from its predecessor on the same window.
  */
 export type TutorialEasing = "linear" | "easeInOut" | "hold";"####,
         },
@@ -1465,7 +1465,7 @@ export type TutorialEasing = "linear" | "easeInOut" | "hold";"####,
             name: "TutorialEvent",
             version: 1,
             typescript: r####"/**
- * @emoji 🏷️ One recorded action/command/keypress, annotational only — see `TutorialTracks::events`.
+ * 🏷️ One recorded action/command/keypress, annotational only — see `TutorialTracks::events`.
  */
 export type TutorialEvent = { at: bigint, kind: TutorialEventKind, };"####,
         },
@@ -1473,7 +1473,7 @@ export type TutorialEvent = { at: bigint, kind: TutorialEventKind, };"####,
             name: "TutorialEventKind",
             version: 1,
             typescript: r####"/**
- * @emoji 🏷️ What one `TutorialEvent` annotates.
+ * 🏷️ What one `TutorialEvent` annotates.
  */
 export type TutorialEventKind = { "kind": "action", action: string, args?: unknown, } | { "kind": "command", command: string, args?: unknown, } | { "kind": "key", keys: string, };"####,
         },
@@ -1481,7 +1481,7 @@ export type TutorialEventKind = { "kind": "action", action: string, args?: unkno
             name: "TutorialGestureCue",
             version: 1,
             typescript: r####"/**
- * @emoji 👻️ One ghost-cursor gesture cue, reusing the introduction demonstration vocabulary verbatim —
+ * 👻️ One ghost-cursor gesture cue, reusing the introduction demonstration vocabulary verbatim —
  * both shells already resolve/render `IntroductionGesture`/`IntroductionPoint`/`IntroductionCursor`.
  */
 export type TutorialGestureCue = { at: bigint, durationMs: bigint, gesture: IntroductionGesture, cursor?: IntroductionCursor, };"####,
@@ -1490,7 +1490,7 @@ export type TutorialGestureCue = { at: bigint, durationMs: bigint, gesture: Intr
             name: "TutorialNarrationCue",
             version: 1,
             typescript: r####"/**
- * @emoji 🎙️ One voiceover cue: `text` is both the TTS script and the caption fallback; `audio`
+ * 🎙️ One voiceover cue: `text` is both the TTS script and the caption fallback; `audio`
  * overrides TTS with a recorded take. The timeline is always the master clock — a still-speaking TTS
  * utterance is cancelled at the next cue's `at`; audio assets are seeked and rate-matched to the
  * playhead instead of played independently.
@@ -1523,7 +1523,7 @@ captions: Array<TutorialCaption>, };"####,
             name: "TutorialOverlayRect",
             version: 1,
             typescript: r####"/**
- * @emoji 🖼️ Normalized 0–1 viewport rect for a `TutorialVideoCue` overlay.
+ * 🖼️ Normalized 0–1 viewport rect for a `TutorialVideoCue` overlay.
  */
 export type TutorialOverlayRect = { x: number, y: number, width: number, height: number, };"####,
         },
@@ -1531,7 +1531,7 @@ export type TutorialOverlayRect = { x: number, y: number, width: number, height:
             name: "TutorialTracks",
             version: 1,
             typescript: r####"/**
- * @emoji 🎞️ The seven parallel tracks of a `TutorialDefinition`'s timeline; every entry's `at` is a
+ * 🎞️ The seven parallel tracks of a `TutorialDefinition`'s timeline; every entry's `at` is a
  * millisecond offset from tutorial start, and each `Vec` is sorted ascending by `at`
  * (`validate_tutorial` enforces this).
  */
@@ -1550,7 +1550,7 @@ document: Array<TutorialDocumentEvent>, camera: Array<TutorialCameraKeyframe>, g
             name: "TutorialUiChange",
             version: 1,
             typescript: r####"/**
- * @emoji 🩹️ One typed, sparse UI-state change — the alphabet `compose_tutorial_ui` replays over a prior
+ * 🩹️ One typed, sparse UI-state change — the alphabet `compose_tutorial_ui` replays over a prior
  * `TutorialUiSnapshot` to reconstruct state at any timeline offset without shipping a full snapshot at
  * every sample.
  */
@@ -1560,7 +1560,7 @@ export type TutorialUiChange = { "kind": "activeMode", id: string, } | { "kind":
             name: "TutorialUiKeyframe",
             version: 1,
             typescript: r####"/**
- * @emoji 🧮️ One UI-state track entry: either a full restore-point snapshot (a valid seek anchor) or a
+ * 🧮️ One UI-state track entry: either a full restore-point snapshot (a valid seek anchor) or a
  * sparse list of changes since the previous sample.
  */
 export type TutorialUiKeyframe = { at: bigint, sample: TutorialUiSample, };"####,
@@ -1569,7 +1569,7 @@ export type TutorialUiKeyframe = { at: bigint, sample: TutorialUiSample, };"####
             name: "TutorialUiSample",
             version: 1,
             typescript: r####"/**
- * @emoji 🧮️ See `TutorialUiKeyframe`.
+ * 🧮️ See `TutorialUiKeyframe`.
  */
 export type TutorialUiSample = { "kind": "snapshot", state: TutorialUiSnapshot, } | { "kind": "delta", changes: Array<TutorialUiChange>, };"####,
         },
@@ -1577,7 +1577,7 @@ export type TutorialUiSample = { "kind": "snapshot", state: TutorialUiSnapshot, 
             name: "TutorialUiSnapshot",
             version: 1,
             typescript: r####"/**
- * @emoji 🧮️ Renderer-neutral restore point for chrome/UI state — a superset of `ViewModel` plus the
+ * 🧮️ Renderer-neutral restore point for chrome/UI state — a superset of `ViewModel` plus the
  * dock/panel/dialog state neither shell serializes today. Deliberately NOT a serialization of either
  * shell's internal store: each shell implements its own `captureUiSnapshot`/`applyUiSnapshot` against
  * this shape. Locale/terminology are excluded on purpose — a tutorial plays in the viewer's own locale.
@@ -1605,7 +1605,7 @@ interactionSelection: { [key in string]?: DomainSelection }, openDialogId?: stri
             name: "TutorialVideoCue",
             version: 1,
             typescript: r####"/**
- * @emoji 📹️ A timed video overlay — e.g. a presenter webcam picture-in-picture, or an authored clip.
+ * 📹️ A timed video overlay — e.g. a presenter webcam picture-in-picture, or an authored clip.
  */
 export type TutorialVideoCue = { at: bigint, durationMs: bigint, src: TutorialAssetSrc, rect: TutorialOverlayRect,
 /**
@@ -1807,7 +1807,7 @@ export type UiTreeWindowRowExtent = "standard" | "compactText" | "compactSmallCo
             name: "UndoMode",
             version: 1,
             typescript: r####"/**
- * @emoji ↩️ How a committed invocation of this capability can be undone.
+ * ↩️ How a committed invocation of this capability can be undone.
  */
 export type UndoMode = { "kind": "none" } | { "kind": "inverse" } | { "kind": "compensate", capability: string, };"####,
         },
@@ -1816,7 +1816,7 @@ export type UndoMode = { "kind": "none" } | { "kind": "inverse" } | { "kind": "c
             name: "UtilityDefinition",
             version: 1,
             typescript: r####"/**
- * @emoji 🧰️ Declares one interactive utility (a live-preview pointer mode) an app exposes. Distinct from
+ * 🧰️ Declares one interactive utility (a live-preview pointer mode) an app exposes. Distinct from
  * an `ActionDefinition`: exactly one utility is active per window kind at a time, and activation is
  * host-owned session view state (`ViewModel.active_utility_id`), never a document field or VCS operation.
  */
@@ -1849,7 +1849,7 @@ run?: ToolRunDefinition, };"####,
             name: "UtilityRef",
             version: 1,
             typescript: r####"/**
- * @emoji 🧰️ A validated reference into an app's `AppDefinition.utilities` registry — the utility mirror of
+ * 🧰️ A validated reference into an app's `AppDefinition.utilities` registry — the utility mirror of
  * `ActionRef`, scoping utilities to window kinds/modes with a typed, resolvable id.
  */
 export type UtilityRef = string;"####,
@@ -2065,7 +2065,7 @@ export type WindowOptions = { measures: Array<WindowMeasure>, engagement: Window
             name: "ArtifactPresentation",
             version: 1,
             typescript: r####"/**
- * @emoji 🧷️ Catalog presentation of the artifact owned by an app.
+ * 🧷️ Catalog presentation of the artifact owned by an app.
  */
 export type ArtifactPresentation = { id: string, name: string, dimension: string, componentKind: string, };"####,
         },
@@ -2073,7 +2073,7 @@ export type ArtifactPresentation = { id: string, name: string, dimension: string
             name: "ComposerEntryDescriptor",
             version: 1,
             typescript: r####"/**
- * @emoji 🎹️ One registered composer route; executable composition stays runtime-only.
+ * 🎹️ One registered composer route; executable composition stays runtime-only.
  */
 export type ComposerEntryDescriptor = { writes: ArtifactDialect, reads: Array<ArtifactDialect>, };"####,
         },
@@ -2081,7 +2081,7 @@ export type ComposerEntryDescriptor = { writes: ArtifactDialect, reads: Array<Ar
             name: "ConfigFieldShape",
             version: 1,
             typescript: r####"/**
- * @emoji 🧮️ Owned edit and validation shape for one configuration field.
+ * 🧮️ Owned edit and validation shape for one configuration field.
  */
 export type ConfigFieldShape = { "kind": "number", min?: number, max?: number, step?: number, } | { "kind": "toggle" } | { "kind": "text" } | { "kind": "select", options: Array<string>, } | { "kind": "record", fields: Array<ConfigFieldSpec>, };"####,
         },
@@ -2089,7 +2089,7 @@ export type ConfigFieldShape = { "kind": "number", min?: number, max?: number, s
             name: "ConfigFieldSpec",
             version: 1,
             typescript: r####"/**
- * @emoji 🧮️ One field in an app configuration record.
+ * 🧮️ One field in an app configuration record.
  */
 export type ConfigFieldSpec = { key: string, label: string, shape: ConfigFieldShape, default?: unknown, };"####,
         },
@@ -2097,7 +2097,7 @@ export type ConfigFieldSpec = { key: string, label: string, shape: ConfigFieldSh
             name: "ConfigSpec",
             version: 1,
             typescript: r####"/**
- * @emoji 🧮️ An app's complete typed configuration declaration.
+ * 🧮️ An app's complete typed configuration declaration.
  */
 export type ConfigSpec = { fields: Array<ConfigFieldSpec>, };"####,
         },
@@ -2105,7 +2105,7 @@ export type ConfigSpec = { fields: Array<ConfigFieldSpec>, };"####,
             name: "CommandFieldSpec",
             version: 1,
             typescript: r####"/**
- * @emoji 🎛️ One field in a keyword-dispatched command variant.
+ * 🎛️ One field in a keyword-dispatched command variant.
  */
 export type CommandFieldSpec = { key: string, shape: ConfigFieldShape, optional: boolean, };"####,
         },
@@ -2113,7 +2113,7 @@ export type CommandFieldSpec = { key: string, shape: ConfigFieldShape, optional:
             name: "CommandVariantSpec",
             version: 1,
             typescript: r####"/**
- * @emoji 🎛️ One keyword and its typed command fields.
+ * 🎛️ One keyword and its typed command fields.
  */
 export type CommandVariantSpec = { keyword: string, fields: Array<CommandFieldSpec>, };"####,
         },
@@ -2121,7 +2121,7 @@ export type CommandVariantSpec = { keyword: string, fields: Array<CommandFieldSp
             name: "CommandGrammar",
             version: 1,
             typescript: r####"/**
- * @emoji 🎛️ An app's complete typed binary command grammar.
+ * 🎛️ An app's complete typed binary command grammar.
  */
 export type CommandGrammar = { variants: Array<CommandVariantSpec>, };"####,
         },
@@ -2129,7 +2129,7 @@ export type CommandGrammar = { variants: Array<CommandVariantSpec>, };"####,
             name: "FileTypeContribution",
             version: 1,
             typescript: r####"/**
- * @emoji 🗂️ One import or export format contributed by an app.
+ * 🗂️ One import or export format contributed by an app.
  */
 export type FileTypeContribution = { formatKind: string, mediaType: MediaType, imports: boolean, exports: boolean, };"####,
         },
@@ -2137,7 +2137,7 @@ export type FileTypeContribution = { formatKind: string, mediaType: MediaType, i
             name: "IoEntryDirection",
             version: 1,
             typescript: r####"/**
- * @emoji 🚪️ Direction of one registered IO dialect route.
+ * 🚪️ Direction of one registered IO dialect route.
  */
 export type IoEntryDirection = "import" | "export";"####,
         },
@@ -2145,7 +2145,7 @@ export type IoEntryDirection = "import" | "export";"####,
             name: "IoEntryDescriptor",
             version: 1,
             typescript: r####"/**
- * @emoji 🚪️ One registered route between owned artifact dialects.
+ * 🚪️ One registered route between owned artifact dialects.
  */
 export type IoEntryDescriptor = { owner: ArtifactDialect, counterpart: ArtifactDialect, direction: IoEntryDirection, };"####,
         },
@@ -2153,7 +2153,7 @@ export type IoEntryDescriptor = { owner: ArtifactDialect, counterpart: ArtifactD
             name: "TopicContribution",
             version: 1,
             typescript: r####"/**
- * @emoji 🗂️ Open plugin contribution keyed by a dot-namespaced topic.
+ * 🗂️ Open plugin contribution keyed by a dot-namespaced topic.
  */
 export type TopicContribution = { topic: string, payload: unknown, };"####,
         },

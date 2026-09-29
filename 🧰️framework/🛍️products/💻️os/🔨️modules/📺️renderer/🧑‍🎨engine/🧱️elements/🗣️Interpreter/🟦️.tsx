@@ -1,7 +1,7 @@
 /// <reference types="vitest/importMeta" />
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/🟦️Interpreter/component.tsx
-/** @emoji 🌳️ `🟦️Interpreter` — turns the semantic UI contract (`semio-framework-ui-contract`'s
+/** 🌳️ `🟦️Interpreter` — turns the semantic UI contract (`semio-framework-ui-contract`'s
  * `UiNodeRecord`/`Component`/`LayoutSpec`/`StyleSpec`/`AccessibilitySpec`) retained by a
  * `📃️UiDocumentStore` into `@semio-tech/ui-react` components. `InterpretedUiNode` is the entry point;
  * `UiNodeView` is the atomic per-node unit — each one subscribes to exactly its own record via
@@ -284,7 +284,7 @@ function panelTreeItemsToData(items: readonly PanelTreeItem[], onAction: (action
   }));
 }
 
-/** @emoji 🌲️ Maps the still-supported manifest tree payload onto the owned panel-tree contract. */
+/** 🌲️ Maps the still-supported manifest tree payload onto the owned panel-tree contract. */
 export function uiTreeNodeToTreePanelConfig(treeNode: PanelTreeNode, onAction: (action: ActionDescriptor) => void): TreePanelConfig {
   const sections: TreeDataSection[] = treeNode.sections.map((section) => ({
     id: section.id,
@@ -303,7 +303,7 @@ export function uiTreeNodeToTreePanelConfig(treeNode: PanelTreeNode, onAction: (
   };
 }
 
-/** @emoji 🖱️ First catalogue-transfer MIME on a declarative {@link Tree} document, if any row carries drag data. */
+/** 🖱️ First catalogue-transfer MIME on a declarative {@link Tree} document, if any row carries drag data. */
 function treeSectionsCatalogueDragMime(sections: readonly TreeDataSection[]): string | undefined {
   const visit = (items: readonly TreeDataItem[]): string | undefined => {
     for (const item of items) {
@@ -342,7 +342,7 @@ function panelTreeDragMime(treeNode: PanelTreeNode): string | undefined {
   return undefined;
 }
 
-/** @emoji 🖱️ Owns manifest-tree drag payload and drop-action routing. */
+/** 🖱️ Owns manifest-tree drag payload and drop-action routing. */
 export function declarativeTreeDragController(treeNode: PanelTreeNode, onAction: (action: ActionDescriptor) => void): TreeDragAndDropController | undefined {
   const mime = panelTreeDragMime(treeNode);
   const source = mime ? catalogueTreeDragController(mime) : undefined;
@@ -409,7 +409,7 @@ function interpLabel(key: UiTranslationKey): UiLabel {
   return shellLabel(key);
 }
 
-/** @emoji 🕳️ Sanctioned wire-boundary mint point (see ui-react's `UiLabel` docstring): brands an
+/** 🕳️ Sanctioned wire-boundary mint point (see ui-react's `UiLabel` docstring): brands an
  * already plugin/manifest-resolved string as {@link UiLabel}. */
 export function wireLabel(value: string): UiLabel {
   return value as UiLabel;
@@ -722,7 +722,7 @@ export type UiInterpreterContext = {
 };
 //#endregion UiInterpreterContext
 
-/** @emoji 🛍️ The APP-STATIC operator/palette catalogue for the app owning this subtree — fetched ONCE
+/** 🛍️ The APP-STATIC operator/palette catalogue for the app owning this subtree — fetched ONCE
  * per app instance from the reserved `framework.section.catalogue` retained surface and cached by
  * `ShellHost` for that instance's whole lifetime. Never read off a scene: with the real `brep`/`math`
  * operator sets installed the payload is ~100 KB, more than three times the 32 KiB fixed per-surface
@@ -733,7 +733,7 @@ export type UiInterpreterContext = {
  * import the other for it. */
 export const AppCatalogueContext = createContext<AppCatalogue>(Object.freeze({}));
 
-/** @emoji 🛍️ Reads the nearest {@link AppCatalogueContext} — `{}` when no app instance provides one. */
+/** 🛍️ Reads the nearest {@link AppCatalogueContext} — `{}` when no app instance provides one. */
 export function useAppCatalogue(): AppCatalogue {
   return useContext(AppCatalogueContext);
 }
@@ -1140,7 +1140,7 @@ function dispatchDeclarativeControlAction(onAction: (action: ActionDescriptor) =
   onAction({ ...descriptor, args: { ...(typeof descriptor.args === "object" && descriptor.args != null ? descriptor.args : {}), ...patch } });
 }
 
-/** @emoji 🎛️ Renders the owned structural control payload retained by panel-tree composition. */
+/** 🎛️ Renders the owned structural control payload retained by panel-tree composition. */
 export function renderUiControl(control: DeclarativeUiControl, onAction: (action: ActionDescriptor) => void, path?: string): ReactElement {
   switch (control.type) {
     case "input": {
@@ -2186,7 +2186,7 @@ function TreeView({ store, record, context }: { readonly store: UiDocumentStore;
   );
 }
 
-/** @emoji 🦴 The one section a tree with NO resolvable `treeSection` child renders, so "still loading"
+/** 🦴 The one section a tree with NO resolvable `treeSection` child renders, so "still loading"
  * and "genuinely nothing to show" are never the same blank rectangle.
  *
  * 🧯️ A panel body the shell has not received yet is `pendingPanelUiNode()` — a `tree` node with
@@ -2268,7 +2268,7 @@ function PagedSurfaceView({ record, component, context }: { readonly record: UiN
 }
 
 /**
- * @emoji ♿️ The accessible door to a canvas.
+ * ♿️ The accessible door to a canvas.
  *
  * Every other component view reaches its ARIA for free, because it renders a real HTML element that
  * already carries the role and takes focus. A surface renders a scene host that paints into a
@@ -2638,7 +2638,7 @@ function TableView({ store, record, context }: { readonly store: UiDocumentStore
             {rows.map((row, position) => {
               const index = leading + position;
               const props = row.component as Extract<Component, { type: "tableRow" }>;
-              const cellNodes = (row.children ?? []).filter((id) => !store.getState().nodes.get(id)?.key.startsWith("row-action-"));
+              const cellNodes = row.children ?? [];
               const name = props.cells[0] ?? row.key;
               const rowDomId = nodeDomId(store, row, context.domScope);
               const cellContext: UiInterpreterContext = { ...context, domScope: rowDomId };
@@ -2784,7 +2784,7 @@ export function interpretUiNode(store: UiDocumentStore, context: UiInterpreterCo
 }
 
 /**
- * @emoji 🐢️ `React.memo`'d entry point — `store` is a stable per-surface identity, so only the root id
+ * 🐢️ `React.memo`'d entry point — `store` is a stable per-surface identity, so only the root id
  * changing (a `SetRoot`/full `loadSnapshot`) causes this to re-subscribe; ordinary node mutations are
  * handled entirely by `UiNodeView`'s own per-id subscription several levels down, never by
  * re-rendering from here.

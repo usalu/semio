@@ -8,7 +8,7 @@ import { defineConfig } from "vitest/config";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../📦️packages/🟦️typescript/🎯️targets/⚛️react");
 const repoRoot = resolve(root, "../../../../../../..");
 
-/** @emoji 🧪️ Vitest for `@semio-tech/presentation-react`. */
+/** 🧪️ Vitest for `@semio-tech/presentation-react`. */
 export default defineConfig({
   root,
   plugins: [react()],

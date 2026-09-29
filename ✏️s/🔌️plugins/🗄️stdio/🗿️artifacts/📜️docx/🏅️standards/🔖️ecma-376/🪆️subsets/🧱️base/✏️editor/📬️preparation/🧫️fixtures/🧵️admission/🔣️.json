@@ -1,9 +1,9 @@
 {
-  "ownerBytes": 2048,
-  "ownerItems": 128,
+  "ownerBytes": 1044480,
+  "ownerItems": 65280,
   "ownerDepth": 32,
   "turnBytes": 4096,
-  "refusedTextBytes": 4096,
+  "refusedTextBytes": 1048576,
   "recognizedMutations": [
     "setRunText",
     "replaceXmlNode",

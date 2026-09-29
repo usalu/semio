@@ -51,7 +51,6 @@ fn align_bytes_per_row_pads_to_wgpu_alignment() {
 #[semio_framework_async_macros::async_test]
 async fn scene_rasterizer_renders_expected_pixel_count() {
     let Ok(mut rasterizer) = SceneRasterizer::new(32, 32).await else {
-        eprintln!("[DEBUG] no wgpu adapter in this environment — skipping GPU assertion");
         return;
     };
     let (scene, background) = seeded_square_scene(42);

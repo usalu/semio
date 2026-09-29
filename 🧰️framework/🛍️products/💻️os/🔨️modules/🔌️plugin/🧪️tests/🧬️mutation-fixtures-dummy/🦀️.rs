@@ -398,10 +398,10 @@ store::space_members! {
 }
 
 impl store::MemberStoreOwner<DummyMutation> for DummySnapshot {
-    // 🚪️ This roster exists to BE a non-default roster, never to open a member: the law that uses it
-    // drives the registered ladder (construct, attach, dispatch, settle, exchange, close) and admits
-    // no child, so the un-openable operation is the honest declaration. `PackMemberSnapshotOpen`
-    // additionally demands `RetireOwned`, which the dummy snapshot does not implement.
+    /// 🚪️ This roster exists to BE a non-default roster, never to open a member: the law that uses it
+    /// drives the registered ladder (construct, attach, dispatch, settle, exchange, close) and admits
+    /// no child, so the un-openable operation is the honest declaration. `PackMemberSnapshotOpen`
+    /// additionally demands `RetireOwned`, which the dummy snapshot does not implement.
     type SnapshotOpen = store::UnsupportedMemberSnapshotOpen<Self>;
 
     fn member_store_owners() -> store::DocumentStoreOwners<Self, DummyMutation> {

@@ -1,10 +1,10 @@
-/** @emoji 🃏️ Compact window-silhouette overview card for one play pane — icon title chip, tagline and open chip. */
+/** 🃏️ Compact window-silhouette overview card for one play pane — icon title chip, tagline and open chip. */
 
 import { cn, Icon, registerUiTranslationBundles, uiDataLabel, useLabel, WindowChrome, windowChromeTitleChipClass } from "@semio-tech/ui-react";
 import type { PlayPaneSpec } from "./🪧️brand.ts";
 
 //#region 🌐️PlayCardLabels
-/** @emoji 🌐️ The card's own chrome strings — registered for English AND German so the overview never
+/** 🌐️ The card's own chrome strings — registered for English AND German so the overview never
  * carries a default language, even though play locks its shells to English. */
 const playCardUiLabel = registerUiTranslationBundles({
   en: { translation: { play: { card: { open: { label: { normal: "Open", beginner: "Open this app" } }, openApp: { label: { normal: "Open {{label}}: {{tagline}}", beginner: "Open {{label}}: {{tagline}}" } } } } } },
@@ -22,7 +22,7 @@ export function PlayCard({
   className,
 }: {
   readonly pane: PlayPaneSpec;
-  /** @emoji 🎈️ Pointer-hover lift only — never maps to window `active` (that paints the primary silhouette stroke). */
+  /** 🎈️ Pointer-hover lift only — never maps to window `active` (that paints the primary silhouette stroke). */
   readonly lifted?: boolean;
   readonly onClick: () => void;
   readonly onMouseEnter?: () => void;

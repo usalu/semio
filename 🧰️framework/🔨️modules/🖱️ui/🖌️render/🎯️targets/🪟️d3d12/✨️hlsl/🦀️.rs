@@ -1,4 +1,4 @@
-//! @emoji ✨️ Hand-written HLSL (Shader Model 5.1, compiled via `D3DCompile`) for the five shader
+//! ✨️ Hand-written HLSL (Shader Model 5.1, compiled via `D3DCompile`) for the five shader
 //! families, ported line-for-line from the canonical WGSL in `ui_render::shader_contract` (packet
 //! `shader-repair`'s repaired constants — never the asyncify-corrupted `🎯️targets/🧊️wgpu/🦀️shaders.rs`).
 //!

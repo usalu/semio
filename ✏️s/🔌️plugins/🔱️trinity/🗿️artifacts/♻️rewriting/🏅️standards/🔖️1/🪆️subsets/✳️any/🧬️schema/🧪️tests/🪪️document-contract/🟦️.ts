@@ -49,6 +49,4 @@ export function testRewritingDocumentContractOracle(): void {
   const invalidLayout = { ruleLayout: { entries: [{ key: "node", precondition: "any", operation: { kind: "set", value: null } }] } };
   assert.equal(validateDiff(invalidLayout), false);
   assert.throws(() => parseRewritingDiff(invalidLayout));
-  console.log(`[DEBUG] Rewriting shared map diff matched ${paths.length} committed inputs and rejected a null layout-point payload`);
-  console.log("[DEBUG] Rewriting document/snapshot accepted six shared JSON value kinds and rejected window fields, malformed layouts and non-JSON nested values");
 }

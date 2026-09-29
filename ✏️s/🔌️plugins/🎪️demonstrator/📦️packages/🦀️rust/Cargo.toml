@@ -23,7 +23,7 @@ package = "semio:demonstrator"
 # live here.
 [package.metadata.semio]
 role = "plugin"
-consumes = ["forms.questionKind", "process.machines", "cad.computer", "sourcing.module"]
+consumes = ["forms.questionKind", "process.machines", "cad.computer", "sourcing.module", "flow.extension"]
 # 🔗️ Runtime actor dependencies — the six plugins whose editor/viewer surfaces this crate registers
 # over THEIR artifact kinds (`🪪️manifest/🎪️demonstrator/🦀️.rs`'s `.depends_on(…)` rows must match the
 # plugin ids below exactly). Flow extensions are listed explicitly (not `flow.extension`) so the

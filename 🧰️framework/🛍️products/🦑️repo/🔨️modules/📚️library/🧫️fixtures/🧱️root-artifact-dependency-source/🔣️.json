@@ -123,7 +123,7 @@
   "wgpuOutputRoots": [
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🤖️generated/🟨️.js",
-      "inclusion": "tracked",
+      "inclusion": "ignored",
       "producer": {
         "ownerPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
         "target": "@semio-tech/framework-renderer-wgpu:generate-frame-worker"

@@ -18,7 +18,7 @@ function formatNumberOrArray(value: number | readonly number[]): string {
 //#endregion 🔖️Formatting
 
 //#region 🔖️ColorsTable
-/** @emoji 🎨️ `STYLING_TOKENS` — the primitive hex palette every `ThemePaintRef.token` resolves against. */
+/** 🎨️ `STYLING_TOKENS` — the primitive hex palette every `ThemePaintRef.token` resolves against. */
 function ColorsTable(): ReactElement {
   const entries = Object.entries(STYLING_TOKENS);
   return (
@@ -40,7 +40,7 @@ function ColorsTable(): ReactElement {
 //#endregion 🔖️ColorsTable
 
 //#region 🔖️SpacingTable
-/** @emoji 📏️ `STYLING_SEMIO_THEME.spacing` — the only spacing scale a `UiTheme` carries (no standalone `STYLING_SPACING` export; it lives inline on the theme premade). */
+/** 📏️ `STYLING_SEMIO_THEME.spacing` — the only spacing scale a `UiTheme` carries (no standalone `STYLING_SPACING` export; it lives inline on the theme premade). */
 function SpacingTable(): ReactElement {
   const entries = Object.entries(STYLING_SEMIO_THEME.spacing);
   return (

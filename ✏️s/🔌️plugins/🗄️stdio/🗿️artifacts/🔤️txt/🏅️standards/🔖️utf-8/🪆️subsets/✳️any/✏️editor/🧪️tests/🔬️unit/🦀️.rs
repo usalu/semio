@@ -59,9 +59,47 @@ async fn direct_text_edit_is_revision_guarded_and_noop_preserving() {
     let emit = txt_emit(&TxtEditorCommand::ReplaceText { revision, text: "x\r\r\ny\r\n".into() }, &snapshot, None).expect("valid replacement");
     let mut next = snapshot.clone();
     for mutation in &emit.artifact_mutations {
-        next = protocol::MutationDiff::apply(<TxtMutation as protocol::Mutation<TxtSnapshot>>::diff(mutation, &next).diff(), &next).expect("native mutation applies");
+        let outcome = <TxtMutation as protocol::Mutation<TxtSnapshot>>::diff(mutation, &next);
+        assert!(outcome.messages().is_empty(), "native mutation {mutation:?} refused: {:?}", outcome.messages());
+        next = protocol::MutationDiff::apply(outcome.diff(), &next).expect("native mutation applies");
     }
     assert_eq!(next.to_body(), "x\r\r\ny\r\n");
+}
+
+/// ⚖️ LAW: a whole-buffer replacement between ANY two native documents lowers to mutations that each apply without a message
+/// (no refused leaf, no empty diff journaled) and end exactly at the replacement — the text round trip `to_body()` is the
+/// oracle. The corpus crosses LF/CRLF, terminated/unterminated, empty, blank-line and bare-CR bodies.
+#[test]
+fn every_replacement_lowers_through_native_documents_only() {
+    const BODIES: [&str; 19] = ["", "a", "a\n", "a\r\n", "\n", "\r\n", "a\nb", "a\nb\n", "a\r\nb", "a\r\r\nb\r\n", "x\r\r\ny\r\n", "a\r", "a\n\n", "\r\n\r\n", "alpha\nbeta", "Hello, stdio.txt!\n", " ", " \n", "\r"];
+    for old_body in BODIES {
+        let snapshot = TxtSnapshot::from_body(old_body);
+        assert_eq!(native_snapshot_error(&snapshot), None, "corpus body {old_body:?} is native");
+        let revision = semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&snapshot);
+        for new_body in BODIES {
+            let emit = txt_emit(&TxtEditorCommand::ReplaceText { revision: revision.clone(), text: new_body.into() }, &snapshot, None).expect("native replacement lowers");
+            let mut next = snapshot.clone();
+            for mutation in &emit.artifact_mutations {
+                let outcome = <TxtMutation as protocol::Mutation<TxtSnapshot>>::diff(mutation, &next);
+                assert!(outcome.messages().is_empty(), "{old_body:?} → {new_body:?}: {mutation:?} refused: {:?}", outcome.messages());
+                next = protocol::MutationDiff::apply(outcome.diff(), &next).expect("native mutation applies");
+            }
+            assert_eq!(next.to_body(), new_body, "{old_body:?} → {new_body:?}");
+            let mut expected = TxtSnapshot::from_body(new_body);
+            expected.schema.clone_from(&snapshot.schema);
+            assert_eq!(next, expected, "{old_body:?} → {new_body:?}");
+        }
+    }
+}
+
+/// ⚖️ LAW: an invariant refusal is FATAL (the store's contract for `mutation.invariant`), so the bounded preparation refuses the
+/// whole edit instead of journaling the leaf's empty diff.
+#[test]
+fn invariant_refusals_are_fatal() {
+    let terminated = TxtSnapshot::from_body("only\n");
+    let outcome = <TxtMutation as protocol::Mutation<TxtSnapshot>>::diff(&TxtMutation::RemoveLine(RemoveLineMutation { index: 0 }), &terminated);
+    assert_eq!(outcome.messages().iter().map(|message| (message.code.0.as_str(), message.level)).collect::<Vec<_>>(), vec![("mutation.invariant", protocol::Severity::Fatal)]);
+    assert_eq!(outcome.diff(), &Default::default());
 }
 
 //#region 🎬️ExampleSwitchLaws

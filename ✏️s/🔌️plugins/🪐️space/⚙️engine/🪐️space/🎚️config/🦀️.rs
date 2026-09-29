@@ -143,7 +143,7 @@ store::impl_whole_record_config!(SpaceConfig);
 //#endregion 🔖️Config
 
 //#region 🔖️ConfigOperations
-/// @emoji 🧮️ `SpaceConfig`'s operation enum — one variant per settled interaction, plus a generic
+/// 🧮️ `SpaceConfig`'s operation enum — one variant per settled interaction, plus a generic
 /// `Snapshot` every variant's `backwards()` returns: a config-only dispatch is a plain `Apply` (not an
 /// `AmendLast`), so each tick is its own distinct, real config edit and "undo this tick" is exactly
 /// "restore the whole-config snapshot from just before it". `Mutation::Diff` is the WHOLE `SpaceConfig`,

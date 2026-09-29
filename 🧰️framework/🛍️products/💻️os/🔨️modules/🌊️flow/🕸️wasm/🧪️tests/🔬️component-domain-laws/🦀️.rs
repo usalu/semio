@@ -72,7 +72,6 @@ fn compiled_session_close_retires_the_real_vcs_and_host_before_terminal_empty() 
     assert_eq!(bridge.terminal_is_empty(), fixture.get("browser").unwrap().get("terminalBeforeClose").unwrap().as_bool().unwrap());
     close_bridge(&mut bridge);
     assert_eq!(bridge.terminal_is_empty(), fixture.get("browser").unwrap().get("terminalAfterClose").unwrap().as_bool().unwrap());
-    println!("[DEBUG] Flow native compiled session close: real VCS and host retired, terminal-empty=true");
 }
 
 #[test]
@@ -114,7 +113,6 @@ fn compiled_session_close_receipt_preserves_a_real_sibling_until_global_close() 
     assert!(completed);
     assert!(!bridge.terminal_is_empty());
     close_bridge(&mut bridge);
-    println!("[DEBUG] Flow real adapter session A retired with its exact receipt; sibling B completed selection before global terminal close");
 }
 
 #[test]
@@ -152,7 +150,6 @@ fn linear_memory_close_preserves_the_exact_retained_event_until_delivery_and_ack
             }
         }
         assert_eq!(flow_bridge_terminal_is_empty(), 1);
-        println!("[DEBUG] Flow linear-memory close: retained event delivered once and acknowledged before terminal-empty");
     })
     .join()
     .unwrap();
@@ -766,7 +763,6 @@ fn a_retained_document_retires_in_turns_that_do_not_count_its_bytes() {
     for size in sizes {
         let json = scaled_document_json(size);
         let turns = close_ladder_turns(&json);
-        println!("[DEBUG] flow close ladder: document {} B ({} B of json) retired in {turns} turns", size, json.len());
         census.push((json.len(), turns));
     }
     let bound = serde_json::from_str::<Value>(include_str!("../../🧫️fixtures/🧹️session-close/🔣️.json")).unwrap()["close"]["maximumTurns"].as_u64().unwrap() as usize;
@@ -805,12 +801,11 @@ fn close_ladder_census(document_json: &str) -> Vec<(String, usize)> {
 fn the_retirement_ladder_names_every_turn_it_spends() {
     let census = close_ladder_census(&scaled_document_json(32_768));
     let turns: usize = census.iter().map(|(_, count)| count).sum();
-    println!("[DEBUG] flow close ladder census (32 KB document): {turns} turns");
     for (phase, count) in &census {
-        println!("[DEBUG]   {phase} x{count}");
+        println!("  {phase} x{count}");
     }
     for rows in [24u32, 64] {
-        println!("[DEBUG] flow close ladder: the {rows}-row measured document retired in {} turns", close_ladder_turns(&row_document_json(rows)));
+        println!("flow close ladder: the {rows}-row measured document retired in {} turns", close_ladder_turns(&row_document_json(rows)));
     }
     assert!(turns < 64, "a 32 KB document must retire in turns worth naming, not thousands: {census:?}");
     assert!(!census.iter().any(|(phase, _)| phase.contains("Backing") || phase.contains("Domain") || phase.contains("Neural")), "a payload frontier must never anchor a close turn: {census:?}");

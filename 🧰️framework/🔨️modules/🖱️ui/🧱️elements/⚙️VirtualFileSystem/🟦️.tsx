@@ -23,7 +23,7 @@ import { formatHostTemporalValueV1 } from "../../🧬️contract/🕰️host-tem
 // #endregion 🔌️Adapters
 
 // #region 📁️VirtualFileSystem
-/** @emoji 🏷️ Render-agnostic descriptor presentation kinds for {@link VirtualFileSystem} columns. */
+/** 🏷️ Render-agnostic descriptor presentation kinds for {@link VirtualFileSystem} columns. */
 export type DescriptorKind =
   | { readonly id: string; readonly name: string; readonly description?: string; readonly presentation: "text" }
   | {
@@ -35,7 +35,7 @@ export type DescriptorKind =
     }
   | { readonly id: string; readonly name: string; readonly description?: string; readonly presentation: "avatar" };
 
-/** @emoji 🏷️ Column binding on a {@link FileNodeKind} referencing a {@link DescriptorKind}. */
+/** 🏷️ Column binding on a {@link FileNodeKind} referencing a {@link DescriptorKind}. */
 export interface FileNodeDescriptor {
   readonly id: string;
   readonly descriptorKindId: string;
@@ -43,7 +43,7 @@ export interface FileNodeDescriptor {
   readonly description?: string;
 }
 
-/** @emoji 📁️ File node kind registry entry (icon, labels, column descriptors). */
+/** 📁️ File node kind registry entry (icon, labels, column descriptors). */
 export interface FileNodeKind {
   readonly id: string;
   readonly name: string;
@@ -52,24 +52,24 @@ export interface FileNodeKind {
   readonly descriptors: readonly FileNodeDescriptor[];
 }
 
-/** @emoji 📁️ Cell value for one {@link FileNodeDescriptor} column on a {@link FileNode}. */
+/** 📁️ Cell value for one {@link FileNodeDescriptor} column on a {@link FileNode}. */
 export type FileNodeDescriptorValue = { readonly presentation: "text"; readonly text: string } | { readonly presentation: "time"; readonly iso: string } | { readonly presentation: "avatar"; readonly name: string; readonly icon?: string };
 
-/** @emoji 📁️ Schema driving {@link VirtualFileSystem} columns and glyphs. */
+/** 📁️ Schema driving {@link VirtualFileSystem} columns and glyphs. */
 export interface VirtualFileSystemSchema {
   readonly fileNodeKinds: Readonly<Record<string, FileNodeKind>>;
   readonly descriptorKinds: Readonly<Record<string, DescriptorKind>>;
   readonly descriptorColumnIds: readonly string[];
 }
 
-/** @emoji 📁️ Demo VFS descriptor kinds for stories and unit tests. */
+/** 📁️ Demo VFS descriptor kinds for stories and unit tests. */
 export const VIRTUAL_FILE_SYSTEM_DEMO_DESCRIPTOR_KINDS: Readonly<Record<string, DescriptorKind>> = {
   text: { id: "text", name: "Text", presentation: "text" },
   time: { id: "time", name: "Time", presentation: "time", format: "datetime" },
   avatar: { id: "avatar", name: "Avatar", presentation: "avatar" },
 };
 
-/** @emoji 📁️ Demo VFS file node kinds for stories and unit tests. */
+/** 📁️ Demo VFS file node kinds for stories and unit tests. */
 export const VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS: Readonly<Record<string, FileNodeKind>> = {
   root: {
     id: "root",
@@ -100,14 +100,14 @@ export const VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS: Readonly<Record<string, F
   },
 };
 
-/** @emoji 📁️ Demo virtual file system schema for stories and unit tests. */
+/** 📁️ Demo virtual file system schema for stories and unit tests. */
 export const VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA: VirtualFileSystemSchema = {
   fileNodeKinds: VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS,
   descriptorKinds: VIRTUAL_FILE_SYSTEM_DEMO_DESCRIPTOR_KINDS,
   descriptorColumnIds: ["path", "fileNodeKind"],
 };
 
-/** @emoji 📁️ One node in a virtual file system tree (children may be loaded lazily by the host). */
+/** 📁️ One node in a virtual file system tree (children may be loaded lazily by the host). */
 export interface FileNode {
   readonly id: string;
   readonly fileNodeKindId: string;
@@ -120,16 +120,16 @@ export interface FileNode {
   readonly descriptorValues?: Readonly<Record<string, FileNodeDescriptorValue>>;
 }
 
-/** @emoji 📁️ {@link FileNode} alias used by {@link VirtualFileSystem}. */
+/** 📁️ {@link FileNode} alias used by {@link VirtualFileSystem}. */
 export type VirtualFileSystemNode = FileNode;
 
-/** @emoji 📁️ Flattened visible row for {@link VirtualFileSystem} (only expanded branches). */
+/** 📁️ Flattened visible row for {@link VirtualFileSystem} (only expanded branches). */
 export interface VirtualFileSystemRow extends FileNode, HierarchicalRowData {
   readonly level: number;
   readonly isExpanded?: boolean;
 }
 
-/** @emoji 📁️ Props for {@link VirtualFileSystem} — a hierarchical {@link Table} for virtual file tree nodes. */
+/** 📁️ Props for {@link VirtualFileSystem} — a hierarchical {@link Table} for virtual file tree nodes. */
 export interface VirtualFileSystemProps {
   readonly schema: VirtualFileSystemSchema;
   readonly rows: readonly VirtualFileSystemRow[];
@@ -151,17 +151,17 @@ export interface VirtualFileSystemProps {
   readonly extraColumns?: readonly TableColumn<VirtualFileSystemRow>[];
 }
 
-/** @emoji 📁️ Visible row order for shift-range selection in {@link VirtualFileSystem}. */
+/** 📁️ Visible row order for shift-range selection in {@link VirtualFileSystem}. */
 export function getVirtualFileSystemOrderedRowIds(rows: readonly VirtualFileSystemRow[]): string[] {
   return rows.map((row) => row.id);
 }
 
-/** @emoji 📁️ Normalizes selected row ids for {@link VirtualFileSystem} selection mode. */
+/** 📁️ Normalizes selected row ids for {@link VirtualFileSystem} selection mode. */
 export function normalizeVirtualFileSystemSelectedRowIds(selectedRowIds: readonly string[], selectionMode: TreeSelectionMode): string[] {
   return normalizeTreeSelectedIds([...selectedRowIds], selectionMode);
 }
 
-/** @emoji 📁️ Next selection after a row click (shift range, ctrl/cmd toggle, plain replace). */
+/** 📁️ Next selection after a row click (shift range, ctrl/cmd toggle, plain replace). */
 export function getVirtualFileSystemNextSelectionState(args: {
   readonly selectionMode: TreeSelectionMode;
   readonly selectedRowIds: readonly string[];
@@ -183,17 +183,17 @@ export function getVirtualFileSystemNextSelectionState(args: {
   return { selectedRowIds: next.selectedIds, anchorRowId: next.anchorId };
 }
 
-/** @emoji 📁️ Resolves a {@link FileNodeKind} from a {@link VirtualFileSystemSchema}. */
+/** 📁️ Resolves a {@link FileNodeKind} from a {@link VirtualFileSystemSchema}. */
 export function resolveVirtualFileSystemFileNodeKind(schema: VirtualFileSystemSchema, fileNodeKindId: string): FileNodeKind | undefined {
   return schema.fileNodeKinds[fileNodeKindId];
 }
 
-/** @emoji 📁️ Resolves a {@link DescriptorKind} from a {@link VirtualFileSystemSchema}. */
+/** 📁️ Resolves a {@link DescriptorKind} from a {@link VirtualFileSystemSchema}. */
 export function resolveVirtualFileSystemDescriptorKind(schema: VirtualFileSystemSchema, descriptorKindId: string): DescriptorKind | undefined {
   return schema.descriptorKinds[descriptorKindId];
 }
 
-/** @emoji 📁️ Finds the first {@link FileNodeDescriptor} binding for a column id across all file node kinds. */
+/** 📁️ Finds the first {@link FileNodeDescriptor} binding for a column id across all file node kinds. */
 export function resolveVirtualFileSystemDescriptorBinding(schema: VirtualFileSystemSchema, descriptorColumnId: string): { readonly binding: FileNodeDescriptor; readonly descriptorKind: DescriptorKind } | undefined {
   for (const fileNodeKind of Object.values(schema.fileNodeKinds)) {
     const binding = fileNodeKind.descriptors.find((entry) => entry.id === descriptorColumnId);
@@ -205,7 +205,7 @@ export function resolveVirtualFileSystemDescriptorBinding(schema: VirtualFileSys
   return undefined;
 }
 
-/** @emoji 📁️ Builds descriptor cell values from a {@link VirtualFileSystemSchema}. */
+/** 📁️ Builds descriptor cell values from a {@link VirtualFileSystemSchema}. */
 export function buildVirtualFileSystemDescriptorValues(
   schema: VirtualFileSystemSchema,
   fileNodeKindId: string,
@@ -231,7 +231,7 @@ export function buildVirtualFileSystemDescriptorValues(
   return values;
 }
 
-/** @emoji 🗓️ Formats a VFS timestamp through the shared host-temporal presentation contract. */
+/** 🗓️ Formats a VFS timestamp through the shared host-temporal presentation contract. */
 export function formatVirtualFileSystemTime(date: Date, presentation: "date" | "datetime" | "relative", locale: string, now: Date = new Date()): string {
   return formatHostTemporalValueV1(
     { id: "vfs", source: { kind: "epochMs", timestampMs: date.valueOf() }, format: presentation === "datetime" ? "dateTime" : presentation },
@@ -240,7 +240,7 @@ export function formatVirtualFileSystemTime(date: Date, presentation: "date" | "
   );
 }
 
-/** @emoji 📁️ Renders one descriptor cell for a {@link VirtualFileSystemRow}. */
+/** 📁️ Renders one descriptor cell for a {@link VirtualFileSystemRow}. */
 export function renderVirtualFileSystemDescriptorCell(descriptorKind: DescriptorKind, value: FileNodeDescriptorValue | undefined, locale: string): React.ReactNode {
   if (!value || value.presentation !== descriptorKind.presentation) return "";
   switch (value.presentation) {
@@ -265,7 +265,7 @@ export function renderVirtualFileSystemDescriptorCell(descriptorKind: Descriptor
   }
 }
 
-/** @emoji 📁️ Builds {@link TableColumn} entries from {@link VirtualFileSystemSchema} descriptor columns. */
+/** 📁️ Builds {@link TableColumn} entries from {@link VirtualFileSystemSchema} descriptor columns. */
 export function buildVirtualFileSystemDescriptorColumns(schema: VirtualFileSystemSchema, locale: string): TableColumn<VirtualFileSystemRow>[] {
   const columns: TableColumn<VirtualFileSystemRow>[] = [];
   for (const columnId of schema.descriptorColumnIds) {
@@ -286,7 +286,7 @@ export function buildVirtualFileSystemDescriptorColumns(schema: VirtualFileSyste
   return columns;
 }
 
-/** @emoji 📁️ Built-in icons keyed by VFS schema `icon` ids and {@link FileNodeKind} ids. */
+/** 📁️ Built-in icons keyed by VFS schema `icon` ids and {@link FileNodeKind} ids. */
 const VIRTUAL_FILE_SYSTEM_ICON_BY_ID: Readonly<Record<string, IconName>> = {
   "layout-grid": "layout-grid",
   folder: "folder",
@@ -365,17 +365,17 @@ const VIRTUAL_FILE_SYSTEM_ICON_BY_ID: Readonly<Record<string, IconName>> = {
   compose: "file-json",
 };
 
-/** @emoji 📁️ Resolves a built-in icon for a VFS schema icon id or file node kind id. */
+/** 📁️ Resolves a built-in icon for a VFS schema icon id or file node kind id. */
 export function resolveVirtualFileSystemSchemaIcon(iconOrKindId: string): IconName | undefined {
   return VIRTUAL_FILE_SYSTEM_ICON_BY_ID[iconOrKindId];
 }
 
-/** @emoji 📁️ Returns a built-in icon name for a generic VFS file node kind id. */
+/** 📁️ Returns a built-in icon name for a generic VFS file node kind id. */
 export function virtualFileSystemKindIcon(fileNodeKindId: string): IconName {
   return resolveVirtualFileSystemSchemaIcon(fileNodeKindId) ?? "file-text";
 }
 
-/** @emoji 📁️ True when a VFS row `icon` value is a remote or data URL image, not a schema icon id. */
+/** 📁️ True when a VFS row `icon` value is a remote or data URL image, not a schema icon id. */
 export function isVirtualFileSystemRemoteIcon(icon: string): boolean {
   const trimmed = icon.trim();
   return trimmed.startsWith("http://") || trimmed.startsWith("https://") || trimmed.startsWith("data:") || trimmed.startsWith("/") || trimmed.startsWith("./");
@@ -397,7 +397,7 @@ function appendVirtualFileSystemVisibleRow(rows: VirtualFileSystemRow[], node: V
   for (const child of children) appendVirtualFileSystemVisibleRow(rows, child, level + 1, childrenByParentId, expandedIds);
 }
 
-/** @emoji 📁️ DFS-flattens visible rows: only children of expanded parents in `childrenByParentId`. */
+/** 📁️ DFS-flattens visible rows: only children of expanded parents in `childrenByParentId`. */
 export function buildVirtualFileSystemVisibleRows(rootId: string, childrenByParentId: ReadonlyMap<string, readonly VirtualFileSystemNode[]>, expandedIds: ReadonlySet<string>, root?: VirtualFileSystemNode): VirtualFileSystemRow[] {
   const rows: VirtualFileSystemRow[] = [];
   const rootNode = root ?? {
@@ -413,7 +413,7 @@ export function buildVirtualFileSystemVisibleRows(rootId: string, childrenByPare
   return rows;
 }
 
-/** @emoji 🌲️ Flattens the raw tree carried by a virtual-file-system scene into renderer-local visible rows. */
+/** 🌲️ Flattens the raw tree carried by a virtual-file-system scene into renderer-local visible rows. */
 export function buildVirtualFileSystemSceneRows(nodes: readonly VirtualFileSystemNode[], expandedIds: ReadonlySet<string>): VirtualFileSystemRow[] {
   const childrenByParentId = new Map<string, VirtualFileSystemNode[]>();
   const roots: VirtualFileSystemNode[] = [];
@@ -471,7 +471,7 @@ const VirtualFileSystemNodeGlyph: React.FC<{
   );
 };
 
-/** @emoji 📁️ Hierarchical virtual file-system table (specialized {@link Table}). */
+/** 📁️ Hierarchical virtual file-system table (specialized {@link Table}). */
 export const VirtualFileSystem: React.FC<VirtualFileSystemProps> = ({
   schema,
   rows,

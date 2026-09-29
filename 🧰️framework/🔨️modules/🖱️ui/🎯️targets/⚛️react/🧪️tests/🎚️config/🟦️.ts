@@ -10,7 +10,7 @@ const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
 const repoRoot = resolve(root, "../../../../../../..");
 
-/** @emoji 🧪️ Vitest for `@semio-tech/ui-react` and its owned React modules. */
+/** 🧪️ Vitest for `@semio-tech/ui-react` and its owned React modules. */
 export default defineConfig({
   root: testRoot,
   cacheDir: repoCacheDirectory(repoRoot, "vite", "ui-react"),

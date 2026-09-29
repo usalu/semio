@@ -922,7 +922,7 @@ function componentTargets(root, workspaceRoot, commandInputs) {
   }]])]);
 }
 
-/** @emoji 🧭️ Repo-root-relative plugin owner directory for a playground crate path. */
+/** 🧭️ Repo-root-relative plugin owner directory for a playground crate path. */
 function pluginOwnerRootFromCratePath(cratePath) {
   const parts = nxPath(cratePath).split("/");
   const pluginsIdx = parts.indexOf("🔌️plugins");
@@ -930,7 +930,7 @@ function pluginOwnerRootFromCratePath(cratePath) {
   return parts.slice(0, pluginsIdx + 2).join("/");
 }
 
-/** @emoji 📦️ CDN dist directory for one playground row when `distDir` is not authored in Cargo.toml. */
+/** 📦️ CDN dist directory for one playground row when `distDir` is not authored in Cargo.toml. */
 function resolvePlaygroundDistDir(entry, catalog) {
   if (entry.distDir) return entry.distDir;
   const owner = pluginOwnerRootFromCratePath(entry.cratePath);
@@ -939,7 +939,7 @@ function resolvePlaygroundDistDir(entry, catalog) {
   return variantsForPlugin.length <= 1 ? `${owner}/dist` : `${owner}/dist/${entry.variant}`;
 }
 
-/** @emoji 🎮️ Flattens every plugin playground row from Cargo manifests (with resolved `distDir`). */
+/** 🎮️ Flattens every plugin playground row from Cargo manifests (with resolved `distDir`). */
 function collectPlaygroundCatalog(configFiles, workspaceRoot) {
   const components = new Map(), playgrounds = [];
   for (const path of configFiles) {
@@ -957,7 +957,7 @@ function collectPlaygroundCatalog(configFiles, workspaceRoot) {
   });
 }
 
-/** @emoji 🌐️ Per-plugin `build` / `build-<variant>-site` targets that publish CDN trees under each plugin's `dist/`. */
+/** 🌐️ Per-plugin `build` / `build-<variant>-site` targets that publish CDN trees under each plugin's `dist/`. */
 function pluginSiteTargetsForCrate(root, allPlaygrounds) {
   const rows = allPlaygrounds.filter((row) => row.cratePath === root);
   if (rows.length === 0) return {};

@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** @emoji ⚙️ Runs the `semio-framework-ui-scene` test suite and the guest-target compile gates.
+/** ⚙️ Runs the `semio-framework-ui-scene` test suite and the guest-target compile gates.
  *
  * This crate carries the pack-encoded `SurfaceDoc` payload every wasm32-wasip2 plugin component and
  * wasm32-unknown-unknown browser renderer moves across the `Component::Surface` boundary, so a
@@ -21,7 +21,7 @@ class TestScript extends BundleScript {
 //#endregion 🔖️test
 
 //#region 🔖️check-wasm
-/** @emoji 🌐️ Both guest flavours: wasip2 (plugin components) and unknown-unknown (browser renderers). */
+/** 🌐️ Both guest flavours: wasip2 (plugin components) and unknown-unknown (browser renderers). */
 class CheckWasmScript extends BundleScript {
   run(): void {
     const check = (args: string[]) => runCmd("cargo", ["check", "-p", "semio-framework-ui-scene", ...args], { cwd: packageRoot, budgetMs: buildBudgetMs() });

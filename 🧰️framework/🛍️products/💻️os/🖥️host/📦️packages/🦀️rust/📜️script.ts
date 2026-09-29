@@ -49,10 +49,10 @@ class MediaProjectionScript extends BundleScript {
     assert(source.includes('"contract": workflow_media_contract_payload(&edge.contract)'), "the live window payload uses the explicit projection");
     const projectionLaw = readFileSync(join(this.root, "../../🧪️tests/🔬️workflow-standalone/🦀️.rs"), "utf8");
     assert(projectionLaw.includes("fn workflow_media_contract_projection_matches_neutral_document_binary_and_conversion_cases"), "an exact native projection law is registered");
-    console.log(`[DEBUG] media contract presentation oracle: ${fixture.cases.length} document/binary/conversion vectors, ${denied} strict hostile denials; no native claim`);
+    console.log(`media contract presentation oracle: ${fixture.cases.length} document/binary/conversion vectors, ${denied} strict hostile denials; no native claim`);
     if (segments.includes("--oracle-only")) return;
     const receipts = await runExactCargoLaws({ cwd: this.repoRoot, groups: [{ package: "semio-framework-os", target: { kind: "lib" }, cargoArgs: ["--features", "os-host-full"], laws: ["workflow_media_contract_projection_matches_neutral_document_binary_and_conversion_cases", "owned_artifact_kind_formats_survive_host_registry_projection"] }] });
-    console.log(`[DEBUG] media contract presentation native assertions=${receipts[0]!.assertions}; executable=${receipts[0]!.sha256}`);
+    console.log(`media contract presentation native assertions=${receipts[0]!.assertions}; executable=${receipts[0]!.sha256}`);
   }
 }
 
@@ -137,11 +137,11 @@ class PersistenceContractScript extends BundleScript {
     const source = readFileSync(join(base, "🧪️tests/🔬️unit/🦀️.rs"), "utf8");
     assert(source.includes("persistence_contract_matches_neutral_scope_progress_and_terminal_traces"));
     assert(!source.includes("resolve_kernel_future") && !source.includes("resolve_ready") && !source.includes("ReplayShellCommand"));
-    console.log(`[DEBUG] persistence contract oracle: requests=${requests.size}, hostileRequests=${fixture.requestNegatives.length}, hostileEvents=${eventDenials}, traces=${fixture.traces.length}, accepted=${accepted}, rejected=${rejected}, durablePublications=${published}; no IO/runtime activation claim`);
+    console.log(`persistence contract oracle: requests=${requests.size}, hostileRequests=${fixture.requestNegatives.length}, hostileEvents=${eventDenials}, traces=${fixture.traces.length}, accepted=${accepted}, rejected=${rejected}, durablePublications=${published}; no IO/runtime activation claim`);
     if (segments.includes("--oracle-only")) return;
     const receipts = await runExactCargoLaws({ cwd: this.repoRoot, groups: [{ package: "semio-framework-os", target: { kind: "lib" }, laws: ["persistence_contract_matches_neutral_scope_progress_and_terminal_traces", "persistence_contract_rejects_closed_fields_and_cross_scope_receipts"] }] });
     assert.equal(receipts[0]!.assertions, 2);
-    console.log(`[DEBUG] persistence contract native assertions=${receipts[0]!.assertions}; executable=${receipts[0]!.sha256}`);
+    console.log(`persistence contract native assertions=${receipts[0]!.assertions}; executable=${receipts[0]!.sha256}`);
   }
 }
 
@@ -176,7 +176,7 @@ class DocumentRetirementScript extends BundleScript {
     assert(source.includes("owned_retirement_rejects_false_terminal_and_preserves_shared_roots"));
     const stdio = readFileSync(join(this.repoRoot, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🦀️.rs"), "utf8");
     assert(!stdio.includes("trait RetireOwned:") && !stdio.includes("struct Bytes(Vec<u8>)"), "Stdio must consume the shared owner primitive");
-    console.log(`[DEBUG] owned retirement oracle: cases=${fixture.cases.length}, budgets=${fixture.budgets.length}, exactByteGrants=${grants}, declaredHostile=${fixture.hostile.length}; native pending`);
+    console.log(`owned retirement oracle: cases=${fixture.cases.length}, budgets=${fixture.budgets.length}, exactByteGrants=${grants}, declaredHostile=${fixture.hostile.length}; native pending`);
     if (segments.includes("--oracle-only")) return;
     const receipts = await runExactCargoLaws({ cwd: this.repoRoot, groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: ["owned_retirement_matches_neutral_exact_byte_grants", "owned_retirement_rejects_false_terminal_and_preserves_shared_roots"] }] });
     assert.equal(receipts[0]!.assertions, 2);
@@ -241,7 +241,7 @@ class MemberOpenProtocolScript extends BundleScript {
     assert(source.includes("member_open_input_framing_is_canonical_scoped_and_budgeted"));
     const store = readFileSync(join(base, "../../🦀️.rs"), "utf8");
     assert(store.includes("member_open_partial_parse_and_initialization_owners_retire_exactly"));
-    console.log(`[DEBUG] member open request oracle: ${fixture.cases.length} admission cases, ${fixture.framing.length} framing cases, ${fixture.retention.length} declared retained-stage cases; rejected input bytes retained=${rejectedBytes}; typed parser/factory activation not claimed`);
+    console.log(`[TRACE] member open request oracle: ${fixture.cases.length} admission cases, ${fixture.framing.length} framing cases, ${fixture.retention.length} declared retained-stage cases; rejected input bytes retained=${rejectedBytes}; typed parser/factory activation not claimed`);
     if (segments.includes("--oracle-only")) return;
     const receipts = await runExactCargoLaws({ cwd: this.repoRoot, groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: ["member_open_request_rejection_retains_exact_pages_and_identity", "member_open_input_framing_is_canonical_scoped_and_budgeted", "member_open_partial_parse_and_initialization_owners_retire_exactly"] }] });
     assert.equal(receipts[0]!.assertions, 3);
@@ -330,7 +330,7 @@ class MemberHistoryIdentitySourceScript extends BundleScript {
       assert.equal(error, row.error, row.id); if (error === null) accepted++;
     }
     const extra = structuredClone(fixture); extra.expected.unowned = true; assert(!validate(extra));
-    console.log(`[DEBUG] retained member history identity schema: ${accepted} accepted / ${ids.size - accepted} denied neutral records; strict AJV and independent LEB128/UTF-8/ID model; no Rust semantic decoder or typed hydration claimed`);
+    console.log(`[TRACE] retained member history identity schema: ${accepted} accepted / ${ids.size - accepted} denied neutral records; strict AJV and independent LEB128/UTF-8/ID model; no Rust semantic decoder or typed hydration claimed`);
   }
 }
 
@@ -426,7 +426,7 @@ class MemberHistoryInputScript extends BundleScript {
       assert.equal(retired, row.retiredBytes); assert.equal(retained, 0); assert.equal(holder, "terminal");
     }
     const extra = structuredClone(fixture); extra.lifecycle[0].grant = true; assert(!validate(extra));
-    console.log(`[DEBUG] retained history owner oracle: ${accepted} accepted / ${fixture.inputs.length - accepted} denied derived SPR inputs, ${fixture.lifecycle.length} owner-state traces, 3 fuel grants, exact 4531-byte paged retirement; no semantic hydration`);
+    console.log(`retained history owner oracle: ${accepted} accepted / ${fixture.inputs.length - accepted} denied derived SPR inputs, ${fixture.lifecycle.length} owner-state traces, 3 fuel grants, exact 4531-byte paged retirement; no semantic hydration`);
     const source = readFileSync(join(owner, "🦀️.rs"), "utf8");
     for (const name of ["member_history_verification_retains_input_and_bounds_verified_handoff", "member_history_verification_rechecks_every_owner_transition_and_retires_exact_bytes"]) assert(source.includes(`fn ${name}`));
     if (segments.includes("--oracle-only")) return;
@@ -493,7 +493,7 @@ class MemberHistoryIdScript extends BundleScript {
       assert.equal(complete, row.complete, row.id);
     }
     const extra = structuredClone(fixture); extra.cases[0].authority = true; assert(!validate(extra));
-    console.log(`[DEBUG] retained semantic ID oracle: ${accepted} accepted / ${fixture.cases.length - accepted} denied exact tagged wires +${fixture.completion.length} non-mutating completion boundaries; independent LEB128 + UTF-8 + UUID formatting; no dictionary or input authority publication`);
+    console.log(`[TRACE] retained semantic ID oracle: ${accepted} accepted / ${fixture.cases.length - accepted} denied exact tagged wires +${fixture.completion.length} non-mutating completion boundaries; independent LEB128 + UTF-8 + UUID formatting; no dictionary or input authority publication`);
     const law = "retained_history_id_cursor_matches_neutral_bytes_and_refuses_unowned_resolution";
     assert(readFileSync(join(owner, "🦀️.rs"), "utf8").includes(`fn ${law}`));
     const source = readFileSync(join(owner, "🦀️.rs"), "utf8");
@@ -584,7 +584,7 @@ class MemberHistoryRecordScript extends BundleScript {
     }
     assert.deepEqual(Object.keys(fixture.events).sort(), [...ids].sort());
     const extra = structuredClone(fixture); extra.cases[0].authority = true; assert(!validate(extra));
-    console.log(`[DEBUG] dictionary payload cursor oracle: ${accepted} accepted / ${fixture.cases.length - accepted} denied exact wires ×3 grants; exact ordered Begin/base/count and Entry/ranges, UTF8 scratch0..4, event fences, canonicalLEB, pinned retirement; no input authority`);
+    console.log(`[TRACE] dictionary payload cursor oracle: ${accepted} accepted / ${fixture.cases.length - accepted} denied exact wires ×3 grants; exact ordered Begin/base/count and Entry/ranges, UTF8 scratch0..4, event fences, canonicalLEB, pinned retirement; no input authority`);
     const source = readFileSync(join(owner, "🦀️.rs"), "utf8");
     assert(source.includes('include_str!("🧫️fixtures/🔣️.json")'), "native payload cursor must consume its exact neutral fixture");
     assert(source.includes('fixture["events"][name]') && source.includes("assert_eq!(events, expected_events"), "native payload cursor must compare every exact ordered neutral event trace");
@@ -618,7 +618,7 @@ class MemberHistoryFoundationScript extends BundleScript {
       { package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: ["member_history_verification_retains_input_and_bounds_verified_handoff", "member_history_verification_rechecks_every_owner_transition_and_retires_exact_bytes", "retained_history_id_cursor_matches_neutral_bytes_and_refuses_unowned_resolution"] },
     ] });
     assert.deepEqual(receipts.map(receipt => receipt.assertions), [2, 3]);
-    console.log("[DEBUG] retained history foundation: exactly5 native assertions; framing2 + private input2 + tagged-ID1; no dictionary/member factory/publication claim");
+    console.log("[TRACE] retained history foundation: exactly5 native assertions; framing2 + private input2 + tagged-ID1; no dictionary/member factory/publication claim");
   }
 }
 
@@ -871,7 +871,7 @@ class MemberHistoryDictionaryScript extends BundleScript {
       }
     }
     const extra = structuredClone(fixture); extra.cases[0].unowned = true; assert(!validate(extra));
-    console.log(`[DEBUG] retained dictionary owner oracle: ${accepted} accepted / ${fixture.cases.length - accepted} denied committed SPR histories, ${fixture.lifecycle.length} owner traces + ${fixture.recordRetirement.length} payload scratch + ${fixture.ownerRetirement.length} pending-copy/ID scratch traces × 3 grants; retirement up to ${maxRetired} bytes; no Rust or typed publication claim`);
+    console.log(`[TRACE] retained dictionary owner oracle: ${accepted} accepted / ${fixture.cases.length - accepted} denied committed SPR histories, ${fixture.lifecycle.length} owner traces + ${fixture.recordRetirement.length} payload scratch + ${fixture.ownerRetirement.length} pending-copy/ID scratch traces × 3 grants; retirement up to ${maxRetired} bytes; no Rust or typed publication claim`);
     const source = readFileSync(join(owner, "🦀️.rs"), "utf8");
     const nativeLaws = readFileSync(join(owner, "🧪️tests/🦀️.rs"), "utf8");
     for (const law of ["member_history_dictionary_is_atomic_and_bounded_by_neutral_records", "member_history_dictionary_retains_every_denied_owner_until_exact_close"]) assert(nativeLaws.includes(`fn ${law}`));
@@ -1006,7 +1006,7 @@ class MemberFactoryIdentityScript extends BundleScript {
       state.holder = "retiring"; while (remaining) { const bytes = Math.min(grant, remaining); remaining -= bytes; retired += bytes; } state.holder = "terminal";
       assert.equal(retired, row.retiredBytes, row.id);
     }
-    console.log(`[DEBUG] selected MemberFactory identity oracle: exact18 source-owned declarations,21 selection rows +7 selection/5 semantic lifecycle traces x3 grants,9 persisted schema/dialect/owner cases with literal input/close bytes; caller schema denied; no native/public opening claim`);
+    console.log(`[TRACE] selected MemberFactory identity oracle: exact18 source-owned declarations,21 selection rows +7 selection/5 semantic lifecycle traces x3 grants,9 persisted schema/dialect/owner cases with literal input/close bytes; caller schema denied; no native/public opening claim`);
     const source = readFileSync(join(owner, "🦀️.rs"), "utf8");
     assert(source.includes("M::OPEN_DECLARATIONS") && source.includes("VerifiedMemberHistoryInput"));
     assert(source.includes("MemberHistoryDictionaryOwner::begin(input, self.declaration.schema"));
@@ -1021,7 +1021,7 @@ class MemberFactoryIdentityScript extends BundleScript {
     assert(store.includes("const OPEN_DECLARATIONS:"), "selected identity requires the coordinated MemberFactory declaration API; staged source is not mounted authority");
     const macroFactory = store.slice(store.indexOf("impl $crate::os_store::MemberFactory for $enum_name"), store.indexOf("//#endregion SpaceMember"));
     for (const field of ["kind: $kind", "standard: $standard", "subset: $subset", "schema: $schema"]) assert(macroFactory.includes(field), `factory declaration must reuse its creation/open literal ${field}`);
-    const noMembers = store.slice(store.indexOf("impl MemberFactory for NoMembers"), store.indexOf("/// @emoji 🧬️ Generates a per-plugin"));
+    const noMembers = store.slice(store.indexOf("impl MemberFactory for NoMembers"), store.indexOf("/// 🧬️ Generates a per-plugin"));
     assert(/const OPEN_DECLARATIONS:\s*&'static\s*\[MemberOpenDeclaration\]\s*=\s*&\[\];/.test(noMembers), "NoMembers has exactly the empty declaration table");
     if (segments.includes("--oracle-only")) return;
     assert(readFileSync(join(owner, "../🦀️.rs"), "utf8").includes("mod factory;"), "selected factory native laws require the coordinated mount");
@@ -1102,7 +1102,7 @@ class PublicMemberOpenHandoffScript extends BundleScript {
         { error: row.error, retainedBy: row.retainedBy, identityBytes: row.identityBytes, reservations: row.reservations, handoffs: row.handoffs, publications: row.publications, creates: row.creates, retiredInputBytes: row.retiredInputBytes }, row.id);
     }
     assert.equal(ids.size, 20);
-    console.log("[DEBUG] public member-open handoff oracle:20 projection/input/capacity cases + exact18 operation arms +8 Flow lifecycle traces; one bounded Flow decoder,17 explicit retained denials, schema+owner derived, publication0");
+    console.log("public member-open handoff oracle:20 projection/input/capacity cases + exact18 operation arms +8 Flow lifecycle traces; one bounded Flow decoder,17 explicit retained denials, schema+owner derived, publication0");
     const store = readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs"), "utf8");
     const factory = store.slice(store.indexOf("pub trait MemberFactory"), store.indexOf("pub enum NoMembers"));
     assert(/type Open\s*:\s*MemberOpenOperation<Member\s*=\s*Self>/.test(factory) && factory.includes("fn begin_open(request: MemberOpenRequest)"),

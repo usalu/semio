@@ -15,7 +15,7 @@ import { galleryCardStyle, galleryPageStyle, SwatchGrid } from "../🧭️coordi
 const PALETTE_GROUPS: readonly ThemePaletteGroup[] = ["board", "map", "canvas", "chrome"];
 const APPEARANCES: readonly ThemeAppearanceName[] = ["light", "dark"];
 
-/** @emoji 💥️ `semioTheme()` with one board paint pointed at a token that doesn't exist in `colors` — demonstrates `parseUiTheme` throwing loudly instead of silently rendering a broken color. */
+/** 💥️ `semioTheme()` with one board paint pointed at a token that doesn't exist in `colors` — demonstrates `parseUiTheme` throwing loudly instead of silently rendering a broken color. */
 function brokenThemeJson(): string {
   const theme = structuredClone(semioTheme()) as UiTheme;
   const broken: UiTheme = { ...theme, appearances: { ...theme.appearances, light: { ...theme.appearances.light, board: { ...theme.appearances.light.board, labelFill: { token: "not-a-real-token" } } } } };
@@ -26,7 +26,7 @@ function brokenThemeJson(): string {
 //#region 🔖️ParseResult
 type ParseResult = { readonly theme: UiTheme; readonly error?: undefined } | { readonly theme?: undefined; readonly error: string };
 
-/** @emoji 🔎️ `JSON.parse` + `parseUiTheme` in one guarded step — either yields a validated `UiTheme` or the exact message `parseUiTheme` throws (missing palette group, unknown token ref, wrong field type, …). */
+/** 🔎️ `JSON.parse` + `parseUiTheme` in one guarded step — either yields a validated `UiTheme` or the exact message `parseUiTheme` throws (missing palette group, unknown token ref, wrong field type, …). */
 function tryParseThemeJson(text: string): ParseResult {
   try {
     return { theme: parseUiTheme(JSON.parse(text)) };

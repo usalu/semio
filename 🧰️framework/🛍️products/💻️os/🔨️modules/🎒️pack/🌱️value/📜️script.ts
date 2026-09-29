@@ -110,5 +110,5 @@ export async function proveWireValueMaterializationFixture(repoRoot: string): Pr
   const store = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs"), "utf8");
   for (const marker of ["pub fn decode_value_record_body_exact(", "wire value materialization exceeds max_total_alloc", "fn decode_inline_symbols(", "fn value_slots<T>(", "copy_decoded_string(value, ctx.materialization.as_ref())"]) assert(owner.includes(marker), marker);
   assert(store.includes("decode_wire_value_with_options(bytes, &PackDecodeOptions::default())"));
-  console.log(`[DEBUG] wire-value materialization: AJV=1 BigInt-accounting=1 JSON+deep-equal+Pack=1 cases=${fixture.cases.length}; native decoder behavior remains a separate exact law`);
+  console.log(`wire-value materialization: AJV=1 BigInt-accounting=1 JSON+deep-equal+Pack=1 cases=${fixture.cases.length}; native decoder behavior remains a separate exact law`);
 }

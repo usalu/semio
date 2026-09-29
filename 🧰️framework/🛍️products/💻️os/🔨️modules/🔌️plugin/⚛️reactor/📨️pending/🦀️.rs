@@ -234,13 +234,24 @@ impl PendingPatchAuthority {
     /// turn, because the authority had exactly one handback cell — the pending half of the
     /// `UI_TURN_PATCHES_MAXIMUM = 1` floor. It now has one cell per patch the turn page can carry, and
     /// the batch is single-instance because ONE `ui-patch-receipt` authorizes all of it.
+    ///
+    /// 🧾️ Retained cells first, OLDEST publication sequence first — a cell holding a patch is one a
+    /// previous turn's page could not carry, and publication order is the pending sequence, never
+    /// the cell index.
+    ///
+    /// 🧾️ A cell retained across turns still names its slot, and THIS turn is the one
+    /// publishing it — so the batch this turn stages must name that slot's instance,
+    /// exactly as if the patch had been taken out of the slot here.
+    ///
+    /// 🧾️ `publish_into` and the external move are both ATOMIC — the whole source or nothing — so a
+    /// cell that just reported bytes and yet hands out no patch is a broken publication contract,
+    /// not a paged one. It is refused BY NAME instead of leaving a borrowed cell nobody can stage a
+    /// receipt against, which is how that shape used to present (`plugin.reactor-close-authority:
+    /// pending patch emission left a borrowed publication unstaged`).
     pub(super) fn take_one(&mut self, admitted_bytes: usize) -> Result<Option<UiPatch>, &'static str> {
         if self.instance_is_closing(self.turn_handback_instance) && self.turn_handbacks.iter().any(|cell| !cell.patch.terminal_is_empty()) {
             return Ok(None);
         }
-        // 🧾️ Retained cells first, OLDEST publication sequence first — a cell holding a patch is one a
-        // previous turn's page could not carry, and publication order is the pending sequence, never
-        // the cell index.
         let retained = self
             .turn_handbacks
             .iter()
@@ -251,9 +262,6 @@ impl PendingPatchAuthority {
             .map(|(index, _)| index);
         if let Some(index) = retained {
             if let Some(patch) = self.turn_handbacks[index].patch.source_mut()?.take() {
-                // 🧾️ A cell retained across turns still names its slot, and THIS turn is the one
-                // publishing it — so the batch this turn stages must name that slot's instance,
-                // exactly as if the patch had been taken out of the slot here.
                 self.turn_handback_instance = parse_surface_instance(&patch.surface.0);
                 self.turn_handbacks[index].published = Some((patch.surface.clone(), patch.revision.0));
                 return Ok(Some(patch));
@@ -291,11 +299,6 @@ impl PendingPatchAuthority {
                 *handbacks[cell].patch.source_mut()? = patch.source_mut()?.take();
             }
         }
-        // 🧾️ `publish_into` and the external move are both ATOMIC — the whole source or nothing — so a
-        // cell that just reported bytes and yet hands out no patch is a broken publication contract,
-        // not a paged one. It is refused BY NAME instead of leaving a borrowed cell nobody can stage a
-        // receipt against, which is how that shape used to present (`plugin.reactor-close-authority:
-        // pending patch emission left a borrowed publication unstaged`).
         let Some(patch) = handbacks[cell].patch.source_mut()?.take() else {
             return Err("pending publication reported bytes and handed out no patch");
         };
@@ -313,6 +316,10 @@ impl PendingPatchAuthority {
     /// cell index and publication order are the same order. A page cut short by its byte budget hands
     /// its last patch back into a cell that then SURVIVES the turn, and from the next turn on those two
     /// orders differ — so the positional rule would have returned a patch to a stranger's slot.
+    ///
+    /// 🧾️ The patch is back in the cell, so this turn did NOT deliver it: the cell keeps its
+    /// sequence (it travels on the next turn, through the same slot, exactly once) and stops being
+    /// something a receipt may be staged against.
     #[expect(clippy::result_large_err, reason = "Refusal must hand back the exact retained patch owner without allocating or releasing its publication credit.")]
     pub(super) fn hand_back_turn(&mut self, patch: UiPatch) -> Result<(), UiPatch> {
         if self.turn_handback_instance != parse_surface_instance(&patch.surface.0) {
@@ -336,9 +343,6 @@ impl PendingPatchAuthority {
             return Err(patch);
         };
         *source = Some(patch);
-        // 🧾️ The patch is back in the cell, so this turn did NOT deliver it: the cell keeps its
-        // sequence (it travels on the next turn, through the same slot, exactly once) and stops being
-        // something a receipt may be staged against.
         self.turn_handbacks[cell].published = None;
         Ok(())
     }
@@ -383,6 +387,8 @@ impl PendingPatchAuthority {
         Ok(())
     }
 
+    /// 🧾️ Only the cells this turn DELIVERED are released. A cell still holding a patch a cut page
+    /// could not carry keeps its sequence and its slot, and travels on the next turn.
     pub(super) fn commit_emission(&mut self) {
         let sequences: Vec<u64> = self.borrowed_sequences().collect();
         assert!(!sequences.is_empty(), "prepared patch emission sequence");
@@ -392,8 +398,6 @@ impl PendingPatchAuthority {
             assert!(!issued.committed);
             issued.committed = true;
         }
-        // 🧾️ Only the cells this turn DELIVERED are released. A cell still holding a patch a cut page
-        // could not carry keeps its sequence and its slot, and travels on the next turn.
         for cell in &mut self.turn_handbacks {
             if cell.published.is_some() {
                 cell.sequence = None;

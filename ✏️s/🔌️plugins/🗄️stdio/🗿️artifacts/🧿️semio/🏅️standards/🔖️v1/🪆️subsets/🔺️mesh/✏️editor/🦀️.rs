@@ -75,12 +75,14 @@ fn vertex_index_arg() -> ActionArgDef {
 }
 
 pub fn set_vertex_action() -> ActionDefinition {
-    ActionDefinition::bounded_catalog("set-vertex", LocalizedLabel::native("Move Vertex", "Vertex verschieben"), ActionKind::Mutation).with_args(vec![
+    let mut action = ActionDefinition::bounded_catalog("set-vertex", LocalizedLabel::native("Move Vertex", "Vertex verschieben"), ActionKind::Mutation).with_args(vec![
         ActionArgDef::text("meshId", LocalizedLabel::native("Mesh ID", "Mesh-ID")).required(),
         ActionArgDef::text("primitiveId", LocalizedLabel::native("Primitive ID", "Primitiv-ID")).required(),
         vertex_index_arg(),
         ActionArgDef::vec3("point", LocalizedLabel::native("Target Point", "Zielpunkt")).required(),
-    ])
+    ]);
+    action.semantics.execution.interactive_job = semio_framework_plugin::InteractiveJobClassification::Migrated;
+    action
 }
 
 #[derive(Default)]

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "expectedCodecCount": 26,
+  "expectedCodecCount": 29,
   "expectedOpenTargetKind": "s.stdio.json",
   "expectedPublication": "committed",
   "expectedHubBundle": "withheld",

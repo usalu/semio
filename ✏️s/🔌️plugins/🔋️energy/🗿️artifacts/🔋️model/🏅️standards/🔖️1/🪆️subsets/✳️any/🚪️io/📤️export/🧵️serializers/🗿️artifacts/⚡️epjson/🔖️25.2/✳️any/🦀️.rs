@@ -6,7 +6,7 @@
 //! unmodified under `energyplus -a -w <epw> -d <dir> <file.epJSON>` — both are asserted by
 //! `🧪️tests/🏛️export-epjson-runs-in-energyplus`, the second (honeybee-free) physics oracle route.
 //!
-//! Object types written: `Version`, `SimulationControl`, `Building`, `Site:Location`,
+//! Object types written: `Version`, `SimulationControl`, `Building`, `ShadowCalculation`, `Site:Location`,
 //! `Site:GroundTemperature:BuildingSurface`, `GlobalGeometryRules`, `Timestep`, `RunPeriod`,
 //! `ScheduleTypeLimits`, `Schedule:Constant`, `Schedule:Compact`, `Material`, `Material:NoMass`,
 //! `WindowMaterial:Glazing`, `WindowMaterial:Gas`, `WindowMaterial:SimpleGlazingSystem`, `Construction`, `Zone`, `BuildingSurface:Detailed`,
@@ -17,20 +17,43 @@
 //! `Output:Variable`, `Output:Meter`, `Output:SQLite`.
 //!
 //! # Three conventions this file DECLARES, because the semio schema does not state them
-//! 1. **Terrain and solar distribution.** [`Model`] carries neither. `Building.terrain` is written
-//!    as `Country` and `solar_distribution` as `FullInteriorAndExterior` — the ANSI/ASHRAE 140
-//!    §5.2 settings, and byte-identical to what the honeybee→OpenStudio route emits, so the two
-//!    producers stay comparable (`📓️w2-oracle-toolchain.md` §5).
+//! 1. **Terrain, solar distribution and shadow updates.** [`Model`] carries none of them.
+//!    `Building.terrain` is written as `Country`, `solar_distribution` as `FullInteriorAndExterior`
+//!    and `ShadowCalculation` as polygon clipping re-run every day — the ANSI/ASHRAE 140 §5.2
+//!    settings of NREL's BESTEST-GSR encoding, and byte-identical to what the honeybee→OpenStudio
+//!    route emits, so the two producers stay comparable (`📓️w2-oracle-toolchain.md` §5).
+//!    EnergyPlus's own default (every 20 days) moves ASHRAE 140 case 900FF's peak by 0.4 K.
 //! 2. **Aperture geometry.** [`Fenestration`] carries an area (plus an optional height/sill) and
 //!    no vertices. Windows on one host surface are laid out one per equal horizontal bay, centred,
 //!    with `height_m`/`sill_height_m` when non-zero and otherwise a 1.5 width/height aspect at a
 //!    0.2 m sill — the same rule the honeybee translator declares, which reproduces ASHRAE 140's
 //!    own two 3.0 m × 2.0 m south windows at x 0.5–3.5 / 4.5–7.5 exactly.
-//! 3. **Vertex winding.** `GlobalGeometryRules` is written `UpperLeftCorner` /
-//!    `Counterclockwise` / `World`, and `Surface.vertices_m` is emitted verbatim: the model's own
-//!    documented winding is already "counter-clockwise seen from OUTSIDE" (see
-//!    `⚙️engine/🏛️bestest/🦀️.rs`'s `surfaces()`), which is exactly what `Counterclockwise` means
-//!    to EnergyPlus. `starting_vertex_position` is not consulted for `*:Detailed` surfaces.
+//! 3. **First vertex.** `GlobalGeometryRules` is written `UpperLeftCorner` / `Counterclockwise` /
+//!    `World`. The model's own winding is already "counter-clockwise seen from OUTSIDE" (see
+//!    `⚙️engine/🏛️bestest/🦀️.rs`'s `surfaces()`), which is exactly what `Counterclockwise` means to
+//!    EnergyPlus, but a model ring states no first corner — and EnergyPlus reads the first corner:
+//!    it takes a surface's height, width and in-plane frame (the frame its windows are placed and
+//!    shaded in) from vertices 1–3 under the declared `UpperLeftCorner`. Every
+//!    `BuildingSurface:Detailed` and `FenestrationSurface:Detailed` ring is therefore rotated to
+//!    start at its upper-left corner seen from outside ([`upper_left_first`]), winding kept. Written
+//!    from the lower-left instead, ASHRAE 140 case 600FF peaks 1.3 K below EnergyPlus's own
+//!    encoding of the same building.
+//!
+//! # Two things the model DOES state, written the way EnergyPlus reads them
+//! * **Infiltration.** `ScheduledAch` and `PerExteriorArea` are constant design flows in the
+//!   engine (`air_exchange::infiltration_flow_m3_s`: schedule × rate; the four coefficient fields
+//!   belong to the wind/stack methods). EnergyPlus scales every `ZoneInfiltration:DesignFlowRate`
+//!   by `A + B·|ΔT| + C·v + D·v²`, so both are written with [`CONSTANT_DESIGN_FLOW_COEFFICIENTS`] —
+//!   copying the model's unused zeros would tell EnergyPlus there is no infiltration at all.
+//! * **Glazing.** A [`Fenestration`] whose `glazing_construction_id` names a construction IS that
+//!   layered `WindowMaterial:Glazing`/`WindowMaterial:Gas` stack, and its `u_value_w_m2k`/`shgc`/
+//!   `vlt` are only the fallback while the id is `None`. Such an aperture references the stack; the
+//!   fallback still travels as the window's `WindowMaterial:SimpleGlazingSystem`, so the import leaf
+//!   restores the whole fenestration.
+//!
+//! With these, EnergyPlus run directly on this codec's ASHRAE 140 cases 600/600FF/900/900FF
+//! reproduces EnergyPlus run on NREL's own encoding of the standard (honeybee `native`) to the
+//! fourth decimal of every judged metric.
 //!
 //! Anything the model can express but epJSON's covered subset cannot is reported as an
 //! [`EpJsonDiagnostic`], never silently dropped.
@@ -38,7 +61,7 @@
 //! @see https://energyplus.readthedocs.io/en/latest/schema.html
 //! @see ../../../../../../../../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️06/ENERGY-PLUGIN-END-TO-END/📓️w6-epjson-io.md
 use crate::air_exchange::InfiltrationMethod;
-use crate::model::{EntityId, Fenestration, GasKind, Material, Model, OutsideBoundary, ScheduleId, Surface, SurfaceClass};
+use crate::model::{Construction, EntityId, Fenestration, GasKind, Material, Model, OutsideBoundary, ScheduleId, Surface, SurfaceClass};
 use crate::EnergyModelSnapshot;
 use pack::json::{Object, Value};
 
@@ -49,6 +72,14 @@ pub const EPJSON_VERSION: &str = "25.2";
 pub const EPJSON_TERRAIN: &str = "Country";
 /// ☀️ Declared convention #1 — see the module docstring.
 pub const EPJSON_SOLAR_DISTRIBUTION: &str = "FullInteriorAndExterior";
+/// 🌗️ Declared convention #1 — days between two `ShadowCalculation` sun-position and shading updates.
+pub const SHADOW_UPDATE_FREQUENCY_DAYS: i64 = 1;
+/// 📐️ Declared convention #3 — how far apart along a surface's own "up" two vertices may sit and still
+/// tie for its top edge when the upper-left corner is picked [m].
+pub const VERTEX_HEIGHT_TIE_M: f64 = 1e-6;
+/// 💨️ EnergyPlus `(A, B, C, D)` of a constant design flow — what the engine's `ScheduledAch` and
+/// `PerExteriorArea` infiltration methods are (see the module docstring).
+pub const CONSTANT_DESIGN_FLOW_COEFFICIENTS: [f64; 4] = [1.0, 0.0, 0.0, 0.0];
 /// 🪟️ Declared convention #2 — width/height of an aperture with no stated `height_m`.
 pub const APERTURE_ASPECT: f64 = 1.5;
 /// 🪟️ Declared convention #2 — sill of an aperture with no stated `sill_height_m`.
@@ -188,11 +219,24 @@ pub fn surface_normal(vertices: &[Vec3]) -> Option<Vec3> {
 
 /// 📐️ Right-handed in-plane basis `(u, v)` with `u × v = n`; `u` is horizontal wherever the
 /// surface is not itself horizontal, so `v` is the surface's own "up" and a window sill measures
-/// along it.
-fn surface_basis(normal: Vec3) -> (Vec3, Vec3) {
+/// along it. A horizontal surface's "up" is north, so `u` is "right" seen from outside everywhere:
+/// east on a roof seen from above, west on a floor seen from below.
+pub fn surface_basis(normal: Vec3) -> (Vec3, Vec3) {
     let up = [0.0, 0.0, 1.0];
     let horizontal = normalized(cross(up, normal)).or_else(|| normalized(cross([0.0, 1.0, 0.0], normal))).unwrap_or([1.0, 0.0, 0.0]);
     (horizontal, cross(normal, horizontal))
+}
+
+/// 📐️ Declared convention #3 — the same ring, rotated to start at its upper-left corner seen from
+/// outside: the highest vertex along the surface's own "up" (`v` of [`surface_basis`]), the
+/// leftmost (smallest `u`) of equally high ones. The winding is kept; a degenerate ring is returned
+/// unchanged. NREL's own ASHRAE 140 encoding (honeybee → OpenStudio) starts every ring there too.
+pub fn upper_left_first(vertices: &[Vec3]) -> Vec<Vec3> {
+    let Some(normal) = surface_normal(vertices) else { return vertices.to_vec() };
+    let (u, v) = surface_basis(normal);
+    let top = vertices.iter().map(|vertex| dot(*vertex, v)).fold(f64::NEG_INFINITY, f64::max);
+    let start = (0..vertices.len()).filter(|index| top - dot(vertices[*index], v) <= VERTEX_HEIGHT_TIE_M).min_by(|a, b| dot(vertices[*a], u).total_cmp(&dot(vertices[*b], u))).unwrap_or(0);
+    vertices[start..].iter().chain(&vertices[..start]).copied().collect()
 }
 
 /// 🪟️ Declared convention #2 — the polygon of window `index` of `count` on `host`: the aperture's
@@ -253,6 +297,12 @@ pub fn is_massless(material: &Material) -> bool {
     material.density_kg_m3 <= 0.0 || material.specific_heat_j_kg_k < 100.0
 }
 
+/// 🪟️ The layered construction a window IS, when its `glazing_construction_id` names one the model
+/// defines — see the module docstring's glazing paragraph.
+pub fn glazing_stack<'a>(model: &'a Model, window: &Fenestration) -> Option<&'a Construction> {
+    window.glazing_construction_id.and_then(|id| model.constructions.iter().find(|construction| construction.id == id))
+}
+
 fn surface_type(class: SurfaceClass) -> &'static str {
     match class {
         SurfaceClass::Roof => "Roof",
@@ -311,6 +361,13 @@ pub fn encode_model_with_diagnostics(model: &Model) -> (Value, Vec<EpJsonDiagnos
 
     let building = entity_name("Building", EntityId(0), &model.name);
     document.insert("Building", Value::Object(Object::from_iter([entry(building.clone(), [field("north_axis", model.site.north_axis_deg), field("terrain", EPJSON_TERRAIN), field("solar_distribution", EPJSON_SOLAR_DISTRIBUTION)])])));
+    document.insert(
+        "ShadowCalculation",
+        Value::Object(Object::from_iter([entry(
+            "ShadowCalculation 1",
+            [field("shading_calculation_method", "PolygonClipping"), field("shading_calculation_update_frequency_method", "Periodic"), field("shading_calculation_update_frequency", SHADOW_UPDATE_FREQUENCY_DAYS)],
+        )])),
+    );
     document.insert(
         "Site:Location",
         Value::Object(Object::from_iter([entry(
@@ -517,7 +574,16 @@ fn encode_constructions(model: &Model, document: &mut Object, material_name_of: 
         let name = entity_name("Fenestration", window.id, &window.name);
         let material = glazing_material_name(&name);
         glazing.push(entry(material.clone(), [field("u_factor", window.u_value_w_m2k), field("solar_heat_gain_coefficient", window.shgc), field("visible_transmittance", window.vlt)]));
-        constructions.push(entry(glazing_construction_name(&name), [field("outside_layer", material)]));
+        if glazing_stack(model, window).is_none() {
+            if let Some(missing) = window.glazing_construction_id {
+                diagnostics.push(EpJsonDiagnostic::new(
+                    "epjson.fenestration.dangling-glazing-construction",
+                    name.clone(),
+                    format!("glazing construction {} is not defined by the model; the window is written with its fallback simple glazing", missing.0),
+                ));
+            }
+            constructions.push(entry(glazing_construction_name(&name), [field("outside_layer", material)]));
+        }
         if window.frame_conductance_w_k > 0.0 || window.divider_conductance_w_k > 0.0 {
             diagnostics.push(EpJsonDiagnostic::new(
                 "epjson.fenestration.frame-dropped",
@@ -586,7 +652,7 @@ fn encode_surfaces(model: &Model, document: &mut Object, zone_name_of: &dyn Fn(E
                 None => diagnostics.push(EpJsonDiagnostic::new("epjson.surface.dangling-interzone", name.clone(), format!("the interzone partner surface {} is not defined; the surface is written as Adiabatic", other.0))),
             }
         }
-        fields.push(("vertices".to_string(), Value::Array(surface.vertices_m.iter().map(|vertex| vertex_value(*vertex)).collect())));
+        fields.push(("vertices".to_string(), Value::Array(upper_left_first(&surface.vertices_m).into_iter().map(vertex_value).collect())));
         surfaces.push(entry(name, fields));
     }
     if !surfaces.is_empty() {
@@ -604,7 +670,8 @@ fn encode_surfaces(model: &Model, document: &mut Object, zone_name_of: &dyn Fn(E
                 diagnostics.push(EpJsonDiagnostic::new("epjson.fenestration.undetermined-geometry", name, "the host surface is degenerate or the aperture area is non-positive, so no rectangle could be placed"));
                 continue;
             };
-            let mut fields = vec![field("surface_type", "Window"), field("construction_name", glazing_construction_name(&name)), field("building_surface_name", entity_name("Surface", surface.id, &surface.name))];
+            let construction = glazing_stack(model, window).map_or_else(|| glazing_construction_name(&name), |stack| entity_name("Construction", stack.id, &stack.name));
+            let mut fields = vec![field("surface_type", "Window"), field("construction_name", construction), field("building_surface_name", entity_name("Surface", surface.id, &surface.name))];
             // 🔶️ `FenestrationSurface:Detailed` itself tops out at four corners, so an aperture
             // whose own polygon has more is written whole and reported — the document stays a
             // faithful picture of the semio model, and the reader is told EnergyPlus will not take it.
@@ -616,7 +683,7 @@ fn encode_surfaces(model: &Model, document: &mut Object, zone_name_of: &dyn Fn(E
                     format!("the aperture carries its own {}-vertex polygon; FenestrationSurface:Detailed accepts four corners, so EnergyPlus will refuse this object", rectangle.len()),
                 ));
             }
-            for (corner, vertex) in rectangle.iter().enumerate() {
+            for (corner, vertex) in upper_left_first(&rectangle).iter().enumerate() {
                 fields.push(field(&format!("vertex_{}_x_coordinate", corner + 1), vertex[0]));
                 fields.push(field(&format!("vertex_{}_y_coordinate", corner + 1), vertex[1]));
                 fields.push(field(&format!("vertex_{}_z_coordinate", corner + 1), vertex[2]));
@@ -692,6 +759,7 @@ fn encode_gains(model: &Model, document: &mut Object, zone_name_of: &dyn Fn(Enti
                 continue;
             }
         };
+        let [constant, temperature, velocity, velocity_squared] = CONSTANT_DESIGN_FLOW_COEFFICIENTS;
         infiltrations.push(entry(
             format!("{zone} Infiltration {}", infiltration.id.0),
             [
@@ -699,10 +767,10 @@ fn encode_gains(model: &Model, document: &mut Object, zone_name_of: &dyn Fn(Enti
                 field("schedule_name", schedule_name(infiltration.schedule_id)),
                 field("design_flow_rate_calculation_method", method),
                 magnitude,
-                field("constant_term_coefficient", infiltration.constant_term_coefficient),
-                field("temperature_term_coefficient", infiltration.temperature_term_coefficient),
-                field("velocity_term_coefficient", infiltration.velocity_term_coefficient),
-                field("velocity_squared_term_coefficient", infiltration.velocity_squared_term_coefficient),
+                field("constant_term_coefficient", constant),
+                field("temperature_term_coefficient", temperature),
+                field("velocity_term_coefficient", velocity),
+                field("velocity_squared_term_coefficient", velocity_squared),
             ],
         ));
     }

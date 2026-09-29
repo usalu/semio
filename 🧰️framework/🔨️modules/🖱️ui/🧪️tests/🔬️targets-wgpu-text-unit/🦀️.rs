@@ -326,7 +326,6 @@ fn a_break_opportunity_is_exactly_what_css_allows() {
     assert!(!super::is_break_opportunity(TOUR_BODY, 0), "the start of a run is never a break");
     assert!(!super::is_break_opportunity(TOUR_BODY, TOUR_BODY.len()), "nor is its end");
     assert_eq!(super::unbreakable_run_end(TOUR_BODY, 2), 7, "`quick` is one unbreakable run");
-    eprintln!("[DEBUG] break-opportunity table: 15 CSS cases pinned");
 }
 
 /// 🧮️ The REFERENCE wrap, written here from the CSS rules rather than borrowed from the
@@ -383,7 +382,6 @@ fn a_paragraph_wraps_at_the_reference_break_indices() {
         max_width += 7.0;
     }
     assert!(widths > 10, "the sweep must cover a real range of box widths, covered {widths}");
-    eprintln!("[DEBUG] wrap reference agreed at {widths} box widths");
 }
 
 /// ⚖️ LAW: the last-resort arm is the ONLY way a word is cut — one run wider than the whole box.
@@ -450,6 +448,5 @@ fn the_retained_painter_breaks_where_the_measure_says() {
         assert_eq!(line, assigned, "scalar at byte {byte} ({:?}) painted on line {line}, measured onto line {assigned}", &TOUR_BODY[byte..byte + 1]);
     }
     assert_eq!(expected.len(), 3, "this box holds the paragraph in three lines");
-    eprintln!("[DEBUG] retained painter and wrap_lines agree on {} lines", expected.len());
 }
 //#endregion ✂️LineBreakTests

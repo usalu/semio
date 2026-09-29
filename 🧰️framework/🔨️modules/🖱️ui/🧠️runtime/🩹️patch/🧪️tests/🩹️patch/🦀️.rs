@@ -58,7 +58,6 @@ fn retained_patch_handoff_keeps_exact_slots_until_preflight_and_acknowledgment()
     for _ in 0..100_000 { let step = ack.close_step_with_grant(1, 1).unwrap(); bytes += step.released_bytes; if step.complete { break; } }
     assert!(ack.terminal_is_empty());
     assert_eq!(bytes, 4);
-    eprintln!("[DEBUG] patch-handoff exact-slots=true occupied-target-preserved=true invalid-ack-preserved=true surface-bytes=4");
 }
 
 #[test]
@@ -86,7 +85,6 @@ fn retained_patch_handoff_close_respects_all_grants_and_contended_exact_credit()
     drop(registry);
     close_published(&mut owner, 1);
     assert!(saw_blocked && handback_blocked);
-    eprintln!("[DEBUG] patch-close grants=1,64,4096 exact-credit-contention=true exact-handback-contention=true");
 }
 #[test]
 fn retained_patch_handoff_unwind_preserves_structural_payload_and_exact_authority() {
@@ -111,6 +109,6 @@ fn retained_patch_handoff_unwind_preserves_structural_payload_and_exact_authorit
         if let Some(owner) = published.as_mut() { close_published(owner, 1); }
         if let Some(owner) = ack.as_mut() { for _ in 0..100_000 { if owner.close_step_with_grant(1, 1).unwrap().complete { break; } } assert!(owner.terminal_is_empty()); }
     }
-    eprintln!("[DEBUG] patch-handoff unwind-frontiers=3 exact-payload-pointer=true exact-authority-count=1 publish-bytes={} ack-bytes={}", SurfaceReconcileReadyPatch::required_publish_bytes(), SurfaceReconcilePublishedPatch::required_acknowledge_bytes());
+    eprintln!("patch-handoff unwind-frontiers=3 exact-payload-pointer=true exact-authority-count=1 publish-bytes={} ack-bytes={}", SurfaceReconcileReadyPatch::required_publish_bytes(), SurfaceReconcilePublishedPatch::required_acknowledge_bytes());
 }
 //#endregion 🧪️PatchHandoff

@@ -114,7 +114,6 @@ fn check(id: &str) {
         Some(consumer) => consumer.take_emit().expect("real completion consumer drains test output"),
         None => None,
     };
-    eprintln!("[DEBUG] txn-command-close id={id} commandBytes={command_bytes} grantItems={} grantBytes={grant_bytes} step={step} releasedItems={released_items} releasedBytes={released_bytes}", case.grant.items);
     assert_eq!(step, case.expected.step, "{id}");
     assert_eq!(released_items, case.expected.released_items, "{id}");
     assert_eq!(

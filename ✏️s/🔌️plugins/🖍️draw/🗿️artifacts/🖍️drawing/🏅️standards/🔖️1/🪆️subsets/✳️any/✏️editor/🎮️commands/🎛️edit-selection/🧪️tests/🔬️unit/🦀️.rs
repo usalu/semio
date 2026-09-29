@@ -25,7 +25,6 @@ fn shape_conversion_fixtures_preserve_identity_style_transform_and_order() {
         assert_eq!(path.base,original);
         assert_eq!(path.segments,serde_json::from_value::<Vec<crate::PathSegment>>(case["segments"].clone()).unwrap());
         assert!(plan(&document,&["converted".into()],"toPath").unwrap().is_empty());
-        eprintln!("[DEBUG] {kind} conversion retained identity, appearance, transform and stack position");
     }
 }
 
@@ -76,7 +75,6 @@ fn selection_operation_fixtures() {
                 assert_eq!(actual, expected, "{case}");
             }
         }
-        eprintln!("[DEBUG] Drawing selection operation {} reached expected document", case["operation"]);
     }
 }
 
@@ -140,7 +138,6 @@ fn arrangement_preserves_ancestor_coordinates_and_atomicity() {
         let expected:std::collections::BTreeMap<String,[f64;4]>=serde_json::from_value(case["after"].clone()).unwrap();
         assert_eq!(actual.len(),expected.len());
         for (id,bounds) in expected {for (a,b) in actual[&id].iter().zip(bounds) {assert!((a-b).abs()<1e-9,"{} {id}: {a} != {b}",case["name"]);}}
-        eprintln!("[DEBUG] {} aligns in document space through complete ancestor transforms",case["name"]);
     }
 }
 
@@ -167,7 +164,6 @@ fn layer_stack_steps_match_shared_order_in_root_and_group() {
         for mutation in mutations {crate::mutations::apply_drawing_mutation(&mut output,&mutation).unwrap();}
         let layers=if nested {let DrawingLayerNode::Group(group)=&output.layers[0] else {unreachable!()}; &group.children}else {&output.layers};
         assert_eq!(layers.iter().map(|layer|layer_base(layer).id.as_str()).collect::<Vec<_>>(),case["after"].as_array().unwrap().iter().map(|id|id.as_str().unwrap()).collect::<Vec<_>>(),"{}",case["name"]);
-        eprintln!("[DEBUG] {} preserves stack and selection order; nested={nested}",case["name"]);
     }}
 }
 
@@ -194,7 +190,6 @@ fn ungroup_matches_shared_structure_transform_and_selection_cases() {
             assert_eq!(base.visible,!case["hidden"].as_array().unwrap().iter().any(|value|value==id));
         }
         if case["name"]=="reflected-sheared-group" {assert!(layer_base(find_drawing_layer(&output,"a").unwrap()).locked);}
-        eprintln!("[DEBUG] {} ungroups with expected transforms, visibility, stack and child selection",case["name"]);
     }
 }
 

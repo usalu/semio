@@ -189,5 +189,4 @@ async fn the_node_graph_canvas_declares_the_activate_binding_the_keyboard_fixtur
     assert!(json.contains(crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID), "the binding must be addressed at this app");
     assert!(json.contains(row["trigger"].as_str().expect("trigger")), "the binding must carry the fixture's trigger");
     assert!(json.contains(row["shortcut"].as_str().expect("shortcut")), "the canvas must advertise its chord as aria-keyshortcuts");
-    eprintln!("[DEBUG] node-graph canvas binds {action} on {} with shortcut {}", row["trigger"].as_str().unwrap_or_default(), row["shortcut"].as_str().unwrap_or_default());
 }

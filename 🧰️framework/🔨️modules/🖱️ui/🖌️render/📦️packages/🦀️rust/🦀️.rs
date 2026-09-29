@@ -1,4 +1,4 @@
-//! @emoji 🖼️ The custom GPU renderer's backend-neutral core.
+//! 🖼️ The custom GPU renderer's backend-neutral core.
 //!
 //! This crate lowers a semantic [`ui_contract::UiSnapshot`] into pixels' worth of *description* — a
 //! [`RenderPacket`] — and stops there. It contains no device, no swapchain, no shader compilation and

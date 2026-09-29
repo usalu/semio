@@ -947,7 +947,8 @@ class WalCommittedCompactionCheckScript extends BundleScript {
     assert(walSource.includes("delete_compacted_sealed_segment"));
     const artifactSource = readFileSync(join(owner, "..", "🗿️artifact", "🦀️.rs"), "utf8");
     assert(artifactSource.includes("ArtifactMessage::Compact") && artifactSource.includes("Priority::Command"));
-    assert(source.includes("fn compaction_applies_only_committed_frontier_snapshot_and_payload_effects("));
+    const laws = readFileSync(join(owner, "🧪️tests", "🔬️unit", "🦀️.rs"), "utf8");
+    assert(laws.includes("fn compaction_applies_only_committed_frontier_snapshot_and_payload_effects("));
     console.log("wal-committed-compaction-independent-oracle: abort effects excluded, global payloads retained, header-only highest preserved");
     if (segments[0] === "--native") {
       const receipts = await runExactCargoLaws({
@@ -961,7 +962,6 @@ class WalCommittedCompactionCheckScript extends BundleScript {
             laws: [
               "db_compact::tests::compaction_applies_only_committed_frontier_snapshot_and_payload_effects",
               "db_compact::tests::document_compaction_retains_shared_and_private_cas_without_global_reference_authority",
-              "db_engine::vcs_integration::retained_tests::vcs_store_keeps_exact_history_owners_through_changes_checkpoint_and_bounded_close",
               "db_engine::tests::compact_document_uses_live_actor_writer_and_restores_submits",
             ],
           },
@@ -975,7 +975,7 @@ class WalCommittedCompactionCheckScript extends BundleScript {
   }
 }
 
-/** 🚪️ Proves retained database shutdown keeps exact retry owners across interruption and error. */
+/** 🚪️ Proves retained database shutdown keeps exact retry owners across interruption and shared authority. */
 class DatabaseShutdownCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("database-shutdown-check accepts only --native");
@@ -983,32 +983,24 @@ class DatabaseShutdownCheckScript extends BundleScript {
     const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🚪️shutdown/🔣️.json"), "utf8"));
     const validate = ownedExport(this.repoRoot, "db.engine", "ShutdownV1");
     assert(validate(fixture), JSON.stringify(validate.errors));
-    assert.deepEqual(fixture.phases, ["authority", "versionGraph", "emit", "complete"]);
+    assert.deepEqual(fixture.phases, ["authority", "emit", "complete"]);
     assert.equal(fixture.maximumAuthorityStepsPerTurn, 1);
     for (const row of fixture.cases) {
       let authorityOwners = row.initial.authorityOwners;
       let externalAuthorityOwners = row.initial.externalAuthorityOwners;
-      let graphStores = row.initial.graphStores;
       let closing = false;
       let cancelled = false;
-      let injectedCloseError = false;
       let terminal = false;
       let emitCount = 0;
       let authorityRetained = false;
-      let graphRetained = false;
       for (const action of row.trace) {
         if (action === "cancel") {
           cancelled = true;
           authorityRetained ||= authorityOwners > 0 || closing;
-          graphRetained ||= graphStores > 0;
           continue;
         }
         if (action === "retry") {
           cancelled = false;
-          continue;
-        }
-        if (action === "inject-close-error") {
-          injectedCloseError = true;
           continue;
         }
         if (action === "release-shared-owner") {
@@ -1019,19 +1011,11 @@ class DatabaseShutdownCheckScript extends BundleScript {
         if (authorityOwners > 0) {
           if (externalAuthorityOwners > 0) {
             authorityRetained = true;
-            graphRetained ||= graphStores > 0;
           } else if (!closing) {
             closing = true;
           } else {
             closing = false;
             authorityOwners -= 1;
-          }
-        } else if (graphStores > 0) {
-          if (injectedCloseError) {
-            injectedCloseError = false;
-            graphRetained = true;
-          } else {
-            graphStores -= 1;
           }
         } else if (emitCount === 0) {
           emitCount = 1;
@@ -1039,18 +1023,16 @@ class DatabaseShutdownCheckScript extends BundleScript {
           terminal = true;
         }
       }
-      assert.deepEqual({ terminal, authorityRetained, graphRetained, emitCount }, row.expected, row.name);
+      assert.deepEqual({ terminal, authorityRetained, emitCount }, row.expected, row.name);
     }
     const source = readFileSync(join(owner, "🦀️.rs"), "utf8");
     const artifact = readFileSync(join(owner, "..", "🗿️artifact", "🦀️.rs"), "utf8");
-    const graph = readFileSync(join(owner, "..", "🕸️version-graph", "🦀️.rs"), "utf8");
     assert(source.includes("closing_authority: Option<") && source.includes("pub async fn shutdown_step(&mut self"));
     assert(source.includes("DatabaseShutdownProgress::Blocked(DatabaseShutdownBlock::Authorities"));
-    assert(source.includes("state.store = Some(store)") && source.includes("shutdown_graph_complete"));
+    assert(source.includes("shutdown_emit_started") && !source.includes("shutdown_graph_complete"));
     assert(!source.includes("pub async fn shutdown(self"));
     assert(artifact.includes("pub fn shutdown_step(&self) -> bool") && artifact.includes("handoff.terminal"));
-    assert(graph.includes("VersionGraphShutdownStep") && graph.includes("fn shutdown_step(&self)"));
-    console.log(`database-shutdown-independent-oracle: AJV=1 cases=${fixture.cases.length} retained-authority=1 retained-graph=1 terminal-ack=1`);
+    console.log(`database-shutdown-independent-oracle: AJV=1 cases=${fixture.cases.length} retained-authority=1 terminal-ack=1`);
     if (segments[0] === "--native") {
       const receipts = await runExactCargoLaws({
         cwd: this.repoRoot,
@@ -1061,8 +1043,7 @@ class DatabaseShutdownCheckScript extends BundleScript {
             package: "semio-framework-os-kernel-db",
             target: { kind: "lib", name: "db" },
             laws: [
-              "db_engine::vcs_integration::retained_tests::vcs_shutdown_error_reinstalls_exact_store_and_retry_reaches_terminal",
-              "db_engine::tests::database_shutdown_cancellation_and_vcs_error_preserve_exact_retry_owners",
+              "db_engine::tests::database_shutdown_cancellation_preserves_exact_retry_owners",
               "db_engine::tests::database_shutdown_shared_authority_blocks_without_closing_live_handle",
             ],
           },
@@ -1249,7 +1230,8 @@ class DocumentMountSingleFlightCheckScript extends BundleScript {
     assert(complete.includes("let mut fanout: [Option<(") && complete.includes("DATABASE_DOCUMENT_MOUNT_WAITERS"));
     assert(complete.indexOf("drop(authority);") < complete.indexOf("for (reply, outcome) in fanout.into_iter().flatten()"));
     assert(complete.indexOf("self.terminal.store(true") < complete.indexOf("for (reply, outcome) in fanout.into_iter().flatten()"));
-    assert(source.includes("self.registry.try_lock().is_ok()"));
+    const registryScope = complete.slice(complete.indexOf("let mut registry = registry.lock()"), complete.indexOf("for (reply, outcome) in fanout.into_iter().flatten()"));
+    assert(registryScope.trimEnd().endsWith("self.terminal.store(true, Ordering::Release);\n        }"), "waiters must be woken only after the registry guard's scope has closed");
     const mountOwner = source.slice(source.indexOf("impl DatabaseDocumentMountOwner"), source.indexOf("//#region 🔖️Database"));
     assert(
       mountOwner.includes("DatabaseDocumentMountDriver::Idle") &&
@@ -1297,14 +1279,23 @@ class DocumentMountSingleFlightCheckScript extends BundleScript {
     ]) {
       assert(artifact.includes(marker), `missing artifact terminal-authority marker: ${marker}`);
     }
-    for (const marker of ["close_error", "WorkerMaintenanceStep::Fault", "artifact_engine_close_fault_retains_exact_runner_until_explicit_maintenance_retry"]) {
+    for (const marker of ["close_error", "WorkerMaintenanceStep::Fault"]) {
       assert(artifact.includes(marker), `missing retained artifact close-fault marker: ${marker}`);
+    }
+    const artifactLaws = readFileSync(join(owner, "..", "..", "🗿️artifact", "🧪️tests", "🔬️unit", "🦀️.rs"), "utf8");
+    for (const law of [
+      "artifact_engine_close_fault_retries_on_bounded_timer_backoff_until_terminal",
+      "artifact_engine_close_fault_exhausts_its_budget_then_polls_only_on_readmission",
+      "artifact_engine_close_fault_cancel_stops_the_timer_until_readmission",
+    ]) {
+      assert(artifactLaws.includes(`fn ${law}(`), `missing retained artifact close-fault law ${law}`);
     }
     const artifactSchedule = artifact.slice(artifact.indexOf("fn schedule(self: &Arc<Self>)"), artifact.indexOf("fn submit_exact(self: &Arc<Self>"));
     assert(artifactSchedule.includes("compare_exchange") && artifactSchedule.includes("ArtifactRunnerDriver::RunnableIdle as u8") && artifactSchedule.includes("ArtifactRunnerDriver::Queued as u8"));
     assert(!artifactSchedule.includes("scheduled.compare_exchange"));
-    const graph = readFileSync(join(owner, "..", "..", "🕸️version-graph", "🦀️.rs"), "utf8");
-    assert(graph.includes("fn emit(&self, event: EmitEvent) -> impl Future<Output = ()> + Send;"));
+    const observe = readFileSync(join(owner, "..", "..", "👁️observe", "🦀️.rs"), "utf8");
+    assert(observe.includes("fn emit(&self, event: EmitEvent) -> impl Future<Output = ()> + Send;"));
+    const engineLaws = readFileSync(join(owner, "..", "🧪️tests", "🔬️unit", "🦀️.rs"), "utf8");
     const hub = readFileSync(join(this.repoRoot, "🌎️hub/🏗️bootstrap/🦀️.rs"), "utf8");
     const ensure = hub.slice(hub.indexOf("async fn ensure_document(&self"), hub.indexOf("fn bearer("));
     assert(ensure.includes("self.db.ensure_document(id).await") && ensure.includes("rejected.retry_close().await"));
@@ -1314,7 +1305,7 @@ class DocumentMountSingleFlightCheckScript extends BundleScript {
       "database_document_mount_cleanup_fault_consumes_racing_resume_request_exactly_once",
       "database_document_mount_hard_scheduler_fault_retains_nonrunnable_job_without_retry_timer",
     ]) {
-      assert(source.includes(`fn ${law}(`), `missing exact mount driver law ${law}`);
+      assert(engineLaws.includes(`fn ${law}(`), `missing exact mount driver law ${law}`);
     }
     console.log(`document-mount-single-flight-independent-oracle: AJV=1 cases=${fixture.cases.length} waiters=${fixture.capacity.waitersPerDocument} owner-futures=${fixture.capacity.ownerFuturesPerDocument}`);
     if (segments[0] !== "--native") return;
@@ -1348,7 +1339,9 @@ class DocumentMountSingleFlightCheckScript extends BundleScript {
             "db_artifact::tests::artifact_runner_terminal_resume_refusal_returns_exact_cursor_for_close",
             "db_artifact::tests::artifact_authority_drop_transfers_parked_terminal_job_to_registered_close_owner",
             "db_artifact::tests::artifact_runner_retirement_panic_retains_exact_cursor_until_explicit_retry",
-            "db_artifact::tests::artifact_engine_close_fault_retains_exact_runner_until_explicit_maintenance_retry",
+            "db_artifact::tests::artifact_engine_close_fault_retries_on_bounded_timer_backoff_until_terminal",
+            "db_artifact::tests::artifact_engine_close_fault_exhausts_its_budget_then_polls_only_on_readmission",
+            "db_artifact::tests::artifact_engine_close_fault_cancel_stops_the_timer_until_readmission",
             "db_artifact::tests::artifact_authority_drop_reuses_registered_retirement_slot_beyond_capacity",
           ],
         },

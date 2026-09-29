@@ -13,37 +13,37 @@ import { resolveControlLabelId } from "../../🧱️elements/🚗️UiDriver/�
 // #endregion 🔌️Adapters
 
 // #region ⌨️ControlKeybindingContext
-/** @emoji ⌨️ Action reference accepted by a control keybinding definition. */
+/** ⌨️ Action reference accepted by a control keybinding definition. */
 export interface ControlKeybindingAction {
   readonly action: string;
 }
 
-/** @emoji ⌨️ Application keybinding declaration merged into the control registry. */
+/** ⌨️ Application keybinding declaration merged into the control registry. */
 export interface ControlKeybindingDefinition {
   readonly action: ControlKeybindingAction;
   readonly keys: string;
 }
 
-/** @emoji ⌨️ Opaque provider children rendered by the React adapter. */
+/** ⌨️ Opaque provider children rendered by the React adapter. */
 type UiKeybindingsProviderChildren = unknown;
 
-/** @emoji ⌨️ Props supplied to the control keybinding context provider. */
+/** ⌨️ Props supplied to the control keybinding context provider. */
 interface UiKeybindingsProviderProps {
   readonly bindings: ReadonlyMap<string, string>;
   readonly children: UiKeybindingsProviderChildren;
 }
 
-/** @emoji ⌨️ Callback invoked for a matched control keybinding. */
+/** ⌨️ Callback invoked for a matched control keybinding. */
 export type ControlKeybindingCallback = () => void;
 
-/** @emoji ⌨️ Supported control-keybinding hook options. */
+/** ⌨️ Supported control-keybinding hook options. */
 export interface ControlKeybindingOptions {
   readonly enabled?: boolean;
   readonly enableOnFormTags?: boolean;
   readonly preventDefault?: boolean;
 }
 
-/** @emoji ⌨️ Dependency values that keep a control-keybinding callback current. */
+/** ⌨️ Dependency values that keep a control-keybinding callback current. */
 export type ControlKeybindingDependencies = ReadonlyArray<unknown>;
 
 interface OwnedHotkeyChord {
@@ -54,12 +54,12 @@ interface OwnedHotkeyChord {
   readonly shift: boolean;
 }
 
-/** @emoji 🍎 Whether the browser platform uses Command as its primary modifier — {@link keybindingPlatformUsesMetaV1}, so the dispatcher, the badge and `aria-keyshortcuts` resolve `mod` from ONE rule. */
+/** 🍎 Whether the browser platform uses Command as its primary modifier — {@link keybindingPlatformUsesMetaV1}, so the dispatcher, the badge and `aria-keyshortcuts` resolve `mod` from ONE rule. */
 export function isAppleHotkeyPlatform(platform: string): boolean {
   return keybindingPlatformUsesMetaV1(platform);
 }
 
-/** @emoji 🧹 Normalizes browser key names and keybinding aliases to one comparison token. */
+/** 🧹 Normalizes browser key names and keybinding aliases to one comparison token. */
 export function normalizeHotkeyKey(key: string): string {
   if (key === " ") return "space";
   const normalized = key.trim().toLowerCase();
@@ -72,7 +72,7 @@ export function normalizeHotkeyKey(key: string): string {
   return normalized;
 }
 
-/** @emoji 🧩 Parses one comma-separated hotkey declaration into strict modifier chords. */
+/** 🧩 Parses one comma-separated hotkey declaration into strict modifier chords. */
 export function parseOwnedHotkeyChords(keys: string, applePlatform: boolean): readonly OwnedHotkeyChord[] {
   const chords: OwnedHotkeyChord[] = [];
   for (const rawChord of keys.split(",")) {
@@ -98,7 +98,7 @@ export function parseOwnedHotkeyChords(keys: string, applePlatform: boolean): re
   return chords;
 }
 
-/** @emoji 🎯 Matches one keyboard event against an already-normalized owned chord. */
+/** 🎯 Matches one keyboard event against an already-normalized owned chord. */
 export function keyboardEventMatchesOwnedHotkey(event: KeyboardEvent, chord: OwnedHotkeyChord): boolean {
   return normalizeHotkeyKey(event.key) === chord.key
     && event.altKey === chord.alt
@@ -107,13 +107,13 @@ export function keyboardEventMatchesOwnedHotkey(event: KeyboardEvent, chord: Own
     && event.shiftKey === chord.shift;
 }
 
-/** @emoji ✍️ Whether a keyboard event originated from a form or editable text surface. */
+/** ✍️ Whether a keyboard event originated from a form or editable text surface. */
 export function isHotkeyFormTarget(target: EventTarget | null): boolean {
   if (!(target instanceof Element)) return false;
   return target.matches("input,textarea,select,[contenteditable]:not([contenteditable='false'])");
 }
 
-/** @emoji 🌙 Owned React hotkey listener with strict chord matching and deterministic cleanup. */
+/** 🌙 Owned React hotkey listener with strict chord matching and deterministic cleanup. */
 export function useHotkeys(keys: string, callback: ControlKeybindingCallback, options: ControlKeybindingOptions = {}, dependencies: ControlKeybindingDependencies = []): void {
   const callbackRef = reactHostPort.useRef(callback);
   callbackRef.current = callback;
@@ -137,7 +137,7 @@ export function useHotkeys(keys: string, callback: ControlKeybindingCallback, op
   }, [chords, enabled, enableOnFormTags, preventDefault]);
 }
 
-/** @emoji ⌨️ Last-wins action-to-keys map from app keybindings. */
+/** ⌨️ Last-wins action-to-keys map from app keybindings. */
 export function buildKeysByActionId(keybindings: readonly ControlKeybindingDefinition[]): ReadonlyMap<string, string> {
   const map = new Map<string, string>();
   for (const binding of keybindings) {
@@ -146,7 +146,7 @@ export function buildKeysByActionId(keybindings: readonly ControlKeybindingDefin
   return map;
 }
 
-/** @emoji ⌨️ Shell chrome control ids mapped to default chords.
+/** ⌨️ Shell chrome control ids mapped to default chords.
  *
  * Every row here is a FRAMEWORK verb, reachable through {@link useControlKeybinding}/`useActionHotkey`,
  * listed by the Settings → Keybindings tree and overridable per user — an app's own
@@ -189,7 +189,7 @@ export const SHELL_KEYBINDINGS: Readonly<Record<string, string>> = {
   "playground.navbar.roles.viewer": "mod+alt+v",
 };
 
-/** @emoji ⌨️ Merges shell defaults, app action bindings, and user overrides. */
+/** ⌨️ Merges shell defaults, app action bindings, and user overrides. */
 export function composeControlKeybindings(keysByActionId: ReadonlyMap<string, string>, overrides: Readonly<Record<string, string>>): ReadonlyMap<string, string> {
   const map = new Map<string, string>(Object.entries(SHELL_KEYBINDINGS));
   for (const [actionId, keys] of keysByActionId) {
@@ -205,18 +205,18 @@ const EMPTY_CONTROL_KEYBINDINGS = ephemeralMap<string, string>("framework.module
 
 const UiKeybindingsContext = reactHostPort.createContext<ReadonlyMap<string, string>>(EMPTY_CONTROL_KEYBINDINGS);
 
-/** @emoji ⌨️ Supplies merged control-id-to-chords bindings to a subtree. */
+/** ⌨️ Supplies merged control-id-to-chords bindings to a subtree. */
 export function UiKeybindingsProvider({ bindings, children }: UiKeybindingsProviderProps) {
   const content = children as React.ReactNode;
   return <UiKeybindingsContext.Provider value={bindings}>{content}</UiKeybindingsContext.Provider>;
 }
 
-/** @emoji ⌨️ Resolves the nearest control-id-to-chords binding map. */
+/** ⌨️ Resolves the nearest control-id-to-chords binding map. */
 export function useUiKeybindingsByControlId(): ReadonlyMap<string, string> {
   return reactHostPort.useContext(UiKeybindingsContext);
 }
 
-/** @emoji ⌨️ Resolves a raw chord string for a control id. */
+/** ⌨️ Resolves a raw chord string for a control id. */
 export function resolveControlKeybindingRaw(id: string | undefined, bindings: ReadonlyMap<string, string>): string | undefined {
   if (!id) return undefined;
   const direct = bindings.get(id);
@@ -226,7 +226,7 @@ export function resolveControlKeybindingRaw(id: string | undefined, bindings: Re
   return undefined;
 }
 
-/** @emoji ⌨️ Resolves a platform-formatted shortcut label for a control id. */
+/** ⌨️ Resolves a platform-formatted shortcut label for a control id. */
 export function useControlHotkey(id: string | undefined): string | undefined {
   const bindings = useUiKeybindingsByControlId();
   const raw = id
@@ -235,7 +235,7 @@ export function useControlHotkey(id: string | undefined): string | undefined {
   return raw ? formatKeybindingShortcut(raw) : undefined;
 }
 
-/** @emoji ⌨️ Binds the active chord for a control id. */
+/** ⌨️ Binds the active chord for a control id. */
 export function useControlKeybinding(controlId: string, callback: ControlKeybindingCallback, options?: ControlKeybindingOptions, dependencies?: ControlKeybindingDependencies): void {
   const bindings = useUiKeybindingsByControlId();
   const keys = reactHostPort.useMemo(() => resolveControlKeybindingRaw(controlId, bindings) ?? SHELL_KEYBINDINGS[controlId] ?? SHELL_KEYBINDINGS[resolveControlLabelId(controlId)], [bindings, controlId]);

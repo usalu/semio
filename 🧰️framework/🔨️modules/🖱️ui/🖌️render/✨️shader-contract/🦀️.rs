@@ -1,4 +1,4 @@
-//! @emoji ✨️ Canonical WGSL for the five shader families plus their `PipelineSpec` metadata.
+//! ✨️ Canonical WGSL for the five shader families plus their `PipelineSpec` metadata.
 //!
 //! This is the single source of truth every `GraphicsBackend` builds its pipelines from — no
 //! backend reads WGSL directly. webgpu consumes [`ShaderVariant::wgsl`] verbatim; vulkan/metal/

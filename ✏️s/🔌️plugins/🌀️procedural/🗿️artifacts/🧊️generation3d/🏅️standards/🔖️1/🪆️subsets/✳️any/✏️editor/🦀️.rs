@@ -306,7 +306,7 @@ fn generation3d_render_body(
     let active_utility = view_state.active_utility_id.as_deref().unwrap_or("move");
     let selected_generation_id = config.selected_generation_id.as_deref();
     if semio_framework_job::runtime_diagnostics_enabled() {
-        eprintln!("[DEBUG] gen3d render body={body_key} generations={} selected={selected_generation_id:?}", document.generation.as_state().generations.len());
+        eprintln!("[TRACE] gen3d render body={body_key} generations={} selected={selected_generation_id:?}", document.generation.as_state().generations.len());
     }
     let node = match body_key {
         flow_window::GENERATION_3D_PLAY_BODY_MAIN => flow_window::render(document, config, session, marks, labels),

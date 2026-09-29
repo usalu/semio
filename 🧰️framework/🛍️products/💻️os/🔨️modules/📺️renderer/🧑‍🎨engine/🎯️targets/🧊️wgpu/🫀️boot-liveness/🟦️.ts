@@ -1,5 +1,5 @@
 //#region 🫀️BootLivenessLaw
-/** @emoji 🫀️ The wgpu browser-boot liveness law, declared once for BOTH browser isolates.
+/** 🫀️ The wgpu browser-boot liveness law, declared once for BOTH browser isolates.
  *
  * 🩸️ What this replaces: a lone `setTimeout(FRAME_WORKER_BOOT_STALL_TIMEOUT_MS)` in the UI isolate whose
  * only proof of life was a message arriving from the frame Worker. That predicate is FALSE for exactly the
@@ -18,7 +18,7 @@
  * This is the shape `🎭️actor/📮️shard-client/🟦️.ts` ratified for shards (`evaluateShardLiveness`'s
  * `firstTurnTimeoutMs` half + `describeShardSilence`); this module is its frame-Worker twin. */
 
-/** @emoji 🫀️ THE wgpu boot liveness policy — one record every boot clock in the two browser isolates
+/** 🫀️ THE wgpu boot liveness policy — one record every boot clock in the two browser isolates
  * reads, so a value can never drift between the UI-isolate watchdog (`../🚚️browser-frame-transport/🟦️.ts`)
  * and the Worker's own phase declarations and liveness ticker (`../🎞️frame-worker/🟦️.ts`).
  *
@@ -44,21 +44,21 @@ export const FRAME_WORKER_BOOT_LIVENESS_POLICY = Object.freeze({
   } as Readonly<Record<string, number>>),
 });
 
-/** @emoji 🧭️ One long phase a Worker has declared and not yet left. */
+/** 🧭️ One long phase a Worker has declared and not yet left. */
 export type BrowserBootPhase = {
   readonly phase: string;
   readonly ceilingMs: number;
   readonly enteredAtMs: number;
 };
 
-/** @emoji 📏️ The ceiling {@link FRAME_WORKER_BOOT_LIVENESS_POLICY} prices one phase name against. */
+/** 📏️ The ceiling {@link FRAME_WORKER_BOOT_LIVENESS_POLICY} prices one phase name against. */
 export function bootPhaseCeilingMs(phase: string): number {
   const table = FRAME_WORKER_BOOT_LIVENESS_POLICY.phaseCeilingMs;
   const family = phase.slice(0, phase.indexOf(":") < 0 ? phase.length : phase.indexOf(":"));
   return table[phase] ?? table[family] ?? FRAME_WORKER_BOOT_LIVENESS_POLICY.defaultPhaseCeilingMs;
 }
 
-/** @emoji 🫀️ One watchdog window's worth of input — every field the rule below reads and nothing else, so
+/** 🫀️ One watchdog window's worth of input — every field the rule below reads and nothing else, so
  * the same decision replays from a JSON timeline with no transport in the picture. `lastLivenessAtMs` is
  * `Number.NEGATIVE_INFINITY` for a Worker that has never sent a single message. */
 export type BrowserBootLivenessWindow = {
@@ -68,7 +68,7 @@ export type BrowserBootLivenessWindow = {
   readonly phase: BrowserBootPhase | undefined;
 };
 
-/** @emoji ⚖️ What one window decided, plus the two measurements a fault card must quote. `rearmInMs` is
+/** ⚖️ What one window decided, plus the two measurements a fault card must quote. `rearmInMs` is
  * always the exact remaining time, so a re-armed watchdog fires at the deadline rather than one whole
  * window past it. */
 export type BrowserBootLivenessDecision = {
@@ -78,7 +78,7 @@ export type BrowserBootLivenessDecision = {
   readonly phaseElapsedMs: number;
 };
 
-/** @emoji ⚖️ THE rule. A declared phase is measured against its OWN ceiling and silence cannot touch it —
+/** ⚖️ THE rule. A declared phase is measured against its OWN ceiling and silence cannot touch it —
  * a Worker blocked inside a browser-owned compile is busy, not dead, and the declaration is the evidence.
  * With no phase in flight, silence past `silenceTimeoutMs` is a wedged event loop and terminates. */
 export function evaluateBrowserBootLiveness(window: BrowserBootLivenessWindow): BrowserBootLivenessDecision {
@@ -96,7 +96,7 @@ export function evaluateBrowserBootLiveness(window: BrowserBootLivenessWindow): 
 //#endregion 🫀️BootLivenessLaw
 
 //#region 🩺️BootSilenceDiagnosis
-/** @emoji 🩺️ What the frame Worker was doing when the watchdog gave up on it. Every field is state the
+/** 🩺️ What the frame Worker was doing when the watchdog gave up on it. Every field is state the
  * transport already holds; the point is that `Worker reported no boot progress for 60000 ms` names neither
  * the phase, nor its ceiling, nor how far past it the phase actually ran — which is precisely how a
  * host-side kill reaches a fault banner looking like a spontaneous, causeless Worker death. */
@@ -113,7 +113,7 @@ function roundedMs(value: number): string {
   return Number.isFinite(value) ? String(Math.max(0, Math.round(value))) : "∞";
 }
 
-/** @emoji 🩺️ Composes {@link BrowserBootSilenceReport} into the one line the `worker-boot-timeout` fault
+/** 🩺️ Composes {@link BrowserBootSilenceReport} into the one line the `worker-boot-timeout` fault
  * carries, in the reader's tongue. A declared phase that blew its ceiling names the phase, its elapsed and
  * its ceiling; an undeclared silence says so explicitly, because those are different defects with
  * different owners — the first is a phase whose ceiling is wrong or whose work truly wedged, the second is
@@ -137,7 +137,7 @@ export function describeBrowserBootSilence(report: BrowserBootSilenceReport, ton
     : `The frame Worker ${silence} (ceiling ${roundedMs(report.silenceTimeoutMs)} ms, last reported stage "${stage}") and had declared no long phase — its event loop is wedged.`;
 }
 
-/** @emoji 🧭️ The declared-phase line the fallback panel renders beside the fault, so a reader sees WHICH
+/** 🧭️ The declared-phase line the fallback panel renders beside the fault, so a reader sees WHICH
  * long phase was in flight and for how long even when the fault came from somewhere else entirely. */
 export function describeBrowserBootPhase(phase: BrowserBootPhase | undefined, elapsedMs: number, tongue: "en" | "de"): string {
   if (!phase) return tongue === "de" ? "Lange Boot-Phase: keine erklärt" : "Long boot phase: none declared";

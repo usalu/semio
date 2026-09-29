@@ -66,7 +66,6 @@ fn flow_presence_store_owners_preserve_readers_and_retire_neutral_byte_grants() 
             assert_eq!(observed_blocked, shared);
             assert!(owner.begin_peer_publication().is_err());
             assert_eq!(disposer.close_step(&mut owner, 0, 0).unwrap(), PluginCloseStep::Complete);
-            eprintln!("[DEBUG] Flow presence roster={} grant={maximum_bytes} retiredBytes={released} capturedReader={observed_blocked} terminal=true", row["id"]);
         }
     }
 }

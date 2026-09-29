@@ -126,12 +126,12 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{mutable_input, DELETE_KINDS};
+    use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::{parse_gltf_document, serialize_gltf_document};
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::mutations::{
-        change_material_alpha_mode, change_material_double_sided, create_image, create_material, create_sampler, create_texture, delete_image, delete_material, delete_sampler, delete_texture, move_image, move_material,
-        move_sampler, move_texture, reorder_images, reorder_materials, reorder_samplers, reorder_textures,
+        change_material_alpha_mode, change_material_double_sided, create_image, create_material, create_sampler, create_texture, delete_image, delete_material, delete_sampler, delete_texture,
+        gltf_inverse_restored_document, move_image, move_material, move_sampler, move_texture, reorder_images, reorder_materials, reorder_samplers, reorder_textures,
     };
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::snapshot::{GltfAlphaMode, GltfSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::gltf::standards::v2_0::subsets::any::project_gltf;
@@ -212,54 +212,6 @@ mod subject {
         }
     }
 
-    /// ↩️ Every `delete-*` kind's own inverse, restoring the removed collection AND every
-    /// reference DIRECTLY from `before` — the exact typed values this snapshot already holds, not a
-    /// same-shaped substitute a second `create-*` call could only approximate (its own payload
-    /// carries no field content — see the feature file's own doc comment). Mirrors
-    /// `../../../♾️any/🔮️oracles/🦀️.rs`'s own `undo_delete_{material,texture,image,sampler}` on the
-    /// independent-reader side.
-    fn undo_delete(before: &GltfSnapshot, mutated: &GltfSnapshot, kind: &str) -> GltfSnapshot {
-        let mut restored = mutated.clone();
-        match kind {
-            "delete-material" => {
-                restored.document.materials = before.document.materials.clone();
-                for (mesh_index, mesh) in restored.document.meshes.iter_mut().enumerate() {
-                    for (primitive_index, primitive) in mesh.primitives.iter_mut().enumerate() {
-                        primitive.material = before.document.meshes[mesh_index].primitives[primitive_index].material;
-                    }
-                }
-            }
-            "delete-texture" => {
-                restored.document.textures = before.document.textures.clone();
-                for (index, material) in restored.document.materials.iter_mut().enumerate() {
-                    let source = &before.document.materials[index];
-                    if let (Some(pbr), Some(source_pbr)) = (&mut material.pbr_metallic_roughness, &source.pbr_metallic_roughness) {
-                        pbr.base_color_texture = source_pbr.base_color_texture.clone();
-                        pbr.metallic_roughness_texture = source_pbr.metallic_roughness_texture.clone();
-                    } else {
-                        material.pbr_metallic_roughness = source.pbr_metallic_roughness.clone();
-                    }
-                    material.normal_texture = source.normal_texture.clone();
-                    material.occlusion_texture = source.occlusion_texture.clone();
-                    material.emissive_texture = source.emissive_texture.clone();
-                }
-            }
-            "delete-image" => {
-                restored.document.images = before.document.images.clone();
-                for (index, texture) in restored.document.textures.iter_mut().enumerate() {
-                    texture.source = before.document.textures[index].source;
-                }
-            }
-            "delete-sampler" => {
-                restored.document.samplers = before.document.samplers.clone();
-                for (index, texture) in restored.document.textures.iter_mut().enumerate() {
-                    texture.sampler = before.document.textures[index].sampler;
-                }
-            }
-            other => unreachable!("undo_delete called for a non-delete kind {other:?}"),
-        }
-        restored
-    }
     //#endregion 🔖️Dispatch
 
     //#region 🔖️Handlers
@@ -286,24 +238,15 @@ mod subject {
         Ok(Outcome::with_raw(bytes, projection).artifact("actual-gltf", &path, "model/gltf+json"))
     }
 
+    /// ↩️ The production inverse, never a hand-written one: `gltf_inverse_restored_document` applies the row's mutation and
+    /// replays that mutation's OWN computed `inverse(base)` through the production codec, and three's GLTFLoader then
+    /// judges the restored document against the committed `⬅️before.gltf`.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let spec = ctx.doc_json()?;
         let kind = spec.str("kind");
         let input = mutable_input(ctx, &kind)?;
-        let before = parse_gltf_document(&input)?;
         let empty = Json::Object(Vec::new());
-        let params = spec.get("params").unwrap_or(&empty);
-        let mutated = apply_kind(&before, &kind, params)?;
-        let restored = if DELETE_KINDS.contains(&kind.as_str()) {
-            undo_delete(&before, &mutated, &kind)
-        } else {
-            let inverse = super::inverse_spec(&kind);
-            let inverse_kind = inverse.str("kind");
-            let inverse_empty = Json::Object(Vec::new());
-            let inverse_params = inverse.get("params").unwrap_or(&inverse_empty);
-            apply_kind(&mutated, &inverse_kind, inverse_params)?
-        };
-        let bytes = serialize_gltf_document(&restored);
+        let bytes = gltf_inverse_restored_document(&input, &kind, &spec.get("params").unwrap_or(&empty).to_string())?;
         let projection = project_gltf(&bytes)?;
         actual(ctx, bytes, projection)
     }

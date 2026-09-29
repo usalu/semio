@@ -25,7 +25,6 @@ export function testFormsResponses(): void {
     if (item.valid) assert.deepEqual(parseFormsResponse(response), response, item.name);
     else assert.throws(() => parseFormsResponse(response), item.name);
   }
-  console.log("[DEBUG] Forms response events, idempotency and undo matched shared vectors and JSON Patch");
 }
 
 /** ✅️ Submission validates every step and snapshots only visible answer fields. */
@@ -40,5 +39,4 @@ export async function testFormsSubmission(): Promise<void> {
     assert.deepEqual(result, test.expected, test.name);
     if (result.response) assert.equal(validate(result.response), true, test.name);
   }
-  console.log("[DEBUG] Forms submission collected visible answers and rejected invalid steps against shared fixtures and Ajv");
 }

@@ -214,7 +214,6 @@ fn table_details_first_paint_keeps_fields_reachable_across_repeated_projection()
         while !retirement.close_step(1, 4096).unwrap().complete {}
         while !ui_contract::close_ui_value_page_with_grant(1, 4096).unwrap().complete {}
     }
-    println!("[DEBUG] table details preserved first-paint fields and bounded folded payload over 32 render/retirement cycles");
 }
 
 #[test]

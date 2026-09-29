@@ -59,7 +59,7 @@ function internalOwnerImports(path: string, owners: ReadonlySet<string>): string
     .sort();
 }
 
-function rootImportsForOwner(routerPath: string, ownerPath: string): string[] {
+function rootImportsForOwner(routerPath: string, ownerPath: string): readonly string[] {
   const source = ts.createSourceFile(routerPath, readFileSync(routerPath, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
   const owner = join(repoRoot, ownerPath);
   return source.statements.flatMap((node) => {
@@ -107,7 +107,7 @@ test("Hub foundation owners are anonymous, exported, and acyclic", () => {
   expect(visited.size).toBe(9);
 });
 
-test("Hub foundation owner graph typechecks without a command-module back edge", { timeout: 30_000 }, () => {
+test("Hub foundation owner graph typechecks without a command-module back edge", () => {
   const paths = fixture.owners.map((owner) => join(repoRoot, owner.path));
   const routerPath = join(hubRoot, "📦️packages/🦀️rust/📜️script.ts");
   const program = ts.createProgram(paths, {
@@ -120,7 +120,7 @@ test("Hub foundation owner graph typechecks without a command-module back edge",
     allowJs: true,
     skipLibCheck: true,
     noEmit: true,
-    types: ["node"],
+    types: ["bun", "node"],
   });
   expect(
     paths.flatMap((path) => [...program.getSyntacticDiagnostics(program.getSourceFile(path)), ...program.getSemanticDiagnostics(program.getSourceFile(path))]).map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")),
@@ -132,7 +132,7 @@ test("Hub foundation owner graph typechecks without a command-module back edge",
       expect(resolve(dirname(path), statement.moduleSpecifier.text), path).not.toBe(routerPath);
     }
   }
-});
+}, { timeout: 30_000 });
 
 test("Hub foundation owner paths bind their full taxonomy contexts", () => {
   const taxonomy = loadTaxonomy();
@@ -288,7 +288,7 @@ test("readiness waits on the hub's own progress, never on a total wall-clock bud
   } });
   try {
     const startedAt = Date.now();
-    const body = await waitForReadiness(fakeRun(advancing.port, () => ""), false, 200);
+    const body = await waitForReadiness(fakeRun(Number(advancing.url.port), () => ""), false, 200);
     expect(body.status).toBe("ready");
     expect(Date.now() - startedAt).toBeGreaterThan(200);
   } finally {
@@ -297,12 +297,12 @@ test("readiness waits on the hub's own progress, never on a total wall-clock bud
 
   const frozen = Bun.serve({ port: 0, hostname: "127.0.0.1", fetch: () => new Response(JSON.stringify(readiness("not-ready", "trusted-catalog-load-stalled-before-it-finished")), { status: 503, headers: { "content-type": "application/json" } }) });
   try {
-    await expect(waitForReadiness(fakeRun(frozen.port, () => ""), false, 200)).rejects.toThrow(/stalled.*trusted-catalog-load-stalled-before-it-finished/su);
+    await expect(waitForReadiness(fakeRun(Number(frozen.url.port), () => ""), false, 200)).rejects.toThrow(/stalled.*trusted-catalog-load-stalled-before-it-finished/su);
   } finally {
     frozen.stop(true);
   }
 
-  const exited = fakeRun(frozen.port, () => "");
+  const exited = fakeRun(Number(frozen.url.port), () => "");
   (exited.child as unknown as { exitCode: number | null }).exitCode = 3;
   await expect(waitForReadiness(exited, false, 200)).rejects.toThrow(/exited before readiness/u);
 }, 600_000);
@@ -369,7 +369,7 @@ test("source definition boundaries match TypeScript AST and reject stale credent
   expect(manualClass).toHaveLength(fixture.sourceBoundary.typescript.expectedBodies);
   expect(manualRun).toHaveLength(fixture.sourceBoundary.typescript.expectedBodies);
   expect(manualRun[0]!.trim()).toBe(method.body!.getText(parsed).slice(1, -1).trim());
-  const typescriptCalls = [...manualRun[0]!.matchAll(/\b(?:await\s+)?([a-z][A-Za-z0-9]*)\(\)/gu)].map((match) => match[1]).filter((name) => name !== "if");
+  const typescriptCalls: readonly string[] = [...manualRun[0]!.matchAll(/\b(?:await\s+)?([a-z][A-Za-z0-9]*)\(\)/gu)].map((match) => match[1]).filter((name) => name !== "if");
   expect(typescriptCalls).toEqual(fixture.sourceBoundary.typescript.expectedCalls);
   expect(sourceDefinitionBodies(hostileSource, /\bfunction\s+declaration\s*\([^)]*\)\s*(?::[^\{;]+)?/gu)).toEqual([]);
   const rustBodies = sourceDefinitionBodies(fixture.sourceBoundary.rust.source, /\bfn\s+main\s*\([^)]*\)\s*/gu);

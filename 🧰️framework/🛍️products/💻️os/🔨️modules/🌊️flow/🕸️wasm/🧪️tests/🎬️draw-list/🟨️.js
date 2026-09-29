@@ -82,7 +82,6 @@ equal(names.filter((name) => name === "save").length, 1, "one-layer-pushed");
 equal(names.filter((name) => name === "restore").length, 1, "one-layer-popped");
 equal(names.at(-1), "restore", "layer-stack-balances");
 equal(context.calls.some((call) => call[0] === "fillRect"), false, "no-placeholder-rectangles");
-console.log("[DEBUG] Flow draw-list replay reproduced every primitive of the shared fixture as its own 2D primitive");
 //#endregion 🎬️ReplayShape
 
 //#region 🎥️ReplayCamera
@@ -107,7 +106,6 @@ const retinaTransforms = retina.calls.filter((call) => call[0] === "setTransform
 for (let index = 1; index < transforms.length; index += 1) {
   deepStrictEqual(retinaTransforms[index].map((value) => Number((value / 2).toFixed(6))), transforms[index].map((value) => Number(value.toFixed(6))), `device-pixel-scale-composes:${index}`);
 }
-console.log("[DEBUG] Flow draw-list replay applied the camera affine and composed the device-pixel scale over it");
 //#endregion 🎥️ReplayCamera
 
 //#region 🚧️ReplayRefusals
@@ -127,7 +125,6 @@ const arcless = recordingContext();
 delete arcless.roundRect;
 replayFlowDrawList(arcless, drawList, identity);
 equal(arcless.calls.filter((call) => call[0] === "arcTo").length, fixture.nodes.length * 2 * 4, "round-rects-fall-back-to-exact-corner-arcs");
-console.log("[DEBUG] Flow draw-list replay refused every malformed list and unwound its own layer stack");
 //#endregion 🚧️ReplayRefusals
 
 //#region 🙈️DevicelessReplay
@@ -187,5 +184,4 @@ equal(renderFlowCanvas({ width: 0, height: 0, getContext: () => { askedForAConte
 equal(askedForAContext, false, "gpu-frames-never-ask-a-presented-canvas-for-a-context");
 equal(renderFlowCanvas({ width: 0, height: 0, getContext: () => null }, devicelessFrame), FlowPresentation.unpresentable, "a-canvas-that-refuses-2d-under-a-2d-frame-is-unpresentable");
 equal(renderFlowCanvas(null, devicelessFrame), FlowPresentation.none, "no-canvas-presents-nothing");
-console.log("[DEBUG] Flow deviceless frame replayed a non-empty list over every node of the shared fixture and named its own presentation verdict");
 //#endregion 🙈️DevicelessReplay

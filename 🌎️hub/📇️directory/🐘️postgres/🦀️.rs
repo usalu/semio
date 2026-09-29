@@ -704,7 +704,7 @@ async fn cas_project_release(tx: &mut sqlx_core::transaction::Transaction<'_, sq
     Ok(())
 }
 
-/// @emoji 🐘️ PostgreSQL-backed `HubDirectory`, pooled via `PgPool`.
+/// 🐘️ PostgreSQL-backed `HubDirectory`, pooled via `PgPool`.
 pub struct PostgresDirectory {
     pool: PgPool,
     #[cfg(test)]
@@ -736,7 +736,7 @@ impl Default for ArtifactGenesisTestControlV1 {
 }
 
 impl PostgresDirectory {
-    /// @emoji 🔌️ Connects to `database_url` and bootstraps the schema (idempotent, no migration framework).
+    /// 🔌️ Connects to `database_url` and bootstraps the schema (idempotent, no migration framework).
     pub async fn connect(database_url: &str) -> DirectoryResult<Self> {
         let pool = PgPoolOptions::new().max_connections(20).connect(database_url).await.map_err(backend)?;
         for statement in SCHEMA.split(';').map(str::trim).filter(|s| !s.is_empty() && !s.starts_with("--")) {
@@ -854,7 +854,7 @@ impl PostgresDirectory {
         }
     }
 
-    /// @emoji 🌱️ Seeds a placeholder `seed` system user and a default `studio`/`private` space it
+    /// 🌱️ Seeds a placeholder `seed` system user and a default `studio`/`private` space it
     /// owns, through the event log (`user.created` + `space.created` + `member.upserted`) like any
     /// other write. The system user satisfies `hub_space.owner_user_id`'s foreign key until a real
     /// bootstrap admin claims ownership through `/admin` (HP-6).

@@ -64,7 +64,6 @@ fn the_inert_probe_chords_claim_no_shell_verb_and_reserve_nothing() {
     }
     let (palette, palette_modifiers) = probe_chord("mod+p");
     assert_eq!(shell_shortcut_for(&palette, &palette_modifiers), Some(ShellShortcut::ToggleSearch), "the palette chord React actually binds");
-    println!("[DEBUG] inert probe chords mod+k / mod+alt+1 / mod+alt+2 claim nothing; mod+p still opens the palette");
 }
 
 /// ⚖️ LAW: the historical probe's `mod+shift+f` remains inert, exactly as React measured it. The
@@ -186,7 +185,6 @@ fn a_real_activation_arms_the_shell_window_activate_history_note() {
 
     shell.arm_window_activation_note();
     assert_eq!(shell.deferred_actions.len(), 1, "…and re-observing the same active window notes nothing again");
-    println!("[DEBUG] window activation note armed for {:?}", shell.active_window_id);
 }
 
 //#endregion 🪟️WindowActivationNote
@@ -259,7 +257,6 @@ fn a_freshly_mounted_instance_is_announced_its_resolved_example() {
     let mut without = shell_with_keybindings(Vec::new());
     without.active_example_id = None;
     assert!(semio_framework_async::block_on(without.announce_session_example()).is_ok(), "a dialect with no example announces nothing at all");
-    println!("[DEBUG] session example announcement dispatched for {:?}", shell.active_example_id);
 }
 
 /// ⚖️ LAW: the two role chips carry React's own control ids and each one's chord, so the pointer and

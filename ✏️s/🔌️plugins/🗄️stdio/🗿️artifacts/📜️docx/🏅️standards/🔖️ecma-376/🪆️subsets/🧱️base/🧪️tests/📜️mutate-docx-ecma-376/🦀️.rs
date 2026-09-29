@@ -4,13 +4,11 @@
 //! Every scenario copies the real, committed `📜️example-readme.docx` fixture (derived once from
 //! this repository's own real `README.md` — see the feature file's own header for the full
 //! provenance) into the case work directory first; the committed fixture is never written to.
-//! `oracle` drives the registered `zip`+`quick-xml` composition
-//! (`../../🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🦀️oracle.rs`'s own
-//! `oracle_apply_mutation`/`oracle_apply_mutation_inverse`); `subject` drives this repository's own
-//! `decode_docx`/`encode_docx`/`apply_docx_mutation` over the full 12-kind `DocxMutation`
-//! vocabulary. Both results are read back by the SAME independent `project_docx_ecma_376` (the
-//! `zip`+`quick-xml` composition) before the `semantic-docx-ecma-376-mutate-v1` profile compares
-//! them. The subject half is gated behind the generated host's `sut` feature so the oracle-only run
+//! The judging oracle is the TypeScript reader (`🟦️.ts`, jszip over the committed python-docx afters and the real
+//! README); `oracle` here is the cross-semio SUPPLEMENT, the registered `zip`+`quick-xml` composition
+//! (`oracle_apply_mutation`/`oracle_apply_mutation_inverse`), asserting its laws in role; `subject` drives this
+//! repository's own `decode_docx`/`encode_docx`/`apply_docx_mutation` over the full 12-kind `DocxMutation`
+//! vocabulary and hands its package to the `docx-ecma-376-jszip-compare-v1` pipeline as `actual-docx`. The subject half is gated behind the generated host's `sut` feature so the oracle-only run
 //! never links `semio-s-plugin-stdio` -- §5.3's own role separation, NOT a workaround for anything:
 //! the Rust subject phase runs (`subject exhaustive --owner 🗄️stdio --case mutate-docx-ecma-376`
 //! executes all 25 scenarios), and wave 14 ran the full differential comparison against the oracle.
@@ -244,7 +242,14 @@ mod subject {
         apply_docx_mutation(&mut snapshot, &mutation);
         let bytes = encode_docx(&snapshot).map_err(|error| format!("encode_docx failed: {error}"))?;
         let projection = project_docx_ecma_376(&bytes)?;
-        Ok(Outcome::with_raw(bytes, projection))
+        actual(ctx, bytes, projection)
+    }
+
+    /// 📦️ The produced package as the `actual-docx` artifact the `docx-ecma-376-jszip-compare-v1` pipeline reads.
+    fn actual(ctx: &Context, bytes: Vec<u8>, projection: Json) -> Result<Outcome, String> {
+        let path = ctx.artifact("actual-docx", "actual.docx")?;
+        std::fs::write(&path, &bytes).map_err(|error| error.to_string())?;
+        Ok(Outcome::with_raw(bytes, projection).artifact("actual-docx", &path, "application/vnd.openxmlformats-officedocument.wordprocessingml.document"))
     }
 
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
@@ -256,7 +261,7 @@ mod subject {
         apply_docx_mutation(&mut snapshot, &undo);
         let bytes = encode_docx(&snapshot).map_err(|error| format!("encode_docx failed: {error}"))?;
         let projection = project_docx_ecma_376(&bytes)?;
-        Ok(Outcome::with_raw(bytes, projection))
+        actual(ctx, bytes, projection)
     }
 
     /// 🔒️ The no-byte-pass-through rule: the subject must fully parse the real artifact into its
@@ -270,7 +275,7 @@ mod subject {
             return Err("byte pass-through: output is bit-identical to the input".to_string());
         }
         let projection = project_docx_ecma_376(&output)?;
-        Ok(Outcome::with_raw(output, projection))
+        actual(ctx, output, projection)
     }
     //#endregion 🔖️Handlers
 }

@@ -602,5 +602,325 @@
       },
       "refusal": "canonical-checkpoint-pair.aggregate"
     }
+  ],
+  "rebootstrapAdmissions": [
+    {
+      "id": "checked-in-exact",
+      "pair": "checked-in-multi-record",
+      "control": {
+        "scope": {
+          "spaceId": "space-wg10",
+          "documentId": "artifact-0f1e2d3c4b5a69788796a5b4c3d2e1f0"
+        },
+        "checkpointId": "3333333333333333333333333333333333333333333333333333333333333333",
+        "descriptorDigestV1": "2222222222222222222222222222222222222222222222222222222222222222",
+        "baselineFrontier": {
+          "documentId": "artifact-0f1e2d3c4b5a69788796a5b4c3d2e1f0",
+          "headEditOrdinal": 9,
+          "headEditId": "edit-9",
+          "lastCommitSeq": 4,
+          "chainHash": [
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6
+          ]
+        }
+      },
+      "refusal": null
+    },
+    {
+      "id": "genesis-exact",
+      "pair": "genesis",
+      "control": {
+        "scope": {
+          "spaceId": "space-wg10",
+          "documentId": "artifact-0f1e2d3c4b5a69788796a5b4c3d2e1f0"
+        },
+        "checkpointId": "1111111111111111111111111111111111111111111111111111111111111111",
+        "descriptorDigestV1": "2222222222222222222222222222222222222222222222222222222222222222",
+        "baselineFrontier": {
+          "documentId": "artifact-0f1e2d3c4b5a69788796a5b4c3d2e1f0",
+          "headEditOrdinal": 0,
+          "headEditId": "",
+          "lastCommitSeq": 0,
+          "chainHash": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "refusal": null
+    },
+    {
+      "id": "foreign-document",
+      "pair": "genesis",
+      "control": {
+        "scope": {
+          "spaceId": "space-wg10",
+          "documentId": "artifact-foreign"
+        },
+        "checkpointId": "1111111111111111111111111111111111111111111111111111111111111111",
+        "descriptorDigestV1": "2222222222222222222222222222222222222222222222222222222222222222",
+        "baselineFrontier": {
+          "documentId": "artifact-0f1e2d3c4b5a69788796a5b4c3d2e1f0",
+          "headEditOrdinal": 0,
+          "headEditId": "",
+          "lastCommitSeq": 0,
+          "chainHash": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "refusal": "canonical-checkpoint-pair.scope"
+    },
+    {
+      "id": "checkpoint-moved-again",
+      "pair": "checked-in-multi-record",
+      "control": {
+        "scope": {
+          "spaceId": "space-wg10",
+          "documentId": "artifact-0f1e2d3c4b5a69788796a5b4c3d2e1f0"
+        },
+        "checkpointId": "7777777777777777777777777777777777777777777777777777777777777777",
+        "descriptorDigestV1": "2222222222222222222222222222222222222222222222222222222222222222",
+        "baselineFrontier": {
+          "documentId": "artifact-0f1e2d3c4b5a69788796a5b4c3d2e1f0",
+          "headEditOrdinal": 9,
+          "headEditId": "edit-9",
+          "lastCommitSeq": 4,
+          "chainHash": [
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6
+          ]
+        }
+      },
+      "refusal": "canonical-checkpoint-pair.checkpoint"
+    },
+    {
+      "id": "descriptor-changed",
+      "pair": "genesis",
+      "control": {
+        "scope": {
+          "spaceId": "space-wg10",
+          "documentId": "artifact-0f1e2d3c4b5a69788796a5b4c3d2e1f0"
+        },
+        "checkpointId": "1111111111111111111111111111111111111111111111111111111111111111",
+        "descriptorDigestV1": "8888888888888888888888888888888888888888888888888888888888888888",
+        "baselineFrontier": {
+          "documentId": "artifact-0f1e2d3c4b5a69788796a5b4c3d2e1f0",
+          "headEditOrdinal": 0,
+          "headEditId": "",
+          "lastCommitSeq": 0,
+          "chainHash": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "refusal": "canonical-checkpoint-pair.descriptor"
+    },
+    {
+      "id": "baseline-differs",
+      "pair": "checked-in-multi-record",
+      "control": {
+        "scope": {
+          "spaceId": "space-wg10",
+          "documentId": "artifact-0f1e2d3c4b5a69788796a5b4c3d2e1f0"
+        },
+        "checkpointId": "3333333333333333333333333333333333333333333333333333333333333333",
+        "descriptorDigestV1": "2222222222222222222222222222222222222222222222222222222222222222",
+        "baselineFrontier": {
+          "documentId": "artifact-0f1e2d3c4b5a69788796a5b4c3d2e1f0",
+          "headEditOrdinal": 0,
+          "headEditId": "",
+          "lastCommitSeq": 0,
+          "chainHash": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "refusal": "canonical-checkpoint-pair.baseline"
+    }
   ]
 }

@@ -10,12 +10,12 @@ import { surfaceClass } from "../🌈️surface-presentation/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🏛️ShellFloorPresentation
-/** @emoji 🏛️ Whether base-floor chrome must paint its own surface. */
+/** 🏛️ Whether base-floor chrome must paint its own surface. */
 export function shellFloorPaints(parent: SurfaceScopeValue | null): boolean {
   return !(parent?.level === "base" && parent.fill !== "none");
 }
 
-/** @emoji 🏛️ Base-floor fill without nested same-level painting. */
+/** 🏛️ Base-floor fill without nested same-level painting. */
 export function shellFloorFillClass(parent: SurfaceScopeValue | null): string {
   return shellFloorPaints(parent) ? surfaceClass : "bg-transparent";
 }

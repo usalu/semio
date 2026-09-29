@@ -8,8 +8,14 @@
 //!    itself wrote (`round_trip_of_every_bestest_case_is_byte_identical`).
 //! 2. **Nothing silently dropped.** An object type outside the covered subset, a schedule whose
 //!    name does not carry a semio [`ScheduleId`], a construction layer naming a material the
-//!    document does not define — each becomes an [`EpJsonDiagnostic`] on the returned import
-//!    report, never a quiet default.
+//!    document does not define, infiltration coefficients a constant-design-flow semio method
+//!    cannot simulate — each becomes an [`EpJsonDiagnostic`] on the returned import report, never
+//!    a quiet default.
+//!
+//! A window whose construction is a layered `WindowMaterial:Glazing`/`:Gas` stack decodes into a
+//! [`Fenestration`] bound to that construction, with its fallback optics read from the window's own
+//! `WindowMaterial:SimpleGlazingSystem`; sill and height are measured along the host's "up" whatever
+//! corner a ring starts at.
 //!
 //! Entity numbering is re-minted here (epJSON identifies everything by NAME), one contiguous block
 //! per collection, so the two directions compose: names, layer order, surface order and window
@@ -18,7 +24,7 @@
 //! @see https://energyplus.readthedocs.io/en/latest/schema.html
 //! @see ../../../../../../../../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️06/ENERGY-PLUGIN-END-TO-END/📓️w6-epjson-io.md
 use crate::air_exchange::InfiltrationMethod;
-use crate::io::export::serializers::artifacts::epjson::v25_2::any::{glazing_construction_name, surface_normal, EpJsonDiagnostic, CONTRACT_OUTPUT_VARIABLES, DUAL_SETPOINT_CONTROL_SCHEDULE};
+use crate::io::export::serializers::artifacts::epjson::v25_2::any::{glazing_material_name, surface_basis, surface_normal, EpJsonDiagnostic, CONSTANT_DESIGN_FLOW_COEFFICIENTS, CONTRACT_OUTPUT_VARIABLES, DUAL_SETPOINT_CONTROL_SCHEDULE};
 use crate::model::{
     Construction, EntityId, EquipmentGain, Fenestration, GasKind, GasMaterial, GlazingMaterial, GroundTemperatureConfig, IdealLoadsSystem, Infiltration, LightingGain, Material, Model, OutputReportFrequency, OutputVariableSpec, OutsideBoundary,
     PeopleGain, ScheduleId, Site, Space, Surface, SurfaceClass, Thermostat, Zone,
@@ -44,6 +50,7 @@ pub const KNOWN_OBJECT_TYPES: &[&str] = &[
     "Version",
     "SimulationControl",
     "Building",
+    "ShadowCalculation",
     "Site:Location",
     "Site:GroundTemperature:BuildingSurface",
     "GlobalGeometryRules",
@@ -458,20 +465,38 @@ fn decode_surfaces(root: &Object, model: &mut Model, zone_names: &[String], diag
     }
 }
 
+/// 🪟️ Decodes every `FenestrationSurface:Detailed`. The glazing is either a single-layer simple-glazing
+/// construction (no `glazing_construction_id`) or a layered construction the window is bound to, whose
+/// fallback optics come from the window's own `WindowMaterial:SimpleGlazingSystem`. `sill` and height are
+/// the aperture's offset and extent along the host's own "up" ([`surface_basis`]), so they hold whichever
+/// corner the ring starts at; a rectangle's area is the product of two adjacent sides, any start.
 fn decode_apertures(root: &Object, model: &mut Model, glazing: &[(String, f64, f64, f64)], diagnostics: &mut Vec<EpJsonDiagnostic>) {
     let overhangs = objects(root, "Shading:Overhang:Projection");
     let fins = objects(root, "Shading:Fin:Projection");
+    let fallbacks: Vec<(&str, f64, f64, f64)> = objects(root, "WindowMaterial:SimpleGlazingSystem")
+        .into_iter()
+        .map(|(material, fields)| (material, number_or(fields, "u_factor", 0.0), number_or(fields, "solar_heat_gain_coefficient", 0.0), number_or(fields, "visible_transmittance", 0.0)))
+        .collect();
     for (index, (name, fields)) in objects(root, "FenestrationSurface:Detailed").into_iter().enumerate() {
         let Some(host) = model.surfaces.iter().find(|surface| Some(surface.name.as_str()) == text(fields, "building_surface_name")).cloned() else {
             diagnostics.push(EpJsonDiagnostic::new("epjson.fenestration.unknown-host", name, "the aperture names a building surface this document does not define and is skipped"));
             continue;
         };
         let construction = text(fields, "construction_name").unwrap_or_default();
-        let Some((_, u_value, shgc, vlt)) = glazing.iter().find(|(candidate, _, _, _)| candidate == construction) else {
+        let simple = glazing.iter().find(|(candidate, _, _, _)| candidate == construction).map(|(_, u_value, shgc, vlt)| (None, *u_value, *shgc, *vlt));
+        let layered = || {
+            let stack = model.constructions.iter().find(|candidate| candidate.name == construction)?.id;
+            let fallback = glazing_material_name(name);
+            fallbacks.iter().find(|(material, _, _, _)| *material == fallback).map(|(_, u_value, shgc, vlt)| (Some(stack), *u_value, *shgc, *vlt))
+        };
+        let Some((glazing_construction_id, u_value, shgc, vlt)) = simple.or_else(layered) else {
             diagnostics.push(EpJsonDiagnostic::new(
                 "epjson.fenestration.unknown-glazing",
                 name,
-                format!("construction {construction:?} is not a single-layer WindowMaterial:SimpleGlazingSystem, which is the only glazing a semio Fenestration can carry"),
+                format!(
+                    "construction {construction:?} is neither a single-layer WindowMaterial:SimpleGlazingSystem nor a layered construction with the window's fallback WindowMaterial:SimpleGlazingSystem {:?}, which a semio Fenestration needs",
+                    glazing_material_name(name)
+                ),
             ));
             continue;
         };
@@ -480,42 +505,27 @@ fn decode_apertures(root: &Object, model: &mut Model, glazing: &[(String, f64, f
             diagnostics.push(EpJsonDiagnostic::new("epjson.fenestration.degenerate", name, "an aperture needs at least three corners to decode into a semio Fenestration"));
             continue;
         }
-        let rectangular = corners.len() == 4;
-        // 🔶️ `sill` is measured along the host's own "up"; `span` is the aperture's extent along
-        // that same axis, which for a rectangle is `distance(corners[1], corners[2])` and for an
-        // arbitrary ring is the only height that means anything.
-        let (sill, span) = match surface_normal(&host.vertices_m) {
+        let (sill, height) = match surface_normal(&host.vertices_m) {
             Some(normal) => {
-                let up = [0.0f64, 0.0, 1.0];
-                let horizontal = [up[1] * normal[2] - up[2] * normal[1], up[2] * normal[0] - up[0] * normal[2], up[0] * normal[1] - up[1] * normal[0]];
-                let length = (horizontal[0] * horizontal[0] + horizontal[1] * horizontal[1] + horizontal[2] * horizontal[2]).sqrt();
-                if length <= 1e-12 {
-                    (0.0, 0.0)
-                } else {
-                    let unit = [horizontal[0] / length, horizontal[1] / length, horizontal[2] / length];
-                    let vertical = [normal[1] * unit[2] - normal[2] * unit[1], normal[2] * unit[0] - normal[0] * unit[2], normal[0] * unit[1] - normal[1] * unit[0]];
-                    let origin = host.vertices_m.first().copied().unwrap_or([0.0; 3]);
-                    let project = |point: [f64; 3]| (point[0] - origin[0]) * vertical[0] + (point[1] - origin[1]) * vertical[1] + (point[2] - origin[2]) * vertical[2];
-                    let base = host.vertices_m.iter().map(|vertex| project(*vertex)).fold(f64::INFINITY, f64::min);
-                    let lowest = corners.iter().map(|corner| project(*corner)).fold(f64::INFINITY, f64::min);
-                    let highest = corners.iter().map(|corner| project(*corner)).fold(f64::NEG_INFINITY, f64::max);
-                    (project(corners[0]) - base, highest - lowest)
-                }
+                let (_, up) = surface_basis(normal);
+                let along = |point: [f64; 3]| point[0] * up[0] + point[1] * up[1] + point[2] * up[2];
+                let base = host.vertices_m.iter().map(|vertex| along(*vertex)).fold(f64::INFINITY, f64::min);
+                let lowest = corners.iter().map(|corner| along(*corner)).fold(f64::INFINITY, f64::min);
+                let highest = corners.iter().map(|corner| along(*corner)).fold(f64::NEG_INFINITY, f64::max);
+                (lowest - base, highest - lowest)
             }
             None => (0.0, 0.0),
         };
-        let width = distance(corners[0], corners[1]);
-        let height = if rectangular { distance(corners[1], corners[2]) } else { span };
-        let area = if rectangular { width * height } else { crate::geometry::surface_area_m2(&corners) };
+        let area = if corners.len() == 4 { distance(corners[0], corners[1]) * distance(corners[1], corners[2]) } else { crate::geometry::surface_area_m2(&corners) };
         let overhang = overhangs.iter().find(|(_, shade)| text(shade, "window_or_door_name") == Some(name));
         let fin = fins.iter().find(|(_, shade)| text(shade, "window_or_door_name") == Some(name));
         model.fenestrations.push(Fenestration {
             id: EntityId(FENESTRATION_BASE + index as u32),
             name: name.to_string(),
             surface_id: host.id,
-            u_value_w_m2k: *u_value,
-            shgc: *shgc,
-            vlt: *vlt,
+            u_value_w_m2k: u_value,
+            shgc,
+            vlt,
             area_m2: area,
             height_m: height,
             sill_height_m: sill,
@@ -525,13 +535,12 @@ fn decode_apertures(root: &Object, model: &mut Model, glazing: &[(String, f64, f
             overhang_offset_m: overhang.map_or(0.0, |(_, shade)| number_or(shade, "height_above_window_or_door", 0.0)),
             fin_depth_m: fin.map_or(0.0, |(_, shade)| number_or(shade, "left_depth_as_fraction_of_window_door_width", 0.0) * height),
             fin_offset_m: fin.map_or(0.0, |(_, shade)| number_or(shade, "left_extension_from_window_door", 0.0)),
-            glazing_construction_id: None,
+            glazing_construction_id,
             // 🔶️ The real corners, kept rather than thrown away: they ARE the aperture, and
             // re-exporting them is what makes this codec's own output round-trip byte-identically
             // whatever shape the document states.
             vertices_m: corners,
         });
-        let _ = glazing_construction_name(name);
     }
 }
 
@@ -581,6 +590,19 @@ fn decode_gains(root: &Object, model: &mut Model, zone_names: &[String], diagnos
                 continue;
             }
         };
+        let coefficients = [
+            number_or(fields, "constant_term_coefficient", 1.0),
+            number_or(fields, "temperature_term_coefficient", 0.0),
+            number_or(fields, "velocity_term_coefficient", 0.0),
+            number_or(fields, "velocity_squared_term_coefficient", 0.0),
+        ];
+        if coefficients != CONSTANT_DESIGN_FLOW_COEFFICIENTS {
+            diagnostics.push(EpJsonDiagnostic::new(
+                "epjson.infiltration.coefficients-dropped",
+                name,
+                format!("a semio {method_text} infiltration is a constant design flow; the EnergyPlus coefficients (A, B, C, D) = {coefficients:?} have no semio equivalent and are not simulated"),
+            ));
+        }
         model.infiltrations.push(Infiltration {
             id: codec_gain_id(name, "Infiltration", &mut next),
             zone_id,
@@ -591,10 +613,10 @@ fn decode_gains(root: &Object, model: &mut Model, zone_names: &[String], diagnos
             effective_leakage_area_m2: 0.0,
             discharge_coefficient: 1.0,
             stack_height_m: 0.0,
-            constant_term_coefficient: number_or(fields, "constant_term_coefficient", 1.0),
-            temperature_term_coefficient: number_or(fields, "temperature_term_coefficient", 0.0),
-            velocity_term_coefficient: number_or(fields, "velocity_term_coefficient", 0.0),
-            velocity_squared_term_coefficient: number_or(fields, "velocity_squared_term_coefficient", 0.0),
+            constant_term_coefficient: coefficients[0],
+            temperature_term_coefficient: coefficients[1],
+            velocity_term_coefficient: coefficients[2],
+            velocity_squared_term_coefficient: coefficients[3],
         });
         
     }

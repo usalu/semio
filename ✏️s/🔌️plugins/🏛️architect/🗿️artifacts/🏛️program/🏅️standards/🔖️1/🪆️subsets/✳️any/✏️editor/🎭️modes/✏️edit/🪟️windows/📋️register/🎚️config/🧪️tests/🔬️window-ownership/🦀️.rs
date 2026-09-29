@@ -71,7 +71,6 @@ fn architect_window_ownership_matches_the_neutral_fixture_and_codecs() {
     assert_eq!(report::config::ArchitectReportWindowConfig::decode_pack(&report_after.encode_pack()).expect("Report Pack"), report_after);
     assert_eq!(report::config::ArchitectReportWindowConfigMutation::parse_op(&report_mutation.print_op()).expect("Report text op"), report_mutation);
     assert_eq!(report::config::ArchitectReportWindowConfigMutation::decode_op(&report_mutation.encode_op().expect("Report binary op")).expect("Report binary decode"), report_mutation);
-    eprintln!("[DEBUG] Architect Register, Adjacency, Graph, and Report configs matched the neutral fixture, inverse, DSL, Pack, text-op, and binary-op laws");
 }
 
 #[test]
@@ -152,7 +151,6 @@ fn architect_window_ownership_report_handler_preserves_exact_invocation_identity
     assert_eq!(left_emit.window_config_mutations[0].window_id(), "architect-report-left");
     assert_eq!(left_emit.window_config_mutations[0].window_kind_id(), report::config::ArchitectReportWindowConfigOwner::WINDOW_KIND_ID);
     assert_eq!([unscoped_id, wrong_kind_id, right_id, left_id].into_iter().collect::<std::collections::HashSet<_>>().len(), 4);
-    eprintln!("[DEBUG] Architect Report handler authored exact records without a window and from Graph, rejected stale identity, and addressed only each exact invoking Report window");
 }
 
 #[test]
@@ -165,7 +163,6 @@ fn architect_window_ownership_runtime_isolates_renders_reloads_and_closes() {
         // binary aborted with `fatal runtime error: stack overflow`.
         .stack_size(8 * 1024 * 1024)
         .spawn(|| {
-            eprintln!("[DEBUG] Architect window ownership runtime entered its 8 MiB thread");
             block_on_architect_windows(Box::pin(async {
                 use crate::editor::architect::commands::adjacency::set_adjacency_filter;
                 use crate::editor::architect::commands::graph::node_graph_viewport;
@@ -174,7 +171,6 @@ fn architect_window_ownership_runtime_isolates_renders_reloads_and_closes() {
                 use semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt;
                 use semio_framework_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance, WindowConfigOwner};
 
-                eprintln!("[DEBUG] Architect window ownership runtime began its heap-pinned future");
 
                 type ArchitectApp = VcsArtifactApp<EditorApp<ArchitectPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
 
@@ -242,9 +238,7 @@ fn architect_window_ownership_runtime_isolates_renders_reloads_and_closes() {
                 let graph_right = all.for_window_instance("architect-graph-right").expect("right Graph");
                 let report_left = all.for_window_instance("architect-report-left").expect("left Report");
                 let report_right = all.for_window_instance("architect-report-right").expect("right Report");
-                eprintln!("[DEBUG] Architect window ownership runtime is constructing the first registered app");
                 let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<ArchitectPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await);
-                eprintln!("[DEBUG] Architect window ownership runtime constructed the first registered app");
                 app.bind_instance_id(93).await;
                 let outcome: Result<(), String> = async {
                     let document_before = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
@@ -330,11 +324,10 @@ fn architect_window_ownership_runtime_isolates_renders_reloads_and_closes() {
                 }
                 .await;
                 if let Err(error) = &outcome {
-                    eprintln!("[DEBUG] Architect exact-window runtime failure before close: {error}");
+                    eprintln!("Architect exact-window runtime failure before close: {error}");
                 }
                 artifact_app_laws::close_registered_fixture_app(&mut *app);
                 outcome.expect("Architect exact-window ownership runtime law");
-                eprintln!("[DEBUG] Architect runtime dispatched three bounded retained window commands, isolated eight exact windows, rendered all four owner kinds, restored every owner pack, preserved document and app-cache bytes, and closed terminal-empty");
             }))
         })
         .expect("spawn Architect window ownership law")

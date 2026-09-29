@@ -708,7 +708,7 @@ impl SpaceBundle {
         self.root.join("blobs")
     }
 
-    /// @emoji 📦️ Reads the studio's pack+spr bytes, matching `read_artifact`/`read_config`'s "empty
+    /// 📦️ Reads the studio's pack+spr bytes, matching `read_artifact`/`read_config`'s "empty
     /// spr if never persisted" convention (a bare pack with no history is a valid fresh studio).
     pub fn read_space_document(&self) -> Result<(Vec<u8>, Vec<u8>), RunError> {
         let pack_path = self.space_artifact_pack_path();
@@ -731,7 +731,7 @@ impl SpaceBundle {
         std::fs::write(self.space_artifact_spr_path(), spr).map_err(|source| RunError::Io { path: self.space_artifact_spr_path(), source })
     }
 
-    /// @emoji 📦️ Reads one node's document pack+spr bytes, `(Vec::new(), Vec::new())` if never persisted.
+    /// 📦️ Reads one node's document pack+spr bytes, `(Vec::new(), Vec::new())` if never persisted.
     pub fn read_artifact(&self, artifact_ref: &str) -> Result<(Vec<u8>, Vec<u8>), RunError> {
         let pack_path = self.artifact_pack_path(artifact_ref);
         let pack = match std::fs::read(&pack_path) {
@@ -757,7 +757,7 @@ impl SpaceBundle {
         std::fs::write(self.artifact_spr_path(artifact_ref), spr).map_err(|source| RunError::Io { path: self.artifact_spr_path(artifact_ref), source })
     }
 
-    /// @emoji 📦️ Reads one node's config pack+spr bytes — mirrors `read_artifact` exactly (same
+    /// 📦️ Reads one node's config pack+spr bytes — mirrors `read_artifact` exactly (same
     /// "never persisted" fallback, same error shape).
     pub fn read_config(&self, config_ref: &str) -> Result<(Vec<u8>, Vec<u8>), RunError> {
         let pack_path = self.config_pack_path(config_ref);
@@ -775,7 +775,7 @@ impl SpaceBundle {
         Ok((pack, spr))
     }
 
-    /// @emoji 📦️ Writes one node's config pack+spr bytes — mirrors `write_artifact` exactly
+    /// 📦️ Writes one node's config pack+spr bytes — mirrors `write_artifact` exactly
     /// (directory-created-if-missing, same error shape).
     pub fn write_config(&self, config_ref: &str, pack: &[u8], spr: &[u8]) -> Result<(), RunError> {
         let pack_path = self.config_pack_path(config_ref);
@@ -786,7 +786,7 @@ impl SpaceBundle {
         std::fs::write(self.config_spr_path(config_ref), spr).map_err(|source| RunError::Io { path: self.config_spr_path(config_ref), source })
     }
 
-    /// @emoji 📦️ Reads one collection's pack+spr bytes — mirrors `read_artifact`'s "never persisted"
+    /// 📦️ Reads one collection's pack+spr bytes — mirrors `read_artifact`'s "never persisted"
     /// fallback exactly. 🚧️ Not yet called from this crate's own runner/CLI flow (collections aren't
     /// wired into `SpaceRunner` until a later wave) — this is the reserved canonical path a future
     /// caller writes/reads through, kept symmetric with `read_artifact`/`write_artifact` on purpose.
@@ -815,7 +815,7 @@ impl SpaceBundle {
         std::fs::write(self.collection_spr_path(collection_id), spr).map_err(|source| RunError::Io { path: self.collection_spr_path(collection_id), source })
     }
 
-    /// @emoji 📦️ Reads a run's own `semio_framework_artifact_workflow_run::RunArtifact` pack+spr bytes, `(Vec::new(), Vec::new())`
+    /// 📦️ Reads a run's own `semio_framework_artifact_workflow_run::RunArtifact` pack+spr bytes, `(Vec::new(), Vec::new())`
     /// if never persisted (no prior run of this id) — mirrors `read_artifact`'s fallback exactly.
     pub fn read_run_document(&self, run_id: &str) -> Result<(Vec<u8>, Vec<u8>), RunError> {
         let pack_path = self.run_artifact_pack_path(run_id);
@@ -842,7 +842,7 @@ impl SpaceBundle {
         std::fs::write(self.run_artifact_spr_path(run_id), spr).map_err(|source| RunError::Io { path: self.run_artifact_spr_path(run_id), source })
     }
 
-    /// @emoji 📦️ Persists every `RunSink::node_artifacts`/`node_configs` entry from one completed run
+    /// 📦️ Persists every `RunSink::node_artifacts`/`node_configs` entry from one completed run
     /// under `runs/<run id>/nodes/` — the only place this crate ever writes a node's post-import
     /// document/config bytes to disk (never back over `artifacts/<artifact_ref>`/`artifacts/<config_ref>`).
     pub fn write_run_nodes(&self, run_id: &str, sink: &RunSink) -> Result<(), RunError> {

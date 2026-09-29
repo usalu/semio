@@ -1046,7 +1046,7 @@ impl EditorHost {
         self.hit_test_offset(world)
     }
 
-    /// @emoji 🎯️ Returns pick-target rows at a screen point for DOM disambiguation menus.
+    /// 🎯️ Returns pick-target rows at a screen point for DOM disambiguation menus.
     pub fn pick_targets_at_screen_json(&self, sx: f64, sy: f64) -> String {
         let offset = self.hit_test_offset_screen(sx, sy);
         let (line, _col) = offset_line_col(&self.text, offset);

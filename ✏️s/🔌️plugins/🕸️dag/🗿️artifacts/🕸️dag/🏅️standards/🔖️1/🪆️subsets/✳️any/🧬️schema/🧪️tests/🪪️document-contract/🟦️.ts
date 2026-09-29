@@ -41,5 +41,4 @@ export function testDagDocumentContractOracle(): void {
     assert.deepEqual(applyPatch(structuredClone(item.before), compare(item.before, item.after)).newDocument, item.after, item.name);
     for (const field of ["content"] as const) if (!Object.hasOwn(item.diff, field)) assert.equal(applyDagDiff(base, item.diff)[field], base[field]);
   }
-  console.log("[DEBUG] Dag sparse edit laws matched independent JSON Patch and retained untouched child identities");
 }

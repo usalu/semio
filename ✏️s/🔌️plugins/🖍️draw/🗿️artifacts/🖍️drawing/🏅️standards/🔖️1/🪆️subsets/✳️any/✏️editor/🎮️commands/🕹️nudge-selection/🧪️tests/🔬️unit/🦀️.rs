@@ -24,7 +24,6 @@ fn selected_ancestor_owns_descendant_movement_once() {
         for i in 0..4 {assert!((moved[i]-original[i]).abs()<1e-10);}
         if ids.len()==2 {assert_eq!(crate::schema::find_drawing_layer(&after,"child"),crate::schema::find_drawing_layer(&before,"child"));}
     }
-    eprintln!("[DEBUG] selected ancestors move descendants once in document axes");
 }
 
 #[test]

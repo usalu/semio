@@ -11,7 +11,7 @@ fn icon_render_scene_chrome_uses_the_selected_locale() {
     }
 }
 
-fn mouse_pointer(id: u64) -> ui_render::PointerInfo {
+pub(super) fn mouse_pointer(id: u64) -> ui_render::PointerInfo {
     ui_render::PointerInfo { id: ui_render::PointerId(id), kind: ui_render::PointerKind::Mouse, pressure: None, tilt: None }
 }
 
@@ -132,7 +132,6 @@ fn a_published_immediate_select_owns_wheel_without_parsing_its_option_id() {
     shell.open_selects.clear();
     assert!(shell.handle_pointer_wheel(x, y, 0.0, 1.0, &mut input), "accepted popup remains authoritative until its replacement is presented");
     assert_eq!(shell.scroll_offsets.get(&format!("select.{id}.scroll")).copied(), Some(35.0));
-    println!("[DEBUG] immediate Select exact owner={id} accepted wheel=35");
 }
 
 #[test]
@@ -217,7 +216,6 @@ fn an_accepted_sibling_insertion_rebases_the_exact_renderer_scene_capture() {
         while !document.close_step() {}
     }
     assert!(!crate::interpreter::ui_document_close_pending());
-    println!("[DEBUG] retained sibling host={} presented={:?} accepted={:?} captured={:?}", current.host_id, original.node, current.node, captured.as_ref().map(|owner| owner.node));
     assert!(original.same_component_host(&current), "a sibling insertion preserves the mounted receiver");
     assert_ne!(original.node, current.node, "the fixture must exercise different arena histories");
     assert_eq!(captured, Some(current.clone()));
@@ -402,10 +400,9 @@ fn replaced_scene_pointer_slots_release_the_fixed_capture_grant() {
     assert!(!overflow, "live captures cannot exceed the fixed grant");
     assert!(old_live.iter().all(|value| !value), "a replaced key retires every old receiver");
     assert!(fresh, "stale targets must release their fixed grant before a successor claims it");
-    println!("[DEBUG] exact retained replacement reclaimed its fixed pointer capture grant");
 }
 
-fn pointer_interaction(shell: ShellState, input: InputState<ActionDescriptor>) -> crate::AppInteractionState {
+pub(super) fn pointer_interaction(shell: ShellState, input: InputState<ActionDescriptor>) -> crate::AppInteractionState {
     crate::AppInteractionState {
         shell,
         input,
@@ -537,7 +534,6 @@ pub(super) fn retained_world_sequence_probe(scenario: &str) {
     let expected_window = if case["steps"].as_array().unwrap().iter().any(|step| step == "modal") { None } else { fixture["expectedOwner"].as_str() };
     assert_eq!(active_window.as_deref(), expected_window, "{scenario} activates the exact receiving window");
     assert!(crate::interpreter::captured_scene_pointer(ui_render::PointerId(77)).is_none(), "{scenario} released its captured owner");
-    println!("[DEBUG] real retained World sequence {scenario} preserved exact owner, edge count, capture close, and menu state");
 }
 
 #[test]
@@ -558,7 +554,6 @@ fn retained_pane_actions_address_the_concrete_window_before_guest_admission() {
             assert!(!shell.active_utility_by_window.contains_key(surface), "{} pane identity never becomes an application window", case["kind"]);
         }
     }
-    println!("[DEBUG] pane actions reached the concrete host window before guest admission");
 }
 
 fn pane_owner_select_records() -> Vec<ui_contract::UiNodeRecord> {
@@ -628,7 +623,6 @@ fn retained_panel_focus_routes_keyboard_without_activating_an_application_window
     assert!(hidden_actions.is_empty(), "a hidden panel dispatches no retained keyboard action");
     assert!(closed_focus.is_none(), "a closed surface cannot receive keyboard input");
     assert!(closed_actions.is_empty(), "a closed surface dispatches no retained keyboard action");
-    println!("[DEBUG] open panel owned keyboard without app activation and relinquished it when hidden or closed");
 }
 
 #[test]
@@ -731,7 +725,6 @@ fn retained_pane_focus_follows_the_last_focus_event_and_ignores_an_old_surface_b
         assert!(!old_has_focus, "{kind} clears its previously focused sibling");
     }
     assert_eq!(final_focus, previous, "an old surface blur cannot clear the newest focused surface");
-    println!("[DEBUG] retained focus followed the newest pane event and ignored late sibling blur");
 }
 
 fn pane_owner_fixture() -> Value {
@@ -755,7 +748,6 @@ fn retained_pane_pointer_activation_preserves_the_concrete_window_owner() {
         assert_eq!(shell.dock.active_window_id.as_deref(), Some(owner), "{} dock owner", case["kind"]);
         assert_eq!(shell.dock.active_stack, Some(vec![1]), "{} active stack", case["kind"]);
     }
-    println!("[DEBUG] all retained pane pointer presses activated their concrete window and dock stack");
 }
 
 #[test]
@@ -780,7 +772,6 @@ fn retained_pane_accessibility_and_keyboard_focus_keep_surface_and_window_distin
         assert_eq!(keyboard_surface.as_deref(), Some(surface), "{} keyboard surface", case["kind"]);
         assert!(select_owns_keyboard, "{} Select keyboard ownership", case["kind"]);
     }
-    println!("[DEBUG] pane accessibility focus preserved concrete window activation and exact keyboard surface");
 }
 
 #[test]
@@ -1343,7 +1334,6 @@ fn context_menu_point_resolves_the_exact_concrete_window_instance() {
     assert_eq!(shell.context_window_instance_id(25.0, 25.0), Some("canvas"));
     assert_eq!(shell.context_window_instance_id(125.0, 25.0), Some("canvas-copy"));
     assert_eq!(shell.context_window_instance_id(250.0, 25.0), None);
-    println!("[DEBUG] native context menu resolved its exact concrete window and preserved panel scope outside dock bodies");
 }
 
 /// ⚖️ LAW: pressing a window's retained BODY activates that window, so the keyboard follows the
@@ -1374,7 +1364,6 @@ fn a_retained_body_press_activates_its_own_window_so_the_keyboard_follows_it() {
     assert_eq!(shell.active_window_id.as_deref(), Some(pressed), "the pressed window is the active one");
     assert!(shell.chrome_build.content_has_focus(shell.active_window_id.as_deref().expect("an active window")), "…so the keyboard's own predicate now answers for the window whose content holds focus");
     while !document.close_step() {}
-    println!("[DEBUG] retained body press moved the active window {opened_with} -> {pressed}");
 }
 
 /// ⚖️ LAW: the RELEASE half of the same click changes nothing about activation — a click activates on
@@ -1966,7 +1955,6 @@ fn renderer_canvas_pointer_sequence(foreign_cancel: bool) {
     assert!(after_foreign_cancel.is_empty(), "another pointer must not finish the captured Canvas gesture");
     assert_eq!(up.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["canvasPointerUp"]);
     assert_eq!(canvas_action_args(&up[0])["cancelled"], true);
-    println!("[DEBUG] actual renderer Canvas sequence foreign_cancel={foreign_cancel} delivered one down and one terminal outside release");
 }
 
 #[test]
@@ -2090,7 +2078,6 @@ fn renderer_canvas_wheel_burst(case_id: &str) {
     let relative_y = y - body.y - body.h * 0.5;
     assert!((relative_x / zoom + camera["x"].as_f64().unwrap() as f32 - (relative_x / initial["zoom"].as_f64().unwrap() as f32 + initial["x"].as_f64().unwrap() as f32)).abs() < 0.0001);
     assert!((relative_y / zoom + camera["y"].as_f64().unwrap() as f32 - (relative_y / initial["zoom"].as_f64().unwrap() as f32 + initial["y"].as_f64().unwrap() as f32)).abs() < 0.0001);
-    println!("[DEBUG] actual renderer wheel burst {case_id} published settled zoom {zoom}");
 }
 
 /// ⚖️ LAW: a real retained Tree drag reaches a real published Canvas2d leaf through Shell move/drop
@@ -2232,7 +2219,6 @@ fn the_palette_chord_toggles_and_never_types_itself_into_the_query() {
     assert_eq!(shell.search_query, "De", "closed palette state does not consume ordinary typing");
     shell.handle_keyboard(ui_wgpu::wgpu::KeyAction::Char("p".into()), &PointerModifiers::default(), &mut input);
     assert_eq!(shell.search_query, "De", "the chord's character never leaks into a closed retained query");
-    println!("[DEBUG] wgpu-shell palette chord: open -> typed \"De\" -> closed, query preserved, focus released");
 }
 
 /// ⚖️ LAW: Escape closes the palette. It used to be claimed by the focused-input commit first, which
@@ -2507,7 +2493,6 @@ fn renderer_canvas_camera_obeys_the_mounted_component_identity() {
         assert_eq!(camera["x"].as_f64(), Some(12.0));
         assert_eq!(camera["y"].as_f64(), Some(-8.0));
     }
-    println!("[DEBUG] mounted Canvas camera retained local refresh and seeded the replacement key: {actual:?}");
 }
 
 /// 🕒️ A checked-out old deadline cannot publish the replacement component's camera.
@@ -2595,5 +2580,5 @@ fn renderer_canvas_retirement_probe(replace: bool, close: bool, remount: bool) {
         let expected_zoom = if remount { lifetime["expectedRemountZoom"].as_f64().unwrap() } else { fixture["mountLifetime"]["steps"][2]["expectedZoom"].as_f64().unwrap() };
         assert!((camera["zoom"].as_f64().unwrap() - expected_zoom).abs() < 0.00001);
     }
-    println!("[DEBUG] Canvas retirement replace={replace} close={close} remount={remount} emitted {} stale actions and {} successor actions", actions.len(), settled.len());
+    println!("Canvas retirement replace={replace} close={close} remount={remount} emitted {} stale actions and {} successor actions", actions.len(), settled.len());
 }

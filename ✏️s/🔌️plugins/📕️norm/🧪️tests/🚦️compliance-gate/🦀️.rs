@@ -560,7 +560,6 @@ fn compliance_gate_all_families() {
             failed += 1;
         }
     }
-    eprintln!("[DEBUG] compliance-gate fleet:\n{summary}");
     assert_eq!(results.len(), 15, "gate must cover all fifteen families");
     if failed > 0 {
         panic!("{failed}/15 families failed compliance gate:\n{summary}");

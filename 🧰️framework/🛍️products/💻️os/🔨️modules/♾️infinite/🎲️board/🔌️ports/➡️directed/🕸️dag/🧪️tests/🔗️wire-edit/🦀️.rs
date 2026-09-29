@@ -105,6 +105,12 @@ fn world_point_to_screen(host: &DagHost, point: canvas::Point) -> (f64, f64) {
     (screen.x, screen.y)
 }
 
+/// 🔗️ A setup wire is the graph the CASE starts from, not part of what it measures.
+///
+/// 🖐️ The discriminator and the bounded fault set must be the SAME set, for every phase:
+/// wherever `derive_pointer_plan` answers `Unsupported`, hover and release over that point
+/// belong to the screen path too — the renderer asks `screen_pointer_gesture_begins_at`
+/// on all three phases and must never hand one of these points to the bounded path.
 #[test]
 fn a_port_to_port_drag_creates_a_wire_and_journals_it_for_the_guest() {
     let law = law();
@@ -114,7 +120,6 @@ fn a_port_to_port_drag_creates_a_wire_and_journals_it_for_the_guest() {
         let mut host = wire_host(&law);
         for setup in case["setup"].as_array().unwrap_or(&Vec::new()) {
             draw_wire(&mut host, setup);
-            // 🔗️ A setup wire is the graph the CASE starts from, not part of what it measures.
             let _ = host.take_graph_edits();
         }
         match gesture["kind"].as_str().expect("gesture kind") {
@@ -142,10 +147,6 @@ fn a_port_to_port_drag_creates_a_wire_and_journals_it_for_the_guest() {
                 let (x, y) = port_screen_point(&host, gesture["at"].as_str().expect("probe endpoint"));
                 assert_eq!(host.screen_pointer_gesture_begins_at(x, y), case["expectedScreenPath"].as_bool().expect("expected screen path"), "{name}");
             }
-            // 🖐️ The discriminator and the bounded fault set must be the SAME set, for every phase:
-            // wherever `derive_pointer_plan` answers `Unsupported`, hover and release over that point
-            // belong to the screen path too — the renderer asks `screen_pointer_gesture_begins_at`
-            // on all three phases and must never hand one of these points to the bounded path.
             "probePhases" => {
                 let (x, y) = match gesture["at"].as_str() {
                     Some(endpoint) => port_screen_point(&host, endpoint),
@@ -191,6 +192,13 @@ fn a_wire_in_flight_holds_the_screen_pointer_path() {
 }
 
 /// 🗺️ A minimap click navigates; a press on its viewport rectangle grabs instead.
+///
+/// 📐️ `minimap::layout` reports both rects as CORNERS `(x0, y0, x1, y1)`, not as origin+size —
+/// the same convention `minimap::point_in_rect` reads them back in.
+///
+/// 🗺️ "Inside the panel, outside the viewport rectangle" is a RELATION between two rects whose
+/// sizes depend on the camera, not a fixed corner — so the law searches the panel for it
+/// rather than guessing a fraction that a different zoom would put back inside the viewport.
 #[test]
 fn a_minimap_click_moves_the_camera() {
     let law = law();
@@ -202,12 +210,7 @@ fn a_minimap_click_moves_the_camera() {
         host.set_minimap_widget_visible(true);
         host.set_camera(camera["x"].as_f64().expect("camera x"), camera["y"].as_f64().expect("camera y"), camera["zoom"].as_f64().expect("camera zoom"));
         let layout = host.minimap_widget_layout(host.width, host.height).unwrap_or_else(|| panic!("{name}: the minimap must be laid out for a camera that does not already show the whole graph"));
-        // 📐️ `minimap::layout` reports both rects as CORNERS `(x0, y0, x1, y1)`, not as origin+size —
-        // the same convention `minimap::point_in_rect` reads them back in.
         let fraction = |rect: (f64, f64, f64, f64), tx: f64, ty: f64| (rect.0 + (rect.2 - rect.0) * tx, rect.1 + (rect.3 - rect.1) * ty);
-        // 🗺️ "Inside the panel, outside the viewport rectangle" is a RELATION between two rects whose
-        // sizes depend on the camera, not a fixed corner — so the law searches the panel for it
-        // rather than guessing a fraction that a different zoom would put back inside the viewport.
         let outside_viewport = || {
             for step_y in 0..20 {
                 for step_x in 0..20 {
@@ -264,6 +267,10 @@ fn case_endpoint_centre(host: &DagHost, case: &Value) -> (f64, f64) {
     (centres.iter().map(|centre| centre.0).sum::<f64>() / count, centres.iter().map(|centre| centre.1).sum::<f64>() / count)
 }
 
+/// 📷️ A zoom band tests the LOD, not the FRAMING: the camera is centred on the very nodes
+/// this case names, so every endpoint it aims at is on the surface at every band. Fixed at
+/// (0, 0) the `tgt` row left the 1280-wide viewport at zoom 2 entirely, and the case pressed
+/// a point no browser would ever route to the canvas — which `visible` now says outright.
 #[test]
 fn the_port_geometry_the_host_publishes_is_the_geometry_that_grabs_a_wire() {
     let law = law();
@@ -273,10 +280,6 @@ fn the_port_geometry_the_host_publishes_is_the_geometry_that_grabs_a_wire() {
         for case in grab["cases"].as_array().expect("grab cases") {
             let name = format!("{} @ zoom {zoom}", case["name"].as_str().expect("case name"));
             let mut host = wire_host(&law);
-            // 📷️ A zoom band tests the LOD, not the FRAMING: the camera is centred on the very nodes
-            // this case names, so every endpoint it aims at is on the surface at every band. Fixed at
-            // (0, 0) the `tgt` row left the 1280-wide viewport at zoom 2 entirely, and the case pressed
-            // a point no browser would ever route to the canvas — which `visible` now says outright.
             let (cam_x, cam_y) = case_endpoint_centre(&host, case);
             host.set_camera(cam_x, cam_y, zoom);
             for setup in case["setup"].as_array().unwrap_or(&Vec::new()) {
@@ -359,7 +362,6 @@ fn a_port_the_camera_has_scrolled_past_publishes_no_geometry_to_aim_at() {
     let world = host.host_snapshot.nodes.iter().find(|node| node.id == endpoint.split('@').next().expect("node id")).map(|node| (node.x, node.y)).expect("endpoint node");
     host.set_camera(world.0 + f64::from(host.width) * 2.0, world.1, 1.0);
     let geometry: Value = serde_json::from_str(&host.entity_screen_json("handle", &endpoint)).expect("entity screen json");
-    println!("[DEBUG] scrolled-past port geometry {geometry}");
     assert_eq!(geometry["visible"].as_bool(), Some(false), "{endpoint} is off the surface, so it must not be published as visible");
     assert!(geometry.get("rect").is_none_or(Value::is_null), "an invisible entity publishes no rect for a caller to aim at");
 

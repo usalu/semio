@@ -1,0 +1,34 @@
+/// 🧭️ Refuses a non-finite point or vector argument of an affine transform, by its name.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn require_finite_vector(label: &str, value: EVec3) -> Result<(), BrepError> {
+    if value.iter().all(|component| component.is_finite()) {
+        return Ok(());
+    }
+    Err(BrepError::InvalidInput(format!("{label} must be finite, got {value:?}")))
+}
+/// 🧭️ Refuses a direction argument that has no direction (zero or non-finite length) instead of substituting one.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn require_direction(label: &str, value: EVec3) -> Result<(), BrepError> {
+    require_finite_vector(label, value)?;
+    if vec3(value).normalized().is_some() {
+        return Ok(());
+    }
+    Err(BrepError::InvalidInput(format!("{label} must be a non-zero direction, got {value:?}")))
+}
+/// 🧭️ Refuses a non-finite scalar argument of an affine transform, by its name.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn require_finite_scalar(label: &str, value: f64) -> Result<(), BrepError> {
+    if value.is_finite() {
+        return Ok(());
+    }
+    Err(BrepError::InvalidInput(format!("{label} must be finite, got {value}")))
+}
+/// 🧭️ Refuses a uniform scale factor that collapses the shape (zero) or is not a number.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn require_scale_factor(label: &str, value: f64) -> Result<(), BrepError> {
+    require_finite_scalar(label, value)?;
+    if value != 0.0 {
+        return Ok(());
+    }
+    Err(BrepError::InvalidInput(format!("{label} must be non-zero, got {value}")))
+}

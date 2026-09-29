@@ -1,16 +1,11 @@
 {
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../../../../../../tsconfig.json",
   "compilerOptions": {
-    "target": "ES2023",
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "strict": true,
-    "skipLibCheck": true,
-    "noEmit": true,
-    "allowImportingTsExtensions": true,
-    "types": ["node"],
-    "resolveJsonModule": true
+    "allowJs": true,
+    "tsBuildInfoFile": "../../../../../../../node_modules/.cache/tsconfig.library.tsbuildinfo",
+    "types": ["bun", "node"]
   },
-  "files": ["../../🏃️process/🌿️environment/🟦️.d.ts"],
   "include": ["**/*.ts", "../../**/*.ts"],
   "exclude": ["**/node_modules/**", "../../**/node_modules/**", "../../**/dist/**", "../../**/📤️dist/**", "../../**/🗑️generated/**", "../../**/🤖️generated/**"]
 }

@@ -16,11 +16,12 @@ async fn resolve_before_first_poll_leaves_the_future_immediately_ready() {
     }
 }
 
+/// 🧩️ 710 bytes, non-trivial and non-uniform
 #[semio_framework_async_macros::async_test]
 async fn append_chunk_reassembles_a_multi_chunk_body_to_the_exact_original_bytes() {
     let registry = RequestRegistry::new();
     let future = registry.request(|req| Effect::CancelJob { job: req.0 });
-    let original: Vec<u8> = (0u8..=255).chain(0u8..=255).chain(0u8..100).collect(); // 710 bytes, non-trivial and non-uniform
+    let original: Vec<u8> = (0u8..=255).chain(0u8..=255).chain(0u8..100).collect();
     for (index, window) in original.chunks(97).enumerate() {
         let done = (index + 1) * 97 >= original.len();
         registry.append_chunk(RequestId(1), window, done, 1024 * 1024);
@@ -35,12 +36,13 @@ async fn append_chunk_reassembles_a_multi_chunk_body_to_the_exact_original_bytes
     }
 }
 
+/// 🚫️ 80 > 64 cap — must fault here, not wait for `done`
 #[semio_framework_async_macros::async_test]
 async fn append_chunk_over_cap_faults_instead_of_silently_truncating() {
     let registry = RequestRegistry::new();
     let future = registry.request(|req| Effect::CancelJob { job: req.0 });
     registry.append_chunk(RequestId(1), &[0u8; 40], false, 64);
-    registry.append_chunk(RequestId(1), &[0u8; 40], false, 64); // 80 > 64 cap — must fault here, not wait for `done`
+    registry.append_chunk(RequestId(1), &[0u8; 40], false, 64);
     let mut future = Box::pin(future);
     let waker = futures_test_waker();
     let mut cx = Context::from_waker(waker);
@@ -51,13 +53,16 @@ async fn append_chunk_over_cap_faults_instead_of_silently_truncating() {
     }
 }
 
+/// 👻️ Never requested
+///
+/// arrives after resolve
 #[semio_framework_async_macros::async_test]
 async fn append_chunk_on_an_unknown_or_already_resolved_id_is_a_harmless_no_op() {
     let registry = RequestRegistry::new();
-    registry.append_chunk(RequestId(999), &[1, 2, 3], false, 1024); // never requested
+    registry.append_chunk(RequestId(999), &[1, 2, 3], false, 1024);
     let future = registry.request(|req| Effect::CancelJob { job: req.0 });
     registry.resolve(RequestId(1), Ok(b"already done".to_vec()));
-    registry.append_chunk(RequestId(1), &[9, 9, 9], true, 1024); // arrives after resolve
+    registry.append_chunk(RequestId(1), &[9, 9, 9], true, 1024);
     let mut future = Box::pin(future);
     let waker = futures_test_waker();
     let mut cx = Context::from_waker(waker);
@@ -77,6 +82,8 @@ async fn pending_ids_reports_only_unresolved_requests() {
     assert_eq!(registry.pending_ids(), vec![RequestId(2)]);
 }
 
+/// 🚫️ A cancelled instance's future observes neither Ready nor a wake — it simply never
+/// resolves. The slot is gone outright (no leaked entry to poll against later).
 #[semio_framework_async_macros::async_test]
 async fn cancel_instance_removes_only_that_instances_pending_requests() {
     let registry = RequestRegistry::new();
@@ -94,8 +101,6 @@ async fn cancel_instance_removes_only_that_instances_pending_requests() {
     assert_eq!(removed, 2, "cancel_instance must report exactly the count it removed");
     assert_eq!(registry.pending_ids(), vec![RequestId(3)], "only instance 9's request must survive");
 
-    // 🚫️ A cancelled instance's future observes neither Ready nor a wake — it simply never
-    // resolves. The slot is gone outright (no leaked entry to poll against later).
     let mut nine = Box::pin(nine);
     let waker = futures_test_waker();
     let mut cx = Context::from_waker(waker);
@@ -110,12 +115,15 @@ async fn cancel_instance_on_an_instance_with_no_pending_requests_is_a_harmless_n
     assert!(registry.pending_ids().is_empty());
 }
 
+/// 🔢️ Id 1, instance 0
+///
+/// id 2, instance 3
 #[semio_framework_async_macros::async_test]
 async fn for_instance_shares_the_same_id_counter_as_the_registry_it_was_derived_from() {
     let registry = RequestRegistry::new();
     let scoped = registry.for_instance(3);
-    let _first = registry.request(|req| Effect::CancelJob { job: req.0 }); // id 1, instance 0
-    let _second = scoped.request(|req| Effect::CancelJob { job: req.0 }); // id 2, instance 3
+    let _first = registry.request(|req| Effect::CancelJob { job: req.0 });
+    let _second = scoped.request(|req| Effect::CancelJob { job: req.0 });
     let mut cursor = registry.begin_cancel_instance(3);
     while registry.cancel_instance_step(&mut cursor) != RequestCloseStep::Complete {}
     assert_eq!(registry.pending_ids(), vec![RequestId(1)]);
@@ -124,10 +132,12 @@ async fn for_instance_shares_the_same_id_counter_as_the_registry_it_was_derived_
 /// 🔁️ A continuation draws from the SAME id counter as a parked-future request and queues its
 /// effect on the SAME outbound queue — that shared counter is what makes a minted `req` unable to
 /// collide with a future's, which a hand-written `RequestId(105)` never guaranteed.
+///
+/// id 1
 #[semio_framework_async_macros::async_test]
 async fn request_continuation_queues_one_effect_and_shares_the_request_id_counter() {
     let registry = RequestRegistry::new();
-    let _parked = registry.request(|req| Effect::CancelJob { job: req.0 }); // id 1
+    let _parked = registry.request(|req| Effect::CancelJob { job: req.0 });
     let minted = registry.request_continuation("flowEvalResolve".to_string(), "{}".to_string(), |req| Effect::CancelJob { job: req.0 }).expect("continuation admission");
     assert_eq!(minted, RequestId(2), "a continuation must not restart or share the parked-future counter");
     assert_eq!(registry.drain().len(), 2, "both the parked request and the continuation queue exactly one effect each");
@@ -136,11 +146,13 @@ async fn request_continuation_queues_one_effect_and_shares_the_request_id_counte
 
 /// 🔁️ `take_continuation` answers exactly once, and only for a continuation id — a parked-future id
 /// stays with `resolve`, which is what keeps the two delivery shapes from stealing each other's work.
+///
+/// id 1, instance 0
 #[semio_framework_async_macros::async_test]
 async fn take_continuation_answers_once_and_never_claims_a_parked_future() {
     let registry = RequestRegistry::new();
     let scoped = registry.for_instance(5);
-    let parked = registry.request(|req| Effect::CancelJob { job: req.0 }); // id 1, instance 0
+    let parked = registry.request(|req| Effect::CancelJob { job: req.0 });
     let minted = scoped.request_continuation("flowTessellateResolve".to_string(), r#"{"nodeHash":8}"#.to_string(), |req| Effect::CancelJob { job: req.0 }).expect("continuation admission");
     assert!(registry.take_continuation(RequestId(1)).is_none(), "a parked-future id is never a continuation");
     let taken = registry.take_continuation(minted).expect("the minted id owns a continuation");

@@ -6,7 +6,7 @@ const TABLE_PARTICIPANT = "konnektivität-beispiel-tabelle";
 const TABLE_EMBODIMENT = "konnektivität-beispiel-tabelle--markdown";
 const SOURCE_ASPECT = 1760 / 1320;
 
-/** @emoji 📐️ Largest centered frame in the left half matching {@link SOURCE_ASPECT}. */
+/** 📐️ Largest centered frame in the left half matching {@link SOURCE_ASPECT}. */
 function leftHalfFigureFrame(sourceAspect: number): DispositionPosition {
   const paddingX = 0.02;
   const paddingY = 0.06;
@@ -26,7 +26,7 @@ function leftHalfFigureFrame(sourceAspect: number): DispositionPosition {
   };
 }
 
-/** @emoji 📐️ Right-half frame with the same padding as {@link leftHalfFigureFrame}. */
+/** 📐️ Right-half frame with the same padding as {@link leftHalfFigureFrame}. */
 function rightHalfFrame(): DispositionPosition {
   const paddingX = 0.02;
   const paddingY = 0.06;

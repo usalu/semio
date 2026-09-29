@@ -2,7 +2,7 @@
 /** 🗄️ Stdio TypeScript composition package router. */
 import { ScriptRouter, runBundleScriptMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { StdioArtifactPackageContractScript, StdioArtifactPackageGraphScript } from "../../🗿️artifacts/🏃️commands/🟦️.ts";
-import { StdioCompositionBuildScript, StdioCompositionCheckScript, StdioCompositionTestScript } from "../../🧩️composition/🏃️commands/🟦️.ts";
+import { StdioCompositionBuildScript, StdioCompositionCheckScript, StdioCompositionTestScript } from "../../🏘️composition/🏃️commands/🟦️.ts";
 
 const router = new ScriptRouter(import.meta.dir)
   .register("build", StdioCompositionBuildScript)

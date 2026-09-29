@@ -53,7 +53,6 @@ async fn publication_rejects_ambiguous_authored_metadata_before_writing_an_archi
     assert_eq!(decode_opc(&bytes).unwrap(), package);
     let archive = zip::ZipArchive::new(std::io::Cursor::new(bytes)).unwrap();
     assert_eq!(archive.len(), fixture["paths"].as_array().unwrap().len());
-    println!("[DEBUG] OPC authored metadata identities and content-type consistency checked before ZIP publication");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -66,7 +65,6 @@ async fn publication_rejects_ambiguous_part_paths_without_overwriting_payloads()
         assert!(matches!(encode_opc(&package), Err(OpcError::Malformed(_))), "path={path}");
         assert_eq!(package, before);
     }
-    println!("[DEBUG] OPC publication rejected every ambiguous part path without altering the source package");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -85,7 +83,6 @@ async fn publication_requires_a_complete_unique_path_permutation() {
     let actual: Vec<String> = (0..archive.len()).map(|index| archive.by_index(index).unwrap().name().into()).collect();
     assert_eq!(actual, order);
     assert_eq!(decode_opc(&bytes).unwrap(), package);
-    println!("[DEBUG] OPC path permutation guards and independent ZIP member order passed");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -97,7 +94,6 @@ async fn publication_preserves_explicit_empty_relationship_parts() {
     let mut archive = zip::ZipArchive::new(std::io::Cursor::new(&bytes)).unwrap();
     assert!(archive.by_name(fixture["emptyRelationshipPath"].as_str().unwrap()).is_ok());
     assert_eq!(decode_opc(&bytes).unwrap(), package);
-    println!("[DEBUG] OPC empty relationship part survived save/reopen and independent ZIP inspection");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -127,9 +123,8 @@ async fn publication_rejects_duplicate_archive_member_names() {
         for offset in offsets {
             bytes[offset..offset + path.len()].copy_from_slice(path.as_bytes());
         }
-        assert!(matches!(decode_opc(&bytes), Err(OpcError::Malformed(_))), "path={path}");
+        assert!(matches!(decode_opc(&bytes), Err(OpcError::Zip(detail)) if detail.contains("names must be nonempty and unique")), "path={path}");
     }
-    println!("[DEBUG] OPC duplicate content and metadata member names refused before interpretation");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -226,7 +221,6 @@ async fn metadata_namespaces_and_identity_constraints_survive_independent_zip_re
             assert!(decode_opc(&bytes).is_err(), "invalid metadata: {invalid}");
         }
     }
-    println!("[DEBUG] OPC prefixed metadata, extension spelling, duplicate identities and invalid target modes validated through ZIP save/reopen");
 }
 
 #[test]
@@ -249,5 +243,4 @@ fn relationship_ids_are_reserved_uniquely_within_each_owner() {
         assert_eq!(selected, case["expected"][0].as_str().unwrap());
         assert_eq!(package.add_generated_relationship("document.xml", "urn:styles", "styles.xml"), "rId1");
     }
-    println!("[DEBUG] OPC fresh relationship IDs preserve occupied identities and independent owner namespaces");
 }

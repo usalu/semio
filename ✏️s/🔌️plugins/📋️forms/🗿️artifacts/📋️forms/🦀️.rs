@@ -384,7 +384,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         dimension: "data".into(),
         media_capability: OsMediaCapability::MeshOnly,
         media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
-        schema: "form.dictionary".into(),
+        schema: FORMS_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
         export_stdio_kinds: vec![],

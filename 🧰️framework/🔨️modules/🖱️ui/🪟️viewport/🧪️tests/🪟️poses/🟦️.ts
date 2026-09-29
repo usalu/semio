@@ -42,5 +42,4 @@ export function testViewportOwnership(): void {
   assert.deepEqual(actual.windows.right, before.windows.right);
   assert.deepEqual(actual.document, before.document);
   assert.deepEqual(actual.os, before.os);
-  console.log(`[DEBUG] Shared viewport admission matches Ajv for ${fixture.cases.length} neutral cases and nonfinite fields; exact-window replacement matches fast-json-patch`);
 }

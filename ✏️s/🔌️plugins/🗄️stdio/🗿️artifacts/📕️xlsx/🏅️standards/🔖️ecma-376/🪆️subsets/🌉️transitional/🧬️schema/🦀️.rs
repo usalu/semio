@@ -28,16 +28,13 @@ pub mod derived_construction {
     use crate::{XlsxDiff, XlsxMutation};
     use dsl::{Diagnostic, Severity};
     use semio_framework_plugin::ArtifactBuilder;
-    use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlNode};
-
-    const WORKBOOK_PART: &str = "xl/workbook.xml";
-    const WORKBOOK_CONTENT_TYPE: &str = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml";
+    use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
 
     //#region 🔖️Stamp
-    /// 🖋️ Real-rewrites `snapshot.opc`'s `xl/workbook.xml` root attrs to explicit Transitional shape.
+    /// 🖋️ Real-rewrites the main workbook XML part's root attrs to explicit Transitional shape.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn stamp_transitional_namespace(mut snapshot: XlsxSnapshot) -> XlsxSnapshot {
-        let main_path = snapshot.opc.resolve_relationship("", semio_s_artifact_stdio_zip::opc::REL_TYPE_OFFICE_DOCUMENT).or_else(|| snapshot.opc.resolve_relationship("", crate::standards::v_ecma_376::subsets::base::io::REL_TYPE_OFFICE_DOCUMENT_STRICT));
+        let main_path = snapshot.workbook_part_path();
         if let Some(part) = main_path.as_deref().and_then(|path| snapshot.xml_part_mut(path)) {
             if let Some(XmlNode::Element { attrs, .. }) = &mut part.document.root {
                 set_attr(attrs, "xmlns", TRANSITIONAL_SML_NS);
@@ -131,7 +128,7 @@ pub mod derived_analysis {
     pub use crate::standards::v_ecma_376::subsets::base::schema::XlsxParts;
     use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
-    use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, XmlNode};
+    use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 
     /// 🎯️ This subset's dialect coordinate.
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.xlsx", standard: StandardId("ecma-376"), subset: SubsetId("transitional") };
@@ -155,7 +152,7 @@ pub mod derived_analysis {
     /// each `None` when absent. `None` overall only when the part is missing or unparsable as XML.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn workbook_root_attrs(snapshot: &XlsxSnapshot) -> Option<(Option<String>, Option<String>, Option<String>)> {
-        let path = snapshot.opc.resolve_relationship("", semio_s_artifact_stdio_zip::opc::REL_TYPE_OFFICE_DOCUMENT).or_else(|| snapshot.opc.resolve_relationship("", crate::standards::v_ecma_376::subsets::base::io::REL_TYPE_OFFICE_DOCUMENT_STRICT))?;
+        let path = snapshot.workbook_part_path()?;
         let XmlNode::Element { name, attrs, .. } = snapshot.xml_part(&path)?.document.root.as_ref()? else { return None };
         if name.rsplit_once(':').map_or(name.as_str(), |(_, local)| local) != "workbook" {
             return None;
@@ -174,15 +171,19 @@ pub mod derived_analysis {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
-    /// 🩺️ Real worksheet content-type scan -- same check as 🔒️strict's own copy, duplicated (small
-    /// enough, CODE_* consts stay subset-namespaced) rather than a cross-subset dependency.
+    /// 🩺️ Real worksheet content-type scan over every part the workbook's worksheet relationships target (its role),
+    /// reading the package-declared type -- same check as 🔒️strict's own copy, duplicated (small enough, CODE_* consts
+    /// stay subset-namespaced) rather than a cross-subset dependency.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn worksheet_content_type_gaps(snapshot: &XlsxSnapshot) -> Vec<Diagnostic> {
         snapshot
-            .xml_parts
-            .iter()
-            .filter(|p| p.content_type.contains("worksheet") && p.content_type != WORKSHEET_CONTENT_TYPE)
-            .map(|p| soft(CODE_WORKSHEET_CONTENT_TYPE, format!("worksheet part {} resolves content type {:?}, expected {WORKSHEET_CONTENT_TYPE:?} (ECMA-376 Part 1 §12.3.24)", p.path, p.content_type)))
+            .worksheet_part_paths()
+            .into_iter()
+            .filter_map(|path| {
+                let content_type = snapshot.opc.content_types.resolve(&path).map(str::to_string);
+                (content_type.as_deref() != Some(WORKSHEET_CONTENT_TYPE))
+                    .then(|| soft(CODE_WORKSHEET_CONTENT_TYPE, format!("worksheet part {path} resolves content type {content_type:?}, expected {WORKSHEET_CONTENT_TYPE:?} (ECMA-376 Part 1 §12.3.24)")))
+            })
             .collect()
     }
 

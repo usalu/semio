@@ -28,7 +28,7 @@ const STORY_CHUNK_SPACING = 12;
 const STORY_CHUNK_SIZE = 20;
 const STORY_CHUNK_COLORS = ["#2563eb", "#f97316", "#16a34a", "#dc2626"] as const;
 
-/** @emoji 🧊️ A grid of boxes tagged with `origin` (read by `WorldChunks`/`ViewRadiusLayer` to bucket+cull) so real chunk visibility culling has something to cull. */
+/** 🧊️ A grid of boxes tagged with `origin` (read by `WorldChunks`/`ViewRadiusLayer` to bucket+cull) so real chunk visibility culling has something to cull. */
 function useStoryChunkOrigins(): readonly Vec3[] {
   return useMemo(() => {
     const origins: Vec3[] = [];
@@ -41,7 +41,7 @@ function useStoryChunkOrigins(): readonly Vec3[] {
   }, []);
 }
 
-/** @emoji 🧊️ `origin` is this component's own (fully-typed) prop, not a Three.js one — `WorldChunks` reads `child.props.origin` straight off the `<StoryChunkBox>` element it buckets (see header docstring), never off the `<mesh>` it renders internally. */
+/** 🧊️ `origin` is this component's own (fully-typed) prop, not a Three.js one — `WorldChunks` reads `child.props.origin` straight off the `<StoryChunkBox>` element it buckets (see header docstring), never off the `<mesh>` it renders internally. */
 function StoryChunkBox({ origin }: { readonly origin: Vec3 }): ReactElement {
   const colorIndex = (Math.round(origin[0] / STORY_CHUNK_SIZE) + Math.round(origin[1] / STORY_CHUNK_SIZE) + STORY_CHUNK_COLORS.length * 2) % STORY_CHUNK_COLORS.length;
   return (

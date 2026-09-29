@@ -85,7 +85,7 @@ async fn every_run_hop_names_a_preview_window_that_is_actually_attached() {
         let receipt = context::drive_preview_run(&mut app, &view, &owed).await;
         let mut expected = case.armed_window_ids.clone();
         expected.sort();
-        eprintln!("[DEBUG] run hops {}: attached={:?} hops={:?}", case.id, view.window_instances.iter().map(|window| window.id.as_str()).collect::<Vec<_>>(), receipt.hop_windows);
+        eprintln!("run hops {}: attached={:?} hops={:?}", case.id, view.window_instances.iter().map(|window| window.id.as_str()).collect::<Vec<_>>(), receipt.hop_windows);
         assert_eq!(hop_windows(&receipt), expected, "arming case {}", case.id);
         assert!(context::owed_run_actions(&mut app, &semio_framework_plugin::ViewModel::default()).await.is_empty(), "no roster at all starts nothing");
         semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
@@ -112,7 +112,6 @@ async fn only_a_preview_addressed_tick_passes_the_retained_preflight() {
             },
             Err(fault) => Some(format!("{fault:?}")),
         };
-        eprintln!("[DEBUG] tick dispatch {}: payloadWindowId={:?} refusal={outcome:?}", case.id, case.payload_window_id);
         assert_eq!(outcome.is_none(), case.admitted, "dispatch case {}: {outcome:?}", case.id);
         if let Some(detail) = outcome {
             assert!(!detail.contains("exceeds semantic work capacity"), "dispatch case {}: an addressing refusal must not be reported as a work-capacity fault: {detail}", case.id);
@@ -159,7 +158,6 @@ async fn set_active_example_drives_the_self_dispatched_tick_chain_to_a_rendered_
     let meshes: serde_json::Value = serde_json::from_str(&world.meshes_json).expect("preview meshes json");
     let mesh_count = meshes.as_array().map_or(0, Vec::len);
     assert!(mesh_count >= 1, "the extruded volume must reach the preview as at least one mesh, got {mesh_count}: {}", world.meshes_json);
-    eprintln!("[DEBUG] self-dispatched tick chain finished: ticks={ticks} status={status_json} meshes={mesh_count}");
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
 }
 
@@ -182,7 +180,6 @@ async fn generate_preview_eval_is_the_run_addressed_at_the_generate_preview() {
     assert!(!receipt.lanes.contains(&TypedOperationResultLane::Fault), "addGeneration faulted: {:?}", receipt.lanes);
     assert_eq!(context::run_actions(&receipt.effects), vec![semio_framework_plugin::TOOL_RUN_START_ACTION_ID.to_string()], "addGeneration carries exactly one run start on its own emit");
     let run = context::drive_preview_run(&mut app, &generations_view, &receipt.effects).await;
-    eprintln!("[DEBUG] generate preview run: {run:?}");
     assert!(run.hop_windows.iter().any(|window| window == "generation3d-generate-preview"), "the run must evaluate the generate preview window: {run:?}");
     assert!(run.answered > 0, "generate preview eval must cross the extension boundary, not settle as a dead sync tick: {run:?}");
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
@@ -231,7 +228,6 @@ async fn add_generation_from_the_generations_window_drives_the_generate_preview_
     let meshes: serde_json::Value = serde_json::from_str(&world.meshes_json).expect("generate preview meshes json");
     let mesh_count = meshes.as_array().map_or(0, Vec::len);
     let status = world.status_json.clone().unwrap_or_default();
-    eprintln!("[DEBUG] addGeneration generate-preview chain: ticks={ticks} meshes={mesh_count} status={status}");
     assert!(mesh_count >= 1, "the generation the UI added must reach the generate preview as at least one mesh, got {mesh_count}: {}", world.meshes_json);
     assert!(!status.contains("\"hint\""), "a preview with evaluated geometry must drop the entry hint: {status}");
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);

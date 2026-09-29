@@ -8,12 +8,20 @@ fn node_by_key<'a>(node: &'a BuiltNode, key: &str) -> Option<&'a BuiltNode> {
     node.children.iter().find_map(|child| node_by_key(child, key))
 }
 
+fn own_bindings(node: &BuiltNode) -> impl Iterator<Item = &ActionBinding> {
+    let row_actions = match &node.component {
+        Component::TableRow(props) => Some(props.row_actions.iter().map(|row_action| &row_action.action)),
+        _ => None,
+    };
+    node.bindings.iter().chain(row_actions.into_iter().flatten())
+}
+
 fn binding_named<'a>(node: &'a BuiltNode, action: &str) -> Option<&'a ActionBinding> {
-    node.bindings.iter().find(|binding| binding.action.name.as_str() == action).or_else(|| node.children.iter().find_map(|child| binding_named(child, action)))
+    own_bindings(node).find(|binding| binding.action.name.as_str() == action).or_else(|| node.children.iter().find_map(|child| binding_named(child, action)))
 }
 
 fn node_with_binding<'a>(node: &'a BuiltNode, action: &str) -> Option<&'a BuiltNode> {
-    node.bindings.iter().any(|binding| binding.action.name.as_str() == action).then_some(node).or_else(|| node.children.iter().find_map(|child| node_with_binding(child, action)))
+    own_bindings(node).any(|binding| binding.action.name.as_str() == action).then_some(node).or_else(|| node.children.iter().find_map(|child| node_with_binding(child, action)))
 }
 
 fn number_arg(binding: &ActionBinding, key: &str) -> Option<f64> {
@@ -66,7 +74,7 @@ async fn every_audio_command_has_one_definition_and_a_revision_bound_surface_con
     for action_id in crate::editor::wav::edit_audio::TOOL_IDS {
         assert_eq!(definition.actions.iter().filter(|action| action.id == *action_id).count(), 1, "{action_id} definition");
         let control = node_with_binding(&root, action_id).unwrap_or_else(|| panic!("{action_id} surface control"));
-        assert!(matches!(&control.component, Component::Button(_) | Component::Input(_)), "{action_id} must remain a natively keyboard-operable control");
+        assert!(matches!(&control.component, Component::Button(_) | Component::Input(_) | Component::TableRow(_)), "{action_id} must remain a natively keyboard-operable control (a row action is painted as a native button)");
         let binding = binding_named(control, action_id).expect("control owns binding");
         assert_eq!(text_arg(binding, "revision").as_deref(), Some(revision), "{action_id} revision binding");
     }

@@ -39,5 +39,4 @@ fn rewriting_window_config_document_retirement_respects_exact_grants() {
             assert_eq!(drain(store::retirement::owned_retirement(value), items, bytes), row["bytes"].as_u64().unwrap() as usize);
         }
     }
-    eprintln!("[DEBUG] Rewriting document roots and all seven mutations retired under exact item/byte grants, with retained-reader blocking");
 }

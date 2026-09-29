@@ -115,10 +115,14 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{inverse_spec, mutable_input};
+    use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::{parse_gltf_document, serialize_gltf_document};
-    use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::mutations::{add_required_extension, add_used_extension, change_asset_descriptive_metadata, change_asset_extension_data, change_asset_extra_data, change_asset_version, change_document_extension_data, change_document_extra_data, move_required_extension, move_used_extension, remove_required_extension, remove_used_extension, reorder_required_extensions, reorder_used_extensions};
+    use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::mutations::{
+        add_required_extension, add_used_extension, change_asset_descriptive_metadata, change_asset_extension_data, change_asset_extra_data, change_asset_version, change_document_extension_data,
+        change_document_extra_data, gltf_inverse_restored_document, move_required_extension, move_used_extension, remove_required_extension, remove_used_extension, reorder_required_extensions,
+        reorder_used_extensions,
+    };
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::snapshot::{GltfJson, GltfSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::gltf::standards::v2_0::subsets::any::project_gltf;
 
@@ -231,20 +235,15 @@ mod subject {
         Ok(Outcome::with_raw(bytes, projection).artifact("actual-gltf", &path, "model/gltf+json"))
     }
 
+    /// ↩️ The production inverse, never a hand-written one: `gltf_inverse_restored_document` applies the row's mutation and
+    /// replays that mutation's OWN computed `inverse(base)` through the production codec, and three's GLTFLoader then
+    /// judges the restored document against the committed `⬅️before.gltf`.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let spec = ctx.doc_json()?;
         let kind = spec.str("kind");
         let input = mutable_input(ctx, &kind)?;
-        let before = parse_gltf_document(&input)?;
         let empty = Json::Object(Vec::new());
-        let params = spec.get("params").unwrap_or(&empty);
-        let mutated = apply_kind(&before, &kind, params)?;
-        let inverse = inverse_spec(&kind);
-        let inverse_kind = inverse.str("kind");
-        let inverse_empty = Json::Object(Vec::new());
-        let inverse_params = inverse.get("params").unwrap_or(&inverse_empty);
-        let restored = apply_kind(&mutated, &inverse_kind, inverse_params)?;
-        let bytes = serialize_gltf_document(&restored);
+        let bytes = gltf_inverse_restored_document(&input, &kind, &spec.get("params").unwrap_or(&empty).to_string())?;
         let projection = project_gltf(&bytes)?;
         actual(ctx, bytes, projection)
     }

@@ -122,6 +122,8 @@ import dialogOriginFixture from "../../🧱️elements/🏛️ShellHost/🧫️f
 import { createAdmittedShellInstanceV1, shellDialogOriginIsCurrentV1, shellDialogOriginV1, shellEffectOwnerIsCurrentV1, shellEffectSourceIsCurrentV1, type ShellDialogOriginV1 } from "../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🟦️.ts";
 import admittedInstanceFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🗨️dialog-origin/🛂️admission/🔣️.json";
 import artifactCreationProgressFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🌱️artifact-creation/🔣️.json";
+import replayRefusalVocabulary from "../../🧱️elements/🏛️ShellHost/📣️replay-refusal/🔣️.json";
+import { REPLAY_REFUSAL_LABELS_V1, replayRefusalCodeV1, replayRefusalNoticeTextV1, type ReplayRefusalReasonV1 } from "../../🧱️elements/🏛️ShellHost/📣️replay-refusal/🟦️.ts";
 import artifactCreationCatalogAuthorityFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🌱️artifact-creation/🪪️catalog-authority/🔣️.json";
 import artifactCreationReadyOpeningFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🌱️artifact-creation/🚪️ready-opening/🔣️.json";
 import { runArtifactCreationReadyOpeningV1 } from "../../🧱️elements/🏛️ShellHost/🌱️artifact-creation/🚪️ready-opening/🟦️.ts";
@@ -222,9 +224,10 @@ describe("catalog-resolved artifact creation kinds", () => {
       label: "GIS",
       version: "1",
       apps: [
-        { id: "gis-map-editor", role: "editor", dialect: { artifactKind: "s.gis.gismap", standard: "1", subset: "*" }, label: localized("GIS Map", "GIS-Karte"), io: { documentSchema: "gis.map" } },
-        { id: "gis-map-viewer", role: "viewer", dialect: { artifactKind: "s.gis.viewer", standard: "1", subset: "*" }, label: localized("GIS Viewer", "GIS-Betrachter"), io: { documentSchema: "gis.map" } },
+        { id: "gis-map-editor", role: "editor", dialect: { artifactKind: "s.gis.gismap", standard: "1", subset: "*" }, label: localized("Editor", "Editor"), io: { artifactSchema: "gis.map" } },
+        { id: "gis-map-viewer", role: "viewer", dialect: { artifactKind: "s.gis.viewer", standard: "1", subset: "*" }, label: localized("Viewer", "Betrachter"), io: { artifactSchema: "gis.map" } },
       ],
+      artifactKinds: [{ schema: "gis.map", label: localized("GIS Map", "GIS-Karte") }],
       workflows: [],
       examples: [],
     },
@@ -362,18 +365,21 @@ describe("catalog-resolved artifact creation kinds", () => {
     const submit = vi.fn();
     const cancel = vi.fn();
     const view = render(createElement(UIDialog<ResolvedActionArgDef>, { dialog: resolved, onSubmit: submit, onCancel: cancel, renderField: (def, value, change, field) => renderStagedArgControl(def, value, change, false, field) }));
-    const picker = view.getByRole("combobox", { name: "Kind" });
-    expect(computeAccessibleName(picker)).toBe("Kind");
-    expect(picker.getAttribute("aria-required")).toBe("true");
-    fireEvent.click(picker);
-    expect(document.activeElement).toBe(view.getByRole("listbox"));
-    fireEvent.click(view.getByRole("option", { name: "GIS Map" }));
-    expect(view.getByRole("button", { name: "Create" }).hasAttribute("disabled")).toBe(false);
-    fireEvent.click(view.getByRole("button", { name: "Create" }));
-    expect(cancel).not.toHaveBeenCalled();
-    expect(submit).toHaveBeenCalledTimes(1);
-    expect(JSON.parse(submit.mock.calls[0]![0].kindChoice).kindId).toBe("s.gis.gismap");
-    view.unmount();
+    try {
+      const picker = view.getByRole("combobox", { name: "Kind" });
+      expect(computeAccessibleName(picker)).toBe("Kind");
+      expect(picker.getAttribute("aria-required")).toBe("true");
+      fireEvent.click(picker);
+      expect(document.activeElement).toBe(view.getByRole("listbox"));
+      fireEvent.click(view.getByRole("option", { name: "GIS Map" }));
+      expect(view.getByRole("button", { name: "Create" }).hasAttribute("disabled")).toBe(false);
+      fireEvent.click(view.getByRole("button", { name: "Create" }));
+      expect(cancel).not.toHaveBeenCalled();
+      expect(submit).toHaveBeenCalledTimes(1);
+      expect(JSON.parse(submit.mock.calls[0]![0].kindChoice).kindId).toBe("s.gis.gismap");
+    } finally {
+      view.unmount();
+    }
   });
 
   it("projects only live catalog editor kinds into the ordinary dialog in the requested locale", () => {
@@ -382,7 +388,7 @@ describe("catalog-resolved artifact creation kinds", () => {
     expect(english.args[0]?.schema).toMatchObject({ kind: "string", options: [{ label: "GIS Map" }] });
     expect(german.args[0]?.schema).toMatchObject({ kind: "string", options: [{ label: "GIS-Karte" }] });
     const option = english.args[0]?.schema.kind === "string" ? english.args[0].schema.options[0] : undefined;
-    expect(option?.value).toBe('{"kindId":"s.gis.gismap","dialect":{"artifactKind":"s.gis.gismap","standard":"1","subset":"*"},"label":{"en":"GIS Map","de":"GIS-Karte"}}');
+    expect(option?.value).toBe('{"kindId":"s.gis.gismap","schema":"gis.map","dialect":{"artifactKind":"s.gis.gismap","standard":"1","subset":"*"},"label":{"en":"GIS Map","de":"GIS-Karte"}}');
     expect(JSON.parse(option?.value ?? "null").kindId).toBe("s.gis.gismap");
     expect(JSON.stringify(english)).not.toContain("s.gis.viewer");
   });
@@ -1505,7 +1511,7 @@ describe("shell runtime diagnostics switch", () => {
   // ⚖️ LAW: an unarmed page boots the shard worker at the bare url, and an armed one stamps the
   // parameter the worker reads back — the ONLY channel the switch has into a Worker realm, which
   // owns no `localStorage`. The generated worker must read that same parameter and seed
-  // `wasi:cli/environment` from it, which is what makes the guest's `[DEBUG]` sites reachable.
+  // `wasi:cli/environment` from it, which is what makes the guest's `[TRACE]` sites reachable.
   it("carries the armed switch into the worker realm on the worker url", () => {
     const stored = new Map<string, string>();
     const original = globalThis.localStorage;
@@ -10569,7 +10575,7 @@ describe("registry-derived utilities and activation (P5)", () => {
     for (let hop = 0; hop < 12 && !existsSync(resolve(root, relative)); hop += 1) root = resolve(root, "..");
     const source = readFileSync(resolve(root, relative), "utf8");
     for (const retired of ["suggestionsTick", "createInFlightSkippingInterval(", "brushPreviewJson", "BrushPreviewGhost", "WorldBrushPreviewRecord", "addBrushObject"]) {
-      expect(source.includes(retired), `[DEBUG] ${retired} is the retired brush ghost path`).toBe(false);
+      expect(source.includes(retired), `[TRACE] ${retired} is the retired brush ghost path`).toBe(false);
     }
     expect(source).toContain("<WorldToolRunTrace lane={scene.toolRunTrace}");
     expect(source).toContain("if (brushSuggestionsTargetSentRef.current === brushSuggestionsTarget) return;");
@@ -11540,7 +11546,7 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
    *
    * 🐛️ `ShellHost`'s ui-refresh lane handed `{ kind: "full" }` to `applyHostEffects` for every owed
    * application, so each React pick paid a whole extra full guest re-render on top of the narrowed
-   * scope the interaction had just derived: `[DEBUG] refreshUi lane {"decision":"owed","scope":{"kind":"full"}}`,
+   * scope the interaction had just derived: `[TRACE] refreshUi lane {"decision":"owed","scope":{"kind":"full"}}`,
    * four of them per pick, which is why narrowing the pick's own scope moved its wall not at all
    * (`📓️interaction-scope-narrowing-2026-09-15.md` §5.3, whose owner this law names). The effects a
    * pass owes are `pending_effects` — `dispatchAction` shapes — and this proves they earn NOTHING of
@@ -13904,7 +13910,7 @@ describe("undeclared action diagnostic", () => {
   ];
 
   /** ⚖️ LAW: the drop is DESCRIBED, not silent — the message names the app, the action and the window
-   * kind the dispatch came from, and is not `[DEBUG]`-prefixed, because it is the only signal a fully
+   * kind the dispatch came from, and is not `[TRACE]`-prefixed, because it is the only signal a fully
    * wired binding died (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
   it("names the app, the action and the dispatching window kind", () => {
     const diagnostic = undeclaredActionDiagnostic("generation3d", "setActiveExample", windowKinds, "procedural-main");
@@ -13912,7 +13918,7 @@ describe("undeclared action diagnostic", () => {
     expect(diagnostic?.action).toBe("setActiveExample");
     expect(diagnostic?.windowKindId).toBe("procedural-main");
     expect(diagnostic?.windowKindIds).toEqual(["generation3d-generations", "procedural-main"]);
-    expect(diagnostic?.message.includes("[DEBUG]")).toBe(false);
+    expect(diagnostic?.message.includes("[TRACE]")).toBe(false);
     for (const fragment of ["generation3d", "setActiveExample", "procedural-main", "window_kind_action_refs"]) expect(diagnostic?.message.includes(fragment)).toBe(true);
   });
 
@@ -15128,4 +15134,19 @@ describe("shared VFS descriptor presentation", () => {
         view.unmount();
       }
     });
+});
+
+describe("📣️ replay refusal vocabulary", () => {
+  it("names every reason in both tongues from the shared vocabulary the wgpu shell reads", () => {
+    expect(Object.keys(REPLAY_REFUSAL_LABELS_V1).sort()).toEqual(Object.keys(replayRefusalVocabulary.reasons).sort());
+    for (const label of Object.values(REPLAY_REFUSAL_LABELS_V1)) expect(label.en !== "" && label.de !== "" && label.en !== label.de).toBe(true);
+  });
+
+  it("answers the shared vectors the wgpu shell's law answers", () => {
+    expect(replayRefusalVocabulary.vectors.length).toBeGreaterThan(0);
+    for (const vector of replayRefusalVocabulary.vectors) {
+      const reason = vector.reason as ReplayRefusalReasonV1;
+      expect([replayRefusalNoticeTextV1(reason, vector.locale), replayRefusalCodeV1(reason)]).toEqual([vector.text, vector.code]);
+    }
+  });
 });

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """🪞️ WG11: runs one prepared patch script against WG11's overlay instead of the tree — every absolute repo path in it (and in the
 sibling scripts it runs via `with_name("…py")`) rewritten to the overlay — first as a dry run, then with `--apply`.
-Usage: python3 wg11-overlay-apply.py <overlayRoot> <patch.py>"""
+Usage: python3 wg11-overlay-apply.py <overlayRoot> <patch.py> [apply flag, default --apply]"""
 import re
 import subprocess
 import sys
@@ -26,7 +26,8 @@ def stage(path: Path) -> Path:
 
 
 staged = stage(script)
-for args in ([], ["--apply"]):
+apply_flag = sys.argv[3] if len(sys.argv) > 3 else "--apply"
+for args in ([], [apply_flag]):
     result = subprocess.run([sys.executable, str(staged), *args], capture_output=True, text=True)
     tail = (result.stdout + result.stderr).strip().splitlines()[-1:] or [""]
     print(f"[wg11-ov] {script.name} {'apply' if args else 'dry-run'} rc={result.returncode} {tail[0]}")

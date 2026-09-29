@@ -34,7 +34,7 @@ use semio_repo_test_host::Adapter;
 /// 🏷️ Mirrors `WriterMutation::KINDS`
 /// (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`) — duplicated, not
 /// imported, because the oracle-only build must not link the subject crate.
-const KINDS: &[&str] = &["rename-writer", "change-uri", "change-language", "edit-text"];
+const KINDS: &[&str] = &["rename-writer", "change-uri", "change-language", "edit-text", "splice-text"];
 
 #[cfg(feature = "sut")]
 /// 👁️ The kinds whose committed vector is deliberately a GUARD vector, so `before` and `after` are
@@ -43,7 +43,7 @@ const KINDS: &[&str] = &["rename-writer", "change-uri", "change-language", "edit
 /// claim the reader can check against the vector, and the feature description states the same. In
 /// exchange, its `mutate` handler asserts the committed `🎯️outcome` and the handle's stability,
 /// which the other three kinds have no equivalent of.
-const GUARD_VECTORS: &[&str] = &["edit-text"];
+const GUARD_VECTORS: &[&str] = &["edit-text", "splice-text"];
 
 #[cfg(feature = "sut")]
 /// 🧫️ Where a `<vector>` cell from the feature's `Examples` table is rooted, relative to this
@@ -121,7 +121,7 @@ mod subject {
         if let Some(first) = law::divergence(&produced, &wanted) {
             return Err(format!("mutate-{kind}: the applied snapshot is not the committed after-snapshot — {first}"));
         }
-        if kind == "edit-text" && current.document.child_id != base.document.child_id {
+        if (kind == "edit-text" || kind == "splice-text") && current.document.child_id != base.document.child_id {
             return Err(format!("mutate-{kind}: an unchanged body re-minted the content-addressed handle ({} → {})", base.document.child_id, current.document.child_id));
         }
         law::mutation_is_observable(&kind, &produced, &before, super::GUARD_VECTORS)?;

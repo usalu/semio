@@ -1,0 +1,15 @@
+# WG11 session 14d overlay dev loop: <patch script> <apply flag>
+wg11-json-number-patch.py --write
+wg11-shell-footprint-patch.py --write
+wg11-renderer-test-drift-patch.py --write
+wg11-renderer-product-patch.py --write
+wg11-renderer-product-2-patch.py --write
+wg11-raster-refusal-patch.py --write
+wg11-display-element-ids-patch.py --write
+wg11-tree-window-patch.py --write
+wg11-tree-window-shell-patch.py --write
+wg11-own-work-budget-patch.py --write
+wg11-engine-close-pages-patch.py --write
+wg11-board-lane-patch.py --write
+wg11-text-advances-patch.py --write
+wg11-text-kerning-patch.py --write

@@ -1,5 +1,5 @@
 /// <reference types="vitest/importMeta" />
-/** @emoji 🎯️ Strict private Shell-to-browser-actor action handoff. */
+/** 🎯️ Strict private Shell-to-browser-actor action handoff. */
 
 export const BROWSER_ACTOR_ACTION_PACK_MAXIMUM_BYTES = 256 * 1024;
 export const BROWSER_ACTOR_ACTION_MUTATION_MAXIMUM = 4_096;

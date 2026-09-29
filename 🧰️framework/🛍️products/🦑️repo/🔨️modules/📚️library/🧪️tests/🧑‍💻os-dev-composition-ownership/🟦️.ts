@@ -134,7 +134,7 @@ describe("OS development composition ownership", () => {
       expect(actual.ownerPath, expected.id).toBe(expected.ownerPath);
       for (const ownerId of expected.ownerIds) expect(actual.inputPatterns, `${expected.id}: ${ownerId}`).toContain(owners.get(ownerId)!.path);
       expect(new Set(actual.inputPatterns).size, expected.id).toBe(actual.inputPatterns.length);
-      expect([...actual.inputPatterns].sort((left, right) => Buffer.from(left).compare(Buffer.from(right))), expected.id).toEqual(actual.inputPatterns);
+      expect([...actual.inputPatterns].sort((left, right) => Buffer.from(left).compare(Buffer.from(right))), expected.id).toEqual<readonly string[]>(actual.inputPatterns);
     }
   });
 

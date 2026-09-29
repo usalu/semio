@@ -1,0 +1,24 @@
+    it("the semio brep kernel answers every affine-transform vector and refuses every degenerate one", async () => {
+      const fixture = await affineFixture(source);
+      expect(await affineDisagreements(fixture, await semioAffineOps(fixture))).toEqual([]);
+    });
+
+    it("every brep_invoke call the kernel makes is a declared verb with its declared arguments", async () => {
+      const { readFile } = await import("node:fs/promises");
+      const { default: Ajv2020 } = await import("ajv/dist/2020.js");
+      const catalog = JSON.parse(await readFile(new URL(`${BREP_INVOKE_CATALOG_PATH}🔣️.json`, source.url), "utf8")) as { readonly verbs: readonly BrepInvokeVerb[] };
+      const schema = JSON.parse(await readFile(new URL(`${BREP_INVOKE_CATALOG_PATH}🧬️schema/🔣️.json`, source.url), "utf8")) as object;
+      const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
+      expect(validate(catalog), JSON.stringify(validate.errors)).toBe(true);
+      const verbs = new Map(catalog.verbs.map((verb) => [verb.method, verb]));
+      expect(verbs.size).toBe(catalog.verbs.length);
+      const calls = brepInvokeCalls(await readFile(new URL("🟦️.ts", source.url), "utf8"));
+      expect(calls.map((call) => call.method)).toEqual(expect.arrayContaining(["translate", "rotate", "box", "tessellate"]));
+      const violations = calls.flatMap(({ method, keys }) => {
+        const verb = verbs.get(method);
+        if (!verb) return [`${method}: not a declared brep_invoke verb`];
+        const declared = new Set(verb.args.map((arg) => arg.name));
+        return [...keys.filter((key) => !declared.has(key)).map((key) => `${method}: undeclared argument ${key}`), ...verb.args.filter((arg) => arg.default === undefined && !keys.includes(arg.name)).map((arg) => `${method}: missing required argument ${arg.name}`)];
+      });
+      expect(violations).toEqual([]);
+    });

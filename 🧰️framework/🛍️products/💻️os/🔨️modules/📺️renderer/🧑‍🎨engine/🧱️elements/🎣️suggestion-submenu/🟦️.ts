@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🎣️ The context menu's live "suggest" submenu, shared by every surface host that lists placement
+/** 🎣️ The context menu's live "suggest" submenu, shared by every surface host that lists placement
  * suggestions for a connector under the pointer (`World3dHost` for vortices, `Board2dHost` for grips): the
  * right-click finds the row that names a connector, starts that connector's suggestion search the moment the
  * menu opens, turns the row into a submenu over the live candidate rows, and binds each candidate row to the

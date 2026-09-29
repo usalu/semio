@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji ⏯️ `ToolRunTraceLayer` — the React World3d tool run trace: a keyed record store per window fed by
+/** ⏯️ `ToolRunTraceLayer` — the React World3d tool run trace: a keyed record store per window fed by
  * the base64url `ToolRunTraceDelta` pages of `World3dScene.toolRunTrace`, one `THREE.InstancedMesh` per
  * `(mesh, verdict)`, verdict paint from design tokens only, age fade to a floor, the highlighted newest
  * `testing` record, and the `provisional` mesh style for document instances a running tool placed.

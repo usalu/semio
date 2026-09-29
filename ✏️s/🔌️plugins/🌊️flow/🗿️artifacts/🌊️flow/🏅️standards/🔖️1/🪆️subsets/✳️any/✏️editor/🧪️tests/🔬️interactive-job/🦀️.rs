@@ -59,17 +59,18 @@ fn declared_classifications() -> BTreeMap<String, String> {
     out
 }
 
-/// ⚖️ LAW: the four app-owned factories partition every declared `FlowCommand` tool id exactly —
+/// ⚖️ LAW: the five app-owned factories partition every declared `FlowCommand` tool id exactly —
 /// no id owned twice, none left to the batch `handle` fallback — and each declares an exact,
 /// nonempty publication-lane contract for every id it owns. Mirrors generation3d's
 /// `retained_route_dispositions_are_exact_and_exhaustive`.
 #[test]
 fn retained_route_dispositions_are_exact_and_exhaustive() {
-    let routes: [(&str, &[&str], &[semio_framework_plugin::ArtifactToolPublicationContract]); 4] = [
+    let routes: [(&str, &[&str], &[semio_framework_plugin::ArtifactToolPublicationContract]); 5] = [
         ("FlowDirectStoreJobFactory", FLOW_DIRECT_STORE_TOOL_IDS, FlowDirectStoreJobFactory::PUBLICATION_CONTRACTS),
         ("FlowChildGroupJobFactory", FLOW_CHILD_GROUP_TOOL_IDS, FlowChildGroupJobFactory::PUBLICATION_CONTRACTS),
         ("FlowHostEffectJobFactory", FLOW_HOST_ONLY_TOOL_IDS, FlowHostEffectJobFactory::PUBLICATION_CONTRACTS),
         ("FlowGraphOperationJobFactory", FLOW_GRAPH_OPERATION_TOOL_IDS, FlowGraphOperationJobFactory::PUBLICATION_CONTRACTS),
+        ("FlowContributionsJobFactory", FLOW_CONTRIBUTIONS_TOOL_IDS, FlowContributionsJobFactory::PUBLICATION_CONTRACTS),
     ];
     let mut owned: BTreeMap<&str, &str> = BTreeMap::new();
     for (factory, tool_ids, publication) in routes {
@@ -86,7 +87,6 @@ fn retained_route_dispositions_are_exact_and_exhaustive() {
     let declared = FlowCommand::TOOL_JOB_IDS.iter().copied().collect::<BTreeSet<_>>();
     assert_eq!(owned.keys().copied().collect::<BTreeSet<_>>(), declared, "every declared FlowCommand row must be owned by exactly one app-owned factory");
     assert_eq!(declared.len(), fixture()["migrated"].as_array().expect("fixture migrated").len());
-    eprintln!("[DEBUG] flow retained dispositions: {} tool ids partitioned over 4 factories", declared.len());
 }
 
 /// ⚖️ LAW: the manifest declares `Migrated` for every one of those ids and
@@ -103,7 +103,6 @@ fn every_declared_flow_action_is_migrated() {
     for id in &migrated {
         assert_eq!(declared.get(id).map(String::as_str), Some("migrated"), "action {id} must be declared Migrated");
     }
-    eprintln!("[DEBUG] flow manifest declares {} migrated actions, 0 batch-only", migrated.len());
 }
 
 /// ⚖️ LAW: the aggregated bounded-first-step proof set is a bijection onto those ids — one proof per
@@ -116,8 +115,7 @@ fn bounded_first_step_proofs_are_a_bijection_onto_the_migrated_ids() {
     assert_eq!(ids.len(), proofs.len(), "a tool may carry at most one proof row");
     let expected = migrated_ids();
     assert_eq!(ids.iter().map(|id| (*id).to_string()).collect::<BTreeSet<_>>(), expected, "proof rows and migrated declarations must be one set");
-    assert_eq!(proofs.len(), FLOW_DIRECT_STORE_TOOL_IDS.len() + FLOW_HOST_ONLY_TOOL_IDS.len() + FLOW_CHILD_GROUP_TOOL_IDS.len() + FLOW_GRAPH_OPERATION_TOOL_IDS.len());
-    eprintln!("[DEBUG] flow bounded-first-step proofs: {} rows, exact bijection", proofs.len());
+    assert_eq!(proofs.len(), FLOW_DIRECT_STORE_TOOL_IDS.len() + FLOW_HOST_ONLY_TOOL_IDS.len() + FLOW_CHILD_GROUP_TOOL_IDS.len() + FLOW_GRAPH_OPERATION_TOOL_IDS.len() + FLOW_CONTRIBUTIONS_TOOL_IDS.len());
 }
 
 /// ⚖️ LAW: the graph-operation route declares ONE capacity — the same `ArtifactRetainedWorkCapacity`
@@ -133,7 +131,6 @@ fn graph_operation_route_declares_one_work_capacity() {
     assert_eq!(FLOW_GRAPH_OPERATION_CAPACITY.rows_for_items(1), Some(FLOW_GRAPH_OPERATION_CAPACITY.rows(1)));
     assert!(FLOW_GRAPH_OPERATION_CAPACITY.admits(FLOW_GRAPH_OPERATION_CAPACITY.rows(FLOW_STORE_MAX_SCENE_ITEMS + 1)));
     assert!(!FLOW_GRAPH_OPERATION_CAPACITY.admits(FLOW_GRAPH_OPERATION_CAPACITY.rows(FLOW_STORE_MAX_SCENE_ITEMS + 2)));
-    eprintln!("[DEBUG] flow graph-operation capacity: work_items={} rows(1)={}", FLOW_GRAPH_OPERATION_CAPACITY.work_items(), FLOW_GRAPH_OPERATION_CAPACITY.rows(1));
 }
 
 /// ⚖️ LAW: `FlowPlayApp` instantiates through the REAL manifest registry — the exact construction
@@ -145,7 +142,6 @@ async fn flow_play_app_boots_through_the_real_registry_without_a_catalog_authori
     let mut app = flow_app_closing().await;
     assert!(!semio_framework_plugin::PluginApp::has_pending_typed_operations(&*app), "a freshly booted flow app owns no in-flight typed operation");
     assert!(matches!(semio_framework_plugin::PluginApp::maintenance_step(&mut *app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES), Ok(_)), "a booted flow app runs its own maintenance turn");
-    eprintln!("[DEBUG] FlowPlayApp booted through the real registry: no interactive-job.catalog-authority fault");
 }
 
 /// ⚖️ LAW: every graph-operation route is admitted by `FlowGraphOperationJobFactory` and returns a
@@ -175,7 +171,6 @@ async fn every_graph_operation_route_is_admitted_by_its_own_retained_factory() {
         assert!(!format!("{result:?}").contains("catalog-authority"), "{tool_id} must not fault the catalog: {result:?}");
         assert!(result.output.as_object().is_some_and(|fields| fields.iter().any(|(key, _)| key == "operationId")), "{tool_id} must return a retained admission receipt, not a batch emit: {result:?}");
         settle(&mut app).await;
-        eprintln!("[DEBUG] graph-operation route {tool_id} admitted by its own retained factory: {result:?}");
     }
 }
 
@@ -185,11 +180,10 @@ async fn every_graph_operation_route_is_admitted_by_its_own_retained_factory() {
 fn the_batch_handle_fallback_is_closed_for_every_declared_route() {
     for tool_id in FlowCommand::TOOL_JOB_IDS {
         assert!(
-            FLOW_DIRECT_STORE_TOOL_IDS.contains(tool_id) || FLOW_CHILD_GROUP_TOOL_IDS.contains(tool_id) || FLOW_HOST_ONLY_TOOL_IDS.contains(tool_id) || FLOW_GRAPH_OPERATION_TOOL_IDS.contains(tool_id),
+            FLOW_DIRECT_STORE_TOOL_IDS.contains(tool_id) || FLOW_CHILD_GROUP_TOOL_IDS.contains(tool_id) || FLOW_HOST_ONLY_TOOL_IDS.contains(tool_id) || FLOW_GRAPH_OPERATION_TOOL_IDS.contains(tool_id) || FLOW_CONTRIBUTIONS_TOOL_IDS.contains(tool_id),
             "tool {tool_id} would reach the batch handle fallback"
         );
     }
-    eprintln!("[DEBUG] flow batch handle fallback is unreachable for all {} declared routes", FlowCommand::TOOL_JOB_IDS.len());
 }
 
 /// ⚖️ LAW (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP): the live boot of the flow editor —

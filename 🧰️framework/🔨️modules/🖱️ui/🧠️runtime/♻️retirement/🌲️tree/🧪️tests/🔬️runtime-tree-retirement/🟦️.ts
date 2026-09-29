@@ -66,5 +66,4 @@ export function testRuntimeTreeRetirement(): void {
   assert(inventory.includes("UI_BUILT_CHILD_RETIRE_SLOTS") && !inventory.includes("SURFACE_RECONCILE_TREE_RETIRE_DEPTH"));
   const cursor = runtime.slice(runtime.indexOf("    fn retire_one(&mut self) -> bool {", runtime.indexOf("impl SurfaceReconcileCursor")));
   assert(cursor.indexOf("self.retire_tree.step()") >= 0 && cursor.indexOf("self.retire_tree.step()") < cursor.indexOf("self.retire_tree.try_begin"));
-  console.log(`[DEBUG] runtime-tree source:7 exact source/handback transitions,${hostile} hostile contracts,384 pages,9 typed fields; native runtime closure unverified`);
 }

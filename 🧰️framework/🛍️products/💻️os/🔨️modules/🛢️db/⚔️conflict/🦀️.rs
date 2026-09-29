@@ -28,7 +28,7 @@ use crate::db_state::{TouchKind, TouchedRegion, TouchedSet};
 use crate::*;
 
 //#region 🔖️CommandTouch
-/// @emoji 🏷️ A command's declared kind — the tag `CommandKindMatrix` keys structural
+/// 🏷️ A command's declared kind — the tag `CommandKindMatrix` keys structural
 /// commutativity knowledge by. Deliberately a bare string newtype (not tied to
 /// `protocol::wire::SchemaId`) so this crate stays usable for kinds that aren't yet registered
 /// `MutationDescriptor`s.
@@ -41,7 +41,7 @@ impl From<&str> for CommandKind {
     }
 }
 
-/// @emoji 👣️ One command's accumulated read/write footprint against a document's overlay, plus
+/// 👣️ One command's accumulated read/write footprint against a document's overlay, plus
 /// enough declared metadata (`kind`, `timestamp`) to classify and prioritize any conflict it's
 /// found to have with a concurrent sibling. `db_artifact` builds one of these per admitted command
 /// (from the `TouchedSet` its `OverlayRoot` mutations accumulated) before handing a batch to
@@ -53,7 +53,7 @@ pub struct CommandTouch {
     pub kind: CommandKind,
     pub timestamp: protocol::HybridLogicalTimestamp,
     pub touched: TouchedSet,
-    /// @emoji 🔐️ Structural `Constraint`s this command claims (unique name / single parent /
+    /// 🔐️ Structural `Constraint`s this command claims (unique name / single parent /
     /// non-overlapping interval) — orthogonal to `touched`, since two commands can violate a
     /// constraint while writing to entirely different overlay paths (the whole reason
     /// `db_conflict` tracks constraint conflicts as their own `ConflictKind` rather than folding
@@ -66,33 +66,33 @@ impl CommandTouch {
         CommandTouch { command_id, actor, kind, timestamp, touched: TouchedSet::new(), claims: Vec::new() }
     }
 
-    /// @emoji ✏️ Builder-style: records one touched region (builds `touched` up incrementally as
+    /// ✏️ Builder-style: records one touched region (builds `touched` up incrementally as
     /// `db_artifact` replays the command's overlay mutations).
     pub fn touch(mut self, region: TouchedRegion) -> Self {
         self.touched.record(region);
         self
     }
 
-    /// @emoji 🔐️ Builder-style: claims a unique-name key (`Constraint::Unique`), e.g.
+    /// 🔐️ Builder-style: claims a unique-name key (`Constraint::Unique`), e.g.
     /// `"unique/email/alice@example.com"`.
     pub fn claim(mut self, key: impl Into<String>) -> Self {
         self.claims.push(Constraint::Unique(key.into()));
         self
     }
 
-    /// @emoji 🌳️ Builder-style: claims `child`'s parent is `parent` (`Constraint::SingleParent`).
+    /// 🌳️ Builder-style: claims `child`'s parent is `parent` (`Constraint::SingleParent`).
     pub fn claim_parent(mut self, child: impl Into<String>, parent: impl Into<String>) -> Self {
         self.claims.push(Constraint::SingleParent { child: child.into(), parent: parent.into() });
         self
     }
 
-    /// @emoji ⏱️ Builder-style: claims `[start, end)` on `track` (`Constraint::NonOverlappingInterval`).
+    /// ⏱️ Builder-style: claims `[start, end)` on `track` (`Constraint::NonOverlappingInterval`).
     pub fn claim_interval(mut self, track: impl Into<String>, start: u64, end: u64) -> Self {
         self.claims.push(Constraint::NonOverlappingInterval { track: track.into(), start, end });
         self
     }
 
-    /// @emoji 🔢️ A total order key for deterministic prioritization: `(timestamp, command_id)`.
+    /// 🔢️ A total order key for deterministic prioritization: `(timestamp, command_id)`.
     /// `timestamp` alone (`protocol::HybridLogicalTimestamp::Ord`) is already actor-tiebroken, but
     /// two distinct commands from the SAME actor at the same tick (a batch submitted together) need
     /// a further tiebreak, hence the trailing `command_id` comparison.
@@ -103,7 +103,7 @@ impl CommandTouch {
 //#endregion 🔖️CommandTouch
 
 //#region 🔖️Bloom
-/// @emoji 🌸️ A fixed-size bitset bloom filter over touched-region paths: a cheap, allocation-bounded
+/// 🌸️ A fixed-size bitset bloom filter over touched-region paths: a cheap, allocation-bounded
 /// pre-filter so `ConflictDetector::detect` doesn't have to run the full O(regions²)
 /// `TouchedSet::conflicts_with` scan for every pair in a large batch — most pairs in a real batch
 /// touch disjoint paths, and `might_intersect` rejects those in O(bits) with zero false negatives
@@ -116,7 +116,7 @@ pub struct PathBloom {
     num_hashes: usize,
 }
 
-/// @emoji 🎛️ The crate's own choice of default sizing (the contract fixes "bloom filters" as a
+/// 🎛️ The crate's own choice of default sizing (the contract fixes "bloom filters" as a
 /// mechanism, not exact parameters): 2048 bits / 4 hash functions keeps the false-positive rate low
 /// for the tens-to-low-hundreds of touched paths one command batch realistically accumulates, while
 /// staying a fixed 256-byte allocation regardless of batch size.
@@ -124,7 +124,7 @@ const DEFAULT_BLOOM_BITS: usize = 2048;
 const DEFAULT_BLOOM_HASHES: usize = 4;
 
 impl PathBloom {
-    /// @emoji 🏗️ Validates `num_bits`/`num_hashes` before allocating the backing `Vec` (mirrors
+    /// 🏗️ Validates `num_bits`/`num_hashes` before allocating the backing `Vec` (mirrors
     /// `pack_core`'s "validate before allocating" invariant, applied to this crate's own inputs).
     pub fn new(num_bits: usize, num_hashes: usize) -> Result<PathBloom, DbError> {
         if num_bits == 0 || num_hashes == 0 {
@@ -138,7 +138,7 @@ impl PathBloom {
         PathBloom::new(DEFAULT_BLOOM_BITS, DEFAULT_BLOOM_HASHES).expect("default bloom parameters are always valid")
     }
 
-    /// @emoji 🏗️ Builds a default-sized bloom filter seeded with every path in `touched`.
+    /// 🏗️ Builds a default-sized bloom filter seeded with every path in `touched`.
     pub fn from_touched(touched: &TouchedSet) -> PathBloom {
         let mut bloom = PathBloom::default_sized();
         for region in &touched.regions {
@@ -158,7 +158,7 @@ impl PathBloom {
         self.bit_positions(path).all(|slot| self.bits[slot / 64] & (1u64 << (slot % 64)) != 0)
     }
 
-    /// @emoji 🔀️ True iff `self` and `other` MIGHT share at least one inserted path — a cheap,
+    /// 🔀️ True iff `self` and `other` MIGHT share at least one inserted path — a cheap,
     /// conservative (never-false-negative) prefilter for `TouchedSet::conflicts_with`. Bloom
     /// filters of mismatched size can't be bitwise-compared meaningfully, so a mismatch
     /// conservatively answers `true` (falls through to the real check) rather than risking a false
@@ -175,7 +175,7 @@ impl PathBloom {
     }
 }
 
-/// @emoji 🔀️ Deterministic per-hash-function seeding, matching `db_state`'s stated design choice
+/// 🔀️ Deterministic per-hash-function seeding, matching `db_state`'s stated design choice
 /// (`std::collections::hash_map::DefaultHasher` is a router, not a security primitive — a bloom
 /// filter's false-positive tolerance needs exactly that, not cryptographic strength).
 fn hash_with_seed(seed: u64, s: &str) -> u64 {
@@ -188,7 +188,7 @@ fn hash_with_seed(seed: u64, s: &str) -> u64 {
 //#endregion 🔖️Bloom
 
 //#region 🔖️KindMatrix
-/// @emoji 🧮️ Declarative structural knowledge that two command KINDS never conflict, independent of
+/// 🧮️ Declarative structural knowledge that two command KINDS never conflict, independent of
 /// whatever paths their instances happen to touch — e.g. a read-only "Query" kind never conflicts
 /// with anything, or a domain-specific pair of write kinds that are known commutative by
 /// construction even though they both touch a shared bookkeeping path (a counter's increment vs. a
@@ -200,7 +200,7 @@ fn hash_with_seed(seed: u64, s: &str) -> u64 {
 #[derive(Clone, Default, Debug)]
 pub struct CommandKindMatrix {
     commuting_pairs: std::collections::HashSet<(String, String)>,
-    /// @emoji 📖️ Kinds declared unconditionally read-only — never conflict with any other kind
+    /// 📖️ Kinds declared unconditionally read-only — never conflict with any other kind
     /// (including another read-only kind), covering the "Query never conflicts" case without an
     /// O(kinds²) pairwise declaration.
     read_only_kinds: std::collections::HashSet<String>,
@@ -211,19 +211,19 @@ impl CommandKindMatrix {
         Self::default()
     }
 
-    /// @emoji ➕️ Declares `a`/`b` as always-commuting, symmetrically (`declare_commuting(a, b)` and
+    /// ➕️ Declares `a`/`b` as always-commuting, symmetrically (`declare_commuting(a, b)` and
     /// `declare_commuting(b, a)` are equivalent, including `a == b`, the common case of "every pair
     /// of instances of this one kind commutes with each other").
     pub fn declare_commuting(&mut self, a: &CommandKind, b: &CommandKind) {
         self.commuting_pairs.insert(Self::pair_key(a, b));
     }
 
-    /// @emoji 📖️ Declares `kind` as read-only: it never conflicts with anything.
+    /// 📖️ Declares `kind` as read-only: it never conflicts with anything.
     pub fn declare_read_only(&mut self, kind: &CommandKind) {
         self.read_only_kinds.insert(kind.0.clone());
     }
 
-    /// @emoji 🔎️ True iff `a`/`b` are declared structurally non-conflicting (either via
+    /// 🔎️ True iff `a`/`b` are declared structurally non-conflicting (either via
     /// `declare_commuting` or because one side is `declare_read_only`).
     pub fn commutes(&self, a: &CommandKind, b: &CommandKind) -> bool {
         self.read_only_kinds.contains(&a.0) || self.read_only_kinds.contains(&b.0) || self.commuting_pairs.contains(&Self::pair_key(a, b))
@@ -240,21 +240,21 @@ impl CommandKindMatrix {
 //#endregion 🔖️KindMatrix
 
 //#region 🔖️Constraint
-/// @emoji 🧱️ A structural database invariant a command declares it upholds — independent of
+/// 🧱️ A structural database invariant a command declares it upholds — independent of
 /// touched-region overlap (two commands can violate a constraint while writing to entirely
 /// different overlay paths). Two commands violating the same constraint can never both stand, so
 /// `db_artifact` always grades a `ConflictKind::Constraint` record `Fatal` (see module doc).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Constraint {
-    /// @emoji 🏷️ Exclusive ownership of a name/key within some caller-chosen scope, encoded
+    /// 🏷️ Exclusive ownership of a name/key within some caller-chosen scope, encoded
     /// directly into `key` (e.g. `"unique/email/alice@example.com"`) — two commands claiming the
     /// identical key conflict.
     Unique(String),
-    /// @emoji 🌳️ `child` may have at most one `parent` at a time — two commands claiming the same
+    /// 🌳️ `child` may have at most one `parent` at a time — two commands claiming the same
     /// `child` with a DIFFERENT `parent` conflict; the same `(child, parent)` claimed twice does not
     /// (both commands agree, nothing to reconcile).
     SingleParent { child: String, parent: String },
-    /// @emoji ⏱️ `[start, end)` must not overlap any other interval claimed on the same `track`
+    /// ⏱️ `[start, end)` must not overlap any other interval claimed on the same `track`
     /// (e.g. a timeline track) — two commands claiming overlapping ranges on the same track
     /// conflict; touching (non-overlapping) ranges do not.
     NonOverlappingInterval { track: String, start: u64, end: u64 },
@@ -266,7 +266,7 @@ fn intervals_overlap(start_a: u64, end_a: u64, start_b: u64, end_b: u64) -> bool
 //#endregion 🔖️Constraint
 
 //#region 🔖️ConflictRecord
-/// @emoji 🗺️ What was found to conflict: either an intersecting touched-region set, or a shared
+/// 🗺️ What was found to conflict: either an intersecting touched-region set, or a shared
 /// uniqueness-constraint claim. Purely structural — grading this into a
 /// `crate::os_dsl::Severity`/`protocol::MutationMessage` (region intersection = `Warning`,
 /// constraint violation = `Fatal`) is `db_artifact`'s job, one layer up (see module doc).
@@ -276,7 +276,7 @@ pub enum ConflictKind {
     Constraint(String),
 }
 
-/// @emoji 🧾️ One detected conflict between two commands in the same batch — the unit
+/// 🧾️ One detected conflict between two commands in the same batch — the unit
 /// `CommandReceipt.conflicts` (the `db` facade's frozen `Vec<ConflictRecord>` field) is built from.
 /// `command_id` is always the lower-priority side (per `CommandTouch::order_key`) so a reader can
 /// treat "the command this record is attached to" as the one that needed reconciling against
@@ -292,7 +292,7 @@ pub struct ConflictRecord {
 //#endregion 🔖️ConflictRecord
 
 //#region 🔖️Lifecycle
-/// @emoji ⚖️ Once `db_artifact` has graded a batch's `ConflictRecord`s into `protocol::
+/// ⚖️ Once `db_artifact` has graded a batch's `ConflictRecord`s into `protocol::
 /// MutationMessage`s and judged their worst `protocol::Severity` against its
 /// `protocol::MergePolicy`, THIS is how it should file the outcome — reusing, never reinventing,
 /// the C5 conflict-lifecycle vocabulary `📡️spr/⚔️conflict` already defines
@@ -314,7 +314,7 @@ pub fn classify(worst: Option<protocol::Severity>, policy: protocol::MergePolicy
 //#endregion 🔖️Lifecycle
 
 //#region 🔖️Detector
-/// @emoji 🕵️ Detects every conflict within one batch of concurrent `CommandTouch`es (all assumed
+/// 🕵️ Detects every conflict within one batch of concurrent `CommandTouch`es (all assumed
 /// to share the same base frontier — `db_artifact` is responsible for only ever passing commands
 /// admitted against the same base, per the contract's conflict-detection placement in its command
 /// pipeline).
@@ -332,7 +332,7 @@ impl ConflictDetector {
         ConflictDetector { kind_matrix }
     }
 
-    /// @emoji 🔎️ Runs touched-region AND constraint-claim conflict detection over `commands`,
+    /// 🔎️ Runs touched-region AND constraint-claim conflict detection over `commands`,
     /// returning every `ConflictRecord` found, in a canonical (input-order-independent) sort by
     /// `(command_id, conflicting_with)` — LAW: the returned set (as a set, ignoring order) depends
     /// only on the CONTENTS of `commands`, never on the order the caller happened to hand them in
@@ -366,7 +366,7 @@ impl ConflictDetector {
     }
 }
 
-/// @emoji ⚔️ Every pair of regions (one from each side, at least one a `Write`) that intersect —
+/// ⚔️ Every pair of regions (one from each side, at least one a `Write`) that intersect —
 /// `None` if the two touched sets don't conflict at all. Built directly on
 /// `db_state::TouchedSet::conflicts_with`'s law (read/read never conflicts) rather than
 /// reimplementing it, but additionally collects WHICH regions overlapped (the boolean-only
@@ -387,7 +387,7 @@ fn touched_overlap(a: &TouchedSet, b: &TouchedSet) -> Option<Vec<TouchedRegion>>
     }
 }
 
-/// @emoji 🔐️ Detects `Constraint` violations across `ordered` (already sorted by priority), one
+/// 🔐️ Detects `Constraint` violations across `ordered` (already sorted by priority), one
 /// independent holder table per `Constraint` variant (`Unique`/`SingleParent`/
 /// `NonOverlappingInterval` claims never conflict across variants — different namespaces). Each
 /// table follows the same "first holder wins, every later violator conflicts against it" shape: a
@@ -437,7 +437,7 @@ fn detect_constraint_conflicts(ordered: &[&CommandTouch]) -> Vec<ConflictRecord>
     records
 }
 
-/// @emoji 🧾️ Shared `ConflictRecord` builder for every `Constraint` violation branch in
+/// 🧾️ Shared `ConflictRecord` builder for every `Constraint` violation branch in
 /// `detect_constraint_conflicts` (see `Constraint`'s doc).
 fn constraint_record(command: &CommandTouch, holder: &CommandTouch, description: String) -> ConflictRecord {
     ConflictRecord { command_id: command.command_id.clone(), conflicting_with: holder.command_id.clone(), kind: ConflictKind::Constraint(description) }

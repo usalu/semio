@@ -45,7 +45,7 @@ import { pluginOutRoot } from "../🏗️build/📋️plan/🟦️.ts";
 
 
 //#region 🪶️PluginSizeMeasurement
-/** @emoji 📏️ One built plugin's jco-extracted core wasm module, section-walked byte-for-byte — no
+/** 📏️ One built plugin's jco-extracted core wasm module, section-walked byte-for-byte — no
  * external tooling (`wasm-tools`/`twiggy`) required, so this runs anywhere `bun` runs. */
 type PluginWasmSizeBreakdown = {
   readonly totalBytes: number;
@@ -60,7 +60,7 @@ type PluginWasmSizeBreakdown = {
 
 type PluginWasmSizeRow = PluginWasmSizeBreakdown & { readonly pluginId: string; readonly file: string };
 
-/** @emoji 🔢️ Reads one unsigned LEB128 varint starting at `offset`; returns the decoded value and the
+/** 🔢️ Reads one unsigned LEB128 varint starting at `offset`; returns the decoded value and the
  * offset just past it. Values here (section sizes, function/page counts) never approach 2^53, so a
  * bigint accumulator collapsed to `Number` is safe and simpler than juggling two code paths. */
 function readULEB128(buf: Buffer, offset: number): { readonly value: number; readonly next: number } {
@@ -77,7 +77,7 @@ function readULEB128(buf: Buffer, offset: number): { readonly value: number; rea
   return { value: Number(result), next: pos };
 }
 
-/** @emoji 📏️ Byte-level breakdown of one core wasm module's sections. Section ids per the wasm binary
+/** 📏️ Byte-level breakdown of one core wasm module's sections. Section ids per the wasm binary
  * format: 0=custom (name-prefixed — the "name" custom section is pure debug/dev-tooling weight, see
  * `[profile.wasm-release]`'s `strip = "symbols"`), 5=memory, 10=code, 11=data. Reports only the first
  * declared memory's limits — every plugin here declares exactly one. */
@@ -129,7 +129,7 @@ function analyzePluginWasmModule(filePath: string): PluginWasmSizeBreakdown {
 
 const PLUGIN_SIZE_REPORT_PATH = join(pluginOutRoot, "📊️size-report.json");
 
-/** @emoji 📏️ Every jco-extracted core wasm module currently on disk under `plugin-modules/`, largest
+/** 📏️ Every jco-extracted core wasm module currently on disk under `plugin-modules/`, largest
  * first. `🪞️vendor` and other non-plugin dirs are skipped the same way `rewriteExistingPluginShimImports`
  * skips them. */
 function collectPluginWasmSizeRows(): PluginWasmSizeRow[] {
@@ -155,7 +155,7 @@ type EngineWasmSizeRow = PluginWasmSizeBreakdown & { readonly engineId: string; 
 
 const ENGINE_SIZE_REPORT_PATH = join(pluginOutRoot, "📈️engine-size-report.json");
 
-/** @emoji 📏️ Every wasm-bindgen engine's `*_bg.wasm` currently built under `node_modules/@semio-tech/*`
+/** 📏️ Every wasm-bindgen engine's `*_bg.wasm` currently built under `node_modules/@semio-tech/*`
  * (flow-core, node-graph, editor, tiled-map, paint, terrain, board-2d — see `runWasmPackWebBuild`'s
  * `profile` option). These packages are workspace-symlinked (bun links `node_modules/@semio-tech/<pkg>`
  * to the crate dir), so each entry's realpath is resolved before scanning its `pkg/` dir. Reuses
@@ -180,7 +180,7 @@ function collectEngineWasmSizeRows(): EngineWasmSizeRow[] {
   return rows.sort((a, b) => b.totalBytes - a.totalBytes);
 }
 
-/** @emoji 📏️`plugin size` — measures every built plugin's core wasm (total/code/data/name bytes,
+/** 📏️`plugin size` — measures every built plugin's core wasm (total/code/data/name bytes,
  * function count, memory initial/max pages), prints a per-plugin + total report, and persists
  * `📊️size-report.json` so the next run prints deltas — makes wasm-release/wasm-opt/dedup regressions
  * visible without re-deriving byte counts by hand. */

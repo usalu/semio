@@ -1613,7 +1613,6 @@ fn fill_checks_all_objects_before_each_placement() {
         let scene = roots.scene.clone();
         let job = all_objects_run(roots, case["targets"].as_array().expect("targets").len());
         let placements = job.provisional_placements();
-        eprintln!("[DEBUG] all-objects {}: accepted={}, collisions={}, rejected={}", case["name"], placements.len(), job.counters()[2], job.counters()[3]);
         assert_eq!(placements.len() as u64, case["expectedLocked"].as_u64().expect("locked"), "{}", case["name"]);
         let mut peers = scene.fixture.objects.clone();
         for placement in placements {
@@ -1663,7 +1662,6 @@ fn fill_revalidation_checks_all_objects_with_current_meshes() {
         let operation = Operation::new(OperationId(111), RevisionId(2), Generation(1), 1);
         let mut job = FillRevalidateJob::new(operation, fill_run_identity(), FillPreparationRoots::new(roots.scene.clone(), Arc::new(meshes)), placements.clone(), 1_000);
         drive_revalidation(&mut job, operation);
-        eprintln!("[DEBUG] all-objects revalidation {}: conflicts={:?}, oracle={oracle:?}", case["name"], job.conflicts());
         assert_eq!(job.conflicts(), oracle, "{}", case["name"]);
     }
 }

@@ -31,13 +31,13 @@ impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for SetTrailingNewl
 
     fn diff(&self, base: &TxtSnapshot) -> protocol::MutationOutcome<TxtDiff> {
         if let Some(reason) = native_snapshot_error(base) {
-            return protocol::MutationOutcome::error("mutation.invariant", reason, Vec::<String>::new());
+            return protocol::MutationOutcome::fatal("mutation.invariant", reason, Vec::<String>::new());
         }
         if let Some(reason) = native_shape_error(base.lines.len(), base.lines.last().is_some_and(|line| line.is_empty()), self.value, base.line_ending) {
-            return protocol::MutationOutcome::error("mutation.invariant", reason, Vec::<String>::new());
+            return protocol::MutationOutcome::fatal("mutation.invariant", reason, Vec::<String>::new());
         }
         if let Some(reason) = base.lines.last().and_then(|line| native_text_error(line, base.line_ending, self.value)) {
-            return protocol::MutationOutcome::error("mutation.invariant", reason, Vec::<String>::new());
+            return protocol::MutationOutcome::fatal("mutation.invariant", reason, Vec::<String>::new());
         }
         protocol::MutationOutcome::new(if base.trailing_newline == self.value { TxtDiff::default() } else { TxtDiff { trailing_newline: Some(self.value), ..Default::default() } })
     }

@@ -487,7 +487,7 @@ fn color_from(c: &DisplayColor) -> Color {
     Color::new(c.0)
 }
 
-/// @emoji 👻️ Catalogue drop ghost rect shown while dragging onto the canvas.
+/// 👻️ Catalogue drop ghost rect shown while dragging onto the canvas.
 #[derive(Clone, Debug)]
 pub struct LayoutDropPreview {
     pub kind: String,

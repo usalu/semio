@@ -204,7 +204,7 @@ function remoteEnvelopeUrl(remote: { readonly hostPort: string; readonly spaceId
   return `http://${remote.hostPort}/spaces/${encodeURIComponent(remote.spaceId)}/documents/${encodeURIComponent(remote.documentId)}/envelope`;
 }
 
-/** @emoji 🔌️ `store::encode_document_pack_bytes` — length-prefixed `pack` then raw `spr`. */
+/** 🔌️ `store::encode_document_pack_bytes` — length-prefixed `pack` then raw `spr`. */
 export function encodeDocumentPackBytes(pack: Uint8Array, spr: Uint8Array): Uint8Array {
   const out: number[] = [];
   writeVarintU64(out, pack.length);
@@ -213,7 +213,7 @@ export function encodeDocumentPackBytes(pack: Uint8Array, spr: Uint8Array): Uint
   return new Uint8Array(out);
 }
 
-/** @emoji 🎯️ Inverse of {@link encodeDocumentPackBytes}. */
+/** 🎯️ Inverse of {@link encodeDocumentPackBytes}. */
 export function decodeDocumentPackBytes(bytes: Uint8Array): { readonly pack: Uint8Array; readonly spr: Uint8Array } {
   const pos: [number] = [0];
   const packLen = readVarintU64(bytes, pos);
@@ -224,12 +224,12 @@ export function decodeDocumentPackBytes(bytes: Uint8Array): { readonly pack: Uin
   return { pack, spr: bytes.subarray(pos[0]) };
 }
 
-/** @emoji 📦️ Packs a snapshot value into a document bundle (`pack` + `spr`). */
+/** 📦️ Packs a snapshot value into a document bundle (`pack` + `spr`). */
 export function encodeDocumentPackBundle(snapshot: unknown, spr: Uint8Array = new Uint8Array()): Uint8Array {
   return encodeDocumentPackBytes(encodePackValue(snapshot), spr);
 }
 
-/** @emoji 📥️ Decodes the snapshot from a document bundle (ignores `spr` history). */
+/** 📥️ Decodes the snapshot from a document bundle (ignores `spr` history). */
 export function decodeDocumentPackSnapshot(bundle: Uint8Array): unknown {
   const { pack } = decodeDocumentPackBytes(bundle);
   return decodePackValue(pack);
@@ -757,7 +757,7 @@ export type ArtifactEvent =
 /** 📤️ Main thread → `🏪️store/👷️worker/🟦️.ts` — `bytes` is a UTF-8 worker wire payload (see {@link encodeBackboneWorkerRequest}). */
 export type BackboneWorkerWireMessage = { readonly wire: Uint8Array };
 
-/** @emoji 🧵️ Worker wire magic — must match `store_sync::backbone_worker_wire::MAGIC`. */
+/** 🧵️ Worker wire magic — must match `store_sync::backbone_worker_wire::MAGIC`. */
 export const BACKBONE_WORKER_WIRE_MAGIC = 0x01;
 
 function parseBackboneWorkerWire<T>(wire: Uint8Array, decode: (value: unknown) => T): T {
@@ -770,7 +770,7 @@ function parseBackboneWorkerWire<T>(wire: Uint8Array, decode: (value: unknown) =
 /** 📇️ The most events one `directory-space-events` message carries: one sealed directory page's raw rows. */
 export const DIRECTORY_SPACE_EVENTS_MAX_PER_MESSAGE = DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS;
 
-/** @emoji 🧵️ Encodes a {@link BackboneWorkerRequest} for the wasm `store_worker` (`handleRequestBytes`). */
+/** 🧵️ Encodes a {@link BackboneWorkerRequest} for the wasm `store_worker` (`handleRequestBytes`). */
 export function encodeBackboneWorkerRequest(request: BackboneWorkerRequest): Uint8Array {
   const wire =
     request.kind === "send"
@@ -780,7 +780,7 @@ export function encodeBackboneWorkerRequest(request: BackboneWorkerRequest): Uin
   return new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...packed]);
 }
 
-/** @emoji 🧵️ Decodes a {@link BackboneWorkerRequest} from the wasm actor or structured-clone twin. */
+/** 🧵️ Decodes a {@link BackboneWorkerRequest} from the wasm actor or structured-clone twin. */
 export function decodeBackboneWorkerRequest(wire: Uint8Array): BackboneWorkerRequest {
   const parsed = parseBackboneWorkerWire(wire, (value) => value as Record<string, unknown>);
   if (parsed.kind === "inference-open") return parseInferencePortOpeningRequestV1(parsed);
@@ -868,7 +868,7 @@ export function decodeBackboneWorkerRequest(wire: Uint8Array): BackboneWorkerReq
   return parsed as BackboneWorkerRequest;
 }
 
-/** @emoji 🧵️ Encodes a {@link BackboneWorkerResponse} from the wasm actor / TS fallback. */
+/** 🧵️ Encodes a {@link BackboneWorkerResponse} from the wasm actor / TS fallback. */
 export function encodeBackboneWorkerResponse(response: BackboneWorkerResponse): Uint8Array {
   const wire =
     response.kind === "event" ? { ...response, event: wireArtifactEvent(response.event) } : response;
@@ -876,7 +876,7 @@ export function encodeBackboneWorkerResponse(response: BackboneWorkerResponse): 
   return new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...packed]);
 }
 
-/** @emoji 🧵️ Decodes a worker response/event wire payload from the wasm actor. */
+/** 🧵️ Decodes a worker response/event wire payload from the wasm actor. */
 export function decodeBackboneWorkerResponse(wire: Uint8Array): BackboneWorkerResponse {
   const parsed = parseBackboneWorkerWire(wire, (value) => value as Record<string, unknown>);
   if (parsed.kind === "browser-actor-action-result") {
@@ -1767,30 +1767,30 @@ function packMintInteger(kind: "int" | "uint", value: bigint): PackInteger {
   return carrier;
 }
 
-/** @emoji 🔢️ Mints a signed 64-bit dynamic integer (`-2^63 <= value <= 2^63-1`). */
+/** 🔢️ Mints a signed 64-bit dynamic integer (`-2^63 <= value <= 2^63-1`). */
 export function packInt(value: bigint): PackInteger {
   if (typeof value !== "bigint" || value < PACK_I64_MIN || value > PACK_I64_MAX) throw new Error(`packInt: ${String(value)} is outside the exact i64 range`);
   return packMintInteger("int", value);
 }
 
-/** @emoji 🔢️ Mints an unsigned 64-bit dynamic integer (`0 <= value <= 2^64-1`). */
+/** 🔢️ Mints an unsigned 64-bit dynamic integer (`0 <= value <= 2^64-1`). */
 export function packUInt(value: bigint): PackInteger {
   if (typeof value !== "bigint" || value < 0n || value > PACK_U64_MAX) throw new Error(`packUInt: ${String(value)} is outside the exact u64 range`);
   return packMintInteger("uint", value);
 }
 
-/** @emoji 🔎️ True only for a carrier this module minted — never for a look-alike literal. */
+/** 🔎️ True only for a carrier this module minted — never for a look-alike literal. */
 export function isPackInteger(value: unknown): value is PackInteger {
   return typeof value === "object" && value !== null && packIntegerMint.has(value);
 }
 
-/** @emoji 🗺️ True only for the MAP arm of {@link PackValue} — not an array, not a minted integer
+/** 🗺️ True only for the MAP arm of {@link PackValue} — not an array, not a minted integer
  * carrier. The one narrowing a reader of a decoded pack needs before it may index by key. */
 export function isPackMap(value: PackValue): value is { readonly [key: string]: PackValue } {
   return typeof value === "object" && value !== null && !Array.isArray(value) && !isPackInteger(value);
 }
 
-/** @emoji 🧬️ Structural-clone replacement. The mint is a `WeakSet`, so a raw `structuredClone`
+/** 🧬️ Structural-clone replacement. The mint is a `WeakSet`, so a raw `structuredClone`
  * silently degrades every integer carrier into an ambiguous `{ kind, value }` map; this rebuilds
  * them, and rejects the look-alikes a clone would have produced. */
 export function clonePackValue(value: PackValue): PackValue {
@@ -2095,7 +2095,7 @@ export function decodePackValue(bytes: Uint8Array): PackValue {
 
 const PACK_B64_PREFIX = "pk:";
 
-/** @emoji 📦️ Lossless pack snapshot as a `pk:`-prefixed base64 string for `sessionStorage`/`ViewModel` string slots. */
+/** 📦️ Lossless pack snapshot as a `pk:`-prefixed base64 string for `sessionStorage`/`ViewModel` string slots. */
 export function packValueToBase64(value: PackValue): string {
   const bytes = encodePackValue(value);
   let binary = "";
@@ -2103,7 +2103,7 @@ export function packValueToBase64(value: PackValue): string {
   return `${PACK_B64_PREFIX}${btoa(binary)}`;
 }
 
-/** @emoji 📥️ Inverse of {@link packValueToBase64}. */
+/** 📥️ Inverse of {@link packValueToBase64}. */
 export function packValueFromBase64(encoded: string): PackValue {
   if (!encoded.startsWith(PACK_B64_PREFIX)) throw new Error("packValueFromBase64: expected pk: prefix");
   const binary = atob(encoded.slice(PACK_B64_PREFIX.length));
@@ -2112,14 +2112,14 @@ export function packValueFromBase64(encoded: string): PackValue {
   return decodePackValue(bytes);
 }
 
-/** @emoji 🎯️ Plugin `handleAction` wire: pack-base64 `{ controllerId, action, args? }`. */
+/** 🎯️ Plugin `handleAction` wire: pack-base64 `{ controllerId, action, args? }`. */
 export type ActionWire = { readonly controllerId: string; readonly action: string; readonly args?: PackValue };
 
 export function encodeActionWire(descriptor: ActionWire): string {
   return packValueToBase64(descriptor);
 }
 
-/** @emoji 📥️ Inverse of {@link encodeActionWire}. */
+/** 📥️ Inverse of {@link encodeActionWire}. */
 export function decodeActionWire(wire: string): ActionWire {
   const wireValue = packValueFromBase64(wire);
   if (wireValue === null || typeof wireValue !== "object" || Array.isArray(wireValue) || isPackInteger(wireValue)) throw new Error("decodeActionWire: expected a dynamic map");
@@ -2128,24 +2128,24 @@ export function decodeActionWire(wire: string): ActionWire {
   return record.args === undefined ? { controllerId: record.controllerId, action: record.action } : { controllerId: record.controllerId, action: record.action, args: record.args };
 }
 
-/** @emoji 🎬️ Decodes a component-scene `*Json` field when it carries {@link packValueToBase64} bytes. */
+/** 🎬️ Decodes a component-scene `*Json` field when it carries {@link packValueToBase64} bytes. */
 export function decodeScenePackField(encoded: string): PackValue {
   return packValueFromBase64(encoded);
 }
 
-/** @emoji 📤️ `protocol::encode_envelopes` batch as a {@link packValueToBase64} string for `applyMutations`. */
+/** 📤️ `protocol::encode_envelopes` batch as a {@link packValueToBase64} string for `applyMutations`. */
 export function encodeMutationEnvelopesPack(envelopes: readonly MutationEnvelope[]): string {
   return packValueToBase64(Array.from(encodeCausalEnvelopeBatch(envelopes, replicationPackCodec)));
 }
 
-/** @emoji 📥️ Inverse of {@link encodeMutationEnvelopesPack}. */
+/** 📥️ Inverse of {@link encodeMutationEnvelopesPack}. */
 export function decodeMutationEnvelopesPack(pack: string): MutationEnvelope[] {
   const wire = packValueFromBase64(pack);
   if (!isPackByteVector(wire)) throw new Error("decodeMutationEnvelopesPack: expected pack byte array");
   return decodeCausalEnvelopeBatch(wire, replicationPackCodec);
 }
 
-/** @emoji 🧮️ Projects a decoded {@link PackValue} onto strict JSON. An integer carrier survives
+/** 🧮️ Projects a decoded {@link PackValue} onto strict JSON. An integer carrier survives
  * only when its `bigint` fits a safe JS integer exactly, and then as a `number`; anything else
  * throws rather than rounding. The descriptor pipeline is deliberately JSON-only — canonical-check
  * and hash the raw `PackValue`, then project through this for JSON schema/pair comparison and JSON
@@ -2165,14 +2165,14 @@ export function packValueToExactJson(value: PackValue, path = "$"): unknown {
   return value;
 }
 
-/** @emoji 🧱️ The one byte-vector boundary every artifact/envelope byte parser shares: each item
+/** 🧱️ The one byte-vector boundary every artifact/envelope byte parser shares: each item
  * must be a finite, safe, integral JS `number` in `0..255`. A `PackInteger` and a fractional or
  * out-of-range `number` are both rejected rather than coerced. */
 export function isPackByteVector(value: PackValue): value is readonly number[] {
   return Array.isArray(value) && (value as readonly PackValue[]).every((entry) => typeof entry === "number" && Number.isSafeInteger(entry) && entry >= 0 && entry <= 255);
 }
 
-/** @emoji 🔢️ Narrows one declared unsigned field to an exact JS integer, or `null`. A `TAG_UINT`
+/** 🔢️ Narrows one declared unsigned field to an exact JS integer, or `null`. A `TAG_UINT`
  * carrier and a plain integral `number` both qualify; a signed carrier, a fraction, and anything
  * beyond `Number.MAX_SAFE_INTEGER` do not — an out-of-range value is a rejection, never a rounding. */
 export function packUIntSafeOrNull(value: PackValue): number | null {
@@ -2180,7 +2180,7 @@ export function packUIntSafeOrNull(value: PackValue): number | null {
   return typeof value === "number" && Number.isSafeInteger(value) && value >= 0 ? value : null;
 }
 
-/** @emoji 🔍️ Renders one raw wasm-boundary value for a fault message, `bigint`s included, bounded so a
+/** 🔍️ Renders one raw wasm-boundary value for a fault message, `bigint`s included, bounded so a
  * whole decoded node never lands in a log line. */
 export function describePackWireValue(raw: unknown): string {
   if (typeof raw === "bigint") return `${raw}n`;
@@ -2191,7 +2191,7 @@ export function describePackWireValue(raw: unknown): string {
   }
 }
 
-/** @emoji 🔢️ One natural number off an actor WIT/pack boundary: a WIT `u64` arrives as a `bigint`, a
+/** 🔢️ One natural number off an actor WIT/pack boundary: a WIT `u64` arrives as a `bigint`, a
  * pack-decoded integer as a lossless integer carrier, an absent value means zero. Anything not exactly
  * representable as a safe non-negative JS integer is a fault naming the field and the value, never a
  * rounding. Every renderer's wire decoder shares this one implementation. */
@@ -2202,7 +2202,7 @@ export function packWireNatural(raw: unknown, field = "natural"): number {
   return value;
 }
 
-/** @emoji 📦️ Decodes one pack-encoded wasm-boundary byte payload and projects its lossless integer
+/** 📦️ Decodes one pack-encoded wasm-boundary byte payload and projects its lossless integer
  * carriers onto exact JSON numbers — the only shape the UI/effect contract twins declare. The one
  * decoder every renderer injects wherever a `pack`-typed WIT field crosses into TypeScript; decoding
  * without this projection leaks `{kind, value}` carriers into node ids, revisions and effect params. */
@@ -2311,14 +2311,14 @@ export function decodeInvocationResultPacks(frame: { readonly mutations: ArrayLi
   return { mutations: mutations.map((entry, index) => invocationResultMutation(entry, `invocation.mutations[${index}]`)), inverseGroup: invocationResultUndoGroup(decodePackWire(new Uint8Array(frame.inverse_group), "invocation.inverseGroup"), "invocation.inverseGroup") };
 }
 
-/** @emoji 🔢️ Throwing form of {@link packUIntSafeOrNull} for a required schema field. */
+/** 🔢️ Throwing form of {@link packUIntSafeOrNull} for a required schema field. */
 export function asPackUIntSafe(value: PackValue, name: string): number {
   const parsed = packUIntSafeOrNull(value);
   if (parsed === null) throw new Error(`${name}: expected an exact unsigned integer within the safe JS range`);
   return parsed;
 }
 
-/** @emoji 🔢️ {@link asPackUIntSafe} additionally bounded to `u32`. */
+/** 🔢️ {@link asPackUIntSafe} additionally bounded to `u32`. */
 export function asPackUInt32(value: PackValue, name: string): number {
   const parsed = asPackUIntSafe(value, name);
   if (parsed > 0xffff_ffff) throw new Error(`${name}: ${parsed} exceeds the declared u32 range`);
@@ -2443,7 +2443,7 @@ function decodeScenePackItem(bytes: Uint8Array, position: { value: number }): un
   throw new Error(`decodeScenePackValue: invalid tag ${tag}`);
 }
 
-/** @emoji 🎬️ Decodes the self-describing serde packet emitted by `semio-framework-ui-scene`. */
+/** 🎬️ Decodes the self-describing serde packet emitted by `semio-framework-ui-scene`. */
 export function decodeScenePackValue(bytes: Uint8Array): unknown {
   const position = { value: 0 };
   const value = decodeScenePackItem(bytes, position);
@@ -2479,7 +2479,7 @@ const MESH_PACK_TAG_STR = 0x06;
 const MESH_PACK_TAG_STR_INLINE = 0x07;
 const MESH_PACK_TAG_BYTES = 0x08;
 
-/** @emoji 🧊️ One decoded preview mesh — typed arrays, ready for a GPU buffer upload with no copy. */
+/** 🧊️ One decoded preview mesh — typed arrays, ready for a GPU buffer upload with no copy. */
 export type MeshPack = {
   readonly positions: Float32Array;
   readonly normals: Float32Array;
@@ -2591,7 +2591,7 @@ export function decodeMeshPackBody(bytes: Uint8Array): MeshPack {
   return paintTextureBase64 === undefined ? mesh : { ...mesh, paintTextureBase64 };
 }
 
-/** @emoji 🧱️ Reassembles the base64 chunks one tessellate round trip streams and decodes them. */
+/** 🧱️ Reassembles the base64 chunks one tessellate round trip streams and decodes them. */
 export function decodeMeshPackChunks(chunks: readonly string[]): MeshPack {
   const binary = atob(chunks.join(""));
   const bytes = new Uint8Array(binary.length);
@@ -3644,7 +3644,7 @@ export function decodeAppFrame(bytes: Uint8Array): AppFrameValue {
  * 📡️ TS twin of `protocol_channel::CHANNEL_VERSION` (`🔨️modules/📡️protocol/🧵️channel/📦️packages/🦀️rust/📦️lib.rs`)
  * — bump both sides together on a wire-incompatible frame change.
  */
-/** @emoji 📥️ Decodes a pack-encoded {@link Fault} from an app-channel error frame. */
+/** 📥️ Decodes a pack-encoded {@link Fault} from an app-channel error frame. */
 export function decodeFaultFromWire(faultBytes: readonly number[], decodePackValue: (bytes: Uint8Array) => unknown): Fault | null {
   try {
     const raw = decodePackValue(new Uint8Array(faultBytes));
@@ -3655,7 +3655,7 @@ export function decodeFaultFromWire(faultBytes: readonly number[], decodePackVal
   }
 }
 
-/** @emoji 🧯️ One display rule for every app-channel fault: a pack-encoded {@link Fault} reads as
+/** 🧯️ One display rule for every app-channel fault: a pack-encoded {@link Fault} reads as
  * `code: message`, and a guest that answered with plain UTF-8 fault text reads as that text. */
 export function faultDisplayMessage(faultBytes: readonly number[], decodePackValue: (bytes: Uint8Array) => unknown): string {
   const fault = decodeFaultFromWire(faultBytes, decodePackValue);
@@ -3667,7 +3667,7 @@ export function faultDisplayMessage(faultBytes: readonly number[], decodePackVal
   return `${code}: ${fault.message}`;
 }
 
-/** @emoji 📥️ Decodes a pack-encoded {@link DispatchReport} from an app-channel wire blob —
+/** 📥️ Decodes a pack-encoded {@link DispatchReport} from an app-channel wire blob —
  * `AppFrame::Invocation.messages` (a successful dispatch's report) or `AppFrame::Error.report` (the
  * rejected dispatch's report, `Fault.code == "mutation.rejected"`). `null` for an empty blob (the
  * trailing field's zero value before every dispatch path was updated to populate it). */
@@ -3680,14 +3680,14 @@ export function decodeDispatchReportFromWire(reportBytes: readonly number[], dec
   }
 }
 
-/** @emoji 📨️ Decodes an `AppFrame::Error.report` blob into its typed `MutationMessage`s — so a
+/** 📨️ Decodes an `AppFrame::Error.report` blob into its typed `MutationMessage`s — so a
  * caller reacting to a rejected dispatch (contract-freeze §C8/§C9) gets structured messages instead
  * of parsing {@link faultDisplayMessage}'s prose string. Empty array for an empty/undecodable blob. */
 export function faultMessages(reportBytes: readonly number[], decodePackValue: (bytes: Uint8Array) => unknown): readonly MutationMessage[] {
   return decodeDispatchReportFromWire(reportBytes, decodePackValue)?.messages ?? [];
 }
 
-/** @emoji 📥️ Decodes a pack-encoded {@link MergeReport} from an `AppFrame::MergeReport.report`
+/** 📥️ Decodes a pack-encoded {@link MergeReport} from an `AppFrame::MergeReport.report`
  * blob — pushed unsolicited after every `ingest_remote`/`resolve_conflict`,
  * alongside `DocumentChanged`. */
 export function decodeMergeReportFromWire(reportBytes: readonly number[], decodePackValue: (bytes: Uint8Array) => unknown): MergeReport | null {
@@ -3699,7 +3699,7 @@ export function decodeMergeReportFromWire(reportBytes: readonly number[], decode
   }
 }
 
-/** @emoji 📥️ Decodes a pack-encoded {@link Conflict}[] projection from an `AppFrame::
+/** 📥️ Decodes a pack-encoded {@link Conflict}[] projection from an `AppFrame::
  * Conflicts.conflicts` blob — pushed unsolicited after every ingest (alongside `DocumentChanged`)
  * and in reply to `AppCommand::ReadConflicts`. */
 export function decodeConflictsFromWire(conflictsBytes: readonly number[], decodePackValue: (bytes: Uint8Array) => unknown): readonly Conflict[] {
@@ -3948,7 +3948,7 @@ export class AppChannelClient {
     const scope = decodePackWire(new Uint8Array(uiScope), "$.uiScope");
     for (const listener of [...this.progressListeners]) {
       try { listener(scope); }
-      catch (error) { console.error("[DEBUG] operation progress subscriber failed", error); }
+      catch (error) { console.error("[TRACE] operation progress subscriber failed", error); }
     }
   }
 
@@ -3965,7 +3965,7 @@ export class AppChannelClient {
     };
     for (const listener of [...this.completionListeners]) {
       try { listener(completion); }
-      catch (error) { console.error("[DEBUG] operation completion subscriber failed", error); }
+      catch (error) { console.error("[TRACE] operation completion subscriber failed", error); }
     }
   }
 
@@ -4359,7 +4359,7 @@ export class AppChannelClient {
     return decodePackValue(new Uint8Array(menuFrame.ContextMenu.items));
   }
 
-  /** @emoji 📥️ Force-applies remote `MutationEnvelope`s through `AppCommand::ApplyEnvelopes`. */
+  /** 📥️ Force-applies remote `MutationEnvelope`s through `AppCommand::ApplyEnvelopes`. */
   async applyEnvelopes(envelopes: readonly MutationEnvelope[]): Promise<AppFrameValue[]> {
     return this.sendCommand({ ApplyEnvelopes: { seq: this.nextSeq(), envelopes } });
   }

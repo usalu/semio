@@ -43,6 +43,7 @@ mod app_builder_tests {
         assert!(result.is_err());
     }
 
+    /// 🕰️ 1 declared + the auto-injected framework History tab.
     #[semio_framework_async_macros::async_test]
     async fn build_definition_is_sync_and_accepts_valid_manifest() {
         let definition = App::builder(canonical_test_app_id("good-app").await, LocalizedLabel::data("Good"))
@@ -62,7 +63,6 @@ mod app_builder_tests {
         assert_eq!(definition.window_kinds.len(), 1);
         assert_eq!(definition.window_kinds.iter().next().map(|kind| kind.icon_id.as_str()), Some("app-window"));
         assert_eq!(definition.modes.first().icon_id.as_str(), "pencil");
-        // 🕰️ 1 declared + the auto-injected framework History tab.
         assert_eq!(definition.panel_tabs.len(), 2);
     }
 
@@ -178,6 +178,39 @@ mod app_builder_tests {
         let undo_binding = definition.keybindings.iter().find(|binding| binding.keys == "mod+z").expect("undo keybinding auto-injected");
         assert_eq!(undo_binding.action.action, "undo");
         assert_eq!(undo_binding.action.controller_id, canonical_test_app_id("history-app").await);
+    }
+
+    /// 👁️ One app of `slug`'s test dialect in `role`, otherwise [`minimal_app`].
+    async fn surface_app(slug: &str, role: AppRole) -> AppDefinition {
+        App::builder(surface_app_id(&ArtifactDialect { artifact_kind: format!("s.test.app-builder.{slug}"), standard: "1".into(), subset: "*".into() }, role), LocalizedLabel::data("App"))
+            .await
+            .document(["semio", slug])
+            .mode("edit", LocalizedLabel::data("Edit"), "pencil")
+            .await
+            .window_kind("main", LocalizedLabel::data("Main"), format!("{slug}.main"), SurfaceKind::Canvas2d, IconName::AppWindow)
+            .await
+            .build_definition()
+    }
+
+    /// 👁️ Row 3.4 (C13, measured on hub 7800 p24): a viewer's manifest declares — and binds — no verb its `ViewerGuard`
+    /// rejects, so no host offers a Spectator an edit control; the read cursor and `copy` stay, and the editor of the same
+    /// dialect keeps every framework verb.
+    #[semio_framework_async_macros::async_test]
+    async fn build_definition_offers_a_viewer_no_verb_its_guard_rejects() {
+        let viewer = surface_app("viewer-guard", AppRole::Viewer).await;
+        let editor = surface_app("viewer-guard", AppRole::Editor).await;
+        let viewer_ids: HashSet<&str> = declared_actions(&viewer).map(|action| action.id.as_str()).collect();
+        let editor_ids: HashSet<&str> = declared_actions(&editor).map(|action| action.id.as_str()).collect();
+        for verb in VIEWER_REJECTED_ACTION_IDS {
+            assert!(!viewer_ids.contains(verb), "a viewer declares {verb}");
+            assert!(viewer.keybindings.iter().all(|binding| binding.action.action != verb), "a viewer binds {verb}");
+        }
+        for verb in ["switchAlternative", "checkoutCheckpoint", "copy"] {
+            assert!(viewer_ids.contains(verb), "a viewer still browses history and copies: {verb}");
+        }
+        for verb in ["undo", "redo", "commitCheckpoint", "createAlternative", "switchAlternative", "checkoutCheckpoint", "copy", "cut", "paste"] {
+            assert!(editor_ids.contains(verb), "the editor keeps {verb}");
+        }
     }
 
     #[semio_framework_async_macros::async_test]

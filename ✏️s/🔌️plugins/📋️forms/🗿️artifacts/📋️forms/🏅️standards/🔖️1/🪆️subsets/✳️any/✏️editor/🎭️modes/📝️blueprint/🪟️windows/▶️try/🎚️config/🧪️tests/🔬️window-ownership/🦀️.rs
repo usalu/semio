@@ -182,10 +182,9 @@ fn forms_try_window_ownership_runtime_isolates_reload_reset_and_continuations() 
                 Ok(())
             }
             .await;
-            if let Err(error) = &outcome { eprintln!("[DEBUG] Forms Try exact-window runtime failure before close: {error}"); }
+            if let Err(error) = &outcome { eprintln!("[TRACE] Forms Try exact-window runtime failure before close: {error}"); }
             artifact_app_laws::close_registered_fixture_app(&mut *app);
             outcome.expect("Forms Try exact-window ownership runtime law");
-            eprintln!("[DEBUG] Forms runtime isolated two Try windows, restored config, cleared reset transient, preserved the other continuation and document/app bytes, and closed terminal-empty");
         }))
         .expect("spawn Forms Try window ownership law")
         .join()
@@ -313,5 +312,4 @@ fn forms_try_window_ownership_mutations_match_neutral_fixture_and_codecs() {
     assert_eq!(restored_transient, base_transient);
     assert_eq!(FormsTryWindowTransientMutation::parse_op(&transient_mutation.print_op()).expect("Forms Try transient text codec"), transient_mutation);
     assert_eq!(FormsTryWindowTransientMutation::decode_op(&transient_mutation.encode_op().expect("Forms Try transient binary encode")).expect("Forms Try transient binary decode"), transient_mutation);
-    eprintln!("[DEBUG] Forms Try config/transient mutations matched neutral fixture inverse, text, and binary laws");
 }

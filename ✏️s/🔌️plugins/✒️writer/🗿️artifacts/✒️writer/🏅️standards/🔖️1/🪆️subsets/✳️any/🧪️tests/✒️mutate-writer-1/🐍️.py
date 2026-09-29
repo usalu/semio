@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""✒️ An INDEPENDENT second implementation of the `s.writer.writer` document and its four typed
+"""✒️ An INDEPENDENT second implementation of the `s.writer.writer` document and its five typed
 mutations, in Python, serving as this case's differential oracle.
 
 **Why a second implementation and not a third-party library.** A `writer` document holds no prose. It
@@ -49,7 +49,7 @@ BODY_REASON = (
     "or document states what the handle becomes; adding one vector whose text really changes, plus the child-addressing rule, closes it."
 )
 
-KINDS = ("rename-writer", "change-uri", "change-language", "edit-text")
+KINDS = ("rename-writer", "change-uri", "change-language", "edit-text", "splice-text")
 """🏷️ Every kind the catalog declares, in its declared order."""
 
 
@@ -60,7 +60,67 @@ def tag_of(kind):
 
 
 TAGS = {kind: tag_of(kind) for kind in KINDS}
+
+BODY_KINDS = ("edit-text", "splice-text")
+"""📝️ The two kinds that reach the body; the committed vectors pin their no-op branch only."""
 # endregion 🔖️Vocabulary
+
+
+# region 🔖️Splice
+SPLICE_CONTEXT = 32
+"""📏️ Context scalars a range edit carries on each side (`semio.ui.scene.text-splice.v1`)."""
+
+SPLICE_MIN_TWO_SIDED = 4
+"""🔗️ Shortest per-side context a two-sided search uses."""
+
+
+def splice_locate(text, splice):
+    """📍️ Where a range edit lands in `text`, written from the five steps `semio.ui.scene.text-splice.v1` states: the run with context on
+    both sides (longest first, down to `SPLICE_MIN_TWO_SIDED`), the run with context on one side (down to one scalar, both sides
+    competing), the run alone, then, for a run that is gone, the insertion point by the same context searches (`clamped`), and last the
+    author's own `start`. Every search takes the match nearest `start`, ties to the lower position. Python strings index scalars."""
+    before, deleted, after, start = splice["before"], splice["deleted"], splice["after"], splice["start"]
+
+    def nearest(positions):
+        return min(positions, key=lambda position: (abs(position - start), position), default=None)
+
+    def found(pattern, shift):
+        return [index + shift for index in range(len(text) - len(pattern) + 1) if text.startswith(pattern, index)]
+
+    def anchored(run):
+        longest = max(len(before), len(after))
+        for size in range(longest, SPLICE_MIN_TWO_SIDED - 1, -1):
+            head, tail = before[len(before) - min(size, len(before)):], after[:min(size, len(after))]
+            if not head or not tail:
+                break
+            hit = nearest(found(head + run + tail, len(head)))
+            if hit is not None:
+                return hit
+        for size in range(longest, 0, -1):
+            head, tail = before[len(before) - min(size, len(before)):], after[:min(size, len(after))]
+            hit = nearest((found(head + run, len(head)) if head else []) + (found(run + tail, 0) if tail else []))
+            if hit is not None:
+                return hit
+        return None
+
+    exact = anchored(deleted)
+    if exact is None and deleted:
+        exact = nearest(found(deleted, 0))
+    if exact is not None:
+        return exact, len(deleted), False
+    insertion = anchored("") if deleted else None
+    if insertion is not None:
+        return insertion, 0, True
+    return min(max(start, 0), len(text)), 0, bool(deleted or before or after)
+
+
+def splice_apply(text, splice):
+    """✂️ The text after a range edit and the edit that undoes it (the removed run back, context of the new text)."""
+    at, length, _ = splice_locate(text, splice)
+    result = text[:at] + splice["insert"] + text[at + length:]
+    end = at + len(splice["insert"])
+    return result, {"start": at, "deleted": splice["insert"], "insert": text[at:at + length], "before": result[max(0, at - SPLICE_CONTEXT):at], "after": result[end:end + SPLICE_CONTEXT]}
+# endregion 🔖️Splice
 
 
 # region 🔖️Document
@@ -84,6 +144,10 @@ def apply_mutation(document, kind, payload):
         if payload["text"] != document["text"]:
             raise AssertionError("mutate-edit-text: %s" % BODY_REASON)
         return copy.deepcopy(document)
+    if kind == "splice-text":
+        if splice_apply(document["text"], payload)[0] != document["text"]:
+            raise AssertionError("mutate-splice-text: %s" % BODY_REASON)
+        return copy.deepcopy(document)
     member, argument = SCALARS[kind]
     document = copy.deepcopy(document)
     document[member] = payload[argument]
@@ -96,6 +160,11 @@ def inverse_mutation(document, kind, payload):
         if payload["text"] != document["text"]:
             raise AssertionError("inverse-edit-text: %s" % BODY_REASON)
         return []
+    if kind == "splice-text":
+        result, undo = splice_apply(document["text"], payload)
+        if result != document["text"]:
+            raise AssertionError("inverse-splice-text: %s" % BODY_REASON)
+        return [(kind, undo)]
     member, argument = SCALARS[kind]
     return [(kind, {argument: document[member]})]
 # endregion 🔖️Verbs
@@ -187,11 +256,11 @@ def mutate_handler(kind):
         validate(before, "mutate-%s" % kind)
         applied = apply_mutation(before, kind, payload_of(ctx, kind))
         validate(applied, "mutate-%s" % kind)
-        expected = ["mutation.no-op"] if kind == "edit-text" else []
+        expected = ["mutation.no-op"] if kind in BODY_KINDS else []
         if declared_codes(outcome) != expected:
             raise AssertionError("mutate-%s: the committed outcome declares %r, but this kind over this vector raises %r" % (kind, declared_codes(outcome), expected))
         equals_committed(kind, applied, after)
-        if kind == "edit-text":
+        if kind in BODY_KINDS:
             restores(kind, applied, before)
         else:
             touches_one(kind, before, applied)

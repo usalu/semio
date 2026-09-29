@@ -1,4 +1,4 @@
-//! @emoji 🌆️ The offscreen scene color target: a `SCENE_MIP_LEVELS`-level mip chain (content at mip 0,
+//! 🌆️ The offscreen scene color target: a `SCENE_MIP_LEVELS`-level mip chain (content at mip 0,
 //! progressively box-blurred into higher mips for the glass backdrop) plus a same-shaped `blur_scratch`
 //! texture the downsample pass reads from (can't sample and render into the same mip simultaneously).
 //! Ported from `🎯️targets/🧊️wgpu/🦀️draw.rs`'s `SceneColorTarget`.

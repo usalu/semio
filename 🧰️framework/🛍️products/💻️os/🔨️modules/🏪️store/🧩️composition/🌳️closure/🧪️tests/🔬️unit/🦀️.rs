@@ -136,7 +136,6 @@ fn owned_document_closure_matches_neutral_graphs_and_independent_limits() {
         for member in &mut source.members { member.owner.as_mut().unwrap().parent = source.root.reference.clone(); member.children.clear(); }
         assert_eq!(validates(&source, 1), row["accepted"].as_bool().unwrap(), "breadth {}", row["children"]);
     }
-    eprintln!("[DEBUG] Recursive closure: 16 neutral graphs x3 grants, 1024-node chain accepted, 65 references on one parent refused");
 }
 
 #[test]
@@ -166,5 +165,4 @@ fn owned_document_closure_cancellation_generation_and_deadline_retain_source() {
         assert_eq!(source.members.as_ptr(), original);
         assert_eq!(source.members.len(), 3);
     }
-    eprintln!("[DEBUG] Recursive closure resumes with scalar metadata only; five sticky authority denials retain exact candidate source allocation");
 }

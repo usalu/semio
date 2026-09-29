@@ -14048,7 +14048,7 @@ func (l *BaseLanguage) ScanComments(ctx *PolicyContext, file, content string, li
 				commentText := strings.TrimSpace(line[j:])
 
 				if lineNum == 1 && strings.HasPrefix(trimmed, "#!") {
-					fmt.Printf("[DEBUG] Ignoring shebang at line 1: %s\n", trimmed)
+					fmt.Printf("[TRACE] Ignoring shebang at line 1: %s\n", trimmed)
 					break
 				}
 
@@ -14088,7 +14088,7 @@ func (l *BaseLanguage) ScanComments(ctx *PolicyContext, file, content string, li
 					break
 				}
 				scanState.InTodoBlock = false
-				debugMarker := strings.Contains(line, "[DEBUG]")
+				debugMarker := strings.Contains(line, "[TRACE]")
 				if !debugMarker {
 					foundInline = true
 					if !inlineCommentActive {
@@ -14357,7 +14357,7 @@ func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content stri
 					break
 				}
 				scanState.InTodoBlock = false
-				debugMarker := strings.Contains(line, "[DEBUG]")
+				debugMarker := strings.Contains(line, "[TRACE]")
 				if !debugMarker {
 					foundInline = true
 					if !inlineCommentActive {
@@ -28542,7 +28542,7 @@ func (c *repoContext) Analyze(scope *string) (*AnalyzeResult, error) {
 	result := make([]*Breach, len(filtered))
 	for i := range filtered {
 		if filtered[i].ID == "" {
-			fmt.Printf("[DEBUG] Analyze found breach with empty id: %+v\n", filtered[i])
+			fmt.Printf("[TRACE] Analyze found breach with empty id: %+v\n", filtered[i])
 		}
 		result[i] = &filtered[i]
 		switch filtered[i].Priority() {
@@ -29455,7 +29455,7 @@ func applyAutofixes(file string, breachs []Breach) (int, error) {
 					if isSkipDirective {
 						break
 					}
-					if strings.Contains(lines[i-1], "[DEBUG]") {
+					if strings.Contains(lines[i-1], "[TRACE]") {
 						break
 					}
 					for _, bl := range pendingBlanks {

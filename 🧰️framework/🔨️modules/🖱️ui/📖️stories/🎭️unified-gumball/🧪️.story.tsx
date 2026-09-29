@@ -16,7 +16,7 @@ import { Object3D } from "three";
 // #endregion 🔌️Adapters
 
 // 🎛️#region 🔖️UnifiedGumball
-/** @emoji 📦️ `UnifiedGumball` needs a live `THREE.Object3D` target — this mounts a box, captures its ref
+/** 📦️ `UnifiedGumball` needs a live `THREE.Object3D` target — this mounts a box, captures its ref
  * once R3F assigns it, and only then renders the gumball attached to it. */
 function GumballTargetDemo({ config }: { readonly config?: GumballConfig }) {
   const [target, setTarget] = useState<UnifiedGumballProps["target"] | null>(null);

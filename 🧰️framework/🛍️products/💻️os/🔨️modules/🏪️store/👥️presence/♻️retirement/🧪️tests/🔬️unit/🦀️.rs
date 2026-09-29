@@ -161,7 +161,6 @@ fn retained_presence_local_capture_cancel_closes_mounted_worker_while_store_rema
     }
     assert!(close.terminal_is_empty());
     assert_eq!(serde_json::json!(count.load(std::sync::atomic::Ordering::Relaxed)), law["expectedFinalSnapshots"]);
-    eprintln!("[DEBUG] mounted captured Presence cancelled and closed while live Store preserved value23; final domain retirement occurred once after Store close");
 }
 
 #[test]
@@ -209,7 +208,6 @@ fn retained_presence_local_replacements_release_shared_aliases_and_retire_exact_
     }
     assert!(close.terminal_is_empty());
     assert_eq!(serde_json::json!(count.load(std::sync::atomic::Ordering::Relaxed)), law["expectedFinalSnapshots"]);
-    eprintln!("[DEBUG] two overlapping local replacements and cross-worker readers retired exactly two old roots while Store47 remained live; final total3");
 }
 
 fn close_peer_root(mut retirement: PresencePeersRetirement<Value>) -> usize {
@@ -296,7 +294,7 @@ fn retained_presence_peer_commit_rejects_foreign_and_stale_roots_without_losing_
             assert_eq!(blocked, Some(true));
         }
         assert_eq!(count.load(std::sync::atomic::Ordering::SeqCst) as u64, law["expectedSnapshots"].as_u64().unwrap());
-        eprintln!("[DEBUG] exact peer commit case={} accepted={accepted}, unchanged={unchanged}, base-retirement-blocked={blocked:?}, snapshots={}", law["name"], count.load(std::sync::atomic::Ordering::SeqCst));
+        eprintln!("exact peer commit case={} accepted={accepted}, unchanged={unchanged}, base-retirement-blocked={blocked:?}, snapshots={}", law["name"], count.load(std::sync::atomic::Ordering::SeqCst));
     }
 }
 
@@ -328,7 +326,6 @@ fn retained_presence_store_close_preserves_distinct_original_local_and_peer_fact
     let actual = serde_json::json!({ "local": local.load(std::sync::atomic::Ordering::SeqCst), "peer": peer.load(std::sync::atomic::Ordering::SeqCst), "foreign": foreign.load(std::sync::atomic::Ordering::SeqCst) });
     assert_eq!(actual, serde_json::json!({ "local": law["expectedLocal"], "peer": law["expectedPeer"], "foreign": law["expectedForeign"] }));
     assert_eq!(Arc::strong_count(&foreign_factory), 1);
-    eprintln!("[DEBUG] Presence detach preserved original local/peer factories and returned-read authority: {actual}");
 }
 
 #[test]
@@ -394,7 +391,7 @@ fn retained_presence_overlapping_rosters_retire_shared_entries_once_across_worke
         }
         assert!(close.terminal_is_empty());
         assert_eq!(count.load(std::sync::atomic::Ordering::Relaxed), 3);
-        eprintln!("[DEBUG] overlapping immutable peer roots retired each payload once across workers race={race}, actor_bytes={bytes}");
+        eprintln!("overlapping immutable peer roots retired each payload once across workers race={race}, actor_bytes={bytes}");
     }
 }
 
@@ -433,7 +430,6 @@ fn retained_presence_read_return_releases_alias_before_cross_worker_reclamation(
         assert_eq!(serde_json::to_value(final_value).unwrap(), fixture["readerReturn"]["text"]);
         assert!(registry.terminal_is_empty());
     }
-    eprintln!("[DEBUG] all four opaque read returns left unique final payload authority for the cross-worker retirement cursor");
 }
 
 #[test]
@@ -468,7 +464,6 @@ fn retained_presence_read_return_injected_alias_barrier_preserves_unreturned_gua
     }
     assert_eq!(final_value.as_deref(), Some("aä🧵"));
     assert!(registry.terminal_is_empty());
-    eprintln!("[DEBUG] injected alias-release barrier retained the unreturned registry owner until publication");
 }
 
 #[test]
@@ -514,7 +509,6 @@ fn retained_presence_read_transfer_contention_preserves_unreturned_capability() 
     assert!(!registry.has_returned());
     assert_eq!(Arc::into_inner(owner.expect("exact transfer retries after bounded lock contention")).as_deref(), Some("aä🧵"));
     assert!(registry.terminal_is_empty());
-    eprintln!("[DEBUG] contended erased transfer preserved its unreturned lease and atomically detached only its exact final owner");
 }
 
 #[test]
@@ -574,7 +568,6 @@ fn retained_presence_store_close_keeps_captured_readers_and_retires_nonempty_pee
         assert_eq!(count.load(std::sync::atomic::Ordering::Relaxed), case["expectedSnapshots"].as_u64().unwrap() as usize);
         assert_eq!(bytes, case["expectedActorBytes"].as_u64().unwrap() as usize);
         assert_eq!((blocked_local, blocked_peers), (shared, shared));
-        eprintln!("[DEBUG] presence close case={} snapshots={} actor_bytes={bytes}", case["name"], count.load(std::sync::atomic::Ordering::Relaxed));
     }
 }
 
@@ -619,5 +612,4 @@ fn retained_presence_store_close_rejects_nonempty_terminal_and_late_commit_witho
     }
     assert!(close.terminal_is_empty() && rejected.terminal_is_empty());
     assert_eq!(count.load(std::sync::atomic::Ordering::Relaxed), 2);
-    eprintln!("[DEBUG] closed Store and rejected late peer commit co-retired their exact base alias and two snapshots");
 }

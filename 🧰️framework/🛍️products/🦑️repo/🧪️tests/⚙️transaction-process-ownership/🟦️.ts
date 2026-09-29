@@ -25,7 +25,7 @@ const require = createRequire(import.meta.url), compilers = [{ id: "bun", compil
 const clone = <T>(value: T): T => structuredClone(value);
 const inputs = [path, vectorPath, join(scope, "🧬️schema/🔣️.json"), import.meta.filename].map((file) => ({ path: file, bytes: existsSync(file) ? readFileSync(file) : null }));
 
-afterAll(() => { for (const input of inputs) expect(existsSync(input.path) ? readFileSync(input.path) : null).toEqual(input.bytes); console.info("[DEBUG] Process observer inert endpoints " + JSON.stringify({ pid: process.pid, inputs: inputs.map(({ path, bytes }) => ({ path, bytes: bytes?.length ?? null, sha256: bytes ? createHash("sha256").update(bytes).digest("hex") : null })) })); });
+afterAll(() => { for (const input of inputs) expect(existsSync(input.path) ? readFileSync(input.path) : null).toEqual(input.bytes); console.info("Process observer inert endpoints " + JSON.stringify({ pid: process.pid, inputs: inputs.map(({ path, bytes }) => ({ path, bytes: bytes?.length ?? null, sha256: bytes ? createHash("sha256").update(bytes).digest("hex") : null })) })); });
 
 function compiled(compiler: typeof compilers[number], inertNativeApi?: unknown) {
   expect(existsSync(path), "Approved private observer must exist").toBe(true);
@@ -134,7 +134,7 @@ test("private observer retains pending identity and actual handle lifecycle with
     const api = compiled(compiler), seen: string[] = [], self = { ...clone(vector.observations.darwin), pid: 100, parentPid: 1, groupId: 100 };
     const run = (id: string, exercise: (observer: any, child: FakeChild, state: { reads: number; hook?: () => void; fail: boolean; foreign: boolean; closed: boolean }) => void) => {
       const child = new FakeChild(), state = { reads: 0, fail: false, foreign: false, closed: false } as { reads: number; hook?: () => void; fail: boolean; foreign: boolean; closed: boolean };
-      const reader = { self, read(pid: number) { state.reads++; expect(pid).toBe(child.pid); state.hook?.(); if (state.fail) throw new Error("inert read failure"); return { ...clone(vector.observations.darwin), parentPid: state.foreign ? 999 : 100 }; }, close() { state.closed = true; } };
+      const reader = { self, read(pid: number) { state.reads++; expect(pid).toBe<number | undefined>(child.pid); state.hook?.(); if (state.fail) throw new Error("inert read failure"); return { ...clone(vector.observations.darwin), parentPid: state.foreign ? 999 : 100 }; }, close() { state.closed = true; } };
       const observer = api.createTransactionProcessObserver("00000000-0000-4000-8000-000000000001", reader);
       exercise(observer, child, state); if (!child.exitCode && child.exitCode !== 0) child.exit(); child.close(); observer.close(); expect(state.closed).toBe(true); seen.push(id);
     };

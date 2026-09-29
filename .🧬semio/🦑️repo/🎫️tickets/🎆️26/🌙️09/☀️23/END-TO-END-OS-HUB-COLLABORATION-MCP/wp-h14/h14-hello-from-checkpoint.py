@@ -45,7 +45,7 @@ edit("""    let mut frontier = frontier;
     let frontier = frontier.or_else(|| plan_seeded_hello_frontier(socket_grant.document_plan.as_deref(), &db_id));
 """, "hello frontier")
 
-edit("""fn wire_frontier_to_db(frontier: &mut RuntimeFrontierSummary, document_id: &str, db_id: &ProtocolArtifactId) -> bool {""", """/// @emoji 🪢️ Where a hello that names no frontier resumes: at the baseline of its plan's checkpoint when the plan's client
+edit("""fn wire_frontier_to_db(frontier: &mut RuntimeFrontierSummary, document_id: &str, db_id: &ProtocolArtifactId) -> bool {""", """/// 🪢️ Where a hello that names no frontier resumes: at the baseline of its plan's checkpoint when the plan's client
 /// seeds its document from that checkpoint's canonical pair (a `closed-browser-actor` plan) and the checkpoint holds edits —
 /// the pair already carries every edit up to it, so the tail starts after it and stays bounded by the checkpoint instead of
 /// the document's whole history. `None` (the tail from the start) otherwise. Keyed by the hub's internal document key.

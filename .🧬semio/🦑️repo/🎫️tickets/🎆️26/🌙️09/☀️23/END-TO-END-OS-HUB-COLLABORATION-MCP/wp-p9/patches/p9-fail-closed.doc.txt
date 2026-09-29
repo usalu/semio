@@ -1,0 +1,26 @@
+🚧️ P9 prepared set for train T6 (session 14c, 2026-09-29): the agent lane's preview fails CLOSED. S19 measured flow's
+`evaluate` settling on the agent lane with 0 effects while its shell lane acts: T1's `preview_addressed_action` refused only
+load-document/download/file-request/extension/task output and silently dropped every other host effect (and the job's
+ephemeral lanes), so an MCP agent was told "done" for an action that did nothing.
+
+1. SDK: `agent_lane_uncarried_lanes(&AgentLanePublication)` enumerates what an agent transaction carries — document,
+   config, draft and owned-child ops only — and names every other non-empty lane, each once, in
+   `AGENT_LANE_UNCARRIED_LANES` order; every kernel `Effect` variant is classified by an exhaustive match (a new variant does
+   not compile until classified). `preview_typed_command_job` runs the app's `ArtifactApp::ephemeral` hook over the same
+   roots the shell lane uses and returns the hook's + completion's presence/transient/window-transient counts; the preview
+   refuses any uncarried lane with `interactive-job.agent-lane-uncarried` (the MCP host maps it to PLUGIN_UNAVAILABLE with
+   an en + de remedy). Laws: language-agnostic `🧫️fixtures/🤖️agent-lane-carriage.json` (8 cases, effects in the kernel's
+   wire form) read by the Rust law `agent_lane_carriage_matches_the_language_agnostic_fixture` and its AJV twin
+   `agentLaneCarriageOracle` (SDK `test` script prints it).
+2. Declared-verb verdict: an agent-facing verb diverges when the shell acts and the agent lane does not act — refused OR
+   silent (was: refused only); the agent-lane probe counts `childGroups` as the `child` lane. Fixture
+   `⚖️declared-verb-verdicts.json` +2 cases (silent-where-shell-acts diverges, silent-where-shell-silent agrees), Rust law +
+   AJV twin floor 28 → 31.
+3. Presentation: a notice and a selection of what the command made only present its result to the human who ran it —
+   omitted beside carried operations; a publication that carries nothing and only presents is refused
+   `app.command.no-effect`, each notice a structured `app.notice` cause (`AgentLaneCarriage::{Carried, NoEffect,
+   Uncarried}`). Host part (os-mcp gateway, lands with its producer): `COMMAND_NO_EFFECT_FAULT_CODE` → non-retryable
+   PRECONDITION_FAILED with an en + de remedy; the dead `interactive-job.preview-unsupported` arm removed (nothing raises it
+   since T1). Test-only laws this changes, landed atomically: puzzle 2d/3d/5d agent-lane laws (pinned divergences with an
+   outcome dump), flow's declared-verb pin `[evaluate, focusSelection]` (the child-editing verbs agree now that the probe
+   counts child groups; `evaluate` refused by name).

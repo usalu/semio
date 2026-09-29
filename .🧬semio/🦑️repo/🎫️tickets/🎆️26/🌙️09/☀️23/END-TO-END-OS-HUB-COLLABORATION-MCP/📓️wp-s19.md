@@ -174,6 +174,42 @@ the `overlay` lane with a private build-dir inside the overlay.
   wgpu Rust files + registry regeneration are window-3 compile steps). Relayed to main.
 - 22:2x overlay build-dir + target deleted (rule 23; 16 GB; sources + payload kept). Durable captures under `s14-s19-logs/`.
 
+#### Session 14c — 2026-09-29 (after the panics + 01:14 sweep; ALL-34 chain since 07:18 → guest freeze)
+
+- 07:4x coordinator: T1/T3 sets landed; LW1 ran my laws (en1998 75/75, norm 60/1 descriptor, flow registry 1/1, contributions
+  9 + 93/0); two deterministic flow reds (`s14-lw1-logs/s19-flow-nextest-1.txt`).
+- **Red 1 — cohort census (root cause, measured):** THREE readers disagreed — flow Rust law (routes + framework-owned, totals pinned
+  34/35), Note TS law (command rows only, framework-owned must be []), flow `action-cohort-audit` (rows = routes ∪ framework-owned);
+  S20's T1 set counted Note by the TS rule (33). Both fixtures had also drifted from source: Flow missed `setActiveExample` +
+  `setContributions` (36 rows) and still named an `artifact` lane; Note classified 27 verbs batch-only (all 33 are retained since
+  09-17) and carried the removed materialization-cursor block. The audit was red for both, the Note TS law 1/3 (since 09-17/09-21).
+  Fix LANDED (test-only, rule 22): ONE census in the schema (`routeCount` = own command rows, each classified once;
+  `frameworkOwnedRoutes` gone), fixtures re-derived from source (command table order, publication-contract lanes, manifest
+  classification), all three readers read it. Catalog: only the cohort hash updated. Proof: flow `--lib` 258/0/1, audit
+  `routes=69 retained=69`, Note TS 3/3. Landing rows written.
+- **Red 2 — `evaluate` no longer diverges (root cause, measured):** shell lane acts; agent lane now `Settled{lanes:{},
+  host_effects:0}` (`flow-cohort-1.txt`). P9's T1 preview (`preview_addressed_action`) drives the host-only job but only refuses
+  LoadDocument/download/file-request/extension/task effects — every other requested host effect is dropped and the preview answers
+  success with 0 effects; `declared_verb_findings` counts refused-vs-acting and write mismatches, never silent-vs-acting. Neither a
+  carrier nor an `evaluate` regression: a fail-open gap. Test-only fix LANDED: pin without `evaluate` + both lanes asserted (shell
+  acts, agent settles silent) so the T6 fix turns it red. T6 (SDK, P9 — relayed): preview fails closed on every requested effect
+  the agent lane cannot carry (`agent-lane-uncarried`) and/or report them; divergence rule adds `shell acts && agent silent`; then
+  `evaluate` returns to flow's pin (flip = 2 lines in `⚖️declared-verbs/🦀️.rs`).
+- 12:5x–13:3x **coordinator: p34 publish refused — demonstrator OWNS `s.gis.gismap`/`3d.cad`/`3d.generation`/`3d.process` (and
+  `catalogue.sourcing`) → every creation of those kinds 409.** Measured (`s14-w4-catalog-p34-failed-c9-1254` trusted-catalog.json):
+  demonstrator published native codec rows for 5 foreign kinds — its embedded editors carry their owners' app-level
+  `ArtifactKindSpec`s (`3d.cad` …), which `describe` counts as owned. LB2's p15 hosting model could not host them: owner from the
+  `s.<owner>.` prefix (only `s.gis.gismap` resolves), hosted editors counted in creation (still ambiguous), hosted pairing only by
+  dialect (`s.cad.cad` ≠ `3d.cad`); puzzle3d/sourcing have no `declaration()`. Design relayed; coordinator APPROVED (explicit
+  owner, owner-preferred creation, presents-kind pairing, stdio rows `owner: stdio`), T6 row 3b right after LB2 row 3.
+- Set `s19-hosted-surfaces.py` (17 files, `--dry-run/--write/--revert`, backups `s14-s19-backup/hosted-surfaces/`), written against
+  overlay `s14-s19-overlay-t6` (live tree 13:1x + LB2 p9 `--write` + p15 `--write`; their backups went to LB2's backup dir under
+  root-hash `1f9b5678e2fd`): see the row in `📓️t6-queue.md`. Dry run clean, second run 0 edits. MEASURED on the overlay: browser twin
+  law `🗂️surface-opens-kind` **29/29** (19 pairing incl. 6 hosted + 9 open-target cases incl. 2 new), hub preflight law **20/20**
+  (3 new cases), os `tsc` 3 errors = overlay-missing generated outputs (puzzle pkg, jcoprobe), 0 in touched files
+  (`s14-s19-logs/tsc-os-t6-1.txt`), hub TS `tsc` 0 (`tsc-hub-t6-1.txt`). Rust proof queued (`s19-t6-proof.sh`, pid 93048 →
+  `t6-proof-1.txt`; overlay lane 7 deep). Row 3b registered in `📓️t6-queue.md`.
+
 ### Session 14b
 
 | # | Item | Status |

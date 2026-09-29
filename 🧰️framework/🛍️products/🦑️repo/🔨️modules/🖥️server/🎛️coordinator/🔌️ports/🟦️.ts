@@ -31,7 +31,7 @@ const { Pool } = createRequire(new URL("../📦️packages/🟦️typescript/pac
 //#endregion 🔗️ExternalImplementations
 
 //#region 🏭️Factories
-/** @emoji 🗄️ Creates the repository-owned SQL pool behind the coordinator's declaring manifest. */
+/** 🗄️ Creates the repository-owned SQL pool behind the coordinator's declaring manifest. */
 export function createOwnedDatabasePool(connectionString: string, max: number): OwnedDatabasePool {
   const pool = new Pool({ connectionString, max });
   return {
@@ -45,17 +45,17 @@ export function createOwnedDatabasePool(connectionString: string, max: number): 
   };
 }
 
-/** @emoji 📨️ Creates a JSON response without exposing the Next.js response implementation. */
+/** 📨️ Creates a JSON response without exposing the Next.js response implementation. */
 export function createOwnedJsonResponse(body: unknown, status: number): OwnedServerResponse {
   return NextResponse.json(body, { status });
 }
 
-/** @emoji 🧪️ Recognizes responses created by the coordinator's Next.js implementation. */
+/** 🧪️ Recognizes responses created by the coordinator's Next.js implementation. */
 export function isOwnedServerResponse(value: unknown): value is OwnedServerResponse {
   return value instanceof NextResponse;
 }
 
-/** @emoji 🌊️ Creates the repository-owned durable job queue behind the coordinator's declaring manifest. */
+/** 🌊️ Creates the repository-owned durable job queue behind the coordinator's declaring manifest. */
 export function createOwnedServerJobQueue(connectionString: string): OwnedServerJobQueue {
   const boss = new PgBoss(connectionString);
   return {

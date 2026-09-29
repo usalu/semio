@@ -1,7 +1,7 @@
 mod tests {
     use super::*;
     use crate::standards::v2_0::subsets::iso21320::schema::ZipIso21320BuilderConstruction as ZipIso21320Builder;
-    use crate::standards::v2_0::subsets::iso21320::schema::{CODE_ENCRYPTED, FLAG_ENCRYPTED, check_iso21320_wire_conformance};
+    use crate::standards::v2_0::subsets::iso21320::schema::{CODE_ENCRYPTED, FLAG_ENCRYPTED};
     use semio_framework_plugin::AnalyzeSource;
     use semio_framework_plugin::ArtifactBuilder as _;
 
@@ -74,12 +74,11 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn encrypted_wire_archive_composes_to_clean_logical_output() {
+    async fn encrypted_wire_archive_is_refused_instead_of_composed_from_ciphertext() {
         let raw = raw_zip_with_flags(FLAG_ENCRYPTED, 20);
         let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&raw) }];
-        let composed = ZipIso21320ComposerComposition::compose(&sources).expect("decode+canonicalize must clear forbidden wire bits");
-        let rematerialized = crate::standards::v2_0::subsets::base::io::encode_zip(&composed.snapshot).expect("encode canonical logical archive");
-        assert!(check_iso21320_wire_conformance(&rematerialized).iter().all(|d| d.code.0 != CODE_ENCRYPTED));
+        let Err(refusal) = ZipIso21320ComposerComposition::compose(&sources) else { panic!("an encrypted member cannot be regenerated, so it never composes") };
+        assert!(refusal.diagnostics.iter().any(|diagnostic| diagnostic.severity == Severity::Error && diagnostic.message.contains("encrypted")), "{refusal:?}");
     }
 
     #[semio_framework_async_macros::async_test]

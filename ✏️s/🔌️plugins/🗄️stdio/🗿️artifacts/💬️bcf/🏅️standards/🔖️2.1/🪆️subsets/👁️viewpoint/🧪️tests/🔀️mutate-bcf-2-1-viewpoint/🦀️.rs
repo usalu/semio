@@ -1,16 +1,15 @@
 //! 🦀️ BCF 2.1 exhaustive mutation case — Rust adapter. Ticket 26/08/23/END-TO-END-TESTING-REFACTOR
 //! wave 7.
 //!
-//! Every scenario copies the real, committed `🏥️wellness-center-coordination-review.bcf` fixture
-//! (derived once from a real IFC2X3 model plus a real committed floor plan PNG — see the feature
-//! file's own header) into the case work directory first; the committed fixture is never written
-//! to. `oracle` drives the registered independent `zip`+`quick-xml` composition
-//! (`../../🏅️standards/🔖️2.1/🪆️subsets/✳️any/🦀️.rs`'s own
-//! `oracle_apply_mutation`/`oracle_apply_mutation_inverse`); `subject` drives this repository's own
-//! `decode_bcf`/`encode_bcf`/`apply_bcf_mutation` over the full 14-kind `BcfMutation` vocabulary.
-//! Both results are read back by the SAME independent `project_bcf_2_1` before the `semantic-bcf-v1`
-//! profile compares them. The subject half is gated behind the generated host's `sut` feature so the
-//! oracle-only run never compiles the local implementation.
+//! Every scenario copies its own committed input into the case work directory first — a mutation or inverse row its
+//! pair's `⬅️before.bcf`, the identity round trip the real `🏥️wellness-center-coordination-review.bcf` (derived once
+//! from a real IFC2X3 model plus a real committed floor plan PNG — see the feature file's own header); committed
+//! fixtures are never written to. The judging oracle is the TypeScript reader (`🟦️.ts`, jszip over the committed
+//! documents); `oracle` here is the cross-semio SUPPLEMENT, the registered independent `zip`+`quick-xml` composition
+//! (`oracle_apply_mutation`/`oracle_apply_mutation_inverse`), asserting its laws in role; `subject` drives this
+//! repository's own `decode_bcf`/`encode_bcf`/`apply_bcf_mutation` over the `BcfMutation` vocabulary and hands its
+//! archive to the `bcf-2-1-jszip-compare-v1` pipeline as `actual-bcf`. The subject half is gated behind the generated
+//! host's `sut` feature so the oracle-only run never compiles the local implementation.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::bcf::standards::v2_1::subsets::markup::{oracle_apply_mutation, oracle_apply_mutation_inverse, project_bcf_2_1};
@@ -19,9 +18,11 @@ use semio_s_plugin_stdio_test_oracle::artifacts::bcf::standards::v2_1::subsets::
 //#region 🔖️Input
 const INPUT: &str = "shared://🏥️wellness-center-coordination-review.bcf";
 
-/// 🧫️ Copies the immutable real fixture into the work directory and returns the mutable copy's bytes.
+/// 🧫️ Copies the scenario's own committed input — its pair's `⬅️before.bcf`, else the real coordination review — into
+/// the work directory and returns the mutable copy's bytes.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
-    let copy = ctx.copy_fixture(INPUT, Some("coordination-review.bcf"))?;
+    let uri = ctx.step_fixture_uris().into_iter().find(|uri| uri.ends_with("/⬅️before.bcf")).unwrap_or_else(|| INPUT.to_string());
+    let copy = ctx.copy_fixture(&uri, Some("coordination-review.bcf"))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Input
@@ -414,7 +415,14 @@ mod subject {
         apply_bcf_mutation(&mut snapshot, &mutation);
         let bytes = encode_bcf(&snapshot).map_err(|error| format!("encode_bcf failed: {error}"))?;
         let projection = project_bcf_2_1(&bytes)?;
-        Ok(Outcome::with_raw(bytes, projection))
+        actual(ctx, bytes, projection)
+    }
+
+    /// 📦️ The produced archive as the `actual-bcf` artifact the `bcf-2-1-jszip-compare-v1` pipeline reads.
+    fn actual(ctx: &Context, bytes: Vec<u8>, projection: Json) -> Result<Outcome, String> {
+        let path = ctx.artifact("actual-bcf", "actual.bcf")?;
+        std::fs::write(&path, &bytes).map_err(|error| error.to_string())?;
+        Ok(Outcome::with_raw(bytes, projection).artifact("actual-bcf", &path, "application/octet-stream"))
     }
 
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
@@ -426,7 +434,7 @@ mod subject {
         apply_bcf_mutation(&mut snapshot, &undo);
         let bytes = encode_bcf(&snapshot).map_err(|error| format!("encode_bcf failed: {error}"))?;
         let projection = project_bcf_2_1(&bytes)?;
-        Ok(Outcome::with_raw(bytes, projection))
+        actual(ctx, bytes, projection)
     }
 
     /// 🔒️ The no-byte-pass-through rule: the subject must fully parse the real artifact into its
@@ -440,7 +448,7 @@ mod subject {
             return Err("byte pass-through: output is bit-identical to the input".to_string());
         }
         let projection = project_bcf_2_1(&output)?;
-        Ok(Outcome::with_raw(output, projection))
+        actual(ctx, output, projection)
     }
     //#endregion 🔖️Handlers
 

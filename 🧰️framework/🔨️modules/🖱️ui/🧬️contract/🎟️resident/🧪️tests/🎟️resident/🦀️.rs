@@ -27,7 +27,6 @@ fn retained_resident_fixed_backing_counts_against_the_same_aggregate() {
     let guard = RESIDENT_LEDGER.lock().unwrap();
     assert_eq!(UiResidentPermit::try_register_runtime_backing(runtime, 32768), Err(UiResidentFault::Contended));
     drop(guard);
-    eprintln!("[DEBUG] resident-fixed contract={} runtime={runtime} total={} dynamic-slots=64 final-release-excludes-static=true", actual.bytes, registered.bytes);
 }
 
 fn fixture() -> serde_json::Value {
@@ -102,7 +101,7 @@ fn retained_resident_permit_preserves_existing_capacity_and_paired_final_return(
     }
     close(&mut reused);
     assert_eq!(UiResidentPermit::snapshot().unwrap(), empty_snapshot());
-    eprintln!("[DEBUG] resident-permit small=9 slots={UI_RESIDENT_SLOTS} document={UI_RESIDENT_DOCUMENT_BYTES} aggregate={UI_RESIDENT_AGGREGATE_BYTES} paired-return=0,65536 explicit-close-drop-does-not-return-again=true");
+    eprintln!("resident-permit small=9 slots={UI_RESIDENT_SLOTS} document={UI_RESIDENT_DOCUMENT_BYTES} aggregate={UI_RESIDENT_AGGREGATE_BYTES} paired-return=0,65536 explicit-close-drop-does-not-return-again=true");
 }
 
 #[test]

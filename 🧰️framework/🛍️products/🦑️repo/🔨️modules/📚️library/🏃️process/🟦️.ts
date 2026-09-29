@@ -1,12 +1,13 @@
-/** @emoji 🏃️ Process execution with opt-in wall-clock budgets for repository commands and builds,
+/** 🏃️ Process execution with opt-in wall-clock budgets for repository commands and builds,
  * the `spawnSync` runners built on them, workspace-aware `.bin`
  * resolution and the dev/ship build-mode switch. Split out of `📦️packages/🟦️typescript/🟦️.ts` so a
  * consumer that only spawns a tool (the plugin package's jco/wasm-opt steps, and through them the
  * extension store and `⚙️vite.config.ts`) never drags the repository library's `🔍️discovery` taxonomy
  * walk into its module graph. */
-import { spawnSync, type ChildProcess } from "node:child_process";
+import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { getWorkspaceRoot } from "../🗂️workspaces/🟦️.ts";
 import { devToolingEnv } from "./🌿️environment/🟦️.ts";
 
@@ -133,7 +134,49 @@ export function daemonBudgetOpts(extra: Partial<NodeJS.ProcessEnv> = {}): RunCmd
   return { budgetMs: daemonBudgetMs(), env: devToolingEnv(extra) };
 }
 
-/** ⏱️Shared `spawnSync` core for [[runCmd]]/[[runCmdStatus]]: throws on spawn error, budget timeout, or signal kill (printing `[budget]` first on timeout); otherwise returns the exit status. */
+/** 🌊️ The library's cargo relay, `⚡️caching/🦀️cargo/📜️script.ts relay <cargo args…>` ([[cargoStreamingStatus]]). */
+export const CARGO_RELAY_SCRIPT = join(dirname(fileURLToPath(import.meta.url)), "..", "⚡️caching", "🦀️cargo", "📜️script.ts");
+
+/** 🌊️ Carries a relayed cargo's wall-clock budget (ms, `0` = unlimited) from [[runCmd]] into the relay. */
+export const CARGO_RELAY_BUDGET_ENV = "SEMIO_CARGO_RELAY_BUDGET_MS";
+
+/** 🌊️ Runs `cargo` with its stdout/stderr piped and forwarded, never inherited: Bun marks its own stdio `O_NONBLOCK` once
+ * written and an inherited pipe shares that flag, so a cargo burst (the replayed warnings of fresh units) fails with
+ * `EAGAIN` — output cut mid-line, exit 101 — as soon as a slow reader lets the 64 KiB pipe fill (ticket 26/09/23 W4: flaky
+ * component builds, the trusted-catalog publish's `os-hub` build). Bun's own writer waits the pipe out. Returns cargo's exit
+ * status; `budgetMs` (> 0) elapsing or a SIGINT/SIGTERM of this process ends the whole cargo tree and throws. */
+export async function cargoStreamingStatus(args: readonly string[], cwd: string, env: NodeJS.ProcessEnv, budgetMs: number): Promise<number> {
+  const child = spawn("cargo", [...args], { cwd, env, stdio: ["inherit", "pipe", "pipe"], detached: process.platform !== "win32" });
+  child.stdout!.pipe(process.stdout, { end: false });
+  child.stderr!.pipe(process.stderr, { end: false });
+  let stopped: string | undefined;
+  const stop = (reason: string): void => {
+    stopped ??= reason;
+    if (child.exitCode === null && child.signalCode === null && child.pid) terminateOwnedProcessTree(child.pid);
+  };
+  const onSignal = (signal: NodeJS.Signals): void => stop(`stopped: the relay received ${signal}`);
+  const budget = budgetMs > 0 ? setTimeout(() => {
+    console.error(`[budget] cargo ${args.join(" ")} exceeded ${budgetMs}ms — killed. ${budgetTimeoutHint("cargo")}`);
+    stop(`exceeded ${budgetMs}ms`);
+  }, budgetMs) : undefined;
+  process.once("SIGINT", onSignal);
+  process.once("SIGTERM", onSignal);
+  try {
+    const [code, signal] = await new Promise<[number | null, NodeJS.Signals | null]>((accept, reject) => {
+      child.once("error", reject);
+      child.once("close", (exitCode, exitSignal) => accept([exitCode, exitSignal]));
+    });
+    if (stopped || signal) throw new Error(`cargo ${args.join(" ")} ${stopped ?? `killed by signal ${signal}`}`);
+    return code ?? 1;
+  } finally {
+    if (budget) clearTimeout(budget);
+    process.removeListener("SIGINT", onSignal);
+    process.removeListener("SIGTERM", onSignal);
+  }
+}
+
+/** ⏱️Shared `spawnSync` core for [[runCmd]]/[[runCmdStatus]]: throws on spawn error, budget timeout, or signal kill (printing `[budget]` first on timeout); otherwise returns the exit status. `cargo` runs through
+ * [[CARGO_RELAY_SCRIPT]] (POSIX), so it never writes to an inherited, possibly non-blocking descriptor ([[cargoStreamingStatus]]). */
 function runCmdInternal(cmd: string, args: string[], opts: RunCmdOpts): number {
   const budgetMs = opts.budgetMs ?? defaultBudgetMs(cmd);
   const formattedArgs = [...args];
@@ -145,14 +188,24 @@ function runCmdInternal(cmd: string, args: string[], opts: RunCmdOpts): number {
       }
     }
   }
-  const result = spawnSync(cmd, formattedArgs, {
-    stdio: "inherit",
-    cwd: opts.cwd,
-    env: opts.env ?? process.env,
-    timeout: budgetMs,
-    killSignal: "SIGKILL",
-    shell: opts.shell ?? false,
-  });
+  const relayed = cmd === "cargo" && process.platform !== "win32";
+  const result = relayed
+    ? spawnSync(process.versions.bun ? process.execPath : "bun", [CARGO_RELAY_SCRIPT, "relay", ...formattedArgs], {
+        stdio: "inherit",
+        cwd: opts.cwd,
+        env: { ...(opts.env ?? process.env), [CARGO_RELAY_BUDGET_ENV]: String(budgetMs) },
+        timeout: budgetMs > 0 ? budgetMs + 60_000 : 0,
+        killSignal: "SIGTERM",
+        shell: false,
+      })
+    : spawnSync(cmd, formattedArgs, {
+        stdio: "inherit",
+        cwd: opts.cwd,
+        env: opts.env ?? process.env,
+        timeout: budgetMs,
+        killSignal: "SIGKILL",
+        shell: opts.shell ?? false,
+      });
   if (result.error) {
     if ((result.error as NodeJS.ErrnoException).code === "ETIMEDOUT") {
       console.error(`[budget] ${cmd} ${args.join(" ")} exceeded ${budgetMs}ms — killed. ${budgetTimeoutHint(cmd, opts.onTimeoutHint)}`);
@@ -232,20 +285,20 @@ export function runNodeBin(args: string[], cwd: string = process.cwd(), env: Nod
   if (status !== 0) process.exit(status);
 }
 
-/** @emoji 🚦️ Whether child builds should use fast dev artifacts or ship optimization. */
+/** 🚦️ Whether child builds should use fast dev artifacts or ship optimization. */
 export type SemioBuildMode = "dev" | "ship";
 
-/** @emoji 🚦️ `ship` only when `SEMIO_BUILD_MODE=ship`; default is dev for local/agent loops. */
+/** 🚦️ `ship` only when `SEMIO_BUILD_MODE=ship`; default is dev for local/agent loops. */
 export function semioBuildMode(): SemioBuildMode {
   return process.env.SEMIO_BUILD_MODE === "ship" ? "ship" : "dev";
 }
 
-/** @emoji 🚀️ Env for nx/build orchestrators so spawned crate `wasm` scripts inherit ship mode. */
+/** 🚀️ Env for nx/build orchestrators so spawned crate `wasm` scripts inherit ship mode. */
 export function semioShipEnv(): NodeJS.ProcessEnv {
   return { ...process.env, SEMIO_BUILD_MODE: "ship" };
 }
 
-/** @emoji 📂 Cargo output directory name for a profile (`dev` → `debug`). */
+/** 📂 Cargo output directory name for a profile (`dev` → `debug`). */
 export function cargoProfileDir(profile: string): string {
   return profile === "dev" ? "debug" : profile;
 }

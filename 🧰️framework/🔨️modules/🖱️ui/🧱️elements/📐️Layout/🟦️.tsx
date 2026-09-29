@@ -26,24 +26,24 @@ import { type Anchor, ANCHORS, UiMobileProvider, GhostProvider, PanelGhostRoot, 
 // Consumers MUST provide a canvas element.
 
 // #region 📱️LayoutMobilePanel
-/** @emoji 📱️ The mobile panel configuration owned by {@link Layout}. */
+/** 📱️ The mobile panel configuration owned by {@link Layout}. */
 export interface LayoutMobilePanelProps {
   visible?: boolean;
   tabs: readonly PanelTabNode[];
   activeTabPath?: readonly string[];
   onActiveTabPathChange?: (path: readonly string[]) => void;
-  /** @emoji 🌱️ Per-branch drill-down memory (see {@link progressPanelTabSelection}). */
+  /** 🌱️ Per-branch drill-down memory (see {@link progressPanelTabSelection}). */
   pathMemory?: Readonly<Record<string, string>>;
   onPathMemoryChange?: (memory: Readonly<Record<string, string>>) => void;
-  /** @emoji 🌱️ Persisted tree section/group expansion across every leaf tab's units (see {@link PanelTreeUnitsPane}). */
+  /** 🌱️ Persisted tree section/group expansion across every leaf tab's units (see {@link PanelTreeUnitsPane}). */
   treeOpenStates?: Readonly<Record<string, boolean>>;
   onTreeOpenStateChange?: (id: string, open: boolean) => void;
-  /** @emoji ♻️ See {@link PanelProps.treeContentRevision}. */
+  /** ♻️ See {@link PanelProps.treeContentRevision}. */
   treeContentRevision?: unknown;
   className?: string;
 }
 
-/** @emoji 📱️ Full-height tabbed panel for Layout's mobile branch. */
+/** 📱️ Full-height tabbed panel for Layout's mobile branch. */
 const LayoutMobilePanel: React.FC<LayoutMobilePanelProps> = ({ visible = false, tabs, activeTabPath, onActiveTabPathChange, pathMemory, onPathMemoryChange, treeOpenStates, onTreeOpenStateChange, treeContentRevision, className = "" }) => {
   // 🌱️ `visible: true` — LayoutMobilePanel has no folded state of its own (it renders nothing at all instead, below);
   // this just keeps `usePanelTabSelection`'s open/fold branches inert so it behaves as pure path/memory selection.
@@ -88,16 +88,16 @@ const LayoutMobilePanel: React.FC<LayoutMobilePanelProps> = ({ visible = false, 
  **/
 export interface LayoutProps {
   navbar?: React.ReactNode;
-  /** @emoji 🎥️ Optional chrome row directly under `navbar`, above the canvas/panels row (e.g. {@link TutorialBar}) — `flex-shrink-0` like `navbar`/`footer`, never affecting the middle column's z-index invariant below. */
+  /** 🎥️ Optional chrome row directly under `navbar`, above the canvas/panels row (e.g. {@link TutorialBar}) — `flex-shrink-0` like `navbar`/`footer`, never affecting the middle column's z-index invariant below. */
   subnavbar?: React.ReactNode;
   footer?: React.ReactNode;
-  /** @emoji 🧭️ Per-anchor panel config — panels float over the navbar/footer/canvas, keyed by which anchor they grow from. */
+  /** 🧭️ Per-anchor panel config — panels float over the navbar/footer/canvas, keyed by which anchor they grow from. */
   panels?: Partial<Record<Anchor, Omit<PanelProps, "anchor">>>;
   mobilePanel?: LayoutMobilePanelProps;
   canvas: React.ReactNode;
-  /** @emoji 🌀️ When set, paints a loading/waiting ring on the canvas viewport wrapper. */
+  /** 🌀️ When set, paints a loading/waiting ring on the canvas viewport wrapper. */
   canvasStatus?: UiStatus;
-  /** @emoji 🦴 Optional skeleton shown inside the canvas ring while `canvasStatus` is busy. */
+  /** 🦴 Optional skeleton shown inside the canvas ring while `canvasStatus` is busy. */
   canvasSkeleton?: React.ReactNode;
   mobile?: boolean;
   className?: string;

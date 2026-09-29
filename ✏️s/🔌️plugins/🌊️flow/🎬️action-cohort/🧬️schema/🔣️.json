@@ -12,7 +12,6 @@
         "source",
         "routeCount",
         "retainedRoutes",
-        "frameworkOwnedRoutes",
         "groups",
         "globals",
         "scanThenMonolithRoutes",
@@ -36,18 +35,11 @@
           "minLength": 1
         },
         "routeCount": {
+          "description": "The census: the number of command rows the owner's own command table declares. Every row is classified in exactly one group, so routeCount equals the number of routes across groups; framework-reserved actions are never app routes and never appear in a cohort.",
           "type": "integer",
           "minimum": 1
         },
         "retainedRoutes": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "minLength": 1
-          },
-          "uniqueItems": true
-        },
-        "frameworkOwnedRoutes": {
           "type": "array",
           "items": {
             "type": "string",
@@ -171,55 +163,6 @@
             "minLength": 1
           },
           "uniqueItems": true
-        },
-        "materialization": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "stringChunkBytes",
-            "typedTextOwnerPresent",
-            "typedTextOwnerAbsent",
-            "cancelDuringMetadataCopy",
-            "nestedSnapshotRoot",
-            "nestedBlockTree",
-            "assetMapCursor",
-            "linkedArtifactCursor",
-            "progressPreview",
-            "abandonmentTerminalEmptiness"
-          ],
-          "properties": {
-            "stringChunkBytes": {
-              "type": "integer",
-              "minimum": 1
-            },
-            "typedTextOwnerPresent": {
-              "const": true
-            },
-            "typedTextOwnerAbsent": {
-              "const": true
-            },
-            "cancelDuringMetadataCopy": {
-              "const": true
-            },
-            "nestedSnapshotRoot": {
-              "const": true
-            },
-            "nestedBlockTree": {
-              "const": true
-            },
-            "assetMapCursor": {
-              "const": true
-            },
-            "linkedArtifactCursor": {
-              "const": true
-            },
-            "progressPreview": {
-              "const": true
-            },
-            "abandonmentTerminalEmptiness": {
-              "const": true
-            }
-          }
         },
         "laws": {
           "type": "object",

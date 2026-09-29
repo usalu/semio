@@ -152,6 +152,9 @@ fn credited_alias_keeps_pages_live_after_original_handle_is_lost() {
     assert!(with_ui_value_arena(|arena| arena.collection(handle).is_none()));
 }
 
+/// ☣️ A poisoned arena lock still admits a fixed value. The arena is process-global, so the law hands the lock back unpoisoned
+/// once it has measured the recovery: every later law's retirement `try_lock` would otherwise refuse the poisoned arena, and the
+/// refusing owner's exact-closure `Drop` aborted the whole lib run (`s14-lw1-logs/wg11-laws-2.txt`).
 #[test]
 fn poisoned_arena_lock_recovers_without_losing_fixed_authority() {
     let _ = std::panic::catch_unwind(|| {
@@ -160,6 +163,8 @@ fn poisoned_arena_lock_recovers_without_losing_fixed_authority() {
     });
     let list = ui_list([UiValue::Bool(true)]);
     assert_eq!(list.cursor().next(), Some(UiValue::Bool(true)));
+    UI_VALUE_ARENA.clear_poison();
+    assert!(!UI_VALUE_ARENA.is_poisoned());
 }
 
 #[test]
@@ -170,7 +175,7 @@ fn arena_initialization_is_a_fixed_control_and_page_taxonomy() {
     assert_eq!(arena.free_collection_count, UI_VALUE_ADMISSION_SLOTS);
     assert!(started.elapsed() < std::time::Duration::from_millis(8));
     eprintln!(
-        "[DEBUG] arena pages={UI_VALUE_AGGREGATE_ITEMS} page-bytes={} collections={UI_VALUE_ADMISSION_SLOTS} collection-bytes={} aggregate-bytes={UI_VALUE_AGGREGATE_BYTES} backing-bytes={} elapsed-ms={}",
+        "arena pages={UI_VALUE_AGGREGATE_ITEMS} page-bytes={} collections={UI_VALUE_ADMISSION_SLOTS} collection-bytes={} aggregate-bytes={UI_VALUE_AGGREGATE_BYTES} backing-bytes={} elapsed-ms={}",
         size_of::<UiPageSlot>(),
         size_of::<UiCollectionSlot>(),
         resident_static_backing_bytes(),

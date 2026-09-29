@@ -46,7 +46,7 @@ class WasmScript extends BundleScript {
 class PreviewGeneratedScript extends BundleScript {
   async run(): Promise<void> {
     const preview = await previewFlowBrowserPackage(join(FAMILY_RS_DIR, "🕸️bindings"));
-    console.log(`[DEBUG] Flow browser package preview: ${preview.files.length} files, ${preview.browserBytes} browser bytes, ${preview.declarationBytes} declaration bytes`);
+    console.log(`Flow browser package preview: ${preview.files.length} files, ${preview.browserBytes} browser bytes, ${preview.declarationBytes} declaration bytes`);
   }
 }
 
@@ -66,7 +66,7 @@ class TestScript extends BundleScript {
 class SourceTestScript extends BundleScript {
   async run(): Promise<void> {
     const { flowExtensionManifestAdmissionSelfTests } = await import("../../../📔️registry/🧪️tests/🪪️manifest-admission/🟦️.ts");
-    console.log(`[DEBUG] flow extension manifest admission twin: ${flowExtensionManifestAdmissionSelfTests()} assertions`);
+    console.log(`flow extension manifest admission twin: ${flowExtensionManifestAdmissionSelfTests()} assertions`);
     await import("../../../🖥️host/🧹️retirement/🧪️tests/🧪️source-contract/🟦️.ts");
     await import("../../../🕸️wasm/🧪️tests/🧬️schema-oracle/🟨️.js");
     const { testFlowOpenOwnership } = await import("../../../🕸️wasm/🧪️tests/🔓️open-ownership/🟦️.ts");
@@ -82,7 +82,7 @@ class BrowserTestScript extends BundleScript {
     const outputs = await bundleFlowBrowserModule(false);
     const module = await outputs[0]?.text();
     if (outputs.length !== 1 || !module?.includes('import("../flow_core.js")') || !module.includes('from "../🖥️host/🟨️.js"') || module.includes("../../../🫀️core/🕸️bindings")) throw new Error("Flow browser package lost its exact sibling module bindings");
-    console.log("[DEBUG] Flow packaged browser entry preserves its generated initializer and owned host sibling without external source-tree paths");
+    console.log("Flow packaged browser entry preserves its generated initializer and owned host sibling without external source-tree paths");
   }
 }
 

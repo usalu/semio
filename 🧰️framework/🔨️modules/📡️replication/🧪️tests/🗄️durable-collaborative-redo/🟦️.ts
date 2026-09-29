@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 type TestSource = { readonly directory: string; readonly url: string };
 
 type Edit = Readonly<{ id: string; actor: string; logicalMs: number; mutationIds: readonly string[] }>;
-type Expect = Readonly<{ applied: readonly string[]; redo: readonly string[] }>;
+type Expect = Readonly<{ applied: readonly string[]; redo: readonly string[]; refused: readonly string[] }>;
 type TransitionStep = Readonly<{ kind: "revert" | "reinstate"; actor: string; mutationIds: readonly string[]; logicalMs: number; id: string }>;
 type Step =
   | (TransitionStep & { id?: string })
@@ -21,8 +21,9 @@ type Fixture = Readonly<{
   observations: readonly string[];
 }>;
 
-/** ♻️ Pure fold twin of Rust `fold_history` for revert/reinstate durability scenarios. */
-function foldHistory(edits: readonly Edit[], transitions: readonly TransitionStep[]): { applied: string[]; redo: string[] } {
+/** ♻️ Pure fold twin of Rust `fold_history` for revert/reinstate durability scenarios: an undo belongs to its author, so a
+ * transition naming another actor's operation changes nothing and is listed in `refused`. */
+function foldHistory(edits: readonly Edit[], transitions: readonly TransitionStep[]): { applied: string[]; redo: string[]; refused: string[] } {
   const owners = new Map<string, string>();
   const authors = new Map<string, string>();
   for (const edit of edits) {
@@ -39,6 +40,7 @@ function foldHistory(edits: readonly Edit[], transitions: readonly TransitionSte
   events.sort((left, right) => left.key[0] - right.key[0] || left.key[1].localeCompare(right.key[1]));
   const active = new Set<string>();
   const redo: string[] = [];
+  const refused: string[] = [];
   const owned = (mutationIds: readonly string[]): string[] => {
     const ids: string[] = [];
     for (const mutationId of mutationIds) {
@@ -54,6 +56,8 @@ function foldHistory(edits: readonly Edit[], transitions: readonly TransitionSte
       for (let index = redo.length - 1; index >= 0; index -= 1) {
         if (authors.get(redo[index]!) === event.edit.actor) redo.splice(index, 1);
       }
+    } else if (owned(event.transition.mutationIds).some((editId) => authors.get(editId) !== event.transition.actor)) {
+      refused.push(event.transition.id);
     } else if (event.transition.kind === "revert") {
       for (const editId of owned(event.transition.mutationIds)) {
         if (active.delete(editId)) redo.push(editId);
@@ -72,7 +76,7 @@ function foldHistory(edits: readonly Edit[], transitions: readonly TransitionSte
     .filter((edit) => active.has(edit.id))
     .sort((left, right) => left.logicalMs - right.logicalMs || left.id.localeCompare(right.id))
     .map((edit) => edit.id);
-  return { applied, redo: [...redo] };
+  return { applied, redo: [...redo], refused };
 }
 
 /** 🗄️ Validates the durable collaborative redo corpus (Ajv) and executes its fold scenario. */
@@ -96,6 +100,7 @@ export async function registerTests(vitest: NonNullable<ImportMeta["vitest"]>, s
       expect(fixture.schema).toBe("semio.history.durable-collaborative-redo.v1");
       expect(fixture.observations).toContain("durable-collaborative-redo");
       expect(fixture.observations).toContain("survives-hub-restart");
+      expect(fixture.observations).toContain("foreign-transition-refused");
     });
 
     it("folds selective undo/redo across reload and hub-restart", () => {
@@ -113,6 +118,7 @@ export async function registerTests(vitest: NonNullable<ImportMeta["vitest"]>, s
           const fold = foldHistory(fixture.edits, transitions);
           expect(fold.applied, step.label).toEqual([...step.expect.applied]);
           expect(fold.redo, step.label).toEqual([...step.expect.redo]);
+          expect(fold.refused, step.label).toEqual([...step.expect.refused]);
         } else {
           const first = foldHistory(fixture.edits, transitions);
           const second = foldHistory(fixture.edits, transitions);

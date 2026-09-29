@@ -773,7 +773,6 @@ async fn member_factory_parent_snapshot_restore_matches_neutral_corpus() {
         if row["parentHasChild"].as_bool().unwrap() { assert_parent_restore_case::<true>(row).await; }
         else { assert_parent_restore_case::<false>(row).await; }
     }
-    eprintln!("[DEBUG] actual parent snapshot restore matched four independent neutral authority cases");
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -1414,17 +1413,14 @@ fn admit_recursive_member_set(
     row: &Value,
     ingress: Vec<crate::app::OwnedDocumentMemberIngress>,
 ) {
-    eprintln!("[DEBUG] recursive replacement member admission: reserving exact roster");
     assert!(app.try_begin_owned_document_members(handle, ingress.len(), u64::MAX).expect("recursive member ingress registry"));
     let mut ingress = ingress.into_iter().map(Some).collect::<Vec<_>>();
     for ordinal in row["admissionOrder"].as_array().expect("recursive admission order") {
         let ordinal = ordinal.as_u64().expect("recursive admission ordinal") as usize;
-        eprintln!("[DEBUG] recursive replacement member admission: transferring ordinal {ordinal}");
         let member = ingress.get_mut(ordinal).and_then(Option::take).expect("recursive admission ordinal is unique and in range");
         app.admit_owned_document_member(handle, member).unwrap_or_else(|_| panic!("recursive exact candidate member admission"));
     }
     assert!(ingress.iter().all(Option::is_none));
-    eprintln!("[DEBUG] recursive replacement member admission: sealing exact roster");
     app.seal_owned_document_members(handle).expect("recursive complete candidate member set");
 }
 
@@ -1521,7 +1517,6 @@ async fn retained_composed_replacement_publishes_parent_members_view_graph_windo
     assert_eq!(app.poll_artifact_store_replacement(handle), crate::app::ArtifactEnvelopeDecodeOperationPoll::Ready);
     assert!(app.acknowledge_artifact_store_replacement(handle).expect("terminal replacement acknowledgement"));
     close_member_admission_app(&mut app);
-    eprintln!("[DEBUG] recursive replacement published parent/member/content/coordinator/window together and incrementally retired old roots, members, pins, and store");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1554,7 +1549,6 @@ async fn retained_composed_replacement_cancellation_during_open_closure_and_view
         assert!(app.acknowledge_artifact_store_replacement(handle).expect("cancel acknowledgement"));
         close_member_admission_app(&mut app);
     }
-    eprintln!("[DEBUG] recursive replacement cancellation retained the live bundle during member open, closure validation, and immutable-view preparation");
 }
 
 /// 🧩️ A candidate parent's child projection is the APP's answer, never the structural one.
@@ -1608,15 +1602,12 @@ async fn retained_composed_replacement_rejects_a_real_live_child_generation_chan
     assert_eq!(app.window_transient_store.document_generation(), old_window_generation);
     assert!(app.acknowledge_artifact_store_replacement(handle).expect("stale replacement acknowledgement"));
     close_member_admission_app(&mut app);
-    eprintln!("[DEBUG] recursive replacement fenced a real child-content generation change and retired its unpublished candidate without changing parent, child view, graph, or windows");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn retained_window_input_recursive_replacement_publishes_the_complete_nested_bundle_atomically() {
-    eprintln!("[DEBUG] recursive replacement success: reading vectors");
     let vectors = recursive_replacement_vectors();
     let row = recursive_replacement_case(&vectors, "recursive-unordered-success");
-    eprintln!("[DEBUG] recursive replacement success: constructing live bundle");
     let mut app = live_recursive_replacement_app().await;
     let old_parent_id = app.store.envelope().id.clone();
     let old_window_generation = app.window_transient_store.document_generation();
@@ -1624,17 +1615,15 @@ async fn retained_window_input_recursive_replacement_publishes_the_complete_nest
     let child_dialect = test_child_dialect().await;
     app.pending_child_pins.push(vcs::CompositionPin { child_ref: ArtifactRef { artifact_id: "child-1".into(), dialect: child_dialect }, checkpoint_id: "displaced-checkpoint".into() });
     let parent_id = vectors["root"]["artifactId"].as_str().expect("recursive replacement root id");
-    eprintln!("[DEBUG] recursive replacement success: constructing candidate ingress");
     let (handle, ingress) = retained_recursive_replacement_fixture(&mut app, 741, parent_id, row["mode"].as_str().expect("recursive replacement mode")).await;
     eprintln!(
-        "[DEBUG] recursive replacement success: admitting complete member set active={} app={} ingress={}",
+        "recursive replacement success: admitting complete member set active={} app={} ingress={}",
         std::mem::size_of::<crate::app::ActiveArtifactStoreReplacement<ComposedParentSnapshot, RecursiveFixtureMutation, RecursiveTestMembers>>(),
         std::mem::size_of::<VcsArtifactApp<ComposedParentApp, RecursiveTestMembers>>(),
         std::mem::size_of::<crate::app::OwnedDocumentMemberIngress>(),
     );
     Box::pin(drive_recursive_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::AwaitingMembers)).await;
     admit_recursive_member_set(&mut app, handle, row, ingress);
-    eprintln!("[DEBUG] recursive replacement success: driving publication");
 
     for _ in 0..100_000 {
         let committed = app.store_replacement_jobs.get(handle.operation.0).is_some_and(|active| active.committed);
@@ -1669,15 +1658,12 @@ async fn retained_window_input_recursive_replacement_publishes_the_complete_nest
     assert!(app.acknowledge_artifact_store_replacement(handle).expect("recursive terminal replacement acknowledgement"));
     close_recursive_replacement_app(app.as_mut());
     assert_eq!(row["published"], true);
-    eprintln!("[DEBUG] recursive retained replacement published the parent, two nested member stores, immutable content, ownership graph, child generation, pins, and window generation in one observable turn, then bounded-retired every displaced owner");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn retained_window_input_recursive_document_archive_round_trips_the_complete_owned_closure() {
-    eprintln!("[DEBUG] recursive archive: constructing retained parent and two member envelopes");
     let archive = recursive_document_archive("archive-parent").await;
     let expected = archive.clone();
-    eprintln!("[DEBUG] recursive archive: constructing live bundle and loading exact closure");
     let mut app = live_recursive_replacement_app().await;
     PluginApp::begin_document_archive_load(app.as_mut(), 81, archive).expect("recursive archive admission");
     let status = Box::pin(drive_recursive_document_archive_load(app.as_mut(), 81)).await;
@@ -1687,7 +1673,6 @@ async fn retained_window_input_recursive_document_archive_round_trips_the_comple
     assert_eq!(app.store.snapshot().expect("archive parent current snapshot").revision, 7);
     assert_eq!(app.child_content_root.typed_read::<RecursiveBranchSnapshot>("slot", "child-1").expect("archive branch content").count, 29);
     assert_eq!(app.child_content_root.typed_read::<RecursiveBranchSnapshot>("nested", "grandchild-1").expect("archive leaf content").count, 53);
-    eprintln!("[DEBUG] recursive archive: reading generation-fenced persisted closure");
     let persisted = Box::pin(PluginApp::document_archive(app.as_ref())).await.expect("recursive archive read");
     assert_eq!(persisted.members.len(), 2);
     assert_eq!(persisted.members[0].owner.parent.artifact_id, "archive-parent");
@@ -1760,9 +1745,14 @@ async fn retained_window_input_recursive_document_archive_round_trips_the_comple
     PluginApp::acknowledge_document_archive_load(app.as_mut(), 83).expect("foreign recursive archive acknowledgement");
     assert_eq!(Box::pin(PluginApp::document_archive(app.as_ref())).await.expect("live archive after foreign parent"), persisted);
     close_recursive_replacement_app(app.as_mut());
-    eprintln!("[DEBUG] recursive archive load/read preserved the full two-level owner closure through atomic replacement and deterministic persistence; malformed and foreign-schema parents retained the prior live archive");
 }
 
+/// 🧭️ One poll spends up to `DOCUMENT_ARCHIVE_POLL_WALL_US` driving the same rotation, so whether it
+/// comes back still `Running` or already `Cancelled` is a scheduling coincidence, not a product
+/// property — a quiet machine fits more bounded steps into that budget than a loaded one, and this
+/// clause used to demand the loaded outcome. What the law is named for is the ORDER: a cancelled
+/// archive never publishes or faults, and it is not acknowledgeable until its exact input owner has
+/// been retired. Both are asserted directly.
 #[semio_framework_async_macros::async_test]
 async fn retained_window_input_recursive_document_archive_cancel_retires_the_exact_input_before_acknowledgement() {
     let archive = recursive_document_archive("cancelled-archive-parent").await;
@@ -1772,12 +1762,6 @@ async fn retained_window_input_recursive_document_archive_cancel_retires_the_exa
     assert!(PluginApp::acknowledge_document_archive_load(app.as_mut(), 84).is_err());
     PluginApp::cancel_document_archive_load(app.as_mut(), 84).expect("recursive archive cancellation request");
     let requested = Box::pin(PluginApp::poll_document_archive_load(app.as_mut(), 84)).await.expect("recursive archive cancellation request status");
-    // 🧭️ One poll spends up to `DOCUMENT_ARCHIVE_POLL_WALL_US` driving the same rotation, so whether it
-    // comes back still `Running` or already `Cancelled` is a scheduling coincidence, not a product
-    // property — a quiet machine fits more bounded steps into that budget than a loaded one, and this
-    // clause used to demand the loaded outcome. What the law is named for is the ORDER: a cancelled
-    // archive never publishes or faults, and it is not acknowledgeable until its exact input owner has
-    // been retired. Both are asserted directly.
     assert!(!matches!(requested.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Fault), "a cancelled recursive archive published or faulted: {:?}", requested.state);
     if requested.state != protocol::DocumentArchiveLoadState::Cancelled {
         assert!(PluginApp::acknowledge_document_archive_load(app.as_mut(), 84).is_err(), "a cancelled archive short of its terminal status was acknowledgeable");
@@ -1787,7 +1771,6 @@ async fn retained_window_input_recursive_document_archive_cancel_retires_the_exa
     PluginApp::acknowledge_document_archive_load(app.as_mut(), 84).expect("recursive archive cancelled acknowledgement");
     assert_eq!(app.store.envelope().id, previous);
     close_recursive_replacement_app(app.as_mut());
-    eprintln!("[DEBUG] cancelled recursive archive retained its exact input owner, published no candidate, bounded-retired the two members plus parent bytes, and released only after terminal acknowledgement");
 }
 
 async fn verify_recursive_rejection_case(id: &'static str, operation: u64) {
@@ -1817,7 +1800,6 @@ async fn retained_window_input_recursive_replacement_rejects_missing_extra_and_d
     for (offset, id) in ["missing-grandchild", "extra-unreachable-member", "duplicate-member"].into_iter().enumerate() {
         Box::pin(verify_recursive_rejection_case(id, 750 + offset as u64)).await;
     }
-    eprintln!("[DEBUG] recursive retained replacement rejected missing, unreachable-extra, and duplicate decoded member stores while bounded-retiring every request, store, snapshot read, identity, and candidate owner");
 }
 
 async fn verify_recursive_cancellation_case(id: &'static str, operation: u64) {
@@ -1829,17 +1811,13 @@ async fn verify_recursive_cancellation_case(id: &'static str, operation: u64) {
         "viewPreparation" => crate::app::ActiveArtifactStoreReplacementState::PreparingCandidateViews,
         other => panic!("unknown recursive cancellation phase {other}"),
     };
-    eprintln!("[DEBUG] recursive replacement {id}: constructing live bundle");
     let mut app = Box::pin(live_recursive_replacement_app()).await;
     let old_parent_id = app.store.envelope().id.clone();
     let old_window_generation = app.window_transient_store.document_generation();
     let old_content_generation = app.child_content_generation;
-    eprintln!("[DEBUG] recursive replacement {id}: constructing candidate ingress");
     let (handle, ingress) = Box::pin(retained_recursive_replacement_fixture(&mut app, operation, &format!("cancelled-{id}"), row["mode"].as_str().expect("recursive cancellation mode"))).await;
-    eprintln!("[DEBUG] recursive replacement {id}: admitting complete member set");
     Box::pin(drive_recursive_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::AwaitingMembers)).await;
     admit_recursive_member_set(&mut app, handle, row, ingress);
-    eprintln!("[DEBUG] recursive replacement {id}: driving to {target:?}");
     Box::pin(drive_recursive_replacement_to(&mut app, handle, target)).await;
     if target == crate::app::ActiveArtifactStoreReplacementState::OpeningMembers {
         for _ in 0..crate::app::MAINTENANCE_STAGES {
@@ -1850,7 +1828,6 @@ async fn verify_recursive_cancellation_case(id: &'static str, operation: u64) {
         }
         assert!(app.store_replacement_jobs.get(handle.operation.0).is_some_and(|active| active.active_member_open.is_some()));
     }
-    eprintln!("[DEBUG] recursive replacement {id}: requesting cancellation");
     app.cancel_artifact_store_replacement(handle).expect("cancel recursive retained replacement");
     Box::pin(drive_recursive_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::Complete)).await;
     assert_eq!(app.poll_artifact_store_replacement(handle), crate::app::ArtifactEnvelopeDecodeOperationPoll::Cancelled, "{id}");
@@ -1859,23 +1836,19 @@ async fn verify_recursive_cancellation_case(id: &'static str, operation: u64) {
     assert_eq!(app.child_content_generation, old_content_generation, "{id}");
     assert_eq!(app.window_transient_store.document_generation(), old_window_generation, "{id}");
     assert!(app.acknowledge_artifact_store_replacement(handle).expect("bounded cancelled replacement acknowledgement"), "{id}");
-    eprintln!("[DEBUG] recursive replacement {id}: closing retained live app");
     close_recursive_replacement_app(app.as_mut());
 }
 
 async fn verify_recursive_stale_authority_case() {
     let vectors = recursive_replacement_vectors();
     let row = recursive_replacement_case(&vectors, "stale-child-content-authority");
-    eprintln!("[DEBUG] recursive replacement stale-child-content-authority: constructing live bundle");
     let mut app = Box::pin(live_recursive_replacement_app()).await;
     let old_parent_id = app.store.envelope().id.clone();
     let old_window_generation = app.window_transient_store.document_generation();
     let old_content_generation = app.child_content_generation;
-    eprintln!("[DEBUG] recursive replacement stale-child-content-authority: constructing and admitting candidate");
     let (handle, ingress) = Box::pin(retained_recursive_replacement_fixture(&mut app, 769, "stale-recursive-parent", row["mode"].as_str().expect("recursive stale mode"))).await;
     Box::pin(drive_recursive_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::AwaitingMembers)).await;
     admit_recursive_member_set(&mut app, handle, row, ingress);
-    eprintln!("[DEBUG] recursive replacement stale-child-content-authority: driving candidate ready");
     Box::pin(drive_recursive_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::CandidateReady)).await;
     let generation = app.admit_child_content_publication().expect("real concurrent child-content publication authority");
     app.publish_child_content_member(generation, "slot", "child-1").await.expect("real concurrent child-content publication");
@@ -1897,7 +1870,6 @@ async fn retained_window_input_recursive_replacement_cancellation_and_stale_auth
         Box::pin(verify_recursive_cancellation_case(id, 760 + offset as u64)).await;
     }
     Box::pin(verify_recursive_stale_authority_case()).await;
-    eprintln!("[DEBUG] recursive retained replacement cancellation at member-open, closure, and view phases plus a real stale content authority retained the complete live bundle and bounded-retired every unpublished owner");
 }
 //#endregion 🧬️ComposedParentFixture
 

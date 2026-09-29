@@ -326,8 +326,17 @@ pub mod render {
         pub sections: Option<PathBuf>,
     }
 
-    /// 🎬️ Renders any `Scene` implementation to configured outputs.
-    pub async fn render_scene<S: Scene>(mut scene: S, config: &AnimateConfig, formats: &[OutputFormat]) -> Result<OutputPaths, VideoError> {
+    /// 🎞️ Every frame a `Scene` plays, captured target-neutrally (no GPU, no file system): the mobject state at each
+    /// timeline sample, the scene's final camera and its sections.
+    pub struct SceneCapture {
+        pub captures: Vec<CapturedFrame>,
+        pub camera: Camera,
+        pub sections: SectionList,
+    }
+
+    /// 🎬️ Plays `scene` under `config` and captures one [`CapturedFrame`] per timeline sample (one still frame when the
+    /// scene plays nothing).
+    pub fn capture_scene<S: Scene>(mut scene: S, config: &AnimateConfig) -> SceneCapture {
         scene.setup(config);
         let mut recorder = FrameRecorder { inner: scene, captures: Vec::new() };
         recorder.construct();
@@ -335,14 +344,19 @@ pub mod render {
         if recorder.captures.is_empty() {
             recorder.capture_now();
         }
+        SceneCapture { sections: recorder.inner.sections().clone(), camera: recorder.inner.camera().clone(), captures: recorder.captures }
+    }
 
-        let sections = recorder.inner.sections().clone();
+    /// 🎬️ Renders any `Scene` implementation to configured outputs.
+    pub async fn render_scene<S: Scene>(scene: S, config: &AnimateConfig, formats: &[OutputFormat]) -> Result<OutputPaths, VideoError> {
+        let recorded = capture_scene(scene, config);
+        let sections = recorded.sections;
         let sections_path = config.output_dir.join("sections.json");
         fs::create_dir_all(&config.output_dir).map_err(VideoError::io("output dir"))?;
         let sections_value = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&sections));
         fs::write(&sections_path, dsl::os_pack::json::to_string_pretty(&sections_value)).map_err(VideoError::io("sections write"))?;
 
-        let camera = recorder.inner.camera().clone();
+        let camera = recorded.camera;
         let mut renderer = VelloRenderer::new(config.width, config.height).await?;
         let mut writer = SceneFileWriter::new(config, formats)?;
         let mut cache = if config.cache.enabled { Some(PartialMovieLut::open_with_limit(config.cache.partial_movie_dir.clone(), config.cache.max_entries)?) } else { None };
@@ -351,7 +365,7 @@ pub mod render {
         let mut current_partial: Option<PathBuf> = None;
         let mut last_pixels: Option<Vec<u8>> = None;
 
-        for (frame_index, capture) in recorder.captures.iter().enumerate() {
+        for (frame_index, capture) in recorded.captures.iter().enumerate() {
             let hash = frame_hash(capture, config);
             if hash != current_hash {
                 if let Some(partial) = current_partial.take() {
@@ -497,10 +511,8 @@ pub mod renderer {
     use crate::editor::animate::engine::camera::camera::Camera;
     use crate::editor::animate::engine::config::config::AnimateConfig;
     use crate::editor::animate::engine::scene::sobject::{Sobject, Sobjects};
-    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     use crate::editor::animate::engine::text::color::Color;
     use crate::editor::animate::engine::video::VideoError;
-    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     use geometry::Affine;
     use semio_framework_raster::RasterError;
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
@@ -514,12 +526,11 @@ pub mod renderer {
 
     /// 🖌️ Headless Vello/wgpu renderer (via `semio_framework_raster::SceneRasterizer`) with
     /// static-background caching. Native/host-only body; see the `wasm32-wasip2` variant below —
-    /// `export-video-from-deck` is dispatched through `Editor::handle`, the plugin's own guest
-    /// command surface (confirmed by tracing `PresentationCommand::ExportVideoFromDeck` →
-    /// `export_video_from_deck::handle_async` → `export_video_from_scene` →
-    /// `compile_scene_to_assets` → `render_scene` → here), so `VelloRenderer` cannot simply
-    /// disappear under wasip2 the way `render_world_3d` did — every caller up that chain must keep
-    /// compiling. `🔍️research/📓️raster-tier-split.md` has the full trace.
+    /// the native site compiler reaches it through `compile_scene_to_assets` → `render_scene`, and
+    /// that chain must keep compiling on every target. The guest's `export-video-from-deck` never
+    /// comes here: it builds a `VideoRenderProgram` (`program::VideoProgramBuilder` paints exactly
+    /// what [`VelloRenderer::render_capture`] paints) and the host renders it.
+    /// `🔍️research/📓️raster-tier-split.md` has the tier split.
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     pub struct VelloRenderer {
         rasterizer: SceneRasterizer,
@@ -558,7 +569,7 @@ pub mod renderer {
     /// graphics API, so no amount of first-party wrapping makes real rasterization possible here.
     /// This is NOT a stub: every call returns the same honest `RasterError::Adapter` a native host
     /// reports when it genuinely finds no adapter (see the raster crate's own
-    /// `[DEBUG] no wgpu adapter in this environment` test fallback for the precedent), surfaced to
+    /// `[TRACE] no wgpu adapter in this environment` test fallback for the precedent), surfaced to
     /// the caller as a real `Fault`/error effect rather than a silently-dropped capability. Kept
     /// zero-sized: it names neither `wgpu` nor `vello`, so it adds nothing to the shipped
     /// component's link graph.
@@ -598,8 +609,8 @@ pub mod renderer {
         scene
     }
 
-    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-    fn scene_affine(camera: &Camera, width: u32, height: u32) -> Affine {
+    /// 📐️ Scene units → device pixels (y down) for `camera` on a `width` × `height` picture.
+    pub(crate) fn scene_affine(camera: &Camera, width: u32, height: u32) -> Affine {
         let sx = width as f64 / camera.frame_width;
         let sy = height as f64 / camera.frame_height;
         Affine::new([sx, 0.0, 0.0, -sy, width as f64 * 0.5 - camera.frame_center.x() * sx, height as f64 * 0.5 + camera.frame_center.y() * sy]) * camera.transform
@@ -627,8 +638,8 @@ pub mod renderer {
         [rgba[0] as f32, rgba[1] as f32, rgba[2] as f32, rgba[3] as f32]
     }
 
-    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-    fn color_from_style(color: Color) -> [f64; 4] {
+    /// 🎨️ A style colour as straight RGBA.
+    pub(crate) fn color_from_style(color: Color) -> [f64; 4] {
         color.to_array()
     }
 
@@ -1014,9 +1025,154 @@ pub mod writer {
     include!("🧪️tests/🔬️writer-unit/🦀️.rs");
 }
 
+pub mod program {
+    //! 🎞️ Captured frames → `semio_framework::kernel::VideoRenderProgram`: the target-neutral half of video export. A
+    //! guest has no GPU and no encoder, so it describes every frame (shared path table, deduplicated scenes, run-length
+    //! timeline) and the host renders + encodes it (`Effect::VideoRenderExport`). Paint order and colours are exactly
+    //! the native `VelloRenderer`'s (`renderer::paint_mobject`), so both tiers draw the same picture.
+
+    use crate::editor::animate::engine::camera::camera::Camera;
+    use crate::editor::animate::engine::config::config::AnimateConfig;
+    use crate::editor::animate::engine::scene::sobject::Sobject;
+    use crate::editor::animate::engine::video::renderer::{color_from_style, scene_affine, CapturedFrame};
+    use geometry::PathEl;
+    use semio_framework::kernel::{VideoRenderOp, VideoRenderPath, VideoRenderProgram, VideoRenderRun, VideoRenderScene, VIDEO_RENDER_PROGRAM_SCHEMA};
+    use std::collections::HashMap;
+
+    type OpKey = (u8, u32, [u64; 6], [u64; 4], u64);
+
+    /// 🧱️ Accumulates captured frames into one program: identical paths share one table row, identical frames one scene,
+    /// consecutive identical frames one timeline run.
+    pub struct VideoProgramBuilder {
+        program: VideoRenderProgram,
+        paths: HashMap<(String, Vec<u64>), u32>,
+        scenes: HashMap<Vec<OpKey>, u32>,
+    }
+
+    fn bits<const N: usize>(values: [f64; N]) -> [u64; N] {
+        values.map(f64::to_bits)
+    }
+
+    fn op_key(op: &VideoRenderOp) -> OpKey {
+        match op {
+            VideoRenderOp::Fill { path, transform, color } => (0, *path, bits(*transform), bits(*color), 0),
+            VideoRenderOp::Stroke { path, transform, color, width } => (1, *path, bits(*transform), bits(*color), width.to_bits()),
+            VideoRenderOp::Image { image, crop, transform, opacity } => (2, *image, bits(*transform), bits(*crop), opacity.to_bits()),
+        }
+    }
+
+    fn unit(value: f64) -> f64 {
+        if value.is_nan() {
+            0.0
+        } else {
+            value.clamp(0.0, 1.0)
+        }
+    }
+
+    impl VideoProgramBuilder {
+        /// 🏗️ An empty program at `config`'s picture size, frame rate and background.
+        pub fn new(config: &AnimateConfig) -> Self {
+            let program = VideoRenderProgram {
+                schema: VIDEO_RENDER_PROGRAM_SCHEMA.into(),
+                width: config.width,
+                height: config.height,
+                fps: config.frame_rate.round().max(1.0) as u32,
+                background: config.background.map(unit),
+                paths: Vec::new(),
+                images: Vec::new(),
+                scenes: Vec::new(),
+                timeline: Vec::new(),
+            };
+            Self { program, paths: HashMap::new(), scenes: HashMap::new() }
+        }
+
+        fn path_index(&mut self, path: &geometry::BezPath) -> u32 {
+            let mut verbs = String::new();
+            let mut points = Vec::new();
+            for element in path.elements() {
+                match element {
+                    PathEl::MoveTo(p) => {
+                        verbs.push('M');
+                        points.extend([p.x(), p.y()]);
+                    }
+                    PathEl::LineTo(p) => {
+                        verbs.push('L');
+                        points.extend([p.x(), p.y()]);
+                    }
+                    PathEl::QuadTo(a, b) => {
+                        verbs.push('Q');
+                        points.extend([a.x(), a.y(), b.x(), b.y()]);
+                    }
+                    PathEl::CurveTo(a, b, c) => {
+                        verbs.push('C');
+                        points.extend([a.x(), a.y(), b.x(), b.y(), c.x(), c.y()]);
+                    }
+                    PathEl::ClosePath => verbs.push('Z'),
+                }
+            }
+            let key = (verbs.clone(), points.iter().map(|value| value.to_bits()).collect::<Vec<_>>());
+            if let Some(index) = self.paths.get(&key) {
+                return *index;
+            }
+            let index = self.program.paths.len() as u32;
+            self.program.paths.push(VideoRenderPath { verbs, points });
+            self.paths.insert(key, index);
+            index
+        }
+
+        /// 🎞️ Appends one captured frame, painted like `VelloRenderer::render_capture` (z-order, then id).
+        pub fn push_capture(&mut self, capture: &CapturedFrame, camera: &Camera, config: &AnimateConfig) {
+            let view = scene_affine(camera, config.width, config.height);
+            let mut order: Vec<usize> = (0..capture.mobjects.len()).collect();
+            order.sort_by_key(|&index| (capture.mobjects[index].z_order(), capture.mobjects[index].id()));
+            let mut ops = Vec::new();
+            for index in order {
+                let mobject = &capture.mobjects[index];
+                let transform = (view * mobject.transform()).as_coeffs();
+                let style = mobject.style();
+                let opacity = mobject.effective_opacity();
+                for path in mobject.paths() {
+                    let path = self.path_index(&path);
+                    if let Some(fill) = style.fill {
+                        let color = color_from_style(fill.with_alpha(fill.a * style.fill_opacity * opacity)).map(unit);
+                        ops.push(VideoRenderOp::Fill { path, transform, color });
+                    }
+                    if let Some(stroke) = style.stroke {
+                        let color = color_from_style(stroke.with_alpha(stroke.a * style.stroke_opacity * opacity)).map(unit);
+                        ops.push(VideoRenderOp::Stroke { path, transform, color, width: style.stroke_width.max(0.0) });
+                    }
+                }
+            }
+            let key: Vec<OpKey> = ops.iter().map(op_key).collect();
+            let scene = match self.scenes.get(&key) {
+                Some(scene) => *scene,
+                None => {
+                    let scene = self.program.scenes.len() as u32;
+                    self.program.scenes.push(VideoRenderScene { ops });
+                    self.scenes.insert(key, scene);
+                    scene
+                }
+            };
+            match self.program.timeline.last_mut() {
+                Some(run) if run.scene == scene => run.frames += 1,
+                _ => self.program.timeline.push(VideoRenderRun { scene, frames: 1 }),
+            }
+        }
+
+        /// 📦️ The finished program.
+        pub fn finish(self) -> VideoRenderProgram {
+            self.program
+        }
+    }
+
+    #[cfg(test)]
+    include!("🧪️tests/🔬️program-unit/🦀️.rs");
+}
+
 pub use cache::PartialMovieLut;
 pub use preview::{preview_scene_headless, preview_scene_window, PreviewOutcome};
-pub use render::{render_scene, OutputFormat, OutputPaths};
+pub use program::VideoProgramBuilder;
+pub use render::{capture_scene, render_scene, OutputFormat, OutputPaths, SceneCapture};
 pub use renderer::VelloRenderer;
 pub use scenes::scene_for_hash;
 pub use writer::{flush_partial_movie_cache, write_sections_srt, SceneFileWriter};

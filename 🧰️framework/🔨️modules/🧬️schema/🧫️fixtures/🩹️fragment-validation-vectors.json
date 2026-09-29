@@ -3,7 +3,7 @@
   "schema": {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "type": "object",
-    "required": ["metadata", "variant", "bytes", "payload"],
+    "required": ["metadata", "variant", "bytes", "samples", "payload"],
     "additionalProperties": false,
     "properties": {
       "metadata": {
@@ -49,14 +49,40 @@
         "maxItems": 2097152,
         "items": { "type": "integer", "minimum": 0, "maximum": 255 }
       },
+      "samples": { "$ref": "#/definitions/Samples", "x-semio-state": "artifact" },
       "payload": { "type": "string" }
+    },
+    "definitions": {
+      "Samples": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": ["kind", "value"],
+            "additionalProperties": false,
+            "properties": {
+              "kind": { "const": "pcm8" },
+              "value": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } }
+            }
+          },
+          {
+            "type": "object",
+            "required": ["kind", "value"],
+            "additionalProperties": false,
+            "properties": {
+              "kind": { "const": "pcm16" },
+              "value": { "type": "array", "items": { "type": "integer", "minimum": -32768, "maximum": 32767 } }
+            }
+          }
+        ]
+      }
     }
   },
   "payloadRepeatBytes": 2097152,
   "base": {
     "metadata": { "mode": "draft", "count": 7, "items": ["first"] },
     "variant": { "kind": "counted", "count": 2 },
-    "bytes": [0]
+    "bytes": [0],
+    "samples": { "kind": "pcm8", "value": [0, 0] }
   },
   "cases": [
     { "id": "range-boundary", "operation": "set", "path": ["metadata", "count"], "candidate": 15, "accepted": true },
@@ -65,6 +91,8 @@
     { "id": "discriminated-union-boundary", "operation": "set", "path": ["variant", "count"], "candidate": 4, "accepted": true },
     { "id": "discriminated-union-overflow", "operation": "set", "path": ["variant", "count"], "candidate": 5, "accepted": false },
     { "id": "discriminated-union-tag-incomplete", "operation": "set", "path": ["variant", "kind"], "candidate": "named", "accepted": false },
+    { "id": "annotated-reference-union-boundary", "operation": "set", "path": ["samples", "value", 1], "candidate": 255, "accepted": true },
+    { "id": "annotated-reference-union-overflow", "operation": "set", "path": ["samples", "value", 1], "candidate": 256, "accepted": false },
     { "id": "required-removal", "operation": "remove", "path": ["metadata", "mode"], "accepted": false },
     { "id": "min-items-removal", "operation": "remove", "path": ["metadata", "items", 0], "accepted": false },
     { "id": "cross-field-dependency", "operation": "insert", "path": ["metadata", "enabled"], "candidate": true, "accepted": false },

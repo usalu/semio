@@ -6,7 +6,7 @@
     {"kind":"node-graph","schema":"node-graph@1","value":{"nodes":[{"id":"operator-a","label":{"$some":"Größe"},"x":0,"y":0,"width":128,"height":96,"inputs":[{"id":"in"}],"outputs":[]}],"edges":[],"viewport":{"$some":{"x":12.5,"y":-6.5,"zoom":3.5}}}},
     {"kind":"text-editor","schema":"text-editor@1","value":{"buffer":"Größe🧭","language":{"$some":"typescript"}}},
     {"kind":"table","schema":"table@1","value":{"columnsJson":"[]","rowsJson":"[]"}},
-    {"kind":"paint-2d","schema":"paint-2d@1","value":{"documentSyncJson":"{}","assetsJson":"[]","cameraJson":"{}","selectionJson":"[]","activeUtility":"brush","brushSize":10,"brushOpacity":1,"viewMode":"composite"}},
+    {"kind":"paint-2d","schema":"paint-2d@1","value":{"documentSyncJson":"{}","assetsJson":"[]","cameraJson":"{}","selectionJson":"[]","activeUtility":"brush","brushSize":10,"brushOpacity":1,"brushColor":"#2878dc","brushHardness":1,"paintTarget":"pixels","maskValue":{"$u64":255},"viewMode":"composite"}},
     {"kind":"virtual-file-system","schema":"virtual-file-system@1","value":{"schemaJson":"{}","rowsJson":"[]"}},
     {"kind":"tiled-map","schema":"tiled-map@1","value":{"mapFixtureJson":"{}","cameraJson":"{}"}},
     {"kind":"board-2d","schema":"board-2d@1","value":{"fixtureJson":"{}","cameraJson":"{}","glyphCatalogsJson":"{}","selectionJson":"[]","interactive":true,"selectionMethod":"rectangle","gridVisible":true,"gridSnapEnabled":false,"gridFactor":1,"selectableNodes":true,"selectableEdges":true,"selectableHandles":true,"suggestionOffset":0,"brushWeightsJson":"{}","placementCompatibilityJson":"[]","lodMode":"automatic"}},

@@ -11,17 +11,17 @@ import { type ShellLocale, type ShellTerminology } from "@semio-tech/framework";
 // #region I18n
 export type UiLocale = ShellLocale;
 
-/** @emoji 🪁️ Label pair resolved by the active driver's `labelTier` axis. */
+/** 🪁️ Label pair resolved by the active driver's `labelTier` axis. */
 export type UiLabelPair = { readonly normal: string; readonly beginner: string };
 
-/** @emoji 🪁️ Translation leaf with optional manual and tutorial metadata. */
+/** 🪁️ Translation leaf with optional manual and tutorial metadata. */
 export type UiLabelValue = {
   readonly label: UiLabelPair;
   readonly manual?: string;
   readonly tutorial?: string;
 };
 
-/** @emoji 🪁️ Ribbon collection ids for ribbon collection toggles. */
+/** 🪁️ Ribbon collection ids for ribbon collection toggles. */
 export type UiRibbonParentCategory =
   | "history"
   | "hand"
@@ -44,7 +44,7 @@ export type UiRibbonParentCategory =
   | "utilities"
   | "sync";
 
-/** @emoji 🪁️ Runtime enumeration of {@link UiRibbonParentCategory} in taxonomy order — for grouping/sorting menu rows by category at runtime. */
+/** 🪁️ Runtime enumeration of {@link UiRibbonParentCategory} in taxonomy order — for grouping/sorting menu rows by category at runtime. */
 export const UI_RIBBON_PARENT_CATEGORIES: readonly UiRibbonParentCategory[] = [
   "history",
   "hand",
@@ -86,7 +86,7 @@ export type DeepUiTranslationKeys<T, Prefix extends string = ""> = T extends UiL
             [K in keyof T & string]: DeepUiTranslationKeys<T[K], Prefix extends "" ? K : `${Prefix}.${K}`>;
           }[keyof T & string];
 
-/** @emoji 🪁️ Domain-neutral chrome translation tree (settings, tooltip, `ui.*`). */
+/** 🪁️ Domain-neutral chrome translation tree (settings, tooltip, `ui.*`). */
 export type UiTranslationSchema = {
   readonly ui: {
     readonly nav: {
@@ -318,7 +318,7 @@ export type UiTranslationSchema = {
       readonly openTaskManager: UiLabelValue;
       readonly openHub: UiLabelValue;
     };
-    /** @emoji 🧭️ Labels for `noteShellCommand`'s shell-chrome commandIds (dock drag, window resize/rearrange/
+    /** 🧭️ Labels for `noteShellCommand`'s shell-chrome commandIds (dock drag, window resize/rearrange/
      * activate/close/split/open-in-new-window, panel toggle/tab) — logged into the plugin's session-only command-history panel. */
     readonly shellCommand: {
       readonly dockMove: UiLabelValue;
@@ -764,37 +764,37 @@ export type UiTranslationSchema = {
   };
 };
 
-/** @emoji 🪁️ Dot-path union of keys in {@link UiTranslationSchema}. */
+/** 🪁️ Dot-path union of keys in {@link UiTranslationSchema}. */
 export type UiTranslationKey = DeepUiTranslationKeys<UiTranslationSchema>;
 
-/** @emoji 🪁️ Compile-time check that ribbon collection ids have chrome translation keys. */
+/** 🪁️ Compile-time check that ribbon collection ids have chrome translation keys. */
 export type AssertUiRibbonParentKeysCovered<Categories extends string> = {
   readonly [K in Categories]: `ui.ribbon.parent.${K}` extends UiTranslationKey ? true : false;
 }[Categories] extends true
   ? true
   : false;
 
-/** @emoji 🪁️ Compile-time check that every {@link UiLocale} has a settings-dropdown label key. */
+/** 🪁️ Compile-time check that every {@link UiLocale} has a settings-dropdown label key. */
 export type AssertUiSettingsLanguageKeysCovered<Locales extends string> = {
   readonly [L in Locales]: `ui.settings.language.${L}` extends UiTranslationKey ? true : false;
 }[Locales] extends true
   ? true
   : false;
 
-/** @emoji 🗣️ Chrome-known terminology ids — single source `@semio-tech/framework`'s `ShellTerminology`; app-declared ids beyond this set fall back to their raw id in the dropdown. */
+/** 🗣️ Chrome-known terminology ids — single source `@semio-tech/framework`'s `ShellTerminology`; app-declared ids beyond this set fall back to their raw id in the dropdown. */
 export type UiChromeTerminologyId = ShellTerminology;
 
-/** @emoji 🗣️ Compile-time check that every {@link UiChromeTerminologyId} has a settings-dropdown label key. */
+/** 🗣️ Compile-time check that every {@link UiChromeTerminologyId} has a settings-dropdown label key. */
 export type AssertUiSettingsTerminologyKeysCovered<Ids extends string> = {
   readonly [I in Ids]: `ui.settings.terminology.${I}` extends UiTranslationKey ? true : false;
 }[Ids] extends true
   ? true
   : false;
 
-/** @emoji 🪁️ Typed translate function for domain-neutral chrome keys. */
+/** 🪁️ Typed translate function for domain-neutral chrome keys. */
 export type UiTranslateFn = <K extends UiTranslationKey>(key: K, options?: Record<string, unknown>) => unknown;
 
-/** @emoji 🪁️ Shared UI i18n port (wraps i18next; do not import i18next outside this bundle). */
+/** 🪁️ Shared UI i18n port (wraps i18next; do not import i18next outside this bundle). */
 export interface UiI18nPort {
   readonly t: UiTranslateFn;
   /** Whether the live bundles define `key` — for a caller holding an open id space that only sometimes names a label. */
@@ -806,7 +806,7 @@ export interface UiI18nPort {
 }
 
 declare const uiRegisteredTranslationKeyBrand: unique symbol;
-/** @emoji 🪁️ Key branded by {@link registerUiTranslationBundles} — only obtainable from the caster it
+/** 🪁️ Key branded by {@link registerUiTranslationBundles} — only obtainable from the caster it
  * returns, so a value of this type provably exists in every {@link UiLocale} bundle registered together
  * with it. Products (coda, compose, …) hold this instead of hand-rolling their own translation-key union
  * and casting into `useLabel`. */

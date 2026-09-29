@@ -53,7 +53,7 @@ class ChildIdentityCheckScript extends BundleScript {
         { package: "semio-s-plugin-flow", target: { kind: "lib" }, laws: ["flow_actual_surface_factories_close_all_owners_under_neutral_grants"] },
       ],
     });
-    console.log(`[DEBUG] Flow child identity native laws: ${receipts.reduce((sum, receipt) => sum + receipt.assertions, 0)} executed`);
+    console.log(`Flow child identity native laws: ${receipts.reduce((sum, receipt) => sum + receipt.assertions, 0)} executed`);
   }
 }
 
@@ -76,7 +76,7 @@ class ChildEditCheckScript extends BundleScript {
         },
       ],
     });
-    console.log(`[DEBUG] Flow typed child edit native law: ${receipts.reduce((sum, receipt) => sum + receipt.assertions, 0)} executed`);
+    console.log(`Flow typed child edit native law: ${receipts.reduce((sum, receipt) => sum + receipt.assertions, 0)} executed`);
   }
 }
 
@@ -182,7 +182,7 @@ class AddWidgetRetainedCheckScript extends BundleScript {
     assert(retainedCommandSource.includes('{"en":"Applying command","de":"Befehl wird angewendet"}'), "retained addWidget progress must bind the production bilingual preview");
     assert(source.includes('action_interactive_job("addWidget", semio_framework_plugin::InteractiveJobClassification::Migrated)'), "the manifest must expose one migrated addWidget route");
     assert(source.includes("FLOW_CHILD_GROUP_TOOL_IDS.contains(&command.command_id())"), "legacy addWidget dispatch must fail closed");
-    console.log(`[DEBUG] Flow retained addWidget oracle: ${fixture.accepted.length} accepted + ${fixture.denials.length} hostile cases; session/publication model is independent; runtimeClaims=0`);
+    console.log(`[TRACE] Flow retained addWidget oracle: ${fixture.accepted.length} accepted + ${fixture.denials.length} hostile cases; session/publication model is independent; runtimeClaims=0`);
   }
 
   async run(segments: string[]): Promise<void> {
@@ -193,7 +193,7 @@ class AddWidgetRetainedCheckScript extends BundleScript {
       cargoArgs: segments,
       groups: [{ package: "semio-s-artifact-flow-flow", target: { kind: "lib" }, laws: ["retained_add_widget_factory_is_exact_child_only_and_legacy_closed", "retained_add_widget_dispatches_one_acknowledged_child_group_and_retires"] }],
     });
-    console.log(`[DEBUG] Flow retained addWidget native laws: ${receipts.reduce((sum, receipt) => sum + receipt.assertions, 0)} executed`);
+    console.log(`Flow retained addWidget native laws: ${receipts.reduce((sum, receipt) => sum + receipt.assertions, 0)} executed`);
   }
 }
 //#endregion 🧪️Validation

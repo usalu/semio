@@ -45,7 +45,7 @@ export async function runArtifactTypeScriptPackageMain(packageRoot: string, pack
   class BuildScript extends BundleScript { async run(): Promise<void> { await build(); } }
   class CheckScript extends BundleScript {
     async run(): Promise<void> {
-      const result = await Bun.build({ entrypoints: [source], write: false, target: "bun", format: "esm" });
+      const result = await Bun.build({ entrypoints: [source], target: "bun", format: "esm" });
       if (!result.success) throw new AggregateError(result.logs, `Failed to check ${packageName}`);
       await typeScript(source, ["--noEmit"]);
       console.log(`[artifact-typescript] checked ${packageName}`);

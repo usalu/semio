@@ -9,7 +9,7 @@
 //! `🧫️fixtures/📇️directory/🪢️canonical-checkpoint-pair-v1.json` (schema `🧬️schema/🪢️canonical-checkpoint-pair-v1`).
 //! The exact inverse of the hub's `append_canonical_pair_{header,data,terminal}` (`🌎️hub/🛰️lag-rebootstrap`).
 
-use super::{ArtifactFrontier, ArtifactHash, CheckpointId, DocumentOpenCheckpointV1, DocumentScope, PublishedArtifactBlob, DOCUMENT_OPEN_ID_MAX_BYTES, DOCUMENT_OPEN_MAX_SAFE_INTEGER};
+use super::{ArtifactFrontier, ArtifactHash, CheckpointId, DocumentOpenCheckpointV1, DocumentScope, PublishedArtifactBlob, RebootstrapRequired, DOCUMENT_OPEN_ID_MAX_BYTES, DOCUMENT_OPEN_MAX_SAFE_INTEGER};
 
 pub const CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE_V1: &str = "application/vnd.semio.canonical-checkpoint-pair.v1";
 pub const CANONICAL_CHECKPOINT_PAIR_HEADER_MAX_BYTES: usize = 16 * 1024;
@@ -135,6 +135,25 @@ impl CanonicalCheckpointPairV1 {
         }
         if self.aggregate_sha256.hex() != expected.aggregate_sha256 {
             return Err(CanonicalCheckpointPairRefusalV1::Aggregate);
+        }
+        Ok(())
+    }
+
+    /// 🛟️ Admits the pair only as exactly the checkpoint a hub `RebootstrapRequired` control names (scope, checkpoint id,
+    /// descriptor digest, baseline frontier) — the control carries no aggregate, which the decoder already proved against the
+    /// pair's own bytes.
+    pub fn admit_rebootstrap(&self, control: &RebootstrapRequired) -> Result<(), CanonicalCheckpointPairRefusalV1> {
+        if self.scope != control.scope {
+            return Err(CanonicalCheckpointPairRefusalV1::Scope);
+        }
+        if self.active_checkpoint_id != control.checkpoint_id {
+            return Err(CanonicalCheckpointPairRefusalV1::Checkpoint);
+        }
+        if self.descriptor_digest_v1 != control.descriptor_digest_v1 {
+            return Err(CanonicalCheckpointPairRefusalV1::Descriptor);
+        }
+        if self.baseline_frontier != control.baseline_frontier {
+            return Err(CanonicalCheckpointPairRefusalV1::Baseline);
         }
         Ok(())
     }

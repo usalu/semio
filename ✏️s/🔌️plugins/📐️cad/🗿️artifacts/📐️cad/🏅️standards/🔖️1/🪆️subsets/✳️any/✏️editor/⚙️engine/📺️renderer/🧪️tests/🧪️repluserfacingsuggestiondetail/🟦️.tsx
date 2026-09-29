@@ -1,28 +1,20 @@
-type TestSource = { readonly directory: string; readonly url: string };
+import { preciseSpatialKernelMath } from "../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧮️preview/🟦️.ts";
+import type { AnchorRef, EdgeRef, FaceRef, ShellRef, SolidRef, VertexRef, WireRef } from "../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import type { InteractionReplEngagementInputs, RendererTestDependencies, SpatialInteractionSelectionByState, SpatialPickTarget, SpatialRendererSelectionByModel } from "../../🟦️.tsx";
+import type { DisplayModel } from "../../../🎬️actions/🟦️.ts";
+import type { InteractionSnapshot } from "../../../🗿️artifact/🟦️.ts";
+import type { MeshTransfer, Vec3 } from "../../../📔️registry/🟦️.ts";
+import type { ModelDiff } from "../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
+import type { ObjectRef, ResolvedTypologyStyle, TypologyRef } from "../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+type TestSource = { readonly url: string };
+
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: RendererTestDependencies, source: TestSource): Promise<void> {
   const { CAD_WORLD_FORWARD, CAD_WORLD_UP, COMMITTED_MESH_FACE_OPACITY, Model, THREE, WINDOW_SEARCH_USER, __cadRendererTestKernel, __cadRendererTestRuntime, applyCadWorldCoordinateSystem, applyModelDiff, buildGeometryObjectIndex, buildInteractionReplEngagement, buildInteractionReplSearch, buildPlanarFaceMeshTransfer, canvasHoverKeyForSelectionTarget, collectGeometryEdgeSegments, createSolidTypologyStyleResolver, createSpatialPickEvent, createSpatialPickTargets, createTypologyStyledMaterial, defaultInteractionReplChromeState, defaultInteractionSpatialViewTheme, defaultModelDefinitionId, defaultSpatialPrimitiveToggles, defaultSpatialTypologyTogglesForModelDefinition, emptyMeshTransfer, ensureTypologyObjectFromCreateDiff, filterCommittedMeshesForModelDefinition, filterFootprintBoxPreviewDisplayItems, filterSpatialPickTargets, filterSpatialPickTargetsForActiveView, filterSpatialPickTargetsForEntityFlags, filterSpatialPickTargetsForPrimitiveToggles, filterSpatialPickTargetsForTypologyToggles, geometryBuckets, geometryEntityNurbsPoles, geometryEntityWireSegments, historyEntryArchivesBoxFootprint, interactionSpatialGroundPickPlaneEnabled, isRenderableMeshTransfer, kernelGeometry, listFactoryFaceMeshesForModelDefinition, listStatDefinitionsForModelDefinition, loadSpatialInteraction, mergeInteractionSpatial, modelDefinitionPickTargetKinds, modelDefinitionTypologyIds, nurbsPolesFromEdge, pinnedPickTargetKeys, preciseSpatialKernelMath, projectRayToVerticalZLine, projectRayToYzPlaneAtX, pruneSelectionTargetsForEntityFlags, replDisplayedSelectionTargets, replFilterSuggestions, replHostGeometryPickingEnabled, replInteractionIdOnSpace, replIsQueryTypingTarget, replMergeSelectionPickInView, replNormalizeActionText, replRendererSelectionTargets, replShouldRepeatInteractionOnSpace, replUserFacingSuggestionDetail, resetSpatialSceneColorCache, resolveCommittedMeshMaterialProps, resolveSpatialEntityFlags, resolveSpatialPickTargetsToRender, resolveSpatialSceneVisibility, resolveTypologyStyle, revealedObjectIdsFromPickKeys, solidRef, spatialAutoFitShouldRun, spatialHoverKeyAliases, spatialHoverKeysMatch, spatialPickKindTogglesFromTypologyFilteredTargets, spatialPickTargetKey, spatialSceneColors, spatialSceneKindTogglesForModelDefinition, spatialSelectionTarget, spatialToggleCheckboxState, spatialToggleGroupFill, spatialToggleGroupState, spatialTypologyToggleLabel, statDefinitionAppliesToScope, transformGumballMatrixDiff, typologyStyleCacheKey, typologyStyleToMaterialProps, uiDataLabel, visibleSolidRefsForModelDefinition } = dependencies;
-  type AnchorRef = any;
-  type DisplayModel = any;
-  type EdgeRef = any;
-  type InteractionReplEngagementInputs = any;
-  type InteractionSnapshot = any;
-  type MeshTransfer = any;
-  type ModelDiff = any;
-  type ObjectRef = any;
-  type ResolvedTypologyStyle = any;
-  type ShellRef = any;
-  type SolidRef = any;
-  type SpatialInteractionSelectionByState = any;
-  type SpatialPickTarget = any;
-  type SpatialRendererSelectionByModel = any;
-  type TypologyRef = any;
-  type Vec3 = any;
-  type VertexRef = any;
-  type WireRef = any;
 
   __cadRendererTestRuntime!.bootstrapCadModules();
-  const { BrepjsKernel, preciseSpatialKernelMath: M } = __cadRendererTestKernel!;
+  const { BrepjsKernel } = __cadRendererTestKernel!;
+  const M = preciseSpatialKernelMath;
   const { describe, it, expect } = vitest;
 
   describe("replUserFacingSuggestionDetail", () => {
@@ -466,9 +458,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("concrete forest fixture keeps committed face visibility toggles", async () => {
       const { readFileSync } = await import("node:fs");
-      const { resolve } = await import("node:path");
       const { ModelSpace } = await import("../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts");
-      const json = JSON.parse(readFileSync(resolve(source.directory, "../../../📚️examples/🖼️assets/🎮️play/🔣️.json"), "utf8"));
+      const json = JSON.parse(readFileSync(new URL("../../../📚️examples/🖼️assets/🎮️play/🔣️.json", source.url), "utf8"));
       const model = (ModelSpace.fromJSON(json).models[defaultModelDefinitionId()] ?? ModelSpace.fromJSON(json).models[""])!;
       const mdId = defaultModelDefinitionId();
       expect(Object.keys(model.solids).length).toBeGreaterThan(0);
@@ -837,7 +828,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const e1 = { id: "e1" as EdgeRef, vertexIds: [v1.id, v2.id] as [VertexRef, VertexRef] };
       const e2 = { id: "e2" as EdgeRef, vertexIds: [v2.id, v0.id] as [VertexRef, VertexRef] };
       const wireId = "w0" as WireRef;
-      const faceId = "f0" as kernelGeometry.FaceRef;
+      const faceId = "f0" as FaceRef;
       applyModelDiff(model, {
         vertices: { added: [v0, v1, v2] },
         edges: { added: [e0, e1, e2] },

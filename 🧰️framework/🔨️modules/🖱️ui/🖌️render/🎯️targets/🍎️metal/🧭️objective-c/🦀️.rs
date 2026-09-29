@@ -1,4 +1,4 @@
-//! @emoji 🧭 Private Objective-C ownership and message ABI used by the Metal backend.
+//! 🧭 Private Objective-C ownership and message ABI used by the Metal backend.
 
 #![allow(dead_code, non_snake_case, unused_unsafe)]
 

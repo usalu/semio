@@ -548,7 +548,6 @@ async fn artifact_engine_create_rejection_propagates_exact_wal_release_owner() {
     assert!(matches!(storage.wal().await.acquire_writer(&core_document).await, Err(DbError::Conflict(_))));
     assert!(matches!(rejected_engine_open_error(rejected).await, DbError::Io(_)));
     storage.wal().await.acquire_writer(&core_document).await.unwrap().release().await.unwrap();
-    eprintln!("[DEBUG] engine construction propagated the exact rejected WAL release owner until terminal close");
 }
 
 fn history_construction_test_lock() -> std::sync::MutexGuard<'static, ()> {
@@ -596,7 +595,6 @@ async fn artifact_history_replay_uses_neutral_committed_inventory_and_retires_ev
         } else {
             assert!(matches!(result, Err(DbError::Corrupt(_))), "{name}");
         }
-        eprintln!("[DEBUG] history committed neutral law retired source, inventory and result owners: {name}, compacted={compacted}, hole={hole}");
     }
 }
 
@@ -662,13 +660,11 @@ async fn artifact_history_replay_projects_real_committed_batch_and_cancels_owned
         cancelled.store(true, std::sync::atomic::Ordering::Release);
         assert!(matches!((&mut replay).await, Err(DbError::Closed)));
         assert!(replay.terminal_is_empty());
-        eprintln!("[DEBUG] history cancelled and retired authenticated source at {checkpoint}");
     }
     engine.wal.close().await.unwrap();
     while engine.state.values.close_step().unwrap() {
         semio_framework_async::yield_once().await;
     }
-    eprintln!("[DEBUG] history projected one committed two-operation entry with the exact submitted frontier");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -732,7 +728,6 @@ async fn artifact_history_and_opener_reject_neutral_inner_documents_and_frontier
             }
         };
         assert!(rejected, "opener admitted {}", row["name"]);
-        eprintln!("[DEBUG] history and opener rejected authenticated committed projection and retired owners: {}", row["name"]);
     }
 }
 
@@ -1018,7 +1013,6 @@ async fn open_replays_the_wal_and_reconstructs_state_and_frontier_identically() 
     while reopened.state.values.close_step().unwrap() {
         semio_framework_async::yield_once().await;
     }
-    eprintln!("[DEBUG] replay preserved the complete live frontier and exact decoded numeric representation after explicit owner retirement");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1370,7 +1364,7 @@ async fn single_envelope_commit(engine: &mut ArtifactEngine, index: u64, durabil
 async fn fs_storage(name: &str) -> (StdArc<db_storage::DbBackend>, std::path::PathBuf) {
     let dir = std::env::temp_dir().join(format!("db_artifact_{name}_{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
-    (StdArc::new(db_storage::DbBackend::Fs(db_storage::FsStorage::open(crate::db_storage::db_io_test_pool(), &dir).await.unwrap())), dir)
+    (StdArc::new(db_storage::DbBackend::Fs(db_storage::FsStorage::open(db_storage::db_io_test_pool(), &dir).await.unwrap())), dir)
 }
 
 async fn close_engine(engine: &mut ArtifactEngine) {
@@ -1508,19 +1502,318 @@ fn journal_grant() -> store::ArtifactStoreOneItemGrant {
     store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: store::durable_group::DURABLE_OWNED_GROUP_EVENT_MAX_BYTES }
 }
 
-#[cfg(feature = "vcs")]
-async fn committed_recovery_hash_store(id: &str, dialect: store::os_io::ArtifactDialect, owner: Option<store::OwnerRef>) -> store::ArtifactStore<crate::db_engine::vcs_integration::HashProjection, crate::db_engine::vcs_integration::HashMutation> {
+//#region 🔖️RecoveryFixtureStore
+/// #⃣ The smallest concrete projection/operation pair a durable-group recovery law can open real
+/// `store::ArtifactStore`s over: a projection that IS one content hash and an operation that
+/// overwrites it (its `inverse` restores the prior hash). Test-only fixture.
+#[derive(Clone, Debug, Default, PartialEq, store::ToValue, store::FromValue)]
+pub struct HashProjection {
+    pub latest_hash: [u8; 32],
+}
+
+impl store::os_schema_composition::ArtifactCompositionFields for HashProjection {
+    fn visit_child_refs<'a, V: store::os_schema_composition::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {
+        Ok(())
+    }
+}
+
+impl store::ArtifactDsl for HashProjection {
+    const EXTENSION: &'static str = "dbhash";
+
+    fn parse_dsl(text: &str) -> Result<HashProjection, store::TextError> {
+        let trimmed = text.trim();
+        if trimmed.len() != 64 || !trimmed.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+            return Err(store::TextError::new("expected 64 lowercase hex characters", store::TextSpan::at(1, 1)));
+        }
+        let mut latest_hash = [0u8; 32];
+        for (index, slot) in latest_hash.iter_mut().enumerate() {
+            *slot = u8::from_str_radix(&trimmed[index * 2..index * 2 + 2], 16).map_err(|_| store::TextError::new("invalid hex byte", store::TextSpan::at(1, (index * 2 + 1) as u32)))?;
+        }
+        Ok(HashProjection { latest_hash })
+    }
+
+    fn print_dsl(&self) -> String {
+        let mut out = String::with_capacity(64);
+        for byte in self.latest_hash {
+            use std::fmt::Write;
+            let _ = write!(out, "{byte:02x}");
+        }
+        out
+    }
+}
+
+impl store::ArtifactPack for HashProjection {
+    fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        Ok(self.latest_hash.to_vec())
+    }
+    fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        let latest_hash: [u8; 32] = bytes.try_into().map_err(|_| store::PackError::Schema("HashProjection pack must be exactly 32 bytes".to_string()))?;
+        Ok(HashProjection { latest_hash })
+    }
+}
+
+#[derive(Clone, Debug, Default, store::ToValue, store::FromValue)]
+pub struct HashDiff {
+    pub hash: Option<[u8; 32]>,
+}
+
+impl protocol::MutationDiff<HashProjection> for HashDiff {
+    fn apply(&self, base: &HashProjection) -> protocol::MutationApplyResult<HashProjection> {
+        Ok(match self.hash {
+            Some(hash) => HashProjection { latest_hash: hash },
+            None => base.clone(),
+        })
+    }
+
+    fn absorb(&mut self, other: HashDiff) {
+        if other.hash.is_some() {
+            self.hash = other.hash;
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, store::ToValue, store::FromValue)]
+pub struct HashMutation {
+    pub hash: [u8; 32],
+    pub author: Option<protocol::ActorId>,
+    pub timestamp: Option<protocol::HybridLogicalTimestamp>,
+}
+
+const HASH_MUTATION_DESCRIPTOR: protocol::MutationLeafDescriptor = protocol::MutationLeafDescriptor {
+    schema_version: 1,
+    owner: "framework/os/db/tests/recovery-fixture/hash-mutation",
+    semantic_kind: "set-hash",
+    display_name: "Set Hash",
+    emoji: "#️⃣",
+    aggregate_variant: "HashMutation",
+    payload_schema: "db.hash/v1",
+    text_opcode: None,
+    binary_tag: None,
+    invertibility: protocol::MutationInvertibility::ExplicitMutation,
+    diff_participation: protocol::MutationDiffParticipation::Detect,
+    outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+    composition: protocol::MutationComposition::Atomic,
+    required_language_surfaces: &[protocol::MutationLanguageSurface::Rust],
+};
+
+impl protocol::Mutation<HashProjection> for HashMutation {
+    type Diff = HashDiff;
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[HASH_MUTATION_DESCRIPTOR];
+
+    fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
+        &HASH_MUTATION_DESCRIPTOR
+    }
+
+    fn diff(&self, _base: &HashProjection) -> protocol::MutationOutcome<HashDiff> {
+        protocol::MutationOutcome::new(HashDiff { hash: Some(self.hash) })
+    }
+
+    /// ↩️ The true inverse: an operation that would restore `base`'s hash — not a
+    /// no-op placeholder.
+    fn inverse(&self, base: &HashProjection) -> Vec<HashMutation> {
+        vec![HashMutation { hash: base.latest_hash, author: self.author.clone(), timestamp: self.timestamp }]
+    }
+
+    fn author_id(&self) -> Option<protocol::ActorId> {
+        self.author.clone()
+    }
+
+    fn timestamp(&self) -> Option<protocol::HybridLogicalTimestamp> {
+        self.timestamp
+    }
+}
+
+// 🚫️async: E1 pure accessor consumed synchronously inside `format!` — see R9
+fn hex_encode(bytes: &[u8; 32]) -> String {
+    use std::fmt::Write;
+    let mut out = String::with_capacity(64);
+    for byte in bytes {
+        let _ = write!(out, "{byte:02x}");
+    }
+    out
+}
+
+fn hex_decode(text: &str) -> Result<[u8; 32], String> {
+    if text.len() != 64 || !text.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+        return Err("expected 64 lowercase hex characters".to_string());
+    }
+    let mut out = [0u8; 32];
+    for (index, slot) in out.iter_mut().enumerate() {
+        *slot = u8::from_str_radix(&text[index * 2..index * 2 + 2], 16).map_err(|error| error.to_string())?;
+    }
+    Ok(out)
+}
+
+/// 🎯️ Single-line text form: `hash=<hex64>[ author=<id>][ ts=<actor>,<physical_ms>,<logical>]`.
+impl protocol::OpText for HashMutation {
+    fn print_op(&self) -> String {
+        let mut out = format!("hash={}", hex_encode(&self.hash));
+        if let Some(author) = &self.author {
+            out.push_str(&format!(" author={}", author.0));
+        }
+        if let Some(ts) = &self.timestamp {
+            out.push_str(&format!(" ts={},{},{}", ts.actor, ts.physical_ms, ts.logical));
+        }
+        out
+    }
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        let err = |detail: String| store::TextError::new(detail, store::TextSpan::at(1, 1));
+        let mut hash = None;
+        let mut author = None;
+        let mut timestamp = None;
+        for token in line.split_whitespace() {
+            let (key, value) = token.split_once('=').ok_or_else(|| err(format!("malformed token '{token}'")))?;
+            match key {
+                "hash" => hash = Some(hex_decode(value).map_err(err)?),
+                "author" => author = Some(protocol::ActorId(value.to_string())),
+                "ts" => {
+                    let parts: Vec<&str> = value.split(',').collect();
+                    if parts.len() != 3 {
+                        return Err(err(format!("malformed ts '{value}'")));
+                    }
+                    let actor = parts[0].parse::<u64>().map_err(|error| err(error.to_string()))?;
+                    let physical_ms = parts[1].parse::<u64>().map_err(|error| err(error.to_string()))?;
+                    let logical = parts[2].parse::<u64>().map_err(|error| err(error.to_string()))?;
+                    timestamp = Some(protocol::HybridLogicalTimestamp { actor, physical_ms, logical });
+                }
+                other => return Err(err(format!("unknown key '{other}'"))),
+            }
+        }
+        Ok(HashMutation { hash: hash.ok_or_else(|| err("missing hash".to_string()))?, author, timestamp })
+    }
+}
+
+/// 🎯️ Binary form: `hash 32 bytes | presence u8 (bit0=author, bit1=timestamp) | [author
+/// len varint + utf8 bytes] | [timestamp: actor/physical_ms/logical varint each]`.
+impl protocol::OpBinary for HashMutation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        let mut out = self.hash.to_vec();
+        let presence = (self.author.is_some() as u8) | ((self.timestamp.is_some() as u8) << 1);
+        out.push(presence);
+        if let Some(author) = &self.author {
+            pack::os_pack::write_varint_u64(&mut out, author.0.len() as u64);
+            out.extend_from_slice(author.0.as_bytes());
+        }
+        if let Some(ts) = &self.timestamp {
+            pack::os_pack::write_varint_u64(&mut out, ts.actor);
+            pack::os_pack::write_varint_u64(&mut out, ts.physical_ms);
+            pack::os_pack::write_varint_u64(&mut out, ts.logical);
+        }
+        Ok(out)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let malformed = |detail: String| protocol::ProtocolError::Malformed { what: "hash op", offset: 0, detail };
+        if bytes.len() < 33 {
+            return Err(malformed("truncated hash op".to_string()));
+        }
+        let hash: [u8; 32] = bytes[..32].try_into().expect("checked len");
+        let presence = bytes[32];
+        let mut pos = 33usize;
+        let author = if presence & 0b01 != 0 {
+            let len = pack::os_pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))? as usize;
+            let end = pos + len;
+            let text = std::str::from_utf8(bytes.get(pos..end).ok_or_else(|| malformed("truncated author".to_string()))?).map_err(|error| malformed(error.to_string()))?.to_string();
+            pos = end;
+            Some(protocol::ActorId(text))
+        } else {
+            None
+        };
+        let timestamp = if presence & 0b10 != 0 {
+            let actor = pack::os_pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))?;
+            let physical_ms = pack::os_pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))?;
+            let logical = pack::os_pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))?;
+            Some(protocol::HybridLogicalTimestamp { actor, physical_ms, logical })
+        } else {
+            None
+        };
+        Ok(HashMutation { hash, author, timestamp })
+    }
+}
+
+struct HashOwnedRetirement<T>(Option<T>);
+
+impl<T: Send> store::ErasedSnapshotRetirement for HashOwnedRetirement<T> {
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+        if maximum_items == 0 {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.0.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.0.is_none()
+    }
+}
+
+struct HashOwnedRetirementFactory;
+
+impl<T: Send + 'static> store::ArtifactOwnedValueRetirementFactory<T> for HashOwnedRetirementFactory {
+    fn retire_owned(&self, value: T) -> Box<dyn store::ErasedSnapshotRetirement> {
+        Box::new(HashOwnedRetirement(Some(value)))
+    }
+}
+
+struct HashSnapshotRetirement(Option<Arc<HashProjection>>);
+
+impl store::ErasedSnapshotRetirement for HashSnapshotRetirement {
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+        if maximum_items == 0 {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.0.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.0.is_none()
+    }
+}
+
+struct HashSnapshotRetirementFactory;
+
+impl store::SnapshotRetirementFactory<HashProjection> for HashSnapshotRetirementFactory {
+    fn retire(&self, snapshot: Arc<HashProjection>) -> Box<dyn store::ErasedSnapshotRetirement> {
+        Box::new(HashSnapshotRetirement(Some(snapshot)))
+    }
+}
+
+impl store::retirement::RetireOwned for HashProjection {
+    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
+        store::retirement::RetireOwned::retirement(self.latest_hash)
+    }
+}
+
+impl store::MemberStoreOwner<HashMutation> for HashProjection {
+    /// 📦️ The fixture projection opens as an owned member through its own `ArtifactPack` codec.
+    type SnapshotOpen = store::PackMemberSnapshotOpen<Self>;
+
+    fn member_store_owners() -> store::DocumentStoreOwners<Self, HashMutation> {
+        store::DocumentStoreOwners::new(
+            Arc::new(HashSnapshotRetirementFactory),
+            Arc::new(HashOwnedRetirementFactory),
+            Arc::new(HashOwnedRetirementFactory),
+            Box::new(store::ArtifactStoreCursorDisposer::<HashProjection, HashMutation>::new()),
+        )
+    }
+}
+//#endregion 🔖️RecoveryFixtureStore
+
+async fn committed_recovery_hash_store(id: &str, dialect: store::os_io::ArtifactDialect, owner: Option<store::OwnerRef>) -> store::ArtifactStore<HashProjection, HashMutation> {
     use store::MemberStoreOwner as _;
-    let mut envelope = store::create_document_envelope::<crate::db_engine::vcs_integration::HashProjection, crate::db_engine::vcs_integration::HashMutation>("db.hash/v1", id, crate::db_engine::vcs_integration::HashProjection::default(), None);
+    let mut envelope = store::create_document_envelope::<HashProjection, HashMutation>("db.hash/v1", id, HashProjection::default(), None);
     envelope.dialect = Some(dialect);
     envelope.owner = owner;
     let mut store = store::ArtifactStore::new(envelope).await.expect("committed recovery fixture creates one exact Store");
-    store.install_document_store_owners_exact(crate::db_engine::vcs_integration::HashProjection::member_store_owners());
+    store.install_document_store_owners_exact(HashProjection::member_store_owners());
     store
 }
 
-#[cfg(feature = "vcs")]
-fn close_committed_recovery_hash_store(store: &mut store::ArtifactStore<crate::db_engine::vcs_integration::HashProjection, crate::db_engine::vcs_integration::HashMutation>) {
+fn close_committed_recovery_hash_store(store: &mut store::ArtifactStore<HashProjection, HashMutation>) {
     for _ in 0..4_096 {
         if store::SpaceMember::close_owned_step(store, 1, 4_096).expect("committed recovery fixture Store closes") == store::SnapshotRetirementStep::Complete {
             assert!(store::SpaceMember::close_owned_terminal_is_empty(store));
@@ -1659,7 +1952,6 @@ async fn document_authority_durable_group_journal_commits_one_exact_fsync_event(
     assert!(witness_api.contains("into_store_owned_recovery") && witness_api.contains("take_rejected_terminal"));
     assert!(!witness_api.contains("fn record(&self)") && !witness_api.contains("fn into_record("));
     assert!(!witness_api.contains("fn cancel("));
-    eprintln!("[DEBUG] typed authority journal committed one exact canonical Store decision, projected its actor frontier before acknowledgement, and reconstructed that exact frontier on reopen");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1726,10 +2018,8 @@ async fn committed_durable_group_decision_accepts_only_one_exact_event_transacti
     }
     while replay.close_owner_step().unwrap() {}
     assert!(replay.terminal_is_empty());
-    eprintln!("[DEBUG] committed decision witness admitted one sole canonical Event, ignored Command or aborted Event, and rejected mixed, duplicate, or foreign Event transactions");
 }
 
-#[cfg(feature = "vcs")]
 #[semio_framework_async_macros::async_test]
 async fn committed_durable_group_recovery_consumes_wal_witness_and_returns_exact_three_stores_on_pre_mutation_rejection() {
     let document = ArtifactId::from("map-a");
@@ -1790,7 +2080,6 @@ async fn committed_durable_group_recovery_consumes_wal_witness_and_returns_exact
     close_committed_recovery_hash_store(&mut terminal.owners.value);
     close_committed_recovery_hash_store(&mut terminal.owners.drawing);
     close_committed_recovery_hash_store(&mut terminal.owners.parent);
-    eprintln!("[DEBUG] a sole committed WAL Event witness denied a foreign Store frontier before mutation and returned all exact owners without exposing the witness");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1805,7 +2094,6 @@ async fn document_authority_durable_group_journal_cancellation_before_handoff_is
     drop(commit);
     drop(sink);
     shutdown_journal_authority(&authority, &pool).await;
-    eprintln!("[DEBUG] cancellation before typed mailbox handoff proved absence and closed the retained journal owner");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1819,7 +2107,6 @@ async fn document_authority_durable_group_journal_rejects_hash_before_mailbox() 
     drop(commit);
     drop(sink);
     shutdown_journal_authority(&authority, &pool).await;
-    eprintln!("[DEBUG] Store canonical hash admission rejected a forged decision before typed mailbox or WAL handoff");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1869,7 +2156,7 @@ async fn document_authority_close_drains_pending_group_commit_for_every_durabili
         }
         assert!(authority.handoff.close_error.lock().unwrap().is_none());
         drop(authority);
-        let (engine, report) = ArtifactEngine::<NullVersionGraph>::open_retained(reopen_document, reopen_storage, ArtifactEngineConfig::default(), 1).await.unwrap();
+        let (engine, report) = ArtifactEngine::open_retained(reopen_document, reopen_storage, ArtifactEngineConfig::default(), 1).await.unwrap();
         assert_eq!(report.torn_tail_bytes, 0);
         assert_eq!(engine.frontier.head_seq, 1, "{durability:?} close must make the acknowledged transaction durable");
         let mut engine = engine;
@@ -1894,7 +2181,7 @@ async fn document_authority_spawn_propagates_a_build_failure_synchronously() {
     let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, 3)));
     let result = ArtifactAuthority::spawn(
         pool.clone(),
-        || async { Err::<Box<ArtifactEngine<NullVersionGraph>>, ArtifactEngineOpenRejected>(ArtifactEngineOpenRejected::BeforeWal(DbError::InvalidArgument("boom".to_string()))) },
+        || async { Err::<Box<ArtifactEngine>, ArtifactEngineOpenRejected>(ArtifactEngineOpenRejected::BeforeWal(DbError::InvalidArgument("boom".to_string()))) },
         MailboxCapacities::uniform(4),
     );
     let rejected = match result.await {

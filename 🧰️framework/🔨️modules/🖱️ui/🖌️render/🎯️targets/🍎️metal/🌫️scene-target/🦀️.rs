@@ -1,4 +1,4 @@
-//! @emoji 🌫️ The offscreen scene-color target + its mip-chain blur scratch texture — the Metal
+//! 🌫️ The offscreen scene-color target + its mip-chain blur scratch texture — the Metal
 //! counterpart of the wgpu target's `SceneColorTarget`, mirroring `GpuContext::render_frame`'s
 //! two-pass structure (`🎯️targets/🧊️wgpu/🦀️gpu.rs`): render 2D/3D content into this target, then blur
 //! its mip chain and composite glass regions on top before blitting to the real swapchain view.

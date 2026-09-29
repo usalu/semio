@@ -263,7 +263,7 @@ pub fn cad_runtime_from_config(cfg: &CadConfig) -> CadPlayRuntime {
     }
 }
 
-/// @emoji 🔀️ The `cad_runtime_from_config` boundary's outbound twin: repacks the (possibly mutated)
+/// 🔀️ The `cad_runtime_from_config` boundary's outbound twin: repacks the (possibly mutated)
 /// `CadPlayRuntime` scratch struct back into a real `CadConfig` snapshot. Kept private so production
 /// command modules cannot bypass the checked snapshot authorities below.
 fn cad_config_from_runtime(runtime: &CadPlayRuntime, base: &CadConfig) -> CadConfig {
@@ -305,7 +305,7 @@ pub fn cad_pane_camera_runtime_mut(runtime: &mut CadPlayRuntime, pane: CadPaneId
     }
 }
 
-/// @emoji 🎛️ Ephemeral read/render view assembled per call from the store's materialized
+/// 🎛️ Ephemeral read/render view assembled per call from the store's materialized
 /// `CadSnapshot` projection and the app's `CadPlayRuntime` view-state. Replaces the old persisted play
 /// envelope: its embedded history/undo stacks are now owned by the wrapping `VcsArtifactApp`'s
 /// `ArtifactStore`, and its runtime view-state lives directly on the `CadPlayApp` struct.
@@ -616,11 +616,16 @@ pub fn apply_transformation_mutations(_document: &CadSnapshot, _qid: &str) -> Ve
     Vec::new()
 }
 
-/// ⚠️ Same documented gap as `apply_transformation_mutations` — there is no live per-pane object
-/// list on `CadSnapshot` to collect solids from anymore (only composed model-child HANDLES,
-/// unresolved at this boundary).
-pub fn collect_pane_solids(_kernel: &mut Brep, _envelope: &CadPlayView, _pane: CadPaneId) -> Vec<GeometryHandle> {
-    Vec::new()
+/// 📦️ The pane's visible objects as world-space kernel solids, read through the composed pane-model child's in-process
+/// seam (`edit::cad_pane_working_scene`: the child's materialized working scene, or the bundled catalogue for a
+/// wire-loaded example) and built as the viewport builds them
+/// ([`crate::standards::v1::subsets::any::schema::inferences::pane_world_solids`]).
+pub fn collect_pane_solids(kernel: &mut Brep, envelope: &CadPlayView, pane: CadPaneId) -> Vec<GeometryHandle> {
+    let Some(scene) = crate::editor::cad::modes::edit::cad_pane_working_scene(&envelope.document, pane) else {
+        return Vec::new();
+    };
+    let (objects, geometry) = crate::editor::cad::modes::edit::cad_pane_working_objects(&scene, pane);
+    crate::standards::v1::subsets::any::schema::inferences::pane_world_solids(kernel, objects, geometry)
 }
 
 pub fn collect_modelspace_solids(kernel: &mut Brep, envelope: &CadPlayView) -> Vec<GeometryHandle> {
@@ -646,7 +651,7 @@ pub fn export_solid_modelspace(envelope: &CadPlayView, format: &str) -> Option<C
     export_solids_as(&mut kernel, &solids, format, "cad.modelspace")
 }
 
-/// @emoji ⬇️ Converts a staged native-geometry export into a download host effect emitted directly
+/// ⬇️ Converts a staged native-geometry export into a download host effect emitted directly
 /// to the shell (no document mutation, no pending-export runtime slot).
 pub fn cad_solid_export_effect(export: CadSolidExport) -> Effect {
     let data = match export.data {
@@ -656,7 +661,7 @@ pub fn cad_solid_export_effect(export: CadSolidExport) -> Effect {
     Effect::DownloadMediaExport { filename: export.filename, mime_type: export.mime_type, data, encoding: export.encoding }
 }
 
-/// @emoji ⬇️ Wraps a spatial-JSON export document into a download host effect.
+/// ⬇️ Wraps a spatial-JSON export document into a download host effect.
 pub fn cad_spatial_export_effect(value: &protocol::DslValue, filename: &str) -> Effect {
     Effect::DownloadMediaExport { filename: filename.into(), mime_type: "text/plain".into(), data: json::to_json_string(value), encoding: None }
 }
@@ -748,7 +753,7 @@ pub fn quat_normalize(q: [f64; 4]) -> [f64; 4] {
     [q[0] / len, q[1] / len, q[2] / len, q[3] / len]
 }
 
-/// @emoji 🎯️ Builds the semantic mutation(s) that apply `field`'s edit across `object_ids`.
+/// 🎯️ Builds the semantic mutation(s) that apply `field`'s edit across `object_ids`.
 ///
 /// 🪆️ Pose fields (`origin.<axis>`, `scale.<axis>`, `orientation.<axis>`) read each object's own
 /// current component, so `value` (absolute) or `delta` (relative) applies per object and preserves
@@ -920,7 +925,7 @@ pub fn try_commit_session_mutations(document: &CadSnapshot, runtime: &mut CadPla
     ops
 }
 
-/// @emoji ⌨️ Advances the engagement REPL for the current `engagement_input`, mutating runtime
+/// ⌨️ Advances the engagement REPL for the current `engagement_input`, mutating runtime
 /// session state and returning any commit operations produced.
 pub fn engagement_submit_mutations(document: &CadSnapshot, runtime: &mut CadPlayRuntime, pane: CadPaneId) -> Vec<CadMutation> {
     let input = runtime.engagement_input.trim().to_string();
@@ -991,7 +996,7 @@ pub fn start_interaction_session(runtime: &mut CadPlayRuntime, pane: CadPaneId, 
     true
 }
 
-/// @emoji 🔀️ WORKFLOWS-END-TO-END-TYPED-PORTS: the typed-command counterpart of the pre-B1
+/// 🔀️ WORKFLOWS-END-TO-END-TYPED-PORTS: the typed-command counterpart of the pre-B1
 /// `mesh_selection_ids` (JSON-args) helper — falls back to the current selection when the command
 /// carries no explicit ids.
 pub fn ids_or_selection(ids: &[String], fallback: &[String]) -> Vec<String> {
@@ -1002,7 +1007,7 @@ pub fn ids_or_selection(ids: &[String], fallback: &[String]) -> Vec<String> {
     }
 }
 
-/// @emoji 🩹️ Typed-command counterpart of a raw JSON patch value: `CadCommand::PatchObject`/
+/// 🩹️ Typed-command counterpart of a raw JSON patch value: `CadCommand::PatchObject`/
 /// `PatchSelection`/`PatchCadPlayReference` all carry `value: Option<String>` (the typed channel has no
 /// single Rust type spanning "maybe a string, maybe a number, maybe a bool") — this recovers the
 /// `DslValue` shape `object_patch_from_field`/`resolve_number_edit` already expect, dispatching
@@ -2397,12 +2402,12 @@ impl ArtifactEditor for CadPlayApp {
 //#endregion 🔖️PlayApp
 
 //#region 🔖️Manifest
-/// @emoji 🧰️ The window-scoped CAD Dislocate utility, whose Move and Rotate handles are utility options.
+/// 🧰️ The window-scoped CAD Dislocate utility, whose Move and Rotate handles are utility options.
 pub fn cad_dislocate_utility() -> UtilityDefinition {
     UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new(CAD_DISLOCATE_UTILITY_ID, LocalizedLabel::native("Dislocate", "Versetzen"), "move-3d") }
 }
 
-/// @emoji 🧰️ The single Dislocate utility ref exposed independently by each world-3d window.
+/// 🧰️ The single Dislocate utility ref exposed independently by each world-3d window.
 pub fn cad_dislocate_utility_refs() -> Vec<semio_framework_plugin::UtilityRef> {
     vec![CAD_DISLOCATE_UTILITY_ID.into()]
 }

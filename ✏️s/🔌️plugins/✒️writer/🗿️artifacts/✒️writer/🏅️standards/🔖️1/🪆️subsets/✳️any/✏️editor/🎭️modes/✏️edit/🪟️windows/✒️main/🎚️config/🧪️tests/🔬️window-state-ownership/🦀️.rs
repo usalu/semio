@@ -70,7 +70,7 @@ fn writer_window_state_retained_publications_isolate_two_windows_and_reload_only
                     let app_config = app.config_pack().await.map_err(|error| format!("{error:?}"))?;
                     for (context, command) in [
                         (&left, WriterCommand::SetCamera(set_camera::SetCamera { camera: WriterCamera { x: 12.0, y: -4.0, zoom: 1.5 } })),
-                        (&right, WriterCommand::SetEditorSelection(set_editor_selection::SetEditorSelection { start: 3, end: 8 })),
+                        (&right, WriterCommand::SetEditorSelection(set_editor_selection::SetEditorSelection { start: 3, end: 8, splice: 0 })),
                         (&right, WriterCommand::SetFontPx(set_font_px::SetFontPx { value: 16 })),
                         (&left, WriterCommand::EngagementInput(engagement_input::EngagementInput { value: "format".into() })),
                     ] {
@@ -104,7 +104,7 @@ fn writer_window_state_retained_publications_isolate_two_windows_and_reload_only
                     if left_transient.engagement_input != "format" || left_transient.lint_generation != 1 || left_transient.editor_selection.is_some() {
                         return Err(format!("left Writer transient crossed partitions: {left_transient:?}"));
                     }
-                    if right_transient.editor_selection != Some(crate::WriterEditorSelection { start: 3, end: 8 }) || right_transient.lint_generation != 0 || !right_transient.engagement_input.is_empty() {
+                    if right_transient.editor_selection != Some(crate::WriterEditorSelection { start: 3, end: 8, splice: 0 }) || right_transient.lint_generation != 0 || !right_transient.engagement_input.is_empty() {
                         return Err(format!("right Writer transient crossed partitions: {right_transient:?}"));
                     }
                     let left_tree = render(&mut app, &left).await?;
@@ -116,7 +116,7 @@ fn writer_window_state_retained_publications_isolate_two_windows_and_reload_only
                     if scene_json(right_tree.camera_json.as_ref(), "cameraJson")? != default_camera {
                         return Err("left Writer camera contaminated right render".into());
                     }
-                    if scene_json(right_tree.selection_json.as_ref(), "selectionJson")? != serde_json::json!({ "start": 3, "end": 8 }) {
+                    if scene_json(right_tree.selection_json.as_ref(), "selectionJson")? != serde_json::json!({ "start": 3, "end": 8, "splice": 0 }) {
                         return Err("right Writer selection did not render".into());
                     }
                     if scene_json(right_tree.settings_json.as_ref(), "settingsJson")?["fontPx"] != serde_json::json!(16) {
@@ -136,19 +136,18 @@ fn writer_window_state_retained_publications_isolate_two_windows_and_reload_only
                     {
                         return Err("Writer persisted window config changed during reload".into());
                     }
-                    if scene_json(reopened_right.selection_json.as_ref(), "selectionJson")? != serde_json::json!({ "start": 0, "end": 0 }) {
+                    if scene_json(reopened_right.selection_json.as_ref(), "selectionJson")? != serde_json::json!({ "start": 0, "end": 0, "splice": 0 }) {
                         return Err("Writer ephemeral selection survived config reload".into());
                     }
                     Ok(())
                 }
                 .await;
                 if let Err(error) = &outcome {
-                    eprintln!("[DEBUG] Writer exact-window runtime failure before close: {error}");
+                    eprintln!("Writer exact-window runtime failure before close: {error}");
                 }
                 artifact_app_laws::close_registered_fixture_app(reopened.as_mut());
                 artifact_app_laws::close_registered_fixture_app(app.as_mut());
                 outcome.expect("retained Writer exact-window ownership and persistence");
-                eprintln!("[DEBUG] two Writer windows published config/transient state independently, preserved document/app config, and reloaded only persisted config");
             })
         })
         .expect("spawn Writer window-state law")
@@ -194,5 +193,4 @@ fn writer_window_state_mutations_are_exact_reversible_and_codec_stable() {
         let expected: WriterMainWindowTransient = pack::from_json_str(&fixture["expectedTransients"][id].to_string()).unwrap();
         assert_eq!(state, expected);
     }
-    eprintln!("[DEBUG] Writer exact-window config/transient mutations matched the shared neutral fixture and exact inverse/codec laws");
 }

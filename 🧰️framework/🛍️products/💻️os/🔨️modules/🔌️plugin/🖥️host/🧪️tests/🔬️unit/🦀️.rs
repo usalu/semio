@@ -276,6 +276,11 @@ async fn io_router_run_io_crosses_two_real_plugin_instance_handles() {
 /// `Done` here proves the host-side plumbing — resolve ownership, find the handle,
 /// `start-job`/`step-job` to completion — is fully real end to end; the real guest kind
 /// `"semio.compose"` itself is `compose-await`'s to register.
+///
+/// 🧭️ Key orientation matches what `register_plugin` actually derives from a `(writes, reads)`
+/// pair: the Export route is keyed on the READ dialect with the WRITE dialect as its format
+/// (see the `candidate_routes` loop above). Asserting the inverse orientation here would fail
+/// on route resolution before ever reaching dispatch.
 #[semio_framework_async_macros::async_test]
 async fn io_router_compose_resolves_ownership_and_drives_the_semio_compose_job_to_completion() {
     let router = IoRouter::new();
@@ -294,10 +299,6 @@ async fn io_router_compose_resolves_ownership_and_drives_the_semio_compose_job_t
     )];
     router.register_plugin("cad", handle, &dialects, &[]).await.expect("register cad");
 
-    // 🧭️ Key orientation matches what `register_plugin` actually derives from a `(writes, reads)`
-    // pair: the Export route is keyed on the READ dialect with the WRITE dialect as its format
-    // (see the `candidate_routes` loop above). Asserting the inverse orientation here would fail
-    // on route resolution before ever reaching dispatch.
     let key = semio_framework::IoKey {
         artifact_kind: "s.stdio.step".to_string(),
         standard: "ap214".to_string(),
@@ -350,7 +351,6 @@ fn host_error_layout_matches_language_neutral_budget() {
     let oracle: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/⚠️error-layout/🔣️.json")).expect("language-neutral error layout budget");
     let host_bytes = size_of::<PluginHostError>();
     let turn_bytes = size_of::<TurnFault>();
-    eprintln!("[DEBUG] Host error inline bytes={host_bytes}, turn fault inline bytes={turn_bytes}");
     assert!(host_bytes <= oracle["maximumHostErrorInlineBytes"].as_u64().expect("host budget") as usize);
     assert!(turn_bytes <= oracle["maximumTurnFaultInlineBytes"].as_u64().expect("turn budget") as usize);
 }

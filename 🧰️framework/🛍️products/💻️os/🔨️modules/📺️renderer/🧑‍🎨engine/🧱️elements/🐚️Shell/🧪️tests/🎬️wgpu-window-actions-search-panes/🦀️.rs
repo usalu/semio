@@ -218,6 +218,15 @@ fn the_first_row_of_the_actions_pane_dispatches_the_apps_own_verb() {
 /// folds the form again) and gains a form carrying one `action.<id>.arg.<argId>` row per visible
 /// argument plus React's own `framework.window.<segment>.action.<id>.{execute,reset}` pair, with
 /// Execute refused until every required argument has an effective value.
+///
+/// 🌳️ React's ACTIONS pane does NOT drop the expanded action from its list: `buildActionCategoryTree`
+/// maps EVERY `categoryActions` entry and pushes the form BESIDE the list section
+/// (`🛠️ShellHelpers/🟦️.tsx:4097`-`:4145`), because the row itself is the accordion trigger that folds
+/// the form again. Only `buildCommandCategoryTree` — the Command dock, a different surface — filters
+/// the expanded command out, and this law was first written with that rule by mistake.
+///
+/// ⚡️ React renders Execute/Reset as the form section's own `actions`; a `TreeSection` carries
+/// no action row here, so the pair follows the form as its own band of the pane stack.
 #[test]
 fn an_arg_carrying_row_opens_reacts_staged_form_and_refuses_execute_until_it_resolves() {
     let fixture = pane_fixture();
@@ -243,19 +252,12 @@ fn an_arg_carrying_row_opens_reacts_staged_form_and_refuses_execute_until_it_res
     ] {
         assert!(keys.iter().any(|key| key.ends_with(&expected)), "📝️ the staged form is missing React's '{expected}' — got {keys:?}");
     }
-    // 🌳️ React's ACTIONS pane does NOT drop the expanded action from its list: `buildActionCategoryTree`
-    // maps EVERY `categoryActions` entry and pushes the form BESIDE the list section
-    // (`🛠️ShellHelpers/🟦️.tsx:4097`-`:4145`), because the row itself is the accordion trigger that folds
-    // the form again. Only `buildCommandCategoryTree` — the Command dock, a different surface — filters
-    // the expanded command out, and this law was first written with that rule by mistake.
     let list_rows: Vec<&String> = keys.iter().filter(|key| key.ends_with("action.openAddObjectDialog")).collect();
     assert_eq!(list_rows.len(), 1, "📝️ the expanded action keeps exactly its one list row — it is the trigger that folds the form again, got {keys:?}");
 
     let execute = |shell: &ShellState| -> bool {
         let node = shell.build_window_actions_ui("pane-top").expect("a body");
         let UiNode::Stack(stack) = &node else { panic!("stack") };
-        // ⚡️ React renders Execute/Reset as the form section's own `actions`; a `TreeSection` carries
-        // no action row here, so the pair follows the form as its own band of the pane stack.
         let button = stack.children.iter().find_map(|child| if let UiNode::Button(button) = child { button.id.as_deref().is_some_and(|id| id.ends_with("execute")).then_some(button) } else { None }).expect("the Execute button");
         matches!(button.presence.state, ui_wgpu::wgpu::component::ui::UiState::Disabled)
     };
@@ -411,6 +413,9 @@ fn the_search_possibles_rank_the_way_reacts_own_scorer_does() {
 /// 🪟️ **The surface pin.** Publishing both pane bodies moves no shell SURFACE — React's census reports
 /// windows, docked panels and dialogs, and an open `Pane` is none of those. This is what makes the
 /// probe's `+s` column read empty on both renderers for a pane-chip step.
+///
+/// 📄️ Every lease this law minted is handed back before the fixture drops — a retained document
+/// dropped without retirement is the store-drop fault the framework refuses.
 #[test]
 fn the_pane_bodies_move_no_shell_surface() {
     let mut shell = actions_shell();
@@ -423,8 +428,6 @@ fn the_pane_bodies_move_no_shell_surface() {
 
     shell.refresh_window_action_panes(&["pane-top".to_string()], &mut faults).expect("the panes republish");
     assert_eq!(shell.window_actions_documents.keys().map(String::as_str).collect::<Vec<_>>(), vec!["pane-top"], "🪟️ a pane that closes retires its body");
-    // 📄️ Every lease this law minted is handed back before the fixture drops — a retained document
-    // dropped without retirement is the store-drop fault the framework refuses.
     shell.refresh_window_action_panes(&[], &mut faults).expect("the panes retire");
     assert!(shell.window_actions_documents.is_empty() && shell.window_search_documents.is_empty(), "🪟️ and a shell with no live pane owns no pane document");
 }
@@ -494,6 +497,15 @@ fn physical_actions_and_search_chips_publish_only_their_own_retained_body() {
 /// status lines and the options and DROPPED all five kinds
 /// (`📓️w13b-actions-search-pane-bodies.md` §6 gap 3): `WindowEngagementControl` had no reader in the
 /// whole renderer, so a granularity ring or a step slider simply was not there.
+///
+/// 🧭️ React's order: the session's step heading, the primary control, the `controls` row, the
+/// remaining status lines, the quick-action group.
+///
+/// 🎯️ Intent parity: a toggle-group option dispatches the control's `onSelect` carrying the
+/// OPTION's own id — React's `onClick={() => control.onSelect?.(option.id)}`.
+///
+/// 🕳️ React's `if (!control.options.length) return null` — an empty group renders NOTHING, not an
+/// empty container.
 #[test]
 fn the_engagement_body_paints_reacts_control_row_with_reacts_ids_and_intents() {
     let fixture = pane_fixture();
@@ -571,8 +583,6 @@ fn the_engagement_body_paints_reacts_control_row_with_reacts_ids_and_intents() {
 
     let node = shell.build_window_actions_ui("pane-top").expect("a body");
     let UiNode::Stack(stack) = &node else { panic!("🎬️ the pane body is a stack") };
-    // 🧭️ React's order: the session's step heading, the primary control, the `controls` row, the
-    // remaining status lines, the quick-action group.
     let Some(UiNode::Text(heading)) = stack.children.first() else { panic!("🎛️ the live session starts with its heading") };
     assert_eq!(heading.value.as_str(), "Pick a face", "🎛️ a LIVE session promotes `engagement-step` into the heading React renders first");
     let Some(UiNode::Field(primary)) = stack.children.get(1) else { panic!("🎛️ a labelled primary control publishes as a semantic field") };
@@ -585,8 +595,6 @@ fn the_engagement_body_paints_reacts_control_row_with_reacts_ids_and_intents() {
     assert!(select_index < status_index, "🎛️ every `controls` row precedes the secondary status lines");
     assert!(status_index < options_index || options_index == usize::MAX, "🎛️ and the status lines precede the quick-action group");
 
-    // 🎯️ Intent parity: a toggle-group option dispatches the control's `onSelect` carrying the
-    // OPTION's own id — React's `onClick={() => control.onSelect?.(option.id)}`.
     let face = stack
         .children
         .iter()
@@ -597,8 +605,6 @@ fn the_engagement_body_paints_reacts_control_row_with_reacts_ids_and_intents() {
     let Some(DslValue::Object(args)) = face.on_change.args.as_ref() else { panic!("🎯️ the option carries its own id in the intent") };
     assert_eq!(args.iter().find(|(key, _)| key == "id").map(|(_, value)| value.clone()), Some(DslValue::String("granularity.face".into())), "🎯️ React's `onSelect(option.id)`");
 
-    // 🕳️ React's `if (!control.options.length) return null` — an empty group renders NOTHING, not an
-    // empty container.
     shell.window_engagements.get_mut("pane-top").expect("the engagement").controls =
         Some(vec![ui_wgpu::wgpu::WindowEngagementControl::ToggleGroup { id: Some("empty".into()), label: Some("Empty".into()), value: None, options: Vec::new(), disabled: None, on_select: None }]);
     let keys = published_keys(&shell, "pane-top", false);
@@ -611,6 +617,9 @@ fn the_engagement_body_paints_reacts_control_row_with_reacts_ids_and_intents() {
 /// `on_submit` there, so a program that feeds autocomplete from the typing never saw a keystroke
 /// (`📓️w13b-actions-search-pane-bodies.md` §6 gap 4). The retained producers landed with this packet;
 /// this pins the four bindings the published record carries.
+///
+/// 🔁️ React routes an empty line to `onSubmit` DURING a session and to `onRepeatLast` only while
+/// idle (`applySearchSpaceAction`), so a live session offers no repeat at all.
 #[test]
 fn the_search_line_binds_reacts_change_submit_abort_and_repeat_moments() {
     let fixture = pane_fixture();
@@ -654,8 +663,6 @@ fn the_search_line_binds_reacts_change_submit_abort_and_repeat_moments() {
         assert!(bound.contains(&trigger), "✍️ the published record binds no {key} ({trigger}) — got {bound:?}");
     }
 
-    // 🔁️ React routes an empty line to `onSubmit` DURING a session and to `onRepeatLast` only while
-    // idle (`applySearchSpaceAction`), so a live session offers no repeat at all.
     assert!(line["repeatLastOnlyWhenIdle"].as_bool().expect("fixture repeat rule"));
     shell.window_engagements.insert("pane-top".into(), engagement(true));
     let node = shell.build_window_search_ui("pane-top").expect("the search body");
@@ -670,6 +677,12 @@ fn the_search_line_binds_reacts_change_submit_abort_and_repeat_moments() {
 /// editor as the row's own `control`. This renderer projected it as a `UiNode::Section`, and a
 /// `Container(Section)` registers NO hit (`retained_hit_registration`, `📥️input/🦀️.rs:718`), so the
 /// header had no pressable twin at all (`📓️w13b-actions-search-pane-bodies.md` §6 gap 5).
+///
+/// 🎛️ Every argument row is a `TreeItem` carrying its editor as a CHILD record, which is React's
+/// `TreeDataItem.control`; the row keeps `action.<id>.arg.<argId>` and the editor keeps the bare
+/// `def.id` React's `renderStagedArgControl` gives it.
+///
+/// ⚡️ React's section `actions` keep their own ids beside the form.
 #[test]
 fn the_staged_forms_category_header_registers_reacts_collapsible_row() {
     let fixture = pane_fixture();
@@ -683,9 +696,6 @@ fn the_staged_forms_category_header_registers_reacts_collapsible_row() {
     let header = records.iter().find(|record| record.key.as_str().ends_with(&section_id)).unwrap_or_else(|| panic!("🌳️ the form header '{section_id}' is published"));
     assert!(matches!(header.component, ui_contract::Component::TreeSection(_)), "🌳️ React's form header is a collapsible tree section, not a plain container — only a `TreeSection` registers `section.chevron.<id>`");
 
-    // 🎛️ Every argument row is a `TreeItem` carrying its editor as a CHILD record, which is React's
-    // `TreeDataItem.control`; the row keeps `action.<id>.arg.<argId>` and the editor keeps the bare
-    // `def.id` React's `renderStagedArgControl` gives it.
     let row_id = form["argRowId"].as_str().expect("arg row").replace("{actionId}", "openAddObjectDialog").replace("{argId}", "kind");
     let row = records.iter().find(|record| record.key.as_str().ends_with(&row_id)).unwrap_or_else(|| panic!("🌳️ the '{row_id}' row is published"));
     assert!(matches!(row.component, ui_contract::Component::TreeItem(_)), "🌳️ a staged argument is a tree ROW");
@@ -694,7 +704,6 @@ fn the_staged_forms_category_header_registers_reacts_collapsible_row() {
     assert!(matches!(editor.component, ui_contract::Component::Input(_)), "🎛️ a text argument edits through an input");
     assert!(editor.key.as_str().ends_with("/kind"), "🆔️ the editor keeps React's bare `def.id`: {}", editor.key.as_str());
 
-    // ⚡️ React's section `actions` keep their own ids beside the form.
     let segment = semio_framework::element_id_segment("pane-top");
     for expected in [
         form["executeId"].as_str().expect("execute").replace("{windowSegment}", &segment).replace("{actionId}", "openAddObjectDialog"),

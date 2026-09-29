@@ -127,7 +127,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::sync::broadcast;
 
 //#region ⚠️ Errors
-/// @emoji 🧯️ Top-level startup error — the only fallible paths outside a document/WS session are
+/// 🧯️ Top-level startup error — the only fallible paths outside a document/WS session are
 /// opening `db::Database`'s storage backend, connecting the directory backend, and binding the
 /// HTTP listener.
 #[derive(Debug)]
@@ -218,7 +218,7 @@ impl From<std::io::Error> for HubError {
 }
 //#endregion ⚠️ Errors
 
-/// @emoji 📦️ Axum JSON boundary for first-party `ToValue`/`FromValue` directory contracts.
+/// 📦️ Axum JSON boundary for first-party `ToValue`/`FromValue` directory contracts.
 struct DirectoryJson<T>(T);
 
 impl<'de, T: FromValue> Deserialize<'de> for DirectoryJson<T> {
@@ -238,35 +238,35 @@ fn now_ms() -> i64 {
     SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |d| d.as_millis() as i64)
 }
 
-/// @emoji 📚️ Carries the tracer the trusted-catalog load reports its progress onto. A unit struct
+/// 📚️ Carries the tracer the trusted-catalog load reports its progress onto. A unit struct
 /// would have had nowhere to send that progress, which is the only reason this holds a value.
 struct StartupCatalogControl {
     tracer: Tracer,
     cancellation: StartupCancellationV1,
     progress: StartupProgressCellV1,
-    /// @emoji 🕰️ When the last IN-FLIGHT progress record was emitted, so a long load reports that it
+    /// 🕰️ When the last IN-FLIGHT progress record was emitted, so a long load reports that it
     /// is advancing without turning a 16 k-unit catalog into 16 k trace lines.
     last_in_flight_ms: std::sync::atomic::AtomicU64,
 }
 
-/// @emoji ⏲️ The smallest gap between two in-flight startup-catalog progress records. The first and
+/// ⏲️ The smallest gap between two in-flight startup-catalog progress records. The first and
 /// last unit of a load are always emitted; everything between is rate-limited to this.
 const STARTUP_CATALOG_IN_FLIGHT_TRACE_MIN_GAP_MS: u64 = 1_000;
 
 impl StartupCatalogControl {
-    /// @emoji 📚️ Reporting onto `tracer` and into `progress`, cancelled with `cancellation`.
+    /// 📚️ Reporting onto `tracer` and into `progress`, cancelled with `cancellation`.
     fn new(tracer: Tracer, cancellation: StartupCancellationV1, progress: StartupProgressCellV1) -> Self {
         Self { tracer, cancellation, progress, last_in_flight_ms: std::sync::atomic::AtomicU64::new(0) }
     }
 
-    /// @emoji 🤫️ Reporting nowhere — for a caller that runs before this process has configured
+    /// 🤫️ Reporting nowhere — for a caller that runs before this process has configured
     /// observability, and for every law that is not about the catalog's progress.
     fn silent() -> Self {
         Self { tracer: Tracer::disabled(), cancellation: StartupCancellationV1::default(), progress: StartupProgressCellV1::default(), last_in_flight_ms: std::sync::atomic::AtomicU64::new(0) }
     }
 }
 
-/// @emoji 📈️ The latest progress a booting hub's startup work reported — what `/readyz` shows as
+/// 📈️ The latest progress a booting hub's startup work reported — what `/readyz` shows as
 /// `startup` while the trusted catalog loads, so a waiting caller sees a hub that is advancing — and the
 /// catalog's per-package progress, which the loaded catalog keeps reporting into for its background
 /// verification.
@@ -288,7 +288,7 @@ impl StartupProgressCellV1 {
     }
 }
 
-/// @emoji 🔐️ The catalog's background verification: once the hub serves, every package whose codec rows no
+/// 🔐️ The catalog's background verification: once the hub serves, every package whose codec rows no
 /// memory pinned at load is pinned against its component, smallest first, reporting into the same progress the
 /// admin observability route reads; a codec call that reaches a package first verifies it itself. One
 /// `server.catalog.publication` record names the outcome.
@@ -307,7 +307,7 @@ async fn verify_pending_catalog_guests(catalog: Arc<VerifiedTrustedCatalog>, tra
     tracer.emit(record);
 }
 
-/// @emoji 🚪️ Raised once the launcher's pipe is gone. Every startup step that can run for minutes —
+/// 🚪️ Raised once the launcher's pipe is gone. Every startup step that can run for minutes —
 /// the trusted-catalog load above all — observes it, so a hub whose launcher left stops loading and
 /// exits instead of outliving it.
 #[derive(Clone, Default)]
@@ -332,7 +332,7 @@ impl AuthorityOperationControl for StartupCatalogControl {
         self.cancellation.is_cancelled()
     }
 
-    /// @emoji 📡️ The boot's only outward sign that the catalog load is ALIVE. It used to emit the
+    /// 📡️ The boot's only outward sign that the catalog load is ALIVE. It used to emit the
     /// first and last unit alone, so a load that took 30 s printed nothing for 30 s and an operator
     /// could not tell a slow machine from a wedged one — the very distinction the load's own
     /// no-progress bound now makes internally. In-flight units are rate-limited to
@@ -541,14 +541,14 @@ impl Drop for ArtifactCasMaintenanceSupervisor {
     }
 }
 
-/// @emoji 🚰️ How often the hub hands its instance's committed outbox rows to the saga runner.
+/// 🚰️ How often the hub hands its instance's committed outbox rows to the saga runner.
 const SAGA_DRAIN_INTERVAL: std::time::Duration = std::time::Duration::from_millis(500);
 
-/// @emoji 🚰️ How many outbox rows one drain may move. Bounded so a backlog is worked off over
+/// 🚰️ How many outbox rows one drain may move. Bounded so a backlog is worked off over
 /// several turns instead of one unbounded pass holding both store locks.
 const SAGA_DRAIN_BATCH: usize = 64;
 
-/// @emoji 🚰️ Runs [`ServerState::drain_sagas`] on a fixed cadence for as long as this hub serves.
+/// 🚰️ Runs [`ServerState::drain_sagas`] on a fixed cadence for as long as this hub serves.
 ///
 /// The framework's own doc for that call states the reason this exists: "a forgotten runner is a
 /// queue that grows forever while every event looks delivered". Hub commits into the instance's
@@ -592,7 +592,7 @@ impl SagaDrainSupervisor {
         Arc::new(Self { cancelled, wake, task: Mutex::new(Some(task)), instance, tracer })
     }
 
-    /// @emoji 🚰️ Stops the cadence and then drains once more by hand. The last pass is the point:
+    /// 🚰️ Stops the cadence and then drains once more by hand. The last pass is the point:
     /// the requests that were still in flight when the router stopped accepting may have committed
     /// outbox rows after the final tick, and leaving those to the next boot is exactly the
     /// acknowledged-but-never-delivered window the outbox exists to close.
@@ -620,7 +620,7 @@ impl Drop for SagaDrainSupervisor {
     }
 }
 
-/// @emoji 🚰️ One drain pass, reported only when it moved rows. Returns how many follow-up turns ran
+/// 🚰️ One drain pass, reported only when it moved rows. Returns how many follow-up turns ran
 /// so a law can assert on the pass itself without owning the supervisor's clock.
 async fn drain_instance_sagas(instance: &ServerState<HubInstance>, tracer: &Tracer) -> usize {
     let span = tracer.span("server.saga.drain").request(tracer.allocate_request_id());
@@ -768,7 +768,7 @@ async fn configured_artifact_authority(data_dir: &std::path::Path, providers: Op
 }
 
 //#region 🔖️State
-/// @emoji 🎫️ Unambiguous v1 key for the flat DB/fanout catalogs: ASCII `v1:`, both UTF-8 byte
+/// 🎫️ Unambiguous v1 key for the flat DB/fanout catalogs: ASCII `v1:`, both UTF-8 byte
 /// lengths in decimal, separators, then the exact adjacent UTF-8 scope payloads. Both lengths make
 /// colon-containing and non-ASCII identifiers structural without a fallback decoder.
 fn document_scope_key_v1(scope: &DocumentScope) -> String {
@@ -865,7 +865,7 @@ struct PresenceSnapshot {
     actors: Vec<DirectoryPresenceActor>,
 }
 
-/// @emoji 🗂️ The member-directory presence projection each document last published, held by the presence publication
+/// 🗂️ The member-directory presence projection each document last published, held by the presence publication
 /// gate: a peer beat that only moves its pointer, camera or caret changes the document roster (every delta goes to the
 /// document's sockets) but not the projection (actor, user, surface, colour), so it is not republished to every
 /// member's directory socket. A document whose roster emptied is forgotten after publishing the empty projection, and a
@@ -916,7 +916,7 @@ impl TestPresenceClock {
     }
 }
 
-/// @emoji 🎨️ One actor's held palette index within a space, ref-counted across that actor's
+/// 🎨️ One actor's held palette index within a space, ref-counted across that actor's
 /// concurrently open document sockets in the same space (contract §C7.3: "A's second document socket
 /// keeps 0").
 struct ColorLease {
@@ -924,7 +924,7 @@ struct ColorLease {
     refs: u32,
 }
 
-/// @emoji 🌈️ One space's live session-color leases (contract §C7.3) — never persisted, rebuilt from
+/// 🌈️ One space's live session-color leases (contract §C7.3) — never persisted, rebuilt from
 /// nothing on hub restart, mirroring `presence`'s own ephemeral law.
 #[derive(Default)]
 struct SpaceColors {
@@ -1210,7 +1210,7 @@ impl SocketSubjectV1 {
         }
     }
 
-    /// @emoji 👤️ How this subject is named in a trace record. A share is deliberately reported by
+    /// 👤️ How this subject is named in a trace record. A share is deliberately reported by
     /// its share id rather than by whoever redeemed it: the hub does not know that person, and
     /// inventing an identity for an observability field would be the worst possible place to.
     fn trace_principal(&self) -> String {
@@ -1268,7 +1268,7 @@ enum SocketGrantStateV1 {
     Consumed,
 }
 
-/// @emoji 🔑 What a pending socket record answers to: a directory socket's one-use capability digest,
+/// 🔑 What a pending socket record answers to: a directory socket's one-use capability digest,
 /// or — for a document socket — only the credential binding its upgrade re-authenticates. A document
 /// socket is admitted by its session or share credential, so no secret is ever minted for it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -2138,7 +2138,7 @@ struct HubState {
     artifact_creation_tasks: Arc<ArtifactCreationHttpTaskOwnerV1>,
     #[cfg(feature = "native-artifact-execution")]
     gis_map_binding: Option<Arc<VerifiedGisMapArtifactBindingV1>>,
-    /// @emoji 💡️ The sole GIS Map proposal authority — present only when a verified trusted profile
+    /// 💡️ The sole GIS Map proposal authority — present only when a verified trusted profile
     /// froze a writable Map editor selection; otherwise every inference route fails closed with
     /// `inference.unavailable` and readiness publishes `inference: false`.
     #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
@@ -2146,18 +2146,18 @@ struct HubState {
     openable_catalog: Option<Arc<dyn DocumentOpenCatalogAuthorityV1>>,
     artifact_publication: Arc<HubArtifactPublication>,
     artifact_maintenance: Arc<ArtifactCasMaintenanceSupervisor>,
-    /// @emoji 📌️ Every Check In this process accepted, keyed by author, document and request id.
+    /// 📌️ Every Check In this process accepted, keyed by author, document and request id.
     check_ins: Arc<DocumentCheckInJobs>,
-    /// @emoji 🏭️ Wave 1.B: the single serialized directory writer (contract §C1's decider laws +
+    /// 🏭️ Wave 1.B: the single serialized directory writer (contract §C1's decider laws +
     /// dense event `seq`) built once over `directory` at startup — see `semio_hub::directory::
     /// DirectoryService`'s own doc. `/directory/commands` and `/directory/invites/{token}/redeem`
     /// go through this; every other `/directory/*` route reads `directory` directly.
     directory_service: Arc<DirectoryService>,
-    /// @emoji 🔐️ Whether this deployment mints sessions from password credentials at
+    /// 🔐️ Whether this deployment mints sessions from password credentials at
     /// `POST /auth/sessions`, and under which lifetime/cost — fail-closed, so a development hub
     /// keeps issuing only through the local-bootstrap pipe (see `semio_hub::auth`).
     credential_sign_in: CredentialSignInPolicyV1,
-    /// @emoji 🚦️ Per-principal and per-remote-address token buckets in front of credential
+    /// 🚦️ Per-principal and per-remote-address token buckets in front of credential
     /// sign-in, directory commands, invite redemption and socket-grant issuance.
     rate_limits: Arc<HubRateLimiterV1>,
     admin_subjects: Arc<[AdminSubject]>,
@@ -2168,14 +2168,14 @@ struct HubState {
     admin_operation_slots: Arc<tokio::sync::Semaphore>,
     admin_operation_tasks: Arc<AdminOperationTaskOwner>,
     readiness: Arc<HubReadinessV1>,
-    /// @emoji 🛡️ Contract §C0 `OS_HUB_ADMIN_DIR`: the admin SPA's static asset root. Lane 2-E owns
+    /// 🛡️ Contract §C0 `OS_HUB_ADMIN_DIR`: the admin SPA's static asset root. Lane 2-E owns
     /// the actual `/admin` file-serving handler (and its 503-if-missing stub) — this lane only
     /// carries the resolved path through `HubState` so that handler has something to read.
     /// 🌵️ Unread until 2-E's handler lands and calls `state.admin_dir` — not dead code, just not
     /// wired to a route yet (explicitly out of this lane's scope, see the doc above).
     #[allow(dead_code)]
     admin_dir: std::path::PathBuf,
-    /// @emoji 📡️ Command-lane + preview-lane fan-out, one `broadcast::Sender` per v1 scope key —
+    /// 📡️ Command-lane + preview-lane fan-out, one `broadcast::Sender` per v1 scope key —
     /// `db::Database`'s own `ArtifactHandle` exposes no live-subscription seam yet (see
     /// `db_engine`'s module doc: `subscribe`/`preview` are honest `Unimplemented` extension seams),
     /// so relaying newly-committed commands / preview blobs / presence updates to other connected
@@ -2196,7 +2196,7 @@ struct HubState {
     document_open_plan_issue_gate: Option<Arc<TestDocumentOpenPlanIssueGate>>,
     #[cfg(test)]
     document_open_plan_deadline_ms: Option<u64>,
-    /// @emoji 👥️ `(document_scope_key_v1, actor)` -> that actor's presence session (contract §C7.3) — ephemeral,
+    /// 👥️ `(document_scope_key_v1, actor)` -> that actor's presence session (contract §C7.3) — ephemeral,
     /// never durable (mirrors the preview lane's own law), rebuilt from nothing on hub restart. The
     /// roster is document-wide now (contract §C7.0): `ServerFrame::Presence` fans out on `fanout`, not
     /// a surface-scoped channel; identity and the plan-bound surface are reconstructed by Hub
@@ -2205,16 +2205,16 @@ struct HubState {
     presence_publication_gate: Arc<tokio::sync::Mutex<PresenceDirectoryProjections>>,
     #[cfg(test)]
     presence_clock: Option<Arc<TestPresenceClock>>,
-    /// @emoji 🎨️ Contract §C7.3 session colors: `space_id` -> that space's live `(actor -> palette
+    /// 🎨️ Contract §C7.3 session colors: `space_id` -> that space's live `(actor -> palette
     /// index)` leases. `acquire_color`/`release_color` below are the only mutators. Never persisted.
     session_colors: Arc<ShardedMap<String, SpaceColors>>,
-    /// @emoji 🦵️ Wave 1.B admin kick: `syncSessionId` (the `SyncSessionRecord.id`/`ConnectionView.
+    /// 🦵️ Wave 1.B admin kick: `syncSessionId` (the `SyncSessionRecord.id`/`ConnectionView.
     /// syncSessionId` the directory hands out on connect) -> a `Notify` the WS loop `select!`s on
     /// alongside its socket/broadcast reads. `POST /admin/api/connections/{syncSessionId}/close`
     /// fires it; the loop observes the wake-up and closes the connection on its own next tick —
     /// this map never itself closes a socket, only signals the session that owns it to.
     session_kicks: Arc<ShardedMap<String, Arc<tokio::sync::Notify>>>,
-    /// @emoji 🚪️ Every upgraded socket (document and directory) holds one admission from here for
+    /// 🚪️ Every upgraded socket (document and directory) holds one admission from here for
     /// its whole life. `axum`'s graceful shutdown never waits for an upgraded connection, so `main`
     /// closes them through this owner and waits for the last admission before it shuts the
     /// `Database` down and closes its storage.
@@ -2222,24 +2222,26 @@ struct HubState {
     socket_grants: Arc<SocketGrantLedgerV1>,
     document_open_plans: Arc<DocumentOpenPlanLedgerV1>,
     socket_binding_gates: Arc<SocketBindingGatesV1>,
-    /// @emoji 🧩️ Installed runtime extensions mirrored from dev `/🧩️extension-modules` —
+    /// 🧩️ Installed runtime extensions mirrored from dev `/🧩️extension-modules` —
     /// populated by hub deploy copy / sideload; `GET /🧩️extension-modules` lists `install.json` rows.
     extensions_root: std::path::PathBuf,
-    /// @emoji ⚖️ Contract §C9 ("hub `🏗️bootstrap/🦀️.rs`: policy from config → `SubmitOptions.policy`"): the
+    /// ⚖️ Contract §C9 ("hub `🏗️bootstrap/🦀️.rs`: policy from config → `SubmitOptions.policy`"): the
     /// authority-local `protocol::MergePolicy` every `submit_commands` call on this hub instance
     /// judges a batch's worst graded conflict/message level against — read once at startup from
     /// `OS_HUB_MERGE_POLICY` (see `merge_policy_from_env`'s doc), never per-connection/per-space,
     /// matching `protocol::MergePolicy`'s own "local/authority state, never on the wire" law.
     merge_policy: protocol::MergePolicy,
-    /// @emoji 🛣️ Every matched route's answers by class and latency, keyed by method and route template —
+    /// 📌️ The checkpoint policy's per-document tallies ([`HubCheckpointPolicyV1`], declared in `readiness`).
+    checkpoint_policy: Arc<CheckpointPolicyLedgerV1>,
+    /// 🛣️ Every matched route's answers by class and latency, keyed by method and route template —
     /// the per-route table `GET /admin/api/observability` reads.
     route_metrics: Arc<HubRouteMetricsV1>,
-    /// @emoji 📝️ The structured observer every route reports through — a level, a sink and the
+    /// 📝️ The structured observer every route reports through — a level, a sink and the
     /// per-event counter table `GET /admin/api/observability` reads. Configured from
     /// `SEMIO_TRACE_LEVEL`/`SEMIO_TRACE_SINK` at boot; a test injects a capturing one and asserts
     /// on the exact records its own request produced.
     tracer: Tracer,
-    /// @emoji 🗄️ Hub as instance #1 of the generic server product (`semio_hub::stores`): the four
+    /// 🗄️ Hub as instance #1 of the generic server product (`semio_hub::stores`): the four
     /// durable storage roles plus the command bus and saga runner over them, opened in the same
     /// `OS_HUB_DATA` root the directory and the artifact CAS live in. `sessions` is the role a
     /// production route writes today — see `record_instance_session`.
@@ -2247,13 +2249,13 @@ struct HubState {
 }
 
 impl HubState {
-    /// @emoji 📝️ Opens one span on this hub's tracer with a fresh request id already bound, so
+    /// 📝️ Opens one span on this hub's tracer with a fresh request id already bound, so
     /// every route reports under the same identity shape without restating it.
     fn span(&self, event: &str) -> Span {
         self.tracer.span(event).request(self.tracer.allocate_request_id())
     }
 
-    /// @emoji 📝️ Reports one fact that has no duration — a refusal taken before any work started,
+    /// 📝️ Reports one fact that has no duration — a refusal taken before any work started,
     /// or a lifecycle event such as boot.
     fn note(&self, event: &str, outcome: TraceOutcome, detail: &str) {
         let mut record = TraceRecord::new(event, outcome);
@@ -2261,7 +2263,7 @@ impl HubState {
         self.tracer.emit(record);
     }
 
-    /// @emoji 👥️ Reports one presence transition — a peer becoming visible (`join`), its lease lapsing
+    /// 👥️ Reports one presence transition — a peer becoming visible (`join`), its lease lapsing
     /// back to identity (`expiry`) or its socket leaving the roster (`leave`) — under the socket actor.
     fn note_presence(&self, event: &str, space_id: &str, document_id: &str, actor: &str) {
         let mut record = TraceRecord::new(event, TraceOutcome::Ok);
@@ -2271,7 +2273,7 @@ impl HubState {
         self.tracer.emit(record);
     }
 
-    /// @emoji 🚨️ Maps a directory fault to its status the way [`directory_error_status`] does, and
+    /// 🚨️ Maps a directory fault to its status the way [`directory_error_status`] does, and
     /// **records the backend's own message first**.
     ///
     /// `DirectoryError::Backend` is the one arm whose payload the status code cannot carry: the
@@ -2286,7 +2288,7 @@ impl HubState {
         directory_error_status(error)
     }
 
-    /// @emoji 🎫️ Records one live session in the server-product instance's [`SessionStore`].
+    /// 🎫️ Records one live session in the server-product instance's [`SessionStore`].
     ///
     /// The hub's session **authority** is and stays the directory: it owns the capability digest,
     /// the expiry, the authorization generation and the revocation audit fact, and every
@@ -2310,12 +2312,12 @@ impl HubState {
         self.instance.sessions.lock().await.create(record).await
     }
 
-    /// @emoji 🗑️ Removes one session from the instance's live set, leaving no replayable trace.
+    /// 🗑️ Removes one session from the instance's live set, leaving no replayable trace.
     async fn forget_instance_session(&self, session_id: &str) -> Result<(), server::storage::StorageError> {
         self.instance.sessions.lock().await.delete(&SessionId(session_id.to_string())).await
     }
 
-    /// @emoji 🚪️ Removes every session of one principal — the instance-side half of "signed out
+    /// 🚪️ Removes every session of one principal — the instance-side half of "signed out
     /// everywhere", which `POST /auth/credentials` performs on the directory.
     async fn revoke_instance_principal(&self, user_id: &str) -> Result<usize, server::storage::StorageError> {
         self.instance.sessions.lock().await.revoke_principal(&Principal::User { id: user_id.to_string() }).await
@@ -2526,7 +2528,7 @@ impl HubState {
         }
     }
 
-    /// @emoji 🎨️ Contract §C7.3: an existing lease for `actor` in `space` is ref-counted and its
+    /// 🎨️ Contract §C7.3: an existing lease for `actor` in `space` is ref-counted and its
     /// index reused; otherwise the lowest index in `0..=255` not currently held by any live actor of
     /// `space`, wrapping `n % 256` once all 256 are taken.
     fn acquire_color(&self, space: &str, actor: &str) -> u8 {
@@ -2542,7 +2544,7 @@ impl HubState {
         })
     }
 
-    /// @emoji 🎨️ `refs -= 1`, dropping the lease at 0 — freed on the last disconnect of that actor's
+    /// 🎨️ `refs -= 1`, dropping the lease at 0 — freed on the last disconnect of that actor's
     /// shell session across all of its document sockets in `space`.
     fn release_color(&self, space: &str, actor: &str) {
         self.session_colors.with_mut(space, |colors| {
@@ -2560,7 +2562,7 @@ impl HubState {
         });
     }
 
-    /// @emoji 🗂️ Get-or-create: after the caller has authenticated and validated the durable
+    /// 🗂️ Get-or-create: after the caller has authenticated and validated the durable
     /// descriptor, a document is lazily minted in `db`'s catalog on its first open. Concurrent
     /// opens resolve to the same live handle.
     async fn ensure_document(&self, id: &ProtocolArtifactId) -> Result<db::ArtifactHandle, db::DbError> {
@@ -2594,7 +2596,7 @@ fn db_error_status(error: &db::DbError) -> StatusCode {
     }
 }
 
-/// @emoji #⃣ Decodes a 64-hex-char blob URL path segment into a `db::ContentHash` — the inverse of
+/// #⃣ Decodes a 64-hex-char blob URL path segment into a `db::ContentHash` — the inverse of
 /// `ContentHash`'s `Display` (see `pack_core::ContentHash`), never trusted as-is (a malformed path
 /// is `BAD_REQUEST`, not a panic).
 fn parse_content_hash(hex: &str) -> Option<db::ContentHash> {
@@ -2612,7 +2614,7 @@ fn parse_content_hash(hex: &str) -> Option<db::ContentHash> {
 //#endregion 🔖️State
 
 //#region 🔖️Auth
-/// @emoji 🔎️ What a bearer token resolved to for document authority: an authenticated space
+/// 🔎️ What a bearer token resolved to for document authority: an authenticated space
 /// member, an exact document share, or nothing. Public discovery never enters this boundary.
 enum AuthOutcome {
     Session { user_id: String, role: SpaceRole, session_id: String, authorization_generation: u64, session_kind: AuthSessionKind },
@@ -2620,7 +2622,7 @@ enum AuthOutcome {
     Denied,
 }
 
-/// @emoji 🔐️ Tries the bearer as an `AuthSessionRecord` (session id -> user -> space role) first;
+/// 🔐️ Tries the bearer as an `AuthSessionRecord` (session id -> user -> space role) first;
 /// falls back to an active exact-space/document share grant when session resolution fails.
 async fn resolve_auth(state: &HubState, space_id: &str, document_id: &str, token: Option<&str>) -> AuthOutcome {
     let capability = token.and_then(|value| HubCapability::parse(value).ok());
@@ -2689,7 +2691,7 @@ async fn authorized(state: &HubState, space_id: &str, document_id: &str, token: 
     access_permits_in_space(state, &resolve_auth(state, space_id, document_id, token).await.access_roles(), HubAccessActionV1::DocumentRead, space_id).await
 }
 
-/// @emoji 📦️ A space-scoped blob read or write under the declared policy: a share never reaches the
+/// 📦️ A space-scoped blob read or write under the declared policy: a share never reaches the
 /// space's content-addressed store, and only a writer may add to it.
 async fn authorized_for_blob(state: &HubState, space_id: &str, hash: &str, token: Option<&str>, action: HubAccessActionV1) -> bool {
     access_permits_in_space(state, &resolve_auth(state, space_id, hash, token).await.access_roles(), action, space_id).await
@@ -2726,7 +2728,7 @@ struct AdminPrincipalV1 {
 }
 
 impl AdminPrincipalV1 {
-    /// @emoji 🎚️ Who this administrator asks a space-role question as.
+    /// 🎚️ Who this administrator asks a space-role question as.
     fn principal(&self) -> DirectoryPrincipalV1<'_> {
         DirectoryPrincipalV1 { user_id: &self.user_id, session_kind: self.session_kind, device_instance_id: &self.device_instance_id }
     }
@@ -2794,7 +2796,7 @@ struct HubReadinessV1 {
     startup: Option<HubStartupProgressV1>,
 }
 
-/// @emoji 📈️ How far a booting hub's startup work has come: the stage its trusted catalog load last
+/// 📈️ How far a booting hub's startup work has come: the stage its trusted catalog load last
 /// reported and that stage's units, and the catalog's per-package phases, bytes and rows once it has
 /// selected its packages. Present only while the hub starts.
 #[derive(Clone, Serialize)]
@@ -2857,6 +2859,89 @@ struct HubFeatureReadinessV1 {
     rebootstrap: bool,
     mcp_workspace: bool,
     inference_services: Vec<HubInferenceServiceReadinessV1>,
+    checkpoint_policy: HubCheckpointPolicyV1,
+}
+
+/// 📌️ `features.checkpointPolicy` (`LocalBootstrapReadinessV1`): the hub checks a document in by itself once the edits,
+/// or the diff and inverse payload bytes, committed over its document sockets since it last did reach either bound — on behalf
+/// of the author whose batch reached it, through the ordinary Check In. A client that seeds from the active checkpoint then
+/// replays at most about one policy's worth of tail when it opens the document (ticket 26/09/23 session 14c: a 13 201-edit
+/// document without a checkpoint could no longer be opened).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct HubCheckpointPolicyV1 {
+    edits: u64,
+    payload_bytes: u64,
+}
+
+/// 📌️ The declared default policy: 1 024 edits or 512 KiB of payload, well inside a browser client's pre-activation tail
+/// retention (64 frames, 1 MiB).
+const HUB_CHECKPOINT_POLICY: HubCheckpointPolicyV1 = HubCheckpointPolicyV1 { edits: 1_024, payload_bytes: 512 * 1024 };
+const CHECKPOINT_POLICY_EDITS_ENV: &str = "OS_HUB_CHECKPOINT_POLICY_EDITS";
+const CHECKPOINT_POLICY_BYTES_ENV: &str = "OS_HUB_CHECKPOINT_POLICY_BYTES";
+
+impl HubCheckpointPolicyV1 {
+    /// 🎚️ The operator's policy: each bound decimal within the schema's range, absent means the declared default, anything else
+    /// fails boot.
+    fn configured(edits: Option<&str>, payload_bytes: Option<&str>) -> Result<Self, String> {
+        let bounded = |value: Option<&str>, name: &str, bounds: std::ops::RangeInclusive<u64>, default: u64| match value.map(str::trim).filter(|text| !text.is_empty()) {
+            None => Ok(default),
+            Some(text) => text.parse::<u64>().ok().filter(|bound| bounds.contains(bound)).ok_or_else(|| format!("{name} must be a decimal integer from {} to {}", bounds.start(), bounds.end())),
+        };
+        Ok(Self { edits: bounded(edits, CHECKPOINT_POLICY_EDITS_ENV, 1..=1_048_576, HUB_CHECKPOINT_POLICY.edits)?, payload_bytes: bounded(payload_bytes, CHECKPOINT_POLICY_BYTES_ENV, 4_096..=1_073_741_824, HUB_CHECKPOINT_POLICY.payload_bytes)? })
+    }
+}
+
+/// 🧮️ What one written document committed since the hub last weighed its checkpoint policy, and whether a policy
+/// Check In of it runs.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+struct CheckpointPolicyTallyV1 {
+    edits: u64,
+    payload_bytes: u64,
+    running: bool,
+}
+
+/// 🧮️ How many documents one hub tallies at once; past it the tallies of documents with no Check In running restart.
+const CHECKPOINT_POLICY_DOCUMENTS_MAX: usize = 65_536;
+
+/// 🧮️ The per-document tallies of the checkpoint policy.
+#[derive(Default)]
+struct CheckpointPolicyLedgerV1 {
+    documents: Mutex<std::collections::HashMap<DocumentScope, CheckpointPolicyTallyV1>>,
+}
+
+impl CheckpointPolicyLedgerV1 {
+    /// ➕️ Adds one committed batch to `scope`'s tally: `true` when the tally reached `policy` and no policy Check In of the
+    /// document runs — the caller starts one, the tally restarts and stays running until [`Self::finish`].
+    fn observe(&self, scope: &DocumentScope, edits: u64, payload_bytes: u64, policy: HubCheckpointPolicyV1) -> bool {
+        let mut documents = self.documents.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if !documents.contains_key(scope) && documents.len() >= CHECKPOINT_POLICY_DOCUMENTS_MAX {
+            documents.retain(|_, tally| tally.running);
+            if documents.len() >= CHECKPOINT_POLICY_DOCUMENTS_MAX {
+                return false;
+            }
+        }
+        let tally = documents.entry(scope.clone()).or_default();
+        tally.edits = tally.edits.saturating_add(edits);
+        tally.payload_bytes = tally.payload_bytes.saturating_add(payload_bytes);
+        if tally.running || (tally.edits < policy.edits && tally.payload_bytes < policy.payload_bytes) {
+            return false;
+        }
+        *tally = CheckpointPolicyTallyV1 { edits: 0, payload_bytes: 0, running: true };
+        true
+    }
+
+    /// 🏁️ Ends `scope`'s policy Check In; the edits committed meanwhile stay tallied.
+    fn finish(&self, scope: &DocumentScope) {
+        if let Some(tally) = self.documents.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get_mut(scope) {
+            tally.running = false;
+        }
+    }
+
+    #[cfg(test)]
+    fn tally(&self, scope: &DocumentScope) -> Option<CheckpointPolicyTallyV1> {
+        self.documents.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(scope).copied()
+    }
 }
 
 /// 💡️ One inference service THIS hub executes server-side, and the document-relative route family
@@ -2956,13 +3041,14 @@ fn hub_readiness(
             rebootstrap: true,
             mcp_workspace: mcp_workspace_ready(agent_delegation_ready, open_plan_ready),
             inference_services,
+            checkpoint_policy: HUB_CHECKPOINT_POLICY,
         },
         blocked_by,
         startup: None,
     }
 }
 
-/// @emoji 🌅️ The readiness of a hub that has bound its socket but not yet opened its stores or loaded
+/// 🌅️ The readiness of a hub that has bound its socket but not yet opened its stores or loaded
 /// its trusted catalog: every component gate closed with `hub-starting`, the artifact authority with
 /// `trusted-catalog-loading`, and no feature served yet.
 fn hub_starting_readiness(mode: HubMode, bind_scope: &'static str, run_id: String, bootstrap_ready: bool, credential_sign_in_enabled: bool, artifact_cas_sweep_execute: bool) -> HubReadinessV1 {
@@ -2988,9 +3074,9 @@ fn hub_starting_readiness(mode: HubMode, bind_scope: &'static str, run_id: Strin
     }
 }
 
-/// @emoji 🌅️ The closed-gate reason of a component a booting hub has not opened yet.
+/// 🌅️ The closed-gate reason of a component a booting hub has not opened yet.
 const HUB_STARTING_REASON: &str = "hub-starting";
-/// @emoji 🌅️ The artifact authority's closed-gate reason while the trusted catalog loads.
+/// 🌅️ The artifact authority's closed-gate reason while the trusted catalog loads.
 const HUB_STARTING_CATALOG_REASON: &str = "trusted-catalog-loading";
 
 /// 🗣️ The one line a hub prints about its own readiness at startup — `[INFO]` naming the bound
@@ -3015,7 +3101,7 @@ fn startup_readiness_line(readiness: &HubReadinessV1, addr: &SocketAddr) -> Stri
     format!("[WARN] os-hub listening at http://{addr} but /readyz reports not-ready — closed gates: {gates}")
 }
 
-/// @emoji 📝️ The same readiness fact as [`startup_readiness_line`], in the stable-code shape a
+/// 📝️ The same readiness fact as [`startup_readiness_line`], in the stable-code shape a
 /// `server.readiness` record's `detail` carries: `addr`, the bind scope and each closed gate by its
 /// own reason code, never a prose sentence a collector would have to parse.
 fn readiness_trace_detail(readiness: &HubReadinessV1, addr: &SocketAddr, bind_scope: &str) -> String {
@@ -3026,11 +3112,17 @@ fn readiness_trace_detail(readiness: &HubReadinessV1, addr: &SocketAddr, bind_sc
     detail
 }
 
-/// @emoji 🔐️ Stamps the ONE truthful answer to "can a browser obtain a session from this hub by
+/// 🔐️ Stamps the ONE truthful answer to "can a browser obtain a session from this hub by
 /// presenting a credential" onto a readiness snapshot. `hub_readiness` itself never claims it: a
 /// hub only issues publicly when `OS_HUB_CREDENTIAL_SIGN_IN` enabled `POST /auth/sessions`, and the
 /// local-bootstrap contract (`🚀️local-bootstrap/🧬️schema/🔣️.json`) requires a development hub
 /// running the pipe to keep reporting `false`.
+/// 📌️ Declares the operator's checkpoint policy in `features.checkpointPolicy`.
+fn with_checkpoint_policy(mut readiness: HubReadinessV1, policy: HubCheckpointPolicyV1) -> HubReadinessV1 {
+    readiness.features.checkpoint_policy = policy;
+    readiness
+}
+
 fn declare_public_session_issuance(readiness: HubReadinessV1, credential_sign_in_enabled: bool) -> HubReadinessV1 {
     HubReadinessV1 { authentication: HubAuthenticationReadinessV1 { public_session_issuance: credential_sign_in_enabled, ..readiness.authentication }, ..readiness }
 }
@@ -3054,7 +3146,7 @@ fn configured_admin_subjects() -> Result<Arc<[AdminSubject]>, HubError> {
     Ok(subjects.into())
 }
 
-/// @emoji 🔐️ Whether a reverse proxy in front of this hub is trusted to report how the *client*
+/// 🔐️ Whether a reverse proxy in front of this hub is trusted to report how the *client*
 /// reached it.
 ///
 /// The hub speaks plain HTTP and always will (`grep rustls|native-tls|TlsAcceptor` → 0 hits); a real
@@ -3074,7 +3166,7 @@ enum ForwardedTlsTrustV1 {
 }
 
 impl ForwardedTlsTrustV1 {
-    /// @emoji 🔐️ `OS_HUB_TRUSTED_FORWARDING=none|proxy`, default `none`. An unrecognized value
+    /// 🔐️ `OS_HUB_TRUSTED_FORWARDING=none|proxy`, default `none`. An unrecognized value
     /// fails the boot rather than silently choosing the permissive answer.
     fn from_environment() -> Result<Self, HubError> {
         match std::env::var("OS_HUB_TRUSTED_FORWARDING").as_deref() {
@@ -3085,7 +3177,7 @@ impl ForwardedTlsTrustV1 {
         }
     }
 
-    /// @emoji 🏷️ The stable word the startup line reports.
+    /// 🏷️ The stable word the startup line reports.
     fn label(self) -> &'static str {
         match self {
             Self::Untrusted => "none",
@@ -3094,7 +3186,7 @@ impl ForwardedTlsTrustV1 {
     }
 }
 
-/// @emoji 🔐️ Whether one request reached the *client* over a secure transport, as far as this hub
+/// 🔐️ Whether one request reached the *client* over a secure transport, as far as this hub
 /// is entitled to know.
 ///
 /// Under [`ForwardedTlsTrustV1::Untrusted`] every request is accepted and the forwarding headers are
@@ -3114,7 +3206,7 @@ fn forwarded_request_is_secure(headers: &HeaderMap, trust: ForwardedTlsTrustV1) 
     }
 }
 
-/// @emoji 🌐️ The host the *client* used, for anything that has to name this deployment back to it.
+/// 🌐️ The host the *client* used, for anything that has to name this deployment back to it.
 /// `X-Forwarded-Host` is read only under [`ForwardedTlsTrustV1::TerminatingProxy`]; otherwise the
 /// request's own `Host` is the whole truth.
 fn forwarded_external_host(headers: &HeaderMap, trust: ForwardedTlsTrustV1) -> Option<String> {
@@ -3125,7 +3217,7 @@ fn forwarded_external_host(headers: &HeaderMap, trust: ForwardedTlsTrustV1) -> O
     forwarded.or_else(|| headers.get(axum::http::header::HOST).and_then(|value| value.to_str().ok()).map(str::trim).filter(|host| !host.is_empty())).map(str::to_string)
 }
 
-/// @emoji 🚧️ The router's outermost layer: every answer that is not a success leaves as a typed, signed
+/// 🚧️ The router's outermost layer: every answer that is not a success leaves as a typed, signed
 /// refusal. A response at or above 400 without `x-semio-refusal` gets the code its status declares
 /// (`HubRefusalStatusCodesV1`), so a client can always tell the hub's own refusal from a proxy's; its
 /// body is never touched, so a bare refusal stays body-free and discloses nothing. A handler that
@@ -3149,7 +3241,7 @@ async fn refusal_middleware(State(tracer): State<Tracer>, request: axum::extract
     typed_refusal(response)
 }
 
-/// @emoji 🏷️ Stamps one response as a typed refusal (see [`refusal_middleware`]); a success passes unchanged.
+/// 🏷️ Stamps one response as a typed refusal (see [`refusal_middleware`]); a success passes unchanged.
 fn typed_refusal(mut response: Response) -> Response {
     if let Some(code) = semio_hub::refusal::refusal_code(response.status().as_u16()) {
         if !response.headers().contains_key(semio_hub::refusal::HUB_REFUSAL_HEADER) {
@@ -3159,7 +3251,7 @@ fn typed_refusal(mut response: Response) -> Response {
     response
 }
 
-/// @emoji 🛡️ Refuses any request a trusted proxy reports as having reached the client in cleartext.
+/// 🛡️ Refuses any request a trusted proxy reports as having reached the client in cleartext.
 ///
 /// Router-wide and outside every other layer: a hub whose transport is compromised must not answer
 /// at all, not answer differently per route.
@@ -3172,7 +3264,7 @@ async fn transport_security_middleware(State(trust): State<ForwardedTlsTrustV1>,
     next.run(request).await
 }
 
-/// @emoji 🛂️ Every configuration a hub refuses to boot with, decided before a single store is opened.
+/// 🛂️ Every configuration a hub refuses to boot with, decided before a single store is opened.
 ///
 /// **Production used to be unreachable.** Its only identity requirement was an external
 /// `IdentityAssertionVerifier` adapter, of which this repository has none and `main` passed a
@@ -3242,7 +3334,7 @@ fn exact_admin_session_bearer(headers: &HeaderMap) -> Result<SessionCapability, 
     SessionCapability::parse(encoded).map_err(|_| StatusCode::UNAUTHORIZED)
 }
 
-/// @emoji 🛡️ Resolves one request-owned verified administrator principal from a live durable session.
+/// 🛡️ Resolves one request-owned verified administrator principal from a live durable session.
 async fn authenticate_admin_principal(state: &HubState, headers: &HeaderMap, _peer: Option<SocketAddr>) -> Result<AdminPrincipalV1, StatusCode> {
     let capability = exact_admin_session_bearer(headers)?;
     let session =
@@ -3296,10 +3388,10 @@ struct SocketGrantReceiptV1 {
     expires_at_ms: i64,
 }
 
-/// @emoji 📝️ Schema of [`DocumentSocketGrantReceiptV1`] — `os.directory#/$defs/DocumentSocketGrantReceiptV1`.
+/// 📝️ Schema of [`DocumentSocketGrantReceiptV1`] — `os.directory#/$defs/DocumentSocketGrantReceiptV1`.
 const DOCUMENT_SOCKET_GRANT_SCHEMA_V1: &str = "semio.hub.document-socket-grant/v1";
 
-/// @emoji 📝️ The answer to a document open-plan exchange: the actor the next `semio.session.v1`
+/// 📝️ The answer to a document open-plan exchange: the actor the next `semio.session.v1`
 /// upgrade of the same credential is admitted as, and until when. It carries no secret — the
 /// credential itself is what the upgrade presents.
 #[derive(Serialize)]
@@ -3327,7 +3419,7 @@ fn socket_issue_bearer(headers: &HeaderMap) -> Result<String, StatusCode> {
     Ok(capability.to_string())
 }
 
-/// @emoji 🙋️ The hub actor id bound to one credential: a session or a share token hashes to the same
+/// 🙋️ The hub actor id bound to one credential: a session or a share token hashes to the same
 /// actor on every open-plan, socket grant and socket upgrade, so no caller ever names its actor.
 fn socket_actor_id(material: &[u8; 32], stable_session: bool) -> String {
     let mut digest = Sha256::new();
@@ -3398,7 +3490,7 @@ async fn authenticate_document_socket_subject(state: &HubState, scope: &Document
     authenticate_document_credential(state, scope, &bearer).await
 }
 
-/// @emoji 🪪️ One document credential — session or share token — to its socket subject and the actor a
+/// 🪪️ One document credential — session or share token — to its socket subject and the actor a
 /// grant issued now would carry: a session's actor is bound to the session (stable across plans, so
 /// per-actor undo spans reconnects), a share holder's actor is minted per plan (two viewers of one link
 /// stay two presences). The socket upgrade resolves the same subject and admits the pending grant
@@ -4155,7 +4247,7 @@ async fn canonical_pair_response(state: &HubState, scope: &DocumentScope, token:
     response
 }
 
-/// @emoji 🧭️ A durably announced document's current frontier.
+/// 🧭️ A durably announced document's current frontier.
 async fn get_document_status(Path((space_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>) -> Result<Json<DocumentStatusResponse>, StatusCode> {
     if !authorized(&state, &space_id, &document_id, bearer(&headers).as_deref()).await {
         return Err(StatusCode::UNAUTHORIZED);
@@ -4553,6 +4645,56 @@ impl VerifiedCheckpointPublisher for FencedCheckInPublisherV1 {
 /// read the committed ledger from its baseline to the named head, fold it through the package codec,
 /// and publish the result behind the author/descriptor/active-checkpoint fence. A monitor revalidates
 /// the author every 50 ms and revokes the job the moment write access is lost.
+/// 📌️ Tallies one committed batch for the checkpoint policy and, when it reaches the policy, starts the policy Check In
+/// of the document on behalf of `subject` in the background.
+fn observe_checkpoint_policy(state: &HubState, scope: &DocumentScope, subject: &SocketSubjectV1, handle: &db::ArtifactHandle, envelopes: &[MutationEnvelope]) {
+    let payload_bytes = envelopes.iter().map(|envelope| (envelope.diff.payload.len() + envelope.inverse.payload.len()) as u64).sum();
+    if state.checkpoint_policy.observe(scope, envelopes.len() as u64, payload_bytes, state.readiness.features.checkpoint_policy) {
+        tokio::spawn(run_policy_check_in(state.clone(), subject.clone(), scope.clone(), handle.clone()));
+    }
+}
+
+/// 📌️ The checkpoint policy's Check In: `subject` — the author whose batch reached the policy, still allowed to check
+/// in — checks `scope` in at its committed head through the ordinary claim, fold and fenced publication; answers the
+/// job's terminal status (`None` when it could not start: no author session, no head, a claim of the same head exists).
+async fn run_policy_check_in(state: HubState, subject: SocketSubjectV1, scope: DocumentScope, handle: db::ArtifactHandle) -> Option<DocumentCheckInStatusV1> {
+    let status = start_policy_check_in(&state, subject, &scope, &handle).await;
+    state.checkpoint_policy.finish(&scope);
+    status
+}
+
+async fn start_policy_check_in(state: &HubState, subject: SocketSubjectV1, scope: &DocumentScope, handle: &db::ArtifactHandle) -> Option<DocumentCheckInStatusV1> {
+    let SocketSubjectV1::Session { user_id, .. } = &subject else { return None };
+    let user_id = user_id.clone();
+    if state.artifact_authority.is_none() || !access_permits_in_space(state, &subject.access_roles(), HubAccessActionV1::DocumentCheckIn, &scope.space_id).await {
+        return None;
+    }
+    let snapshot = handle.checkpoint_publication_snapshot().await.ok()?;
+    let head = EditedArtifactFrontierV1::of_artifact_frontier(&ledger_artifact_frontier(scope, &snapshot)?)?;
+    let request_id = os_directory::hex_lower(&Sha256::digest(format!("checkpoint-policy\0{}\0{}\0{}", scope.space_id, scope.document_id, head.head_edit_ordinal).as_bytes()))[..32].to_string();
+    let request = DocumentCheckInV1 { schema: os_directory::DOCUMENT_CHECK_IN_SCHEMA_V1.into(), request_id: request_id.clone(), head };
+    let source = request.canonical_json()?;
+    let command_sha256 = os_directory::hex_lower(&Sha256::digest(source.as_bytes()));
+    let key = DocumentCheckInKey { user_id: user_id.clone(), space_id: scope.space_id.clone(), document_id: scope.document_id.clone(), request_id: request_id.clone() };
+    let DocumentCheckInAdmission::Owner(job) = state.check_ins.admit(key.clone(), &command_sha256) else { return None };
+    let claim = NewCheckpointPublicationClaimV1 { actor_user_id: user_id.clone(), correlation_id: request_id.clone(), command_sha256: command_sha256.clone(), claimed_at: now_ms() };
+    if !matches!(state.directory_service.claim_or_read_checkpoint_publication(&claim).await, Ok(CheckpointPublicationClaimV1::Claimed(_))) {
+        state.check_ins.forget(&key);
+        return None;
+    }
+    let guard = CheckInClaimGuardV1 { service: state.directory_service.clone(), actor_user_id: user_id, correlation_id: request_id, command_sha256, complete: false };
+    let policy = state.readiness.features.checkpoint_policy;
+    let mut record = TraceRecord::new("server.document.check-in", TraceOutcome::Started);
+    record.level = TraceLevel::Info;
+    record.principal = Some(subject.trace_principal());
+    record.space = Some(scope.space_id.clone());
+    record.artifact = Some(scope.document_id.clone());
+    record.detail = Some(format!("checkpoint-policy head={} edits={} payloadBytes={}", request.head.head_edit_ordinal, policy.edits, policy.payload_bytes));
+    state.tracer.emit(record);
+    run_document_check_in(state.clone(), subject, scope.clone(), request, job.clone(), guard).await;
+    Some(job.status())
+}
+
 async fn run_document_check_in(state: HubState, subject: SocketSubjectV1, scope: DocumentScope, request: DocumentCheckInV1, job: Arc<DocumentCheckInJob>, mut claim: CheckInClaimGuardV1) {
     let audience = SocketAudienceV1::Document(scope.clone());
     let monitor = tokio::spawn({
@@ -4612,7 +4754,7 @@ async fn run_document_check_in(state: HubState, subject: SocketSubjectV1, scope:
     }
 }
 
-/// @emoji ⛔️ Why one Check In ended without a checkpoint: its typed refusal (`None`: cancelled) and, when an authority or
+/// ⛔️ Why one Check In ended without a checkpoint: its typed refusal (`None`: cancelled) and, when an authority or
 /// ledger failure caused it, that failure in its own words — the span's detail after the refusal code, so a
 /// `codec-refused` names the codec fault, the pair limit or the operation order that refused it.
 struct CheckInEndV1 {
@@ -4739,7 +4881,7 @@ async fn check_in_author(state: &HubState, scope: &DocumentScope, headers: &Head
     Ok((subject, user_id))
 }
 
-/// @emoji 📌️ `POST /spaces/{space_id}/documents/{document_id}/check-ins` — Check In. The author names
+/// 📌️ `POST /spaces/{space_id}/documents/{document_id}/check-ins` — Check In. The author names
 /// one committed head of this document's ledger; the hub materializes the checkpoint from its own
 /// log and makes it active. Answers the job's status (`202` while it runs, `200` once terminal); a
 /// retry of the same request answers the same job, or after a restart the same durable checkpoint.
@@ -4800,7 +4942,7 @@ async fn post_document_check_in(Path((space_id, document_id)): Path<(String, Str
     check_in_status_response(accepted)
 }
 
-/// @emoji 📣️ `GET /spaces/{space_id}/documents/{document_id}/check-ins/{request_id}` — one of the
+/// 📣️ `GET /spaces/{space_id}/documents/{document_id}/check-ins/{request_id}` — one of the
 /// caller's own Check Ins; another author's request id is indistinguishable from an unknown one.
 async fn get_document_check_in(Path((space_id, document_id, request_id)): Path<(String, String, String)>, OriginalUri(uri): OriginalUri, headers: HeaderMap, State(state): State<HubState>) -> Response {
     if uri.query().is_some() {
@@ -4817,7 +4959,7 @@ async fn get_document_check_in(Path((space_id, document_id, request_id)): Path<(
     }
 }
 
-/// @emoji 🛑️ `POST /spaces/{space_id}/documents/{document_id}/check-ins/{request_id}/cancel` — stops
+/// 🛑️ `POST /spaces/{space_id}/documents/{document_id}/check-ins/{request_id}/cancel` — stops
 /// the caller's own Check In at its next checkpoint; a published checkpoint is never withdrawn.
 async fn post_document_check_in_cancel(Path((space_id, document_id, request_id)): Path<(String, String, String)>, OriginalUri(uri): OriginalUri, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
     if uri.query().is_some() || !body.is_empty() {
@@ -4950,7 +5092,7 @@ async fn consume_scoped_directory_socket_grant(state: &HubState, headers: &Heade
     }
 }
 
-/// @emoji 🧭️ Admits a document upgrade whose credential resolved to `subject`: the oldest pending
+/// 🧭️ Admits a document upgrade whose credential resolved to `subject`: the oldest pending
 /// document grant of that binding and audience, revalidated against its sealed plan, consumed once.
 async fn consume_document_socket_grant(state: &HubState, subject: &SocketSubjectV1, audience: SocketAudienceV1, surface: Option<&str>) -> Result<SocketGrantAdmissionV1, (StatusCode, &'static str)> {
     let candidate = state.socket_grants.pending_document_binding(&audience, &subject.binding(), now_ms()).map_err(|_| (StatusCode::UNAUTHORIZED, "socket-grant-pending"))?;
@@ -5001,7 +5143,7 @@ fn credential_from_protocol_header(headers: &HeaderMap) -> Result<String, Status
     Ok(token.to_string())
 }
 
-/// @emoji 📝️ The one document socket, `/scopes/{space}%2F{document}/document/ws?surface=`. The
+/// 📝️ The one document socket, `/scopes/{space}%2F{document}/document/ws?surface=`. The
 /// credential — a session or a share token — rides `Sec-WebSocket-Protocol: semio.session.v1, <token>`;
 /// it resolves to its subject exactly as the open-plan issuer did, and the upgrade consumes the pending
 /// plan grant issued to that binding, whose actor the socket is then bound to. Nothing about identity
@@ -5067,7 +5209,7 @@ async fn error_frame(code: &str, message: impl Into<String>) -> Message {
 }
 
 
-/// @emoji 🧭️ Best-effort `RuntimeFrontierSummary` for an `Ack` when the triggering `submit` itself
+/// 🧭️ Best-effort `RuntimeFrontierSummary` for an `Ack` when the triggering `submit` itself
 /// failed — re-reads the document's current (unaffected) frontier so the client still learns
 /// "where the server actually is", falling back to an all-zero genesis summary only if even that
 /// read fails (a document wedged badly enough that this happens has bigger problems than one Ack).
@@ -5082,13 +5224,13 @@ fn engine_frontier_to_wire(frontier: &db::db_engine::Frontier, head_edit_id: Str
     RuntimeFrontierSummary { document_id: frontier.document.clone(), head_edit_ordinal: frontier.head_seq, head_edit_id, last_commit_seq: frontier.commit_seq, chain_hash: frontier.chain_hash }
 }
 
-/// @emoji 🔁️ The origin this hub stamps on every catch-up tail (hello and `FrontierAdvertise`): a declared hub identity, never the receiving socket's actor — a
+/// 🔁️ The origin this hub stamps on every catch-up tail (hello and `FrontierAdvertise`): a declared hub identity, never the receiving socket's actor — a
 /// tail carries anyone's edits, and a replica that read its own actor there discarded the whole history as its own echo (ticket
 /// 26/09/23 session 12, run s12i). Replicas suppress echoes by operation identity; this names the tail. Pinned to
 /// `🏪️store/🧫️fixtures/document-echo-suppression-v1` `hubCatchUpOrigin`.
 const HUB_CATCH_UP_ORIGIN: &str = "hub.catch-up";
 
-/// @emoji 📨️ Submits one batch and returns its `Ack` plus the `Commands` relay for peers. The caller
+/// 📨️ Submits one batch and returns its `Ack` plus the `Commands` relay for peers. The caller
 /// holds the document's write gate, so the frontier read first is exactly the one the submit starts
 /// from: a receipt that does not advance `commit_seq` is the engine's idempotent replay of an
 /// already-committed `command_id` — acknowledged again for the resending client, never relayed as new.
@@ -5119,7 +5261,7 @@ async fn submit_commands(handle: &db::ArtifactHandle, gate: &db::security::Secur
     }
 }
 
-/// @emoji 🚪️ Admits `envelopes` as one batch through `gate.admit_commands` (tenant isolation, then
+/// 🚪️ Admits `envelopes` as one batch through `gate.admit_commands` (tenant isolation, then
 /// `Action::Write` authz on `AuthzScope::CommandKind`, the DoS budget charged for the whole batch at
 /// once, replay dedupe — see `SecurityGate::admit_commands`' own doc) before any of them reach
 /// `db::ArtifactHandle::submit`; admission records nothing, [`submit_commands`] records the committed
@@ -5140,7 +5282,7 @@ const DOCUMENT_SOCKET_COMMAND_BUDGET: u32 = protocol::DOCUMENT_BACKBONE_BATCH_MA
 /// 🪣️ Commands per second a document socket's budget regains.
 const DOCUMENT_SOCKET_COMMAND_REFILL_PER_SECOND: u32 = 60;
 
-/// @emoji 🚧️ One document socket's security gate over `policy`: a 60 s replay window of 256 committed
+/// 🚧️ One document socket's security gate over `policy`: a 60 s replay window of 256 committed
 /// operations per actor and the declared-batch-sized command budget.
 fn document_socket_gate(policy: db::security::RoleBasedPolicy) -> db::security::SecurityGate {
     db::security::SecurityGate::new(policy, db::security::ReplayGuard::new(60_000, 256), db::security::BudgetRegistry::new(DOCUMENT_SOCKET_COMMAND_BUDGET, DOCUMENT_SOCKET_COMMAND_REFILL_PER_SECOND), Arc::new(db::NullEmit))
@@ -5169,7 +5311,7 @@ fn document_socket_frame_deadline(state: &HubState) -> std::time::Duration {
 /// socket re-reads its authority, so a revocation that lands while a frame waits still fences it.
 const AGENT_COMMAND_PATIENCE_MS: u64 = 10_000;
 
-/// @emoji 📨️ Handles one decoded `ClientFrame` for an already-authenticated v1 socket session within the frame
+/// 📨️ Handles one decoded `ClientFrame` for an already-authenticated v1 socket session within the frame
 /// deadline: every frame but an admitted `Commands` batch completes here; an admitted batch leaves holding its
 /// document's write gate as [`ClientFrameStepV1::Commit`] for [`commit_admitted_commands`].
 ///
@@ -5247,7 +5389,7 @@ async fn handle_client_frame(
     }
 }
 
-/// @emoji 🚦️ What one decoded frame leaves its socket to do once its admission finished within the frame deadline.
+/// 🚦️ What one decoded frame leaves its socket to do once its admission finished within the frame deadline.
 enum ClientFrameStepV1 {
     Continue,
     End,
@@ -5261,7 +5403,7 @@ impl ClientFrameStepV1 {
     }
 }
 
-/// @emoji ✍️ One `Commands` batch admitted within the frame deadline, holding its document's write gate until its
+/// ✍️ One `Commands` batch admitted within the frame deadline, holding its document's write gate until its
 /// commit is answered.
 struct AdmittedCommandsV1 {
     batch_id: u64,
@@ -5269,13 +5411,18 @@ struct AdmittedCommandsV1 {
     _document_write: tokio::sync::OwnedMutexGuard<()>,
 }
 
-/// @emoji 🧾️ Commits one admitted batch and answers it: the engine's receipt (or refusal) always reaches the socket as
+/// 🧾️ Commits one admitted batch and answers it: the engine's receipt (or refusal) always reaches the socket as
 /// the batch's `Ack` — never cut by the frame deadline, the engine's own bounds end the wait — and an advanced
-/// frontier's relay reaches every peer. Returns `false` when the Ack could not be sent.
+/// frontier's relay reaches every peer; a committed batch is tallied for the checkpoint policy. Returns `false` when the
+/// Ack could not be sent.
 #[allow(clippy::too_many_arguments)]
-async fn commit_admitted_commands(state: &HubState, handle: &db::ArtifactHandle, document_id: &str, fanout: &broadcast::Sender<ServerFrame>, actor: &ActorId, gate: &db::security::SecurityGate, admitted: AdmittedCommandsV1, sender: &mut SplitSink<WebSocket, Message>) -> bool {
+async fn commit_admitted_commands(state: &HubState, handle: &db::ArtifactHandle, scope: &DocumentScope, subject: &SocketSubjectV1, fanout: &broadcast::Sender<ServerFrame>, actor: &ActorId, gate: &db::security::SecurityGate, admitted: AdmittedCommandsV1, sender: &mut SplitSink<WebSocket, Message>) -> bool {
+    let document_id = scope.document_id.as_str();
     let AdmittedCommandsV1 { batch_id, envelopes, _document_write } = admitted;
     let (ack, relay) = submit_commands(handle, gate, actor, batch_id, envelopes, state.merge_policy).await;
+    if let Some(ServerFrame::Commands { envelopes, .. }) = relay.as_ref() {
+        observe_checkpoint_policy(state, scope, subject, handle, envelopes);
+    }
     #[cfg(test)]
     if let Some(live_gate) = state.live_gate.as_ref().filter(|gate| gate.socket_commit_pause_enabled.load(std::sync::atomic::Ordering::Acquire)) {
         live_gate.socket_commit_admitted.add_permits(1);
@@ -5324,7 +5471,7 @@ async fn commit_admitted_commands(state: &HubState, handle: &db::ArtifactHandle,
 /// (e.g. directory hiccup) falls back to a `Notify` nobody can ever reach, i.e. un-kickable, which
 /// matches this crate's generally forgiving stance on directory-write failures elsewhere in this
 /// handler.
-/// @emoji 🔌️ One document socket, whatever ends it: the session, then a close frame (a no-op when the session already
+/// 🔌️ One document socket, whatever ends it: the session, then a close frame (a no-op when the session already
 /// sent its own typed close) and the closing handshake, so no exit — a refused hello, a storage fault after an error
 /// frame, a revocation — drops the connection under the client's unread frames.
 async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, surface: String, state: HubState, socket_admission: SocketGrantAdmissionV1) {
@@ -5451,6 +5598,7 @@ async fn serve_document_socket(sender: &mut SplitSink<WebSocket, Message>, recei
             return;
         }
     }
+    let frontier = frontier.or_else(|| plan_seeded_hello_frontier(socket_grant.document_plan.as_deref(), &db_id));
 
     let session_id = directory::os_identity::time_ordered_id();
     let mut hello_session = match state.db.hello(db_id.clone(), frontier, session_id, ActorId(HUB_CATCH_UP_ORIGIN.into()), 64 * 1024).await {
@@ -5717,7 +5865,7 @@ async fn serve_document_socket(sender: &mut SplitSink<WebSocket, Message>, recei
                                 Ok(ClientFrameStepV1::Continue) => {}
                                 Ok(ClientFrameStepV1::End) => break,
                                 Ok(ClientFrameStepV1::Commit(admitted)) => {
-                                    if !commit_admitted_commands(&state, &handle, &document_id, &fanout, &actor, &gate, admitted, sender).await {
+                                    if !commit_admitted_commands(&state, &handle, &DocumentScope::new(space_id.as_str(), document_id.as_str()), &socket_grant.subject, &fanout, &actor, &gate, admitted, sender).await {
                                         break;
                                     }
                                 }
@@ -5813,17 +5961,17 @@ async fn serve_document_socket(sender: &mut SplitSink<WebSocket, Message>, recei
     state.release_color(&space_id, &actor.0);
 }
 
-/// @emoji ⏳️ How long a socket the hub is closing keeps reading the client's remaining frames for its closing reply.
+/// ⏳️ How long a socket the hub is closing keeps reading the client's remaining frames for its closing reply.
 const SOCKET_CLOSE_DRAIN: std::time::Duration = std::time::Duration::from_secs(1);
 
-/// @emoji 🚪️ Ends a socket the way the WebSocket closing handshake asks: `close` sent — refused, and harmless, when a
+/// 🚪️ Ends a socket the way the WebSocket closing handshake asks: `close` sent — refused, and harmless, when a
 /// typed close already went out — then [`drain_closing_socket`].
 async fn close_socket(sender: &mut SplitSink<WebSocket, Message>, receiver: &mut SplitStream<WebSocket>, close: Message) {
     let _ = sender.send(close).await;
     drain_closing_socket(receiver).await;
 }
 
-/// @emoji 🧽️ Reads and discards what the client still sends until its own close, its disconnect or
+/// 🧽️ Reads and discards what the client still sends until its own close, its disconnect or
 /// [`SOCKET_CLOSE_DRAIN`]. Dropping a socket with unread frames resets the TCP connection, and a reset can
 /// discard the close frame the client has not read yet: a client that kept sending after a refusal saw a bare
 /// `Connection reset by peer` instead of the hub's typed close (found by the generative hostile-input law).
@@ -5840,7 +5988,7 @@ async fn drain_closing_socket(receiver: &mut SplitStream<WebSocket>) {
 //#endregion 🔖️WebSocket
 
 //#region 🔖️Directory
-/// @emoji 🙋️ A bearer token resolved to a live, unexpired `AuthSessionRecord`'s user — every
+/// 🙋️ A bearer token resolved to a live, unexpired `AuthSessionRecord`'s user — every
 /// `/directory/*`/`/auth/sessions/me` route that needs a caller identity resolves through this
 /// (distinct from `AuthOutcome`, which can also carry an exact document share; the directory
 /// control plane has no such fallback — a command with no valid session is unauthenticated).
@@ -5856,7 +6004,7 @@ struct AuthedUser {
 }
 
 impl AuthedUser {
-    /// @emoji 🎚️ Who this caller asks every space-role question as.
+    /// 🎚️ Who this caller asks every space-role question as.
     fn principal(&self) -> DirectoryPrincipalV1<'_> {
         DirectoryPrincipalV1 { user_id: &self.user_id, session_kind: self.session_kind, device_instance_id: &self.device_instance_id }
     }
@@ -5864,7 +6012,7 @@ impl AuthedUser {
 
 
 
-/// @emoji 🗄️ Opens this process's [`HubInstance`] — the server product's four durable storage roles
+/// 🗄️ Opens this process's [`HubInstance`] — the server product's four durable storage roles
 /// plus the command bus and the saga runner over them — rooted at `{data_dir}/instance`.
 ///
 /// It goes through the framework's own [`FrameworkServer`] builder rather than calling
@@ -5899,7 +6047,7 @@ async fn instance_state(data_dir: &std::path::Path) -> Result<ServerState<HubIns
 
 
 
-/// @emoji ⚖️ `OS_HUB_MERGE_POLICY=laissez-faire|normal|vigilant` (default `normal`) — read once at
+/// ⚖️ `OS_HUB_MERGE_POLICY=laissez-faire|normal|vigilant` (default `normal`) — read once at
 /// startup into `HubState.merge_policy` (see its own doc). An unrecognized value is a non-fatal
 /// misconfiguration (logged, falls back to the default) rather than refusing to boot, matching this
 /// crate's generally-forgiving stance on env parsing elsewhere in `main`.
@@ -5984,7 +6132,7 @@ async fn send_socket_document_rebootstrap(sender: &mut SplitSink<WebSocket, Mess
 
 
 
-/// @emoji 🧾️ `ApplyOutcome::Rejected.messages`'s canonical JSON payload, encoded from the
+/// 🧾️ `ApplyOutcome::Rejected.messages`'s canonical JSON payload, encoded from the
 /// first-party `ToValue` shape shared by every replication wire consumer.
 fn encode_messages(messages: &[protocol::MutationMessage]) -> Vec<u8> {
     let value = DslValue::Array(messages.iter().map(ToValue::to_value).collect());
@@ -5993,7 +6141,7 @@ fn encode_messages(messages: &[protocol::MutationMessage]) -> Vec<u8> {
 
 
 
-/// @emoji 🧾️ Every `protocol::MutationMessage` `error` carries, if any: `db::DbError::Rejected`'s own (the outcome-step
+/// 🧾️ Every `protocol::MutationMessage` `error` carries, if any: `db::DbError::Rejected`'s own (the outcome-step
 /// gate `db_artifact::ArtifactEngine::submit` returns per contract §C9), and for `db::DbError::Unavailable` — the engine
 /// could not admit the batch NOW (DB I/O admission or capacity exhausted) — the declared transient refusal, so the client
 /// resends the batch instead of discarding it; every other `DbError` variant has nothing to add here.
@@ -6006,13 +6154,13 @@ fn messages_for_error(error: &db::DbError) -> Vec<u8> {
     }
 }
 
-/// @emoji 📏️ `ApplyOutcome::Rejected.messages` of a batch the hub can never admit: the one `HubBatchLimitRefusalMessageV1`
+/// 📏️ `ApplyOutcome::Rejected.messages` of a batch the hub can never admit: the one `HubBatchLimitRefusalMessageV1`
 /// (`🚧️refusal`), level error, code `hub.batch-limit`, the exceeded limit bounded — permanent, never the transient code.
 fn batch_limit_refusal_messages(reason: &str) -> Vec<u8> {
     encode_messages(&[protocol::MutationMessage::error(semio_hub::refusal::HUB_BATCH_LIMIT_REFUSAL_CODE, semio_hub::refusal::hub_batch_limit_refusal_message(reason))])
 }
 
-/// @emoji 📏️ The permanent refusal of a `Commands` batch the document backbone does not declare legal
+/// 📏️ The permanent refusal of a `Commands` batch the document backbone does not declare legal
 /// (`protocol::DOCUMENT_BACKBONE_BATCH_MAXIMUM_*`, judged by the wire's own exact decoder over the batch's canonical
 /// encoding); `None` for every declared batch, which the socket budget and the db engine admit as one submit.
 fn undeclared_batch_refusal(envelopes: &[MutationEnvelope]) -> Option<ApplyOutcome> {
@@ -6021,7 +6169,7 @@ fn undeclared_batch_refusal(envelopes: &[MutationEnvelope]) -> Option<ApplyOutco
     Some(ApplyOutcome::Rejected { messages: batch_limit_refusal_messages(&reason), reason })
 }
 
-/// @emoji ⏳️ `ApplyOutcome::Rejected.messages` of a batch refused for a transient reason: the one
+/// ⏳️ `ApplyOutcome::Rejected.messages` of a batch refused for a transient reason: the one
 /// `HubTransientApplyRefusalMessageV1` (`🚧️refusal`), level warning, code `hub.unavailable`, the reason bounded.
 fn transient_apply_refusal_messages(reason: &str) -> Vec<u8> {
     encode_messages(&[protocol::MutationMessage::warn(semio_hub::refusal::HUB_TRANSIENT_APPLY_REFUSAL_CODE, semio_hub::refusal::hub_transient_apply_refusal_message(reason))])
@@ -6029,7 +6177,7 @@ fn transient_apply_refusal_messages(reason: &str) -> Vec<u8> {
 
 
 
-/// @emoji 🧭️ Stamps the DOCUMENT's own id onto one outbound wire frontier.
+/// 🧭️ Stamps the DOCUMENT's own id onto one outbound wire frontier.
 ///
 /// The hub keys documents internally by [`db_artifact_id`] — `v1:<len>:<len>:<space><document>` —
 /// because the db and fanout catalogs are flat and a bare document id is not unique across spaces.
@@ -6046,7 +6194,7 @@ fn project_wire_frontier(frontier: &mut RuntimeFrontierSummary, document_id: &st
 
 
 
-/// @emoji 🧭️ Every frontier one outbound frame carries, projected onto the document's own id. A
+/// 🧭️ Every frontier one outbound frame carries, projected onto the document's own id. A
 /// frame with no frontier is returned untouched and uncloned by the caller.
 fn project_server_frame(frame: &mut ServerFrame, document_id: &str) {
     match frame {
@@ -6079,7 +6227,7 @@ fn project_server_frame(frame: &mut ServerFrame, document_id: &str) {
 
 
 
-/// @emoji 🧭️ Whether one frame carries a frontier at all, so the projection clones only when it has
+/// 🧭️ Whether one frame carries a frontier at all, so the projection clones only when it has
 /// something to rewrite.
 const fn frame_carries_frontier(frame: &ServerFrame) -> bool {
     matches!(frame, ServerFrame::Welcome { .. } | ServerFrame::Commands { .. } | ServerFrame::Ack { .. } | ServerFrame::RebootstrapRequired { .. })
@@ -6087,11 +6235,24 @@ const fn frame_carries_frontier(frame: &ServerFrame) -> bool {
 
 
 
-/// @emoji 🧭️ The inverse of [`project_wire_frontier`]: one frontier a CLIENT sent, named by the
+/// 🧭️ The inverse of [`project_wire_frontier`]: one frontier a CLIENT sent, named by the
 /// document id it opened, re-keyed onto this hub's internal db id before any db layer compares it
 /// (`db_sync` refuses a hello whose advertised frontier does not name its own document). A frontier
 /// naming anything other than the socket's own document is refused rather than re-keyed — the hub
 /// must never accept an identity claim it then overwrites.
+/// 🪢️ Where a hello that names no frontier resumes: at the baseline of its plan's checkpoint when the plan's client
+/// seeds its document from that checkpoint's canonical pair (a `closed-browser-actor` plan) and the checkpoint holds edits —
+/// the pair already carries every edit up to it, so the tail starts after it and stays bounded by the checkpoint instead of
+/// the document's whole history. `None` (the tail from the start) otherwise. Keyed by the hub's internal document key.
+fn plan_seeded_hello_frontier(plan: Option<&DocumentOpenPlanAuthorityV1>, db_id: &ProtocolArtifactId) -> Option<RuntimeFrontierSummary> {
+    let plan = plan?;
+    let baseline = &plan.checkpoint.baseline_frontier;
+    if !matches!(plan.browser_actor, os_directory::DocumentOpenBrowserActorV1::ClosedBrowserActor { .. }) || !baseline.is_edited_for(&plan.scope) {
+        return None;
+    }
+    Some(RuntimeFrontierSummary { document_id: db_id.clone(), head_edit_ordinal: baseline.head_edit_ordinal, head_edit_id: baseline.head_edit_id.clone(), last_commit_seq: baseline.last_commit_seq, chain_hash: baseline.chain_hash.0 })
+}
+
 fn wire_frontier_to_db(frontier: &mut RuntimeFrontierSummary, document_id: &str, db_id: &ProtocolArtifactId) -> bool {
     if frontier.document_id.0 != document_id {
         return false;
@@ -6119,7 +6280,7 @@ async fn resolve_optional_bearer_user(state: &HubState, headers: &HeaderMap) -> 
     Ok(Some(AuthedUser { user_id: session.user_id, session_id: session.id, expires_at: session.expires_at, authorization_generation: session.authorization_generation, capability, session_kind: session.session_kind, device_instance_id: session.device_instance_id }))
 }
 
-/// @emoji 🚪️ The refusal of a route that also answers anonymously ([`resolve_optional_bearer_user`]): its `401` means a
+/// 🚪️ The refusal of a route that also answers anonymously ([`resolve_optional_bearer_user`]): its `401` means a
 /// PRESENTED credential did not authenticate, so it answers the typed, localized `HubCredentialRefusalV1` body with the
 /// RFC 6750 `invalid_token` challenge (audit s13 os-frontend §4.17) — the client learns its session ended instead of
 /// reading the anonymous view. Every other status stays a bare, signed refusal.
@@ -6847,7 +7008,7 @@ fn role_wire(role: SpaceRole) -> DirectorySpaceRole {
     }
 }
 
-/// @emoji 🔴️ `ConnectionView` for one live `SyncSessionRecord` — `presenceKnown` cross-references
+/// 🔴️ `ConnectionView` for one live `SyncSessionRecord` — `presenceKnown` cross-references
 /// `state.presence` (contract: "connections = `list_active_sync_sessions()` joined with the
 /// in-memory presence map").
 async fn connection_view(state: &HubState, session: &SyncSessionRecord) -> ConnectionView {
@@ -6875,7 +7036,7 @@ fn connection_view_with_email(state: &HubState, session: &SyncSessionRecord, ema
     }
 }
 
-/// @emoji 📄️ One durable directory descriptor enriched with its opened DB handle's current frontier; an unopened
+/// 📄️ One durable directory descriptor enriched with its opened DB handle's current frontier; an unopened
 /// document retains the descriptor's authoritative bootstrap frontier.
 async fn document_view(state: &HubState, descriptor: DocumentDescriptor) -> DocumentView {
     let db_id = db_artifact_id(&DocumentScope::new(&descriptor.space_id, &descriptor.document_id));
@@ -6940,7 +7101,7 @@ fn member_space_view(space: SpaceView, role: DirectorySpaceRole) -> MemberSpaceV
     }
 }
 
-/// @emoji ⚖️ Contract §C2's command authorization matrix: `create-space` any session; `delete-space`/
+/// ⚖️ Contract §C2's command authorization matrix: `create-space` any session; `delete-space`/
 /// `archive-space` owner or admin; everything else any AUTHOR of the named space or admin. `decide`
 /// itself performs zero authorization (its own doc) — this is that check, run before `execute`.
 /// 🎬️ The declared-policy action one directory command asks for.
@@ -7102,7 +7263,7 @@ async fn execute_directory_command_receipt_fenced(
 /// id never resurrects a result for an expired, revoked, or differently-scoped session. The one-shot
 /// invite capability is returned to this live call alone; every later resolution of the same id is
 /// redacted, proving no duplicate invitation was minted.
-/// @emoji 🏷️ The stable label one directory command is reported under. The variant name only —
+/// 🏷️ The stable label one directory command is reported under. The variant name only —
 /// never a field, because every payload field of this enum is user data.
 fn directory_command_trace_kind(command: &DirectoryCommand) -> &'static str {
     match command {
@@ -7120,7 +7281,7 @@ fn directory_command_trace_kind(command: &DirectoryCommand) -> &'static str {
     }
 }
 
-/// @emoji 🪐️ The space a directory command acts in, when it names one. `CreateSpace` has none yet
+/// 🪐️ The space a directory command acts in, when it names one. `CreateSpace` has none yet
 /// — the id is minted by the decider — and `AnnounceDocument` carries its own descriptor's.
 fn directory_command_trace_space(command: &DirectoryCommand) -> Option<String> {
     match command {
@@ -7138,7 +7299,7 @@ fn directory_command_trace_space(command: &DirectoryCommand) -> Option<String> {
     }
 }
 
-/// @emoji 📝️ The directory command path's span (`server.directory.command`). The record names the
+/// 📝️ The directory command path's span (`server.directory.command`). The record names the
 /// command kind rather than its payload — a command body carries space names, invite addresses and
 /// member ids, none of which belong in an operator's log.
 async fn post_directory_commands(headers: HeaderMap, axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>, State(state): State<HubState>, body: Bytes) -> Result<(StatusCode, DirectoryJson<DirectoryCommandReceiptV1>), StatusCode> {
@@ -7201,7 +7362,7 @@ async fn post_directory_commands(headers: HeaderMap, axum::extract::ConnectInfo(
     Ok((StatusCode::ACCEPTED, DirectoryJson(receipt)))
 }
 
-/// @emoji 🏘️ The caller's space list: every public space and every space it belongs to, ordered by id, from ONE
+/// 🏘️ The caller's space list: every public space and every space it belongs to, ordered by id, from ONE
 /// directory query ([`HubDirectory::list_visible_space_summaries`]) whatever the number of spaces, documents or
 /// events. It used to fold the whole directory event log and then, per visible space, list its documents (mounting
 /// each one for its frontier just to count them) and its sessions — 25–58 s for a member of 82 spaces on hub 7800
@@ -7708,7 +7869,7 @@ async fn revalidate_directory_event_page_caller(state: &HubState, caller: &Authe
     Ok(current)
 }
 
-/// @emoji 🧑‍🤝‍🧑 The spaces `principal` holds a role in ([`HubDirectory::principal_ceiling`]), read ONCE per event page:
+/// 🧑‍🤝‍🧑 The spaces `principal` holds a role in ([`HubDirectory::principal_ceiling`]), read ONCE per event page:
 /// raw directory events are member-only ([`event_visible`]), so this set decides every row of the page. The page used to
 /// read the space and the caller's role per event — two directory round trips per row, 256 for a full page (ticket
 /// 26/09/23 WG8).
@@ -7741,7 +7902,7 @@ fn directory_event_page_event_visible(member_spaces: &BTreeSet<String>, event: &
     }
 }
 
-/// @emoji 📏️ An upper bound of the sealed page's JSON length: `envelope_bytes` is the page with no events at its
+/// 📏️ An upper bound of the sealed page's JSON length: `envelope_bytes` is the page with no events at its
 /// widest (`throughSeqInclusive` = `u64::MAX`, `hasMore` = `false`), plus each event's own JSON and one comma between
 /// two. A page within this bound fits without sealing it; only a page near the limit is sealed exactly, so building a
 /// page is linear in its rows (every row used to re-seal the whole page so far: quadratic).
@@ -7877,7 +8038,7 @@ async fn serve_directory_event_page_v1(uri: axum::http::Uri, headers: HeaderMap,
     response
 }
 
-/// @emoji 🪪️ Revalidates the exact browser session behind a long-lived directory stream. Revocation and
+/// 🪪️ Revalidates the exact browser session behind a long-lived directory stream. Revocation and
 /// expiry therefore take effect on the next outbound frame instead of leaving a previously opened
 /// socket privileged indefinitely.
 async fn caller_active(state: &HubState, caller: &AuthedUser) -> bool {
@@ -7899,7 +8060,7 @@ async fn directory_space_access_for_user(state: &HubState, space_id: &str, princ
     directory_space_access_decision(space.visibility == "public", role)
 }
 
-/// @emoji 👁️ Raw durable events are member-only. Public discovery has no event stream, so
+/// 👁️ Raw durable events are member-only. Public discovery has no event stream, so
 /// no redaction of actor, HLC, sequence, or identity-bearing event bodies can be forgotten.
 async fn event_visible(state: &HubState, event: &DirectoryEvent, caller: Option<&AuthedUser>) -> bool {
     let Some(space_id) = &event.space_id else {
@@ -7911,7 +8072,7 @@ async fn event_visible(state: &HubState, event: &DirectoryEvent, caller: Option<
     directory_space_access_for_user(state, space_id, caller.map(AuthedUser::principal)).await.is_member()
 }
 
-/// @emoji 🛡️ The single privacy boundary for every directory WebSocket frame. Realtime connection
+/// 🛡️ The single privacy boundary for every directory WebSocket frame. Realtime connection
 /// and presence telemetry requires current membership even for public spaces; public visibility
 /// exposes directory metadata, not who is online or their account email.
 async fn directory_message_visible(state: &HubState, message: &DirectoryStreamMessage, caller: Option<&AuthedUser>) -> bool {
@@ -7928,7 +8089,7 @@ async fn directory_message_visible(state: &HubState, message: &DirectoryStreamMe
     }
 }
 
-/// @emoji 👁️ Keeps the events `caller` may read — its own space-less events and every event of a space it belongs
+/// 👁️ Keeps the events `caller` may read — its own space-less events and every event of a space it belongs
 /// to — deciding the whole page from ONE membership read (it used to read the space and the role per distinct space).
 async fn visibility_filter_events(state: &HubState, events: Vec<DirectoryEvent>, caller: Option<&AuthedUser>) -> Result<Vec<DirectoryEvent>, StatusCode> {
     let Some(caller) = caller else { return Ok(Vec::new()) };
@@ -8064,7 +8225,7 @@ struct DirectoryScopedWsV1Query {
     since: u64,
 }
 
-/// @emoji 📝️ The directory lane's admission span (`server.directory.socket`), the same shape the
+/// 📝️ The directory lane's admission span (`server.directory.socket`), the same shape the
 /// document lane reports: one record for the upgrade decision and one for the session's lifetime.
 async fn directory_ws_v1(ws: WebSocketUpgrade, Query(query): Query<DirectoryWsV1Query>, headers: HeaderMap, State(state): State<HubState>) -> Response {
     let span = state.span("server.directory.socket");
@@ -8493,7 +8654,7 @@ async fn get_session_me(headers: HeaderMap, State(state): State<HubState>) -> Re
     Ok(Json(response))
 }
 
-/// @emoji 🚪️ `POST /auth/sessions/me/sign-out` — the self sign-out command. Revocation is a
+/// 🚪️ `POST /auth/sessions/me/sign-out` — the self sign-out command. Revocation is a
 /// directory fact, and the same revocation is applied to the server instance's live session set: a
 /// key removed from one and left in the other is a key that still opens a door somewhere, so the two
 /// move together or the caller learns the sign-out did not complete.
@@ -8556,7 +8717,7 @@ async fn post_session_sign_out(headers: HeaderMap, State(state): State<HubState>
     }
 }
 
-/// @emoji 🎫️ `POST /auth/sessions` — the hub's credential sign-in and session mint. The whole law
+/// 🎫️ `POST /auth/sessions` — the hub's credential sign-in and session mint. The whole law
 /// lives in `semio_hub::auth`: the body is decoded and bounds-checked
 /// ([`CredentialSignInRequestV1::verify`]), the claimed identity gets its own rate-limit bucket on
 /// top of the remote-address bucket [`rate_limit_middleware`] already charged, and
@@ -8651,7 +8812,7 @@ async fn post_auth_session(State(state): State<HubState>, body: Bytes) -> Respon
     }
 }
 
-/// @emoji 🔁️ `POST /auth/credentials` — the principal's own password change. Two independent
+/// 🔁️ `POST /auth/credentials` — the principal's own password change. Two independent
 /// proofs are required: a live bearer (which says *who*) and the current password (which says the
 /// human is present, so a stolen capability alone can never take an account over). On success the
 /// new credential and its `credential-changed` fact are written in one transaction and **every**
@@ -8758,7 +8919,7 @@ async fn post_auth_credential(headers: HeaderMap, State(state): State<HubState>,
     }
 }
 
-/// @emoji 🧾️ Appends one refused `credential-changed` attempt. A successful change journals its own
+/// 🧾️ Appends one refused `credential-changed` attempt. A successful change journals its own
 /// fact inside `set_password_credential`'s transaction, so only refusals are recorded here.
 async fn journal_credential_change_refusal(state: &HubState, user_id: &str, reason_code: &str, correlation_id: &str) {
     let fact = CredentialAuditFactV1 {
@@ -8773,7 +8934,7 @@ async fn journal_credential_change_refusal(state: &HubState, user_id: &str, reas
     let _ = state.directory.append_credential_audit(&fact).await;
 }
 
-/// @emoji 🧾️ Appends one `credential-sign-in` fact. A backend that cannot journal never turns a
+/// 🧾️ Appends one `credential-sign-in` fact. A backend that cannot journal never turns a
 /// refusal into an admission — the response was already decided before this is called.
 async fn journal_credential_sign_in(state: &HubState, target_user_id: Option<&str>, outcome_code: &str, reason_code: Option<&str>, correlation_id: &str, peer_class: &str) {
     let fact = CredentialAuditFactV1 {
@@ -8788,8 +8949,8 @@ async fn journal_credential_sign_in(state: &HubState, target_user_id: Option<&st
     let _ = state.directory.append_credential_audit(&fact).await;
 }
 
-/// @emoji 🛑️ The one shape every credential sign-in refusal is served in.
-/// @emoji 🤖️ Every agent-delegation refusal is served exactly like a credential refusal: the code's
+/// 🛑️ The one shape every credential sign-in refusal is served in.
+/// 🤖️ Every agent-delegation refusal is served exactly like a credential refusal: the code's
 /// own status, `no-store`, and a `retry-after` header whenever the limiter is the reason.
 fn agent_error_response(error: AgentErrorCodeV1, retry_after_ms: Option<u64>) -> Response {
     let status = StatusCode::from_u16(error.status()).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
@@ -8805,7 +8966,7 @@ fn agent_error_response(error: AgentErrorCodeV1, retry_after_ms: Option<u64>) ->
     response
 }
 
-/// @emoji 🤖️ Resolves the signed-in human behind a delegation-administration call: a live session
+/// 🤖️ Resolves the signed-in human behind a delegation-administration call: a live session
 /// bearer that is NOT itself an agent session. An agent can never delegate onward, so the one
 /// check that matters here is `session_kind`.
 async fn delegating_principal(state: &HubState, headers: &HeaderMap) -> Result<AuthSessionRecord, AgentErrorCodeV1> {
@@ -8822,7 +8983,7 @@ async fn delegating_principal(state: &HubState, headers: &HeaderMap) -> Result<A
     Ok(session)
 }
 
-/// @emoji 🤖️ The delegation an agent session was minted from, resolved ONCE at socket admission so
+/// 🤖️ The delegation an agent session was minted from, resolved ONCE at socket admission so
 /// the roster and the connection log can name the agent instead of the human whose authority it
 /// borrows. `device_instance_id` carries the delegation id (`post_agent_session`), and a delegation
 /// always belongs to the space and the delegating human its session names, so that human's own
@@ -8834,7 +8995,7 @@ async fn agent_delegation_for_session(state: &HubState, space_id: &str, delegati
     rows.into_iter().find(|row| row.delegation_id == delegation_id)
 }
 
-/// @emoji 🧾️ One agent-delegation fact, written through the same append the credential log uses.
+/// 🧾️ One agent-delegation fact, written through the same append the credential log uses.
 async fn journal_agent_fact(state: &HubState, event_kind: &str, user_id: &str, outcome_code: &str, reason_code: Option<&str>, correlation_id: &str, peer_class: &str) {
     let fact = CredentialAuditFactV1 {
         event_kind: event_kind.to_string(),
@@ -8848,7 +9009,7 @@ async fn journal_agent_fact(state: &HubState, event_kind: &str, user_id: &str, o
     let _ = state.directory.append_credential_audit(&fact).await;
 }
 
-/// @emoji 🤖️ `POST /auth/agent-delegations` — a signed-in human delegates a scoped, revocable
+/// 🤖️ `POST /auth/agent-delegations` — a signed-in human delegates a scoped, revocable
 /// credential to an AI agent. The caller must be an **author** of the target space: a spectator
 /// cannot manufacture an editing principal out of a read-only membership. The response carries the
 /// token exactly once; nothing stores it, and no later route can read it back.
@@ -8913,7 +9074,7 @@ async fn post_agent_delegation(headers: HeaderMap, State(state): State<HubState>
     response
 }
 
-/// @emoji 🤖️ `GET /auth/agent-delegations?space=<id>` — every delegation this human created in this
+/// 🤖️ `GET /auth/agent-delegations?space=<id>` — every delegation this human created in this
 /// space, revoked ones included so the UI can show what was withdrawn. Never a token, never a
 /// selector, and never another human's delegations.
 async fn get_agent_delegations(headers: HeaderMap, Query(query): Query<AgentDelegationQueryV1>, State(state): State<HubState>) -> Response {
@@ -8944,7 +9105,7 @@ async fn get_agent_delegations(headers: HeaderMap, Query(query): Query<AgentDele
     }
 }
 
-/// @emoji 🤖️ `POST /auth/agent-delegations/{id}/revoke` — the withdrawal command. The delegation
+/// 🤖️ `POST /auth/agent-delegations/{id}/revoke` — the withdrawal command. The delegation
 /// row and its `agent-delegation-revoked` fact are written in one transaction, and every live agent session
 /// minted from it is revoked with the same `authorization_generation` bump an ordinary sign-out
 /// performs — so open socket grants and document plans die with it and the agent's next frame is
@@ -9005,7 +9166,7 @@ async fn post_agent_delegation_revoke(Path(delegation_id): Path<String>, headers
     }
 }
 
-/// @emoji 🤖️ `POST /auth/agent-sessions` — the agent exchanges its delegation for a session. The
+/// 🤖️ `POST /auth/agent-sessions` — the agent exchanges its delegation for a session. The
 /// bearer is the delegation capability, not a password: nothing here ever sees a human secret.
 ///
 /// The minted session is an ordinary `AuthSessionRecord` so every existing hub route authenticates
@@ -9094,7 +9255,7 @@ async fn post_agent_session(headers: HeaderMap, State(state): State<HubState>, b
     }
 }
 
-/// @emoji 🔎️ `?space=<id>` — the one query parameter the delegation listing takes.
+/// 🔎️ `?space=<id>` — the one query parameter the delegation listing takes.
 #[derive(Deserialize)]
 struct AgentDelegationQueryV1 {
     space: String,
@@ -9116,7 +9277,7 @@ fn auth_error_response(error: AuthErrorCodeV1, retry_after_ms: Option<u64>) -> R
     response
 }
 
-/// @emoji 🚦️ Charges every rate-limited route family before its handler runs: credential sign-in
+/// 🚦️ Charges every rate-limited route family before its handler runs: credential sign-in
 /// and sign-out, directory commands, invite redemption and socket-grant issuance. Each request is
 /// charged to its remote address and, when it carries one, to its session capability's public
 /// selector; the handler for `POST /auth/sessions` adds the claimed identity's own bucket, which
@@ -9151,7 +9312,7 @@ async fn rate_limit_middleware(State(state): State<HubState>, request: axum::ext
     }
 }
 
-/// @emoji 🏷️ Which rate-limit family a request belongs to, by method and path alone.
+/// 🏷️ Which rate-limit family a request belongs to, by method and path alone.
 fn rate_limit_class(method: &axum::http::Method, path: &str) -> Option<RateLimitClassV1> {
     match (method, path) {
         (&axum::http::Method::POST, semio_hub::auth::SESSION_MINT_ROUTE) | (&axum::http::Method::POST, semio_hub::auth::CREDENTIAL_ROUTE) | (&axum::http::Method::POST, semio_hub::auth::SESSION_SIGN_OUT_ROUTE) => Some(RateLimitClassV1::Auth),
@@ -9162,7 +9323,7 @@ fn rate_limit_class(method: &axum::http::Method, path: &str) -> Option<RateLimit
     }
 }
 
-/// @emoji 🌐️ Which browser origins this deployment admits for *credentialed* cross-origin
+/// 🌐️ Which browser origins this deployment admits for *credentialed* cross-origin
 /// requests, resolved once at startup from `OS_HUB_ALLOWED_ORIGINS` and the bind address.
 ///
 /// The hub's dev topology serves the shell from a different port than the hub itself, so it needs
@@ -9184,7 +9345,7 @@ enum CrossOriginPolicyV1 {
 }
 
 impl CrossOriginPolicyV1 {
-    /// @emoji 🌐️ `OS_HUB_ALLOWED_ORIGINS=https://s.example.com,https://admin.example.com` wins
+    /// 🌐️ `OS_HUB_ALLOWED_ORIGINS=https://s.example.com,https://admin.example.com` wins
     /// whenever it is set and non-empty. With it unset the policy follows `OS_HUB_BIND`: loopback
     /// (the default *development* posture, and what `OS_HUB_BIND` must be for `OS_HUB_MODE=production`
     /// to boot at all) admits loopback origins, and any other bind admits none.
@@ -9215,7 +9376,7 @@ impl CrossOriginPolicyV1 {
         Ok(Self::Allowlist(origins.into()))
     }
 
-    /// @emoji ✅️ Whether one request's `Origin` header value earns the credentialed grant.
+    /// ✅️ Whether one request's `Origin` header value earns the credentialed grant.
     fn admits(&self, origin: &str) -> bool {
         match self {
             Self::LoopbackDevelopment => is_loopback_origin(origin),
@@ -9224,7 +9385,7 @@ impl CrossOriginPolicyV1 {
         }
     }
 
-    /// @emoji 🏷️ The stable word the startup line and the report use for this posture.
+    /// 🏷️ The stable word the startup line and the report use for this posture.
     fn label(&self) -> &'static str {
         match self {
             Self::LoopbackDevelopment => "loopback-development",
@@ -9234,7 +9395,7 @@ impl CrossOriginPolicyV1 {
     }
 }
 
-/// @emoji 🌐️ A serialized origin: `scheme://host[:port]` with no userinfo, path, query, fragment or
+/// 🌐️ A serialized origin: `scheme://host[:port]` with no userinfo, path, query, fragment or
 /// wildcard. Anything else in an allowlist is a deployer's mistake, not a pattern to interpret.
 fn is_browser_origin(value: &str) -> bool {
     let Some((scheme, rest)) = value.split_once("://") else { return false };
@@ -9260,7 +9421,7 @@ fn is_browser_origin(value: &str) -> bool {
     }
 }
 
-/// @emoji 🔢️ An origin's optional `:port` suffix — empty, or a colon and a decimal port.
+/// 🔢️ An origin's optional `:port` suffix — empty, or a colon and a decimal port.
 fn is_origin_port(suffix: &str) -> bool {
     match suffix.strip_prefix(':') {
         None => suffix.is_empty(),
@@ -9268,7 +9429,7 @@ fn is_origin_port(suffix: &str) -> bool {
     }
 }
 
-/// @emoji 🏠️ Whether an origin's host is this machine — `localhost`, `127.0.0.0/8` or `[::1]`.
+/// 🏠️ Whether an origin's host is this machine — `localhost`, `127.0.0.0/8` or `[::1]`.
 fn is_loopback_origin(value: &str) -> bool {
     if !is_browser_origin(value) {
         return false;
@@ -9284,7 +9445,7 @@ fn is_loopback_origin(value: &str) -> bool {
     host.eq_ignore_ascii_case("localhost") || host.parse::<std::net::IpAddr>().is_ok_and(|address| address.is_loopback())
 }
 
-/// @emoji 🌐️ Applies the hub's explicit cross-origin response policy. The only public issuance
+/// 🌐️ Applies the hub's explicit cross-origin response policy. The only public issuance
 /// route is `POST /auth/sessions`, which a deployment must enable explicitly and which is rate
 /// limited per remote address and per claimed identity; every protected route still requires its
 /// own typed capability.
@@ -9300,7 +9461,7 @@ async fn cors_middleware(State(policy): State<CrossOriginPolicyV1>, request: axu
     response
 }
 
-/// @emoji 🌐️ See {@link cors_middleware}. Reflects the request's own `Origin` (never `*`) only when
+/// 🌐️ See {@link cors_middleware}. Reflects the request's own `Origin` (never `*`) only when
 /// {@link CrossOriginPolicyV1} admits it, plus the bearer/JSON headers and verbs this control plane
 /// actually uses. `Vary: Origin` is appended for every request that carried an `Origin` — including
 /// a refused one — so a shared cache never serves one origin's grant to another.
@@ -9318,7 +9479,7 @@ fn apply_cors_headers(headers: &mut HeaderMap, origin: Option<&axum::http::Heade
 //#endregion 🔖️Directory
 
 //#region 🔖️Admin
-/// @emoji 🧮️ Best-effort recursive directory size in bytes — used only for the admin overview's
+/// 🧮️ Best-effort recursive directory size in bytes — used only for the admin overview's
 /// `dataDirBytes`; any unreadable entry is silently skipped rather than failing the whole overview.
 fn dir_size(path: &std::path::Path) -> u64 {
     let mut total = 0u64;
@@ -10302,7 +10463,7 @@ async fn admin_overview(headers: HeaderMap, axum::extract::ConnectInfo(peer): ax
     Ok(Json(response))
 }
 
-/// @emoji 📝️ What `GET /admin/api/observability` answers ([`HubObservabilityV1`]): the per-event table one
+/// 📝️ What `GET /admin/api/observability` answers ([`HubObservabilityV1`]): the per-event table one
 /// tracer has accumulated since boot, the per-route answer table, the compiled-guest residency and the DB I/O
 /// census.
 ///
@@ -10321,7 +10482,7 @@ fn observability_view(tracer: &Tracer, routes: &HubRouteMetricsV1, catalog: Opti
     HubObservabilityV1::read(tracer, routes, catalog, HUB_PROCESS_START.elapsed().as_millis().min(u128::from(u64::MAX)) as u64)
 }
 
-/// @emoji 🛣️ Counts every answer of a matched route under its method and route template, with the time the
+/// 🛣️ Counts every answer of a matched route under its method and route template, with the time the
 /// route took to answer — the per-route table of `GET /admin/api/observability`. It runs inside routing
 /// (`route_layer`), so the template is known and a concrete path never becomes a key, and outside
 /// [`rate_limit_middleware`], so an address-bucket refusal is counted as the route's `rateLimited`.
@@ -10334,7 +10495,7 @@ async fn route_metrics_middleware(State(metrics): State<Arc<HubRouteMetricsV1>>,
     response
 }
 
-/// @emoji 📝️ `GET /admin/api/observability` — behind `authenticate_admin_principal`, exactly like
+/// 📝️ `GET /admin/api/observability` — behind `authenticate_admin_principal`, exactly like
 /// every other `/admin/api` route, so a hub bound to a network interface never exposes its own
 /// internals unauthenticated. See [`observability_view`] for why the body is counters.
 async fn admin_observability(headers: HeaderMap, axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>, State(state): State<HubState>) -> Result<Json<HubObservabilityV1>, StatusCode> {
@@ -10551,7 +10712,7 @@ async fn admin_events(
 //#endregion 🔖️Admin
 
 //#region 🔖️Extensions
-/// @emoji 🧩️ Hub mirror of dev `staticDirVitePlugin` `/🧩️extension-modules` — lists installed extension metadata.
+/// 🧩️ Hub mirror of dev `staticDirVitePlugin` `/🧩️extension-modules` — lists installed extension metadata.
 #[derive(Serialize)]
 struct ExtensionListResponse {
     extensions: Vec<serde_json::Value>,
@@ -10566,7 +10727,7 @@ fn extension_asset_content_type(path: &std::path::Path) -> &'static str {
     }
 }
 
-/// @emoji 🧩️ The file one extension asset request names, or `None` for a name that is not an extension id plus a
+/// 🧩️ The file one extension asset request names, or `None` for a name that is not an extension id plus a
 /// relative path of plain components: every component must be a normal, control-free name — no root, prefix,
 /// `.` or `..`, and no NUL, which the file system refuses rather than resolves (a `%00` segment answered `500`).
 fn extension_asset_path(root: &std::path::Path, extension_id: &str, rest: &str) -> Option<std::path::PathBuf> {
@@ -10650,7 +10811,7 @@ async fn get_trusted_plugin_module_file(Path((bundle_sha256, path)): Path<(Strin
 //#endregion 🔖️PluginModules
 
 //#region 🔖️AdminPage
-/// @emoji 🛡️ Static SPA serving for `/admin` (contract §C2) — reads from `HubState.admin_dir`
+/// 🛡️ Static SPA serving for `/admin` (contract §C2) — reads from `HubState.admin_dir`
 /// (lane 1-B's field, `OS_HUB_ADMIN_DIR` else the compile-time default pointing at lane 2-E's own
 /// `bun nx run os-hub-admin:build` output), mirroring `🔖️Extensions`'s `extension_asset_path`/
 /// `get_extension_asset` pair exactly: plain `tokio::fs::read`, no `tower-http`, a traversal guard
@@ -10671,7 +10832,7 @@ fn admin_asset_content_type(path: &std::path::Path) -> &'static str {
     }
 }
 
-/// @emoji 🚧️ Rejects `..`, a backslash (a Windows separator smuggled into a URL path segment), and
+/// 🚧️ Rejects `..`, a backslash (a Windows separator smuggled into a URL path segment), and
 /// strips every leading `/` before joining onto `root` — `PathBuf::join` treats an absolute second
 /// argument as a full replacement of the base, which would otherwise let `rest = "/etc/passwd"` read
 /// clean outside `root` entirely (the one way this guard differs from `extension_asset_path`, which
@@ -10971,7 +11132,7 @@ async fn post_inference_gis_map_job_cancel(Path((space_id, document_id, job_id))
     }
 }
 
-/// @emoji 🗳️ Approves one offered proposal. The caller's authority is validated once at ingress and its bindings stay
+/// 🗳️ Approves one offered proposal. The caller's authority is validated once at ingress and its bindings stay
 /// held (shared) until the answer is sent, so no revocation can interleave with the commit; once the commit is
 /// durable the answer is its receipt. A second directory check after the commit could only fail for availability
 /// (a 2 s directory read on a loaded hub) and answered `503 inference.unavailable` for a committed approval — the
@@ -10994,7 +11155,7 @@ async fn post_inference_gis_map_job_approval(Path((space_id, document_id, job_id
     }
 }
 
-/// @emoji ↩️ Undoes one approval under the same ingress law as [`post_inference_gis_map_job_approval`]: a durable
+/// ↩️ Undoes one approval under the same ingress law as [`post_inference_gis_map_job_approval`]: a durable
 /// undo is answered with its receipt.
 #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 async fn post_inference_gis_map_approval_undo(Path((space_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
@@ -11121,14 +11282,14 @@ fn router(state: HubState, cross_origin: CrossOriginPolicyV1, forwarded_tls: For
         .with_state(state)
 }
 
-/// @emoji 🧬️ Resolves and connects `db::Database`'s storage substrate, selected by
+/// 🧬️ Resolves and connects `db::Database`'s storage substrate, selected by
 /// `OS_HUB_STORAGE_BACKEND` (`fs` default, zero-touch, rooted at `{data_dir}/db`; `sqlite`,
 /// `postgres` — requires `OS_HUB_DATABASE_URL` — or `neo4j` — requires `OS_HUB_NEO4J_URI` —
 /// otherwise, each match arm compiled only when this crate's same-named feature enables `db`'s own
 /// matching storage feature). Independent of `connect_directory`'s own backend choice (the
 /// contract's "storage swappability" requirement applies to `db`'s substrate and the directory's
 /// substrate separately, even though both now share the same three feature names).
-/// @emoji 🧵️ Hub's ONE process-wide `WorkerPool` — Phase 1
+/// 🧵️ Hub's ONE process-wide `WorkerPool` — Phase 1
 /// (`26/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR`) replaces `HubDbRuntime` (a `HostAsyncRuntime` bridge
 /// whose entire reason to exist was `run_blocking`, now deleted from that trait — see
 /// `db_storage`'s module doc) with this: `db::storage_sqlite::SqliteStorage::open`'s blocking body
@@ -11192,7 +11353,7 @@ async fn connect_db(data_dir: &std::path::Path) -> Result<db::Database, HubError
     }
 }
 
-/// @emoji 🧩️ Opens the hub-owned artifact CAS in a namespace independent from generic DB payloads.
+/// 🧩️ Opens the hub-owned artifact CAS in a namespace independent from generic DB payloads.
 async fn connect_artifact_cas(data_dir: &std::path::Path) -> Result<Arc<ArtifactChunkCasStores>, HubError> {
     let backend = std::env::var("OS_HUB_STORAGE_BACKEND").unwrap_or_else(|_| "fs".into());
     let storage = match backend.as_str() {
@@ -11219,7 +11380,7 @@ async fn connect_artifact_cas(data_dir: &std::path::Path) -> Result<Arc<Artifact
     Ok(Arc::new(storage))
 }
 
-/// @emoji 🧬️ Resolves and connects the identity/tenancy directory backend, selected by
+/// 🧬️ Resolves and connects the identity/tenancy directory backend, selected by
 /// `OS_HUB_DIRECTORY_BACKEND` (`sqlite` default, zero-touch, `{data_dir}/directory.db`; `postgres`
 /// — requires `OS_HUB_DIRECTORY_DATABASE_URL` — or `neo4j` — requires
 /// `OS_HUB_DIRECTORY_NEO4J_URI` — otherwise, each match arm compiled only when this crate's
@@ -11262,16 +11423,16 @@ async fn connect_directory(data_dir: &std::path::Path) -> Result<Arc<HubDirector
     }
 }
 
-/// @emoji ⏳️ How long `main` waits for upgraded sockets to finish their own close path (directory
+/// ⏳️ How long `main` waits for upgraded sockets to finish their own close path (directory
 /// session close, presence leave, color release) after it told them to close.
 const SOCKET_DRAIN_DEADLINE: std::time::Duration = std::time::Duration::from_secs(5);
 
-/// @emoji ⏳️ How long `main` gives the `Database` to retire every document authority before it
+/// ⏳️ How long `main` gives the `Database` to retire every document authority before it
 /// closes the storage anyway. Closing the storage is what releases the cross-process WAL writer
 /// fence (Postgres advisory lock, Neo4j lease), so it runs even when this deadline elapsed.
 const DATABASE_SHUTDOWN_DEADLINE: std::time::Duration = std::time::Duration::from_secs(10);
 
-/// @emoji 🚪️ The one owner of every upgraded socket's lifetime. `axum`'s graceful shutdown stops
+/// 🚪️ The one owner of every upgraded socket's lifetime. `axum`'s graceful shutdown stops
 /// accepting and waits for HTTP responses, but an upgraded connection has left `hyper`'s connection
 /// tracking, so without this owner a document socket keeps its `ArtifactHandle` (and with it the
 /// document's WAL writer) until the process dies.
@@ -11288,7 +11449,7 @@ impl Default for HubSocketDrainV1 {
 }
 
 impl HubSocketDrainV1 {
-    /// @emoji 🎟️ Admits one freshly upgraded socket; `None` once shutdown has begun.
+    /// 🎟️ Admits one freshly upgraded socket; `None` once shutdown has begun.
     fn admit(self: &Arc<Self>) -> Option<HubSocketDrainAdmissionV1> {
         self.live.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
         let admission = HubSocketDrainAdmissionV1 { drain: self.clone(), closing: self.closing.subscribe() };
@@ -11298,12 +11459,12 @@ impl HubSocketDrainV1 {
         Some(admission)
     }
 
-    /// @emoji 📣️ Tells every admitted socket to close and refuses every later one. Idempotent.
+    /// 📣️ Tells every admitted socket to close and refuses every later one. Idempotent.
     fn begin(&self) {
         self.closing.send_replace(true);
     }
 
-    /// @emoji ⏳️ Waits until the last admission dropped or `deadline` elapsed; answers how many
+    /// ⏳️ Waits until the last admission dropped or `deadline` elapsed; answers how many
     /// sockets are still live.
     async fn drained(&self, deadline: std::time::Duration) -> usize {
         let wait = async {
@@ -11322,14 +11483,14 @@ impl HubSocketDrainV1 {
     }
 }
 
-/// @emoji 🎫️ One live socket's hold on [`HubSocketDrainV1`]; dropping it is that socket's exit.
+/// 🎫️ One live socket's hold on [`HubSocketDrainV1`]; dropping it is that socket's exit.
 struct HubSocketDrainAdmissionV1 {
     drain: Arc<HubSocketDrainV1>,
     closing: tokio::sync::watch::Receiver<bool>,
 }
 
 impl HubSocketDrainAdmissionV1 {
-    /// @emoji 📣️ Resolves once the hub began shutting down.
+    /// 📣️ Resolves once the hub began shutting down.
     async fn closing(&mut self) {
         let _ = self.closing.wait_for(|closing| *closing).await;
     }
@@ -11343,17 +11504,17 @@ impl Drop for HubSocketDrainAdmissionV1 {
     }
 }
 
-/// @emoji 🔌️ The close code a socket receives when the hub shuts down: 1012 "service restart",
+/// 🔌️ The close code a socket receives when the hub shuts down: 1012 "service restart",
 /// which every client treats as transient and redials (only 4401 is terminal). Pinned by
 /// `🧫️fixtures/🤝️two-client-document-v1` `shutdown.closeCode`.
 const HUB_SHUTDOWN_CLOSE_CODE: u16 = 1012;
 
-/// @emoji 🔌️ The close frame carrying [`HUB_SHUTDOWN_CLOSE_CODE`].
+/// 🔌️ The close frame carrying [`HUB_SHUTDOWN_CLOSE_CODE`].
 fn hub_shutdown_close_frame() -> Message {
     Message::Close(Some(CloseFrame { code: HUB_SHUTDOWN_CLOSE_CODE, reason: "hub-shutdown".into() }))
 }
 
-/// @emoji 🔚️ Retires the hub's `Database` and closes its storage. The `Database` is shut down once
+/// 🔚️ Retires the hub's `Database` and closes its storage. The `Database` is shut down once
 /// `main` is its last owner (every socket and task that held a clone has drained by then); the
 /// storage close that follows releases every WAL writer on the backend itself — the Postgres
 /// advisory lock's session ends and the Neo4j lease is marked released — and resolves only after
@@ -11378,7 +11539,7 @@ async fn close_hub_database(db: Arc<db::Database>, deadline: std::time::Duration
     shutdown.and(close).map_err(HubError::Db)
 }
 
-/// @emoji 🛑️ Which termination signal an orchestrator sent. `docker stop`, `systemctl stop` and a
+/// 🛑️ Which termination signal an orchestrator sent. `docker stop`, `systemctl stop` and a
 /// Kubernetes pod eviction all send `SIGTERM`; a terminal sends `SIGINT`. Both mean the same thing
 /// to this process — stop accepting, then run the drains `main` already runs after `axum::serve`
 /// returns (`AdminOperationTaskOwner::shutdown`, `ArtifactCreationHttpTaskOwnerV1::shutdown` →
@@ -11390,7 +11551,7 @@ enum TerminationSignalV1 {
 }
 
 impl TerminationSignalV1 {
-    /// @emoji 🏷️ The POSIX name, as the shutdown line reports it.
+    /// 🏷️ The POSIX name, as the shutdown line reports it.
     fn name(self) -> &'static str {
         match self {
             Self::Interrupt => "SIGINT",
@@ -11399,7 +11560,7 @@ impl TerminationSignalV1 {
     }
 }
 
-/// @emoji 🛑️ Whichever of the two arrives first, with `SIGTERM` preferred when both are already
+/// 🛑️ Whichever of the two arrives first, with `SIGTERM` preferred when both are already
 /// ready — the orchestrator's verdict outranks a console interrupt. Taking the two futures as
 /// arguments is what makes the choice testable without raising a real signal at a shared test
 /// binary.
@@ -11413,7 +11574,7 @@ async fn first_termination_signal(interrupt: impl std::future::Future<Output = (
     }
 }
 
-/// @emoji 🛑️ The real process-wide handler. A platform that refuses the `SIGTERM` registration
+/// 🛑️ The real process-wide handler. A platform that refuses the `SIGTERM` registration
 /// leaves that arm pending for ever rather than failing the boot: a hub that cannot hear `SIGTERM`
 /// is the behaviour this process had before, and it still hears `SIGINT`.
 #[cfg(unix)]
@@ -11437,7 +11598,7 @@ async fn termination_signal(tracer: &Tracer) -> TerminationSignalV1 {
     first_termination_signal(interrupt, terminate).await
 }
 
-/// @emoji 🛑️ See the unix twin. Windows has no `SIGTERM`; `ctrl_c` covers both console interrupt
+/// 🛑️ See the unix twin. Windows has no `SIGTERM`; `ctrl_c` covers both console interrupt
 /// and the shutdown event a service manager raises.
 #[cfg(not(unix))]
 async fn termination_signal(_tracer: &Tracer) -> TerminationSignalV1 {
@@ -11445,7 +11606,7 @@ async fn termination_signal(_tracer: &Tracer) -> TerminationSignalV1 {
     TerminationSignalV1::Interrupt
 }
 
-/// @emoji 🧵️ Stack budget of every hub runtime thread, workers and blocking pool alike. Durable-store turns
+/// 🧵️ Stack budget of every hub runtime thread, workers and blocking pool alike. Durable-store turns
 /// (fixed-capacity owners that decode, inflate and verify a pack) run inline under the whole HTTP
 /// middleware stack, and in an unoptimized build that chain outgrows tokio's 2 MiB default: measured
 /// as a SIGABRT stack overflow in `inflate` under `post_inference_gis_map_job_approval`. 8 MiB is the
@@ -11456,7 +11617,7 @@ fn main() -> Result<(), HubError> {
     tokio::runtime::Builder::new_multi_thread().enable_all().thread_stack_size(HUB_RUNTIME_THREAD_STACK_BYTES).build().map_err(HubError::Io)?.block_on(serve())
 }
 
-/// @emoji 🚪️ The hub process: CLI verbs first, then the configured server until a termination signal.
+/// 🚪️ The hub process: CLI verbs first, then the configured server until a termination signal.
 ///
 /// 🔐️ Read before the startup gate rather than next to its first use: whether the hub's own
 /// credential authority is enabled is *the* thing that decides whether production may boot, and
@@ -11509,6 +11670,7 @@ async fn serve() -> Result<(), HubError> {
     let cross_origin = CrossOriginPolicyV1::from_environment(bind)?;
     let forwarded_tls = ForwardedTlsTrustV1::from_environment()?;
     let guest_residency = TrustedCatalogGuestResidencyV1::configured(std::env::var(GUEST_RESIDENCY_BYTES_ENV).ok().as_deref()).map_err(|detail| HubError::ArtifactAuthority(AuthorityError::Catalog(detail)))?;
+    let checkpoint_policy = HubCheckpointPolicyV1::configured(std::env::var(CHECKPOINT_POLICY_EDITS_ENV).ok().as_deref(), std::env::var(CHECKPOINT_POLICY_BYTES_ENV).ok().as_deref()).map_err(|detail| HubError::ArtifactAuthority(AuthorityError::Catalog(detail)))?;
     let credential_sign_in = CredentialSignInPolicyV1::from_env().map_err(|error| HubError::UnsafeAuthConfiguration(error.to_string()))?;
     let identity_verifier: Option<Arc<dyn IdentityAssertionVerifier>> = None;
     let bootstrap_control = Arc::new(HubBootstrapControl::new());
@@ -11650,7 +11812,10 @@ async fn serve() -> Result<(), HubError> {
         let artifact_authority_reason =
             artifact_authority_closed_reason(cfg!(feature = "native-artifact-execution"), trusted_catalog_stalled, data_dir.join("trusted-catalog/current.json").try_exists().unwrap_or(false));
         let readiness = Arc::new(declare_public_session_issuance(
-            hub_readiness(mode, bind_scope, run_id, bootstrap_ready, artifact_authority_ready, open_plan_ready, agent_delegation_ready, admin_dir.is_dir(), true, artifact_cas_sweep_execute, inference_ready, artifact_authority_reason),
+            with_checkpoint_policy(
+                hub_readiness(mode, bind_scope, run_id, bootstrap_ready, artifact_authority_ready, open_plan_ready, agent_delegation_ready, admin_dir.is_dir(), true, artifact_cas_sweep_execute, inference_ready, artifact_authority_reason),
+                checkpoint_policy,
+            ),
             credential_sign_in.is_enabled(),
         ));
         let admin_cursor_key = SessionCapability::mint()?.secret_digest();
@@ -11688,6 +11853,7 @@ async fn serve() -> Result<(), HubError> {
             artifact_publication,
             artifact_maintenance: artifact_maintenance.clone(),
             check_ins: check_ins.clone(),
+            checkpoint_policy: Arc::default(),
             directory_service,
             credential_sign_in,
             rate_limits: Arc::new(HubRateLimiterV1::system()),
@@ -11817,7 +11983,7 @@ async fn serve() -> Result<(), HubError> {
     database_close_result
 }
 
-/// @emoji 🔚️ The one `server.shutdown` record every exit after the database opened ends with — a
+/// 🔚️ The one `server.shutdown` record every exit after the database opened ends with — a
 /// drained serve and a startup refused after the open alike — naming the retained sockets (or the
 /// refusal) and whether the database closed, so a restart right after it is known to reopen.
 fn hub_shutdown_record(served: &Result<(usize, Result<(), HubError>), HubError>, database: &Result<(), HubError>) -> TraceRecord {

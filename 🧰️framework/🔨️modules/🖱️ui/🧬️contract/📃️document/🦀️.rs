@@ -1,4 +1,4 @@
-//! @emoji 📄️ `UiSnapshot` / `UiNodeRecord` / `UiNodeId` / `UiPatch` / `UiPatchOp` and the revision
+//! 📄️ `UiSnapshot` / `UiNodeRecord` / `UiNodeId` / `UiPatch` / `UiPatchOp` and the revision
 //! model — the flat, id-keyed document every renderer reads and every reconciler writes. No type in
 //! this file nests another node inline; a node only ever refers to a child by [`UiNodeId`], which is
 //! what keeps the whole surface schema-projectable (see the crate's `🦀️.rs` header).

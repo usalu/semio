@@ -56,7 +56,6 @@ export async function testPreview2GuestLogVendoring(repoRoot: string): Promise<v
   writeFileSync(drift, "export const stderr = {};\n");
   assert.throws(() => patchPreview2ShimGuestLogClassification(drift), /patch did not match/);
   assert.throws(() => patchPreview2ShimGuestLogLineRelease(drift), /line release patch did not match/);
-  console.log(`[DEBUG] Preview2 guest log vendoring: installed oracle, fragmented lines, blocking-write-and-flush release (${fixture.lineBuffer.preview2HostCalls} upstream fragments collapse to ${fixture.lineBuffer.hostCalls.length} lines), severity, idempotence and drift refusal passed`);
 }
 
 export async function testBrowserWasiActivation(repoRoot: string): Promise<void> {

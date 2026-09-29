@@ -313,7 +313,7 @@ fn list_active_is_ordered_by_publish_arrival_sequence() {
 //#endregion 🔖️ListActive
 
 //#region 🔖️NeverDurable
-/// @emoji 🚨️ The single most important law of this crate, enforced statically: `db_preview`'s
+/// 🚨️ The single most important law of this crate, enforced statically: `db_preview`'s
 /// production source (everything above this `🧪️Tests` region) and its `Cargo.toml` must never
 /// reference anything WAL/durable-storage-shaped. Split on the region marker so the forbidden
 /// token literals living inside THIS test do not trip the check against themselves.

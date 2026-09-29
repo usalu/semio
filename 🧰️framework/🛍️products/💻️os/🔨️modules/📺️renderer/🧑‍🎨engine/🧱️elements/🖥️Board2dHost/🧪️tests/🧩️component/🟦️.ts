@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🧪️ Board2dHost pure-function laws: the probe's handle vitals and the transitive kind hover. */
+/** 🧪️ Board2dHost pure-function laws: the probe's handle vitals and the transitive kind hover. */
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters

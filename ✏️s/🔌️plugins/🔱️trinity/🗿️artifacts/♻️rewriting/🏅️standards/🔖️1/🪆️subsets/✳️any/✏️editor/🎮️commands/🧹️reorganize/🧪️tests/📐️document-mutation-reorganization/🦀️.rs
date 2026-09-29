@@ -30,5 +30,4 @@ async fn reorganize_uses_document_mutations() {
         }
         assert_eq!(after, before);
     }
-    eprintln!("[DEBUG] Rewriting reorganization matched the neutral layout trace, emitted document-only mutations, and restored exact inverses");
 }

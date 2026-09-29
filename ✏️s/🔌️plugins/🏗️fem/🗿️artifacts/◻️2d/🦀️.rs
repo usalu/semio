@@ -302,6 +302,26 @@ pub use crate::standards::v1::subsets::any::schema::Fem2dArtifact;
 // #endregion 🔖️Document
 
 // #region 🔖️ArtifactKind
+/// 🪪️ The fem 2D model document kind — the id `fem2d_io`'s `ArtifactPresentation` already names (`2d.fem`),
+/// with the ONE schema the hub's codec rows, document-open targets and genesis key on (`FEM_2D_SCHEMA`). Declared
+/// beside [`computation_artifact_kind`], which stays the results kind `results:out` pins itself to.
+pub fn document_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+    semio_framework_plugin::ArtifactKindSpec {
+        id: "2d.fem".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("FEM 2D Model", "FEM-2D-Modell"),
+        source_format: FEM_2D_SCHEMA.into(),
+        component_kind: "fem2d".into(),
+        dimension: "2d".into(),
+        media_capability: semio_framework_plugin::OsMediaCapability::MeshOnly,
+        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
+        schema: FEM_2D_SCHEMA.into(),
+        export_formats: vec![],
+        import_formats: vec![],
+        export_stdio_kinds: vec!["stdio.csv".into(), "stdio.json".into(), "stdio.obj".into(), "stdio.stl".into(), "stdio.txt".into()],
+        import_stdio_kinds: vec!["stdio.json".into(), "stdio.txt".into()],
+    }
+}
+
 /// 🔌️ The computed-results output artifact kind (`results:out`'s `kind_id`, see
 /// `crate::editor::fem2d::fem2d_io`) — the OS-catalog-level resource descriptor for
 /// `computation.fem2d`; deliberately a different `media_type` (`Computation`×`Value`) than the PORT's

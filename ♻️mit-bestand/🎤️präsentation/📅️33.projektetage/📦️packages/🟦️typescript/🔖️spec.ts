@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🔖️ 33. Projektetage — deck specification shared by the entry and the slide files. Kept apart from `🟦️.ts` so a slide's static import of the spec never cycles into the entry's top-level slide await. */
+/** 🔖️ 33. Projektetage — deck specification shared by the entry and the slide files. Kept apart from `🟦️.ts` so a slide's static import of the spec never cycles into the entry's top-level slide await. */
 // #endregion 🧲️Header
 
 //#region 🔖️spec
@@ -102,7 +102,7 @@ export const CATALOGUE_EMBODIMENT_COL3_CROP = "catalogue-col3--crop";
 export const CATALOGUE_EMBODIMENT_COL3_LABEL = "catalogue-col3--label";
 export const ZUKUNFT_BAU_EMBODIMENT = "zukunft-bau-entwerfen-mit-bestand--iframe";
 
-/** @emoji 📐️ `♻️bauteilbörse.png` pixel width÷height (1222×896). */
+/** 📐️ `♻️bauteilbörse.png` pixel width÷height (1222×896). */
 export const CATALOGUE_SOURCE_ASPECT = 1222 / 896;
 
 export const CATALOGUE_FRAME = {
@@ -128,7 +128,7 @@ export const zukunftBauEmbodiment: Embodiment = {
   title: "Zukunft Bau: Entwerfen mit Bestand",
 };
 
-/** @emoji 🏷️ Grid keys of all 3×5 catalogue tiles → semantic participant ids. */
+/** 🏷️ Grid keys of all 3×5 catalogue tiles → semantic participant ids. */
 export const CATALOGUE_TILE_SEMANTIC_KEYS = {
   "tile-r0-c0": "Struktur 1",
   "tile-r0-c1": "Struktur 2",
@@ -147,7 +147,7 @@ export const CATALOGUE_TILE_SEMANTIC_KEYS = {
   "tile-r2-c4": "Stütze",
 } as const;
 
-/** @emoji 🧩️ Applies semantic participant ids to split template artifacts. */
+/** 🧩️ Applies semantic participant ids to split template artifacts. */
 export function catalogueSplitWithSemanticKeys(artifacts: SplitArtifacts): SplitArtifacts {
   const keyMap = CATALOGUE_TILE_SEMANTIC_KEYS;
   const remapId = (gridKey: string): string => keyMap[gridKey as keyof typeof keyMap] ?? gridKey;
@@ -181,7 +181,7 @@ const CATALOGUE_SPLIT_RAW = split({
 
 export const CATALOGUE_SPLIT = catalogueSplitWithSemanticKeys(CATALOGUE_SPLIT_RAW);
 
-/** @emoji 📐️ Union of normalized figure crops for participant ids. */
+/** 📐️ Union of normalized figure crops for participant ids. */
 export function unionTileCropForParticipants(artifacts: SplitArtifacts, participantIds: readonly string[]): DispositionPosition {
   const crops = artifacts.dispositions
     .filter((disposition) => participantIds.includes(disposition.participantId))
@@ -193,7 +193,7 @@ export function unionTileCropForParticipants(artifacts: SplitArtifacts, particip
   return unionSourceCrops(crops);
 }
 
-/** @emoji 📐️ Bounding box of slide positions for participant ids. */
+/** 📐️ Bounding box of slide positions for participant ids. */
 export function unionTilePositionForParticipants(artifacts: SplitArtifacts, participantIds: readonly string[]): DispositionPosition {
   const positions = artifacts.dispositions
     .filter((disposition) => participantIds.includes(disposition.participantId))
@@ -215,7 +215,7 @@ export function unionTilePositionForParticipants(artifacts: SplitArtifacts, part
   return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
 }
 
-/** @emoji 📐️ Ten catalogue tiles (5–14) as three separated columns (2×3 | 1×3 | 1×1). */
+/** 📐️ Ten catalogue tiles (5–14) as three separated columns (2×3 | 1×3 | 1×1). */
 export function catalogueFocusColumnTiles(): readonly { readonly participantId: string; readonly position: DispositionPosition }[] {
   const rowGap = 0.014;
   const innerGap = 0.01;
@@ -274,7 +274,7 @@ export const CATALOGUE_COLUMN_LABELS: Record<keyof typeof CATALOGUE_COLUMN_TILE_
 export const CATALOGUE_LABEL_INLINE_FRAME = { x: 0.1, y: 0.44, width: 0.8, height: 0.12 };
 export const CATALOGUE_LABEL_INLINE_GAP = 0.03;
 
-/** @emoji 📐️ One of three equal inline label slots on the Bauteilbeschriftungen row. */
+/** 📐️ One of three equal inline label slots on the Bauteilbeschriftungen row. */
 export function inlineColumnLabelPosition(columnIndex: 0 | 1 | 2): DispositionPosition {
   const gap = CATALOGUE_LABEL_INLINE_GAP;
   const colWidth = (CATALOGUE_LABEL_INLINE_FRAME.width - gap * 2) / 3;
@@ -286,7 +286,7 @@ export function inlineColumnLabelPosition(columnIndex: 0 | 1 | 2): DispositionPo
   };
 }
 
-/** @emoji 📐️ Focus-slide dispositions for catalogue tile participants. */
+/** 📐️ Focus-slide dispositions for catalogue tile participants. */
 export function catalogueFocusDispositions(): readonly Disposition[] {
   const focusTiles = catalogueFocusColumnTiles();
   const positions = Object.fromEntries(focusTiles.map((tile) => [tile.participantId, tile.position]));
@@ -296,7 +296,7 @@ export function catalogueFocusDispositions(): readonly Disposition[] {
   );
 }
 
-/** @emoji 🔀️ One-to-many morphTo slots: catalogue figure into focus tiles at grid positions on the catalogue slide. */
+/** 🔀️ One-to-many morphTo slots: catalogue figure into focus tiles at grid positions on the catalogue slide. */
 export function catalogueFocusMorphTo(): readonly MorphToSlot[] {
   return catalogueFocusColumnTiles().map((tile) => {
     const splitDisposition = CATALOGUE_SPLIT.dispositions.find((disposition) => disposition.participantId === tile.participantId);
@@ -312,7 +312,7 @@ export function catalogueFocusMorphTo(): readonly MorphToSlot[] {
   });
 }
 
-/** @emoji 🔀️ Many-to-one morphFrom slots: focus tiles (source figure) into one column label disposition. */
+/** 🔀️ Many-to-one morphFrom slots: focus tiles (source figure) into one column label disposition. */
 export function columnLabelMorphFrom(column: keyof typeof CATALOGUE_COLUMN_TILE_KEYS, labelPosition: DispositionPosition): Disposition["morphFrom"] {
   return CATALOGUE_COLUMN_TILE_KEYS[column].map((participantId) => ({
     participantId,
@@ -413,7 +413,7 @@ export const BAUKOMPONENTEN_ITEMS = [
   { id: "trennwand-glas", src: "/🪟️bauteilbörse-trennwand-glas.png", kind: "figure", alt: "Trennwand Glas" },
 ] as const;
 
-/** @emoji 🧩️ Participants, embodiments, and grid dispositions for the Baukomponenten 3×3 slide. */
+/** 🧩️ Participants, embodiments, and grid dispositions for the Baukomponenten 3×3 slide. */
 export function baukomponentenGridArtifacts(): {
   readonly participants: Participant[];
   readonly embodiments: Embodiment[];

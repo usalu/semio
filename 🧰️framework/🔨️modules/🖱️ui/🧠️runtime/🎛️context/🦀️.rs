@@ -1,4 +1,4 @@
-//! @emoji 🎛️ `Context<T>`: notify, emit, subscribe, observe, defer, spawn_local — and the effect
+//! 🎛️ `Context<T>`: notify, emit, subscribe, observe, defer, spawn_local — and the effect
 //! queues behind them.
 //!
 //! Every parameter here is a sync `FnMut`/`FnOnce`, never an async block — that is what makes "no

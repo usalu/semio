@@ -305,7 +305,7 @@ export const createVirtualContinuationHost = (): VirtualContinuationHost => {
     drain: (untilMs = Number.POSITIVE_INFINITY, stepBudget = 100_000) => {
       let steps = 0;
       for (;;) {
-        if (steps > stepBudget) throw new Error(`[DEBUG] virtual continuation host exceeded its ${stepBudget}-step budget at ${nowMs} ms`);
+        if (steps > stepBudget) throw new Error(`virtual continuation host exceeded its ${stepBudget}-step budget at ${nowMs} ms`);
         if (macrotasks.length > 0) {
           steps += 1;
           macrotasks.shift()!();

@@ -270,7 +270,7 @@ export class RetainedVerificationScript extends BundleScript {
         assert.deepEqual(inspect(committed), { end: committed.length, sequence: 1, frames: 2, tail: 0 });
       } else assert.throws(() => inspect(committed), new RegExp(`^Error: ${row.error}$`), row.id);
     }
-    process.stdout.write(`[DEBUG] independent retained SPR oracle: 2 commits, ${recoveryCases} exact LastCommit prefixes, ${fixture.negative.length} strict hostile denials, ${fixture.compressed.length} compressed grammar cases; no typed history publication\n`);
+    process.stdout.write(`independent retained SPR oracle: 2 commits, ${recoveryCases} exact LastCommit prefixes, ${fixture.negative.length} strict hostile denials, ${fixture.compressed.length} compressed grammar cases; no typed history publication\n`);
     const source = readFileSync(join(owner, "🦀️.rs"), "utf8");
     const laws = ["retained_spr_verification_matches_neutral_commits_and_torn_prefixes", "retained_spr_verification_rejects_hostile_frames_without_publication", "retained_spr_resume_preserves_exact_prefix_and_commit_chain"];
     for (const law of laws) assert(source.includes(`fn ${law}(`), `missing retained SPR law ${law}`);
@@ -323,7 +323,7 @@ class RetainedRecordObservationScript extends BundleScript {
     const extra = JSON.parse(JSON.stringify(fixture)) as { readonly cases: readonly Record<string, unknown>[] };
     extra.cases[0]!.authority = true;
     assert(!validate(extra));
-    console.log(`[DEBUG] retained SPR observation oracle: ${fixture.cases.length} exact rows, ${observed} scalar observations; compressed raw-length/empty payload/clear/error/cancel; zero commit or input authority`);
+    console.log(`[TRACE] retained SPR observation oracle: ${fixture.cases.length} exact rows, ${observed} scalar observations; compressed raw-length/empty payload/clear/error/cancel; zero commit or input authority`);
     const source = readFileSync(join(owner, "🦀️.rs"), "utf8");
     const law = "retained_record_observation_uses_the_existing_framing_state_without_authority";
     assert(source.includes('include_str!("🧫️fixtures/🔣️.json")') && source.includes(`fn ${law}(`));

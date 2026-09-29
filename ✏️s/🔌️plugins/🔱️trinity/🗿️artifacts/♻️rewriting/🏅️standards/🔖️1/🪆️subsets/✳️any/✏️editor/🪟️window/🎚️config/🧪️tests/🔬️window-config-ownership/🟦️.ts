@@ -25,5 +25,4 @@ export function testRewritingWindowConfigOracle(): void {
     for (const state of Object.values(windows)) assert(validate(state), JSON.stringify(validate.errors));
   }
   assert.deepEqual(generations, fixture.expectedWindowGenerations);
-  console.log("[DEBUG] Rewriting window config oracle: independent camera/LOD updates, per-window generations, empty app config");
 }

@@ -5,12 +5,12 @@
 // #endregion 🧲️Header
 
 // #region 🎈️SurfacePresentation
-/** @emoji 🎨️ Opaque per-level fill. */
+/** 🎨️ Opaque per-level fill. */
 export const surfaceClass = "ui-surface";
 
-/** @emoji 🪟️ Glass per-level fill. */
+/** 🪟️ Glass per-level fill. */
 export const glassClass = "ui-glass";
 
-/** @emoji 🌫️ Fullscreen level-aware scrim. */
+/** 🌫️ Fullscreen level-aware scrim. */
 export const veilClass = "ui-veil";
 // #endregion 🎈️SurfacePresentation

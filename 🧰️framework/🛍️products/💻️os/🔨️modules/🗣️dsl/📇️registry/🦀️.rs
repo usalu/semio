@@ -24,7 +24,7 @@ use std::collections::HashMap;
 use std::sync::{Mutex, OnceLock};
 
 //#region 🔖️Registry
-/// @emoji 🌐️ Process-global `(schema id, RecordSpec constructor)` table — see module doc for the
+/// 🌐️ Process-global `(schema id, RecordSpec constructor)` table — see module doc for the
 /// `register_language` precedent this mirrors. Not `pub`: reached only through
 /// [`register_schema_spec`] (write) and [`full_resolver`] (read-a-snapshot), same access shape as
 /// `crate::os_dsl`'s `LANGUAGE_REGISTRY`/`IDIOM_REGISTRY`.
@@ -34,7 +34,7 @@ async fn schema_registry() -> &'static Mutex<HashMap<&'static str, fn() -> crate
     SCHEMA_REGISTRY.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
-/// @emoji 📌️ Registers one schema id's `RecordSpec` constructor — called once per schema at
+/// 📌️ Registers one schema id's `RecordSpec` constructor — called once per schema at
 /// host/plugin init (typically inside an artifact's `⚙️engine::register()`), for both a document's
 /// own schema id (`"stdio.gif"`) and its diff schema (`"stdio.gif#diff"`, B-R4). Overwrites on
 /// re-registration rather than erroring, matching `register_language`'s hot-reload-safe behavior —
@@ -44,7 +44,7 @@ pub async fn register_schema_spec(id: &'static str, spec: fn() -> crate::os_dsl:
     registry.insert(id, spec);
 }
 
-/// @emoji 📇️ A `SchemaResolver` backed by a fixed table of `(schema id, RecordSpec constructor)`
+/// 📇️ A `SchemaResolver` backed by a fixed table of `(schema id, RecordSpec constructor)`
 /// pairs — [`full_resolver`] is the real-callers constructor (a live snapshot of the process-global
 /// registry); [`FullResolver::from_map`] stays available for a caller that wants a narrower/custom
 /// table (e.g. a test double) built by hand, independent of global registration state.
@@ -53,7 +53,7 @@ pub struct FullResolver {
 }
 
 impl FullResolver {
-    /// @emoji 🧪️ Builds a resolver from an explicit table, bypassing the process-global registry
+    /// 🧪️ Builds a resolver from an explicit table, bypassing the process-global registry
     /// entirely — for tests/test-doubles that want an isolated, narrower set.
     pub async fn from_map(schemas: HashMap<&'static str, fn() -> crate::os_dsl::schema::RecordSpec>) -> Self {
         Self { schemas }
@@ -72,7 +72,7 @@ impl SchemaResolver for FullResolver {
     }
 }
 
-/// @emoji 🏗️ Builds the real fan-in resolver as a live snapshot of everything registered via
+/// 🏗️ Builds the real fan-in resolver as a live snapshot of everything registered via
 /// [`register_schema_spec`] so far (call again after new registrations to see them — this is a
 /// point-in-time copy of `&'static str`/`fn` pointers, not a live view). Schema ids follow the
 /// schema lattice's own convention (`"<doc-schema>"` for a document, `"<doc-schema>#diff"` for its

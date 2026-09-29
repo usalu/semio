@@ -20,12 +20,12 @@
 //! @see ../../🔣️oracle.json — the mutation catalog `KINDS` is measured against.
 //! @see ../🦀️.rs — this subset's conformance check, one axis per variant below.
 
-use crate::standards::v_ecma_376::subsets::base::schema::diff::{DocxDiff, DocxOpcContentTypesDiff, DocxOpcDiff, DocxOpcPartDiff, DocxOpcPartsDiff, DocxOpcRelDiff, DocxOpcRelListDiff, DocxOpcRelationshipsDiff, NamedModified, NamedTripleDiff};
+use crate::standards::v_ecma_376::subsets::base::schema::diff::{DocxDiff, DocxOpcContentTypesDiff, DocxOpcDiff, DocxOpcPartsDiff, DocxOpcRelDiff, DocxOpcRelListDiff, DocxOpcRelationshipsDiff, NamedModified};
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{DocxSnapshot, DocxXmlPart};
 use protocol::command::DiffAlgebra;
 use protocol::Mutation;
-use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
-use semio_s_artifact_stdio_zip::opc::{resolve_relationship_target, OpcPart};
+use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDocument, XmlNode};
+use semio_s_artifact_stdio_zip::opc::resolve_relationship_target;
 
 //#region 🔖️Dialect
 /// 🏷️ ISO/IEC 29500-4 Transitional WordprocessingML main namespace.
@@ -104,22 +104,9 @@ fn main_part_path(base: &DocxSnapshot) -> Option<String> {
     Some(resolve_relationship_target("", &relationship.target))
 }
 
-/// 📰️ Whether a part is XML this vocabulary may rewrite. `.rels` parts never appear in `opc.parts`
-/// — they are decoded into `opc.relationships`, which the relationship-base axis addresses instead.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn is_xml_part(path: &str) -> bool {
-    let lower = path.to_ascii_lowercase();
-    lower.ends_with(".xml") || lower.ends_with(".vml")
-}
-
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_part(part: &DocxXmlPart) -> Option<XmlDocument> {
     Some(part.document.clone())
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn serialize(document: &XmlDocument) -> Vec<u8> {
-    xml_document_to_text(document).into_bytes()
 }
 
 /// ✍️ Rewrites every attribute value equal to a member of `from` to `to`, through the whole
@@ -220,15 +207,6 @@ fn opc_diff(parts: Option<DocxOpcPartsDiff>, content_types: Option<DocxOpcConten
         return DocxDiff::default();
     }
     DocxDiff { opc: Some(DocxOpcDiff { content_types, parts, relationships, comment: None }), ..Default::default() }
-}
-
-/// 🔺️ Sparse per-part diff: the touched parts only, each carrying just the fields that moved.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parts_diff(modified: Vec<(String, DocxOpcPartDiff)>, added: Vec<OpcPart>, removed: Vec<String>) -> Option<DocxOpcPartsDiff> {
-    if modified.is_empty() && added.is_empty() && removed.is_empty() {
-        return None;
-    }
-    Some(NamedTripleDiff { removed, modified: modified.into_iter().map(|(key, diff)| NamedModified { key, diff }).collect(), added, ..Default::default() })
 }
 
 /// 🔺️ The diff of retargeting one namespace family across every XML part that declares it.

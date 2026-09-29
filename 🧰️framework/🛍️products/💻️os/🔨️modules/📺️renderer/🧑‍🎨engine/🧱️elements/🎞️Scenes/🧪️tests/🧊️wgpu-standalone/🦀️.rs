@@ -262,6 +262,8 @@ pub fn handle_scene_wheel(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y:
     }
 }
 
+/// 🫳️ A row transfer resolves on the RELEASE (`scene_transfer_drop_action`), so the
+/// move itself carries no state of its own — the same no-op the pan modes take.
 #[cfg(test)]
 pub fn handle_scene_pointer_move(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y: f32, down: bool, _button: i16, drag_dx: f32, drag_dy: f32) -> Vec<ActionDescriptor> {
     let inner = bounds;
@@ -299,8 +301,6 @@ pub fn handle_scene_pointer_move(scene: &UiComponentSceneNode, bounds: Rect, x: 
                     });
                 }
                 SceneDragMode::MapPan => {}
-                // 🫳️ A row transfer resolves on the RELEASE (`scene_transfer_drop_action`), so the
-                // move itself carries no state of its own — the same no-op the pan modes take.
                 SceneDragMode::InkPan { start_x, start_y, camera_x, camera_y, zoom } => {
                     let dx = (x - start_x) as f64;
                     let dy = (y - start_y) as f64;

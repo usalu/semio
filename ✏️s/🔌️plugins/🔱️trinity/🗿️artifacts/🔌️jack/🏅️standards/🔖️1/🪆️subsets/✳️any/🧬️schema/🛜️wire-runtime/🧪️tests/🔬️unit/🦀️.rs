@@ -180,7 +180,6 @@ fn query_ownership_shared_scene_clone_retires_while_source_remains_live() {
     let steps = drive_snapshot_retirement(clone);
     assert_eq!(source.content.local_owner::<crate::JackWorkingScene>().expect("live source owner remains").nodes[0].id, "live");
     assert!(steps > 1);
-    eprintln!("[DEBUG] shared Jack query snapshot retired in {steps} bounded steps while its source remained live");
     drive_snapshot_retirement(source);
 }
 
@@ -197,7 +196,6 @@ fn query_ownership_unique_scene_retirement_drains_entities_one_owner_per_grant()
     );
     let steps = drive_snapshot_retirement(source);
     assert!(steps > 3, "the last scene owner must retire nodes and edges separately");
-    eprintln!("[DEBUG] unique Jack query scene retired its nodes and edge in {steps} bounded steps");
 }
 
 #[semio_framework_async_macros::async_test]

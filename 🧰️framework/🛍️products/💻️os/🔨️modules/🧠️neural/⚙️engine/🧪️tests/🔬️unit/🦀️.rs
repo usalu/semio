@@ -976,7 +976,6 @@ fn a_budgeted_walk_parks_one_whole_wave_and_never_a_node_behind_a_parked_answer(
     assert!(wave.remaining.contains(&"join".to_string()), "the blocked node is still owed");
     assert!(wave.remaining.contains(&"left".to_string()) && wave.remaining.contains(&"right".to_string()), "a parked node is owed until its answer lands");
     assert!(!wave.remaining.contains(&"root".to_string()), "a node this walk computed is not owed again");
-    eprintln!("[DEBUG] flow eval wave: parked={parked:?} remaining={:?}", wave.remaining);
     wave.retire_cold();
     cache.retire_cold();
     tree.retire_cold();
@@ -1015,7 +1014,6 @@ fn a_two_level_contributed_graph_converges_in_two_waves() {
         waves.push(parked);
     }
     assert_eq!(waves, vec![vec!["left".to_string(), "right".to_string()], vec!["join".to_string()]], "four nodes, two dependency levels, two waves");
-    eprintln!("[DEBUG] flow eval waves: {waves:?}");
     cache.retire_cold();
     tree.retire_cold();
     registry.retire_cold();

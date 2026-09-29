@@ -273,7 +273,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         dimension: "data".into(),
         media_capability: OsMediaCapability::MeshOnly,
         media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Kit },
-        schema: "sourcing.curation".into(),
+        schema: SOURCING_CURATION_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
         export_stdio_kinds: vec!["stdio.json".into(), "stdio.zip".into()],

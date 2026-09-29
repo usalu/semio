@@ -1,4 +1,4 @@
-//! @emoji 🌐️ [`WebGpuBackend`] — this crate's concrete `ui_render::GraphicsBackend`. Owns the device/
+//! 🌐️ [`WebGpuBackend`] — this crate's concrete `ui_render::GraphicsBackend`. Owns the device/
 //! surface/pipelines/resources and drives one frame through `crate::frame::render`. Everything device-
 //! shaped lives behind this one type; nothing else in the crate is `pub`.
 

@@ -60,7 +60,7 @@ pub struct Din4108PlayApp;
 impl ArtifactEditor for Din4108PlayApp {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
     fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
-        vec![crate::examples::demo::source()]
+        vec![crate::examples::demo::source(), crate::examples::failing_thin_insulation::source()]
     }
     type Snapshot = Din4108Snapshot;
     type Mutation = Din4108Mutation;
@@ -239,7 +239,7 @@ pub fn create_din4108_app() -> semio_framework_plugin::AppDefinition {
             // camelCase JSON — the projection the Inputs window already renders.
             .action_with(
                 semio_framework_plugin::ActionDefinition::new_catalog("setSnapshot", LocalizedLabel::native("Set Snapshot", "Dokument setzen"), semio_framework_plugin::ActionKind::Mutation)
-                    .with_args(vec![semio_framework_plugin::ActionArgDef::text("snapshot", LocalizedLabel::native("Document JSON", "Dokument-JSON"))]),
+                    .with_args(vec![semio_framework_plugin::ActionArgDef::json_text("snapshot", LocalizedLabel::native("Document JSON", "Dokument-JSON")).required()]),
             )
             .action_destructive("setSnapshot")
             .action_with(semio_framework_plugin::ActionDefinition::new("evaluate", LocalizedLabel::native("Evaluate", "Auswerten"), semio_framework_plugin::ActionKind::View, "hash"))
@@ -257,32 +257,33 @@ pub fn create_din4108_app() -> semio_framework_plugin::AppDefinition {
             .action_with(
                 semio_framework_plugin::ActionDefinition::new_catalog("setField", LocalizedLabel::native("Set Field", "Feld setzen"), semio_framework_plugin::ActionKind::Mutation)
                     .with_args(vec![
-                        semio_framework_plugin::ActionArgDef::text("path", LocalizedLabel::native("Path", "Pfad")),
-                        semio_framework_plugin::ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")),
+                        semio_framework_plugin::ActionArgDef::text("path", LocalizedLabel::native("Path", "Pfad")).required(),
+                        semio_framework_plugin::ActionArgDef::any("value", LocalizedLabel::native("Value", "Wert")).required(),
                     ]),
             )
             .action_interactive_job("setField", InteractiveJobClassification::Migrated)
             .action_with(
                 semio_framework_plugin::ActionDefinition::new_catalog("insertItem", LocalizedLabel::native("Insert Item", "Eintrag einfügen"), semio_framework_plugin::ActionKind::Mutation)
                     .with_args(vec![
-                        semio_framework_plugin::ActionArgDef::text("path", LocalizedLabel::native("Path", "Pfad")),
-                        semio_framework_plugin::ActionArgDef::text("index", LocalizedLabel::native("Index", "Index")),
+                        semio_framework_plugin::ActionArgDef::text("path", LocalizedLabel::native("Path", "Pfad")).required(),
+                        semio_framework_plugin::ActionArgDef::index("index", LocalizedLabel::native("Index", "Index")).required(),
+                        semio_framework_plugin::ActionArgDef::any("value", LocalizedLabel::native("Value", "Wert")),
                     ]),
             )
             .action_interactive_job("insertItem", InteractiveJobClassification::Migrated)
             .action_with(
                 semio_framework_plugin::ActionDefinition::new_catalog("removeItem", LocalizedLabel::native("Remove Item", "Eintrag entfernen"), semio_framework_plugin::ActionKind::Mutation)
                     .with_args(vec![
-                        semio_framework_plugin::ActionArgDef::text("path", LocalizedLabel::native("Path", "Pfad")),
-                        semio_framework_plugin::ActionArgDef::text("index", LocalizedLabel::native("Index", "Index")),
+                        semio_framework_plugin::ActionArgDef::text("path", LocalizedLabel::native("Path", "Pfad")).required(),
+                        semio_framework_plugin::ActionArgDef::index("index", LocalizedLabel::native("Index", "Index")).required(),
                     ]),
             )
             .action_interactive_job("removeItem", InteractiveJobClassification::Migrated)
             .action_with(
                 semio_framework_plugin::ActionDefinition::new_catalog("applyRemedy", LocalizedLabel::native("Apply Remedy", "Abhilfe anwenden"), semio_framework_plugin::ActionKind::Mutation)
                     .with_args(vec![
-                        semio_framework_plugin::ActionArgDef::text("checkId", LocalizedLabel::native("Check", "Nachweis")),
-                        semio_framework_plugin::ActionArgDef::text("remedyIndex", LocalizedLabel::native("Remedy", "Abhilfe")),
+                        semio_framework_plugin::ActionArgDef::text("checkId", LocalizedLabel::native("Check", "Nachweis")).required(),
+                        semio_framework_plugin::ActionArgDef::index("remedyIndex", LocalizedLabel::native("Remedy", "Abhilfe")).required(),
                     ]),
             )
             .action_interactive_job("applyRemedy", InteractiveJobClassification::Migrated)

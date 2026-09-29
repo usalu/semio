@@ -1292,7 +1292,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
             }
             console.log('[BUILD_INSPECTION]' + JSON.stringify(rows));
           `, configPath, JSON.stringify(fixture.settings), join(dirname(outputPath), "vite-inspection-cache"), join(dirname(outputPath), "vite-inspection-unwritten")], { cwd: repoRoot, env: { ...process.env, SEMIO_PLUGIN: "s", SEMIO_RENDERER: "react", SEMIO_BRAND: "" }, timeout: fixture.settings.maximumDurationMs, killSignal: "SIGKILL", maxBuffer: 32 * 1024 * 1024 }, (error, stdout, stderr) => error ? reject(new Error(`production inspection failed: ${error.message}\n${stderr}`)) : resolveOutput(stdout));
-          child.stderr?.on("data", (chunk) => { if (String(chunk).includes("[DEBUG]")) console.log(String(chunk).trim()); });
+          child.stderr?.on("data", (chunk) => { if (String(chunk).includes("[TRACE]")) console.log(String(chunk).trim()); });
         });
       } finally {
         expect(snapshot()).toEqual(before);

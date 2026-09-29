@@ -5,6 +5,7 @@ message RenameWriter { string new_id = 1; }
 message ChangeUri { string new_uri = 1; }
 message ChangeLanguage { string new_language_id = 1; }
 message EditText { string text = 1; }
+message SpliceText { uint32 start = 1; string deleted = 2; string insert = 3; string before = 4; string after = 5; }
 
 message WriterMutation {
   oneof mutation {
@@ -12,5 +13,6 @@ message WriterMutation {
     ChangeUri change_uri = 2;
     ChangeLanguage change_language = 3;
     EditText edit_text = 4;
+    SpliceText splice_text = 5;
   }
 }

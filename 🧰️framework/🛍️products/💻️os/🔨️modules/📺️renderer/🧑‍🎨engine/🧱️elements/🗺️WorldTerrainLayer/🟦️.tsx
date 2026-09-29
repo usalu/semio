@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/🗺️WorldTerrainLayer/component.tsx
-/** @emoji ⛰️ `🗺️WorldTerrainLayer` — chunked-DEM-tile GIS terrain mesh mounted alongside `WorldInstancesLayer` inside the shared `World3d` viewport, driven by a wasm `TerrainSession`. */
+/** ⛰️ `🗺️WorldTerrainLayer` — chunked-DEM-tile GIS terrain mesh mounted alongside `WorldInstancesLayer` inside the shared `World3d` viewport, driven by a wasm `TerrainSession`. */
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters

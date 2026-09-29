@@ -819,6 +819,5 @@ async fn canvas_catalogue_retained_actions_preview_and_create_in_the_addressed_w
         }.await;
         artifact_app_laws::close_registered_fixture_app(&mut app.0);
         outcome.unwrap_or_else(|error| panic!("{kind}: {error}"));
-        eprintln!("[DEBUG] Layout catalogue {kind}: addressed preview, one creation, terminal preview retirement");
     }
 }

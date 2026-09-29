@@ -73,7 +73,7 @@ impl crate::mutation::Mutation<i64> for CausalAddOp {
         vec![CausalAddOp { delta: -self.delta }]
     }
 }
-/// @emoji 🎯️ Hand-written (no `os_dsl::DslOps` derive in this dependency-free fixture): `format
+/// 🎯️ Hand-written (no `os_dsl::DslOps` derive in this dependency-free fixture): `format
 /// u8 (=1) | delta i64 LE`.
 impl crate::mutation::OpBinary for CausalAddOp {
     fn encode_op(&self) -> Result<Vec<u8>, crate::ProtocolError> {
@@ -272,7 +272,7 @@ fn causal_insert_rejects_oversized_identity_without_losing_the_envelope_owner() 
 mod quick {
     use super::*;
 
-    /// @emoji 🔁️ Diamond DAG (A none; B,C dep A; D dep B,C) inserted in every hand-picked
+    /// 🔁️ Diamond DAG (A none; B,C dep A; D dep B,C) inserted in every hand-picked
     /// topological order converges to the same final applied set and drained envelope count —
     /// the "permutation-convergence" law the amendment's testing note asks for at the `quick`
     /// tier. True topological orders never hit the `insert`-classification quirk documented on

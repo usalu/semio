@@ -103,7 +103,7 @@ struct HubFeatureReadinessV1 {
     checkpoint_policy: HubCheckpointPolicyV1,
 }
 
-/// @emoji 📌️ `features.checkpointPolicy` (`LocalBootstrapReadinessV1`): the hub checks a document in by itself once the edits,
+/// 📌️ `features.checkpointPolicy` (`LocalBootstrapReadinessV1`): the hub checks a document in by itself once the edits,
 /// or the diff and inverse payload bytes, committed over its document sockets since it last did reach either bound — on behalf
 /// of the author whose batch reached it, through the ordinary Check In. A client that seeds from the active checkpoint then
 /// replays at most about one policy's worth of tail when it opens the document (ticket 26/09/23 session 14c: a 13 201-edit
@@ -133,7 +133,7 @@ impl HubCheckpointPolicyV1 {
     }
 }
 
-/// @emoji 🧮️ What one written document committed since the hub last weighed its checkpoint policy, and whether a policy
+/// 🧮️ What one written document committed since the hub last weighed its checkpoint policy, and whether a policy
 /// Check In of it runs.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 struct CheckpointPolicyTallyV1 {
@@ -145,7 +145,7 @@ struct CheckpointPolicyTallyV1 {
 /// 🧮️ How many documents one hub tallies at once; past it the tallies of documents with no Check In running restart.
 const CHECKPOINT_POLICY_DOCUMENTS_MAX: usize = 65_536;
 
-/// @emoji 🧮️ The per-document tallies of the checkpoint policy.
+/// 🧮️ The per-document tallies of the checkpoint policy.
 #[derive(Default)]
 struct CheckpointPolicyLedgerV1 {
     documents: Mutex<std::collections::HashMap<DocumentScope, CheckpointPolicyTallyV1>>,
@@ -194,10 +194,10 @@ edit(BOOT, """            mcp_workspace: mcp_workspace_ready(agent_delegation_re
         },""", "readiness default")
 
 edit(BOOT, """    merge_policy: protocol::MergePolicy,
-    /// @emoji 🛣️ Every matched route's answers""", """    merge_policy: protocol::MergePolicy,
-    /// @emoji 📌️ The checkpoint policy's per-document tallies ([`HubCheckpointPolicyV1`], declared in `readiness`).
+    /// 🛣️ Every matched route's answers""", """    merge_policy: protocol::MergePolicy,
+    /// 📌️ The checkpoint policy's per-document tallies ([`HubCheckpointPolicyV1`], declared in `readiness`).
     checkpoint_policy: Arc<CheckpointPolicyLedgerV1>,
-    /// @emoji 🛣️ Every matched route's answers""", "state field")
+    /// 🛣️ Every matched route's answers""", "state field")
 
 edit(BOOT, """            check_ins: check_ins.clone(),
             directory_service,""", """            check_ins: check_ins.clone(),
@@ -218,7 +218,7 @@ edit(BOOT, """        let readiness = Arc::new(declare_public_session_issuance(
             credential_sign_in.is_enabled(),
         ));""", "readiness wrap")
 
-edit(BOOT, """fn declare_public_session_issuance(readiness: HubReadinessV1, credential_sign_in_enabled: bool) -> HubReadinessV1 {""", """/// @emoji 📌️ Declares the operator's checkpoint policy in `features.checkpointPolicy`.
+edit(BOOT, """fn declare_public_session_issuance(readiness: HubReadinessV1, credential_sign_in_enabled: bool) -> HubReadinessV1 {""", """/// 📌️ Declares the operator's checkpoint policy in `features.checkpointPolicy`.
 fn with_checkpoint_policy(mut readiness: HubReadinessV1, policy: HubCheckpointPolicyV1) -> HubReadinessV1 {
     readiness.features.checkpoint_policy = policy;
     readiness
@@ -226,13 +226,13 @@ fn with_checkpoint_policy(mut readiness: HubReadinessV1, policy: HubCheckpointPo
 
 fn declare_public_session_issuance(readiness: HubReadinessV1, credential_sign_in_enabled: bool) -> HubReadinessV1 {""", "with_checkpoint_policy fn")
 
-edit(BOOT, """/// @emoji 🧾️ Commits one admitted batch and answers it: the engine's receipt (or refusal) always reaches the socket as
+edit(BOOT, """/// 🧾️ Commits one admitted batch and answers it: the engine's receipt (or refusal) always reaches the socket as
 /// the batch's `Ack` — never cut by the frame deadline, the engine's own bounds end the wait — and an advanced
 /// frontier's relay reaches every peer. Returns `false` when the Ack could not be sent.
 #[allow(clippy::too_many_arguments)]
 async fn commit_admitted_commands(state: &HubState, handle: &db::ArtifactHandle, document_id: &str, fanout: &broadcast::Sender<ServerFrame>, actor: &ActorId, gate: &db::security::SecurityGate, admitted: AdmittedCommandsV1, sender: &mut SplitSink<WebSocket, Message>) -> bool {
     let AdmittedCommandsV1 { batch_id, envelopes, _document_write } = admitted;
-    let (ack, relay) = submit_commands(handle, gate, actor, batch_id, envelopes, state.merge_policy).await;""", """/// @emoji 🧾️ Commits one admitted batch and answers it: the engine's receipt (or refusal) always reaches the socket as
+    let (ack, relay) = submit_commands(handle, gate, actor, batch_id, envelopes, state.merge_policy).await;""", """/// 🧾️ Commits one admitted batch and answers it: the engine's receipt (or refusal) always reaches the socket as
 /// the batch's `Ack` — never cut by the frame deadline, the engine's own bounds end the wait — and an advanced
 /// frontier's relay reaches every peer; a committed batch is tallied for the checkpoint policy. Returns `false` when the
 /// Ack could not be sent.
@@ -249,7 +249,7 @@ edit(BOOT, """                                Ok(ClientFrameStepV1::Commit(admit
                                     if !commit_admitted_commands(&state, &handle, &document_id, &fanout, &actor, &gate, admitted, sender).await {""", """                                Ok(ClientFrameStepV1::Commit(admitted)) => {
                                     if !commit_admitted_commands(&state, &handle, &DocumentScope::new(space_id.as_str(), document_id.as_str()), &socket_grant.subject, &fanout, &actor, &gate, admitted, sender).await {""", "socket call")
 
-edit(BOOT, """async fn run_document_check_in(state: HubState, subject: SocketSubjectV1, scope: DocumentScope, request: DocumentCheckInV1, job: Arc<DocumentCheckInJob>, mut claim: CheckInClaimGuardV1) {""", """/// @emoji 📌️ Tallies one committed batch for the checkpoint policy and, when it reaches the policy, starts the policy Check In
+edit(BOOT, """async fn run_document_check_in(state: HubState, subject: SocketSubjectV1, scope: DocumentScope, request: DocumentCheckInV1, job: Arc<DocumentCheckInJob>, mut claim: CheckInClaimGuardV1) {""", """/// 📌️ Tallies one committed batch for the checkpoint policy and, when it reaches the policy, starts the policy Check In
 /// of the document on behalf of `subject` in the background.
 fn observe_checkpoint_policy(state: &HubState, scope: &DocumentScope, subject: &SocketSubjectV1, handle: &db::ArtifactHandle, envelopes: &[MutationEnvelope]) {
     let payload_bytes = envelopes.iter().map(|envelope| (envelope.diff.payload.len() + envelope.inverse.payload.len()) as u64).sum();
@@ -258,7 +258,7 @@ fn observe_checkpoint_policy(state: &HubState, scope: &DocumentScope, subject: &
     }
 }
 
-/// @emoji 📌️ The checkpoint policy's Check In: `subject` — the author whose batch reached the policy, still allowed to check
+/// 📌️ The checkpoint policy's Check In: `subject` — the author whose batch reached the policy, still allowed to check
 /// in — checks `scope` in at its committed head through the ordinary claim, fold and fenced publication; answers the
 /// job's terminal status (`None` when it could not start: no author session, no head, a claim of the same head exists).
 async fn run_policy_check_in(state: HubState, subject: SocketSubjectV1, scope: DocumentScope, handle: db::ArtifactHandle) -> Option<DocumentCheckInStatusV1> {
@@ -365,6 +365,11 @@ edit(TESTS, """    /// 📌️ Check In folds the hub's own ledger onto the acti
 
     /// 📌️ Check In folds the hub's own ledger onto the active checkpoint and publishes it: after two
     /// edits the active checkpoint's baseline is exactly the named head, its parent is genesis, and a""", "laws")
+edit(TESTS, """        merge_policy: protocol::MergePolicy::default(),
+""", """        merge_policy: protocol::MergePolicy::default(),
+        checkpoint_policy: Arc::default(),
+""", "test state initializers", count=2)
+
 print(f"states-mid {states}")
 print(f"states {states}")
 if problems:

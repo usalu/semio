@@ -42,7 +42,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         dimension: "2d".into(),
         media_capability: OsMediaCapability::MeshOnly,
         media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
-        schema: "shooting.scene".into(),
+        schema: SHOOTING_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
         export_stdio_kinds: vec!["stdio.json".into()],

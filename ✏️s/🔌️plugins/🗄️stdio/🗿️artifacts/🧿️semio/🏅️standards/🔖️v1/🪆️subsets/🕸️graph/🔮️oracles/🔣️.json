@@ -179,6 +179,7 @@
         }
       ],
       "kinds": [
+        "set-snapshot",
         "create-node",
         "delete-node",
         "change-node-kind",

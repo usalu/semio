@@ -34,7 +34,6 @@ async fn disconnect_then_connect_round_trips_one_wire() {
         let (id, from, from_port, to, to_port) = one_live_wire(&read.host_snapshot);
         (read.host_snapshot.synapses.len(), id, from, from_port, to, to_port)
     };
-    eprintln!("[DEBUG] wire under test {synapse_id}: {from}:{from_port} -> {to}:{to_port} of {before}");
 
     edit(&mut app, serde_json::json!([{ "operation": "disconnect", "synapseId": synapse_id }])).await;
     {
@@ -72,7 +71,6 @@ async fn move_relocates_the_widget_a_node_drag_names() {
         (position.x, position.y)
     };
     assert_eq!(landed, (-321.0, 654.0), "move must place the widget exactly where the drag released it");
-    eprintln!("[DEBUG] moved widget={node_id} to {landed:?}");
 }
 
 //#region 🎚️SliderGesture
@@ -179,7 +177,6 @@ async fn every_slider_gesture_row_folds_one_press_into_one_edit_on_the_released_
             slider_value(&read.host_snapshot, "height")
         };
         assert_eq!(landed, Some(row.final_value), "row {} must leave the document on the released value", row.row);
-        eprintln!("[DEBUG] slider gesture row={} keys={keys:?} edits={} value={landed:?}", row.row, distinct.len());
     }
 }
 

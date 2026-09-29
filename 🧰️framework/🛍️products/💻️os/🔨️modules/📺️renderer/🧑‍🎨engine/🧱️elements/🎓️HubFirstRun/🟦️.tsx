@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🎓️ The hub first-run walkthrough pane — the presentational half of
+/** 🎓️ The hub first-run walkthrough pane — the presentational half of
  * `📇️directory/🎓️first-run/🟦️.ts`. It owns no transport, no storage handle and no hub state: the
  * caller passes the live {@link HubFirstRunStateV1} and receives `onDismiss`, exactly as
  * `🔐️HubSignIn`/`🏘️SpaceBrowser` receive theirs, so the same pane renders in a story, in a test and

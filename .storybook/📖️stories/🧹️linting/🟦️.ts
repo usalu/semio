@@ -8,7 +8,7 @@ export type OwnedLintConfig = Readonly<Record<string, unknown>>;
 //#endregion 🔖️OwnedLintContract
 
 //#region 🏭️Factories
-/** @emoji 🧹 Builds the UI React flat-lint configuration behind the root manifest that declares its temporary implementations. */
+/** 🧹 Builds the UI React flat-lint configuration behind the root manifest that declares its temporary implementations. */
 export function createUiReactLintConfig(): OwnedLintConfig[] {
   return tseslint.config(
     {

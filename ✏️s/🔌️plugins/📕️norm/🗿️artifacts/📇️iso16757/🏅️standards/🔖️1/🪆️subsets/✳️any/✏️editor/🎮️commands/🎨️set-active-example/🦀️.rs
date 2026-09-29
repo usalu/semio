@@ -2,7 +2,7 @@
 
 use super::set_snapshot;
 use crate::{Iso16757Snapshot, Iso16757Mutation};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
+use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Payload
@@ -16,11 +16,8 @@ pub struct SetActiveExample {
 //#region 🔖️Handler
 /// 🎨️ Replaces the live document with the named example's `PRIMARY_TEXT`, or clears it when the id is empty.
 pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, Iso16757Snapshot>, cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Iso16757Mutation, NoConfigMutation>, Fault> {
-    let snapshot = match payload.example_id.trim() {
-        "" => Iso16757Snapshot::default(),
-        id if id == crate::examples::demo::ID => <Iso16757Snapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT)
-            .map_err(|error| Fault::from(format!("set-active-example: invalid example text: {error:?}")))?,
-        _ => return Ok(Emit::default()),
+    let Some(snapshot) = crate::app_surface::roster_example_snapshot(<crate::editor::iso16757::Iso16757PlayApp as ArtifactEditor>::examples(), &payload.example_id)? else {
+        return Ok(Emit::default());
     };
     set_snapshot::handle(&set_snapshot::ReplaceSnapshot { snapshot }, doc, cfg)
 }

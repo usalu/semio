@@ -134,7 +134,7 @@ func TestScanCommentsGo(t *testing.T) {
 	})
 
 	t.Run("debug marker skipped", func(t *testing.T) {
-		content := "// #region 🔖️Section\n\nfmt.Println(\"[DEBUG] test\")\n\nfunc main() {}\n\n// #endregion 🔖️Section\n"
+		content := "// #region 🔖️Section\n\nfmt.Println(\"[TRACE] test\")\n\nfunc main() {}\n\n// #endregion 🔖️Section\n"
 		breachs := lang.ScanComments(ctx, "test.go", content, strings.Split(content, "\n"))
 		if len(breachs) != 0 {
 			t.Errorf("expected 0 breachs for debug marker, got %d", len(breachs))

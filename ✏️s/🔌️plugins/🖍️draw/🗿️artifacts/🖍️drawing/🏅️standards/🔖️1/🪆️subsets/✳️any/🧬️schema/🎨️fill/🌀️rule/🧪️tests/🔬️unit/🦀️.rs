@@ -22,5 +22,4 @@ fn authored_fill_rules_survive_pack_and_reach_paint_picking_and_export() {
         let (svg,_,_)=crate::standards::v1::subsets::any::io::drawing_document_to_svg(&doc).unwrap();
         assert!(svg.contains(&format!("fill-rule=\"{}\"",rule.as_str())));
     }
-    eprintln!("[DEBUG] authored fill rules reach persisted geometry, scene paint, picking and SVG export");
 }

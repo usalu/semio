@@ -1,4 +1,4 @@
-//! @emoji 🎛️ Platform event normalization — the layer that stops native and browser SDK types from
+//! 🎛️ Platform event normalization — the layer that stops native and browser SDK types from
 //! leaking upward. A caller in `🦀️window.rs` (same crate) feeds this module the raw pieces of a
 //! platform event; this module hands back `ui_render`'s own multi-pointer, physical/logical-key
 //! vocabulary (`ui_render::dispatch::DispatchEvent` and friends). Nothing above `ui_host` ever names

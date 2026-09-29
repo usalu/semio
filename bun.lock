@@ -688,6 +688,11 @@
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/📦️packages/🟦️typescript": {
       "name": "@semio-tech/stdio-png",
       "version": "0.1.0",
+      "devDependencies": {
+        "@types/pngjs": "^6.0.5",
+        "pngjs": "^7.0.0",
+        "vitest": "^4.0.17",
+      },
     },
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/📦️packages/🟦️typescript": {
       "name": "@semio-tech/stdio-jpg",
@@ -987,6 +992,7 @@
         "react-i18next": "^16.5.2",
         "react-resizable-panels": "^4.2.1",
         "three": "^0.182.0",
+        "three-mesh-bvh": "^0.9.14",
         "xstate": "^5.25.0",
       },
       "devDependencies": {
@@ -1009,7 +1015,7 @@
       "name": "@semio-tech/assets",
       "version": "1.0.0",
       "devDependencies": {
-        "@types/node": "^20.0.0",
+        "@types/node": "^22.19.6",
         "jsdom": "^24.1.3",
       },
     },
@@ -1086,13 +1092,12 @@
         "@semio-tech/ui-styling": "workspace:*",
         "react": "^19.2.3",
         "react-dom": "^19.2.3",
-        "three": "^0.182.0",
-        "three-mesh-bvh": "^0.9.10",
       },
       "devDependencies": {
         "@types/react": "^19.2.8",
         "@types/react-dom": "^19.2.3",
         "@types/three": "^0.180.0",
+        "three": "^0.182.0",
         "typescript": "^5.9.3",
         "vite": "^7.3.1",
         "vitest": "^4.0.17",
@@ -1148,7 +1153,6 @@
         "katex": "^0.16.22",
         "react": "^19.2.3",
         "react-dom": "^19.2.3",
-        "three": "^0.182.0",
       },
       "devDependencies": {
         "@types/pngjs": "^6.0.5",
@@ -1156,6 +1160,7 @@
         "@types/react-dom": "^19.2.3",
         "@types/three": "^0.180.0",
         "pngjs": "^7.0.0",
+        "three": "^0.182.0",
         "typescript": "^5.9.3",
         "vitest": "^4.0.17",
       },
@@ -4709,8 +4714,6 @@
     "@secretlint/formatter/chalk": ["chalk@5.6.2", "", {}, "sha512-7NzBL0rN6fMUW+f7A6Io4h40qQlG+xGmtMxfbnH/K7TAtt8JQWVQK+6g0UXKMeVJoyV5EkkNsErQ8pVD3bLHbA=="],
 
     "@secretlint/formatter/strip-ansi": ["strip-ansi@7.2.0", "", { "dependencies": { "ansi-regex": "^6.2.2" } }, "sha512-yDPMNjp4WyfYBkHnjIRLfca1i6KMyGCtsVgoKe/z1+6vukgaENdgGBZt+ZmKPc4gavvEZ5OgHfHdrazhgNyG7w=="],
-
-    "@semio-tech/assets/@types/node": ["@types/node@20.19.43", "", { "dependencies": { "undici-types": "~6.21.0" } }, "sha512-6oYBAi5ikg4Pl+kGsoYtawUMBT2zZMCvPNF7pVLnHZfd1zf38DRiWn/gT01RYCdUqkv7Fhr+C9ot4/tb+2sVvA=="],
 
     "@semio-tech/framework-renderer-react/@types/three": ["@types/three@0.180.0", "", { "dependencies": { "@dimforge/rapier3d-compat": "~0.12.0", "@tweenjs/tween.js": "~23.1.3", "@types/stats.js": "*", "@types/webxr": "*", "@webgpu/types": "*", "fflate": "~0.8.2", "meshoptimizer": "~0.22.0" } }, "sha512-ykFtgCqNnY0IPvDro7h+9ZeLY+qjgUWv+qEvUt84grhenO60Hqd4hScHE7VTB9nOQ/3QM8lkbNE+4vKjEpUxKg=="],
 

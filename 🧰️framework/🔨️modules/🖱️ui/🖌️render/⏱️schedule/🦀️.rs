@@ -1,4 +1,4 @@
-//! @emoji ⏱️ `InvalidationReason` and the `FrameScheduler` that makes idle windows cost zero frames.
+//! ⏱️ `InvalidationReason` and the `FrameScheduler` that makes idle windows cost zero frames.
 //!
 //! `should_render(now) -> Option<InvalidationReason>` returning `None` is the whole point of this
 //! file: the defect this program replaces is `wgpu-old`'s `🦀️.rs` calling `request_redraw` every

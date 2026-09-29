@@ -1,8 +1,12 @@
-type TestSource = { readonly directory: string; readonly url: string };
+import { ObjectRef, SelectionTarget, deletableObjectIdsFromSelection, deleteObjectsFromModel } from "../../../📐️geometry/🟦️.ts";
+import type { SpatialTestDependencies } from "../../🟦️.ts";
+import type { TypologyRef } from "../../../📐️geometry/🟦️.ts";
+import type { MeshTransfer } from "@semio-tech/s-3d-js";
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
-  const { Model, ObjectRef, SelectionTarget, TypologyRef, __spatialCoreTestKernel, __spatialCoreTestRuntime, appendCommittedMeshFaceToModel, applyModelDiff, deletableObjectIdsFromSelection, deleteObjectsFromModel, solidRef } = dependencies;
-  type MeshTransfer = any;
+type TestSource = { readonly url: string };
+
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: SpatialTestDependencies, source: TestSource): Promise<void> {
+  const { Model, __spatialCoreTestKernel, __spatialCoreTestRuntime, appendCommittedMeshFaceToModel, applyModelDiff, solidRef } = dependencies;
 
   __spatialCoreTestRuntime!.bootstrapCadModules();
   const { preciseSpatialKernelMath } = __spatialCoreTestKernel!;

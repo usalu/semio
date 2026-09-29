@@ -23,12 +23,12 @@ async fn task_restarts_round_trip_through_json_and_are_exposed_by_the_accessor()
     assert_eq!(pack.task_restarts().await[1].instance, 6);
 }
 
+/// 🧬️ `#[serde(default)]` on `task_restarts` — an older pack (or a hand-built JSON blob
+/// missing the field entirely) must not fail to restore just because this wave added a
+/// field to the envelope (greenfield repo, no migration script, but a checkpoint taken
+/// moments before an actor upgrade is a real same-process scenario, not legacy support).
 #[semio_framework_async_macros::async_test]
 async fn a_checkpoint_pack_encoded_before_task_restarts_existed_still_decodes() {
-    // 🧬️ `#[serde(default)]` on `task_restarts` — an older pack (or a hand-built JSON blob
-    // missing the field entirely) must not fail to restore just because this wave added a
-    // field to the envelope (greenfield repo, no migration script, but a checkpoint taken
-    // moments before an actor upgrade is a real same-process scenario, not legacy support).
     let legacy_json = r#"{"instances":[],"timers":[],"pending_requests":[]}"#;
     let pack: CheckpointPack = serde_json::from_str(legacy_json).expect("a pack missing task_restarts must still decode");
     assert!(pack.task_restarts().await.is_empty());

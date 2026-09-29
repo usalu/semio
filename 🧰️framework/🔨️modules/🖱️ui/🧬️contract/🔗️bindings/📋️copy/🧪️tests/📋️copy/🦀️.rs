@@ -51,7 +51,6 @@ fn retained_binding_copy_partial_returns_keep_the_other_exact_root() {
         }
         assert!(owner.terminal_is_empty());
     }
-    eprintln!("[DEBUG] binding-copy-return orders=2 refused-grant-preserves=true exact-other-root=true");
 }
 
 #[test]
@@ -85,7 +84,6 @@ fn retained_binding_copy_separates_allocation_clone_and_placement() {
     close(&mut source, 64);
     close(&mut candidate, 64);
     assert!(owner.terminal_is_empty());
-    eprintln!("[DEBUG] retained-binding-copy count=32 copied={copied} placed={placed} maximum-turn={grant} ordered=true");
 }
 
 #[test]
@@ -129,6 +127,5 @@ fn retained_binding_copy_cancel_and_arena_contention_keep_exact_aliases() {
     drop(guard);
     assert!(owner.advance(1, 4096, 4096).unwrap().progressed);
     close(&mut owner, 64);
-    eprintln!("[DEBUG] retained-binding-cancel frontiers=13 close-grants=3 shared-reader=true arena-contention=blocked");
 }
 //#endregion 🧪️BindingCopyLaws

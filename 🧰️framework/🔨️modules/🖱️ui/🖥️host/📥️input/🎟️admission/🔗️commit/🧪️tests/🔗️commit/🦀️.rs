@@ -32,6 +32,5 @@ fn metrics_observer_independent_updates_are_not_a_composite_transaction() {
     assert_eq!(committed.scene_revision, count("committed", "sceneRevision"));
     assert_eq!(committed.input_generation, count("committed", "inputGeneration"));
     let half_accepted = half != old && half != committed;
-    eprintln!("[DEBUG] metrics observer old={old:?} between={half:?} committed={committed:?} halfAccepted={half_accepted}");
     assert_eq!(half_accepted, fixture["independentUpdates"]["halfIsLegitimate"].as_bool().unwrap());
 }

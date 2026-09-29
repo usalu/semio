@@ -84,7 +84,6 @@ async fn neutral_reservation_traces_gate_dispatch_until_exact_binding() {
         }
         assert_eq!(grants as u64, row["grants"].as_u64().unwrap(), "{}", row["id"]);
         assert_eq!(kernel.actor_record(actor.unwrap()).await.is_some(), row["actorRetained"].as_bool().unwrap(), "{}", row["id"]);
-        eprintln!("[DEBUG] Kernel reservation trace={} grants={grants} retained={}", row["id"], row["actorRetained"]);
     }
 }
 
@@ -115,5 +114,4 @@ async fn reservation_exhaustion_collision_and_stale_binding_leave_no_partial_adm
     let refused = kernel.bind_activation(stale, key).await.unwrap_err();
     assert_eq!(refused.reason, KernelActivationFault::ForeignReservation);
     assert!(kernel.actors.is_empty() && kernel.scheduler.actors.is_empty());
-    eprintln!("[DEBUG] Kernel reservation exhaustion=1 collision=1 wrong-binding=1 stale-binding=1 partial-admissions=0");
 }

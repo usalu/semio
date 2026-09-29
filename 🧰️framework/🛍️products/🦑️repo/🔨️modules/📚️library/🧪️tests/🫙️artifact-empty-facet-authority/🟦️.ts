@@ -61,7 +61,7 @@ test("current-options facets require their registered identity and complete owne
     expect(validate({ sourcePath: row.sourcePath, fileKindId: row.fileKindId }), row.id).toBe(row.ownerForm !== null);
     const core = { contractId: optionsFixture.contractId, sourcePath: row.sourcePath };
     const expected = row.ownerForm === null ? { ...core, disposition: "unclaimed" } : { ...core, ownerForm: row.ownerForm, destinationPath: `${dirname(row.sourcePath)}/📝️.md`, disposition: "project" };
-    for (const implementation of implementations) expect(implementation({ sourcePath: row.sourcePath, sourceFileKindId: row.fileKindId }, taxonomy), row.id).toEqual(expected);
+    for (const implementation of implementations) expect(implementation({ sourcePath: row.sourcePath, sourceFileKindId: row.fileKindId }, taxonomy), row.id).toEqual<typeof expected>(expected);
   }
 });
 
@@ -74,7 +74,7 @@ test("matches all empty-facet decisions with independent owner schemas and both 
     expect(matches, row.id).toEqual(row.form === null ? [] : [row.form]);
     const core = { contractId: golden.contractId, sourcePath };
     const expected = row.form === null ? { ...core, disposition: "unclaimed" } : { ...core, ownerForm: row.form, destinationPath: `${root}/${row.owner}/${golden.destinationFilename}`, disposition: "project" };
-    for (const implementation of implementations) expect(implementation({ sourcePath, sourceFileKindId: fileKindId }, taxonomy), row.id).toEqual(expected);
+    for (const implementation of implementations) expect(implementation({ sourcePath, sourceFileKindId: fileKindId }, taxonomy), row.id).toEqual<typeof expected>(expected);
   }
 });
 

@@ -83,8 +83,10 @@ impl protocol::OpBinary for SemioBrepEditCommand {
 semio_s_artifact_stdio_contract::snapshot_editing_command_roster!(SemioBrepEditCommand, ["set-vertex"]);
 
 pub fn set_vertex_action() -> ActionDefinition {
-    ActionDefinition::bounded_catalog("set-vertex", LocalizedLabel::native("Move Vertex", "Vertex verschieben"), ActionKind::Mutation)
-        .with_args(vec![ActionArgDef::text("vertexId", LocalizedLabel::native("Vertex ID", "Vertex-ID")).required(), ActionArgDef::vec3("point", LocalizedLabel::native("Target Point", "Zielpunkt")).required()])
+    let mut action = ActionDefinition::bounded_catalog("set-vertex", LocalizedLabel::native("Move Vertex", "Vertex verschieben"), ActionKind::Mutation)
+        .with_args(vec![ActionArgDef::text("vertexId", LocalizedLabel::native("Vertex ID", "Vertex-ID")).required(), ActionArgDef::vec3("point", LocalizedLabel::native("Target Point", "Zielpunkt")).required()]);
+    action.semantics.execution.interactive_job = semio_framework_plugin::InteractiveJobClassification::Migrated;
+    action
 }
 //#endregion 🔖️Command
 

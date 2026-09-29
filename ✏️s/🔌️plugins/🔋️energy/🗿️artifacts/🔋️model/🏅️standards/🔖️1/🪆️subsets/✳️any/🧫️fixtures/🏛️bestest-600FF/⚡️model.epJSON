@@ -20,6 +20,13 @@
       "solar_distribution": "FullInteriorAndExterior"
     }
   },
+  "ShadowCalculation": {
+    "ShadowCalculation 1": {
+      "shading_calculation_method": "PolygonClipping",
+      "shading_calculation_update_frequency_method": "Periodic",
+      "shading_calculation_update_frequency": 1
+    }
+  },
   "Site:Location": {
     "BESTEST 600FF Site": {
       "latitude": 39.83,
@@ -238,12 +245,6 @@
       "outside_layer": "Clear Glass 3 mm",
       "layer_2": "Air Gap 12 mm",
       "layer_3": "Clear Glass 3 mm"
-    },
-    "South Window West Glazing Construction": {
-      "outside_layer": "South Window West Glazing"
-    },
-    "South Window East Glazing Construction": {
-      "outside_layer": "South Window East Glazing"
     }
   },
   "Zone": {
@@ -269,20 +270,20 @@
         {
           "vertex_x_coordinate": 0.0,
           "vertex_y_coordinate": 0.0,
-          "vertex_z_coordinate": 0.0
-        },
-        {
-          "vertex_x_coordinate": 8.0,
-          "vertex_y_coordinate": 0.0,
-          "vertex_z_coordinate": 0.0
-        },
-        {
-          "vertex_x_coordinate": 8.0,
-          "vertex_y_coordinate": 0.0,
           "vertex_z_coordinate": 2.7
         },
         {
           "vertex_x_coordinate": 0.0,
+          "vertex_y_coordinate": 0.0,
+          "vertex_z_coordinate": 0.0
+        },
+        {
+          "vertex_x_coordinate": 8.0,
+          "vertex_y_coordinate": 0.0,
+          "vertex_z_coordinate": 0.0
+        },
+        {
+          "vertex_x_coordinate": 8.0,
           "vertex_y_coordinate": 0.0,
           "vertex_z_coordinate": 2.7
         }
@@ -299,21 +300,21 @@
         {
           "vertex_x_coordinate": 8.0,
           "vertex_y_coordinate": 0.0,
-          "vertex_z_coordinate": 0.0
-        },
-        {
-          "vertex_x_coordinate": 8.0,
-          "vertex_y_coordinate": 6.0,
-          "vertex_z_coordinate": 0.0
-        },
-        {
-          "vertex_x_coordinate": 8.0,
-          "vertex_y_coordinate": 6.0,
           "vertex_z_coordinate": 2.7
         },
         {
           "vertex_x_coordinate": 8.0,
           "vertex_y_coordinate": 0.0,
+          "vertex_z_coordinate": 0.0
+        },
+        {
+          "vertex_x_coordinate": 8.0,
+          "vertex_y_coordinate": 6.0,
+          "vertex_z_coordinate": 0.0
+        },
+        {
+          "vertex_x_coordinate": 8.0,
+          "vertex_y_coordinate": 6.0,
           "vertex_z_coordinate": 2.7
         }
       ]
@@ -329,20 +330,20 @@
         {
           "vertex_x_coordinate": 8.0,
           "vertex_y_coordinate": 6.0,
-          "vertex_z_coordinate": 0.0
-        },
-        {
-          "vertex_x_coordinate": 0.0,
-          "vertex_y_coordinate": 6.0,
-          "vertex_z_coordinate": 0.0
-        },
-        {
-          "vertex_x_coordinate": 0.0,
-          "vertex_y_coordinate": 6.0,
           "vertex_z_coordinate": 2.7
         },
         {
           "vertex_x_coordinate": 8.0,
+          "vertex_y_coordinate": 6.0,
+          "vertex_z_coordinate": 0.0
+        },
+        {
+          "vertex_x_coordinate": 0.0,
+          "vertex_y_coordinate": 6.0,
+          "vertex_z_coordinate": 0.0
+        },
+        {
+          "vertex_x_coordinate": 0.0,
           "vertex_y_coordinate": 6.0,
           "vertex_z_coordinate": 2.7
         }
@@ -359,21 +360,21 @@
         {
           "vertex_x_coordinate": 0.0,
           "vertex_y_coordinate": 6.0,
-          "vertex_z_coordinate": 0.0
-        },
-        {
-          "vertex_x_coordinate": 0.0,
-          "vertex_y_coordinate": 0.0,
-          "vertex_z_coordinate": 0.0
-        },
-        {
-          "vertex_x_coordinate": 0.0,
-          "vertex_y_coordinate": 0.0,
           "vertex_z_coordinate": 2.7
         },
         {
           "vertex_x_coordinate": 0.0,
           "vertex_y_coordinate": 6.0,
+          "vertex_z_coordinate": 0.0
+        },
+        {
+          "vertex_x_coordinate": 0.0,
+          "vertex_y_coordinate": 0.0,
+          "vertex_z_coordinate": 0.0
+        },
+        {
+          "vertex_x_coordinate": 0.0,
+          "vertex_y_coordinate": 0.0,
           "vertex_z_coordinate": 2.7
         }
       ]
@@ -388,21 +389,21 @@
       "vertices": [
         {
           "vertex_x_coordinate": 0.0,
-          "vertex_y_coordinate": 0.0,
-          "vertex_z_coordinate": 2.7
-        },
-        {
-          "vertex_x_coordinate": 8.0,
-          "vertex_y_coordinate": 0.0,
-          "vertex_z_coordinate": 2.7
-        },
-        {
-          "vertex_x_coordinate": 8.0,
           "vertex_y_coordinate": 6.0,
           "vertex_z_coordinate": 2.7
         },
         {
           "vertex_x_coordinate": 0.0,
+          "vertex_y_coordinate": 0.0,
+          "vertex_z_coordinate": 2.7
+        },
+        {
+          "vertex_x_coordinate": 8.0,
+          "vertex_y_coordinate": 0.0,
+          "vertex_z_coordinate": 2.7
+        },
+        {
+          "vertex_x_coordinate": 8.0,
           "vertex_y_coordinate": 6.0,
           "vertex_z_coordinate": 2.7
         }
@@ -417,16 +418,6 @@
       "wind_exposure": "NoWind",
       "vertices": [
         {
-          "vertex_x_coordinate": 0.0,
-          "vertex_y_coordinate": 0.0,
-          "vertex_z_coordinate": 0.0
-        },
-        {
-          "vertex_x_coordinate": 0.0,
-          "vertex_y_coordinate": 6.0,
-          "vertex_z_coordinate": 0.0
-        },
-        {
           "vertex_x_coordinate": 8.0,
           "vertex_y_coordinate": 6.0,
           "vertex_z_coordinate": 0.0
@@ -434,6 +425,16 @@
         {
           "vertex_x_coordinate": 8.0,
           "vertex_y_coordinate": 0.0,
+          "vertex_z_coordinate": 0.0
+        },
+        {
+          "vertex_x_coordinate": 0.0,
+          "vertex_y_coordinate": 0.0,
+          "vertex_z_coordinate": 0.0
+        },
+        {
+          "vertex_x_coordinate": 0.0,
+          "vertex_y_coordinate": 6.0,
           "vertex_z_coordinate": 0.0
         }
       ]
@@ -442,35 +443,35 @@
   "FenestrationSurface:Detailed": {
     "South Window West": {
       "surface_type": "Window",
-      "construction_name": "South Window West Glazing Construction",
+      "construction_name": "Double Clear Glazing",
       "building_surface_name": "South Wall",
       "vertex_1_x_coordinate": 0.5,
       "vertex_1_y_coordinate": 0.0,
-      "vertex_1_z_coordinate": 0.2,
-      "vertex_2_x_coordinate": 3.5,
+      "vertex_1_z_coordinate": 2.2,
+      "vertex_2_x_coordinate": 0.5,
       "vertex_2_y_coordinate": 0.0,
       "vertex_2_z_coordinate": 0.2,
       "vertex_3_x_coordinate": 3.5,
       "vertex_3_y_coordinate": 0.0,
-      "vertex_3_z_coordinate": 2.2,
-      "vertex_4_x_coordinate": 0.5,
+      "vertex_3_z_coordinate": 0.2,
+      "vertex_4_x_coordinate": 3.5,
       "vertex_4_y_coordinate": 0.0,
       "vertex_4_z_coordinate": 2.2
     },
     "South Window East": {
       "surface_type": "Window",
-      "construction_name": "South Window East Glazing Construction",
+      "construction_name": "Double Clear Glazing",
       "building_surface_name": "South Wall",
       "vertex_1_x_coordinate": 4.5,
       "vertex_1_y_coordinate": 0.0,
-      "vertex_1_z_coordinate": 0.2,
-      "vertex_2_x_coordinate": 7.5,
+      "vertex_1_z_coordinate": 2.2,
+      "vertex_2_x_coordinate": 4.5,
       "vertex_2_y_coordinate": 0.0,
       "vertex_2_z_coordinate": 0.2,
       "vertex_3_x_coordinate": 7.5,
       "vertex_3_y_coordinate": 0.0,
-      "vertex_3_z_coordinate": 2.2,
-      "vertex_4_x_coordinate": 4.5,
+      "vertex_3_z_coordinate": 0.2,
+      "vertex_4_x_coordinate": 7.5,
       "vertex_4_y_coordinate": 0.0,
       "vertex_4_z_coordinate": 2.2
     }
@@ -481,7 +482,7 @@
       "schedule_name": "Schedule 1",
       "design_flow_rate_calculation_method": "AirChanges/Hour",
       "air_changes_per_hour": 0.5,
-      "constant_term_coefficient": 0.0,
+      "constant_term_coefficient": 1.0,
       "temperature_term_coefficient": 0.0,
       "velocity_term_coefficient": 0.0,
       "velocity_squared_term_coefficient": 0.0

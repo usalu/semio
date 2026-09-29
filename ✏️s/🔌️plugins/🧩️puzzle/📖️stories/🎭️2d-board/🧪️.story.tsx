@@ -50,7 +50,7 @@ const STORY_DEFAULT_RUNTIME: StoryPuzzle2dRuntime = {
   lodMode: "automatic",
 };
 
-/** @emoji 🎲️ Mints a story-local brush id that avoids every id already present in `existingIds` — mirrors `unique_node_id`/`unique_edge_id`'s collision re-mint without needing the real per-session serial counter. */
+/** 🎲️ Mints a story-local brush id that avoids every id already present in `existingIds` — mirrors `unique_node_id`/`unique_edge_id`'s collision re-mint without needing the real per-session serial counter. */
 function newStoryBrushEntityId(kind: "node" | "edge", existingIds: ReadonlySet<string>): string {
   let index = 1;
   let candidate = `brush-${kind}-${index}`;
@@ -61,7 +61,7 @@ function newStoryBrushEntityId(kind: "node" | "edge", existingIds: ReadonlySet<s
   return candidate;
 }
 
-/** @emoji 📬️ Story-local mirror of `apply_board_events_from_json` in `puzzle/plugin/rs/d2/mod.rs` — only the event kinds the stories exercise. */
+/** 📬️ Story-local mirror of `apply_board_events_from_json` in `puzzle/plugin/rs/d2/mod.rs` — only the event kinds the stories exercise. */
 function applyStoryBoardEvents(state: StoryPuzzle2dState, eventsJson: string): StoryPuzzle2dState {
   let events: readonly { readonly name: string; readonly payload?: Record<string, unknown> }[] = [];
   try {
@@ -153,7 +153,7 @@ function applyStoryBoardEvents(state: StoryPuzzle2dState, eventsJson: string): S
   return { fixture, runtime };
 }
 
-/** @emoji 🧩️ Story-local mirror of a subset of `Puzzle2dPlayApp::handle_action_patch_operations` — enough for the interaction stories to round-trip. */
+/** 🧩️ Story-local mirror of a subset of `Puzzle2dPlayApp::handle_action_patch_operations` — enough for the interaction stories to round-trip. */
 function reduceStoryPuzzle2dAction(state: StoryPuzzle2dState, action: string, args: Record<string, unknown> | undefined): StoryPuzzle2dState {
   const { fixture, runtime } = state;
   switch (action) {
@@ -224,7 +224,7 @@ function catalogRowsSubset(catalogs: Record<string, unknown>, slice: string, key
   return Array.isArray(rows) ? rows.map((row) => catalogRowSubset(row as Record<string, unknown>, keys)) : undefined;
 }
 
-/** @emoji 🗂️ Story-local mirror of `board_kind_catalogs_json` — the document owns `nodes`/`🐙️handles`/`edges`/`wires`, the board engine reads `nodeKinds`/`handleKinds`/`edgeKinds`/`wireKinds` and rejects any row still carrying the document's `label`, so each row is narrowed to the keys the engine reads and an absent slice is omitted rather than emitted empty. Keeping the fixtures document-shaped is deliberate: hand-writing engine-shaped catalogs here is what let the missing production translation go unnoticed. */
+/** 🗂️ Story-local mirror of `board_kind_catalogs_json` — the document owns `nodes`/`🐙️handles`/`edges`/`wires`, the board engine reads `nodeKinds`/`handleKinds`/`edgeKinds`/`wireKinds` and rejects any row still carrying the document's `label`, so each row is narrowed to the keys the engine reads and an absent slice is omitted rather than emitted empty. Keeping the fixtures document-shaped is deliberate: hand-writing engine-shaped catalogs here is what let the missing production translation go unnoticed. */
 function storyBoardKindCatalogsJson(fixture: StoryPuzzle2dFixture): string {
   const catalogs = fixture.meta?.kindCatalogs as Record<string, unknown> | undefined;
   if (!catalogs) return "{}";
@@ -296,7 +296,7 @@ const STORY_BRUSH_FIXTURE: StoryPuzzle2dFixture = {
   },
 };
 
-/** @emoji 🖌️ Same board as `STORY_BRUSH_FIXTURE` but `alpha` carries a second, unconnected `port` handle (`alpha:v1`) so the brush has a free slot to preview and commit into, and the `seed` node kind declares a handle template so `brush_compatible_candidates` has something to offer. Catalogs stay in the **document** `nodes`/`🐙️handles` shape — `storyBoardKindCatalogsJson` does the translation, exactly as production does. */
+/** 🖌️ Same board as `STORY_BRUSH_FIXTURE` but `alpha` carries a second, unconnected `port` handle (`alpha:v1`) so the brush has a free slot to preview and commit into, and the `seed` node kind declares a handle template so `brush_compatible_candidates` has something to offer. Catalogs stay in the **document** `nodes`/`🐙️handles` shape — `storyBoardKindCatalogsJson` does the translation, exactly as production does. */
 const STORY_BRUSH_OPEN_SLOT_FIXTURE: StoryPuzzle2dFixture = {
   schema: "puzzle.2d.fixture",
   camera: { x: 140, y: 60, zoom: 1 },

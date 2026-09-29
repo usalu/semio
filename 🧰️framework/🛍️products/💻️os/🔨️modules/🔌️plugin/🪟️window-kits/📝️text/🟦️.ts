@@ -1,5 +1,5 @@
 //#region 🔖️TextWindowKit
-/** @emoji 📝 `@semio-tech/plugin-window-kits` — TypeScript twin of the Rust `TextWindowKit`
+/** 📝 `@semio-tech/plugin-window-kits` — TypeScript twin of the Rust `TextWindowKit`
  * (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs` `#region 🔖️WindowKits`, ticket
  * 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET §2.6). One language-tagged text buffer; `readOnly`
  * stamps `TextEditorScene.settingsJson` so the host renderer can disable input without a separate

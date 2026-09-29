@@ -1898,7 +1898,7 @@ func (c *RepoContext) Analyze(scope *string) (*model.AnalyzeResult, error) {
 	result := make([]*model.Breach, len(filtered))
 	for i := range filtered {
 		if filtered[i].ID == "" {
-			fmt.Printf("[DEBUG] Analyze found breach with empty id: %+v\n", filtered[i])
+			fmt.Printf("[TRACE] Analyze found breach with empty id: %+v\n", filtered[i])
 		}
 		result[i] = &filtered[i]
 		switch filtered[i].Priority() {
@@ -2805,7 +2805,7 @@ func applyAutofixes(file string, breachs []model.Breach) (int, error) {
 					if isSkipDirective {
 						break
 					}
-					if strings.Contains(lines[i-1], "[DEBUG]") {
+					if strings.Contains(lines[i-1], "[TRACE]") {
 						break
 					}
 					for _, bl := range pendingBlanks {

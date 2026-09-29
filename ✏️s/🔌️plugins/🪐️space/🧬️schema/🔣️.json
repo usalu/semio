@@ -145,6 +145,9 @@
             },
             "publicationContracts": {
               "type": "array",
+              "additionalItems": false,
+              "minItems": 40,
+              "maxItems": 40,
               "items": [
                 {
                   "type": "object",
@@ -194,7 +197,7 @@
                     },
                     "lanes": {
                       "const": [
-                        "Config"
+                        "HostOnly"
                       ]
                     }
                   },
@@ -435,11 +438,445 @@
                     }
                   },
                   "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "toolId",
+                    "lanes"
+                  ],
+                  "properties": {
+                    "toolId": {
+                      "const": "patchParameter"
+                    },
+                    "lanes": {
+                      "const": [
+                        "Artifact"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "toolId",
+                    "lanes"
+                  ],
+                  "properties": {
+                    "toolId": {
+                      "const": "addParameter"
+                    },
+                    "lanes": {
+                      "const": [
+                        "Artifact"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "toolId",
+                    "lanes"
+                  ],
+                  "properties": {
+                    "toolId": {
+                      "const": "removeParameter"
+                    },
+                    "lanes": {
+                      "const": [
+                        "Artifact"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "toolId",
+                    "lanes"
+                  ],
+                  "properties": {
+                    "toolId": {
+                      "const": "moveMediaNode"
+                    },
+                    "lanes": {
+                      "const": [
+                        "Artifact"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "toolId",
+                    "lanes"
+                  ],
+                  "properties": {
+                    "toolId": {
+                      "const": "connectMediaPorts"
+                    },
+                    "lanes": {
+                      "const": [
+                        "Artifact"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "toolId",
+                    "lanes"
+                  ],
+                  "properties": {
+                    "toolId": {
+                      "const": "disconnectMediaEdge"
+                    },
+                    "lanes": {
+                      "const": [
+                        "Artifact"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "toolId",
+                    "lanes"
+                  ],
+                  "properties": {
+                    "toolId": {
+                      "const": "removeAppInstance"
+                    },
+                    "lanes": {
+                      "const": [
+                        "Artifact",
+                        "Config"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "toolId",
+                    "lanes"
+                  ],
+                  "properties": {
+                    "toolId": {
+                      "const": "copyAppInstance"
+                    },
+                    "lanes": {
+                      "const": [
+                        "Config"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "toolId",
+                    "lanes"
+                  ],
+                  "properties": {
+                    "toolId": {
+                      "const": "duplicateAppInstance"
+                    },
+                    "lanes": {
+                      "const": [
+                        "Artifact",
+                        "Config"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "toolId",
+                    "lanes"
+                  ],
+                  "properties": {
+                    "toolId": {
+                      "const": "pasteAppInstance"
+                    },
+                    "lanes": {
+                      "const": [
+                        "Artifact",
+                        "Config"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "toolId",
+                    "lanes"
+                  ],
+                  "properties": {
+                    "toolId": {
+                      "const": "renameAppInstance"
+                    },
+                    "lanes": {
+                      "const": [
+                        "Artifact"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "toolId",
+                    "lanes"
+                  ],
+                  "properties": {
+                    "toolId": {
+                      "const": "patchMediaNodes"
+                    },
+                    "lanes": {
+                      "const": [
+                        "Artifact"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "toolId",
+                    "lanes"
+                  ],
+                  "properties": {
+                    "toolId": {
+                      "const": "patchAppInstances"
+                    },
+                    "lanes": {
+                      "const": [
+                        "Artifact"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "toolId",
+                    "lanes"
+                  ],
+                  "properties": {
+                    "toolId": {
+                      "const": "bindParameterField"
+                    },
+                    "lanes": {
+                      "const": [
+                        "Artifact"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "toolId",
+                    "lanes"
+                  ],
+                  "properties": {
+                    "toolId": {
+                      "const": "unbindParameterField"
+                    },
+                    "lanes": {
+                      "const": [
+                        "Artifact"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "toolId",
+                    "lanes"
+                  ],
+                  "properties": {
+                    "toolId": {
+                      "const": "reorganizeWorkflow"
+                    },
+                    "lanes": {
+                      "const": [
+                        "Artifact"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "toolId",
+                    "lanes"
+                  ],
+                  "properties": {
+                    "toolId": {
+                      "const": "workflowEngagementSubmit"
+                    },
+                    "lanes": {
+                      "const": [
+                        "Artifact",
+                        "Config"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "toolId",
+                    "lanes"
+                  ],
+                  "properties": {
+                    "toolId": {
+                      "const": "compiledDagEngagementSubmit"
+                    },
+                    "lanes": {
+                      "const": [
+                        "HostOnly"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "toolId",
+                    "lanes"
+                  ],
+                  "properties": {
+                    "toolId": {
+                      "const": "nodeGraphEdit"
+                    },
+                    "lanes": {
+                      "const": [
+                        "Artifact",
+                        "Config"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "toolId",
+                    "lanes"
+                  ],
+                  "properties": {
+                    "toolId": {
+                      "const": "exportMedia"
+                    },
+                    "lanes": {
+                      "const": [
+                        "HostOnly"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "toolId",
+                    "lanes"
+                  ],
+                  "properties": {
+                    "toolId": {
+                      "const": "importMedia"
+                    },
+                    "lanes": {
+                      "const": [
+                        "Config"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "toolId",
+                    "lanes"
+                  ],
+                  "properties": {
+                    "toolId": {
+                      "const": "importMediaPayload"
+                    },
+                    "lanes": {
+                      "const": [
+                        "Config"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "toolId",
+                    "lanes"
+                  ],
+                  "properties": {
+                    "toolId": {
+                      "const": "exportStudioPack"
+                    },
+                    "lanes": {
+                      "const": [
+                        "HostOnly"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "toolId",
+                    "lanes"
+                  ],
+                  "properties": {
+                    "toolId": {
+                      "const": "exportStudioDsl"
+                    },
+                    "lanes": {
+                      "const": [
+                        "HostOnly"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
                 }
-              ],
-              "additionalItems": false,
-              "minItems": 16,
-              "maxItems": 16
+              ]
             },
             "routes": {
               "allOf": [
@@ -521,16 +958,16 @@
                       "const": 40
                     },
                     "bounded": {
-                      "const": 15
+                      "const": 40
                     },
                     "migrated": {
-                      "const": 15
+                      "const": 40
                     },
                     "unique": {
                       "const": true
                     },
                     "batch": {
-                      "const": 25
+                      "const": 0
                     }
                   },
                   "additionalProperties": false

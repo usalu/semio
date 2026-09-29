@@ -17,7 +17,7 @@ const threePackageRoot = resolve(repoRoot, "node_modules/three");
 
 const workspaceResolve = createWorkspaceViteResolveConfig(repoRoot);
 
-/** @emoji 🧪️ Vitest for `@semio-tech/infinite-world-r3f` — in-source `import.meta.vitest` on `🟦️.tsx`. */
+/** 🧪️ Vitest for `@semio-tech/infinite-world-r3f` — in-source `import.meta.vitest` on `🟦️.tsx`. */
 export default defineOwnedTestConfig({
   root: testRoot,
   plugins: [uiReactBuildPlugin()],

@@ -134,13 +134,13 @@ pub struct AsyncEngineHandle {
 }
 
 impl AsyncEngineHandle {
+    /// 🧬️ B1 world-collapse already landed `pub(crate) mod actor_bindings` — no lease needed
+    /// (the previous draft's blocking lease request is resolved; see this file's module doc).
     pub async fn new(cfg: SharedEngineConfig) -> Result<Self, PluginHostError> {
         let (engine, _pooling_active) = build_async_engine(cfg).await?;
         let epoch = crate::EpochDeadlines::new(&engine, &crate::plugin_host_worker_pool());
         let mut linker = Linker::new(&engine);
         wasmtime_wasi::p2::add_to_linker_async(&mut linker).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
-        // 🧬️ B1 world-collapse already landed `pub(crate) mod actor_bindings` — no lease needed
-        // (the previous draft's blocking lease request is resolved; see this file's module doc).
         actor_bindings::Actor::add_to_linker::<AsyncActorHostState, HasSelf<AsyncActorHostState>>(&mut linker, |state: &mut AsyncActorHostState| state).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         Ok(Self { engine, epoch, linker: Arc::new(linker) })
     }
@@ -170,9 +170,9 @@ impl actor_bindings::semio::framework::events::Host for AsyncActorHostState {}
 impl actor_bindings::semio::framework::ui::Host for AsyncActorHostState {}
 impl actor_bindings::semio::framework::instance_lifetime::Host for AsyncActorHostState {}
 impl actor_bindings::semio::framework::ui::HostSurface for AsyncActorHostState {
-    // 🚫️async: E1 — `bindgen!` fixes this signature (the resource-destructor hook wasmtime calls
-    // when a guest handle goes out of scope); not chosen by this repo. See R9/R2 E1, and
-    // `component.rs`'s identical tag on `impl wit_ui::HostSurface for ActorHostState`.
+    /// 🚫️async: E1 — `bindgen!` fixes this signature (the resource-destructor hook wasmtime calls
+    /// when a guest handle goes out of scope); not chosen by this repo. See R9/R2 E1, and
+    /// `component.rs`'s identical tag on `impl wit_ui::HostSurface for ActorHostState`.
     fn drop(&mut self, _rep: wasmtime::component::Resource<actor_bindings::semio::framework::ui::Surface>) -> wasmtime::Result<()> {
         Ok(())
     }
@@ -193,12 +193,12 @@ impl actor_bindings::semio::framework::ui::HostSurface for AsyncActorHostState {
 struct DeadlineCell(Mutex<Instant>);
 
 impl DeadlineCell {
-    // 🚫️async: R9 — `new`/`extend` are pure `Mutex` writes with zero suspension points, and their
-    // one real consumer, `passed`, is called from INSIDE the sync `FnMut` closure
-    // `Store::epoch_deadline_callback` requires (wasmtime's own API — E1-equivalent, fixed outside
-    // this repo). `.await` is illegal inside that closure, so `passed` cannot be async, and R9's
-    // "E1 propagates one hop backwards" rule takes `new`/`extend` sync with it for symmetry (they
-    // have no suspension point of their own either — verified: a single `Mutex::lock` write/read).
+    /// 🚫️async: R9 — `new`/`extend` are pure `Mutex` writes with zero suspension points, and their
+    /// one real consumer, `passed`, is called from INSIDE the sync `FnMut` closure
+    /// `Store::epoch_deadline_callback` requires (wasmtime's own API — E1-equivalent, fixed outside
+    /// this repo). `.await` is illegal inside that closure, so `passed` cannot be async, and R9's
+    /// "E1 propagates one hop backwards" rule takes `new`/`extend` sync with it for symmetry (they
+    /// have no suspension point of their own either — verified: a single `Mutex::lock` write/read).
     fn new(initial: Duration) -> Arc<Self> {
         Arc::new(Self(Mutex::new(Instant::now() + initial)))
     }
@@ -272,6 +272,15 @@ pub enum AsyncActorCommand {
 /// `emitted` is prepended (it happened earlier in the turn, via `host-async.emit`, than anything
 /// `poll` itself returns) — same ordering `WasmtimeRuntime::execute_turn` uses for its own
 /// `emit_sink.chain(wit_turn_result.effects)`.
+///
+/// 👥️ terra-shard-lane: same wire-shape mismatch as `component.rs`'s `execute_turn` —
+/// `turn.presence` is real guest-emitted data (WIT `presence-update{peer: pack}`, a
+/// pack-encoded `📡️replication/📡️wire::PresencePeer`, the collaboration-ROSTER shape), but
+/// `KernelTurnResult.presence: Vec<ui_contract::PresenceUpdate>` wants the render-plane,
+/// `(surface, node_key)`-addressed channel — a DIFFERENT shape by that field's own doc
+/// comment (`🎠️kernel/🦀️.rs:918-923`), and no `PresencePeer → PresenceUpdate`
+/// conversion exists anywhere in this repo yet. See `📓️terra-shard-lane-report.md`'s
+/// presence-wire-mismatch finding.
 async fn convert_poll_success(turn: wit_reactor::TurnResult, mut effects: Vec<Effect>, patches: Vec<super::wit_ui::UiPatch>, instance_id: u32, max_patch_bytes: u32) -> Result<KernelTurnResult, TurnFault> {
     for effect in turn.effects {
         match super::wit_effect_to_kernel(effect).await {
@@ -284,14 +293,6 @@ async fn convert_poll_success(turn: wit_reactor::TurnResult, mut effects: Vec<Ef
     Ok(KernelTurnResult {
         ui_patches,
         effects,
-        // 👥️ terra-shard-lane: same wire-shape mismatch as `component.rs`'s `execute_turn` —
-        // `turn.presence` is real guest-emitted data (WIT `presence-update{peer: pack}`, a
-        // pack-encoded `📡️replication/📡️wire::PresencePeer`, the collaboration-ROSTER shape), but
-        // `KernelTurnResult.presence: Vec<ui_contract::PresenceUpdate>` wants the render-plane,
-        // `(surface, node_key)`-addressed channel — a DIFFERENT shape by that field's own doc
-        // comment (`🎠️kernel/🦀️.rs:918-923`), and no `PresencePeer → PresenceUpdate`
-        // conversion exists anywhere in this repo yet. See `📓️terra-shard-lane-report.md`'s
-        // presence-wire-mismatch finding.
         presence: Vec::new(),
         next_wake: turn.next_wake,
         status: super::wit_turn_status_to_kernel(turn.status).await,
@@ -316,6 +317,23 @@ pub struct AsyncActorTask {
 }
 
 impl AsyncActorTask {
+    /// 🎯️ Harness tests D/E: the `Store` is constructed and OWNED right here, inside the
+    /// spawned task body — never handed out to, or borrowed by, anything outside this async
+    /// block. `JoinHandle::abort()` on THIS task therefore drops the future AND the Store
+    /// together, which is what actually cancels an in-flight host import (test D proved
+    /// dropping a borrowed future alone is NOT enough).
+    ///
+    /// 🧪️ harness test F, re-confirmed against the real collapsed world by this rewrite's own
+    /// acceptance run (see packet report): the generated `Actor` implements neither `Clone`
+    /// nor `Copy` but IS `Send + Sync`, so wrapping the ONE instance in `Arc` and cloning the
+    /// `Arc` into every `accessor.spawn`'d command task works. One instance, not two.
+    ///
+    /// 🧬️ The whole actor lifetime lives inside ONE `run_concurrent` call. The closure below
+    /// never itself awaits a WIT export — it only receives commands and hands each one to
+    /// `accessor.spawn` as its own `AccessorTask`, so two commands against this SAME `Store`
+    /// (e.g. `Checkpoint` answered while a slow `StepJob` is still in flight) genuinely run
+    /// concurrently, reproducing harness test F's proof against the real world rather than
+    /// merely asserting it still holds.
     pub async fn spawn(engine: &AsyncEngineHandle, component: Arc<wasmtime::component::Component>, state: AsyncActorHostState, initial_budget: Budget, instance_id: u32) -> Result<Self, PluginHostError> {
         let (commands_tx, mut commands_rx) = tokio::sync::mpsc::unbounded_channel::<AsyncActorCommand>();
         let (ready_tx, ready_rx) = tokio::sync::oneshot::channel::<Result<(), PluginHostError>>();
@@ -324,20 +342,11 @@ impl AsyncActorTask {
         let linker = engine.linker.clone();
 
         let join = tokio::spawn(async move {
-            // 🎯️ Harness tests D/E: the `Store` is constructed and OWNED right here, inside the
-            // spawned task body — never handed out to, or borrowed by, anything outside this async
-            // block. `JoinHandle::abort()` on THIS task therefore drops the future AND the Store
-            // together, which is what actually cancels an in-flight host import (test D proved
-            // dropping a borrowed future alone is NOT enough).
             let deadline = DeadlineCell::new(Duration::from_millis(initial_budget.deadline_ms as u64));
             let mut store = Store::new(&engine_handle, state);
             let _ = store.set_fuel(initial_budget.fuel);
             install_epoch_budget(&mut store, deadline.clone()).await;
 
-            // 🧪️ harness test F, re-confirmed against the real collapsed world by this rewrite's own
-            // acceptance run (see packet report): the generated `Actor` implements neither `Clone`
-            // nor `Copy` but IS `Send + Sync`, so wrapping the ONE instance in `Arc` and cloning the
-            // `Arc` into every `accessor.spawn`'d command task works. One instance, not two.
             let instance = match actor_bindings::Actor::instantiate_async(&mut store, &component, &linker).await {
                 Ok(instance) => Arc::new(instance),
                 Err(error) => {
@@ -347,12 +356,6 @@ impl AsyncActorTask {
             };
             let _ = ready_tx.send(Ok(()));
 
-            // 🧬️ The whole actor lifetime lives inside ONE `run_concurrent` call. The closure below
-            // never itself awaits a WIT export — it only receives commands and hands each one to
-            // `accessor.spawn` as its own `AccessorTask`, so two commands against this SAME `Store`
-            // (e.g. `Checkpoint` answered while a slow `StepJob` is still in flight) genuinely run
-            // concurrently, reproducing harness test F's proof against the real world rather than
-            // merely asserting it still holds.
             let _ = store
                 .run_concurrent(async move |accessor: &Accessor<AsyncActorHostState>| {
                     loop {
@@ -384,10 +387,18 @@ impl AsyncActorTask {
                                     reply: tokio::sync::oneshot::Sender<Result<KernelTurnResult, TurnFault>>,
                                 }
                                 impl AccessorTask<AsyncActorHostState> for PollTask {
+                                    /// 📥️ A turn's pages are STAGED before it, never carried through
+                                    /// `poll`'s parameter list — see `reactor.stage-command-page` in
+                                    /// the WIT for the leaked parameter area that shape cost.
+                                    ///
+                                    /// 🚫️async: E5 executor bridge. `AsyncActorHostState::take_effects`/`take_patches`
+                                    /// (`imports.rs`) are async-signatured but their bodies are a single `mem::take` with
+                                    /// zero suspension points — same idiom `imports.rs`'s own `emit()` uses for
+                                    /// `wit_effect_to_kernel`. `Accessor::with` closures are sync-only (see `imports.rs`'s
+                                    /// `snapshot_call` precedent: every async follow-up happens OUTSIDE `.with()`, on plain
+                                    /// owned data extracted synchronously), so `block_on` is the sound bridge here, not a
+                                    /// shortcut around it.
                                     async fn run(self, accessor: &Accessor<AsyncActorHostState>) -> wasmtime::Result<()> {
-                                        // 📥️ A turn's pages are STAGED before it, never carried through
-                                        // `poll`'s parameter list — see `reactor.stage-command-page` in
-                                        // the WIT for the leaked parameter area that shape cost.
                                         let Self { _epoch, instance, instance_id, events, command_page, cold_pair_page, budget, max_patch_bytes, reply } = self;
                                         let outcome = async {
                                             if let Some((cursor, bytes)) = command_page {
@@ -405,13 +416,6 @@ impl AsyncActorTask {
                                         .await;
                                         let mapped = match outcome {
                                             Ok(Ok(turn)) => {
-                                                // 🚫️async: E5 executor bridge. `AsyncActorHostState::take_effects`/`take_patches`
-                                                // (`imports.rs`) are async-signatured but their bodies are a single `mem::take` with
-                                                // zero suspension points — same idiom `imports.rs`'s own `emit()` uses for
-                                                // `wit_effect_to_kernel`. `Accessor::with` closures are sync-only (see `imports.rs`'s
-                                                // `snapshot_call` precedent: every async follow-up happens OUTSIDE `.with()`, on plain
-                                                // owned data extracted synchronously), so `block_on` is the sound bridge here, not a
-                                                // shortcut around it.
                                                 let (emitted, patches) = accessor.with(|mut access| {
                                                     let state = access.get();
                                                     (semio_framework_async::block_on(state.take_effects()), semio_framework_async::block_on(state.take_patches()))
@@ -490,10 +494,10 @@ impl AsyncActorTask {
                                     reply: tokio::sync::oneshot::Sender<Result<(), String>>,
                                 }
                                 impl AccessorTask<AsyncActorHostState> for CancelJobTask {
+                                    /// 🧬️ `jobs.wit`'s `cancel-job: async func(job: u64);` has no `result<_, plugin-error>`
+                                    /// wrapper (unlike `start-job`/`step-job`), same asymmetry `component.rs`'s own
+                                    /// `cancel_job` comment documents — only the trap-level Result exists here.
                                     async fn run(self, accessor: &Accessor<AsyncActorHostState>) -> wasmtime::Result<()> {
-                                        // 🧬️ `jobs.wit`'s `cancel-job: async func(job: u64);` has no `result<_, plugin-error>`
-                                        // wrapper (unlike `start-job`/`step-job`), same asymmetry `component.rs`'s own
-                                        // `cancel_job` comment documents — only the trap-level Result exists here.
                                         let mapped = match self.instance.semio_framework_jobs().call_cancel_job(accessor, self.job).await {
                                             Ok(()) => Ok(()),
                                             Err(trap) => Err(trap.to_string()),

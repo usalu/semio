@@ -1,0 +1,27 @@
+            None => (FaultCode::new("interactive-job.app-owned-output"), String::from_utf8_lossy(bytes).into_owned()),
+        }
+    }
+
+    /// 🧾️ One app refusal as a job fault detail in the typed-operation fault framing, `<code>\u{1f}<message>`: what a
+    /// job that ran an app's reducer hands `JobFault`, so the fault page a shell, a fixture and an agent read carries
+    /// the app's OWN code structurally ([`decode_typed_operation_fault_page`]) — never a wrapper code with the domain
+    /// code flattened into its text. The message is clipped to [`TYPED_OPERATION_FAULT_BYTES`] on a char boundary; a
+    /// code the frame cannot carry (empty, above [`TYPED_OPERATION_FAULT_CODE_BYTES`], or holding the separator)
+    /// leaves the detail unframed, which reads as `interactive-job.app-owned-output`.
+    pub fn typed_operation_fault_detail(fault: &Fault) -> Vec<u8> {
+        let code = fault.code.0.as_bytes();
+        let framed = !code.is_empty() && code.len() <= TYPED_OPERATION_FAULT_CODE_BYTES && !code.contains(&TYPED_OPERATION_FAULT_SEPARATOR);
+        let mut end = fault.message.len().min(TYPED_OPERATION_FAULT_BYTES);
+        while !fault.message.is_char_boundary(end) {
+            end -= 1;
+        }
+        let mut detail = Vec::with_capacity(code.len() + 1 + end);
+        if framed {
+            detail.extend_from_slice(code);
+            detail.push(TYPED_OPERATION_FAULT_SEPARATOR);
+        }
+        detail.extend_from_slice(&fault.message.as_bytes()[..end]);
+        detail
+    }
+
+    struct ArtifactBoundedToolFault {

@@ -13,16 +13,16 @@ use protocol::causal::FrontierSummary;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Identity
-/// @emoji 🏢️ The instance-wide tenancy root. Distinct from a space: a tenant owns spaces, billing
+/// 🏢️ The instance-wide tenancy root. Distinct from a space: a tenant owns spaces, billing
 /// and membership; a space scopes documents. Hub aliased the two, this contract does not.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct TenantId(pub String);
 
-/// @emoji 🗂️ A scope inside a tenant — the project/space a command or query is addressed within.
+/// 🗂️ A scope inside a tenant — the project/space a command or query is addressed within.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct Scope(pub String);
 
-/// @emoji 🎭️ The durable address of one authority actor: the serialized consistency boundary a
+/// 🎭️ The durable address of one authority actor: the serialized consistency boundary a
 /// command is executed inside. `kind` selects the registered actor implementation.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct ActorKey {
@@ -31,7 +31,7 @@ pub struct ActorKey {
     pub id: String,
 }
 
-/// @emoji 🙋️ Who is acting. A principal is never a role — roles are policy templates evaluated
+/// 🙋️ Who is acting. A principal is never a role — roles are policy templates evaluated
 /// against a principal, never an enum branched on inside a handler.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", tag = "kind")]
@@ -42,30 +42,30 @@ pub enum Principal {
     Anonymous,
 }
 
-/// @emoji 🎫️ One authenticated session of a principal on one device.
+/// 🎫️ One authenticated session of a principal on one device.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct SessionId(pub String);
 
-/// @emoji 📱️ A device a session runs on; an offline outbox belongs to exactly one.
+/// 📱️ A device a session runs on; an offline outbox belongs to exactly one.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct DeviceId(pub String);
 //#endregion 🔖️Identity
 
 //#region 🔖️Command
-/// @emoji 🆔️ Client-minted identity of one command submission; stable across retries.
+/// 🆔️ Client-minted identity of one command submission; stable across retries.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct CommandId(pub String);
 
-/// @emoji 🔁️ Deduplication key. Two submissions carrying the same key must produce one effect and
+/// 🔁️ Deduplication key. Two submissions carrying the same key must produce one effect and
 /// the same receipt, however many times the client retries after a timeout.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct IdempotencyKey(pub String);
 
-/// @emoji 🔢️ An actor's monotonically increasing revision, used for optimistic concurrency.
+/// 🔢️ An actor's monotonically increasing revision, used for optimistic concurrency.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct Revision(pub u64);
 
-/// @emoji 🕰️ Client hybrid-logical clock reading, carried so the authority can order concurrent
+/// 🕰️ Client hybrid-logical clock reading, carried so the authority can order concurrent
 /// submissions without trusting wall clocks.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Default, Serialize, Deserialize)]
 pub struct HybridLogicalClock {
@@ -73,19 +73,19 @@ pub struct HybridLogicalClock {
     pub counter: u32,
 }
 
-/// @emoji 🔍️ Distributed-trace correlation for one submission.
+/// 🔍️ Distributed-trace correlation for one submission.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct TraceContext {
     pub trace_id: String,
     pub span_id: String,
 }
 
-/// @emoji 🛂️ A capability the caller presents to justify an action policy would otherwise deny —
+/// 🛂️ A capability the caller presents to justify an action policy would otherwise deny —
 /// e.g. a share token granting one document to an otherwise anonymous principal.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CapabilityProof(pub String);
 
-/// @emoji 📨️ One durable intent addressed to one authority actor. The payload stays opaque: this
+/// 📨️ One durable intent addressed to one authority actor. The payload stays opaque: this
 /// contract never parses a domain command, it only routes, deduplicates and authorizes it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -107,7 +107,7 @@ pub struct CommandEnvelope {
     pub trace: TraceContext,
 }
 
-/// @emoji 🧾️ Proof the authority processed a command, returned identically on every retry of the
+/// 🧾️ Proof the authority processed a command, returned identically on every retry of the
 /// same [`IdempotencyKey`].
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -118,7 +118,7 @@ pub struct CommandReceipt {
     pub accepted_at: HybridLogicalClock,
 }
 
-/// @emoji 🚫️ Why an authority refused a command. Never a panic, never a bare string at the edge.
+/// 🚫️ Why an authority refused a command. Never a panic, never a bare string at the edge.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", tag = "kind")]
 pub enum Rejection {
@@ -129,18 +129,18 @@ pub enum Rejection {
     ActorUnavailable { detail: String },
 }
 
-/// @emoji 💬️ A human-facing note attached to an outcome (validation warning, coercion notice).
+/// 💬️ A human-facing note attached to an outcome (validation warning, coercion notice).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Notice {
     pub code: String,
     pub message: String,
 }
 
-/// @emoji 🧵️ A long-running workflow a command started; the caller polls or subscribes for it.
+/// 🧵️ A long-running workflow a command started; the caller polls or subscribes for it.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct ProcessId(pub String);
 
-/// @emoji 🎯️ What the authority decided. `Transformed` is the collaborative case: the command was
+/// 🎯️ What the authority decided. `Transformed` is the collaborative case: the command was
 /// accepted but rebased, so the client must roll back its speculative apply and take the canonical
 /// events instead.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -152,7 +152,7 @@ pub enum CommandOutcome {
     Pending { receipt: CommandReceipt, process: ProcessId },
 }
 
-/// @emoji 📴️ What a command kind is allowed to do while the replica is detached. Declared per kind
+/// 📴️ What a command kind is allowed to do while the replica is detached. Declared per kind
 /// so "local-first" can never be read as "membership and permissions may be decided offline".
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -167,15 +167,15 @@ pub enum OfflinePolicy {
 //#endregion 🔖️Command
 
 //#region 🔖️Query
-/// @emoji 🆔️ Identity of one query submission.
+/// 🆔️ Identity of one query submission.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct QueryId(pub String);
 
-/// @emoji 📑️ Opaque continuation token for a paged or subscribed read.
+/// 📑️ Opaque continuation token for a paged or subscribed read.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct QueryCursor(pub String);
 
-/// @emoji 🧭️ How fresh an answer must be. Client-facing semantics — the engine's own richer modes
+/// 🧭️ How fresh an answer must be. Client-facing semantics — the engine's own richer modes
 /// are an implementation detail translated at the adapter boundary.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", tag = "kind")]
@@ -188,7 +188,7 @@ pub enum QueryConsistency {
     Authority,
 }
 
-/// @emoji ❓️ One read addressed at a projection, never at an actor's private state.
+/// ❓️ One read addressed at a projection, never at an actor's private state.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct QueryEnvelope {
@@ -202,7 +202,7 @@ pub struct QueryEnvelope {
     pub cursor: Option<QueryCursor>,
 }
 
-/// @emoji 📤️ What a query returns: a whole value, one page, or a live subscription handle.
+/// 📤️ What a query returns: a whole value, one page, or a live subscription handle.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", tag = "kind")]
 pub enum QueryResult {
@@ -211,13 +211,13 @@ pub enum QueryResult {
     Subscription { subscription: SubscriptionId, initial: Vec<u8>, cursor: Option<QueryCursor>, frontier: Option<FrontierSummary> },
 }
 
-/// @emoji 🔔️ Identity of an established live projection subscription.
+/// 🔔️ Identity of an established live projection subscription.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct SubscriptionId(pub String);
 //#endregion 🔖️Query
 
 //#region 🔖️Lanes
-/// @emoji 📚️ One durable, replayable fact an actor emitted. Persisted, sequenced, causally tracked
+/// 📚️ One durable, replayable fact an actor emitted. Persisted, sequenced, causally tracked
 /// and authorized on delivery.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -229,7 +229,7 @@ pub struct EventRecord {
     pub payload: Vec<u8>,
 }
 
-/// @emoji 💨️ One lossy, expiring frame — cursors, selections, previews, typing, connection quality.
+/// 💨️ One lossy, expiring frame — cursors, selections, previews, typing, connection quality.
 /// A separate type from [`EventRecord`] on purpose: an ephemeral frame is never replayed into
 /// durable state and is rate-limited and authorized separately.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -243,7 +243,7 @@ pub struct EphemeralFrame {
 //#endregion 🔖️Lanes
 
 //#region 🔖️Policy
-/// @emoji 🚦️ Every point authorization is evaluated at. Hiding a route is user experience; these
+/// 🚦️ Every point authorization is evaluated at. Hiding a route is user experience; these
 /// are where access is actually decided.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -259,7 +259,7 @@ pub enum PolicyPoint {
     Administration,
 }
 
-/// @emoji ⚖️ The result of one policy evaluation. Deny always wins over allow.
+/// ⚖️ The result of one policy evaluation. Deny always wins over allow.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", tag = "kind")]
 pub enum PolicyDecision {
@@ -276,7 +276,7 @@ impl PolicyDecision {
 //#endregion 🔖️Policy
 
 //#region 🔖️Module
-/// @emoji 📇️ What one command kind declares to the instance that registers it.
+/// 📇️ What one command kind declares to the instance that registers it.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CommandDescriptor {
@@ -286,7 +286,7 @@ pub struct CommandDescriptor {
     pub offline: OfflinePolicy,
 }
 
-/// @emoji 📇️ What one query kind declares.
+/// 📇️ What one query kind declares.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct QueryDescriptor {
@@ -295,7 +295,7 @@ pub struct QueryDescriptor {
     pub projection: String,
 }
 
-/// @emoji 🎓️ A named bundle of grants. `admin`/`manager`/`editor`/`viewer` are values of this type,
+/// 🎓️ A named bundle of grants. `admin`/`manager`/`editor`/`viewer` are values of this type,
 /// never hard-coded enums inside handlers.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -306,7 +306,7 @@ pub struct PolicyTemplate {
     pub grants: Vec<PolicyGrant>,
 }
 
-/// @emoji 🔑️ One grant inside a template: an action on a resource pattern at a policy point.
+/// 🔑️ One grant inside a template: an action on a resource pattern at a policy point.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PolicyGrant {
@@ -315,7 +315,7 @@ pub struct PolicyGrant {
     pub action: String,
 }
 
-/// @emoji 🧾️ The declarative half of a server module — what it contributes, with no runtime types,
+/// 🧾️ The declarative half of a server module — what it contributes, with no runtime types,
 /// so an instance definition can be inspected, diffed and served without constructing a server.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -328,7 +328,7 @@ pub struct ModuleManifest {
     pub actor_kinds: Vec<String>,
 }
 
-/// @emoji 🏛️ One deployable server: its identity plus the modules composing it. Hub and Zentrale
+/// 🏛️ One deployable server: its identity plus the modules composing it. Hub and Zentrale
 /// are two values of this type, not two forks of a server.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

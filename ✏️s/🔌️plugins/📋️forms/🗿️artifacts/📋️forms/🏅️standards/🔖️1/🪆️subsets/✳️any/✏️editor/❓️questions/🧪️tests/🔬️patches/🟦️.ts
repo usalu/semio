@@ -33,5 +33,4 @@ export function testFormsQuestionPatches(): void {
     }
     assert.deepEqual(before, item.before, "choice edit leaves source untouched");
   }
-  console.log("[DEBUG] Forms question edits matched shared vectors and the JSON Patch oracle");
 }

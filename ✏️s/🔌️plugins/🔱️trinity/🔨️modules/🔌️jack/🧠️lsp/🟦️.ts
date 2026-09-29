@@ -1,4 +1,4 @@
-/** @emoji 📡️ Jack LSP worker — JSON-RPC pump over WASM `JackLspSession`. The JSON-RPC/LSP message
+/** 📡️ Jack LSP worker — JSON-RPC pump over WASM `JackLspSession`. The JSON-RPC/LSP message
  * guards it depends on (`isJsonRpcRequest`/`isJsonRpcNotification`/`isJsonRpcResponse`/`LanguageServer`/
  * `LspMessage`) are defined locally below (see the `🔖️protocol` region) rather than imported — a
  * sibling `./protocol.ts` never existed on disk, so the previous import of the same names was dead. */
@@ -68,7 +68,7 @@ self.addEventListener("message", (event: MessageEvent<LspMessage | { operation?:
 });
 
 //#region 🔖️protocol
-/** @emoji 📡️ Minimal JSON-RPC and LSP message guards for Jack language-server workers. */
+/** 📡️ Minimal JSON-RPC and LSP message guards for Jack language-server workers. */
 
 export type LspMessage = {
   readonly jsonrpc?: string;

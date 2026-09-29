@@ -36,7 +36,7 @@ pub use transition::*;
 // `store::pack_rt::encode_wire_value` (first-party, not JSON). Converted to hand-written
 // `ToValue`/`FromValue` below, mirroring the pre-existing wire shape byte-for-byte.
 
-/// @emoji ✉️ A causally-ordered operation crossing the wire: identity, actor, dependency set, the
+/// ✉️ A causally-ordered operation crossing the wire: identity, actor, dependency set, the
 /// forward diff, its precomputed inverse, and the HLC tick it was authored at. `dependencies` are
 /// ordering constraints (a replica applies the operation only after every one of them); `observed`
 /// is advisory authoring context and never orders anything: the newest operation of ANOTHER author
@@ -114,7 +114,7 @@ impl crate::value::FromValue for MutationEnvelope {
     }
 }
 
-/// @emoji 🧮️ A schema-tagged, opaque binary forward-op payload.
+/// 🧮️ A schema-tagged, opaque binary forward-op payload.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ArtifactDiff {
     pub schema: crate::ids::SchemaId,
@@ -144,7 +144,7 @@ impl crate::value::FromValue for ArtifactDiff {
     }
 }
 
-/// @emoji ↩️ A schema-tagged, opaque binary inverse-op payload.
+/// ↩️ A schema-tagged, opaque binary inverse-op payload.
 #[derive(Clone, Debug, PartialEq)]
 pub struct InverseMutation {
     pub schema: crate::ids::SchemaId,
@@ -187,7 +187,7 @@ impl crate::value::FromValue for InverseMutation {
 // `🧪️Tests::quick` convergence tests exercise; `protocol_testkit`'s exhaustive suite covers
 // scrambled orderings.
 
-/// @emoji 🕸️ Causal DAG of exchanged `MutationEnvelope`s: buffers envelopes until their
+/// 🕸️ Causal DAG of exchanged `MutationEnvelope`s: buffers envelopes until their
 /// dependencies are applied.
 pub const MUTATION_DAG_CAPACITY: usize = 8_192;
 pub const MUTATION_DAG_IDENTIFIER_BYTES: usize = 256;
@@ -389,7 +389,7 @@ impl Drop for MutationDag {
     }
 }
 
-/// @emoji 🚦️ The outcome of one `MutationDag::insert` call.
+/// 🚦️ The outcome of one `MutationDag::insert` call.
 #[derive(Debug, PartialEq)]
 #[cfg_attr(target_pointer_width = "64", expect(clippy::large_enum_variant, reason = "Duplicate admission returns the exact envelope owner without allocating on refusal."))]
 pub enum InsertResult {
@@ -398,7 +398,7 @@ pub enum InsertResult {
     AlreadyApplied(MutationEnvelope),
 }
 
-/// @emoji 🚨️ `MutationDag`'s one failure mode: the same operation id inserted twice while still pending.
+/// 🚨️ `MutationDag`'s one failure mode: the same operation id inserted twice while still pending.
 /// Hand-rolled `Display`/`Error` (this crate has no `thiserror` dependency — `protocol_core`/
 /// `protocol_command` are the only path deps).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -471,11 +471,11 @@ impl MutationDag {
         self.pending.is_empty()
     }
 
-    /// @emoji ➕️ Inserts one envelope. Returns `AlreadyApplied` if its id was applied before,
+    /// ➕️ Inserts one envelope. Returns `AlreadyApplied` if its id was applied before,
     /// `Err(Duplicate)` if it's already buffered as pending, `Pending` if any dependency is wholly
     /// unknown to this dag, else `Applied`.
     ///
-    /// @emoji ⛓️ The unblocking is a CASCADE, not one step. An accepted envelope can release a whole
+    /// ⛓️ The unblocking is a CASCADE, not one step. An accepted envelope can release a whole
     /// pending chain — `c` depends on `b` depends on `a`, all three arriving in reverse order — and a
     /// single {@link advance_ready_one} released only `b`, leaving `c` pending forever. That is the
     /// exact shape `assert_op_dag_convergence` measured: the same closed dependency set converged to
@@ -509,13 +509,13 @@ impl MutationDag {
         Ok(InsertResult::Applied)
     }
 
-    /// @emoji ✅️ Borrows one ready identity at a caller-owned cursor without materializing a list.
+    /// ✅️ Borrows one ready identity at a caller-owned cursor without materializing a list.
     pub fn ready_identity_at(&self, cursor: usize) -> Option<&str> {
         let id = self.pending.get(cursor)?;
         self.envelopes.iter().find(|envelope| envelope.mutation_id.0 == *id).filter(|envelope| envelope.dependencies.iter().all(|dependency| self.applied.iter().any(|applied| applied == &dependency.0))).map(|envelope| envelope.mutation_id.0.as_str())
     }
 
-    /// @emoji 🧺️ Transfers at most one exact applied owner at the retained drain cursor.
+    /// 🧺️ Transfers at most one exact applied owner at the retained drain cursor.
     pub fn take_next_applied(&mut self) -> MutationDagAppliedStep {
         let Some(id) = self.applied.get(self.drained) else { return MutationDagAppliedStep::Complete };
         self.drained += 1;
@@ -525,7 +525,7 @@ impl MutationDag {
         MutationDagAppliedStep::Envelope(self.envelopes.swap_remove(index).expect("validated applied envelope slot remains occupied"))
     }
 
-    /// @emoji 🌱️ Seeds one id into the applied-set from out-of-band knowledge (e.g. a full-document
+    /// 🌱️ Seeds one id into the applied-set from out-of-band knowledge (e.g. a full-document
     /// snapshot merge) — without this, a later envelope whose `dependencies` reference this id
     /// stays `Pending` forever, since `insert` only recognizes a dependency as satisfied through
     /// this dag's own `envelopes`/`applied` bookkeeping, never through edits a peer adopted by some
@@ -580,7 +580,7 @@ impl MutationDag {
 //#endregion 🔖️MutationDag
 
 //#region 🔖️Frontier
-/// @emoji 🏔️ Runtime/wire twin of `os_spr::history::FrontierSummary` — the shape `db` and
+/// 🏔️ Runtime/wire twin of `os_spr::history::FrontierSummary` — the shape `db` and
 /// `framework/sync` exchange without a full history-log decode. Deliberately NOT unified with the
 /// durable-log-derived version: they serve different layers (live runtime state vs on-disk log).
 /// 🌱️ Carries serde's derives alongside the hand-written `ToValue`/`FromValue` twin below, the same
@@ -653,7 +653,7 @@ impl crate::value::FromValue for FrontierSummary {
     }
 }
 
-/// @emoji ⚖️ How a `local` frontier relates to a `remote` one.
+/// ⚖️ How a `local` frontier relates to a `remote` one.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum FrontierComparison {
     Equal,
@@ -714,7 +714,7 @@ impl crate::value::FromValue for FrontierComparison {
     }
 }
 
-/// @emoji 🔎️ Compares two frontier summaries. Design choice (the contract fixes the enum shape,
+/// 🔎️ Compares two frontier summaries. Design choice (the contract fixes the enum shape,
 /// not the comparison algorithm): identical `(head_edit_ordinal, head_edit_id, chain_hash)` is
 /// `Equal`; a strictly greater/lesser `head_edit_ordinal` alone is `Ahead`/`Behind` (a summary
 /// carries no ancestry chain to verify beyond its tip, so ordinal order is the only signal
@@ -738,7 +738,7 @@ pub fn frontier_delta(local: &FrontierSummary, remote: &FrontierSummary) -> Fron
 //#endregion 🔖️Frontier
 
 //#region 🔖️Transform
-/// @emoji 🔀️ The result of transforming one operation against a concurrent one.
+/// 🔀️ The result of transforming one operation against a concurrent one.
 #[derive(Clone, Debug, PartialEq)]
 pub enum TransformOutcome<Op> {
     Unchanged(Op),
@@ -746,7 +746,7 @@ pub enum TransformOutcome<Op> {
     Conflict(String),
 }
 
-/// @emoji 🧮️ Operational-transform hook: rewrites `self` so it applies cleanly after `against`
+/// 🧮️ Operational-transform hook: rewrites `self` so it applies cleanly after `against`
 /// (both assumed concurrent, same base). New trait — no prior `vcs`/`framework-core` equivalent.
 pub trait MutationTransform<P>: crate::mutation::Mutation<P> {
     fn transform(&self, against: &Self) -> TransformOutcome<Self>
@@ -782,7 +782,7 @@ pub trait MutationTransform<P>: crate::mutation::Mutation<P> {
 // (`{edit.id}#{i}` for the id, `edit.actor` or `"unknown"` for the actor,
 // `HybridLogicalTimestamp::new(0, 0).await` for the timestamp) so this function is total (modulo encode
 // failure) even for a bare-bones `Edit` with no explicit meta.
-/// @emoji 🪪️ The wire `MutationId` each of `edit.forwards` would get if fanned out through
+/// 🪪️ The wire `MutationId` each of `edit.forwards` would get if fanned out through
 /// `mutation_envelope_from_edit` — same fallback chain (`mutation_meta[i]` field, else the `Op`
 /// trait method, else `{edit.id}#{i}`), extracted so callers that only need identity (e.g.
 /// snapshot-vs-operations-message dedup) don't have to pay for `encode_op`/`inverse` work, and so
@@ -809,7 +809,7 @@ pub fn mutation_envelope_from_edit<P, Op: crate::mutation::Mutation<P> + crate::
     mutation_envelopes_from_edit_since(edit, 0, document_id, schema)
 }
 
-/// @emoji ✂️ The envelopes of `edit`'s operations from position `from` on — exactly the tail of
+/// ✂️ The envelopes of `edit`'s operations from position `from` on — exactly the tail of
 /// [`mutation_envelope_from_edit`]'s answer, encoding only that tail. An edit that absorbs later
 /// operations (a coalesced typing run) is announced one appended range at a time, so re-encoding its
 /// whole history per keystroke would make a long run quadratic (ticket 26/09/23 LD item 1).
@@ -863,7 +863,7 @@ pub fn mutation_envelopes_from_edit_since<P, Op: crate::mutation::Mutation<P> + 
 //#endregion 🔖️Bridge
 
 //#region 🔖️EnvelopeCodec
-/// @emoji 🎞️ Binary record codec for `MutationEnvelope`/`FrontierSummary`, built on
+/// 🎞️ Binary record codec for `MutationEnvelope`/`FrontierSummary`, built on
 /// `crate::wire::🔖️WireCodec`'s primitives — the storage/wire form `protocol_wire`'s frames
 /// embed and `db_sync`'s WAL uses directly (see the amendment's "storage AND communication both
 /// binary" requirement). Field declaration order, no tags — the same convention `os_dsl::op_rt` and
@@ -881,7 +881,7 @@ fn decode_hlc(bytes: &[u8], pos: &mut usize) -> Result<crate::ids::HybridLogical
     Ok(crate::ids::HybridLogicalTimestamp { actor, physical_ms, logical })
 }
 
-/// @emoji 🎯️ `mutation_id str | document_id str | actor str | dependencies vec<str> |
+/// 🎯️ `mutation_id str | document_id str | actor str | dependencies vec<str> |
 /// observed (0 | 1 str) | target vec<str> | diff.schema str | diff.payload bytes | inverse.schema str |
 /// inverse.payload bytes | hlc`.
 pub fn encode_envelope(envelope: &MutationEnvelope, out: &mut Vec<u8>) {
@@ -910,7 +910,7 @@ pub fn encode_envelope(envelope: &MutationEnvelope, out: &mut Vec<u8>) {
     encode_hlc(out, &envelope.timestamp);
 }
 
-/// @emoji 🎯️ Inverse of [`encode_envelope`].
+/// 🎯️ Inverse of [`encode_envelope`].
 pub fn decode_envelope(bytes: &[u8], pos: &mut usize) -> Result<MutationEnvelope, crate::ProtocolError> {
     let mutation_id = crate::ids::MutationId(crate::read_str(bytes, pos)?);
     let document_id = crate::ids::ArtifactId(crate::read_str(bytes, pos)?);
@@ -938,7 +938,7 @@ pub fn decode_envelope(bytes: &[u8], pos: &mut usize) -> Result<MutationEnvelope
     Ok(MutationEnvelope { mutation_id, document_id, actor, dependencies, observed, target, diff: ArtifactDiff { schema: diff_schema, payload: diff_payload }, inverse: InverseMutation { schema: inverse_schema, payload: inverse_payload }, timestamp })
 }
 
-/// @emoji 🎯️ `document_id str | head_edit_ordinal varint | head_edit_id str | last_commit_seq
+/// 🎯️ `document_id str | head_edit_ordinal varint | head_edit_id str | last_commit_seq
 /// varint | chain_hash 32`.
 pub fn encode_frontier(f: &FrontierSummary, out: &mut Vec<u8>) {
     crate::write_str(out, &f.document_id.0);
@@ -948,7 +948,7 @@ pub fn encode_frontier(f: &FrontierSummary, out: &mut Vec<u8>) {
     crate::write_hash32(out, &f.chain_hash);
 }
 
-/// @emoji 🎯️ Inverse of [`encode_frontier`].
+/// 🎯️ Inverse of [`encode_frontier`].
 pub fn decode_frontier(bytes: &[u8], pos: &mut usize) -> Result<FrontierSummary, crate::ProtocolError> {
     let document_id = crate::ids::ArtifactId(crate::read_str(bytes, pos)?);
     let head_edit_ordinal = crate::wire::read_varint_u64(bytes, pos)?;
@@ -958,7 +958,7 @@ pub fn decode_frontier(bytes: &[u8], pos: &mut usize) -> Result<FrontierSummary,
     Ok(FrontierSummary { document_id, head_edit_ordinal, head_edit_id, last_commit_seq, chain_hash })
 }
 
-/// @emoji 🎯️ `count varint | encode_envelope each` — for boundaries that move a whole batch of
+/// 🎯️ `count varint | encode_envelope each` — for boundaries that move a whole batch of
 /// envelopes as one opaque byte blob (the WIT ABI, worker frames) instead of one wire frame per
 /// envelope (`ClientFrame::Commands`, which already carries `Vec<MutationEnvelope>` typed).
 pub fn encode_envelopes(envelopes: &[MutationEnvelope]) -> Vec<u8> {
@@ -1049,7 +1049,7 @@ fn read_document_backbone_text(bytes: &[u8], position: &mut usize, maximum: usiz
     String::from_utf8(read_document_backbone_bytes(bytes, position, maximum, limit)?).map_err(|_| document_backbone_batch_malformed(start, "utf8"))
 }
 
-/// @emoji 🪢️ Decodes one terminal canonical causal batch under the shared hot-port limits,
+/// 🪢️ Decodes one terminal canonical causal batch under the shared hot-port limits,
 /// checking every count and length before allocating its retained owner.
 pub fn decode_document_backbone_envelopes_exact_with_limits(bytes: &[u8], limits: DocumentBackboneBatchLimitsV1) -> Result<Vec<MutationEnvelope>, crate::ProtocolError> {
     let ceiling = DocumentBackboneBatchLimitsV1::default();
@@ -1120,12 +1120,12 @@ pub fn decode_document_backbone_envelopes_exact_with_limits(bytes: &[u8], limits
     Ok(envelopes)
 }
 
-/// @emoji 🔐️ Shared production-limit decoder for one hot document-backbone mutation batch.
+/// 🔐️ Shared production-limit decoder for one hot document-backbone mutation batch.
 pub fn decode_document_backbone_envelopes_exact(bytes: &[u8]) -> Result<Vec<MutationEnvelope>, crate::ProtocolError> {
     decode_document_backbone_envelopes_exact_with_limits(bytes, DocumentBackboneBatchLimitsV1::default())
 }
 
-/// @emoji 🎯️ Inverse of [`encode_envelopes`].
+/// 🎯️ Inverse of [`encode_envelopes`].
 pub fn decode_envelopes(bytes: &[u8]) -> Result<Vec<MutationEnvelope>, crate::ProtocolError> {
     let mut pos = 0usize;
     let count = crate::wire::read_varint_u64(bytes, &mut pos)?;
@@ -1136,7 +1136,7 @@ pub fn decode_envelopes(bytes: &[u8]) -> Result<Vec<MutationEnvelope>, crate::Pr
     Ok(envelopes)
 }
 
-/// @emoji 🎯️ `count varint | (len varint | bytes) each` — a binary vec-of-op-payloads framing,
+/// 🎯️ `count varint | (len varint | bytes) each` — a binary vec-of-op-payloads framing,
 /// replacing the `serde_json::json!({"inverse": [...]})` convention for `InverseMutation`
 /// payloads that carry more than one composed op (e.g. framework/plugin's `result_from_last_edit`).
 pub fn encode_ops_vec(ops: &[Vec<u8>]) -> Vec<u8> {
@@ -1148,7 +1148,7 @@ pub fn encode_ops_vec(ops: &[Vec<u8>]) -> Vec<u8> {
     out
 }
 
-/// @emoji 🎯️ Inverse of [`encode_ops_vec`].
+/// 🎯️ Inverse of [`encode_ops_vec`].
 pub fn decode_ops_vec(bytes: &[u8]) -> Result<Vec<Vec<u8>>, crate::ProtocolError> {
     let mut pos = 0usize;
     let count = crate::wire::read_varint_u64(bytes, &mut pos)?;

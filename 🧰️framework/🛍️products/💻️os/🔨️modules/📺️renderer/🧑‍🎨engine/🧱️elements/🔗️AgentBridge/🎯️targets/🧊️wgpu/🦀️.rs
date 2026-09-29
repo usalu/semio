@@ -58,7 +58,7 @@ pub fn reconnect_delay_ms(attempt: u32) -> f64 {
 /// 🔒️ `admission_proof` is a PROTECTED in-memory value the local supervisor hands over, never an
 /// environment credential: it travels as the second websocket subprotocol (see
 /// [`bridge_protocols`]), which is what keeps it out of urls, logs and referrers. It is therefore
-/// deliberately not `Debug`-printed and never reaches a `[DEBUG]` line.
+/// deliberately not `Debug`-printed and never reaches a `[TRACE]` line.
 #[derive(Clone, PartialEq, Eq)]
 pub struct AgentBridgeConfig {
     pub url: String,

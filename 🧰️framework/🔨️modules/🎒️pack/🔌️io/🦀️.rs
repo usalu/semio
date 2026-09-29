@@ -20,7 +20,7 @@ mod native {
     use crate::format::{Manifest, PackWriter, RecoveryReport, WriteOptions};
     use crate::{PackError, PackLimits, PackSink, PackSource};
 
-    /// @emoji 🚨️ Wraps a `std::io::Error` into the crate-wide `PackError::Io` variant — the only
+    /// 🚨️ Wraps a `std::io::Error` into the crate-wide `PackError::Io` variant — the only
     /// place `std::io::Error` is allowed to appear, per the contract's no-`std::io::Error`-in-
     /// public-signatures rule.
     #[allow(clippy::needless_pass_by_value)] // used as a `map_err` callback, which passes the error by value
@@ -29,7 +29,7 @@ mod native {
     }
 
     //#region 🔖️File
-    /// @emoji 📂️ A read-only, random-access file source. Positional reads go through
+    /// 📂️ A read-only, random-access file source. Positional reads go through
     /// `std::os::unix::fs::FileExt::read_at`/`std::os::windows::fs::FileExt::seek_read` (both
     /// take `&self`, no locking needed) on unix/windows, and a `Mutex`-guarded seek+read fallback
     /// on any other native target — kept behind one `Mutex<File>` field for a single code path.
@@ -39,7 +39,7 @@ mod native {
     }
 
     impl FilePackSource {
-        /// @emoji 📖️ Opens `path` for reading and stat's its length up front.
+        /// 📖️ Opens `path` for reading and stat's its length up front.
         pub fn open(path: &Path) -> Result<Self, PackError> {
             let file = std::fs::File::open(path).map_err(io_err)?;
             let len = file.metadata().map_err(io_err)?.len();
@@ -82,7 +82,7 @@ mod native {
         }
     }
 
-    /// @emoji 📤️ A write-only file sink opened truncate-on-create; tracks its own write position
+    /// 📤️ A write-only file sink opened truncate-on-create; tracks its own write position
     /// since `std::fs::File` exposes none without a `&mut self` seek.
     pub struct FilePackSink {
         file: std::fs::File,
@@ -90,7 +90,7 @@ mod native {
     }
 
     impl FilePackSink {
-        /// @emoji 🆕️ Creates (truncating any existing file) `path` for writing.
+        /// 🆕️ Creates (truncating any existing file) `path` for writing.
         pub fn create(path: &Path) -> Result<Self, PackError> {
             let file = std::fs::OpenOptions::new().write(true).create(true).truncate(true).open(path).map_err(io_err)?;
             Ok(Self { file, position: 0 })
@@ -116,11 +116,11 @@ mod native {
     //#endregion 🔖️File
 
     //#region 🔖️Atomic
-    /// @emoji 🔢️ Per-process monotonic counter mixed into temp-file names so concurrent
+    /// 🔢️ Per-process monotonic counter mixed into temp-file names so concurrent
     /// `write_atomic` calls (even to the same `path`, even on the same PID) never collide.
     static TMP_COUNTER: AtomicU64 = AtomicU64::new(0);
 
-    /// @emoji 🛟️ Writes `bytes` to `path` atomically: writes to a sibling temp file, `fsync`s it,
+    /// 🛟️ Writes `bytes` to `path` atomically: writes to a sibling temp file, `fsync`s it,
     /// then `rename`s it into place. `rename` is atomic on every platform this targets, so a
     /// reader can never observe a partially-written `path` — it sees either the old content or
     /// the fully-written new content, never a torn write.
@@ -141,7 +141,7 @@ mod native {
     //#endregion 🔖️Atomic
 
     //#region 🔖️Stream
-    /// @emoji 🌊️ An incremental pack file writer: segments/chunks are framed and flushed straight
+    /// 🌊️ An incremental pack file writer: segments/chunks are framed and flushed straight
     /// to disk as they're written rather than buffered in memory for the whole file, wrapping
     /// `crate::format::PackWriter<FilePackSink>`.
     pub struct StreamingPackWriter {
@@ -149,14 +149,14 @@ mod native {
     }
 
     impl StreamingPackWriter {
-        /// @emoji 🚀️ Creates `path` and writes the 32-byte header.
+        /// 🚀️ Creates `path` and writes the 32-byte header.
         pub async fn create(path: &Path, options: &WriteOptions) -> Result<Self, PackError> {
             let sink = FilePackSink::create(path)?;
             let inner = PackWriter::begin(sink, options).await?;
             Ok(Self { inner })
         }
 
-        /// @emoji 🖇️ Frames, compresses, CRCs, and flushes one segment to disk.
+        /// 🖇️ Frames, compresses, CRCs, and flushes one segment to disk.
         pub async fn write_segment(&mut self, kind: u8, payload: &[u8]) -> Result<(), PackError> {
             self.inner.write_segment(kind, payload).await
         }
@@ -165,7 +165,7 @@ mod native {
             self.inner.begin_identity_chunk(payload_len).await
         }
 
-        /// @emoji 🏁️ Writes the chunk table, manifest, end marker, and footer, `fsync`s (via
+        /// 🏁️ Writes the chunk table, manifest, end marker, and footer, `fsync`s (via
         /// `FilePackSink::flush`, called internally by `PackWriter::finish`), and closes the file.
         pub async fn finish(self, manifest: &Manifest) -> Result<(), PackError> {
             self.inner.finish(manifest).await?;
@@ -175,7 +175,7 @@ mod native {
     //#endregion 🔖️Stream
 
     //#region 🔖️Recover
-    /// @emoji 🩺️ Opens `path` and forward-scans it via `crate::format::recover` — for use when a
+    /// 🩺️ Opens `path` and forward-scans it via `crate::format::recover` — for use when a
     /// file's footer fails to parse/validate and the caller wants to salvage whatever valid
     /// segments precede the corruption.
     pub async fn recover_file(path: &Path, limits: &PackLimits) -> Result<RecoveryReport, PackError> {

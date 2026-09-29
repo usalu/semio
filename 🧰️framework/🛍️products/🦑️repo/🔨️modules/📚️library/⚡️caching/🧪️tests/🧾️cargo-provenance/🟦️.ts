@@ -50,7 +50,7 @@ test("classifies foreign sources under POSIX and Windows path rules, agreeing wi
   expect(JSON.parse(oracle.stdout)).toEqual(actual);
 });
 
-test("a second checkout poisons a shared build-dir, the gate names it and the repair makes Cargo rebuild", { timeout: 240_000 }, () => {
+test("a second checkout poisons a shared build-dir, the gate names it and the repair makes Cargo rebuild", () => {
   const toolchain = Bun.TOML.parse(readFileSync(join(repoRoot, "rust-toolchain.toml"), "utf8")) as { toolchain: { channel: string } };
   const root = realpathSync(mkdtempSync(join(tmpdir(), "semio-cargo-provenance-")));
   try {
@@ -87,9 +87,9 @@ test("a second checkout poisons a shared build-dir, the gate names it and the re
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
-});
+}, { timeout: 240_000 });
 
-test("no profile keeps incremental state in the shared build-dir, whatever the caller's CARGO_INCREMENTAL (cargo unit-graph oracle)", { timeout: 240_000 }, () => {
+test("no profile keeps incremental state in the shared build-dir, whatever the caller's CARGO_INCREMENTAL (cargo unit-graph oracle)", () => {
   const manifest = Bun.TOML.parse(readFileSync(join(repoRoot, "Cargo.toml"), "utf8")) as { profile: Record<string, { inherits?: string; incremental?: boolean }> };
   const builtIn: Record<string, string> = { test: "dev", bench: "release" };
   const resolve = (name: string): boolean | undefined => manifest.profile[name]?.incremental ?? (manifest.profile[name]?.inherits ?? builtIn[name] ? resolve(manifest.profile[name]?.inherits ?? builtIn[name]!) : undefined);
@@ -102,7 +102,7 @@ test("no profile keeps incremental state in the shared build-dir, whatever the c
     expect(units.length, `${row.profile} ${row.package}`).toBeGreaterThan(0);
     expect(units.filter((unit) => unit.profile.incremental).map((unit) => unit.profile.name), `${row.profile} ${row.package} ${row.target ?? "host"}`).toEqual([]);
   }
-});
+}, { timeout: 240_000 });
 
 test("a cancelled scan stops before reading another package", () => {
   const build = mkdtempSync(join(tmpdir(), "semio-cargo-provenance-cancel-"));

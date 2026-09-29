@@ -73,6 +73,10 @@ mod plugin_builder_contract_tests {
         static RENDER_CONTEXT_PROBE: std::cell::RefCell<Option<(String, ViewModel)>> = const { std::cell::RefCell::new(None) };
     }
 
+    /// 🏷️ The recorded digest is an oracle for ONE digest domain. Its domain tag is bumped
+    /// (`ARC-CONTEXT-3` → `-4` …) exactly when the identity's input set changes, which is what
+    /// invalidates the literal — so the tag is joined here first and a drift fails on the clause
+    /// that names its cause instead of on a bare number.
     #[test]
     fn app_owned_request_context_identity_matches_language_neutral_oracle_and_rejects_every_root_drift() {
         let fixture: Value = serde_json::from_str(include_str!("../../🧵️retained-command/🧫️fixtures/🧬️request-context.json")).expect("request context fixture");
@@ -84,10 +88,6 @@ mod plugin_builder_contract_tests {
         let transient_generation = fixture["transientGeneration"].as_u64().expect("transient generation");
         let children_digest = u64::from_str_radix(fixture["childrenDigestHex"].as_str().expect("children digest hex"), 16).expect("children digest");
         let identity = test_artifact_owned_tool_job_context_identity_digest;
-        // 🏷️ The recorded digest is an oracle for ONE digest domain. Its domain tag is bumped
-        // (`ARC-CONTEXT-3` → `-4` …) exactly when the identity's input set changes, which is what
-        // invalidates the literal — so the tag is joined here first and a drift fails on the clause
-        // that names its cause instead of on a bare number.
         let source = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🦀️.rs"));
         let tag = source.split("let mut digest = extend(0xcbf2_9ce4_8422_2325, b\"").nth(1).expect("the identity digest seeds itself with its own domain tag").split('"').next().expect("domain tag literal");
         assert_eq!(tag, fixture["domainTag"].as_str().expect("fixture domain tag"), "the recorded oracle belongs to a different identity domain — re-record the digest with the tag that replaced it");
@@ -680,18 +680,18 @@ mod plugin_builder_contract_tests {
     }
 
     impl<const RETAINED: bool, const TOOLS: u8> semio_framework_job::InteractiveJob for TestClipboardReservedJob<RETAINED, TOOLS> {
+        /// 📨️ A framework-RESERVED route commits only if its job hands the admitted envelope back
+        /// byte for byte (`retained_payload_eq_slice` in `run_framework_reserved_job`, refusing
+        /// `interactive-job.output-envelope` otherwise) — exactly what the generated
+        /// `framework_reserved_job!` bodies do with their own `raw`. An app that takes the route over
+        /// through `build_reserved_tool_job` inherits that obligation; returning an empty commit
+        /// output made every `copy`/`cut`/`paste` law die at the envelope gate.
         fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
             if cx.is_cancelled() {
                 return semio_framework_job::StepOutcome::Cancelled;
             }
             let emit = self.emit();
             self.completion.as_ref().expect("test clipboard completion").complete(Ok(emit), EphemeralEmit::default()).expect("single test clipboard completion");
-            // 📨️ A framework-RESERVED route commits only if its job hands the admitted envelope back
-            // byte for byte (`retained_payload_eq_slice` in `run_framework_reserved_job`, refusing
-            // `interactive-job.output-envelope` otherwise) — exactly what the generated
-            // `framework_reserved_job!` bodies do with their own `raw`. An app that takes the route over
-            // through `build_reserved_tool_job` inherits that obligation; returning an empty commit
-            // output made every `copy`/`cut`/`paste` law die at the envelope gate.
             semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
                 state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
                 output: crate::app::retained_job_payload(cx, semio_framework_job::JobPayloadStream::CommitOutput, &self.raw_wire),
@@ -809,6 +809,9 @@ mod plugin_builder_contract_tests {
     /// 🪪️ `TestApp`'s verb for one command variant, as a plain `fn` so the retained
     /// command payload (`ArtifactRetainedCommandPayload::command_id`) and the async
     /// `ArtifactApp::command_id` answer the same id from ONE table.
+    ///
+    /// 🔀️ Rides the keyed fixture's ONE generated tool id (`TOOL_JOB_IDS` is fixture-checked):
+    /// a pick and a composite edit are two commands of the same typed tool.
     fn test_command_id(command: &TestCommand) -> &'static str {
         match command {
             TestCommand::Increment => "increment",
@@ -831,8 +834,6 @@ mod plugin_builder_contract_tests {
             TestCommand::ProbeChild { .. } => "probeChild",
             TestCommand::SpawnCountTask => "spawnCountTask",
             TestCommand::ApplyCountFromTask { .. } => "applyCountFromTask",
-            // 🔀️ Rides the keyed fixture's ONE generated tool id (`TOOL_JOB_IDS` is fixture-checked):
-            // a pick and a composite edit are two commands of the same typed tool.
             TestCommand::PickItem { .. } => "compositeEdit",
             TestCommand::BulkEdit { .. } => "compositeEdit",
         }
@@ -841,6 +842,10 @@ mod plugin_builder_contract_tests {
     /// 🧮️ `TestApp`'s reducer body, shared verbatim by `ArtifactApp::handle` (host route) and
     /// `test_app_command_reduce` (the app-owned retained tool route) so a migrated dispatch
     /// and a direct one can never diverge.
+    ///
+    /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: no mutations of its own — the
+    /// task's eventual `TaskResolution::Command` follow-up is what mutates the
+    /// document, on a LATER dispatch (see `ApplyCountFromTask` below).
     fn test_app_reduce(command: &TestCommand, doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>) -> Result<Emit<TestMutation, TestConfigMutation, NoDraftMutation>, Fault> {
         match command {
             TestCommand::Increment | TestCommand::IncrementViaCommand | TestCommand::ModeIncrement => Ok(Emit { artifact_mutations: vec![TestMutation::SetCount(SetCount { value: doc.snapshot.count + 1 })], description: Some("increment".into()), ..Default::default() }),
@@ -874,9 +879,6 @@ mod plugin_builder_contract_tests {
                 let _snapshot = doc.children.typed_read::<TestSnapshot>(slot, child_id)?;
                 Ok(Emit::effect(Effect::DispatchAction { req: RequestId(91_001), action: "probeChildContinuation".into(), args: None, delay_ms: 0 }))
             }
-            // 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: no mutations of its own — the
-            // task's eventual `TaskResolution::Command` follow-up is what mutates the
-            // document, on a LATER dispatch (see `ApplyCountFromTask` below).
             TestCommand::SpawnCountTask => Ok(Emit::task(
                 AsyncTask::new("spawn-count-task", |ctx: TaskCtx| async move {
                     let bytes = ctx.host.storage_read("counter").await?;
@@ -940,9 +942,9 @@ mod plugin_builder_contract_tests {
                 labels: false,
             })
         }
-        // 🪪️ Must equal `test_app_surface_id()` — a hand-typed `&'static str` because the runtime
-        // `ArtifactApp::APP_ID` const (contract §2.1, "kept") cannot call a heap-allocating fn at
-        // compile time; `test_app_id_matches_its_own_dialect` below is the drift guard.
+        /// 🪪️ Must equal `test_app_surface_id()` — a hand-typed `&'static str` because the runtime
+        /// `ArtifactApp::APP_ID` const (contract §2.1, "kept") cannot call a heap-allocating fn at
+        /// compile time; `test_app_id_matches_its_own_dialect` below is the drift guard.
         const APP_ID: &'static str = "s.test.synthetic@1/*#editor";
         const DOCUMENT_SCHEMA: &'static str = "semio.test/v1";
         type Snapshot = TestSnapshot;
@@ -1022,6 +1024,10 @@ mod plugin_builder_contract_tests {
             test_command_id(command)
         }
 
+        /// 🎯️ M1 (ticket 26/08/17 `design-unified.md`): reachable ONLY through the
+        /// `command_from_intent` bridge (this string is never dispatched by any other
+        /// existing test) — the `🕹️IntentDispatchTests` fixture proves kind discipline
+        /// survives the new intent path exactly like it already does for `dispatch_typed`.
         async fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<Self::Command, Fault> {
             match action {
                 "incrementViaCommand" => Ok(TestCommand::IncrementViaCommand),
@@ -1032,10 +1038,6 @@ mod plugin_builder_contract_tests {
                     slot: args.and_then(|value| value.get("slot")).and_then(DslValue::as_str).unwrap_or_default().to_string(),
                     child_id: args.and_then(|value| value.get("childId")).and_then(DslValue::as_str).unwrap_or_default().to_string(),
                 }),
-                // 🎯️ M1 (ticket 26/08/17 `design-unified.md`): reachable ONLY through the
-                // `command_from_intent` bridge (this string is never dispatched by any other
-                // existing test) — the `🕹️IntentDispatchTests` fixture proves kind discipline
-                // survives the new intent path exactly like it already does for `dispatch_typed`.
                 "badView" => Ok(TestCommand::BadView),
                 _ => Err(Fault::from(format!("unknown test command: {action}"))),
             }
@@ -1115,13 +1117,14 @@ mod plugin_builder_contract_tests {
         /// `contract_registry`-backed tests, which never set that label, are untouched) — a flat >9-row
         /// menu fixture for `context_menu_funnel_organizes_a_synthetic_apps_flat_overflow_menu` below,
         /// proving `VcsArtifactApp::context_menu` runs every emitter through `organize_context_menu`.
+        ///
+        /// 🩹️ Rewritten from `Menu::when(cond, |m| m.command(..))` — `when`'s closure param is
+        /// `impl FnOnce(Self) -> Self` (sync, a public documented pattern other plugins use), but
+        /// `Menu::command`/`action` are genuinely async (they await `AppActionRegistry::get*`). An
+        /// async closure can't satisfy a sync `FnOnce`, so this fixture inlines the two guarded
+        /// branches as explicit `if`s instead of touching `when`'s public signature. See R10 residue
+        /// class 1 (`` inside a sync closure).
         async fn context_menu(_request: &ContextMenuRequest, doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, _view_state: &ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
-            // 🩹️ Rewritten from `Menu::when(cond, |m| m.command(..))` — `when`'s closure param is
-            // `impl FnOnce(Self) -> Self` (sync, a public documented pattern other plugins use), but
-            // `Menu::command`/`action` are genuinely async (they await `AppActionRegistry::get*`). An
-            // async closure can't satisfy a sync `FnOnce`, so this fixture inlines the two guarded
-            // branches as explicit `if`s instead of touching `when`'s public signature. See R10 residue
-            // class 1 (`` inside a sync closure).
             let mut menu = Menu::of(registry).action("setLabelRequired");
             if !doc.snapshot.label.is_empty() && doc.snapshot.label != "flat-menu-test" {
                 menu = menu.command("incrementViaCommand");
@@ -1592,7 +1595,6 @@ mod plugin_builder_contract_tests {
             Some(clock),
         )
         .await;
-        eprintln!("[DEBUG] registered 500us factory completed real dispatch/rebase/publication/ACK/close with exact fake microsecond clock");
     }
 
     /// ⏱️ Continuation turns a staged operation may spend beyond one per acknowledgeable result page —
@@ -1658,7 +1660,6 @@ mod plugin_builder_contract_tests {
         assert!(pages >= OPERATIONS, "each of the {OPERATIONS} admitted operations owes at least one result page, saw {pages}");
         assert!(widest >= 2, "{OPERATIONS} concurrently publishing operations must share a crossing; the widest batch was {widest}");
         assert!(crossings < pages, "{pages} result pages retired in {crossings} crossings — a page per crossing is the cardinality this law removes");
-        eprintln!("[DEBUG] actual {pages} typed-operation result pages retired in {crossings} host crossings, widest batch {widest}");
         let active = cell.instance.lock().unwrap();
         assert!(!active.app.has_pending_typed_operations());
         drop(active);
@@ -1774,6 +1775,15 @@ mod plugin_builder_contract_tests {
         }
     }
 
+    /// ⚖️ LAW: a staged operation costs the host ONE turn per acknowledgeable result page, not one
+    /// per publication unit. The host has to come back for a result page because the page is only
+    /// released by its own ACK; every other unit is internal to the guest, and answering `MoreWork`
+    /// after each of them cost this fixture 48 turns before ticket 26/09/02 wave B24.
+    /// 🧮️ A turn the operation was not even schedulable on — `contended` without `runnable`, the
+    /// shared worker pool busy with somebody else — is the machine's pacing, not the continuation's,
+    /// and is not counted: on a loaded machine it drew one such turn in roughly one run in five
+    /// (measured 2026-09-21, trace `[(false, true, true), (true, false, true), …]`) while every
+    /// runnable turn still carried its exact receipt. The ceiling constant is untouched.
     #[semio_framework_async_macros::async_test]
     async fn retained_operation_continues_after_command_admission_until_publication_and_retirement() {
         let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🧫️fixtures/🔣️.json")).unwrap();
@@ -1812,15 +1822,6 @@ mod plugin_builder_contract_tests {
             }
             std::thread::yield_now();
         }
-        // ⚖️ LAW: a staged operation costs the host ONE turn per acknowledgeable result page, not one
-        // per publication unit. The host has to come back for a result page because the page is only
-        // released by its own ACK; every other unit is internal to the guest, and answering `MoreWork`
-        // after each of them cost this fixture 48 turns before ticket 26/09/02 wave B24.
-        // 🧮️ A turn the operation was not even schedulable on — `contended` without `runnable`, the
-        // shared worker pool busy with somebody else — is the machine's pacing, not the continuation's,
-        // and is not counted: on a loaded machine it drew one such turn in roughly one run in five
-        // (measured 2026-09-21, trace `[(false, true, true), (true, false, true), …]`) while every
-        // runnable turn still carried its exact receipt. The ceiling constant is untouched.
         assert!(
             spent <= receipts + TYPED_OPERATION_CONTINUATION_SLACK,
             "a {receipts}-receipt operation spent {spent} continuation turns (ceiling {}) — the continuation is pacing one publication unit per host round trip; turns (runnable, contended, produced): {turns:?}",
@@ -1880,7 +1881,7 @@ mod plugin_builder_contract_tests {
             if let Err(error) = super::plugin_step_live_cleanup(&runtime) {
                 let pump = cell.maintenance_pump.lock().expect("failed maintenance pump");
                 panic!(
-                    "[DEBUG] {error:?}: turn={turn} status={} generation={} stalled={} entries={} session={} outcome={} rejected={} terminal={} pending={:?} closing={} faulted={}",
+                    "{error:?}: turn={turn} status={} generation={} stalled={} entries={} session={} outcome={} rejected={} terminal={} pending={:?} closing={} faulted={}",
                     cell.maintenance_status.load(std::sync::atomic::Ordering::SeqCst),
                     cell.maintenance_generation.load(std::sync::atomic::Ordering::SeqCst),
                     cell.maintenance_stalled_steps.load(std::sync::atomic::Ordering::SeqCst),
@@ -1952,7 +1953,7 @@ mod plugin_builder_contract_tests {
             }
             if !more {
                 assert!(lanes.contains(&TypedOperationResultLane::Terminal), "runtime retired before its terminal page");
-                eprintln!("[DEBUG] retained Child runtime published every host lane and retired after {turn} turns");
+                eprintln!("retained Child runtime published every host lane and retired after {turn} turns");
                 break;
             }
             plugin_job_yield_once().await;
@@ -1992,7 +1993,6 @@ mod plugin_builder_contract_tests {
         }
         assert!(runtime.close_quarantine.borrow().get(id).is_none());
         assert!(retired.upgrade().is_none());
-        eprintln!("[DEBUG] retained Child publication emitted Child+Terminal ACK pages, moved one parent-child undo group, and retired every owner");
     }
     //#endregion 🗝️RegisteredKeyedDispatchFixture
 
@@ -2135,6 +2135,9 @@ mod plugin_builder_contract_tests {
     /// one). `setLabelRequired` stays declared here purely as a registry fixture for the context-menu
     /// label-resolution test below. These synthetic reducers have no retained factory authority;
     /// only an exact authority test may promote its own selected row to Migrated.
+    ///
+    /// 🧪️ `Mutation`-kind by declaration, but `TestApp` emits zero operations for it — the
+    /// "declared Mutation action that happened to produce nothing" fixture.
     async fn contract_registry() -> AppActionRegistry {
         let app = App::from_builder(
             App::builder(test_app_surface_id().await, LocalizedLabel::data("Synthetic"))
@@ -2143,8 +2146,6 @@ mod plugin_builder_contract_tests {
                 .await.window_kind("main", LocalizedLabel::data("Main"), "synthetic.main", SurfaceKind::Canvas2d, IconName::AppWindow)
                 .await.mutation("setLabelRequired", LocalizedLabel::data("Set Label"))
                 .await.action_args("setLabelRequired", vec![ActionArgDef::text("value", LocalizedLabel::data("Value")).required()])
-                // 🧪️ `Mutation`-kind by declaration, but `TestApp` emits zero operations for it — the
-                // "declared Mutation action that happened to produce nothing" fixture.
                 .await.mutation("noopMutation", LocalizedLabel::data("Noop Mutation"))
                 .await.mutation("targetWindow", LocalizedLabel::data("Target Window"))
                 .await.view_action("badView", LocalizedLabel::data("Bad View"))
@@ -2265,6 +2266,15 @@ mod plugin_builder_contract_tests {
         /// revision. Every dispatch here therefore settles its own operation before returning, and
         /// the returned result carries the settled effects/events/scope rather than the admission's
         /// empty ones. `mutations` stays empty by construction — read the store or the edit log.
+        ///
+        /// 🧩️ A COMPOSED gesture's result is published by the ladder itself, on its own bounded
+        /// host outbox, so the host reads the parent's and every child's mutation under its own
+        /// handle plus the single `UndoGroup` that names them — nothing is rebuilt here.
+        /// 🪢️ The settle-receipt half: a migrated dispatch answers with an admission whose `mutations`
+        /// and `inverse_group` are empty by construction, because the document only advances once the
+        /// worker's emit has walked the publication ladder above. Rebuilt here through the SAME
+        /// `result_from_last_edit` the unmigrated route calls, with the SAME `amended_same_edit` tail
+        /// rule, so a coalesced gesture still reports only the operation THIS dispatch added.
         async fn dispatch_typed(&mut self, command: TestCommand, meta: &ActionMeta) -> Result<semio_framework::InvocationResult, Fault> {
             let verb = test_command_id(&command);
             let before_edit_id = self.0.test_last_edit_id();
@@ -2276,14 +2286,6 @@ mod plugin_builder_contract_tests {
             if let Some(scope) = receipt.ui_scope {
                 admitted.ui_scope = scope;
             }
-            // 🧩️ A COMPOSED gesture's result is published by the ladder itself, on its own bounded
-            // host outbox, so the host reads the parent's and every child's mutation under its own
-            // handle plus the single `UndoGroup` that names them — nothing is rebuilt here.
-            // 🪢️ The settle-receipt half: a migrated dispatch answers with an admission whose `mutations`
-            // and `inverse_group` are empty by construction, because the document only advances once the
-            // worker's emit has walked the publication ladder above. Rebuilt here through the SAME
-            // `result_from_last_edit` the unmigrated route calls, with the SAME `amended_same_edit` tail
-            // rule, so a coalesced gesture still reports only the operation THIS dispatch added.
             let after_edit_id = self.0.test_last_edit_id();
             if after_edit_id.is_some() {
                 let tail_offset = if after_edit_id == before_edit_id { before_tail } else { (0, 0) };
@@ -2430,6 +2432,23 @@ mod plugin_builder_contract_tests {
     }
 
     impl ContractComposedApp {
+        /// 🧩️ A COMPOSED gesture's result is published by the ladder itself, on its own bounded
+        /// host outbox, so the host reads the parent's and every child's mutation under its own
+        /// handle plus the single `UndoGroup` that names them — nothing is rebuilt here.
+        ///
+        /// 🔎️ A composed law that reads the WRONG number of documents needs to know whether the
+        /// composed lane answered at all or answered short — the two have different causes and
+        /// the same symptom.
+        ///
+        /// 🪢️ The settle-receipt half: a migrated dispatch answers with an admission whose `mutations`
+        /// and `inverse_group` are empty by construction, because the document only advances once the
+        /// worker's emit has walked the publication ladder above. Rebuilt here through the SAME
+        /// `result_from_last_edit` the unmigrated route calls, with the SAME `amended_same_edit` tail
+        /// rule, so a coalesced gesture still reports only the operation THIS dispatch added.
+        /// 🧩️ `test_result_from_last_edit` rebuilds from the PARENT store's tail edit only and
+        /// leaves `member_edits` empty by construction, so it must never overwrite a composed
+        /// result the pipeline itself already filled — a composite gesture's child lane would
+        /// vanish into the rebuild.
         async fn dispatch_typed(&mut self, command: TestCommand, meta: &ActionMeta) -> Result<semio_framework::InvocationResult, Fault> {
             let verb = test_command_id(&command);
             let before_edit_id = self.0.test_last_edit_id();
@@ -2441,27 +2460,12 @@ mod plugin_builder_contract_tests {
             if let Some(scope) = receipt.ui_scope {
                 admitted.ui_scope = scope;
             }
-            // 🧩️ A COMPOSED gesture's result is published by the ladder itself, on its own bounded
-            // host outbox, so the host reads the parent's and every child's mutation under its own
-            // handle plus the single `UndoGroup` that names them — nothing is rebuilt here.
             let composed_results = receipt.composed.len();
             if let Some(composed) = receipt.composed.pop() {
                 admitted.mutations = composed.mutations;
                 admitted.inverse_group = composed.inverse_group;
             }
-            // 🔎️ A composed law that reads the WRONG number of documents needs to know whether the
-            // composed lane answered at all or answered short — the two have different causes and
-            // the same symptom.
             admitted.output = DslValue::Object(vec![("composedResults".into(), DslValue::String(composed_results.to_string()))]);
-            // 🪢️ The settle-receipt half: a migrated dispatch answers with an admission whose `mutations`
-            // and `inverse_group` are empty by construction, because the document only advances once the
-            // worker's emit has walked the publication ladder above. Rebuilt here through the SAME
-            // `result_from_last_edit` the unmigrated route calls, with the SAME `amended_same_edit` tail
-            // rule, so a coalesced gesture still reports only the operation THIS dispatch added.
-            // 🧩️ `test_result_from_last_edit` rebuilds from the PARENT store's tail edit only and
-            // leaves `member_edits` empty by construction, so it must never overwrite a composed
-            // result the pipeline itself already filled — a composite gesture's child lane would
-            // vanish into the rebuild.
             let after_edit_id = self.0.test_last_edit_id();
             if after_edit_id.is_some() {
                 let tail_offset = if after_edit_id == before_edit_id { before_tail } else { (0, 0) };
@@ -2505,6 +2509,25 @@ mod plugin_builder_contract_tests {
         ContractComposedApp(app)
     }
 
+    /// 🧭️ The bijection has exactly two named residues, and both are asserted as exact sets so a
+    /// drift in either direction fails on the clause that names its cause.
+    ///
+    /// 1. Framework-reserved SURFACE verbs the framework registers a factory for unconditionally
+    ///    (`register_framework_reserved_tool_factories`) while this fixture's manifest declares
+    ///    none of them — it has no interaction topology and no window kit to mint them. A verb
+    ///    here is registered but undeclared, so `require_ui_safe_declaration` refuses it by name
+    ///    before its factory is ever reached.
+    /// 2. Migrated verbs the framework serves without a tool factory, so a missing registration
+    ///    is not the dead-action defect it would be for any other migrated verb: `setActiveUtility`
+    ///    (injected whenever the app declares utilities; `handle_action_invocation` routes it
+    ///    DIRECTLY to `dispatch_emit`) and `cancelTypedOperation` (every app's operation-progress
+    ///    cancel; the head of `dispatch_action` routes it DIRECTLY to `dispatch_operation_cancellation`).
+    ///
+    /// 🚦️ `not-ui-safe`, not `missing-factory`: `contract_registry` declares every verb
+    /// `BatchOnlyPendingRewrite`, and the UI-safety backstop is read from the manifest declaration
+    /// at the HEAD of `admit_command_wire`, before any proof is resolved. A non-migrated verb has
+    /// no factory precisely BECAUSE it is not migrated, so `missing-factory` was the consequence,
+    /// not the cause — the clause above still proves there is no factory to find.
     #[semio_framework_async_macros::async_test]
     async fn activated_tool_factory_keys_are_an_exact_bijection_with_migrated_declarations() {
         let platform = Platform::new(None).await;
@@ -2520,19 +2543,6 @@ mod plugin_builder_contract_tests {
                 key.1
             })
             .collect();
-        // 🧭️ The bijection has exactly two named residues, and both are asserted as exact sets so a
-        // drift in either direction fails on the clause that names its cause.
-        //
-        // 1. Framework-reserved SURFACE verbs the framework registers a factory for unconditionally
-        //    (`register_framework_reserved_tool_factories`) while this fixture's manifest declares
-        //    none of them — it has no interaction topology and no window kit to mint them. A verb
-        //    here is registered but undeclared, so `require_ui_safe_declaration` refuses it by name
-        //    before its factory is ever reached.
-        // 2. Migrated verbs the framework serves without a tool factory, so a missing registration
-        //    is not the dead-action defect it would be for any other migrated verb: `setActiveUtility`
-        //    (injected whenever the app declares utilities; `handle_action_invocation` routes it
-        //    DIRECTLY to `dispatch_emit`) and `cancelTypedOperation` (every app's operation-progress
-        //    cancel; the head of `dispatch_action` routes it DIRECTLY to `dispatch_operation_cancellation`).
         let framework_registered_without_declaration: std::collections::BTreeSet<String> =
             ["clearSelection", "configuration-binary", "import-media", "interactionHover", "interactionSelect", "selectAll", "setInteractionGranularity", "setSelectionMode"].into_iter().map(String::from).collect();
         let framework_directly_routed_migrated: std::collections::BTreeSet<String> = ["cancelTypedOperation", "setActiveUtility"].into_iter().map(String::from).collect();
@@ -2553,31 +2563,27 @@ mod plugin_builder_contract_tests {
         assert!(!registered.contains(verb), "the unproved verb has no activated factory of its own");
         assert!(!declared.contains(verb), "and this registry does not declare it migrated either");
         let error = app.dispatch_typed(TestCommand::IncrementViaCommand, &meta()).await.expect_err("an unproved typed command must remain fail closed");
-        // 🚦️ `not-ui-safe`, not `missing-factory`: `contract_registry` declares every verb
-        // `BatchOnlyPendingRewrite`, and the UI-safety backstop is read from the manifest declaration
-        // at the HEAD of `admit_command_wire`, before any proof is resolved. A non-migrated verb has
-        // no factory precisely BECAUSE it is not migrated, so `missing-factory` was the consequence,
-        // not the cause — the clause above still proves there is no factory to find.
         assert_eq!(error.code.0, "interactive-job.not-ui-safe");
         assert_eq!(platform.action_bus.dispatch_count(), before);
         artifact_app_laws::close_registered_fixture_app(&mut app);
     }
 
     //#region 🧪️SharedFrameworkActionRouteTests
+    /// 🪪️ Every framework-reserved factory is parameterized by its OWNING app type, so the
+    /// identity this law joins must name the exact owner the wrapper above was built on — a bare
+    /// `TestApp` is `TestApp<false, TEST_APP_TOOLS_FULL>`, a DIFFERENT owner and a different TypeId.
+    ///
+    /// 📏️ The last column is `ToolExecutionContract::max_raw_wire_bytes`, i.e. the `$raw` column of
+    /// this verb's own `framework_reserved_job!(..)` line — NOT its output cap. `copy`/`cut` carry
+    /// an 8 KiB raw wire and a 1 MiB OUTPUT; recording the output cap here made the law demand a
+    /// 1 MiB wire admission that the bus has never granted them.
     #[semio_framework_async_macros::async_test]
     async fn shared_framework_actions_have_exact_registered_factory_and_joined_bus_identity() {
         let platform = Platform::new(None).await;
         let registry = contract_registry().await;
         let controller_id = registry.test_controller_id().to_string();
         let app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_NONE>>::with_registry_on_bus(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), registry, platform.action_bus.clone()).await;
-        // 🪪️ Every framework-reserved factory is parameterized by its OWNING app type, so the
-        // identity this law joins must name the exact owner the wrapper above was built on — a bare
-        // `TestApp` is `TestApp<false, TEST_APP_TOOLS_FULL>`, a DIFFERENT owner and a different TypeId.
         type UnprovedFrameworkOwner = TestApp<false, TEST_APP_TOOLS_NONE>;
-        // 📏️ The last column is `ToolExecutionContract::max_raw_wire_bytes`, i.e. the `$raw` column of
-        // this verb's own `framework_reserved_job!(..)` line — NOT its output cap. `copy`/`cut` carry
-        // an 8 KiB raw wire and a 1 MiB OUTPUT; recording the output cap here made the law demand a
-        // 1 MiB wire admission that the bus has never granted them.
         let expected: [(&str, &str, std::any::TypeId, &'static str, usize); 12] = [
             ("copy", "framework.reserved.copy.v1", std::any::TypeId::of::<FrameworkCopyJobFactory<UnprovedFrameworkOwner>>(), std::any::type_name::<FrameworkCopyJobFactory<UnprovedFrameworkOwner>>(), 8_192),
             ("cut", "framework.reserved.cut.v1", std::any::TypeId::of::<FrameworkCutJobFactory<UnprovedFrameworkOwner>>(), std::any::type_name::<FrameworkCutJobFactory<UnprovedFrameworkOwner>>(), 8_192),
@@ -2952,6 +2958,9 @@ mod plugin_builder_contract_tests {
         artifact_app_laws::close_registered_fixture_app(&mut app);
     }
 
+    /// 🔢️ Swept over every declared stage instead of a frozen stage index: which ordinal owns the
+    /// completed-record lane is an implementation detail that moves whenever a stage is added, while
+    /// the law — ordinary maintenance never retires an unconsumed completed output — is not.
     #[semio_framework_async_macros::async_test]
     async fn app_maintenance_and_close_retain_completed_envelope_results_until_terminal_empty() {
         struct CompletedRecordSentinel {
@@ -3002,9 +3011,6 @@ mod plugin_builder_contract_tests {
             }
         };
         assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 0);
-        // 🔢️ Swept over every declared stage instead of a frozen stage index: which ordinal owns the
-        // completed-record lane is an implementation detail that moves whenever a stage is added, while
-        // the law — ordinary maintenance never retires an unconsumed completed output — is not.
         for stage in 0..MAINTENANCE_STAGES {
             app.maintenance_stage = stage;
             let _ = PluginApp::maintenance_step(&mut app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("ordinary maintenance preserves unconsumed completed output");
@@ -3033,6 +3039,10 @@ mod plugin_builder_contract_tests {
         artifact_app_laws::close_registered_fixture_app(&mut app);
     }
 
+    /// 🪜️ Park the ladder exactly ON the segment stage without touching it. Every stage before it
+    /// is bookkeeping that releases no bytes, and the segment stage alone refuses a grant under one
+    /// chunk (`maximum_bytes < ARTIFACT_OUTPUT_CHUNK_BYTES`), so a sub-chunk budget walks the ladder
+    /// to that stage and then stands still there — which is itself the bounded-grant refusal.
     #[semio_framework_async_macros::async_test]
     async fn app_close_step_drains_at_most_one_segment_and_one_chunk_budget() {
         let mut app = contract_app_under_test().await;
@@ -3045,10 +3055,6 @@ mod plugin_builder_contract_tests {
         assert_eq!(chunks.push(vec![2; ARTIFACT_OUTPUT_CHUNK_BYTES]), Ok(ARTIFACT_OUTPUT_CHUNK_BYTES * 2));
         assert_eq!(chunks.seal(), Ok(ARTIFACT_OUTPUT_CHUNK_BYTES * 2));
         assert!(app.segmented_downloads.insert(37, ArtifactDownloadOutput::new("close.bin", "application/octet-stream", None, chunks.clone()).expect("sealed close output")).is_ok());
-        // 🪜️ Park the ladder exactly ON the segment stage without touching it. Every stage before it
-        // is bookkeeping that releases no bytes, and the segment stage alone refuses a grant under one
-        // chunk (`maximum_bytes < ARTIFACT_OUTPUT_CHUNK_BYTES`), so a sub-chunk budget walks the ladder
-        // to that stage and then stands still there — which is itself the bounded-grant refusal.
         let mut parked = false;
         for _ in 0..(MAINTENANCE_STAGES as usize * ARTIFACT_LIVE_OUTPUT_SLOTS) {
             match app.close_step(1, ARTIFACT_OUTPUT_CHUNK_BYTES - 1).expect("bounded pre-segment close slice") {
@@ -3573,7 +3579,6 @@ mod plugin_builder_contract_tests {
             );
             assert_eq!(crate::reactor::retained_command_ingress_occupancy(), 0, "a {declared}-page command must leave no retained ingress owner");
         }
-        eprintln!("[DEBUG] command page set turns: {}", census.join(" "));
         reactor_native_lifecycle_finish(&runtime, lifetime, 9).await;
     }
     
@@ -3583,14 +3588,15 @@ mod plugin_builder_contract_tests {
     /// 🧊️ The measurement is the heap witness's own peak across `CommandPageSet::try_new`, so it reads
     /// the block the allocator was actually asked for. Before the fix the one-page reading is 262 272 B
     /// — four times the ceiling the guest can be relied on to serve — and after it is one page's worth.
+    ///
+    /// 🧵️ This thread's own allocator scope — a process-wide peak minus a process-wide baseline
+    /// reads every concurrent law's allocations and frees as this reservation's own, which makes
+    /// the reading drift below the block that was really requested (127 B for a 128 B authority).
     #[test]
     fn a_command_page_authority_reserves_only_the_pages_its_command_declares() {
         for declared in [1usize, 2, 8, semio_framework::kernel::COMMAND_MAXIMUM_PAGES] {
             let reserved = semio_framework::kernel::CommandPageSet::reservation_bytes(declared) as isize;
             assert_eq!(reserved, (declared * size_of::<semio_framework::kernel::FixedCommandPage>()) as isize);
-            // 🧵️ This thread's own allocator scope — a process-wide peak minus a process-wide baseline
-            // reads every concurrent law's allocations and frees as this reservation's own, which makes
-            // the reading drift below the block that was really requested (127 B for a 128 B authority).
             semio_framework_trace::reset_heap_peak_on_this_thread();
             let baseline = semio_framework_trace::retained_heap_bytes_on_this_thread();
             let pages = semio_framework::kernel::CommandPageSet::try_new(declared).expect("a declared page authority");
@@ -3817,6 +3823,9 @@ mod plugin_builder_contract_tests {
     ///
     /// 🚚️ The commands go through the real `poll_kernel` ingress the shard drives, with cursors produced
     /// by the real `CommandBatchDriver` — not through a test-only shortcut into the app.
+    ///
+    /// 🧵️ This thread's own allocator scope — see `retained_heap_bytes_on_this_thread`; a
+    /// process-wide difference weighs every concurrent law in the binary as this command's own.
     #[semio_framework_async_macros::async_test]
     async fn a_long_command_stream_never_pins_the_retained_ingress_authority() {
         let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
@@ -3850,8 +3859,6 @@ mod plugin_builder_contract_tests {
                 settled = semio_framework_trace::retained_heap_bytes_on_this_thread();
             }
         }
-        // 🧵️ This thread's own allocator scope — see `retained_heap_bytes_on_this_thread`; a
-        // process-wide difference weighs every concurrent law in the binary as this command's own.
         let retained = semio_framework_trace::retained_heap_bytes_on_this_thread() - settled;
         let measured = (INGRESS_COMMANDS - warmed) as isize;
         let per_command = retained / measured;
@@ -3860,7 +3867,6 @@ mod plugin_builder_contract_tests {
             per_command <= INGRESS_COMMAND_RETENTION_CEILING_BYTES,
             "the command ingress retains {per_command} B per command (ceiling {INGRESS_COMMAND_RETENTION_CEILING_BYTES}) — the guest's linear memory is fixed and never shrinks: {census}"
         );
-        eprintln!("[DEBUG] command page authority: {census}, {per_command} B/command");
         reactor_native_lifecycle_finish(&runtime, lifetime, 9).await;
     }
 
@@ -3964,6 +3970,11 @@ mod plugin_builder_contract_tests {
     }
 
     //#region 🔖️EphemeralLaneTests
+    /// 🧾️ Neither ephemeral lane may appear in history: they have no edits, no undo, and no
+    /// command-log rows of their own — the document's single edit is the only thing recorded.
+    ///
+    /// ↩️ Undo rolls back the DOCUMENT; the ephemeral lanes are not restored, because they
+    /// were never part of the undoable gesture in the first place.
     #[semio_framework_async_macros::async_test]
     async fn a_command_reaches_both_ephemeral_lanes_without_touching_history() {
         let mut app = contract_app().await;
@@ -3980,12 +3991,8 @@ mod plugin_builder_contract_tests {
             "object-safe channel snapshot must carry the typed presence pack, both generations, and (declaring no interaction domain) empty interaction bytes"
         );
 
-        // 🧾️ Neither ephemeral lane may appear in history: they have no edits, no undo, and no
-        // command-log rows of their own — the document's single edit is the only thing recorded.
         assert_eq!(app.test_store().await.envelope().vcs.edits.len(), 1, "an ephemeral lane leaked into the document's edit log");
 
-        // ↩️ Undo rolls back the DOCUMENT; the ephemeral lanes are not restored, because they
-        // were never part of the undoable gesture in the first place.
         app.dispatch_action("undo", None, &meta()).await.expect("undo");
         assert_eq!(app.test_snapshot().await.count, 0);
         assert_eq!(app.presence_store.generation().await, 1, "undo must not rewind presence");
@@ -4004,12 +4011,13 @@ mod plugin_builder_contract_tests {
     /// domain with `broadcast: true` (nothing app-specific) must see its live selection show up in
     /// `ephemeral_snapshot().interaction` — assembled purely from `AppDefinition.interactions` plus
     /// the framework-owned `interaction_store`/`interaction_hover` state.
+    ///
+    /// 🧪️ `interaction_topology`'s fixture only knows "item-1" once `doc.snapshot.label` is
+    /// non-empty (see that fn's own doc comment) — without this seed, `validate_state` prunes
+    /// the pick as an unknown id and the domain never shows up in `interaction_state()`.
     #[semio_framework_async_macros::async_test]
     async fn ephemeral_snapshot_carries_encoded_interaction_from_declared_broadcast_specs() {
         let mut app = interaction_app_under_test().await;
-        // 🧪️ `interaction_topology`'s fixture only knows "item-1" once `doc.snapshot.label` is
-        // non-empty (see that fn's own doc comment) — without this seed, `validate_state` prunes
-        // the pick as an unknown id and the domain never shows up in `interaction_state()`.
         app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).await.expect("seed label");
         reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))).await;
 
@@ -4100,6 +4108,8 @@ mod plugin_builder_contract_tests {
     /// `presence_store` ONLY when one is present, (2) unconditionally upserts `color`/`surface`/
     /// `interaction` into `peer_presence` for every peer in the roster, and (3) treats the roster
     /// as the single source of truth — a peer absent from a later call is dropped from BOTH maps.
+    ///
+    /// 👋 bob leaves the roster — a second call carrying only alice must drop bob from BOTH maps.
     #[semio_framework_async_macros::async_test]
     async fn retained_presence_fills_presence_store_and_peer_marks_and_drops_left_peers() {
         let mut app = contract_app().await;
@@ -4116,7 +4126,6 @@ mod plugin_builder_contract_tests {
         assert_eq!(app.peer_presence.get("user:bob#s1").unwrap().color, Some(5));
         drop(typed_root);
 
-        // 👋 bob leaves the roster — a second call carrying only alice must drop bob from BOTH maps.
         assert!(publish_presence_roster(&mut app, 2, Some(9), &[alice], 2000).await.fault.is_none());
         assert_eq!(app.presence_store.peers_root().peers().count(), 1);
         assert_eq!(app.peer_presence.len(), 1);
@@ -4125,6 +4134,11 @@ mod plugin_builder_contract_tests {
         drain_and_close_fixture(&mut app);
     }
 
+    /// 🧮️ The drive bound was a hand-picked 16 calls; the retirement needs 21 (three item releases,
+    /// then the peer's own bytes one at a time). The count is a property of the fixture's roster, not
+    /// of the product, so it is replaced by the stronger statement it was standing in for: EVERY
+    /// bounded call must release something until the authority is terminal — a stall or a block now
+    /// fails at the exact call it happened on instead of hiding under a larger number.
     #[semio_framework_async_macros::async_test]
     async fn peer_presence_capture_is_one_arc_and_retirement_waits_for_then_drains_the_exact_root() {
         let mut app = contract_app_raw().await;
@@ -4153,11 +4167,6 @@ mod plugin_builder_contract_tests {
             let _ = PluginApp::maintenance_step(&mut app, 1, 4096).expect("bounded peer root retirement progresses");
         }
         assert!(app.peer_presence_retirements.is_empty(), "old peer root reaches terminal-empty without a whole-roster drop");
-        // 🧮️ The drive bound was a hand-picked 16 calls; the retirement needs 21 (three item releases,
-        // then the peer's own bytes one at a time). The count is a property of the fixture's roster, not
-        // of the product, so it is replaced by the stronger statement it was standing in for: EVERY
-        // bounded call must release something until the authority is terminal — a stall or a block now
-        // fails at the exact call it happened on instead of hiding under a larger number.
         for calls in 0..(MAINTENANCE_STAGES as usize * ARTIFACT_LIVE_OUTPUT_SLOTS) {
             if app.presence_peer_retirements.is_empty() {
                 break;
@@ -4173,6 +4182,10 @@ mod plugin_builder_contract_tests {
         drain_and_close_fixture(&mut app);
     }
 
+    /// 🎡️ One maintenance call now runs every stage that still has something to give, so the whole
+    /// call's `released_items` is not this stage's answer. What the clause prices is unchanged and is
+    /// asserted exactly: a grant one byte short of the retained page releases NO bytes, and the page
+    /// stays mounted (next line).
     #[semio_framework_async_macros::async_test]
     async fn peer_roster_saturation_cancel_stale_and_interrupted_close_preserve_exact_authority() {
         let mut saturated = contract_app_raw().await;
@@ -4209,10 +4222,6 @@ mod plugin_builder_contract_tests {
         cancelled.admit_presence_ingress(admission, cursor, 0);
         cancel.cancel_now();
         cancelled.maintenance_stage = 7;
-        // 🎡️ One maintenance call now runs every stage that still has something to give, so the whole
-        // call's `released_items` is not this stage's answer. What the clause prices is unchanged and is
-        // asserted exactly: a grant one byte short of the retained page releases NO bytes, and the page
-        // stays mounted (next line).
         let interrupted = PluginApp::maintenance_step(&mut cancelled, 1, 16).expect("sub-page close grant");
         assert!(matches!(interrupted, PluginCloseStep::Pending { released_bytes: 0, .. }), "interrupted close released bytes under a grant one short of its retained page: {interrupted:?}");
         assert!(cancelled.peer_roster_publications.get(generation).is_some(), "cancelled publication stays mounted until its retained page closes");
@@ -4304,7 +4313,7 @@ mod plugin_builder_contract_tests {
         Ok(TestMembers::Child(Box::new(child)))
     }
 
-    /// @emoji 🫙️ The owner-less twin of {@link new_test_child}, for the laws whose whole subject is a
+    /// 🫙️ The owner-less twin of {@link new_test_child}, for the laws whose whole subject is a
     /// member that has NOT yet adopted its bounded retirement authority. Every product path mints a
     /// member through `create_member_store`/`open_member_store`, which install the catalog, so this
     /// shape exists only to drive the refusal those laws assert.
@@ -4320,15 +4329,15 @@ mod plugin_builder_contract_tests {
     }
 
     impl store::ErasedSnapshotRetirement for TestSnapshotRetirement {
+        /// 🎭️ The lie is SPENT on its first answer. The law's subject is that a `Complete`
+        /// without a terminal-empty witness is caught by name; a retirement that lied for
+        /// ever could never then be disposed, and the fixture app it lives in could not be
+        /// closed through the same honest ladder every other member uses.
         fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
             if maximum_items == 0 {
                 return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
             }
             if self.lie_about_terminal {
-                // 🎭️ The lie is SPENT on its first answer. The law's subject is that a `Complete`
-                // without a terminal-empty witness is caught by name; a retirement that lied for
-                // ever could never then be disposed, and the fixture app it lives in could not be
-                // closed through the same honest ladder every other member uses.
                 self.lie_about_terminal = false;
                 return Ok(store::SnapshotRetirementStep::Complete);
             }
@@ -4353,7 +4362,7 @@ mod plugin_builder_contract_tests {
         }
     }
 
-    /// @emoji 🎭️ The owned-value twin of {@link TestSnapshotRetirementFactory}: `retire_snapshot_read_erased`
+    /// 🎭️ The owned-value twin of {@link TestSnapshotRetirementFactory}: `retire_snapshot_read_erased`
     /// draws the child's returned-read retirement from the INITIAL snapshot owner, so a law whose subject
     /// is a lying terminal witness has to plant its lie there.
     ///
@@ -4399,13 +4408,13 @@ mod plugin_builder_contract_tests {
     }
 
     impl store::MemberStoreOwner<TestMutation> for TestSnapshot {
-        // 🚪️ The fixture child is a real openable member, not an un-openable one. While this was
-        // `UnsupportedMemberSnapshotOpen` every composed replacement that carried a `TestMembers`
-        // candidate was refused at its first member-open step with `MemberOpenDiagnostic::Decode`
-        // (`UnsupportedMemberSnapshotOpen::step` has no other answer), so the three
-        // `retained_composed_replacement_*` laws could never reach `ValidatingClosure` or
-        // `CandidateReady`. `PackMemberSnapshotOpen` is the framework's own pack decoder and
-        // `TestSnapshot` is an `ArtifactPack`, which is exactly what a real member declares.
+        /// 🚪️ The fixture child is a real openable member, not an un-openable one. While this was
+        /// `UnsupportedMemberSnapshotOpen` every composed replacement that carried a `TestMembers`
+        /// candidate was refused at its first member-open step with `MemberOpenDiagnostic::Decode`
+        /// (`UnsupportedMemberSnapshotOpen::step` has no other answer), so the three
+        /// `retained_composed_replacement_*` laws could never reach `ValidatingClosure` or
+        /// `CandidateReady`. `PackMemberSnapshotOpen` is the framework's own pack decoder and
+        /// `TestSnapshot` is an `ArtifactPack`, which is exactly what a real member declares.
         type SnapshotOpen = store::PackMemberSnapshotOpen<Self>;
 
         fn member_store_owners() -> store::DocumentStoreOwners<Self, TestMutation> {
@@ -4418,7 +4427,7 @@ mod plugin_builder_contract_tests {
         }
     }
 
-    /// @emoji 🔐️ Adopts the exact member owner catalog a product child carries from
+    /// 🔐️ Adopts the exact member owner catalog a product child carries from
     /// `create_member_store`, for a law that first drove the refusal an owner-less member owes and
     /// then has to close the app it registered that member into.
     fn install_test_member_owners(app: &mut VcsArtifactApp<TestApp, TestMembers>, child_id: &str) {
@@ -4426,7 +4435,7 @@ mod plugin_builder_contract_tests {
         child.install_document_store_owners_exact(<TestSnapshot as store::MemberStoreOwner<TestMutation>>::member_store_owners());
     }
 
-    /// @emoji 🎭️ Installs the member owner catalog whose OWNED-VALUE factory carries the lie —
+    /// 🎭️ Installs the member owner catalog whose OWNED-VALUE factory carries the lie —
     /// the one `retire_snapshot_read_erased` draws its unique-owner disposer from, which is the only
     /// place a child-content retirement can meet a lying terminal witness at all. The DISPLACEMENT
     /// factory stays honest on purpose: it retires the snapshot a member replaces, and a lying one
@@ -4518,7 +4527,6 @@ mod plugin_builder_contract_tests {
         app.maintenance_stage = 20;
         assert_eq!(app.maintenance_step(1, 4096).unwrap(), PluginCloseStep::Complete);
         close_member_admission_app(&mut app);
-        eprintln!("[DEBUG] child open: factory rejection is pure; checkpoint rejection retains its pin and closes exactly one admitted member");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -4540,7 +4548,6 @@ mod plugin_builder_contract_tests {
         assert!(app.composition.graph_mut().await.owner_of("child-1").await.is_none());
         close_member_admission_fixture(&mut returned);
         close_member_admission_app(&mut app);
-        eprintln!("[DEBUG] direct child registration: queued pin rejection returns the byte-identical caller member without publication");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -4563,9 +4570,21 @@ mod plugin_builder_contract_tests {
         assert!(restored.child_content_root.typed_read::<TestSnapshot>("slot", "child-1").is_ok());
         close_member_admission_app(&mut restored);
         close_member_admission_app(&mut app);
-        eprintln!("[DEBUG] owned child publication: fresh registration and independent restore each publish one exact parent/slot/member root");
     }
 
+    /// 🧾️ One `KernelMutation` for the parent's own op, one for the child's — each carrying
+    /// its OWN document handle, never the parent's, for the child entry (Task 3's "REAL
+    /// target" requirement).
+    ///
+    /// 🧾️ ONE `UndoGroup` names BOTH documents via `member_edits`.
+    ///
+    /// The child store actually applied its own op.
+    ///
+    /// And the command log recorded the child's edit id under the `config_edit_ids` precedent.
+    ///
+    /// 🧾️ The migrated route logs the admission row (no edit of its own) before the composed
+    /// publication logs the real one, so the subject is the row that CARRIES the gesture: exactly
+    /// one composite row names the child's edit, and it is the row that carries the parent's.
     #[semio_framework_async_macros::async_test]
     async fn composite_gesture_produces_one_undo_group_spanning_parent_and_child_with_real_handles() {
         let mut app = contract_composed_app().await;
@@ -4573,9 +4592,6 @@ mod plugin_builder_contract_tests {
 
         let result = app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta()).await.expect("composite edit");
 
-        // 🧾️ One `KernelMutation` for the parent's own op, one for the child's — each carrying
-        // its OWN document handle, never the parent's, for the child entry (Task 3's "REAL
-        // target" requirement).
         assert_eq!(
             result.mutations.len(),
             2,
@@ -4591,23 +4607,17 @@ mod plugin_builder_contract_tests {
         assert!(mutation_documents.contains(&parent_handle), "the parent's own edit must carry the parent's handle");
         assert!(mutation_documents.contains(&child_handle), "the child's edit must carry the CHILD's handle, not the parent's");
 
-        // 🧾️ ONE `UndoGroup` names BOTH documents via `member_edits`.
         assert_eq!(result.inverse_group.member_edits.len(), 2);
         let member_documents: std::collections::HashSet<ArtifactHandle> = result.inverse_group.member_edits.iter().map(|edit_ref| edit_ref.document).collect();
         assert!(member_documents.contains(&parent_handle));
         assert!(member_documents.contains(&child_handle));
 
-        // The child store actually applied its own op.
         let entry = app.children.get_mut(&("slot".to_string(), "child-1".to_string())).expect("child stays registered after dispatch");
         assert_eq!(entry.reference.dialect.artifact_kind, "s.test.child");
         let TestMembers::Child(child_store) = &mut entry.member;
         assert_eq!(child_store.snapshot().expect("child snapshot").count, 7);
 
-        // And the command log recorded the child's edit id under the `config_edit_ids` precedent.
         let history = app.test_history().await;
-        // 🧾️ The migrated route logs the admission row (no edit of its own) before the composed
-        // publication logs the real one, so the subject is the row that CARRIES the gesture: exactly
-        // one composite row names the child's edit, and it is the row that carries the parent's.
         let composite_rows: Vec<_> = history.commands.iter().filter(|entry| entry.action_id == "compositeEdit").collect();
         let carrying: Vec<_> = composite_rows.iter().filter(|row| !row.child_edit_ids.is_empty()).collect();
         assert_eq!(carrying.len(), 1, "exactly one composite row names the child's own edit id: {:?}", composite_rows.iter().map(|row| (row.edit_id.clone(), row.child_edit_ids.clone())).collect::<Vec<_>>());
@@ -4662,6 +4672,21 @@ mod plugin_builder_contract_tests {
         assert_eq!(refused.rejection.expect("a child this instance does not hold is refused").code.0, "transaction.member-rejected");
     }
 
+    /// 🧒️ Registering a member is the RUNTIME's job; declaring it on the parent snapshot is the
+    /// APP's. `ChildRestoreProjection` is built from the loaded parent's own declared child
+    /// fields and from nothing else — no live registry state can stand in for them — so a member
+    /// the reloaded parent does not declare is refused by `validate_parent_child_restore`,
+    /// exactly as a real composed document's would be.
+    ///
+    /// 📤️ Persist exactly what the host would: the parent's document pack plus one
+    /// `ChildPackEntry` per live child.
+    ///
+    /// 📥️ Reload into a FRESH app, the way `LoadDocument` + `LoadChildren` would. Explicit
+    /// `TestMembers`: nothing else in this branch constructs one directly to pin `M` for
+    /// inference — `open_child`'s `M::open` dispatch is compile-time generic, not a value.
+    ///
+    /// The child came back as its OWN live store, at the value its own history ended on —
+    /// and reload went through the real factory, not a cache.
     #[semio_framework_async_macros::async_test]
     async fn a_child_survives_a_full_persist_and_reload_cycle_through_the_channel_frames() {
         let mut app = contract_composed_app_raw().await;
@@ -4669,11 +4694,6 @@ mod plugin_builder_contract_tests {
         app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta()).await.expect("composite edit");
         artifact_app_laws::settle_registered_typed_operation(&mut app, meta().instance_id).await.expect("the migrated composite gesture settles before it is persisted");
 
-        // 🧒️ Registering a member is the RUNTIME's job; declaring it on the parent snapshot is the
-        // APP's. `ChildRestoreProjection` is built from the loaded parent's own declared child
-        // fields and from nothing else — no live registry state can stand in for them — so a member
-        // the reloaded parent does not declare is refused by `validate_parent_child_restore`,
-        // exactly as a real composed document's would be.
         let declared = ArtifactRef { artifact_id: "child-1".into(), dialect: test_child_dialect().await }.to_uri();
         app.test_store_mut()
             .await
@@ -4685,8 +4705,6 @@ mod plugin_builder_contract_tests {
             .expect("the parent declares the member it owns");
         assert_eq!(app.test_snapshot().await.slot.len(), 1, "the live parent declares exactly its one member");
 
-        // 📤️ Persist exactly what the host would: the parent's document pack plus one
-        // `ChildPackEntry` per live child.
         let parent_pack = PluginApp::document_pack(&app).await.expect("parent document pack");
         let entries = PluginApp::child_packs(&app).await.expect("child packs");
         assert_eq!(entries.len(), 1);
@@ -4694,9 +4712,6 @@ mod plugin_builder_contract_tests {
         assert_eq!(entries[0].child_id, "child-1");
         assert_eq!(entries[0].dialect, test_child_dialect().await.to_coordinate());
 
-        // 📥️ Reload into a FRESH app, the way `LoadDocument` + `LoadChildren` would. Explicit
-        // `TestMembers`: nothing else in this branch constructs one directly to pin `M` for
-        // inference — `open_child`'s `M::open` dispatch is compile-time generic, not a value.
         let mut reloaded = contract_composed_app_raw().await;
         PluginApp::load_document_pack(&mut reloaded, &parent_pack).await.expect("load parent document pack");
         assert_eq!(reloaded.test_snapshot().await.slot.len(), 1, "the reloaded parent carries its own declaration through the pack");
@@ -4705,8 +4720,6 @@ mod plugin_builder_contract_tests {
             PluginApp::load_child_pack(&mut reloaded, &entry.slot, &entry.child_id, dialect, &entry.envelope_pack).await.expect("load child pack");
         }
 
-        // The child came back as its OWN live store, at the value its own history ended on —
-        // and reload went through the real factory, not a cache.
         let child = reloaded.child_store("slot", "child-1").await.expect("child restored");
         let restored: TestSnapshot = <TestSnapshot as ArtifactPack>::decode_pack(&child.document_pack_bytes().await.expect("child pack")).expect("decode child");
         assert_eq!(restored.count, 7, "the reloaded child lost its own edit history");
@@ -4810,27 +4823,29 @@ mod plugin_builder_contract_tests {
         assert!(!PluginApp::has_runnable_typed_operations(&*app));
     }
 
+    /// 📌️ Checkpoint the parent: the cascade must commit the dirty child first, then pin the
+    /// child checkpoint that commit produced.
+    ///
+    /// ⏭️ Move both forward, past the pin.
+    ///
+    /// ⏮️ Checking the parent out to the pinned checkpoint must drag the child back with it —
+    /// otherwise a restored composition silently mixes an old parent with a new child.
     #[semio_framework_async_macros::async_test]
     async fn a_checkpoint_pins_its_children_and_a_checkout_cascades_back_to_them() {
         let mut app = contract_composed_app().await;
         app.register_child("slot", "child-1", test_child_dialect().await, new_test_child("child-1").await.expect("construct child")).await.expect("register child");
         app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta()).await.expect("first composite edit");
 
-        // 📌️ Checkpoint the parent: the cascade must commit the dirty child first, then pin the
-        // child checkpoint that commit produced.
         app.dispatch_action("commitCheckpoint", Some(&dv(serde_json::json!({ "message": "v1" }))), &meta()).await.expect("checkpoint");
         let pinned_checkpoint = app.test_store().await.current_checkpoint_id().map(str::to_string).expect("parent checkpoint exists");
         let pins = app.test_store().await.envelope().vcs.checkpoints.iter().find(|checkpoint| checkpoint.id == pinned_checkpoint).map(|checkpoint| checkpoint.composition_pins.clone()).expect("checkpoint found");
         assert_eq!(pins.len(), 1, "a composing document's checkpoint must pin its children");
         assert_eq!(pins[0].child_ref.artifact_id, "child-1");
 
-        // ⏭️ Move both forward, past the pin.
         app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 42 }, &meta()).await.expect("second composite edit");
         let live = reads_child_count(&app);
         assert_eq!(live.await, 42);
 
-        // ⏮️ Checking the parent out to the pinned checkpoint must drag the child back with it —
-        // otherwise a restored composition silently mixes an old parent with a new child.
         app.dispatch_action("checkoutCheckpoint", Some(&dv(serde_json::json!({ "checkpointId": pinned_checkpoint }))), &meta()).await.expect("checkout");
         assert_eq!(reads_child_count(&app).await, 7, "checkout did not cascade to the pinned child");
     }
@@ -4841,6 +4856,9 @@ mod plugin_builder_contract_tests {
         view.typed_read::<TestSnapshot>("slot", "child-1").expect("child readable through the view").count
     }
 
+    /// 🧾️ The command capture this law holds IS the alias that blocks the retiring root's close —
+    /// a real captured root is released when its operation retires, and every assertion above has
+    /// already run against it.
     #[semio_framework_async_macros::async_test]
     async fn child_content_publication_path_copies_fixed_pages_and_command_capture_retains_one_root() {
         let mut app = contract_composed_app().await;
@@ -4856,24 +4874,21 @@ mod plugin_builder_contract_tests {
         assert!(admitted.typed_read::<TestSnapshot>("slot", "child-b").is_err(), "the admitted root never observes a later child");
         assert!(ChildContentView::clone(&app.child_content_root).typed_read::<TestSnapshot>("slot", "child-b").is_ok());
         assert!(!app.child_content_retirements.is_empty(), "the replaced nonempty root remains under explicit retirement authority");
-        // 🧾️ The command capture this law holds IS the alias that blocks the retiring root's close —
-        // a real captured root is released when its operation retires, and every assertion above has
-        // already run against it.
         drop(admitted);
         drop(admitted_root);
         drain_and_close_composed_fixture(&mut app);
     }
 
+    /// 🎡️ The rotation is fair: one call runs every stage that still has something to give and
+    /// reports a blocked stage only once nothing else can progress, so the block is the rotation's
+    /// EVENTUAL answer rather than the answer of the one call that lands on stage 4. A lost
+    /// authority never reports a block at all, so nothing here is weakened.
     #[semio_framework_async_macros::async_test]
     async fn child_snapshot_retirement_rejection_preserves_exact_erased_owner() {
         let mut app = contract_composed_app_raw().await;
         app.register_child("slot", "child-a", test_child_dialect().await, new_bare_test_child("child-a").await.expect("construct child-a")).await.expect("register child-a");
         let generation = app.admit_child_content_publication().expect("admit replacement root");
         app.publish_child_content_member(generation, "slot", "child-a").await.expect("replace the exact child snapshot lease");
-        // 🎡️ The rotation is fair: one call runs every stage that still has something to give and
-        // reports a blocked stage only once nothing else can progress, so the block is the rotation's
-        // EVENTUAL answer rather than the answer of the one call that lands on stage 4. A lost
-        // authority never reports a block at all, so nothing here is weakened.
         assert_maintenance_reports_block(&mut app, 4, "the rejected child snapshot transfer");
         let retirement = app.child_content_retirements.get(2).expect("retirement remains registered after rejected transfer");
         let entry = retirement.pending.as_ref().expect("exact rejected snapshot remains pending");
@@ -4889,18 +4904,27 @@ mod plugin_builder_contract_tests {
     /// happen is the lying owner's authority leaving the registry: every turn until the fault arrives
     /// is asserted to leave `child_content_retirements` populated, which is strictly what the old
     /// clause was a proxy for, and the fault must still arrive by name before any reclaim.
+    ///
+    /// 🪢️ The registered root captured the member's CURRENT snapshot, so while the member still
+    /// holds that exact `Arc` the returned-read retirement is only an alias: `Arc::into_inner`
+    /// answers `None`, the alias is released truthfully and the member's own owned-value factory
+    /// — where the lie lives — is never consulted. Advancing the member past that snapshot and
+    /// draining the alias its displacement retired makes the retiring root the snapshot's LAST
+    /// owner, which is the only state in which a child-content retirement meets a lying disposer
+    /// at all.
+    ///
+    /// 🪪️ Either named guard is an acceptable answer — the plugin ladder's own terminal-witness
+    /// refusal, or the nested disposer refusal it now attributes by name instead of as the
+    /// anonymous `plugin.internal` — but an unnamed internal error is not.
+    ///
+    /// 🧹️ The lie is spent (see `TestSnapshotRetirement::close_step`), so the very disposer that
+    /// was caught now answers honestly and the fixture closes through the ordinary ladder — the
+    /// law proves the refusal, not a leak.
     #[semio_framework_async_macros::async_test]
     async fn child_root_maintenance_requires_terminal_empty_before_reclaim() {
         let mut app = contract_composed_app_raw().await;
         app.register_child("slot", "child-a", test_child_dialect().await, new_bare_test_child("child-a").await.expect("construct child-a")).await.expect("register child-a");
         install_test_snapshot_retirement(&mut app, "child-a", true);
-        // 🪢️ The registered root captured the member's CURRENT snapshot, so while the member still
-        // holds that exact `Arc` the returned-read retirement is only an alias: `Arc::into_inner`
-        // answers `None`, the alias is released truthfully and the member's own owned-value factory
-        // — where the lie lives — is never consulted. Advancing the member past that snapshot and
-        // draining the alias its displacement retired makes the retiring root the snapshot's LAST
-        // owner, which is the only state in which a child-content retirement meets a lying disposer
-        // at all.
         {
             let TestMembers::Child(child) = &mut app.children.get_mut(&("slot".to_string(), "child-a".to_string())).expect("exact child owner").member;
             for value in 1..=2 {
@@ -4937,17 +4961,11 @@ mod plugin_builder_contract_tests {
             }
         }
         let fault = faulted.expect("lying Complete must fail before registry removal");
-        // 🪪️ Either named guard is an acceptable answer — the plugin ladder's own terminal-witness
-        // refusal, or the nested disposer refusal it now attributes by name instead of as the
-        // anonymous `plugin.internal` — but an unnamed internal error is not.
         assert!(
             matches!(fault.code.0.as_str(), "interactive-job.child-snapshot-terminal-not-empty" | "interactive-job.child-snapshot-disposer-refused"),
             "the lie must be caught BY NAME: {fault:?}"
         );
         assert!(!app.child_content_retirements.is_empty(), "terminal witness failure retains the registry authority");
-        // 🧹️ The lie is spent (see `TestSnapshotRetirement::close_step`), so the very disposer that
-        // was caught now answers honestly and the fixture closes through the ordinary ladder — the
-        // law proves the refusal, not a leak.
         drain_and_close_composed_fixture(&mut app);
     }
 
@@ -4971,6 +4989,13 @@ mod plugin_builder_contract_tests {
         drain_and_close_composed_fixture(&mut app);
     }
 
+    /// ⏱️ This clause used to be an 8 ms wall clock. The clock was a PROXY for one property — the
+    /// maximum child's bytes never cross the public dispatch boundary, the dispatch hands back a
+    /// continuation instead — and on a loaded machine the proxy fails while the property holds. The
+    /// property itself is asserted directly and deterministically: the dispatch requests its
+    /// continuation, its own answer carries no child bytes, and the two materialization counters
+    /// below stay at zero. Nothing the clock could catch is lost: a dispatch that walked the
+    /// 4 MiB snapshot would have to clone it or pack-encode it, and both are counted.
     #[semio_framework_async_macros::async_test]
     async fn maximum_child_public_dispatch_reaches_first_continuation_without_clone_or_encode() {
         let mut app = contract_composed_app().await;
@@ -4983,13 +5008,6 @@ mod plugin_builder_contract_tests {
         MAXIMUM_CHILD_ENCODINGS.store(0, std::sync::atomic::Ordering::Release);
 
         let result = app.dispatch_action("probeChild", Some(&dv(serde_json::json!({ "slot": "slot", "childId": "child-maximum" }))), &meta()).await.expect("public maximum-child probe");
-        // ⏱️ This clause used to be an 8 ms wall clock. The clock was a PROXY for one property — the
-        // maximum child's bytes never cross the public dispatch boundary, the dispatch hands back a
-        // continuation instead — and on a loaded machine the proxy fails while the property holds. The
-        // property itself is asserted directly and deterministically: the dispatch requests its
-        // continuation, its own answer carries no child bytes, and the two materialization counters
-        // below stay at zero. Nothing the clock could catch is lost: a dispatch that walked the
-        // 4 MiB snapshot would have to clone it or pack-encode it, and both are counted.
         assert!(result.requested_effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == "probeChildContinuation")));
         let answer = format!("{:?}", result.output);
         assert!(answer.len() < 4096, "the public dispatch's own answer carried {} bytes of the maximum child instead of a continuation", answer.len());
@@ -4998,6 +5016,8 @@ mod plugin_builder_contract_tests {
         assert_eq!(MAXIMUM_CHILD_ENCODINGS.load(std::sync::atomic::Ordering::Acquire), 0, "ChildContentView must not pack-encode maximum child content during public dispatch");
     }
 
+    /// ↩️ Store-level undo bypasses `ArtifactApp::handle` entirely — this is exactly where the
+    /// `thread_local!` child caches this view replaces used to go stale.
     #[semio_framework_async_macros::async_test]
     async fn the_child_content_view_never_goes_stale_across_undo_and_redo() {
         let mut app = contract_composed_app().await;
@@ -5005,21 +5025,26 @@ mod plugin_builder_contract_tests {
         app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta()).await.expect("composite edit");
         assert_eq!(reads_child_count(&app).await, 7);
 
-        // ↩️ Store-level undo bypasses `ArtifactApp::handle` entirely — this is exactly where the
-        // `thread_local!` child caches this view replaces used to go stale.
         app.dispatch_action("undo", None, &meta()).await.expect("undo");
         assert_eq!(reads_child_count(&app).await, 0, "the view must reflect the child's undone state");
         app.dispatch_action("redo", None, &meta()).await.expect("redo");
         assert_eq!(reads_child_count(&app).await, 7, "the view must reflect the child's redone state");
     }
 
+    /// 🪢️ `child-b` is registered but NEVER targeted by the composite gesture below — its
+    /// `tail_group_id()` stays `None`, the textbook "foreign tail" `GroupUndoReport` must
+    /// skip rather than abort the whole group over.
+    ///
+    /// The parent reverted...
+    ///
+    /// ...child-a (the real group member) reverted too...
+    ///
+    /// ...and child-b — a genuine foreign tail, never touched by this group — is reported as
+    /// SKIPPED, not silently dropped nor allowed to abort the rest of the group.
     #[semio_framework_async_macros::async_test]
     async fn group_undo_skips_a_foreign_tail_child_but_still_undoes_parent_and_touched_child() {
         let mut app = contract_composed_app().await;
         app.register_child("slot", "child-a", test_child_dialect().await, new_test_child("child-a").await.expect("construct child")).await.expect("register child seeds ownership");
-        // `child-b` is registered but NEVER targeted by the composite gesture below — its
-        // `tail_group_id()` stays `None`, the textbook "foreign tail" `GroupUndoReport` must
-        // skip rather than abort the whole group over.
         app.register_child("slot", "child-b", test_child_dialect().await, new_test_child("child-b").await.expect("construct child")).await.expect("register child seeds ownership");
 
         let before = app.test_snapshot().await;
@@ -5028,24 +5053,20 @@ mod plugin_builder_contract_tests {
 
         let result = app.dispatch_action("undo", None, &meta()).await.expect("group undo");
 
-        // The parent reverted...
         assert_eq!(app.test_snapshot().await, before);
-        // ...child-a (the real group member) reverted too...
         let TestMembers::Child(child_a_store) = &mut app.children.get_mut(&("slot".to_string(), "child-a".to_string())).expect("child-a").member;
         assert_eq!(child_a_store.snapshot().expect("child-a snapshot").count, 0);
-        // ...and child-b — a genuine foreign tail, never touched by this group — is reported as
-        // SKIPPED, not silently dropped nor allowed to abort the rest of the group.
         assert!(!result.diagnostics.is_empty(), "child-b's foreign tail must surface a diagnostic, not vanish silently");
         assert!(result.diagnostics.iter().any(|diagnostic| diagnostic.message.contains("child-b")), "the skip diagnostic must name the actual skipped member");
 
     }
 
+    /// 🌱️ Proves `VcsArtifactApp::absorb_created_children` — the mechanism a
+    /// `ChildGenesis`-authoring `Emit` constructor (a later wave) will rely on to make a
+    /// freshly-minted child reachable at all; per B2's own `GroupReceipt::created_children`
+    /// doc comment, skipping this step would make `ChildGenesis` pointless.
     #[semio_framework_async_macros::async_test]
     async fn created_children_survive_absorb_into_the_child_store_map() {
-        // 🌱️ Proves `VcsArtifactApp::absorb_created_children` — the mechanism a
-        // `ChildGenesis`-authoring `Emit` constructor (a later wave) will rely on to make a
-        // freshly-minted child reachable at all; per B2's own `GroupReceipt::created_children`
-        // doc comment, skipping this step would make `ChildGenesis` pointless.
         let mut app = contract_composed_app().await;
         let parent_id = app.store.envelope().id.clone();
         app.composition.graph_mut().await.insert_owns(&parent_id, "genesisSlot", "genesis-child").await.expect("seed ownership so absorb's slot_of lookup resolves");
@@ -5061,13 +5082,13 @@ mod plugin_builder_contract_tests {
     }
     //#endregion 🔖️CompositionTests
 
+    /// 👁️ A view command never advances the document.
     #[semio_framework_async_macros::async_test]
     async fn view_action_emits_no_operations() {
         let mut app = contract_app().await;
         let result = app.dispatch_typed(TestCommand::Select { id: Some("node-1".into()) }, &meta()).await.expect("select");
         assert!(result.mutations.is_empty());
         assert!(result.requested_effects.is_empty());
-        // A view command never advances the document.
         assert_eq!(app.test_snapshot().await, TestSnapshot::default());
     }
 
@@ -5115,19 +5136,24 @@ mod plugin_builder_contract_tests {
     }
 
 
+    /// 🔄️ Keep the two selects from folding into one row by dispatching an unrelated Mutation between them.
+    ///
+    /// 🧾️ Revert-to-command semantics are VCS-consistent (same as the document side): "leave the
+    /// TARGET row applied, undo everything after it" — so to land back on `selected == "a"`, target
+    /// the "select a" row itself (the one with the SMALLEST seq — `history.commands` is newest-first).
+    ///
+    /// 🧾️ Unlike the pre-B1 memory-replay (which redispatched "select" and folded a new row), a
+    /// config-store undo-to-position is pure cursor motion on the config store — it appends its own
+    /// "revertToCommand" row, exactly like the document-edit branch above it.
     #[semio_framework_async_macros::async_test]
     async fn view_action_with_inverse_is_revertible_and_backwards_restores_app_runtime_state() {
         let mut app = contract_app().await;
-        // Keep the two selects from folding into one row by dispatching an unrelated Mutation between them.
         app.dispatch_typed(TestCommand::Select { id: Some("a".into()) }, &meta()).await.expect("select a");
         app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("increment");
         app.dispatch_typed(TestCommand::Select { id: Some("b".into()) }, &meta()).await.expect("select b");
         assert_eq!(app.test_config().await.selected, Some("b".to_string()));
 
         let history = app.test_history().await;
-        // 🧾️ Revert-to-command semantics are VCS-consistent (same as the document side): "leave the
-        // TARGET row applied, undo everything after it" — so to land back on `selected == "a"`, target
-        // the "select a" row itself (the one with the SMALLEST seq — `history.commands` is newest-first).
         let select_a = history.commands.iter().filter(|entry| entry.action_id == "select").min_by_key(|entry| entry.seq).expect("select-a row carrying a config edit id");
         assert!(select_a.revertible, "a config edit-linked row must be revertible");
         let seq = select_a.seq;
@@ -5137,13 +5163,12 @@ mod plugin_builder_contract_tests {
 
         assert_eq!(app.test_config().await.selected, Some("a".to_string()), "reverting to the select-a row must leave it applied and undo select-b");
         let after = app.test_history().await;
-        // 🧾️ Unlike the pre-B1 memory-replay (which redispatched "select" and folded a new row), a
-        // config-store undo-to-position is pure cursor motion on the config store — it appends its own
-        // "revertToCommand" row, exactly like the document-edit branch above it.
         assert_eq!(after.commands.len(), log_len_before + 1, "the revert appends one History-kind row");
         assert_eq!(after.commands.first().map(|entry| entry.action_id.as_str()), Some(REVERT_TO_COMMAND_ACTION_ID));
     }
 
+    /// 🫧️ The plugin cannot touch shell-owned state itself — it bubbles the inverse out as an effect
+    /// instead of replaying anything locally, and does NOT append a new log entry on its own.
     #[semio_framework_async_macros::async_test]
     async fn shell_action_with_inverse_bubbles_a_replay_effect_instead_of_replaying_locally() {
         let mut app = contract_app().await;
@@ -5157,8 +5182,6 @@ mod plugin_builder_contract_tests {
 
         let result = reserved_action(&mut app, REVERT_TO_COMMAND_ACTION_ID, Some(&dv(json!({ "entrySeq": seq })))).await;
 
-        // The plugin cannot touch shell-owned state itself — it bubbles the inverse out as an effect
-        // instead of replaying anything locally, and does NOT append a new log entry on its own.
         assert_eq!(result.requested_effects, vec![Effect::ReplayShellCommand { action_id: "os.setThemeId".into(), args: Some(semio_framework::dsl_value!({ "themeId": "light" })) }]);
         assert_eq!(app.test_history().await.commands.len(), history.commands.len(), "bubbling the effect logs nothing new by itself");
         artifact_app_laws::close_registered_fixture_app(&mut *app);
@@ -5192,6 +5215,7 @@ mod plugin_builder_contract_tests {
         assert!(result.requested_effects.is_empty());
     }
 
+    /// ✂️ One undo restores the cut label — cut is a single coalesced edit, not two.
     #[semio_framework_async_macros::async_test]
     async fn cut_removes_label_and_emits_clipboard_write_as_one_undo_unit() {
         let mut app = contract_app().await;
@@ -5200,7 +5224,6 @@ mod plugin_builder_contract_tests {
         assert_eq!(app.test_snapshot().await.label, "");
         assert_eq!(result.requested_effects.len(), 1);
         assert!(matches!(&result.requested_effects[0], Effect::ClipboardWrite { fragment } if fragment.dsl_text == "hello"));
-        // One undo restores the cut label — cut is a single coalesced edit, not two.
         reserved_action(&mut app, "undo", None).await;
         assert_eq!(app.test_snapshot().await.label, "hello");
     }
@@ -5259,6 +5282,7 @@ mod plugin_builder_contract_tests {
         }
     }
 
+    /// 🪡️ One undo reverts the whole coalesced gesture back to the empty label.
     #[semio_framework_async_macros::async_test]
     async fn coalesced_operations_amend_a_single_edit() {
         let mut app = contract_app().await;
@@ -5266,7 +5290,6 @@ mod plugin_builder_contract_tests {
             app.dispatch_typed(TestCommand::SetLabel { value: value.into() }, &meta()).await.expect("setLabel");
         }
         assert_eq!(app.test_snapshot().await.label, "abc");
-        // One undo reverts the whole coalesced gesture back to the empty label.
         reserved_action(&mut app, "undo", None).await;
         assert_eq!(app.test_snapshot().await.label, "");
     }
@@ -5701,6 +5724,9 @@ mod plugin_builder_contract_tests {
     }
 
     //#region 🔖️CommandLogTests
+    /// 🏷️ `increment` IS declared by `migrated_contract_registry` (the fixture every law here now uses),
+    /// so the row carries its DECLARED label — still `LocalizedLabel::data`, so still locale-invariant
+    /// rather than untranslated English, which is the property this clause exists for.
     #[semio_framework_async_macros::async_test]
     async fn an_operation_action_appends_one_command_log_entry_linked_to_its_edit() {
         let mut app = contract_app().await;
@@ -5709,9 +5735,6 @@ mod plugin_builder_contract_tests {
         assert_eq!(history.commands.len(), 1);
         let entry = &history.commands[0];
         assert_eq!(entry.action_id, "increment");
-        // 🏷️ `increment` IS declared by `migrated_contract_registry` (the fixture every law here now uses),
-        // so the row carries its DECLARED label — still `LocalizedLabel::data`, so still locale-invariant
-        // rather than untranslated English, which is the property this clause exists for.
         assert_eq!(label_in(&entry.label, Locale::En), "Increment");
         assert_eq!(label_in(&entry.label, Locale::De), "Increment", "a declared label is locale-invariant data, never untranslated English");
         assert_eq!(entry.kind, ActionKind::Mutation);
@@ -5746,13 +5769,15 @@ mod plugin_builder_contract_tests {
         assert!(after_redo.commands.iter().any(|entry| entry.action_id == "undo"));
     }
 
+    /// 🧾️ `commands` is newest-first — take the MINIMUM seq among "increment" entries to target inc1, not inc2.
+    ///
+    /// 🧾️ `commands` is newest-first — the just-appended revert entry is the FIRST element, not the last.
     #[semio_framework_async_macros::async_test]
     async fn revert_to_command_restores_the_snapshot_and_appends_one_entry() {
         let mut app = contract_app().await;
         app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("inc1");
         app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("inc2");
         assert_eq!(app.test_snapshot().await.count, 2);
-        // 🧾️ `commands` is newest-first — take the MINIMUM seq among "increment" entries to target inc1, not inc2.
         let first_increment_seq = app.test_history().await.commands.iter().filter(|entry| entry.action_id == "increment").map(|entry| entry.seq).min().expect("first increment entry");
         let before_len = app.test_history().await.commands.len();
 
@@ -5761,10 +5786,10 @@ mod plugin_builder_contract_tests {
         assert_eq!(app.test_snapshot().await.count, 1, "revert leaves the target edit applied, undoing only what came after it");
         let history = app.test_history().await;
         assert_eq!(history.commands.len(), before_len + 1, "exactly one entry appended for the revert itself");
-        // 🧾️ `commands` is newest-first — the just-appended revert entry is the FIRST element, not the last.
         assert_eq!(history.commands.first().map(|entry| entry.action_id.as_str()), Some(REVERT_TO_COMMAND_ACTION_ID));
     }
 
+    /// 🧾️ The receiver never dispatched anything itself — any log entry it has must come from backfill.
     #[semio_framework_async_macros::async_test]
     async fn ingested_remote_edits_are_backfilled_into_the_command_log() {
         let mut sender = contract_app().await;
@@ -5780,7 +5805,6 @@ mod plugin_builder_contract_tests {
         }
         let operations = protocol::encode_envelopes(&envelopes);
 
-        // 🧾️ The receiver never dispatched anything itself — any log entry it has must come from backfill.
         let mut receiver = contract_app().await;
         receiver.ingest_operations(&operations).await.expect("ingest");
         let history = receiver.test_history().await;
@@ -5798,6 +5822,8 @@ mod plugin_builder_contract_tests {
         artifact_app_laws::close_registered_fixture_app(&mut *app);
     }
 
+    /// 📌️ Six since the explicit check-in row landed (`#s-checkin`, React's
+    /// `framework.history.checkin`) between Commit Checkpoint and Create Alternative.
     #[semio_framework_async_macros::async_test]
     async fn ui_history_panel_filters_rows_and_gates_the_backwards_action() {
         let history = HistoryView {
@@ -5844,8 +5870,6 @@ mod plugin_builder_contract_tests {
         assert_eq!(all_panel.children.len(), 2, "Actions + Commands sections");
         let Component::TreeSection(actions_props) = &all_panel.children[0].component else { panic!("expected a TreeSection") };
         assert_eq!(actions_props.label.as_ref().map(|label| label.0.as_str()), Some("Actions"));
-        // 📌️ Six since the explicit check-in row landed (`#s-checkin`, React's
-        // `framework.history.checkin`) between Commit Checkpoint and Create Alternative.
         assert_eq!(all_panel.children[0].children.len(), 6, "undo/redo/commit/checkin/alternative/filter");
         assert_eq!(all_panel.children[0].children[3].key.as_str(), "framework.history.checkin", "the check-in row follows Commit Checkpoint");
         let viewer_panel = ui_history_panel(&history, "ctrl", false, true, &ViewModel::default()).await.expect("viewer history panel");
@@ -6412,7 +6436,6 @@ mod plugin_builder_contract_tests {
         super::plugin_hide_surface(&runtime, 7, hidden).await.unwrap();
         assert!(super::plugin_render_surface(&runtime, 7, hidden).await.is_err());
         assert!(super::plugin_render_surface(&runtime, 7, fixture["survivor"].as_str().unwrap()).await.is_ok());
-        eprintln!("[DEBUG] real app render receives host preferences and each concrete surface context; hidden surface rendering is rejected");
     }
     //#endregion 🗂️GroupedContextMenu
 
@@ -6430,7 +6453,6 @@ mod plugin_builder_contract_tests {
         let (body, actual) = RENDER_CONTEXT_PROBE.with(|probe| probe.take().unwrap());
         assert_eq!(body, "properties");
         assert_eq!(serde_json::to_value(actual).unwrap(), serde_json::to_value(host_view.for_panel()).unwrap());
-        eprintln!("[DEBUG] panel refresh clears focused window and utility while preserving host preferences");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -6467,15 +6489,14 @@ mod plugin_builder_contract_tests {
         assert_eq!(payloads["measures"]["left"][0]["id"], "left-measure");
         assert_eq!(payloads["measures"]["right"][0]["id"], "right-measure");
         assert_eq!(payloads["tools"]["fill"][0]["id"], "fill-measure");
-        eprintln!("[DEBUG] reserved section surfaces rendered {} accessor maps through the retained chunk carrier", payloads.len());
     }
 
+    /// 🧮️ Sized FROM the two ceilings rather than against a frozen literal: the law's whole subject is
+    /// a payload one whole node of children cannot hold, so its precondition has to follow whatever
+    /// `UI_TEXT_MAX_BYTES`/`UI_BUILT_CHILDREN_MAX` currently are. Each map row is at least 24 bytes of
+    /// JSON (`"window-0000":"measure-0000",`), so this many rows always overflows the product.
     #[semio_framework_async_macros::async_test]
     async fn reserved_section_carrier_pages_a_payload_past_one_node_of_children() {
-        // 🧮️ Sized FROM the two ceilings rather than against a frozen literal: the law's whole subject is
-        // a payload one whole node of children cannot hold, so its precondition has to follow whatever
-        // `UI_TEXT_MAX_BYTES`/`UI_BUILT_CHILDREN_MAX` currently are. Each map row is at least 24 bytes of
-        // JSON (`"window-0000":"measure-0000",`), so this many rows always overflows the product.
         let rows = UI_TEXT_MAX_BYTES * UI_BUILT_CHILDREN_MAX / 24;
         let payload = serde_json::to_string(&(0..rows).map(|index| (format!("window-{index:04}"), format!("measure-{index:04}"))).collect::<BTreeMap<_, _>>()).unwrap();
         assert!(payload.len() > UI_TEXT_MAX_BYTES * UI_BUILT_CHILDREN_MAX);
@@ -6511,7 +6532,7 @@ mod plugin_builder_contract_tests {
         let leaves = count_projected_text_leaves(&projected);
         assert!(leaves <= payload.len().div_ceil(pack).max(1) + 2, "packed leaves must stay near ceil(bytes/pack), got {leaves} for {} bytes", payload.len());
         assert!(count_projected_nodes(&projected) <= semio_framework_ui_contract::UI_DOCUMENT_NODES, "a reserved measures carrier must fit the document node table");
-        eprintln!("[DEBUG] section carrier packed {} bytes into {} text leaves at depth {depth} ({} nodes)", payload.len(), chunks.len(), count_projected_nodes(&projected));
+        eprintln!("section carrier packed {} bytes into {} text leaves at depth {depth} ({} nodes)", payload.len(), chunks.len(), count_projected_nodes(&projected));
     }
 
     /// 🧩️ Pins the pack this producer writes against the language-neutral fixture the TypeScript
@@ -6540,7 +6561,6 @@ mod plugin_builder_contract_tests {
             assert_eq!(attributes[&format!("{offset:02}")].as_str().unwrap(), *slice);
         }
         assert_eq!(artifact_app_laws::fixture_carrier_text(&projected), payload);
-        eprintln!("[DEBUG] neutral fixture pinned: {} bytes packed into 1 value slice and {} dataAttributes slices", payload.len(), slices.len() - 1);
     }
 
     //#region 🚚️World3dSceneLaneCarriers
@@ -6633,7 +6653,6 @@ mod plugin_builder_contract_tests {
         let mut reassembled: semio_framework_ui_scene::World3dScene = artifact_app_laws::decode_fixture_scene_with_lanes(&serde_json::to_string(&projection).unwrap()).unwrap();
         reassembled.lanes = Vec::new();
         assert_eq!(reassembled, scene);
-        eprintln!("[DEBUG] world-3d scene of {assembled_bytes} packed bytes published a {doc_bytes}-byte spine plus {} lane carriers holding {total} payload bytes", lanes.len());
     }
 
     #[semio_framework_async_macros::async_test]
@@ -6649,7 +6668,6 @@ mod plugin_builder_contract_tests {
         let changed: Vec<&String> = picked_lanes.keys().filter(|key| picked_lanes.get(*key) != first.get(*key)).collect();
         assert_eq!(changed, vec![semio_framework_ui_scene::World3dSceneLane::Selection.body_key()]);
         assert_ne!(picked_projection["component"], moved_projection["component"], "a changed lane must still move the spine so its consumer re-reads");
-        eprintln!("[DEBUG] a camera move republished 0 of {} lanes; a selection edit republished exactly {}", first.len(), changed.len());
     }
 
     #[semio_framework_async_macros::async_test]
@@ -6661,7 +6679,7 @@ mod plugin_builder_contract_tests {
         let (leaves, depth) = assert_lane_carrier(lanes.get(semio_framework_ui_scene::World3dSceneLane::Instances.body_key()).unwrap(), &instances);
         let pack = UI_TEXT_MAX_BYTES * (1 + UI_FIXED_LIST_ITEMS);
         assert!(leaves <= instances.len().div_ceil(pack).max(1) + 2, "packed instances leaves must stay near ceil(bytes/pack), got {leaves} for {} bytes", instances.len());
-        eprintln!("[DEBUG] one {}-byte instances lane packed into {leaves} text leaves at depth {depth}", instances.len());
+        eprintln!("one {}-byte instances lane packed into {leaves} text leaves at depth {depth}", instances.len());
     }
 
     #[semio_framework_async_macros::async_test]
@@ -6680,7 +6698,6 @@ mod plugin_builder_contract_tests {
         let (projection, _) = project_scene_surface(node);
         let nodes = count_projected_nodes(&projection);
         assert!(nodes <= semio_framework_ui_contract::UI_DOCUMENT_NODES, "Nakagin-scale world-3d surface presented {nodes} nodes over UI_DOCUMENT_NODES");
-        eprintln!("[DEBUG] Nakagin-scale world-3d surface presented {nodes} nodes (cap {})", semio_framework_ui_contract::UI_DOCUMENT_NODES);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -6691,7 +6708,6 @@ mod plugin_builder_contract_tests {
         let projected: Value = serde_json::from_str(&artifact_app_laws::project_and_retire_fixture_tree(tree).unwrap()).unwrap();
         let nodes = count_projected_nodes(&projected);
         assert!(nodes <= semio_framework_ui_contract::UI_DOCUMENT_NODES, "a 100 KiB measures section presented {nodes} nodes over UI_DOCUMENT_NODES");
-        eprintln!("[DEBUG] 100 KiB measures section presented {nodes} nodes for {} bytes", payload.len());
     }
 
     //#endregion 🚚️World3dSceneLaneCarriers
@@ -6722,7 +6738,6 @@ mod plugin_builder_contract_tests {
             expected["surface"] = surface["id"].clone();
             assert_eq!(serde_json::to_value(&presence[0]).unwrap(), expected);
         }
-        eprintln!("[DEBUG] surface context presence follows each concrete window and panel without sibling leakage");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -6812,6 +6827,9 @@ mod plugin_builder_contract_tests {
         assert_eq!(event.payload, dsl::DslValue::from(json!({ "utilityId": "brush" })));
     }
 
+    /// 🧷️ One undo reverts the whole coalesced amend gesture.
+    ///
+    /// Each commit is its own edit: one undo only reverts the last commit.
     #[semio_framework_async_macros::async_test]
     async fn action_emit_amend_coalesces_while_commit_does_not() {
         let mut app = contract_app_under_test().await;
@@ -6819,7 +6837,6 @@ mod plugin_builder_contract_tests {
             app.dispatch_typed(TestCommand::AmendLabel { value: value.into() }, &meta()).await.expect("amendLabel");
         }
         assert_eq!(app.test_snapshot().await.label, "abc");
-        // One undo reverts the whole coalesced amend gesture.
         reserved_action(&mut app, "undo", None).await;
         assert_eq!(app.test_snapshot().await.label, "");
 
@@ -6827,17 +6844,18 @@ mod plugin_builder_contract_tests {
             app.dispatch_typed(TestCommand::CommitLabel { value: value.into() }, &meta()).await.expect("commitLabel");
         }
         assert_eq!(app.test_snapshot().await.label, "xy");
-        // Each commit is its own edit: one undo only reverts the last commit.
         reserved_action(&mut app, "undo", None).await;
         assert_eq!(app.test_snapshot().await.label, "x");
     }
 
+    /// 🪢️ Regression guard for `result_from_last_edit`'s `tail_offset` slicing: even though the
+    /// coalesced edit accumulates every amend's operations (3 after this loop), each dispatch's
+    /// `InvocationResult` must report only the operation IT just added — never re-serializing the whole
+    /// growing edit into every `KernelMutation`/`UndoGroup` on every single dispatch.
+    ///
+    /// The narrowed per-dispatch reporting must not affect coalescing/undo semantics.
     #[semio_framework_async_macros::async_test]
     async fn amend_dispatch_reports_only_this_dispatch_new_operations() {
-        // 🪢️ Regression guard for `result_from_last_edit`'s `tail_offset` slicing: even though the
-        // coalesced edit accumulates every amend's operations (3 after this loop), each dispatch's
-        // `InvocationResult` must report only the operation IT just added — never re-serializing the whole
-        // growing edit into every `KernelMutation`/`UndoGroup` on every single dispatch.
         let mut app = contract_app_under_test().await;
         app.dispatch_typed(TestCommand::AmendLabel { value: "a".into() }, &meta()).await.expect("amendLabel a");
         app.dispatch_typed(TestCommand::AmendLabel { value: "ab".into() }, &meta()).await.expect("amendLabel ab");
@@ -6852,7 +6870,6 @@ mod plugin_builder_contract_tests {
         assert_eq!(result.inverse_group.mutations.len(), 1);
         assert_eq!(result.inverse_group.inverse_mutations.len(), 1);
         assert_eq!(app.test_snapshot().await.label, "abc");
-        // The narrowed per-dispatch reporting must not affect coalescing/undo semantics.
         reserved_action(&mut app, "undo", None).await;
         assert_eq!(app.test_snapshot().await.label, "");
     }
@@ -6988,10 +7005,10 @@ mod plugin_builder_contract_tests {
     }
 
     //#region 🔖️InteractionDispatchTests
+    /// 🕹️ `interaction_topology` requires a non-empty `label` for "item-1" to exist.
     #[semio_framework_async_macros::async_test]
     async fn interaction_select_replace_persists_through_the_interaction_store() {
         let mut app = interaction_app_under_test().await;
-        // 🕹️ `interaction_topology` requires a non-empty `label` for "item-1" to exist.
         app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).await.expect("seed label");
         reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))).await;
         let selection = app.interaction_state().await.selection.get("items").cloned().expect("items domain selected");
@@ -6999,6 +7016,7 @@ mod plugin_builder_contract_tests {
         assert_eq!(selection.granularity, "item");
     }
 
+    /// 🐁️ Empty targets clears the channel (see `next_hover`'s "empty batch clears" law).
     #[semio_framework_async_macros::async_test]
     async fn interaction_hover_is_ephemeral_and_never_touches_the_persisted_interaction_store() {
         let mut app = interaction_app_under_test().await;
@@ -7011,11 +7029,12 @@ mod plugin_builder_contract_tests {
         assert_eq!(app.interaction_store.envelope().vcs.edits.len(), edits_after_select, "hover must never mint a persisted interaction_store edit");
         assert_eq!(app.interaction_state().await.hover.get("items").map(|hover| hover.ids.clone()), Some(vec!["item-1".to_string()]));
 
-        // 🐁️ Empty targets clears the channel (see `next_hover`'s "empty batch clears" law).
         reserved_action(&mut app, INTERACTION_HOVER_ACTION_ID, Some(&dv(json!({ "domainId": "items", "channel": "pointer", "targets": "[]" })))).await;
         assert!(app.interaction_state().await.hover.get("items").is_none(), "an emptied hover channel is removed, not left as an empty entry");
     }
 
+    /// 🕰️ The framework-injected "undo" action only ever dispatches against `self.store` (the
+    /// DOCUMENT store) — with only the label-seed edit on it, one undo reverts THAT, not the pick.
     #[semio_framework_async_macros::async_test]
     async fn a_pick_is_never_undoable_the_default_undo_only_ever_walks_the_document_store() {
         let mut app = interaction_app_under_test().await;
@@ -7023,13 +7042,14 @@ mod plugin_builder_contract_tests {
         reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))).await;
         assert_eq!(app.interaction_state().await.selection.get("items").map(|selection| selection.ids.clone()), Some(vec!["item-1".to_string()]));
 
-        // 🕰️ The framework-injected "undo" action only ever dispatches against `self.store` (the
-        // DOCUMENT store) — with only the label-seed edit on it, one undo reverts THAT, not the pick.
         reserved_action(&mut app, "undo", None).await;
         assert_eq!(app.test_snapshot().await.label, "", "undo must revert the document edit (seeding the label)");
         assert_eq!(app.interaction_state().await.selection.get("items").map(|selection| selection.ids.clone()), Some(vec!["item-1".to_string()]), "the pick itself must survive an unrelated document undo — lane discipline");
     }
 
+    /// 🛂️ An undeclared granularity is rejected, not silently accepted — `handle_action` only ADMITS
+    /// a framework-reserved verb (`FrameworkSetInteractionGranularityJob`), so the refusal rides the
+    /// reserved job's commit, exactly where `reserved_action` above drives the accepted ones.
     #[semio_framework_async_macros::async_test]
     async fn set_selection_mode_and_set_interaction_granularity_persist_immediately() {
         let mut app = interaction_app_under_test().await;
@@ -7039,9 +7059,6 @@ mod plugin_builder_contract_tests {
         reserved_action(&mut app, SET_INTERACTION_GRANULARITY_ACTION_ID, Some(&dv(json!({ "domainId": "items", "granularityId": "item" })))).await;
         assert_eq!(app.interaction_state().await.active_granularity.get("items").map(String::as_str), Some("item"));
 
-        // 🛂️ An undeclared granularity is rejected, not silently accepted — `handle_action` only ADMITS
-        // a framework-reserved verb (`FrameworkSetInteractionGranularityJob`), so the refusal rides the
-        // reserved job's commit, exactly where `reserved_action` above drives the accepted ones.
         let admitted = app.handle_action(SET_INTERACTION_GRANULARITY_ACTION_ID, Some(&dv(json!({ "domainId": "items", "granularityId": "bogus" }))), &meta()).await.expect("undeclared granularity admission");
         let error = crate::app::settle_framework_reserved_admission(&mut *app, admitted).await.expect_err("undeclared granularity must be rejected");
         assert!(error.message.contains("bogus"), "unexpected error: {}", error.message);
@@ -7059,6 +7076,8 @@ mod plugin_builder_contract_tests {
         assert!(app.interaction_state().await.selection.get("items").is_none_or(|selection| selection.ids.is_empty()), "clearSelection must empty every declared domain's selection");
     }
 
+    /// 🧹️ `TestApp::interaction_topology` reports NO ids once `label` is empty again — simulates
+    /// "item-1 was deleted from the document" — task 4: revalidated after EVERY artifact dispatch.
     #[semio_framework_async_macros::async_test]
     async fn validate_state_prunes_a_stale_selection_id_after_the_document_deletes_it() {
         let mut app = interaction_app_under_test().await;
@@ -7066,8 +7085,6 @@ mod plugin_builder_contract_tests {
         reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))).await;
         assert_eq!(app.interaction_state().await.selection.get("items").map(|selection| selection.ids.clone()), Some(vec!["item-1".to_string()]));
 
-        // 🧹️ `TestApp::interaction_topology` reports NO ids once `label` is empty again — simulates
-        // "item-1 was deleted from the document" — task 4: revalidated after EVERY artifact dispatch.
         app.dispatch_typed(TestCommand::SetLabel { value: "".into() }, &meta()).await.expect("delete item-1 (empty label)");
 
         assert!(app.interaction_state().await.selection.get("items").is_none_or(|selection| selection.ids.is_empty()), "the deleted id must be pruned from selection automatically");
@@ -7108,14 +7125,24 @@ mod plugin_builder_contract_tests {
         assert!(outcome.is_err(), "build_definition must reject transitive hover paired with HierarchyProvider::Flat");
     }
 
+    /// 👥️ Contract-freeze §C7.6 peer setup — M2 (ticket 26/08/17 `design-unified.md`) makes
+    /// this the real presence-derivation fixture the prior packet's own gap note anticipated.
+    ///
+    /// 👥️ M2: `stamp_and_cache_interaction_ui` no longer writes selection/hover back onto the
+    /// tree itself (`TreeNode`/`Component::TreeItem` still carry no presence field — see that
+    /// method's own doc comment for why "the framework wins" onto the tree is gone for good);
+    /// it derives `ui_contract::PresenceUpdate`s into `self.pending_presence` instead, asserted
+    /// below.
+    ///
+    /// 👥️ M2 acceptance: selecting item-1 (own) with alice ALSO selecting it derives exactly
+    /// one `PresenceUpdate` for that node — own.selected true, one peer mark, own color
+    /// threaded through, with the app-local body key before runtime surface binding.
     #[semio_framework_async_macros::async_test]
     async fn ui_tree_stamping_caches_interaction_topology_from_a_domain_bound_tree() {
         let mut app = interaction_app_under_test().await;
         app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).await.expect("seed label");
         reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))).await;
 
-        // 👥️ Contract-freeze §C7.6 peer setup — M2 (ticket 26/08/17 `design-unified.md`) makes
-        // this the real presence-derivation fixture the prior packet's own gap note anticipated.
         app.own_color = Some(9);
         let mut peer_presence = PeerPresenceRoot::empty();
         peer_presence
@@ -7135,11 +7162,6 @@ mod plugin_builder_contract_tests {
         assert!(previous.is_empty());
         drop(previous);
 
-        // 👥️ M2: `stamp_and_cache_interaction_ui` no longer writes selection/hover back onto the
-        // tree itself (`TreeNode`/`Component::TreeItem` still carry no presence field — see that
-        // method's own doc comment for why "the framework wins" onto the tree is gone for good);
-        // it derives `ui_contract::PresenceUpdate`s into `self.pending_presence` instead, asserted
-        // below.
         let item = TreeNode::try_new(
             "item-1",
             Component::TreeItem(TreeItemProps {
@@ -7170,9 +7192,6 @@ mod plugin_builder_contract_tests {
         assert_eq!(topology.ordered.len(), 1);
         assert_eq!(topology.ordered[0].id, "item-1");
 
-        // 👥️ M2 acceptance: selecting item-1 (own) with alice ALSO selecting it derives exactly
-        // one `PresenceUpdate` for that node — own.selected true, one peer mark, own color
-        // threaded through, with the app-local body key before runtime surface binding.
         assert_eq!(app.pending_presence.len(), 1, "expected exactly one dirty presence key, got {:?}", app.pending_presence);
         let update = &app.pending_presence[0];
         assert_eq!(update.surface, semio_framework_ui_contract::SurfaceId::try_from("window").expect("bounded fixture"));
@@ -7230,14 +7249,12 @@ mod plugin_builder_contract_tests {
         let state = app.interaction_state().await;
         app.stamp_and_cache_interaction_ui(&tree(), &state, "window").await.expect("bounded fixture");
         let first: Vec<(String, bool)> = app.pending_presence.drain(..).map(|update| (update.node_key, update.own.selected)).collect();
-        println!("[DEBUG] presence after selecting item-1: {first:?}");
         assert_eq!(first, vec![("item-1".to_string(), true)]);
 
         reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-2"))).await;
         let state = app.interaction_state().await;
         app.stamp_and_cache_interaction_ui(&tree(), &state, "window").await.expect("bounded fixture");
         let second: Vec<(String, bool)> = app.pending_presence.drain(..).map(|update| (update.node_key, update.own.selected)).collect();
-        println!("[DEBUG] presence after moving the selection to item-2: {second:?}");
         assert!(second.contains(&("item-2".to_string(), true)), "the newly selected row must be marked: {second:?}");
         assert!(second.contains(&("item-1".to_string(), false)), "the row that LOST the selection must be retired, not left marked: {second:?}");
 
@@ -7245,7 +7262,6 @@ mod plugin_builder_contract_tests {
         let state = app.interaction_state().await;
         app.stamp_and_cache_interaction_ui(&tree(), &state, "window").await.expect("bounded fixture");
         let third: Vec<(String, bool)> = app.pending_presence.drain(..).map(|update| (update.node_key, update.own.selected)).collect();
-        println!("[DEBUG] presence on an unchanged selection: {third:?}");
         assert_eq!(third, vec![("item-2".to_string(), true)], "an unchanged selection must cost exactly its own mark, never a repeated retirement");
         close_reserved_app(&mut app);
     }
@@ -7554,6 +7570,8 @@ mod plugin_builder_contract_tests {
     /// fold ran before the `Ui` page was minted); the fold's leftover `InteractionView` rides that
     /// same progress unit; the operation retires through `Ui` + `Terminal` and one completion.
     /// Fails-before: the first turn after admission yielded the `ReplayShellCommand`.
+    ///
+    /// 📡️ EXACTLY the host's per-turn effect drain — every effect this turn hands out.
     #[semio_framework_async_macros::async_test]
     async fn typed_ladder_never_hands_a_guest_interaction_verb_to_the_host_on_any_turn() {
         let id = 47u32;
@@ -7583,7 +7601,6 @@ mod plugin_builder_contract_tests {
                         return Err(format!("turn {turns}: exact result ACK rejected"));
                     }
                 }
-                // 📡️ EXACTLY the host's per-turn effect drain — every effect this turn hands out.
                 while let Some(effect) = app.take_typed_operation_effect() {
                     let verb = match &effect {
                         Effect::ReplayShellCommand { action_id, .. } => crate::app::INTERACTION_ACTION_IDS.contains(&action_id.as_str()),
@@ -7611,7 +7628,7 @@ mod plugin_builder_contract_tests {
                 }
                 std::thread::yield_now();
             }
-            println!("[DEBUG] typed-ladder pick retired after {turns} turns: lanes={lanes:?} completions={completions} progress={}", progress_units.len());
+            println!("typed-ladder pick retired after {turns} turns: lanes={lanes:?} completions={completions} progress={}", progress_units.len());
             if lanes.contains(&TypedOperationResultLane::Effect) {
                 return Err(format!("no Effect result page may be minted for a verb that folds inline: {lanes:?}"));
             }
@@ -7768,42 +7785,60 @@ mod plugin_builder_contract_tests {
     /// completion (`reactor_driver::resolve_request`, standing in for `Event::Completed`)
     /// resolves it; the follow-up `TaskResolution::Command` mutates the store, stamped with
     /// the task's CLONED originating `ActionMeta`.
+    ///
+    /// 🪪️ This law dispatches under its OWN instance, not the fixture's default: a typed command
+    /// is refused with `interactive-job.live-instance` unless the wrapper's mounted live instance
+    /// is exactly `meta.instance_id`, and `spawn_task` is keyed off that same id.
+    ///
+    /// 🪜️ A migrated verb's `dispatch_typed` only ADMITS: the emit is owned by the mounted
+    /// operation, and every lane of it — the task lane included — is spent by the bounded
+    /// publication ladder, one lane per unit. Asserting the spawn before settling would assert
+    /// that a migrated command never spawns.
+    ///
+    /// 🪪️ `spawn_task` is keyed off `meta.instance_id` (the publication ladder's own captured
+    /// `mounted.meta`, i.e. `spawn_meta` above, which shares `instance`'s value by construction).
+    ///
+    /// ▶️ First poll: the task runs up to its `.await` on `host.storage_read(..)` and parks —
+    /// genuinely pending, not synchronously resolved.
+    ///
+    /// ✅️ Inject the "completion" (`⚛️reactor::poll`'s `Event::Completed` arm calls the exact
+    /// same `RequestRegistry::resolve`) — request id 1 is `storage_read`'s, the first (and
+    /// only) request this test has allocated.
+    ///
+    /// 🔀️ Re-enter through the SAME typed-command path a live command would — this IS
+    /// `plugin_runtime::plugin_resume_task`'s `TaskResumeInput::Command` arm, exercised
+    /// directly rather than through `crate::reactor::drain_task_resumes` (wasm-only).
+    ///
+    /// 🪜️ The follow-up re-enters the APPLYING lane (`PluginApp::resume_task_command` →
+    /// `dispatch_typed`), so like every migrated dispatch it ADMITS here and the document
+    /// advances when its publication ladder walks. Settle it through the same runtime cell the
+    /// host's continuation drives, then read what it actually did.
+    ///
+    /// 🧾️ And it landed as the app's own verb in the command log, applied — a PREVIEW
+    /// (`handle_command_frame`, the agent prepare lane this resume used to take) records
+    /// nothing at all and applies nothing.
     #[semio_framework_async_macros::async_test]
     async fn a_spawned_task_awaits_a_real_request_and_its_resume_mutates_the_store_under_the_original_meta() {
         let instance = 501;
         let spawn_meta = ActionMeta { actor: "alice".into(), instance_id: instance, view_state: None };
         let mut app = contract_app_raw().await;
-        // 🪪️ This law dispatches under its OWN instance, not the fixture's default: a typed command
-        // is refused with `interactive-job.live-instance` unless the wrapper's mounted live instance
-        // is exactly `meta.instance_id`, and `spawn_task` is keyed off that same id.
         crate::app::PluginApp::bind_instance_id(&mut app, instance).await;
 
         let result = app.dispatch_typed(TestCommand::SpawnCountTask, &spawn_meta).await.expect("dispatching SpawnCountTask must succeed");
         assert!(result.mutations.is_empty(), "SpawnCountTask itself must emit no document mutation — only the LATER resume does");
-        // 🪜️ A migrated verb's `dispatch_typed` only ADMITS: the emit is owned by the mounted
-        // operation, and every lane of it — the task lane included — is spent by the bounded
-        // publication ladder, one lane per unit. Asserting the spawn before settling would assert
-        // that a migrated command never spawns.
         let receipt = artifact_app_laws::settle_registered_typed_operation(&mut app, instance).await.expect("the spawning operation's publication settles");
         assert_eq!(
             receipt.lanes,
             vec![TypedOperationResultLane::Ui, TypedOperationResultLane::Terminal],
             "the task lane spends its own publication unit and mints NO host page of its own: the operation's pages are exactly the ones its emit's remaining lanes owe"
         );
-        // 🪪️ `spawn_task` is keyed off `meta.instance_id` (the publication ladder's own captured
-        // `mounted.meta`, i.e. `spawn_meta` above, which shares `instance`'s value by construction).
         assert_eq!(crate::reactor::reactor_driver::task_count_for_instance(instance).await, 1, "the publication ladder's task lane must have spawned exactly one task");
 
-        // ▶️ First poll: the task runs up to its `.await` on `host.storage_read(..)` and parks —
-        // genuinely pending, not synchronously resolved.
         let pending = crate::reactor::reactor_driver::run_until_idle(8).await;
         assert!(pending, "the task must be parked on a real RequestRegistry await, not finished synchronously");
         assert_eq!(crate::reactor::reactor_driver::pending_request_count().await, 1, "storage_read must have allocated exactly one RequestRegistry slot");
         assert!(crate::reactor::reactor_driver::pop_task_resume().await.is_none(), "nothing can have resolved yet — the task is still parked");
 
-        // ✅️ Inject the "completion" (`⚛️reactor::poll`'s `Event::Completed` arm calls the exact
-        // same `RequestRegistry::resolve`) — request id 1 is `storage_read`'s, the first (and
-        // only) request this test has allocated.
         crate::reactor::reactor_driver::resolve_request(1, Ok(42i32.to_le_bytes().to_vec())).await;
         let pending = crate::reactor::reactor_driver::run_until_idle(8).await;
         assert!(!pending, "the task must run to completion once its await resolves");
@@ -7819,9 +7854,6 @@ mod plugin_builder_contract_tests {
         let decoded_command = <TestCommand as ::protocol::OpBinary>::decode_op(&command_bytes).expect("must decode back to a TestCommand");
         assert_eq!(decoded_command, TestCommand::ApplyCountFromTask { value: 42 }, "the resolved command must carry the value the injected completion delivered");
 
-        // 🔀️ Re-enter through the SAME typed-command path a live command would — this IS
-        // `plugin_runtime::plugin_resume_task`'s `TaskResumeInput::Command` arm, exercised
-        // directly rather than through `crate::reactor::drain_task_resumes` (wasm-only).
         let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
         crate::plugin_runtime::test_push_instance(&runtime, AppInstance { id: resumed_instance, app: TestRuntimeApps::from(app), surface_contexts: Default::default() }).await;
         let output = crate::plugin_runtime::plugin_resume_task(&runtime, resumed_instance, &resumed_meta, crate::plugin_runtime::TaskResumeInput::Command(command_bytes)).await;
@@ -7832,19 +7864,12 @@ mod plugin_builder_contract_tests {
             "a resumed Command follow-up must frame as AppFrame::Emit — never a fault: {frame:?}"
         );
 
-        // 🪜️ The follow-up re-enters the APPLYING lane (`PluginApp::resume_task_command` →
-        // `dispatch_typed`), so like every migrated dispatch it ADMITS here and the document
-        // advances when its publication ladder walks. Settle it through the same runtime cell the
-        // host's continuation drives, then read what it actually did.
         let cell = crate::plugin_runtime::runtime_instance_cell(&runtime, resumed_instance).expect("the resumed instance stays mounted");
         let mut active = cell.instance.try_lock().expect("no other owner holds the resumed instance");
         let receipt = artifact_app_laws::settle_registered_typed_operation(&mut active.app, resumed_instance).await.expect("the resumed follow-up publishes");
         assert!(receipt.lanes.contains(&TypedOperationResultLane::Artifact), "the follow-up must have published on the ARTIFACT lane — it applies, it does not preview: {:?}", receipt.lanes);
         assert_eq!(receipt.completions, 1, "the follow-up is exactly one terminated operation");
 
-        // 🧾️ And it landed as the app's own verb in the command log, applied — a PREVIEW
-        // (`handle_command_frame`, the agent prepare lane this resume used to take) records
-        // nothing at all and applies nothing.
         let history = crate::app::PluginApp::history_snapshot(&mut active.app).await.expect("history after the resumed follow-up");
         let row = history.upserts.iter().find(|entry| entry.action_id == "applyCountFromTask").unwrap_or_else(|| panic!("the follow-up dispatch is recorded under its own verb: {:?}", history.upserts.iter().map(|entry| entry.action_id.clone()).collect::<Vec<_>>()));
         assert!(row.applied, "the follow-up is an APPLIED edit, not a staged preview");
@@ -7853,6 +7878,8 @@ mod plugin_builder_contract_tests {
 
     /// 🚫️ The (quota+1)th task on one instance is refused with a typed `Fault` — never a
     /// silent drop — while earlier tasks and OTHER instances are unaffected.
+    ///
+    /// 🔓️ A different instance has its OWN quota accounting, unaffected by 502's exhaustion.
     #[semio_framework_async_macros::async_test]
     async fn spawn_task_quota_gate_faults_the_n_plus_1th_task_and_never_silently_drops_it() {
         let instance = 502;
@@ -7870,7 +7897,6 @@ mod plugin_builder_contract_tests {
         assert_eq!(error.code.0, "plugin.task.quota-exceeded");
         assert_eq!(crate::reactor::reactor_driver::task_count_for_instance(instance).await, 2, "a refused spawn must not have added a 3rd record");
 
-        // 🔓️ A different instance has its OWN quota accounting, unaffected by 502's exhaustion.
         let other_instance = 503;
         let other_meta = ActionMeta { actor: "local".into(), instance_id: other_instance, view_state: None };
         let task = AsyncTask::<TestMutation, TestConfigMutation, NoDraftMutation>::new("elsewhere", |_ctx| async move { Ok(TaskResolution::Done) });
@@ -7914,6 +7940,13 @@ mod plugin_builder_contract_tests {
     /// 🚫️ `Event::InstanceClose` cancellation: every task an instance owns is dropped from the
     /// executor (never runs to completion) and its pending `RequestRegistry` slot is gone too
     /// — no leaked slot — while a DIFFERENT instance's live task/request is untouched.
+    ///
+    /// parks forever in this test
+    ///
+    /// 🚫️ `cancel_instance_tasks` alone drops the future (and its parked `RequestFuture`
+    /// with it); `RequestRegistry::cancel_instance` is the defense-in-depth sweep `poll`'s
+    /// `Event::InstanceClose` arm runs right after — exercised here to prove BOTH steps
+    /// together leave no slot behind, matching that call site exactly.
     #[semio_framework_async_macros::async_test]
     async fn instance_close_cancellation_drops_the_instances_tasks_and_leaks_no_registry_slot() {
         let dying = 505;
@@ -7924,7 +7957,7 @@ mod plugin_builder_contract_tests {
         let dying_ran = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
         let dying_ran_inner = dying_ran.clone();
         let dying_task = AsyncTask::<TestMutation, TestConfigMutation, NoDraftMutation>::new("dying", move |ctx: TaskCtx| async move {
-            let _ = ctx.host.storage_read("never-resolved").await; // parks forever in this test
+            let _ = ctx.host.storage_read("never-resolved").await;
             dying_ran_inner.store(true, std::sync::atomic::Ordering::SeqCst);
             Ok(TaskResolution::Done)
         });
@@ -7941,10 +7974,6 @@ mod plugin_builder_contract_tests {
         assert_eq!(crate::reactor::reactor_driver::pending_request_count().await, 2, "one RequestRegistry slot per parked task");
 
         crate::reactor::cancel_instance_tasks(dying);
-        // 🚫️ `cancel_instance_tasks` alone drops the future (and its parked `RequestFuture`
-        // with it); `RequestRegistry::cancel_instance` is the defense-in-depth sweep `poll`'s
-        // `Event::InstanceClose` arm runs right after — exercised here to prove BOTH steps
-        // together leave no slot behind, matching that call site exactly.
         let removed = crate::reactor::reactor_driver::cancel_instance_registry_requests(dying);
         assert_eq!(removed.await, 0, "cancel_instance_tasks already dropped the task's own RequestFuture — nothing left for the registry sweep to remove");
 
@@ -7961,6 +7990,15 @@ mod plugin_builder_contract_tests {
     /// design-abi.md §4) and `restore_now` queues it as an ordinary `Command` resume, ready for
     /// `plugin_resume_task` on the very next turn — exercised end to end against a fresh
     /// `TestApp` instance, exactly like a live task's own resume.
+    ///
+    /// 🚫️ The in-flight task (and its parked request) belong to the OLD actor incarnation —
+    /// never resumed as though the host round-trip were still live (design-abi.md §4).
+    /// `restore_now` below is what re-arms it, as a fresh Command resume, not a revival.
+    /// The order is the close ladder's own and the completion oracle's
+    /// `await-request-retirement-before-observation`: the registry retires its slots FIRST
+    /// (`ReactorCloseState::requests_complete` precedes `tasks_complete`), so a task still live
+    /// at that moment can only ever observe its request as retired — never as a successful host
+    /// response — and `cancel_instance_tasks` then DROPS whatever is left without polling it.
     #[semio_framework_async_macros::async_test]
     async fn checkpoint_then_restore_requeues_a_restartable_tasks_command_as_a_resume() {
         let completion: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧫️fixtures/⏳️completion/🔣️.json"))).unwrap();
@@ -7985,14 +8023,6 @@ mod plugin_builder_contract_tests {
 
         let packed = crate::reactor::checkpoint_now(&runtime).await.expect("checkpoint must succeed while the task is in flight");
 
-        // 🚫️ The in-flight task (and its parked request) belong to the OLD actor incarnation —
-        // never resumed as though the host round-trip were still live (design-abi.md §4).
-        // `restore_now` below is what re-arms it, as a fresh Command resume, not a revival.
-        // The order is the close ladder's own and the completion oracle's
-        // `await-request-retirement-before-observation`: the registry retires its slots FIRST
-        // (`ReactorCloseState::requests_complete` precedes `tasks_complete`), so a task still live
-        // at that moment can only ever observe its request as retired — never as a successful host
-        // response — and `cancel_instance_tasks` then DROPS whatever is left without polling it.
         assert!(completion["execution"].as_array().unwrap().iter().any(|row| row == "await-request-retirement-before-observation"), "the completion oracle declares this exact order");
         crate::reactor::reactor_driver::cancel_instance_registry_requests(instance).await;
         assert_eq!(crate::reactor::reactor_driver::poll_instance_tasks_once(instance).await, 1, "the live task observes its retired request on its next poll and finishes");

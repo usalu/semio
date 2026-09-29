@@ -98,7 +98,7 @@ async fn fields_match_neutral_boundaries_and_serde() {
         checked += 1;
     }
     assert_eq!(checked, 51);
-    eprintln!("[DEBUG] checked integer vectors={checked} pointerBits={}", usize::BITS);
+    eprintln!("checked integer vectors={checked} pointerBits={}", usize::BITS);
 }
 
 #[semio_framework_async_macros::async_test]

@@ -48,7 +48,27 @@ fn process_export_format(format_kind: &str) -> Result<semio_framework_plugin::io
 ]
 
 
+
+#: 🏁️ Set-level landing markers `(repo path, text)` — `None` = the set deletes that file. All present → the set is
+#: landed and nothing is applied (per-hunk checks alone cannot see an insert whose text a later codemod reworded).
+LANDED = [('✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs', 'fn process_export_format(format_kind: &str)')]
+
+
+def landed_guard() -> bool:
+    """🏁️ True when every landing marker is in the tree; a partial landing is a conflict, never a second write."""
+    tree = Path("/Users/ueli/Documents/semio")
+    present = [(not (tree / rel).exists()) if marker is None else ((tree / rel).exists() and marker in (tree / rel).read_text()) for rel, marker in LANDED]
+    if all(present):
+        print("landed: every set marker is in the tree — nothing to apply")
+        return True
+    if any(present):
+        raise SystemExit(f"CONFLICT: set partially landed (markers {present}) — nothing written")
+    return False
+
+
 def main() -> None:
+    if landed_guard():
+        return
     text = IO.read_text()
     notes = []
     for name, old, new in HUNKS:

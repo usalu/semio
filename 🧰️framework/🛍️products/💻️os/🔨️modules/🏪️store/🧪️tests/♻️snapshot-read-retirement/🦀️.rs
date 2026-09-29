@@ -24,5 +24,4 @@ fn snapshot_read_retirement_skips_empty_slots_and_wraps_without_starvation() {
         assert!(registry.terminal_is_empty(), "{}", row["name"]);
         assert_eq!(actual, expected, "{}", row["name"]);
     }
-    eprintln!("[DEBUG] sparse snapshot reads skip empty capacity, wrap, and preserve live-read fairness in three neutral cases");
 }

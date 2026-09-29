@@ -5,7 +5,7 @@ Every sync also prunes overlay files the tree no longer has (outside the overlay
 and mirrors `node_modules` (top level → the tree's entries, `@semio-tech/*` → the tree's relative links, so workspace packages
 resolve INSIDE the overlay). `--reset-staged` puts every payload path back to the tree's content (a create the tree lacks is
 removed) and rewrites its `.old` base, so the codemods re-run on the current tree.
-usage: s19-overlay.py <overlay-root> [--reset-staged]"""
+usage: s19-overlay.py <overlay-root> [--reset-staged] [--no-protect]"""
 import ctypes, json, os, subprocess, sys
 
 repo = "/Users/ueli/Documents/semio"
@@ -47,9 +47,9 @@ for d in ignored_dirs:
         rels.extend(os.path.relpath(os.path.join(base, f), repo) for f in files)
 here = os.path.dirname(os.path.abspath(__file__))
 manifest = os.path.join(here, "payload", "manifest.json")
-protected = {entry["path"] for entry in json.load(open(manifest, encoding="utf-8"))} if os.path.exists(manifest) else set()
+protected = {entry["path"] for entry in json.load(open(manifest, encoding="utf-8"))} if os.path.exists(manifest) and "--no-protect" not in sys.argv else set()
 protect_list = os.path.join(here, "s19-overlay-protect.txt")
-if os.path.exists(protect_list):
+if os.path.exists(protect_list) and "--no-protect" not in sys.argv:
     protected |= {line.strip() for line in open(protect_list, encoding="utf-8") if line.strip() and not line.startswith("#")}
 if "--reset-staged" in sys.argv and os.path.exists(manifest):
     for entry in json.load(open(manifest, encoding="utf-8")):

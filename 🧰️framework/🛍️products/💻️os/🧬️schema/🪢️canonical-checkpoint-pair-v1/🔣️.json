@@ -5,7 +5,7 @@
   "description": "The one seed every shell opens a hub document on: the hub's active canonical checkpoint pair (GET /spaces/{spaceId}/documents/{documentId}/active-checkpoint/pair), decoded from its framed wire, its pack, SPR and aggregate digests verified, and admitted only when it is exactly the checkpoint the hub authorized for the open (scope, checkpoint id, descriptor digest, baseline frontier, aggregate). A door-created artifact's first checkpoint is its genesis; a checked-in document's is its check-in.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "mediaType", "limits", "pairs", "refusals", "admissions"],
+  "required": ["schema", "mediaType", "limits", "pairs", "refusals", "admissions", "rebootstrapAdmissions"],
   "definitions": {
     "hex32": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
     "part": {
@@ -100,6 +100,31 @@
           "stage": { "enum": ["decode", "digest"] },
           "bodyHex": { "type": "string", "pattern": "^([0-9a-f]{2})+$" },
           "refusal": { "type": "string", "pattern": "^canonical-checkpoint-pair\\.[a-z-]+$" }
+        }
+      }
+    },
+    "rebootstrapAdmissions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "pair", "control", "refusal"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "pair": { "type": "string", "minLength": 1 },
+          "control": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["scope", "checkpointId", "descriptorDigestV1", "baselineFrontier"],
+            "properties": {
+              "scope": { "$ref": "#/definitions/scope" },
+              "checkpointId": { "$ref": "#/definitions/hex32" },
+              "descriptorDigestV1": { "$ref": "#/definitions/hex32" },
+              "baselineFrontier": { "$ref": "#/definitions/frontier" }
+            }
+          },
+          "refusal": { "oneOf": [{ "type": "null" }, { "type": "string", "pattern": "^canonical-checkpoint-pair\\.[a-z-]+$" }] }
         }
       }
     },

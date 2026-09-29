@@ -31,7 +31,7 @@ impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for SetLineMutation
 
     fn diff(&self, base: &TxtSnapshot) -> protocol::MutationOutcome<TxtDiff> {
         if let Some(reason) = native_snapshot_error(base) {
-            return protocol::MutationOutcome::error("mutation.invariant", reason, Vec::<String>::new());
+            return protocol::MutationOutcome::fatal("mutation.invariant", reason, Vec::<String>::new());
         }
         let index = match txt_u32_to_usize(self.index) {
             Ok(index) => index,
@@ -43,10 +43,10 @@ impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for SetLineMutation
         let is_last = index == base.lines.len() - 1;
         let last_empty = if is_last { self.text.is_empty() } else { base.lines.last().is_some_and(|line| line.is_empty()) };
         if let Some(reason) = native_shape_error(base.lines.len(), last_empty, base.trailing_newline, base.line_ending) {
-            return protocol::MutationOutcome::error("mutation.invariant", reason, Vec::<String>::new());
+            return protocol::MutationOutcome::fatal("mutation.invariant", reason, Vec::<String>::new());
         }
         if let Some(reason) = native_text_error(&self.text, base.line_ending, !is_last || base.trailing_newline) {
-            return protocol::MutationOutcome::error("mutation.invariant", reason, Vec::<String>::new());
+            return protocol::MutationOutcome::fatal("mutation.invariant", reason, Vec::<String>::new());
         }
         protocol::MutationOutcome::new(if base.lines.get(index).is_none_or(|current| current == &self.text) {
             TxtDiff::default()

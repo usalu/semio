@@ -14,7 +14,7 @@ use crate::os_dsl::{DslValue, FromValue, ToValue, ValueError};
 use crate::os_spr::{Edit, Mutation, MutationApplyError, MutationDiff};
 
 //#region 🆔️Ids
-/// @emoji 🔑 Content-addressed entity id: `{prefix}-{hex16(blake3(prefix || 0 || payload))}`.
+/// 🔑 Content-addressed entity id: `{prefix}-{hex16(blake3(prefix || 0 || payload))}`.
 pub async fn content_addressed_entity_id(prefix: &str, payload: &[u8]) -> String {
     let mut input = prefix.as_bytes().to_vec();
     input.push(0);
@@ -24,14 +24,14 @@ pub async fn content_addressed_entity_id(prefix: &str, payload: &[u8]) -> String
     format!("{prefix}-{hex16}")
 }
 
-/// @emoji 🆔️ Deterministic child id scoped to an edit: blake3(`{edit_id}:{ordinal}`).
+/// 🆔️ Deterministic child id scoped to an edit: blake3(`{edit_id}:{ordinal}`).
 pub async fn edit_scoped_id(edit_id: &str, ordinal: u32) -> String {
     let digest = semio_framework_hash::hash(format!("{edit_id}:{ordinal}").as_bytes());
     let hex16: String = digest.as_bytes()[..8].iter().map(|byte| format!("{byte:02x}")).collect();
     format!("scoped-{hex16}")
 }
 
-/// @emoji ✏️ Globally unique edit id from the authoring replica + its sequence + the forwards
+/// ✏️ Globally unique edit id from the authoring replica + its sequence + the forwards
 /// fingerprint. `replica` is the Store's per-instance entropy identity (its clock actor), so two
 /// processes, tabs or guest instances that author identical content as their first edit never mint
 /// the same id — an id collision is a silent replay at every ledger that dedupes by id.
@@ -45,7 +45,7 @@ pub async fn mint_edit_id(replica: u64, sequence: i32, forwards_fingerprint: &[u
     content_addressed_entity_id("edit", &payload).await
 }
 
-/// @emoji 📦️ Content-addressed change id from ordered edit ids (+ optional description distinguisher).
+/// 📦️ Content-addressed change id from ordered edit ids (+ optional description distinguisher).
 pub async fn mint_change_id(edit_ids: &[String], description: Option<&str>) -> String {
     let mut payload = edit_ids.join("\0").into_bytes();
     payload.push(0);
@@ -53,7 +53,7 @@ pub async fn mint_change_id(edit_ids: &[String], description: Option<&str>) -> S
     content_addressed_entity_id("change", &payload).await
 }
 
-/// @emoji 🌿️ Content-addressed alternative id from name + ordered checkpoint ids.
+/// 🌿️ Content-addressed alternative id from name + ordered checkpoint ids.
 pub async fn mint_alternative_id(name: &str, checkpoint_ids: &[String]) -> String {
     let mut payload = name.as_bytes().to_vec();
     payload.push(0);
@@ -61,7 +61,7 @@ pub async fn mint_alternative_id(name: &str, checkpoint_ids: &[String]) -> Strin
     content_addressed_entity_id("alternative", &payload).await
 }
 
-/// @emoji ⚙️ Globally unique operation id from the operation's bytes and the replica clock tick
+/// ⚙️ Globally unique operation id from the operation's bytes and the replica clock tick
 /// that stamped it (`actor` is the replica identity, `physical_ms`/`logical` strictly advance per
 /// replica), so identical operations authored twice, or by two replicas, never share an id.
 pub async fn mint_mutation_id(mutation_bytes: &[u8], stamp: (u64, u64, u64)) -> String {
@@ -73,7 +73,7 @@ pub async fn mint_mutation_id(mutation_bytes: &[u8], stamp: (u64, u64, u64)) -> 
     content_addressed_entity_id("mutation", &payload).await
 }
 
-/// @emoji 🆔️ Legacy-compatible prefix-only mint — identical inputs collide.
+/// 🆔️ Legacy-compatible prefix-only mint — identical inputs collide.
 /// Prefer [`mint_edit_id`] / [`mint_change_id`] / [`mint_alternative_id`] / [`mint_mutation_id`] /
 /// [`content_addressed_entity_id`] with a distinguishing payload.
 pub async fn create_document_vcs_id(prefix: &str) -> String {
@@ -136,7 +136,7 @@ pub struct Change {
     pub saved_at: String,
 }
 
-/// @emoji 🧩️ One owned child's checkpoint pin, captured on the parent's checkpoint so checking out
+/// 🧩️ One owned child's checkpoint pin, captured on the parent's checkpoint so checking out
 /// the parent can restore the whole composition. `child_ref` is the pinned child artifact's real
 /// `crate::os_io::ArtifactRef` — **correction, `UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM/📓️wave1-reports/
 /// b2-store-composition-report.md`**: the prior wave (`b1-spr-vcs-report.md`) believed `ArtifactRef`
@@ -176,7 +176,7 @@ pub struct Checkpoint {
     #[value(skip_serializing_if = "Option::is_none")]
     pub message: Option<String>,
     pub timestamp: String,
-    /// @emoji 🧩️ Which checkpoint each owned child was at when this checkpoint was committed —
+    /// 🧩️ Which checkpoint each owned child was at when this checkpoint was committed —
     /// empty for a non-composite artifact (every checkpoint before this ticket, and every leaf
     /// artifact after it). Additive; see [`CompositionPin`].
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -292,7 +292,7 @@ struct ArtifactHistorySlot<T> {
     value: Option<T>,
 }
 
-/// @emoji 📚️ Fixed-capacity generation-keyed history authority. Live entries form one stable
+/// 📚️ Fixed-capacity generation-keyed history authority. Live entries form one stable
 /// linked order; removed slots are tombstoned and reused only after their generation advances.
 pub struct ArtifactHistoryLedger<T> {
     slots: std::mem::ManuallyDrop<Vec<std::mem::MaybeUninit<ArtifactHistorySlot<T>>>>,
@@ -886,27 +886,27 @@ pub enum VcsError {
     Serialize(String),
     Deserialize(String),
     Backbone(String),
-    /// @emoji 🧬️ A migration/replay/merge was attempted across two envelopes/mutations whose
+    /// 🧬️ A migration/replay/merge was attempted across two envelopes/mutations whose
     /// `dialect` coordinates don't match (see `store::ArtifactEnvelope::dialect`, `26/08/10` D4
     /// evolution slice). Not yet raised by any call site in this pass — additive only.
     DialectMismatch(String),
-    /// @emoji 🧬️ An operation needs a dialect migration to run first (see `store::migrate_document`)
+    /// 🧬️ An operation needs a dialect migration to run first (see `store::migrate_document`)
     /// before it can proceed. Not yet raised by any call site in this pass — additive only.
     MigrationRequired(String),
-    /// @emoji 🧬️ A registered dialect migration ran but failed. Not yet raised by any call site in
+    /// 🧬️ A registered dialect migration ran but failed. Not yet raised by any call site in
     /// this pass — additive only.
     MigrationFailed(String),
-    /// @emoji 🔁️ A composition-pin graph traversal (parent → child → …) found a cycle back to an
+    /// 🔁️ A composition-pin graph traversal (parent → child → …) found a cycle back to an
     /// ancestor — an owned-child forest must stay acyclic. Raised by `store::CompositionGraph::
     /// would_cycle_owns`/`would_cycle_links` via `store::CompositionCoordinator::dispatch_group`'s
     /// phase-1 validation (`UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` `🔖️CompositionCoordinator`, wave B2).
     CompositionCycle(String),
-    /// @emoji 🚫️ An operation would violate composition's single-ownership invariant (e.g.
+    /// 🚫️ An operation would violate composition's single-ownership invariant (e.g.
     /// adopting a child that already has a different owner, or dispatching to a child a group's
     /// stated parent does not actually own). Raised by `store::CompositionGraph::insert_owns` and
     /// `store::CompositionCoordinator::dispatch_group`'s phase-1 ownership check.
     OwnershipViolation(String),
-    /// @emoji 🛂️ A structural failure rejected an operation during
+    /// 🛂️ A structural failure rejected an operation during
     /// `store::CompositionCoordinator::dispatch_group`'s phase-1 pass (or the object-safe
     /// `store::SpaceMember::preview_wire`/`dispatch_wire` bridge that pass uses) — the group is
     /// aborted with zero side effects anywhere. Reserved for structural failures only (ticket
@@ -915,7 +915,7 @@ pub enum VcsError {
     /// `MutationOutcome`, never through this variant. Additive; not raised anywhere else in this
     /// crate (every other command path reports its own more specific `VcsError` variant).
     ValidationFailed(String),
-    /// @emoji 🧯️ A `CompositionCoordinator::dispatch_group` call failed AFTER some members were
+    /// 🧯️ A `CompositionCoordinator::dispatch_group` call failed AFTER some members were
     /// already applied, and the reverse-order `Undo` compensation pass (see that method's doc
     /// comment) itself failed on at least one member — i.e. the group could not be fully rolled
     /// back. The message embeds a human-readable rollback report (which members compensated
@@ -924,7 +924,7 @@ pub enum VcsError {
     /// legitimately leave a multi-member gesture inconsistent — every other `VcsError` variant is
     /// raised BEFORE any mutation lands.
     CompensationFailed(String),
-    /// @emoji 🛑️ A command was rejected WHOLESALE by the authority's own `crate::os_spr::MergePolicy`
+    /// 🛑️ A command was rejected WHOLESALE by the authority's own `crate::os_spr::MergePolicy`
     /// — nothing in the command was applied (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-
     /// CLASS-CONFLICTS` §C6). Carries the policy that rejected it and every message the rejected
     /// replay produced, so a caller can explain the rejection without re-running anything.
@@ -934,7 +934,7 @@ pub enum VcsError {
         policy: crate::os_spr::MergePolicy,
         messages: Vec<crate::os_spr::MutationMessage>,
     },
-    /// @emoji ❓️ `store::ArtifactStore::resolve_conflict` was called with an id that names no
+    /// ❓️ `store::ArtifactStore::resolve_conflict` was called with an id that names no
     /// currently-`Open` conflict on this store.
     UnknownConflict(String),
 }
@@ -986,7 +986,7 @@ protocol::fault_from_error!(VcsError, crate::os_dsl::FaultOrigin::Module, "modul
 
 //#endregion 🔖️Errors
 //#region 🔖️CollectionDiff
-/// @emoji 🧩️ Sparse collection patch entry (mirrors semio_compose_rs `XModified`).
+/// 🧩️ Sparse collection patch entry (mirrors semio_compose_rs `XModified`).
 ///
 /// 🎞️ Canonical collection patch entry for sparse collection diffs (re-exported by `crate::os_spr`).
 #[derive(Clone, Debug, Default, PartialEq, Eq, ToValue, FromValue)]
@@ -996,7 +996,7 @@ pub struct ItemPatch<TId, TPatch> {
     pub patch: TPatch,
 }
 
-/// @emoji 🧩️ Sparse collection diff (mirrors semio_compose_rs `XCollectionDiff`).
+/// 🧩️ Sparse collection diff (mirrors semio_compose_rs `XCollectionDiff`).
 #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct CollectionDiff<TId, TPatch, TAdded> {
@@ -1013,7 +1013,7 @@ impl<TId, TPatch, TAdded> Default for CollectionDiff<TId, TPatch, TAdded> {
 //#endregion 🔖️CollectionDiff
 
 //#region 🔖️CollectionMutation
-/// @emoji 🏷️ Identifies an item within a `Vec` by a stable id, for generic collection operations.
+/// 🏷️ Identifies an item within a `Vec` by a stable id, for generic collection operations.
 pub trait Identified<TId> {
     // 🚫️async: E1 pure accessor — every real caller is a std `Iterator`/`Vec` closure
     // (`retain`/`position`/`find`), `FnMut(&T) -> bool` signature fixed outside this repo and
@@ -1022,13 +1022,13 @@ pub trait Identified<TId> {
     fn id(&self) -> &TId;
 }
 
-/// @emoji 🩹️ Applies a patch in place and returns the patch that undoes it (captured from prior state).
+/// 🩹️ Applies a patch in place and returns the patch that undoes it (captured from prior state).
 pub trait Patchable<TPatch>: Sized {
     fn apply_patch(&mut self, patch: &TPatch);
     fn diff_patch(&self, other: &Self) -> Option<TPatch>;
 }
 
-/// @emoji 🧺️ Generic ordered-collection operation (add/remove/move/patch) with mechanical pre-state inverses.
+/// 🧺️ Generic ordered-collection operation (add/remove/move/patch) with mechanical pre-state inverses.
 ///
 /// 🎞️ `crate::os_spr::command` re-exports this very type, so `index`/`to_index` is the one wire shape
 /// every caller sees — there is no second spr-side schema to keep in step.
@@ -1050,7 +1050,7 @@ pub enum CollectionMutation<TId, TItem, TPatch> {
     Patch { id: TId, patch: TPatch },
 }
 
-/// @emoji ▶️ Applies a `CollectionMutation` to a `Vec` in place.
+/// ▶️ Applies a `CollectionMutation` to a `Vec` in place.
 pub fn apply_collection_mutation<TId, TItem, TPatch>(items: &mut Vec<TItem>, operation: &CollectionMutation<TId, TItem, TPatch>)
 where
     TId: PartialEq + Clone,
@@ -1079,7 +1079,7 @@ where
     }
 }
 
-/// @emoji ↩️ Computes the inverse `CollectionMutation` from the pre-state `items`. Panics if `operation` targets
+/// ↩️ Computes the inverse `CollectionMutation` from the pre-state `items`. Panics if `operation` targets
 /// an id absent from `items` (Remove/Move/Patch always target an existing item by construction).
 pub fn inverse_collection_mutation<TId, TItem, TPatch>(items: &[TItem], operation: &CollectionMutation<TId, TItem, TPatch>) -> CollectionMutation<TId, TItem, TPatch>
 where
@@ -1106,7 +1106,7 @@ where
     }
 }
 
-/// @emoji 🧮️ Projects a `CollectionMutation` onto a sparse {@link CollectionDiff}, so a plugin's
+/// 🧮️ Projects a `CollectionMutation` onto a sparse {@link CollectionDiff}, so a plugin's
 /// `Mutation::diff` can produce a diff in one call instead of hand-writing `removed`/`modified`/
 /// `added`. `Add` → `added`, `Remove` → `removed`, `Patch` → `modified`. `CollectionDiff` has no
 /// positional-move channel, so `Move` is encoded as `removed` + `added` (delete then re-add by
@@ -1137,7 +1137,7 @@ where
 // replays a snapshot through an operation's forward diff — the pure per-step transform every
 // store-level replay uses.
 
-/// @emoji ▶️ Computes `operation.diff(snapshot)`, applies the resulting diff, and returns the new
+/// ▶️ Computes `operation.diff(snapshot)`, applies the resulting diff, and returns the new
 /// snapshot alongside every [`crate::os_spr::MutationMessage`] the outcome carried. Diff-apply
 /// rejection is returned as its structured [`MutationApplyError`] before a snapshot is produced. A `Fatal`
 /// message's diff is `D::default()` by construction (§C2 LAW 1), so applying it is always a no-op —
@@ -1163,7 +1163,7 @@ where
 // (`checkpoint_ancestors`/`merge_base`/`reconcile_alternative` all take an envelope) — only the
 // envelope-free id-minting primitive stays here.
 
-/// @emoji 🔒️ Content-addressed checkpoint id: `ck-<hex16(blake3(parent_id || ordered_change_content_
+/// 🔒️ Content-addressed checkpoint id: `ck-<hex16(blake3(parent_id || ordered_change_content_
 /// hashes || message || authors || timestamp [|| ordered_pin_content]))>`, replacing the old fully-
 /// random counter-string scheme (`create_document_vcs_id("checkpoint")`) — two peers that
 /// independently commit the identical checkpoint content (same parent, same changes in the same

@@ -7,7 +7,7 @@ const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 
-/** @emoji 🧪️ Vitest configuration for the synchronous extension package/store boundary. */
+/** 🧪️ Vitest configuration for the synchronous extension package/store boundary. */
 export default {
   root: testRoot,
   test: {

@@ -211,14 +211,14 @@ pub mod board_host {
         serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into())
     }
 
-    /// @emoji 🎨️ Whether drawable style resolves committed selection chrome or neutral cached geometry.
+    /// 🎨️ Whether drawable style resolves committed selection chrome or neutral cached geometry.
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     enum StyleChromePass {
         CachedBase,
         InteractionOverlay,
     }
 
-    /// @emoji 🎨️ Which node/handle primitives to paint in a layered draw pass (fills behind icons/text).
+    /// 🎨️ Which node/handle primitives to paint in a layered draw pass (fills behind icons/text).
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     enum NodeHandlePaintLayer {
         Full,
@@ -2416,7 +2416,7 @@ pub mod board_host {
         pub handles: BTreeMap<String, HandleData>,
         pub edges: BTreeMap<String, EdgeData>,
         pub wires: BTreeMap<String, WireData>,
-        /// @emoji 🎯️ Fill-constraining rectangles, keyed by document id. Painted beneath every entity,
+        /// 🎯️ Fill-constraining rectangles, keyed by document id. Painted beneath every entity,
         /// hit-tested after all of them, and counted against the descriptor census like any other entity.
         pub regions: BTreeMap<String, RegionData>,
         /// Catalog keyed by `handle_kind` id (see `set_board_kind_catalogs_from_json`).
@@ -2424,22 +2424,22 @@ pub mod board_host {
         pub wire_kinds: BTreeMap<String, WireKindDef>,
         pub node_kinds: BTreeMap<String, NodeKindDef>,
         pub edge_kinds: BTreeMap<String, EdgeKindDef>,
-        /// @emoji 🔺️ Registry of edge tip shapes keyed by catalog id (built-ins seeded at init).
+        /// 🔺️ Registry of edge tip shapes keyed by catalog id (built-ins seeded at init).
         pub edge_tips: BTreeMap<String, EdgeTipDef>,
-        /// @emoji 🔗️ Kind-compatibility rules for link gestures; empty = unrestricted.
+        /// 🔗️ Kind-compatibility rules for link gestures; empty = unrestricted.
         pub link_compat_rules: Vec<LinkCompatRule>,
         pub selection: BTreeSet<String>,
-        /// @emoji 👁️ Live rectangle/lasso preview ids (committed selection stays in `selection` until pointer-up).
+        /// 👁️ Live rectangle/lasso preview ids (committed selection stays in `selection` until pointer-up).
         pub preselect: BTreeSet<String>,
-        /// @emoji 💠️ During preselect: anchor selection \\ `preselect` (secondary chrome while dragging).
+        /// 💠️ During preselect: anchor selection \\ `preselect` (secondary chrome while dragging).
         pub preselect_removed: BTreeSet<String>,
-        /// @emoji 💠️ After commit: ids dropped in the last `select` transition only.
+        /// 💠️ After commit: ids dropped in the last `select` transition only.
         pub selection_exit_highlight: BTreeSet<String>,
         pub selection_options: SelectionOptions,
         pub hovered_id: Option<String>,
-        /// @emoji 🖱️ Transitive same-kind hover `(domain, kind_id)` when hovering a kind row or derived from `hovered_id`.
+        /// 🖱️ Transitive same-kind hover `(domain, kind_id)` when hovering a kind row or derived from `hovered_id`.
         pub hovered_kind: Option<(String, String)>,
-        /// @emoji 💠️ Externally driven highlight ids (e.g. cross-panel variable binding); below hover, above neutral.
+        /// 💠️ Externally driven highlight ids (e.g. cross-panel variable binding); below hover, above neutral.
         pub highlighted_ids: BTreeSet<String>,
         pub interaction: Interaction,
         pub width: u32,
@@ -2452,41 +2452,41 @@ pub mod board_host {
         event_schema_fault: bool,
         /// Screen-space preview polygon (CSS pixels) while area-selecting; cleared when idle.
         pub selection_screen_preview: Option<Vec<Point>>,
-        /// @emoji ↔ True when area-select drag is crossing (right-to-left); drives dashed preview stroke.
+        /// ↔ True when area-select drag is crossing (right-to-left); drives dashed preview stroke.
         pub selection_preview_crossing: bool,
         /// Screen-space polyline preview (CSS px) while dragging a handle link before drop.
         pub link_screen_preview: Option<Vec<Point>>,
         pub canvas_theme: CanvasPalette,
-        /// @emoji 👁️ When false, the LOD world grid is not stroked at all (snapping is unaffected — that is `grid_snap_enabled`).
+        /// 👁️ When false, the LOD world grid is not stroked at all (snapping is unaffected — that is `grid_snap_enabled`).
         pub grid_visible: bool,
-        /// @emoji 📐️ Positive multiplier for LOD world grid steps (`10` / `5` / `1` base world units per band).
+        /// 📐️ Positive multiplier for LOD world grid steps (`10` / `5` / `1` base world units per band).
         pub grid_factor: f64,
-        /// @emoji 🧲️ When true, node drags snap to the finest visible LOD grid (step scales with `grid_factor`).
+        /// 🧲️ When true, node drags snap to the finest visible LOD grid (step scales with `grid_factor`).
         pub grid_snap_enabled: bool,
         pub preserve_original_element_style: bool,
-        /// @emoji 📶️ When true (default), camera zoom selects draw LOD; when false, optional `forced_draw_lod` pins the tier when set.
+        /// 📶️ When true (default), camera zoom selects draw LOD; when false, optional `forced_draw_lod` pins the tier when set.
         pub automatic_lod: bool,
         forced_draw_lod: Option<BoardDrawLod>,
         pub icon_paint_cache: IconPaintCache,
-        /// @emoji 📡️ Dedupes {@code linkCompatibleNodes} emissions while a link wire is active.
+        /// 📡️ Dedupes {@code linkCompatibleNodes} emissions while a link wire is active.
         link_compat_nodes_emit_key: Option<String>,
-        /// @emoji 📡️ Dedupes {@code linkTargetRing} emissions while a link wire is active.
+        /// 📡️ Dedupes {@code linkTargetRing} emissions while a link wire is active.
         link_target_ring_emit_key: Option<String>,
-        /// @emoji 📡️ Dedupes `select` emissions when ids are unchanged but modifier merge mode changes mid‑gesture.
+        /// 📡️ Dedupes `select` emissions when ids are unchanged but modifier merge mode changes mid‑gesture.
         last_select_emit_sig: Option<(Vec<String>, Option<String>)>,
-        /// @emoji 📡️ Dedupes `preselect` emissions during area-select drag.
+        /// 📡️ Dedupes `preselect` emissions during area-select drag.
         last_preselect_emit_sig: Option<(Vec<String>, Vec<String>, Option<String>)>,
-        /// @emoji 🧿️ Bumped when drawable content changes (not camera); keys {@link BoardHost.world_content_cache}.
+        /// 🧿️ Bumped when drawable content changes (not camera); keys {@link BoardHost.world_content_cache}.
         content_scene_generation: u64,
-        /// @emoji 🎨️ World-space Vello content reused across pan/zoom when generation and LOD match.
+        /// 🎨️ World-space Vello content reused across pan/zoom when generation and LOD match.
         world_content_cache: RefCell<Option<(u64, BoardDrawLod, Scene)>>,
         opaque_scene_retirement: Cell<Option<OpaqueSceneRetirementToken>>,
         opaque_scene_fault: Cell<bool>,
-        /// @emoji 🔍️ True while the wheel zoom gesture is active (skip grid + per-tile rebuild hot paths).
+        /// 🔍️ True while the wheel zoom gesture is active (skip grid + per-tile rebuild hot paths).
         wheel_zoom_active: bool,
-        /// @emoji 📶️ LOD tier pinned for the active wheel gesture so pan/zoom does not rebuild {@link BoardHost.world_content_cache} on every band crossing.
+        /// 📶️ LOD tier pinned for the active wheel gesture so pan/zoom does not rebuild {@link BoardHost.world_content_cache} on every band crossing.
         wheel_zoom_render_lod: Option<BoardDrawLod>,
-        /// @emoji 🖌️ Active viewport utility (`select` suppresses brush slot logic).
+        /// 🖌️ Active viewport utility (`select` suppresses brush slot logic).
         active_utility: ActiveUtility,
         suggestion_offset: f64,
         brush_node_size: f64,
@@ -2500,19 +2500,19 @@ pub mod board_host {
         brush_placement_serial: u64,
         brush_node_kind_weights: HashMap<String, f64>,
         brush_handle_kind_weights: HashMap<String, f64>,
-        /// @emoji ⌥️ Alt held while brushing — enables suggestion offset and commit-on-leave.
+        /// ⌥️ Alt held while brushing — enables suggestion offset and commit-on-leave.
         brush_alt_pressed: bool,
-        /// @emoji ✨️ Suggestions menu opened a slot outside brush utility — use suggestion offset and highlight source handle.
+        /// ✨️ Suggestions menu opened a slot outside brush utility — use suggestion offset and highlight source handle.
         brush_slot_suggestions_active: bool,
-        /// @emoji 🕹️ Which selection-gumball handles the select utility offers (`setTransformGumballFlag`).
+        /// 🕹️ Which selection-gumball handles the select utility offers (`setTransformGumballFlag`).
         transform_flags: TransformGumballFlags,
-        /// @emoji 🔄️ The live rotate-ring gesture, `None` whenever the ring is merely drawn.
+        /// 🔄️ The live rotate-ring gesture, `None` whenever the ring is merely drawn.
         transform_drag: Option<BoardTransformDrag>,
-        /// @emoji 🚚️ The live region move/resize gesture (`None` when no region is being dragged).
+        /// 🚚️ The live region move/resize gesture (`None` when no region is being dragged).
         region_drag: Option<BoardRegionDrag>,
-        /// @emoji 🖍️ The live area-brush rectangle (`None` unless the areaBrush utility is painting).
+        /// 🖍️ The live area-brush rectangle (`None` unless the areaBrush utility is painting).
         region_paint: Option<BoardRegionPaint>,
-        /// @emoji 🖍️ World width/height an area-brush CLICK (no drag) paints, from the utility's own steppers.
+        /// 🖍️ World width/height an area-brush CLICK (no drag) paints, from the utility's own steppers.
         area_brush_extent: (f64, f64),
         pub port_mode: GraphPortMode,
         interaction_revision: u64,
@@ -3692,7 +3692,7 @@ pub mod board_host {
     }
 
     impl BoardHost {
-        /// @emoji 📶️ Draw LOD used while building the vector scene (pins during wheel zoom).
+        /// 📶️ Draw LOD used while building the vector scene (pins during wheel zoom).
         fn draw_lod_for_frame(&self) -> BoardDrawLod {
             if self.wheel_zoom_active {
                 if let Some(pinned) = self.wheel_zoom_render_lod {
@@ -3706,7 +3706,7 @@ pub mod board_host {
             lod.label()
         }
 
-        /// @emoji 🏷️ Camera, draw LOD, and visible node centers from the WASM host for the JS text overlay (must match the last GPU frame).
+        /// 🏷️ Camera, draw LOD, and visible node centers from the WASM host for the JS text overlay (must match the last GPU frame).
         pub fn overlay_paint_state_json(&self) -> String {
             let nodes: Vec<serde_json::Value> = self.nodes.values().filter(|n| n.visible).map(|n| serde_json::json!({ "id": n.id, "x": n.x, "y": n.y })).collect();
             serde_json::json!({
@@ -4234,7 +4234,7 @@ pub mod board_host {
             (self.snap_world_scalar(x), self.snap_world_scalar(y))
         }
 
-        /// @emoji 👁️ Shows or hides the world grid. Hiding it never changes snapping, which reads `grid_snap_enabled`.
+        /// 👁️ Shows or hides the world grid. Hiding it never changes snapping, which reads `grid_snap_enabled`.
         pub fn set_grid_visible(&mut self, visible: bool) {
             if self.grid_visible != visible {
                 self.grid_visible = visible;
@@ -4276,7 +4276,7 @@ pub mod board_host {
             Ok(())
         }
 
-        /// @emoji 🔗️ Applies or clears a host-driven link preview session (cross-surface mirror).
+        /// 🔗️ Applies or clears a host-driven link preview session (cross-surface mirror).
         pub fn set_external_link_preview_json(&mut self, json: &str) -> Result<(), NormalPortError> {
             let v: serde_json::Value = serde_json::from_str(json).map_err(NormalPortError::ExternalLinkPreviewJson)?;
             let source = v.get("source").and_then(|s| s.as_str()).unwrap_or("").trim().to_string();
@@ -4297,7 +4297,7 @@ pub mod board_host {
             Ok(())
         }
 
-        /// @emoji 🔗️ Clears host-driven link preview without touching local link drags.
+        /// 🔗️ Clears host-driven link preview without touching local link drags.
         pub fn clear_external_link_preview(&mut self) {
             if matches!(self.interaction, Interaction::ExternalLinkPreview { .. }) {
                 self.interaction = Interaction::None;
@@ -4329,7 +4329,7 @@ pub mod board_host {
             self.set_camera_internal(x, y, zoom, true);
         }
 
-        /// @emoji 🔇️ Updates viewport camera without enqueueing a `camera` drain row (wheel / imperative sync).
+        /// 🔇️ Updates viewport camera without enqueueing a `camera` drain row (wheel / imperative sync).
         pub fn set_camera_silent(&mut self, x: f64, y: f64, zoom: f64) {
             self.set_camera_internal(x, y, zoom, false);
         }
@@ -4364,7 +4364,7 @@ pub mod board_host {
             self.selection_options.select_handles = select_handles;
         }
 
-        /// @emoji 🔗️ JSON `[{ "source","target","bidirectional"?,"important"?,"specificity"? },…]` gates link gestures; empty clears restrictions.
+        /// 🔗️ JSON `[{ "source","target","bidirectional"?,"important"?,"specificity"? },…]` gates link gestures; empty clears restrictions.
         pub fn set_handle_link_compat_from_json(&mut self, json: &str) -> Result<(), NormalPortError> {
             let v: serde_json::Value = serde_json::from_str(json)?;
             let arr = v.as_array().ok_or(NormalPortError::CompatNotArray)?;
@@ -4401,7 +4401,7 @@ pub mod board_host {
             Ok(())
         }
 
-        /// @emoji 🧩️ JSON object `{ handleKinds?, wireKinds?, nodeKinds?, edgeKinds? }` replacing prior catalogs (omit arrays to clear that slice).
+        /// 🧩️ JSON object `{ handleKinds?, wireKinds?, nodeKinds?, edgeKinds? }` replacing prior catalogs (omit arrays to clear that slice).
         pub fn set_board_kind_catalogs_from_json(&mut self, json: &str) -> Result<(), NormalPortError> {
             if json.len() > BOARD_EVENT_BYTE_CAPACITY {
                 return Err(NormalPortError::EventCredits);
@@ -4520,7 +4520,7 @@ pub mod board_host {
             Ok(())
         }
 
-        /// @emoji 🛡️ Ensures runtime catalogs declare every kind from a compile-time manifest.
+        /// 🛡️ Ensures runtime catalogs declare every kind from a compile-time manifest.
         pub fn validate_against_manifest_id(&self, manifest_id: &str) -> Result<(), NormalPortError> {
             let gm = manifest_by_id(manifest_id).ok_or_else(|| NormalPortError::UnknownManifestId(manifest_id.to_string()))?;
             for row in &gm.port_kinds {
@@ -4609,7 +4609,7 @@ pub mod board_host {
             }
         }
 
-        /// @emoji 🎨️ Accepts `#rgb`/`#rrggbb`/`#rrggbbaa` or CSS `hsl()` / `hsla()` (comma or space syntax, optional `/` alpha).
+        /// 🎨️ Accepts `#rgb`/`#rrggbb`/`#rrggbbaa` or CSS `hsl()` / `hsla()` (comma or space syntax, optional `/` alpha).
         fn parse_css_color(s: &str) -> Option<Color> {
             if let Some(c) = Self::parse_css_hex_color(s) {
                 return Some(c);
@@ -4807,7 +4807,7 @@ pub mod board_host {
             self.is_preselecting() || !self.preselect.is_empty()
         }
 
-        /// @emoji 🎨️ During area-select: preselect → Selected; anchor∖preselect → Highlighted; idle selection → Selected.
+        /// 🎨️ During area-select: preselect → Selected; anchor∖preselect → Highlighted; idle selection → Selected.
         fn resolve_interaction_style_kind(&self, id: &str) -> BoardElementStyleKind {
             if self.is_preselect_active() {
                 if self.preselect.contains(id) {
@@ -4923,7 +4923,7 @@ pub mod board_host {
             Self::locked_style_dim(kind, w.locked)
         }
 
-        /// @emoji 💠️ Entity ids whose selection/preselect/hover chrome tints fills and strokes without rebuilding {@link BoardHost.world_content_cache}.
+        /// 💠️ Entity ids whose selection/preselect/hover chrome tints fills and strokes without rebuilding {@link BoardHost.world_content_cache}.
         fn interaction_overlay_entity_ids(&self) -> BTreeSet<String> {
             let mut ids = BTreeSet::new();
             if self.is_preselect_active() {
@@ -5368,7 +5368,7 @@ pub mod board_host {
             (self.brush_node_size * 0.5).max(1.0)
         }
 
-        /// @emoji 🖌️ Brush slot anchor follows indirect-handle layout at overview/normal LOD so hit targets match painted rings.
+        /// 🖌️ Brush slot anchor follows indirect-handle layout at overview/normal LOD so hit targets match painted rings.
         fn brush_handle_anchor_world(&self, h: &HandleData) -> Option<Point> {
             if matches!(self.current_draw_lod(), BoardDrawLod::Overview | BoardDrawLod::Compact | BoardDrawLod::Normal) {
                 self.indirect_handle_world_pos(h).or_else(|| self.handle_world_pos(h))
@@ -5397,7 +5397,7 @@ pub mod board_host {
             self.handle_slot_center_world(h.node_id.as_str(), hw, self.brush_effective_suggestion_offset())
         }
 
-        /// @emoji 🖌️ World distance from pointer to brush slot when the pointer is on the slot, anchor, or sole-free node body.
+        /// 🖌️ World distance from pointer to brush slot when the pointer is on the slot, anchor, or sole-free node body.
         fn brush_slot_pointer_hit_distance(&self, world: Point, handle_id: &str, h: &HandleData) -> Option<f64> {
             let slot_center = self.brush_slot_center_world(h)?;
             let zoom = self.camera.zoom.max(1e-9);
@@ -7462,7 +7462,7 @@ pub mod board_host {
             Some(BrushPreviewSnapshot { source_handle_id: source_handle_id.to_string(), node_kind_id: node_kind_id.to_string(), x, y, shape, radius, width, height, handles, target_handle_index, icon_kind })
         }
 
-        /// @emoji 🖌️ Mirrors brush slot + preview from another authoring pane (no pointer input on this host).
+        /// 🖌️ Mirrors brush slot + preview from another authoring pane (no pointer input on this host).
         pub fn set_brush_session_mirror_json(&mut self, json: &str) -> Result<(), NormalPortError> {
             if json.trim().is_empty() {
                 self.brush_slot_suggestions_active = false;
@@ -7528,6 +7528,11 @@ pub mod board_host {
             Ok(())
         }
 
+        /// 🔗️ A handle that already carries an edge is not open, so it grows nothing. The pointer
+        /// path filters those out before it ever enters a slot (`brush_nearest_slot_source`); the
+        /// direct entry points (`brush_open_slot`, `brush_target_slot`) reach this instead, and the
+        /// slot must then resolve an EMPTY page rather than a wrong one — that empty page is what a
+        /// fully fastened document's suggestions popup reads as "no placement available".
         fn brush_enter_slot(&mut self, source_handle_id: &str) {
             if self.brush_slot_source_id.as_deref() == Some(source_handle_id) {
                 return;
@@ -7536,11 +7541,6 @@ pub mod board_host {
                 self.brush_finish_slot();
             }
             self.brush_slot_source_id = Some(source_handle_id.to_string());
-            // 🔗️ A handle that already carries an edge is not open, so it grows nothing. The pointer
-            // path filters those out before it ever enters a slot (`brush_nearest_slot_source`); the
-            // direct entry points (`brush_open_slot`, `brush_target_slot`) reach this instead, and the
-            // slot must then resolve an EMPTY page rather than a wrong one — that empty page is what a
-            // fully fastened document's suggestions popup reads as "no placement available".
             let fastened = self.handle_has_incident_edge(source_handle_id);
             let Some(source) = self.handles.get(source_handle_id).filter(|_| !fastened).cloned() else {
                 self.brush_candidates.clear();
@@ -7682,7 +7682,7 @@ pub mod board_host {
             self.brush_rebuild_preview();
         }
 
-        /// @emoji 🖌️ Opens a brush slot on a free handle (suggestions menu; works outside brush utility).
+        /// 🖌️ Opens a brush slot on a free handle (suggestions menu; works outside brush utility).
         pub fn brush_open_slot(&mut self, handle_id: &str) {
             if !self.handles.contains_key(handle_id) {
                 return;
@@ -7693,7 +7693,7 @@ pub mod board_host {
             self.set_hovered_id(Some(handle_id.to_string()));
         }
 
-        /// @emoji 🎣️ Points the brush slot at a handle, or at nothing, WITHOUT opening the suggestions
+        /// 🎣️ Points the brush slot at a handle, or at nothing, WITHOUT opening the suggestions
         /// popup — the armed brush's own targeting channel, so a program driving the brush headlessly
         /// resolves the same candidate page a pointer hover would without claiming the popup's hover.
         pub fn brush_target_slot(&mut self, handle_id: Option<&str>) {
@@ -7706,13 +7706,13 @@ pub mod board_host {
             }
         }
 
-        /// @emoji 🖌️ Commits the active brush preview and clears the slot.
+        /// 🖌️ Commits the active brush preview and clears the slot.
         pub fn brush_commit_slot(&mut self) {
             self.brush_commit_preview();
             self.brush_clear_slot();
         }
 
-        /// @emoji 🖌️ Discards the active brush slot without placing.
+        /// 🖌️ Discards the active brush slot without placing.
         pub fn brush_cancel_slot(&mut self) {
             self.brush_clear_slot();
         }
@@ -7843,7 +7843,7 @@ pub mod board_host {
             Some(FixtureDropPreviewSnapshot { node_kind_id: node_kind_id.to_string(), x, y, shape, radius, width, height, icon_kind })
         }
 
-        /// @emoji 👻️ Sets or clears the workbench palette fixture drop ghost node (independent of brush utility).
+        /// 👻️ Sets or clears the workbench palette fixture drop ghost node (independent of brush utility).
         pub fn set_fixture_drop_preview_json(&mut self, json: &str) -> Result<(), NormalPortError> {
             if json.trim().is_empty() {
                 self.fixture_drop_preview = None;
@@ -7901,7 +7901,7 @@ pub mod board_host {
             scene.stroke(&Stroke::new(ui_styling::strokes::WIRE_HIGHLIGHT), Affine::IDENTITY, self.canvas_theme.wire_stroke_highlighted, None, &bez);
         }
 
-        /// @emoji 🧩️ Selects world-space clip tiling for Vello scene construction (`none` | `world-clip`).
+        /// 🧩️ Selects world-space clip tiling for Vello scene construction (`none` | `world-clip`).
         pub fn set_world_raster_tiling(&mut self, mode: &str) {
             let next = if mode == "world-clip" { "world-clip".into() } else { "none".into() };
             if self.world_raster_tiling == next {
@@ -8014,7 +8014,7 @@ pub mod board_host {
             }
         }
 
-        /// @emoji 🏁️ Emits final node coordinates after a drag gesture so hosts can commit declarative fixture state once.
+        /// 🏁️ Emits final node coordinates after a drag gesture so hosts can commit declarative fixture state once.
         fn push_node_drag_end_events(&mut self, start_positions: &BTreeMap<String, (f64, f64)>) {
             if !start_positions.keys().any(|id| self.nodes.contains_key(id)) {
                 return;
@@ -8623,7 +8623,7 @@ pub mod board_host {
             matches!(&self.interaction, Interaction::Selection { .. })
         }
 
-        /// @emoji 💠️ Live area-select preview ids, or committed selection when not preselecting.
+        /// 💠️ Live area-select preview ids, or committed selection when not preselecting.
         fn selection_chrome_ids(&self) -> BTreeSet<String> {
             if self.is_preselecting() || !self.preselect.is_empty() {
                 self.preselect.clone()
@@ -8632,7 +8632,7 @@ pub mod board_host {
             }
         }
 
-        /// @emoji 🖱️ Empty selection on background click without exit/highlight chrome or preselect.
+        /// 🖱️ Empty selection on background click without exit/highlight chrome or preselect.
         fn clear_selection_on_background_click(&mut self) {
             if self.selection.is_empty() {
                 return;
@@ -8699,7 +8699,7 @@ pub mod board_host {
             self.publish_event_reservation(reservation);
         }
 
-        /// @emoji 🔇️ Updates committed selection without emitting `select` (controlled React sync).
+        /// 🔇️ Updates committed selection without emitting `select` (controlled React sync).
         pub fn set_selection_ids_silent(&mut self, ids: &[String]) {
             let next: BTreeSet<String> = ids.iter().cloned().collect();
             if next == self.selection {
@@ -8713,7 +8713,7 @@ pub mod board_host {
             self.sync_selection_flags_to_objects();
         }
 
-        /// @emoji 🔇️ Mirrors area-select preview chrome without emitting `preselect` (shared multi-view sync).
+        /// 🔇️ Mirrors area-select preview chrome without emitting `preselect` (shared multi-view sync).
         pub fn set_preselect_state_silent(&mut self, ids: &[String], removed_ids: &[String]) {
             let next: BTreeSet<String> = ids.iter().cloned().collect();
             let removed: BTreeSet<String> = removed_ids.iter().cloned().collect();
@@ -8749,7 +8749,7 @@ pub mod board_host {
             self.publish_event_reservation(reservation);
         }
 
-        /// @emoji 👁️ Rectangle/lasso drag preview: `preselect` + `preselect_removed` (anchor \\ preselect); emits `preselect` only.
+        /// 👁️ Rectangle/lasso drag preview: `preselect` + `preselect_removed` (anchor \\ preselect); emits `preselect` only.
         fn apply_area_preselect(&mut self, anchor_ids: &BTreeSet<String>, ids: &[String], gesture: Option<&str>) {
             let next: BTreeSet<String> = ids.iter().cloned().collect();
             let sorted = Self::sorted_selection_ids(&next);
@@ -8776,7 +8776,7 @@ pub mod board_host {
             v
         }
 
-        /// @emoji 🧿️ Ends a rectangle/lasso cycle: commits `selection`, clears preselect (highlight only lives in preselect).
+        /// 🧿️ Ends a rectangle/lasso cycle: commits `selection`, clears preselect (highlight only lives in preselect).
         fn commit_area_select_from_initial(&mut self, initial_ids: &BTreeSet<String>, ids: &[String], gesture: Option<&str>) {
             let next: BTreeSet<String> = ids.iter().cloned().collect();
             let sorted = Self::sorted_selection_ids(&next);
@@ -8796,12 +8796,12 @@ pub mod board_host {
             self.publish_event_reservation(reservation);
         }
 
-        /// @emoji 🧿️ True during left‑button rectangle/lasso drag so callers can avoid descriptor round‑trips that fight the live marquee state.
+        /// 🧿️ True during left‑button rectangle/lasso drag so callers can avoid descriptor round‑trips that fight the live marquee state.
         pub fn is_dragging_area_select(&self) -> bool {
             matches!(&self.interaction, Interaction::Selection { .. })
         }
 
-        /// @emoji 🧿️ True during area select, link gestures, node drag, the rotate-ring gesture, or camera pan so JS can defer full `syncDescriptorJson` round-trips.
+        /// 🧿️ True during area select, link gestures, node drag, the rotate-ring gesture, or camera pan so JS can defer full `syncDescriptorJson` round-trips.
         pub fn defers_descriptor_sync_from_js(&self) -> bool {
             self.transform_drag.is_some()
                 || self.region_drag.is_some()
@@ -8809,7 +8809,7 @@ pub mod board_host {
                 || matches!(self.interaction, Interaction::LinkAtSourceHandle { .. } | Interaction::LinkDragSnap { .. } | Interaction::LinkTargetNode { .. } | Interaction::ExternalLinkPreview { .. } | Interaction::DragNodes { .. } | Interaction::Pan { .. })
         }
 
-        /// @emoji 🩺️ What the engine is doing right now, as one probe-readable row: the live gesture,
+        /// 🩺️ What the engine is doing right now, as one probe-readable row: the live gesture,
         /// the armed utility, the hovered id and the selection/preselect sizes. Published by the React
         /// host as `data-board-interaction-json`, the board twin of `World3dHost`'s `data-interaction-json`.
         pub fn interaction_json(&self) -> String {
@@ -8862,7 +8862,7 @@ pub mod board_host {
             out
         }
 
-        /// @emoji 🩺️ Every handle the pane can actually be POINTED AT, as one bounded probe row:
+        /// 🩺️ Every handle the pane can actually be POINTED AT, as one bounded probe row:
         /// world position, owning node, handle kind, and whether the handle is still free (no incident
         /// edge — the precondition `openHandleSuggestions` and `createEdge` both need). `data-board-
         /// positions-json` carries NODES only, so nothing in the DOM ever named a handle and no
@@ -8971,7 +8971,7 @@ pub mod board_host {
             })
         }
 
-        /// @emoji 📐️ Node half-extent for indirect ring layout: circle radius or half the shorter rectangle side.
+        /// 📐️ Node half-extent for indirect ring layout: circle radius or half the shorter rectangle side.
         fn indirect_node_half_extent(&self, n: &NodeData) -> f64 {
             match n.shape {
                 NodeShape::Circle => self.scaled_node_radius(n),
@@ -8979,12 +8979,12 @@ pub mod board_host {
             }
         }
 
-        /// @emoji 📐️ Radial world offset from node rim to indirect-handle center (`INDIRECT_HANDLE_RING_GAP_NODE_SCALE`× half-extent) so ring–node proportions stay fixed when zooming.
+        /// 📐️ Radial world offset from node rim to indirect-handle center (`INDIRECT_HANDLE_RING_GAP_NODE_SCALE`× half-extent) so ring–node proportions stay fixed when zooming.
         fn indirect_handle_ring_offset_world(&self, n: &NodeData) -> f64 {
             (self.indirect_node_half_extent(n) * INDIRECT_HANDLE_RING_GAP_NODE_SCALE).max(1e-9)
         }
 
-        /// @emoji 📐️ Ghost link handles sit on a rim offset by `INDIRECT_HANDLE_RING_GAP_NODE_SCALE`× node half-extent from the node body so ring spacing scales with the node at every zoom.
+        /// 📐️ Ghost link handles sit on a rim offset by `INDIRECT_HANDLE_RING_GAP_NODE_SCALE`× node half-extent from the node body so ring spacing scales with the node at every zoom.
         pub fn indirect_handle_world_pos(&self, h: &HandleData) -> Option<Point> {
             let n = self.nodes.get(&h.node_id)?;
             let offset = self.indirect_handle_ring_offset_world(n);
@@ -8994,7 +8994,7 @@ pub mod board_host {
             })
         }
 
-        /// @emoji 📐️ Indirect-connect marker radius in world units: `INDIRECT_HANDLE_MARKER_NODE_SCALE`× circle radius or × half the shorter rectangle side.
+        /// 📐️ Indirect-connect marker radius in world units: `INDIRECT_HANDLE_MARKER_NODE_SCALE`× circle radius or × half the shorter rectangle side.
         pub fn indirect_handle_marker_radius_world(&self, h: &HandleData) -> f64 {
             let Some(n) = self.nodes.get(&h.node_id) else {
                 return (self.effective_handle_radius(h) * INDIRECT_HANDLE_MARKER_NODE_SCALE).max(1e-9);
@@ -9003,7 +9003,7 @@ pub mod board_host {
             (self.indirect_node_half_extent(n) * INDIRECT_HANDLE_MARKER_NODE_SCALE * handle_local_scale).max(1e-9)
         }
 
-        /// @emoji 🧭️ Source handle id while a link wire is drawn (`LinkDragSnap` / `LinkTargetNode`).
+        /// 🧭️ Source handle id while a link wire is drawn (`LinkDragSnap` / `LinkTargetNode`).
         fn active_link_source_handle_id(&self) -> Option<&str> {
             match &self.interaction {
                 Interaction::LinkDragSnap { source_id, .. } | Interaction::LinkTargetNode { source_id, .. } | Interaction::ExternalLinkPreview { source_id, .. } => Some(source_id.as_str()),
@@ -9011,7 +9011,7 @@ pub mod board_host {
             }
         }
 
-        /// @emoji 🧭️ Visible target node ids that expose at least one free handle compatible with `source_handle_id`.
+        /// 🧭️ Visible target node ids that expose at least one free handle compatible with `source_handle_id`.
         fn link_drag_compatible_target_node_ids(&self, source_handle_id: &str) -> Vec<String> {
             let Some(source) = self.handles.get(source_handle_id) else {
                 return Vec::new();
@@ -9040,7 +9040,7 @@ pub mod board_host {
             out
         }
 
-        /// @emoji 🧭️ Count of visible free handles on `node_id` compatible with `source_handle_id`.
+        /// 🧭️ Count of visible free handles on `node_id` compatible with `source_handle_id`.
         fn link_compatible_handle_count_on_node(&self, source_handle_id: &str, node_id: &str) -> usize {
             let Some(source) = self.handles.get(source_handle_id) else {
                 return 0;
@@ -9051,7 +9051,7 @@ pub mod board_host {
             self.handles.iter().filter(|(id, h)| h.node_id == node_id && self.handle_eligible_link_target_ring(id.as_str(), source_handle_id) && self.handles_link_compatible_for_drag(source, h)).count()
         }
 
-        /// @emoji 🧭️ Free compatible handle ids on `node_id` for an active link from `source_handle_id`.
+        /// 🧭️ Free compatible handle ids on `node_id` for an active link from `source_handle_id`.
         fn link_compatible_handle_ids_on_node(&self, source_handle_id: &str, node_id: &str) -> Vec<String> {
             let Some(source) = self.handles.get(source_handle_id) else {
                 return Vec::new();
@@ -9073,7 +9073,7 @@ pub mod board_host {
             out
         }
 
-        /// @emoji 🧭️ Compatible target node under `world` while a link wire is active (node body hit).
+        /// 🧭️ Compatible target node under `world` while a link wire is active (node body hit).
         fn link_drag_ring_target_node_id(&self, source_handle_id: &str, world: Point) -> Option<String> {
             let nid = self.resolve_node_hit_world(world)?;
             if self.handles.get(source_handle_id)?.node_id == nid {
@@ -9082,7 +9082,7 @@ pub mod board_host {
             self.node_has_any_free_link_compatible_handle(source_handle_id, nid.as_str()).then_some(nid)
         }
 
-        /// @emoji 🧭️ Resolves which single node draws the overview/normal indirect handle ring when that node has **more than one** eligible free handles (otherwise the sole handle is implicit).
+        /// 🧭️ Resolves which single node draws the overview/normal indirect handle ring when that node has **more than one** eligible free handles (otherwise the sole handle is implicit).
         fn indirect_ring_node_id(&self, lod: BoardDrawLod) -> Option<String> {
             if !matches!(lod, BoardDrawLod::Overview | BoardDrawLod::Compact | BoardDrawLod::Normal) {
                 return None;
@@ -9126,7 +9126,7 @@ pub mod board_host {
             self.handles.iter().filter(|(id, h)| h.node_id == node_id && self.handle_effectively_visible(id.as_str()) && self.handle_eligible_indirect_connect_ring(id.as_str())).count()
         }
 
-        /// @emoji 🧭️ Returns the handle id when `node_id` has exactly one visible free indirect-eligible handle.
+        /// 🧭️ Returns the handle id when `node_id` has exactly one visible free indirect-eligible handle.
         fn sole_eligible_indirect_handle_on_node(&self, node_id: &str) -> Option<String> {
             let mut found: Option<String> = None;
             for (id, h) in &self.handles {
@@ -9141,7 +9141,7 @@ pub mod board_host {
             found
         }
 
-        /// @emoji 🧭️ When the drop target has exactly one free handle compatible with `source_handle_id`, returns that handle id (otherwise `None`).
+        /// 🧭️ When the drop target has exactly one free handle compatible with `source_handle_id`, returns that handle id (otherwise `None`).
         fn node_sole_free_link_compatible_handle(&self, source_handle_id: &str, target_node_id: &str) -> Option<String> {
             let source = self.handles.get(source_handle_id)?;
             if source.node_id == target_node_id {
@@ -9214,7 +9214,7 @@ pub mod board_host {
             Some(sole)
         }
 
-        /// @emoji 🧭️ True when `target_node_id` hosts at least one visible free handle that can pair with `source_handle_id` under link-compat rules.
+        /// 🧭️ True when `target_node_id` hosts at least one visible free handle that can pair with `source_handle_id` under link-compat rules.
         fn node_has_any_free_link_compatible_handle(&self, source_handle_id: &str, target_node_id: &str) -> bool {
             let Some(source) = self.handles.get(source_handle_id) else {
                 return false;
@@ -9236,7 +9236,7 @@ pub mod board_host {
             false
         }
 
-        /// @emoji 💫️ True when the handle may appear on a link-target ghost ring (`overview`/`normal` LOD).
+        /// 💫️ True when the handle may appear on a link-target ghost ring (`overview`/`normal` LOD).
         fn handle_eligible_link_target_ring(&self, handle_id: &str, source_handle_id: &str) -> bool {
             if !self.handle_effectively_visible(handle_id) || self.handle_has_incident_edge(handle_id) {
                 return false;
@@ -9498,12 +9498,12 @@ pub mod board_host {
             }
         }
 
-        /// @emoji 🧭️ Minimap/overview LOD: group selection and bounded drag only — no per-node/edge/handle picks.
+        /// 🧭️ Minimap/overview LOD: group selection and bounded drag only — no per-node/edge/handle picks.
         fn lod_disables_discrete_pick(&self) -> bool {
             matches!(self.current_draw_lod(), BoardDrawLod::Minimap | BoardDrawLod::Overview)
         }
 
-        /// @emoji 🔗️ Overview LOD: tight world-radius hit on a free handle so link drag can start without enabling broad `resolve_hit_world` handle picks.
+        /// 🔗️ Overview LOD: tight world-radius hit on a free handle so link drag can start without enabling broad `resolve_hit_world` handle picks.
         fn resolve_overview_free_link_handle_pointer_world(&self, point: Point) -> Option<String> {
             if !matches!(self.current_draw_lod(), BoardDrawLod::Overview) {
                 return None;
@@ -9528,7 +9528,7 @@ pub mod board_host {
             best.map(|(_, id)| id)
         }
 
-        /// @emoji 🧭️ Minimap/overview LOD: pointer-down inside the selection AABB moves the group without a discrete hit.
+        /// 🧭️ Minimap/overview LOD: pointer-down inside the selection AABB moves the group without a discrete hit.
         fn lod_uses_bounded_drag(&self) -> bool {
             matches!(self.current_draw_lod(), BoardDrawLod::Minimap | BoardDrawLod::Overview)
         }
@@ -9631,13 +9631,16 @@ pub mod board_host {
             out.push(BoardPickTargetJson { domain: domain.to_string(), id, generality, label });
         }
 
+        /// 🎯️ The handle the pointer's own hit test resolves leads — including the indirect-ring handles
+        /// Overview/Compact draw, which the per-LOD loop below never visits — so a right-click names exactly
+        /// the handle the hover paints, not the node underneath it.
+        ///
+        /// 🎯️ Regions are the least specific target on the board — last in the list, so a context
+        /// menu offers the graph first and the backdrop only when nothing else is under the point.
         fn resolve_pick_targets_world(&self, point: Point) -> Vec<BoardPickTargetJson> {
             let mut out = Vec::new();
             let lod = self.current_draw_lod();
             let zoom = self.camera.zoom;
-            // 🎯️ The handle the pointer's own hit test resolves leads — including the indirect-ring handles
-            // Overview/Compact draw, which the per-LOD loop below never visits — so a right-click names exactly
-            // the handle the hover paints, not the node underneath it.
             if let Some(id) = self.resolve_hit_world(point).filter(|id| self.handles.contains_key(id.as_str())) {
                 Self::push_pick_target(&mut out, "handle", id.clone(), 2, Some(id));
             }
@@ -9689,8 +9692,6 @@ pub mod board_host {
                     }
                 }
             }
-            // 🎯️ Regions are the least specific target on the board — last in the list, so a context
-            // menu offers the graph first and the backdrop only when nothing else is under the point.
             for region in self.regions.values() {
                 if region.hidden {
                     continue;
@@ -9702,7 +9703,7 @@ pub mod board_host {
             out
         }
 
-        /// @emoji 🎯️ All pick targets under a screen point as JSON (`domain`, `id`, `generality`).
+        /// 🎯️ All pick targets under a screen point as JSON (`domain`, `id`, `generality`).
         pub fn pick_targets_at_screen_json(&self, sx: f64, sy: f64) -> String {
             let world = self.screen_to_world(Point::new(sx, sy));
             serde_json::to_string(&self.resolve_pick_targets_world(world)).unwrap_or_else(|_| "[]".into())
@@ -10078,7 +10079,7 @@ pub mod board_host {
             Ok(())
         }
 
-        /// @emoji 📍️ Applies peer-pane node drags without a full descriptor re-sync.
+        /// 📍️ Applies peer-pane node drags without a full descriptor re-sync.
         pub fn set_node_positions(&mut self, moves: &[(String, f64, f64)]) {
             let mut geometry_changed = false;
             for (id, x, y) in moves {
@@ -10098,7 +10099,7 @@ pub mod board_host {
             }
         }
 
-        /// @emoji 📍️ Parses `[{"id","x","y"},…]` and updates existing host nodes in place.
+        /// 📍️ Parses `[{"id","x","y"},…]` and updates existing host nodes in place.
         pub fn set_node_positions_json(&mut self, json: &str) -> Result<(), NormalPortError> {
             #[derive(Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
             struct NodePositionMoveJson {
@@ -10159,6 +10160,10 @@ pub mod board_host {
 
         /// 🧾️ The pure half of [`Self::parse_fixture_json`]: one fixture document into one scene
         /// descriptor, or `None` for a document this port refuses. Touches no board state.
+        ///
+        /// 🎯️ Target regions are optional by construction (the artifact omits an empty collection),
+        /// so a malformed row is skipped rather than refusing the whole document: a board that
+        /// cannot paint its constraint rectangles must still paint its graph.
         fn fixture_scene_descriptor(f: FixtureJson, has_ports: bool) -> Option<SceneDescriptorJson> {
             let mut desc = SceneDescriptorJson::default();
             for entry in f.nodes {
@@ -10319,9 +10324,6 @@ pub mod board_host {
                     locked: board_json_locked_option(e),
                 });
             }
-            // 🎯️ Target regions are optional by construction (the artifact omits an empty collection),
-            // so a malformed row is skipped rather than refusing the whole document: a board that
-            // cannot paint its constraint rectangles must still paint its graph.
             for entry in f.target_regions {
                 let Some(o) = entry.as_object() else {
                     continue;
@@ -10498,7 +10500,7 @@ pub mod board_host {
             }
         }
 
-        /// @emoji 📏️ Screen-pixel edge stroke width (world-clip tiles and post-cache overlay).
+        /// 📏️ Screen-pixel edge stroke width (world-clip tiles and post-cache overlay).
         fn edge_screen_stroke_width_px(&self, lod: BoardDrawLod) -> f64 {
             match lod {
                 BoardDrawLod::Minimap => ui_styling::strokes::EDGE_MINIMAP,
@@ -10507,7 +10509,7 @@ pub mod board_host {
             }
         }
 
-        /// @emoji 📏️ Edge stroke in world units so {@link BoardHost.camera_content_affine} yields ~{@link Self::edge_screen_stroke_width_px}.
+        /// 📏️ Edge stroke in world units so {@link BoardHost.camera_content_affine} yields ~{@link Self::edge_screen_stroke_width_px}.
         fn edge_world_stroke_width(&self, lod: BoardDrawLod) -> f64 {
             let screen_px = self.edge_screen_stroke_width_px(lod);
             let z = self.camera.zoom.max(1e-9);
@@ -10805,13 +10807,13 @@ pub mod board_host {
             }
         }
 
+        /// 🎯️ Target regions are the backdrop: painted before the first entity layer, always in
+        /// world space, so nothing they overlap is ever hidden behind them.
         fn append_cached_world_content(&self, scene: &mut Scene, lod: BoardDrawLod) {
             self.advance_opaque_scene_retirement_step();
             let generation = self.content_scene_generation;
             let cam_aff = self.camera_content_affine();
             let overlay_ids = self.interaction_overlay_entity_ids();
-            // 🎯️ Target regions are the backdrop: painted before the first entity layer, always in
-            // world space, so nothing they overlap is ever hidden behind them.
             if !self.regions.is_empty() || self.region_paint.is_some() {
                 let mut region_layer = Scene::new();
                 self.append_target_region_paint(&mut region_layer, true);
@@ -10967,7 +10969,7 @@ pub mod board_host {
             self.publish_event_reservation(reservation);
         }
 
-        /// @emoji 🖱️ Sets transitive kind hover from a catalog row (clears direct `hovered_id`).
+        /// 🖱️ Sets transitive kind hover from a catalog row (clears direct `hovered_id`).
         pub fn set_hovered_kind(&mut self, domain: Option<String>, kind_id: Option<String>) {
             let next_kind = domain.zip(kind_id);
             if self.hovered_id.is_none() && self.hovered_kind == next_kind {
@@ -10981,7 +10983,7 @@ pub mod board_host {
             self.publish_event_reservation(reservation);
         }
 
-        /// @emoji 🔇️ Updates hover chrome without emitting `hover` (controlled React sync).
+        /// 🔇️ Updates hover chrome without emitting `hover` (controlled React sync).
         pub fn set_hovered_id_silent(&mut self, id: Option<String>) {
             if self.hovered_id == id && self.hovered_kind.is_none() {
                 return;
@@ -10990,7 +10992,7 @@ pub mod board_host {
             self.hovered_kind = None;
         }
 
-        /// @emoji 💠️ Externally driven highlight set (cross-panel binding); does not emit events.
+        /// 💠️ Externally driven highlight set (cross-panel binding); does not emit events.
         pub fn set_highlighted_ids(&mut self, ids: Vec<String>) {
             let next: BTreeSet<String> = ids.into_iter().collect();
             if self.highlighted_ids == next {
@@ -10999,12 +11001,12 @@ pub mod board_host {
             self.highlighted_ids = next;
         }
 
-        /// @emoji 💠️ Current externally driven highlight ids as JSON array.
+        /// 💠️ Current externally driven highlight ids as JSON array.
         pub fn highlighted_ids_json(&self) -> Result<String, NormalPortError> {
             Ok(serde_json::to_string(&self.highlighted_ids.iter().cloned().collect::<Vec<_>>())?)
         }
 
-        /// @emoji 🔇️ Mirrors controlled kind hover without emitting `hover`.
+        /// 🔇️ Mirrors controlled kind hover without emitting `hover`.
         pub fn set_hovered_kind_silent(&mut self, domain: Option<String>, kind_id: Option<String>) {
             let next_kind = domain.zip(kind_id);
             if self.hovered_id.is_none() && self.hovered_kind == next_kind {
@@ -11495,7 +11497,7 @@ pub mod board_host {
             d_screen <= tol_commit
         }
 
-        /// @emoji 🔗️ True when any edge uses this handle as `source` or `target` (handle already participates in a link).
+        /// 🔗️ True when any edge uses this handle as `source` or `target` (handle already participates in a link).
         fn handle_has_incident_edge(&self, handle_id: &str) -> bool {
             self.edges.values().any(|e| e.source == handle_id || e.target == handle_id)
         }
@@ -11508,7 +11510,7 @@ pub mod board_host {
             matches!(self.current_draw_lod(), BoardDrawLod::Normal | BoardDrawLod::Detail | BoardDrawLod::Micro)
         }
 
-        /// @emoji 🧲️ While dragging a node with no incident edges, overlapping bounds pick the nearest compatible free handle pair.
+        /// 🧲️ While dragging a node with no incident edges, overlapping bounds pick the nearest compatible free handle pair.
         fn node_drag_proximity_handle_pair(&self, moving_node_id: &str) -> Option<(String, String)> {
             if !self.lod_allows_node_proximity_connect() {
                 return None;
@@ -11606,12 +11608,12 @@ pub mod board_host {
             wire.visible && self.handle_effectively_visible(wire.source.as_str()) && wire.target.as_ref().is_none_or(|id| self.handle_effectively_visible(id.as_str()))
         }
 
-        /// @emoji 💫️ True when the handle may be drawn or hit-tested on the indirect-connect ghost ring (`overview`/`normal` LOD).
+        /// 💫️ True when the handle may be drawn or hit-tested on the indirect-connect ghost ring (`overview`/`normal` LOD).
         fn handle_eligible_indirect_connect_ring(&self, handle_id: &str) -> bool {
             self.handle_selectable(handle_id) && !self.handle_has_incident_edge(handle_id)
         }
 
-        /// @emoji 📍️ Drag-phase link snap tests **screen px** to the handle anchor so detail/micro zoom keeps a stable hit halo; pointer-up re-checks with `link_snap_commit_proximity_ok` before `proximityConnect`.
+        /// 📍️ Drag-phase link snap tests **screen px** to the handle anchor so detail/micro zoom keeps a stable hit halo; pointer-up re-checks with `link_snap_commit_proximity_ok` before `proximityConnect`.
         fn nearest_link_snap_handle_world(&self, source_handle_id: &str, world: Point) -> Option<String> {
             if matches!(self.current_draw_lod(), BoardDrawLod::Minimap) {
                 return None;
@@ -12387,13 +12389,16 @@ pub mod board_host {
             true
         }
 
+        /// 🖍️ The area brush owns the whole pointer while it is armed: a press anchors a region
+        /// rectangle instead of picking, so the same gesture can never also start a marquee.
+        ///
+        /// 🎯️ LAST of all the pick paths: a region is the board's backdrop, so it is only grabbed
+        /// once the nodes, handles, edges and the rotate ring have all missed.
         pub fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: u8, shift: bool, ctrl_or_meta: bool) {
             self.interaction_revision = self.interaction_revision.wrapping_add(1);
             self.set_selection_screen_preview(None);
             let screen = Point::new(sx, sy);
             let world = self.screen_to_world(screen);
-            // 🖍️ The area brush owns the whole pointer while it is armed: a press anchors a region
-            // rectangle instead of picking, so the same gesture can never also start a marquee.
             if self.active_utility == ActiveUtility::AreaBrush {
                 if button == 1 {
                     self.interaction = Interaction::Pan { origin: self.camera.clone(), start_screen: screen };
@@ -12505,8 +12510,6 @@ pub mod board_host {
                     return;
                 }
             }
-            // 🎯️ LAST of all the pick paths: a region is the board's backdrop, so it is only grabbed
-            // once the nodes, handles, edges and the rotate ring have all missed.
             if hit.is_none() && button == 0 && self.try_begin_region_drag_at(world) {
                 return;
             }
@@ -12886,7 +12889,7 @@ pub mod board_host {
             cancelled_region || cancelled_brush || cancelled_interaction
         }
 
-        /// @emoji ↩️ Aborts an in‑flight rectangle/lasso drag and restores the selection snapshot from when the gesture began.
+        /// ↩️ Aborts an in‑flight rectangle/lasso drag and restores the selection snapshot from when the gesture began.
         pub fn cancel_area_select(&mut self) -> bool {
             if self.cancel_region_paint() || self.cancel_region_drag() {
                 return true;
@@ -12959,7 +12962,7 @@ pub mod board_host {
         }
 
         //#region 🕹️TransformGumball
-        /// @emoji 🕹️ Composes which gumball handles the select utility offers. `move` is the native
+        /// 🕹️ Composes which gumball handles the select utility offers. `move` is the native
         /// node drag (always available while it is on), `rotate` draws and arms the ring.
         pub fn set_transform_flags(&mut self, move_enabled: bool, rotate_enabled: bool) {
             let next = TransformGumballFlags { move_enabled, rotate_enabled };
@@ -12977,13 +12980,13 @@ pub mod board_host {
             self.transform_flags
         }
 
-        /// @emoji 📐️ Every selected node id in engine order — the rotate gesture's members, pivot
+        /// 📐️ Every selected node id in engine order — the rotate gesture's members, pivot
         /// contributors and event ids all come from this one list.
         fn transform_selection_node_ids(&self) -> Vec<String> {
             self.selection.iter().filter(|id| self.nodes.contains_key(*id)).cloned().collect()
         }
 
-        /// @emoji ⭕️ Pivot and ring radius when the rotate gumball is live: the select utility is
+        /// ⭕️ Pivot and ring radius when the rotate gumball is live: the select utility is
         /// active, the rotate flag is on, and at least one selected node exists to turn.
         fn transform_gumball_geometry(&self) -> Option<(Point, f64)> {
             if self.active_utility != ActiveUtility::Select || !self.transform_flags.rotate_enabled {
@@ -13005,7 +13008,7 @@ pub mod board_host {
             Some((pivot, transform_ring_radius_world(pivot, &corners, self.camera.zoom)))
         }
 
-        /// @emoji 🩺️ The gumball's whole probe-visible state: which handles are composed, whether the
+        /// 🩺️ The gumball's whole probe-visible state: which handles are composed, whether the
         /// ring is drawn, and the live drag's pivot/angle. Read as `data-board-transform-json`.
         pub fn transform_gumball_json(&self) -> String {
             let geometry = self.transform_drag.as_ref().map(|drag| (drag.pivot, drag.radius_world)).or_else(|| self.transform_gumball_geometry());
@@ -13031,7 +13034,7 @@ pub mod board_host {
             out
         }
 
-        /// @emoji 🔄️ Grabs the rotate ring. Asked BEFORE any node/handle/edge hit test, so a ring that
+        /// 🔄️ Grabs the rotate ring. Asked BEFORE any node/handle/edge hit test, so a ring that
         /// crosses a node still rotates instead of starting a drag on whatever sits under it.
         fn try_begin_transform_drag_at(&mut self, world: Point) -> bool {
             let Some((pivot, radius_world)) = self.transform_gumball_geometry() else {
@@ -13058,9 +13061,12 @@ pub mod board_host {
             true
         }
 
-        /// @emoji 👁️ Re-derives the whole preview from the grab-time snapshot: positions orbit the
+        /// 👁️ Re-derives the whole preview from the grab-time snapshot: positions orbit the
         /// pivot and every handle angle turns with its node, exactly like the guest reducer the
         /// release commits to. Emits nothing — a rotate is ONE document edit, on release.
+        ///
+        /// 🪞️ A preview frame is expendable: a refused reservation drops the row instead of
+        /// claiming overflow credit, so a fast drag can never fault the event terminal.
         fn update_transform_drag(&mut self, world: Point, snap: bool) {
             let Some(mut drag) = self.transform_drag.take() else {
                 return;
@@ -13081,8 +13087,6 @@ pub mod board_host {
             let preview = BoardOwnedEvent::transform_preview(drag.start_positions.keys().filter_map(|id| self.nodes.get(id).map(|node| (id.as_str(), node.x, node.y))));
             self.transform_drag = Some(drag);
             self.bump_content_scene_generation();
-            // 🪞️ A preview frame is expendable: a refused reservation drops the row instead of
-            // claiming overflow credit, so a fast drag can never fault the event terminal.
             if let Ok(event) = preview {
                 if let Ok(reservation) = self.events.reserve_event(event) {
                     self.publish_event_reservation(reservation);
@@ -13090,7 +13094,7 @@ pub mod board_host {
             }
         }
 
-        /// @emoji 🏁️ Ends the gesture with ONE `nodeRotate` row carrying the absolute delta and the
+        /// 🏁️ Ends the gesture with ONE `nodeRotate` row carrying the absolute delta and the
         /// pivot. A zero-angle release (a click on the ring) commits nothing.
         fn commit_transform_drag(&mut self) -> bool {
             let Some(drag) = self.transform_drag.take() else {
@@ -13107,7 +13111,7 @@ pub mod board_host {
             true
         }
 
-        /// @emoji ↩️ Restores the exact pre-gesture geometry — Escape, pointer-leave and switching the
+        /// ↩️ Restores the exact pre-gesture geometry — Escape, pointer-leave and switching the
         /// rotate flag off all abandon a live ring drag without touching the document.
         fn cancel_transform_drag(&mut self) -> bool {
             let Some(drag) = self.transform_drag.take() else {
@@ -13128,10 +13132,11 @@ pub mod board_host {
             true
         }
 
-        /// @emoji ⭕️ Paints the ring, its pivot dot and the live grab spoke.
+        /// ⭕️ Paints the ring, its pivot dot and the live grab spoke.
+        ///
+        /// ⭕️ While the gesture is live the ring is the one grabbed at press time: re-deriving it from
+        /// the turning nodes would make the band breathe under the cursor for a non-circular selection.
         fn append_transform_gumball_paint(&self, scene: &mut Scene, world_space: bool) {
-            // ⭕️ While the gesture is live the ring is the one grabbed at press time: re-deriving it from
-            // the turning nodes would make the band breathe under the cursor for a non-circular selection.
             let Some((pivot, radius_world)) = self.transform_drag.as_ref().map(|drag| (drag.pivot, drag.radius_world)).or_else(|| self.transform_gumball_geometry()) else {
                 return;
             };
@@ -13155,7 +13160,7 @@ pub mod board_host {
         //#endregion 🕹️TransformGumball
 
         //#region 🎯️TargetRegions
-        /// @emoji 🖍️ World width/height an area-brush CLICK paints; a non-finite or non-positive axis
+        /// 🖍️ World width/height an area-brush CLICK paints; a non-finite or non-positive axis
         /// keeps the previous extent rather than minting a zero-area region no fill could ever satisfy.
         pub fn set_area_brush_extent(&mut self, width: f64, height: f64) {
             let (mut w, mut h) = self.area_brush_extent;
@@ -13175,7 +13180,7 @@ pub mod board_host {
             self.area_brush_extent
         }
 
-        /// @emoji 🧲️ The world step every region gesture quantizes to, or `None` while the grid-snap
+        /// 🧲️ The world step every region gesture quantizes to, or `None` while the grid-snap
         /// modifier is off — one definition shared by paint, move and resize.
         fn region_snap_step(&self) -> Option<f64> {
             if !self.grid_snap_enabled {
@@ -13189,7 +13194,7 @@ pub mod board_host {
             Point::new(snap_region_scalar(point.x, step), snap_region_scalar(point.y, step))
         }
 
-        /// @emoji 📐️ Live bounds of one region: the gesture's preview while it is the dragged one, the
+        /// 📐️ Live bounds of one region: the gesture's preview while it is the dragged one, the
         /// document's rectangle otherwise.
         fn region_live_bounds(&self, region: &RegionData) -> [f64; 4] {
             match self.region_drag.as_ref().filter(|drag| drag.id == region.id) {
@@ -13198,7 +13203,7 @@ pub mod board_host {
             }
         }
 
-        /// @emoji 🩺️ Every region this board holds, in id order, as the probe reads them out of
+        /// 🩺️ Every region this board holds, in id order, as the probe reads them out of
         /// `data-board-target-regions-json`. Bounds are normalized and reflect a live drag, so the
         /// attribute and the pixels never disagree mid-gesture.
         pub fn target_regions_json(&self) -> String {
@@ -13235,9 +13240,12 @@ pub mod board_host {
             out
         }
 
-        /// @emoji 🎯️ The region grip under `world`, asked ONLY after the nodes, handles, edges and the
+        /// 🎯️ The region grip under `world`, asked ONLY after the nodes, handles, edges and the
         /// rotate ring have all missed — a region is the board's backdrop, never a lid over its graph.
         /// A hidden region is not paint and therefore not a pick target either.
+        ///
+        /// 🤏️ A real grip always outranks a body: overlapping rectangles must still be resizable
+        /// at the edge of the one on top, otherwise a region enclosing another would swallow it.
         fn region_grip_hit_world(&self, world: Point) -> Option<(String, RegionGrip)> {
             let zoom = self.camera.zoom;
             let mut best: Option<(String, RegionGrip)> = None;
@@ -13246,8 +13254,6 @@ pub mod board_host {
                     continue;
                 }
                 let Some(grip) = region_grip_at(self.region_live_bounds(region), zoom, world) else { continue };
-                // 🤏️ A real grip always outranks a body: overlapping rectangles must still be resizable
-                // at the edge of the one on top, otherwise a region enclosing another would swallow it.
                 let replaces = match best.as_ref() {
                     None => true,
                     Some((_, previous)) => *previous == RegionGrip::Body || grip != RegionGrip::Body,
@@ -13259,7 +13265,7 @@ pub mod board_host {
             best
         }
 
-        /// @emoji 🚚️ Grabs a region: the body moves it, a corner/edge grip resizes it. A LOCKED region
+        /// 🚚️ Grabs a region: the body moves it, a corner/edge grip resizes it. A LOCKED region
         /// refuses the grab outright — it still paints and still selects, it simply cannot be dragged.
         fn try_begin_region_drag_at(&mut self, world: Point) -> bool {
             let Some((id, grip)) = self.region_grip_hit_world(world) else {
@@ -13280,7 +13286,7 @@ pub mod board_host {
             true
         }
 
-        /// @emoji 👁️ Re-derives the whole preview from the grab-time rectangle, so the drag never
+        /// 👁️ Re-derives the whole preview from the grab-time rectangle, so the drag never
         /// accumulates float drift. Emits nothing: a region gesture is ONE document edit, on release.
         fn update_region_drag(&mut self, world: Point) {
             let Some(mut drag) = self.region_drag.take() else {
@@ -13294,7 +13300,7 @@ pub mod board_host {
             self.bump_content_scene_generation();
         }
 
-        /// @emoji 🏁️ Ends a region gesture with exactly ONE row: `regionMove` for a body drag,
+        /// 🏁️ Ends a region gesture with exactly ONE row: `regionMove` for a body drag,
         /// `regionResize` for a grip drag. A release that moved nothing commits nothing.
         fn commit_region_drag(&mut self) -> bool {
             let Some(drag) = self.region_drag.take() else {
@@ -13318,7 +13324,7 @@ pub mod board_host {
             true
         }
 
-        /// @emoji ↩️ Abandons a live region gesture without touching the document.
+        /// ↩️ Abandons a live region gesture without touching the document.
         fn cancel_region_drag(&mut self) -> bool {
             if self.region_drag.take().is_none() {
                 return false;
@@ -13344,7 +13350,7 @@ pub mod board_host {
             self.bump_content_scene_generation();
         }
 
-        /// @emoji 📐️ The rectangle the live paint would commit: the dragged box, or the configured
+        /// 📐️ The rectangle the live paint would commit: the dragged box, or the configured
         /// brush extent anchored at the press point when the gesture never left it.
         fn region_paint_bounds(paint: &BoardRegionPaint, extent: (f64, f64)) -> [f64; 4] {
             if paint.dragged {
@@ -13353,7 +13359,7 @@ pub mod board_host {
             region_bounds(paint.anchor.x, paint.anchor.y, extent.0, extent.1)
         }
 
-        /// @emoji 🏁️ Ends an area-brush gesture with exactly ONE `regionCreate` row. A rectangle that
+        /// 🏁️ Ends an area-brush gesture with exactly ONE `regionCreate` row. A rectangle that
         /// collapsed on either axis is refused rather than published — the same floor a resize honours.
         fn commit_region_paint(&mut self) -> bool {
             let Some(paint) = self.region_paint.take() else {
@@ -13379,7 +13385,7 @@ pub mod board_host {
             true
         }
 
-        /// @emoji 🎯️ Paints every visible region — translucent fill, outline, corner grips on the
+        /// 🎯️ Paints every visible region — translucent fill, outline, corner grips on the
         /// selected one, and a corner tag for a labelled one. Appended BEFORE the node fill layer, so
         /// a region is always the backdrop of the graph and never covers an entity.
         ///
@@ -13438,7 +13444,7 @@ pub mod board_host {
         }
         //#endregion 🎯️TargetRegions
 
-        /// @emoji 📦️ Starts a group drag when `world` lies inside the padded union bounds of the current selection (minimap/overview LOD).
+        /// 📦️ Starts a group drag when `world` lies inside the padded union bounds of the current selection (minimap/overview LOD).
         fn try_begin_bounded_selection_drag_at(&mut self, world: Point) -> bool {
             if !self.lod_uses_bounded_drag() {
                 return false;

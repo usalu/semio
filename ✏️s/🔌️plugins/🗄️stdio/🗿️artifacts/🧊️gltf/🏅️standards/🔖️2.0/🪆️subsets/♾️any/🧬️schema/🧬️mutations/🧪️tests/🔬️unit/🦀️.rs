@@ -3,8 +3,8 @@ use protocol::SemanticMutation;
 
 #[test]
 fn aggregate_descriptor_roster_is_exactly_the_direct_leaf_roster() {
-    assert_eq!(GltfMutation::kinds().len(), 120);
-    assert_eq!(GltfMutation::kinds().iter().map(|descriptor| descriptor.kind).collect::<std::collections::BTreeSet<_>>().len(), 120);
+    assert_eq!(GltfMutation::kinds().len(), 121);
+    assert_eq!(GltfMutation::kinds().iter().map(|descriptor| descriptor.kind).collect::<std::collections::BTreeSet<_>>().len(), 121);
 }
 
 #[test]
@@ -15,7 +15,6 @@ fn mutation_rejection_messages_match_the_language_neutral_json_oracle() {
         let encoded: serde_json::Value = serde_json::from_str(&dsl::json::to_json_string(&outcome)).unwrap();
         assert_eq!(encoded, case["outcome"]);
     }
-    println!("[DEBUG] glTF rejection oracle: six classifications preserve severity, code, detail and target.");
 }
 
 #[test]
@@ -38,5 +37,4 @@ fn mutation_restore_preserves_the_language_neutral_wire_and_inverse() {
     assert!(outcome.messages().is_empty());
     assert_eq!(protocol::MutationDiff::apply(outcome.diff(), &next).unwrap(), base);
     assert!(size_of::<GltfMutation>() <= fixture["maximumInlineBytes"].as_u64().unwrap() as usize);
-    println!("[DEBUG] glTF mutation carrier: committed JSON, forward apply and restored inverse agree.");
 }

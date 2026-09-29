@@ -24,12 +24,10 @@ type Fixture = {
   source: string;
   routeCount: number;
   retainedRoutes: string[];
-  frameworkOwnedRoutes: string[];
   groups: Group[];
   globals: { symbol: string; scope: "framework-process" | "plugin-process"; blocker: string }[];
   scanThenMonolithRoutes: string[];
   blockedSeams?: string[];
-  materialization?: Record<string, boolean | number>;
   laws: Record<string, boolean>;
 };
 
@@ -59,9 +57,8 @@ function fixtureOracle(fixture: Fixture): boolean {
   const retained = fixture.groups.filter((group) => group.status === "migrated").flatMap((group) => group.routes);
   return ["semio.flow-note.action-cohort.v1", "semio.note.action-cohort.v1"].includes(fixture.schema)
     && exact(fixture.retainedRoutes, retained)
-    && classified.length === fixture.routeCount - fixture.frameworkOwnedRoutes.length
+    && classified.length === fixture.routeCount
     && new Set(classified).size === classified.length
-    && new Set(fixture.frameworkOwnedRoutes).size === fixture.frameworkOwnedRoutes.length
     && fixture.scanThenMonolithRoutes.length === 0
     && Object.values(fixture.laws).every(Boolean)
     && fixture.groups.every((group) => group.routes.length > 0
@@ -109,10 +106,10 @@ function sourceOracle(fixture: Fixture, source: string, retainedSource = ""): bo
       && retainedSource.includes("type Owner = EditorApp<NotePlayApp>;")
       && retainedSource.includes("registry.register(NoteCommandJobFactory::new(&controller))")
       && source.includes("fn build_artifact_store_one_item_preparation_factory()")
-      && source.includes("fn build_config_store_one_item_preparation_factory()")
+      && retainedSource.includes("bounded_config_store_one_item_preparation_factory::<NoteSnapshot, crate::op::NoteMutation>")
       && exact(publicationRows(retainedContracts), fixture.retainedRoutes)
       && fixture.groups.filter((group) => group.status === "migrated").every((group) => group.routes.every((route) => exactPublication(retainedContracts, route, group.lanes)));
-  return exact(commandRows(source), [...classified, ...fixture.frameworkOwnedRoutes])
+  return exact(commandRows(source), classified)
     && exact([...pairs.keys()], classified)
     && fixture.groups.every((group) => group.routes.every((route) => pairs.get(route) === variant(group.status)))
     && (fixture.retainedRoutes.length === 0
@@ -133,8 +130,8 @@ async function globalOracle(fixture: Fixture, source: string, pluginRoot: string
       && !duplicate.includes("NEXT_DUPLICATE_WIDGET_REQUEST")
       && !duplicate.includes("AtomicU64");
   }
-  const schema = await Bun.file(resolve(pluginRoot, "🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs")).text();
-  return fixture.globals.length === 0 && !schema.includes("static NEXT: AtomicU64");
+  const schema = await Bun.file(resolve(pluginRoot, "🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs")).text();
+  return fixture.globals.length === 0 && !schema.includes("static NEXT") && !schema.includes("AtomicU64") && schema.includes("pub struct NoteIdOwner");
 }
 
 class ActionCohortAuditScript extends BundleScript {
@@ -174,15 +171,15 @@ class ActionCohortAuditScript extends BundleScript {
     }
     const hostileFixtures: Fixture[] = [
       { ...fixtures[0]!, retainedRoutes: [...fixtures[0]!.retainedRoutes, "addWidget"] },
-      { ...fixtures[0]!, routeCount: 35 },
-      { ...fixtures[1]!, groups: fixtures[1]!.groups.map((group, index) => index === 3 ? { ...group, lanes: ["host-only", "artifact"] } : group) },
+      { ...fixtures[0]!, routeCount: fixtures[0]!.routeCount + 1 },
+      { ...fixtures[1]!, groups: fixtures[1]!.groups.map((group, index) => index === 0 ? { ...group, lanes: ["host-only", "artifact"] } : group) },
     ];
     if (hostileFixtures.some((fixture) => Boolean(validate(fixture)) && fixtureOracle(fixture))) throw new Error("Flow/Note hostile fixture mutation passed both oracles");
     const total = selected.reduce((sum, fixture) => sum + fixture.routeCount, 0);
     const failclosed = selected.reduce((sum, fixture) => sum + fixture.groups.flatMap((group) => group.routes).length, 0);
     const globals = selected.reduce((sum, fixture) => sum + fixture.globals.length, 0);
     const retained = selected.reduce((sum, fixture) => sum + fixture.retainedRoutes.length, 0);
-    console.error(`validated ${scope === "all" ? "Flow/Note" : scope} action cohort; routes=${total}; retained=${retained}; failclosed=${failclosed - retained}; frameworkDelegated=${scope === "all" ? 1 : 0}; globals=${globals}; scanThenMonolith=0; schema=Ajv; oracle=independent`);
+    console.error(`validated ${scope === "all" ? "Flow/Note" : scope} action cohort; routes=${total}; retained=${retained}; failclosed=${failclosed - retained}; globals=${globals}; scanThenMonolith=0; schema=Ajv; oracle=independent`);
   }
 }
 

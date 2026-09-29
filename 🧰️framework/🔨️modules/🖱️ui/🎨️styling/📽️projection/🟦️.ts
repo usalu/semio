@@ -37,7 +37,7 @@ interface Tokens {
   appearances?: Record<string, Record<string, Record<string, PaintRef>>>;
 }
 
-/** @emoji 👥️ The 12-hue session-color wheel (contract freeze §C7.5) driving `--presence-0..11` CSS vars,
+/** 👥️ The 12-hue session-color wheel (contract freeze §C7.5) driving `--presence-0..11` CSS vars,
  * `presence::HUES/LIGHT/DARK` (Rust), and `STYLING_PRESENCE_PALETTES` (TS) — the pure twins in
  * `👥️PresenceBar/{🧊️component.rs,🟦️.tsx}` derive every peer's color from these three numbers
  * plus the hub-assigned palette index. */
@@ -47,7 +47,7 @@ interface StylingPresence {
   dark: { s: number; l: number };
 }
 
-/** @emoji 🌓️ Knobs driving the formula-derived 6-level UI surface system (`base..menu`); see contract at
+/** 🌓️ Knobs driving the formula-derived 6-level UI surface system (`base..menu`); see contract at
  * `.🧬semio/🦑️repo/🎫️tickets/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt`. */
 interface StylingLevels {
   names: readonly string[];
@@ -90,7 +90,7 @@ export function loadTokens(): Tokens {
   return JSON.parse(raw) as Tokens;
 }
 
-/** @emoji 📏️ Derives dag component width as twice the IO channel column width. */
+/** 📏️ Derives dag component width as twice the IO channel column width. */
 function resolveMetrics(metrics: Tokens["metrics"]): NonNullable<Tokens["metrics"]> {
   return resolveThemeMetrics(metrics ?? {}) as NonNullable<Tokens["metrics"]>;
 }
@@ -115,7 +115,7 @@ export const LEVELS_DEFAULT: StylingLevels = {
   zStep: 10,
 };
 
-/** @emoji 👥️ Fallback presence palette (contract freeze §C7.5) — used when a `*.theme.json` predates the
+/** 👥️ Fallback presence palette (contract freeze §C7.5) — used when a `*.theme.json` predates the
  * `presence` block; `🔣️.json` and every premade theme carry their own copy of these same values. */
 const PRESENCE_DEFAULT: StylingPresence = {
   hues: [0, 210, 120, 30, 270, 180, 330, 60, 240, 150, 300, 90],
@@ -123,7 +123,7 @@ const PRESENCE_DEFAULT: StylingPresence = {
   dark: { s: 0.72, l: 0.62 },
 };
 
-/** @emoji 🌓️ Injects the 6 formula-derived `level<Name>` background paints and `element<Name>` element paints
+/** 🌓️ Injects the 6 formula-derived `level<Name>` background paints and `element<Name>` element paints
  * (k=0..5, `base..menu`) into one appearance's `chrome` group, mutating it in place. `bg(k) = mix_oklab(base,
  * foreground, k*shadeStep)`, `element(k) = mix_oklab(gray, foreground, k*elementStep)` — see contract CSS MECHANISM. */
 function injectLevelPaints(levels: StylingLevels, gray: Rgba8, chrome: Record<string, Rgba8>): void {
@@ -149,7 +149,7 @@ function rustF64Lit(v: number): string {
   return Number.isInteger(v) ? `${v}.0` : String(v);
 }
 
-/** @emoji 🎨️ Resolves every appearance's paint refs to Rgba8, then injects the formula-derived level/element
+/** 🎨️ Resolves every appearance's paint refs to Rgba8, then injects the formula-derived level/element
  * paints (see {@link injectLevelPaints}) into each appearance's `chrome` group so every existing emitter
  * (TS/Rust/Python, keyed off object entries) carries them automatically. */
 export function resolveAppearances(tokens: Tokens): Record<string, Record<string, Record<string, Rgba8>>> {
@@ -187,11 +187,11 @@ function paletteGroupNames(resolvedAppearances: ReturnType<typeof resolveAppeara
 
 //#region 🌓️Premade
 
-/** @emoji 🌓️ One premade theme as the projection sees it: its `id` plus its own full token set. Read from
+/** 🌓️ One premade theme as the projection sees it: its `id` plus its own full token set. Read from
  * `🌓️theme/*.json`, the same files {@link validatePremadeThemes} parses. */
 type PremadeTheme = { id: string; tokens: Tokens };
 
-/** @emoji 🌓️ Every premade theme, id-sorted so the emitted constants are deterministic. */
+/** 🌓️ Every premade theme, id-sorted so the emitted constants are deterministic. */
 function loadPremadeThemes(): readonly PremadeTheme[] {
   if (!existsSync(premadeThemeDir)) {
     return [];
@@ -208,7 +208,7 @@ function loadPremadeThemes(): readonly PremadeTheme[] {
   return themes.sort((left, right) => (left.id < right.id ? -1 : left.id > right.id ? 1 : 0));
 }
 
-/** @emoji 🌓️ Emits `<GROUP>_<THEME>_<APPEARANCE>` constants over the SAME `<Group>Palette` struct the
+/** 🌓️ Emits `<GROUP>_<THEME>_<APPEARANCE>` constants over the SAME `<Group>Palette` struct the
  * default theme produces. Requires key-set parity, which {@link validatePremadeThemes} enforces — a
  * premade that declares its own extra chrome keys could not share the struct, which is exactly the drift
  * that forced the os wgpu Shell to hand-port 20 literals (ticket 26/09/17 packet W2k). */
@@ -278,13 +278,13 @@ function emitPaletteTheme(tokens: Tokens): string {
   return lines.join("\n");
 }
 
-/** @emoji 🔢️ Renders an `[0, 1]` fraction as a clean percent literal (`0.68` → `"68"`), avoiding float
+/** 🔢️ Renders an `[0, 1]` fraction as a clean percent literal (`0.68` → `"68"`), avoiding float
  * noise in generated CSS. */
 function pct(fraction: number): string {
   return String(Math.round(fraction * 10000) / 100);
 }
 
-/** @emoji 👥️ Emits `--presence-0..11` under `:root` (light) and `.dark`, plus their `--color-presence-N`
+/** 👥️ Emits `--presence-0..11` under `:root` (light) and `.dark`, plus their `--color-presence-N`
  * `@theme` aliases (contract freeze §C7.5) — the CSS half of the presence palette; `emitRust`/
  * `emitTypeScriptTokens` emit the pure-twin half consumed by `👥️PresenceBar`. Only the base cycle
  * (`index % 12`, i.e. `k = index / 12 === 0`) gets a CSS var; higher cycles render inline HSL via the
@@ -312,7 +312,7 @@ function emitJsonConst(name: string, value: unknown, indent = ""): string {
   return `${indent}export const ${name} = ${JSON.stringify(value, null, 2).replaceAll("\n", `\n${indent}`)} as const;\n`;
 }
 
-/** @emoji 🎨️ Builds the default "semio" `UiTheme` verbatim from 🔣️.json (the paint refs stay unresolved). */
+/** 🎨️ Builds the default "semio" `UiTheme` verbatim from 🔣️.json (the paint refs stay unresolved). */
 function buildSemioUiTheme(tokens: Tokens): UiTheme {
   return {
     id: "semio",
@@ -435,7 +435,7 @@ function emitCSharp(tokens: Tokens): string {
 }
 
 function emitRust(tokens: Tokens, resolvedAppearances: ReturnType<typeof resolveAppearances>): string {
-  const lines: string[] = ["// @emoji 🎨️ Auto-generated from framework/ui/styling/🔣️.json — do not edit by hand.", ""];
+  const lines: string[] = ["// 🎨️ Auto-generated from framework/ui/styling/🔣️.json — do not edit by hand.", ""];
   //#region 🎨️Colors
   lines.push("/// 🎨️ Primitive palette tokens (🔣️.json `colors`) — the Rust twin of CSS's `--color-*`");
   lines.push("/// custom properties and TypeScript's `STYLING_TOKENS`. `*_HEX` is the authored sRGB hex;");
@@ -554,7 +554,7 @@ function emitRust(tokens: Tokens, resolvedAppearances: ReturnType<typeof resolve
 
 function emitPython(tokens: Tokens, resolvedAppearances: ReturnType<typeof resolveAppearances>): string {
   const lines: string[] = [
-    '"""@emoji 🎨️ Auto-generated from framework/ui/styling/🔣️.json — do not edit by hand."""',
+    '"""🎨️ Auto-generated from framework/ui/styling/🔣️.json — do not edit by hand."""',
     "from __future__ import annotations",
     "from dataclasses import dataclass",
     "from typing import Final",
@@ -600,7 +600,7 @@ function emitPython(tokens: Tokens, resolvedAppearances: ReturnType<typeof resol
 type StylingArtifact = { path: string; content: string };
 type StylingAdapterManifest = { tokens: string; adapters: readonly { outputs: readonly string[] }[] };
 
-/** @emoji 🧾️ Renders the complete cross-language styling output manifest without writing files. */
+/** 🧾️ Renders the complete cross-language styling output manifest without writing files. */
 export function renderStylingArtifacts(): readonly StylingArtifact[] {
   const tokens = loadTokens();
   const fontsCatalog = loadFontCatalog();
@@ -622,7 +622,7 @@ export function renderStylingArtifacts(): readonly StylingArtifact[] {
   ];
 }
 
-/** @emoji 📋️ Proves the adapter manifest declares exactly the artifacts emitted by the shared renderer. */
+/** 📋️ Proves the adapter manifest declares exactly the artifacts emitted by the shared renderer. */
 function validateStylingOutputManifest(artifacts: readonly StylingArtifact[]): void {
   const manifest = JSON.parse(readFileSync(adaptersManifestPath, "utf8")) as StylingAdapterManifest;
   if (manifest.tokens !== "🔣️.json") throw new Error(`styling adapter manifest tokens must be 🔣️.json, got ${JSON.stringify(manifest.tokens)}`);
@@ -632,7 +632,7 @@ function validateStylingOutputManifest(artifacts: readonly StylingArtifact[]): v
   if (JSON.stringify(declared) !== JSON.stringify(rendered)) throw new Error(`styling adapter manifest mismatch:\ndeclared=${JSON.stringify(declared)}\nrendered=${JSON.stringify(rendered)}`);
 }
 
-/** @emoji 🎨️ Writes all styling artifacts from the same byte plan used by the freshness check. */
+/** 🎨️ Writes all styling artifacts from the same byte plan used by the freshness check. */
 export function generateStylingArtifacts(): void {
   const artifacts = renderStylingArtifacts();
   validateStylingOutputManifest(artifacts);
@@ -666,7 +666,7 @@ export function previewStylingArtifacts(repoRoot: string): string {
   return `${JSON.stringify({ contractId: "styling-tokens", nodes, schemaVersion: 1, staleRemovals })}\n`;
 }
 
-/** @emoji 🧪️ Fails closed when a declared styling artifact is missing or byte-stale. */
+/** 🧪️ Fails closed when a declared styling artifact is missing or byte-stale. */
 export function checkStylingArtifacts(): void {
   const artifacts = renderStylingArtifacts();
   validateStylingOutputManifest(artifacts);
@@ -677,7 +677,7 @@ export function checkStylingArtifacts(): void {
 
 const premadeThemeDir = join(stylingOwnerRoot, "🌓️theme");
 
-/** @emoji 🔎️ Parses every JSON preset owned by the theme directory before generation succeeds. */
+/** 🔎️ Parses every JSON preset owned by the theme directory before generation succeeds. */
 function validatePremadeThemes(): void {
   if (!existsSync(premadeThemeDir)) {
     return;
@@ -697,7 +697,7 @@ function validatePremadeThemes(): void {
   }
 }
 
-/** @emoji 🔎️ A premade theme must declare EXACTLY the default theme's appearance paint keys, in the same
+/** 🔎️ A premade theme must declare EXACTLY the default theme's appearance paint keys, in the same
  * order: that is what lets one generated `<Group>Palette` struct carry every theme, and what stops a
  * renderer from hand-resolving a premade's palette because it cannot share the struct. `parseUiTheme`
  * only checks that the six GROUPS exist, never their keys, which is how mono drifted to 7 extra `chrome`

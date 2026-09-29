@@ -20,7 +20,7 @@ async fn frontier(document: &ArtifactId, head_seq: u64) -> Frontier {
 }
 
 async fn sample_body(head_seq: u64) -> db_snapshot::SnapshotBody {
-    db_snapshot::SnapshotBody { head_seq, commit_seq: head_seq, epoch: 0, chain_hash: [0u8; 32], protocol_version: 1, vcs_head: None, base_pack_hash: None, roots: vec![], created_at_ms: head_seq * 1_000 }
+    db_snapshot::SnapshotBody { head_seq, commit_seq: head_seq, epoch: 0, chain_hash: [0u8; 32], protocol_version: 1, base_pack_hash: None, roots: vec![], created_at_ms: head_seq * 1_000 }
 }
 
 async fn wal_bytes(source: &[u8]) -> db_wal::WalBytes {
@@ -243,7 +243,6 @@ async fn retained_compaction_max_plus_one_capacity_refusal_preserves_storage_doc
         epoch: 1,
         chain_hash: [0; 32],
         protocol_version: 1,
-        vcs_head: None,
         base_pack_hash: None,
         roots: Vec::with_capacity(DATABASE_COMPACTION_OPERATION_ITEMS as usize),
         new_pages: Vec::new(),

@@ -49,6 +49,8 @@ pub fn plugin() -> Result<Plugin<FemApps>, PluginAssemblyError> {
         .viewer_mutation_roster::<semio_s_artifact_fem_3d::viewer::fem3d::Fem3dViewer>()
         .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_fem_2d::computation_artifact_kind().id })
         .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_fem_3d::computation_artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_fem_2d::document_artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_fem_3d::document_artifact_kind().id })
         .execution(ExecutionMode::Isolated)
         .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist fem2d/fem3d edits to the open document".into(), optional: false })
         .try_build()

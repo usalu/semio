@@ -41,7 +41,8 @@
       "additionalProperties": false,
       "required": [
         "applied",
-        "redo"
+        "redo",
+        "refused"
       ],
       "properties": {
         "applied": {
@@ -51,6 +52,12 @@
           }
         },
         "redo": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Id"
+          }
+        },
+        "refused": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/Id"

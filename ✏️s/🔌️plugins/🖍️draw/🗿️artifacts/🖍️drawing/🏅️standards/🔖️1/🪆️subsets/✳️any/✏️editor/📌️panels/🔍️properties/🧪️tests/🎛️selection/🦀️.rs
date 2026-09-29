@@ -19,7 +19,6 @@ fn inspector_selection_fixtures() {
             assert!(json.contains(&format!("drawing-inspector.{}.input", field.as_str().unwrap())), "{}: {json}", case["name"]);
         }
         assert_eq!(json.contains("patchLayers"), !case["expectedFields"].as_array().unwrap().is_empty(), "{}: {json}", case["name"]);
-        eprintln!("[DEBUG] inspector journey {} projected successfully", case["name"]);
     }
 }
 
@@ -36,7 +35,6 @@ fn inspector_stroke_controls_are_localized() {
             assert!(json.contains(label.as_str()), "missing {}", label.as_str());
         }
     }
-    eprintln!("[DEBUG] stroke inspector projected English and German controls");
 }
 
 #[test]
@@ -67,7 +65,6 @@ fn inspector_path_nodes_publish_localized_edit_actions() {
     assert!(!json.contains("node.1.split"));
     assert!(!json.contains("node.1.convert"));
     assert!(!json.contains("node.2.join"));
-    eprintln!("[DEBUG] localized path-node inspection and lock projection completed");
 }
 
 fn inspector_input_rows(node: &serde_json::Value, output: &mut Vec<serde_json::Value>) {
@@ -95,7 +92,6 @@ fn node_coordinates_are_grouped_into_readable_pairs() {
             assert_eq!(serde_json::Value::Array(actual), fixture["rows"]);
         }
     }
-    eprintln!("[DEBUG] node coordinate rows preserve readable anchor and handle pairs in both locales");
 }
 
 #[test]
@@ -119,7 +115,6 @@ fn gradient_coordinates_and_stops_have_labeled_rows() {
             }
         }
     }
-    eprintln!("[DEBUG] gradient coordinate and stop rows retain readable labeled fields in both locales");
 }
 
 #[test]
@@ -138,7 +133,6 @@ fn inspector_exposes_localized_shape_conversion_only_for_editable_shapes() {
     let tree=render(&document,&["shape".into()],&DrawingPlayLabels::NATIVE_EN,&TreeWindows::for_body(&view,DRAWING_PLAY_BODY_PROPERTIES)).unwrap();
     let json=project_and_retire_fixture_tree(built_to_component_tree(tree)).unwrap();
     assert!(!json.contains("toPath"));
-    eprintln!("[DEBUG] shape conversion is localized and respects the inspector lock state");
 }
 
 #[test]
@@ -159,7 +153,6 @@ fn gradient_inspector_projects_type_coordinates_and_stops() {
     let tree = render(&document,&[id],&DrawingPlayLabels::NATIVE_EN,&TreeWindows::for_body(&view,DRAWING_PLAY_BODY_PROPERTIES)).unwrap();
     let json = project_and_retire_fixture_tree(built_to_component_tree(tree)).unwrap();
     assert!(!json.contains("fill.add"));
-    eprintln!("[DEBUG] gradient inspector projected localized coordinates, stops, and locked actions");
 }
 
 #[test]
@@ -187,7 +180,6 @@ fn inspector_controls_bind_the_events_the_host_dispatches() {
         check(&json,&fixture["controlEvents"],&mut count);
         assert!(count >= 30,"missing inspector controls: {count}");
     }
-    eprintln!("[DEBUG] inspector fields, gradient stops and path coordinates dispatch the bound host event in both locales");
 }
 
 #[test]
@@ -236,7 +228,6 @@ fn fill_rule_inspector_preserves_choice_mixed_state_and_lock() {
             if value.is_empty() {assert_eq!(input["component"]["placeholder"],labels.mixed.as_str());}
         }
     }
-    eprintln!("[DEBUG] fill-rule inspector preserves common and mixed choices, localization, and selection locks");
 }
 
 #[test]
@@ -250,7 +241,6 @@ fn layer_stack_controls_are_localized_and_dispatch_semantic_operations() {
         let json=project_and_retire_fixture_tree(built_to_component_tree(tree)).unwrap();
         for text in [labels.bring_forward.as_str(),labels.send_backward.as_str(),"bringForward","sendBackward","editSelection"] {assert!(json.contains(text),"missing {text}: {json}");}
     }
-    eprintln!("[DEBUG] localized layer stack controls dispatch semantic selection commands");
 }
 
 #[test]
@@ -266,7 +256,6 @@ fn ungroup_control_appears_for_editable_groups_in_both_languages() {
         assert_eq!(json.contains(labels.ungroup.as_str()),!locked);
         assert_eq!(json.contains("drawing-inspector.ungroup"),!locked);
     }}
-    eprintln!("[DEBUG] ungroup inspector action respects localization and group locks");
 }
 
 #[test]
@@ -297,7 +286,6 @@ fn group_isolation_inspector_exposes_localized_common_mixed_and_locked_states() 
             else {assert_eq!(input["component"]["type"],"select");assert_eq!(input["component"]["value"],"");assert_eq!(input["component"]["placeholder"],labels.mixed.as_str());assert_eq!(input["component"]["items"].as_array().unwrap().len(),2);}
         }
     }
-    eprintln!("[DEBUG] group isolation inspector carries EN/DE labels, mixed values, and selection locks");
 }
 
 #[test]
@@ -338,5 +326,4 @@ fn blend_inspector_exposes_every_mode_and_preserves_mixed_and_locked_states() {
             if mixed { assert_eq!(input["component"]["placeholder"], labels.mixed.as_str()); }
         }}
     }
-    eprintln!("[DEBUG] all sixteen blend choices retain EN/DE labels, selected and mixed values, and selection locks");
 }

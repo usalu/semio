@@ -132,6 +132,9 @@ fn the_host_effect_funnel_owns_request_file_open() {
 /// Worker that owns the `OffscreenCanvas`, where both are absent — so a `web_sys::window()?` prologue is
 /// a SILENT no-op, which is exactly how an export handed its bytes to nobody and an import opened
 /// nothing. Both go through the one page-owned door instead.
+///
+/// 📝️ CODE lines only: this region's own docstring names the defect it closes, and a law that could
+/// not tell a comment from a call would forbid saying so.
 #[test]
 fn the_browser_file_door_never_assumes_a_document_in_the_worker() {
     for needle in [r#""op": "download-media-export""#, r#""op": "request-file-open""#, r#""semioWgpuHostIo""#] {
@@ -139,8 +142,6 @@ fn the_browser_file_door_never_assumes_a_document_in_the_worker() {
     }
     let door = WGPU_SHELL_SOURCE.split("//#region 📤️FileOpenImport").nth(1).expect("the file-door region");
     let door = door.split("//#endregion 📤️FileOpenImport").next().expect("the file-door region end");
-    // 📝️ CODE lines only: this region's own docstring names the defect it closes, and a law that could
-    // not tell a comment from a call would forbid saying so.
     let code = door.lines().filter(|line| !line.trim_start().starts_with("//")).collect::<Vec<_>>().join("\n");
     assert!(!code.contains("web_sys::window()"), "the file door must not ask a Worker isolate for a window");
     assert!(!WGPU_SHELL_SOURCE.contains("HtmlAnchorElement"), "the `<a download>` belongs to the page half (`🚪️host-io/🟦️.ts`)");

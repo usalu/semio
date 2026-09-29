@@ -653,7 +653,6 @@ fn an_asset_over_one_retirement_grant_applies_and_its_operation_retires_within_e
         }
     }
     assert!(released >= bytes, "every asset byte was released through the grants: {released} of {bytes} B");
-    eprintln!("[DEBUG] add-layer-asset of {bytes} B applied and retired in grants of {RASTER_OWNED_FIELD_BYTES} B");
     retirement::retire_raster_snapshot(added);
     retirement::retire_raster_snapshot(base);
 }

@@ -18,7 +18,6 @@ fn microsecond_clock_installation_is_exact_and_repeatable() {
         let requested = clock(law["requested"].as_str().unwrap());
         assert_eq!(install_exact_clock(&authority, requested).is_ok(), law["accepted"].as_bool().unwrap());
         assert!(std::ptr::fn_addr_eq(*authority.get().unwrap(), clock(law["retained"].as_str().unwrap())));
-        eprintln!("[DEBUG] monotonic clock installation current={} requested={} accepted={} retained={}", law["current"], law["requested"], law["accepted"], law["retained"]);
     }
 }
 
@@ -28,6 +27,5 @@ fn microsecond_watchdog_boundary_is_strictly_below_eight_ms() {
     for law in fixture["watchdog"].as_array().unwrap() {
         let elapsed = law["elapsedMicroseconds"].as_str().unwrap().parse().unwrap();
         assert_eq!(interactive_step_contract_violated(elapsed), law["violated"].as_bool().unwrap());
-        eprintln!("[DEBUG] exact watchdog boundary elapsed_us={elapsed} violated={}", law["violated"]);
     }
 }

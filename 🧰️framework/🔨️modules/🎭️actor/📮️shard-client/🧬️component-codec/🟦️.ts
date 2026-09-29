@@ -37,7 +37,7 @@ export const ACTOR_CODEC_REFUSAL = Object.freeze({
 
 //#region 🌉️BridgeArm
 /**
- * @emoji 🌉️ Answers one {@link ShardCodecRequest} from the component's `codec` exports — inlined by
+ * 🌉️ Answers one {@link ShardCodecRequest} from the component's `codec` exports — inlined by
  * `pluginComponentBridgeSource` (via `toString`, so it stays a self-contained function) as the generated
  * bridge's `codec` arm. The guest's own `plugin-error` — jco throws it as a `ComponentError` whose
  * `payload` is `{ tag: "fault", val: <fault pack> }` — is answered as `{ fault }` for the host to decode,

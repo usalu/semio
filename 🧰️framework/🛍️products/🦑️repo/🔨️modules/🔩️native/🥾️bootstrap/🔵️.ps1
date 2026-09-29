@@ -415,8 +415,6 @@ Set-UserEnvironmentVariable -Name "CMAKE_PRESET" -Value "windows"
 Set-UserEnvironmentVariable -Name "DOTNET_CLI_TELEMETRY_OPTOUT" -Value "1"
 Set-UserEnvironmentVariable -Name "PLAYWRIGHT_BROWSERS_PATH" -Value $playwrightPath
 Set-UserEnvironmentVariable -Name "SEMIO_GITKRAKEN_WORKSPACE_NAME" -Value "compose"
-Set-UserEnvironmentVariable -Name "SEMIO_GITKRAKEN_AUTO_START" -Value "false"
-Set-UserEnvironmentVariable -Name "SEMIO_F3D_AUTO_START" -Value "true"
 Set-UserEnvironmentVariable -Name "SEMIO_POST_ATTACH_SKIP_EXTENSION_INSTALL" -Value ""
 Set-UserEnvironmentVariable -Name "EDITOR" -Value "code --wait"
 #endregion 🗂️UserState

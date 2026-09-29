@@ -1,4 +1,4 @@
-/** @emoji 🧪️ Canvas presence registry + overlay reduction smoke tests. */
+/** 🧪️ Canvas presence registry + overlay reduction smoke tests. */
 import { describe, expect, it } from "vitest";
 import {
   clearLocalPresenceWindowViewV1,

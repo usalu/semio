@@ -58,7 +58,7 @@ export function assertFixtureSweepLawCoverage(receipts: readonly FixtureSweepRec
   const laws = fixtureSweepLawGroup().laws;
   const output = laws.map((_law, index) => [".stdout", ".stderr"].map(suffix => readFileSync(join(receipt.artifactDir, `law-${index}${suffix}`), "utf8")).join("\n")).join("\n");
   const evidence = assertFixtureSweepOutput(output, receipt.assertions);
-  console.log(`[DEBUG] ${evidence.grammar}; ${evidence.protocol}; ${evidence.coverage}; exact assertions=${laws.length}; executable=${receipt.sha256}; evidence=${receipt.artifactDir}`);
+  console.log(`${evidence.grammar}; ${evidence.protocol}; ${evidence.coverage}; exact assertions=${laws.length}; executable=${receipt.sha256}; evidence=${receipt.artifactDir}`);
 }
 
 function repoRoot(): string {

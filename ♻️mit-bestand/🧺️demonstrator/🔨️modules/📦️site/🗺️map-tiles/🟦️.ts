@@ -7,7 +7,7 @@ import {
 } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 import { DEMONSTRATOR_STATIC_MAP_TILE_Z_MAX_RASTER, DEMONSTRATOR_STATIC_MAP_TILE_Z_MAX_VECTOR } from "../🗺️tile-serve-mode/🟦️.ts";
 
-/** @emoji ⬇️ Ensures Verfolgen's default Switzerland viewport has raster + vector tiles before `closeBundle` copies them. */
+/** ⬇️ Ensures Verfolgen's default Switzerland viewport has raster + vector tiles before `closeBundle` copies them. */
 export async function prefetchDemonstratorMapTiles(repoRoot: string): Promise<void> {
   const result = await prefetchMapTiles({
     repoRoot,

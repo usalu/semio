@@ -1,5 +1,11 @@
 use super::*;
 
+/// 🧬️ Registers the document schema png's declaration contributes — the contract every snapshot edit validates against;
+/// a fixture editor runs without the plugin assembly that publishes it.
+fn register_document_schema() {
+    framework_schema::register_artifact_schema_descriptors(vec![crate::standards::v1_2::subsets::any::schema::png_artifact_schema_descriptor()]).expect("the png document schema registers");
+}
+
 #[semio_framework_async_macros::async_test]
 async fn create_editor_builds_a_definition_for_the_editor_role() {
     let def = create_png_editor();
@@ -16,7 +22,7 @@ async fn editor_dialect_matches_the_artifact_coordinate() {
 async fn editor_declares_every_typed_snapshot_edit_action() {
     let definition = create_png_editor();
     for action_id in semio_s_artifact_stdio_contract::editing::SNAPSHOT_EDIT_ACTION_IDS {
-        let action = definition.actions.iter().find(|action| action.id == *action_id).expect("typed snapshot edit action");
+        let action = definition.actions.iter().chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter())).find(|action| action.id == *action_id).expect("typed snapshot edit action (window-owned actions live on their window kind)");
         assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated);
     }
 }
@@ -65,7 +71,7 @@ fn drive_pixel_region(command: &PngEditCommand, snapshot: &PngSnapshot) -> Vec<P
 #[semio_framework_async_macros::async_test]
 async fn image_window_exposes_a_typed_localized_pixel_region_action() {
     let definition = create_png_editor();
-    let action = definition.actions.iter().find(|action| action.id == patch_pixel_region::ACTION_ID).expect("pixel region app action");
+    let action = definition.actions.iter().chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter())).find(|action| action.id == patch_pixel_region::ACTION_ID).expect("pixel region action (window-owned actions live on their window kind)");
     assert_eq!(action.args.len(), 8);
     assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated);
     assert!(action.args.iter().all(|argument| argument.required));
@@ -143,6 +149,7 @@ fn retained_pixel_region_accepts_dci_4k_raster_with_bounded_patch_work() {
 
 #[test]
 fn snapshot_detail_edit_round_trips_through_native_history_and_codecs() {
+    register_document_schema();
     use protocol::{Mutation, MutationDiff, OpBinary, OpText};
 
     let base = crate::schema::demo_png_snapshot();
@@ -172,6 +179,7 @@ fn snapshot_detail_edit_round_trips_through_native_history_and_codecs() {
 
 #[test]
 fn typed_snapshot_source_preserves_ancillary_and_unknown_chunk_details() {
+    register_document_schema();
     let mut base = crate::schema::demo_png_snapshot();
     base.gama = Some(u32::MAX - 1);
     base.unknown_chunks.push(crate::schema::snapshot::PngChunk { kind: *b"vpAg", data: vec![0, 1, 127, 128, 255] });
@@ -188,6 +196,7 @@ fn typed_snapshot_source_preserves_ancillary_and_unknown_chunk_details() {
 
 #[semio_framework_async_macros::async_test]
 async fn large_raster_metadata_and_pixel_edits_publish_and_replay_compactly() {
+    register_document_schema();
     use protocol::OpBinary;
 
     let pixel_count = 2_097_152;

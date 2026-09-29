@@ -23,6 +23,13 @@ async fn manifest(plugin_id: &str, version: &str, deps: &[(&str, &str)]) -> Plug
 /// 🔗️ The three ways a contribution can be blocked at DISPATCH time are distinguishable — the
 /// frozen taxonomy has separate codes for them, and collapsing "owner gone" into
 /// "not permitted" would tell an operator to fix a declaration that is already correct.
+///
+/// 🛡️ The version branch is defence-in-depth, and this asserts WHY it cannot fire today rather
+/// than pretending to exercise it: `register` re-validates the whole graph, so swapping `cad`
+/// for a build `aec`'s requirement excludes is refused outright and the registered set keeps
+/// its invariant. The branch stays because `contribution_block` is called per transaction, and
+/// a future load path that mutates the set without that re-validation would otherwise hand a
+/// contributor an owner it was never compiled against.
 #[semio_framework_async_macros::async_test]
 async fn contribution_block_separates_missing_owner_from_version_mismatch_from_undeclared() {
     let graph = PluginGraph::new();
@@ -36,12 +43,6 @@ async fn contribution_block_separates_missing_owner_from_version_mismatch_from_u
     let (code, _) = graph.contribution_block("cad", "aec").await.unwrap().expect("an undeclared dependency is blocked");
     assert_eq!(code, "transaction.contribution-not-permitted");
 
-    // 🛡️ The version branch is defence-in-depth, and this asserts WHY it cannot fire today rather
-    // than pretending to exercise it: `register` re-validates the whole graph, so swapping `cad`
-    // for a build `aec`'s requirement excludes is refused outright and the registered set keeps
-    // its invariant. The branch stays because `contribution_block` is called per transaction, and
-    // a future load path that mutates the set without that re-validation would otherwise hand a
-    // contributor an owner it was never compiled against.
     let drift = graph.register(manifest("cad", "2.0.0", &[]).await).await.unwrap_err();
     assert!(matches!(drift, PluginGraphError::Graph(semio_framework::DependencyGraphError::VersionMismatch { .. })));
     assert_eq!(graph.contribution_block("aec", "cad").await.unwrap(), None, "the refused swap must leave the satisfied dependency intact");
@@ -72,12 +73,12 @@ async fn register_rejects_a_version_mismatch() {
     assert!(matches!(error, PluginGraphError::Graph(semio_framework::DependencyGraphError::VersionMismatch { .. })));
 }
 
+/// 🔁️ Re-registering "a" (as if hot-reloading it) to depend on "b" would close a -> b -> a.
 #[semio_framework_async_macros::async_test]
 async fn a_later_registration_that_would_close_a_cycle_is_rejected() {
     let graph = PluginGraph::new();
     graph.register(manifest("a", "1.0.0", &[]).await).await.unwrap();
     graph.register(manifest("b", "1.0.0", &[("a", "=1.0.0")]).await).await.unwrap();
-    // Re-registering "a" (as if hot-reloading it) to depend on "b" would close a -> b -> a.
     let error = graph.register(manifest("a", "1.0.0", &[("b", "=1.0.0")]).await).await.unwrap_err();
     assert!(matches!(error, PluginGraphError::Graph(semio_framework::DependencyGraphError::Cycle { .. })));
 }

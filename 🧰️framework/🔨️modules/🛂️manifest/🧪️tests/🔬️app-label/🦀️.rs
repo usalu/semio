@@ -161,7 +161,7 @@ async fn action_arg_def_builder_chain() {
     assert!(matches!(arg.control(), ActionArgControl::Slider { min, max, .. } if min == 0.0 && max == 4.0));
 }
 
-/// @emoji 🧪️ D6 regression proof (ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet
+/// 🧪️ D6 regression proof (ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet
 /// P3-manifest-schema): each of the six `ActionArgDef` builder helpers must still derive EXACTLY
 /// the `ActionArgControl` it used to construct directly, now that `control` is a stored→derived
 /// field — this is the whole refactor's regression guard for the ~236 call sites across 33 plugins.
@@ -176,7 +176,7 @@ async fn six_arg_builder_helpers_derive_the_pre_d6_control() {
     assert_eq!(ActionArgDef::vec3("v", LocalizedLabel::data("V")).control(), ActionArgControl::Vec3);
 }
 
-/// @emoji 🧪️ The two host-resolved builders (unused by any current call site, per the P3 reader
+/// 🧪️ The two host-resolved builders (unused by any current call site, per the P3 reader
 /// audit) still derive their pre-D6 controls too — `ArgFormat::ArtifactKind`/`SurfaceApp` exist
 /// solely so these keep working under the new stored/derived split.
 #[semio_framework_async_macros::async_test]
@@ -186,7 +186,7 @@ async fn host_resolved_arg_builders_derive_their_pre_d6_controls() {
     assert_eq!(ActionArgDef::surface_app("s", LocalizedLabel::data("S"), roles.clone(), "dialect").control(), ActionArgControl::SurfaceApp { roles, dialect_arg: "dialect".to_string() });
 }
 
-/// @emoji 🧪️ `ActionSemantics::for_kind` matches the `📋️master.md` §3.1 defaults table.
+/// 🧪️ `ActionSemantics::for_kind` matches the `📋️master.md` §3.1 defaults table.
 #[semio_framework_async_macros::async_test]
 async fn action_semantics_for_kind_matches_the_defaults_table() {
     let mutation = ActionSemantics::for_kind(ActionKind::Mutation);
@@ -210,7 +210,7 @@ async fn action_semantics_for_kind_matches_the_defaults_table() {
     assert_eq!(shell.policy.scopes, vec![kernel::CapabilityId("shell.navigate".into())]);
 }
 
-/// @emoji 🧪️ `bounded_catalog` retains kind defaults but never grants execution authority.
+/// 🧪️ `bounded_catalog` retains kind defaults but never grants execution authority.
 #[semio_framework_async_macros::async_test]
 async fn action_definition_semantics_default_from_kind_and_builders_compose() {
     let mutation = ActionDefinition::bounded_catalog("deleteThing", LocalizedLabel::data("Delete Thing"), ActionKind::Mutation);
@@ -244,7 +244,7 @@ fn interactive_job_classification_is_explicit_and_release_validated() {
     assert_eq!(errors, vec![InteractiveJobClassificationError { owner: "app.mode".into(), id: "solve".into() }]);
 }
 
-/// @emoji 🧪️ `ActionArgDef::json_schema`/`arg_schema_json_schema` produce sane JSON Schema 2020-12
+/// 🧪️ `ActionArgDef::json_schema`/`arg_schema_json_schema` produce sane JSON Schema 2020-12
 /// leaves for the shapes P3-manifest-schema actually introduces.
 #[semio_framework_async_macros::async_test]
 async fn action_arg_def_json_schema_covers_the_core_shapes() {
@@ -340,7 +340,6 @@ async fn unresolved_action_choices_follow_neutral_catalog_contract() {
         let expected: Vec<String> = if row["unresolved"].as_bool().unwrap() { vec!["kindChoice".into()] } else { Vec::new() };
         assert_eq!(unresolved, expected, "{}", row["id"]);
     }
-    eprintln!("[DEBUG] Action choice validation: Rust neutral=12 shared-TypeScript-AJV-oracle=12");
 }
 
 #[semio_framework_async_macros::async_test]

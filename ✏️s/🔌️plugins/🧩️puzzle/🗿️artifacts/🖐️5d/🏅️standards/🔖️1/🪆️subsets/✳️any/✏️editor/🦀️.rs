@@ -4066,7 +4066,7 @@ fn puzzle5d_context_menu_items(
 //#endregion 🔖️ContextMenu
 
 //#region 🔖️Puzzle5dCommand
-/// @emoji 🎯️ B1: `Puzzle5dPlayApp::Command` — the SOLE dispatch surface, one variant per declared
+/// 🎯️ B1: `Puzzle5dPlayApp::Command` — the SOLE dispatch surface, one variant per declared
 /// action (mirrors every `.mutation(...)`/`.view_action(...)` id `create_puzzle5d_app` registers,
 /// plus the framework-injected `SET_ACTIVE_UTILITY_ACTION_ID`). Each variant carries `window_id` (was
 /// host-pushed `view_state.window_id`) plus `args` (the action's original `{...}` JSON payload,
@@ -4473,7 +4473,7 @@ fn with_puzzle5d_app<R>(f: impl FnOnce(&Puzzle5dPlayApp) -> R) -> R {
 pub struct Puzzle5dPlayApp;
 
 impl Puzzle5dPlayApp {
-    /// @emoji 🧩️ B1: the pure per-action core, dispatched into by `ArtifactApp::handle` with
+    /// 🧩️ B1: the pure per-action core, dispatched into by `ArtifactApp::handle` with
     /// `action`/`args`/`window_id` reconstructed 1:1 from the typed `Puzzle5dCommand`. Everything past
     /// this adapter boundary reads/writes the passed-in `Puzzle5dConfig` snapshot and returns a real
     /// `Emit` (document + config operations) instead of mutating `self`.
@@ -9501,7 +9501,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         puzzle5d_copy_fragment(doc.snapshot, &part_ids, &fastener_ids)
     }
 
-    /// @emoji ✂️ B1: `ArtifactApp::cut_operations`'s signature carries no config output channel (it
+    /// ✂️ B1: `ArtifactApp::cut_operations`'s signature carries no config output channel (it
     /// returns a bare `Vec<Self::Mutation>`, not an `Emit`), so this can only emit the document
     /// removal; clearing the selection is left to the framework's own post-cut selection reconciliation
     /// (the cut parts/fasteners are gone from the document either way, so a stale selection referencing
@@ -9511,7 +9511,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         puzzle5d_cut_operations(doc.snapshot, &part_ids, &fastener_ids)
     }
 
-    /// @emoji 📋️ B1: `ArtifactApp::paste_operations` carries no `ConfigView` at all (only `doc`/
+    /// 📋️ B1: `ArtifactApp::paste_operations` carries no `ConfigView` at all (only `doc`/
     /// `fragment`/`placement`), so the new selection can't be threaded through this call; a following
     /// `setSelection` command (which the host already issues after a paste in practice) is what
     /// actually selects the pasted parts now.
@@ -9544,7 +9544,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         Puzzle5dCommand::try_from_action(action, args, window_id).ok_or_else(|| Fault::from(format!("unknown Puzzle 5D action '{action}'")))
     }
 
-    /// @emoji 🧩️ Thin typed-command adapter — reconstructs the exact `(action, args, window_id)`
+    /// 🧩️ Thin typed-command adapter — reconstructs the exact `(action, args, window_id)`
     /// triple `handle_action_impl` expects from the typed `Puzzle5dCommand`.
     fn handle(
         command: &Puzzle5dCommand,

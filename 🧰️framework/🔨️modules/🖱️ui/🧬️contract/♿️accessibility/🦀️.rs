@@ -1,4 +1,4 @@
-//! @emoji ♿️ The `AccessibilitySpec` carried by every node record.
+//! ♿️ The `AccessibilitySpec` carried by every node record.
 //!
 //! ⚠️ SCAFFOLD — owned by packet `contract-layout`. Replace this placeholder wholesale; keep the region
 //! structure and the U1 sync rule (no `async fn` in this crate).
@@ -252,6 +252,7 @@ pub fn accessibility_projection_node(record: &crate::UiNodeRecord, depth: usize)
         crate::Component::Button(props) => Some(&props.label),
         crate::Component::TreeItem(props) => Some(&props.label),
         crate::Component::Table(props) => Some(&props.label),
+        crate::Component::Text(props) => Some(&props.value),
         _ => None,
     });
     AccessibilityProjectionNode {

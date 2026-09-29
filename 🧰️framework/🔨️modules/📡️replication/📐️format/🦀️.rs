@@ -22,21 +22,21 @@ use crate::source::{PackSink, PackSource};
 use crate::wire::{frame_flags, ProtocolError, ProtocolLimits, RecordHasher, FRAME_FLAG_COMPRESSED, FRAME_FLAG_CRITICAL};
 
 //#region 🔖️Header
-/// @emoji 🧲️ The 8-byte magic every `.spr` file begins with — distinct from pack's `.spk` magic
+/// 🧲️ The 8-byte magic every `.spr` file begins with — distinct from pack's `.spk` magic
 /// (own root-of-trust model; see the module doc).
 pub const MAGIC: [u8; 8] = [0x89, b'S', b'P', b'R', 0x0D, 0x0A, 0x1A, 0x0A];
-/// @emoji 📏️ Fixed wire size of the header, in bytes.
+/// 📏️ Fixed wire size of the header, in bytes.
 pub const HEADER_SIZE: usize = 32;
-/// @emoji 🔢️ The container format version this crate writes and reads.
+/// 🔢️ The container format version this crate writes and reads.
 pub const FORMAT_VERSION_MAJOR: u16 = 1;
-/// @emoji 🔢️ The container format minor version this crate writes.
+/// 🔢️ The container format minor version this crate writes.
 pub const FORMAT_VERSION_MINOR: u16 = 0;
 
-/// @emoji 🎭️ The union of `crate::REQUIRED_*` bits this crate understands; any bit outside
+/// 🎭️ The union of `crate::REQUIRED_*` bits this crate understands; any bit outside
 /// this mask makes a header (and therefore the whole file) unreadable.
 const REQUIRED_KNOWN_MASK: u32 = crate::REQUIRED_HASH_CHAIN | crate::REQUIRED_SIGNED | crate::REQUIRED_ENCRYPTED;
 
-/// @emoji ✍️ Serializes the 32-byte header: magic, version, flags, `header_crc32` over bytes
+/// ✍️ Serializes the 32-byte header: magic, version, flags, `header_crc32` over bytes
 /// `0..20` (CRC-32C, `crate::codec::crc32c`), 8 reserved zero bytes.
 async fn build_header_bytes(required_flags: u32, optional_flags: u32) -> [u8; HEADER_SIZE] {
     let mut buf = [0u8; HEADER_SIZE];
@@ -50,7 +50,7 @@ async fn build_header_bytes(required_flags: u32, optional_flags: u32) -> [u8; HE
     buf
 }
 
-/// @emoji 📖️ Validates a source's 32-byte header in place: magic, self-CRC, `required_flags`
+/// 📖️ Validates a source's 32-byte header in place: magic, self-CRC, `required_flags`
 /// restricted to `REQUIRED_KNOWN_MASK` (0..=2), `version_major == 1`. Every failure mode reuses a
 /// `crate::codec::PackError` variant wrapped in `ProtocolError::Pack` — all are directly constructible
 /// (no protocol_core amendment needed, unlike the contract's fallback-deviation clause anticipated).
@@ -81,7 +81,7 @@ pub fn parse_header_bytes(buf: &[u8; HEADER_SIZE]) -> Result<Header, ProtocolErr
     Ok(Header { version_major, version_minor, required_flags, optional_flags: u32::from_le_bytes(buf[16..20].try_into().unwrap()) })
 }
 
-/// @emoji 🪪️ A header's decoded fields — exposed for downstream crates (`protocol_io`'s
+/// 🪪️ A header's decoded fields — exposed for downstream crates (`protocol_io`'s
 /// `HistoryFile`, `protocol_cli`'s `inspect`/`verify` subcommands) that need to inspect a `.spr`
 /// file's format version/flags without re-deriving this crate's private byte layout.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -92,7 +92,7 @@ pub struct Header {
     pub optional_flags: u32,
 }
 
-/// @emoji 📖️ Validates (see `validate_header`) and returns a source's 32-byte header fields.
+/// 📖️ Validates (see `validate_header`) and returns a source's 32-byte header fields.
 pub async fn read_header<S: PackSource>(source: &S) -> Result<Header, ProtocolError> {
     let total_len = source.len().await;
     if total_len < HEADER_SIZE as u64 { return Err(ProtocolError::Pack(PackError::Truncated(total_len))); }
@@ -103,7 +103,7 @@ pub async fn read_header<S: PackSource>(source: &S) -> Result<Header, ProtocolEr
 //#endregion 🔖️Header
 
 //#region 🔖️Frame
-/// @emoji 🔢️ The wire width, in bytes, of `value` encoded as an unsigned LEB128 varint.
+/// 🔢️ The wire width, in bytes, of `value` encoded as an unsigned LEB128 varint.
 async fn varint_width(value: u64) -> u64 {
     let mut buf = Vec::with_capacity(10);
     crate::codec::write_varint_u64(&mut buf, value);
@@ -153,14 +153,14 @@ async fn write_frame_retained<S: PackSink>(sink: &mut S, kind: u8, flags: u8, ra
     Ok((frame_len as u64, *digest.finalize().as_bytes()))
 }
 
-/// @emoji 🚨️ Builds a `crate::ProtocolError::Malformed` for this crate's own structural
+/// 🚨️ Builds a `crate::ProtocolError::Malformed` for this crate's own structural
 /// checks (distinct from `crate::codec::PackError`-wrapped errors, which cover pack-primitive-level
 /// failures like truncation/varint overflow).
 async fn malformed(what: &'static str, offset: u64, detail: impl Into<String>) -> ProtocolError {
     ProtocolError::Malformed { what, offset, detail: detail.into() }
 }
 
-/// @emoji 📦️ One parsed, CRC-verified record frame borrowed zero-copy from the buffer it was read
+/// 📦️ One parsed, CRC-verified record frame borrowed zero-copy from the buffer it was read
 /// from. `stored` is exactly the on-disk payload bytes — compressed iff `flags & FRAME_FLAG_COMPRESSED`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct RecordFrame<'a> {
@@ -172,14 +172,14 @@ pub struct RecordFrame<'a> {
 }
 
 impl<'a> RecordFrame<'a> {
-    /// @emoji 📤️ The on-disk payload bytes: identical to the caller's original data iff
+    /// 📤️ The on-disk payload bytes: identical to the caller's original data iff
     /// `!compressed`; otherwise the caller must decompress via a `crate::codec::CompressionCodec`
     /// keyed by `crate::frame_codec_id(self.flags).await`, targeting `self.raw_len` bytes.
     pub async fn payload(&self) -> &'a [u8] {
         self.stored
     }
 
-    /// @emoji 📏️ Total on-disk bytes this frame occupies (the value its trailing `back_len` field
+    /// 📏️ Total on-disk bytes this frame occupies (the value its trailing `back_len` field
     /// carries), recomputed from the visible fields rather than cached — every input to the
     /// computation is already public state, so there is nothing to desync.
     pub async fn frame_len(&self) -> u64 {
@@ -192,7 +192,7 @@ impl<'a> RecordFrame<'a> {
     }
 }
 
-/// @emoji 👓️ Zero-copy forward parse of one frame starting at `bytes[pos..]`. Validates `body_len`
+/// 👓️ Zero-copy forward parse of one frame starting at `bytes[pos..]`. Validates `body_len`
 /// bounds, `crc32c` (over `kind..payload`), and the `back_len` self-echo before returning. Returns
 /// `(frame, next_pos)` so callers (both cursors below) can advance without recomputing `frame_len`.
 async fn decode_frame_in_slice(bytes: &[u8], pos: usize) -> Result<(RecordFrame<'_>, usize), ProtocolError> {
@@ -234,7 +234,7 @@ async fn decode_frame_in_slice(bytes: &[u8], pos: usize) -> Result<(RecordFrame<
     Ok((RecordFrame { kind, flags, offset: pos as u64, stored, raw_len }, trailer_end))
 }
 
-/// @emoji ➡️ Forward, zero-copy iteration over a contiguous record stream (a whole `.spr` buffer,
+/// ➡️ Forward, zero-copy iteration over a contiguous record stream (a whole `.spr` buffer,
 /// or any already-decompressed span of ordinary frames — e.g. an inflated `REC_SEALED` batch).
 pub struct FrameCursor<'a> {
     bytes: &'a [u8],
@@ -242,13 +242,13 @@ pub struct FrameCursor<'a> {
 }
 
 impl<'a> FrameCursor<'a> {
-    /// @emoji 🚀️ Positions a cursor over `bytes`, ready to read the frame starting at `start_offset`
+    /// 🚀️ Positions a cursor over `bytes`, ready to read the frame starting at `start_offset`
     /// (typically `HEADER_SIZE` for a whole file).
     pub async fn new(bytes: &'a [u8], start_offset: u64) -> Self {
         Self { bytes, pos: start_offset as usize }
     }
 
-    /// @emoji ⏭️ Parses and returns the next frame, or `None` at exact end-of-buffer. A short
+    /// ⏭️ Parses and returns the next frame, or `None` at exact end-of-buffer. A short
     /// leftover (fewer bytes than a minimal frame needs) is a real parse error, not `None` — only
     /// `recover`'s forward scan is expected to encounter a torn tail and must stop before it.
     pub async fn next_frame(&mut self) -> Result<Option<RecordFrame<'a>>, ProtocolError> {
@@ -261,7 +261,7 @@ impl<'a> FrameCursor<'a> {
     }
 }
 
-/// @emoji ⬅️ Backward, zero-copy, O(1)-per-step iteration over a contiguous record stream, walking
+/// ⬅️ Backward, zero-copy, O(1)-per-step iteration over a contiguous record stream, walking
 /// via each frame's trailing `back_len` rather than re-scanning from the start.
 ///
 /// Unlike `FrameCursor::new`, `at_end` takes no `start_offset` — it has no way to know where a
@@ -274,17 +274,17 @@ pub struct ReverseFrameCursor<'a> {
     pos: usize,
 }
 
-/// @emoji 📏️ The smallest possible on-disk frame: a 1-byte `body_len` varint (value 2, the minimum
+/// 📏️ The smallest possible on-disk frame: a 1-byte `body_len` varint (value 2, the minimum
 /// legal body_len), 1 kind byte, 1 flags byte, 4 crc32c bytes, 4 back_len bytes.
 const MIN_FRAME_LEN: usize = 11;
 
 impl<'a> ReverseFrameCursor<'a> {
-    /// @emoji 🏁️ Positions a cursor just past the last byte of `bytes`, ready to read the final frame.
+    /// 🏁️ Positions a cursor just past the last byte of `bytes`, ready to read the final frame.
     pub async fn at_end(bytes: &'a [u8]) -> Self {
         Self { bytes, pos: bytes.len() }
     }
 
-    /// @emoji ⏮️ Reads the trailing `back_len`, jumps back that many bytes, forward-parses from
+    /// ⏮️ Reads the trailing `back_len`, jumps back that many bytes, forward-parses from
     /// there, and requires the reproduced end offset to equal the cursor's current position —
     /// exactly the contract's reverse-scan algorithm. `None` at exact start-of-stream.
     pub async fn prev_frame(&mut self) -> Result<Option<RecordFrame<'a>>, ProtocolError> {
@@ -310,13 +310,13 @@ impl<'a> ReverseFrameCursor<'a> {
 //#endregion 🔖️Frame
 
 //#region 🔖️Commit
-/// @emoji 📏️ Every commit frame's fixed total on-disk size: `1(body_len, single byte since 65 <
+/// 📏️ Every commit frame's fixed total on-disk size: `1(body_len, single byte since 65 <
 /// 128) + 1(kind) + 1(flags) + 64(payload) + 4(crc32c) + 4(back_len)`.
 pub const COMMIT_FRAME_LEN: u64 = 75;
-/// @emoji 📏️ Fixed size of a `REC_COMMIT` frame's payload, in bytes.
+/// 📏️ Fixed size of a `REC_COMMIT` frame's payload, in bytes.
 pub const COMMIT_PAYLOAD_LEN: usize = 64;
 
-/// @emoji ⛓️ The decoded fields of a `REC_COMMIT` frame's fixed 64-byte payload. Public — this is
+/// ⛓️ The decoded fields of a `REC_COMMIT` frame's fixed 64-byte payload. Public — this is
 /// the only way for a downstream crate (`protocol_history`'s `FrontierSummary.last_commit_seq`/
 /// `.chain_hash`, `protocol_materialize`, `protocol_cli`'s `hash`/`inspect` subcommands) to read a
 /// commit's chain state without re-deriving this crate's private byte offsets.
@@ -329,7 +329,7 @@ pub struct CommitPayload {
     pub chain_hash: [u8; 32],
 }
 
-/// @emoji ✍️ Serializes a commit's fixed 64-byte payload per the contract's exact field offsets.
+/// ✍️ Serializes a commit's fixed 64-byte payload per the contract's exact field offsets.
 async fn write_commit_payload(commit_seq: u64, prev_commit_offset: u64, records_len: u64, record_count: u32, chain_hash: &[u8; 32]) -> [u8; COMMIT_PAYLOAD_LEN] {
     let mut buf = [0u8; COMMIT_PAYLOAD_LEN];
     buf[0..8].copy_from_slice(&commit_seq.to_le_bytes());
@@ -340,7 +340,7 @@ async fn write_commit_payload(commit_seq: u64, prev_commit_offset: u64, records_
     buf
 }
 
-/// @emoji 📖️ Parses a commit frame's payload; the only structural requirement is the exact 64-byte
+/// 📖️ Parses a commit frame's payload; the only structural requirement is the exact 64-byte
 /// length (already implied by `COMMIT_FRAME_LEN`, but checked directly since callers may hand this
 /// any `stored` slice, e.g. during `recover`'s source-backed reads). Public per the `CommitPayload`
 /// doc comment above — the sole intended entry point for decoding a `RecordFrame`'s `stored` bytes
@@ -360,18 +360,18 @@ pub fn parse_commit_payload(payload: &[u8]) -> Result<CommitPayload, ProtocolErr
 //#endregion 🔖️Commit
 
 //#region 🔖️Writer
-/// @emoji ⚙️ Header flags to open a `.spr` file with.
+/// ⚙️ Header flags to open a `.spr` file with.
 #[derive(Clone, Copy, Debug, Default)]
 pub struct WriteOptions {
     pub required_flags: u32,
     pub optional_flags: u32,
 }
 
-/// @emoji 🗜️ `(compressed, raw_len, stored_bytes)` — `Cow::Borrowed` for the identity codec avoids
+/// 🗜️ `(compressed, raw_len, stored_bytes)` — `Cow::Borrowed` for the identity codec avoids
 /// copying an already caller-owned payload slice.
 type PreparedPayload<'a> = (bool, Option<u64>, std::borrow::Cow<'a, [u8]>);
 
-/// @emoji 🗜️ Resolves `codec` for one `write_record` call.
+/// 🗜️ Resolves `codec` for one `write_record` call.
 async fn prepare_payload(codec: crate::codec::ids::CodecId, payload: &[u8]) -> Result<PreparedPayload<'_>, ProtocolError> {
     match codec.0 {
         0 => Ok((false, None, std::borrow::Cow::Borrowed(payload))),
@@ -391,7 +391,7 @@ async fn prepare_payload(codec: crate::codec::ids::CodecId, payload: &[u8]) -> R
     }
 }
 
-/// @emoji ✒️ Streaming `.spr` builder: writes the header, then any number of records via
+/// ✒️ Streaming `.spr` builder: writes the header, then any number of records via
 /// `write_record`, periodically closed off with `commit` — which hash-chains everything written
 /// since the previous commit (or the header, for the first).await. The hot path (`write_record`) is
 /// allocation-light: identity payloads and frame metadata stream directly into the retained sink.
@@ -445,7 +445,7 @@ impl<'a, S: PackSink> SprIdentityRecord<'a, S> {
 }
 
 impl<S: PackSink> SprWriter<S> {
-    /// @emoji 🚀️ Writes the 32-byte header and seeds `chain_0 = blake3(header bytes)`.
+    /// 🚀️ Writes the 32-byte header and seeds `chain_0 = blake3(header bytes)`.
     pub async fn begin(mut sink: S, options: &WriteOptions) -> Result<Self, ProtocolError> {
         let unknown = options.required_flags & !REQUIRED_KNOWN_MASK;
         if unknown != 0 {
@@ -482,12 +482,12 @@ impl<S: PackSink> SprWriter<S> {
         })
     }
 
-    /// @emoji 📍️ Current absolute write position — the offset the next record/commit will start at.
+    /// 📍️ Current absolute write position — the offset the next record/commit will start at.
     pub async fn position(&self) -> u64 {
         self.sink.position().await
     }
 
-    /// @emoji 🔗️ The chain hash of the last commit — `chain_0 = blake3(header)` before the first, the
+    /// 🔗️ The chain hash of the last commit — `chain_0 = blake3(header)` before the first, the
     /// verified span's chain after `resume_verified`. Records written since that commit do not move it,
     /// so a sink that has already handed its committed bytes to storage can still link a successor.
     pub fn committed_chain_hash(&self) -> [u8; 32] {
@@ -512,7 +512,7 @@ impl<S: PackSink> SprWriter<S> {
         Ok(SprIdentityRecord { owner: self, start_offset, payload_len, written: 0, frame_len, crc, digest })
     }
 
-    /// @emoji 🖇️ Frames (compressing per `codec`), CRCs, and writes one record. Returns its start
+    /// 🖇️ Frames (compressing per `codec`), CRCs, and writes one record. Returns its start
     /// offset. Folds the frame's `blake3` digest into the pending commit-chain accumulator — the
     /// digest covers the WHOLE on-disk frame (length-prefix through `back_len`), matching the
     /// contract's `digest_i = blake3(full frame bytes of record i)`.
@@ -532,7 +532,7 @@ impl<S: PackSink> SprWriter<S> {
         Ok(start_offset)
     }
 
-    /// @emoji ⛓️ Writes a `REC_COMMIT` frame covering everything since the last commit (or the
+    /// ⛓️ Writes a `REC_COMMIT` frame covering everything since the last commit (or the
     /// header, for the first).await: `chain_n = blake3(chain_{n-1} || digest_1 || .. || digest_k)`.
     /// Returns the commit frame's start offset.
     pub async fn commit(&mut self) -> Result<u64, ProtocolError> {
@@ -556,7 +556,7 @@ impl<S: PackSink> SprWriter<S> {
         Ok(offset)
     }
 
-    /// @emoji 📤️ Unwraps the underlying sink (e.g. to hand a `Vec<u8>` or file handle onward).
+    /// 📤️ Unwraps the underlying sink (e.g. to hand a `Vec<u8>` or file handle onward).
     pub async fn into_sink(self) -> S {
         self.sink
     }
@@ -564,11 +564,11 @@ impl<S: PackSink> SprWriter<S> {
 //#endregion 🔖️Writer
 
 //#region 🔖️Recovery
-/// @emoji 📋️ What a `recover` call found: how much of the file is trustworthy and where.
+/// 📋️ What a `recover` call found: how much of the file is trustworthy and where.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct RecoveryReport {
     pub records_recovered: u64,
-    /// @emoji 📏️ Design choice: the absolute count of trusted bytes from the start of the file —
+    /// 📏️ Design choice: the absolute count of trusted bytes from the start of the file —
     /// i.e. the offset callers should truncate/slice to (`&bytes[..bytes_recovered]`), not merely
     /// "bytes of record payload." Always `>= HEADER_SIZE` (the header itself always counts).
     pub bytes_recovered: u64,
@@ -577,7 +577,7 @@ pub struct RecoveryReport {
     pub torn_tail_bytes: u64,
 }
 
-/// @emoji 🔀️ Which recovered boundary a caller trusts.
+/// 🔀️ Which recovered boundary a caller trusts.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum RecoveryMode {
     #[default]
@@ -585,7 +585,7 @@ pub enum RecoveryMode {
     LastValidRecord,
 }
 
-/// @emoji 🔍️ How much a reader verifies before trusting decoded content.
+/// 🔍️ How much a reader verifies before trusting decoded content.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum VerificationLevel {
     Trusted,
@@ -594,7 +594,7 @@ pub enum VerificationLevel {
     Full,
 }
 
-/// @emoji 🔢️ Reads one LEB128 varint at an absolute source offset, one byte at a time so it never
+/// 🔢️ Reads one LEB128 varint at an absolute source offset, one byte at a time so it never
 /// over-reads a legitimately short remaining source. Mirrors `os_pack::format::read_varint_u64_at`.
 async fn read_varint_via_source<S: PackSource>(source: &S, offset: u64, total_len: u64) -> Result<(u64, u64), ProtocolError> {
     let mut tmp: Vec<u8> = Vec::with_capacity(10);
@@ -619,11 +619,11 @@ async fn read_varint_via_source<S: PackSource>(source: &S, offset: u64, total_le
     Ok((value, i))
 }
 
-/// @emoji 👓️ `(kind, flags, raw_len, owned payload, frame_len)` — the owning twin of `RecordFrame`
+/// 👓️ `(kind, flags, raw_len, owned payload, frame_len)` — the owning twin of `RecordFrame`
 /// for `PackSource`-backed reads, which cannot borrow zero-copy from a random-access source.
 type SourceFrame = (u8, u8, Option<u64>, Vec<u8>, u64);
 
-/// @emoji 👓️ Source-backed (owning, non-zero-copy) frame read at an absolute offset — the
+/// 👓️ Source-backed (owning, non-zero-copy) frame read at an absolute offset — the
 /// `PackSource` twin of `decode_frame_in_slice`, used by `recover`'s forward scan and fast-path
 /// commit walk, both of which operate over `PackSource` rather than an in-memory slice. Validates
 /// `body_len` against `limits.max_frame_len` BEFORE allocating the body buffer.
@@ -672,7 +672,7 @@ async fn read_frame_via_source<S: PackSource>(source: &S, offset: u64, limits: &
     Ok((kind, flags, raw_len, payload, frame_len))
 }
 
-/// @emoji ⚡️ Fast path: probes the last `COMMIT_FRAME_LEN` bytes for a valid `REC_COMMIT` frame
+/// ⚡️ Fast path: probes the last `COMMIT_FRAME_LEN` bytes for a valid `REC_COMMIT` frame
 /// reaching exactly EOF, then walks `prev_commit_offset` all the way back to `commit_seq == 1`,
 /// re-validating (CRC + critical bit + sequence linkage) every commit frame along the way — O(commit
 /// count), never touching an intervening non-commit record. `None` on any failure, signalling the
@@ -722,7 +722,7 @@ async fn try_fast_path<S: PackSource>(source: &S, total_len: u64, limits: &Proto
     Some(RecoveryReport { records_recovered: records_sum + num_commits, bytes_recovered: total_len, last_commit_seq, last_commit_offset, torn_tail_bytes: 0 })
 }
 
-/// @emoji 🚑️ Recovers a `.spr` source: validates the header, then tries the O(commits) fast path
+/// 🚑️ Recovers a `.spr` source: validates the header, then tries the O(commits) fast path
 /// before falling back to a bounded forward scan from `HEADER_SIZE`, stopping at the first invalid
 /// or truncated frame. See the contract's four-step algorithm (reproduced in the inline comments).
 pub async fn recover<S: PackSource>(source: &S, limits: &ProtocolLimits, mode: RecoveryMode) -> Result<RecoveryReport, ProtocolError> {
@@ -784,7 +784,7 @@ pub async fn recover<S: PackSource>(source: &S, limits: &ProtocolLimits, mode: R
 //#endregion 🔖️Recovery
 
 //#region 🔖️Crypto
-/// @emoji 🔗️ The commit chain's hash primitive: `blake3`, owned here so `protocol_core` stays
+/// 🔗️ The commit chain's hash primitive: `blake3`, owned here so `protocol_core` stays
 /// dependency-free (per the family's crypto-trait-only rule).
 pub struct Blake3Hasher;
 

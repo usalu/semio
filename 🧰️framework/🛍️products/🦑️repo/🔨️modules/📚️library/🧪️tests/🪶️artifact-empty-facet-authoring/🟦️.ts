@@ -57,7 +57,7 @@ const identityPaths = [
 ];
 const identities = (): Record<string, string> => Object.fromEntries(identityPaths.map((path) => [relative(repoRoot, path).replaceAll("\\", "/"), hash(readFileSync(path))]));
 
-test("shared artifact authoring passes the independent strict TypeScript compiler", { timeout: 30_000 }, () => {
+test("shared artifact authoring passes the independent strict TypeScript compiler", () => {
   const path = artifactOwnerPath;
   const program = ts.createProgram([path], {
     target: ts.ScriptTarget.ESNext,
@@ -73,7 +73,7 @@ test("shared artifact authoring passes the independent strict TypeScript compile
   const source = program.getSourceFile(path);
   expect(source).toBeDefined();
   expect([...program.getSyntacticDiagnostics(source), ...program.getSemanticDiagnostics(source)].map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n"))).toEqual([]);
-});
+}, { timeout: 30_000 });
 
 /** 🧭️ Allocates one exclusive semantic run after checking its complete no-follow ancestry. */
 function allocate(): string {
@@ -248,7 +248,7 @@ for (const row of vector.cases)
           expect(partial.created.length).toBeGreaterThan(0);
           for (const file of partial.created) {
             const { path, ...identity } = file;
-            expect(after[`🧪️workspace/${path}`]).toEqual({ kind: "file", ...identity });
+            expect(after[`🧪️workspace/${path}`]).toEqual<{ readonly kind: string } & typeof identity>({ kind: "file", ...identity });
           }
         }
       } else {
@@ -388,7 +388,7 @@ for (const row of requestInput.cases)
         else
           for (const file of partial!.created) {
             const { path, ...identity } = file;
-            expect(after[`🧪️workspace/${path}`]).toEqual({ kind: "file", ...identity });
+            expect(after[`🧪️workspace/${path}`]).toEqual<{ readonly kind: string } & typeof identity>({ kind: "file", ...identity });
           }
       }
       expect(identities()).toEqual(sourcesBefore);

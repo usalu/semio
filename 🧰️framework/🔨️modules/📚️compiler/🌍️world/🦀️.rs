@@ -8,7 +8,7 @@
 //! not yet built — landing in the call-site-swap ticket once a wasm guest actually needs it.
 
 //#region 🔖️Fonts
-/// @emoji 🔤️ One embedded font's raw bytes plus a stable role — the role is what the layout layer
+/// 🔤️ One embedded font's raw bytes plus a stable role — the role is what the layout layer
 /// (`compiler_math`) and shaper (`compiler_text`) key off, never a file path or index.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum FontRole {
@@ -25,7 +25,7 @@ pub enum FontRole {
     Emoji,
 }
 
-/// @emoji 📦️ The full embedded font set, keyed by [`FontRole`].
+/// 📦️ The full embedded font set, keyed by [`FontRole`].
 #[derive(Clone, Copy, Debug)]
 pub struct FontSet {
     pub math: &'static [u8],
@@ -47,7 +47,7 @@ impl FontSet {
     }
 }
 
-/// @emoji 🏗️ The native/host font provider — bytes baked into the binary at compile time.
+/// 🏗️ The native/host font provider — bytes baked into the binary at compile time.
 pub fn embedded_fonts() -> FontSet {
     FontSet {
         math: include_bytes!("🔤️fonts/🧮️LibertinusMath-Regular.otf"),

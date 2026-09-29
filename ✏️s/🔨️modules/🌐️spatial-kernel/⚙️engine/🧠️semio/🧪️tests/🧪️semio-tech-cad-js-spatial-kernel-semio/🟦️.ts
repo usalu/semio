@@ -1,6 +1,111 @@
-type TestSource = { readonly directory: string; readonly url: string };
+import type { SemioTestDependencies } from "../../🟦️.ts";
+import type { Vec3 } from "@semio-tech/s-3d-js";
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+type TestSource = { readonly url: string };
+
+/** 🔁️ `s.stdio.semio.brep.affine-transforms/v1` — the kernel-neutral affine-transform vectors every implementation answers
+ * (Rust kernel, `brep_invoke` bridge, this TS kernel, OpenCascade as the third-party oracle).
+ * @see ../../../../../../🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧫️fixtures/🔁️affine-transforms/🔣️.json */
+type AffineSolid = { readonly kind: "box"; readonly width: number; readonly depth: number; readonly height: number } | { readonly kind: "sphere"; readonly radius: number } | { readonly kind: "cylinder" | "cone"; readonly radius: number; readonly height: number };
+type AffineStep =
+  | { readonly kind: "translate"; readonly offset: Vec3 }
+  | { readonly kind: "rotate"; readonly axis: Vec3; readonly angle: number }
+  | { readonly kind: "rotateAbout"; readonly origin: Vec3; readonly axis: Vec3; readonly angle: number }
+  | { readonly kind: "scale"; readonly factor: number; readonly center: Vec3 }
+  | { readonly kind: "mirror"; readonly origin: Vec3; readonly normal: Vec3 };
+type AffineBounds = { readonly min: Vec3; readonly max: Vec3 };
+type AffineCase = { readonly id: string; readonly solid: AffineSolid; readonly steps: readonly AffineStep[]; readonly expect: { readonly volume: number; readonly centerOfMass: Vec3; readonly bounds: AffineBounds; readonly faceNormals?: readonly Vec3[] } };
+type AffineRefusal = { readonly id: string; readonly solid: AffineSolid; readonly step: AffineStep };
+type AffineFixture = { readonly schema: "s.stdio.semio.brep.affine-transforms/v1"; readonly tessellationTolerance: number; readonly volumeRelativeTolerance: number; readonly centerOfMassTolerance: number; readonly boundsTolerance: number; readonly normalTolerance: number; readonly cases: readonly AffineCase[]; readonly refusals: readonly AffineRefusal[] };
+type AffineMeasure = { readonly volume: number; readonly centerOfMass: Vec3; readonly bounds: AffineBounds; readonly faceNormals: readonly Vec3[]; readonly faceCount: number; readonly edgeCount: number };
+/** 🧩️ One implementation under the vectors: build the primitive, apply one step, measure the result. */
+type AffineKernelOps<S> = { readonly make: (solid: AffineSolid) => Promise<S>; readonly apply: (shape: S, step: AffineStep) => Promise<S>; readonly measure: (shape: S) => Promise<AffineMeasure> };
+
+const AFFINE_FIXTURE_PATH = "../../../../🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧫️fixtures/🔁️affine-transforms/🔣️.json";
+
+/** 📥️ Reads the fixture and refuses a renamed contract or an empty case list, so a drift never passes over zero vectors. */
+async function affineFixture(source: TestSource): Promise<AffineFixture> {
+  const { readFile } = await import("node:fs/promises");
+  const root = JSON.parse(await readFile(new URL(AFFINE_FIXTURE_PATH, source.url), "utf8")) as AffineFixture;
+  if (root.schema !== "s.stdio.semio.brep.affine-transforms/v1" || root.cases.length === 0 || root.refusals.length === 0) throw new Error(`affine-transforms fixture contract drifted: ${root.schema}`);
+  return root;
+}
+
+/** 📏️ Every mismatch between one implementation's measurement and the fixture, as readable lines (empty = agreement). */
+function affineMismatches(fixture: AffineFixture, row: AffineCase, before: AffineMeasure, after: AffineMeasure): string[] {
+  const out: string[] = [];
+  const near = (label: string, got: number, want: number, tolerance: number) => {
+    if (!(Math.abs(got - want) <= tolerance)) out.push(`${row.id}: ${label} ${got} != ${want} (±${tolerance})`);
+  };
+  near("volume", after.volume, row.expect.volume, fixture.volumeRelativeTolerance * Math.abs(row.expect.volume));
+  row.expect.centerOfMass.forEach((want, axis) => near(`centerOfMass[${axis}]`, after.centerOfMass[axis]!, want, fixture.centerOfMassTolerance));
+  row.expect.bounds.min.forEach((want, axis) => near(`bounds.min[${axis}]`, after.bounds.min[axis]!, want, fixture.boundsTolerance));
+  row.expect.bounds.max.forEach((want, axis) => near(`bounds.max[${axis}]`, after.bounds.max[axis]!, want, fixture.boundsTolerance));
+  if (before.faceCount !== after.faceCount || before.edgeCount !== after.edgeCount) out.push(`${row.id}: topology ${before.faceCount}/${before.edgeCount} -> ${after.faceCount}/${after.edgeCount}`);
+  if (row.expect.faceNormals) {
+    const unmatched = [...after.faceNormals];
+    for (const want of row.expect.faceNormals) {
+      const index = unmatched.findIndex((got) => got.every((value, axis) => Math.abs(value - want[axis]!) <= fixture.normalTolerance));
+      if (index < 0) out.push(`${row.id}: outward face normal ${JSON.stringify(want)} missing from ${JSON.stringify(after.faceNormals)}`);
+      else unmatched.splice(index, 1);
+    }
+    if (unmatched.length > 0) out.push(`${row.id}: unexpected face normals ${JSON.stringify(unmatched)}`);
+  }
+  return out;
+}
+
+/** 🔁️ Runs every fixture vector and refusal through one implementation and returns every disagreement. */
+async function affineDisagreements<S>(fixture: AffineFixture, ops: AffineKernelOps<S>): Promise<string[]> {
+  const out: string[] = [];
+  for (const row of fixture.cases) {
+    let shape = await ops.make(row.solid);
+    const before = await ops.measure(shape);
+    for (const step of row.steps) shape = await ops.apply(shape, step);
+    out.push(...affineMismatches(fixture, row, before, await ops.measure(shape)));
+  }
+  for (const refusal of fixture.refusals) {
+    const shape = await ops.make(refusal.solid);
+    const accepted = await ops.apply(shape, refusal.step).then(
+      () => true,
+      () => false,
+    );
+    if (accepted) out.push(`${refusal.id}: accepted a degenerate ${refusal.step.kind}`);
+  }
+  return out;
+}
+
+/** 🔮️ OpenCascade through the owned `brepjs` boundary — the third-party answer to the same vectors. */
+async function openCascadeAffineOps(): Promise<AffineKernelOps<object>> {
+  const occt = await import("../../../../../../🔌️plugins/📐️cad/⚙️engine/🧱️brepjs/🟦️.ts");
+  const wasmFile = await occt.resolveOwnedOpenCascadeWasmFileUrl();
+  await occt.initializeOwnedOpenCascade((path) => (path === "brepjs_single.wasm" ? wasmFile : path));
+  const degrees = (radians: number) => (radians * 180) / Math.PI;
+  return {
+    make: async (solid) => (solid.kind === "box" ? occt.box(solid.width, solid.depth, solid.height) : solid.kind === "sphere" ? occt.sphere(solid.radius) : solid.kind === "cylinder" ? occt.cylinder(solid.radius, solid.height) : occt.cone(solid.radius, 0, solid.height)),
+    apply: async (shape, step) => {
+      if (step.kind === "translate") return occt.translate(shape, step.offset);
+      if (step.kind === "rotate") return occt.rotate(shape, degrees(step.angle), { axis: step.axis, at: [0, 0, 0] });
+      if (step.kind === "rotateAbout") return occt.rotate(shape, degrees(step.angle), { axis: step.axis, at: step.origin });
+      if (step.kind === "scale") return occt.scale(shape, step.factor, { center: step.center });
+      return occt.mirror(shape, { normal: step.normal, at: step.origin });
+    },
+    measure: async (shape) => {
+      const props = occt.unwrap(occt.measureVolumeProps(shape));
+      const bounds = occt.getBounds(shape);
+      const faces = occt.getFaces(shape);
+      return {
+        volume: props.volume,
+        centerOfMass: [props.centerOfMass[0], props.centerOfMass[1], props.centerOfMass[2]],
+        bounds: { min: [bounds.xMin, bounds.yMin, bounds.zMin], max: [bounds.xMax, bounds.yMax, bounds.zMax] },
+        faceNormals: faces.map((face) => occt.normalAt(face)),
+        faceCount: faces.length,
+        edgeCount: occt.getEdges(shape).length,
+      };
+    },
+  };
+}
+
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: SemioTestDependencies, source: TestSource): Promise<void> {
   const { SemioBrepKernel } = dependencies;
 
   const { beforeEach, describe, expect, it } = vitest;
@@ -61,6 +166,13 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(res.diff.solids?.added?.length).toBe(1);
       const vol = await kernel.solidVolume(res.diff.solids!.added![0]!.id);
       expect(vol).toBeGreaterThan(0);
+    });
+  });
+
+  describe("@semio-tech/cad-js/spatial-kernel/semio affine transforms", () => {
+    it("OpenCascade (brepjs, the third-party oracle) answers every affine-transform vector and refuses every degenerate one", async () => {
+      const fixture = await affineFixture(source);
+      expect(await affineDisagreements(fixture, await openCascadeAffineOps())).toEqual([]);
     });
   });
 

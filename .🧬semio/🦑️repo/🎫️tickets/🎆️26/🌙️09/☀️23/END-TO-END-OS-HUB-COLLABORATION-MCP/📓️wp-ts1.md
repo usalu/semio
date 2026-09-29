@@ -7,6 +7,51 @@ captures `wp-ts1/generated/`. Rules: `📓️session-14-preamble.md` (+ 13/12).
 
 Status legend: **measured** = ran here, command + capture named; **unverified** = read from source only; **written, not run**.
 
+## Session 14e — CAD suite load failures + real `@types/bun` (coordinator 08:1x)
+
+| # | item | state | evidence |
+|---|---|---|---|
+| 1a | import cycle through `📔️registry` (`runtime/renderer → actions → typology → artifact → registry → semio → geometry/preview → actions`) | **fixed at the layer boundary**: (i) the 09-08 extraction hoisted test-only static imports into sources' `🧪️Tests` regions — spatial-kernel `📐️geometry` imported cad `🎬️actions` in production; `wp-ts1/ts1-cad-test-imports.ts` moves every test-only name into its suite's own imports (actions 1, artifact 38, geometry 6, spatial 4) and out of bag/type; geometry's production-used `SpatialKernel`/`SpatialPreviewKernel` become a header `import type`; (ii) spatial-kernel `PreciseSpatialKernelMath.executeAction` delegated up into cad `executeActionCapability` — exactly what `🎬️actions`' own fallback does when a kernel has no native `executeAction` hook → removed with its import. `ts1-import-cycles.ts`: registry/renderer "no cycle" | `cad-vitest-2.txt` |
+| 1b | `import.meta.dir` under vitest | **fixed**: cad + spatial-kernel registrations pass `{ url: import.meta.url }`, suites declare `TestSource = { readonly url: string }` and read `new URL(relative, source.url)` (`ts1-cad-test-source-url.py`). The same Bun-only `directory` is passed at 116 sites in 69 files repo-wide (22 suites read it) — follow-up, several are guest-linked | — |
+| 1c | flow wasm `/@fs/` in node | **fixed**: `🧊️3d` `ensureBrepWasmLoaded` addresses `flow_core_bg.wasm` by its module URL (`new URL(…, import.meta.url)`, Vite's own asset form); an `http(s)` URL goes to the bindings, a `file:` URL (node/Bun test run) is read from disk (`fetch` has no portable `file:`); the unused `*.wasm?url` ambient in framework removed. `🧊️3d` is not in the os program → no `s` boot | `cad-vitest-semio-2.txt` |
+| 1d | CAD suites now | runtime 2/2 (was: load failure), renderer 67/69 (was: load failure), brepjs 30/30 (was 29/30), geometry 41/44 (was 40/44), semio 1/6 — **real reds by owner** (CAD TS engine, no active slice): semio ×5 `brep_invoke translate: unknown brep_invoke method` — the TS `SemioBrepKernel` calls `translate`/`rotate`, the Rust dispatcher in `🌊️flow/📐️brep-geometry/🦀️.rs` has neither (guest code, frozen); geometry ×3 + renderer ×2 AEC typology catalog: `loadTypology("building.building.slab")` → null, `resolveTypologyStyle` falls back to the hash colour (`#3ecca2` ≠ authored `#8B7355`), `from_building` yields 0 objects — geometry and registry each own a copy of the model-definition asset state and caches (same ephemeral keys), the runtime suite sees energy typologies while geometry's lookups miss building/structure ones. Latent (not failing): `runtime → extension → @semio-tech/cad-js index → runtime` | `cad-vitest-2.txt`, `cad-vitest-semio-2.txt` |
+| 2 | framework/library/repo/hub on the installed `@types/bun` 1.4.2 | **done**: the hand-written `🏃️process/🌿️environment/🟦️.d.ts` deleted (its header asked for exactly this once `@types/bun` installs); library/repo/hub `types` gain `bun` (framework already saw all `@types`), the file leaves every `files`/`include`; the obsolete inline `ImportMeta.dir` declarations in ui-react's and window-kits' `📜️script.ts` removed; root `lib` += `DOM.AsyncIterable` (the env `BunReadableStream` that blocked it is gone; os drops its duplicate `lib`). 133 unique real errors (the "~230" double-counted library ⊂ repo): 22 `bun:test` calls wrote options before the body → `ts1-bun-test-options-order.ts` puts them where `@types/bun` declares (`test(label, fn, { timeout })`); ~89 typed-matcher mismatches (`ts1-bun-matchers.py`): readonly/literal arrays compare as `toEqual<readonly string[]>`, untyped fixture values as `toEqual<typeof expected>` (bun's own typed-comparison overload), `any` handles get the type they produce (`expect<string>(…)`), missing expectations are guarded; source-admission-io `row.expected.*` likewise; real fixes: Bun.build has no `write` option, `args.kind === "entry-point"` never matched (Bun reports `entry-point-build`, measured), `SyncSubprocess.signal` → `signalCode` (the old check always read `undefined`), `Bun.serve().port` → `url.port`, lease/services children typed `Bun.Subprocess<"pipe","pipe","pipe">`, the fetch stub keeps `preconnect`, execa 1.x typed at its CommonJS boundary, a looped `spawnSync` annotated (assertion-signature CFA), the MCP live-agent harness child typed (its "declared twice" workaround comment is now false), the hub foundation owner-graph law's own compiler program gains `bun` types (it failed on `Bun`) | **measured**: all 20 package tsconfigs 0 errors non-incremental (`r7/summary.txt`), os/hub again after the last two edits (`b2`); suites touching runtime-relevant edits 21/22 + hub foundation law 1/1 (`bun-tests-b.txt`, `bun-test-hub-foundation-2.txt`); the other reds in the 17-suite batch (`bun-tests-a.txt`: rust-physical ×14, empty-facet authoring ×12, typescript-path ×6, schema-invariants ×5, readme-move ×5, kind-only launch seed, hub moved-owner imports, registry catalog closure) sit in suites where TS1 only added erased type arguments — pre-existing tree/taxonomy/launch drift, owners R10 (launch/taxonomy) and the library suite owners |
+
+## Session 14d — standalone package tsconfigs (resumed 2026-09-29 07:1x)
+
+Goal (coordinator 07:0x): every package's own tsconfig type-checks with 0 errors; fix config/lib/types/paths at the root, real
+type errors properly; no suppression, no `any` escapes. Captures ONLY under `.🧬semio/🌐hub/s14-ts1-logs/` (rule 26 sweep took
+`wp-ts1/generated/`; the 14c captures named below are gone, their numbers stand as recorded). Runner
+`wp-ts1/ts1-tsc-packages.zsh <round> slug=tsconfig…` (sequential, nice 15, load-gated).
+
+| # | package tsconfig | r0 07:13 | now | root cause → fix |
+|---|---|---|---|---|
+| 1 | machine, 3d | 49, 49 | **0, 0** | `rootDir: "."` (+ unused `baseUrl`) on a noEmit program whose entry imports across the repo (TS6059) → removed |
+| 2 | framework | 4 | **0** | `lines-and-columns` ships types outside its `exports` → `paths` to its `.d.ts` (same pattern as `dom-accessibility-api`); pixels selection test cast JSON `number[][]` to `SelectionShape` → fixture admitted through its schema (`compile<…>`, guard) |
+| 3 | library | 18 | **0** | standalone config without `allowJs` imported the library's `🟨️.mjs` modules (TS7016) → extends the root baseline + `allowJs` (as the repo program) |
+| 4 | test | 39 | **0** | standalone config without Bun types (Bun, `import.meta.dir`, `bun:sqlite`) → extends root, `types: ["bun", "node"]` (`@types/bun` 1.4.2 is installed), includes `📜️script.ts` too |
+| 5 | assets | 1160 | **0** | no `extends` (ES5 defaults: TS1501/2802/5097…) → extends root, `types: ["bun", "node"]`; its stale `@types/node ^20` devDependency (no `node:sqlite`) aligned to the workspace `^22.19.6`, `bun install` (lockfile: assets entry + the orphan 20.19.43 row gone; it also recorded stdio-png's already-present devDependencies), orphan nested `node_modules/@types/node` removed; `bun install --frozen-lockfile --dry-run` rc 0 |
+| 6 | hub admin | 577 | **0** | standalone config without node/bun types for its tests → extends root, `types: ["bun", "node", "react", "react-dom", "vite/client"]`, `📜️script.ts` no longer excluded; root `lib` += `DOM.Iterable` (NodeList iteration; os keeps its own `DOM.AsyncIterable` override — root AsyncIterable breaks the env-d.ts `BunReadableStream` in repo, 39 errors, measured). **Real bug:** `SpacesPage` `createSpace(…).then(loadSpaces)` fed the terminal receipt in as the page cursor (`cursor=[object Object]`) → `.then(() => loadSpaces())`; regression test red on the old code (`hub-admin-test-red.txt`), suite 22/22 green |
+| 7 | cad + 4 extensions | 342, 282×4 | **0, 0×4** | 09-08 test-extraction codemod left `registerTests1(vitest, dependencies: any, …)` with type-only names passed as values (TS2693 — also a runtime missing-export binding) and destructured values used as types (TS2749), plus 58 `type X = any` aliases. One-off codemod `wp-ts1/ts1-cad-test-deps.ts` (TypeScript API): each of the 14 source modules exports `<Dir>TestDependencies` (`typeof` of every injected value), stops passing type-only names, and its suite takes that type + `import type`s of the real refs (342 → 28). `wp-ts1/ts1-cad-manual.py` for the rest: since the 09-03 preview split brepjs called preview-private `readVec3`/`faceNormalFromPoints`/`derivedFacePoints` (**runtime ReferenceErrors**) → exported from `🧮️preview` + imported; suites destructured `preciseSpatialKernelMath` (7) and used `aabbVolume` from the brepjs module that never exported them (`M` was `undefined`) → static import from their owner `🧮️preview` (`__actionsTestKernel` retired, it only fed that); `parseCadBounds` returned `number[]` for its `[x,y,z]` interface → `parseCadBoundsCorner`; `import.meta.env.VITEST === true` (always false, the env is a string) → `=== "true"`; `StatelyMachineSpec` exported for its suite; configs lose unused `baseUrl`/duplicate options, get own `tsBuildInfoFile` (machine, 3d, cad×5 no longer share root's) |
+| 8 | os, repo (regression after root lib edit) | 0, 0 | **0, 0** | — |
+
+**Final (08:00, non-incremental `tsc --incremental false`, `wp-ts1/ts1-tsc-all.zsh r5`): all 20 tracked package tsconfigs 0
+errors** (cad ×5, hub, hub admin, framework, machine, ui-react, assets, 3d, os, renderer-react, window-kits, repo, vscode,
+library, coordinator, test) — `.🧬semio/🌐hub/s14-ts1-logs/r5/summary.txt`.
+
+Runtime proof (native lane): pixels editing `bun test` 58/58; hub admin vitest 22/22 (+ new SpacesPage law, red on the old code);
+cad extensions 2/1/2/1 green; cad core: artifact interactions 145/145, spatial + stately + inferences + actions 32/32, geometry
+40/44, brepjs 29/30, semio 1/6, runtime + renderer suites fail at module load — **all cad reds pre-existing and outside TS1's
+edits**: `source.directory` undefined (the codemod passes Bun's `import.meta.dir`, absent under vite-node) ×2, AEC typology data
+not registered ×3, flow wasm `/@fs/` URL unfetchable in node ×5, and a registry import cycle (`runtime → actions → typology →
+artifact → 📔️registry` leaves `interactionCompileCacheClear` undefined at `artifact:1014`; TS1 changed no static import of those
+five modules — `git diff -U0` import lines 0). Captures `cad-vitest-*.txt`. None of the edited cad/admin sources is in the os
+program (`--listFilesOnly`), so no `s` boot applies (rule 20).
+
+Follow-up — **done in 14e item 2** (numbers below were the measured estimate): migrating framework/library/repo/hub from the hand-written env `🌿️environment/🟦️.d.ts` to real
+`@types/bun` (its own header asks for it; `@types/bun` is installed) costs library 97 / repo 103 / framework 22 / hub 7 real type
+errors (bun:test options, `Bun.spawn` overloads, `FileSink`) — `.🧬semio/🌐hub/s14-ts1-logs/exp/*.txt`.
+
 ## Session 14c
 
 | # | item | state | evidence |
@@ -35,6 +80,14 @@ Status legend: **measured** = ran here, command + capture named; **unverified** 
 | `🧪️tests/🎨️chrome-palette` | 1 | write to readonly `UiTheme.id` | spread copy with `id` | overnight |
 | `🧪️tests/🎥️world3d-camera-framing` | 1 | `projectionFrame` missing | `projectionFrame: "content"` | type change overnight |
 | layout `🧬️schema/🔺️diff/🟦️.ts` | 1 | `FramePatch` interface gained `rotation`/`locked`/`visible`, `parseFramePatch` did not (also a runtime fault, item 4a) | `boolean` parser + the 3 fields in schema order | W4 `wp-w4/w4-layout-diff-schema.py` (27th 18:38) |
+
+### Session 14e log
+
+- 08:1x cycle analysis (`ts1-import-cycles.ts`), test-region import move, `executeAction` delegate removed → registry cycle gone; module-URL fixtures; brep wasm by module URL. 08:26 CAD suites load (runtime/renderer). 08:3x Bun migration: 133 unique errors → options order codemod, matcher alignment, real fixes; env d.ts deleted; root `DOM.AsyncIterable`. 08:53 all 20 configs 0; 08:5x bun suites (edited-runtime 21/22, hub law fixed → 1/1).
+
+### Session 14d log
+
+- 07:1x resumed; r0 inventory (12 failing package configs, 2 912 errors). 07:2x machine/3d/framework/library/test/assets green; `bun install` (assets `@types/node`). 07:3x hub admin green + SpacesPage fix + red/green law. 07:4x root lib `DOM.Iterable` (AsyncIterable reverted after repo regression 39). 07:5x cad codemod + manual set → 0. 08:00 all 20 configs 0 (non-incremental). 08:0x cad/admin/pixels runtime runs.
 
 ### Session 14c log
 

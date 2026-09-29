@@ -479,6 +479,12 @@ async fn rollback_leaves_state_untouched() {
 /// command at all — a remote envelope ingested from the backbone mid-transaction — which is
 /// precisely the race §5.8's check exists to catch. Driving this through `dispatch_typed`
 /// instead only proves §5.10 a second time (it rejects with `transaction.instance-busy`).
+///
+/// ↩️ A rejected commit RESTORES the pending transaction rather than discarding it (contract
+/// §5.8), so the only honest way out of this state is the explicit rollback the refusal invites.
+///
+/// 🔌️ The sender still holds the near end of the pair; a store whose backbone is attached
+/// retains that channel owner, and its close is `Blocked` until the attachment is released.
 #[semio_framework_async_macros::async_test]
 async fn generation_mismatch_is_rejected_with_the_frozen_code() {
     let mut sender = new_registered_app::<TxnApp, _>(transaction_manifest()).await;
@@ -500,11 +506,7 @@ async fn generation_mismatch_is_rejected_with_the_frozen_code() {
     app.ingest_operations(&operations).await.expect("a remote edit lands while the transaction is pending");
     let error = app.transaction_commit("txn-3", &meta("local")).await.expect_err("commit must reject a stale generation");
     assert_eq!(error.code.0, "transaction.generation-mismatch");
-    // ↩️ A rejected commit RESTORES the pending transaction rather than discarding it (contract
-    // §5.8), so the only honest way out of this state is the explicit rollback the refusal invites.
     app.transaction_rollback("txn-3").await.expect("a rejected commit leaves the transaction pending and explicitly rollback-able");
-    // 🔌️ The sender still holds the near end of the pair; a store whose backbone is attached
-    // retains that channel owner, and its close is `Blocked` until the attachment is released.
     sender.detach_backbone().await.expect("sender releases its backbone before close");
     drop(far);
     close_transaction_store_roots(&mut sender);
@@ -522,6 +524,9 @@ async fn second_prepare_while_pending_is_rejected_instance_busy() {
     close_transaction_store_roots(&mut app);
 }
 
+/// 🔖️ Read-only surfaces stay unaffected — `render`/`snapshot` never go through
+/// `dispatch_emit` at all, matching contract §5.10's carve-out for
+/// RefreshUi/ReadDocument/ContextMenu/ephemeral lanes.
 #[semio_framework_async_macros::async_test]
 async fn a_mutating_command_while_pending_is_rejected_but_reads_still_work() {
     let mut app = new_registered_app::<TxnApp, _>(transaction_manifest()).await;
@@ -530,9 +535,6 @@ async fn a_mutating_command_while_pending_is_rejected_but_reads_still_work() {
     let blocked = dispatch_settled(&mut app, TxnCommand::Increment, "local").await;
     assert!(blocked.is_err(), "a command emitting artifact mutations must be rejected while a transaction is pending");
     assert_eq!(blocked.unwrap_err().code.0, "transaction.instance-busy");
-    // 🔖️ Read-only surfaces stay unaffected — `render`/`snapshot` never go through
-    // `dispatch_emit` at all, matching contract §5.10's carve-out for
-    // RefreshUi/ReadDocument/ContextMenu/ephemeral lanes.
     assert_eq!(app.snapshot().unwrap().count, 0, "the pending transaction must not have applied anything yet");
     close_transaction_store_roots(&mut app);
 }

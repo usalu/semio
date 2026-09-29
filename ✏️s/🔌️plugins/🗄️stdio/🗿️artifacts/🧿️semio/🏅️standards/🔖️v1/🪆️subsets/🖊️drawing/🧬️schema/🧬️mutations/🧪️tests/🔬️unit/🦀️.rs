@@ -205,7 +205,7 @@ async fn replace_fill_and_change_stroke_round_trip() {
 
 #[semio_framework_async_macros::async_test]
 async fn semantic_kinds_cover_every_declared_variant() {
-    assert_eq!(SemioDrawingMutation::kinds().len(), 17);
+    assert_eq!(SemioDrawingMutation::kinds().len(), 18);
     let mutation = SemioDrawingMutation::DeleteLayer(delete_layer::DeleteLayer { id: "l0".into() });
     assert_eq!(mutation.semantics().kind, "delete-layer");
     assert_eq!(mutation.semantics().record, "DeletedLayer");

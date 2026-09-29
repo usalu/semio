@@ -1658,6 +1658,10 @@ impl ShardLoop {
     /// non-blocking drain share the exact same transport without losing whatever woke the wait.
     /// `primed: None` (what [`Self::pump`] passes) behaves identically to the pre-`ShardFrame`
     /// `pump()`.
+    ///
+    /// 🔀️ Same E0502 reason as the turn-execution loop above — computed before `get_mut`.
+    ///
+    /// 🐕️ P1c: same watchdog treatment as `Self::execute_turn_for` — see that call site's doc.
     pub async fn pump_primed(&mut self, primed: Option<Vec<u8>>) -> Result<usize, PluginHostError> {
         let has_deferred = !self.pending_interactive.is_empty()
             || !self.pending_background.is_empty()
@@ -1787,7 +1791,6 @@ impl ShardLoop {
                 self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message }).await?;
                 return Ok(1);
             }
-            // 🔀️ Same E0502 reason as the turn-execution loop above — computed before `get_mut`.
             let job_budget = job_budget_from_grant(self.granted_budget(actor_id));
             let actor_lane = self.actor_lane(actor_id);
             let watchdog_stage = interactive_stage_for(actor_lane);
@@ -1797,7 +1800,6 @@ impl ShardLoop {
                 self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: actor {actor_id} is not registered on this shard") }).await?;
                 return Ok(1);
             };
-            // 🐕️ P1c: same watchdog treatment as `Self::execute_turn_for` — see that call site's doc.
             let job_outcome = {
                 let _watchdog = Watchdog::start("plugin-host.shard.step_job", OperationId(actor_id), Generation(job), watchdog_stage);
                 self.runtime.step_job(instance, job, job_budget.await).await
@@ -1883,32 +1885,62 @@ impl ShardLoop {
     /// 🚦 One actor's turn: takes its collected `events` out of `events_by_actor`, runs
     /// [`super::GuestRuntime::execute_turn`], admits `SpawnJob`/`CancelJob` effects, and sends the
     /// resulting [`ShardOutcome`]. A failed guest cancellation retires the actor before reuse.
+    ///
+    /// 🔀️ Computed BEFORE `get_mut` below — `self.granted_budget(actor_id)`/`self.actor_lane(..)`
+    /// need `&self` (the whole struct), which conflicts with the `&mut self.instances` borrow
+    /// `instance` holds for the rest of this call (E0502).
+    ///
+    /// 👶️ host-dedyn: `GuestRuntime::execute_turn` is plain AFIT now (double-future collapsed)
+    /// — `.await`ed directly. `ShardLoop` is driven by a `WorkerPool` job now (P1c) rather than a
+    /// dedicated OS thread — that job's own `block_on` (`🧵️executor/🦀️.rs`'s `ShardExecutor::run`) is
+    /// the executor boundary; every impl `ShardLoop` is ever handed resolves on its first poll
+    /// (see `GuestRuntime`'s own doc comment), so this never actually parks.
+    ///
+    /// 🐕️ P1c: `Watchdog` wraps ONLY the guest call itself (not the effect-admission bookkeeping
+    /// below) — `semio_framework_trace::INTERACTIVE_STEP_CEILING_US` is 8ms; every lane's own
+    /// `lane_defaults::budget_for` grants MORE than that to UserVisible (16ms)/Background
+    /// (50ms)/Maintenance (200ms) turns BY DESIGN (the epoch-interruption ceiling, not a soft
+    /// target), so those lanes are EXPECTED to record a violation on a turn that spends its full
+    /// grant — see `📓️p1c-actor-shards.md`'s "turn paths exceeding 8ms" section. This packet only
+    /// wires the recording; making a single guest call internally resumable within 8ms slices is
+    /// Phase 2's job-protocol work, not this one's.
+    ///
+    /// 🔀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (J1, placement routing added K1): the
+    /// generic `Effect::SpawnJob`/`Effect::CancelJob` admission this packet closes — see
+    /// `running_jobs`'s own doc comment. `placement` (inline/isolated/exclusive) is
+    /// captured into `job_placement` and `Exclusive` is routed to the FRONT of
+    /// `to_step`'s per-pump order (below) — every placement still runs on the SAME
+    /// instance that spawned it (routing to a DIFFERENT pooled/exclusive INSTANCE needs
+    /// the actor pool `Kernel::activate`/`ShardTable` builds, `design-runtime.md` §1,
+    /// `🎭️actor` territory a single `ShardLoop` cannot reach on its own — documented gap,
+    /// not a silently faked one, see the K1 report's lease-request).
+    ///
+    /// 🛑️ terra-shard-lane piece 2: a background/maintenance turn that ran past its
+    /// epoch-armed `budget.wall_ms` (`turn_budget_from_grant`'s `deadline_ms`, armed in
+    /// `WasmtimeRuntime::execute_turn`/`step_job` via `EpochDeadlines::arm`, which advances
+    /// the epoch when that deadline arrives) must be RE-GRANTED next tick, not treated as a failure — an
+    /// epoch interrupt lands at a wasm-bytecode safe point, so the wasmtime `Store` inside
+    /// `self.instances[&actor_id]` stays perfectly usable and nothing here unregisters it or
+    /// clears its state. Sending `ShardOutcome::Fault` for this (the OLD behavior, still
+    /// correct for every OTHER `TurnFault` variant below) would have the kernel's
+    /// failure-escalation path quarantine an actor purely for being preempted by the exact
+    /// per-turn wall budget this ticket's own DRR scheduler assigned it — see
+    /// `📓️terra-shard-lane-report.md`.
+    ///
+    /// 👥️ `presence: Vec::new()` — a deadline-exceeded turn never finished, so there is
+    /// no guest-computed presence (or effects/ui_patches) to carry, unlike the two
+    /// wire-shape-mismatch sites this packet's report flags (`🦀️.rs`'s
+    /// `execute_turn`, `⏳️runtime/🦀️.rs`'s `convert_poll_success`): nothing was dropped
+    /// here, there was simply nothing produced.
     async fn execute_turn_for(&mut self, actor_id: u64, event: &Event, granted: semio_framework_actor::Budget, actor_lane: semio_framework_actor::Lane) -> Result<bool, PluginHostError> {
         let in_flight = self.instances.get(&actor_id).is_some_and(GuestInstance::turn_in_flight);
         let events = turn_events(event, in_flight);
-        // 🔀️ Computed BEFORE `get_mut` below — `self.granted_budget(actor_id)`/`self.actor_lane(..)`
-        // need `&self` (the whole struct), which conflicts with the `&mut self.instances` borrow
-        // `instance` holds for the rest of this call (E0502).
         let turn_budget = turn_budget_from_grant(granted);
         let watchdog_stage = interactive_stage_for(actor_lane);
         let Some(instance) = self.instances.get_mut(&actor_id) else {
             self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: actor {actor_id} is not registered on this shard") }).await?;
             return Ok(false);
         };
-        // 👶️ host-dedyn: `GuestRuntime::execute_turn` is plain AFIT now (double-future collapsed)
-        // — `.await`ed directly. `ShardLoop` is driven by a `WorkerPool` job now (P1c) rather than a
-        // dedicated OS thread — that job's own `block_on` (`🧵️executor/🦀️.rs`'s `ShardExecutor::run`) is
-        // the executor boundary; every impl `ShardLoop` is ever handed resolves on its first poll
-        // (see `GuestRuntime`'s own doc comment), so this never actually parks.
-        //
-        // 🐕️ P1c: `Watchdog` wraps ONLY the guest call itself (not the effect-admission bookkeeping
-        // below) — `semio_framework_trace::INTERACTIVE_STEP_CEILING_US` is 8ms; every lane's own
-        // `lane_defaults::budget_for` grants MORE than that to UserVisible (16ms)/Background
-        // (50ms)/Maintenance (200ms) turns BY DESIGN (the epoch-interruption ceiling, not a soft
-        // target), so those lanes are EXPECTED to record a violation on a turn that spends its full
-        // grant — see `📓️p1c-actor-shards.md`'s "turn paths exceeding 8ms" section. This packet only
-        // wires the recording; making a single guest call internally resumable within 8ms slices is
-        // Phase 2's job-protocol work, not this one's.
         let turn_outcome = {
             let _watchdog = Watchdog::start("plugin-host.shard.execute_turn", OperationId(actor_id), Generation(0), watchdog_stage);
             self.runtime.execute_turn(instance, events, turn_budget.await).await
@@ -1918,15 +1950,6 @@ impl ShardLoop {
                 let base_revision = result.ui_patches.iter().map(|patch| patch.revision.0).max().unwrap_or_default();
                 let bridged = to_actor_turn_result_in_place(&mut result, actor_id, 0, 0).await;
                 let mut admitted_jobs = Vec::new();
-                // 🔀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (J1, placement routing added K1): the
-                // generic `Effect::SpawnJob`/`Effect::CancelJob` admission this packet closes — see
-                // `running_jobs`'s own doc comment. `placement` (inline/isolated/exclusive) is
-                // captured into `job_placement` and `Exclusive` is routed to the FRONT of
-                // `to_step`'s per-pump order (below) — every placement still runs on the SAME
-                // instance that spawned it (routing to a DIFFERENT pooled/exclusive INSTANCE needs
-                // the actor pool `Kernel::activate`/`ShardTable` builds, `design-runtime.md` §1,
-                // `🎭️actor` territory a single `ShardLoop` cannot reach on its own — documented gap,
-                // not a silently faked one, see the K1 report's lease-request).
                 for effect in std::mem::take(&mut result.effects) {
                     match effect {
                         Effect::SpawnJob { job, kind, input, placement } => {
@@ -1994,24 +2017,8 @@ impl ShardLoop {
                     Err(fault) => ShardOutcome::Fault { actor: actor_id, message: fault.message },
                 }
             }
-            // 🛑️ terra-shard-lane piece 2: a background/maintenance turn that ran past its
-            // epoch-armed `budget.wall_ms` (`turn_budget_from_grant`'s `deadline_ms`, armed in
-            // `WasmtimeRuntime::execute_turn`/`step_job` via `EpochDeadlines::arm`, which advances
-            // the epoch when that deadline arrives) must be RE-GRANTED next tick, not treated as a failure — an
-            // epoch interrupt lands at a wasm-bytecode safe point, so the wasmtime `Store` inside
-            // `self.instances[&actor_id]` stays perfectly usable and nothing here unregisters it or
-            // clears its state. Sending `ShardOutcome::Fault` for this (the OLD behavior, still
-            // correct for every OTHER `TurnFault` variant below) would have the kernel's
-            // failure-escalation path quarantine an actor purely for being preempted by the exact
-            // per-turn wall budget this ticket's own DRR scheduler assigned it — see
-            // `📓️terra-shard-lane-report.md`.
             Err(TurnFault::DeadlineExceeded | TurnFault::FuelExhausted) if instance.turn_in_flight() => ShardOutcome::Preempted { actor: actor_id },
             Err(TurnFault::DeadlineExceeded) => {
-                // 👥️ `presence: Vec::new()` — a deadline-exceeded turn never finished, so there is
-                // no guest-computed presence (or effects/ui_patches) to carry, unlike the two
-                // wire-shape-mismatch sites this packet's report flags (`🦀️.rs`'s
-                // `execute_turn`, `⏳️runtime/🦀️.rs`'s `convert_poll_success`): nothing was dropped
-                // here, there was simply nothing produced.
                 let result = TurnResult {
                     ui_patches: semio_framework::kernel::UiTurnPatches::default(),
                     effects: Vec::new(),
@@ -2171,15 +2178,16 @@ impl ShardLoop {
     /// (not yet built, `🎠️kernel` is out of this packet's `path_scope`); JSON is what every OTHER
     /// wire boundary in this crate already uses (`IoRouter`/`EffectEventMarshal`), so this is a
     /// documented, consistent placeholder, not an invented one-off.
+    ///
+    /// 🚦 terra-shard-lane piece 1: records the LAST-seen lane for `envelope.to`, covering both
+    /// standalone `ShardFrame::Envelope` frames and every envelope bundled inside a
+    /// `ShardFrame::Grant` (`Self::consume_frame`'s `Grant` arm calls this per envelope) — see
+    /// `Self::actor_lane`'s own doc for why this, not a `ShardFrame::Grant`-level field, is where
+    /// the lane classification comes from.
     async fn dispatch_envelope(&mut self, envelope: Envelope, owner_bytes: usize) -> Result<(), PluginHostError> {
         if !self.actor_generation_is_current(envelope.to) {
             return Ok(());
         }
-        // 🚦 terra-shard-lane piece 1: records the LAST-seen lane for `envelope.to`, covering both
-        // standalone `ShardFrame::Envelope` frames and every envelope bundled inside a
-        // `ShardFrame::Grant` (`Self::consume_frame`'s `Grant` arm calls this per envelope) — see
-        // `Self::actor_lane`'s own doc for why this, not a `ShardFrame::Grant`-level field, is where
-        // the lane classification comes from.
         let actor = envelope.to.0;
         let lane = envelope.lane;
         self.actor_lanes.insert(actor, lane);

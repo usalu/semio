@@ -62,7 +62,7 @@ export const Writer: Story = { args: { plugin: "writer" } satisfies OsBootHostPr
 // #endregion 🔖️PluginMatrix
 
 // #region 🔖️CoverageAssertion
-/** @emoji 🔤️ `pluginId` (kebab-case, e.g. `"playbook-module-procedural"`) → the PascalCase export name used above. */
+/** 🔤️ `pluginId` (kebab-case, e.g. `"playbook-module-procedural"`) → the PascalCase export name used above. */
 function toPascalCase(pluginId: string): string {
   return pluginId
     .split("-")
@@ -106,7 +106,7 @@ const EXPORTED_STORIES: Record<string, Story> = {
   Writer,
 };
 
-/** @emoji 🛡️ Throws at module-eval time (surfaces immediately in Storybook's preview) if a registry
+/** 🛡️ Throws at module-eval time (surfaces immediately in Storybook's preview) if a registry
  * program is missing its literal export above, or an export's `args.plugin` drifted from its name —
  * catches registry/story-list drift without needing a codemod to regenerate the literal list. */
 function assertPluginMatrixCoverage(): void {

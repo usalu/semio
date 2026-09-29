@@ -131,5 +131,4 @@ export function testSemioKitDocumentContract(): void {
   assert.equal(mutationVariants.size, 15, "every typed mutation variant");
   assert(!mutationSchema({ Unknown: {} }), "unknown mutation variant schema oracle");
   assert.throws(() => parseMutation({ Unknown: {} }), "unknown mutation variant parser");
-  console.log("[DEBUG] Stdio Kit exact contracts: " + fixtures.snapshotCases.length + " snapshot vectors, " + fixtures.diffCases.length + " diff vectors, " + snapshots + " committed snapshots, " + diffs + " committed diffs, " + mutations + " typed mutations");
 }

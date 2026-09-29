@@ -58,9 +58,9 @@ pub fn window_measures(config: &WriterMainWindowConfig, labels: &WriterPlayLabel
 pub fn render(document: &WriterSnapshot, config: &WriterMainWindowConfig, transient: &WriterMainWindowTransient) -> UiAssemblyResult<BuiltNode> {
     let is_jack = document.language_id == "jack";
     let text = writer_text(document);
-    let selection = transient.editor_selection.clone().unwrap_or(crate::WriterEditorSelection { start: 0, end: 0 });
+    let selection = transient.editor_selection.clone().unwrap_or(crate::WriterEditorSelection { start: 0, end: 0, splice: 0 });
     let cursor = selection.end;
-    let selection_json = Some(json!({ "start": selection.start, "end": selection.end }).to_string());
+    let selection_json = Some(json!({ "start": selection.start, "end": selection.end, "splice": selection.splice }).to_string());
 
     let grammar_tokens = tokenize_language(&text, &document.language_id);
     let lsp_tokens = language_tokens_json(document);
@@ -119,13 +119,23 @@ pub fn render(document: &WriterSnapshot, config: &WriterMainWindowConfig, transi
             placeholders_json,
             extra_carets_json,
             selectable_spans_json,
-            settings_json: Some(serde_json::to_string(&config.editor_settings).unwrap_or_else(|_| "{}".into())),
+            settings_json: Some(writer_settings_json(config)),
             camera_json: Some(json!({ "x": config.camera.x, "y": config.camera.y, "zoom": config.camera.zoom }).to_string()),
             hover_json,
             newline_gates_json,
             rename_json,
         },
     )
+}
+
+/// ⌨️ The editor settings plus the typing contract (`TextEditorTypingV1`, `semio.ui.scene.text-splice.v1`): this window takes
+/// one `textSplice` per typed run and echoes the applied `seq` in `selectionJson.splice`.
+fn writer_settings_json(config: &WriterMainWindowConfig) -> String {
+    let mut settings = serde_json::to_value(&config.editor_settings).unwrap_or_else(|_| json!({}));
+    if let Value::Object(map) = &mut settings {
+        map.insert("typing".into(), json!({ "mode": "splice" }));
+    }
+    settings.to_string()
 }
 //#endregion 🔖️Render
 

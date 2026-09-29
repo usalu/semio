@@ -5,7 +5,7 @@ import { pathToFileURL } from "node:url";
 import { resolvePlaygroundDistDir } from "../../../../../💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/📍️output/🟦️.ts";
 import { generatePlaygroundRegistry } from "../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🔎️discovery/🟦️.ts";
 
-/** @emoji 🌐️ Language-agnostic contract for plugin CDN dist directory defaults. */
+/** 🌐️ Language-agnostic contract for plugin CDN dist directory defaults. */
 export async function testPlaygroundSiteDistDefaults(): Promise<void> {
   const fixture = [
     { pluginId: "energy", variant: "energy", distDir: undefined },
@@ -29,7 +29,7 @@ export async function testPlaygroundSiteDistDefaults(): Promise<void> {
   assert.equal(withoutDist.length, 0, `every playground needs a plugin distDir: ${withoutDist.map((row) => row.variant).join(", ")}`);
 }
 
-/** @emoji 🏗️ Every plugin playground crate gets Nx `build` / `build-<variant>-site` targets wired to framework-os-dev release builds. */
+/** 🏗️ Every plugin playground crate gets Nx `build` / `build-<variant>-site` targets wired to framework-os-dev release builds. */
 export async function testPluginSiteNxTargets(workspace: string): Promise<void> {
   const registry = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry";
   const paths = JSON.parse(readFileSync(join(workspace, registry, "🤖️generated/🔌️plugins.json"), "utf8")).map((row: { cratePath: string }) => `${row.cratePath}/Cargo.toml`);
@@ -51,7 +51,7 @@ export async function testPluginSiteNxTargets(workspace: string): Promise<void> 
   assert.equal(new Set(releaseNames).size, catalog.length, "each playground variant must map to one CDN release Nx target on framework-os-dev");
 }
 
-/** @emoji 🌐️ Asserts a built plugin tree is CDN-deployable (GitHub Pages / static host conventions). */
+/** 🌐️ Asserts a built plugin tree is CDN-deployable (GitHub Pages / static host conventions). */
 export function assertCdnDeploySurface(distRoot: string): void {
   for (const file of ["index.html", "404.html", "favicon.ico"]) {
     assert.ok(existsSync(join(distRoot, file)), `${distRoot}: missing ${file}`);

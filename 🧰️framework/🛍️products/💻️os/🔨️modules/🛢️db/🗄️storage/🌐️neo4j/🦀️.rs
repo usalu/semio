@@ -74,20 +74,20 @@ async fn write_driver_bytes(reservation: DbIoDriverReservation, bytes: BoltBytes
     db_io_write_observed_bytes_range(reservation, bytes.value.to_vec(), offset, length, output)?.await
 }
 
-/// @emoji 🔢️ Neo4j's `Integer` bolt type is a signed 64-bit value; the family's identity/sequence
+/// 🔢️ Neo4j's `Integer` bolt type is a signed 64-bit value; the family's identity/sequence
 /// numbers are `u64`. Converts with an explicit range check rather than a silent wrapping `as i64`.
 fn u64_to_i64(value: u64, what: &'static str) -> Result<i64, DbError> {
     i64::try_from(value).map_err(|_| DbError::InvalidArgument(format!("{what} exceeds neo4j's signed 64-bit integer range: {value}")))
 }
 
-/// @emoji 🔢️ Inverse of `u64_to_i64` for values read back from a Neo4j `Integer` property. A
+/// 🔢️ Inverse of `u64_to_i64` for values read back from a Neo4j `Integer` property. A
 /// negative value here means the property was corrupted (hand-edited or written by a bug) since
 /// every writer path exclusively writes non-negative values.
 fn i64_to_u64(value: i64, what: &'static str) -> Result<u64, DbError> {
     u64::try_from(value).map_err(|_| DbError::Corrupt(format!("{what} decoded as a negative neo4j integer: {value}")))
 }
 
-/// @emoji ✂️ Slices `bytes[range.offset..range.offset+range.len]`, bounds-checked against
+/// ✂️ Slices `bytes[range.offset..range.offset+range.len]`, bounds-checked against
 /// `bytes`'s actual length — the shared implementation `WalStorage::read` validates against,
 /// mirroring `MemoryStorage`/`FsStorage`'s identical bounds-checking law.
 fn slice_range(bytes: &[u8], range: ByteRange) -> Result<&[u8], DbError> {
@@ -124,10 +124,10 @@ fn apply_truncate(current: &[u8], sealed: bool, new_len: u64) -> Result<Vec<u8>,
 //#endregion 🔖️WalLaws
 
 //#region 🔖️LeaseLaws
-/// @emoji ⏳️ One lease row as read back from Neo4j: `(fence, expires_at_ms, holder)`.
+/// ⏳️ One lease row as read back from Neo4j: `(fence, expires_at_ms, holder)`.
 type LeaseRow = (EpochFence, u64, DbIoText);
 
-/// @emoji 🤝️ The pure decision behind `LeaseStorage::acquire` — see `MemoryStorage::acquire`'s
+/// 🤝️ The pure decision behind `LeaseStorage::acquire` — see `MemoryStorage::acquire`'s
 /// identical law in `db_storage`, factored out here for unit testing without a live connection.
 fn decide_acquire_fence(resource: &str, existing: Option<LeaseRow>, holder: &str, now_ms: u64) -> Result<EpochFence, DbError> {
     match existing {
@@ -142,7 +142,7 @@ fn decide_acquire_fence(resource: &str, existing: Option<LeaseRow>, holder: &str
     }
 }
 
-/// @emoji ♻️ The pure decision behind `LeaseStorage::renew`.
+/// ♻️ The pure decision behind `LeaseStorage::renew`.
 fn validate_renew(resource: &str, existing: Option<LeaseRow>, holder: &str, fence: EpochFence, now_ms: u64) -> Result<(), DbError> {
     let (current_fence, expires_at_ms, current_holder) = existing.ok_or_else(|| DbError::NotFound(format!("lease for {resource} not found")))?;
     if now_ms >= expires_at_ms {
@@ -154,7 +154,7 @@ fn validate_renew(resource: &str, existing: Option<LeaseRow>, holder: &str, fenc
     fence.check(current_fence)
 }
 
-/// @emoji 🕊️ The pure decision behind `LeaseStorage::release`.
+/// 🕊️ The pure decision behind `LeaseStorage::release`.
 fn validate_release(resource: &str, existing: Option<LeaseRow>, holder: &str, fence: EpochFence) -> Result<(), DbError> {
     let (current_fence, _, current_holder) = existing.ok_or_else(|| DbError::NotFound(format!("lease for {resource} not found")))?;
     if current_holder.as_str() != holder {
@@ -165,7 +165,7 @@ fn validate_release(resource: &str, existing: Option<LeaseRow>, holder: &str, fe
 //#endregion 🔖️LeaseLaws
 
 //#region 🔖️ErrorMapping
-/// @emoji 🚨️ Maps a `neo4rs::Error` into the family's single `DbError` — never lets a foreign
+/// 🚨️ Maps a `neo4rs::Error` into the family's single `DbError` — never lets a foreign
 /// error type leak through a public signature, per the repo's binding convention.
 #[allow(clippy::needless_pass_by_value)] // used as a `map_err` callback, which passes the error by value
                                          // 🚫️async: E4 fn-pointer slot
@@ -181,7 +181,7 @@ fn map_neo4rs_error(err: neo4rs::Error) -> DbError {
     }
 }
 
-/// @emoji 🏷️ Classifies a server-reported `Neo4jError` by its `Neo4jErrorKind` (the driver's own
+/// 🏷️ Classifies a server-reported `Neo4jError` by its `Neo4jErrorKind` (the driver's own
 /// status-code classification) into the family's `DbError`.
 // 🚫️async: E1 pure accessor called from `map_neo4rs_error`, itself an E4 fn-pointer slot — see R9
 fn map_neo4j_error(err: &neo4rs::Neo4jError) -> DbError {
@@ -194,7 +194,7 @@ fn map_neo4j_error(err: &neo4rs::Neo4jError) -> DbError {
     }
 }
 
-/// @emoji 🚨️ Maps a row-decoding error (a property missing or of the wrong bolt type) into
+/// 🚨️ Maps a row-decoding error (a property missing or of the wrong bolt type) into
 /// `DbError::Corrupt` — a decode failure always means the stored data doesn't match this crate's
 /// own schema, never a caller mistake.
 #[allow(clippy::needless_pass_by_value)] // used as a `map_err` callback, which passes the error by value
@@ -205,7 +205,7 @@ fn map_de_error(err: neo4rs::DeError) -> DbError {
 //#endregion 🔖️ErrorMapping
 
 //#region 🔖️Cypher
-/// @emoji 🧱️ Uniqueness constraints (single-property, Community-Edition-compatible) and
+/// 🧱️ Uniqueness constraints (single-property, Community-Edition-compatible) and
 /// composite lookup indexes bootstrapped once at `Neo4jStorage::connect`. Composite *uniqueness*
 /// constraints need Enterprise Edition; multi-key node identity (`WalSegment`/`SnapshotGeneration`/
 /// `IndexRun`) is instead guaranteed by always addressing those nodes via `MERGE` on their full
@@ -311,7 +311,7 @@ const CYPHER_CATALOG_READ: &str = "
     MATCH (c:CatalogRoot {id: 'root'})
     RETURN c.epoch AS epoch, c.bytes AS bytes, c.len AS len";
 
-/// @emoji ✅️ Single-statement compare-and-swap: `OPTIONAL MATCH` never creates a node, so a failed
+/// ✅️ Single-statement compare-and-swap: `OPTIONAL MATCH` never creates a node, so a failed
 /// comparison (the `WHERE` filters the only row away) leaves the graph untouched — `CatalogRoot`
 /// only ever comes into existence via a SUCCEEDING `cas_root`, matching `read_root`'s "`None` until
 /// `cas_root` has succeeded once" contract exactly. `coalesce(c.epoch, 0)` treats a not-yet-created
@@ -345,7 +345,7 @@ const CYPHER_INDEX_DELETE: &str = "
 //#endregion 🔖️IndexCypher
 
 //#region 🔖️WalWriterCypher
-/// @emoji 🔐️ Claims the document's writer lease. The first `SET` write-locks the lease node before
+/// 🔐️ Claims the document's writer lease. The first `SET` write-locks the lease node before
 /// anything is read, so two contenders serialize on it and the second sees the first's commit; only
 /// an absent or expired lease is claimed, and every claim advances the fencing token.
 const CYPHER_WAL_WRITER_ACQUIRE: &str = "
@@ -357,7 +357,7 @@ const CYPHER_WAL_WRITER_ACQUIRE: &str = "
     SET w.holder = $holder, w.token = w.token + 1, w.expiresAtMs = timestamp() + $ttlMs
     RETURN w.token AS token";
 
-/// @emoji 💓 Extends a still-owned lease; no row means the lease was lost.
+/// 💓 Extends a still-owned lease; no row means the lease was lost.
 const CYPHER_WAL_WRITER_RENEW: &str = "
     MATCH (w:WalWriter {document: $document})
     SET w.renewedAtMs = timestamp()
@@ -366,7 +366,7 @@ const CYPHER_WAL_WRITER_RENEW: &str = "
     SET w.expiresAtMs = timestamp() + $ttlMs
     RETURN w.token AS token";
 
-/// @emoji 🛡️ The first statement of every WAL mutation transaction: write-locks the lease node and
+/// 🛡️ The first statement of every WAL mutation transaction: write-locks the lease node and
 /// proves ownership (renewing it) before any segment is touched.
 const CYPHER_WAL_WRITER_FENCE: &str = "
     MATCH (w:WalWriter {document: $document})
@@ -375,7 +375,7 @@ const CYPHER_WAL_WRITER_FENCE: &str = "
     SET w.expiresAtMs = CASE WHEN owned THEN timestamp() + $ttlMs ELSE w.expiresAtMs END
     RETURN owned, w.token AS token";
 
-/// @emoji 🕊️ Frees an owned lease; the node and its token stay so the next claim advances it.
+/// 🕊️ Frees an owned lease; the node and its token stay so the next claim advances it.
 const CYPHER_WAL_WRITER_RELEASE: &str = "
     MATCH (w:WalWriter {document: $document})
     SET w.releasedAtMs = timestamp()
@@ -400,13 +400,13 @@ const CYPHER_LEASE_DELETE: &str = "
 //#endregion 🔖️Cypher
 
 //#region 🔖️WriterFence
-/// @emoji ⏳️ Lease lifetime on the server clock — contract `neo4j.leaseTtlMs`.
+/// ⏳️ Lease lifetime on the server clock — contract `neo4j.leaseTtlMs`.
 const WAL_WRITER_LEASE_TTL_MS: i64 = 15_000;
 
-/// @emoji 💓 Renewal period of a held lease — contract `neo4j.renewEveryMs`.
+/// 💓 Renewal period of a held lease — contract `neo4j.renewEveryMs`.
 const WAL_WRITER_RENEW_EVERY_MS: u64 = 5_000;
 
-/// @emoji 🎫️ One claimed lease: the holder identity and the fencing token its claim produced.
+/// 🎫️ One claimed lease: the holder identity and the fencing token its claim produced.
 #[derive(Clone)]
 struct Neo4jWalWriterLease {
     holder: String,
@@ -451,13 +451,13 @@ impl Neo4jWalWriterLease {
     }
 }
 
-/// @emoji 🔔 Completion witness of a detached lease release; wakes the release controller and a parked backend close.
+/// 🔔 Completion witness of a detached lease release; wakes the release controller and a parked backend close.
 struct Neo4jWalWriterUnlock {
     done: std::sync::atomic::AtomicBool,
     waker: std::sync::Mutex<Option<std::task::Waker>>,
 }
 
-/// @emoji 🔐️ One document's cross-process writer fence: a renewed lease, then an in-flight release, then terminal.
+/// 🔐️ One document's cross-process writer fence: a renewed lease, then an in-flight release, then terminal.
 enum Neo4jWalWriterGuard {
     Held { lease: Neo4jWalWriterLease, graph: Graph, document: String, backend: DbIoBackendControl, renewal: DbIoDriverPeriodic },
     Unlocking(Arc<Neo4jWalWriterUnlock>),
@@ -510,7 +510,7 @@ impl WalWriterGuard for Neo4jWalWriterGuard {
 //#endregion 🔖️WriterFence
 
 //#region 🔖️Neo4jStorage
-/// @emoji 🕸️ `DbStorage` over a live Neo4j server — see module doc for the schema shape, the
+/// 🕸️ `DbStorage` over a live Neo4j server — see module doc for the schema shape, the
 /// async-first `DbFuture` boundary, and the lease-node WAL writer fence.
 struct Neo4jDbIoExecutor {
     graph: Option<Graph>,
@@ -553,13 +553,13 @@ impl Neo4jDbIoExecutor {
         Ok(())
     }
 
-    /// @emoji 1⃣ Runs `q` (autocommit) and returns its first row, if any.
+    /// 1⃣ Runs `q` (autocommit) and returns its first row, if any.
     async fn fetch_one(&self, q: Query) -> Result<Option<neo4rs::Row>, DbError> {
         let mut stream = self.graph()?.execute(q).await.map_err(map_neo4rs_error)?;
         stream.next().await.map_err(map_neo4rs_error)
     }
 
-    /// @emoji ▶️ Runs `q` (autocommit), discarding any result rows.
+    /// ▶️ Runs `q` (autocommit), discarding any result rows.
     async fn run(&self, q: Query) -> Result<(), DbError> {
         self.graph()?.run(q).await.map_err(map_neo4rs_error)
     }
@@ -568,7 +568,7 @@ impl Neo4jDbIoExecutor {
 
 //#region 🔖️WalStorage
 impl Neo4jDbIoExecutor {
-    /// @emoji 🛡️ Proves, inside the mutation's own transaction, that `lease` still owns the document.
+    /// 🛡️ Proves, inside the mutation's own transaction, that `lease` still owns the document.
     async fn prove_lease(txn: &mut Txn, lease: &Neo4jWalWriterLease, document: &str, generation: u64) -> Result<(), DbError> {
         let mut stream = txn.execute(lease.query(CYPHER_WAL_WRITER_FENCE, document)).await.map_err(map_neo4rs_error)?;
         let row = stream.next(txn.handle()).await.map_err(map_neo4rs_error)?;
@@ -715,7 +715,7 @@ impl Neo4jDbIoExecutor {
         txn.run(query(CYPHER_WAL_DELETE_SEGMENT).param("document", document.to_string()).param("index", idx)).await.map_err(map_neo4rs_error)
     }
 
-    /// @emoji 🔐️ Runs one pinned WAL mutation (sync included, as the ownership barrier) in a
+    /// 🔐️ Runs one pinned WAL mutation (sync included, as the ownership barrier) in a
     /// transaction whose first statement proves the permit's lease; any failure rolls it back.
     async fn fenced_wal_mutation(&mut self, operation: u64, task: &mut DbIoTask) -> Result<DbIoResult, DbError> {
         let (key, backend, document) = task.writer_stamp().map(|(key, backend, document)| (key, backend, document.clone())).ok_or_else(|| DbError::Internal("Neo4j WAL mutation lost its writer stamp".to_string()))?;
@@ -940,7 +940,7 @@ impl IndexStorage for Neo4jDbIoExecutor {
 
 //#region 🔖️LeaseStorage
 impl Neo4jDbIoExecutor {
-    /// @emoji 📖️ Reads `resource`'s current lease row (regardless of expiry — callers decide what
+    /// 📖️ Reads `resource`'s current lease row (regardless of expiry — callers decide what
     /// an expired row means) within `txn`.
     async fn lease_row(&self, txn: &mut Txn, resource: &str) -> Result<Option<LeaseRow>, DbError> {
         let mut reservation = DbIoDriverReservation::try_reserve(self.active_operation, DbIoText::maximum_capacity())?;
@@ -1233,7 +1233,7 @@ impl DbIoTaskExecutor for Neo4jDbIoExecutor {
 }
 //#endregion 🔖️TypedExecutor
 
-/// @emoji 🕸️ Typed Neo4j facade; only the registered executor owns the external graph driver.
+/// 🕸️ Typed Neo4j facade; only the registered executor owns the external graph driver.
 pub struct Neo4jStorage {
     control: DbIoBackendControl,
     worker_pool: Arc<WorkerPool>,
@@ -1257,7 +1257,7 @@ impl Neo4jStorage {
         crate::db_storage::open_db_io_backend_admitted(&worker_pool, || Self::connect_owned_once(worker_pool.clone(), uri.clone(), config.clone())).await
     }
 
-    /// @emoji 🎯️ One Neo4j backend open attempt, refused at once when the backend capacity is taken.
+    /// 🎯️ One Neo4j backend open attempt, refused at once when the backend capacity is taken.
     async fn connect_owned_once(worker_pool: Arc<WorkerPool>, uri: DbIoText, config: neo4rs::Config) -> Result<Self, DbStorageOpenRejected> {
         let rollback = DbIoBackendRollbackReservation::try_reserve()?;
         let pool_use = worker_pool.acquire_use().map_err(|error| DbError::Unavailable(format!("Neo4j DB I/O backend WorkerPool use rejected: {error:?}")))?;
@@ -1477,7 +1477,7 @@ impl LeaseStorage for Neo4jStorage {
 
 //#region 🔖️DbBackend
 impl Neo4jStorage {
-    /// @emoji 🎚️ What this backend actually supports. See module doc's "Durability" section: every
+    /// 🎚️ What this backend actually supports. See module doc's "Durability" section: every
     /// write is already committed server-side by the time it returns, so this backend can
     /// honestly claim the strongest single-node durability class without a separate `sync` step.
     pub async fn capabilities(&self) -> StorageCapabilities {

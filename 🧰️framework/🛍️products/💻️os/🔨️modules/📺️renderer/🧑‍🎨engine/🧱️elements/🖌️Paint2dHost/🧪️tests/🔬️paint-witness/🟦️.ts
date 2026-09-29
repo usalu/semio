@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🔬️ `Paint2dHost` paint witness laws: the `data-layers-json`/`data-assets-json` a raster surface
+/** 🔬️ `Paint2dHost` paint witness laws: the `data-layers-json`/`data-assets-json` a raster surface
  * publishes, pinned against the language-neutral fixture and cross-checked against `pngjs`. */
 // #endregion 🧲️Header
 

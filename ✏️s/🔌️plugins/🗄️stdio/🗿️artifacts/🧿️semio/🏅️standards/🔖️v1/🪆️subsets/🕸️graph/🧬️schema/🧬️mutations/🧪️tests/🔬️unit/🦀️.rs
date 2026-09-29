@@ -173,7 +173,7 @@ async fn create_delete_edge_round_trips() {
 
 #[semio_framework_async_macros::async_test]
 async fn semantic_kinds_cover_every_variant() {
-    assert_eq!(SemioGraphMutation::kinds().len(), 11);
+    assert_eq!(SemioGraphMutation::kinds().len(), 12);
     let mutation = SemioGraphMutation::DeleteNode(delete_node::DeleteNode { id: GraphNodeId::new("n1") });
     assert_eq!(mutation.semantics().kind, "delete-node");
     assert_eq!(mutation.semantics().record, "DeletedNode");

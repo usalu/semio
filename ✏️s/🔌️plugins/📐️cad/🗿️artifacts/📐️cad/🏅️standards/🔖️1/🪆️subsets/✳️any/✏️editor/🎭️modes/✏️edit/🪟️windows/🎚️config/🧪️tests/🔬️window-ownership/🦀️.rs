@@ -31,7 +31,6 @@ fn cad_document_contract_world_window_config_matches_neutral_fixture_and_codecs(
     assert_eq!(<CadWorldWindowConfig as store::ArtifactDsl>::parse_dsl(&text).expect("window config text"), next);
     let bytes = store::ArtifactPack::encode_pack(&next);
     assert_eq!(<CadWorldWindowConfig as store::ArtifactPack>::decode_pack(&bytes).expect("window config pack"), next);
-    eprintln!("[DEBUG] CAD world-window config matched neutral fixture, inverse, text, and binary laws");
 }
 
 #[test]
@@ -258,11 +257,10 @@ fn cad_document_contract_world_window_runtime_isolates_commands_and_restores_exa
                     Ok(())
                 }.await;
                 if let Err(error) = &outcome {
-                    eprintln!("[DEBUG] CAD exact-window runtime failure before close: {error}");
+                    eprintln!("CAD exact-window runtime failure before close: {error}");
                 }
                 artifact_app_laws::close_registered_fixture_app(&mut *app);
                 outcome.expect("CAD exact-window ownership runtime law");
-                eprintln!("[DEBUG] CAD runtime isolated camera, projection, sun, and utility state across two same-kind windows, restored the exact pack, and preserved document/app bytes");
             })
         })
         .expect("spawn CAD window ownership law")
@@ -301,7 +299,6 @@ fn cad_rendered_world_window_app_reaches_its_exact_terminal_close_witness() {
                 let tree = app.render(shape::BODY_KEY, None, &left).await.expect("CAD shape render");
                 let _json = artifact_app_laws::project_and_retire_fixture_tree(tree).expect("retire the rendered CAD tree");
                 artifact_app_laws::close_registered_fixture_app(&mut *app);
-                eprintln!("[DEBUG] a rendered CAD world window app closed to its exact terminal-empty witness");
             })
         })
         .expect("spawn CAD render close law")
@@ -341,7 +338,6 @@ fn cad_reloaded_window_config_app_reaches_its_exact_terminal_close_witness() {
                 assert_eq!(packs.len(), 2, "both declared world windows materialize a partition: {:?}", packs.iter().map(|pack| pack.window_id.clone()).collect::<Vec<_>>());
                 artifact_app_laws::close_registered_fixture_app(&mut *source);
                 drop(source);
-                eprintln!("[DEBUG] the CAD window config source app closed to its exact terminal-empty witness");
 
                 let expected: Vec<(String, String, Vec<u8>, Vec<u8>)> = packs.iter().map(|pack| (pack.window_id.clone(), pack.window_kind_id.clone(), pack.files.pack.clone(), pack.files.spr.clone())).collect();
                 let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await);
@@ -357,7 +353,6 @@ fn cad_reloaded_window_config_app_reaches_its_exact_terminal_close_witness() {
                     reopened.window_config_packs().await.expect("reopened CAD window config packs").into_iter().map(|pack| (pack.window_id, pack.window_kind_id, pack.files.pack, pack.files.spr)).collect();
                 artifact_app_laws::close_registered_fixture_app(&mut *reopened);
                 assert_eq!(reloaded, expected, "a reopened CAD window config partition must be byte-exact with the one it was printed from");
-                eprintln!("[DEBUG] a CAD app that reloaded its exact window config packs closed to its exact terminal-empty witness");
             })
         })
         .expect("spawn CAD window config reload close law")

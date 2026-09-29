@@ -83,3 +83,19 @@ fn a_pair_is_admitted_only_as_the_checkpoint_the_hub_authorized_for_the_open() {
         assert_eq!(decoded.admit(&scope, &expected).map_err(CanonicalCheckpointPairRefusalV1::code), case["refusal"].as_str().map_or(Ok(()), Err), "{}", case["id"]);
     }
 }
+
+#[test]
+fn a_pair_is_admitted_only_as_the_checkpoint_a_rebootstrap_control_names() {
+    let fixture = fixture();
+    for case in fixture["rebootstrapAdmissions"].as_array().expect("rebootstrap admissions") {
+        let pair = fixture["pairs"].as_array().unwrap().iter().find(|pair| pair["id"] == case["pair"]).expect("admission pair");
+        let decoded = decode_canonical_checkpoint_pair_v1(&hex_bytes(&pair["bodyHex"])).expect("fixture pair decodes");
+        let control = RebootstrapRequired {
+            scope: DocumentScope::new(case["control"]["scope"]["spaceId"].as_str().unwrap(), case["control"]["scope"]["documentId"].as_str().unwrap()),
+            checkpoint_id: hash(&case["control"]["checkpointId"]),
+            descriptor_digest_v1: hash(&case["control"]["descriptorDigestV1"]),
+            baseline_frontier: frontier(&case["control"]["baselineFrontier"]),
+        };
+        assert_eq!(decoded.admit_rebootstrap(&control).map_err(CanonicalCheckpointPairRefusalV1::code), case["refusal"].as_str().map_or(Ok(()), Err), "{}", case["id"]);
+    }
+}

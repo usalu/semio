@@ -102,7 +102,7 @@ class VerifyScript extends BundleScript {
     if (args.length) throw new Error("Tectonic verification accepts no arguments");
     const child = Bun.spawnSync([preparedTectonic(this.repoRoot), "--version"], { stdout: "pipe", stderr: "pipe", timeout: 10000 });
     if (child.exitCode !== 0 || child.stdout.toString().trim() !== `Tectonic ${manifest.version}`) throw new Error(`Prepared Tectonic version mismatch: ${child.stdout.toString()}${child.stderr.toString()}`);
-    console.log(`[DEBUG] Verified published Tectonic ${manifest.version} executable PASS`);
+    console.log(`Verified published Tectonic ${manifest.version} executable PASS`);
   }
 }
 

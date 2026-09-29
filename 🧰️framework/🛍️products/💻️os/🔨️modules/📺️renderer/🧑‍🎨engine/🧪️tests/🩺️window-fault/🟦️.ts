@@ -1,4 +1,4 @@
-import { exampleArtifactSources, reachableKindsFromUnknown, resolveDocumentOperatorKinds, scopeContributionsJson, type PluginManifest } from "@semio-tech/framework";
+import { scopeContributionsJson, type PluginManifest } from "@semio-tech/framework";
 /** 🩺 Window-fault classification conformance against the SAME language-neutral vector fixture the
  * Rust plugin runtime decodes (`🔌️plugin/🩺️runtime-fault-vectors.json`), with strict Ajv as the
  * independent oracle for the fixture's own shape. */
@@ -163,81 +163,37 @@ describe("scopeContributionsJson", () => {
     { pluginId: "procedural", manifest: manifest("flow.extension", { operators: [{ kind: "procedural.example" }] }) },
     { pluginId: "flow-extension-brep", manifest: manifest("flow.extension", { operators: [{ kind: "brep.solid.extrude" }, { kind: "brep.curve.polygon" }] }) },
     { pluginId: "flow-extension-bim", manifest: manifest("flow.extension", { operators: [{ kind: "bim.wall" }] }) },
-    { pluginId: "flow-extension-math", manifest: manifest("flow.extension", { operators: [{ kind: "math.vector" }] }) },
+    { pluginId: "gis", manifest: manifest("stdio.artifact-catalog.v1", { catalogJson: "x".repeat(64) }) },
   ];
-  it("keeps the receiver and only plugins whose operators the document graph can reach", () => {
-    const kinds = reachableKindsFromUnknown([{ widgets: [{ neuronKind: "brep.solid.extrude" }, { neuronKind: "math.vector" }] }]);
-    expect(kinds.sort()).toEqual(["brep.solid.extrude", "math.vector"]);
-    const scoped = JSON.parse(scopeContributionsJson(loaded, "procedural", kinds)) as { pluginId: string }[];
-    expect(scoped.map((entry) => entry.pluginId).sort()).toEqual(["flow-extension-brep", "flow-extension-math", "procedural"]);
-  });
-  
-  it("extracts neuronKind from an embedded fixture JSON string", () => {
-    const kinds = reachableKindsFromUnknown([{ data: "{\"widgets\":[{\"neuronKind\":\"brep.solid.extrude\"}]}" }]);
-    expect(kinds).toContain("brep.solid.extrude");
-  });
-
-  it("drops every foreign contribution when the graph names no operator kind", () => {
-    const scoped = JSON.parse(scopeContributionsJson(loaded, "procedural", [])) as { pluginId: string }[];
-    expect(scoped.map((entry) => entry.pluginId)).toEqual(["procedural"]);
-  });
-
-  it("treats a present empty graph as resolved and a missing graph as unresolved", () => {
-    expect(resolveDocumentOperatorKinds([{ fixture: { widgets: [] } }])).toEqual({ status: "resolved", kinds: [] });
-    expect(resolveDocumentOperatorKinds([{ surface: "lane-split" }])).toEqual({ status: "unresolved", reason: "no-operator-graph" });
-    const dsl = 'neuron id="extrude" neuron-kind=brep.solid.extrude';
-    const scoped = resolveDocumentOperatorKinds([dsl]);
-    expect(scoped.status).toBe("resolved");
-    if (scoped.status === "resolved") expect(scoped.kinds).toContain("brep.solid.extrude");
+  it("forwards every contribution of a consumed topic and none of an unconsumed one", () => {
+    const scoped = JSON.parse(scopeContributionsJson(loaded, "flow", ["flow.extension"])) as { pluginId: string }[];
+    expect(scoped.map((entry) => entry.pluginId)).toEqual(["procedural", "flow-extension-brep", "flow-extension-bim"]);
   });
 
   it("an empty loaded table serializes as [] and that payload is not installable", async () => {
-    const json = scopeContributionsJson([], "procedural", ["brep.solid.extrude"]);
+    const json = scopeContributionsJson([], "procedural", ["flow.extension"]);
     expect(json).toBe("[]");
     const installed: string[] = [];
     const publisher = createContributionsPublisher({
       registryGeneration: () => "fixture",
-      resolveScope: async () => ({ status: "resolved", kinds: ["brep.solid.extrude"] }),
       buildPack: () => json,
       install: async (_session, pack) => { installed.push(pack); },
     });
     expect(await publisher.publish({ pluginId: "procedural", instanceId: 1 }, undefined)).toEqual({ status: "empty" });
     expect(installed).toEqual([]);
-    expect(publisher.installedKey()).toBeNull();
+    expect(publisher.installedFor(1)).toBeNull();
   });
 });
 
 describe("contributions pack crossing", () => {
-  it("the live shell sends one pack-encoded setContributions, never 4 KiB string pages", () => {
+  it("the live shell sends one pack-encoded setContributions scoped by consumes alone, never 4 KiB string pages", () => {
     expect(shellSource).not.toContain("publicInvocationStringPages");
-    expect(shellSource).not.toContain("reachableKinds.length > 0 ? scopeContributionsJson");
-    expect(shellSource).toContain("resolveDocumentOperatorKinds");
-    expect(shellSource).toContain("scopeContributionsJson");
-    expect(shellSource).toContain("exampleArtifactSources");
-    expect(shellSource).toContain("fromExamples");
-    expect(shellSource).toContain("readAppDocumentPack");
+    expect(shellSource).not.toContain("resolveDocumentOperatorKinds");
+    expect(shellSource).not.toContain("exampleArtifactSources");
+    expect(shellSource).not.toContain("readDocumentOperatorScope");
+    expect(shellSource).toContain("scopeContributionsJson(loadedForScope, receiver === undefined ? session.pluginId : programPluginIdV1(receiver), environment.consumedTopics)");
     expect(shellSource).toContain('encodeAppCommandInvocation(pluginEntry.handle.pluginId, targetApp, "setContributions", args)');
     expect(shellSource).toContain("pluginEntry.handle.handleCommand(instanceId, wire, environment.targetViewState)");
     expect(shellSource).toContain("page: 0, pageCount: 1");
-  });
-
-  it("published example graphs recover operator kinds when ReadDocument is genesis", () => {
-    const sources = exampleArtifactSources(
-      [{ id: "box-shell-preview", dialect: { artifactKind: "s.procedural.generation3d", standard: "1", subset: "*" }, artifactJson: "neuron-kind=brep.prim3d.box neuron-kind=brep.solid.shell" }],
-      { artifactKind: "s.procedural.generation3d", standard: "1", subset: "*" },
-    );
-    const scope = resolveDocumentOperatorKinds(sources);
-    expect(scope).toEqual({ status: "resolved", kinds: ["brep.prim3d.box", "brep.solid.shell"] });
-    const scoped = JSON.parse(scopeContributionsJson(
-      [
-        { pluginId: "procedural", manifest: { topicContributions: [{ topic: "flow.extension", payload: { operators: [{ kind: "procedural.example" }] } }] } },
-        { pluginId: "flow-extension-brep", manifest: { topicContributions: [{ topic: "flow.extension", payload: { operators: [{ kind: "brep.prim3d.box" }, { kind: "brep.solid.shell" }] } }] } },
-        { pluginId: "flow-extension-bim", manifest: { topicContributions: [{ topic: "flow.extension", payload: { operators: [{ kind: "bim.wall" }] } }] } },
-      ],
-      "procedural",
-      scope.status === "resolved" ? scope.kinds : [],
-    )) as { pluginId: string }[];
-    expect(scoped.map((entry) => entry.pluginId).sort()).toEqual(["flow-extension-brep", "procedural"]);
-    expect(JSON.stringify(scoped).includes("bim.wall")).toBe(false);
   });
 });

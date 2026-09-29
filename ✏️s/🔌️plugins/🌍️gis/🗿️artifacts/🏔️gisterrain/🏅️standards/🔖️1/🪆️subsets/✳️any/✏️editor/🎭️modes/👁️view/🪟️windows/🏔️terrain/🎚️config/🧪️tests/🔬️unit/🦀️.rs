@@ -110,7 +110,6 @@ fn gis_terrain_window_config_isolates_two_registered_windows_and_reloads() {
 
                 close(&mut reopened);
                 close(&mut running);
-                eprintln!("[DEBUG] two registered Terrain windows published and reloaded independent camera config; transient inventory remained empty");
             })
         })
         .expect("spawn Terrain window config law")

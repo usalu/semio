@@ -126,7 +126,7 @@
     "artifactCasSweeper": { "ready": true, "execute": false, "defaultMode": "dry-run" },
     "artifactAuthority": { "ready": true },
     "adminAssets": { "ready": true },
-    "features": { "openPlan": false, "openPlanExchange": false, "rebootstrap": true, "mcpWorkspace": false, "inferenceServices": [] }
+    "features": { "openPlan": false, "openPlanExchange": false, "rebootstrap": true, "mcpWorkspace": false, "inferenceServices": [], "checkpointPolicy": { "edits": 1024, "payloadBytes": 524288 } }
   },
   "bootstrapReadyButArtifactUnavailable": {
     "schema": "semio.hub.readiness/v1",
@@ -142,7 +142,7 @@
     "artifactCasSweeper": { "ready": true, "execute": false, "defaultMode": "dry-run" },
     "artifactAuthority": { "ready": false, "reason": "trusted-catalog-never-published-in-this-data-root" },
     "adminAssets": { "ready": true },
-    "features": { "openPlan": false, "openPlanExchange": false, "rebootstrap": true, "mcpWorkspace": false, "inferenceServices": [] },
+    "features": { "openPlan": false, "openPlanExchange": false, "rebootstrap": true, "mcpWorkspace": false, "inferenceServices": [], "checkpointPolicy": { "edits": 1024, "payloadBytes": 524288 } },
     "blockedBy": [{ "gate": "artifactAuthority", "reason": "trusted-catalog-never-published-in-this-data-root" }]
   },
   "notReady": {
@@ -159,7 +159,7 @@
     "artifactCasSweeper": { "ready": true, "execute": false, "defaultMode": "dry-run" },
     "artifactAuthority": { "ready": false, "reason": "trusted-catalog-never-published-in-this-data-root" },
     "adminAssets": { "ready": false, "reason": "admin-spa-dist-missing-run-os-hub-admin-build" },
-    "features": { "openPlan": false, "openPlanExchange": false, "rebootstrap": true, "mcpWorkspace": false, "inferenceServices": [] },
+    "features": { "openPlan": false, "openPlanExchange": false, "rebootstrap": true, "mcpWorkspace": false, "inferenceServices": [], "checkpointPolicy": { "edits": 1024, "payloadBytes": 524288 } },
     "blockedBy": [{ "gate": "authentication.bootstrapReady", "reason": "local-bootstrap-pipe-handshake-incomplete" }, { "gate": "artifactAuthority", "reason": "trusted-catalog-never-published-in-this-data-root" }, { "gate": "adminAssets", "reason": "admin-spa-dist-missing-run-os-hub-admin-build" }]
   },
   "starting": {
@@ -176,7 +176,7 @@
     "artifactCasSweeper": { "ready": false, "reason": "hub-starting", "execute": false, "defaultMode": "dry-run" },
     "artifactAuthority": { "ready": false, "reason": "trusted-catalog-loading" },
     "adminAssets": { "ready": false, "reason": "hub-starting" },
-    "features": { "openPlan": false, "openPlanExchange": false, "rebootstrap": false, "mcpWorkspace": false, "inferenceServices": [] },
+    "features": { "openPlan": false, "openPlanExchange": false, "rebootstrap": false, "mcpWorkspace": false, "inferenceServices": [], "checkpointPolicy": { "edits": 1024, "payloadBytes": 524288 } },
     "blockedBy": [{ "gate": "directory", "reason": "hub-starting" }, { "gate": "storage", "reason": "hub-starting" }, { "gate": "artifactCasBarrier", "reason": "hub-starting" }, { "gate": "artifactAuthority", "reason": "trusted-catalog-loading" }, { "gate": "adminAssets", "reason": "hub-starting" }],
     "startup": { "stage": "guest-codec-executing", "completedUnits": 25000000, "totalUnits": 4000000000 }
   },

@@ -1,0 +1,17 @@
+        /// 🧾️ Retains a terminal job fault's detail bytes (bounded) so the publication that follows
+        /// a cancelled lease reports the real cause instead of a generic cancellation.
+        fn from_payload(detail: &semio_framework_job::RetainedJobPayload) -> Self {
+            let mut bounded = Self { bytes: [0; TYPED_OPERATION_FAULT_BYTES], len: 0, code: [0; TYPED_OPERATION_FAULT_CODE_BYTES], code_len: 0 };
+            for page in 0..detail.page_count() {
+                let Some(bytes) = detail.page(page) else { break };
+                for byte in bytes {
+                    if bounded.len == bounded.bytes.len() {
+                        return bounded;
+                    }
+                    bounded.bytes[bounded.len] = *byte;
+                    bounded.len += 1;
+                }
+            }
+            bounded
+        }
+

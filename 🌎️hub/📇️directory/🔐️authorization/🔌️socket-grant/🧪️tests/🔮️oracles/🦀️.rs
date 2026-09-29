@@ -27,7 +27,7 @@ fn test_declarations(source: &str) -> Vec<String> {
     names
 }
 
-/// @emoji 🧾️ Collects the laws an item tree declares, descending into inline modules: a law's level tier
+/// 🧾️ Collects the laws an item tree declares, descending into inline modules: a law's level tier
 /// (`mod quick` / `mod long` / `mod exhaustive`) is a runtime budget, not a different declaration, so a
 /// stage's `declaration` must still be found after it was tiered.
 fn collect_test_declarations(items: &[Item], names: &mut Vec<String>) {

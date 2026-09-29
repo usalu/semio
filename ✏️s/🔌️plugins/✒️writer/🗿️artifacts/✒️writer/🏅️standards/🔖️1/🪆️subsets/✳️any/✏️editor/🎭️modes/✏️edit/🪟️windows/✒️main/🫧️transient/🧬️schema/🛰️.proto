@@ -6,4 +6,4 @@ message WriterMainWindowTransient {
   uint32 lint_generation = 2;
   string engagement_input = 3;
 }
-message WriterEditorSelection { uint64 start = 1; uint64 end = 2; }
+message WriterEditorSelection { uint64 start = 1; uint64 end = 2; uint64 splice = 3; }

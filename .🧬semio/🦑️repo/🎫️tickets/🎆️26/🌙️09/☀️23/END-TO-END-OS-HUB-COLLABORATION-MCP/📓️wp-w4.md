@@ -257,3 +257,47 @@ finished compile-atomically by W4. The chain copy tolerates transient reds (retr
   `w3-release-root-check` never ran — only matters for release-variant serves; rerun `framework-plugin-web:support-release` +
   `run-many -t materialize-release` + `w3-release-root-check.ts release` when the wasm lane is free (or with the next all-34 chain).
 - 22:0x `w4-chain.sh` readiness poll now reads the hold's append-only `hold.txt` (zsh -n ok; the status.txt race is documented in the header).
+
+### Session 14c (cont., 2026-09-29)
+
+- 00:1x hub-refresh prepared (`wp-w4/w4-hub-refresh.sh` check/build/prove/swap, dry-run clean; `w4-hub-resume.sh` takes an optional binary dir);
+  superseded — H13's kernel-db vcs removal (08:40) made v1 roots (p24) obsolete; the all-34 chain starts 7800 on a fresh root. Kind-identity
+  scripts landed by L1 in window 3 (T3); flow's describe-gate red was fixed by T14 (FlowSnapshot DslRecord).
+- 11:0x resumed after the usage cut. All-34 chain attempt 2 (10:29:54, `--from components`) failed twice at 6/11 check: **root cause** = the
+  registry descriptor gate compared the dev-component hash in each descriptor against the AMBIENT canonical wasm-release artifact (stdio family
+  releases built by plain cargo 05:14–06:09 — not the warm lane, which builds into capture dirs). Fixed (landing row): gate checks the
+  described `dist/component-dev` deliverable. vitest 1/1, os tsc 0, live check rc=0 (69/69).
+- **11:13:16 CHAIN RELAUNCHED** by W4 (pid 9439, `FLEET_TICKET_STAMP=20260928120100 W4_REBUILD_FROM=check`, catalog `s14-w4-catalog-all`,
+  root `s14-w4-hub-7800-all`); attempt-2 logs archived as `s14-w4-logs/c5-*`.
+- 11:24:42 rebuild-all rc=0 (686 s); preflight all rc=0 (47 s); **11:41:52 publish-all FAILED → final-publish.rc = 1** (983 s): "component
+  codec probe requires at least one declared artifact kind" — the 9 stdio FAMILY packages (stdio-image/media/cad/bim/mesh/pdf/office/semio/
+  binary; `TRUSTED_BOOTSTRAP_PACKAGES`, linkedCodecRegistry null) declare zero ArtifactKindSpecs and their apps present no io artifact: they
+  host editors for kinds `stdio` owns, and the trusted catalog has no hosted-package model (codec rows / open targets are own-package only) →
+  owner design item (LB2/ST2). Preflight of the 34 non-family packages rc=0 (`.🧬semio/🌐hub/s14-w4-captures/preflight-p34.txt`).
+  Recommended to main: publish-only p34 (`W4_REBUILD_FROM=skip`, catalog `s14-w4-catalog-p34`, root `s14-w4-hub-7800-p34`).
+- **11:48:09 chain run c7 (p34 publish-only) LAUNCHED** by W4 after main's approval (pid 59391; `W4_REBUILD_FROM=skip`, 34 non-family packages,
+  catalog `s14-w4-catalog-p34`, root `s14-w4-hub-7800-p34`); failed all-catalog moved to `s14-w4-catalog-all-failed-c6-1141`; c6 logs `c6-*`.
+  preflight rc=0 (40 s), publish-all started 11:48:49. Hosted-package catalog model → LB2 (coordinator relay).
+- 11:49:29 chain c7 (p34) **final-publish.rc = 1** in 40 s: the trusted-catalog `cargo build --bin os-hub` (library `runCargo`, spawnSync inherit)
+  died with the EAGAIN signature (`561 |warningerror`, 101). Root-fixed for every library cargo launcher (landing row: relay + cargoStreamingStatus;
+  runOwnedCommand pipes). Proofs: slow-reader byte-exact forwarding (1 639 813 B), status propagation, tsc 0.
+- **11:59:05 chain run c8 (p34 publish-only) RELAUNCHED** (pid 70223; c7 logs `c7-*`).
+- 12:43:24 chain c8 (p34) **final-publish.rc = 1** after 44 min (relay fix held: os-hub build + all 34 packages built/hashed/verified): the profile id
+  `local-<34 ids>-open-v1` = 260 bytes > hub identity bound 256 → current-pointer reader refused. Root-fixed (landing row: bounded
+  `trustedBootstrapProfileIdV1`). Failed catalog → `s14-w4-catalog-p34-failed-c8-1243`; c8 logs `c8-*`.
+- **12:45:50 chain c9 (p34 publish-only) RELAUNCHED** (pid 41447).
+- 12:5x fail-fast selection validator landed (landing row; law 11/11 + Ajv oracle): `--packages all` now refused in ~20 s naming the 9 stdio
+  families; p34 accepted (profile `local-34-packages-1fe007f21662abf7-open-v1`). New test dir + fixture dir → R10 (taxonomy) FYI.
+- 12:54:17 chain c9 (p34) **final-publish.rc = 1** after 8 min (cached builds; profile fix held): candidate GIS Map probe creation → HTTP 409 =
+  "creation kind has no unambiguous verified editor": demonstrator declares and OWNS (embedded apps) `s.gis.gismap`, `3d.cad`, `3d.generation`,
+  `3d.puzzle`, `catalogue.sourcing`, `3d.process` → ambiguous creation on the hub. Demonstrator needs hosting ≠ owning (→ LB2/owner).
+  **12:55:39 chain c10 (p33 = p34 − demonstrator) RELAUNCHED** (pid 65378, catalog `s14-w4-catalog-p33`, root `s14-w4-hub-7800-p33`); failed
+  catalog `s14-w4-catalog-p34-failed-c9-1254`, logs `c9-*`. Validator gained the collision rule (landing row): p34 refused in seconds, p33 accepted.
+- **13:09:47 publish-all c10 rc=0 → final-publish.rc = 0** (817 s): 33 packages, generation `21109b7e70c2a5ea…`, bundle `514038937eba4b87…`,
+  profile = listed name (247 B), catalog `s14-w4-catalog-p33`. hub-build started 13:10:00.
+- **13:14:16 7800 READY on p33** (hub 83781, hold via w4-hub-hold, fresh root `s14-w4-hub-7800-p33`, gen `21109b7e…`; hub-build rc=0 30 s,
+  mcp-build rc=0 209 s, restart rc=0; readiness read from hold.txt within one poll). /readyz ready (0 unready components); **hub-freshness
+  FRESH**; **open-plan 63/63 creatable kinds PASS** (fem/flow/norm/forms/… now on the hub; procedural 2d/3d generation green); footprint idle
+  1764 MB, after creations 1318 MB. Chain "s14-w4-catalog-p33 SERVED" 13:17:34; release tail (release-modules → release-root-check) running.
+  Open (owners): stdio families + demonstrator need hosting ≠ owning in the trusted catalog (LB2); ~35 plugin bridge/generator/typegen
+  scripts still spawn cargo with inherited stdio (follow-up). Rollback for 7800: stop the hold, `zsh wp-w4/w4-hub-resume.sh <root> [bin dir]`.

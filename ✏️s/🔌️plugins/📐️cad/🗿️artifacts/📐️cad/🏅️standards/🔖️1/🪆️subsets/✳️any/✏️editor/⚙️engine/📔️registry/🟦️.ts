@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🧭️ `@semio-tech/cad-js` — CAD domain module facet. See `cad/AGENTS.md`. */
+/** 🧭️ `@semio-tech/cad-js` — CAD domain module facet. See `cad/AGENTS.md`. */
 import { ephemeralBox, ephemeralMap, ephemeralWeakMap } from "@semio-tech/framework";
 import type { ArcPlaneFrame, EdgeCurve, EdgeGroup, EdgeInfo, FaceGroup, FaceInfo, MeshTransfer, Vec3 } from "@semio-tech/s-3d-js";
 import { emptyMeshTransfer, kernelGeometry, solidRef } from "@semio-tech/s-3d-js";
@@ -13,7 +13,7 @@ import type { SpatialKernel } from "../../../../../../../../../../../🔨️modu
 export { SemioBrepKernel, semioBrepKernel };
 
 // #region 🧠️DefaultSpatialKernel
-/** @emoji 🧠️ THE production CAD `SpatialKernel` (ticket 26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME
+/** 🧠️ THE production CAD `SpatialKernel` (ticket 26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME
  * W4-A) — the first-party Rust `BrepKernel` over `invokeBrep`/`flow_core` wasm. `🧱️brepjs`
  * (OpenCascade) is retained ONLY as the vitest differential oracle, never constructed here. */
 export function defaultSpatialKernel(): SpatialKernel {
@@ -23,7 +23,7 @@ export function defaultSpatialKernel(): SpatialKernel {
 
 // #region 📦️📔️registry
 // #region 📥️ModelDefinitionRegistry
-/** @emoji 📥️ Registered model-definition asset modules (populated by `ModelDefinitionAssets` region). */
+/** 📥️ Registered model-definition asset modules (populated by `ModelDefinitionAssets` region). */
 export interface ModelDefinitionAssetModules {
   readonly typologies: Readonly<Record<string, unknown>>;
   readonly actions: Readonly<Record<string, unknown>>;
@@ -90,7 +90,7 @@ function mergeModelDefinitionAssetModules(base: ModelDefinitionAssetModules, pat
 
 export const interactionCompileCacheClear = ephemeralBox<() => void>("s.plugins.cad.modules.core.component.ts.interactionCompileCacheClear", () => {});
 
-/** @emoji 📥️ Merges model-definition asset catalogs (host or module injection). */
+/** 📥️ Merges model-definition asset catalogs (host or module injection). */
 export function registerModelDefinitionAssets(modules: ModelDefinitionAssetModules): void {
   modelDefinitionAssetModules.current = mergeModelDefinitionAssetModules(modelDefinitionAssetModules.current, modules);
   resetModelDefinitionCaches();
@@ -131,7 +131,7 @@ function modelDefinitionTransformationModules(): Readonly<Record<string, unknown
 // #endregion 📥️ModelDefinitionRegistry
 
 // #region 📥️ImportProfiles
-/** @emoji 🪪️ STEP/BIM import profile for one model definition. */
+/** 🪪️ STEP/BIM import profile for one model definition. */
 export interface ModelImportProfile {
   readonly layerTypology: Readonly<Record<string, TypologyRef>>;
   readonly fallbackTypology: TypologyRef;
@@ -142,17 +142,17 @@ export interface ModelImportProfile {
 
 const importProfiles = ephemeralMap<string, ModelImportProfile>("s.plugins.cad.modules.core.component.ts.importProfiles");
 
-/** @emoji 📥️ Registers STEP layer → typology mapping for one model definition. */
+/** 📥️ Registers STEP layer → typology mapping for one model definition. */
 export function registerImportProfile(modelDefinitionId: string, profile: ModelImportProfile): void {
   importProfiles.set(modelDefinitionId, profile);
 }
 
-/** @emoji 🧭️ Resolves the STEP import profile for one model definition. */
+/** 🧭️ Resolves the STEP import profile for one model definition. */
 export function importProfileFor(modelDefinitionId: string): ModelImportProfile | null {
   return importProfiles.get(modelDefinitionId) ?? null;
 }
 
-/** @emoji 🏷️ Maps a STEP presentation-layer token to a typology via registered import profiles. */
+/** 🏷️ Maps a STEP presentation-layer token to a typology via registered import profiles. */
 export function typologyFromStepLayer(layerName: string, modelDefinitionId: string): TypologyRef {
   const trimmed = layerName.trim();
   const namespaced = trimmed.match(/^([^:]+)::(.+)$/i);

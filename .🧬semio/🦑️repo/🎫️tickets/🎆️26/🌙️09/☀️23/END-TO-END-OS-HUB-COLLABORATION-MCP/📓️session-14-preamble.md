@@ -184,9 +184,14 @@ Executors = Opus 5.5 agents, one slice each. Auditors = Sonnet 5 agents, read-on
     (our cargo/vite/chrome + the user's VS Code ripgrep indexing ~550 % CPU + GitKraken/VS Code git status + a 5 GB `git
     index-pack --verify-stat`). Every panic kills every agent, hub, serve and lane. Until the coordinator lifts this:
     (a) the mutex now caps `CARGO_BUILD_JOBS` at 4 for native/overlay/wasm and holds a granted slot until the 1-min load is
-    < 32 (`FLEET_LOAD_GATE`); (b) ONE heavy job machine-wide at a time (native OR wasm, not both), no parallel serves;
-    (c) never start a serve/hub/browser while a lane job runs unless the job is yours and needs it; (d) ≤ 4 live agents.
+    < 32 (`FLEET_LOAD_GATE`); (b) ONE heavy job machine-wide at a time (native OR wasm, not both; relaxed 05:3x: a native job may run beside wasm while the 1-min load < 16), no parallel serves;
+    (c) never start a serve/hub/browser while a lane job runs unless the job is yours and needs it; (d) ≤ 4 live agents (relaxed 06:4x to ≤ 8: agents are cheap, builds are gated by the lanes + load gate).
 26. **SWEEP 01:14 (2026-09-29):** the recurring EXTERNAL cleanup deleted every gitignored dir inside the ticket (`wp-*/generated/`,
     `wp-*/w3-backup/`, `wp-*/target/`, `🗑️generated/`) — owners' set backups and captures are GONE. Keep backups, overlays,
     captures and logs ONLY under `.🧬semio/🌐hub/s14-<slice>-*` (survived). Landed sets' `--revert` state is lost (T1 is
     green, no revert needed); for T2+ L1's own `l1-land` records (now under the hub dir) are the revert path.
+27. **WINDOW 3 CLOSED — ALL-34 CHAIN LAUNCHED 2026-09-29 07:18:33** (pid 44628, log `.🧬semio/🌐hub/s14-w4-logs/chain-final.txt`;
+    catalog `s14-w4-catalog-all`, 7800 root `s14-w4-hub-7800-all`; T1–T5 + c12-splice landed, PRE-CHAIN GREEN 07:18). GUEST FREEZE
+    (rule 2) until the coordinator writes "WINDOW 4 OPEN": guest sets are PREPARED only (for train T6: H14 retire-pages, WG11
+    json-number + shell-footprint + renderer fixes, LB2 family hosting, U6 row target). Host-only fixes still land per rules 20/22
+    (compile-atomic) — hub/kernel-db edits must keep `os-hub:build-dev` green (the chain builds the hub from the tree at its end).

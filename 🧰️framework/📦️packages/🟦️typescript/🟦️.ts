@@ -8,7 +8,7 @@ export { waitForEvent } from "../../🔨️modules/⏳️async/🔔️event-wait
 export type { EventSubscribe, WaitForEventOptions } from "../../🔨️modules/⏳️async/🔔️event-wait/🟦️.ts";
 export { fetchWithTimeout } from "../../🔨️modules/🚪️io/🌐️fetch-timeout/🟦️.ts";
 export type { FetchTimeoutOptions, FetchTimeoutResponse } from "../../🔨️modules/🚪️io/🌐️fetch-timeout/🟦️.ts";
-/** @emoji 📦️ `@semio-tech/framework` — package glue (reexports + inline vitest). */
+/** 📦️ `@semio-tech/framework` — package glue (reexports + inline vitest). */
 export * from "../../🔨️modules/🎯️action-bus/🟦️.ts";
 export { blake3Hex, Blake3Hasher } from "../../🔨️modules/🔏️hash/🟦️.ts";
 export * from "../../🔨️modules/🧩️action-argument-resolution/🟦️.ts";

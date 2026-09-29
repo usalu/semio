@@ -44,7 +44,7 @@ const FEM2D_RESULTS_BODY_KEY = "fem2d.play.results";
 const FEM2D_EDITOR_CONTROLLER_ID = "fem2d-play";
 const FEM2D_CLEARED_EXAMPLE_ID = "none";
 
-/** @emoji 👁️ The three `DisplayMode` discriminants `config_result_display` maps `Fem2dConfig::result_mode` onto. */
+/** 👁️ The three `DisplayMode` discriminants `config_result_display` maps `Fem2dConfig::result_mode` onto. */
 const FEM2D_RESULT_MODES: readonly string[] = ["static", "modal", "buckling"];
 
 function Fem2dResultsStoryHost({ initialExampleId, locale, initialMode }: { readonly initialExampleId: string; readonly locale: FemStoryLocale; readonly initialMode: string }): ReactElement {

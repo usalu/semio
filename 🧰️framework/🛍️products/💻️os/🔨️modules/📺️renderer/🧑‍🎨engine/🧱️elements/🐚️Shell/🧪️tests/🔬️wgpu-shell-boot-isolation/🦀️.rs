@@ -103,7 +103,6 @@ fn boot_selection_opens_the_requested_variant_across_the_fixture_table() {
             }
         }
     }
-    eprintln!("[DEBUG] wgpu shell boot selection honoured every fixture case");
 }
 
 /// 🧪️ A boot that cannot open its app is that plugin's fault, not the renderer's: `boot()` still
@@ -117,7 +116,6 @@ fn boot_without_the_requested_plugin_settles_with_a_per_plugin_status() {
     assert_eq!(shell.plugin_faults[0].plugin_id, "procedural");
     assert_eq!(shell.plugin_faults[0].app_id, "s.procedural.generation3d@1/*#editor");
     assert_eq!(shell.error, shell.plugin_fault_status());
-    eprintln!("[DEBUG] wgpu shell boot isolated the missing plugin: {:?}", shell.error);
 }
 
 /// 🧪️ The per-plugin status renders in English and in German, with no default language, and always

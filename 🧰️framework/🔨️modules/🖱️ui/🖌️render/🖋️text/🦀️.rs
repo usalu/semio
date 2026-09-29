@@ -1,4 +1,4 @@
-//! @emoji 🖋️ CPU-side text: font registration/fallback, a shaped-layout cache and the glyph atlas.
+//! 🖋️ CPU-side text: font registration/fallback, a shaped-layout cache and the glyph atlas.
 //!
 //! Ported from `🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📝️text/🦀️.rs` (604 lines,
 //! read-only — that file lives inside the externally-red `wgpu-engine` feature and is not required to

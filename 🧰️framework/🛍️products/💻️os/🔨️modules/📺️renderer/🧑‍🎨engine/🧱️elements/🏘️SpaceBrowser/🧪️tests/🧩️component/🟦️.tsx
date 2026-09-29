@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🏘️ Laws for the end-user spaces surface (ticket
+/** 🏘️ Laws for the end-user spaces surface (ticket
  * `26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END` slice AU2). Independent oracles: Ajv over the owned
  * fixture schema, and — for every command this surface can raise — the *production*
  * `parseDirectoryCommandV1`/`sealDirectoryCommandRequestV1` from `@semio-tech/framework-os`, which

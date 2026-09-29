@@ -719,6 +719,12 @@ fn a_right_gesture_publishes_nothing_while_it_runs() {
 /// 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w9c-behaviour-parity-run-2.md` step 15). A stale aim
 /// retires like any other answered intent; a point the surface DOES cover still faults, because there
 /// the refusal is real.
+///
+/// 🖱️ The button no CAMERA gesture claims still answers, and never faults — a middle press used to
+/// fall through to the unclaimed-intent fault, which killed the page on the first middle-click of
+/// any world surface. What it answers is the selection React publishes for any button (packet
+/// W13c's `plan_world3d_non_primary_press_pick`, through R3F's `onPointerMissed`); the release
+/// retires as before.
 #[test]
 fn an_intent_aimed_outside_the_surface_retires_instead_of_faulting_the_frame() {
     let mut state = World3dState::new("surface".into(), "controller".into());
@@ -735,11 +741,6 @@ fn an_intent_aimed_outside_the_surface_retires_instead_of_faulting_the_frame() {
     assert!(!state.interaction_authority.as_ref().expect("authority").faulted, "🖱️ the authority stays usable for the next gesture");
     assert!(take_actions(&mut input).is_empty());
 
-    // 🖱️ The button no CAMERA gesture claims still answers, and never faults — a middle press used to
-    // fall through to the unclaimed-intent fault, which killed the page on the first middle-click of
-    // any world surface. What it answers is the selection React publishes for any button (packet
-    // W13c's `plan_world3d_non_primary_press_pick`, through R3F's `onPointerMissed`); the release
-    // retires as before.
     let mut authority = WorldInteractionAuthority::default();
     authority.next_generation = 3;
     authority.queue.push(WorldInteractionIntent::pointer_button(1000.0, 400.0, true, 1, &PointerModifiers::default())).unwrap();
@@ -833,6 +834,11 @@ fn world_marquee_result_pages_admit_exact_capacity_and_retire_one_target_per_gra
     assert_eq!(pages.page_len, 0);
 }
 
+/// 🎯️ `targets` is a JSON-encoded STRING, not a structured array: the framework's own decoder is
+/// `parse_interaction_targets`, which reads the arg with `DslValue::as_str`
+/// (`💻️os/🔨️modules/🔌️plugin/🦀️.rs`), and the manifest declares it `ActionArgDef::text`. An array
+/// makes `as_str` answer `None` and the guest faults the job — ticket
+/// 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-world3d-interaction-2026-09-13.md`.
 #[test]
 fn world_marquee_pages_build_one_target_per_grant_and_publish_atomically_fifo() {
     let mut state = World3dState::new("surface".into(), "controller".into());
@@ -859,11 +865,6 @@ fn world_marquee_pages_build_one_target_per_grant_and_publish_atomically_fifo() 
     }
     let actions = take_actions(&mut input);
     assert_eq!(actions.len(), 2);
-    // 🎯️ `targets` is a JSON-encoded STRING, not a structured array: the framework's own decoder is
-    // `parse_interaction_targets`, which reads the arg with `DslValue::as_str`
-    // (`💻️os/🔨️modules/🔌️plugin/🦀️.rs`), and the manifest declares it `ActionArgDef::text`. An array
-    // makes `as_str` answer `None` and the guest faults the job — ticket
-    // 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-world3d-interaction-2026-09-13.md`.
     let page_targets = |action: &ActionDescriptor| {
         let raw = action.args.as_ref().and_then(|args| args.get("targets")).and_then(|value| value.as_str()).expect("targets is JSON text");
         serde_json::from_str::<Vec<serde_json::Value>>(raw).expect("targets decodes as the framework does")
@@ -1214,6 +1215,8 @@ fn world_gumball_commit_host_snapshot() -> (World3dState, WorldGumballGesture) {
     (state, gesture)
 }
 
+/// 🪟️ A transform verb is window-owned: it addresses its own window instance rather than
+/// whatever has focus — see `WorldGumballCommitJob::step`'s `windowId` stage.
 #[test]
 fn world_gumball_commit_builds_one_flat_node_per_grant_then_retires_tokens() {
     let (state, gesture) = world_gumball_commit_host_snapshot();
@@ -1233,13 +1236,13 @@ fn world_gumball_commit_builds_one_flat_node_per_grant_then_retires_tokens() {
     let actions = take_actions(&mut input);
     assert_eq!(actions.len(), 1);
     assert_eq!(actions[0].action, "translateSelection");
-    // 🪟️ A transform verb is window-owned: it addresses its own window instance rather than
-    // whatever has focus — see `WorldGumballCommitJob::step`'s `windowId` stage.
     assert_eq!(actions[0].args.as_ref().and_then(|args| args.get("windowId")).and_then(|value| value.as_str()), Some(state.surface_id.as_str()));
     assert_eq!(actions[0].args.as_ref().and_then(|args| args.get("surfaceId")).and_then(|value| value.as_str()), Some(state.surface_id.as_str()));
     assert!(turns > 8);
 }
 
+/// 🪟️ Five staged nodes precede the first selected-id resolve: `{`, `surfaceId`, `windowId`,
+/// `mode`, `ids[`.
 #[test]
 fn world_gumball_commit_saturation_aba_and_interrupted_close_retain_claim_authority() {
     let (mut state, gesture) = world_gumball_commit_host_snapshot();
@@ -1259,8 +1262,6 @@ fn world_gumball_commit_saturation_aba_and_interrupted_close_retain_claim_author
     let mut replacement = Mat4::identity();
     replacement.cols[3][0] = 1.0;
     state.interaction_objects.admit(3, WorldInteractionObjectKind::Instance, "selected", None, replacement, [0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0]).expect("ABA replacement");
-    // 🪟️ Five staged nodes precede the first selected-id resolve: `{`, `surfaceId`, `windowId`,
-    // `mode`, `ids[`.
     for _ in 0..5 {
         let _ = with_world_step_context(1, |context| job.step(&state, 8, &mut input, context));
     }
@@ -1380,6 +1381,8 @@ fn world_intent_queue_retains_exact_fifo_owner_on_saturation_and_closes_one_per_
     assert_eq!(queue.push(rejected).expect_err("closed authority retains late intent").generation, 99);
 }
 
+/// 🧭️ A navigation step moves the orbit and publishes NOTHING: the wire report is the debounced
+/// settle's, one per gesture (see `WorldCameraSync`).
 #[test]
 fn world_wheel_plan_revalidates_before_mutation_and_publishes_flat_action() {
     let mut state = World3dState::new("surface".into(), "controller".into());
@@ -1396,8 +1399,6 @@ fn world_wheel_plan_revalidates_before_mutation_and_publishes_flat_action() {
     let pending = with_world_step_context(1, |context| publish_world3d_plan_step(&mut state, &mut plan, 8, &mut input, context)).unwrap();
     assert_eq!(pending, WorldInteractionStep::Pending);
     assert_ne!(state.orbit.distance, original_distance);
-    // 🧭️ A navigation step moves the orbit and publishes NOTHING: the wire report is the debounced
-    // settle's, one per gesture (see `WorldCameraSync`).
     assert!(take_actions(&mut input).is_empty());
     let complete = with_world_step_context(1, |context| publish_world3d_plan_step(&mut state, &mut plan, 8, &mut input, context)).unwrap();
     assert_eq!(complete, WorldInteractionStep::Complete);
@@ -1590,6 +1591,9 @@ fn world_authority_close_drains_active_and_queued_fixed_owners_to_terminal() {
     assert!(take_actions(&mut input).is_empty());
 }
 
+/// 🗃️ The blocked owner transfers on the FIRST turn that finds a freed slot, whatever else that
+/// turn's authority owes first (a moved camera re-dirties the object registry, and its rebuild is
+/// itself several turns).
 #[test]
 fn world_saturation_owner_blocks_new_ingress_until_exact_fifo_transfer() {
     let mut state = World3dState::new("surface".into(), "controller".into());
@@ -1607,9 +1611,6 @@ fn world_saturation_owner_blocks_new_ingress_until_exact_fifo_transfer() {
         assert!(turns < 16, "the front intent is answered in a bounded number of turns");
     }
     assert!(take_actions(&mut input).is_empty(), "a navigation intent moves the orbit and owes the settle, it publishes nothing");
-    // 🗃️ The blocked owner transfers on the FIRST turn that finds a freed slot, whatever else that
-    // turn's authority owes first (a moved camera re-dirties the object registry, and its rebuild is
-    // itself several turns).
     let mut turns = 0;
     while state.interaction_authority.as_ref().is_some_and(|authority| authority.blocked.is_some()) {
         assert_eq!(with_world_step_context(1, |context| step_world3d_interaction(&mut state, 2, &mut input, context)), WorldInteractionAuthorityStep::Pending);
@@ -1805,10 +1806,10 @@ fn prepared_world_resources_are_send_and_deduplicate_uploads() {
     assert_eq!(input.evictions.get(0), Some(&PreparedRenderEviction::Mesh { key: "stale".into() }));
 }
 
+/// 🧭️ React's own `resolveSceneGizmoViewportPlacement` oracle — the block margin clears the folded
+/// projection pane so the cube sits ABOVE the pane's bottom chip row, never on it.
 #[test]
 fn world_orbit_view_gizmo_placement_matches_react_bottom_right_insets() {
-    // 🧭️ React's own `resolveSceneGizmoViewportPlacement` oracle — the block margin clears the folded
-    // projection pane so the cube sits ABOVE the pane's bottom chip row, never on it.
     assert_eq!(gizmo::orbit_view_gizmo_placement(Rect { x: 0.0, y: 0.0, w: 1280.0, h: 720.0 }), (32.0, 58.0));
     assert_eq!(gizmo::orbit_view_gizmo_placement(Rect { x: 0.0, y: 0.0, w: 120.0, h: 160.0 }), (32.0, 53.0));
     assert_eq!(gizmo::orbit_view_gizmo_placement(Rect { x: 0.0, y: 0.0, w: 40.0, h: 48.0 }), (22.0, 22.0));
@@ -2038,6 +2039,10 @@ fn pick_target_ray(state: &World3dState) -> (Vec3, Vec3) {
 /// ⚖️ Four things at once, because they are one mechanism: a lane that parses but never hit-tests is
 /// exactly the gap this packet closed (`📓️w2f-cad-spatial-editor-wgpu.md` §5.1 — the overlay could
 /// be SHOWN and not picked).
+///
+/// 🖱️ A real click through the retained authority — the pick target beats the instance under it.
+///
+/// 🎯️ `targets` is JSON TEXT on the wire (see `push_interaction_targets`), never a nested array.
 #[test]
 fn the_pick_target_lane_hit_tests_finest_first_skips_unselectable_rows_and_dispatches_react_payloads() {
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
@@ -2055,7 +2060,6 @@ fn the_pick_target_lane_hit_tests_finest_first_skips_unselectable_rows_and_dispa
     let tied_object = world_pick_target_ray_score(&state.pick_targets[0], origin, direction).expect("coincident padded object score");
     assert!(vertex < tied_object, "React's spatialPickPriority makes the finest kind win at coincident padded bounds ({vertex} < {tied_object})");
 
-    // 🖱️ A real click through the retained authority — the pick target beats the instance under it.
     let modifiers = PointerModifiers::default();
     enqueue_world3d_event(&mut state, WorldInteractionIntent::pointer_button(200.0, 200.0, true, 0, &modifiers)).expect("press admitted");
     enqueue_world3d_event(&mut state, WorldInteractionIntent::pointer_button(200.0, 200.0, false, 0, &modifiers)).expect("release admitted");
@@ -2075,7 +2079,6 @@ fn the_pick_target_lane_hit_tests_finest_first_skips_unselectable_rows_and_dispa
     let select = published.iter().find(|action| action.action == "interactionSelect").expect("a sub-object pick publishes interactionSelect");
     let args = select.args.as_ref().expect("interactionSelect carries args");
     assert_eq!(args.get("domainId").and_then(dsl::DslValue::as_str), Some("cad"), "the bound domain, not the world fallback");
-    // 🎯️ `targets` is JSON TEXT on the wire (see `push_interaction_targets`), never a nested array.
     let targets = args.get("targets").and_then(dsl::DslValue::as_str).expect("targets is JSON text");
     assert!(targets.contains(r#""granularity":"vertex""#), "the WINNING target's own kind is the granularity: {targets}");
     assert!(targets.contains(r#""id":"v-1""#), "the kernel entity id, not the instance id: {targets}");
@@ -2118,6 +2121,8 @@ fn pick_hover_keys_match_across_the_kernel_and_pick_aliases() {
 /// 🌫️ LAW (packet W14g items 3 + 4): the instance lane carries the per-instance OPACITY a locked
 /// object is dimmed by, and the `highlighted`/`disabled`/`celebrating` flags that reach the three
 /// `MESH_STYLE_PAINT` rows nothing published before.
+///
+/// 🎨️ Each flag resolves to its OWN row of React's table, not to the two rows that existed here.
 #[test]
 fn the_instance_lane_carries_locked_opacity_and_the_three_unreachable_style_rows() {
     let instances = r##"[
@@ -2138,7 +2143,6 @@ fn the_instance_lane_carries_locked_opacity_and_the_three_unreachable_style_rows
     assert!((alpha - 0.35).abs() < 1e-3, "WORLD_LOCKED_OPACITY_SCALE multiplies the authored alpha, got {alpha}");
     let opaque = state.draws.iter().flat_map(|draw| draw.instances.iter()).find(|instance| instance.id == "obj-2").map(|instance| instance.color[3]).expect("obj-2 reaches a draw");
     assert!((opaque - 1.0).abs() < 1e-3, "an instance with no opacity keeps its authored alpha, got {opaque}");
-    // 🎨️ Each flag resolves to its OWN row of React's table, not to the two rows that existed here.
     assert_eq!(resolve_mesh_style(MeshStyleState { disabled: true, ..MeshStyleState::default() }), MeshStyleKind::Disabled);
     assert_eq!(resolve_mesh_style(MeshStyleState { highlighted: true, ..MeshStyleState::default() }), MeshStyleKind::Highlighted);
     assert_eq!(resolve_mesh_style(MeshStyleState { celebrating: true, ..MeshStyleState::default() }), MeshStyleKind::Celebrated);
@@ -2182,6 +2186,11 @@ fn the_scene_bridge_retains_semantic_authored_and_environment_color_provenance()
 /// 🎛️ LAW (packet W14g item 5): the gumball's handle set is the PLUGIN-AUTHORED `gumballConfig` when
 /// the producer published one (`cad`'s dislocate utility does), the single-mode fallback otherwise,
 /// and the drafting-plane subset intersects both — React's `gumballHandleEnabled`.
+///
+/// 🎛️ No authored config → React's `gumballConfigForTransformMode`, whose `rotate` arm offers the
+/// rings ONLY. This host used to admit the three move axes unconditionally in every mode.
+///
+/// 📐️ A Top pane's `xy` drafting plane keeps the in-plane move/scale pair and the NORMAL rotation.
 #[test]
 fn the_gumball_offers_the_authored_config_then_the_transform_mode_fallback_intersected_with_the_plane() {
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
@@ -2194,8 +2203,6 @@ fn the_gumball_offers_the_authored_config_then_the_transform_mode_fallback_inter
     assert!(config.admits(GumballHandle::MoveX) && config.admits(GumballHandle::MoveXY) && config.admits(GumballHandle::RotateZ));
     assert!(!config.admits(GumballHandle::ScaleX), "an authored config that disables scaling hides AND unpicks the scale handles");
 
-    // 🎛️ No authored config → React's `gumballConfigForTransformMode`, whose `rotate` arm offers the
-    // rings ONLY. This host used to admit the three move axes unconditionally in every mode.
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     sync_world3d_state(&mut state, &scene_with_selection(r#"{"transformMode":"rotateSelection"}"#), Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 });
     let config = world3d_gumball_config(&state);
@@ -2203,7 +2210,6 @@ fn the_gumball_offers_the_authored_config_then_the_transform_mode_fallback_inter
     assert!(!config.admits(GumballHandle::MoveX), "React's rotate mode offers no translation handle");
     assert!(!config.admits(GumballHandle::ScaleZ));
 
-    // 📐️ A Top pane's `xy` drafting plane keeps the in-plane move/scale pair and the NORMAL rotation.
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     sync_world3d_state(&mut state, &scene_with_selection(r#"{"transformMode":"transform","gumballConfig":{"plane":"xy"}}"#), Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 });
     let config = world3d_gumball_config(&state);
@@ -2218,6 +2224,8 @@ fn the_gumball_offers_the_authored_config_then_the_transform_mode_fallback_inter
 /// (`WORLD_VERTEX_DOT_PX`/`WORLD_VERTEX_MARK_PX`, `sizeAttenuation={false}`), so it keeps its
 /// apparent size as the camera pulls away instead of collapsing to a sub-pixel world-unit cross —
 /// the same defect React shipped and fixed on lowpoly.
+///
+/// 🩸️ The pre-W14g cross was `VERTEX_BASE_SCALE * 0.15` = 0.0075 world units, at ANY distance.
 #[test]
 fn vertex_markers_hold_their_pixel_size_at_every_camera_distance() {
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
@@ -2241,7 +2249,6 @@ fn vertex_markers_hold_their_pixel_size_at_every_camera_distance() {
     assert!((near_pixels - WORLD_VERTEX_DOT_PX * 0.5).abs() < 1e-3, "the plain dot is React's 6 px, got {}", near_pixels * 2.0);
     let mark = vertex_marker_half_extent(&near, viewport, centre, VERTEX_HOVER_SCALE);
     assert!(mark > near_half, "a hovered/selected marker is React's larger 11 px mark");
-    // 🩸️ The pre-W14g cross was `VERTEX_BASE_SCALE * 0.15` = 0.0075 world units, at ANY distance.
     assert!(far_half > 0.0075, "the old world-unit cross was sub-pixel at this distance");
 }
 //#endregion 🔘️VertexMarkerPixels
@@ -2350,6 +2357,7 @@ fn sync_parses_numeric_component_ids_and_hovered_component() {
     assert!(state.show_edges);
 }
 
+/// ⚪️ 4 from edges + 24 from 4 vertex crosses
 #[test]
 fn append_component_vertex_spheres_render_base_vertices() {
     let mesh = topology_mesh();
@@ -2363,7 +2371,7 @@ fn append_component_vertex_spheres_render_base_vertices() {
 
     let mut lines = Vec::new();
     append_component_overlays(&state, &ui_wgpu::wgpu::Theme::default(), &state.orbit.to_camera(), COMPONENT_OVERLAY_VIEWPORT, &mut lines);
-    assert_eq!(lines.len(), 28); // 4 from edges + 24 from 4 vertex crosses
+    assert_eq!(lines.len(), 28);
 }
 
 /// 🔘️ The viewport the component-overlay laws measure vertex markers against — their size is now in
@@ -3574,6 +3582,9 @@ fn every_react_measured_trigger_announces_once_per_window_instance() {
 /// camera's own fade radius rather than a fixed square, stays inside the far plane, and fades to
 /// zero alpha at its rim (`📓️w7b-presenter-one-frame-per-boot.md` §5,
 /// `📓️w8b-orthographic-camera-and-3d-parity.md` §3).
+///
+/// 🔀️ The same law under a plan view: a parallel camera's fade radius comes from its zoomed
+/// pixel extent, so a `Top` pane gets a grid of its own instead of the perspective one's.
 #[test]
 fn lod_grid_lines_keep_reacts_band_spacing_and_fade_inside_the_far_plane() {
     let viewport = Rect { x: 0.0, y: 0.0, w: 956.0, h: 814.0 };
@@ -3596,8 +3607,6 @@ fn lod_grid_lines_keep_reacts_band_spacing_and_fade_inside_the_far_plane() {
     }
     assert!(lines.iter().any(|vertex| vertex.color[3] == 0.0), "the rim fades out instead of ending on a hard edge");
 
-    // 🔀️ The same law under a plan view: a parallel camera's fade radius comes from its zoomed
-    // pixel extent, so a `Top` pane gets a grid of its own instead of the perspective one's.
     let parallel = ui_wgpu::wgpu::Camera3d { projection: ui_wgpu::wgpu::CameraProjection3d::Orthographic, zoom: 12.0, position: Vec3::new(0.0, 0.0, 9.45), up: Vec3::new(0.0, 1.0, 0.0), ..camera.clone() };
     let mut parallel_lines = Vec::new();
     append_lod_grid_lines(&mut parallel_lines, 2.0, 10.0, Vec3::ZERO, &parallel, viewport, [0.5, 0.5, 0.5, 1.0]);
@@ -3608,13 +3617,13 @@ fn lod_grid_lines_keep_reacts_band_spacing_and_fade_inside_the_far_plane() {
 }
 
 //#region EnvironmentTests
+/// 🎨️ Linear, not raw sRGB: the world pass renders into an sRGB view, so a wire colour is
+/// linearized on the way in exactly as React's `new Color(hex)` linearizes it.
 #[test]
 fn environment_clear_color_uses_opaque_background() {
     let environment = WorldEnvironmentRecord { background: Some("#112233".into()), ..Default::default() };
     let theme_clear = Rgba::new(0.0, 0.0, 0.0, 1.0);
     let clear = environment_clear_color(&environment, theme_clear);
-    // 🎨️ Linear, not raw sRGB: the world pass renders into an sRGB view, so a wire colour is
-    // linearized on the way in exactly as React's `new Color(hex)` linearizes it.
     assert!((clear.r - srgb_to_linear(0x11 as f32 / 255.0)).abs() < 1e-4);
     assert!((clear.g - srgb_to_linear(0x22 as f32 / 255.0)).abs() < 1e-4);
     assert!((clear.b - srgb_to_linear(0x33 as f32 / 255.0)).abs() < 1e-4);
@@ -3629,6 +3638,7 @@ fn environment_clear_color_falls_back_when_transparent_or_absent() {
     assert_eq!(environment_clear_color(&absent, theme_clear).r, theme_clear.r);
 }
 
+/// ☀️ Azimuth=90, elevation=0 -> pure +Y direction (cos(0)*cos(90)=~0, cos(0)*sin(90)=1, sin(0)=0).
 #[test]
 fn environment_light_dir_uses_sun_direction_only_when_enabled() {
     let disabled = WorldEnvironmentRecord { sun: Some(WorldEnvironmentSunRecord { enabled: Some(false), azimuth: Some(90.0), elevation: Some(0.0), ..Default::default() }), ..Default::default() };
@@ -3636,7 +3646,6 @@ fn environment_light_dir_uses_sun_direction_only_when_enabled() {
 
     let enabled = WorldEnvironmentRecord { sun: Some(WorldEnvironmentSunRecord { enabled: Some(true), azimuth: Some(90.0), elevation: Some(0.0), ..Default::default() }), ..Default::default() };
     let dir = environment_light_dir(&enabled);
-    // azimuth=90, elevation=0 -> pure +Y direction (cos(0)*cos(90)=~0, cos(0)*sin(90)=1, sin(0)=0).
     assert!(dir[0].abs() < 1e-3);
     assert!((dir[1] - 1.0).abs() < 1e-3);
     assert!(dir[2].abs() < 1e-3);
@@ -3887,10 +3896,10 @@ fn hypsometric_color_matches_reference_stops() {
     assert!((peak[1] - 1.0).abs() < 1e-3);
 }
 
+/// 🏔️ Two triangles, 6 verts (no sharing, to keep each triangle's average elevation exact):
+/// triangle 0 is flat at elevation ratio 0.0, triangle 1 is flat at elevation ratio 1.0.
 #[test]
 fn build_terrain_tile_mesh_oracle_colours_every_vertex_along_the_continuous_ramp() {
-    // Two triangles, 6 verts (no sharing, to keep each triangle's average elevation exact):
-    // triangle 0 is flat at elevation ratio 0.0, triangle 1 is flat at elevation ratio 1.0.
     let mesh = TerrainTileMeshPayload {
         positions: vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 2.0, 0.0, 10.0, 3.0, 0.0, 10.0, 2.0, 1.0, 10.0],
         normals: vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0],
@@ -3910,6 +3919,15 @@ fn terrain_tile_url_substitutes_z_x_y() {
     assert_eq!(terrain_tile_url("/dem/{z}/{x}/{y}.png", 12, 34, 56), "/dem/12/34/56.png");
 }
 
+/// 📡️ The queue is not a to-do list nobody reads: an uncached visible tile is ADMITTED into the
+/// bounded world-asset pipeline, so the renderer host's generic fetch pump drains it exactly as it
+/// drains GLB meshes and reference images. Before this wiring the queue had no consumer outside a
+/// unit test and terrain never loaded in production at all.
+///
+/// 🕸️ The tile mesh is built by a BOUNDED cursor — ONE scalar write per turn — so the draw appears
+/// many turns after the bytes land, not on the very next frame. The turns are driven directly
+/// (`step_world_terrain_mesh`) rather than through whole `sync_terrain_state` frames, which would
+/// re-serialize every visible tile's mesh JSON per step.
 #[test]
 fn sync_terrain_state_queues_fetch_for_uncached_tile_and_builds_after_upload() {
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
@@ -3921,10 +3939,6 @@ fn sync_terrain_state_queues_fetch_for_uncached_tile_and_builds_after_upload() {
     assert!(evicted.is_empty(), "nothing was cached yet, nothing to evict");
     assert!(!state.pending_terrain_tile_urls.is_empty(), "an uncached visible tile should be queued for byte-fetch");
 
-    // 📡️ The queue is not a to-do list nobody reads: an uncached visible tile is ADMITTED into the
-    // bounded world-asset pipeline, so the renderer host's generic fetch pump drains it exactly as it
-    // drains GLB meshes and reference images. Before this wiring the queue had no consumer outside a
-    // unit test and terrain never loaded in production at all.
     let owner = take_next_world3d_asset(&mut state).expect("a visible uncached DEM tile is admitted as a fetch request");
     let (z, x, y) = match owner.kind() {
         WorldAssetRequestKind::Terrain { z, x, y } => (z, x, y),
@@ -3944,10 +3958,6 @@ fn sync_terrain_state_queues_fetch_for_uncached_tile_and_builds_after_upload() {
     assert!(apply_world3d_terrain_tile_bytes(&mut state, z, x, y, &bytes), "fetched DEM bytes reach the terrain session");
     assert!(!state.pending_terrain_tile_urls.contains_key(&terrain_tile_url("/dem/{z}/{x}/{y}.png", z, x, y)), "an applied tile leaves the pending set");
 
-    // 🕸️ The tile mesh is built by a BOUNDED cursor — ONE scalar write per turn — so the draw appears
-    // many turns after the bytes land, not on the very next frame. The turns are driven directly
-    // (`step_world_terrain_mesh`) rather than through whole `sync_terrain_state` frames, which would
-    // re-serialize every visible tile's mesh JSON per step.
     sync_terrain_state(&mut state, &camera);
     assert!(state.terrain_build.is_some(), "an uploaded tile opens its mesh-build cursor");
     let mut turns = 0;
@@ -4048,12 +4058,12 @@ fn world_interaction_definition_declares_path_delimited_item_domain() {
     assert!(def.selection.merges.contains(&MergeMode::Additive));
 }
 
+/// 🕹️ default `granularity` ("object") is neither component-mode nor "mesh" — this is the
+/// plain `world`-domain item pick path (see `pick_select_action`'s final fallback branch).
 #[test]
 fn pick_select_emits_batched_interaction_select_for_plain_object_pick() {
     let mesh = topology_mesh();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
-    // 🕹️ default `granularity` ("object") is neither component-mode nor "mesh" — this is the
-    // plain `world`-domain item pick path (see `pick_select_action`'s final fallback branch).
     state.meshes.insert("mesh-1".into(), mesh);
     state.draws.push(SceneDraw3d { mesh_key: "mesh-1".into(), mesh_version: 0, instances: vec![Instance3d { id: "obj-1".into(), model: Mat4::identity(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() }], shadow_role: Default::default() });
     let inner = Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 };
@@ -4087,6 +4097,7 @@ fn marquee_select_emits_batched_interaction_select_with_rectangle_method() {
     assert!(state.marquee_points.is_empty(), "marquee is consumed after gathering targets");
 }
 
+/// 🖱️ Moving off the instance clears — empty `targets` is `next_hover`'s clear signal.
 #[test]
 fn pick_hover_emits_interaction_hover_and_clears_when_nothing_hit() {
     let mesh = topology_mesh();
@@ -4106,7 +4117,6 @@ fn pick_hover_emits_interaction_hover_and_clears_when_nothing_hit() {
     let targets = args["targets"].as_array().expect("targets array");
     assert_eq!(targets[0]["id"], json!("surface-1/obj-1"));
 
-    // 🖱️ Moving off the instance clears — empty `targets` is `next_hover`'s clear signal.
     let action = pick_hover_action(&mut state, 5.0, 5.0, inner).expect("clear action");
     assert_eq!(action.action, "interactionHover");
     let args = action.args.expect("args");
@@ -4206,13 +4216,13 @@ fn marquee_select_emits_bare_ids_into_bound_app_domain() {
     assert_eq!(targets[0]["id"], json!("obj-1"));
 }
 
+/// 🚫️ An action for the OS `world` fallback domain must NOT apply once this window is bound to
+/// its own app domain — otherwise the same click could ever light up two selection universes.
 #[test]
 fn apply_world_action_preview_respects_bound_app_domain_and_ignores_other_domains() {
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     state.bound_domain_id = Some("cad".into());
     state.bound_domain_granularity_id = Some("object".into());
-    // 🚫️ An action for the OS `world` fallback domain must NOT apply once this window is bound to
-    // its own app domain — otherwise the same click could ever light up two selection universes.
     apply_world_action_preview(
         &mut state,
         &ActionDescriptor {
@@ -4654,6 +4664,8 @@ fn scene_bridge_honours_selection_hover_camera_and_sun() {
     }
 }
 
+/// 🎯️ Aim through the fixture camera's own target, which is the centre of the prism's base face
+/// — the one point guaranteed both inside the solid and inside the 45° frustum.
 #[test]
 fn scene_bridge_binds_the_apps_interaction_domain_for_world_picking() {
     let fixture = scene_bridge_fixture();
@@ -4670,8 +4682,6 @@ fn scene_bridge_binds_the_apps_interaction_domain_for_world_picking() {
     let interaction_id = state.instance_interaction_ids.get(&instance_id).expect("the scene bridge retains the instance's topology target").clone();
     assert_eq!(interaction_id, "extrude@solid");
 
-    // 🎯️ Aim through the fixture camera's own target, which is the centre of the prism's base face
-    // — the one point guaranteed both inside the solid and inside the 45° frustum.
     let camera = state.orbit.to_camera();
     let screen = ui_wgpu::wgpu::project_point(camera.view_proj(bounds.w, bounds.h), Vec3::ZERO, bounds.w, bounds.h).expect("camera target projects");
     let hit = pick_instance_at(&state, screen[0], screen[1], bounds);
@@ -5020,6 +5030,11 @@ fn the_live_camera_row_reports_the_orbit_and_not_the_wire() {
 
 /// 📐️ LAW: local projection selections acquire the spec without rearming content framing. React's
 /// viewport owner remains mounted and `WorldProjectionSnapDriver` retains the accepted pose.
+///
+/// 📐️ And the wire never takes the selection back. The settle a press queues publishes
+/// `setCamera`, whose payload carries no `projection` member at all, so the guest's echo always
+/// arrives in the DELIVERED family — applying it whole is how the switch undid itself in one
+/// round trip.
 #[test]
 fn a_local_projection_selection_retains_viewport_ownership() {
     let mut state = World3dState::new("surface".into(), "controller".into());
@@ -5041,10 +5056,6 @@ fn a_local_projection_selection_retains_viewport_ownership() {
     assert!(apply_world3d_projection_spec(&mut state, cabinet), "📐️ but a row with the same family and another plane does — Cabinet after Orthographic");
     assert_eq!(state.projection_spec, cabinet, "📐️ a free oblique retains every framing and shear parameter");
 
-    // 📐️ And the wire never takes the selection back. The settle a press queues publishes
-    // `setCamera`, whose payload carries no `projection` member at all, so the guest's echo always
-    // arrives in the DELIVERED family — applying it whole is how the switch undid itself in one
-    // round trip.
     let mut wired = World3dState::new("surface".into(), "controller".into());
     wired.bounds = Rect::new(0.0, 0.0, 478.0, 814.0);
     assert!(apply_world3d_projection_spec(&mut wired, top));
@@ -5183,6 +5194,9 @@ fn delivered_preserve_camera_policy_cancels_frame_debt_until_local_projection_se
 /// FADE parameter, not a draw extent, so at the puzzle 3d boot camera it coarsened the band from
 /// 10 world units to 10 000 and painted four giant cells across a pane where React paints a 10-unit
 /// grid (`📓️w9b-projection-pane-framing-grid-materials.md` §3).
+///
+/// 🌐️ And the ceiling is never spent on the SPACING: every band keeps React's own
+/// `lodGridStepWorld` step however far the camera is.
 #[test]
 fn the_grid_never_ends_on_a_hard_edge_however_far_the_camera_is() {
     let viewport = Rect { x: 0.0, y: 0.0, w: 956.0, h: 814.0 };
@@ -5196,8 +5210,6 @@ fn the_grid_never_ends_on_a_hard_edge_however_far_the_camera_is() {
         assert!(lines.len() <= 8 * (WORLD_GRID_MAX_DIVISIONS as usize + 1), "🌐️ inside the vertex budget at {distance}: {}", lines.len());
         assert!(lines.iter().any(|vertex| vertex.color[3] == 0.0), "🌐️ the rim reaches alpha 0 at {distance}, so the ceiling is invisible");
 
-        // 🌐️ And the ceiling is never spent on the SPACING: every band keeps React's own
-        // `lodGridStepWorld` step however far the camera is.
         let mut offsets: Vec<f32> = lines.iter().map(|vertex| vertex.position[1]).collect();
         offsets.sort_by(|left, right| left.partial_cmp(right).expect("finite grid coordinates"));
         offsets.dedup_by(|left, right| (*left - *right).abs() < 1e-4);
@@ -5325,7 +5337,6 @@ fn reference_visual_geometry_reaches_the_actual_textured_scene_pass() {
         }
     }
     retire_bridged_surface(&mut state);
-    println!("[DEBUG] actual reference scene pass retained the texture identity and Three-derived plane corners");
 }
 
 /// 🌐️ LAW: the actual World producer publishes one retained procedural grid scalar and no

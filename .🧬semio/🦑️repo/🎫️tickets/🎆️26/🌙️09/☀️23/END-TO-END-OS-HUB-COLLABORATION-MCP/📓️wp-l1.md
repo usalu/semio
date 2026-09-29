@@ -14,9 +14,12 @@ wasm32 only via `📜️fleet-mutex.sh wasm l1` (default build-dir = warms the n
 | prep | manifests + live dry runs of every window-3 set | **done 21:1x**: 46 sets dry-run on the live tree (`wp-l1/generated/dry-live-1/`): clean except **AV2** (payload `files/✏️s/` deleted between 11:43 and 16:29 → **restored by L1 21:2x** from AV2's live overlay `s13-av1-overlay` (== `s14b-av2-snapshot/overlay`; git 5bcb2da's copy is the stale pre-rebase design) → dry run 66 hunks / 25 files / 18 new / 0 problems) and T14's chain-dependent sets (g12 needs F9, 5b-b2 needs 5b — expected). T1 baseline native check (115 crates, warms build-fleet-b, exposes pre-existing reds) running; os tsc baseline **0 errors** (46 s) |
 | T1a | mini-train pulled forward (coordinator 21:5x: MCP hub lane gate): H13 refill + G12 live catalog | **written 21:58–22:00** (h13 9 files: services, kernel directory client + law/fixture, os-mcp 🔗️remote + schema/fixture/TS; g12 2 files os-mcp workspace + quick); native check kernel + services + os-mcp + semio-hub queued with priority stamp 120100 (`generated/t1a-native-1.txt`); wasm32 kernel queued (W4's wasm hold still in release-modules) |
 | T1 | SDK core: lb2-xml/p6/p1/p7 · T14 f9/carriers/g12/class-fix/p8-orphan/h9l/5b/5b-b2/item6 · s19 gen-archive-load · s20 initializer/poll-yield/document-verbs/chunk-staging 1+2/retire-load-request · c12 seed-history · g12 revision-binding · p9 | **all written 21:5x–23:24** (reboot 22:42 survived, 0 torn files). Proof 1 (00:0x): native 119 crates **red only on t14-h9l** (3 sites) + pre-existing stdio lib tests; wasm32-wasip2 166 crates **red only on h9l's host site** (17 dependents of semio-framework-os unchecked); os tsc 2 → **0** after P9's in-tree fix 23:39; boot to Home **ok** (50 s, 0 faults). c12-seed-history-amend REVERTED (duplicated law). Waiting: T14 h9l hotfix → re-check; then descriptor regen (wasm lane, with T14) + p6 describe watch |
-| T2 | stdio (ST2 code · R10 r10 · CX1 · 1b rebuild · LB2 p5 · LB2 p3 + WG11 painter) | waits for T1 |
-| T3 | apps & shells (SH2 ×2 · S18 · WG11 ×5 · C12 · C13 · AV2 · EN2 · S19 · S20 apps) | waits for T2 |
-| T4 | host runtime & hub-adjacent (H13 · H14 · G12 live catalog · Z4 · R10 deps · W4 kind specs) | waits for T3 |
+| T1-close | descriptor regen (coordinator: after the h9l hotfix, all plugin descriptors through the chain's describe generator) | **green 03:25**: rebuild-all components (describe + materialize-dev, 60 projects + 67 deps) rc 0 6810 s + generate rc 0 76 s; 118 descriptor files rewritten; p6 watch 0 `plugin-assembly.declaration-schema|inference`; T14 `kind-label-check.py` rc 1 (88 "kind of schema X has no label", 20 packages → T14 + W4) |
+| T2 | stdio: st2-code (40) · st2-r10 (R10, 9 + 9 new + move) · cx1 (34, generation 7d60c569…) · nx1b-rebuild (1) · lb2-p5 (12) · u6-dead-docx-xlsx (10) · u6-txt-replace-lowering (7) · u6-wav-kind-retag (2) · lb2-p3-wg11 (17) | **GREEN 04:27**: native 53 crates green except pre-existing docx/xlsx lib-test drift (fixed later by U6); lb2-p3-wg11 reverted (re-landed in T3-late with U6's capacity fix); wasm32 50 rc 0; stdio + 9 families describe + generate rc 0 after `l1-stdio-semio-strip`; os/hub tsc 0; boot ok |
+| T3 | **GREEN 05:37** (c12-splice out; w4 ×2 + t14-kind-choices re-landed 06:15 and proven with T4) — 33 sets: c13-p1/p2 · u6 fragment/bcf-mesh/fault-terminal · sh2 space-home (80) + b1 (44) · s18 twin · wg11 reseed/board/a11y/harness/replay-routes/offer-scope/shell-turn · c12 splice + child-payload · av2 · en2 (12 sets) · s19 norm ×4 + flow-extensions · s20 cad/process/silent · w4 kind-specs + codec-gate · t14 kind-choices · lb2-p3-wg11 (re-landed, U6 capacity fix) · u6 xlsx-canonical-save + docx-set-page-owner | **all written 04:28–04:48**; os tsc 0; R10 taxonomy for the new dirs 04:48; combined native check 193 crates running (`s14-l1-logs/T3-native-1.txt`), then wasm32 176, renderer, p5 fixture writers, boot. Descriptors of T3 plugins are left to the next chain's rebuild-all (R10's registry probe red on stale space/animate descriptors = expected) |
+| pre-chain | R10 T5 codemods (1 475 files: [DEBUG]→[TRACE] 1 931, comment hoist 1 333, @emoji 9 155) + c12-splice (58) + `l1-c12-test-import` | **PRE-CHAIN GREEN 07:18**: native 228 crates green except pre-existing value-derive `flatten_with_skip` test (untouched, unowned); wasm32 178 rc 0; renderer rc 0; os tsc 0 (+7 other programs 0; 9 standalone package tsconfigs only pre-existing config-class errors, no syntax class); boot ok |
+| T6 (queued, post-chain) | **LB2 p9/p11/p12 ON HOLD (LB2 08:3x: scratch s9 red — shipped_fleet 4/6, editor_catalog 59/90; p9 grows again)** · LB2 p9 hosted-artifacts (49) → p11 editor-documents (32) → p12 document-schema-identity (24) (revert reverse; shared: p9∩p12 gif root, p11∩p12 gif 89a editor/viewer) · H14 retire-pages · WG11 json-number · U6 (a') row-target | coordinator 07:1x + LB2 07:2x–07:4x; LB2's test-only p10 (editor_catalog law + fixture, 2 files disjoint from p9/p11/p12) lands by LB2 under rule 22; family `descriptor_is_fresh` on LB2's scratch: 7/9 unchanged, stdio-image + stdio-pdf change (p12) → T6 describe = stdio + image + pdf; LB2 p9 grew to 55 files (kernel store/io schema docs, SDK `schema_documents`, framework schema inference export) → kernel-wide, full guest proof; P9 `p9-fail-closed` (8 files, SDK agent lane fails closed) queued after LB2's sets |
+| T4 | c12-catchup-status (6) · h14-codec-origin (3, 3-way merge over G12's plugin-host edit) · z4-b123 (12) · z4-lifecycle (18) · r10-png (3) · r10-zip (9) · r10-image (2) · r10-three (4) (+ H13 refill + G12 live catalog landed as T1a) | **written 05:37–05:39**; R10 taxonomy 05:49; native 196 crates **rc 0** (469 s, 0 errors — docx/xlsx tests compile now), wasm32-wasip2 177 **rc 0** (204 s), renderer wasm32-unknown-unknown **rc 0** (97 s), os tsc 0, hub tsc 0. T3-late re-land 06:14–06:15 (w4-kind-specs 39, w4-codec-gate 3, t14-kind-choices 3; T14 scratch-proven) → combined re-check: native 196 **rc 0** (425 s), wasm32 177 **rc 0** (202 s), renderer **rc 0** (75 s), os tsc 0, boot to Home ok (6 s, 0 faults) ⇒ **T4 GREEN 06:32** (c12-splice still out, waiting for C12) |
 
 ### Pre-existing reds (T1 baseline, before any T1 write)
 
@@ -158,4 +161,46 @@ feature). Not caused by any window-3 set; errors in these files are excluded fro
   T14 ×9, S19 gen-archive-load 10/10 (3-way merge of payload old/new over the tree == tree), S20 document-verbs 35/35 (its dry run
   misreports insert hunks as "apply": old ⊂ new is tested first — a re-`--write` would duplicate; never re-run), S20 ×4, C12 + amend,
   G12 ×2, H13, P9 50/51 + P8 16/17 (the 1 each = later owner edits). No torn write.
+- 01:30 descriptor regen started (`l1-describe.sh` → `.🧬semio/🌐hub/s14-l1-logs/T1-describe-3.txt`, wasm lane, alone per rule 25b):
+  rebuild-all components (describe + materialize-dev, 60 projects + 67 deps, --parallel=2) → generate. Load 40–85 (mostly VS Code
+  ripgrep / git / fseventsd, ≤ 6 rustc). T2 sets dry-run clean on the post-T1 tree 01:3x (st2 code/r10, cx1, nx1b, lb2-p5, lb2-p3+wg11);
+  T2 waits for the regen (it reads the same stdio sources). R10's step-8 tooling lost its `generated/window3-backups` in the sweep →
+  R10 must be resumed for `st2-r10`.
+- 03:25 regen END rc 0 (`s14-l1-logs/T1-describe-3.txt`); p6 watch clean; kind-label check 88 problems (`T1-kind-label-check-1.txt`).
+  Coordinator decisions since: p24 hub refresh cancelled (post-T1 hub cannot read pre-h9l descriptors) → no live verification until
+  the next chain; go T2 → T3 → T4 as fast as rule 25 allows; T3 front = c13-p1 + c13-p2; T5 only if its proof fits before the chain.
+  The sweep also removed 52 tracked payload files (c12 splice/seed, av2 4, en2 29) → restored by the coordinator from HEAD.
+- 03:31 R10 taxonomy slot (11 names, probe valid) → 03:32 st2-code (st2-gen re-run on the post-T1 tree first; 13 edits + 27 new) →
+  03:41–03:45 R10 st2-r10 (registry check red: stale catalog — expected, told R10 not to revert) → 03:54–03:58 cx1 (bootstrap generation
+  bda0b90f… → 7d60c569…, 4 occurrences), nx1b-rebuild, lb2-p5, u6 ×3 (U6 = new slice: dead docx/xlsx items, txt replace lowering, wav
+  kind retag), lb2-p3 + wg11 painter (2 concurrent peer bcf asset edits forgotten). T3 gained: u6-fragment-annotation-siblings (after C13),
+  wg11-replay-routes + wg11-offer-scope (before wg11-shell-turn), t14-kind-choices (after W4's gate); SH2 set now 80 files.
+- 04:00–04:05 T2 native (53 crates, 39 features, `s14-l1-logs/T2-native-1.txt`): red only in lb2-p3-wg11's NEW tests (ui
+  `📊️table-row-grid` E0599 `taffy::Size::MAX_CONTENT`; SDK `🔬️app-window-kits` E0716) + the pre-existing docx/xlsx lib-test drift →
+  **lb2-p3-wg11 REVERTED 04:04** (clean, 17 files); re-check plugin + ui(wgpu-engine) + space-home + plugin-space rc 0 (`T2-native-2.txt`).
+  U6 fixed both compile errors in the payloads 04:1x but 2 SDK laws stay red (p3 capacity design) → set HELD. os tsc 0, hub tsc 0.
+- 04:05–04:07 T2 wasm32-wasip2 50 guest crates **rc 0** (90 s, `T2-wasm-1.txt`).
+- 04:08–04:21 stdio + 9 families describe + materialize-dev: **stdio-semio describe failed** — dev component 345 579 424 B > the
+  268 435 456 B raw-component bound (same class as W4's 19:2x stdio fix) → new L1 set `l1-stdio-semio-strip` (root Cargo.toml
+  `[profile.wasm-dev.package.semio-s-plugin-stdio-semio] strip = "symbols"`, W4/norm precedent) landed 04:2x; describe re-run.
+- 04:28–04:37 T3 run 1: 30 sets landed (`s14-l1-logs/T3-run-1.txt`); SH2's emptied `🎚️config/🧬️schema/📇️directory-projection/` removed.
+  04:48 T3 run 2: lb2-p3-wg11 (U6's capacity-true laws), u6 C7 xlsx canonical save, u6 C8 docx set-page owner. R10 registry verify
+  04:35 overlapped the writes (stale descriptors expected until the chain). R10 taxonomy slot for T3's new dirs 04:48.
+- 04:49–04:57 T3 native (193 crates): 4 culprits — w4-kind-specs (fem-2d `name:` E0560), c12-splice (writer `text_splice` unresolved;
+  command test missing from payload since dfe2687), wg11-reseed (kernel sync test E0004 `RebootstrapRequired`), av2 (animate test
+  E0277 Debug). 04:58 REVERTED c12-splice, w4-codec-gate, w4-kind-specs (clean) and t14-kind-choices (first by a mistyped command
+  of mine, kept reverted: it must follow W4's identity set); wg11-reseed + av2 reverts not clean (later sets rewrote their files) →
+  coordinator landed 2 test-only hotfixes 05:0x. Re-checks green: kernel/animate/writer/fem/describe/framework (`T3-native-2.txt`),
+  writer/fem dependents (`T3-native-3.txt`). wasm32-wasip2 176 crates rc 0 (199 s, `T3-wasm-1.txt`). Renderer wasm32-unknown-unknown
+  queued behind ST2's wasm hold (editor-component-check, since 05:04); p5 fixture writers wait (rule 25: one heavy job).
+- 05:35 T3 renderer wasm32-unknown-unknown rc 0 (after ST2's wasm hold); 05:36 LB2 p5 fixture writers (5 demo assets, docx/xlsx lib
+  tests compile since U6's A6); 05:37 T3 boot to Home ok ⇒ **T3 GREEN** (w4 ×2, t14-kind-choices, c12-splice out).
+- 05:37–05:39 T4 written; r10-three's record dropped a concurrent Cargo.lock update (it belongs to r10-png/zip + ST2's cargo).
+  05:50–05:58 T4 native 196 crates rc 0; 06:09–06:14 wasm32 177 rc 0 + renderer rc 0; os/hub tsc 0.
+- 06:14 T3-late re-land of the kind sets (T14 fixed fem `name:`; scratch proof 29 crates + laws 14/0) → re-check running.
+- 06:20–06:32 T4 + T3-late re-check all green (`T4-{native,wasm,renderer}-2.txt`, `T4-tsc-os-2.txt`, `T4-boot-1.txt`) ⇒ **T4 GREEN**.
+- 06:3x c12-splice re-landed (repaired payload) → 06:55 R10's T5 written → 06:55–07:05 pre-chain native (228 crates): c12's new law
+  imported `settle_framework_reserved_admission` from the wrong module (revert not clean: T5 touched 4 of its files) → L1 test-only
+  import fix, writer re-check rc 0; value-derive `flatten_with_skip` = pre-existing. 07:09–07:17 wasm32 178 + renderer rc 0; 07:18
+  os tsc 0 + boot ok ⇒ **PRE-CHAIN GREEN** relayed.
 - 21:5x S20 relay: chunk-staging phase 2 ready (`s20-patch-chunk-staging-2.py`, 27 files) → both phases land in ONE T1 step (hold lifted).

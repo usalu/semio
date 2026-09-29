@@ -87,30 +87,20 @@ describe("wgpu scoped contributions pack", () => {
     { pluginId: "flow-extension-bim", manifest: manifest("bim.wall") },
     { pluginId: "flow-extension-math", manifest: manifest("math.vector") },
   ];
-  it("sends one body-bounded pack of the receiver plus reachable operators", () => {
-    const pack = wgpuBuildScopedContributionsPack(laws.laws.scopedContributionsPack.receiverPluginId, [{ widgets: [{ neuronKind: "brep.solid.extrude" }, { neuronKind: "math.vector" }] }], loaded);
+  const law = laws.laws.scopedContributionsPack;
+  it("sends one body-bounded pack of the receiver plus every contribution of the topics it consumes", () => {
+    const pack = wgpuBuildScopedContributionsPack(law.receiverPluginId, loaded, law.receiverConsumes);
     expect(pack).not.toBeNull();
     expect(pack?.crossings).toBe(1);
     expect(pack?.bytes.byteLength).toBeLessThanOrEqual(PUBLIC_INVOCATION_BODY_BYTES);
     expect(PUBLIC_INVOCATION_STRING_BYTES).toBeLessThan(PUBLIC_INVOCATION_BODY_BYTES);
-    expect([...pack!.pluginIds].sort()).toEqual(laws.laws.scopedContributionsPack.expectPluginIds);
+    expect([...pack!.pluginIds].sort()).toEqual(law.expectPluginIds);
   });
-  it("drops foreign contributions when the graph names no operator kind", () => {
-    const pack = wgpuBuildScopedContributionsPack(laws.laws.scopedContributionsPack.receiverPluginId, [{}], loaded);
+  it("sends only the receiver's own contributions when it consumes nothing", () => {
+    const pack = wgpuBuildScopedContributionsPack(law.receiverPluginId, loaded, []);
     expect(pack).not.toBeNull();
     expect(pack?.crossings).toBe(1);
-    expect([...pack!.pluginIds]).toEqual(laws.laws.scopedContributionsPack.expectEmptyGraphPluginIds);
-  });
-  it("reaches brep operators nested in a flow-extension manifestJson string", () => {
-    const packed = [
-      loaded[0]!,
-      { pluginId: "flow-extension-brep", manifest: { topicContributions: [{ topic: "flow.extension", payload: { manifestJson: JSON.stringify({ contributes: { operators: [{ id: "brep.solid.extrude" }] } }) } }], apps: [], workflows: [] } },
-      loaded[2]!,
-    ];
-    const pack = wgpuBuildScopedContributionsPack(laws.laws.scopedContributionsPack.receiverPluginId, ["neuron-kind=brep.solid.extrude"], packed);
-    expect(pack).not.toBeNull();
-    expect(pack?.crossings).toBe(1);
-    expect([...pack!.pluginIds].sort()).toEqual(laws.laws.scopedContributionsPack.expectManifestJsonPluginIds);
+    expect([...pack!.pluginIds]).toEqual(law.expectConsumingNothingPluginIds);
   });
 });
 

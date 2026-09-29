@@ -681,7 +681,7 @@ pub fn mesh_selection_ids(args: Option<&Value>, fallback: &[String]) -> Vec<Stri
     args.and_then(|value| value.get("ids")).and_then(|value| dsl::FromValue::from_value(json::to_dsl_value(value)).ok()).filter(|ids: &Vec<String>| !ids.is_empty()).unwrap_or_else(|| fallback.to_vec())
 }
 
-/** @emoji 🧭️ Whether `handle` may emit VCS operations from a fixture before/after delta — view-only actions skip the persisted artifact snapshot entirely. */
+/** 🧭️ Whether `handle` may emit VCS operations from a fixture before/after delta — view-only actions skip the persisted artifact snapshot entirely. */
 fn puzzle3d_action_artifact_intent(action: &str) -> bool {
     matches!(
         action,
@@ -1275,7 +1275,7 @@ pub fn value_as_vec3(value: &Value) -> Option<[f64; 3]> {
     Some([array.first()?.as_f64()?, array.get(1)?.as_f64()?, array.get(2)?.as_f64()?])
 }
 
-/** @emoji 📐️ Resolves one numeric-field edit: an absolute `value` (typed entry) wins when present,
+/** 📐️ Resolves one numeric-field edit: an absolute `value` (typed entry) wins when present,
  * otherwise a `delta` (stepper nudge) is added to `current` — offset-preserving across a multi-select
  * where `current` differs per entity. `None` when neither parses. */
 fn puzzle3d_resolve_number_edit(current: f64, value: Option<&Value>, delta: Option<&Value>) -> Option<f64> {
@@ -1285,14 +1285,14 @@ fn puzzle3d_resolve_number_edit(current: f64, value: Option<&Value>, delta: Opti
     delta.and_then(Value::as_f64).map(|delta| current + delta)
 }
 
-/** @emoji 📐️ Settings counterpart to `puzzle3d_resolve_number_edit`: reads `value`/`delta` directly
+/** 📐️ Settings counterpart to `puzzle3d_resolve_number_edit`: reads `value`/`delta` directly
  * out of an action's `args`, for single global settings (not per-entity multi-select) whose stepper
  * dispatches straight to their own dedicated action. */
 pub fn puzzle3d_absolute_or_delta(args: Option<&Value>, current: f64) -> Option<f64> {
     puzzle3d_resolve_number_edit(current, args.and_then(|value| value.get("value")), args.and_then(|value| value.get("delta")))
 }
 
-/** @emoji 📐️ Parses a nested stepper-group field id as `"<base>.<axis>"` (`x`/`y`/`z`/`w`), returning
+/** 📐️ Parses a nested stepper-group field id as `"<base>.<axis>"` (`x`/`y`/`z`/`w`), returning
  * the axis index when `field` names a component of `base` — the dot-path convention
  * `ui_inspector_vec3_group`/the inspector's quaternion group use for their per-axis actions. */
 fn puzzle3d_axis_index(field: &str, base: &str) -> Option<usize> {
@@ -2430,7 +2430,7 @@ pub fn puzzle3d_interaction_chrome_scope() -> UiDirtyScope {
     UiDirtyScope::Partial { window_bodies: vec![main::BODY_KEY.to_string()], panel_bodies: Vec::new(), utilities: false, tools: false, engagements: false, measures: true, labels: false }
 }
 
-/// @emoji 🐢️ What class of shell state one declared command invalidates — the ONE place this app
+/// 🐢️ What class of shell state one declared command invalidates — the ONE place this app
 /// decides a `UiDirtyScope`, next to the command catalogue whose ids it keys on.
 ///
 /// 🧯️ Why this is a table and not a default: `dispatch_step` used to start every arm at
@@ -2483,7 +2483,7 @@ pub fn puzzle3d_scope(class: Puzzle3dScopeClass) -> UiDirtyScope {
     }
 }
 
-/// @emoji 🐢️ The scope table: one class per declared action id. An id absent from the table is
+/// 🐢️ The scope table: one class per declared action id. An id absent from the table is
 /// [`Puzzle3dScopeClass::Chrome`] — the widest, always-correct answer — so a newly declared command
 /// is slow before it is wrong, and `command_scope_classes_name_the_panels_they_change` in
 /// `🧪️tests/🔬️unit/🦀️.rs` is what forces every MUTATING id to earn a narrower class.
@@ -2506,7 +2506,7 @@ pub fn puzzle3d_command_scope_class(action: &str) -> Puzzle3dScopeClass {
 //#endregion 🔖️UiScopes
 
 //#region 🔖️Puzzle3dCommand
-/// @emoji 🎯️ B1: `Puzzle3dPlayApp::Command` — the SOLE dispatch surface, one variant per declared
+/// 🎯️ B1: `Puzzle3dPlayApp::Command` — the SOLE dispatch surface, one variant per declared
 /// action (mirrors every `.mutation(...)`/`.view_action(...)` id `create_puzzle3d_app` registers
 /// below). Each variant carries `window_id` (was host-pushed `view_state.window_id`) plus `args` (the
 /// action's original `{...}` JSON payload, unchanged) — `handle` reconstructs the exact
@@ -3379,7 +3379,7 @@ impl Puzzle3dPlayApp {
         scene
     }
 
-    /// @emoji 🧩️ B1: the pure per-action core, dispatched into by `ArtifactApp::handle` with
+    /// 🧩️ B1: the pure per-action core, dispatched into by `ArtifactApp::handle` with
     /// `action`/`args`/`window_id` reconstructed 1:1 from the typed `Puzzle3dCommand`. Everything past
     /// this adapter boundary reads/writes the passed-in `Puzzle3dConfig` snapshot and returns a real
     /// `Emit` (document + config operations) instead of mutating `self`.
@@ -8033,7 +8033,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         Puzzle3dCommand::from_action(action, args, window_id).ok_or_else(|| Fault::from(format!("unknown Puzzle 3D action '{action}'")))
     }
 
-    /// @emoji 🧩️ Thin typed-command adapter — reconstructs the exact `(action, args, window_id)`
+    /// 🧩️ Thin typed-command adapter — reconstructs the exact `(action, args, window_id)`
     /// triple `handle_action_impl` expects from the typed `Puzzle3dCommand`.
     fn handle(
         command: &Puzzle3dCommand,

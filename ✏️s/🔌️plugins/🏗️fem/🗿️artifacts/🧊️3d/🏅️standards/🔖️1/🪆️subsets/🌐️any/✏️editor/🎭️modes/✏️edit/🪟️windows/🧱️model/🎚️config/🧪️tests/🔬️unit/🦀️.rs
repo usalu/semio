@@ -36,5 +36,4 @@ fn fem3d_window_config_model_matches_neutral_fixture_and_codecs() {
         }
     }
     assert!(admitted_invalid.is_empty(), "FEM native admitted invalid neutral cases: {admitted_invalid:?}");
-    eprintln!("[DEBUG] FEM 3D model window config matched neutral fixture and codecs");
 }

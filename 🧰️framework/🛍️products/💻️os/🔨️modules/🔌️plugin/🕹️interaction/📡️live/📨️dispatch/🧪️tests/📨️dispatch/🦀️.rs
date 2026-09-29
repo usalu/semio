@@ -82,7 +82,6 @@ fn instance_lifetime_close_deadline_resume_never_reenters_completed_work() {
         assert_eq!(state.deadline_resume.load(Ordering::SeqCst), u8::MAX);
         assert_eq!(state.deadline_elapsed_us.load(Ordering::SeqCst), row["elapsedUs"].as_u64().unwrap());
     }
-    eprintln!("[DEBUG] native close deadline retains exact candidate through repeated late publication without pump reentry");
 }
 
 
@@ -123,7 +122,6 @@ async fn instance_lifetime_close_late_physical_step_retains_its_exact_outcome() 
     }
     assert_eq!(RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst)), RuntimeCloseStatus::Complete);
     assert!(state.cell.lock().unwrap().is_none());
-    eprintln!("[DEBUG] native close physical-step-once retained-outcome late_us={} total_distinct_steps={}", state.deadline_elapsed_us.load(Ordering::SeqCst), state.physical_close_calls.load(Ordering::SeqCst));
 }
 
 
@@ -145,7 +143,6 @@ fn instance_lifetime_close_deadline_submit_refusal_preserves_candidate() {
     assert_eq!(RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst)), RuntimeCloseStatus::Complete);
     assert_eq!(state.deadline_resume.load(Ordering::SeqCst), u8::MAX);
     assert!(pump.session.is_none() && pump.outcome.is_none());
-    eprintln!("[DEBUG] native close refused submission retained exact candidate until later successful publication");
 }
 
 #[test]
@@ -266,7 +263,7 @@ fn drive_close_lease(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeA
             let fault = state.last_fault.lock().unwrap();
             let length = fault.iter().position(|byte| *byte == 0).unwrap_or(fault.len());
             let phases = state.callback_phase_us.each_ref().map(|phase| phase.load(std::sync::atomic::Ordering::SeqCst));
-            panic!("[DEBUG] exact close {error:?}: generation={} origin={} elapsed={} phases={phases:?} stalled={} terminal={} complete={} blocked={} faulted={} pending={:?} detail={}", state.generation.0, state.last_fault_origin.load(std::sync::atomic::Ordering::SeqCst), state.last_callback_elapsed_us.load(std::sync::atomic::Ordering::SeqCst), state.stalled_steps.load(std::sync::atomic::Ordering::SeqCst), pump.terminal, pump.complete, pump.blocked, pump.faulted, pump.pending_status, String::from_utf8_lossy(&fault[..length]));
+            panic!("exact close {error:?}: generation={} origin={} elapsed={} phases={phases:?} stalled={} terminal={} complete={} blocked={} faulted={} pending={:?} detail={}", state.generation.0, state.last_fault_origin.load(std::sync::atomic::Ordering::SeqCst), state.last_callback_elapsed_us.load(std::sync::atomic::Ordering::SeqCst), state.stalled_steps.load(std::sync::atomic::Ordering::SeqCst), pump.terminal, pump.complete, pump.blocked, pump.faulted, pump.pending_status, String::from_utf8_lossy(&fault[..length]));
         }
         if lease.is_retired().unwrap() && runtime.close_quarantine.borrow().get(7).is_none() { return; }
         std::thread::yield_now();
@@ -392,18 +389,18 @@ async fn run_ingress(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeA
     panic!("fixed local query command did not leave ingress");
 }
 
+/// 🔒️ The encoded transaction route is no longer refused wholesale: it is admitted and answers
+/// with its OWN typed frame, failing CLOSED on the payload itself. The refusal this law used to
+/// name, `plugin.command-route-state-machine-required`, exists NOWHERE in the tree any more — it
+/// was the route-level rejection that has been replaced by the per-payload one below. What the
+/// law protects is unchanged: an encoded `TransactionPrepare` can never smuggle an unvalidated
+/// owner-mutation payload past the decoder, and no `Error` frame hides the outcome.
 #[semio_framework_async_macros::async_test]
 async fn local_interaction_cold_transaction_receipts_and_encoded_route_rejection() {
     let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
     let cell = std::sync::Arc::new(super::super::RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }));
     runtime.instances.borrow_mut().insert_admitted(7, cell.clone());
     let denied = wire_command(&runtime, 0, protocol::AppCommand::TransactionPrepare { seq: 0, txn_id: "denied".into(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: Vec::new(), label: String::new(), origin: Vec::new(), prepared_child_ops: Vec::new() }).await;
-    // 🔒️ The encoded transaction route is no longer refused wholesale: it is admitted and answers
-    // with its OWN typed frame, failing CLOSED on the payload itself. The refusal this law used to
-    // name, `plugin.command-route-state-machine-required`, exists NOWHERE in the tree any more — it
-    // was the route-level rejection that has been replaced by the per-payload one below. What the
-    // law protects is unchanged: an encoded `TransactionPrepare` can never smuggle an unvalidated
-    // owner-mutation payload past the decoder, and no `Error` frame hides the outcome.
     assert!(!denied.iter().any(|frame| matches!(frame, protocol::AppFrame::Error { .. })), "the route answers through its own transaction frame, not an error frame: {denied:?}");
     let rejection = denied
         .iter()
@@ -420,11 +417,11 @@ async fn local_interaction_cold_transaction_receipts_and_encoded_route_rejection
     for (prepare_seq, finish_seq, txn_id, commit) in [(1, 2, "receipt-commit", true), (3, 4, "receipt-rollback", false)] {
         let operation = <TestMutation as protocol::OpBinary>::encode_op(&TestMutation::SetCount(SetCount { value: prepare_seq as i32 })).unwrap();
         let prepared = cold_decoded_command(&runtime, prepare_seq, protocol::AppCommand::TransactionPrepare { seq: prepare_seq, txn_id: txn_id.into(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: vec![operation], label: "receipt fixture".into(), origin: Vec::new(), prepared_child_ops: Vec::new() }).await;
-        assert_eq!(prepared.iter().filter(|frame| matches!(frame, protocol::AppFrame::Done { in_reply_to } if *in_reply_to == prepare_seq)).count(), 1, "[DEBUG] transaction prepare seq={prepare_seq} frames={prepared:?}");
+        assert_eq!(prepared.iter().filter(|frame| matches!(frame, protocol::AppFrame::Done { in_reply_to } if *in_reply_to == prepare_seq)).count(), 1, "[TRACE] transaction prepare seq={prepare_seq} frames={prepared:?}");
         assert!(prepared.iter().any(|frame| matches!(frame, protocol::AppFrame::TransactionPrepared { txn_id: actual, rejection, .. } if actual == txn_id && rejection.is_empty())));
         let command = if commit { protocol::AppCommand::TransactionCommit { seq: finish_seq, txn_id: txn_id.into() } } else { protocol::AppCommand::TransactionRollback { seq: finish_seq, txn_id: txn_id.into() } };
         let finished = cold_decoded_command(&runtime, finish_seq, command).await;
-        assert_eq!(finished.iter().filter(|frame| matches!(frame, protocol::AppFrame::Done { in_reply_to } if *in_reply_to == finish_seq)).count(), 1, "[DEBUG] transaction finish seq={finish_seq} frames={finished:?}");
+        assert_eq!(finished.iter().filter(|frame| matches!(frame, protocol::AppFrame::Done { in_reply_to } if *in_reply_to == finish_seq)).count(), 1, "[TRACE] transaction finish seq={finish_seq} frames={finished:?}");
         assert!(finished.iter().any(|frame| match frame {
             protocol::AppFrame::TransactionCommitted { txn_id: actual, edit_id } => commit && actual == txn_id && !edit_id.is_empty(),
             protocol::AppFrame::TransactionRolledBack { txn_id: actual } => !commit && actual == txn_id,

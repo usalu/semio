@@ -19,5 +19,4 @@ export function testRewritingDocumentRetirementOracle(): void {
     const bytes = value.newBeforeFixtureJson !== undefined ? text(value.newBeforeFixtureJson) : value.newLhsJson !== undefined ? text(value.newLhsJson) : value.newRhsJson !== undefined ? text(value.newRhsJson) : text(value.key) + (value.newValue !== undefined ? property(value.newValue) : value.newPoint !== undefined ? 16 : 0);
     assert.equal(bytes, row.bytes);
   }
-  console.log("[DEBUG] Rewriting retirement oracle: two document roots and seven mutation payloads match independent JSON-tree byte accounting");
 }

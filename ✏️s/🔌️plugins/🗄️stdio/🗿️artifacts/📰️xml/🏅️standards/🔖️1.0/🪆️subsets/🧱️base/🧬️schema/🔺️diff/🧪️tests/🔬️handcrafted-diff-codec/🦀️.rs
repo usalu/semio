@@ -44,7 +44,6 @@ fn explicit_null_removes_declaration_and_doctype_without_erasing_unchanged_field
             assert_eq!(replay.inverse(&before).apply(&after).unwrap(), before);
         }
     }
-    println!("[DEBUG] XML declaration and doctype explicit null survives value/text/binary replay and inverse");
 }
 
 #[test]
@@ -92,5 +91,4 @@ fn attribute_reordering_and_composed_structural_edits_preserve_exact_identity_or
             assert_eq!(children, before, "case={}", case["name"]);
         }
     }
-    println!("[DEBUG] XML attribute reorder, insertion/removal composition, inverse and exact codec replay preserve the independent ordered-array oracle");
 }

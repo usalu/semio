@@ -17,10 +17,6 @@
 //! diffs are covered by a published snapshot, the segment (diffs included) is deleted outright
 //! rather than rewritten record-by-record.
 //!
-//! 🎯️ Scope boundary — "branch GC": branches are a `vcs::Alternative` concept; only `db_engine`
-//! (behind the `vcs` Cargo feature) may depend on `vcs`, and this crate has no `VersionGraph`
-//! handle to call. Left as a `db_engine`-layer extension, not faked here.
-//!
 //! 🎯️ Design choice — "manifest CAS": `db_storage::CatalogStorage::cas_root` guards ONE global
 //! root blob shared by every document in a `DbStorage` instance, owned end-to-end by `db_engine`/
 //! the catalog actor; this crate has no schema for that blob's contents and touching it here would
@@ -38,7 +34,7 @@ use std::future::Future;
 use std::sync::Arc;
 
 //#region 🔖️Budget
-/// @emoji 💰️ Bounds how much work one `Compactor::run` pass does across every subsystem — the
+/// 💰️ Bounds how much work one `Compactor::run` pass does across every subsystem — the
 /// contract's "budgets" line. Every loop this crate runs (WAL segment selection, snapshot chain
 /// depth, payload deletions) is capped by one of these fields so a single compaction pass never
 /// turns into unbounded work against a document with a very long history.
@@ -50,7 +46,7 @@ pub struct CompactionBudget {
 }
 
 impl CompactionBudget {
-    /// @emoji ♾️ No cap on any subsystem — for tests and offline/maintenance runs where bounded
+    /// ♾️ No cap on any subsystem — for tests and offline/maintenance runs where bounded
     /// latency doesn't matter.
     pub const fn unlimited() -> CompactionBudget {
         CompactionBudget { max_wal_segments: u64::MAX, max_snapshot_generations: u64::MAX, max_payloads: u64::MAX }
@@ -58,7 +54,7 @@ impl CompactionBudget {
 }
 
 impl Default for CompactionBudget {
-    /// @emoji 🏗️ This crate's own choice of defaults (the contract fixes that budgets exist, not
+    /// 🏗️ This crate's own choice of defaults (the contract fixes that budgets exist, not
     /// their numbers): generous enough that an ordinary document's compaction pass finishes in one
     /// call, small enough that a pathological document (a snapshot chain thousands deep) can't
     /// stall an online compactor indefinitely.
@@ -69,7 +65,7 @@ impl Default for CompactionBudget {
 //#endregion 🔖️Budget
 
 //#region 🔖️Lease
-/// @emoji 🚧️ The fencing primitive behind "online compaction with manifest CAS + fencing" (see
+/// 🚧️ The fencing primitive behind "online compaction with manifest CAS + fencing" (see
 /// module doc's design-choice note on why this wraps `LeaseStorage` rather than `CatalogStorage`).
 /// Mirrors `db_snapshot::SnapshotLease`'s shape exactly, under its own `"compact:"`-prefixed
 /// resource namespace so a document's snapshot builder and its compactor never contend on the
@@ -77,56 +73,56 @@ impl Default for CompactionBudget {
 pub struct CompactionLease;
 
 impl CompactionLease {
-    /// @emoji 🏷️ The `LeaseStorage` resource name guarding `document`'s compaction pass.
+    /// 🏷️ The `LeaseStorage` resource name guarding `document`'s compaction pass.
     // 🚫️async: E1 pure accessor consumed synchronously by `acquire`/`renew`/`release`/`current` — see R9
     pub fn resource(document: &ArtifactId) -> String {
         format!("compact:{document}")
     }
 
-    /// @emoji 🤝️ Acquires (or idempotently re-acquires) the compaction lease for `document`.
+    /// 🤝️ Acquires (or idempotently re-acquires) the compaction lease for `document`.
     pub async fn acquire(storage: &impl db_storage::LeaseStorage, document: &ArtifactId, holder: &str, ttl_ms: u64, now_ms: u64) -> Result<EpochFence, DbError> {
         storage.acquire(&Self::resource(document), holder, ttl_ms, now_ms).await
     }
 
-    /// @emoji ♻️ Extends `holder`'s existing compaction lease for `document`.
+    /// ♻️ Extends `holder`'s existing compaction lease for `document`.
     pub async fn renew(storage: &impl db_storage::LeaseStorage, document: &ArtifactId, holder: &str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
         storage.renew(&Self::resource(document), holder, fence, ttl_ms, now_ms).await
     }
 
-    /// @emoji 🕊️ Releases `holder`'s compaction lease for `document` — `Compactor::run` always
+    /// 🕊️ Releases `holder`'s compaction lease for `document` — `Compactor::run` always
     /// calls this once, even if the pass itself failed (see that method's doc).
     pub async fn release(storage: &impl db_storage::LeaseStorage, document: &ArtifactId, holder: &str, fence: EpochFence) -> Result<(), DbError> {
         storage.release(&Self::resource(document), holder, fence).await
     }
 
-    /// @emoji 👀️ The compaction lease's current holder/fence for `document`, or `None` if unheld.
+    /// 👀️ The compaction lease's current holder/fence for `document`, or `None` if unheld.
     pub async fn current(storage: &impl db_storage::LeaseStorage, document: &ArtifactId, now_ms: u64) -> Result<Option<db_storage::LeaseInfo>, DbError> {
         storage.current(&Self::resource(document), now_ms).await
     }
 }
 
-/// @emoji ⏳️ This crate's own default compaction-lease TTL (the contract doesn't fix a number):
+/// ⏳️ This crate's own default compaction-lease TTL (the contract doesn't fix a number):
 /// long enough that a slow consolidate-and-prune pass over a deep snapshot chain doesn't lose the
 /// lease mid-flight, short enough that a crashed compactor's stale lease self-heals quickly.
 const DEFAULT_LEASE_TTL_MS: u64 = 5 * 60 * 1_000;
 //#endregion 🔖️Lease
 
 //#region 🔖️WalRetention
-/// @emoji 🧾️ One WAL segment's role in a retention decision: its index and the highest
+/// 🧾️ One WAL segment's role in a retention decision: its index and the highest
 /// `head_seq` any `WAL_FRONTIER`/`WAL_SNAPSHOT_PUB` record within its span reached.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct SegmentHorizon {
     pub segment_index: u64,
-    /// @emoji ❓️ `None` if the segment carries no frontier marker at all — such a segment is
+    /// ❓️ `None` if the segment carries no frontier marker at all — such a segment is
     /// never a `plan_wal_retention` candidate, since there is no way to prove everything in it is
     /// covered by a given floor.
     pub max_head_seq: Option<u64>,
 }
 
-/// @emoji 🪢️ Groups already-admitted records in segment-then-on-disk order by the
+/// 🪢️ Groups already-admitted records in segment-then-on-disk order by the
 /// `WalRecord::SegmentHeader` boundaries that open each span —
 /// the shared traversal `segment_horizons`/`sweep_payloads` both build on.
-/// @emoji 📊️ Computes every segment's `SegmentHorizon` from a document's full replayed record
+/// 📊️ Computes every segment's `SegmentHorizon` from a document's full replayed record
 /// stream.
 #[cfg(test)]
 pub async fn segment_horizons<'record>(records: impl IntoIterator<Item = &'record db_wal::WalRecord>) -> Vec<SegmentHorizon> {
@@ -153,7 +149,7 @@ pub async fn segment_horizons<'record>(records: impl IntoIterator<Item = &'recor
     horizons
 }
 
-/// @emoji 🧹️ Selects which SEALED WAL segments are safe to delete: strictly below the highest
+/// 🧹️ Selects which SEALED WAL segments are safe to delete: strictly below the highest
 /// segment index present (the live segment, retained even when it contains only its header), with
 /// a known `max_head_seq` at or below `floor_head_seq`, capped at
 /// `budget.max_wal_segments`. Ascending order (oldest first).
@@ -169,7 +165,7 @@ pub fn plan_wal_retention(horizons: &[SegmentHorizon], floor_head_seq: u64, budg
     selected
 }
 
-/// @emoji 🗑️ Applies `plan_wal_retention`'s output: deletes each selected segment from `storage`.
+/// 🗑️ Applies `plan_wal_retention`'s output: deletes each selected segment from `storage`.
 /// Idempotent (`WalStorage::delete_segment` already is). Returns how many were selected (and thus
 /// attempted).
 #[cfg(test)]
@@ -208,14 +204,14 @@ pub async fn apply_wal_retention(storage: &impl db_storage::WalStorage, document
 //#endregion 🔖️WalRetention
 
 //#region 🔖️PayloadGc
-/// @emoji 📊️ What `sweep_payloads` did.
+/// 📊️ What `sweep_payloads` did.
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
 pub struct PayloadGcReport {
     pub candidates_checked: u64,
     pub deleted: u64,
 }
 
-/// @emoji 🔗️ Ref-traced payload GC: `candidates` are the `WalPayloadRef::CasRef` hashes that
+/// 🔗️ Ref-traced payload GC: `candidates` are the `WalPayloadRef::CasRef` hashes that
 /// appeared ONLY within `deleted_segments`' span of `records` (i.e. payloads that just lost their
 /// one known reference); any candidate NOT also referenced by a record outside
 /// `deleted_segments` is genuinely orphaned and deleted from `payload_storage`.
@@ -254,7 +250,7 @@ pub async fn sweep_payloads<'record>(payload_storage: &impl db_storage::PayloadS
 //#endregion 🔖️PayloadGc
 
 //#region 🔖️IndexCompaction
-/// @emoji 🧹️ One `IndexKind`'s post-compaction shape.
+/// 🧹️ One `IndexKind`'s post-compaction shape.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct IndexKindReport {
     pub kind: db_index::IndexKind,
@@ -311,7 +307,7 @@ impl Default for CompactionIndexReports {
     }
 }
 
-/// @emoji 🧹️ Compacts every `db_index::IndexKind` for `document`: merges all live runs into one
+/// 🧹️ Compacts every `db_index::IndexKind` for `document`: merges all live runs into one
 /// per kind, physically dropping tombstones shadowed beneath them (`db_index::IndexHandle::
 /// compact`'s own law) — the mechanism behind the contract's "index merge" and, for
 /// `IndexKind::Preview`/`Conflict` specifically, its share of "tombstone/preview GC": once a
@@ -334,7 +330,7 @@ pub async fn compact_all_indexes(storage: &impl db_storage::IndexStorage, docume
 const COMPACTION_RETAINED_PAGE_OWNERS: usize = 64;
 const COMPACTION_RETIREMENT_SLOTS: usize = 64;
 
-/// @emoji 🧱️ Fixed, page-credit-witnessed snapshot consolidation owner set.
+/// 🧱️ Fixed, page-credit-witnessed snapshot consolidation owner set.
 struct CompactionRetainedPages {
     pages: [Option<db_state::Page>; COMPACTION_RETAINED_PAGE_OWNERS],
     credits: [u8; COMPACTION_RETAINED_PAGE_OWNERS],
@@ -554,7 +550,7 @@ enum CompactionCloseExit {
     Fault,
 }
 
-/// @emoji 🛰️ Mounted close state that advances one retained page opportunity per poll.
+/// 🛰️ Mounted close state that advances one retained page opportunity per poll.
 #[cfg(test)]
 struct MountedCompactionPageClose<'owner> {
     owner: &'owner mut CompactionRetainedPages,
@@ -590,7 +586,7 @@ impl Future for MountedCompactionPageClose<'_> {
     }
 }
 
-/// @emoji 🌳️ Walks the snapshot chain from `through_generation` back to its full-baseline root,
+/// 🌳️ Walks the snapshot chain from `through_generation` back to its full-baseline root,
 /// returning the latest generation's own descriptor plus every page introduced anywhere in the
 /// chain, deduplicated by content hash — `SnapshotConsolidator::consolidate`'s input.
 #[cfg(test)]
@@ -627,7 +623,7 @@ async fn collect_chain_pages<S: db_storage::SnapshotStorage>(
     Ok((latest_descriptor, pages))
 }
 
-/// @emoji 🧑️‍💼️ Rolls up a document's incremental snapshot chain into a fresh, self-sufficient
+/// 🧑️‍💼️ Rolls up a document's incremental snapshot chain into a fresh, self-sufficient
 /// full baseline — the responsibility `db_snapshot`'s own module doc explicitly defers to this
 /// crate (see that crate's "Scope boundary" note).
 #[cfg(test)]
@@ -641,7 +637,7 @@ impl<'storage, S: db_storage::SnapshotStorage> SnapshotConsolidator<'storage, S>
         SnapshotConsolidator { manager: db_snapshot::SnapshotManager::new(storage).await }
     }
 
-    /// @emoji 🧵️ Publishes a new full-baseline generation carrying the union of every page from
+    /// 🧵️ Publishes a new full-baseline generation carrying the union of every page from
     /// the chain's root through `through_generation` (deduplicated by content hash), with the
     /// latest generation's own frontier/provenance/`roots`. Returns the new generation number; the
     /// caller is responsible for `retain_from` afterward once satisfied nothing still needs an old
@@ -661,7 +657,6 @@ impl<'storage, S: db_storage::SnapshotStorage> SnapshotConsolidator<'storage, S>
             epoch: latest.epoch,
             chain_hash: latest.chain_hash,
             protocol_version: latest.protocol_version,
-            vcs_head: latest.vcs_head,
             base_pack_hash: latest.base_pack_hash,
             roots: latest.roots,
             created_at_ms: latest.created_at_ms,
@@ -675,7 +670,7 @@ impl<'storage, S: db_storage::SnapshotStorage> SnapshotConsolidator<'storage, S>
         }
     }
 
-    /// @emoji 🗑️ Forwards to `db_snapshot::SnapshotManager::retain_from` — `floor_generation` must
+    /// 🗑️ Forwards to `db_snapshot::SnapshotManager::retain_from` — `floor_generation` must
     /// itself be a full baseline (typically the generation `consolidate` just returned).
     pub async fn retain_from(&self, document: &ArtifactId, floor_generation: u64) -> Result<(), DbError> {
         self.manager.retain_from(document, floor_generation).await
@@ -684,7 +679,7 @@ impl<'storage, S: db_storage::SnapshotStorage> SnapshotConsolidator<'storage, S>
 //#endregion 🔖️SnapshotConsolidation
 
 //#region 🔖️ColdArchive
-/// @emoji 🧊️ Builds one document's cold-tier archive: the full, self-contained byte concatenation
+/// 🧊️ Builds one document's cold-tier archive: the full, self-contained byte concatenation
 /// of every snapshot generation from the chain's root through `through_generation` (via
 /// the snapshot retained chain cursor), independently reopenable with
 /// `db_snapshot::open_latest` — ready to hand to whatever cold-tier object store a deployment
@@ -706,7 +701,7 @@ pub async fn build_cold_archive(storage: &impl db_storage::SnapshotStorage, docu
 //#endregion 🔖️ColdArchive
 
 //#region 🔖️Compactor
-/// @emoji 📋️ What one `Compactor::run` pass did.
+/// 📋️ What one `Compactor::run` pass did.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct CompactionReport {
     pub wal_segments_deleted: u64,
@@ -716,7 +711,7 @@ pub struct CompactionReport {
     pub snapshot_generations_pruned: u64,
 }
 
-/// @emoji 🧑️‍💼️ The top-level, fenced, budgeted orchestrator gluing every subsystem in this crate
+/// 🧑️‍💼️ The top-level, fenced, budgeted orchestrator gluing every subsystem in this crate
 /// together over one `db_storage::DbStorage` backend — "online compaction with manifest CAS +
 /// fencing" (see module doc's design-choice note on the fencing mechanism).
 #[cfg(test)]
@@ -739,7 +734,7 @@ impl<'storage> Compactor<'storage> {
         Compactor { storage }
     }
 
-    /// @emoji 🚀️ One bounded, fenced compaction pass over `document`: WAL segment retention below
+    /// 🚀️ One bounded, fenced compaction pass over `document`: WAL segment retention below
     /// `wal_floor_head_seq`, ref-traced payload GC over whatever WAL retention just orphaned, every
     /// index kind's merge/tombstone-GC, and — if `consolidate_snapshots` is set — rolling the
     /// snapshot chain into a fresh full baseline and pruning everything below it. Acquires
@@ -751,7 +746,7 @@ impl<'storage> Compactor<'storage> {
         self.run_owned(document, holder, Some(wal_floor_head_seq), consolidate_snapshots, budget, now_ms).await
     }
 
-    /// @emoji 🧭️ Convenience over `run`: derives `wal_floor_head_seq` from `document`'s current
+    /// 🧭️ Convenience over `run`: derives `wal_floor_head_seq` from `document`'s current
     /// latest snapshot generation (or `0`, i.e. nothing deletable, if it has none yet).
     pub async fn run_from_latest_snapshot(&self, document: &ArtifactId, holder: &str, consolidate_snapshots: bool, budget: &CompactionBudget, now_ms: u64) -> Result<CompactionReport, DbError> {
         self.run_owned(document, holder, None, consolidate_snapshots, budget, now_ms).await
@@ -882,11 +877,10 @@ fn database_compaction_descriptor_backing(descriptor: &db_snapshot::SnapshotDesc
         .roots
         .capacity()
         .checked_add(descriptor.new_pages.capacity())
-        .and_then(|value| value.checked_add(usize::from(descriptor.vcs_head.is_some())))
         .and_then(|value| value.checked_add(1))
         .ok_or(DbError::LimitExceeded("database compaction snapshot backing items"))?;
     let hash_bytes = descriptor.roots.capacity().checked_add(descriptor.new_pages.capacity()).and_then(|value| value.checked_mul(size_of::<ContentHash>())).ok_or(DbError::LimitExceeded("database compaction snapshot backing bytes"))?;
-    let bytes = hash_bytes.checked_add(descriptor.document.0.capacity()).and_then(|value| value.checked_add(descriptor.vcs_head.as_ref().map_or(0, String::capacity))).ok_or(DbError::LimitExceeded("database compaction snapshot backing bytes"))?;
+    let bytes = hash_bytes.checked_add(descriptor.document.0.capacity()).ok_or(DbError::LimitExceeded("database compaction snapshot backing bytes"))?;
     Ok((items, bytes))
 }
 
@@ -897,10 +891,6 @@ async fn retire_compaction_descriptor(mut descriptor: db_snapshot::SnapshotDescr
     let roots = std::mem::take(&mut descriptor.roots);
     semio_framework_async::yield_once().await;
     drop(roots);
-    if let Some(vcs_head) = descriptor.vcs_head.take() {
-        semio_framework_async::yield_once().await;
-        drop(vcs_head);
-    }
     let document = std::mem::take(&mut descriptor.document.0);
     semio_framework_async::yield_once().await;
     drop(document);
@@ -916,10 +906,6 @@ async fn retire_compaction_snapshot_body(mut body: db_snapshot::SnapshotBody) {
     let roots = std::mem::take(&mut body.roots);
     semio_framework_async::yield_once().await;
     drop(roots);
-    if let Some(vcs_head) = body.vcs_head.take() {
-        semio_framework_async::yield_once().await;
-        drop(vcs_head);
-    }
 }
 
 async fn close_compaction_snapshot_body(body: db_snapshot::SnapshotBody, ledger: &mut DatabaseCompactionBackingLedger, charge: (usize, usize)) -> Result<(), DbError> {
@@ -1407,12 +1393,12 @@ async fn retained_compaction_snapshot(
     }
     let latest_descriptor = latest_descriptor.take().ok_or_else(|| DbError::Internal("database compaction latest descriptor lost".to_string()))?;
     let latest_descriptor_charge = database_compaction_descriptor_backing(&latest_descriptor)?;
-    let db_snapshot::SnapshotDescriptor { document: ArtifactId(latest_document), head_seq, commit_seq, epoch, chain_hash, protocol_version, vcs_head, base_pack_hash, roots, new_pages: latest_new_pages, created_at_ms, .. } = latest_descriptor;
+    let db_snapshot::SnapshotDescriptor { document: ArtifactId(latest_document), head_seq, commit_seq, epoch, chain_hash, protocol_version, base_pack_hash, roots, new_pages: latest_new_pages, created_at_ms, .. } = latest_descriptor;
     semio_framework_async::yield_once().await;
     drop(latest_new_pages);
     semio_framework_async::yield_once().await;
     drop(latest_document);
-    let mut body = db_snapshot::SnapshotBody { head_seq, commit_seq, epoch, chain_hash, protocol_version, vcs_head, base_pack_hash, roots, created_at_ms };
+    let mut body = db_snapshot::SnapshotBody { head_seq, commit_seq, epoch, chain_hash, protocol_version, base_pack_hash, roots, created_at_ms };
     let new_generation = loop {
         let deadline = std::time::Instant::now() + std::time::Duration::from_millis(DATABASE_COMPACTION_TURN_MS);
         let mut control = db_snapshot::SnapshotCursorControl::new(cancelled.clone(), deadline, DATABASE_COMPACTION_INDEX_FUEL)?;

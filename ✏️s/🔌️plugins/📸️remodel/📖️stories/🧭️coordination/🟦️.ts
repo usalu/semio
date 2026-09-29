@@ -44,13 +44,13 @@ import type { Canvas2dScene, TableScene, World3dScene } from "../../../../../�
 import type { AccessibilitySpec, BuiltNode, LayoutSpec, StyleSpec } from "../../../../../🧰️framework/🔨️modules/🛂️manifest/🟦️.ts";
 
 //#region 🔖️SceneModel
-/** @emoji 🎞️ One sampled frame of a media stream — `RemodelingSnapshot::streams[].frames[]`. */
+/** 🎞️ One sampled frame of a media stream — `RemodelingSnapshot::streams[].frames[]`. */
 export type RemodelFrameRef = { readonly index: number; readonly timestampMs: number; readonly assetId: string };
 
-/** @emoji 📼️ The decoded-container facts a video import records — `streams[].source`. */
+/** 📼️ The decoded-container facts a video import records — `streams[].source`. */
 export type RemodelStreamSource = { readonly name: string; readonly container: string; readonly codec: string; readonly durationMs: number; readonly frameCount: number; readonly width: number; readonly height: number };
 
-/** @emoji 🎥️ One media stream — `RemodelingSnapshot::streams[]`. */
+/** 🎥️ One media stream — `RemodelingSnapshot::streams[]`. */
 export type RemodelStream = {
   readonly id: string;
   readonly name: string;
@@ -62,10 +62,10 @@ export type RemodelStream = {
   readonly source: RemodelStreamSource | null;
 };
 
-/** @emoji 🧩️ A composed child-artifact handle (`s.stdio.semio@v1/<subset>`) — opaque geometry/pixels live behind it. */
+/** 🧩️ A composed child-artifact handle (`s.stdio.semio@v1/<subset>`) — opaque geometry/pixels live behind it. */
 export type RemodelChildHandle = { readonly childId: string; readonly target: { readonly artifactId: string; readonly dialect: { readonly artifactKind: string; readonly standard: string; readonly subset: string } } };
 
-/** @emoji 💧️ The watertightness audit a reconstructed mesh carries — `results.mesh.watertight` / `results.qc.watertight`. */
+/** 💧️ The watertightness audit a reconstructed mesh carries — `results.mesh.watertight` / `results.qc.watertight`. */
 export type RemodelWatertightReport = {
   readonly vertexCount: number;
   readonly triangleCount: number;
@@ -85,10 +85,10 @@ export type RemodelWatertightReport = {
   readonly isWatertight: boolean;
 };
 
-/** @emoji 🧱️ One document-owned durable leaf — `durableArtifacts[childId]`, the content an asset handle addresses. */
+/** 🧱️ One document-owned durable leaf — `durableArtifacts[childId]`, the content an asset handle addresses. */
 export type RemodelDurableArtifact = { readonly kind: string; readonly mime: string | null; readonly width: number; readonly height: number; readonly chunks: readonly string[] };
 
-/** @emoji 📷️ One calibrated camera — `calibration.cameras[]`. */
+/** 📷️ One calibrated camera — `calibration.cameras[]`. */
 export type RemodelCamera = {
   readonly id: string;
   readonly label: string;
@@ -103,7 +103,7 @@ export type RemodelCamera = {
   readonly locked: boolean;
 };
 
-/** @emoji 🎯️ One ground control point and its per-frame pixel observations — `gcps[]`. */
+/** 🎯️ One ground control point and its per-frame pixel observations — `gcps[]`. */
 export type RemodelGcp = {
   readonly id: string;
   readonly name: string;
@@ -111,10 +111,10 @@ export type RemodelGcp = {
   readonly observations: readonly { readonly streamId: string; readonly frameIndex: number; readonly pixel: readonly [number, number] }[];
 };
 
-/** @emoji 🧭️ A recovered camera pose — one `results.trajectory.poses[]` entry. */
+/** 🧭️ A recovered camera pose — one `results.trajectory.poses[]` entry. */
 export type RemodelPose = { readonly cameraId: string; readonly rotationWxyz: readonly number[]; readonly translation: readonly [number, number, number] };
 
-/** @emoji 📸️ The remodeling document — a story-local mirror of `RemodelingSnapshot`'s camelCase wire shape. */
+/** 📸️ The remodeling document — a story-local mirror of `RemodelingSnapshot`'s camelCase wire shape. */
 export type RemodelScene = {
   readonly schema: string;
   readonly id: string;
@@ -459,7 +459,7 @@ export const REMODEL_EMPTY_SCENE: RemodelScene = {
 //#endregion 🔖️Documents
 
 //#region 🔖️Config
-/** @emoji 🎚️ Story-local mirror of `RemodelingConfig` (`✏️editor/🎚️config/🦀️.rs`). */
+/** 🎚️ Story-local mirror of `RemodelingConfig` (`✏️editor/🎚️config/🦀️.rs`). */
 export type RemodelConfig = {
   readonly camera: { readonly position: readonly [number, number, number]; readonly target: readonly [number, number, number]; readonly fov: number };
   readonly layers: { readonly mesh: boolean; readonly dense: boolean; readonly sparse: boolean; readonly cameras: boolean; readonly gcps: boolean };
@@ -481,7 +481,7 @@ export const REMODEL_DEFAULT_CONFIG: RemodelConfig = {
 //#endregion 🔖️Config
 
 //#region 🔖️Labels
-/** @emoji 🗣️ One locale's resolution of `RemodelingLabels` — one field per `app_labels!` row, native variant. */
+/** 🗣️ One locale's resolution of `RemodelingLabels` — one field per `app_labels!` row, native variant. */
 export type RemodelLabels = Readonly<Record<RemodelLabelKey, string>>;
 
 export type RemodelLabelKey =
@@ -775,12 +775,12 @@ export type RemodelPanelId = (typeof REMODEL_PANELS)[number]["id"];
 //#endregion 🔖️Constants
 
 //#region 🔖️Formatting
-/** @emoji 🔢️ Rust's `{:.N}` — fixed decimals, never JS's shortest round-trip. */
+/** 🔢️ Rust's `{:.N}` — fixed decimals, never JS's shortest round-trip. */
 function fixed(value: number, decimals: number): string {
   return value.toFixed(decimals);
 }
 
-/** @emoji 🐍️ Rust's `{:?}` over a serde-kebab enum tag: the fixtures store `"brute-force"`, `Debug` prints `BruteForce`. */
+/** 🐍️ Rust's `{:?}` over a serde-kebab enum tag: the fixtures store `"brute-force"`, `Debug` prints `BruteForce`. */
 function debugEnum(tag: string): string {
   return tag
     .split("-")
@@ -788,7 +788,7 @@ function debugEnum(tag: string): string {
     .join("");
 }
 
-/** @emoji 🔡️ `descriptor.args` narrowed to a plain record — the shape every host dispatches. */
+/** 🔡️ `descriptor.args` narrowed to a plain record — the shape every host dispatches. */
 export function remodelActionArgs(args: ActionDescriptor["args"]): Record<string, unknown> {
   return (args ?? {}) as Record<string, unknown>;
 }
@@ -813,7 +813,7 @@ function remodelWorldPointsJson(scene: RemodelScene, layers: RemodelConfig["laye
   return out.length === 0 ? undefined : JSON.stringify(out);
 }
 
-/** @emoji 🧮️ `PackedF32::from_f32_slice` — little-endian f32 triples, base64'd, byte-for-byte the wire shape `WorldPointCloudLayer` decodes. */
+/** 🧮️ `PackedF32::from_f32_slice` — little-endian f32 triples, base64'd, byte-for-byte the wire shape `WorldPointCloudLayer` decodes. */
 function packF32(values: readonly number[]): string {
   const buffer = new ArrayBuffer(values.length * 4);
   const view = new DataView(buffer);
@@ -983,12 +983,12 @@ const PANEL_ACCESSIBILITY: AccessibilitySpec = { label: null, description: null,
 const PANEL_STACK_LAYOUT: LayoutSpec = { kind: "stack", axis: "vertical", gap: "sm", padding: { all: "sm" }, align: "stretch", justify: "start", grow: false, wrap: false };
 const PANEL_LEAF_LAYOUT: LayoutSpec = { kind: "leaf", width: "fill", height: "hug" };
 
-/** @emoji 🔤️ `ui_text(Label::data(…))` translated to the retained document's `Component::Text`. */
+/** 🔤️ `ui_text(Label::data(…))` translated to the retained document's `Component::Text`. */
 function panelText(key: string, value: string): BuiltNode {
   return { key, component: { type: "text", value, emphasize: null, dataAttributes: null }, layout: PANEL_LEAF_LAYOUT, style: PANEL_STYLE, activity: "idle", disabled: false, accessibility: PANEL_ACCESSIBILITY, bindings: [], menu: null, children: [] };
 }
 
-/** @emoji 📚️ `ui_stack_vertical(children)` translated to the retained document's `Component::Container` in its `plain` role. */
+/** 📚️ `ui_stack_vertical(children)` translated to the retained document's `Component::Container` in its `plain` role. */
 function panelStack(key: string, children: readonly BuiltNode[]): BuiltNode {
   return {
     key,
@@ -1004,7 +1004,7 @@ function panelStack(key: string, children: readonly BuiltNode[]): BuiltNode {
   };
 }
 
-/** @emoji 📥️ `ui_import_drop_zone` translated: a `plain` container carrying its `dropOverlay` title/hint/accept plus the two text children the Rust builder nests inside it, with `importFramePayload` bound to `Trigger::Drop`. */
+/** 📥️ `ui_import_drop_zone` translated: a `plain` container carrying its `dropOverlay` title/hint/accept plus the two text children the Rust builder nests inside it, with `importFramePayload` bound to `Trigger::Drop`. */
 function panelDropZone(key: string, title: string, hint: string, accept: string): BuiltNode {
   return {
     key,
@@ -1065,7 +1065,7 @@ function resultsPanel(scene: RemodelScene, labels: RemodelLabels): BuiltNode {
   return panelStack("results", [panelText("results-mesh", meshLabel), panelText("results-sparse", sparse), panelText("results-dense", dense), panelText("results-trajectory", trajectory), panelText("results-geo", geo)]);
 }
 
-/** @emoji 🧮️ Byte length behind a base64 payload — the story's stand-in for `PackedF32::to_f32_vec().len()`. */
+/** 🧮️ Byte length behind a base64 payload — the story's stand-in for `PackedF32::to_f32_vec().len()`. */
 function base64ByteLength(value: string): number {
   const padding = value.endsWith("==") ? 2 : value.endsWith("=") ? 1 : 0;
   return (value.length / 4) * 3 - padding;

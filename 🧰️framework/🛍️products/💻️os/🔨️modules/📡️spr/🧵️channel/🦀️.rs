@@ -15,7 +15,7 @@
 //! best-effort lanes.
 
 //#region 🔖️Version
-/// @emoji 🔢️ The channel wire format's own version, pinned against the shared cross-language
+/// 🔢️ The channel wire format's own version, pinned against the shared cross-language
 /// fixture `🔖️channel-version.json` so a half-done bump fails a test instead of drifting silently.
 /// Channel v12 (`📓️design-abi.md` §2 "`exchange` collapse") retires the `AppCommand::Hello` /
 /// `AppFrame::Welcome` handshake entirely — lifecycle now arrives through the reactor ABI's
@@ -65,7 +65,7 @@ impl MediaExportStateWire {
 //#endregion 🔖️MediaExportWire
 
 //#region 🔖️ChildPackEntry
-/// @emoji 🧸️ One owned child's whole persisted envelope, as it travels between host and guest.
+/// 🧸️ One owned child's whole persisted envelope, as it travels between host and guest.
 /// Composed children are their OWN envelopes with their own `ArtifactVcs` history, so a composing
 /// document's `LoadDocument`/`Document` pair is not sufficient to save or restore it — its children
 /// would exist only until the process ended. `AppCommand::LoadChildren`/`AppFrame::Children` carry
@@ -2478,7 +2478,7 @@ impl PagedAppCommandDecodeCursor {
 //#endregion 🔖️PagedAppCommandDecode
 
 //#region 🔖️AppCommand
-/// @emoji 📨️ One frame a client (UI or headless runner) sends to the app engine.
+/// 📨️ One frame a client (UI or headless runner) sends to the app engine.
 #[derive(Debug, PartialEq)]
 #[expect(clippy::large_enum_variant, reason = "Presence commands transfer the admitted fixed roster slots inline without another channel allocation.")]
 pub enum AppCommand {
@@ -2727,7 +2727,7 @@ pub enum AppCommand {
 //#endregion 🔖️AppCommand
 
 //#region 🔖️AppFrame
-/// @emoji 📬️ One frame the app engine sends to its client.
+/// 📬️ One frame the app engine sends to its client.
 #[derive(Clone, Debug, PartialEq)]
 pub enum AppFrame {
     Done {
@@ -3059,7 +3059,7 @@ async fn read_vec_envelope(bytes: &[u8], pos: &mut usize) -> Result<Vec<crate::o
 }
 //#endregion 🔖️Combinators
 
-/// @emoji 📤️ Encodes one `AppCommand`: `tag u8 | fields`.
+/// 📤️ Encodes one `AppCommand`: `tag u8 | fields`.
 
 struct CommandPageWriter {
     pages: CommandPageSet,
@@ -3463,7 +3463,7 @@ pub async fn encode_app_command(command: &AppCommand) -> Result<PagedCommand, cr
     out.finish()
 }
 
-/// @emoji 🧸️ `count varint | (slot, child_id, dialect, envelope_pack)*` — the shared list codec for
+/// 🧸️ `count varint | (slot, child_id, dialect, envelope_pack)*` — the shared list codec for
 /// both `AppCommand::LoadChildren` and `AppFrame::Children`.
 async fn write_vec_child_pack(out: &mut Vec<u8>, entries: &[ChildPackEntry]) {
     crate::os_spr::write_varint_u64(out, entries.len() as u64);
@@ -3475,7 +3475,7 @@ async fn write_vec_child_pack(out: &mut Vec<u8>, entries: &[ChildPackEntry]) {
     }
 }
 
-/// @emoji 🧸️ Inverse of [`write_vec_child_pack`].
+/// 🧸️ Inverse of [`write_vec_child_pack`].
 async fn read_vec_child_pack(bytes: &[u8], pos: &mut usize) -> Result<Vec<ChildPackEntry>, crate::os_spr::ProtocolError> {
     let count = crate::os_spr::read_varint_u64(bytes, pos)?;
     let mut entries = Vec::with_capacity(count as usize);
@@ -3608,7 +3608,7 @@ async fn read_vec_window_config_pack(bytes: &[u8], pos: &mut usize) -> Result<Ve
     Ok(entries)
 }
 
-/// @emoji 📥️ Decodes one `AppCommand`, the inverse of [`encode_app_command`].
+/// 📥️ Decodes one `AppCommand`, the inverse of [`encode_app_command`].
 pub(super) async fn decode_app_command(bytes: &[u8]) -> Result<AppCommand, crate::os_spr::ProtocolError> {
     let tag = *bytes.first().ok_or_else(|| malformed("channel app-command tag", 0, "empty frame"))?;
     let mut pos = 1usize;
@@ -3751,7 +3751,7 @@ pub fn presence_command_sequence(bytes: &[u8]) -> Result<Option<u64>, crate::os_
     crate::os_spr::read_varint_u64(bytes, &mut pos).map(Some)
 }
 
-/// @emoji 📤️ Encodes one `AppFrame`: `tag u8 | fields`.
+/// 📤️ Encodes one `AppFrame`: `tag u8 | fields`.
 pub async fn encode_app_frame(frame: &AppFrame) -> Vec<u8> {
     let mut out = Vec::new();
     match frame {
@@ -3959,7 +3959,7 @@ pub async fn encode_app_frame(frame: &AppFrame) -> Vec<u8> {
     out
 }
 
-/// @emoji 📥️ Decodes one `AppFrame`, the inverse of [`encode_app_frame`].
+/// 📥️ Decodes one `AppFrame`, the inverse of [`encode_app_frame`].
 pub async fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, crate::os_spr::ProtocolError> {
     let tag = *bytes.first().ok_or_else(|| malformed("channel app-frame tag", 0, "empty frame"))?;
     let mut pos = 1usize;

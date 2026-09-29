@@ -63,7 +63,6 @@ pub fn serve(pending: &PendingExtensionInvocation) -> Result<Vec<u8>, Fault> {
 pub async fn settle<P: PluginApp>(app: &mut P, receiver: u32, action_meta: &ActionMeta) -> SettledExtensionInvocations {
     settle_extension_invocations(app, receiver, action_meta, &mut |pending| {
         let outcome = serve(pending);
-        eprintln!("[DEBUG] extension runner received extension={} capability={} ok={}", pending.extension_id, pending.capability, outcome.is_ok());
         outcome
     })
     .await

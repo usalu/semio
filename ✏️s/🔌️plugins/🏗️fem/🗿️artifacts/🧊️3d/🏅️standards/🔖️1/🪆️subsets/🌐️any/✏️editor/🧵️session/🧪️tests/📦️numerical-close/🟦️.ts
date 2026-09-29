@@ -12,6 +12,5 @@ export function testFem3dNumericalCloseOwners(): void {
     assert.equal(row.expected.complete, false);
     assert.equal(row.expected.lane, row.lane + 1);
   }
-  console.log("[DEBUG] Four absent numerical child lanes advance while retaining later close owners");
 }
 

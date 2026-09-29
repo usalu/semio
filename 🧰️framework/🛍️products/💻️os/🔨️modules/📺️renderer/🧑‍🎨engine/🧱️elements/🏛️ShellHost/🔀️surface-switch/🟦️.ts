@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/ShellHost/surface-switch/component.ts
-/** @emoji 🔀️ The navbar's two switching axes — surface ROLE (`…#editor` ⇄ `…#viewer`, a different app
+/** 🔀️ The navbar's two switching axes — surface ROLE (`…#editor` ⇄ `…#viewer`, a different app
  * instance) and app MODE (a different layout of the same instance) — plus the in-place session switch
  * both share, as an OWNED unit: no React, no shell imports, so a law can drive it without pulling the
  * shell's element graph (the same separation `🛠️ShellHelpers/🧩️contributions` keeps).

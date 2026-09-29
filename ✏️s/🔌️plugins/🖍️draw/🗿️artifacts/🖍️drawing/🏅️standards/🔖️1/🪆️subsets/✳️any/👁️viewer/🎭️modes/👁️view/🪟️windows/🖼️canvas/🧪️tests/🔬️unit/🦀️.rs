@@ -23,5 +23,4 @@ fn drawing_viewer_framing_uses_the_artifact_world_bounds() {
     };
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).unwrap();
     assert_eq!(scene.framing.unwrap().bounds,[0.0,0.0,200.0,300.0]);
-    eprintln!("[DEBUG] Drawing viewer publishes artifact bounds for measured initial fitting");
 }

@@ -46,7 +46,6 @@ fn surface_output_pool_reserves_before_producer_and_refuses_the_sixty_fifth() {
     }
     while !queue.close_step(1, 4096).unwrap().complete {}
     assert!(queue.terminal_is_empty());
-    eprintln!("[DEBUG] output-pool preproducer={invoked} extra=false entry-limit=64 independent-payload-quota=false");
 }
 
 #[test]
@@ -69,7 +68,6 @@ fn surface_output_pool_static_backing_joins_existing_ledger_once_without_a_root_
     while !first.close_step(1, 1).unwrap().complete {}
     while !second.close_step(1, 1).unwrap().complete {}
     assert_eq!(ui_contract::UiResidentPermit::snapshot().unwrap(), live);
-    eprintln!("[DEBUG] output-pool static-ledger contract={} runtime={expected} total={} additional-root-slots=0 final-release-retains-static=true", before.bytes, live.bytes);
 }
 
 #[test]
@@ -106,7 +104,6 @@ fn surface_output_pool_keeps_exact_paired_ready_on_refusal_and_fifo_handoff() {
         }
         assert!(queue.terminal_is_empty());
     }
-    eprintln!("[DEBUG] output-pool fifo=2 exact-rejected-pointer=true paired-credit=true close-grants=1,64,4096");
 }
 //#endregion 🧪️OutputAdmission
 
@@ -127,7 +124,6 @@ fn surface_output_admission_refuses_before_producer_when_only_one_handback_is_fr
         release_surface_reconcile_handback(owner);
     }
     assert_eq!(accepted, law["onlyOneFreeAccepted"].as_bool().unwrap());
-    eprintln!("[DEBUG] handback-admission one-free-accepted={accepted} producer-invoked=false");
 }
 
 #[test]
@@ -173,7 +169,6 @@ fn surface_output_admission_transfers_after_seal_with_no_unreserved_handback() {
         }
     }
     assert_eq!(transferred, fixture()["handbackAdmission"]["saturatedAfterSealTransfers"].as_bool().unwrap());
-    eprintln!("[DEBUG] handback-admission post-seal-transfer={transferred} late-slot-acquisition=false");
 }
 //#endregion 🧪️HandbackAdmission
 
@@ -213,7 +208,7 @@ fn surface_output_admission_inplace_transfer_retains_source_on_refusal_and_targe
     current = None;
     let caught = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         assert!(job.take_ready_into(&mut current, &mut ready, bytes).unwrap());
-        panic!("[DEBUG] actual ready transfer callback unwind");
+        panic!("actual ready transfer callback unwind");
     }));
     assert!(caught.is_err());
     assert_eq!(job.state.as_ref().unwrap().as_ref() as *const _, shell);
@@ -224,7 +219,6 @@ fn surface_output_admission_inplace_transfer_retains_source_on_refusal_and_targe
     while !terminal.close_step() {}
     while !ready.as_mut().unwrap().close_step_with_grant(1, 4096).unwrap().complete {}
     while !current.as_mut().unwrap().retire_one() {}
-    eprintln!("[DEBUG] ready-transfer bytes={bytes} shell-preserved=true refused-payload-preserved=true unwind-targets-retained=true");
 }
 //#endregion 🧪️StructuralReadyTransfer
 
@@ -280,7 +274,6 @@ fn surface_output_admission_ready_rechecks_cancel_generation_fuel_and_deadline_b
         while !terminal.close_step() {}
     }
     assert_eq!(observed, law["readyRevalidation"].as_array().unwrap().iter().map(|row| row["outcome"].as_str().unwrap()).collect::<Vec<_>>());
-    eprintln!("[DEBUG] ready-revalidation actual={observed:?} exact-source-preserved=true");
 }
 //#endregion 🧪️ReadyRevalidation
 
@@ -322,7 +315,7 @@ fn surface_output_pool_direct_job_receiver_keeps_exact_roots_across_refusal_and_
     current = None;
     let caught = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         assert_eq!(outputs.receive_job_into(&mut reservation, &mut job, &mut current, bytes).unwrap(), SurfaceReconcileOutputTransfer::Published);
-        panic!("[DEBUG] direct pool receiver callback after actual transfer");
+        panic!("direct pool receiver callback after actual transfer");
     }));
     assert!(caught.is_err());
     assert!(reservation.is_none());
@@ -338,6 +331,5 @@ fn surface_output_pool_direct_job_receiver_keeps_exact_roots_across_refusal_and_
     while !terminal.close_step() {}
     while !current.as_mut().unwrap().retire_one() {}
     assert_eq!(outputs.terminal_is_empty(), law["directReceiver"]["terminal"].as_bool().unwrap());
-    eprintln!("[DEBUG] direct-pool receiver-bytes={bytes} original-payload=true original-shell=true callback-unwind-retained=true");
 }
 //#endregion 🧪️DirectPoolReceiver

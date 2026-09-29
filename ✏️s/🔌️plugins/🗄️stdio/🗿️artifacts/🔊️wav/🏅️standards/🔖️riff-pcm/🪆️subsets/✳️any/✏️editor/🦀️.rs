@@ -164,6 +164,17 @@ fn wavEditor_direct_patch(event: &editing::SnapshotEditEvent, snapshot: &WavSnap
     };
     Ok(Some(patch))
 }
+/// 🏷️ A `kind` edit switches the sample format: `{kind, value}` is rebuilt from the current samples and decoded as the requested
+/// kind, so each sample must fit it — the generic in-place path editor refuses an enum tag by design.
+fn wavEditor_retag_data(data: &WavData, kind: &dsl::DslValue) -> Result<WavData, Fault> {
+    let samples = match data {
+        WavData::Pcm16(samples) => dsl::ToValue::to_value(samples),
+        WavData::Pcm8(samples) | WavData::Raw(samples) => dsl::ToValue::to_value(samples),
+        WavData::Float32(samples) => dsl::ToValue::to_value(samples),
+    };
+    <WavData as dsl::FromValue>::from_value(dsl::DslValue::Object(vec![("kind".into(), kind.clone()), ("value".into(), samples)])).map_err(|error| wavEditor_edit_fault("stdio.wav.invalid-data", error.to_string()))
+}
+
 fn wavEditor_snapshot_edit(event: &editing::SnapshotEditEvent, snapshot: &WavSnapshot) -> Result<WavSnapshot, Fault> {
     use editing::SnapshotEditEvent;
     if let SnapshotEditEvent::ReplaceSource { source } = event {
@@ -174,6 +185,11 @@ fn wavEditor_snapshot_edit(event: &editing::SnapshotEditEvent, snapshot: &WavSna
         if path == "/data" {
             let mut next = snapshot.clone();
             next.data = <WavData as dsl::FromValue>::from_value(value.clone()).map_err(|error| wavEditor_edit_fault("stdio.wav.invalid-data", error.to_string()))?;
+            return Ok(next);
+        }
+        if path == "/data/kind" {
+            let mut next = snapshot.clone();
+            next.data = wavEditor_retag_data(&snapshot.data, value)?;
             return Ok(next);
         }
         if path == "/data/value" {
@@ -419,6 +435,12 @@ impl ArtifactEditor for WavEditor {
 impl editing::SnapshotEditingEditor for WavEditor {
     fn snapshot_edit_event(command: &Self::Command) -> Option<&editing::SnapshotEditEvent> {
         match command { WavEditCommand::EditSnapshot { event } => Some(event), _ => None }
+    }
+    fn snapshot_edit_expected(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Self::Snapshot, Fault> {
+        match event {
+            editing::SnapshotEditEvent::SetValue { path, .. } if path == "/data/kind" => wavEditor_snapshot_edit(event, snapshot),
+            _ => editing::generic_snapshot_edit_expected::<Self>(event, snapshot),
+        }
     }
     fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         if let Some(patch) = wavEditor_direct_patch(event, snapshot)? {

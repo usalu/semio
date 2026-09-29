@@ -20,5 +20,5 @@ fn return_source_native_layout_census_before_backing_admission() {
         "sourceBackingAdmitted": false,
         "nativeOwnerMounted": false,
     });
-    eprintln!("[DEBUG] return-source native layout census {inventory}");
+    eprintln!("return-source native layout census {inventory}");
 }

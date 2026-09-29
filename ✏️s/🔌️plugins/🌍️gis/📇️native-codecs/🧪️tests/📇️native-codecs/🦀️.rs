@@ -179,7 +179,6 @@ fn gis_native_controlled_inference_executes_literal_progress_cancel_and_deadline
         assert_eq!(output.err().unwrap().code, error);
         assert_eq!(calls, interruption["calls"].as_u64().unwrap(), "no work occurs after the first caller interruption");
     }
-    println!("[DEBUG] GIS controlled inference: literal proposal=1 inverse=1 geo=1 interruption=3 rejection=7; no hub approval authority");
 }
 
 /// 🔬️ Creation-path oracle (ticket 26/09/18 slice TC3b, `📓️tc3-catalog-carried-genesis.md` §2.2):

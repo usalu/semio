@@ -19,7 +19,7 @@ fn input_admission_constructor_has_no_unadmitted_backing() {
     let queue = EventQueue::new();
     let physical = queue.discrete.capacity() * size_of::<DiscreteEvent>();
     let expected = fixture()["physicalRetirement"]["initialQueueBackingBytes"].as_u64().unwrap();
-    eprintln!("[DEBUG] event-queue-constructor capacity={} slot-bytes={} physical={physical}", queue.discrete.capacity(), size_of::<DiscreteEvent>());
+    eprintln!("event-queue-constructor capacity={} slot-bytes={} physical={physical}", queue.discrete.capacity(), size_of::<DiscreteEvent>());
     assert_eq!(physical as u64, expected);
 }
 
@@ -81,7 +81,6 @@ fn input_admission_terminal_requires_empty_backing() {
     drain(&mut queue);
     let terminal = queue.terminal_is_empty();
     let physical = queue.discrete.capacity() * size_of::<DiscreteEvent>();
-    eprintln!("[DEBUG] event-queue-terminal logical={logical} original-payload-capacity={payload_capacity} retained-queue-backing={physical} terminal={terminal}");
     assert_eq!(law["physicalRetirement"]["terminalRequiresEmptyBacking"], true);
     assert!(!terminal || physical == 0);
 }

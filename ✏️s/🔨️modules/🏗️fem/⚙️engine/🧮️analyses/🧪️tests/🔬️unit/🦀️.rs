@@ -65,7 +65,6 @@ fn assembly_physical_fixture() -> serde_json::Value {
 fn assembly_triplet_pages_mounted_model_has_no_inline_payload_arrays() {
     let fixture = assembly_physical_fixture();
     let bytes = size_of::<MountedAnalysisModel>();
-    eprintln!("[DEBUG] mounted analysis inline owner bytes={bytes}, maximum={}", fixture["mountedModel"]["maximumInlineBytes"]);
     assert!(bytes <= fixture["mountedModel"]["maximumInlineBytes"].as_u64().unwrap() as usize);
 }
 
@@ -158,7 +157,7 @@ fn assembly_triplet_pages_mounted_model_admits_one_backing_and_preserves_refused
             }
             assert_eq!(model.physical_backing_bytes(), before_close);
             let (released, terminal) = close_mounted_fixture(&mut model);
-            eprintln!("[DEBUG] mounted model {kind}/{target_name}: allocations={allocations}, allocated={allocated}, released={released}, terminal={terminal}");
+            eprintln!("mounted model {kind}/{target_name}: allocations={allocations}, allocated={allocated}, released={released}, terminal={terminal}");
             assert_eq!(allocated, released);
             assert!(terminal);
             if target == maximum && kind != "support" { assert!(allocated > MOUNTED_ANALYSIS_BACKING_BYTES); }
@@ -186,7 +185,6 @@ fn assembly_triplet_pages_mounted_model_partial_admission_and_fault_retain_every
             assert_eq!(model.physical_backing_bytes(), before);
             assert_eq!(mounted_fixture_coordinates(&model, kind), coordinates);
             let (released, terminal) = close_mounted_fixture(&mut model);
-            eprintln!("[DEBUG] mounted model partial {kind}/{cutoff}: allocated={allocated}, released={released}, terminal={terminal}");
             assert_eq!(allocated, released);
             assert!(terminal);
         }
@@ -238,7 +236,6 @@ fn assembly_triplet_pages_inline_job_close_reports_no_struct_bytes() {
     let mut build = AssemblyCsrBuild::new(job).unwrap_or_else(|_| panic!("closed inline fixture"));
     let first = build.close_step(0);
     let terminal = build.close_step(0);
-    eprintln!("[DEBUG] assembly inline job first={first:?}, terminal={terminal:?}");
     assert_eq!(first, (false, fixture["release"]["maximumOwnersPerStep"].as_u64().unwrap() as usize, fixture["release"]["inlineOwnerBytes"].as_u64().unwrap() as usize));
     assert_eq!(terminal, (true, 0, 0));
 }
@@ -280,7 +277,6 @@ fn assembly_triplet_pages_inline_matrix_close_reports_only_actual_backing() {
                 released += step.2;
                 if step.0 { terminal = true; break; }
             }
-            eprintln!("[DEBUG] assembly matrix {} / {} grant={bytes}, before={before:?}, first={first:?}, after={after:?}, allocated={allocated}, released={released}, exact={exact}, terminal={terminal}", case["name"], grant["name"]);
             assert!(terminal);
             assert!(exact, "inline retirement cannot invent backing bytes");
             assert_eq!(released, allocated);

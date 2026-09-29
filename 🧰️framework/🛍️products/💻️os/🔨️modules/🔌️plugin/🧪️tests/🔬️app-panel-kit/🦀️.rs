@@ -153,7 +153,6 @@ mod panel_kit_tests {
             assert_eq!(section_window(section), Some(TreeWindow { row_extent: Default::default(), total: 63, offset: 0 }), "every container publishes its full extent, including one the ledger could not seat");
         }
         let rows: usize = body.children.iter().map(|section| section.children.len()).sum();
-        println!("[DEBUG] tree-window-ledger sections={} rows={rows} body_nodes={} remaining={}", keys.len(), body_nodes(&body), windows.nodes_remaining());
         assert_eq!(windows.nodes_remaining(), 0, "nine containers of 30 rows exhaust the ledger");
         assert!(rows <= LEDGER, "the rows a body materialises never exceed its ledger: {rows} > {LEDGER}");
         assert!(body_nodes(&body) <= UI_DOCUMENT_NODES, "and the presented body fits the reconciler's record arena: {} > {UI_DOCUMENT_NODES}", body_nodes(&body));
@@ -181,7 +180,6 @@ mod panel_kit_tests {
             tree_window_item(&nested, inner, &key, true, &leaves, window_row)
         })
         .expect("bounded fixture");
-        println!("[DEBUG] tree-window-ledger nested body_nodes={} remaining={}", body_nodes(&deep), nested.nodes_remaining());
         assert!(body_nodes(&deep) <= UI_DOCUMENT_NODES, "a nested window still fits the record arena: {}", body_nodes(&deep));
     }
 
@@ -198,7 +196,6 @@ mod panel_kit_tests {
         }
         let body = builder.build().expect("bounded fixture");
         let rows: usize = body.children.iter().map(|section| section.children.len()).sum();
-        println!("[DEBUG] tree-window-ledger first-paint viewport=500 rows={rows} body_nodes={}", body_nodes(&body));
         assert!(rows <= LEDGER, "a 500-row viewport cannot outspend the ledger: {rows} > {LEDGER}");
         assert!(body_nodes(&body) <= UI_DOCUMENT_NODES, "{} > {UI_DOCUMENT_NODES}", body_nodes(&body));
         assert_eq!(windows.nodes_remaining(), 0);
@@ -240,7 +237,6 @@ mod panel_kit_tests {
         let panel = ui_history_panel(&history, "ctrl", false, false, &view).await.expect("a log of any length must assemble");
         let commands = &panel.children[1];
         let fixed = body_nodes(&panel) - commands.children.len() - 1;
-        println!("[DEBUG] tree-window-ledger history commands={} fixed={fixed} body_nodes={}", commands.children.len(), body_nodes(&panel));
         assert_eq!(section_window(commands), Some(TreeWindow { row_extent: Default::default(), total: 300, offset: 0 }), "the scrollbar spans the whole log");
         assert!(commands.children.len() <= LEDGER, "{} > {LEDGER}", commands.children.len());
         assert!(fixed <= TREE_WINDOW_FIXED_NODE_HEADROOM, "the un-ledgered Actions rows fit the reserve: {fixed} > {TREE_WINDOW_FIXED_NODE_HEADROOM}");
@@ -283,7 +279,6 @@ mod panel_kit_tests {
         })
         .expect("bounded fixture");
         let spent = LEDGER - windows.nodes_remaining();
-        println!("[DEBUG] tree-window-ledger exactly-once spent={spent} body_nodes={}", body_nodes(&section));
         assert_eq!(body_nodes(&section), 1 + 3 + 3 * 4, "one section, three group rows, four leaves each");
         assert_eq!(spent, body_nodes(&section), "the ledger spends exactly one record per node the body actually built");
     }
@@ -406,7 +401,6 @@ mod panel_kit_tests {
         }
         let body = builder.build().expect("bounded fixture");
         let un_ledgered = body_nodes(&body) - 1 - (1 + body.children[0].children.len());
-        println!("[DEBUG] tree-window-ledger fattest-panel un_ledgered={un_ledgered} body_nodes={}", body_nodes(&body));
         assert_eq!(un_ledgered, 21, "the energy fenestration inspector's own measured figure: 1 + 16 + 1 + 3");
         assert!(un_ledgered <= TREE_WINDOW_FIXED_NODE_HEADROOM, "{un_ledgered} > {TREE_WINDOW_FIXED_NODE_HEADROOM}");
         assert!(body_nodes(&body) <= UI_DOCUMENT_NODES, "a fully spent ledger beside the fattest fixed block still reconciles: {} > {UI_DOCUMENT_NODES}", body_nodes(&body));
@@ -514,7 +508,6 @@ mod panel_kit_tests {
         }
         let body = builder.build().expect("bounded fixture");
         let (first_paint, scrolled) = (&body.children[0], &body.children[1]);
-        println!("[DEBUG] tree-window-ledger priority first_paint={} scrolled={} body_nodes={}", first_paint.children.len(), scrolled.children.len(), body_nodes(&body));
         assert_eq!(scrolled.children.len(), 40, "the scrolled container is honoured exactly, not starved by the one in front of it");
         assert_eq!(scrolled.children[0].key.as_str(), "ns.row.120");
         assert_eq!(scrolled.children[39].key.as_str(), "ns.row.159");
@@ -543,7 +536,6 @@ mod panel_kit_tests {
         }
         let body = builder.build().expect("bounded fixture");
         let rows: Vec<usize> = body.children.iter().map(|section| section.children.len()).collect();
-        println!("[DEBUG] tree-window-ledger clamp rows={rows:?} body_nodes={}", body_nodes(&body));
         assert_eq!(rows, vec![LEDGER - 1, 0, 0, 0], "the first request is seated whole; the clamp falls on the tail");
         for section in body.children.iter() {
             assert_eq!(section_window(section), Some(TreeWindow { row_extent: Default::default(), total: 200, offset: 0 }), "every container stamps its total, seated or not");
@@ -573,7 +565,6 @@ mod panel_kit_tests {
             .build()
             .expect("bounded fixture");
         let nested: usize = body.children[0].children.iter().map(|group| group.children.len()).sum();
-        println!("[DEBUG] tree-window-ledger nested-section groups={} nested={nested} body_nodes={} remaining={}", body.children[0].children.len(), body_nodes(&body), windows.nodes_remaining());
         assert!(body_nodes(&body) <= UI_DOCUMENT_NODES, "{} > {UI_DOCUMENT_NODES}", body_nodes(&body));
         assert_eq!(section_window(&body.children[0]), Some(TreeWindow { row_extent: Default::default(), total: 40, offset: 0 }));
         assert_eq!(section_window(&body.children[1]), Some(TreeWindow { row_extent: Default::default(), total: 40, offset: 0 }), "a container the exhausted ledger could not seat still publishes its extent");

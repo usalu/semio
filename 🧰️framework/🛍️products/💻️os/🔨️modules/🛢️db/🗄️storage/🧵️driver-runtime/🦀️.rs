@@ -44,7 +44,7 @@ const DRIVER_THREAD_STACK_BYTES: usize = 1 << 20;
 /// 🎛️ Overrides [`DEFAULT_DRIVER_THREADS`], clamped to a sane band so a typo cannot spawn a fleet.
 const DRIVER_THREADS_ENV: &str = "SEMIO_DB_IO_DRIVER_THREADS";
 
-/// @emoji 🧵️ The bounded runtime the external drivers are polled on.
+/// 🧵️ The bounded runtime the external drivers are polled on.
 struct DbIoDriverRuntime {
     runtime: tokio::runtime::Runtime,
 }
@@ -60,7 +60,7 @@ impl DbIoAsyncDriverRuntime for DbIoDriverRuntime {
     }
 }
 
-/// @emoji 🌉️ What `Lane::Io` polls in place of the driver's own future.
+/// 🌉️ What `Lane::Io` polls in place of the driver's own future.
 struct DetachedDriver {
     receiver: oneshot::Receiver<DbIoAsyncDriverOutput>,
 }
@@ -90,7 +90,7 @@ fn driver_threads() -> usize {
     std::env::var(DRIVER_THREADS_ENV).ok().and_then(|value| value.trim().parse::<usize>().ok()).unwrap_or(DEFAULT_DRIVER_THREADS).clamp(1, 8)
 }
 
-/// @emoji 🏗️ The process's one external-driver runtime, built on first use and never shut down.
+/// 🏗️ The process's one external-driver runtime, built on first use and never shut down.
 ///
 /// Panics only if the OS refuses to spawn it, which is the same class of failure as
 /// `WorkerPool::new`'s own `expect` on a thread it cannot start: there is no storage backend to
@@ -109,12 +109,12 @@ fn runtime() -> &'static DbIoDriverRuntime {
     })
 }
 
-/// @emoji 🧵️ The process's one external-driver runtime, as the interface every caller sees.
+/// 🧵️ The process's one external-driver runtime, as the interface every caller sees.
 pub fn shared() -> &'static dyn DbIoAsyncDriverRuntime {
     runtime()
 }
 
-/// @emoji 🚚 Runs one already-boxed future on the driver runtime and hands its completion back
+/// 🚚 Runs one already-boxed future on the driver runtime and hands its completion back
 /// through the same repo-owned rendezvous [`DbIoAsyncDriverRuntime::detach`] uses.
 ///
 /// The backend-close stepper needs this: `sqlx`'s `PgPool::close()` is driver I/O like any other and
@@ -128,7 +128,7 @@ pub fn detach_unit(future: Pin<Box<dyn Future<Output = ()> + Send + 'static>>) -
     receiver
 }
 
-/// @emoji 🚪 Runs `build` inside the driver runtime's context — for driver constructors that spawn
+/// 🚪 Runs `build` inside the driver runtime's context — for driver constructors that spawn
 /// their own maintenance tasks (`sqlx`'s pool reaper) and would otherwise abort a caller that has no
 /// runtime of its own.
 pub fn within<T>(build: impl FnOnce() -> T) -> T {
@@ -136,7 +136,7 @@ pub fn within<T>(build: impl FnOnce() -> T) -> T {
     build()
 }
 
-/// @emoji 💓 A periodic driver turn owned by its handle — a remote lease renews itself on the
+/// 💓 A periodic driver turn owned by its handle — a remote lease renews itself on the
 /// driver runtime while its owner holds the handle, and dropping the handle stops it at once.
 pub struct DbIoDriverPeriodic {
     task: tokio::task::JoinHandle<()>,
@@ -148,7 +148,7 @@ impl Drop for DbIoDriverPeriodic {
     }
 }
 
-/// @emoji 💓 Runs `step` every `period` on the driver runtime until it answers `false` or the
+/// 💓 Runs `step` every `period` on the driver runtime until it answers `false` or the
 /// returned handle is dropped.
 pub fn detach_periodic(period: std::time::Duration, mut step: impl FnMut() -> Pin<Box<dyn Future<Output = bool> + Send>> + Send + 'static) -> DbIoDriverPeriodic {
     let task = runtime().runtime.spawn(async move {

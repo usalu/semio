@@ -2,7 +2,7 @@
 # 🧪️ SH2 overlay runs (session 14 rule 3 / session 13 rule 37): ONE overlay build fleet-wide via the `overlay` fleet mutex, inside the
 # scratch overlay with PRIVATE build/target dirs (never the shared build-dir), nice 15, incremental off.
 overlay="/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-sh2-overlay"
-out="/Users/ueli/Documents/semio/.tmp-ticket/wp-sh2/generated"
+out="/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-sh2-captures"
 tag="${SH2_TAG:-ov}"
 export CARGO_INCREMENTAL=0 RUST_MIN_STACK=33554432
 export CARGO_BUILD_BUILD_DIR="/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-sh2-build"
@@ -35,6 +35,14 @@ for job in $jobs; do
       ( cd "$overlay" && zsh /Users/ueli/Documents/semio/.tmp-ticket/📜️fleet-mutex.sh overlay sh2 -- nice -n 15 zsh -c 'echo "== home-feature"; cargo test -p semio-s-artifact-space-home --features component-app-assembly --lib --no-fail-fast -- --test-threads 4; echo "== home"; cargo test -p semio-s-artifact-space-home --lib --no-fail-fast -- --test-threads 4; echo "== plugin"; cargo test -p semio-s-plugin-space --lib --no-fail-fast -- --test-threads 4' ) > "$out/$tag-b1-guest.txt" 2>&1
       echo "END b1-guest rc=$? $(date '+%H:%M:%S') :: $(/usr/bin/grep -E '^test result|^error(\[|:)|^== ' "$out/$tag-b1-guest.txt" | tr '\n' ' ' | cut -c1-900)" ;;
     plugin-proofs) run plugin-proofs test -p semio-s-plugin-space --lib --no-fail-fast -- --test-threads 4 interactive_job_catalog ;;
+    p1)
+      echo "START p1 $(date '+%H:%M:%S')"
+      ( cd "$overlay" && zsh /Users/ueli/Documents/semio/.tmp-ticket/📜️fleet-mutex.sh overlay sh2 -- nice -n 15 zsh -c 'echo "== home-feature"; cargo test -p semio-s-artifact-space-home --features component-app-assembly --lib --no-fail-fast -- --test-threads 4; echo "== home"; cargo test -p semio-s-artifact-space-home --lib --no-fail-fast -- --test-threads 4; echo "== plugin"; cargo test -p semio-s-plugin-space --lib --no-fail-fast -- --test-threads 4; echo "== space-check"; cargo check -p semio-s-artifact-space-space --features component-app-assembly --lib --tests --message-format short' ) > "$out/$tag-p1.txt" 2>&1
+      echo "END p1 rc=$? $(date '+%H:%M:%S') :: $(/usr/bin/grep -E '^test result|^error(\[|:)|^== ' "$out/$tag-p1.txt" | tr '\n' ' ' | cut -c1-900)" ;;
+    p1-check)
+      echo "START p1-check $(date '+%H:%M:%S')"
+      ( cd "$overlay" && zsh /Users/ueli/Documents/semio/.tmp-ticket/📜️fleet-mutex.sh overlay sh2 -- nice -n 15 zsh -c 'cargo check -p semio-s-artifact-space-home -p semio-s-plugin-space --features semio-s-artifact-space-home/component-app-assembly --lib --tests --message-format short' ) > "$out/$tag-p1-check.txt" 2>&1
+      echo "END p1-check rc=$? $(date '+%H:%M:%S') :: $(/usr/bin/grep -E '^error(\[|:)|^warning: `' "$out/$tag-p1-check.txt" | tr '\n' ' ' | cut -c1-900)" ;;
     kernel-check) run kernel-check check -p semio-framework-os-kernel --features sync,ureq --lib --tests --message-format short ;;
     kernel) run kernel test -p semio-framework-os-kernel --features sync,ureq --lib --no-fail-fast -- --test-threads 4 ;;
   esac

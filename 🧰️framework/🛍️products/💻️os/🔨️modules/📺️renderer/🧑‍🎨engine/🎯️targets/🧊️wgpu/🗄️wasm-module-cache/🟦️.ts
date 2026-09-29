@@ -1,5 +1,5 @@
 //#region 🗄️RendererModuleCache
-/** @emoji 🗄️ Persists the COMPILED renderer `WebAssembly.Module` across reloads, so only the first boot on
+/** 🗄️ Persists the COMPILED renderer `WebAssembly.Module` across reloads, so only the first boot on
  * a given artifact pays for compiling it.
  *
  * The renderer wasm is 76 048 601 B. Compiling it is the single most expensive thing a cold boot does, it
@@ -23,11 +23,11 @@
 const CACHE_DATABASE = "semio-wgpu-renderer-modules";
 const CACHE_STORE = "modules";
 const CACHE_VERSION = 1;
-/** @emoji ⏳️ A cache lookup must never be the thing that stalls a boot: IndexedDB blocks behind another
+/** ⏳️ A cache lookup must never be the thing that stalls a boot: IndexedDB blocks behind another
  * tab's pending upgrade, and a boot that waits on it forever is worse than one that compiles. */
 const CACHE_OPERATION_TIMEOUT_MS = 5_000;
 
-/** @emoji 🗄️ One cached compiled renderer artifact. */
+/** 🗄️ One cached compiled renderer artifact. */
 export type RendererModuleCacheHit = {
   readonly module: WebAssembly.Module;
   readonly tag: string;
@@ -75,7 +75,7 @@ async function openCache(): Promise<IDBDatabase | undefined> {
   );
 }
 
-/** @emoji 🔑️ The artifact's server-asserted identity, via one `HEAD`. An empty answer means the server
+/** 🔑️ The artifact's server-asserted identity, via one `HEAD`. An empty answer means the server
  * offered no validator at all, which disables the cache rather than risking a stale module. */
 export async function rendererArtifactTag(url: string): Promise<string> {
   try {
@@ -91,7 +91,7 @@ export async function rendererArtifactTag(url: string): Promise<string> {
   }
 }
 
-/** @emoji 🗄️ The compiled module for this artifact, or `undefined` for every kind of miss. */
+/** 🗄️ The compiled module for this artifact, or `undefined` for every kind of miss. */
 export async function readCachedRendererModule(url: string, tag: string): Promise<RendererModuleCacheHit | undefined> {
   if (!tag) return undefined;
   const database = await openCache();
@@ -107,7 +107,7 @@ export async function readCachedRendererModule(url: string, tag: string): Promis
   }
 }
 
-/** @emoji 🗄️ Stores the compiled module, replacing whatever this artifact's slot held. Answers whether the
+/** 🗄️ Stores the compiled module, replacing whatever this artifact's slot held. Answers whether the
  * write actually landed, so the boot reports a real cache state rather than an intent. */
 export async function writeCachedRendererModule(url: string, tag: string, module: WebAssembly.Module, byteLength: number, nowMs: number): Promise<boolean> {
   if (!tag) return false;
@@ -124,7 +124,7 @@ export async function writeCachedRendererModule(url: string, tag: string, module
   }
 }
 
-/** @emoji 🧹️ Drops this artifact's slot — used when a compile succeeds against a tag the cache disagrees
+/** 🧹️ Drops this artifact's slot — used when a compile succeeds against a tag the cache disagrees
  * with, so a wrong row can never outlive the boot that noticed it. */
 export async function evictCachedRendererModule(url: string): Promise<void> {
   const database = await openCache();

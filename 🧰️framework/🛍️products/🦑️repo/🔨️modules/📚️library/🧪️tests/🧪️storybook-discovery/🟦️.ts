@@ -51,7 +51,7 @@ describe("Storybook discovery identity", () => {
       const parsed = loadCsf(source, { fileName: expected.path, makeTitle: (title) => title }).parse();
       const stories = Object.entries(parsed._stories).map(([exportName, story]) => ({ exportName, id: story.id, name: story.name }));
       expect(parsed.meta?.title, expected.path).toBe(expected.title);
-      expect(stories, expected.path).toEqual(expected.stories);
+      expect(stories, expected.path).toEqual<typeof expected.stories>(expected.stories);
     }
   });
 

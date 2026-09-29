@@ -22,7 +22,6 @@ fn built_child_retirement_contention_retains_exact_page() {
     drop(guard);
     assert!(matches!(iterator.try_next_or_release().unwrap(), BuiltChildRetirementNext::Complete));
     assert!(iterator.handback.is_none() && iterator.backing.is_none());
-    eprintln!("[DEBUG] built-child exact page: contention preserved reservation, retry released locally");
 }
 
 #[test]
@@ -68,5 +67,4 @@ fn built_tree_retirement_preserves_foreign_queued_page_at_full_capacity() {
     }
     assert!(owner.terminal_is_empty());
     assert!(matches!(foreign.try_next_or_release().unwrap(), BuiltChildRetirementNext::Complete));
-    eprintln!("[DEBUG] built-tree exact pages:383 fixture+1 foreign queued; foreign preserved and separately retired");
 }

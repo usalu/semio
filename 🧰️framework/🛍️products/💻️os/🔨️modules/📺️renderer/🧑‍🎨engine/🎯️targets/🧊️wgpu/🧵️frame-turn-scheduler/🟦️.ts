@@ -3,7 +3,7 @@ export type FrameTurnStep = () => boolean;
 export type FrameTurnCloseStep = () => boolean;
 export type FrameTurnOwner = "frame" | "assetDecode";
 
-/** @emoji 🚏️ Owns one unthrottled Worker task. A MessagePort task is not subject to the nested and
+/** 🚏️ Owns one unthrottled Worker task. A MessagePort task is not subject to the nested and
  * background timer clamps that can strand a retained frame between phases. */
 export class WorkerTurnTaskQueue {
   private readonly channel = new MessageChannel();
@@ -37,13 +37,13 @@ export class WorkerTurnTaskQueue {
   }
 }
 
-/** @emoji 🔢️ Advances the Worker-owned frame result sequence without saturation or reuse. */
+/** 🔢️ Advances the Worker-owned frame result sequence without saturation or reuse. */
 export function nextFrameSequence(current: number): number {
   if (!Number.isSafeInteger(current) || current < 0 || current >= Number.MAX_SAFE_INTEGER) throw new Error("frame output sequence exhausted");
   return current + 1;
 }
 
-/** @emoji 🧵️ Retains one frame owner inside the dedicated Worker. Each scheduled callback performs at
+/** 🧵️ Retains one frame owner inside the dedicated Worker. Each scheduled callback performs at
  * most one frame unit or one close unit, and another callback is armed only while that owner remains
  * pending. */
 export class FrameTurnScheduler {

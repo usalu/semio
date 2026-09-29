@@ -38,5 +38,4 @@ fn terrain_document_contract_preserves_mesh_identity_through_conversion_and_code
     crate::mutations::apply_gis_terrain_mutation(&mut edited, &mutation).unwrap();
     assert_eq!(edited.mesh, snapshot.mesh);
     assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&actual)).unwrap(), fixture["diff"]);
-    eprintln!("[DEBUG] Terrain JSON/text/Pack, four neutral deltas and real scalar mutation preserve exact mesh identity");
 }

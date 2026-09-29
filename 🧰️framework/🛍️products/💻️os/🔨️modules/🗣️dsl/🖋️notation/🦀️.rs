@@ -1,4 +1,4 @@
-//! @emoji 🖋️ `dsl_notation` — the shared notation toolkit handcrafted per-app grammars build on,
+//! 🖋️ `dsl_notation` — the shared notation toolkit handcrafted per-app grammars build on,
 //! so "every grammar is handcrafted" doesn't mean "every grammar reinvents its own sub-parsers".
 //! First resident: the edge/arrow literal, extended with an optional `[id:kind]` label so
 //! graph-like documents can read as arrows (`a -> b`, `a -[e1:Connection]-> b`) instead of
@@ -18,7 +18,7 @@ use crate::os_dsl::{lex, Limits, SpannedToken, TextError, TextSpan, TokenKind};
 
 //#region 🔖️Edge
 
-/// @emoji 🕸️ One endpoint of an edge statement: `id[:kind][@port]`.
+/// 🕸️ One endpoint of an edge statement: `id[:kind][@port]`.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct EdgeNode {
     pub id: String,
@@ -26,7 +26,7 @@ pub struct EdgeNode {
     pub port: Option<String>,
 }
 
-/// @emoji 🔗️ The optional id/kind label carried by a bracketed edge arrow — `[e1:Connection]`,
+/// 🔗️ The optional id/kind label carried by a bracketed edge arrow — `[e1:Connection]`,
 /// `[e1]`, `[:Connection]`. Reuses Jack's existing `-[r:Kind]->` relationship-pattern bracket
 /// notation (`🧮️math/🕸️graph/🗣️dsl`) rather than inventing a second bracket-free spelling, so the
 /// two labeled-arrow grammars already in the repo agree with each other.
@@ -42,7 +42,7 @@ impl EdgeLabel {
     }
 }
 
-/// @emoji 🔀️ The arrow between `from` and a linked node: direction plus an optional label.
+/// 🔀️ The arrow between `from` and a linked node: direction plus an optional label.
 #[derive(Clone, Debug, PartialEq)]
 pub struct EdgeLink {
     pub directed: bool,
@@ -50,7 +50,7 @@ pub struct EdgeLink {
     pub to: EdgeNode,
 }
 
-/// @emoji 🕸️ One edge statement (or a bare node declaration if `link` is `None`).
+/// 🕸️ One edge statement (or a bare node declaration if `link` is `None`).
 ///
 /// Surface forms — `<-` and its labeled/reversed counterpart are sugar only, normalized by
 /// endpoint-swap so the stored value (and everything reprinted from it) only ever holds a
@@ -182,7 +182,7 @@ fn parse_edge_label(cursor: &mut Cursor) -> Result<EdgeLabel, TextError> {
     Ok(label)
 }
 
-/// @emoji 🕸️ Parses one edge (or bare node) statement from an already-lexed cursor.
+/// 🕸️ Parses one edge (or bare node) statement from an already-lexed cursor.
 fn parse_edge(cursor: &mut Cursor) -> Result<EdgeValue, TextError> {
     let mut from = parse_edge_node(cursor)?;
     let link = match cursor.peek().kind {
@@ -237,7 +237,7 @@ fn parse_edge(cursor: &mut Cursor) -> Result<EdgeValue, TextError> {
     Ok(EdgeValue { from, link })
 }
 
-/// @emoji 🔌️ Lexes + parses one standalone edge literal — the entry point family/app grammars
+/// 🔌️ Lexes + parses one standalone edge literal — the entry point family/app grammars
 /// call for the `edge` macro-production.
 pub fn parse_edge_text(text: &str) -> Result<EdgeValue, TextError> {
     let limits = Limits::default();
@@ -262,7 +262,7 @@ fn print_edge_node(node: &EdgeNode, out: &mut String) {
     }
 }
 
-/// @emoji 🖨️ Canonical printer for [`EdgeValue`] — `parse_edge_text(print_edge(x)) == x` is the
+/// 🖨️ Canonical printer for [`EdgeValue`] — `parse_edge_text(print_edge(x)) == x` is the
 /// round-trip law every macro-production in this toolkit must satisfy.
 ///
 /// Labeled arrows print with a leading space before the opening `-[`: `a` is `is_ident_continue`
@@ -289,7 +289,7 @@ pub fn print_edge(edge: &EdgeValue) -> String {
 //#endregion 🔖️Edge
 
 //#region 🔖️Quantity
-/// @emoji 📐️ Parses a number glued to a unit suffix — `210GPa`, `0.8kN/m2`, `45%` — converting
+/// 📐️ Parses a number glued to a unit suffix — `210GPa`, `0.8kN/m2`, `45%` — converting
 /// into `native`'s scale. `dsl_core`'s number lexer doesn't glue the suffix on itself (`210GPa`
 /// lexes as two adjacent tokens, `Float("210")` then `Ident("GPa")`, exactly like
 /// `crate::os_dsl::schema::parse_scalar`'s existing `Quantity`/`Angle` shapes already rely on) — this checks
@@ -323,14 +323,14 @@ pub fn parse_quantity_text(text: &str, native: &'static crate::os_dsl::UnitSpec)
     Ok(value)
 }
 
-/// @emoji 🖨️ Canonical printer — always suffixes in `native`'s own unit (never the alien unit a
+/// 🖨️ Canonical printer — always suffixes in `native`'s own unit (never the alien unit a
 /// value might have been parsed from), so re-parsing the printed form is always a same-unit,
 /// lossless round trip.
 pub fn print_quantity(value: f64, native: &'static crate::os_dsl::UnitSpec) -> String {
     format!("{}{}", crate::os_dsl::format_f64(value), native.symbol)
 }
 
-/// @emoji 📐️ `parse_quantity_text` specialized to degrees: a bare number with no suffix is read
+/// 📐️ `parse_quantity_text` specialized to degrees: a bare number with no suffix is read
 /// as degrees (unlike `parse_quantity_text`'s general "no suffix = already-native-unit" rule,
 /// this pins the no-suffix case specifically, since degrees are what the architecture calls the
 /// canonical angle unit); `rad`/`turn` suffixes convert in.
@@ -339,7 +339,7 @@ pub fn parse_angle_text(text: &str) -> Result<f64, TextError> {
     parse_quantity_text(text, deg)
 }
 
-/// @emoji 🖨️ Canonical printer for an angle in degrees — `45°` (the `°` symbol, not `deg`).
+/// 🖨️ Canonical printer for an angle in degrees — `45°` (the `°` symbol, not `deg`).
 pub fn print_angle(value_deg: f64) -> String {
     let degree_symbol = crate::os_dsl::unit_by_symbol("°").expect("`°` is a built-in unit");
     format!("{}{}", crate::os_dsl::format_f64(value_deg), degree_symbol.symbol)

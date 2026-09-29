@@ -32,7 +32,7 @@ pub fn generation_command_result(action: &str, args: Option<&dsl::DslValue>, pro
     };
     let preview_fixture = selected_generation(&state).map(|_| generation_host_snapshot_for(&projection.host_snapshot, &state, state.selected_generation_id.as_deref()));
     if semio_framework_job::runtime_diagnostics_enabled() {
-        eprintln!("[DEBUG] gen3d command action={action} before={} after={} ops={} selected={:?}", projection.generation.as_state().generations.len(), state.generations.len(), operations.len(), state.selected_generation_id);
+        eprintln!("[TRACE] gen3d command action={action} before={} after={} ops={} selected={:?}", projection.generation.as_state().generations.len(), state.generations.len(), operations.len(), state.selected_generation_id);
     }
     Some(Generation3dGenerationCommandResult {
         emit: Emit {

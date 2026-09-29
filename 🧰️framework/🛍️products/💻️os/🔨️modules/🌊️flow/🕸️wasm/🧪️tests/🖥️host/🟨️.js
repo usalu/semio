@@ -45,7 +45,6 @@ equal(runtime.terminalIsEmpty(), runtimeLifetime.runtimeClose.terminal, "runtime
 let lateAdmission = false;
 try { runtime.openSession(); } catch { lateAdmission = true; }
 equal(lateAdmission, true, "runtime-closing-refuses-new-session");
-console.log("[DEBUG] Flow browser runtime isolated two sessions, acknowledged exact session retirement, refused duplicate exports, and closed its bridge exactly once");
 const lateBridge = new MockFlowBridge(memory);
 const lateRuntime = await createFlowBrowserRuntime({ source: lateBridge.exports });
 const lateSession = lateRuntime.openSession();
@@ -69,7 +68,6 @@ equal(receiptBridge.sessionReceiptAckAttempts, runtimeLifetime.backpressure.rece
 equal(receiptBridge.sessionCloseControlAttempts, runtimeLifetime.backpressure.closeControlRejections + 1, "exact-session-close-control-retried");
 deepStrictEqual(receiptBridge.closedSessionSlots, [1]);
 await receiptRuntime.close();
-console.log("[DEBUG] Flow late open retired only its cancelled owner; session retirement waited for the third exact receipt ACK without resending close");
 
 await testFlowOpenOwnership(runtimeLifetime.openFailure);
 const bridge = new MockFlowBridge(memory);
@@ -114,7 +112,6 @@ for (const provenTerminal of [sessionClose.browser.terminalOnClosingPoll, false]
   equal(accepted, provenTerminal, "closing-poll-exact-terminal-witness");
   equal(owner.terminalIsEmpty(), provenTerminal, "closing-poll-retained-terminal-state");
 }
-console.log("[DEBUG] Flow close poll terminal witness: exact-terminal accepted, unproven-terminal rejected");
 
 const yieldingBridge = new MockFlowBridge(memory);
 let yieldingClose = false;
@@ -132,7 +129,6 @@ const externalEvent = new Promise((resolve) => setTimeout(() => { eventObserved 
 await Promise.all([pendingClose, externalEvent]);
 equal(eventObserved, sessionClose.browser.yieldsToEvents, "pending-close-yields-to-user-events");
 equal(closePolls, sessionClose.browser.pendingClosePolls, "bounded-close-poll-count");
-console.log("[DEBUG] Flow retained close yielded to an external event before its four bounded poll turns completed");
 
 const integrated = await createFlowBrowserRuntime({ source: await readFile(new URL("../../../🫀️core/🕸️bindings/flow_core_bg.wasm", import.meta.url)) });
 const integratedSession = integrated.openSession();
@@ -146,8 +142,6 @@ await integratedSession.close();
 await integratedSibling.catalogueJson().result;
 await integrated.close();
 equal(integrated.terminalIsEmpty(), sessionClose.browser.terminalAfterClose, "compiled-session-terminal-after-close");
-console.log("[DEBUG] Flow compiled session close drained its real domain after %d completed requests and reached terminal-empty", sessionClose.browser.requestBurst + 1);
-console.log("[DEBUG] Flow browser startup preserved four exact initializer/import ownership cases against the compiled module");
 
 const fixtureTask = features.document.catalogueJson({});
 const events = [];
@@ -182,7 +176,6 @@ for (const [law, deviceless] of [
   equal(devicelessSurface.presentsOnGpu, false, `deviceless-surface-presentation:${law}`);
   await features.surface.surfaceStatus({ surface: devicelessSurface.surface, surfaceGeneration: devicelessSurface.surfaceGeneration, status: "cancelled" }).result;
 }
-console.log("[DEBUG] Flow surface attachment reached created on four hosts that could not bind a WebGPU presenter");
 
 // 🛡️ A host with no `navigator.gpu` must never reach the guest's wgpu bring-up: a panic there is an
 // unrecoverable trap that takes the whole session with it.
@@ -211,7 +204,6 @@ for (const [law, gpu] of [
   equal(adapterlessSurface.presentsOnGpu, false, `adapterless-presents-in-2d:${law}`);
   await features.surface.surfaceStatus({ surface: adapterlessSurface.surface, surfaceGeneration: adapterlessSurface.surfaceGeneration, status: "cancelled" }).result;
 }
-console.log("[DEBUG] Flow surface attachment kept the canvas 2D-capable on four hosts that expose navigator.gpu and hand out no adapter");
 
 let releaseAttach;
 const interruptedAttach = attachFlowSurface(features, {}, { width: 1, height: 1, gpu: presentingGpu, bindings: { flowAttachSurfaceCanvas: () => new Promise((resolve) => { releaseAttach = resolve; }) } });

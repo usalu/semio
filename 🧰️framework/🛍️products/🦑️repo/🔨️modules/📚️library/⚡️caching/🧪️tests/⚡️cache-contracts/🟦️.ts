@@ -28,8 +28,7 @@ import { testTrunkLockfile } from "../🔒️trunk-lockfile/🟦️.ts";
 import { testNativeDependencies } from "../📦️native-dependencies/🟦️.ts";
 import { testCargoCleanupBoundary } from "../🦀️cleanup-boundary/🟦️.ts";
 import { testGraphRevision } from "../🔁️graph-revision/🟦️.ts";
-import { testContainerPersistentState } from "../../📦️artifacts/🐳️containers/🧪️tests/🔒️persistent-state/🟦️.ts";
-import { testExtensionAttach } from "../../📦️artifacts/🐳️containers/🧪️tests/🧩️extension-attach/🟦️.ts";
+import { testDevcontainerLifecycle } from "../../📦️artifacts/🐳️containers/🧪️tests/🔁️lifecycle/🟦️.ts";
 import { testBinaryenToolchain } from "../../🚀️bootstrap/🛠️tools/🕸️wasm/🧪️tests/🛠️binaryen-toolchain/🟦️.ts";
 import { testWasmToolFingerprint } from "../../🚀️bootstrap/🛠️tools/🕸️wasm/🧪️tests/🔏️tool-fingerprint/🟦️.ts";
 
@@ -46,8 +45,7 @@ export async function testCommandInputs(workspace: string, output: string): Prom
   await testCiBaselineCommand(workspace, output);
   testDevcontainerContext(workspace);
   testContainerRuntimeBootstrap(workspace);
-  testContainerPersistentState(workspace);
-  testExtensionAttach(workspace, output);
+  await testDevcontainerLifecycle(workspace, output);
   const { testExtensionHostBuild } = await import("../../../../💻️client/🧩️vscode/🧪️tests/🧩️host-build/🟦️.ts");
   await testExtensionHostBuild(output);
   const { testExtensionPackage } = await import("../../../../💻️client/🧩️vscode/🧪️tests/📦️package/🟦️.ts");

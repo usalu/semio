@@ -30,7 +30,6 @@ export async function testFlowBrowserClock() {
     assert.ok(started >= 1, "the consumed module must install its real clock before its first Flow request");
     assert.ok(samples > started && samples >= fixture.clock.minimumSamples, "Flow turns must resample the installed clock");
     assert.ok(last > first, "the consumed clock must advance rather than freeze its startup sample");
-    console.log(`[DEBUG] consumed Flow Wasm sampled real ${fixture.clock.source} ${samples} times from ${first}ms to ${last}ms, then closed terminal-empty`);
   } finally {
     if (descriptor) Object.defineProperty(globalThis, "performance", descriptor);
     else Reflect.deleteProperty(globalThis, "performance");

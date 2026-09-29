@@ -90,7 +90,7 @@ function storyInteractionItem(block: InkItem): InkItem {
   return block.kind === "group" ? { ...block, interactionId, children: block.children.map(storyInteractionItem) } : { ...block, interactionId };
 }
 
-/** @emoji ✍️ Story-local mirror of `applyEventsLocal` (`framework/os/renderer/js/react/index.tsx`) — the subset of a real plugin's `inkApplyEvents` operation vocabulary the stories exercise. */
+/** ✍️ Story-local mirror of `applyEventsLocal` (`framework/os/renderer/js/react/index.tsx`) — the subset of a real plugin's `inkApplyEvents` operation vocabulary the stories exercise. */
 function applyStoryInkEvents(document: InkDocument, events: readonly InkCanvasEvent[]): InkDocument {
   let blocks = document.blocks;
   let next = document;
@@ -116,7 +116,7 @@ function applyStoryInkEvents(document: InkDocument, events: readonly InkCanvasEv
   return { ...next, blocks };
 }
 
-/** @emoji ✍️ Story-local mirror of the app event reducer plus framework interaction projection. */
+/** ✍️ Story-local mirror of the app event reducer plus framework interaction projection. */
 function reduceStoryInkAction(state: StoryInkState, descriptor: ActionDescriptor): StoryInkState {
   const args = (descriptor.args ?? {}) as Record<string, unknown>;
   switch (descriptor.action) {

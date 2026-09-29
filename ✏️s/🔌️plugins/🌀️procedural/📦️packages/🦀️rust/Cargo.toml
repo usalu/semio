@@ -13,7 +13,7 @@ package = "semio:procedural"
 
 [package.metadata.semio]
 role = "plugin"
-consumes = ["forms.questionKind"]
+consumes = ["forms.questionKind", "flow.extension"]
 depends-on = [
   "flow-extension-bim",
   "flow-extension-brep",

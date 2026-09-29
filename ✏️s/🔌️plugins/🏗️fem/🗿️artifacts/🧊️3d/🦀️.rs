@@ -285,6 +285,26 @@ pub use crate::standards::v1::subsets::any::schema::Fem3dArtifact;
 // #endregion 🔖️Document
 
 // #region 🔖️ArtifactKind
+/// 🪪️ The fem 3D model document kind — the id `fem3d_io`'s `ArtifactPresentation` already names (`3d.fem`),
+/// with the ONE schema the hub's codec rows, document-open targets and genesis key on (`FEM_3D_SCHEMA`). Declared
+/// beside [`computation_artifact_kind`], which stays the results kind `results:out` pins itself to.
+pub fn document_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+    semio_framework_plugin::ArtifactKindSpec {
+        id: "3d.fem".into(),
+        label: semio_framework_plugin::LocalizedLabel::native("FEM 3D Model", "FEM-3D-Modell"),
+        source_format: FEM_3D_SCHEMA.into(),
+        component_kind: "fem3d".into(),
+        dimension: "3d".into(),
+        media_capability: semio_framework_plugin::OsMediaCapability::MeshOnly,
+        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Any },
+        schema: FEM_3D_SCHEMA.into(),
+        export_formats: vec![],
+        import_formats: vec![],
+        export_stdio_kinds: vec!["stdio.csv".into(), "stdio.json".into(), "stdio.obj".into(), "stdio.stl".into(), "stdio.txt".into()],
+        import_stdio_kinds: vec!["stdio.json".into(), "stdio.txt".into()],
+    }
+}
+
 /// 🏷️ The `computation.fem3d` artifact kind — every load case/combination's solved
 /// `crate::model::StaticResult`, pinned to this kind by the `results:out` media port (see
 /// `crate::editor::fem3d::fem3d_results_out_port`) and produced by

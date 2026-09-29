@@ -319,7 +319,7 @@ fn a_not_ready_hub_names_every_closed_gate_and_its_reason_in_readyz_and_at_start
 use tokio_tungstenite::connect_async;
 use tokio_tungstenite::tungstenite::{client::IntoClientRequest, Message as WsMessage};
 
-/// @emoji 🏛️ The seeded space id every test routes against (see `SqliteDirectory::seed`).
+/// 🏛️ The seeded space id every test routes against (see `SqliteDirectory::seed`).
 const STUDIO: &str = "default";
 
 #[cfg(feature = "native-artifact-execution")]
@@ -596,7 +596,7 @@ impl DirectoryEventPageSource for SyntheticDirectoryEventSource {
     }
 }
 
-/// @emoji 📁️ A fresh, never-reused temp directory per call — the owned `time_ordered_id` rather than
+/// 📁️ A fresh, never-reused temp directory per call — the owned `time_ordered_id` rather than
 /// `now_ms()` alone, since `cargo test` runs this whole module's `#[tokio::test]`s
 /// concurrently within one process: two tests calling `test_state()` in the same millisecond
 /// would otherwise collide on the identical `os-hub-test-db-<pid>-<ms>` path and open the SAME
@@ -879,6 +879,7 @@ async fn test_state_with_directory(dir: std::path::PathBuf, directory: SqliteDir
         },
         extensions_root: dir.join("extension-modules"),
         merge_policy: protocol::MergePolicy::default(),
+        checkpoint_policy: Arc::default(),
     }
 }
 
@@ -968,10 +969,11 @@ async fn lag_test_state(directory_capacity: usize, fanout_capacity: usize) -> Hu
         },
         extensions_root: dir.join("extension-modules"),
         merge_policy: protocol::MergePolicy::default(),
+        checkpoint_policy: Arc::default(),
     }
 }
 
-/// @emoji 🏗️ Test-only `create-space` through `DirectoryService::execute` (the trait's own
+/// 🏗️ Test-only `create-space` through `DirectoryService::execute` (the trait's own
 /// `create_space` write method is gone — see `📓️w1-b-report.md`) — returns the minted space id.
 /// `decide` performs zero authorization of its own, so `owner_user_id` need not be a real,
 /// already-existing user for these low-level fixture setups.
@@ -987,7 +989,7 @@ async fn create_space_for_test(state: &HubState, owner_user_id: &str, name: &str
         .expect("space.created event")
 }
 
-/// @emoji 🏗️ Test-only `upsert-member` through `DirectoryService::execute` — `email` must match
+/// 🏗️ Test-only `upsert-member` through `DirectoryService::execute` — `email` must match
 /// an already-minted `AuthSessionRecord`'s user for the member to land on that SAME user rather
 /// than a freshly-created one (`decide`'s `UpsertMember` resolves-or-creates by email).
 async fn upsert_member_for_test(state: &HubState, space_id: &str, email: &str, role: DirectorySpaceRole) {
@@ -1025,7 +1027,7 @@ async fn announce_document_for_test(state: &HubState, space_id: &str, document_i
     state.directory_service.execute(actor, DirectoryCommand::AnnounceDocument { descriptor: Box::new(document_descriptor_for_test(space_id, document_id)) }).await.expect("announce document");
 }
 
-/// @emoji 🧱️ Publishes the next ORDINARY checkpoint on a document's already-committed lineage.
+/// 🧱️ Publishes the next ORDINARY checkpoint on a document's already-committed lineage.
 /// `decide_verified_checkpoint` (`📇️directory/🦀️.rs`) refuses a parentless ordinary publication with
 /// `Conflict("ordinary artifact publication requires a committed genesis parent")` — a document's first
 /// checkpoint is a creation genesis and only `publish_document_genesis` mints one — so a law seeds the
@@ -1076,7 +1078,7 @@ async fn publish_checkpoint_for_test(state: &HubState, space_id: &str, document_
     checkpoint
 }
 
-/// @emoji 🌱️ Publishes one creation genesis exactly the way production does, in the two forms
+/// 🌱️ Publishes one creation genesis exactly the way production does, in the two forms
 /// production keeps apart. The **prepared candidate** carries `sha256/<hex>` storage keys — that is
 /// what `blob_reference` (`🗿️artifact-authority/🦀️.rs:516`) mints and what
 /// `ArtifactCreationPreparedV1::validate` requires — and its `checkpoint_id` is computed over them.
@@ -1184,7 +1186,7 @@ async fn publish_openable_document_for_test(state: &HubState, token: &str, space
     (descriptor, checkpoint)
 }
 
-/// @emoji 🌱️ Seeds one creation-owned document through the production authority: a real session minted by
+/// 🌱️ Seeds one creation-owned document through the production authority: a real session minted by
 /// `issue_test_session`, made an author of the space exactly as a person is, then `publish_document_genesis`
 /// — the same path `AU1`/`AU3` drive. It replaces `announce_document_for_test` wherever a law then publishes
 /// an ordinary checkpoint: the genesis writes the descriptor itself, and `append_document_genesis` refuses a
@@ -1198,7 +1200,7 @@ async fn seed_genesis_document_for_test(state: &HubState, author_email: &str, sp
     (document_id, genesis)
 }
 
-/// @emoji 🌱️ The same seed for a law that already holds an author's session and a document id it must keep:
+/// 🌱️ The same seed for a law that already holds an author's session and a document id it must keep:
 /// the id has to be creation-owned (`artifact-<32 hex>`) because `ArtifactCreationIntentV1`'s request id is
 /// that suffix, and `SpaceArtifactCreationStatusV1::validate` bounds it.
 async fn seed_genesis_for_document_for_test(state: &HubState, token: &str, space_id: &str, document_id: &str, label: &str) -> os_directory::ArtifactCheckpoint {
@@ -1467,7 +1469,7 @@ async fn check_in_process_fixture_emits_verified_gis_ledger_and_catalog() {
     let control = StartupCatalogControl::silent();
     let context = OperationContext::new(control.now_ms().saturating_add(30_000), AuthorityLimits::maximum(), &control);
     let relocated = TrustedCatalogLoader::load_current(&destination.join("data"), &NativeCodecProviderSetV1::linked(), &context).await.expect("relocated process catalog dependency closure").expect("relocated current");
-    assert_eq!(relocated.codec_count(), 28);
+    assert_eq!(relocated.codec_count(), 31);
     assert_eq!(relocated.packages().len(), 2);
     assert_eq!(relocated.generation_id(), generation_id);
     assert!(destination.join("data/trusted-catalog/current.json").is_file());
@@ -2870,7 +2872,7 @@ async fn canonical_pair_route_disconnect_deadline_and_progress_are_request_owned
     assert_eq!(after_disconnect, disconnect_control.progress_snapshot());
 }
 
-/// @emoji 🧪️ A loopback `ConnectInfo` for handlers called directly in tests. Network
+/// 🧪️ A loopback `ConnectInfo` for handlers called directly in tests. Network
 /// proximity confers no authorization; every protected test also supplies a verified session.
 fn loopback_peer() -> axum::extract::ConnectInfo<SocketAddr> {
     axum::extract::ConnectInfo(SocketAddr::from(([127, 0, 0, 1], 0)))
@@ -3040,6 +3042,33 @@ struct DocumentOpenPlanLedgerFixture {
     descriptor: DocumentDescriptor,
     descriptor_digest_v1: String,
     valid_plan: DocumentOpenPlanV1,
+}
+
+/// 🪢️ A frontier-less hello resumes at the plan checkpoint's baseline exactly when the plan's client seeds from that
+/// checkpoint's pair: a `closed-browser-actor` plan with an edited checkpoint answers the baseline on the hub's internal
+/// key; the same plan without a browser actor, or with a genesis checkpoint, answers `None` (the tail from the start).
+#[test]
+fn a_frontierless_hello_resumes_at_the_checkpoint_its_client_seeds_from() {
+    let fixture: DocumentOpenPlanLedgerFixture = directory::os_pack::json::from_json_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json")).expect("document open plan fixture");
+    let mut plan = document_open_plan_test_authority(&fixture);
+    let db_id = db_artifact_id(&plan.scope);
+    assert_eq!(plan_seeded_hello_frontier(Some(&plan), &db_id), None, "a plan without a browser actor keeps the whole tail");
+    plan.browser_actor = os_directory::DocumentOpenBrowserActorV1::ClosedBrowserActor {
+        schema: "semio.browser-actor/v1".into(),
+        codegen_policy: "closed".into(),
+        sha256: "a".repeat(64),
+        source_component_sha256: "b".repeat(64),
+        source_descriptor_byte_sha256: "c".repeat(64),
+        policy_sha256: "d".repeat(64),
+        import_interfaces: Vec::new(),
+    };
+    let baseline = plan.checkpoint.baseline_frontier.clone();
+    assert!(baseline.head_edit_ordinal > 0);
+    let resumed = plan_seeded_hello_frontier(Some(&plan), &db_id).expect("a seeding plan resumes at its checkpoint");
+    assert_eq!(resumed, RuntimeFrontierSummary { document_id: db_id.clone(), head_edit_ordinal: baseline.head_edit_ordinal, head_edit_id: baseline.head_edit_id.clone(), last_commit_seq: baseline.last_commit_seq, chain_hash: baseline.chain_hash.0 });
+    plan.checkpoint.baseline_frontier = directory::os_directory::ArtifactFrontier { document_id: plan.scope.document_id.clone(), head_edit_ordinal: 0, head_edit_id: String::new(), last_commit_seq: 0, chain_hash: directory::os_directory::ArtifactHash([0; 32]) };
+    assert_eq!(plan_seeded_hello_frontier(Some(&plan), &db_id), None, "a genesis checkpoint keeps the tail from the start");
+    assert_eq!(plan_seeded_hello_frontier(None, &db_id), None);
 }
 
 fn document_open_plan_test_authority(fixture: &DocumentOpenPlanLedgerFixture) -> DocumentOpenPlanAuthorityV1 {
@@ -8486,7 +8515,7 @@ mod quick {
         let providers = NativeCodecProviderSetV1::linked();
         let root = native_openable_stdio_bundle();
         let configured = configured_artifact_authority(&root, Some(&providers), &Tracer::disabled(), &StartupCancellationV1::default(), &StartupProgressCellV1::default()).await.expect("verified stdio authority").configured().expect("configured stdio authority");
-        assert_eq!(configured.catalog.codec_count(), 26);
+        assert_eq!(configured.catalog.codec_count(), 29);
         assert_eq!(configured.catalog.open_target_count(), 1);
         let mut ready = test_state().await;
         ready.openable_catalog = Some(configured.catalog.clone());
@@ -8503,6 +8532,66 @@ mod quick {
         assert!(!encoded.contains("receipt"));
         assert!(!encoded.contains("factory"));
         std::fs::remove_dir_all(root).expect("remove stdio bundle fixture");
+    }
+
+    /// 📌️ The checkpoint policy is the schema's: absent bounds are the declared default the readiness body carries, each
+    /// bound is a decimal within its range, anything else fails boot.
+    #[test]
+    fn the_checkpoint_policy_is_declared_in_readiness_and_bounded_like_its_schema() {
+        assert_eq!(HubCheckpointPolicyV1::configured(None, None), Ok(HUB_CHECKPOINT_POLICY));
+        assert_eq!(HubCheckpointPolicyV1::configured(Some(" 1 "), Some("4096")), Ok(HubCheckpointPolicyV1 { edits: 1, payload_bytes: 4_096 }));
+        assert_eq!(HubCheckpointPolicyV1::configured(Some("1048576"), Some("1073741824")), Ok(HubCheckpointPolicyV1 { edits: 1_048_576, payload_bytes: 1_073_741_824 }));
+        for (edits, bytes) in [(Some("0"), None), (Some("1048577"), None), (Some("ten"), None), (None, Some("4095")), (None, Some("1073741825")), (None, Some("-1"))] {
+            assert!(HubCheckpointPolicyV1::configured(edits, bytes).is_err(), "{edits:?} {bytes:?} must fail boot");
+        }
+        let readiness = with_checkpoint_policy(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root"), HubCheckpointPolicyV1 { edits: 7, payload_bytes: 8_192 });
+        let body = serde_json::to_value(&readiness).expect("readiness JSON");
+        assert_eq!(body["features"]["checkpointPolicy"], serde_json::json!({ "edits": 7, "payloadBytes": 8192 }));
+        let declared = serde_json::to_value(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root")).expect("readiness JSON");
+        assert_eq!(declared["features"]["checkpointPolicy"], serde_json::json!({ "edits": 1024, "payloadBytes": 524288 }));
+    }
+
+    /// 🧮️ The policy's tally starts one Check In when a document reaches either bound, keeps tallying — but starts no second
+    /// one — while it runs, and tallies documents apart.
+    #[test]
+    fn the_checkpoint_policy_starts_one_check_in_per_bound_and_tallies_while_it_runs() {
+        let ledger = CheckpointPolicyLedgerV1::default();
+        let policy = HubCheckpointPolicyV1 { edits: 4, payload_bytes: 1_000 };
+        let (first, second) = (DocumentScope::new("space", "first"), DocumentScope::new("space", "second"));
+        assert!(!ledger.observe(&first, 3, 10, policy));
+        assert!(ledger.observe(&first, 1, 10, policy), "the fourth edit reaches the edit bound");
+        assert_eq!(ledger.tally(&first), Some(CheckpointPolicyTallyV1 { edits: 0, payload_bytes: 0, running: true }));
+        assert!(!ledger.observe(&first, 9, 5_000, policy), "no second policy Check In while one runs");
+        assert!(ledger.observe(&second, 1, 1_000, policy), "the byte bound alone starts one, for another document");
+        ledger.finish(&first);
+        assert_eq!(ledger.tally(&first), Some(CheckpointPolicyTallyV1 { edits: 9, payload_bytes: 5_000, running: false }), "edits committed meanwhile stay tallied");
+        assert!(ledger.observe(&first, 0, 0, policy), "the tally that grew meanwhile starts the next one");
+    }
+
+    /// 📌️ Once the edits committed since the active checkpoint reach the policy the hub checks the document in by itself, on
+    /// behalf of the author whose batch reached it: the active checkpoint's baseline becomes the committed head and a cold
+    /// open reads the replica fold of the ledger, byte for byte; a frontier-less hello from a seeding plan then resumes there.
+    #[cfg(all(feature = "native-artifact-execution", feature = "integration-fixtures"))]
+    #[tokio::test]
+    async fn the_checkpoint_policy_checks_a_document_in_at_its_committed_head() {
+        let mut fixture = check_in_fixture("policy").await;
+        let mut readiness = (*fixture.state.readiness).clone();
+        readiness.features.checkpoint_policy = HubCheckpointPolicyV1 { edits: 2, payload_bytes: 1_073_741_824 };
+        fixture.state.readiness = Arc::new(readiness);
+        let addr = spawn_server(fixture.state.clone()).await;
+        let ledger = check_in_map_edits(&fixture, &["61", "62"]).await;
+        check_in_commit(&fixture, ledger[0].clone()).await;
+        let head = check_in_commit(&fixture, ledger[1].clone()).await;
+        let (subject, _) = check_in_author(&fixture.state, &fixture.scope, &bearer_headers(&fixture.author.token)).await.expect("the author checks in");
+        assert!(fixture.state.checkpoint_policy.observe(&fixture.scope, 2, 0, fixture.state.readiness.features.checkpoint_policy), "two committed edits reach the policy");
+        let status = run_policy_check_in(fixture.state.clone(), subject, fixture.scope.clone(), fixture.handle.clone()).await.expect("the policy Check In starts");
+        assert_eq!(status.phase, DocumentCheckInPhaseV1::Ready, "policy check-in ended {status:?}");
+        assert_eq!(fixture.state.checkpoint_policy.tally(&fixture.scope).map(|tally| tally.running), Some(false));
+        let active = fixture.state.directory.get_active_artifact_checkpoint(&fixture.scope).await.expect("active read").expect("active checkpoint");
+        assert_eq!(EditedArtifactFrontierV1::of_artifact_frontier(&active.baseline_frontier), Some(head), "the active checkpoint is the committed head");
+        let cold = check_in_cold_pair(addr, &fixture).await;
+        assert_eq!(cold.selection.active_checkpoint_id, active.checkpoint_id);
+        assert_eq!((cold.pair().pack.clone(), cold.pair().spr.clone()), check_in_replica_pair(&fixture, &ledger).await, "the policy checkpoint is the replica fold, byte for byte");
     }
 
     /// 📌️ Check In folds the hub's own ledger onto the active checkpoint and publishes it: after two
@@ -8768,8 +8857,8 @@ mod long {
 
     /// 📈️ A document socket keeps acknowledging commands however large its document grows: 150
     /// chained writes over one live socket, every one `Accepted`, past each former wall of the
-    /// document store (the eighth index entry, the 64th version-graph change, the 128th replaced
-    /// value). A hub used to go silent — no Ack, no error — once a document grew past one of them.
+    /// document store (the eighth index entry, the 128th replaced value). A hub used to go silent — no
+    /// Ack, no error — once a document grew past one of them.
     #[test]
     fn a_document_socket_keeps_acknowledging_commands_as_its_document_grows() {
         run_socket_test(|| async {

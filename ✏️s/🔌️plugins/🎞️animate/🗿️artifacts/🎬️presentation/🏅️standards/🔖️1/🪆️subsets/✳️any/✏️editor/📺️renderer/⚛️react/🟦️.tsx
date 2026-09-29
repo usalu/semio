@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 📽️ React + reveal.js renderer for `@semio-tech/animate-presentation-core` declarative decks. */
+/** 📽️ React + reveal.js renderer for `@semio-tech/animate-presentation-core` declarative decks. */
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
@@ -110,7 +110,7 @@ export {
 } from "./🔨️modules/🔌️pdf-canvas-port/🟦️.ts";
 
 // #region 🔖️Markdown
-/** @emoji 📝️ Compiles markdown source into an HTML fragment. */
+/** 📝️ Compiles markdown source into an HTML fragment. */
 export interface MarkdownHtmlCompiler {
   compile(markdown: string): Promise<string>;
 }
@@ -121,12 +121,12 @@ const defaultMarkdownHtmlCompiler: MarkdownHtmlCompiler = {
 
 const markdownHtmlCompiler = ephemeralBox<MarkdownHtmlCompiler>("s.plugins.animate.apps.presentation.renderer.react.component.tsx.markdownHtmlCompiler", defaultMarkdownHtmlCompiler);
 
-/** @emoji 🔌️ Replaces the markdown HTML compiler (tests or alternate renderers). */
+/** 🔌️ Replaces the markdown HTML compiler (tests or alternate renderers). */
 export function setMarkdownHtmlCompiler(compiler: MarkdownHtmlCompiler): void {
   markdownHtmlCompiler.current = compiler;
 }
 
-/** @emoji 📝️ Compiles markdown through the active {@link MarkdownHtmlCompiler}. */
+/** 📝️ Compiles markdown through the active {@link MarkdownHtmlCompiler}. */
 export function compileMarkdownToHtml(markdown: string): Promise<string> {
   return markdownHtmlCompiler.current.compile(markdown);
 }
@@ -201,20 +201,20 @@ export {
 export type { MorphFromSlot, PresentationLanguageKind, PresentationSlideBookmark, PresentationSlideBookmarkParamKeys, PresentationSlideRef, RenderSlide, Slide, TextMorphRoot } from "@semio-tech/animate-presentation-core";
 
 //#region 🔖️MountOptions
-/** @emoji ⚙️ Reveal.js and @semio-tech/ui-react surface chrome options for {@link mountPresentation}. */
+/** ⚙️ Reveal.js and @semio-tech/ui-react surface chrome options for {@link mountPresentation}. */
 export interface PresentationMountOptions {
   readonly surfaceChrome?: ElementsSurfaceChromeInput | false;
   readonly transition?: "fade" | "slide" | "convex" | "concave" | "zoom" | "none";
-  /** @emoji 🔗️ Sync slide position to the URL hash; defaults to true. */
+  /** 🔗️ Sync slide position to the URL hash; defaults to true. */
   readonly hash?: boolean;
   readonly slideNumber?: boolean;
   readonly width?: number;
   readonly height?: number;
-  /** @emoji 🎞️ Called once reveal.js finished initializing (tests and tooling). */
+  /** 🎞️ Called once reveal.js finished initializing (tests and tooling). */
   readonly onRevealReady?: (api: Reveal.Api) => void;
 }
 
-/** @emoji 🔗️ Writes reveal.js hash with localized bookmark params after the path; bookmark params are ignored for navigation. */
+/** 🔗️ Writes reveal.js hash with localized bookmark params after the path; bookmark params are ignored for navigation. */
 export function syncPresentationSlideUrl(presentation: Presentation, indices: { readonly h: number; readonly v: number }): void {
   if (typeof window === "undefined") {
     return;
@@ -229,7 +229,7 @@ export function syncPresentationSlideUrl(presentation: Presentation, indices: { 
   history.replaceState(null, "", url);
 }
 
-/** @emoji 🔗️ Reads reveal.js slide indices from the URL hash; trailing bookmark query params are ignored. */
+/** 🔗️ Reads reveal.js slide indices from the URL hash; trailing bookmark query params are ignored. */
 export function readPresentationSlideIndicesFromUrl(hash: string = typeof window !== "undefined" ? window.location.hash : ""): { readonly h: number; readonly v: number } | null {
   return parsePresentationSlideHash(hash);
 }
@@ -242,7 +242,7 @@ const DEFAULT_SURFACE_CHROME: ElementsSurfaceChromeInput = {
 };
 
 //#region 🔖️RevealChrome
-/** @emoji 📐️ Writes reveal slide dimensions as CSS variables for positioned arrangement canvases. */
+/** 📐️ Writes reveal slide dimensions as CSS variables for positioned arrangement canvases. */
 export function syncPresentationSlideSizeVars(deckEl: HTMLElement | null, deck: Reveal.Api | null): void {
   if (!deckEl || !deck) {
     return;
@@ -253,13 +253,13 @@ export function syncPresentationSlideSizeVars(deckEl: HTMLElement | null, deck: 
   syncPresentationAutoAnimateDurationVar(deckEl, deck);
 }
 
-/** @emoji ⏱️ Syncs reveal auto-animate duration for morph ghost/target opacity fades. */
+/** ⏱️ Syncs reveal auto-animate duration for morph ghost/target opacity fades. */
 export function syncPresentationAutoAnimateDurationVar(deckEl: HTMLElement, deck: Reveal.Api | null): void {
   const durationSeconds = typeof deck?.getConfig().autoAnimateDuration === "number" ? deck.getConfig().autoAnimateDuration : 1;
   deckEl.style.setProperty("--presentation-auto-animate-duration", `${durationSeconds}s`);
 }
 
-/** @emoji 🌓️ Align reveal `has-dark-background` with `html.dark` from system chrome. */
+/** 🌓️ Align reveal `has-dark-background` with `html.dark` from system chrome. */
 export function syncRevealBackgroundKind(deckEl: HTMLElement | null): void {
   if (!deckEl || typeof document === "undefined") {
     return;
@@ -271,17 +271,17 @@ export function syncRevealBackgroundKind(deckEl: HTMLElement | null): void {
 //#endregion 🔖️RevealChrome
 
 //#region 🔖️RevealMorph
-/** @emoji 👻️ reveal.js-only morph companion role (not part of presentation core). */
+/** 👻️ reveal.js-only morph companion role (not part of presentation core). */
 export type RevealMorphCompanionKind = "source" | "target";
 
-/** @emoji ✅️ Resolved disposition plus optional reveal.js morph companion metadata. */
+/** ✅️ Resolved disposition plus optional reveal.js morph companion metadata. */
 export interface RevealResolvedDisposition extends ResolvedDisposition {
   readonly revealMorphCompanion?: RevealMorphCompanionKind;
-  /** @emoji 📐️ Source slide frame for target ghosts: paired with {@link ResolvedDisposition.position} for frame and crop morph during auto-animate. */
+  /** 📐️ Source slide frame for target ghosts: paired with {@link ResolvedDisposition.position} for frame and crop morph during auto-animate. */
   readonly revealMorphFromFrame?: DispositionPosition;
-  /** @emoji 📐️ Target slide frame for source tiles: paired with {@link ResolvedDisposition.position} when the next slide morphFrom references this participant. */
+  /** 📐️ Target slide frame for source tiles: paired with {@link ResolvedDisposition.position} when the next slide morphFrom references this participant. */
   readonly revealMorphToFrame?: DispositionPosition;
-  /** @emoji 📐️ Previous-slide morphTo slot frame (catalogue grid) for crop morph into {@link ResolvedDisposition.position}. */
+  /** 📐️ Previous-slide morphTo slot frame (catalogue grid) for crop morph into {@link ResolvedDisposition.position}. */
   readonly revealMorphFromMorphToFrame?: DispositionPosition;
 }
 
@@ -389,7 +389,7 @@ function revealMorphFromMorphToFrameByParticipant(previousSlide: Slide): Map<str
   return map;
 }
 
-/** @emoji 🔀️ Resolves an arrangement and appends reveal.js morph companions for one-to-many / many-to-one. */
+/** 🔀️ Resolves an arrangement and appends reveal.js morph companions for one-to-many / many-to-one. */
 export function resolveRevealArrangement(scope: ReturnType<typeof buildResolutionScope>, arrangement: Arrangement, context: { readonly previousSlide?: Slide; readonly nextSlide?: Slide }): RevealResolvedDisposition[] {
   const resolved = resolveArrangement(scope, arrangement) as RevealResolvedDisposition[];
   const companions: RevealResolvedDisposition[] = [];
@@ -440,7 +440,7 @@ function visibleRevealArrangementPositions(resolved: readonly RevealResolvedDisp
   return positions;
 }
 
-/** @emoji ⊕ Centers visible placements; omits reveal-only morph companions. */
+/** ⊕ Centers visible placements; omits reveal-only morph companions. */
 export function centerRevealResolvedArrangement(resolved: readonly RevealResolvedDisposition[]): RevealResolvedDisposition[] {
   const positions = visibleRevealArrangementPositions(resolved);
   if (positions.length === 0) {
@@ -475,20 +475,20 @@ export function centerRevealResolvedArrangement(resolved: readonly RevealResolve
 //#endregion 🔖️RevealMorph
 
 //#region 🔖️ArrangementSettled
-/** @emoji 🔗️ True when two slide sections share the same reveal.js auto-animate run id. */
+/** 🔗️ True when two slide sections share the same reveal.js auto-animate run id. */
 export function slidesShareAutoAnimateId(fromSlide: HTMLElement | null | undefined, toSlide: HTMLElement | null | undefined): boolean {
   const fromId = fromSlide?.getAttribute("data-auto-animate-id");
   const toId = toSlide?.getAttribute("data-auto-animate-id");
   return fromId !== null && fromId !== undefined && fromId === toId;
 }
 
-/** @emoji ⏳️ True while reveal.js auto-animate is pending or running on one section. */
+/** ⏳️ True while reveal.js auto-animate is pending or running on one section. */
 export function isSectionAutoAnimating(sectionEl: HTMLElement): boolean {
   const state = sectionEl.getAttribute("data-auto-animate");
   return state === "pending" || state === "running";
 }
 
-/** @emoji ⏳️ True while reveal.js auto-animate is measuring or running on this slide (or any slide in the deck). */
+/** ⏳️ True while reveal.js auto-animate is measuring or running on this slide (or any slide in the deck). */
 export function isRevealSlideAutoAnimating(sectionEl: HTMLElement): boolean {
   if (isSectionAutoAnimating(sectionEl)) {
     return true;
@@ -500,7 +500,7 @@ export function isRevealSlideAutoAnimating(sectionEl: HTMLElement): boolean {
   return deck.querySelector('section[data-auto-animate="pending"], section[data-auto-animate="running"]') !== null;
 }
 
-/** @emoji ⏳️ Clears settled state on arrival so split tiles stay visible at rest; drops settled on slides no longer adjacent. */
+/** ⏳️ Clears settled state on arrival so split tiles stay visible at rest; drops settled on slides no longer adjacent. */
 export function syncArrangementSettledState(deckEl: HTMLElement, currentSlide: HTMLElement | null, previousSlide: HTMLElement | null): void {
   const settleSections = deckEl.querySelectorAll<HTMLElement>("section[data-settle-before-morph-to]");
   for (const section of settleSections) {
@@ -516,7 +516,7 @@ export function syncArrangementSettledState(deckEl: HTMLElement, currentSlide: H
   }
 }
 
-/** @emoji 🔗️ Resolves the reveal.js slide section at stack indices `h` / `v`. */
+/** 🔗️ Resolves the reveal.js slide section at stack indices `h` / `v`. */
 export function resolveRevealSlideAt(deckEl: HTMLElement, indices: { readonly h: number; readonly v: number }): HTMLElement | null {
   const horizontal = deckEl.querySelectorAll<HTMLElement>(".slides > section")[indices.h];
   if (!horizontal) {
@@ -526,7 +526,7 @@ export function resolveRevealSlideAt(deckEl: HTMLElement, indices: { readonly h:
   return vertical[indices.v] ?? horizontal;
 }
 
-/** @emoji 📖️ Reads reveal.js `slidechanged` slide elements extended onto the event object. */
+/** 📖️ Reads reveal.js `slidechanged` slide elements extended onto the event object. */
 export function slideChangedEventSlides(event: Event): {
   readonly previousSlide: HTMLElement | undefined;
   readonly currentSlide: HTMLElement | undefined;
@@ -541,7 +541,7 @@ export function slideChangedEventSlides(event: Event): {
   };
 }
 
-/** @emoji 🧹️ Strips reveal.js FLIP `transform`/`transition` only; never `left`/`top`/`width`/`height` (React owns those on morph frames). */
+/** 🧹️ Strips reveal.js FLIP `transform`/`transition` only; never `left`/`top`/`width`/`height` (React owns those on morph frames). */
 export function clearRevealAutoAnimateInlineLayout(deckEl: HTMLElement): void {
   const flipProps = ["transform", "transition"] as const;
   const selectors = ["[data-auto-animate-target]"];
@@ -554,7 +554,7 @@ export function clearRevealAutoAnimateInlineLayout(deckEl: HTMLElement): void {
   }
 }
 
-/** @emoji ✅️ Clears reveal `pending`/`running` on slides so morph-source/into rest CSS applies after FLIP completes. */
+/** ✅️ Clears reveal `pending`/`running` on slides so morph-source/into rest CSS applies after FLIP completes. */
 export function finalizeRevealAutoAnimateRestState(deckEl: HTMLElement): void {
   for (const slide of deckEl.querySelectorAll<HTMLElement>('section[data-auto-animate="running"], section[data-auto-animate="pending"]')) {
     slide.setAttribute("data-auto-animate", "");
@@ -573,10 +573,10 @@ export function finalizeRevealAutoAnimateRestState(deckEl: HTMLElement): void {
   }
 }
 
-/** @emoji 🔀️ Slide class while auto-animating a `data-settle-before-morph-to` many-to-one run (focus tiles → label ghosts). */
+/** 🔀️ Slide class while auto-animating a `data-settle-before-morph-to` many-to-one run (focus tiles → label ghosts). */
 export const PRESENTATION_MANY_TO_ONE_MORPH_CLASS = "presentation-arrangement--many-to-one-morph";
 
-/** @emoji 🔀️ True when `fromSlide` settles into `toSlide` via `data-settle-before-morph-to` (arrangement id on `title`). */
+/** 🔀️ True when `fromSlide` settles into `toSlide` via `data-settle-before-morph-to` (arrangement id on `title`). */
 export function isManyToOneMorphTransition(fromSlide: HTMLElement, toSlide: HTMLElement): boolean {
   const settleBefore = fromSlide.getAttribute("data-settle-before-morph-to");
   if (!settleBefore) {
@@ -589,14 +589,14 @@ export function isManyToOneMorphTransition(fromSlide: HTMLElement, toSlide: HTML
   return settleBefore.split(",").some((entry) => entry.trim() === toId);
 }
 
-/** @emoji 🧹️ Clears {@link PRESENTATION_MANY_TO_ONE_MORPH_CLASS} from all slides in the deck. */
+/** 🧹️ Clears {@link PRESENTATION_MANY_TO_ONE_MORPH_CLASS} from all slides in the deck. */
 export function clearManyToOneMorphArrangementClass(deckEl: HTMLElement): void {
   for (const slide of deckEl.querySelectorAll<HTMLElement>(`section.${PRESENTATION_MANY_TO_ONE_MORPH_CLASS}`)) {
     slide.classList.remove(PRESENTATION_MANY_TO_ONE_MORPH_CLASS);
   }
 }
 
-/** @emoji 🔀️ Marks the active many-to-one morph run on `fromSlide` and `toSlide` only. */
+/** 🔀️ Marks the active many-to-one morph run on `fromSlide` and `toSlide` only. */
 export function syncManyToOneMorphArrangementClass(deckEl: HTMLElement, fromSlide: HTMLElement | null, toSlide: HTMLElement | null): void {
   clearManyToOneMorphArrangementClass(deckEl);
   if (fromSlide && toSlide && isManyToOneMorphTransition(fromSlide, toSlide)) {
@@ -605,7 +605,7 @@ export function syncManyToOneMorphArrangementClass(deckEl: HTMLElement, fromSlid
   }
 }
 
-/** @emoji ⏳️ Prepares settle + many-to-one frame/crop morph before reveal auto-animate measures FLIP. */
+/** ⏳️ Prepares settle + many-to-one frame/crop morph before reveal auto-animate measures FLIP. */
 export function prepareArrangementBeforeAutoAnimate(fromSlide: HTMLElement, toSlide: HTMLElement): void {
   const deckEl = fromSlide.closest(".reveal");
   if (deckEl instanceof HTMLElement) {
@@ -647,7 +647,7 @@ function elementIsLabelMorphSource(element: HTMLElement): boolean {
   return element.classList.contains("presentation-affiliation-morph-source");
 }
 
-/** @emoji 🎯️ True when this node may be a reveal.js auto-animate pair endpoint (intro wrapper or canvas-framed tile). */
+/** 🎯️ True when this node may be a reveal.js auto-animate pair endpoint (intro wrapper or canvas-framed tile). */
 export function isRevealAutoAnimatePairSource(element: HTMLElement): boolean {
   if (!element.hasAttribute("data-id")) {
     return false;
@@ -661,7 +661,7 @@ export function isRevealAutoAnimatePairSource(element: HTMLElement): boolean {
   return true;
 }
 
-/** @emoji 📐️ Slide-local ink box for reveal.js `measure` (avoids viewport `getBoundingClientRect` fly-in when `center: true`). */
+/** 📐️ Slide-local ink box for reveal.js `measure` (avoids viewport `getBoundingClientRect` fly-in when `center: true`). */
 export function revealInkMeasureForAutoAnimate(element: HTMLElement): {
   readonly x: number;
   readonly y: number;
@@ -687,7 +687,7 @@ function isIntroFlowSlide(slide: HTMLElement): boolean {
   return slide.classList.contains("presentation-arrangement--intro") && !slide.classList.contains("presentation-arrangement--positioned");
 }
 
-/** @emoji 🎯️ reveal.js auto-animate options for canvas morph text (translate only). */
+/** 🎯️ reveal.js auto-animate options for canvas morph text (translate only). */
 export function revealTextAutoAnimatePairOptions(_from: HTMLElement, _fromSlide: HTMLElement, _toSlide: HTMLElement): Record<string, unknown> {
   return {
     scale: false,
@@ -703,7 +703,7 @@ function elementIsInteractiveFigureDisposition(element: HTMLElement): boolean {
   return element.classList.contains("presentation-interactive-disposition") && elementIsFigureMorphSlot(element) && !elementIsSourceGhostAnchor(element) && !elementIsTargetGhostAnchor(element);
 }
 
-/** @emoji 🎯️ Picks the `to` morph anchor for one `data-id` (focus tile → label target ghost, catalogue source → focus tile). */
+/** 🎯️ Picks the `to` morph anchor for one `data-id` (focus tile → label target ghost, catalogue source → focus tile). */
 export function resolveMorphAutoAnimateTo(fromElement: HTMLElement, toSlide: HTMLElement): HTMLElement | null {
   const id = fromElement.getAttribute("data-id");
   if (!id) {
@@ -741,7 +741,7 @@ export function resolveMorphAutoAnimateTo(fromElement: HTMLElement, toSlide: HTM
   return candidates.find((candidate) => !elementIsSourceGhostAnchor(candidate) || (elementIsTargetGhostAnchor(candidate) && candidate.classList.contains("presentation-interactive-disposition"))) ?? null;
 }
 
-/** @emoji 🔗️ reveal.js auto-animate matcher: intro uses stock `data-id` pairing; catalogue uses ghost-aware pairing. */
+/** 🔗️ reveal.js auto-animate matcher: intro uses stock `data-id` pairing; catalogue uses ghost-aware pairing. */
 export function presentationAutoAnimateMatcher(this: AutoAnimateMatcherHost, fromSlide: HTMLElement, toSlide: HTMLElement): { from: HTMLElement; to: HTMLElement; options?: Record<string, unknown> }[] {
   if (isIntroFlowSlide(fromSlide) && isIntroFlowSlide(toSlide)) {
     const pairs: { from: HTMLElement; to: HTMLElement; options?: Record<string, unknown> }[] = [];
@@ -801,7 +801,7 @@ export function presentationAutoAnimateMatcher(this: AutoAnimateMatcherHost, fro
   });
 }
 
-/** @emoji 📐️ Rewrites reveal FLIP `scale(sx, sy)` to `scale(max(sx,sy))` so figure tiles zoom instead of squashing during auto-animate. */
+/** 📐️ Rewrites reveal FLIP `scale(sx, sy)` to `scale(max(sx,sy))` so figure tiles zoom instead of squashing during auto-animate. */
 export function patchAutoAnimateUniformScale(css: string): string {
   return css.replace(/scale\(([\d.]+),\s*([\d.]+)\)/g, (_match, scaleX: string, scaleY: string) => {
     const sx = Number.parseFloat(scaleX);
@@ -813,7 +813,7 @@ export function patchAutoAnimateUniformScale(css: string): string {
   });
 }
 
-/** @emoji 👻️ Figure ghost visibility during reveal auto-animate (FLIP only; no intro text keyframes). */
+/** 👻️ Figure ghost visibility during reveal auto-animate (FLIP only; no intro text keyframes). */
 export function presentationMorphGhostAutoAnimateCss(durationSeconds: number): string {
   const duration = `${durationSeconds}s`;
   return `
@@ -848,7 +848,7 @@ export function presentationMorphGhostAutoAnimateCss(durationSeconds: number): s
 `;
 }
 
-/** @emoji 🩹️ Patches reveal auto-animate sheet: uniform scale for catalogue tiles only; intro text keeps native FLIP. */
+/** 🩹️ Patches reveal auto-animate sheet: uniform scale for catalogue tiles only; intro text keeps native FLIP. */
 export function patchPresentationAutoAnimateStyleSheet(sheet: { innerHTML: string }, durationSeconds: number, options?: { readonly manyToOneMorph?: boolean; readonly introFlowMorph?: boolean }): void {
   let css = sheet.innerHTML;
   if (options?.manyToOneMorph !== true && options?.introFlowMorph !== true) {
@@ -857,7 +857,7 @@ export function patchPresentationAutoAnimateStyleSheet(sheet: { innerHTML: strin
   sheet.innerHTML = css + presentationMorphGhostAutoAnimateCss(durationSeconds);
 }
 
-/** @emoji 🩹️ Applies reveal auto-animate sheet fixes for the current slide pair. */
+/** 🩹️ Applies reveal auto-animate sheet fixes for the current slide pair. */
 export function patchPresentationAutoAnimateRunStyleSheet(sheet: { innerHTML: string }, durationSeconds: number, fromSlide: HTMLElement | undefined, toSlide: HTMLElement | undefined): void {
   if (fromSlide !== undefined && toSlide !== undefined && isIntroFlowSlide(fromSlide) && isIntroFlowSlide(toSlide)) {
     return;
@@ -872,7 +872,7 @@ export interface PresentationAutoAnimateRunSlides {
   readonly toSlide?: HTMLElement;
 }
 
-/** @emoji 🔎️ Resolves an auto-animate slide pair when reveal.js omits it from the `autoanimate` event. */
+/** 🔎️ Resolves an auto-animate slide pair when reveal.js omits it from the `autoanimate` event. */
 export function resolvePresentationAutoAnimateRunSlides(explicit: PresentationAutoAnimateRunSlides, pending: PresentationAutoAnimateRunSlides | undefined): PresentationAutoAnimateRunSlides {
   if (explicit.fromSlide !== undefined && explicit.toSlide !== undefined) {
     return explicit;
@@ -889,7 +889,7 @@ export function resolvePresentationAutoAnimateRunSlides(explicit: PresentationAu
 
 //#region 🔖️HiddenPreflight
 /**
- * @emoji 🩹️ Lets reveal.js own slide visibility by relaxing Tailwind preflight's `[hidden]` reset.
+ * 🩹️ Lets reveal.js own slide visibility by relaxing Tailwind preflight's `[hidden]` reset.
  *
  * `@semio-tech/ui-react` surface chrome ships Tailwind v4 preflight, whose layered
  * `[hidden]{display:none!important}` outranks reveal.js's inline `display:block` on the off-screen
@@ -948,19 +948,19 @@ function morphAnchorClass(emphasis: ParticipantEmphasis): string {
 //#region 🔖️SlideEpoch
 const PresentationSlideEpochContext = createContext(0);
 
-/** @emoji 🔗️ When true, the interactive canvas wrapper owns `data-id` for reveal.js auto-animate. */
+/** 🔗️ When true, the interactive canvas wrapper owns `data-id` for reveal.js auto-animate. */
 const MorphAnchorOnWrapperContext = createContext(false);
 
-/** @emoji ⛶️ When true, {@link PdfMorphView} measures against the enlarged slide content box, not the declared catalogue frame. */
+/** ⛶️ When true, {@link PdfMorphView} measures against the enlarged slide content box, not the declared catalogue frame. */
 const PresentationDispositionEnlargeContext = createContext(false);
 
-/** @emoji 📐️ Live slide frame for {@link FigureMorphView} cover math (drag/resize updates this). */
+/** 📐️ Live slide frame for {@link FigureMorphView} cover math (drag/resize updates this). */
 const PresentationFigureCropFrameContext = createContext<DispositionPosition | undefined>(undefined);
 
-/** @emoji 📐️ Slide width÷height for mosaic windowed-cover (`undefined` → use {@link FigureEmbodiment.sourceAspect}). */
+/** 📐️ Slide width÷height for mosaic windowed-cover (`undefined` → use {@link FigureEmbodiment.sourceAspect}). */
 const PresentationSlideAspectContext = createContext<number | undefined>(undefined);
 
-/** @emoji 🆔️ Interactive disposition id for ephemeral pdf page navigation in {@link PdfMorphView}. */
+/** 🆔️ Interactive disposition id for ephemeral pdf page navigation in {@link PdfMorphView}. */
 const PresentationInteractiveDispositionIdContext = createContext<string | undefined>(undefined);
 
 export function parsePresentationSlideCssSize(revealEl: HTMLElement | null): { readonly width: number; readonly height: number } {
@@ -1018,18 +1018,18 @@ const defaultPdfCanvasPort: PdfCanvasPort = {
 
 const pdfCanvasPort = ephemeralBox<PdfCanvasPort>("s.plugins.animate.apps.presentation.renderer.react.component.tsx.pdfCanvasPort", defaultPdfCanvasPort);
 
-/** @emoji 🧪️ Replaces the PDF canvas implementation through the owned port. */
+/** 🧪️ Replaces the PDF canvas implementation through the owned port. */
 export function setPdfCanvasPort(port: PdfCanvasPort): void {
   pdfCanvasPort.current = port;
 }
 
-/** @emoji 🧹️ Restores the production PDF.js canvas implementation. */
+/** 🧹️ Restores the production PDF.js canvas implementation. */
 export function resetPdfCanvasPort(): void {
   pdfCanvasPort.current = defaultPdfCanvasPort;
 }
 //#endregion 🔌️PdfCanvasPort
 
-/** @emoji 📐️ Uniform PDF canvas scale so the page covers the disposition frame without distortion. */
+/** 📐️ Uniform PDF canvas scale so the page covers the disposition frame without distortion. */
 export function pdfCoverScale(containerWidth: number, containerHeight: number, pageWidth: number, pageHeight: number): number | null {
   if (containerWidth <= 0 || containerHeight <= 0 || pageWidth <= 0 || pageHeight <= 0) {
     return null;
@@ -1037,7 +1037,7 @@ export function pdfCoverScale(containerWidth: number, containerHeight: number, p
   return Math.max(containerWidth / pageWidth, containerHeight / pageHeight);
 }
 
-/** @emoji 📐️ Uniform PDF canvas scale for one-axis cover scroll (fit width or height, overflow the other). */
+/** 📐️ Uniform PDF canvas scale for one-axis cover scroll (fit width or height, overflow the other). */
 export function pdfScrollCoverScale(containerWidth: number, containerHeight: number, pageWidth: number, pageHeight: number): number | null {
   if (containerWidth <= 0 || containerHeight <= 0 || pageWidth <= 0 || pageHeight <= 0) {
     return null;
@@ -1053,12 +1053,12 @@ export function pdfScrollCoverScale(containerWidth: number, containerHeight: num
   return Math.min(containerWidth / pageWidth, containerHeight / pageHeight);
 }
 
-/** @emoji 📑️ Ordered PDF page numbers for navigation; empty means all document pages. */
+/** 📑️ Ordered PDF page numbers for navigation; empty means all document pages. */
 export function pdfEmbodimentPageList(embodiment: PdfEmbodiment): readonly number[] {
   return embodiment.pages ?? [];
 }
 
-/** @emoji 📄️ Starting page for a pdf embodiment (subset or single page). */
+/** 📄️ Starting page for a pdf embodiment (subset or single page). */
 export function pdfEmbodimentInitialPage(embodiment: PdfEmbodiment): number {
   const pages = pdfEmbodimentPageList(embodiment);
   if (pages.length > 0) {
@@ -1068,7 +1068,7 @@ export function pdfEmbodimentInitialPage(embodiment: PdfEmbodiment): number {
   return embodiment.page ?? 1;
 }
 
-/** @emoji 🧭️ Whether pdf prev/next controls apply for this embodiment. */
+/** 🧭️ Whether pdf prev/next controls apply for this embodiment. */
 export function pdfPageNavEnabled(embodiment: PdfEmbodiment, numPages: number | null): boolean {
   const pages = pdfEmbodimentPageList(embodiment);
   if (pages.length > 1) {
@@ -1077,7 +1077,7 @@ export function pdfPageNavEnabled(embodiment: PdfEmbodiment, numPages: number | 
   return pages.length === 0 && numPages !== null && numPages > 1;
 }
 
-/** @emoji ◀️ True when pdf page nav can move to an earlier page. */
+/** ◀️ True when pdf page nav can move to an earlier page. */
 export function pdfCanGoToPreviousPage(currentPage: number, embodiment: PdfEmbodiment, numPages: number | null): boolean {
   const pages = pdfEmbodimentPageList(embodiment);
   if (pages.length > 0) {
@@ -1086,7 +1086,7 @@ export function pdfCanGoToPreviousPage(currentPage: number, embodiment: PdfEmbod
   return currentPage > 1;
 }
 
-/** @emoji ▶️ True when pdf page nav can move to a later page. */
+/** ▶️ True when pdf page nav can move to a later page. */
 export function pdfCanGoToNextPage(currentPage: number, embodiment: PdfEmbodiment, numPages: number | null): boolean {
   const pages = pdfEmbodimentPageList(embodiment);
   if (pages.length > 0) {
@@ -1096,7 +1096,7 @@ export function pdfCanGoToNextPage(currentPage: number, embodiment: PdfEmbodimen
   return numPages !== null && currentPage < numPages;
 }
 
-/** @emoji 📄️ Target page for prev/next within a subset or the full document. */
+/** 📄️ Target page for prev/next within a subset or the full document. */
 export function pdfAdjacentPage(currentPage: number, direction: "prev" | "next", embodiment: PdfEmbodiment, numPages: number | null): number {
   const pages = pdfEmbodimentPageList(embodiment);
   if (pages.length > 0) {
@@ -1118,7 +1118,7 @@ export function pdfAdjacentPage(currentPage: number, direction: "prev" | "next",
   return next;
 }
 
-/** @emoji 📐️ Measures the PDF canvas viewport from the disposition frame or enlarged slide content box. */
+/** 📐️ Measures the PDF canvas viewport from the disposition frame or enlarged slide content box. */
 function usePdfContainerSize(anchorRef: RefObject<HTMLDivElement | null>, position: DispositionPosition | undefined, slideEpoch: number, enlarged: boolean): { readonly width?: number; readonly height?: number } {
   const [size, setSize] = useState<{ readonly width?: number; readonly height?: number }>({});
   useEffect(() => {
@@ -1181,8 +1181,8 @@ function centeredLineClass(morphId: string, embodiment: TextEmbodiment, emphasis
   return [lineClass(morphId, embodiment, emphasis), "text-center"].filter(Boolean).join(" ");
 }
 
-/** @emoji 🎯️ Renders {@link TextEmbodiment}; `data-id` on leaf text unless the intro wrapper owns the morph anchor. */
-/** @emoji 🎯️ Stable reveal.js `data-id` for one text line; single-line blocks use the morph id, multi-line use `--index`. */
+/** 🎯️ Renders {@link TextEmbodiment}; `data-id` on leaf text unless the intro wrapper owns the morph anchor. */
+/** 🎯️ Stable reveal.js `data-id` for one text line; single-line blocks use the morph id, multi-line use `--index`. */
 function textMorphAnchorId(anchorId: string, lineIndex: number, lineCount: number, _root: ReturnType<typeof resolveTextMorphRoot>): string {
   return lineCount === 1 ? anchorId : `${anchorId}--${lineIndex}`;
 }
@@ -1363,7 +1363,7 @@ function BulletMorphView({ morphId: anchorId, embodiment, emphasis }: { readonly
   );
 }
 
-/** @emoji 🔗️ Resolves deck-relative figure paths against the Vite base URL. */
+/** 🔗️ Resolves deck-relative figure paths against the Vite base URL. */
 export function resolvePresentationAssetUrl(src: string): string {
   if (/^(?:[a-z]+:)?\/\//i.test(src) || src.startsWith("data:") || src.startsWith("blob:")) {
     return src;
@@ -1373,14 +1373,14 @@ export function resolvePresentationAssetUrl(src: string): string {
   return `${base.endsWith("/") ? base : `${base}/`}${trimmed}`.replace(/\/{2,}/g, "/");
 }
 
-/** @emoji 📐️ Physical aspect of a normalized crop (width÷height in source pixels). */
+/** 📐️ Physical aspect of a normalized crop (width÷height in source pixels). */
 export function figureCropPhysicalAspect(crop: DispositionPosition, sourceAspect = 1): number {
   return (crop.width / crop.height) * sourceAspect;
 }
 
 const FIGURE_MOSAIC_ALIGN_EPSILON = 1e-4;
 
-/** @emoji 🧩️ Grid column/row for a split crop, or null when the crop is not a mosaic cell. */
+/** 🧩️ Grid column/row for a split crop, or null when the crop is not a mosaic cell. */
 export function figureMosaicCellIndex(crop: DispositionPosition, mosaic: { readonly rows: number; readonly columns: number; readonly frame?: DispositionPosition }): { readonly column: number; readonly row: number } | null {
   const { rows, columns } = mosaic;
   if (rows < 1 || columns < 1) {
@@ -1403,7 +1403,7 @@ export function figureMosaicCellIndex(crop: DispositionPosition, mosaic: { reado
   return { column, row };
 }
 
-/** @emoji 🧩️ Edge-aligned background-position for one cell in a rows×columns sprite grid. */
+/** 🧩️ Edge-aligned background-position for one cell in a rows×columns sprite grid. */
 export function figureMosaicBackgroundPosition(column: number, row: number, columns: number, rows: number): { readonly posX: number; readonly posY: number } {
   return {
     posX: columns <= 1 ? 50 : (column / (columns - 1)) * 100,
@@ -1411,7 +1411,7 @@ export function figureMosaicBackgroundPosition(column: number, row: number, colu
   };
 }
 
-/** @emoji 📐️ Background-position along one axis when cover overflows (k≥1; k=1 → edge-aligned i/(n−1)). */
+/** 📐️ Background-position along one axis when cover overflows (k≥1; k=1 → edge-aligned i/(n−1)). */
 export function overflowAxisPosition(index: number, count: number, coverOverflowK: number): number {
   if (count <= 1) {
     return 50;
@@ -1425,7 +1425,7 @@ export function overflowAxisPosition(index: number, count: number, coverOverflow
   return (numerator / denominator) * 100;
 }
 
-/** @emoji 🪟️ One mosaic cell as a window onto a single cover render of `frame` (no per-crop sprite zoom). */
+/** 🪟️ One mosaic cell as a window onto a single cover render of `frame` (no per-crop sprite zoom). */
 export function mosaicWindowedCoverVars(
   cell: { readonly column: number; readonly row: number },
   grid: { readonly rows: number; readonly columns: number },
@@ -1453,12 +1453,12 @@ export function mosaicWindowedCoverVars(
   };
 }
 
-/** @emoji 🖼️ True when the crop is the full source bitmap. */
+/** 🖼️ True when the crop is the full source bitmap. */
 function figureCropIsFullImage(crop: DispositionPosition): boolean {
   return crop.width >= 1 - FIGURE_MOSAIC_ALIGN_EPSILON && crop.height >= 1 - FIGURE_MOSAIC_ALIGN_EPSILON;
 }
 
-/** @emoji 🖼️ Positions a normalized source crop when background width is `(100/crop.width)%` (uniform, no distortion). */
+/** 🖼️ Positions a normalized source crop when background width is `(100/crop.width)%` (uniform, no distortion). */
 export function figureCropBackgroundPosition(crop: DispositionPosition): {
   readonly posX: number;
   readonly posY: number;
@@ -1474,7 +1474,7 @@ export function figureCropBackgroundPosition(crop: DispositionPosition): {
   };
 }
 
-/** @emoji 🖼️ Uniform background-size: `cover` for full image, else `N% auto` / `auto N%` zoomed to the crop (never dual-axis `%`). */
+/** 🖼️ Uniform background-size: `cover` for full image, else `N% auto` / `auto N%` zoomed to the crop (never dual-axis `%`). */
 export function figureCropBackgroundSize(crop: DispositionPosition, frame: DispositionPosition, sourceAspect = 1): string {
   if (figureCropIsFullImage(crop)) {
     return "cover";
@@ -1494,7 +1494,7 @@ export function figureCropBackgroundSize(crop: DispositionPosition, frame: Dispo
   return `auto ${zoomH * coverScale}%`;
 }
 
-/** @emoji 🖼️ Centered crop cover in a slide frame (non-mosaic / focus morph). */
+/** 🖼️ Centered crop cover in a slide frame (non-mosaic / focus morph). */
 function figureCropCoverVars(crop: DispositionPosition, frame: DispositionPosition, sourceAspect = 1): { readonly size: string; readonly posX: number; readonly posY: number } {
   const { posX, posY } = figureCropBackgroundPosition(crop);
   return {
@@ -1504,7 +1504,7 @@ function figureCropCoverVars(crop: DispositionPosition, frame: DispositionPositi
   };
 }
 
-/** @emoji 🪟️ Mosaic cell background vars (windowed cover of `mosaic.frame`). */
+/** 🪟️ Mosaic cell background vars (windowed cover of `mosaic.frame`). */
 function figureMosaicCellCoverVars(crop: DispositionPosition, mosaic: FigureMosaicGrid, sourceAspect: number, slideAspect?: number): { readonly size: string; readonly posX: number; readonly posY: number } | null {
   const cell = figureMosaicCellIndex(crop, mosaic);
   if (!cell) {
@@ -1515,7 +1515,7 @@ function figureMosaicCellCoverVars(crop: DispositionPosition, mosaic: FigureMosa
 }
 
 //#region 🔖️FigureScroll
-/** @emoji 📐️ Default slide pixel size from {@link PresentationSlideAspectContext} (960×700 when unknown). */
+/** 📐️ Default slide pixel size from {@link PresentationSlideAspectContext} (960×700 when unknown). */
 function presentationSlidePixelSize(slideAspect?: number): { readonly width: number; readonly height: number } {
   const height = 700;
   return {
@@ -1523,7 +1523,7 @@ function presentationSlidePixelSize(slideAspect?: number): { readonly width: num
     height,
   };
 }
-/** @emoji 📐️ Estimated frame pixels from normalized disposition (before DOM measure on hidden slides). */
+/** 📐️ Estimated frame pixels from normalized disposition (before DOM measure on hidden slides). */
 export function estimateDispositionFramePixels(frame: DispositionPosition, slideWidth = 960, slideHeight = 700): { readonly width: number; readonly height: number } {
   return {
     width: frame.width * slideWidth,
@@ -1531,7 +1531,7 @@ export function estimateDispositionFramePixels(frame: DispositionPosition, slide
   };
 }
 
-/** @emoji 📜️ True when a figure should use one-axis cover scroll (mosaic tiles always clip). */
+/** 📜️ True when a figure should use one-axis cover scroll (mosaic tiles always clip). */
 export function figureEmbodimentScrollEnabled(embodiment: FigureEmbodiment): boolean {
   if (embodiment.scroll === false || embodiment.mosaic !== undefined) {
     return false;
@@ -1539,17 +1539,17 @@ export function figureEmbodimentScrollEnabled(embodiment: FigureEmbodiment): boo
   return true;
 }
 
-/** @emoji 📜️ True when a video should use one-axis cover scroll. */
+/** 📜️ True when a video should use one-axis cover scroll. */
 export function videoEmbodimentScrollEnabled(embodiment: VideoEmbodiment): boolean {
   return embodiment.scroll !== false;
 }
 
-/** @emoji 📜️ True when a pdf page should use one-axis cover scroll. */
+/** 📜️ True when a pdf page should use one-axis cover scroll. */
 export function pdfEmbodimentScrollEnabled(embodiment: PdfEmbodiment): boolean {
   return embodiment.scroll !== false;
 }
 
-/** @emoji ✨️ True when a media embodiment should show the glassy teaser veil. */
+/** ✨️ True when a media embodiment should show the glassy teaser veil. */
 export function mediaTeaserActive(teaser: MediaTeaser | undefined): teaser is MediaTeaser {
   return teaser !== undefined;
 }
@@ -1568,7 +1568,7 @@ function MediaTeaserWrap({ teaser, children }: { readonly teaser?: MediaTeaser; 
   );
 }
 
-/** @emoji ↔ Which axis overflows under uniform cover (frame vs source aspect). */
+/** ↔ Which axis overflows under uniform cover (frame vs source aspect). */
 export function figureCoverOverflowAxis(frameWidth: number, frameHeight: number, sourceAspect: number): "x" | "y" | null {
   if (frameWidth <= 0 || frameHeight <= 0 || sourceAspect <= 0) {
     return null;
@@ -1583,7 +1583,7 @@ export function figureCoverOverflowAxis(frameWidth: number, frameHeight: number,
   return null;
 }
 
-/** @emoji ↔ Scroll axis implied by a crop background-size (`N% auto` → x, `auto N%` → y). */
+/** ↔ Scroll axis implied by a crop background-size (`N% auto` → x, `auto N%` → y). */
 export function figureBackgroundSizeScrollAxis(bgSize: string): "x" | "y" | null {
   if (bgSize === "cover" || bgSize === "contain") {
     return null;
@@ -1597,7 +1597,7 @@ export function figureBackgroundSizeScrollAxis(bgSize: string): "x" | "y" | null
   return null;
 }
 
-/** @emoji 📐️ Inner scroll content size for a crop background-size string. */
+/** 📐️ Inner scroll content size for a crop background-size string. */
 export function figureCropScrollContentSize(bgSize: string): CSSProperties {
   const horizontal = bgSize.match(/^([\d.]+)% auto$/);
   if (horizontal) {
@@ -1610,13 +1610,13 @@ export function figureCropScrollContentSize(bgSize: string): CSSProperties {
   return { width: "100%", height: "100%", minWidth: "100%", minHeight: "100%" };
 }
 
-/** @emoji ↔ Scroll offset matching CSS background-position along one axis. */
+/** ↔ Scroll offset matching CSS background-position along one axis. */
 export function figureScrollOffsetForBackgroundPosition(axis: "x" | "y", positionPercent: number, scrollSize: number, clientSize: number): number {
   const max = Math.max(0, scrollSize - clientSize);
   return (positionPercent / 100) * max;
 }
 
-/** @emoji 🖼️ Crop background-size on a scroll inner (span one scroll axis). */
+/** 🖼️ Crop background-size on a scroll inner (span one scroll axis). */
 export function figureCropScrollBackgroundSize(bgSize: string, scrollAxis?: "x" | "y" | null, zoom = 1): string {
   const axis = figureBackgroundSizeScrollAxis(bgSize) ?? scrollAxis ?? null;
   if (axis === "x") {
@@ -1628,21 +1628,21 @@ export function figureCropScrollBackgroundSize(bgSize: string, scrollAxis?: "x" 
   return figureBackgroundSizeZoomed(bgSize, zoom);
 }
 
-/** @emoji 🔍️ Minimum ctrl+wheel zoom (cover baseline). */
+/** 🔍️ Minimum ctrl+wheel zoom (cover baseline). */
 export const FIGURE_WHEEL_ZOOM_MIN = 1;
 
-/** @emoji 🔍️ Maximum ctrl+wheel zoom multiplier. */
+/** 🔍️ Maximum ctrl+wheel zoom multiplier. */
 export const FIGURE_WHEEL_ZOOM_MAX = 8;
 
 const FIGURE_WHEEL_ZOOM_FACTOR = 1.1;
 
-/** @emoji 🔍️ Next zoom level from a wheel delta and current multiplier. */
+/** 🔍️ Next zoom level from a wheel delta and current multiplier. */
 export function figureWheelZoomStep(deltaY: number, currentZoom: number): number {
   const factor = deltaY < 0 ? FIGURE_WHEEL_ZOOM_FACTOR : 1 / FIGURE_WHEEL_ZOOM_FACTOR;
   return Math.min(FIGURE_WHEEL_ZOOM_MAX, Math.max(FIGURE_WHEEL_ZOOM_MIN, currentZoom * factor));
 }
 
-/** @emoji 🔍️ Keep the pointer anchor fixed while zooming scrollable figure content. */
+/** 🔍️ Keep the pointer anchor fixed while zooming scrollable figure content. */
 export function figureWheelZoomAdjustScroll(scroller: HTMLElement, clientX: number, clientY: number, prevZoom: number, nextZoom: number): void {
   if (prevZoom <= 0 || nextZoom === prevZoom) {
     return;
@@ -1655,7 +1655,7 @@ export function figureWheelZoomAdjustScroll(scroller: HTMLElement, clientX: numb
   scroller.scrollTop = Math.max(0, (scroller.scrollTop + anchorY) * ratio - anchorY);
 }
 
-/** @emoji 🔍️ Scale a crop `background-size` string by a zoom multiplier. */
+/** 🔍️ Scale a crop `background-size` string by a zoom multiplier. */
 export function figureBackgroundSizeZoomed(bgSize: string, zoom: number): string {
   if (zoom <= 1) {
     return bgSize;
@@ -1671,7 +1671,7 @@ export function figureBackgroundSizeZoomed(bgSize: string, zoom: number): string
   return bgSize;
 }
 
-/** @emoji 🔍️ Apply ctrl+wheel zoom to cover scroll content sizing. */
+/** 🔍️ Apply ctrl+wheel zoom to cover scroll content sizing. */
 export function figureCoverScrollContentSize(portWidth: number, portHeight: number, sourceAspect: number, zoom = 1): { readonly axis: "x" | "y" | "both" | null; readonly style: CSSProperties } {
   const base = figureCoverScrollContentSizeAtZoom(portWidth, portHeight, sourceAspect, 1);
   if (zoom <= 1) {
@@ -1718,7 +1718,7 @@ function figureCoverScrollContentSizeAtZoom(portWidth: number, portHeight: numbe
   return { axis, style: { width: `${widthPercent}%`, height: "100%" } };
 }
 
-/** @emoji 🔍️ Apply ctrl+wheel zoom to img/video cover element sizing. */
+/** 🔍️ Apply ctrl+wheel zoom to img/video cover element sizing. */
 export function figureCoverScrollElementStyle(portWidth: number, portHeight: number, sourceAspect: number, zoom = 1): CSSProperties {
   if (zoom <= 1) {
     const { axis } = figureCoverScrollContentSizeAtZoom(portWidth, portHeight, sourceAspect, 1);
@@ -1772,7 +1772,7 @@ export function figureCoverScrollElementStyle(portWidth: number, portHeight: num
 
 const FigureZoomContext = createContext(1);
 
-/** @emoji 🔍️ Ctrl+wheel zoom multiplier for the enclosing {@link FigureScrollViewport}. */
+/** 🔍️ Ctrl+wheel zoom multiplier for the enclosing {@link FigureScrollViewport}. */
 export function useFigureZoom(): number {
   return useContext(FigureZoomContext);
 }
@@ -1803,7 +1803,7 @@ function figureScrollScrollerClass(axis: "x" | "y" | "both" | null): string {
   return "presentation-figure-scroll-scroller";
 }
 
-/** @emoji 📏️ Overlay scrollbar thumb size and offset from native scroll metrics. */
+/** 📏️ Overlay scrollbar thumb size and offset from native scroll metrics. */
 export function figureScrollOverlayThumbMetrics(clientSize: number, scrollSize: number, scrollPos: number, minThumb = 24): { readonly thumbSize: number; readonly thumbOffset: number; readonly visible: boolean } {
   if (clientSize <= 0 || scrollSize <= clientSize + 1) {
     return { thumbSize: 0, thumbOffset: 0, visible: false };
@@ -2336,7 +2336,7 @@ function FigureZoomedCropScrollContent({
   return <div className={className} style={scrollContentStyle} {...(morphCropData !== undefined ? { "data-presentation-morph-crop": morphCropData } : {})} role="img" aria-label={ariaLabel} />;
 }
 
-/** @emoji 📐️ Reads `left`/`top`/`width`/`height` percent inline styles as a normalized disposition frame. */
+/** 📐️ Reads `left`/`top`/`width`/`height` percent inline styles as a normalized disposition frame. */
 export function readPercentDispositionFrame(element: HTMLElement): DispositionPosition | null {
   const read = (property: "left" | "top" | "width" | "height"): number | null => {
     const raw = element.style.getPropertyValue(property);
@@ -2356,7 +2356,7 @@ export function readPercentDispositionFrame(element: HTMLElement): DispositionPo
   return { x, y, width, height };
 }
 
-/** @emoji 🔀️ Copies live focus-tile frames from slide 8 onto label-slide target ghosts before many-to-one FLIP. */
+/** 🔀️ Copies live focus-tile frames from slide 8 onto label-slide target ghosts before many-to-one FLIP. */
 export function syncManyToOneGhostMorphFramesFromDom(fromSlide: HTMLElement, toSlide: HTMLElement): void {
   if (!isManyToOneMorphTransition(fromSlide, toSlide)) {
     return;
@@ -2394,7 +2394,7 @@ export function syncManyToOneGhostMorphFramesFromDom(fromSlide: HTMLElement, toS
   }
 }
 
-/** @emoji 📐️ Custom properties for morphing a canvas frame from `from` into `to` during reveal auto-animate. */
+/** 📐️ Custom properties for morphing a canvas frame from `from` into `to` during reveal auto-animate. */
 export function morphFrameCssVars(from: DispositionPosition, to: DispositionPosition): CSSProperties {
   return {
     ["--presentation-morph-frame-left" as string]: `${from.x * 100}%`,
@@ -2408,7 +2408,7 @@ export function morphFrameCssVars(from: DispositionPosition, to: DispositionPosi
   };
 }
 
-/** @emoji 📐️ Writes {@link morphFrameCssVars} onto an element via `style.setProperty` (required for CSS variables). */
+/** 📐️ Writes {@link morphFrameCssVars} onto an element via `style.setProperty` (required for CSS variables). */
 export function applyMorphFrameCssVars(element: HTMLElement, from: DispositionPosition, to: DispositionPosition): void {
   for (const [key, value] of Object.entries(morphFrameCssVars(from, to))) {
     if (typeof value === "string") {
@@ -2417,7 +2417,7 @@ export function applyMorphFrameCssVars(element: HTMLElement, from: DispositionPo
   }
 }
 
-/** @emoji 🖼️ Applies figure crop CSS variables from a vars object via `setProperty`. */
+/** 🖼️ Applies figure crop CSS variables from a vars object via `setProperty`. */
 export function applyFigureCropCssVars(element: HTMLElement, vars: CSSProperties): void {
   for (const [key, value] of Object.entries(vars)) {
     if (typeof value === "string" && key.startsWith("--presentation-figure-bg-")) {
@@ -2426,7 +2426,7 @@ export function applyFigureCropCssVars(element: HTMLElement, vars: CSSProperties
   }
 }
 
-/** @emoji 🖼️ CSS vars for crop tiles: mosaic windowed cover at rest/grid; centered crop cover for focus morph. */
+/** 🖼️ CSS vars for crop tiles: mosaic windowed cover at rest/grid; centered crop cover for focus morph. */
 export function figureCropBackgroundVars(embodiment: FigureEmbodiment, crop: DispositionPosition, frame?: DispositionPosition, morphToFrame?: DispositionPosition, fromMorphToFrame?: DispositionPosition, slideAspect?: number): CSSProperties {
   const mosaic = embodiment.mosaic;
   const sourceAspect = embodiment.sourceAspect ?? 1;
@@ -2454,7 +2454,7 @@ export function figureCropBackgroundVars(embodiment: FigureEmbodiment, crop: Dis
   return vars;
 }
 
-/** @emoji 👻️ Target ghost crop vars: `--presentation-figure-bg-size` = source tile frame, `-morph` = label slot (many-to-one 8→9). */
+/** 👻️ Target ghost crop vars: `--presentation-figure-bg-size` = source tile frame, `-morph` = label slot (many-to-one 8→9). */
 export function figureCropBackgroundVarsTargetGhost(embodiment: FigureEmbodiment, crop: DispositionPosition, sourceFrame: DispositionPosition, labelFrame: DispositionPosition): CSSProperties {
   return figureCropBackgroundVars(embodiment, crop, sourceFrame, labelFrame);
 }
@@ -2674,7 +2674,7 @@ function FigureMorphView({
   return <FigureImageMorphView morphId={anchorId} embodiment={embodiment} emphasis={emphasis} position={position} />;
 }
 
-/** @emoji 🏷️ Positioned text morph slot: `data-id` on the frame so reveal.js can morph figure crops into labels. */
+/** 🏷️ Positioned text morph slot: `data-id` on the frame so reveal.js can morph figure crops into labels. */
 function PositionedTextMorphView({
   morphId: anchorId,
   embodiment,
@@ -3091,12 +3091,12 @@ function MorphDispositionView({ disposition }: { readonly disposition: RevealRes
 const DISPOSITION_MIN_FRACTION = 0.02;
 const POINTER_DRAG_THRESHOLD_PX = 3;
 
-/** @emoji 🗺️ Whether reveal.js is showing the slide grid (Escape overview). */
+/** 🗺️ Whether reveal.js is showing the slide grid (Escape overview). */
 export function revealDeckInOverview(element: Element | null): boolean {
   return element?.closest(".reveal")?.classList.contains("overview") ?? false;
 }
 
-/** @emoji 🗺️ Swallow the post-gesture click reveal.js uses to leave overview (capture on `.reveal`). */
+/** 🗺️ Swallow the post-gesture click reveal.js uses to leave overview (capture on `.reveal`). */
 export function suppressRevealOverviewSlideNavigation(event: Event): void {
   const origin = event.target;
   if (!(origin instanceof Element)) {
@@ -3117,7 +3117,7 @@ export function suppressRevealOverviewSlideNavigation(event: Event): void {
   reveal.addEventListener("click", swallowClick, true);
 }
 
-/** @emoji 🖱️ Disposition ids to move/resize for this gesture (before async `selectIds` commits). */
+/** 🖱️ Disposition ids to move/resize for this gesture (before async `selectIds` commits). */
 function resolveDispositionDragGroupIds(id: string, wasSelected: boolean, additive: boolean, selectedIds: ReadonlySet<string>): readonly string[] {
   if (!wasSelected) {
     if (additive) {
@@ -3133,59 +3133,59 @@ function resolveDispositionDragGroupIds(id: string, wasSelected: boolean, additi
   return selectedIds.size > 1 ? [...selectedIds] : [id];
 }
 
-/** @emoji 📐️ Ephemeral slide-space rectangle for interactive dispositions (normalized 0..1). */
+/** 📐️ Ephemeral slide-space rectangle for interactive dispositions (normalized 0..1). */
 export type DispositionTransform = DispositionPosition;
 
-/** @emoji ↔ Marquee selection mode: crossing (L→R partial overlap) vs window (R→L full containment). */
+/** ↔ Marquee selection mode: crossing (L→R partial overlap) vs window (R→L full containment). */
 export type MarqueeSelectionRule = "crossing" | "window";
 
-/** @emoji ⊡ Eight resize handles on a disposition frame. */
+/** ⊡ Eight resize handles on a disposition frame. */
 export type DispositionResizeHandle = "nw" | "n" | "ne" | "e" | "se" | "s" | "sw" | "w";
 
 const DISPOSITION_RESIZE_HANDLES: readonly DispositionResizeHandle[] = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
 
-/** @emoji 🔑️ Stable id for one resolved disposition on a slide. */
+/** 🔑️ Stable id for one resolved disposition on a slide. */
 export function dispositionInteractionId(renderSlideId: string, disposition: RevealResolvedDisposition, index: number): string {
   return `${renderSlideId}--${disposition.morphId}--${disposition.embodimentId ?? index}`;
 }
 
-/** @emoji 🔑️ Stable id for one split tile on an interactive slide. */
+/** 🔑️ Stable id for one split tile on an interactive slide. */
 export function tileDispositionInteractionId(renderSlideId: string, disposition: RevealResolvedDisposition, dispositionIndex: number, tileKey: string): string {
   return `${dispositionInteractionId(renderSlideId, disposition, dispositionIndex)}--tile--${tileKey}`;
 }
 
-/** @emoji 🔑️ Stable id for a visual row band grouping split tiles on one disposition. */
+/** 🔑️ Stable id for a visual row band grouping split tiles on one disposition. */
 export function rowBandInteractionId(renderSlideId: string, disposition: RevealResolvedDisposition, dispositionIndex: number, rowIndex: number): string {
   return `${dispositionInteractionId(renderSlideId, disposition, dispositionIndex)}--row--${rowIndex}`;
 }
 
-/** @emoji 🖱️ One interactive placement (whole disposition or a single split tile). */
+/** 🖱️ One interactive placement (whole disposition or a single split tile). */
 export interface InteractiveDispositionPlacement {
   readonly id: string;
   readonly disposition: RevealResolvedDisposition;
-  /** @emoji 📐️ Wrapper frame (row-local for tiles inside a visual row). */
+  /** 📐️ Wrapper frame (row-local for tiles inside a visual row). */
   readonly declaredRect: DispositionPosition | undefined;
-  /** @emoji 📐️ Slide-space frame for marquee, drag, and resize. */
+  /** 📐️ Slide-space frame for marquee, drag, and resize. */
   readonly sectionRect: DispositionPosition | undefined;
-  /** @emoji 🔗️ reveal.js `data-id` on the canvas wrapper when the tile frame must not own it. */
+  /** 🔗️ reveal.js `data-id` on the canvas wrapper when the tile frame must not own it. */
   readonly revealMorphId?: string;
   readonly rowBandId?: string;
 }
 
-/** @emoji 📏️ Row-level hit target spanning all tiles in one visual row of a split disposition. */
+/** 📏️ Row-level hit target spanning all tiles in one visual row of a split disposition. */
 export interface InteractiveRowBandPlacement {
   readonly id: string;
   readonly frame: DispositionPosition;
   readonly tileIds: readonly string[];
 }
 
-/** @emoji 🖱️ Interactive placements and row bands for one slide arrangement. */
+/** 🖱️ Interactive placements and row bands for one slide arrangement. */
 export interface InteractiveSlideLayout {
   readonly placements: readonly InteractiveDispositionPlacement[];
   readonly rowBands: readonly InteractiveRowBandPlacement[];
 }
 
-/** @emoji 🧩️ Builds one interactive placement per resolved disposition. */
+/** 🧩️ Builds one interactive placement per resolved disposition. */
 export function buildInteractiveSlideLayout(renderSlideId: string, resolved: readonly RevealResolvedDisposition[], morph = false): InteractiveSlideLayout {
   const placements: InteractiveDispositionPlacement[] = [];
   resolved.forEach((disposition, dispositionIndex) => {
@@ -3201,17 +3201,17 @@ export function buildInteractiveSlideLayout(renderSlideId: string, resolved: rea
   return { placements, rowBands: [] };
 }
 
-/** @emoji 📐️ True when two normalized rectangles overlap with positive area. */
+/** 📐️ True when two normalized rectangles overlap with positive area. */
 export function rectsIntersect(a: DispositionPosition, b: DispositionPosition): boolean {
   return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
 }
 
-/** @emoji 📐️ True when outer fully contains inner. */
+/** 📐️ True when outer fully contains inner. */
 export function rectContains(outer: DispositionPosition, inner: DispositionPosition): boolean {
   return inner.x >= outer.x && inner.y >= outer.y && inner.x + inner.width <= outer.x + outer.width && inner.y + inner.height <= outer.y + outer.height;
 }
 
-/** @emoji ⊞ Normalized marquee rectangle from two pointer fractions. */
+/** ⊞ Normalized marquee rectangle from two pointer fractions. */
 export function normalizeMarquee(start: { readonly x: number; readonly y: number }, end: { readonly x: number; readonly y: number }): DispositionPosition {
   const x = Math.min(start.x, end.x);
   const y = Math.min(start.y, end.y);
@@ -3223,12 +3223,12 @@ export function normalizeMarquee(start: { readonly x: number; readonly y: number
   };
 }
 
-/** @emoji ↔ Crossing when dragged right-to-left (end.x < start.x), else window. */
+/** ↔ Crossing when dragged right-to-left (end.x < start.x), else window. */
 export function marqueeSelectionRule(start: { readonly x: number; readonly y: number }, end: { readonly x: number; readonly y: number }): MarqueeSelectionRule {
   return end.x < start.x ? "crossing" : "window";
 }
 
-/** @emoji 🎯️ Whether a marquee selects a target rect under crossing or window rules. */
+/** 🎯️ Whether a marquee selects a target rect under crossing or window rules. */
 export function marqueeSelects(marquee: DispositionPosition, target: DispositionPosition, rule: MarqueeSelectionRule): boolean {
   if (marquee.width <= 0 || marquee.height <= 0) {
     return false;
@@ -3240,7 +3240,7 @@ function clampFraction(value: number): number {
   return Math.max(0, Math.min(1, value));
 }
 
-/** @emoji ↔ Moves a normalized rect by fractional deltas (unbounded; follows pointer across the slide). */
+/** ↔ Moves a normalized rect by fractional deltas (unbounded; follows pointer across the slide). */
 export function translateDispositionRect(rect: DispositionPosition, dx: number, dy: number): DispositionPosition {
   return {
     x: rect.x + dx,
@@ -3250,7 +3250,7 @@ export function translateDispositionRect(rect: DispositionPosition, dx: number, 
   };
 }
 
-/** @emoji ⊡ Resizes a normalized rect from one handle by fractional deltas. */
+/** ⊡ Resizes a normalized rect from one handle by fractional deltas. */
 export function resizeDispositionRect(rect: DispositionPosition, handle: DispositionResizeHandle, dx: number, dy: number, minSize: number = DISPOSITION_MIN_FRACTION): DispositionPosition {
   let { x, y, width, height } = rect;
   if (handle.includes("e")) {
@@ -3286,7 +3286,7 @@ export function resizeDispositionRect(rect: DispositionPosition, handle: Disposi
   return { x, y, width, height };
 }
 
-/** @emoji ⊞ Union bounding box of normalized rectangles. */
+/** ⊞ Union bounding box of normalized rectangles. */
 export function groupBoundingRect(rects: readonly DispositionPosition[]): DispositionPosition | null {
   if (rects.length === 0) {
     return null;
@@ -3294,7 +3294,7 @@ export function groupBoundingRect(rects: readonly DispositionPosition[]): Dispos
   return unionDispositionPositions(rects);
 }
 
-/** @emoji ⊞ Scales one member rect when a group bounding box is resized. */
+/** ⊞ Scales one member rect when a group bounding box is resized. */
 export function scaleRectWithinGroup(rect: DispositionPosition, oldGroup: DispositionPosition, newGroup: DispositionPosition): DispositionPosition {
   if (oldGroup.width <= 0 || oldGroup.height <= 0) {
     return rect;
@@ -3311,7 +3311,7 @@ export function scaleRectWithinGroup(rect: DispositionPosition, oldGroup: Dispos
   };
 }
 
-/** @emoji ⛶️ Centered near-slide frame for interactive enlarge (uniform across figure, video, pdf, tiles). */
+/** ⛶️ Centered near-slide frame for interactive enlarge (uniform across figure, video, pdf, tiles). */
 export const SLIDE_INTERACTIVE_ENLARGE_FRAME: DispositionPosition = {
   x: 0.05,
   y: 0.075,
@@ -3319,7 +3319,7 @@ export const SLIDE_INTERACTIVE_ENLARGE_FRAME: DispositionPosition = {
   height: 0.85,
 };
 
-/** @emoji ⛶️ Toggles uniform enlarged slide frame vs stashed pre-enlarge rect. */
+/** ⛶️ Toggles uniform enlarged slide frame vs stashed pre-enlarge rect. */
 export function toggleEnlargeRect(current: DispositionPosition, stash: DispositionPosition | undefined): { readonly rect: DispositionPosition; readonly stash: DispositionPosition | undefined } {
   if (stash !== undefined) {
     return { rect: stash, stash: undefined };
@@ -3327,7 +3327,7 @@ export function toggleEnlargeRect(current: DispositionPosition, stash: Dispositi
   return { rect: SLIDE_INTERACTIVE_ENLARGE_FRAME, stash: current };
 }
 
-/** @emoji 📐️ reveal.js nested slide section with usable layout height for pointer math. */
+/** 📐️ reveal.js nested slide section with usable layout height for pointer math. */
 export function slideCoordinateRoot(sectionEl: HTMLElement): HTMLElement {
   const arrangement = sectionEl.closest("section.presentation-arrangement--interactive");
   if (arrangement instanceof HTMLElement) {
@@ -3352,7 +3352,7 @@ export function slideCoordinateRoot(sectionEl: HTMLElement): HTMLElement {
   return reveal instanceof HTMLElement ? reveal : sectionEl;
 }
 
-/** @emoji 📐️ Client/layout bounds for slide-space fractions when inner reveal sections report zero height. */
+/** 📐️ Client/layout bounds for slide-space fractions when inner reveal sections report zero height. */
 export function slideLayoutBounds(sectionEl: HTMLElement): DOMRect {
   const root = slideCoordinateRoot(sectionEl);
   const rect = root.getBoundingClientRect();
@@ -3365,7 +3365,7 @@ export function slideLayoutBounds(sectionEl: HTMLElement): DOMRect {
   return new DOMRect(anchor.left, anchor.top, width, height);
 }
 
-/** @emoji 🖼️ Arrangement canvas when dispositions use declared slide-space frames; otherwise the slide coordinate root. */
+/** 🖼️ Arrangement canvas when dispositions use declared slide-space frames; otherwise the slide coordinate root. */
 export function dispositionPlacementContainer(sectionEl: HTMLElement, canvasPlacement: boolean): HTMLElement {
   if (!canvasPlacement) {
     return slideCoordinateRoot(sectionEl);
@@ -3374,12 +3374,12 @@ export function dispositionPlacementContainer(sectionEl: HTMLElement, canvasPlac
   return canvas instanceof HTMLElement ? canvas : sectionEl;
 }
 
-/** @emoji 🖼️ Ink-bearing node used to measure a positioned disposition on the arrangement canvas. */
+/** 🖼️ Ink-bearing node used to measure a positioned disposition on the arrangement canvas. */
 export function dispositionFrameElement(root: HTMLElement): HTMLElement {
   return (root.querySelector(".presentation-disposition-frame, .presentation-morph-slot--figure, .presentation-morph-anchor") as HTMLElement | null) ?? root;
 }
 
-/** @emoji ⊡ Selection chrome style: flow slides use measured ink frame; canvas-framed slides use wrapper inset via CSS. */
+/** ⊡ Selection chrome style: flow slides use measured ink frame; canvas-framed slides use wrapper inset via CSS. */
 export function interactiveDispositionChromeStyle(options: { readonly selected: boolean; readonly effectiveRect: DispositionPosition | undefined; readonly canvasFramed: boolean; readonly enlarged: boolean }): CSSProperties | undefined {
   const { selected, effectiveRect, canvasFramed, enlarged } = options;
   if (!selected || !effectiveRect || enlarged || canvasFramed) {
@@ -3388,7 +3388,7 @@ export function interactiveDispositionChromeStyle(options: { readonly selected: 
   return transformFrameStyle(effectiveRect);
 }
 
-/** @emoji 📍️ Maps client coordinates to normalized fractions inside a section element. */
+/** 📍️ Maps client coordinates to normalized fractions inside a section element. */
 export function clientToSectionFraction(sectionEl: HTMLElement, clientX: number, clientY: number, options?: { readonly clamp?: boolean }): { readonly x: number; readonly y: number } {
   const bounds = slideLayoutBounds(sectionEl);
   if (bounds.width <= 0 || bounds.height <= 0) {
@@ -3405,7 +3405,7 @@ export function clientToSectionFraction(sectionEl: HTMLElement, clientX: number,
   };
 }
 
-/** @emoji 📍️ Maps an element's client rect to normalized fractions inside a section. */
+/** 📍️ Maps an element's client rect to normalized fractions inside a section. */
 export function measureElementRectInSection(element: HTMLElement, sectionEl: HTMLElement): DispositionPosition | null {
   const sectionBounds = slideLayoutBounds(sectionEl);
   if (sectionBounds.width <= 0 || sectionBounds.height <= 0) {
@@ -3489,7 +3489,7 @@ function tightProbeBoundsRect(element: HTMLElement, container: DOMRect): DOMRect
   return alignTightBoxWithin(element, container, probeBox);
 }
 
-/** @emoji 📍️ Ink bounds for text nodes (block headings otherwise span the full slide width). */
+/** 📍️ Ink bounds for text nodes (block headings otherwise span the full slide width). */
 export function tightElementBoundsRect(element: HTMLElement): DOMRect | null {
   const box = element.getBoundingClientRect();
   if (box.width <= 0 || box.height <= 0) {
@@ -3524,7 +3524,7 @@ function clientRectToSectionFraction(rect: DOMRect, sectionBounds: DOMRect): Dis
   };
 }
 
-/** @emoji 📍️ Union of morph content bounds in section space (avoids full-width flow wrappers). */
+/** 📍️ Union of morph content bounds in section space (avoids full-width flow wrappers). */
 export function measureDispositionBoundsInSection(root: HTMLElement, sectionEl: HTMLElement): DispositionPosition | null {
   root.classList.add("presentation-interactive-disposition--measuring");
   try {
@@ -3556,7 +3556,7 @@ export function measureDispositionBoundsInSection(root: HTMLElement, sectionEl: 
   }
 }
 
-/** @emoji 📍️ Ink bounds as fractions inside a container (selection chrome and fill use this space). */
+/** 📍️ Ink bounds as fractions inside a container (selection chrome and fill use this space). */
 export function measureDispositionBoundsInContainer(root: HTMLElement, containerEl: HTMLElement): DispositionPosition | null {
   root.classList.add("presentation-interactive-disposition--measuring");
   try {
@@ -3588,12 +3588,12 @@ export function measureDispositionBoundsInContainer(root: HTMLElement, container
   }
 }
 
-/** @emoji 📏️ True when measured fractions are large enough to drag or resize reliably. */
+/** 📏️ True when measured fractions are large enough to drag or resize reliably. */
 export function isUsableMeasuredRect(rect: DispositionPosition): boolean {
   return rect.width >= DISPOSITION_MIN_FRACTION && rect.height >= DISPOSITION_MIN_FRACTION;
 }
 
-/** @emoji 📐️ Declared placement for one resolved disposition (includes dormant morph anchors at opacity 0). */
+/** 📐️ Declared placement for one resolved disposition (includes dormant morph anchors at opacity 0). */
 export function declaredDispositionRect(disposition: RevealResolvedDisposition): DispositionPosition | undefined {
   return disposition.position;
 }
@@ -3609,7 +3609,7 @@ function transformFrameStyle(transform: DispositionPosition): CSSProperties {
   };
 }
 
-/** @emoji 📐️ Cumulative visual scale for one element (client rect vs layout box, includes ancestor transforms). */
+/** 📐️ Cumulative visual scale for one element (client rect vs layout box, includes ancestor transforms). */
 export function elementVisualScale(element: HTMLElement): number {
   const rect = element.getBoundingClientRect();
   const layoutW = element.offsetWidth;
@@ -3626,12 +3626,12 @@ export function elementVisualScale(element: HTMLElement): number {
   return Math.min(4, Math.max(0.05, scale));
 }
 
-/** @emoji 📐️ reveal.js scales slides visually; map screen-pointer deltas to local translate pixels. */
+/** 📐️ reveal.js scales slides visually; map screen-pointer deltas to local translate pixels. */
 export function sectionVisualScale(sectionEl: HTMLElement): number {
   return elementVisualScale(slideCoordinateRoot(sectionEl));
 }
 
-/** @emoji ↔ Node that receives flow `translate3d` during drag (offset wrapper, else content, else disposition root). */
+/** ↔ Node that receives flow `translate3d` during drag (offset wrapper, else content, else disposition root). */
 export function flowDragTransformElement(sectionEl: HTMLElement, root: HTMLElement | null, content: HTMLElement | null): HTMLElement {
   if (root?.classList.contains("presentation-interactive-disposition--offset")) {
     return root;
@@ -3645,7 +3645,7 @@ export function flowDragTransformElement(sectionEl: HTMLElement, root: HTMLEleme
   return slideCoordinateRoot(sectionEl);
 }
 
-/** @emoji ↔ Pointer travel in screen px → local px for CSS translate on the flow drag target. */
+/** ↔ Pointer travel in screen px → local px for CSS translate on the flow drag target. */
 export function flowPointerDeltaToLocal(transformEl: HTMLElement, startClientX: number, startClientY: number, currentClientX: number, currentClientY: number): { readonly dx: number; readonly dy: number } {
   const scale = elementVisualScale(transformEl);
   const safe = Number.isFinite(scale) && scale > 0 ? Math.min(4, Math.max(0.05, scale)) : 1;
@@ -3655,21 +3655,21 @@ export function flowPointerDeltaToLocal(transformEl: HTMLElement, startClientX: 
   };
 }
 
-/** @emoji ↔ Flow-layout drag: local-pixel translate (x/y are px, not normalized). */
+/** ↔ Flow-layout drag: local-pixel translate (x/y are px, not normalized). */
 export function flowDispositionOffsetStyle(transform: DispositionPosition): CSSProperties {
   return {
     transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
   };
 }
 
-/** @emoji 📐️ True when two normalized disposition frames differ. */
+/** 📐️ True when two normalized disposition frames differ. */
 export function dispositionPositionChanged(a: DispositionPosition, b: DispositionPosition): boolean {
   return Math.abs(a.x - b.x) > 1e-6 || Math.abs(a.y - b.y) > 1e-6 || Math.abs(a.width - b.width) > 1e-6 || Math.abs(a.height - b.height) > 1e-6;
 }
 
 const SLIDE_INTERACTION_RESET_PROXIMITY_PX = 72;
 
-/** @emoji 📐️ True when any disposition on the slide has ephemeral layout (drag, resize, enlarge, or pdf page). */
+/** 📐️ True when any disposition on the slide has ephemeral layout (drag, resize, enlarge, or pdf page). */
 export function slideHasEphemeralLayout(
   transforms: ReadonlyMap<string, DispositionTransform>,
   enlargedIds: ReadonlySet<string>,
@@ -3691,7 +3691,7 @@ export function slideHasEphemeralLayout(
   return false;
 }
 
-/** @emoji 📐️ True when a disposition transform differs from its declared anchor. */
+/** 📐️ True when a disposition transform differs from its declared anchor. */
 export function dispositionHasEphemeralLayout(transform: DispositionTransform | undefined, anchorRect: DispositionPosition | undefined, measuredNatural: DispositionPosition | undefined, flowLayout: boolean): boolean {
   if (!transform) {
     return false;
@@ -3705,7 +3705,7 @@ export function dispositionHasEphemeralLayout(transform: DispositionTransform | 
   return true;
 }
 
-/** @emoji 🎯️ Pointer is within the top-right hotspot where the slide reset control lives. */
+/** 🎯️ Pointer is within the top-right hotspot where the slide reset control lives. */
 export function pointerNearSlideResetHotspot(section: HTMLElement, clientX: number, clientY: number, proximityPx = SLIDE_INTERACTION_RESET_PROXIMITY_PX): boolean {
   const bounds = slideLayoutBounds(section);
   const reachX = Math.max(proximityPx, bounds.width * 0.12);
@@ -3713,7 +3713,7 @@ export function pointerNearSlideResetHotspot(section: HTMLElement, clientX: numb
   return clientX >= bounds.right - reachX && clientY >= bounds.top && clientY <= bounds.top + reachY;
 }
 
-/** @emoji 📐️ Flow drag: preserve the wrapper footprint while ink is absolutely positioned inside. */
+/** 📐️ Flow drag: preserve the wrapper footprint while ink is absolutely positioned inside. */
 export function flowDispositionReserveStyle(reservePx: { readonly width: number; readonly height: number }): CSSProperties {
   return {
     minWidth: reservePx.width,
@@ -3721,7 +3721,7 @@ export function flowDispositionReserveStyle(reservePx: { readonly width: number;
   };
 }
 
-/** @emoji 📐️ Flow transforms store pointer deltas; positioned transforms store slide-space frames. */
+/** 📐️ Flow transforms store pointer deltas; positioned transforms store slide-space frames. */
 export function flowDispositionManipulationRect(measured: DispositionPosition, existing: DispositionPosition | undefined): DispositionPosition {
   if (existing) {
     return existing;
@@ -3729,7 +3729,7 @@ export function flowDispositionManipulationRect(measured: DispositionPosition, e
   return { x: 0, y: 0, width: measured.width, height: measured.height };
 }
 
-/** @emoji 📐️ True when x/y/width/height are a normalized slide-space frame (not pixel drag storage). */
+/** 📐️ True when x/y/width/height are a normalized slide-space frame (not pixel drag storage). */
 export function isNormalizedSlideFrame(transform: DispositionPosition): boolean {
   return (
     transform.x >= 0 &&
@@ -3745,7 +3745,7 @@ export function isNormalizedSlideFrame(transform: DispositionPosition): boolean 
   );
 }
 
-/** @emoji ↔ True when a flow transform only stores pixel translate with unchanged measured size. */
+/** ↔ True when a flow transform only stores pixel translate with unchanged measured size. */
 export function isFlowPixelOffsetTransform(transform: DispositionPosition, measured: DispositionPosition | undefined): boolean {
   const sizeMatches = measured === undefined ? transform.width > 0 && transform.width <= 1 && transform.height > 0 && transform.height <= 1 : transform.width === measured.width && transform.height === measured.height;
   if (!sizeMatches) {
@@ -3766,7 +3766,7 @@ export function isFlowPixelOffsetTransform(transform: DispositionPosition, measu
   return !isNormalizedSlideFrame(transform);
 }
 
-/** @emoji 🔍️ Uniform scale for pinned resize so ink zooms inside the frame without reflow overflow. */
+/** 🔍️ Uniform scale for pinned resize so ink zooms inside the frame without reflow overflow. */
 export function interactiveDispositionContentScale(transform: DispositionPosition, baseline: DispositionPosition | undefined): number | null {
   if (!baseline || baseline.width <= 0 || baseline.height <= 0) {
     return null;
@@ -3791,7 +3791,7 @@ export function interactiveDispositionContentScale(transform: DispositionPositio
   return Number.isFinite(uniform) ? uniform : null;
 }
 
-/** @emoji 🔍️ CSS transform that scales disposition content from its center during interactive resize. */
+/** 🔍️ CSS transform that scales disposition content from its center during interactive resize. */
 export function interactiveDispositionContentScaleStyle(scale: number): CSSProperties {
   return {
     transform: `scale(${scale})`,
@@ -3800,7 +3800,7 @@ export function interactiveDispositionContentScaleStyle(scale: number): CSSPrope
   };
 }
 
-/** @emoji 📍️ Converts a flow pixel-offset transform into a slide-space frame using measured ink bounds. */
+/** 📍️ Converts a flow pixel-offset transform into a slide-space frame using measured ink bounds. */
 export function flowPixelOffsetToSectionRect(measured: DispositionPosition, transform: DispositionPosition, sectionEl: HTMLElement, transformEl?: HTMLElement): DispositionPosition {
   const el = transformEl ?? flowDragTransformElement(sectionEl, null, null);
   const layout = slideLayoutBounds(sectionEl);
@@ -3850,7 +3850,7 @@ function usePresentationInteractionState(): PresentationInteractionState {
   return value;
 }
 
-/** @emoji 🖱️ Per-slide selection, transforms, and enlarge flags; cleared only via reset controls. */
+/** 🖱️ Per-slide selection, transforms, and enlarge flags; cleared only via reset controls. */
 export function usePresentationInteraction(): PresentationInteractionState {
   const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(() => new Set());
   const [transforms, setTransforms] = useState<ReadonlyMap<string, DispositionTransform>>(() => new Map());
@@ -4748,7 +4748,7 @@ function isRevealSlideBackgroundPointerTarget(target: EventTarget | null): boole
   return target instanceof Element && Boolean(target.closest(".slide-background.present, .slide-background-content"));
 }
 
-/** @emoji 🖱️ Marquee and deselect on slide background; mounted on the arrangement section capture phase. */
+/** 🖱️ Marquee and deselect on slide background; mounted on the arrangement section capture phase. */
 function useSlideBackgroundInteraction({
   sectionRef,
   canvasPlacement,
@@ -5072,7 +5072,7 @@ const ArrangementSectionSurface: FC<{
 //#endregion 🔖️ArrangementSection
 
 //#region 🔖️PresentationInteractionProvider
-/** @emoji 🖱️ Clears selection and ephemeral layout when reveal.js changes the active slide. */
+/** 🖱️ Clears selection and ephemeral layout when reveal.js changes the active slide. */
 const PresentationSlideInteractionBridge: FC<{
   readonly deckRef: RefObject<Reveal.Api | null>;
 }> = ({ deckRef }) => {
@@ -5129,7 +5129,7 @@ const PresentationInteractionProvider: FC<{
 //#endregion 🔖️PresentationInteractionProvider
 
 //#region 🔖️PresentationDeck
-/** @emoji 🎞️ Maps a {@link Presentation} to reveal.js DOM. */
+/** 🎞️ Maps a {@link Presentation} to reveal.js DOM. */
 export const PresentationDeck: FC<{
   readonly presentation: Presentation;
   readonly options?: PresentationMountOptions;
@@ -5397,7 +5397,7 @@ export const PresentationDeck: FC<{
 const mountedRoot = ephemeralBox<Root | null>("s.plugins.animate.apps.presentation.renderer.react.component.tsx.mountedRoot", null);
 const surfaceChromeCleanup = ephemeralBox<(() => void) | null>("s.plugins.animate.apps.presentation.renderer.react.component.tsx.surfaceChromeCleanup", null);
 
-/** @emoji 🚀️ Mounts a declarative presentation into a DOM root via React + reveal.js (eg-ice-25 reveal wiring). */
+/** 🚀️ Mounts a declarative presentation into a DOM root via React + reveal.js (eg-ice-25 reveal wiring). */
 export function mountPresentation(rootEl: HTMLElement, presentation: Presentation, options?: PresentationMountOptions): void {
   surfaceChromeCleanup.current?.();
   surfaceChromeCleanup.current = null;
@@ -5410,7 +5410,7 @@ export function mountPresentation(rootEl: HTMLElement, presentation: Presentatio
   mountedRoot.current.render(<PresentationDeck presentation={presentation} options={options} />);
 }
 
-/** @emoji 🧹️ Unmounts a presentation previously mounted with {@link mountPresentation}. */
+/** 🧹️ Unmounts a presentation previously mounted with {@link mountPresentation}. */
 export function unmountPresentation(): void {
   mountedRoot.current?.unmount();
   mountedRoot.current = null;
@@ -5429,7 +5429,7 @@ if (import.meta.vitest) {
 //#region 🔖️json
 
 //#region 🔖️Renderer
-/** @emoji 🧬️ Renders parsed JSON as an interactive syntax tree. */
+/** 🧬️ Renders parsed JSON as an interactive syntax tree. */
 export interface JsonTreeRenderer {
   render(data: unknown): ReactNode;
 }
@@ -5540,12 +5540,12 @@ const defaultJsonTreeRenderer: JsonTreeRenderer = {
 
 const jsonTreeRenderer = ephemeralBox<JsonTreeRenderer>("s.plugins.animate.apps.presentation.renderer.react.component.tsx.jsonTreeRenderer", defaultJsonTreeRenderer);
 
-/** @emoji 🔌️ Replaces the JSON tree renderer (tests or alternate renderers). */
+/** 🔌️ Replaces the JSON tree renderer (tests or alternate renderers). */
 export function setJsonTreeRenderer(renderer: JsonTreeRenderer): void {
   jsonTreeRenderer.current = renderer;
 }
 
-/** @emoji 🧬️ Renders JSON through the active {@link JsonTreeRenderer}. */
+/** 🧬️ Renders JSON through the active {@link JsonTreeRenderer}. */
 export function renderJsonTree(data: unknown): ReactNode {
   return jsonTreeRenderer.current.render(data);
 }

@@ -1,7 +1,7 @@
 // #region 🧲️Header
 /// <reference types="vite/client" />
 /// <reference types="vitest/importMeta" />
-/** @emoji 🖊️ `@semio-tech/s-2d-js` — 2D drawing scene contracts, canvas raster, and export ports. */
+/** 🖊️ `@semio-tech/s-2d-js` — 2D drawing scene contracts, canvas raster, and export ports. */
 // #endregion 🧲️Header
 import { drawingTextLines, DRAWING_TEXT_LINE_HEIGHT } from "./📝️text/🟦️.ts";
 export { drawingTextLines, drawingTextFallbackExtent, DRAWING_TEXT_LINE_HEIGHT } from "./📝️text/🟦️.ts";
@@ -95,17 +95,17 @@ export type DrawBooleanOperation = (typeof DRAW_BOOLEAN_OPERATIONS)[number];
 // #endregion 📐️Contracts
 
 // #region 📤️ExportPorts
-/** @emoji 📄️ SVG serialization port for {@link DrawingScene}. */
+/** 📄️ SVG serialization port for {@link DrawingScene}. */
 export interface DrawingSvgExportPort {
   exportSvg(scene: DrawingScene): string;
 }
 
-/** @emoji 📕️ PDF serialization port for {@link DrawingScene}. */
+/** 📕️ PDF serialization port for {@link DrawingScene}. */
 export interface DrawingPdfExportPort {
   exportPdf(scene: DrawingScene): string;
 }
 
-/** @emoji 🖼️ PNG rasterization port for {@link DrawingScene}. */
+/** 🖼️ PNG rasterization port for {@link DrawingScene}. */
 export interface DrawingPngExportPort {
   exportPng(scene: DrawingScene): string;
 }
@@ -190,7 +190,7 @@ function paintStroke(ctx: CanvasRenderingContext2D, stroke: StrokeStyle): void {
   ctx.setLineDash(stroke.dash ? [...stroke.dash] : []);
 }
 
-/** @emoji 🖼️ Rasterizes a {@link DrawingScene} to a PNG data URL. */
+/** 🖼️ Rasterizes a {@link DrawingScene} to a PNG data URL. */
 export function rasterizeDrawingSceneToPng(scene: DrawingScene): string {
   const canvas = document.createElement("canvas");
   canvas.width = Math.max(1, Math.ceil(scene.width));
@@ -201,7 +201,7 @@ export function rasterizeDrawingSceneToPng(scene: DrawingScene): string {
   return canvas.toDataURL("image/png");
 }
 
-/** @emoji 🎨️ Paints a {@link DrawingScene} onto a 2D canvas context. */
+/** 🎨️ Paints a {@link DrawingScene} onto a 2D canvas context. */
 export function paintDrawingScene(ctx: CanvasRenderingContext2D, scene: DrawingScene, options?: { readonly clear?: boolean }): void {
   const clear = options?.clear ?? true;
   if (clear) ctx.clearRect(0, 0, Math.max(1, scene.width), Math.max(1, scene.height));
@@ -243,14 +243,14 @@ export function paintDrawingScene(ctx: CanvasRenderingContext2D, scene: DrawingS
   }
 }
 
-/** @emoji 🖼️ {@link DrawingPngExportPort} backed by canvas readback. */
+/** 🖼️ {@link DrawingPngExportPort} backed by canvas readback. */
 export const canvasDrawingPngExportPort: DrawingPngExportPort = {
   exportPng(scene) {
     return rasterizeDrawingSceneToPng(scene);
   },
 };
 
-/** @emoji 🖼️ Rasterizes SVG markup to a PNG data URL in the browser. */
+/** 🖼️ Rasterizes SVG markup to a PNG data URL in the browser. */
 export async function rasterizeSvgMarkupToPngDataUrl(svg: string, width: number, height: number): Promise<string> {
   if (typeof document === "undefined") {
     return `data:image/png;base64,`;
@@ -274,7 +274,7 @@ export async function rasterizeSvgMarkupToPngDataUrl(svg: string, width: number,
   });
 }
 
-/** @emoji 📄️ Serializes path segments to an SVG `d` attribute. */
+/** 📄️ Serializes path segments to an SVG `d` attribute. */
 export function pathSegmentsToSvgD(segments: readonly PathSegment[]): string {
   let d = "";
   for (const segment of segments) {
@@ -288,7 +288,7 @@ export function pathSegmentsToSvgD(segments: readonly PathSegment[]): string {
   return d.trim();
 }
 
-/** @emoji 📄️ Serializes a {@link DrawingScene} to SVG markup. */
+/** 📄️ Serializes a {@link DrawingScene} to SVG markup. */
 export function drawingSceneToSvgMarkup(scene: DrawingScene): string {
   const shapes = scene.nodes
     .map((entry) => {
@@ -310,7 +310,7 @@ export function drawingSceneToSvgMarkup(scene: DrawingScene): string {
 // #endregion 🎨️CanvasRaster
 
 // #region 🎬️PreviewPayload
-/** @emoji 🎬️ Parses a worker preview payload into a {@link DrawingScene}. */
+/** 🎬️ Parses a worker preview payload into a {@link DrawingScene}. */
 export function drawingSceneFromPreviewPayload(payload: unknown): DrawingScene | undefined {
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) return undefined;
   const record = payload as DrawingScene & { error?: string };

@@ -1,4 +1,4 @@
-//! @emoji 📏️ The taffy adapter: `LayoutCx` owns the per-frame `taffy::TaffyTree`, maps
+//! 📏️ The taffy adapter: `LayoutCx` owns the per-frame `taffy::TaffyTree`, maps
 //! [`ui_contract::LayoutSpec`] onto taffy `Style`, and resolves intrinsic measurement + pixel
 //! snapping. **Taffy types never appear in a public signature here or anywhere else in this crate** —
 //! [`LayoutNodeId`] wraps `taffy::NodeId` with a private field for exactly that reason, and

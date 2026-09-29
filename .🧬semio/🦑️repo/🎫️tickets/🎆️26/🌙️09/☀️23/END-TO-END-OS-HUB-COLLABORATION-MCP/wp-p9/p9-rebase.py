@@ -5,12 +5,13 @@ rustfmt pass re-wrapped are re-anchored on the live text by the region they repl
 turns base → stage into the patch set again. Usage: p9-rebase.py --dry-run | --write"""
 import json
 import re
+import os
 import sys
 import types
 from pathlib import Path
 
 TREE = Path("/Users/ueli/Documents/semio")
-STAGE = TREE / ".🧬semio/🌐hub/s14-p9-stage"
+STAGE = TREE / os.environ.get("P9_STAGE", ".🧬semio/🌐hub/s14-p9-stage")
 PATCH = Path(__file__).parent / "patches/p9-agent-lane.py"
 PLUGIN = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs"
 

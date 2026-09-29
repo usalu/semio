@@ -25,6 +25,22 @@ test("declared canonical Rust test evidence retains source identity", () => {
   expect(interactivityProductionSource(policySource)).not.toContain(vector.law);
 });
 
+test("cfg(test) attributes hide exactly their test-only items, same-line or negated", () => {
+  const production = interactivityProductionSource(vector.cfgTestItems.source);
+  for (const kept of vector.cfgTestItems.production) expect(production).toContain(kept);
+  for (const hidden of vector.cfgTestItems.test) expect(production).not.toContain(hidden);
+});
+
+test("rustc independently compiles the cfg(test) item vector with and without the test harness", () => {
+  const path = join(root, vector.cfgTestItems.path);
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, vector.cfgTestItems.source);
+  for (const harness of [["--crate-type", "lib"], ["--test"]]) {
+    const compiled = Bun.spawnSync(["rustc", "--crate-name", "policy_cfg_test_oracle", "--edition", "2021", "-A", "warnings", ...harness, path, "-o", join(root, `cfg-test-oracle-${harness.at(-1)}`)]);
+    expect(compiled.exitCode, compiled.stderr.toString()).toBe(0);
+  }
+}, 30_000);
+
 test("rustc independently accepts and executes the declared canonical module", () => {
   const executable = join(root, process.platform === "win32" ? "oracle.exe" : "oracle");
   const compiled = Bun.spawnSync(["rustc", "--crate-name", "policy_evidence_oracle", "--edition", "2021", "--test", join(root, vector.productionPath), "-o", executable]);

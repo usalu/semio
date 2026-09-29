@@ -154,7 +154,7 @@ export async function renderPrintPanelGlass(options: { readonly manifestPath: st
       .png({ compressionLevel: 9 })
       .toBuffer();
     writeFileSync(join(options.glassDirectory, `${entry.id}.png`), image);
-    console.log(`[DEBUG] print panel glass ${entry.id} page ${entry.page}`);
+    console.log(`[TRACE] print panel glass ${entry.id} page ${entry.page}`);
   }
   writeFileSync(join(options.glassDirectory, ".ready"), "");
 }
@@ -224,7 +224,7 @@ async function compilePrintDocument(tectonic: string, texPath: string, outDirect
   });
   const pdf = join(outDirectory, `${jobname}.pdf`);
   if (!existsSync(pdf)) throw new Error(`missing PDF output: ${pdf}`);
-  console.log(`[DEBUG] print built ${relative(workspaceRoot, pdf)}`);
+  console.log(`[TRACE] print built ${relative(workspaceRoot, pdf)}`);
 }
 
 function writeDerivedDarkTex(lightTexPath: string): string {

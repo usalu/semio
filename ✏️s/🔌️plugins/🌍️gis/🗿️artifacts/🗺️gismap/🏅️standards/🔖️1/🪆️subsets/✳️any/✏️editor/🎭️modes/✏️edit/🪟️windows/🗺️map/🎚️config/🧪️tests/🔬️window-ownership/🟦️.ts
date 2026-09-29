@@ -71,7 +71,6 @@ export function testGisMapWindowOwnershipOracle(): void {
   assert.deepEqual(actual, fixture.expected);
   for (const rejection of fixture.rejections) assert.throws(() => target(fixture.windowInstances, rejection.windowId, rejection.claimedWindowKindId), new RegExp(rejection.code));
   assert.throws(() => parseMapWindowConfig({ ...fixture.baseConfig, layerVisibility: { water: "false" } }));
-  console.log("[DEBUG] gis-map-window-ownership windows=2 schema=ajv implementation=typescript oracle=json-patch document=stable");
 }
 
 testGisMapWindowOwnershipOracle();

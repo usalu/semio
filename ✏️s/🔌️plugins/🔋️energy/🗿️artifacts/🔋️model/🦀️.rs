@@ -178,10 +178,10 @@ use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, M
 
 pub use crate::schema::EnergyModelArtifact;
 
-/// @emoji 🔖️ Document schema / DSL envelope id.
+/// 🔖️ Document schema / DSL envelope id.
 pub const ENERGY_MODEL_DOCUMENT_SCHEMA: &str = "energy.model";
 
-/// @emoji 🧬️ Artifact schema descriptor id.
+/// 🧬️ Artifact schema descriptor id.
 pub const ENERGY_MODEL_ARTIFACT_SCHEMA_ID: &str = "s.energy.model";
 
 //#region 🔖️Dialect

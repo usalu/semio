@@ -5,7 +5,7 @@
 // #endregion 🧲️Header
 
 // #region 🆔️ElementIdentity
-/** @emoji 🆔️ Qualified identity shared by UI elements. */
+/** 🆔️ Qualified identity shared by UI elements. */
 export interface ElementProps {
   readonly id: string;
 }

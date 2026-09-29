@@ -1,7 +1,7 @@
 // #region layout
 //! 🧮️ Flex stack layout for widget trees.
 
-use crate::wgpu::component::ui::{UiControlNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
+use crate::wgpu::component::ui::{UiControlNode, UiTreeActionPlacement, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
 use crate::wgpu::geometry::Rect;
 use crate::wgpu::theme::Theme;
 use ui_contract::SpaceToken;
@@ -133,6 +133,7 @@ pub struct TreeRowMetrics {
     pub control_height_small: f32,
     pub gap: f32,
     pub drag_handle_extent: f32,
+    pub action_gap: f32,
     pub inline: ui_contract::FlowInline,
     standard_row_height: f32,
     standard_control_width: f32,
@@ -169,6 +170,7 @@ impl TreeRowMetrics {
             control_height_small: theme.control_height_small,
             gap: theme.gap_standard,
             drag_handle_extent: crate::wgpu::chrome::ICON_TREE_ROW,
+            action_gap: theme.padding_standard,
             inline: ui_contract::FlowInline::Ltr,
             standard_row_height: theme.tree_row_height,
             standard_control_width: TREE_ROW_CONTROL_WIDTH,
@@ -330,6 +332,44 @@ pub fn tree_row_control_rect_before_drag(row_width: f32, metrics: &TreeRowMetric
     let x = if metrics.inline.is_rtl() { metrics.gap + reservation } else { (row_width - metrics.control_width - metrics.gap - reservation).max(0.0) };
     Rect::new(x, (metrics.row_height - metrics.control_height) * 0.5, metrics.control_width.min((row_width - reservation).max(0.0)), metrics.control_height)
 }
+
+/// 🎬️ A tree or table row's trailing action `slot` (1 = the inline-end-most), relative to the row's own top-left — the one rect
+/// `paint` draws a row action's icon at and the pointer router fires it from. `trailing` is the drag handle's reservation when
+/// the row shows one.
+pub fn tree_row_action_rect(row_width: f32, row_height: f32, slot: usize, trailing: f32, metrics: &TreeRowMetrics) -> Rect {
+    let extent = metrics.drag_handle_extent;
+    let offset = metrics.gap + trailing + slot as f32 * (extent + metrics.action_gap);
+    let x = if metrics.inline.is_rtl() { offset - extent } else { row_width - offset };
+    Rect::new(x, (row_height - extent) * 0.5, extent, extent)
+}
+
+/// 🎬️ The index of the Row-placed action whose slot holds the row-local point: every action takes one slot from the inline end
+/// in reverse authored order, exactly as `paint` counts them, and a Menu-placed one paints and hits nothing in its slot.
+pub fn tree_row_action_at(item: &UiTreeItemNode, row_width: f32, row_height: f32, trailing: f32, metrics: &TreeRowMetrics, x: f32, y: f32) -> Option<usize> {
+    let actions = item.actions.as_deref()?;
+    actions.iter().enumerate().rev().zip(1usize..).find(|((_, action), slot)| action.placement() == UiTreeActionPlacement::Row && tree_row_action_rect(row_width, row_height, *slot, trailing, metrics).contains(x, y)).map(|((index, _), _)| index)
+}
+
+/// 📊️ The trailing actions column of a table whose widest row carries `slots` actions — the span its
+/// [`tree_row_action_rect`] slots occupy, so the header's actions label, the cells and the icons agree.
+pub fn table_actions_width(slots: usize, metrics: &TreeRowMetrics) -> f32 {
+    if slots == 0 {
+        0.0
+    } else {
+        metrics.gap + slots as f32 * (metrics.drag_handle_extent + metrics.action_gap)
+    }
+}
+
+/// 📊️ Column `column` of a `columns`-wide table row (or its header), relative to the row's own top-left: the materialised columns
+/// share the row's inline extent equally, `gap` apart, between the leading gap and the `actions` column — the flow `flex`'s
+/// `LayoutNodeKind::TableRow` lays an editable row's cell children in.
+pub fn table_column_rect(row_width: f32, row_height: f32, column: usize, columns: usize, actions: f32, metrics: &TreeRowMetrics) -> Rect {
+    let span = (row_width - metrics.gap - actions - metrics.gap * columns.saturating_sub(1) as f32).max(0.0);
+    let width = if columns == 0 { 0.0 } else { span / columns as f32 };
+    let offset = metrics.gap + column as f32 * (width + metrics.gap);
+    let x = if metrics.inline.is_rtl() { row_width - offset - width } else { offset };
+    Rect::new(x, 0.0, width, row_height)
+}
 //#endregion 🌳️TreeRowGeometry
 
 //#region 🎛️ControlGeometry
@@ -429,4 +469,8 @@ mod tests;
 #[cfg(test)]
 #[path = "../../../🧪️tests/🌳️tree-row-rects/🦀️.rs"]
 mod tree_row_rect_tests;
+
+#[cfg(test)]
+#[path = "../../../🧪️tests/📊️table-row-grid/🦀️.rs"]
+mod table_row_grid_tests;
 // #endregion layout

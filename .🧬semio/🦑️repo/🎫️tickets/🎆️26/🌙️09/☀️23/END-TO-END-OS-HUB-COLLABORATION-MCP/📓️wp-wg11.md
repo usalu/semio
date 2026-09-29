@@ -6,6 +6,234 @@ Slice WG11 (session 14, 2026-09-27 18:2x), successor of WG9 ([`📓️wp-wg9.md`
 Scripts `wp-wg11/`, captures `wp-wg11/generated/` (expendable), durable logs `.🧬semio/🌐hub/s14-wg11-logs/`. Private cargo
 target `.tmp-ticket/wp-wg11/target`. Landing rows: [`📓️landing.md`](📓️landing.md) `# Session 14`.
 
+## Session 14d
+
+Resumed 2026-09-29 06:4x (after the usage cut, 4 kernel panics and the 01:14 external sweep, which deleted `wp-wg11/generated/` and
+`wp-wg11/w3-backup/` — captures now ONLY under `.🧬semio/🌐hub/s14-wg11-*`, rule 26). All WG11 T3 sets LANDED (L1); LW1 ran the laws
+(`📓️wp-lw1.md`, `.🧬semio/🌐hub/s14-lw1-logs/wg11-laws-{1..5}.txt`). Renderer/shell are guest code → fixes are sets for the first train after
+the chain.
+
+| # | Item | Status |
+|---|------|--------|
+| 1 | shell-turn law overflows its own 1 MiB thread in debug (`a_framework_setting_dispatch_completes_on_a_one_mebibyte_thread`) → find the deep frame, root fix | **root found + set prepared** `wp-wg11/wg11-shell-footprint-patch.py` (5 files, dry run clean, Rust parses): `ShellState` = 400 888 B (icon-export batch 278 008 inlining four phase owners; World3d map inlining two whole entries; World3d retirement owner) → `ShellState::new` frame 803 KB + law closure 410 KB > 1 MiB before dispatch; boxing the phase owners → ≈ 47 KB (computed from the type-size layout); slot-budget pins updated to measured; new size law ≤ 64 KiB |
+| 2 | `ui_value_to_dsl` (wgpu reconcile) turns integer UiValue args into floats (`row: 7` → `Float(7.0)`) → numeric conversion fix + law | **prepared** `wp-wg11/wg11-json-number-patch.py` (6 files, dry run clean on the post-T5 tree): ONE bridge `DslValue::json_number` (value crate) used by the wgpu reconcile AND the SDK typed-intent producer (same defect); semantics proven 11/11 vs Python `json.loads` of the JS text (bun `JSON.stringify` column); repo compile + laws = first train after the chain |
+| 3 | renderer-wgpu full lib 1366 pass / 183 fail + 4 aborts → triage by cause, root fixes | triaged: 134 of 187 are artefacts of a one-process run (process-global engine state; canonical runner = nextest per process); **53 real** reds grouped (log 07:0x). Sets prepared (dry run clean on post-T5 live, applied together in WG11's overlay): `wg11-renderer-test-drift-patch.py` (rule 22, 9 files: corrupt GLB PNG checksums, swapchain/watchdog/hub source-law slices, winit theme tag, reserved-ids fixture, locale Mode identity, panel record key, icon stroke, TextEditor presentation), `wg11-renderer-product-patch.py` (T6, 5 files / 2 crates: hub task region, `Shell …` diagnostic, caret by identity not scene clone, compile via `KernelPoolFuture`, **world3d shadow pipeline lacked `@location(10)`** — every headless/native `GpuContext` panicked), `wg11-display-element-ids-patch.py` (T6, 7 files: one element-id scheme React+wgpu, schema `elementId`); Marketplace windowing on U6's RowTarget (T6, after U6) — next; remaining singletons under runtime proof (overlay build 3) |
+
+### Session 14d log
+
+- 06:5x durable copy of LW1's 06:42 renderer lib-test binary (current tree after T4): `.🧬semio/🌐hub/s14-wg11-bin/renderer-tests-0642`
+  (analysis without cargo). Failure clusters of `wg11-laws-5.txt` (183): presented-input candidate not sealed ~40, component/tree pointer
+  document faulted 26, retained presentation/paint faulted 10, resident capacity exhausted 14, ~90 singletons across interpreter/engine_canvas/
+  scenes/os_host/native_accessibility.
+- 06:5x item 2: root = the UI contract carries every JSON number as `UiValue::Number(f64)` and TWO bridges turned integral values
+  into floats — the wgpu reconcile's `ui_value_to_dsl` (`serde_json::to_value` → `Float(7.0)`) and the SDK's typed-intent producer
+  (`DslValue::float`) — while React's JSON text wire delivers `7`; stdio (`window_kit_required_index_argument`) and tool-run
+  (`tool_run_arg_u64`) had grown per-call-site integral-float tolerance for exactly this. Set `wg11-json-number-patch.py`: `DslValue::
+  json_number(f64)` (safe integer → UInt/Int, non-finite → Null, else Float) + both bridges; shared vectors in `🌱️value/🧫️fixtures/
+  🔣️json-projection/🔣️.json` `numbers` (TS: `JSON.stringify`, Rust: vs serde_json parse). Semantics proof (no repo build): standalone
+  rustc of the exact function vs Python's `json.loads` of bun's `JSON.stringify` output → 11/11 (`.🧬semio/🌐hub/s14-wg11-scratch/json-number/`).
+  The tolerant decoders stay (not mine; now redundant for UiValue-born numbers).
+- 07:0x item 3 FINDING: the canonical renderer test runner (`runCargoTestBudgeted`, `📚️library/🟦️.ts`) runs cargo **nextest** (one
+  PROCESS per test) with `RUST_MIN_STACK` = 128 MiB; LW1 ran plain `cargo test` (all tests in ONE process, parallel threads, default
+  stack). Since 09-06 the renderer's retained engine/interpreter/scene state lives in process-global `WorkerCell`s (worker-safe for the
+  shared pool), so a one-process run makes tests share one UI engine: foreign seals ("presented input candidate could not be sealed —
+  existing seals" ×45 trace lines), foreign windows filling resident capacity, faulted pointer documents. Re-run of all 187 (183 + the 4
+  aborters) ISOLATED, one process each, 128 MiB (the canonical conditions) with the durable binary: **134 PASS, 52 FAIL, 1 abort** (the
+  shell-turn law) — `.🧬semio/🌐hub/s14-wg11-captures/isolated-1.tsv`. The 53 real reds: marketplace panel > 128 document nodes ×4, display
+  projection/template ids ×3, TextEditor fixture identity ×4, scene accessibility buttons (EventFeed, GraphTimeline, Table row/editable text,
+  icon-export cancel) ×6, native AccessKit ×2, source-text laws ×4 (executor bridge `block_on`, legacy scene queue, directory FIFO browser
+  gate, bilingual chrome phrases), slot-table stack budgets ×2, GPU icon export (wgpu validation) ×2, ~26 singletons (camera math, footer
+  bands, pane chips, watchdog signature, swapchain acquire, GLB texture decode, winit theme reason, …).
+- 07:0x item 1: `-Zprint-type-sizes` of the post-T4 renderer (`s14-wg11-captures/type-sizes-1.txt`, lane 162 s) + frame table
+  (`frames-0642-all.txt`): the shell-turn boxing WORKED (`dispatch_action` poll 841 KB → 76 KB); the new overflow is `ShellState` itself
+  (400 888 B: `icon_export` 278 008 = `rendering` 102 704 + `source` GpuContext 100 904 + `preparing` 45 280 + `scene` 26 984;
+  `world3d_states` 54 856 = inline rejected 25 872 + retired 25 864; `component_world3d_retirement` 25 864) → `ShellState::new` frame 803 KB +
+  the law's closure 410 KB > 1 MiB before `dispatch_action` runs. Set `wg11-shell-footprint-patch.py`: those phase owners boxed (exist only
+  while their phase runs) → ShellState ≈ 47 472 B; slot-budget pins (`⏳️async/🧫️fixtures/🧱️boxed-fixed-slots`) to the measured sizes (World3d
+  entry 25 872, map owner 3 136, EngineSurfaceSlot 80 288 / owner 32 — the latter two also clear the 2 red slot-budget laws); law
+  `a_shell_state_stays_small_enough_to_live_on_a_bounded_thread` (≤ 64 KiB). Also found: frames grew a lot since 09-28 14:23
+  (`RuntimeApply::start_frame_deferred` 4.9 → 13.2 MB, `restore_presenter_interaction_step` 4.2 → 11.3 MB) — runtime pool types grew;
+  canonical tests hide it under RUST_MIN_STACK = 128 MiB (noted, not in this set).
+- 07:1x relayed main (items 1–3 status). Coordinator 07:2x: Marketplace = windowed Tree section on U6's (a') RowTarget + RowAction
+  (U6 adds an enabled flag) ordered AFTER U6's set in T6, no inline-toolbar interim, no raised ceiling; Display ids = ONE element-id
+  scheme on both renderers from the schema. All WG11 sets → L1, first post-chain train (T6).
+- 07:2x item 3 root causes (static, each confirmed against the source and git history):
+  - GLB material fixture (09-28, new): embedded PNG bufferView 8 has a wrong zlib Adler-32 (`05fe02fe`, scanline `01 00ff00ff` sums to
+    `04060200`) and so a wrong IDAT CRC — Python `zlib` refuses it too; fixture repaired byte-exactly (same pixel).
+  - `world3d_shadow_pipeline`: `vs_shadow` takes `InstanceInput` whose `@location(10) emissive_cutoff` only the main/translucent
+    hand-copied layouts declared → `create_render_pipeline` Validation Error → native panic in wgpu's default handler (both GPU icon
+    export laws; any native `GpuContext::from_device`), WebGPU silently invalid shadow pipeline. Fix = the one shared
+    `world_vertex_layout()/world_instance_layout()` pair for all three.
+  - Display ids: wgpu composed template segments through `element_id_segment` (09-28), React glued raw ids, fixture pinned raw → one
+    grammar both sides (`childElementId`/`child_element_id`), schema `definitions.elementId` = `ELEMENT_ID_PATTERN`, fixture rewritten.
+  - Marketplace > 128 nodes: the generated activation catalogue (`📇️registry/🤖️generated/🖥️hosts`, 09-29 04:27) now names 44 plugins,
+    3–4 records each (row + toolbar + buttons) → needs windowing (coordinator decision above).
+  - Source laws broken by my own T3 shell-turn set: the hub sign-in law split on `async fn handle_hub_workspace_action(` (now
+    `fn …<'a>(…) -> ShellTurn`); all other `async fn` anchors laws name still exist (checked).
+  - `dock_mode_layout_identity` strips titles by design since 09-27 ("React Mode identity"); the locale law still read titles.
+  - TextEditor focus is presented-tree addressed since 09-27 (`presented_document_id`), the seeded fixture window was never presented.
+  - Peer ticket WGPU-RENDERER-REACT-PARITY (astra/sol, last report 09-28 05:00, "No native pass is claimed") introduced the icon stroke,
+    the svg/graph/text layout changes and several of the remaining singletons without a native run.
+- 07:3x overlay sync now also mirrors gitignored generated inputs (`*.rs` + everything under `🤖️generated/`: tokens, icon SVGs, registry
+  tables) — the first two overlay builds failed on `🔤️tokens/🦀️.rs` and the generated icon SVGs; overlay dev loop is incremental (private
+  build-dir). Build 3 queued: renderer lib tests + every red in its own process (`wg11-isolated.sh`, `isolated-2.tsv`), ui reconcile laws,
+  value `json_number` law.
+- 07:4x coordinator: approved the FULL P5 cut (wgpu twin of `treeWindowBodyRequestsV1` + served memory, shared fixture + cost model,
+  fed by the retained tree's measured viewport/scroll, driving shell-owned windowed panels AND guest `tree_windows`/
+  `tree_viewport_rows`; laws: 10 000-row end reached, served window ≤ body budget, React ≡ wgpu for the same viewport vector) and a
+  native pipeline-creation law; Marketplace = windowed section on U6's RowTarget + `RowAction.disabled` (U6 relay), ordered AFTER U6.
+- 07:49 overlay build 3 (all five sets applied, private build-dir): renderer lib tests COMPILE (8 min); every red in its own process
+  (`isolated-2.tsv`): **22 of 54 now green** — the 1 MiB shell-turn law, the size law, both slot budgets, TextEditor ×4, Display ×2, GLB,
+  executor bridge, watchdog, swapchain, directory FIFO, chrome phrase, hub sign-in, winit theme, reserved ids, locale identity,
+  command-dock form, icon lighting. New finds from that run: (a) `world3d_painted_shader` — its `.replacen` anchor for the emissive
+  line no longer matched (the lit shader gained `+ in.emissive_cutoff.rgb`), `lit_color` was silently never declared → every GPU
+  context refused the painted shader module: edits become one table `WORLD3D_PAINTED_SHADER_EDITS` + CPU law (every anchor exactly
+  once) — in the product set; (b) the value law's fixture rewrite dropped the closing brace (my own set bug, caught by the proof —
+  fixed + a read-back guard); (c) `the_reserved_media_transport_projects_only_truthful_localized_host_status` red for the SAME root as
+  item 2: an Extension's `params_json` is `serde_json::to_string(&UiValue)` and the derived serializer writes `1.0`, so every valid
+  media transport read "invalid contract" → item 2's set now fixes the ROOT: one rule `protocol::value::json_integer` (no DslValue in
+  its signature, so the UI contract may use it), a hand-written `Serialize for UiValue` writing integers as JSON integers, and
+  `DslValue::json_number` on the same rule (the wgpu reconcile needs no change of its own any more); (d) the projection pane parks in
+  `layout` for 1024 opportunities (0.2 s) — the retained layout is pool-driven now and the pane's opportunity cap counts spins;
+  (e) the ingress law's legacy helper list names helpers deleted on 09-26 (drift, fixed).
+- 08:0x P5 written: `wg11-tree-window-patch.py` (ui crate: rule module + neutral vectors/schema written by React's rule, spacer geometry
+  in the retained layout, `Ui::tree_window_measures`, React law reads the same vectors) and `wg11-tree-window-shell-patch.py` (Shell:
+  scheduler twin of `createTreeWindowSchedulerV1`, observer on every completed body paint, settle-pump driven, `live_view_state` stamps
+  the fields — GAP closed); both dry-run clean, queued in overlay build 4 with overlay-only `[DEBUG]` instrumentation for the
+  remaining runtime reds.
+- 08:2x overlay build 4 (`s14-wg11-captures/overlay-dev-4.txt`, `reds-6-panics.txt`): renderer lib compiles with EVERY set; green
+  now: P5 scheduler 3/3, native AX ×2, receipts, ingress, icon GPU export ×2; ui lib failed on two flex-unit `TreeRow` literals
+  without `lead` → tree-window set gains the literals, a flex lead law (both flows) and the rewritten P5 GAP doc in `🧩️component`.
+- 08:3x–08:5x remaining reds root-caused (debug + reading): (a) since 09-21 a retained scene's host id is ENGINE-MINTED and since
+  09-27 input/AX resolve in the PRESENTED tree and only ACCEPTED scene cells publish — the EventFeed / Table button / GraphTimeline /
+  Table editable ×2 / NodeGraph caret wiring laws staged under the authored host id and drove never-presented windows → shared
+  helpers in test-drift (`present_seeded_scene_window`, `retained_scene`, `rebased_scene_key`, `accept_table_editable_text_cells`);
+  (b) map pinch: map camera clamps to cover (800×600 ⇒ zoom ≥ 400), law seeds relative; (c) export-batch law never `publish_hits`;
+  (d) panel tabs are `aria-pressed` since 09-26 (settings law); (e) display-transfer law cleared deferred actions but not the paired
+  journal debt; (f) refused-peer law predates WG8's detached settle refresh → bounded settle drive. Test-drift now 18 files.
+- 08:4x product set 2 `wp-wg11/wg11-renderer-product-2-patch.py` (8 files, dry run clean; after test-drift + product): SVG back-face sign
+  (culled every front face), GraphTimeline chips measured at `text-2xs` with the measured track retained for hit/AX (was
+  `0.43 × xs` per scalar: 85.8 vs React 80.9), centered band rounds INSIDE the band (TS + Rust twin + 2 shared fixture vectors),
+  projection-body rows (`<surface>/<id>`) are chrome presses. Product set 1 gains pre-wrap hanging spaces (`a  b  c  d` law).
+- Open (design needed): projection pane's 1024-opportunity budget counts worker-pool wait polls (712 layout yields, ~600 of them
+  `WorkerPool`/`WorkerTake`/`WorkerOutcome`/`CloseSession` for two layouts — load-dependent); an undecodable image `data:` URL
+  rejects its raster reservation → the upload cursor answers `Fault` → the frame transaction faults, the source is re-offered every
+  paint and blocks the `ui-image` lane for every later image; the 65 535-scalar TextEditor close ladder exceeds 262 144 steps
+  (measuring in build 5). Display fixture logs `panel 'framework.marketplace' exceeds 128 document nodes` (Marketplace item).
+- 08:5x overlay build 5 queued (`overlay-dev-5.txt`): ui + renderer + contract + replication lib tests `--no-run` with all sets
+  (+ product-2); tests run per process from the built binaries afterwards.
+- 09:0x coordinator: L1 paused until window 4; register sets in `📓️t6-queue.md` (rows 7/8 updated: order, crates, laws); the three
+  open design items are WG11's. Designs + sets (all dry-run clean on live except where noted; proven in overlay build 5/6):
+  - `wg11-own-work-budget-patch.py` (ui engine + Interpreter + Shell + navbar laws): `UiLayoutStep::Awaiting` for a pool wait;
+    `UiDocumentFrameCursor::last_step_was_own_work` (false for shared retirement lanes, pool waits and other surfaces' layout
+    steps); the Shell's four retained-document budgets spend an opportunity only on own work (`document_opportunity_remains`).
+  - `wg11-raster-refusal-patch.py` (ui prepared + Scenes + Interpreter + 2 law files): `PreparedRasterRejected::is_content_refusal`;
+    `queue_canvas_image_upload_with` → `Result<String, RasterUploadRefusal::{Busy, Invalid}>`; refused owners park in a fixed
+    per-surface refusal ring retired silently by the upload cursor (admission keeps a slot) — only authority faults still fault the
+    frame; the ui-image resolver keeps `Invalid` sources per id (`UI_IMAGE_REFUSED`) instead of re-offering them every paint.
+  - `wg11-engine-close-pages-patch.py` (EngineCanvas + ✍️editor + laws): every scalar-popping close helper releases a 64 KiB page
+    per grant (`retire_string_page`/`retire_bytes_page`, `EDITOR_RETIREMENT_PAGE_BYTES`) — popping a scalar never freed memory.
+  - `wg11-marketplace-window-patch.py` (T6 row 8; after U6 + tree-window-shell; dry-run clean against U6's overlay via `--base`):
+    rows carry row actions on ONE target with disabled verbs, one windowed roster section fed by the P5 scheduler, windowed shell
+    bodies publish as scroll roots, `PanelProjection::tree_item` projects `actions` → `row_actions` + one `RowTarget`.
+- 09:1x full renderer lib, per process, on the build-4 binary (`s14-wg11-captures/full4-c{0..3}.tsv`, 1 568 tests): 28 reds, all
+  root-caused above, plus two new ones found by the full run — `tool_run_panel_*` ×2 pinned the OLD float echo (`generation: 0.0`)
+  that json-number fixes; the json-number set now updates them to the JSON integer React sends. Marketplace ×3 +
+  `every_shell_owned_leaf_projects_into_retained_records` (`exceeds 128 document nodes`) are row 8's. TS laws in the overlay
+  (`overlay-ts-2.txt`, ignored wasm bindings mirrored): ChromePanels/display ids 11/11, engine-contract Display+delivery 20/20,
+  Interpreter tree-window vectors 28/28. Finding (not WG11's): the value module's TS laws (`testSharedDynamicValueOracle`,
+  `testPagedListOwnership`) are exported functions no runner calls — run by hand in the overlay with bun: PASS.
+- U6's own ui run (`s14-u6-logs/t4-q6-prove2.txt`) lists six ui-crate reds; four are renderer-owned and checked in WG11's build 5 ui
+  run: `world_mesh_instance_packs_policy_and_standard_material_without_stride_growth` (the 09-28 GLB material channel grew the
+  stride 96 → 112), `ui_surface_slot_table_is_heap_first_and_fits_a_bounded_thread_stack` (slot-size fixture),
+  `every_world_color_cursor_uses_the_encoded_composite_attachment`, `an_enabled_shadow_pass_measures_every_caster_before_its_receivers`.
+- 09:21 overlay build 5 (`overlay-dev-5.txt`): ALL 12 sets compile (json-number, shell-footprint, test-drift, product, product-2,
+  raster-refusal, display ids, tree-window, tree-window-shell, own-work-budget, engine-close-pages + debug). Per process:
+  ui lib 739/743 (`ui5-c*.tsv`; reds = four 09-28 law drifts: stride 96→112, encoded-pipeline list +4 authored pipelines, prepared
+  order label `world-postprocess`, slot budget 164 672→164 712 — all added to test-drift, now 22 files); renderer lib 1 556/1 570
+  (`full5-c*.tsv`): fixed and green — display transfer, refused peer, settings, icon export cancel, footer bands, pane chip, diff
+  pre-wrap, SVG fill, raster avatar, draft-pages close, closed_world3d, table button + graph checkpoint wiring, tool-run (json-number).
+  Remaining 10 → second round of drift edits in test-drift (EventFeed action names the MOUNTED surface id; table draft seeds before
+  the edit; NodeGraph cadence API answers `Some((surface, None))`; AX value publishes through the retained page; the sibling law
+  drains its retired World3d owner before the shell drops) + build-6 debug for the projection pane (now parks in PAINT once layout
+  waits stopped counting), GraphTimeline shaped track numbers, and the board half of the pinch law. Marketplace ×3 +
+  `every_shell_owned_leaf_projects_into_retained_records` are row 8's.
+- 10:27 (after the session cut; disk cleanup removed the overlay build outputs) build 6 queued behind lb2/c12/p9 (cold).
+- 11:0x T7b set `wp-wg11/wg11-text-kerning-patch.py` (after T7a; 9 files, crate semio-framework-ui; dry run clean on the overlay with
+  all 12 sets + T7a; rustfmt-clean; joined build 6's patch list so T7a and T7b prove in one lane hold). Probes (`text/`): Chromium
+  kerning is PAIRWISE for Anta/Share Tech Mono — every corpus row's kerned width = unkerned + Σ adjacent pair kerns within 0.008 px
+  (`kerning-pairs-probe.ts`); opentype.js 1.3.4 under-applies Anta's GPOS (2.7 px off) so it is NOT an oracle — Chromium is.
+  Design: `text::PairKerning` shapes the pair alone (swash, design units, liga/clig/calt off) less its nominal advances, faces held
+  once so the context stays warm; the atlas caches it per face+pair (bounded, bitmap never kerns); ONE rule (`pen_kerning`: kern
+  against the previous scalar once the pen left the line start) in measure, range, pre-wrap and greedy wrap, the retained painter
+  (wrap pricing, overflow, pen) and the widget pen loops (now one `pen_glyph_run`); `pen_advance`/`pen_at` give the per-scalar walk
+  and the caret x (a caret after a kerned pair includes it, as Chromium's); the layout worker carries each glyph's kerning to the
+  next scalar of its run and adds it only while both scalars share a line. Corpus (T7b) = T7a's 120 rows + one strongly kerned
+  en/de pair (`AVATAR To Wave`, `VATER, Tätowierung`) with a `kernedWidthPx` column: 54/144 rows kern, up to 9.5 px. Laws: T7a's
+  unkerned law now sums advances; ADDED kerned-column law, one-source law (A+V −0.0928, f+o −0.0391 em = Chromium), measure/wrap/
+  caret law, painter law (glyph x = kerned caret; kerned wrap keeps `over`), mounted-layout worker law. TS law (overlay): 2/2 incl.
+  Chromium re-measure of both columns. Product set: the pre-wrap law's `"one\n\ntwo"` was emitted as raw newlines — now escaped.
+- 11:1x rustfmt pass over every set (`wp-wg11/wg11-fmt-sets.py`: rustfmt --check in the overlay vs the live tree, each group only
+  the overlay shows is rewritten in the set's replacement text): 15 groups auto-fixed + 7 by hand (import order in the Tree
+  target and mounted layout, `UiLayoutStep` stays compact with `Awaiting` documented on the enum, the three world pipelines'
+  `VertexState` collapse after the shared layouts, the editor close condition, the Scenes admission chain, the Display windows
+  section literal). Remaining rustfmt groups in touched files are pre-existing (icon-export's compact arms, export-batch law).
+  All 13 sets re-applied cleanly to a fresh overlay sync. Incident: that manual sync+apply overlapped build 6's own hold
+  (granted 11:13:12, cargo from 11:13:33, cold deps) — it rewrote the set files at 11:14:18 (same final content) and dropped the
+  debug lines, re-added at 11:15 before the renderer crate compiled; no set file changes again until build 6 ends.
+- 11:13 build 6 HELD (`overlay-dev-6.txt`): all 13 sets (incl. T7a + T7b) + debug applied rc=0; ui lib → renderer lib → editor.
+- 11:15 ui lib test binary (`ui-bin-6`, 751 tests, per process `ui6-c{0,1}.tsv`): **748 ok / 3 red**. All T7a + T7b laws GREEN —
+  unkerned corpus (advance sum) and KERNED corpus (144 rows ≤ 0.5 px vs Chromium), quarter-pixel DPI key, exact fractional advances,
+  one layout/atlas advance source, one kerning source (A+V, f+o = Chromium), measure/wrap/caret rule, retained painter at the kerned
+  caret + kerned wrap, mounted-layout worker kerning. The 3 reds, all root-fixed in the sets (proof = build 7):
+  (1) `ui_surface_slot_table_is_heap_first…` 164 712 → 165 840 B: every retained window's inline layout jobs carry the worker's
+  shaping context → T7b pins the measured size in the boxed-fixed-slots fixture;
+  (2) `section_and_field_measure_the_shared_wrapped_chrome_fixture` (field hug 83.2 vs 115.2): the fixture's 112 px field box was
+  sized under the 0.625 em stand-in — Chromium sets "Shown before control" (111.9 px, 0.06 px from the break) and "Fix this value
+  now" on ONE line there; T7a moves the box to 80 px where Chromium wraps both (probe `text/section-field-probe.ts`);
+  (3) `section_and_field_chrome_paint_only_inside_their_measured_bands`: painted with the fixed-pitch bitmap atlas a layout priced in
+  Anta's advances — T7a paints it with `FontAtlas::shaped_default` (the layout's own advance source). Finding (no gap): Chromium's
+  synthetic bold does NOT widen Anta's advances (`text/synthetic-bold-probe.ts`), so the faux semibold keeping advances is right.
+- 11:22 TS laws in the overlay (`overlay-ts-6.txt`): ChromePanels 11/11, engine-contract 20/20, Interpreter tree windows 28/28,
+  text corpus (both columns, Chromium re-measure) + navbar band + GraphTimeline layout 26/26.
+- 11:24–11:35 renderer lib per process (`renderer-bin-6`, `full6-c{0..3}.tsv`): **1 561 / 1 570**. Green now: all second-round
+  wiring laws (EventFeed, table draft/Enter/Escape, AX value echo, NodeGraph cadence), `a_focused_world_window_does_not_retire…`,
+  GraphTimeline `shared_layout_contract…` (track 80.959 vs React 80.9375 — the T7 criterion), SVG, footer bands, map pinch. Reds:
+  marketplace ×3 + panel-anchor (row 8, U6); `icon_gpu_export_cancellation…` (8.7 ms > 2 ms ceiling at load 21; green twice in
+  isolation — load flake); and three root-fixed in sets for build 7:
+  (a) board pinch — `[DEBUG] board down scene.2.1 hosted=true drag_active=false`: a backdrop press opens
+  `Interaction::SelectionPending` (click-vs-marquee threshold) which `board_drag_active` did not count, so a release off-surface
+  before the threshold never reached the host → NEW set `wg11-board-lane-patch.py` (T6 row 7, independent):
+  `BoardHost::pointer_lane_in_flight` (pending or live area select + every `defers_descriptor_sync_from_js` gesture), EngineCanvas
+  asks it (twin of `tiled_map_drag_active`, live from the map's press);
+  (b) `checkpoint_regions_match_react…` — the fixture's `x` (read only by the wgpu law; React's twin clicks DOM regions) put the
+  selectable edge at 157, a boundary no React geometry makes: React's checkpoint spans the `auto` label column (`Head` 23.33 +
+  `px-1.5`×2 + `px-single`×2 = 41.70, LayoutUnit 3.1875) and the 96 px graph column from 23.19 → 160.89 (probe
+  `text/chip-probe.ts`). product-2 re-derives `graph-select` 160.5 / inert 162.5 (clear of T6's quantized 161.9); T7a tightens
+  the inert sample to 161.25 (exact advances land at 160.93);
+  (c) projection pane ×2 — paint advances one grant per step (`[DEBUG] paint … progress 0…418`, `proj6.txt`) and faulted at
+  the 1 024 ceiling: the converging body needs ~1 034 OWN opportunities (~600 layout = worker outcome take + apply per job step
+  for each scalar and node stage, ~430 paint). The ceiling's derivation ("15 rows × 9 phases + one grant per scalar fit several
+  times over") omitted the worker round trips → own-work-budget sets it to 4 096 (≈4× the measured need; the pane is React's
+  fixed taxonomy). Build 7 prints the pane's own count (overlay-only debug).
+- 11:35 build 7 queued (7th in FIFO): 14 sets (+ board-lane) + T7 fixes + debug (projection layout steps + pane count).
+  Chain verified in a fresh overlay sync (all rc=0) while far from the lane head; TS twins of the changed fixtures (section-field,
+  checkpoint-hit, text corpus) 19/19.
+- 12:00 build 7 HELD (`overlay-dev-7.txt`, all 14 sets + T7 + debug rc=0; ui 7 s, renderer 28 s incremental — binaries verified to
+  carry the new code). **ui lib 751/751** per process (`ui7-c{0,1}.tsv`) — T7a + T7b fully green incl. the three former reds.
+  **renderer lib 1 564/1 570** (`full7-c{0..3}.tsv`): board pinch ✓ (board-lane), checkpoint regions ✓ (fixture re-derived),
+  icon-export timing green; left = row 8 ×4 and projection ×2, which now COMPLETE (own work 1 405 < 4 096) but publish 19 row hits
+  against React's 15: the four group rows also carry their disclosure hit (`tree.chevron.<id>`, the retained-section-collapse
+  design) and the laws counted every hit under the pane parent → test-drift filters row (label) hits. Debug trace (`proj7.txt`):
+  two layout passes (the pane re-solves once it hugs its measured content), 600 pool waits not counted, ~800 paint grants.
+- 12:04 build 8 queued (projection law filter + measured budget doc).
+- 12:50 build 8 (`overlay-dev-8.txt`): renderer 1 564/1 570 (`full8-c*.tsv`); the projection laws now count 15 label rows, sit
+  inside the pane, read top-down — and stop on the pane's ROW IDS: `world_projection_pane_rows` glued the raw template id
+  (`…paneTop.three-point`) while React's `projection-pane` fixture, the Display rows and the Shell's own default-selection stamp
+  (`element_id_segment`) use the element-id grammar (`…paneTop.threePoint`) — so the stamped selection never matched a row
+  (fold law `selected == None`) and the declared-order lookup found nothing. Root fix joins the display-element-ids set (one
+  element-id scheme): the pane rows compose through `child_element_id`. Build 9 queued 12:52.
+
 ## Session 14c
 
 Successor agent (2026-09-28 16:5x, second restart; chain relaunched 16:55:46, GUEST FREEZE ON, 7800 DOWN until the chain moves it onto ALL).

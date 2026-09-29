@@ -22,7 +22,6 @@ async fn rewriting_map_ownership_transport_preserves_entry_presence() {
         let actual: serde_json::Value = serde_json::from_str(&pack::to_json_string(&current.parameter_bindings)).unwrap();
         assert_eq!(actual, row["after"], "{}", row["name"]);
     }
-    println!("[DEBUG] Rewriting persisted map edits preserved explicit null entries and removals");
 }
 
 /// 🪢 Coalesced map edits retain successful sequential application over the original base.
@@ -41,5 +40,4 @@ async fn rewriting_map_ownership_absorb_preserves_sequential_application() {
         }
         assert_eq!(combined.apply(&base).as_ref(), Ok(&current), "{}", row["name"]);
     }
-    println!("[DEBUG] Rewriting map-edit composition matched sequential application");
 }

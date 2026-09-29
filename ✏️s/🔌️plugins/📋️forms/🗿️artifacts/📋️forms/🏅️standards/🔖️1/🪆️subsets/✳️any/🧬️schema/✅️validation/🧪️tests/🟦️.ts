@@ -13,5 +13,4 @@ export function testFormsValidation(): void {
     assert.equal(actual, test.error, test.name);
     assert.equal(actual === null, ajv.compile(test.oracle)(test.value), test.name);
   }
-  console.log(`[DEBUG] Forms answer validation matched ${fixture.cases.length} shared vectors and Ajv formats`);
 }

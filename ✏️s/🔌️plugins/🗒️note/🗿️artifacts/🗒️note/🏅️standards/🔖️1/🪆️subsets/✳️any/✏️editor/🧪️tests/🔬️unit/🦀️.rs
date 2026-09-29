@@ -462,7 +462,7 @@ async fn interaction_topology_is_empty_for_a_document_with_no_blocks() {
 /// 🕹️ Retained verb over the framework-owned selection: `delete-selection` reads the "blocks" selection
 /// resolved into `NoteDispatchCtx`. Driven at the handler with that selection because the native app harness
 /// hands a migrated verb's tool job an EMPTY `InteractionState` (ticket 26/09/17/NOTE-PLUGIN-END-TO-END,
-/// proven with `[DEBUG]` instrumentation); the react shell delivers it — the ticket's interact probe picks a
+/// proven with `[TRACE]` instrumentation); the react shell delivers it — the ticket's interact probe picks a
 /// tree row and presses Delete.
 #[semio_framework_async_macros::async_test]
 async fn delete_selection_deletes_the_selected_blocks() {
@@ -503,7 +503,6 @@ async fn note_empty_config_owner_registry_rejects_nonempty_pack_and_retires_term
         assert!(app.load_config_pack(&foreign).await.is_err(), "framework NoConfig must reject nonempty app bytes");
         assert!(app.config_pack().await.expect("NoConfig after rejection").pack.is_empty());
         close_app(&mut app).await;
-        eprintln!("[DEBUG] Note registry used framework NoConfig, rejected foreign app bytes, and retired its exact config owner terminal-empty");
     })
     .await;
 }
@@ -546,7 +545,6 @@ async fn note_empty_config_owner_exact_composite_window_cameras_isolate_and_relo
         assert_eq!(render_with_view(&mut reopened, NOTE_PLAY_BODY_COMPOSITE, &view_b).await, composite_b);
         close_app(&mut reopened).await;
         close_app(&mut app).await;
-        eprintln!("[DEBUG] two Note composite windows published and rendered independent cameras, preserved document and app configuration, reloaded both exact persistent partitions, and closed their registered apps");
     })
     .await;
 }
@@ -587,7 +585,6 @@ async fn note_empty_config_owner_exact_composite_window_transient_isolates_reset
         assert_eq!(cancelled.get::<window::NoteCompositeWindowTransientOwner>().map(|value| value.engagement_input.as_str()), Some(""));
         drop(cancelled);
         close_app(&mut app).await;
-        eprintln!("[DEBUG] Note composite transient input stayed exact-window isolated, document reload reset ephemeral state, replacement cancelled an unpublished retained mutation, and registered app close reached terminal-empty ownership");
     })
     .await;
 }

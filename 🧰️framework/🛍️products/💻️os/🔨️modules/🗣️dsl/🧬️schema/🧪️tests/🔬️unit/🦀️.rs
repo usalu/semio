@@ -261,7 +261,7 @@ async fn primitive_statements_collection_preserves_order_and_round_trips() {
 }
 
 // --- primitive 4: recursive sub-blocks ---
-/// @emoji 🌳️ Genuinely self-referential: `children`'s own variant table names `group_spec`
+/// 🌳️ Genuinely self-referential: `children`'s own variant table names `group_spec`
 /// itself. Lazy `fn() -> RecordSpec` entries make this sound — `group_spec()` doesn't recurse
 /// just to build the table, only `parse`/`print` calling the stored fn pointer one level at a
 /// time (as deep as real input actually nests) ever evaluates it again.

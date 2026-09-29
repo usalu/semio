@@ -57,7 +57,6 @@ fn variant_level_field_casing_overrides_container_and_matches_neutral_serde_orac
     verify(VariantOverrideInternal::Bar { material_id: "m1".into(), section_id: "s1".into() }, &corpus["internal"]);
     verify(VariantOverrideExternal::Bar { material_id: "m1".into(), section_id: "s1".into() }, &corpus["external"]);
     verify(VariantOverrideAdjacent::Bar { material_id: "m1".into(), section_id: "s1".into() }, &corpus["adjacent"]);
-    eprintln!("[DEBUG] variant-owned field casing agrees with serde and three neutral wire shapes");
 }
 
 /// 🔑 The wire key names this derive emits, in emission order. `serde_json::Value`'s map compares

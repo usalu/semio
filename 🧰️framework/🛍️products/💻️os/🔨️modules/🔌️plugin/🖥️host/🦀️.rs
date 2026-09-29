@@ -192,37 +192,40 @@ impl Default for SharedEngineConfig {
 /// `OnDemand` allocation — the fallback knob §2 asks for — if the pooling allocator rejects `cfg` on
 /// this host (e.g. insufficient virtual address space, or a hardened container); the returned `bool`
 /// reports which strategy actually got used, for logging/metrics.
+///
+/// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): NOT optional. `world
+/// actor` imports `host-async`, whose 24 `async func`s only lift/lower under the
+/// component-model async ABI; and S7's categorical finding runs the other way too — with
+/// this on, a plain sync `func` export becomes uncallable, which is exactly why all seven of
+/// the world's exports gained `async` in the same edit. `Config::concurrency_support` (what
+/// `Store::run_concurrent` and `StreamReader` need) defaults to `true` and is left alone —
+/// wasmtime rejects a Config that enables component-model-async while disabling it.
+///
+/// 🐛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (V1b): `total_component_instances` alone is
+/// not enough — the pooling allocator meters CORE instances, memories and tables from
+/// separate pools that each default to 1000, and one component instance consumes several
+/// of each (guest module + wasip2 adapter + composed modules). At full scale the bench
+/// died with "maximum concurrent limit of 1000 for core instances reached" while the
+/// component pool still had thousands free. Sized off the component budget rather than
+/// hardcoded, so raising one knob no longer silently leaves the others behind.
+///
+/// ♻️ The FOURTH sub-pool with its own 1000 default, found only because fixing the third
+/// let the bench run far enough to hit it ("maximum concurrent GC heap limit of 1000
+/// reached"). Every one of these caps is invisible until the scale exceeds it, so they
+/// surface one run at a time; sized off the same component budget as the rest.
 pub async fn build_shared_engine(cfg: SharedEngineConfig) -> Result<(Engine, bool), PluginHostError> {
     let build = |pooling: bool| -> wasmtime::Result<Engine> {
         let mut config = Config::new();
         config.wasm_component_model(true);
-        // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): NOT optional. `world
-        // actor` imports `host-async`, whose 24 `async func`s only lift/lower under the
-        // component-model async ABI; and S7's categorical finding runs the other way too — with
-        // this on, a plain sync `func` export becomes uncallable, which is exactly why all seven of
-        // the world's exports gained `async` in the same edit. `Config::concurrency_support` (what
-        // `Store::run_concurrent` and `StreamReader` need) defaults to `true` and is left alone —
-        // wasmtime rejects a Config that enables component-model-async while disabling it.
         config.wasm_component_model_async(true);
         config.consume_fuel(cfg.fuel_metering);
         config.epoch_interruption(true);
         if pooling {
             let mut pooling_cfg = PoolingAllocationConfig::default();
             pooling_cfg.total_component_instances(cfg.total_component_instances);
-            // 🐛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (V1b): `total_component_instances` alone is
-            // not enough — the pooling allocator meters CORE instances, memories and tables from
-            // separate pools that each default to 1000, and one component instance consumes several
-            // of each (guest module + wasip2 adapter + composed modules). At full scale the bench
-            // died with "maximum concurrent limit of 1000 for core instances reached" while the
-            // component pool still had thousands free. Sized off the component budget rather than
-            // hardcoded, so raising one knob no longer silently leaves the others behind.
             pooling_cfg.total_core_instances(cfg.total_component_instances * CORE_INSTANCES_PER_COMPONENT);
             pooling_cfg.total_memories(cfg.total_component_instances * MEMORIES_PER_COMPONENT);
             pooling_cfg.total_tables(cfg.total_component_instances * TABLES_PER_COMPONENT);
-            // ♻️ The FOURTH sub-pool with its own 1000 default, found only because fixing the third
-            // let the bench run far enough to hit it ("maximum concurrent GC heap limit of 1000
-            // reached"). Every one of these caps is invisible until the scale exceeds it, so they
-            // surface one run at a time; sized off the same component budget as the rest.
             pooling_cfg.total_gc_heaps(cfg.total_component_instances * MEMORIES_PER_COMPONENT);
             pooling_cfg.max_memory_size(cfg.max_memory_bytes);
             pooling_cfg.linear_memory_keep_resident(cfg.linear_memory_keep_resident_bytes);
@@ -283,7 +286,7 @@ impl PeriodicPoolTimer {
     /// ▶️ Registers the first tick. `tick` must be quick and non-blocking — it runs inside the pool's
     /// timer firing — as the epoch/heartbeat bodies below are: a single atomic increment or a short,
     /// already-buffered write.
-    // 🚫️async: E1-adjacent — no suspension point of its own (only REGISTERS the tick). See R9.
+    /// 🚫️async: E1-adjacent — no suspension point of its own (only REGISTERS the tick). See R9.
     fn start(pool: &WorkerPool, interval_ms: u64, tick: impl FnMut() -> bool + Send + 'static) -> Self {
         let stop = Arc::new(AtomicBool::new(false));
         Self::schedule(pool, interval_ms, Arc::new(Mutex::new(tick)), Arc::clone(&stop));
@@ -674,7 +677,16 @@ pub struct PackageRef {
 pub struct CompiledHandle {
     pub package_hash: [u8; 32],
     component: Option<Arc<Component>>,
-    owned: Option<Arc<OwnedSemioArtifact>>,
+    owned: Option<Arc<OwnedCompiledGuest>>,
+}
+
+impl CompiledHandle {
+    /// 📏️ The bytes this compiled guest holds beyond its parsed component: the owned interpreter's codec origin once a
+    /// codec call assembled it ([`OwnedCodecOriginCell`]), else none. A residency budget charges a compiled guest this
+    /// on top of its component.
+    pub fn codec_origin_bytes(&self) -> u64 {
+        self.owned.as_ref().map_or(0, |owned| owned.codec_origin.resident_bytes())
+    }
 }
 
 impl std::fmt::Debug for CompiledHandle {
@@ -713,7 +725,7 @@ impl GuestInstance {
     /// own diagnostics were armed when the instance was built, because that is the only condition
     /// under which the guest is given an environment that makes it print at all (see
     /// [`guest_wasi_ctx`]). This is the wasm-hosted counterpart of reading the browser console: the
-    /// SAME `[DEBUG]`/`[BUDGET]` lines the native in-process suites print, now observable from a
+    /// SAME `[TRACE]`/`[BUDGET]` lines the native in-process suites print, now observable from a
     /// real `wasm32-wasip2` component.
     pub fn guest_diagnostics_text(&self) -> Option<String> {
         match &self.state {
@@ -736,12 +748,12 @@ impl std::fmt::Debug for GuestInstance {
 }
 
 enum GuestInstanceState {
-    // 🧪️ Only `MockGuestRuntime` (`#[cfg(test)]`) ever constructs this variant — `#[allow(dead_code)]`
-    // rather than `#[cfg(test)]` on the variant itself, so `GuestInstanceState` stays a REFUTABLE
-    // match target (`Wasmtime` is not the only variant) in every build config; a `#[cfg(test)]`
-    // variant would make the `let GuestInstanceState::Wasmtime(state) = .. else { .. }` guards in
-    // `WasmtimeRuntime`'s own methods irrefutable outside `cfg(test)`, turning their `else` arms into
-    // a NEW dead-code warning instead of fixing one.
+    /// 🧪️ Only `MockGuestRuntime` (`#[cfg(test)]`) ever constructs this variant — `#[allow(dead_code)]`
+    /// rather than `#[cfg(test)]` on the variant itself, so `GuestInstanceState` stays a REFUTABLE
+    /// match target (`Wasmtime` is not the only variant) in every build config; a `#[cfg(test)]`
+    /// variant would make the `let GuestInstanceState::Wasmtime(state) = .. else { .. }` guards in
+    /// `WasmtimeRuntime`'s own methods irrefutable outside `cfg(test)`, turning their `else` arms into
+    /// a NEW dead-code warning instead of fixing one.
     #[allow(dead_code)]
     Mock(MockInstanceState),
     Owned(OwnedInstanceState),
@@ -1200,9 +1212,9 @@ impl GuestRuntime for MockGuestRuntime {
         Ok(GuestInstance { actor, state: GuestInstanceState::Mock(MockInstanceState::default()) })
     }
 
+    /// 👶️ host-dedyn: identical body to before this packet — no suspension point, so this
+    /// resolves on its very first poll, same contract `GuestRuntime`'s own doc comment names.
     async fn execute_turn(&self, inst: &mut GuestInstance, events: &[Event], _budget: Budget) -> Result<TurnResult, TurnFault> {
-        // 👶️ host-dedyn: identical body to before this packet — no suspension point, so this
-        // resolves on its very first poll, same contract `GuestRuntime`'s own doc comment names.
         self.observed_turns.lock().expect("mock turn trace").push((inst.actor.0, events.to_vec(), _budget));
         self.observed_events.lock().map_err(|_| TurnFault::Host(PluginHostError::LockPoisoned("mock runtime")))?.entry(inst.actor.0).or_default().extend_from_slice(events);
         let mut scripts = self.scripts.lock().map_err(|_| TurnFault::Host(PluginHostError::LockPoisoned("mock runtime")))?;
@@ -1302,6 +1314,106 @@ const OWNED_RESULT_LIMIT: usize = 64 * 1024 * 1024;
 const OWNED_CHECKPOINT_MAGIC: &[u8; 8] = b"SMOWNH01";
 const OWNED_STEP_FUEL: u64 = 4_096;
 const OWNED_SLICE_DEADLINE_MS: u32 = 8;
+
+/// 🧊️ The artifact schema a codec origin's assembly asks `codec.pack-schema-hash` for: one no app declares, so the
+/// export assembles the bundle, answers its refusal and touches no app's codec.
+const OWNED_CODEC_ORIGIN_SCHEMA: &str = "";
+
+/// ⏲️ How often a codec call waiting for another call's origin assembly relays that assembly's fuel and looks at its
+/// own cancellation.
+const OWNED_CODEC_ORIGIN_WAIT_POLL: std::time::Duration = std::time::Duration::from_millis(50);
+
+/// 🧠️ One component compiled for the owned interpreter: its parsed artifact, and the origin its codec calls start from
+/// once one of them assembled it.
+struct OwnedCompiledGuest {
+    artifact: Arc<OwnedSemioArtifact>,
+    codec_origin: OwnedCodecOriginCell,
+}
+
+/// 🧊️ A compiled guest's codec origin: its owned instance right after a first codec export assembled the plugin bundle
+/// (`__semio_ensure_plugin_runtime`: every artifact declared, every mutation roster, the built bundle) and completed.
+/// Measured on catalog B3 (H12, 2026-09-27): a fresh instance spends 521.5 M of a puzzle codec call's 524.7 M fuel on that
+/// assembly and the operation itself ≈ 3.2 M, and every codec call used to pay it on a throwaway instance. Each codec call
+/// now starts from a copy of this state, so every call still sees exactly the same guest — the assembled bundle and
+/// nothing another call did — and answers byte for byte what a fresh instance answers.
+struct OwnedCodecOrigin {
+    actor: OwnedSemioInstance,
+    diagnostics: Vec<u8>,
+    context: i32,
+    next_resource: i32,
+    assembly_fuel: u64,
+}
+
+impl OwnedCodecOrigin {
+    /// 📏️ What the origin holds: the guest's linear memory and what it printed while assembling.
+    fn resident_bytes(&self) -> u64 {
+        u64::try_from(self.actor.memory().map_or(0, <[u8]>::len).saturating_add(self.diagnostics.len())).unwrap_or(u64::MAX)
+    }
+}
+
+/// 🚦️ Where one compiled guest's codec origin stands; `Assembling` carries the fuel the assembly reported so far.
+enum OwnedCodecOriginState {
+    Absent,
+    Assembling { fuel: u64 },
+    Ready(Arc<OwnedCodecOrigin>),
+}
+
+/// 🧊️ The codec origin of one compiled guest, assembled once, by the first codec call that needs it. A call that arrives
+/// while another assembles waits for that assembly instead of running a second one, relays its fuel as its own progress —
+/// a stall bound watching the waiter sees the assembly move, and sees it stop — and observes its own cancellation. An
+/// assembly that faults, is cancelled or panics leaves the origin absent, and the next call assembles it itself.
+struct OwnedCodecOriginCell {
+    state: std::sync::Mutex<OwnedCodecOriginState>,
+    settled: std::sync::Condvar,
+}
+
+impl OwnedCodecOriginCell {
+    fn new() -> Self {
+        Self { state: std::sync::Mutex::new(OwnedCodecOriginState::Absent), settled: std::sync::Condvar::new() }
+    }
+
+    fn lock(&self) -> std::sync::MutexGuard<'_, OwnedCodecOriginState> {
+        self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
+    }
+
+    fn resident_bytes(&self) -> u64 {
+        match &*self.lock() {
+            OwnedCodecOriginState::Ready(origin) => origin.resident_bytes(),
+            OwnedCodecOriginState::Absent | OwnedCodecOriginState::Assembling { .. } => 0,
+        }
+    }
+
+    /// 📈️ Records the running assembly's fuel for the calls waiting on it.
+    fn assembled_so_far(&self, fuel: u64) {
+        if let OwnedCodecOriginState::Assembling { fuel: reported } = &mut *self.lock() {
+            *reported = fuel;
+        }
+        self.settled.notify_all();
+    }
+}
+
+/// 🧊️ A codec call's use of its compiled guest's origin: the origin, the fuel THIS call spent assembling it (the part of its
+/// budget it used), and the fuel it already reported as progress — the assembly's own, or the one it relayed while it waited
+/// for another call's — so its operation's progress continues from there instead of starting over.
+struct OwnedCodecOriginUse {
+    origin: Arc<OwnedCodecOrigin>,
+    spent_fuel: u64,
+    reported_fuel: u64,
+}
+
+/// 🧯️ One origin assembly in flight: however it ends — with an origin, a fault, a cancellation or a panic — the cell
+/// settles (ready, or absent again) and every waiting call wakes.
+struct OwnedCodecOriginAssembly<'a> {
+    cell: &'a OwnedCodecOriginCell,
+    origin: Option<Arc<OwnedCodecOrigin>>,
+}
+
+impl Drop for OwnedCodecOriginAssembly<'_> {
+    fn drop(&mut self) {
+        *self.cell.lock() = self.origin.take().map_or(OwnedCodecOriginState::Absent, OwnedCodecOriginState::Ready);
+        self.cell.settled.notify_all();
+    }
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
 enum OwnedOperation {
@@ -1483,17 +1595,85 @@ impl OwnedRuntime {
 
     pub fn compile_component(&self, package: &PackageRef, bytes: &[u8]) -> Result<CompiledHandle, PluginHostError> {
         let artifact = OwnedSemioArtifact::parse(bytes).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
-        Ok(CompiledHandle { package_hash: package.hash.0, component: None, owned: Some(Arc::new(artifact)) })
+        Ok(CompiledHandle { package_hash: package.hash.0, component: None, owned: Some(Arc::new(OwnedCompiledGuest { artifact: Arc::new(artifact), codec_origin: OwnedCodecOriginCell::new() })) })
     }
 
     pub fn instantiate_actor(&self, compiled: &CompiledHandle, actor: RuntimeActorId) -> Result<GuestInstance, PluginHostError> {
-        let artifact = compiled.owned.as_ref().ok_or_else(|| PluginHostError::Plugin("CompiledHandle has no repository-owned actor artifact".to_string()))?;
+        let artifact = &owned_compiled_guest(compiled)?.artifact;
         let owned = artifact.instantiate().map_err(|error| PluginHostError::Plugin(error.to_string()))?;
         if owned.startup_active() {
             return Err(PluginHostError::Plugin("owned actor has an undriven start function".to_string()));
         }
         let instance_id = self.next_instance_id.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         Ok(GuestInstance { actor, state: GuestInstanceState::Owned(OwnedInstanceState { artifact: Arc::clone(artifact), actor: owned, pending: None, poisoned: false, diagnostics: Vec::new(), context: 0, next_resource: 1, instance_id }) })
+    }
+
+    /// 🧊️ `owned`'s codec origin for one call ([`OwnedCodecOriginUse`]). While another call assembles it, this one waits,
+    /// relays that assembly's fuel through `progress` and observes `cancellation`; if that assembly ends without an origin,
+    /// this call assembles it.
+    fn codec_origin(&self, owned: &OwnedCompiledGuest, budget: Budget, progress: &mut impl FnMut(u64, std::time::Duration), cancellation: Option<&GuestCallCancellation>) -> Result<OwnedCodecOriginUse, TurnFault> {
+        let cell = &owned.codec_origin;
+        let started = std::time::Instant::now();
+        let mut relayed = 0;
+        let mut state = cell.lock();
+        loop {
+            match &*state {
+                OwnedCodecOriginState::Ready(origin) => return Ok(OwnedCodecOriginUse { origin: Arc::clone(origin), spent_fuel: 0, reported_fuel: relayed }),
+                OwnedCodecOriginState::Absent => break,
+                OwnedCodecOriginState::Assembling { fuel } => {
+                    if *fuel > relayed {
+                        relayed = *fuel;
+                        progress(relayed, started.elapsed());
+                    }
+                    if cancellation.is_some_and(GuestCallCancellation::is_cancelled) {
+                        return Err(TurnFault::Cancelled);
+                    }
+                    state = cell.settled.wait_timeout(state, OWNED_CODEC_ORIGIN_WAIT_POLL).unwrap_or_else(std::sync::PoisonError::into_inner).0;
+                }
+            }
+        }
+        *state = OwnedCodecOriginState::Assembling { fuel: 0 };
+        drop(state);
+        let mut assembly = OwnedCodecOriginAssembly { cell, origin: None };
+        let origin = Arc::new(self.assemble_codec_origin(
+            owned,
+            budget,
+            |fuel, elapsed| {
+                cell.assembled_so_far(fuel);
+                progress(fuel, elapsed);
+            },
+            cancellation,
+        )?);
+        assembly.origin = Some(Arc::clone(&origin));
+        let fuel = origin.assembly_fuel;
+        Ok(OwnedCodecOriginUse { origin, spent_fuel: fuel, reported_fuel: fuel })
+    }
+
+    /// 🏗️ Runs `codec.pack-schema-hash` for [`OWNED_CODEC_ORIGIN_SCHEMA`] on a fresh instance — every owned codec export
+    /// first assembles the plugin bundle — and keeps the instance it completed on. Its answer, a refusal, is read only to
+    /// know the export completed as the ABI says.
+    fn assemble_codec_origin(&self, owned: &OwnedCompiledGuest, budget: Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: Option<&GuestCallCancellation>) -> Result<OwnedCodecOrigin, TurnFault> {
+        let actor = owned.artifact.instantiate()?;
+        if actor.startup_active() {
+            return Err(TurnFault::Host(PluginHostError::Plugin("owned actor has an undriven start function".to_string())));
+        }
+        let instance_id = self.next_instance_id.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let mut state = OwnedInstanceState { artifact: Arc::clone(&owned.artifact), actor, pending: None, poisoned: false, diagnostics: Vec::new(), context: 0, next_resource: 1, instance_id };
+        let encoded = serde_json::to_vec(&OwnedCodecInput { artifact_schema: OWNED_CODEC_ORIGIN_SCHEMA, document_id: "", pack: &[], spr: &[], ops: &[] }).map_err(|error| PluginHostError::Json(error.to_string()))?;
+        begin_owned_operation(&mut state, OwnedOperation::PackSchemaHash, Some(encoded))?;
+        let invocation = resume_owned_operation_observed(&mut state, OwnedOperation::PackSchemaHash, budget.fuel, budget.deadline_ms, OwnedDeadline::NoFuelProgress, progress, cancellation)?;
+        match decode_owned_result::<Vec<u8>>(&invocation.output) {
+            Ok(_) | Err(TurnFault::Guest(_)) => {}
+            Err(fault) => return Err(fault),
+        }
+        Ok(OwnedCodecOrigin { actor: state.actor, diagnostics: state.diagnostics, context: state.context, next_resource: state.next_resource, assembly_fuel: invocation.fuel_used })
+    }
+
+    /// 🧬️ A throwaway instance of `owned` in its codec origin's state.
+    fn codec_instance(&self, owned: &OwnedCompiledGuest, origin: &OwnedCodecOrigin) -> GuestInstance {
+        let instance_id = self.next_instance_id.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let state = OwnedInstanceState { artifact: Arc::clone(&owned.artifact), actor: origin.actor.clone(), pending: None, poisoned: false, diagnostics: origin.diagnostics.clone(), context: origin.context, next_resource: origin.next_resource, instance_id };
+        GuestInstance { actor: RuntimeActorId(0), state: GuestInstanceState::Owned(state) }
     }
 
     pub fn execute_actor_turn(&self, inst: &mut GuestInstance, events: &[Event], budget: Budget) -> Result<TurnResult, TurnFault> {
@@ -1534,18 +1714,22 @@ impl OwnedRuntime {
         self.describe_observed(compiled, budget, |_, _| {}).await
     }
 
-    /// 🌱️ Runs one of the component's four pure `codec` functions on a throwaway instance. This is
+    /// 🌱️ Runs one of the component's pure `codec` functions on a throwaway instance. This is
     /// the host half of ticket 26/09/18 slice TC3b: a headless server resolves a document kind's
     /// schema fingerprint, its canonical empty document, its pair-validation mirror and its edit
     /// apply from the component itself, so a package whose Rust codec the server does not link is
-    /// still fully creatable and editable. The instance is created and dropped per call — nothing
-    /// here observes or mutates live actor state.
-    fn codec_call<T: serde::de::DeserializeOwned>(&self, compiled: &CompiledHandle, operation: OwnedOperation, input: &OwnedCodecInput<'_>, budget: Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: Option<&GuestCallCancellation>) -> Result<T, TurnFault> {
-        let mut instance = self.instantiate_actor(compiled, RuntimeActorId(0)).map_err(TurnFault::Host)?;
+    /// still fully creatable and editable. The instance is a copy of the compiled guest's codec
+    /// origin ([`OwnedCodecOrigin`]), created and dropped per call — nothing here observes or mutates
+    /// live actor state, and no call sees what another did. `budget.fuel` bounds the call including
+    /// the origin assembly it may run first; `progress` reports both as one count.
+    fn codec_call<T: serde::de::DeserializeOwned>(&self, compiled: &CompiledHandle, operation: OwnedOperation, input: &OwnedCodecInput<'_>, budget: Budget, mut progress: impl FnMut(u64, std::time::Duration), cancellation: Option<&GuestCallCancellation>) -> Result<T, TurnFault> {
+        let owned = owned_compiled_guest(compiled)?;
+        let used = self.codec_origin(owned, budget, &mut progress, cancellation)?;
+        let mut instance = self.codec_instance(owned, &used.origin);
         let state = owned_state_mut(&mut instance)?;
         let encoded = serde_json::to_vec(input).map_err(|error| PluginHostError::Json(error.to_string()))?;
         begin_owned_operation(state, operation, Some(encoded))?;
-        let invocation = resume_owned_operation_observed(state, operation, budget.fuel, budget.deadline_ms, OwnedDeadline::NoFuelProgress, progress, cancellation)?;
+        let invocation = resume_owned_operation_observed(state, operation, budget.fuel.saturating_sub(used.spent_fuel), budget.deadline_ms, OwnedDeadline::NoFuelProgress, |fuel, elapsed| progress(used.reported_fuel.saturating_add(fuel), elapsed), cancellation)?;
         decode_owned_result(&invocation.output)
     }
 
@@ -1722,6 +1906,10 @@ impl GuestRuntime for OwnedRuntime {
     async fn drop_instance(&self, inst: GuestInstance) {
         self.drop_actor(inst);
     }
+}
+
+fn owned_compiled_guest(compiled: &CompiledHandle) -> Result<&OwnedCompiledGuest, PluginHostError> {
+    compiled.owned.as_deref().ok_or_else(|| PluginHostError::Plugin("CompiledHandle has no repository-owned actor artifact".to_string()))
 }
 
 fn owned_state_mut(inst: &mut GuestInstance) -> Result<&mut OwnedInstanceState, TurnFault> {
@@ -2174,17 +2362,18 @@ impl WasiView for ActorHostState {
 /// the GUEST's perf traces through. `semio_framework_trace::RUNTIME_DIAGNOSTICS_ENV` resolves lazily
 /// and exactly once inside the guest, so handing it across at instantiate is enough. A host whose
 /// own diagnostics are off hands across NOTHING, which is what keeps a release run clean with no
-/// second switch and no build-profile cfg — the guest's `[DEBUG]` sites stay compiled in and stay
+/// second switch and no build-profile cfg — the guest's `[TRACE]` sites stay compiled in and stay
 /// silent. Mirrors the browser host's `localStorage`-seeded `getEnvironment` shim (ticket
 /// 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️audit-guest-tick-cost-2026-09-12.md` §4 rank 1).
+///
+/// 🩺️ A guest whose traces are armed must also have somewhere to write them: the sandboxed
+/// default ctx drops `wasi:cli/stderr` on the floor, which is why a wasmtime-hosted guest's
+/// `eprintln!` has never been readable the way the browser console reads it.
 fn guest_wasi_ctx() -> (WasiCtx, Option<wasmtime_wasi::p2::pipe::MemoryOutputPipe>) {
     let mut builder = WasiCtxBuilder::new();
     if !semio_framework_job::runtime_diagnostics_enabled() {
         return (builder.build(), None);
     }
-    // 🩺️ A guest whose traces are armed must also have somewhere to write them: the sandboxed
-    // default ctx drops `wasi:cli/stderr` on the floor, which is why a wasmtime-hosted guest's
-    // `eprintln!` has never been readable the way the browser console reads it.
     let diagnostics = wasmtime_wasi::p2::pipe::MemoryOutputPipe::new(GUEST_DIAGNOSTICS_CAPACITY_BYTES);
     builder.env(semio_framework_job::RUNTIME_DIAGNOSTICS_ENV, "1").stderr(diagnostics.clone());
     (builder.build(), Some(diagnostics))
@@ -2253,9 +2442,9 @@ fn classify_guest_trap(trap: &impl std::fmt::Debug) -> TurnFault {
 /// 🧬️ `pure` (`📜️wit/📜️pure.wit`) is `world actor`'s ONLY import — `log`/`now-ms`/`trace-span`,
 /// none fallible, none async.
 impl actor_bindings::semio::framework::pure::Host for ActorHostState {
-    // 🚫️async: E1 — `wasmtime::component::bindgen!` generates this `Host` trait from the WIT
-    // interface, which declares `log`/`now-ms`/`trace-span` sync (see doc comment above); the
-    // trait's signature is external and fixed, not chosen by this repo. See R9/R2 E1.
+    /// 🚫️async: E1 — `wasmtime::component::bindgen!` generates this `Host` trait from the WIT
+    /// interface, which declares `log`/`now-ms`/`trace-span` sync (see doc comment above); the
+    /// trait's signature is external and fixed, not chosen by this repo. See R9/R2 E1.
     fn log(&mut self, level: String, message: String) {
         eprintln!("[actor:{}:{level}] {message}", self.plugin_id);
     }
@@ -2291,8 +2480,8 @@ impl wit_lifetime::Host for ActorHostState {}
 /// mandatory `drop`, so this impl exists to satisfy the linker and can never actually be called:
 /// no host function hands a `Surface` handle to the guest, so no handle exists to drop.
 impl wit_ui::HostSurface for ActorHostState {
-    // 🚫️async: E1 — `bindgen!` fixes this signature (the resource-destructor hook wasmtime calls
-    // when a guest handle goes out of scope); it is not chosen by this repo. See R9/R2 E1.
+    /// 🚫️async: E1 — `bindgen!` fixes this signature (the resource-destructor hook wasmtime calls
+    /// when a guest handle goes out of scope); it is not chosen by this repo. See R9/R2 E1.
     fn drop(&mut self, _rep: wasmtime::component::Resource<wit_ui::Surface>) -> wasmtime::Result<()> {
         Ok(())
     }
@@ -2305,10 +2494,10 @@ impl wit_ui::HostSurface for ActorHostState {
 /// the poll world's own delivery mechanism, so an `emit`ed effect reaches the host through exactly
 /// the path an effect returned from `poll` would.
 impl wit_host_async::Host for ActorHostState {
-    // 🚫️async: E1 — `bindgen!` declares `emit`/`emit-patch` sync because the WIT does (see
-    // `host-async`'s own doc comment on why these two stay fire-and-forget). Both bodies are a
-    // single `Vec::push` with no suspension point, so nothing is lost: the ASYNC half of the work
-    // (`wit_effect_to_kernel`) is deferred to `execute_turn`, which can await it properly.
+    /// 🚫️async: E1 — `bindgen!` declares `emit`/`emit-patch` sync because the WIT does (see
+    /// `host-async`'s own doc comment on why these two stay fire-and-forget). Both bodies are a
+    /// single `Vec::push` with no suspension point, so nothing is lost: the ASYNC half of the work
+    /// (`wit_effect_to_kernel`) is deferred to `execute_turn`, which can await it properly.
     fn emit(&mut self, value: wit_effects::Effect) {
         self.emit_sink.push(value);
     }
@@ -2466,17 +2655,18 @@ pub struct WasmtimeRuntime {
 }
 
 impl WasmtimeRuntime {
+    /// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): `Actor::add_to_linker`
+    /// defines BOTH of the collapsed world's imports in one call (`pure` + `host-async`) —
+    /// adding only `pure` now leaves 24 imports unresolved and every instantiation fails with
+    /// "a matching implementation was not found in the linker".
+    ///
+    /// 🌐️ `add_to_linker_async`, not `_sync`: the Store is component-model-async now, and the
+    /// sync WASI shim installs host functions that cannot be called from an async-lifted guest.
     pub async fn new(cfg: SharedEngineConfig) -> Result<Self, PluginHostError> {
         let (engine, pooling_active) = build_shared_engine(cfg).await?;
         let epoch = EpochDeadlines::new(&engine, &plugin_host_worker_pool());
         let mut linker = Linker::new(&engine);
-        // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): `Actor::add_to_linker`
-        // defines BOTH of the collapsed world's imports in one call (`pure` + `host-async`) —
-        // adding only `pure` now leaves 24 imports unresolved and every instantiation fails with
-        // "a matching implementation was not found in the linker".
         actor_bindings::Actor::add_to_linker::<ActorHostState, wasmtime::component::HasSelf<ActorHostState>>(&mut linker, |state: &mut ActorHostState| state).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
-        // 🌐️ `add_to_linker_async`, not `_sync`: the Store is component-model-async now, and the
-        // sync WASI shim installs host functions that cannot be called from an async-lifted guest.
         wasmtime_wasi::p2::add_to_linker_async(&mut linker).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         let engine_config_hash = shared_engine_config_hash(&cfg, pooling_active).await;
         let isolated_engine = SharedEngineConfig { force_on_demand: !pooling_active, ..cfg }.to_isolated_arg();
@@ -2685,22 +2875,32 @@ impl GuestRuntimes {
 //#endregion 🗂️GuestCodecDispatch
 
 impl GuestRuntime for WasmtimeRuntime {
+    /// 🚫️async: R13/R14 corollary — `let _ = <async call>;` used to suppress the lint while
+    /// silently dropping this call's future: the on-disk compilation cache write never ran, so
+    /// `compile` was recompiling from wasm bytes on every single call regardless of
+    /// `load_compiled_component`'s cache-hit path above. Best-effort by design (a failed cache
+    /// write must not fail `compile` itself), so the `Result` still discards, only the future
+    /// is now actually driven.
     async fn compile(&self, package: &PackageRef, bytes: &[u8]) -> Result<CompiledHandle, PluginHostError> {
         let cache_path = compiled_cache_path(&self.cache_root, &self.engine_config_hash, &package.hash.0).await;
         if let Some(component) = load_compiled_component(&self.engine, &cache_path).await {
             return Ok(CompiledHandle { package_hash: package.hash.0, component: Some(Arc::new(component)), owned: None });
         }
         let component = Component::from_binary(&self.engine, bytes).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
-        // 🚫️async: R13/R14 corollary — `let _ = <async call>;` used to suppress the lint while
-        // silently dropping this call's future: the on-disk compilation cache write never ran, so
-        // `compile` was recompiling from wasm bytes on every single call regardless of
-        // `load_compiled_component`'s cache-hit path above. Best-effort by design (a failed cache
-        // write must not fail `compile` itself), so the `Result` still discards, only the future
-        // is now actually driven.
         let _ = store_compiled_component(&component, &cache_path).await;
         Ok(CompiledHandle { package_hash: package.hash.0, component: Some(Arc::new(component)), owned: None })
     }
 
+    /// 🐛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-wasmtime-upgrade): wasmtime 22.0.1's
+    /// `bindgen!`-generated `Actor::instantiate` returned `(Actor, wasmtime::component::Instance)`;
+    /// wasmtime 47.0.3 dropped the raw `Instance` from the convenience wrapper (it was never used
+    /// here anyway — every subsequent call goes through `bindings`' own typed accessors) and
+    /// returns bare `Actor` instead. See `path2.rs`'s expanded bindgen output in
+    /// `wasmtime-internal-component-macro-47.0.3/tests/expanded/` for the confirmed new shape.
+    ///
+    /// 🧬️ B1 world-collapse: `instantiate_async`, not `instantiate` — the world's `host-async`
+    /// imports are async host functions, and the sync entry point refuses a Store whose linker
+    /// carries any.
     async fn instantiate(&self, compiled: &CompiledHandle, actor: RuntimeActorId, caps: &[BrokerCapabilityGrant], budget: &Budget) -> Result<GuestInstance, PluginHostError> {
         let component = compiled.component.as_ref().ok_or_else(|| PluginHostError::Plugin("CompiledHandle has no wasmtime Component — built by MockGuestRuntime::compile, not WasmtimeRuntime::compile".to_string()))?;
         let instance_id = self.next_instance_id.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
@@ -2723,20 +2923,35 @@ impl GuestRuntime for WasmtimeRuntime {
         let deadline = Arc::new(EpochDeadlineCell::default());
         self.epoch.install(&mut store, Arc::clone(&deadline));
         let _epoch = self.epoch.arm(&mut store, &deadline, budget.deadline_ms as u64);
-        // 🐛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-wasmtime-upgrade): wasmtime 22.0.1's
-        // `bindgen!`-generated `Actor::instantiate` returned `(Actor, wasmtime::component::Instance)`;
-        // wasmtime 47.0.3 dropped the raw `Instance` from the convenience wrapper (it was never used
-        // here anyway — every subsequent call goes through `bindings`' own typed accessors) and
-        // returns bare `Actor` instead. See `path2.rs`'s expanded bindgen output in
-        // `wasmtime-internal-component-macro-47.0.3/tests/expanded/` for the confirmed new shape.
-        //
-        // 🧬️ B1 world-collapse: `instantiate_async`, not `instantiate` — the world's `host-async`
-        // imports are async host functions, and the sync entry point refuses a Store whose linker
-        // carries any.
         let bindings = actor_bindings::Actor::instantiate_async(&mut store, component, &self.linker).await.map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         Ok(GuestInstance { actor, state: GuestInstanceState::Wasmtime(WasmtimeInstanceState { store, bindings, instance_id, deadline }) })
     }
 
+    /// 🚫️async: R10 residue shape 1 — `kernel_event_to_wit` is async, hoisted out of the sync
+    /// `Iterator::map` closure via a plain loop.
+    ///
+    /// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): `poll` is `async func`
+    /// now, so it is driven through `Store::run_concurrent`'s `Accessor` rather than called
+    /// directly against `&mut Store` — that is the ONLY shape wasmtime offers for an async-lifted
+    /// export, and it is what lets the guest suspend on a `host-async` import mid-turn without
+    /// unwinding the call. Args are owned (moved into the concurrent task), not borrowed.
+    /// A turn's pages are staged FIRST, in the same concurrent task, so the guest reads them off
+    /// its staging slot instead of carrying them through `poll`'s leaked parameter area.
+    ///
+    /// 🚪️ B1 world-collapse: everything the guest pushed through `host-async.emit` during THIS
+    /// turn is delivered on the same `turn-result` as the effects it returned — one merged list,
+    /// emitted-first (they happened earlier in the turn, by construction).
+    ///
+    /// 👥️ M2 render-plane presence (sol's ruling, 26/08/20): `presence-update.update` is a
+    /// pack-encoded `ui_contract::PresenceUpdate`, NOT the replication `PresencePeer` the
+    /// record originally declared — the consumer of a turn result is the renderer, which
+    /// needs `(surface, node_key)` addressing and a TTL, while the collaboration roster keeps
+    /// its own channel (`ephemeral_snapshot` out, `AppCommand::Presence`/`adopt_presence`
+    /// in). Symmetric with the guest's `kernel_presence_update_to_wit`.
+    ///
+    /// A malformed entry is SKIPPED rather than failing the turn, matching `AppCommand::
+    /// Presence`'s own roster-decode convention: presence is best-effort and TTL-scoped, so
+    /// one bad update must not cost the actor an otherwise valid turn's patches and effects.
     async fn execute_turn(&self, inst: &mut GuestInstance, events: &[Event], budget: Budget) -> Result<TurnResult, TurnFault> {
         let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
             return Err(TurnFault::Trapped("execute_turn called on a non-wasmtime GuestInstance".to_string()));
@@ -2745,16 +2960,7 @@ impl GuestRuntime for WasmtimeRuntime {
         arm_store_fuel(store, self.fuel_metering, budget.fuel).map_err(|error| TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))?;
         let _epoch = self.epoch.arm(store, deadline, budget.deadline_ms as u64);
         let wit_budget = wit_reactor::Budget { fuel: budget.fuel, deadline_ms: budget.deadline_ms, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames };
-        // 🚫️async: R10 residue shape 1 — `kernel_event_to_wit` is async, hoisted out of the sync
-        // `Iterator::map` closure via a plain loop.
         let (wit_events, wit_command_page, wit_cold_pair_page) = kernel_turn_inputs_to_wit(events, *instance_id).await?;
-        // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): `poll` is `async func`
-        // now, so it is driven through `Store::run_concurrent`'s `Accessor` rather than called
-        // directly against `&mut Store` — that is the ONLY shape wasmtime offers for an async-lifted
-        // export, and it is what lets the guest suspend on a `host-async` import mid-turn without
-        // unwinding the call. Args are owned (moved into the concurrent task), not borrowed.
-        // A turn's pages are staged FIRST, in the same concurrent task, so the guest reads them off
-        // its staging slot instead of carrying them through `poll`'s leaked parameter area.
         let call_result = store
             .run_concurrent(async |accessor| {
                 if let Some((cursor, bytes)) = wit_command_page {
@@ -2776,9 +2982,6 @@ impl GuestRuntime for WasmtimeRuntime {
             Err(trap) => return Err(classify_guest_trap(&trap)),
         };
         let wit_turn_result = poll_result.map_err(decode_guest_plugin_error)?;
-        // 🚪️ B1 world-collapse: everything the guest pushed through `host-async.emit` during THIS
-        // turn is delivered on the same `turn-result` as the effects it returned — one merged list,
-        // emitted-first (they happened earlier in the turn, by construction).
         let emitted: Vec<wit_effects::Effect> = std::mem::take(&mut store.data_mut().emit_sink);
         let emitted_patches: Vec<wit_ui::UiPatch> = std::mem::take(&mut store.data_mut().emit_patch_sink);
         let mut effects = Vec::with_capacity(emitted.len() + wit_turn_result.effects.len());
@@ -2790,16 +2993,6 @@ impl GuestRuntime for WasmtimeRuntime {
         Ok(TurnResult {
             ui_patches,
             effects,
-            // 👥️ M2 render-plane presence (sol's ruling, 26/08/20): `presence-update.update` is a
-            // pack-encoded `ui_contract::PresenceUpdate`, NOT the replication `PresencePeer` the
-            // record originally declared — the consumer of a turn result is the renderer, which
-            // needs `(surface, node_key)` addressing and a TTL, while the collaboration roster keeps
-            // its own channel (`ephemeral_snapshot` out, `AppCommand::Presence`/`adopt_presence`
-            // in). Symmetric with the guest's `kernel_presence_update_to_wit`.
-            //
-            // A malformed entry is SKIPPED rather than failing the turn, matching `AppCommand::
-            // Presence`'s own roster-decode convention: presence is best-effort and TTL-scoped, so
-            // one bad update must not cost the actor an otherwise valid turn's patches and effects.
             presence: {
                 let mut updates = Vec::with_capacity(wit_turn_result.presence.len());
                 for entry in wit_turn_result.presence {
@@ -2820,19 +3013,20 @@ impl GuestRuntime for WasmtimeRuntime {
         })
     }
 
-    // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): every export below is
-    // `async func` in the WIT now, so each goes through `Store::run_concurrent` + `Accessor` — the
-    // same shape `execute_turn` uses, and the only one wasmtime offers for an async-lifted export.
-    // The doubled `Result` is unchanged in meaning: outer = trap, inner = `plugin-error`.
+    /// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): every export below is
+    /// `async func` in the WIT now, so each goes through `Store::run_concurrent` + `Accessor` — the
+    /// same shape `execute_turn` uses, and the only one wasmtime offers for an async-lifted export.
+    /// The doubled `Result` is unchanged in meaning: outer = trap, inner = `plugin-error`.
+    ///
+    /// ⏱️ The host's own ceilings, never the guest's grant — see [`GUEST_JOB_WATCHDOG_MS`]. Armed
+    /// HERE because `start-job` armed nothing at all and inherited whatever the preceding
+    /// `execute_turn`/`step-job` left in the store: a start after a fully spent turn began with
+    /// an already-passed epoch and no fuel.
     async fn start_job(&self, inst: &mut GuestInstance, job: u64, kind: &str, input: Vec<u8>) -> Result<(), TurnFault> {
         let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
             return Err(TurnFault::Trapped("start_job called on a non-wasmtime GuestInstance".to_string()));
         };
         let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
-        // ⏱️ The host's own ceilings, never the guest's grant — see [`GUEST_JOB_WATCHDOG_MS`]. Armed
-        // HERE because `start-job` armed nothing at all and inherited whatever the preceding
-        // `execute_turn`/`step-job` left in the store: a start after a fully spent turn began with
-        // an already-passed epoch and no fuel.
         let _epoch = self.arm_guest_watchdog(store, deadline).map_err(TurnFault::Host)?;
         let kind = kind.to_string();
         store
@@ -2843,12 +3037,12 @@ impl GuestRuntime for WasmtimeRuntime {
             .map_err(|error| TurnFault::Trapped(format!("{error:?}")))
     }
 
+    /// ⏱️ …and the guest still receives its own cooperative grant, unchanged, on `wit_budget`.
     async fn step_job(&self, inst: &mut GuestInstance, job: u64, budget: JobBudget) -> Result<JobStep, TurnFault> {
         let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
             return Err(TurnFault::Trapped("step_job called on a non-wasmtime GuestInstance".to_string()));
         };
         let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
-        // ⏱️ …and the guest still receives its own cooperative grant, unchanged, on `wit_budget`.
         let _epoch = self.arm_guest_watchdog(store, deadline).map_err(TurnFault::Host)?;
         let wit_budget = wit_jobs::JobBudget { fuel: budget.fuel, deadline_ms: budget.deadline_ms };
         let step = store
@@ -2864,18 +3058,19 @@ impl GuestRuntime for WasmtimeRuntime {
         })
     }
 
+    /// ⏱️ A cancellation may arrive long after the step that preceded it, and an epoch deadline
+    /// is ABSOLUTE — an unarmed `cancel-job` ran against the previous crossing's spent deadline
+    /// and trapped the instance it was trying to wind down. See [`GUEST_JOB_WATCHDOG_MS`].
+    ///
+    /// 🧬️ `jobs.wit`'s `cancel-job: async func(job: u64);` has no `result<_, plugin-error>`
+    /// wrapper (unlike `start-job`/`step-job`), so only the trap-level results can fail: one
+    /// from `run_concurrent` itself, one from the call.
     async fn cancel_job(&self, inst: &mut GuestInstance, job: u64) -> Result<(), TurnFault> {
         let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
             return Err(TurnFault::Trapped("cancel_job called on a non-wasmtime GuestInstance".to_string()));
         };
         let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
-        // ⏱️ A cancellation may arrive long after the step that preceded it, and an epoch deadline
-        // is ABSOLUTE — an unarmed `cancel-job` ran against the previous crossing's spent deadline
-        // and trapped the instance it was trying to wind down. See [`GUEST_JOB_WATCHDOG_MS`].
         let _epoch = self.arm_guest_watchdog(store, deadline).map_err(TurnFault::Host)?;
-        // 🧬️ `jobs.wit`'s `cancel-job: async func(job: u64);` has no `result<_, plugin-error>`
-        // wrapper (unlike `start-job`/`step-job`), so only the trap-level results can fail: one
-        // from `run_concurrent` itself, one from the call.
         store.run_concurrent(async |accessor| bindings.semio_framework_jobs().call_cancel_job(accessor, job).await).await.map_err(|error| classify_guest_trap(&error))?.map_err(|error| classify_guest_trap(&error))
     }
 
@@ -2908,9 +3103,9 @@ impl GuestRuntime for WasmtimeRuntime {
             .map_err(|error| PluginHostError::Plugin(format!("{error:?}")))
     }
 
+    /// 🗑️ `Store<ActorHostState>` and its `Component` `Arc` drop with `_inst` — nothing else to
+    /// release; the pooling allocator reclaims the instance's slab on `Store` drop.
     async fn drop_instance(&self, _inst: GuestInstance) {
-        // 🗑️ `Store<ActorHostState>` and its `Component` `Arc` drop with `_inst` — nothing else to
-        // release; the pooling allocator reclaims the instance's slab on `Store` drop.
     }
 }
 
@@ -2936,9 +3131,9 @@ impl GuestRuntime for WasmtimeRuntime {
 pub enum GuestRuntimes {
     Owned(OwnedRuntime),
     Wasmtime(WasmtimeRuntime),
-    // 🔮️ a later packet adds `AsyncActor(AsyncPluginRuntime)` here, backed by wasmtime's
-    // `component-model-async` — do not mount `⏳️runtime/🦀️.rs` from this packet (out of scope, needs a
-    // rewritten schema; see this ticket's brief).
+    /// 🔮️ a later packet adds `AsyncActor(AsyncPluginRuntime)` here, backed by wasmtime's
+    /// `component-model-async` — do not mount `⏳️runtime/🦀️.rs` from this packet (out of scope, needs a
+    /// rewritten schema; see this ticket's brief).
     #[cfg(test)]
     Mock(Arc<MockGuestRuntime>),
     #[cfg(test)]
@@ -3189,6 +3384,16 @@ fn wit_command_ingress_to_kernel(status: wit_reactor::CommandIngressStatus) -> s
 /// 🐛️ Guest → host: WIT `effect` (`📜️wit/📜️effects.wit`) to `semio_framework::kernel::Effect`.
 /// `Err` is returned (never a silently-wrong `Effect`) for `io-run` — the one variant with no
 /// kernel counterpart yet (`## blocked-on` in the report).
+///
+/// 🚧️ blocked-on-A3: no `Effect::IoRun` variant exists yet (`## blocked-on` in the report).
+///
+/// 🚫️async: R10 residue shape 1 — `decode_dsl` is async, hoisted out of `Option::and_then`'s
+/// sync closure below (and at every other `.args.and_then(|bytes| decode_dsl(&bytes))` site
+/// in this match).
+///
+/// 🧬️ A2b narrowed `request-media-frames-effect.payload` from `option<pack>` to
+/// `option<string>` (correctly honoring the kernel as SSOT) — already a `String`, no
+/// decode needed.
 async fn wit_effect_to_kernel(effect: wit_effects::Effect) -> Result<Effect, PluginHostError> {
     use wit_effects::Effect as E;
     Ok(match effect {
@@ -3206,15 +3411,11 @@ async fn wit_effect_to_kernel(effect: wit_effects::Effect) -> Result<Effect, Plu
         E::LinkResolve(inner) => Effect::LinkResolve { req: RequestId(inner.req), link: String::from_utf8_lossy(&inner.link).into_owned() },
         E::RegistryQuery(inner) => Effect::RegistryQuery { req: RequestId(inner.req), kind: inner.params.kind, filter: decode_dsl(&inner.params.filter).await },
         E::IoCompose(inner) => Effect::IoCompose { req: RequestId(inner.req), key: String::from_utf8_lossy(&inner.params.key).into_owned(), sources: decode_json(&inner.params.sources).await.unwrap_or_default() },
-        // 🚧️ blocked-on-A3: no `Effect::IoRun` variant exists yet (`## blocked-on` in the report).
         E::IoRun(_inner) => return Err(PluginHostError::Plugin("effect io-run has no semio_framework::kernel::Effect variant yet (needs A3 to add Effect::IoRun) — see 📓️terra-B1-host-native-report.md".to_string())),
         E::CacheDerive(inner) => Effect::CacheDerive { req: RequestId(inner.req), engine_id: inner.params.engine_id, input: inner.params.input },
         E::CacheRead(inner) => Effect::CacheRead { req: RequestId(inner.req), engine_id: inner.params.engine_id, key: String::from_utf8_lossy(&inner.params.key).into_owned() },
         E::OpenWindow(inner) => Effect::OpenWindow { req: RequestId(inner.req), kind: WindowKindId(inner.params.kind), params: decode_dsl(&inner.params.params).await.unwrap_or(DslValue::Null) },
         E::CloseWindow(inner) => Effect::CloseWindow { window: WindowHandle(inner.window as u128) },
-        // 🚫️async: R10 residue shape 1 — `decode_dsl` is async, hoisted out of `Option::and_then`'s
-        // sync closure below (and at every other `.args.and_then(|bytes| decode_dsl(&bytes))` site
-        // in this match).
         E::DispatchAction(inner) => {
             let args = match inner.params.args {
                 Some(bytes) => decode_dsl(&bytes).await,
@@ -3249,6 +3450,7 @@ async fn wit_effect_to_kernel(effect: wit_effects::Effect) -> Result<Effect, Plu
             Effect::OpenDialog { req: RequestId(inner.req), dialog_id: inner.params.dialog_id, args }
         }
         E::IconRenderExport(inner) => Effect::IconRenderExport { items: decode_json(&inner.items).await.unwrap_or_default() },
+        E::VideoRenderExport(inner) => Effect::VideoRenderExport { filename: inner.filename, program: decode_dsl(&inner.program).await.and_then(|value| dsl::from_dsl_value(value).ok()).unwrap_or_default() },
         E::DownloadMediaExport(inner) => Effect::DownloadMediaExport { filename: inner.filename, mime_type: inner.mime_type, data: inner.data, encoding: inner.encoding },
         E::RequestFileOpen(inner) => Effect::RequestFileOpen { req: RequestId(inner.req), accept: inner.params.accept, read_as: inner.params.read_as, import_action: String::new(), multiple: inner.params.multiple },
         E::RequestMediaFrames(inner) => {
@@ -3266,9 +3468,6 @@ async fn wit_effect_to_kernel(effect: wit_effects::Effect) -> Result<Effect, Plu
                 max_frames: inner.params.max_frames,
                 max_long_edge_px: inner.params.max_long_edge_px,
                 fps_hint: inner.params.fps_hint,
-                // 🧬️ A2b narrowed `request-media-frames-effect.payload` from `option<pack>` to
-                // `option<string>` (correctly honoring the kernel as SSOT) — already a `String`, no
-                // decode needed.
                 payload: inner.params.payload,
                 args,
             }
@@ -3385,11 +3584,15 @@ async fn kernel_turn_inputs_to_wit(events: &[Event], instance_id: u32) -> Result
     Ok((ordinary, command, cold))
 }
 
+/// 🚫️async: R10 residue shape 1 — `kernel_broker_grant_to_wit` is async, hoisted out of
+/// the sync `Iterator::map` via a plain loop.
+///
+/// 🐛️ WIT `request-event.from` was renamed `origin` — `from` is WIT-reserved (the SAME
+/// reserved-keyword class B1's report already fixed for `stream`/`result`; this one was
+/// fixed by A2 between B1's last pass and now, per the packet brief's "guest side is green").
 pub(crate) async fn kernel_event_to_wit(event: &Event, instance_id: u32) -> wit_events::Event {
     match event {
         Event::InstanceOpen { request, app_id, actor, config, assets, capabilities, quotas } => {
-            // 🚫️async: R10 residue shape 1 — `kernel_broker_grant_to_wit` is async, hoisted out of
-            // the sync `Iterator::map` via a plain loop.
             let mut wit_capabilities = Vec::with_capacity(capabilities.len());
             for capability in capabilities {
                 wit_capabilities.push(kernel_broker_grant_to_wit(capability).await);
@@ -3431,9 +3634,6 @@ pub(crate) async fn kernel_event_to_wit(event: &Event, instance_id: u32) -> wit_
         Event::Message { source, payload } => wit_events::Event::Message(wit_events::MessageEvent { source: kernel_message_endpoint_to_wit(source).await, payload: payload.clone() }),
         Event::Timer { id } => wit_events::Event::Timer(wit_events::TimerEvent { id: *id }),
         Event::Wake => wit_events::Event::Wake,
-        // 🐛️ WIT `request-event.from` was renamed `origin` — `from` is WIT-reserved (the SAME
-        // reserved-keyword class B1's report already fixed for `stream`/`result`; this one was
-        // fixed by A2 between B1's last pass and now, per the packet brief's "guest side is green").
         Event::Request { req, from, capability, payload } => {
             wit_events::Event::Request(wit_events::RequestEvent { req: req.0, params: wit_events::RequestParams { origin: kernel_message_endpoint_to_wit(from).await, capability: capability.clone(), payload: payload.clone() } })
         }
@@ -5691,7 +5891,7 @@ pub struct RuntimeMetricsPublisher {
 }
 
 impl RuntimeMetricsPublisher {
-    // 🚫️async: E1 pure constructor consumed by `impl Default` (external trait, sync-only) — R9.
+    /// 🚫️async: E1 pure constructor consumed by `impl Default` (external trait, sync-only) — R9.
     pub fn new() -> Self {
         Self { last_published_ms: None }
     }
@@ -5701,13 +5901,14 @@ impl RuntimeMetricsPublisher {
     /// else `None`. `shard_heartbeats` maps each live `ShardId` to its transport's last
     /// `ShardTransport::heartbeat()` reading — the overlay `Kernel::shard_metrics_samples` cannot do
     /// itself (see this struct's doc comment).
+    ///
+    /// 🚫️async: R10 residue shape 2 — a future is consumed by a single `.await`; awaited once
+    /// here instead of once inside the loop and again (moved) at `pack_encode` below.
     pub async fn maybe_sample(&mut self, kernel: &semio_framework_actor::Kernel, now_ms: u64, shard_heartbeats: &HashMap<semio_framework_actor::ShardId, u64>) -> Option<Vec<u8>> {
         if !semio_framework_actor::runtime_metrics_due(self.last_published_ms, now_ms).await {
             return None;
         }
         self.last_published_ms = Some(now_ms);
-        // 🚫️async: R10 residue shape 2 — a future is consumed by a single `.await`; awaited once
-        // here instead of once inside the loop and again (moved) at `pack_encode` below.
         let mut snapshot = kernel.runtime_metrics_snapshot(now_ms).await;
         for shard in &mut snapshot.shards {
             if let Some(&last_beat) = shard_heartbeats.get(&shard.shard) {
@@ -5988,6 +6189,9 @@ fn walk_io_routes(
 /// multi-plugin graph instead of one plugin's own local registry. Pure — no lock, no wasm call —
 /// so it is directly unit-testable with a synthetic graph (`io_router_route_is_deterministic_
 /// across_load_order`, `io_router_route_prefers_higher_minimum_fidelity`, below).
+///
+/// 🚫️async: R10 residue shape 1 — `io_route_rank` is async, so ranks are precomputed before
+/// the sync `sort_by` comparator rather than called from inside it.
 fn resolve_io_route(graph: &BTreeMap<IoEntryKey, IoEntryRoute>, from: &semio_framework::io_schema::ArtifactDialect, into: &semio_framework::io_schema::ArtifactDialect, max_hops: u8) -> Result<semio_framework::io_schema::IoRoute, PluginHostError> {
     let max_hops = max_hops.min(3);
     if max_hops == 0 {
@@ -6001,8 +6205,6 @@ fn resolve_io_route(graph: &BTreeMap<IoEntryKey, IoEntryRoute>, from: &semio_fra
     if candidates.is_empty() {
         return Err(PluginHostError::Plugin(format!("no io route from {} to {} within {max_hops} hops", from.to_coordinate(), into.to_coordinate())));
     }
-    // 🚫️async: R10 residue shape 1 — `io_route_rank` is async, so ranks are precomputed before
-    // the sync `sort_by` comparator rather than called from inside it.
     let mut ranked: Vec<(_, Vec<semio_framework::io_schema::IoEntryDescriptor>)> = Vec::with_capacity(candidates.len());
     for candidate in candidates {
         let rank = io_route_rank(&candidate);
@@ -6202,6 +6404,9 @@ impl IoRouter {
     /// `std::sync::Mutex`. This generalizes `compose`'s one-hop self-route refusal (above) to a
     /// resolved route of up to 3 hops; the guard is an up-front scan, not a per-hop check, so a
     /// route is either run in full or not run at all — no partial execution on a refusal.
+    ///
+    /// 🚫️async: R10 residue shape 1 — `to_coordinate` is external/async, hoisted out of
+    /// the `ok_or_else` sync closures below.
     pub async fn run_io(&self, calling_plugin_id: &str, from: &str, into: &str, payload: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {
         let from_dialect = semio_framework::io_schema::ArtifactDialect::parse_coordinate(from).map_err(PluginHostError::Plugin)?;
         let into_dialect = semio_framework::io_schema::ArtifactDialect::parse_coordinate(into).map_err(PluginHostError::Plugin)?;
@@ -6218,8 +6423,6 @@ impl IoRouter {
             let mut hops = Vec::with_capacity(route.hops.len());
             for hop in &route.hops {
                 let key: IoEntryKey = (hop.from.clone(), hop.into.clone());
-                // 🚫️async: R10 residue shape 1 — `to_coordinate` is external/async, hoisted out of
-                // the `ok_or_else` sync closures below.
                 let from_coord = hop.from.to_coordinate();
                 let into_coord = hop.into.to_coordinate();
                 let owner = state.io_entries.get(&key).map(|entry| entry.owner.clone()).ok_or_else(|| PluginHostError::Plugin(format!("io-run: hop {from_coord} -> {into_coord} vanished from the router between resolve and execute")))?;
@@ -6241,6 +6444,9 @@ impl IoRouter {
     /// multiple plugins, so this SKIPS rather than refuses the whole call). JSON `Vec<(ArtifactDialect,
     /// Confidence)>` bytes, sorted confidence descending then coordinate ascending — same shape and
     /// order `io::io_mechanism::io_identify` produces for the guest-local case.
+    ///
+    /// 🚫️async: R10 residue shape 1 — `Confidence::rank`/`ArtifactDialect::to_coordinate` are
+    /// external async accessors, so the sort key is precomputed before the sync `sort_by`.
     pub async fn identify(&self, calling_plugin_id: &str, payload_bytes: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {
         let payload_text = std::str::from_utf8(&payload_bytes).map_err(|error| PluginHostError::Json(error.to_string()))?;
         let payload: semio_framework::io_schema::IoPayload = dsl::os_pack::json::from_json_str(payload_text).map_err(|error| PluginHostError::Json(error.to_string()))?;
@@ -6266,8 +6472,6 @@ impl IoRouter {
                 found.push((into, confidence));
             }
         }
-        // 🚫️async: R10 residue shape 1 — `Confidence::rank`/`ArtifactDialect::to_coordinate` are
-        // external async accessors, so the sort key is precomputed before the sync `sort_by`.
         let mut decorated = Vec::with_capacity(found.len());
         for (dialect, confidence) in found {
             let rank = confidence.rank();
@@ -6516,6 +6720,10 @@ impl ArtifactInferenceRouter {
     /// registered graph can still recurse infinitely if two rows' `depends_on` disagree with what
     /// was toposorted (e.g. a hot-reloaded plugin), so this is real defense-in-depth, not
     /// redundant.
+    ///
+    /// 🚫️async: R10 residue shape 3 — genuinely self-recursive (this fn really does
+    /// await real plugin-runtime I/O via `handle.infer` below, so R9 does not apply);
+    /// `Box::pin` breaks the otherwise-infinite future size, per rustc's own E0733 hint.
     async fn infer_with_visited(&self, request: &[u8], visited: &mut Vec<String>, cancel: &semio_framework_async::CancelToken) -> Result<Vec<u8>, PluginHostError> {
         let request_text = std::str::from_utf8(request).map_err(|error| PluginHostError::Json(error.to_string()))?;
         let mut route: InferenceRouteRequest = dsl::os_pack::json::from_json_str(request_text).map_err(|error| PluginHostError::Json(error.to_string()))?;
@@ -6543,9 +6751,6 @@ impl ArtifactInferenceRouter {
                 };
                 let dependency_request = build_dependency_inference_request(&route, &dependency_metadata).await;
                 let dependency_request_bytes = dsl::os_pack::json::to_json_string(&dependency_request).into_bytes();
-                // 🚫️async: R10 residue shape 3 — genuinely self-recursive (this fn really does
-                // await real plugin-runtime I/O via `handle.infer` below, so R9 does not apply);
-                // `Box::pin` breaks the otherwise-infinite future size, per rustc's own E0733 hint.
                 let dependency_result_bytes = Box::pin(self.infer_with_visited(&dependency_request_bytes, visited, cancel)).await?;
                 dependencies.push((dependency_schema.clone(), dependency_result_bytes));
             }
@@ -6575,6 +6780,11 @@ impl ArtifactInferenceRouter {
 /// `artifact_kind`, per `GuestArtifactInferenceMetadata`'s own field doc). Genuinely new logic —
 /// distinct from W0-C's plugin-manifest toposort, a different domain (inference schemas within one
 /// artifact kind, not plugins).
+///
+/// 🚫️async: R10 residue shape 3 — self-recursive, and per E1's own principle: pure in-memory
+/// BTreeMap/Vec recursion with no suspension point anywhere in the body, so async here would
+/// ALSO need `Box::pin` at the recursive call just to compile, for zero behavioural benefit.
+/// Reverted to sync rather than boxed — R9.
 fn validate_inference_dependency_graph(routes: &BTreeMap<(String, String), (String, GuestArtifactInferenceMetadata)>) -> Result<(), PluginHostError> {
     let mut adjacency: BTreeMap<(&str, &str), Vec<&str>> = BTreeMap::new();
     for ((artifact_kind, inference_schema), (_, item)) in routes {
@@ -6587,10 +6797,6 @@ fn validate_inference_dependency_graph(routes: &BTreeMap<(String, String), (Stri
         Done,
     }
 
-    // 🚫️async: R10 residue shape 3 — self-recursive, and per E1's own principle: pure in-memory
-    // BTreeMap/Vec recursion with no suspension point anywhere in the body, so async here would
-    // ALSO need `Box::pin` at the recursive call just to compile, for zero behavioural benefit.
-    // Reverted to sync rather than boxed — R9.
     fn visit<'a>(artifact_kind: &'a str, node: &'a str, adjacency: &BTreeMap<(&'a str, &'a str), Vec<&'a str>>, marks: &mut BTreeMap<(&'a str, &'a str), Mark>, stack: &mut Vec<&'a str>) -> Result<(), PluginHostError> {
         match marks.get(&(artifact_kind, node)) {
             Some(Mark::Done) => return Ok(()),
@@ -6769,15 +6975,16 @@ impl PluginGraph {
     /// ✅️ Registers (or replaces) `manifest`'s entry, re-validating the WHOLE resulting graph
     /// before committing — an invalid addition (missing dependency, version mismatch, cycle)
     /// leaves the previously-registered set untouched.
+    ///
+    /// 🪪️ `resolve_load_order` (not `validate_dependency_graph` alone) is what actually detects a
+    /// CYCLE — per W0-C's own report: "a real cycle among present plugins passes validation and
+    /// is caught by the toposort leftover-set walk". `validate_dependency_graph` alone only
+    /// catches missing-dependency/version-mismatch.
     pub async fn register(&self, manifest: PluginManifest) -> Result<(), PluginGraphError> {
         let mut state = self.lock()?;
         let mut candidate = state.clone();
         candidate.insert(manifest.plugin_id.clone(), manifest);
         let list: Vec<PluginManifest> = candidate.values().cloned().collect();
-        // 🪪️ `resolve_load_order` (not `validate_dependency_graph` alone) is what actually detects a
-        // CYCLE — per W0-C's own report: "a real cycle among present plugins passes validation and
-        // is caught by the toposort leftover-set walk". `validate_dependency_graph` alone only
-        // catches missing-dependency/version-mismatch.
         semio_framework::resolve_load_order(&list)?;
         *state = candidate;
         Ok(())
@@ -7280,6 +7487,17 @@ impl HostTransactionCoordinator {
     /// `exchange`/`plan_contributed` are closures so this can be driven over real
     /// `WasmPluginRuntime`s (production, see `🏃️run/🦀️.rs`) or an in-process fake
     /// (tests) without either depending on the other.
+    ///
+    /// 🚫️async: R10 residue shape 1 — `Option::and_then` takes a sync closure, so the
+    /// `resolve(...).await` that used to live inside it is hoisted out here instead.
+    ///
+    /// 🚫️async: R10 residue shape 1 — `TransactionError::rejected` is async, hoisted
+    /// out of `ok_or_else`/`map_err`'s sync closures via explicit matches.
+    ///
+    /// Phase 1 (§5.5): prepare every member exactly once, in discovery order; any rejection
+    /// rolls back every member already prepared before it.
+    ///
+    /// Phase 2 (§5.6): commit in REVERSE discovery order.
     #[allow(clippy::too_many_arguments)]
     pub async fn run_transaction(
         &self,
@@ -7294,8 +7512,6 @@ impl HostTransactionCoordinator {
     ) -> Result<TransactionOutcome, TransactionError> {
         let txn_id = self.mint_txn_id(&initiator).await;
 
-        // 🚫️async: R10 residue shape 1 — `Option::and_then` takes a sync closure, so the
-        // `resolve(...).await` that used to live inside it is hoisted out here instead.
         let initiator_artifact_id = instances.artifact_ids_for_instance(&initiator.plugin_id, initiator.instance_id).await.into_iter().next();
         let initiator_target = match initiator_artifact_id {
             Some(artifact_id) => match instances.resolve(&artifact_id).await {
@@ -7325,8 +7541,6 @@ impl HostTransactionCoordinator {
                     return Err(TransactionError::rejected("transaction.cycle", format!("transaction `{txn_id}` revisited {}/{}", step.target.artifact_id, step.mutation_id.0)).await);
                 }
 
-                // 🚫️async: R10 residue shape 1 — `TransactionError::rejected` is async, hoisted
-                // out of `ok_or_else`/`map_err`'s sync closures via explicit matches.
                 let location = match instances.resolve(&step.target.artifact_id).await {
                     Some(location) => location,
                     None => return Err(TransactionError::rejected("transaction.unknown-target", format!("no live instance bound to artifact id `{}`", step.target.artifact_id)).await),
@@ -7360,8 +7574,6 @@ impl HostTransactionCoordinator {
             frontier = next_frontier;
         }
 
-        // Phase 1 (§5.5): prepare every member exactly once, in discovery order; any rejection
-        // rolls back every member already prepared before it.
         let mut rejection: Option<TransactionError> = None;
         let mut prepared: Vec<TransactionMember> = Vec::new();
         for member in &discovery_order {
@@ -7419,7 +7631,6 @@ impl HostTransactionCoordinator {
             return Err(error);
         }
 
-        // Phase 2 (§5.6): commit in REVERSE discovery order.
         let mut committed: Vec<TransactionMember> = Vec::new();
         let mut edit_id_by_member: BTreeMap<(String, u32), String> = BTreeMap::new();
         let mut commit_error: Option<TransactionError> = None;
@@ -7526,11 +7737,6 @@ impl AppRouter {
         Self { state: Mutex::new(AppRouterState::default()) }
     }
 
-    // 🗑️ The old `register_plugin(&self, plugin_id, runtime: &WasmPluginRuntime)` thin wrapper is
-    // gone with `WasmPluginRuntime` itself — it only ever read `runtime.manifest` (already
-    // host-resident, no wasm call), so every caller now calls `register_manifest` directly with
-    // whatever `PluginManifest` it already has on hand (mirrors `IoRouter`/`ArtifactInferenceRouter`'s
-    // own post-`WasmPluginRuntime` registration idiom: pre-decoded data in, no runtime dependency).
 
     /// 🧪️ `register_plugin` split out for direct manifest-driven testing (no wasmtime component
     /// needed to exercise the two frozen conflict/gate faults) — pure aside from the `Mutex` lock.
@@ -7540,6 +7746,12 @@ impl AppRouter {
     /// `unregister_plugin` keeps them — a later contributor must never inherit an excluded plugin's
     /// kind. TS twin: `AppRouter.build` (`🎠️kernel/🟦️.ts`), shared vectors
     /// `🎠️kernel/🧫️fixtures/🧫️app-router-plugin-faults/🔣️.json`.
+    ///
+    /// 🗑️ The old `register_plugin(&self, plugin_id, runtime: &WasmPluginRuntime)` thin wrapper is
+    /// gone with `WasmPluginRuntime` itself — it only ever read `runtime.manifest` (already
+    /// host-resident, no wasm call), so every caller now calls `register_manifest` directly with
+    /// whatever `PluginManifest` it already has on hand (mirrors `IoRouter`/`ArtifactInferenceRouter`'s
+    /// own post-`WasmPluginRuntime` registration idiom: pre-decoded data in, no runtime dependency).
     pub async fn register_manifest(&self, plugin_id: &str, manifest: &PluginManifest) -> Result<(), semio_framework::Fault> {
         let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let dependencies: BTreeSet<String> = manifest.dependencies.iter().map(|dependency| dependency.plugin_id.clone()).collect();
@@ -7706,9 +7918,9 @@ mod app_router_tests;
 pub struct OpeningResolver;
 
 impl OpeningResolver {
+    /// 🚫️async: R10 residue shape 2 — a future is consumed by one `.await`; awaited once here
+    /// instead of once inside the `if let` and again (moved) at `.into_iter()` below.
     pub async fn resolve(router: &AppRouter, dialect: &semio_framework::ArtifactDialect, role: semio_framework::AppRole, user_default: Option<&semio_framework::AppRef>) -> Result<semio_framework::AppRef, semio_framework::Fault> {
-        // 🚫️async: R10 residue shape 2 — a future is consumed by one `.await`; awaited once here
-        // instead of once inside the `if let` and again (moved) at `.into_iter()` below.
         let candidates = router.surfaces_for(dialect, role).await;
         if let Some(default_ref) = user_default {
             if candidates.contains(default_ref) {

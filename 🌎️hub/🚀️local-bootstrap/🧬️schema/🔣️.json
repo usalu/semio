@@ -672,7 +672,8 @@
             "openPlanExchange",
             "rebootstrap",
             "mcpWorkspace",
-            "inferenceServices"
+            "inferenceServices",
+            "checkpointPolicy"
           ],
           "properties": {
             "openPlan": {
@@ -686,6 +687,27 @@
             },
             "mcpWorkspace": {
               "type": "boolean"
+            },
+            "checkpointPolicy": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "edits",
+                "payloadBytes"
+              ],
+              "description": "📌️ When the hub checks a document in by itself: once the edits, or the diff and inverse payload bytes, committed over its document sockets since it last did reach either bound, on behalf of the author whose batch reached it. A client that seeds from the checkpoint then receives only the tail since it (`OS_HUB_CHECKPOINT_POLICY_EDITS`, `OS_HUB_CHECKPOINT_POLICY_BYTES`).",
+              "properties": {
+                "edits": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 1048576
+                },
+                "payloadBytes": {
+                  "type": "integer",
+                  "minimum": 4096,
+                  "maximum": 1073741824
+                }
+              }
             },
             "inferenceServices": {
               "type": "array",

@@ -1,5 +1,5 @@
 // #region 🧱️Header
-/** @emoji 🎨️ `@semio-tech/framework-renderer-react` — trusted React renderer for declarative Rust program UI trees. */
+/** 🎨️ `@semio-tech/framework-renderer-react` — trusted React renderer for declarative Rust program UI trees. */
 // #endregion 🧱️Header
 
 export type { ActionDescriptor, UiComponentSceneNode } from "@semio-tech/framework";

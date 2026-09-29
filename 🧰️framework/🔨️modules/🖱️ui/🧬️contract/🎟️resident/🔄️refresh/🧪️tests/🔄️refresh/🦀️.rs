@@ -110,7 +110,7 @@ fn retained_refresh_never_needs_a_second_full_resident_set() {
     }
     drain_pages();
     eprintln!(
-        "[DEBUG] resident-refresh surfaces={} refreshes={} peak-roots={peak_roots} peak-bytes={peak_bytes} faults={faults} retire-steps={steps} node-record-bytes={} open-bytes={} fixed-backing={}",
+        "resident-refresh surfaces={} refreshes={} peak-roots={peak_roots} peak-bytes={peak_bytes} faults={faults} retire-steps={steps} node-record-bytes={} open-bytes={} fixed-backing={}",
         surfaces.len(),
         data["refreshes"],
         size_of::<UiNodeRecord>(),
@@ -140,7 +140,7 @@ fn retained_refresh_double_buffered_order_needs_a_second_full_set() {
     }
     drain_pages();
     eprintln!(
-        "[DEBUG] resident-refresh-double-buffered single-roots={} single-bytes={} doubled-roots={} doubled-bytes={}",
+        "resident-refresh-double-buffered single-roots={} single-bytes={} doubled-roots={} doubled-bytes={}",
         single.used_slots - before.used_slots,
         single.bytes - before.bytes,
         doubled.used_slots - before.used_slots,
@@ -178,7 +178,7 @@ fn retained_refresh_aggregate_admits_only_a_handful_of_ceiling_sized_surfaces() 
     for permit in &mut admitted {
         assert!(permit.close_step(1).unwrap().complete);
     }
-    eprintln!("[DEBUG] resident-refresh-ceiling admitted={count} refusal={refusal:?} surface-bytes={UI_RESIDENT_SURFACE_BYTES} aggregate={UI_RESIDENT_AGGREGATE_BYTES} fixed-backing={}", UiResidentPermit::contract_backing_bytes());
+    eprintln!("resident-refresh-ceiling admitted={count} refusal={refusal:?} surface-bytes={UI_RESIDENT_SURFACE_BYTES} aggregate={UI_RESIDENT_AGGREGATE_BYTES} fixed-backing={}", UiResidentPermit::contract_backing_bytes());
     assert_eq!(count, data["ceilingSizedRoots"].as_u64().unwrap() as usize);
     assert!(count < UI_RESIDENT_SLOTS, "the ceiling is a maximum, never a price: {count} ceiling-sized roots against {UI_RESIDENT_SLOTS} slots");
     assert_eq!(UI_RESIDENT_SLOTS * UI_RESIDENT_DOCUMENT_BYTES, UI_RESIDENT_AGGREGATE_BYTES, "the aggregate uses the declared per-slot record-byte baseline");
@@ -213,7 +213,6 @@ fn cold_document_roots_are_priced_from_their_census_and_reach_every_slot() {
     let one_record = crate::ui_document_resident_limits(1);
     assert_eq!(held.bytes - before.bytes, UI_DOCUMENT_LEASE_SLOTS * one_record.bytes);
     assert_eq!(held.items - before.items, UI_DOCUMENT_LEASE_SLOTS * one_record.items);
-    eprintln!("[DEBUG] cold-document-census slots={UI_DOCUMENT_LEASE_SLOTS} empty={empty:?} one-record={one_record:?} ceiling-items={UI_RESIDENT_SURFACE_ITEMS}");
     for mut builder in builders {
         for _ in 0..1 << 16 {
             if builder.close_step() {

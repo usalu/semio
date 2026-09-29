@@ -200,7 +200,6 @@ async fn query_ownership_resumable_matches_neutral_results_and_single_mutation_p
             }
         };
         assert!(preparation.terminal_is_empty());
-        eprintln!("[DEBUG] query ownership transferred after {preparation_turns} preparation turns");
         let mut steps = 0;
         let actual = loop {
             steps += 1;
@@ -239,7 +238,7 @@ async fn query_ownership_resumable_matches_neutral_results_and_single_mutation_p
         assert_eq!(actual.1.len(), case["mutations"].as_u64().unwrap() as usize);
         assert!(execution.step().is_err());
         assert!(steps > 1);
-        eprintln!("[DEBUG] resumable query completed in {steps} steps with {} document mutations", actual.1.len());
+        eprintln!("resumable query completed in {steps} steps with {} document mutations", actual.1.len());
     }
 }
 
@@ -251,7 +250,6 @@ async fn query_ownership_artifact_contract_exposes_document_state_only() {
             assert_eq!(field["x-semio-state"], "artifact", "{name} belongs to a separate app or window owner");
         }
     }
-    eprintln!("[DEBUG] Jack artifact and diff contracts expose document state only");
 }
 
 #[test]
@@ -281,7 +279,6 @@ fn query_ownership_cancelled_preparation_closes_while_source_scene_remains_live(
     assert!(preparation.terminal_is_empty());
     assert_eq!(source.content.local_owner::<crate::JackWorkingScene>().expect("source survives cancellation").nodes.len(), source_owner.nodes.len());
     drop(preparation);
-    eprintln!("[DEBUG] cancelled query preparation closed without waiting for its live source scene");
 }
 
 fn query_ownership_preparation_rejection(source: &JackSnapshot) -> String {
@@ -326,7 +323,6 @@ fn query_ownership_preparation_rejects_oversized_node_and_edge_before_clone() {
     let edge_source = edge_graph.to_snapshot();
     assert_eq!(query_ownership_preparation_rejection(&edge_source), "query entity exceeds its byte grant");
     assert_eq!(edge_source.edges().iter().find(|edge| edge.id == "e1").expect("oversized source edge remains live").properties["payload"].as_str().map(str::len), Some(property_bytes));
-    eprintln!("[DEBUG] query preparation rejected oversized node and edge payloads before cloning them");
 }
 
 #[test]
@@ -376,7 +372,7 @@ fn query_ownership_output_admission_rejects_oversized_table_before_publication()
         }
     }
     assert!(complete && execution.terminal_is_empty());
-    eprintln!("[DEBUG] query output admission rejected a {encoded_cells}-byte table before publication");
+    eprintln!("query output admission rejected a {encoded_cells}-byte table before publication");
 }
 
 #[test]
@@ -384,6 +380,5 @@ fn query_preparation_layout_matches_neutral_budget() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪜️resumable-query/🔣️.json")).expect("neutral query ownership fixture");
     let maximum = fixture["retainedExecution"]["maximumPreparationStepInlineBytes"].as_u64().expect("inline preparation budget") as usize;
     let actual = size_of::<QueryPreparationStep>();
-    eprintln!("[DEBUG] Query preparation step occupies {actual} inline bytes; neutral maximum is {maximum}");
     assert!(actual <= maximum, "query preparation must transfer a compact execution owner");
 }

@@ -78,7 +78,6 @@ fn runtime_single_enqueue_reader_cannot_observe_completion_without_its_scene_inv
         drop(published);
     }
     drop(queue);
-    eprintln!("[DEBUG] single enqueue publication={publication:?} observation={observation:?} resumed={resumed:?} old={old:?} committed={committed:?} publishedCount={published_count} exactSource={exact_source}");
     assert!(publication.is_ok() && resumed.is_ok() && reader_joined.is_ok());
     assert!(accepted.unwrap() && exact_source);
     assert_eq!(source_revision, count("source", "revision"));

@@ -120,7 +120,7 @@ pub(crate) async fn space_interaction_select(granularity: &str, id: &str) -> Act
     }
 }
 
-/// @emoji 🤝️ Resolves the source/target ports for a proposed connect and negotiates their wire contract
+/// 🤝️ Resolves the source/target ports for a proposed connect and negotiates their wire contract
 /// via `engine::negotiate_media_connect`, converting a rejection into a `Notify` effect — shared by
 /// `connections::connect_media_ports` and the `graph_edit::node_graph_edit`/`"connect"` fixture edit.
 pub(crate) async fn negotiate_connect_or_notify(projection: &WorkflowSnapshot, source_node_id: &str, source_port_id: &str, target_node_id: &str, target_port_id: &str) -> Result<MediaContract, Effect> {
@@ -133,7 +133,7 @@ pub(crate) async fn connect_edge_operation(source_node_id: &str, source_port_id:
     })
 }
 
-/// @emoji 🔎️ First selected node — the fallback target for actions that implicitly operate on "the"
+/// 🔎️ First selected node — the fallback target for actions that implicitly operate on "the"
 /// current selection (rename/remove/open) when no explicit node id is supplied. `selected` is the
 /// `graph` domain's live selection (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — no
 /// longer a deleted `SpaceConfig` field.

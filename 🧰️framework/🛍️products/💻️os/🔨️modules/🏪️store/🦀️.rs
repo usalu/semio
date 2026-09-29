@@ -2029,7 +2029,7 @@ enum ArtifactStoreCursorDisposerPhase {
     Complete,
 }
 
-/// @emoji 🧹️ Explicit store-owner cursor used only when a domain installs it through its
+/// 🧹️ Explicit store-owner cursor used only when a domain installs it through its
 /// owner catalog. It advances one detached authority at a time and never supplies a default proof.
 pub struct ArtifactStoreCursorDisposer<P, Mutation> {
     phase: ArtifactStoreCursorDisposerPhase,
@@ -2444,7 +2444,7 @@ pub fn begin_artifact_assembly() -> Result<ArtifactAssemblyTransaction, Artifact
 //#endregion 🔖️ArtifactAssembly
 
 //#region 🔖️Schemas
-/// @emoji 🔗️ Identifies the channel a document synchronizes through, when one is attached.
+/// 🔗️ Identifies the channel a document synchronizes through, when one is attached.
 /// 🌱️ `Serialize`/`Deserialize` dropped outright (not even `cfg_attr(test, …)`): no production
 /// consumer (`🖥️host/🦀️.rs`'s `BackboneDocument`, `🔌️plugin/🦀️.rs`'s `backbone_ref()`) requires
 /// `ArtifactBackboneRef: Serialize`, and no test in this crate uses `serde_json` as a differential
@@ -2455,12 +2455,12 @@ pub struct ArtifactBackboneRef {
     pub uri: String,
 }
 
-/// @emoji 🔗️ Builds a backbone reference from a channel URI.
+/// 🔗️ Builds a backbone reference from a channel URI.
 pub async fn document_backbone_ref(uri: &str) -> ArtifactBackboneRef {
     ArtifactBackboneRef { uri: uri.to_string() }
 }
 
-/// @emoji 🎯️ Undo/redo/checkout position — derived by folding the event log, never persisted.
+/// 🎯️ Undo/redo/checkout position — derived by folding the event log, never persisted.
 /// Carries the FULL applied-edit list (not just the tail edit id): an edit undone mid-history
 /// precedes later-applied edits in file order, and the redo stack can contain edits in any order
 /// relative to `applied_edit_ids` — a single marker id cannot represent that. `checkpoint_id`
@@ -2624,7 +2624,7 @@ impl Drop for ArtifactCursor {
 }
 
 //#region 🔖️HistoryLane
-/// @emoji 🛤️ Which undo/redo cursor a recorded edit belongs to. `Document` is the default — the
+/// 🛤️ Which undo/redo cursor a recorded edit belongs to. `Document` is the default — the
 /// ordinary main history `Undo`/`Redo` travels. Any other lane (starting with `Interaction`) is a
 /// persisted, replayable SIDE history: mutations recorded under it stay in `ArtifactVcs.edits` and
 /// `ArtifactEnvelope.lanes` forever (never dropped, never un-persisted), but default `Undo`/`Redo`
@@ -2657,29 +2657,29 @@ pub struct ArtifactEnvelopeOwners<P, Mutation> {
     pub vcs: ArtifactVcs<P, Mutation>,
     pub backbone: Option<ArtifactBackboneRef>,
     pub active_alternative_id: Option<String>,
-    /// @emoji 🎯️ Undo/redo/checkout position, present only once a store has synced it (see
+    /// 🎯️ Undo/redo/checkout position, present only once a store has synced it (see
     /// `ArtifactStore::sync_cursor`) — absent for a freshly-constructed envelope or one loaded
     /// from a source that predates this field, in which case position stays runtime-only exactly
     /// as before.
     pub cursor: Option<ArtifactCursor>,
-    /// @emoji 🗣️ The dialect this envelope's `vcs.initial_snapshot` (and every replayed edit) is
+    /// 🗣️ The dialect this envelope's `vcs.initial_snapshot` (and every replayed edit) is
     /// currently in — absent for envelopes minted before dialect-tracking existed, or for document
     /// kinds that never adopted more than one dialect. See `26/08/10` D4 evolution slice; nothing
     /// in `ArtifactStore::dispatch` reads or writes this yet (that wiring is later scope) — it is
     /// purely a persisted fact a future migration-aware caller can act on.
     pub dialect: Option<crate::os_io::ArtifactDialect>,
-    /// @emoji 🧬️ Set once, the first time this envelope's snapshot was produced by migrating a
+    /// 🧬️ Set once, the first time this envelope's snapshot was produced by migrating a
     /// prior document's dialect (see `migrate_document` below) rather than being authored directly
     /// in `dialect`. Absent for every envelope that was never migrated.
     pub migrated_from: Option<MigrationProvenance>,
-    /// @emoji 🏠️ Present exactly when this envelope is a CHILD in a composition — the ownership
+    /// 🏠️ Present exactly when this envelope is a CHILD in a composition — the ownership
     /// stamp naming which parent/slot/`child_id` created it (see `🔖️Composition` below). Placed on
     /// the CHILD's own envelope (not only on the parent's `ArtifactChild` handle) so ownership is
     /// queryable directly from the child side — e.g. "is this document embeddable standalone, or
     /// does deleting it require going through its owner". Absent for every independent artifact
     /// (the overwhelming majority) and for every envelope minted before this ticket.
     pub owner: Option<OwnerRef>,
-    /// @emoji 🛤️ Sparse `Edit.id → HistoryLane` ledger: only entries recorded under a NON-`Document`
+    /// 🛤️ Sparse `Edit.id → HistoryLane` ledger: only entries recorded under a NON-`Document`
     /// lane are ever inserted (an ordinary document edit never gets a map entry at all), so an id
     /// absent from this map is `HistoryLane::Document` by construction — see
     /// `ArtifactStore::edit_lane`. Additive — absent (empty map) for every envelope minted before
@@ -2690,7 +2690,7 @@ pub struct ArtifactEnvelopeOwners<P, Mutation> {
     pub lanes: BTreeMap<String, HistoryLane>,
     pub edit_messages: ArtifactEditMessageLedger,
     pub conflicts: Vec<crate::os_spr::Conflict>,
-    /// @emoji 🔀️ Every structural history event — undo, redo, checkpoint commit, branch, checkout,
+    /// 🔀️ Every structural history event — undo, redo, checkpoint commit, branch, checkout,
     /// repin — as one causal `crate::os_spr::HISTORY_TRANSITION_SCHEMA` envelope, in HLC order.
     /// Together with `vcs.edits` this is the document's complete semantic event log: `cursor`,
     /// `active_alternative_id` and the change/checkpoint/alternative ledgers are its projection
@@ -2776,7 +2776,7 @@ impl<P, Mutation> ArtifactEnvelopeOwners<P, Mutation> {
     }
 }
 
-/// @emoji 🛡️ Terminal shell for one exact document record. Deep fields are ManuallyDrop from
+/// 🛡️ Terminal shell for one exact document record. Deep fields are ManuallyDrop from
 /// birth and can leave the shell only through the bounded store/completed-record owner protocols.
 pub struct ArtifactEnvelope<P, Mutation> {
     owners: std::mem::ManuallyDrop<ArtifactEnvelopeOwners<P, Mutation>>,
@@ -2788,7 +2788,7 @@ impl<P, Mutation> ArtifactEnvelope<P, Mutation> {
         Self { owners: std::mem::ManuallyDrop::new(owners), owners_detached: false }
     }
 
-    /// @emoji 🧺️ Consumes the terminal shell and hands back its owners. This is the ONLY way a caller
+    /// 🧺️ Consumes the terminal shell and hands back its owners. This is the ONLY way a caller
     /// outside this module can read an envelope's fields: the shell's `Drop` asserts that its owners
     /// were detached first, so reading fields by reference and letting the shell fall out of scope
     /// aborts at runtime ("terminal shell reached Drop before ... detached every nested owner").
@@ -2799,7 +2799,7 @@ impl<P, Mutation> ArtifactEnvelope<P, Mutation> {
         unsafe { std::mem::ManuallyDrop::take(&mut self.owners) }
     }
 
-    /// @emoji 🧹️ Retires a candidate envelope that no store adopted. {@link into_owners} hands back
+    /// 🧹️ Retires a candidate envelope that no store adopted. {@link into_owners} hands back
     /// fixed ledgers (`vcs.edits`/`changes`/`checkpoints`/`alternatives`, `edit_messages`) that each
     /// carry their own terminal-empty `Drop` witness, so dropping a POPULATED candidate aborts the
     /// process on that witness instead of surfacing the refusal. Every entry is popped here, in the
@@ -2825,7 +2825,7 @@ impl<P, Mutation> ArtifactEnvelope<P, Mutation> {
         retire_replayed_projection::<P, Mutation>(initial_snapshot);
     }
 
-    /// @emoji 🌱️ Moves the sole snapshot from a decoder-proven fresh envelope. Rejection
+    /// 🌱️ Moves the sole snapshot from a decoder-proven fresh envelope. Rejection
     /// returns the exact shell untouched; accepted metadata is definitionally bounded and empty.
     pub fn try_into_fresh_snapshot(self) -> Result<P, Self> {
         if self.schema.len() > 256
@@ -2886,7 +2886,7 @@ impl<P, Mutation> Drop for ArtifactEnvelope<P, Mutation> {
     }
 }
 
-/// @emoji 🧬️ Provenance stamp for an envelope produced by `migrate_document`: which prior document,
+/// 🧬️ Provenance stamp for an envelope produced by `migrate_document`: which prior document,
 /// which dialect it was in, and (if the migration ran at a specific checkpoint rather than the
 /// live tip) which checkpoint. `migrated_at` follows this crate's existing `Checkpoint.timestamp`/
 /// `Edit.started_at` convention (a caller-supplied string stamped via `now_iso()`, see below) — no
@@ -2916,7 +2916,7 @@ pub enum ArtifactCommand<Mutation> {
         #[value(default, skip_serializing_if = "Option::is_none")]
         semantic_command: Option<Box<ArtifactCommand<Mutation>>>,
     },
-    /// @emoji 🛤️ `Apply`'s lane-tagged twin — records the resulting edit under `lane` (via
+    /// 🛤️ `Apply`'s lane-tagged twin — records the resulting edit under `lane` (via
     /// `ArtifactEnvelope.lanes`) instead of the implicit `HistoryLane::Document` a plain `Apply`
     /// gets. New variant, not a field added to `Apply` itself, so every existing `Apply {
     /// mutations, description }` construction across the workspace keeps compiling untouched.
@@ -2927,7 +2927,7 @@ pub enum ArtifactCommand<Mutation> {
         #[value(default)]
         lane: HistoryLane,
     },
-    /// @emoji 🛤️ `AmendLast`'s lane-tagged twin — see `ApplyInLane`'s doc for why this is an
+    /// 🛤️ `AmendLast`'s lane-tagged twin — see `ApplyInLane`'s doc for why this is an
     /// additive new variant rather than a field on `AmendLast`.
     AmendLastInLane {
         mutations: Vec<Mutation>,
@@ -2935,7 +2935,7 @@ pub enum ArtifactCommand<Mutation> {
         #[value(default)]
         lane: HistoryLane,
     },
-    /// @emoji 🛤️ Explicit lane-scoped undo: mirrors plain `Undo`'s selective (own-author) semantics
+    /// 🛤️ Explicit lane-scoped undo: mirrors plain `Undo`'s selective (own-author) semantics
     /// but searches `applied_edit_ids` for the nearest local entry whose `HistoryLane` is exactly
     /// `lane`, instead of `HistoryLane::Document`. Lets a caller walk a non-`Document` lane on
     /// purpose — the completing half of "default `Undo`/`Redo` skip non-`Document` lanes" (see
@@ -2943,7 +2943,7 @@ pub enum ArtifactCommand<Mutation> {
     UndoInLane {
         lane: HistoryLane,
     },
-    /// @emoji 🛤️ `UndoInLane`'s redo-direction sibling — mirrors plain `Redo`, but pops the
+    /// 🛤️ `UndoInLane`'s redo-direction sibling — mirrors plain `Redo`, but pops the
     /// nearest-to-top `redo_edit_ids` entry whose `HistoryLane` is exactly `lane`.
     RedoInLane {
         lane: HistoryLane,
@@ -2966,24 +2966,24 @@ pub enum ArtifactCommand<Mutation> {
     },
     AmendLast {
         mutations: Vec<Mutation>,
-        /// @emoji 🪢️ Matches the last uncommitted edit's `coalesce_key` to absorb into it instead of creating a new edit.
+        /// 🪢️ Matches the last uncommitted edit's `coalesce_key` to absorb into it instead of creating a new edit.
         coalesce_key: Option<String>,
     },
-    /// @emoji 🕸️ Feeds a remote MutationEnvelope through the causal DAG into the edit timeline.
+    /// 🕸️ Feeds a remote MutationEnvelope through the causal DAG into the edit timeline.
     IngestRemote {
         #[value(serialize_with = "operation_envelope_serde::to_value", deserialize_with = "operation_envelope_serde::from_value")]
         envelope: crate::os_spr::MutationEnvelope,
     },
-    /// @emoji 🧹 Clears volatile draft-lane history that must never enter a Change/Checkpoint.
+    /// 🧹 Clears volatile draft-lane history that must never enter a Change/Checkpoint.
     PruneDrafts,
-    /// @emoji ⚖️ Sets this store's local `crate::os_spr::MergePolicy` — authority-local state, never
+    /// ⚖️ Sets this store's local `crate::os_spr::MergePolicy` — authority-local state, never
     /// carried on a `crate::os_spr::MutationEnvelope`/`BackboneMessage`, never part of shared
     /// history (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C6). Ordinal
     /// 15 — frozen, appended after `PruneDrafts`.
     SetMergePolicy {
         policy: crate::os_spr::MergePolicy,
     },
-    /// @emoji ⚔️ Resolves an `Open` `crate::os_spr::Conflict` by id — see
+    /// ⚔️ Resolves an `Open` `crate::os_spr::Conflict` by id — see
     /// `ArtifactStore::resolve_conflict` for what `Accept`/`Discard` do for each conflict kind.
     /// Ordinal 16 — frozen.
     ResolveConflict {
@@ -3030,7 +3030,7 @@ impl<Mutation> ArtifactCommand<Mutation> {
 // `🔖️CompositionCoordinator` region, after `🔖️Space` below) orchestrates atomic multi-store
 // dispatch across a parent and its children on top of these types.
 
-/// @emoji 🧸️ Ownership handle a parent SNAPSHOT embeds for one owned child slot (e.g. a plugin's
+/// 🧸️ Ownership handle a parent SNAPSHOT embeds for one owned child slot (e.g. a plugin's
 /// generated field `mesh_child: ArtifactChild<MeshSnapshot>`). `S` is a compile-time-only phantom
 /// naming which snapshot type the child is expected to materialize as — it never appears on the
 /// wire and never constrains this type's own capabilities. `Clone`/`Debug`/`PartialEq` are
@@ -3046,7 +3046,7 @@ impl<Mutation> ArtifactCommand<Mutation> {
 /// no independent lifecycle: see the region doc's CHILD-vs-LINK split.
 struct ArtifactChildLocalText(Arc<str>);
 
-/// @emoji 🚫️ Why an owned child's local materialization cannot be read at a typed boundary.
+/// 🚫️ Why an owned child's local materialization cannot be read at a typed boundary.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ArtifactChildMaterializationError {
     Absent,
@@ -3213,7 +3213,7 @@ impl<S> FromValue for ArtifactChild<S> {
     }
 }
 
-/// @emoji 🪪️ Type-erased projection of one `ArtifactChild<S>` field, dropping the compile-time-only
+/// 🪪️ Type-erased projection of one `ArtifactChild<S>` field, dropping the compile-time-only
 /// `S` phantom so `ArtifactRefs::child_refs` can return a single homogeneous `Vec` across however
 /// many differently-`S`-typed child slots a snapshot declares.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
@@ -3363,7 +3363,7 @@ impl<'a> crate::os_schema_composition::ChildRefVisitor<'a> for ChildRestoreProje
     }
 }
 
-/// @emoji 🏠️ The ownership stamp placed on the CHILD's own `ArtifactEnvelope.owner` (not only on
+/// 🏠️ The ownership stamp placed on the CHILD's own `ArtifactEnvelope.owner` (not only on
 /// the parent's `ArtifactChild` handle), so ownership is queryable directly from the child side —
 /// e.g. "is this document embeddable standalone, or does deleting it require going through its
 /// owner". `child_id` matches the owning `ArtifactChild<S>.child_id`/`ChildRef.child_id` exactly.
@@ -3375,7 +3375,7 @@ pub use artifact_child_owner_schema::OwnerRef;
 mod artifact_link_schema;
 pub use artifact_link_schema::{ArtifactLink, LinkPin};
 
-/// @emoji 🌳️ Lets a snapshot type declare its own composed children / referenced links. Both
+/// 🌳️ Lets a snapshot type declare its own composed children / referenced links. Both
 /// methods default to empty, so a leaf artifact (the overwhelming majority) needs zero
 /// boilerplate — only a technology that actually embeds `ArtifactChild<S>`/`ArtifactLink` fields
 /// overrides them (typically derive-generated in a later wave, per the design doc's
@@ -3389,7 +3389,7 @@ pub trait ArtifactRefs {
     }
 }
 
-/// @emoji 🔎️ What resolving one `ArtifactLink` found: the target materialized as real bytes, that
+/// 🔎️ What resolving one `ArtifactLink` found: the target materialized as real bytes, that
 /// it is simply absent, or (for a `LinkPin::Snapshot`) only the escrowed blob reference is known
 /// without the resolver having fetched its bytes yet.
 #[derive(Clone, Debug, PartialEq)]
@@ -3399,7 +3399,7 @@ pub enum LinkState {
     PinnedOnly { blob: BlobRef },
 }
 
-/// @emoji 🕵️ Host-side, LAZY link resolution — never called during `CompositionCoordinator`
+/// 🕵️ Host-side, LAZY link resolution — never called during `CompositionCoordinator`
 /// dispatch (links have no bearing on group-atomicity: unlike a child, a link's target is not part
 /// of this artifact's own document and dispatch never touches it). A UI/renderer calls this only
 /// when it actually needs to show/open the linked content.
@@ -3407,7 +3407,7 @@ pub trait LinkResolver {
     async fn resolve(&self, link: &ArtifactLink) -> LinkState;
 }
 
-/// @emoji 🗂️ The read-only directory a `MemberLinkResolver` resolves against — whatever holds the
+/// 🗂️ The read-only directory a `MemberLinkResolver` resolves against — whatever holds the
 /// live members (a `SpaceHost`, or a test fixture). Returns owned PACK bytes rather than a
 /// `&dyn SpaceMember` so the resolver can be OWNED and stored (a borrowed member reference could
 /// never live in a long-lived host field), and `Option<Result<..>>` distinguishes "no such member"
@@ -3434,7 +3434,7 @@ impl MemberDirectory for SpaceHost {
     }
 }
 
-/// @emoji 🕵️ The one production `LinkResolver`: resolves each `LinkPin` against a `MemberDirectory`
+/// 🕵️ The one production `LinkResolver`: resolves each `LinkPin` against a `MemberDirectory`
 /// (plus an optional `BlobStore` for escrowed snapshot pins). This is what makes "referenced
 /// artifacts with their own version history" real — `Head` reads the target's live tip, while
 /// `Checkpoint` reads the target's content AS OF that checkpoint, so a pinned reference keeps
@@ -3445,7 +3445,7 @@ impl MemberDirectory for SpaceHost {
 /// <hash>" without the content), which is precisely the state `LinkState::PinnedOnly` exists for.
 /// A read error is never laundered into `Missing`: absence and failure are different answers, and
 /// only absence is benign.
-/// @emoji 🕳️ The default `B` for a `MemberLinkResolver` that carries no blob escrow — uninhabited,
+/// 🕳️ The default `B` for a `MemberLinkResolver` that carries no blob escrow — uninhabited,
 /// same stand-in shape as `BackboneChannelPorts`/`NoMembers`, so `MemberLinkResolver::new` never
 /// needs its caller to name a concrete `BlobStore` implementor it isn't using.
 pub enum NoBlobStore {}
@@ -3513,7 +3513,7 @@ impl<D: MemberDirectory, B: BlobStore> LinkResolver for MemberLinkResolver<D, B>
     }
 }
 
-/// @emoji 🏭️ Generic genesis-construction helper every `space_members!`-generated `MemberFactory::
+/// 🏭️ Generic genesis-construction helper every `space_members!`-generated `MemberFactory::
 /// create` arm calls — the composition sibling of `ArtifactCodec`/`register_document_codec` above.
 /// Bakes a brand-new child store from a freshly-baked initial pack (composition genesis, see
 /// `CompositionCoordinator::dispatch_group`): `initial_pack` decoded as `P` (empty rejected — a
@@ -3538,7 +3538,7 @@ where
     Ok(store)
 }
 
-/// @emoji 🏭️ Generic reload helper every `space_members!`-generated `MemberFactory::open` arm
+/// 🏭️ Generic reload helper every `space_members!`-generated `MemberFactory::open` arm
 /// calls — reconstructs a previously-persisted child from its full envelope pack via the same
 /// `parse_document_pack` → `reset(envelope, applied, redo)` path `apply_ops_binary` uses, so a
 /// reloaded child restores its exact undo/redo cursor position, not merely its content. The
@@ -3601,6 +3601,9 @@ fn artifact_child_to_record<S>(child: &ArtifactChild<S>) -> crate::os_dsl::Recor
 }
 
 // 🚫️async: E1 pure — same sync consumer as `artifact_child_to_record`. See R9.
+/// 🧱️ Constructed directly rather than through the still-async `ArtifactChild::new`: this fn is
+/// sync (E1, above) and `new` is a plain struct literal, so inlining it here avoids forcing an
+/// async->sync flip across `new`'s 108 call sites in crates other packets own.
 fn artifact_child_from_record<S>(record: &crate::os_dsl::RecordValue) -> Result<ArtifactChild<S>, String> {
     let child_id = match record.get(0) {
         Some(crate::os_dsl::FieldValue::Text(s)) => s.clone(),
@@ -3610,14 +3613,11 @@ fn artifact_child_from_record<S>(record: &crate::os_dsl::RecordValue) -> Result<
         Some(crate::os_dsl::FieldValue::Text(s)) => crate::os_io::ArtifactRef::parse_uri(s)?,
         other => return Err(format!("expected target, found {other:?}")),
     };
-    // 🧱️ Constructed directly rather than through the still-async `ArtifactChild::new`: this fn is
-    // sync (E1, above) and `new` is a plain struct literal, so inlining it here avoids forcing an
-    // async->sync flip across `new`'s 108 call sites in crates other packets own.
     Ok(ArtifactChild { child_id, target, local_owner: None, _snapshot: PhantomData })
 }
 
 impl<S> crate::os_dsl::DslField for ArtifactChild<S> {
-    // 🚫️async: E4 — see `DslField::shape`'s tag on the trait.
+    /// 🚫️async: E4 — see `DslField::shape`'s tag on the trait.
     fn shape() -> crate::os_dsl::Shape {
         crate::os_dsl::Shape::Record(artifact_child_spec)
     }
@@ -3666,7 +3666,7 @@ fn owner_ref_from_record(record: &crate::os_dsl::RecordValue) -> Result<OwnerRef
 }
 
 impl crate::os_dsl::DslField for OwnerRef {
-    // 🚫️async: E4 — see `DslField::shape`'s tag on the trait.
+    /// 🚫️async: E4 — see `DslField::shape`'s tag on the trait.
     fn shape() -> crate::os_dsl::Shape {
         crate::os_dsl::Shape::Record(owner_ref_spec)
     }
@@ -3750,7 +3750,7 @@ fn link_pin_from_record(record: &crate::os_dsl::RecordValue) -> Result<LinkPin, 
 }
 
 impl crate::os_dsl::DslField for LinkPin {
-    // 🚫️async: E4 — see `DslField::shape`'s tag on the trait.
+    /// 🚫️async: E4 — see `DslField::shape`'s tag on the trait.
     fn shape() -> crate::os_dsl::Shape {
         crate::os_dsl::Shape::Record(link_pin_spec)
     }
@@ -3799,7 +3799,7 @@ fn artifact_link_from_record(record: &crate::os_dsl::RecordValue) -> Result<Arti
 }
 
 impl crate::os_dsl::DslField for ArtifactLink {
-    // 🚫️async: E4 — see `DslField::shape`'s tag on the trait.
+    /// 🚫️async: E4 — see `DslField::shape`'s tag on the trait.
     fn shape() -> crate::os_dsl::Shape {
         crate::os_dsl::Shape::Record(artifact_link_spec)
     }
@@ -3817,7 +3817,7 @@ impl crate::os_dsl::DslField for ArtifactLink {
 //#endregion 🔖️Composition
 
 //#region 🔖️Authority
-/// @emoji 🧾 Receipt from the sole store write gate (`dispatch` / `reset`). `messages`/`worst` carry
+/// 🧾 Receipt from the sole store write gate (`dispatch` / `reset`). `messages`/`worst` carry
 /// whatever `crate::os_spr::MutationMessage`s the command's own replay produced (empty/`None` for a
 /// structural command with nothing to report) — `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-
 /// FIRST-CLASS-CONFLICTS` §C6. `Eq` dropped (was `#[derive(.., PartialEq, Eq)]`): `EditMessages`
@@ -3925,7 +3925,7 @@ pub struct ArtifactProjectionInvalidation {
 //#endregion 📡️Events
 //#endregion 🔮️Projection
 
-/// @emoji 👁️ Read-only view over a document envelope — mutation is sealed through `dispatch`/`reset`.
+/// 👁️ Read-only view over a document envelope — mutation is sealed through `dispatch`/`reset`.
 #[derive(Clone, Copy, Debug)]
 pub struct ArtifactEnvelopeView<'a, P, Mutation> {
     envelope: &'a ArtifactEnvelope<P, Mutation>,
@@ -3961,7 +3961,7 @@ impl<'a, P, Mutation> ArtifactEnvelopeView<'a, P, Mutation> {
     }
 }
 
-/// @emoji 📝 Draft-lane store alias — same algebra as ArtifactStore; PruneDrafts never enters a Change.
+/// 📝 Draft-lane store alias — same algebra as ArtifactStore; PruneDrafts never enters a Change.
 pub type DraftStore<P, Mutation> = ArtifactStore<P, Mutation>;
 
 //#region 🔖️EphemeralLanes
@@ -4211,7 +4211,7 @@ impl<P, Mutation> Drop for ArtifactEphemeralOneItemPublication<P, Mutation> {
 }
 //#endregion 📬️EphemeralOneItemPublication
 
-/// @emoji 👥️ The PRESENCE lane's store: ephemeral SHARED state — a last-writer-wins roster, NOT an
+/// 👥️ The PRESENCE lane's store: ephemeral SHARED state — a last-writer-wins roster, NOT an
 /// event log.
 ///
 /// 🎯️ Why not `ArtifactStore` (which `ConfigStore`/`DraftStore` both alias): presence has no
@@ -4710,7 +4710,7 @@ impl<P: Clone + Default, Mutation: self::Mutation<P>> Default for PresenceStore<
 
 impl<P: Clone, Mutation: self::Mutation<P>> PresenceStore<P, Mutation> {
     /// 🏗️ A roster holding only this actor's own initial presence.
-    // 🚫️async: E1 pure constructor, consumed by `Default::default()` — see R9.
+    /// 🚫️async: E1 pure constructor, consumed by `Default::default()` — see R9.
     pub fn new(local: P) -> Self {
         Self {
             local: std::mem::ManuallyDrop::new(Arc::new(local)),
@@ -5015,7 +5015,7 @@ impl<P: Clone, Mutation: self::Mutation<P>> PresenceStore<P, Mutation> {
     }
 }
 
-/// @emoji 🫧️ The TRANSIENT lane's store: ephemeral LOCAL-ONLY UI state.
+/// 🫧️ The TRANSIENT lane's store: ephemeral LOCAL-ONLY UI state.
 ///
 /// 🎯️ Presence minus the roster. Nothing here is ever shared, persisted, packed, checkpointed or
 /// undone — it is exactly the state that used to hide in plugin `thread_local!`s and untyped shell
@@ -5038,7 +5038,7 @@ impl<P: Clone + Default, Mutation: self::Mutation<P>> Default for TransientStore
 }
 
 impl<P: Clone, Mutation: self::Mutation<P>> TransientStore<P, Mutation> {
-    // 🚫️async: E1 pure constructor, consumed by `Default::default()` — see R9.
+    /// 🚫️async: E1 pure constructor, consumed by `Default::default()` — see R9.
     pub fn new(current: P) -> Self {
         Self { current: Arc::new(current), reads: Arc::new(SnapshotReadLeaseRegistry::new()), active_returned_read: None, generation: 0, _mutation: PhantomData }
     }
@@ -5409,7 +5409,7 @@ impl<P> Drop for TransientStoreRetirement<P> {
 }
 
 //#region 🔖️InteractionStore
-/// @emoji 🕹️ Ephemeral LOCAL-ONLY lane for the framework interaction mechanism's hover half — the
+/// 🕹️ Ephemeral LOCAL-ONLY lane for the framework interaction mechanism's hover half — the
 /// `PresenceStore`/`TransientStore` sibling for `InteractionState.hover`.
 ///
 /// 🎯️ Only hover lives here. Selection + `active_mode`/`active_granularity` are
@@ -5443,7 +5443,7 @@ impl<S: Clone + Default, Mutation: self::Mutation<S>> Default for InteractionSto
 
 impl<S: Clone, Mutation: self::Mutation<S>> InteractionStore<S, Mutation> {
     /// 🏗️ Starts with this actor's own initial hover state (typically empty).
-    // 🚫️async: E1 pure constructor, consumed by `Default::default()` — see R9.
+    /// 🚫️async: E1 pure constructor, consumed by `Default::default()` — see R9.
     pub fn new(hover: S) -> Self {
         Self { hover, generation: 0, _mutation: PhantomData }
     }
@@ -5485,21 +5485,21 @@ impl<S: Clone, Mutation: self::Mutation<S>> InteractionStore<S, Mutation> {
 
 //#region 🔖️Text
 //#region 🔖️Text
-/// @emoji 📍️ 1-based line/column position inside DSL or op-log source text. Lives in `dsl_core`
+/// 📍️ 1-based line/column position inside DSL or op-log source text. Lives in `dsl_core`
 /// (the token-native DSL engine's foundation crate, which sits below `vcs`); re-exported here so
 /// every existing `crate::os_store::TextSpan`/`crate::os_store::TextError` import across the workspace keeps compiling.
 pub use crate::os_dsl::{TextError, TextSpan};
 
-/// @emoji 📜️ Handcrafted textual representation of a document snapshot, implemented once per
+/// 📜️ Handcrafted textual representation of a document snapshot, implemented once per
 /// technology next to its `Snapshot` type. LAW: `P::parse_dsl(&snapshot.print_dsl())` recovers
 /// an equal snapshot — canonical `print_dsl` output is always a `parse_dsl` fixpoint; hand-written
 /// text may normalize (whitespace, ordering) before reaching that fixpoint.
 pub trait ArtifactDsl: Sized {
-    /// @emoji 🏷️ Legacy single-segment suffix used by fixture paths and codecs.
+    /// 🏷️ Legacy single-segment suffix used by fixture paths and codecs.
     const EXTENSION: &'static str;
     fn parse_dsl(text: &str) -> Result<Self, TextError>;
     fn print_dsl(&self) -> String;
-    /// @emoji 🪪️ Dotted `plugin.artifact` identity for `.semio` preambles and on-disk names.
+    /// 🪪️ Dotted `plugin.artifact` identity for `.semio` preambles and on-disk names.
     fn envelope_id() -> &'static str {
         Self::EXTENSION
     }
@@ -5514,7 +5514,7 @@ pub use crate::os_semio as semio_format;
 
 //#region 🔖️Pack
 //#region 🔖️Pack
-/// @emoji 📦️ Binary counterpart of `🔖️Text` above — see the wave-1 design at
+/// 📦️ Binary counterpart of `🔖️Text` above — see the wave-1 design at
 /// `.🧬semio/🦑️repo/🎫️tickets/26/07/27/PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS/` for the full container-format
 /// contract. `pack`'s own `EncodeOptions`/`DecodeOptions`/`VerificationLevel` are re-exported under
 /// a `Pack`-prefixed name (not a plain re-export — `dsl_derive`'s emitted `ArtifactPack` impl and
@@ -5522,7 +5522,7 @@ pub use crate::os_semio as semio_format;
 /// `crate::os_store::PackVerificationLevel`, so there is exactly one spelling repo-wide).
 pub use crate::os_pack::{DecodeOptions as PackDecodeOptions, EncodeOptions as PackEncodeOptions, PackError, VerificationLevel as PackVerificationLevel};
 
-/// @emoji 🧵️ Thin runtime bridge to `crate::os_pack::{encode_document, decode_document}`, resolved as
+/// 🧵️ Thin runtime bridge to `crate::os_pack::{encode_document, decode_document}`, resolved as
 /// `::crate::os_store::pack_rt::...` by `dsl_derive`'s generated `ArtifactPack` impl (app crates depend on
 /// `vcs`, never on `pack` directly — same seam `::crate::os_dsl::RecordSpec`/`RecordValue` already use). Also
 /// hosts the schema-less `DslValue` bridge behind `impl ArtifactPack for DslValue` below.
@@ -5539,17 +5539,17 @@ pub mod pack_rt {
         RETAINED_PACK_PAGE_BYTES,
     };
 
-    /// @emoji 🚪️ Forwards to `crate::os_pack::encode_document`.
+    /// 🚪️ Forwards to `crate::os_pack::encode_document`.
     pub fn encode_document(spec: &RecordSpec, record: &RecordValue, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         crate::os_pack::encode_document(spec, record, options)
     }
 
-    /// @emoji 🚪️ Forwards to `crate::os_pack::decode_document`.
+    /// 🚪️ Forwards to `crate::os_pack::decode_document`.
     pub fn decode_document(bytes: &[u8], spec: &RecordSpec, options: &PackDecodeOptions) -> Result<(RecordValue, crate::os_pack::DecodeReport), PackError> {
         crate::os_pack::decode_document(bytes, spec, options)
     }
 
-    /// @emoji 🎯️ P6: container-less record body helpers for handcrafted OpBinary impls.
+    /// 🎯️ P6: container-less record body helpers for handcrafted OpBinary impls.
     pub fn encode_record_body(spec: &RecordSpec, record: &RecordValue, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         crate::os_pack::encode_record_body(spec, record, options)
     }
@@ -5560,10 +5560,10 @@ pub mod pack_rt {
         crate::os_pack::write_varint_u64(out, value);
     }
     pub use crate::os_pack::ByteReader;
-    /// @emoji 🎯️ Format byte every encoded operation starts with (handcrafted OpBinary convention).
+    /// 🎯️ Format byte every encoded operation starts with (handcrafted OpBinary convention).
     pub const OP_BINARY_FORMAT: u8 = 1;
 
-    /// @emoji 🌱️ Field id the JSON bridge's synthetic single-field record wraps a whole
+    /// 🌱️ Field id the JSON bridge's synthetic single-field record wraps a whole
     /// `serde_json::Value` payload in — mirrors `crate::os_dsl::DslField for serde_json::Value`'s
     /// `Shape::Value` escape hatch (`dsl/rs/lib.rs`), lifted one level from "one field" to "one
     /// whole document" so schema-less apps (puzzle plugins, semio_compose_rs kit) get a pack encoding too.
@@ -5573,7 +5573,7 @@ pub mod pack_rt {
         RecordSpec::new(None, RecordLayout::Lines, vec![FieldSpec::new(VALUE_BRIDGE_FIELD_ID, "value", Shape::Value)])
     }
 
-    /// @emoji 🌱️ Encodes an arbitrary `DslValue` as a complete pack file.
+    /// 🌱️ Encodes an arbitrary `DslValue` as a complete pack file.
     pub fn encode_pack_value(value: &DslValue) -> Vec<u8> {
         let mut fields = HashMap::new();
         fields.insert(VALUE_BRIDGE_FIELD_ID, FieldValue::Value(value.clone()));
@@ -5581,7 +5581,7 @@ pub mod pack_rt {
         encode_document(&value_bridge_spec(), &record, &PackEncodeOptions::default()).expect("value bridge encode is infallible for a well-formed DslValue")
     }
 
-    /// @emoji 🌱️ Inverse of `encode_pack_value`.
+    /// 🌱️ Inverse of `encode_pack_value`.
     pub fn decode_pack_value(bytes: &[u8]) -> Result<DslValue, PackError> {
         let (record, _report) = decode_document(bytes, &value_bridge_spec(), &PackDecodeOptions::default())?;
         match record.get(VALUE_BRIDGE_FIELD_ID) {
@@ -5590,7 +5590,7 @@ pub mod pack_rt {
         }
     }
 
-    /// @emoji 🪶️ Container-less twin of `encode_pack_value` for per-message wire payloads.
+    /// 🪶️ Container-less twin of `encode_pack_value` for per-message wire payloads.
     pub fn encode_wire_value(value: &DslValue) -> Vec<u8> {
         let mut fields = HashMap::new();
         fields.insert(VALUE_BRIDGE_FIELD_ID, FieldValue::Value(value.clone()));
@@ -5598,7 +5598,7 @@ pub mod pack_rt {
         crate::os_pack::encode_record_body(&value_bridge_spec(), &record, &PackEncodeOptions::default()).expect("wire value encode is infallible for a well-formed DslValue")
     }
 
-    /// @emoji 🪶️ Inverse of `encode_wire_value`.
+    /// 🪶️ Inverse of `encode_wire_value`.
     pub fn decode_wire_value(bytes: &[u8]) -> Result<DslValue, PackError> {
         decode_wire_value_with_options(bytes, &PackDecodeOptions::default())
     }
@@ -5608,20 +5608,20 @@ pub mod pack_rt {
         crate::os_pack::decode_value_record_body_exact(bytes, VALUE_BRIDGE_FIELD_ID, &options.limits)
     }
 
-    /// @emoji 🧩️ Compose-only bridge — external technology; converts through `DslValue` without JSON on the wire.
+    /// 🧩️ Compose-only bridge — external technology; converts through `DslValue` without JSON on the wire.
     pub fn encode_json_value(value: &serde_json::Value) -> Vec<u8> {
         encode_pack_value(&json_value_to_dsl(value))
     }
 
-    /// @emoji 🧩️ Compose-only inverse of `encode_json_value`.
+    /// 🧩️ Compose-only inverse of `encode_json_value`.
     pub fn decode_json_value(bytes: &[u8]) -> Result<serde_json::Value, PackError> {
         decode_pack_value(bytes).map(dsl_value_to_json)
     }
 
-    /// @emoji 📦️ Prefix for base64-wrapped pack bytes in scene `*Json` string slots (TS `PACK_B64_PREFIX`).
+    /// 📦️ Prefix for base64-wrapped pack bytes in scene `*Json` string slots (TS `PACK_B64_PREFIX`).
     pub const PACK_B64_PREFIX: &str = "pk:";
 
-    /// @emoji 📦️ Lossless pack snapshot as a `pk:`-prefixed base64 string. RFC 4648 standard
+    /// 📦️ Lossless pack snapshot as a `pk:`-prefixed base64 string. RFC 4648 standard
     /// alphabet via the first-party `semio-framework-io-base64` codec — this call site is
     /// guest-reachable (scene `*Json` field encoding), so it is re-pointed at the codec rather than
     /// target-gated away like this crate's genuinely host-only third-party crates.
@@ -5629,13 +5629,13 @@ pub mod pack_rt {
         format!("{}{}", PACK_B64_PREFIX, semio_framework_io_base64::base64_standard_encode(bytes))
     }
 
-    /// @emoji 📥️ Inverse of [`pack_value_to_base64`].
+    /// 📥️ Inverse of [`pack_value_to_base64`].
     pub fn pack_value_from_base64(encoded: &str) -> Result<Vec<u8>, PackError> {
         let payload = encoded.strip_prefix(PACK_B64_PREFIX).ok_or(PackError::Malformed { what: "pack base64", offset: 0, detail: "missing pk: prefix".into() })?;
         semio_framework_io_base64::base64_standard_decode(payload).map_err(|error| PackError::Malformed { what: "pack base64", offset: 0, detail: error.to_string() })
     }
 
-    /// @emoji 🎬️ Decodes a component-scene `*Json` field when it carries [`pack_value_to_base64`] bytes.
+    /// 🎬️ Decodes a component-scene `*Json` field when it carries [`pack_value_to_base64`] bytes.
     pub fn decode_scene_pack_field(encoded: &str) -> Result<DslValue, PackError> {
         if encoded.starts_with(PACK_B64_PREFIX) {
             decode_pack_value(&pack_value_from_base64(encoded)?)
@@ -5644,7 +5644,7 @@ pub mod pack_rt {
         }
     }
 
-    /// @emoji 🎬️ Expands a scene `*Json` slot to JSON text for engines that still ingest stringified payloads.
+    /// 🎬️ Expands a scene `*Json` slot to JSON text for engines that still ingest stringified payloads.
     pub fn scene_field_json_text(field: &str) -> Result<String, PackError> {
         if field.starts_with(PACK_B64_PREFIX) {
             let dsl = decode_pack_value(&pack_value_from_base64(field)?)?;
@@ -5654,7 +5654,7 @@ pub mod pack_rt {
         }
     }
 
-    /// @emoji 🧩️ Compose wire decode helper — renormalizes a `serde_json::Value` tree after pack decode.
+    /// 🧩️ Compose wire decode helper — renormalizes a `serde_json::Value` tree after pack decode.
     // 🚫️async: E1 pure transform pipeline consumed by json_values_equal's `==` (external PartialEq) — see R9
     pub fn renormalize_json_wire_value(value: serde_json::Value) -> serde_json::Value {
         dsl_value_to_json(renormalize_whole_number_floats(json_value_to_dsl(&value)))
@@ -5670,7 +5670,7 @@ pub mod pack_rt {
         serde_json::Value::from(value)
     }
 
-    /// @emoji ⚖️ Semantic JSON value equality — normalizes numeric representation (`3` vs `3.0`), a
+    /// ⚖️ Semantic JSON value equality — normalizes numeric representation (`3` vs `3.0`), a
     /// distinction `DslValue`'s own `Number::UInt`/`Int`/`Float` fidelity now deliberately preserves
     /// (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/01) — so this compares
     /// through [`renormalize_whole_number_floats`] on both sides rather than plain `DslValue` equality.
@@ -5679,7 +5679,7 @@ pub mod pack_rt {
         renormalize_whole_number_floats(json_value_to_dsl(a)) == renormalize_whole_number_floats(json_value_to_dsl(b))
     }
 
-    /// @emoji 🔧️ Rewrites fractionless floats in a `DslValue` tree to their exact integer variant
+    /// 🔧️ Rewrites fractionless floats in a `DslValue` tree to their exact integer variant
     /// (`Number::UInt`/`Number::Int`) so a `3.0` reaching this path (e.g. through a plugin/JS
     /// boundary that has no integer type) compares equal to a genuine `3`.
     // 🚫️async: E1 pure recursive transform, consumed by json_values_equal's `==` (external PartialEq) — see R9
@@ -5725,7 +5725,7 @@ pub struct OwnedSchemaDecodePage {
 }
 
 impl OwnedSchemaDecodePage {
-    /// @emoji 📄️ Copies one already-admitted canonical page into definitionally shallow storage.
+    /// 📄️ Copies one already-admitted canonical page into definitionally shallow storage.
     pub fn try_from_slice(bytes: &[u8]) -> Result<Self, OwnedSchemaDecodePageFault> {
         if bytes.len() > OWNED_SCHEMA_DECODE_PAGE_BYTES {
             return Err(OwnedSchemaDecodePageFault { actual_bytes: bytes.len() });
@@ -5774,7 +5774,7 @@ pub struct OwnedSchemaDecodePages {
 }
 
 impl OwnedSchemaDecodePages {
-    /// @emoji 🎫️ Reserves fixed page and byte authority before any input owner is admitted.
+    /// 🎫️ Reserves fixed page and byte authority before any input owner is admitted.
     pub fn try_with_credits(credits: OwnedSchemaDecodeCredits) -> Result<Self, OwnedSchemaDecodeAdmissionFault> {
         if credits.maximum_pages == 0 || credits.maximum_bytes == 0 {
             return Err(OwnedSchemaDecodeAdmissionFault::ZeroCapacity);
@@ -5788,7 +5788,7 @@ impl OwnedSchemaDecodePages {
         Ok(Self { slots: slots.into_boxed_slice(), page_count: 0, byte_count: 0, maximum_bytes: credits.maximum_bytes, sealed: false })
     }
 
-    /// @emoji 🔎️ Validates one page extent before a producer constructs its fixed owner.
+    /// 🔎️ Validates one page extent before a producer constructs its fixed owner.
     pub fn preflight_page_bytes(&self, page_bytes: usize) -> Result<(), OwnedSchemaDecodeAdmissionFault> {
         if self.sealed {
             return Err(OwnedSchemaDecodeAdmissionFault::Sealed);
@@ -5809,7 +5809,7 @@ impl OwnedSchemaDecodePages {
         Ok(())
     }
 
-    /// @emoji 📥️ Moves one exact page owner into its pre-reserved slot or returns it untouched.
+    /// 📥️ Moves one exact page owner into its pre-reserved slot or returns it untouched.
     pub fn admit_page(&mut self, page: OwnedSchemaDecodePage) -> Result<(), (OwnedSchemaDecodeAdmissionFault, OwnedSchemaDecodePage)> {
         if let Err(fault) = self.preflight_page_bytes(page.len()) {
             return Err((fault, page));
@@ -5818,7 +5818,7 @@ impl OwnedSchemaDecodePages {
         Ok(())
     }
 
-    /// @emoji 📨️ Commits the page built by a producer callback after the same mutable authority preflighted it.
+    /// 📨️ Commits the page built by a producer callback after the same mutable authority preflighted it.
     pub fn admit_preflighted_page(&mut self, page: OwnedSchemaDecodePage) {
         debug_assert!(self.preflight_page_bytes(page.len()).is_ok());
         let next_bytes = self.byte_count + page.len();
@@ -5827,7 +5827,7 @@ impl OwnedSchemaDecodePages {
         self.byte_count = next_bytes;
     }
 
-    /// @emoji 🔒️ Seals the exact admitted byte extent before tokenization begins.
+    /// 🔒️ Seals the exact admitted byte extent before tokenization begins.
     pub fn seal(&mut self) -> Result<(), OwnedSchemaDecodeAdmissionFault> {
         if self.sealed {
             return Err(OwnedSchemaDecodeAdmissionFault::Sealed);
@@ -5857,7 +5857,7 @@ impl OwnedSchemaDecodePages {
         unsafe { self.slots.get(page)?.assume_init_ref().bytes.get(within).copied() }
     }
 
-    /// @emoji 🧹️ Retires one logical admitted page per close grant; page payloads are inline bytes.
+    /// 🧹️ Retires one logical admitted page per close grant; page payloads are inline bytes.
     pub fn close_take_page(&mut self) -> Option<OwnedSchemaDecodePage> {
         if self.page_count == 0 {
             return None;
@@ -5967,7 +5967,7 @@ pub struct OwnedSchemaTokenCursor {
 }
 
 impl OwnedSchemaTokenCursor {
-    /// @emoji 🧬️ Begins tokenization only after exact fixed-page admission is sealed.
+    /// 🧬️ Begins tokenization only after exact fixed-page admission is sealed.
     pub fn try_new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, pages: OwnedSchemaDecodePages) -> Result<Self, OwnedSchemaDecodePages> {
         if !pages.is_sealed() {
             return Err(pages);
@@ -6058,7 +6058,7 @@ impl OwnedSchemaTokenCursor {
         }
     }
 
-    /// @emoji ⏭️ Advances lexical validation by budgeted bytes and yields at most one schema token.
+    /// ⏭️ Advances lexical validation by budgeted bytes and yields at most one schema token.
     pub fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> OwnedSchemaTokenStep {
         if cx.operation() != self.operation || cx.generation() != self.generation {
             let diagnostic = self.diagnostic("schema-json.stale-authority", self.offset);
@@ -6262,7 +6262,7 @@ impl OwnedSchemaTokenCursor {
         }
     }
 
-    /// @emoji 🧹️ Releases exactly one admitted page from a cancelled or rejected decode.
+    /// 🧹️ Releases exactly one admitted page from a cancelled or rejected decode.
     pub fn close_step(&mut self, maximum_pages: usize) -> SnapshotRetirementStep {
         if maximum_pages == 0 {
             return SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 };
@@ -6277,7 +6277,7 @@ impl OwnedSchemaTokenCursor {
         self.pages.terminal_is_empty()
     }
 
-    /// @emoji 📐️ Copies a bounded token span directly from fixed pages without concatenation.
+    /// 📐️ Copies a bounded token span directly from fixed pages without concatenation.
     pub fn copy_token_bytes(&self, token: OwnedSchemaToken, relative_offset: usize, output: &mut [u8]) -> usize {
         let start = token.start as usize;
         let end = token.end as usize;
@@ -6361,7 +6361,7 @@ pub struct OwnedSchemaRecordSpec {
 }
 
 impl OwnedSchemaRecordSpec {
-    /// @emoji 📋️ Admits a fixed schema whose field IDs and keys form an exact bijection.
+    /// 📋️ Admits a fixed schema whose field IDs and keys form an exact bijection.
     pub fn validate(self) -> Result<Self, &'static str> {
         if self.fields.is_empty() || self.fields.len() > 64 {
             return Err("schema-json.field-capacity");
@@ -6413,7 +6413,7 @@ pub struct OwnedSchemaRecordCursor {
 }
 
 impl OwnedSchemaRecordCursor {
-    /// @emoji 🧬️ Couples fixed schema authority to the fixed-page token cursor.
+    /// 🧬️ Couples fixed schema authority to the fixed-page token cursor.
     pub fn try_new(spec: OwnedSchemaRecordSpec, tokens: OwnedSchemaTokenCursor) -> Result<Self, (OwnedSchemaTokenCursor, &'static str)> {
         let spec = match spec.validate() {
             Ok(spec) => spec,
@@ -6437,7 +6437,7 @@ impl OwnedSchemaRecordCursor {
         self.spec.fields.iter().enumerate().all(|(index, field)| !field.required || self.seen & (1 << index) != 0)
     }
 
-    /// @emoji ⏭️ Advances one schema token, preserving exact field identity and duplicate state.
+    /// ⏭️ Advances one schema token, preserving exact field identity and duplicate state.
     pub fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> OwnedSchemaRecordStep {
         if matches!(self.state, OwnedSchemaRecordState::Complete) {
             return OwnedSchemaRecordStep::Complete;
@@ -6583,7 +6583,7 @@ pub enum OwnedSchemaNestedRecordStep {
     Fault(OwnedSchemaDecodeDiagnostic),
 }
 
-/// @emoji 🪆 Schema-first nested-object matcher fed by an outer retained record cursor. It
+/// 🪆 Schema-first nested-object matcher fed by an outer retained record cursor. It
 /// owns no bytes and advances exactly one already-budgeted token at a time.
 pub struct OwnedSchemaNestedRecordCursor {
     spec: OwnedSchemaRecordSpec,
@@ -6732,7 +6732,7 @@ const ARTIFACT_ENVELOPE_OWNED_SCHEMA_FIELDS: &[OwnedSchemaFieldSpec] = &[
     OwnedSchemaFieldSpec { id: ARTIFACT_ENVELOPE_CONFLICTS_FIELD, key: "conflicts", required: true },
 ];
 
-/// @emoji 🧬️ Returns the sole field-ID/key contract for owned envelope decode.
+/// 🧬️ Returns the sole field-ID/key contract for owned envelope decode.
 pub fn artifact_envelope_owned_schema() -> OwnedSchemaRecordSpec {
     OwnedSchemaRecordSpec { fields: ARTIFACT_ENVELOPE_OWNED_SCHEMA_FIELDS }
 }
@@ -6768,7 +6768,7 @@ impl ArtifactEnvelopeFieldReservation {
     }
 }
 
-/// @emoji 🎯️ Exact pre-admission target for one decoded envelope field.
+/// 🎯️ Exact pre-admission target for one decoded envelope field.
 pub trait ArtifactEnvelopeDecodedRecordTarget<P, Mutation>: Send {
     fn reserve_field(&mut self, field_id: u16) -> Result<ArtifactEnvelopeFieldReservation, OwnedSchemaDecodeDiagnostic>;
     fn publish_vcs_reserved(&mut self, reservation: ArtifactEnvelopeFieldReservation, value: ArtifactVcs<P, Mutation>);
@@ -6777,7 +6777,7 @@ pub trait ArtifactEnvelopeDecodedRecordTarget<P, Mutation>: Send {
     fn cancel_field_reservation(&mut self, reservation: ArtifactEnvelopeFieldReservation) -> Result<(), OwnedSchemaDecodeDiagnostic>;
 }
 
-/// @emoji 🧬️ Terminalizable owned decoder for the nested VCS record.
+/// 🧬️ Terminalizable owned decoder for the nested VCS record.
 pub trait ArtifactEnvelopeVcsFieldAuthority<P, Mutation>: Send {
     fn accept_token(&mut self, token: OwnedSchemaToken, terminal: bool, source: &OwnedSchemaRecordCursor, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactEnvelopeFieldDecodeStep, OwnedSchemaDecodeDiagnostic>;
     fn publish_reserved(
@@ -6793,7 +6793,7 @@ pub trait ArtifactEnvelopeVcsFieldAuthority<P, Mutation>: Send {
     fn terminal_is_empty(&self) -> bool;
 }
 
-/// @emoji 🪨️ Terminalizable owner-supplied decoder for a domain snapshot value.
+/// 🪨️ Terminalizable owner-supplied decoder for a domain snapshot value.
 pub trait ArtifactEnvelopeSnapshotFieldAuthority<P>: Send {
     fn accept_token(&mut self, token: OwnedSchemaToken, terminal: bool, source: &OwnedSchemaRecordCursor, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactEnvelopeFieldDecodeStep, OwnedSchemaDecodeDiagnostic>;
     fn publish_reserved(
@@ -6809,14 +6809,14 @@ pub trait ArtifactEnvelopeSnapshotFieldAuthority<P>: Send {
     fn terminal_is_empty(&self) -> bool;
 }
 
-/// @emoji 🪨️ Exact pre-admission target for a nested domain snapshot.
+/// 🪨️ Exact pre-admission target for a nested domain snapshot.
 pub trait ArtifactEnvelopeSnapshotFieldTarget<P>: Send {
     fn reserve_snapshot(&mut self) -> Result<ArtifactEnvelopeFieldReservation, OwnedSchemaDecodeDiagnostic>;
     fn publish_snapshot_reserved(&mut self, reservation: ArtifactEnvelopeFieldReservation, value: P);
     fn cancel_snapshot_reservation(&mut self, reservation: ArtifactEnvelopeFieldReservation) -> Result<(), OwnedSchemaDecodeDiagnostic>;
 }
 
-/// @emoji 🧬️ Terminalizable owner-supplied decoder for one domain mutation.
+/// 🧬️ Terminalizable owner-supplied decoder for one domain mutation.
 pub trait ArtifactEnvelopeMutationFieldAuthority<Mutation>: Send {
     fn accept_token(&mut self, token: OwnedSchemaToken, terminal: bool, source: &OwnedSchemaRecordCursor, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactEnvelopeFieldDecodeStep, OwnedSchemaDecodeDiagnostic>;
     fn publish_reserved(
@@ -6829,21 +6829,21 @@ pub trait ArtifactEnvelopeMutationFieldAuthority<Mutation>: Send {
     fn terminal_is_empty(&self) -> bool;
 }
 
-/// @emoji 🧬️ Exact pre-admission target for one nested domain mutation.
+/// 🧬️ Exact pre-admission target for one nested domain mutation.
 pub trait ArtifactEnvelopeMutationFieldTarget<Mutation>: Send {
     fn reserve_mutation(&mut self) -> Result<ArtifactEnvelopeFieldReservation, OwnedSchemaDecodeDiagnostic>;
     fn publish_mutation_reserved(&mut self, reservation: ArtifactEnvelopeFieldReservation, value: Mutation);
     fn cancel_mutation_reservation(&mut self, reservation: ArtifactEnvelopeFieldReservation) -> Result<(), OwnedSchemaDecodeDiagnostic>;
 }
 
-/// @emoji ⚔️ Terminalizable repository-owned SPR conflict record authority.
+/// ⚔️ Terminalizable repository-owned SPR conflict record authority.
 pub trait ArtifactEnvelopeSprConflictAuthority: Send {
     fn accept_token(&mut self, token: OwnedSchemaToken, terminal: bool, source: &OwnedSchemaRecordCursor, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactEnvelopeFieldDecodeStep, OwnedSchemaDecodeDiagnostic>;
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, OwnedSchemaDecodeDiagnostic>;
     fn terminal_is_empty(&self) -> bool;
 }
 
-/// @emoji 🏭️ Mandatory domain catalog for every nested envelope decoder; there is no default implementation.
+/// 🏭️ Mandatory domain catalog for every nested envelope decoder; there is no default implementation.
 pub trait ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>: Send + Sync {
     fn begin_vcs(
         &self,
@@ -6859,7 +6859,7 @@ pub trait ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>: Send + Sync {
     fn edit_history_decoder(&self) -> Arc<dyn ArtifactOwnedHistoryEntryDecoder<Edit<Mutation>>>;
 }
 
-/// @emoji 🧬️ Owner-supplied decoder for one pre-admitted history entry. The framework
+/// 🧬️ Owner-supplied decoder for one pre-admitted history entry. The framework
 /// never invokes `DeserializeOwned` for a domain edit behind the catalog's back.
 pub trait ArtifactOwnedHistoryEntryDecoder<T>: Send + Sync {
     fn begin_entry(
@@ -6871,7 +6871,7 @@ pub trait ArtifactOwnedHistoryEntryDecoder<T>: Send + Sync {
     ) -> Box<dyn ArtifactOwnedHistoryEntryAuthority<T>>;
 }
 
-/// @emoji 🧬 Terminalizable schema cursor for one pre-reserved history entry.
+/// 🧬 Terminalizable schema cursor for one pre-reserved history entry.
 pub trait ArtifactOwnedHistoryEntryAuthority<T>: Send {
     fn accept_token(&mut self, token: OwnedSchemaToken, terminal: bool, source: &OwnedSchemaRecordCursor, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactEnvelopeFieldDecodeStep, OwnedSchemaDecodeDiagnostic>;
     fn take_value(&mut self) -> Option<T>;
@@ -6887,7 +6887,7 @@ impl<T> ArtifactRepositoryHistoryEntryDecoder<T> {
     }
 }
 
-/// @emoji 🧱 Retained source-bounded repository decoder used only by cohorts whose domain cursor
+/// 🧱 Retained source-bounded repository decoder used only by cohorts whose domain cursor
 /// remains explicitly fail-closed pending a schema-owned implementation.
 pub fn artifact_bounded_history_entry_decoder<T>() -> Arc<dyn ArtifactOwnedHistoryEntryDecoder<T>>
 where
@@ -7469,7 +7469,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + Sync + 'static> ArtifactOwnedHis
     }
 }
 
-/// @emoji 📡️ Builds the repository-owned retained `.spr`/`.ops` edit decoder around an
+/// 📡️ Builds the repository-owned retained `.spr`/`.ops` edit decoder around an
 /// exact domain catalog. Domain snapshots and mutations never cross this seam as serde owners.
 pub fn artifact_owned_spr_edit_history_decoder<P: Send + Sync + 'static, Mutation: Send + Sync + 'static>(
     catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
@@ -7588,7 +7588,7 @@ impl<T> Drop for ArtifactRepositoryHistoryEntryAuthority<T> {
     }
 }
 
-/// @emoji 📦️ Exact owner-supplied catalog and retirement factories required to admit an
+/// 📦️ Exact owner-supplied catalog and retirement factories required to admit an
 /// envelope decode. Construction is all-or-nothing so a caller cannot pair a field catalog with
 /// unrelated nested-owner disposal authority.
 pub struct ArtifactEnvelopeDecodeOwnerBundle<P, Mutation> {
@@ -7625,7 +7625,7 @@ impl<P, Mutation> ArtifactEnvelopeDecodeOwnerBundle<P, Mutation> {
     }
 }
 
-/// @emoji 🧬️ Domain-supplied typed field owner used by envelope decode; no serde type crosses this seam.
+/// 🧬️ Domain-supplied typed field owner used by envelope decode; no serde type crosses this seam.
 pub trait ArtifactEnvelopeFieldDecoder<P, Mutation>: Send {
     fn accept_field_token(&mut self, field_id: u16, token: OwnedSchemaToken, terminal: bool, source: &OwnedSchemaRecordCursor, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactEnvelopeFieldDecodeStep, OwnedSchemaDecodeDiagnostic>;
     fn finish_record(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactEnvelopeFieldDecodeStep, OwnedSchemaDecodeDiagnostic>;
@@ -7682,7 +7682,7 @@ impl<P, Mutation> Drop for ArtifactEnvelopeFieldDecoderRegistryState<P, Mutation
     }
 }
 
-/// @emoji 🗄️ Fixed app-owned registry that keeps nested field decoders out of stack/job destructors.
+/// 🗄️ Fixed app-owned registry that keeps nested field decoders out of stack/job destructors.
 pub struct ArtifactEnvelopeFieldDecoderRegistry<P, Mutation> {
     state: Mutex<ArtifactEnvelopeFieldDecoderRegistryState<P, Mutation>>,
     returned: Box<[std::sync::atomic::AtomicU64]>,
@@ -7692,7 +7692,7 @@ pub struct ArtifactEnvelopeFieldDecoderRegistry<P, Mutation> {
 }
 
 impl<P, Mutation> ArtifactEnvelopeFieldDecoderRegistry<P, Mutation> {
-    /// @emoji 🏗️ Preallocates the entire fixed decoder authority before any input owner exists.
+    /// 🏗️ Preallocates the entire fixed decoder authority before any input owner exists.
     pub fn new() -> Arc<Self> {
         let slots = (0..ARTIFACT_ENVELOPE_FIELD_DECODER_CAPACITY).map(|_| ArtifactEnvelopeFieldDecoderSlot { generation: 0, owner: std::mem::ManuallyDrop::new(None) }).collect::<Vec<_>>().into_boxed_slice();
         let returned = (0..ARTIFACT_ENVELOPE_FIELD_DECODER_CAPACITY).map(|_| std::sync::atomic::AtomicU64::new(0)).collect::<Vec<_>>().into_boxed_slice();
@@ -7710,7 +7710,7 @@ impl<P, Mutation> ArtifactEnvelopeFieldDecoderRegistry<P, Mutation> {
         })
     }
 
-    /// @emoji 🎫️ Admits one exact decoder or returns it untouched on contention/capacity/exhaustion.
+    /// 🎫️ Admits one exact decoder or returns it untouched on contention/capacity/exhaustion.
     pub fn try_admit(
         self: &Arc<Self>,
         owner: Box<dyn ArtifactEnvelopeFieldDecoder<P, Mutation>>,
@@ -7753,7 +7753,7 @@ impl<P, Mutation> ArtifactEnvelopeFieldDecoderRegistry<P, Mutation> {
         Ok(f(owner))
     }
 
-    /// @emoji 🧹️ Detaches one exact returned decoder without calling it or dropping it under the registry lock.
+    /// 🧹️ Detaches one exact returned decoder without calling it or dropping it under the registry lock.
     pub fn take_returned_ticket(&self, ticket: ArtifactEnvelopeFieldDecoderTicket) -> Result<ArtifactEnvelopeReturnedFieldDecoder<P, Mutation>, ArtifactEnvelopeFieldDecoderRegistryFault> {
         let owner = {
             let mut state = self.state.try_lock().map_err(|_| ArtifactEnvelopeFieldDecoderRegistryFault::Contended)?;
@@ -7778,7 +7778,7 @@ impl<P, Mutation> ArtifactEnvelopeFieldDecoderRegistry<P, Mutation> {
         Ok(ArtifactEnvelopeReturnedFieldDecoder { owner: std::mem::ManuallyDrop::new(Some(owner)) })
     }
 
-    /// @emoji 🔎 Returns one exact atomically handed-back ticket without scanning the fixed registry.
+    /// 🔎 Returns one exact atomically handed-back ticket without scanning the fixed registry.
     pub fn next_returned_ticket(&self) -> Option<ArtifactEnvelopeFieldDecoderTicket> {
         let mask = self.returned_mask.load(std::sync::atomic::Ordering::Acquire);
         if mask == 0 {
@@ -7789,8 +7789,8 @@ impl<P, Mutation> ArtifactEnvelopeFieldDecoderRegistry<P, Mutation> {
         (generation != 0).then_some(ArtifactEnvelopeFieldDecoderTicket { index: index as u16, generation })
     }
 
-    /// @emoji ✅ Exact generation witness that the app maintenance owner detached this ticket.
-    /// @emoji 🪪️ Whether THIS ticket's decoder has been handed back. Monotone by slot generation, so
+    /// ✅ Exact generation witness that the app maintenance owner detached this ticket.
+    /// 🪪️ Whether THIS ticket's decoder has been handed back. Monotone by slot generation, so
     /// a later lease reusing the same slot can never make an already-reclaimed ticket read as
     /// outstanding again: an `==` test flipped a finished authority's own `Drop` witness back to
     /// false the moment a sibling authority took the next generation of the same slot, which is
@@ -7804,7 +7804,7 @@ impl<P, Mutation> ArtifactEnvelopeFieldDecoderRegistry<P, Mutation> {
     }
 }
 
-/// @emoji 🪪️ Shallow non-cloneable lease; Drop atomically hands its exact decoder back to the registry.
+/// 🪪️ Shallow non-cloneable lease; Drop atomically hands its exact decoder back to the registry.
 pub struct ArtifactEnvelopeFieldDecoderLease<P, Mutation> {
     registry: Arc<ArtifactEnvelopeFieldDecoderRegistry<P, Mutation>>,
     ticket: ArtifactEnvelopeFieldDecoderTicket,
@@ -7820,7 +7820,7 @@ impl<P, Mutation> ArtifactEnvelopeFieldDecoderLease<P, Mutation> {
         self.ticket
     }
 
-    /// @emoji ↩️ Atomically returns the lease exactly once without acquiring or blocking on the owner mutex.
+    /// ↩️ Atomically returns the lease exactly once without acquiring or blocking on the owner mutex.
     pub fn return_now(&mut self) -> bool {
         if self.returned {
             return false;
@@ -7840,7 +7840,7 @@ impl<P, Mutation> Drop for ArtifactEnvelopeFieldDecoderLease<P, Mutation> {
     }
 }
 
-/// @emoji 🧹️ Detached decoder owner driven outside the registry lock by the bounded maintenance lane.
+/// 🧹️ Detached decoder owner driven outside the registry lock by the bounded maintenance lane.
 pub struct ArtifactEnvelopeReturnedFieldDecoder<P, Mutation> {
     owner: std::mem::ManuallyDrop<Option<Box<dyn ArtifactEnvelopeFieldDecoder<P, Mutation>>>>,
 }
@@ -7881,7 +7881,7 @@ where
     P: Send,
     Mutation: Send,
 {
-    /// @emoji ↩️ Detaches and bounded-closes one exact returned decoder on the caller thread so a
+    /// ↩️ Detaches and bounded-closes one exact returned decoder on the caller thread so a
     /// worker [`release_step`] can pass its `ticket_reclaimed` gate without waiting for the app's
     /// next maintenance visit (ticket 26/09/09/PROCEDURAL-3D-END-TO-END `env-20`).
     pub fn reclaim_returned_ticket_now(
@@ -7946,7 +7946,7 @@ pub struct OwnedSchemaStringAuthority<const MAXIMUM_BYTES: usize> {
 }
 
 impl<const MAXIMUM_BYTES: usize> OwnedSchemaStringAuthority<MAXIMUM_BYTES> {
-    /// @emoji 🔠️ Binds one string token to fixed caller-chosen semantic storage.
+    /// 🔠️ Binds one string token to fixed caller-chosen semantic storage.
     pub fn try_new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, token: OwnedSchemaToken, path: OwnedSchemaPath) -> Result<Self, OwnedSchemaToken> {
         if token.kind != OwnedSchemaTokenKind::String || token.end.saturating_sub(token.start) < 2 || MAXIMUM_BYTES == 0 {
             return Err(token);
@@ -8003,7 +8003,7 @@ impl<const MAXIMUM_BYTES: usize> OwnedSchemaStringAuthority<MAXIMUM_BYTES> {
         }
     }
 
-    /// @emoji ⏭️ Unescapes source bytes one semantic byte/scalar at a time under the caller's grant.
+    /// ⏭️ Unescapes source bytes one semantic byte/scalar at a time under the caller's grant.
     pub fn step(&mut self, source: &OwnedSchemaRecordCursor, cx: &mut semio_framework_job::StepContext<'_>) -> OwnedSchemaStringStep {
         if cx.operation() != self.operation || cx.generation() != self.generation {
             let diagnostic = self.diagnostic("schema-json.stale-string-authority");
@@ -8096,7 +8096,7 @@ impl<const MAXIMUM_BYTES: usize> OwnedSchemaStringAuthority<MAXIMUM_BYTES> {
         matches!(self.state, OwnedSchemaStringState::Complete).then(|| unsafe { std::str::from_utf8_unchecked(&self.bytes[..self.len]) })
     }
 
-    /// @emoji 📤️ Publishes the bounded semantic string exactly once after terminal validation.
+    /// 📤️ Publishes the bounded semantic string exactly once after terminal validation.
     pub fn take_string(&mut self) -> Option<String> {
         if self.taken || !matches!(self.state, OwnedSchemaStringState::Complete) {
             return None;
@@ -8105,7 +8105,7 @@ impl<const MAXIMUM_BYTES: usize> OwnedSchemaStringAuthority<MAXIMUM_BYTES> {
         Some(unsafe { String::from_utf8_unchecked(self.bytes[..self.len].to_vec()) })
     }
 
-    /// @emoji 🛑️ Releases the definitionally inline partial scalar without allocating.
+    /// 🛑️ Releases the definitionally inline partial scalar without allocating.
     pub fn cancel(&mut self) {
         self.state = OwnedSchemaStringState::Cancelled;
         self.taken = true;
@@ -8125,7 +8125,7 @@ pub enum OwnedSchemaHexStep {
     Fault(OwnedSchemaDecodeDiagnostic),
 }
 
-/// @emoji 🔢 Incremental bounded hex scalar used by owner catalogs for nested pack values.
+/// 🔢 Incremental bounded hex scalar used by owner catalogs for nested pack values.
 /// The decoded bytes stay inline and no String/Vec is ever constructed.
 pub struct OwnedSchemaHexAuthority<const MAXIMUM_BYTES: usize> {
     operation: semio_framework_job::OperationId,
@@ -8222,7 +8222,7 @@ impl<const MAXIMUM_BYTES: usize> OwnedSchemaHexAuthority<MAXIMUM_BYTES> {
     }
 }
 
-/// @emoji 🧺️ Token-local authority for an exact empty JSON array. The opening token is
+/// 🧺️ Token-local authority for an exact empty JSON array. The opening token is
 /// consumed separately from the terminal token so a surrounding record never replays either one.
 pub struct OwnedSchemaEmptyArrayAuthority {
     path: OwnedSchemaPath,
@@ -8240,7 +8240,7 @@ enum OwnedSchemaBoundedArrayState {
     Closing,
 }
 
-/// @emoji 📚️ Retained one-entry-at-a-time decoder for repository-owned history arrays.
+/// 📚️ Retained one-entry-at-a-time decoder for repository-owned history arrays.
 /// Each semantic entry is capped at one decode page and enters the fixed generation ledger once.
 struct OwnedSchemaBoundedArrayAuthority<T> {
     path: OwnedSchemaPath,
@@ -8464,14 +8464,14 @@ pub struct ArtifactEnvelopeDecodePage {
     inner: OwnedSchemaDecodePage,
 }
 
-/// @emoji 📚️ Seals exact caller-pre-admitted pages into the sole 12-field envelope cursor.
+/// 📚️ Seals exact caller-pre-admitted pages into the sole 12-field envelope cursor.
 pub fn artifact_envelope_decode_record(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, pages: OwnedSchemaDecodePages) -> Result<OwnedSchemaRecordCursor, OwnedSchemaDecodePages> {
     let tokens = OwnedSchemaTokenCursor::try_new(operation, generation, pages)?;
     OwnedSchemaRecordCursor::try_new(artifact_envelope_owned_schema(), tokens).map_err(|(tokens, _)| tokens.pages)
 }
 
 impl ArtifactEnvelopeDecodePage {
-    /// @emoji 📄️ Creates one definitionally shallow page from an already bounded producer buffer.
+    /// 📄️ Creates one definitionally shallow page from an already bounded producer buffer.
     pub fn try_from_array(bytes: [u8; ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES], len: usize) -> Result<Self, [u8; ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES]> {
         if len > ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES {
             return Err(bytes);
@@ -8479,18 +8479,18 @@ impl ArtifactEnvelopeDecodePage {
         Ok(Self { inner: OwnedSchemaDecodePage { bytes, len: len as u16 } })
     }
 
-    /// @emoji 📄️ Constructs the fixed page inside a producer callback whose extent was already accepted.
+    /// 📄️ Constructs the fixed page inside a producer callback whose extent was already accepted.
     pub fn from_preflighted_array(bytes: [u8; ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES], len: usize) -> Self {
         debug_assert!(len <= ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
         Self { inner: OwnedSchemaDecodePage { bytes, len: len as u16 } }
     }
 
-    /// @emoji 📥️ Moves this exact page into pre-reserved schema storage or returns it untouched.
+    /// 📥️ Moves this exact page into pre-reserved schema storage or returns it untouched.
     pub fn admit_into(self, pages: &mut OwnedSchemaDecodePages) -> Result<(), (OwnedSchemaDecodeAdmissionFault, Self)> {
         pages.admit_page(self.inner).map_err(|(fault, inner)| (fault, Self { inner }))
     }
 
-    /// @emoji 📨️ Commits this page after the same mutable ingress authority ran its producer preflight.
+    /// 📨️ Commits this page after the same mutable ingress authority ran its producer preflight.
     pub fn admit_preflighted_into(self, pages: &mut OwnedSchemaDecodePages) {
         pages.admit_preflighted_page(self.inner);
     }
@@ -8512,7 +8512,7 @@ enum ArtifactEnvelopeDecodeState {
     Fault(OwnedSchemaDecodeDiagnostic),
 }
 
-/// @emoji 🧬️ Persistent fixed-page envelope decode job; terminal outcomes are withheld until every nested owner is empty.
+/// 🧬️ Persistent fixed-page envelope decode job; terminal outcomes are withheld until every nested owner is empty.
 pub struct ArtifactEnvelopeDecodeAuthority<P, Mutation> {
     record: std::mem::ManuallyDrop<Option<OwnedSchemaRecordCursor>>,
     fields: std::mem::ManuallyDrop<Option<ArtifactEnvelopeFieldDecoderLease<P, Mutation>>>,
@@ -8531,7 +8531,7 @@ where
     P: Send,
     Mutation: Send,
 {
-    /// @emoji 🏗️ Admits the field decoder before binding the shallow job lease and sealed record cursor.
+    /// 🏗️ Admits the field decoder before binding the shallow job lease and sealed record cursor.
     pub fn try_new(
         record: OwnedSchemaRecordCursor,
         field_registry: &Arc<ArtifactEnvelopeFieldDecoderRegistry<P, Mutation>>,
@@ -8600,12 +8600,12 @@ where
         semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail })
     }
 
+    /// 📏️ The owner's own byte demand is read under its lease, then the lease is RELEASED before the
+    /// ledger check: `checked_field_close_byte_demand` borrows `*self`, and the lease borrow is still
+    /// live for `close_step` below, so the two must not overlap.
     fn release_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Option<semio_framework_job::StepOutcome> {
         cx.set_stage("artifact-envelope-decode-close");
         if self.fields.is_some() {
-            // 📏️ The owner's own byte demand is read under its lease, then the lease is RELEASED before the
-            // ledger check: `checked_field_close_byte_demand` borrows `*self`, and the lease borrow is still
-            // live for `close_step` below, so the two must not overlap.
             let demand = self.fields.as_mut().expect("release step holds its field decoder lease").with_owner(|owner| if owner.terminal_is_empty() { Ok(0) } else { owner.next_close_byte_demand() });
             let demanded = match demand {
                 Ok(Ok(maximum_bytes)) => maximum_bytes,
@@ -8725,7 +8725,7 @@ where
         Some(terminal)
     }
 
-    /// @emoji 🧹️ Transfers an unstarted exact decode owner into a retained close authority.
+    /// 🧹️ Transfers an unstarted exact decode owner into a retained close authority.
     pub fn reject(self, diagnostic: OwnedSchemaDecodeDiagnostic) -> Result<ArtifactEnvelopeDecodeRejected<P, Mutation>, Self> {
         if !matches!(self.state, ArtifactEnvelopeDecodeState::Fields) || self.record.is_none() || self.fields.is_none() || self.field_returned || self.pending_field.is_some() {
             return Err(self);
@@ -9009,6 +9009,9 @@ where
     P: Send,
     Mutation: Send,
 {
+    /// 🧱️ A retained decode page is a GRANULE: it is released whole or not at all, so a turn
+    /// that cannot pay a full page buys nothing. The empty record husk still completes under
+    /// any grant — its last page has already been paid for.
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
         if maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
@@ -9058,9 +9061,6 @@ where
             return Ok(SnapshotRetirementStep::Blocked);
         }
         if let Some(record) = self.record.as_mut() {
-            // 🧱️ A retained decode page is a GRANULE: it is released whole or not at all, so a turn
-            // that cannot pay a full page buys nothing. The empty record husk still completes under
-            // any grant — its last page has already been paid for.
             if !record.terminal_is_empty() && maximum_bytes < ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES {
                 return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
             }
@@ -9088,7 +9088,7 @@ impl<P, Mutation> Drop for ArtifactEnvelopeDecodeRejected<P, Mutation> {
     }
 }
 
-/// @emoji 🧹️ Exact close authority used when the shared field registry rejects admission
+/// 🧹️ Exact close authority used when the shared field registry rejects admission
 /// after the record pages and owner-supplied decoder have already been constructed.
 pub struct ArtifactEnvelopeUnadmittedDecodeRejected<P, Mutation> {
     record: Option<OwnedSchemaRecordCursor>,
@@ -9181,13 +9181,13 @@ pub enum ArtifactEnvelopeCompletedRecordFault {
     FalseTerminal,
 }
 
-/// @emoji 🎯 Atomic consumer for one completed envelope. Rejection returns the exact record to
+/// 🎯 Atomic consumer for one completed envelope. Rejection returns the exact record to
 /// its app-owned slot; no caller receives a stack-local owner on a fallible branch.
 pub trait ArtifactEnvelopeCompletedRecordTarget<P, Mutation> {
     fn try_adopt_completed(&mut self, envelope: ArtifactEnvelope<P, Mutation>) -> Result<(), ArtifactEnvelope<P, Mutation>>;
 }
 
-/// @emoji 🎁️ Exact completed envelope owner retained by the app until one consumer takes it or close retires it.
+/// 🎁️ Exact completed envelope owner retained by the app until one consumer takes it or close retires it.
 pub trait ArtifactEnvelopeCompletedRecord<P, Mutation>: Send {
     fn try_publish_to(&mut self, target: &mut dyn ArtifactEnvelopeCompletedRecordTarget<P, Mutation>) -> bool;
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String>;
@@ -9277,7 +9277,7 @@ impl<P, Mutation> Drop for ArtifactEnvelopeCompletedRecordRegistryState<P, Mutat
     }
 }
 
-/// @emoji 🗄️ Fixed app-owned completed-record registry; result publication never puts a deep envelope on a job stack.
+/// 🗄️ Fixed app-owned completed-record registry; result publication never puts a deep envelope on a job stack.
 pub struct ArtifactEnvelopeCompletedRecordRegistry<P, Mutation> {
     state: Mutex<ArtifactEnvelopeCompletedRecordRegistryState<P, Mutation>>,
 }
@@ -9356,7 +9356,7 @@ impl<P, Mutation> ArtifactEnvelopeCompletedRecordRegistry<P, Mutation> {
         Ok(owner)
     }
 
-    /// @emoji 🚫 Marks a rejected/cancelled consumer result for the app maintenance close pump.
+    /// 🚫 Marks a rejected/cancelled consumer result for the app maintenance close pump.
     pub fn try_request_close(&self, ticket: ArtifactEnvelopeCompletedRecordTicket) -> Result<(), ArtifactEnvelopeCompletedRecordFault> {
         let mut state = self.state.try_lock().map_err(|_| ArtifactEnvelopeCompletedRecordFault::Contended)?;
         let index = Self::validate(&state, ticket)?;
@@ -9377,7 +9377,7 @@ impl<P, Mutation> ArtifactEnvelopeCompletedRecordRegistry<P, Mutation> {
         Ok(Some(ArtifactEnvelopeCompletedRecordTicket { index: index as u16, generation: state.slots[index].generation }))
     }
 
-    /// @emoji 🧹 Returns only records explicitly handed back by a cancelled/rejected consumer.
+    /// 🧹 Returns only records explicitly handed back by a cancelled/rejected consumer.
     pub fn try_next_close_ticket(&self, cursor: &mut usize) -> Result<Option<ArtifactEnvelopeCompletedRecordTicket>, ArtifactEnvelopeCompletedRecordFault> {
         let state = self.state.try_lock().map_err(|_| ArtifactEnvelopeCompletedRecordFault::Contended)?;
         if state.closing == 0 {
@@ -9415,7 +9415,7 @@ impl<P, Mutation> ArtifactEnvelopeCompletedRecordRegistry<P, Mutation> {
     }
 }
 
-/// @emoji 🎫️ Shallow publication cell for the exact completed-record ticket produced by one decode job.
+/// 🎫️ Shallow publication cell for the exact completed-record ticket produced by one decode job.
 pub struct ArtifactEnvelopeDecodeCompletion {
     index: std::sync::atomic::AtomicU16,
     generation: std::sync::atomic::AtomicU64,
@@ -9496,7 +9496,7 @@ enum ArtifactEnvelopeFreshVcsActive<Mutation> {
     Alternatives(OwnedSchemaBoundedArrayAuthority<Alternative>),
 }
 
-/// @emoji 🌱️ Concrete repository VCS authority for a paged envelope. It accepts one
+/// 🌱️ Concrete repository VCS authority for a paged envelope. It accepts one
 /// owner-supplied snapshot and four fixed-capacity, one-entry-at-a-time history arrays.
 pub struct ArtifactEnvelopeFreshVcsAuthority<P: Send + 'static, Mutation: Send + 'static> {
     cursor: OwnedSchemaNestedRecordCursor,
@@ -10006,7 +10006,7 @@ enum ArtifactEnvelopeFreshRecordActive<P, Mutation> {
     Empty { authority: OwnedSchemaEmptyArrayAuthority },
 }
 
-/// @emoji 📋️ Concrete 12-field catalog consumer for one fresh document envelope. All optional
+/// 📋️ Concrete 12-field catalog consumer for one fresh document envelope. All optional
 /// fields must be absent or null; history/edit/conflict collections must be exact empty arrays.
 pub struct ArtifactEnvelopeFreshFieldDecoder<P: Send + 'static, Mutation: Send + 'static> {
     operation: semio_framework_job::OperationId,
@@ -10372,13 +10372,13 @@ impl std::fmt::Display for ArtifactEnvelopeWholeBufferIngressError {
 
 impl std::error::Error for ArtifactEnvelopeWholeBufferIngressError {}
 
-/// @emoji 🚫️ Greenfield fail-closure for deleted whole-buffer envelope ingress; callers must use the app-owned paged submission handle.
+/// 🚫️ Greenfield fail-closure for deleted whole-buffer envelope ingress; callers must use the app-owned paged submission handle.
 pub fn reject_whole_buffer_artifact_envelope_ingress<P, Mutation>(_input: &str) -> Result<ArtifactEnvelope<P, Mutation>, ArtifactEnvelopeWholeBufferIngressError> {
     Err(ArtifactEnvelopeWholeBufferIngressError)
 }
 //#endregion 🧬️OwnedSchemaDecode
 
-/// @emoji 📦️ Binary counterpart to `ArtifactDsl` — same shape, opposite face. LAW: `P::decode_pack(
+/// 📦️ Binary counterpart to `ArtifactDsl` — same shape, opposite face. LAW: `P::decode_pack(
 /// &p.encode_pack())` recovers an equal `p`, AND (structurally, not just by test) `decode_pack(
 /// encode_pack(p)) == parse_dsl(print_dsl(p))` — dsl and pack are two encodings of the identical
 /// `(RecordSpec, RecordValue)` pair keyed by the same stable `u16` field ids `dsl_derive` assigns,
@@ -10389,18 +10389,18 @@ pub trait ArtifactPack: Sized {
     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError>;
     fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError>;
 
-    /// @emoji 📦️ `encode_pack_with` at default options — infallible in practice (mirrors
+    /// 📦️ `encode_pack_with` at default options — infallible in practice (mirrors
     /// `ArtifactDsl::print_dsl`'s infallible signature); panics only on a `PackLimits` overflow.
     fn encode_pack(&self) -> Vec<u8> {
         self.encode_pack_with(&PackEncodeOptions::default()).expect("default-options pack encode is infallible")
     }
 
-    /// @emoji 📦️ `decode_pack_with` at default (Standard) verification.
+    /// 📦️ `decode_pack_with` at default (Standard) verification.
     fn decode_pack(bytes: &[u8]) -> Result<Self, PackError> {
         Self::decode_pack_with(bytes, &PackDecodeOptions::default())
     }
 
-    /// @emoji 🧬️ This document kind's structural field spec, for `ArtifactCodec::pack_schema_hash`
+    /// 🧬️ This document kind's structural field spec, for `ArtifactCodec::pack_schema_hash`
     /// (W5.7's semio_hub schema-hash validation — see that field's doc). Default `None` for hand-written
     /// `ArtifactPack` impls with no `RecordSpec` (schema-erased or synthetic fixture types, e.g.
     /// `serde_json::Value` above): those document kinds simply opt out (a zero hash reads as
@@ -10412,7 +10412,7 @@ pub trait ArtifactPack: Sized {
     }
 }
 
-/// @emoji 📦️ Binary counterpart to `ArtifactTextFiles`. `pack` (whole `.spk` container bytes) and
+/// 📦️ Binary counterpart to `ArtifactTextFiles`. `pack` (whole `.spk` container bytes) and
 /// `spr` (whole `.spr` op-log bytes, carrying real `inverse`/binary op payloads/cursor — see
 /// `print_document_spr`) are AUTHORITATIVE; `ops` stays the op-log TEXT as a human-readable mirror
 /// only (format-invariant across text/pack/spr, but forwards-only — see `print_ops_log`'s doc).
@@ -10423,7 +10423,7 @@ pub struct ArtifactPackFiles {
     pub ops: String,
 }
 
-/// @emoji 🔌️ Wire codec for the authoritative half of `ArtifactPackFiles` (`pack` + `spr`; `ops` is
+/// 🔌️ Wire codec for the authoritative half of `ArtifactPackFiles` (`pack` + `spr`; `ops` is
 /// a derived text mirror, not carried — `parse_document_pack` never reads it) — one length-prefixed
 /// `pack` blob followed by the remaining bytes as `spr`. Used wherever a single binary blob must
 /// stand in for a whole document (media document wire, WIT `list<u8>` document hops).
@@ -10435,7 +10435,7 @@ pub async fn encode_document_pack_bytes(pack: &[u8], spr: &[u8]) -> Vec<u8> {
     out
 }
 
-/// @emoji 🔌️ Inverse of `encode_document_pack_bytes`.
+/// 🔌️ Inverse of `encode_document_pack_bytes`.
 pub async fn decode_document_pack_bytes(bytes: &[u8]) -> Result<(Vec<u8>, Vec<u8>), VcsError> {
     let mut pos = 0usize;
     let pack_len = crate::os_pack::read_varint_u64(bytes, &mut pos).map_err(|error| VcsError::Deserialize(error.to_string()))? as usize;
@@ -10446,7 +10446,7 @@ pub async fn decode_document_pack_bytes(bytes: &[u8]) -> Result<(Vec<u8>, Vec<u8
     Ok((bytes[pos..pack_end].to_vec(), bytes[pack_end..].to_vec()))
 }
 
-/// @emoji 🧩️ Compose-only pack bridge (external technology).
+/// 🧩️ Compose-only pack bridge (external technology).
 impl ArtifactPack for serde_json::Value {
     fn encode_pack_with(&self, _options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         Ok(pack_rt::encode_json_value(self))
@@ -10456,7 +10456,7 @@ impl ArtifactPack for serde_json::Value {
     }
 }
 
-/// @emoji 🌱️ Pack counterpart of the schema-less `DslValue` escape hatch: delegates to `pack_rt`'s value bridge.
+/// 🌱️ Pack counterpart of the schema-less `DslValue` escape hatch: delegates to `pack_rt`'s value bridge.
 impl ArtifactPack for DslValue {
     fn encode_pack_with(&self, _options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         Ok(pack_rt::encode_pack_value(self))
@@ -10466,7 +10466,7 @@ impl ArtifactPack for DslValue {
     }
 }
 
-/// @emoji 🔀️ The closest `PackError` variant to "a text-format failure surfaced through a pack-facing
+/// 🔀️ The closest `PackError` variant to "a text-format failure surfaced through a pack-facing
 /// API" (e.g. `dsl_derive`'s generated `decode_pack_with`, whose `__dsl_from_record` step returns
 /// `TextError`). A free function, not `impl From<TextError> for PackError`: both types are
 /// re-exports of foreign crates (`dsl_core`/`pack_core`) through `vcs`, so a blanket `From` impl
@@ -10485,7 +10485,7 @@ pub fn text_error_to_pack_error(error: TextError) -> PackError {
 
 //#region 🔖️CodecRegistry
 //#region 🔖️CodecRegistry
-/// @emoji 🗂️ Type-erased document codec — the bridge a schema-string-keyed caller (chiefly
+/// 🗂️ Type-erased document codec — the bridge a schema-string-keyed caller (chiefly
 /// `framework/sync`'s `FolderEndpoint`) uses to print/parse pack+ops without naming the concrete
 /// `P`/`Mutation` types at that layer. Built once per document kind via `ArtifactCodec::of`
 /// (wrapped one line per app by `register_document_codec_for_app` in `framework/plugin/rs/lib.rs`,
@@ -10505,7 +10505,7 @@ pub const ARTIFACT_CODEC_APPLY_CLOSE_MAXIMUM_STEPS: usize = 1 << 20;
 pub struct ArtifactCodec {
     pub schema: String,
     pub extension: &'static str,
-    /// @emoji 🧬️ W5.7: a structural fingerprint of this document kind's field shape —
+    /// 🧬️ W5.7: a structural fingerprint of this document kind's field shape —
     /// `crate::os_pack::schema_hash(&spec)` over `P::record_spec()`, or `[0u8; 32]` when `P` has no
     /// `RecordSpec` (hand-written `ArtifactPack` impls, see that trait method's doc). Hub actors
     /// send this in `ClientFrame::SocketHelloV1`; the semio_hub validates it against the durable
@@ -10513,31 +10513,31 @@ pub struct ArtifactCodec {
     /// hash always skips validation (schema-agnostic client). Durable pinning belongs in the db
     /// catalog once it grows a column for it; this in-memory pin is this wave's scope.
     pub pack_schema_hash: [u8; 32],
-    /// @emoji 📤️ `(dsl text, ops text) -> (pack files, dsl mirror text)` — the hand-authored/
+    /// 📤️ `(dsl text, ops text) -> (pack files, dsl mirror text)` — the hand-authored/
     /// imported fallback path: compiles text straight to binary pack+spr (no JSON envelope
     /// currency anywhere in between). Returns the re-printed canonical dsl mirror alongside the
     /// pack files so a caller can write all four files (`.pack`/`.spr`/`.dsl`/`.ops`) in one shot.
-    // 🚫️async: E4 fn-pointer erasure-table thunk (R1(ii): ComposeFuture/IoFuture-shaped) — an
-    // `async fn` item's pointer type is unnameable, so the table stores a plain `fn` that itself
-    // returns a boxed future.
+    /// 🚫️async: E4 fn-pointer erasure-table thunk (R1(ii): ComposeFuture/IoFuture-shaped) — an
+    /// `async fn` item's pointer type is unnameable, so the table stores a plain `fn` that itself
+    /// returns a boxed future.
     pub compile_dsl: for<'a> fn(&'a str, &'a str) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(ArtifactPackFiles, String), VcsError>> + Send + 'a>>,
-    /// @emoji 📥️ `(pack bytes, spr bytes) -> (dsl text, ops text)` — the sanctioned human/agent
+    /// 📥️ `(pack bytes, spr bytes) -> (dsl text, ops text)` — the sanctioned human/agent
     /// LOGGING mirror, produced from the authoritative binary for schema-agnostic callers
     /// (`store_sync`'s `FolderEndpoint::Pack` write path) that never touch a concrete `P`/`Mutation`.
-    // 🚫️async: E4 fn-pointer erasure-table thunk (R1(ii)) — see `compile_dsl`'s tag above.
+    /// 🚫️async: E4 fn-pointer erasure-table thunk (R1(ii)) — see `compile_dsl`'s tag above.
     pub print_mirror: for<'a> fn(&'a [u8], &'a [u8]) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<ArtifactTextFiles, VcsError>> + Send + 'a>>,
-    /// @emoji 🧩️ One `MutationEnvelope` -> one complete {@link print_edit_lines} append unit (edit
+    /// 🧩️ One `MutationEnvelope` -> one complete {@link print_edit_lines} append unit (edit
     /// header, indented op line, inverse record, one metadata record), for `FolderTextStorage::append_ops`'s hot-path logging append — decodes the
     /// envelope's opaque `OpBinary` payload back into a concrete `Mutation` just long enough to
     /// print it, for schema-agnostic callers that otherwise never see a concrete op type.
-    // 🚫️async: E4 fn-pointer erasure-table thunk (R1(ii)) — see `compile_dsl`'s tag above.
+    /// 🚫️async: E4 fn-pointer erasure-table thunk (R1(ii)) — see `compile_dsl`'s tag above.
     pub edit_text_from_envelope: for<'a> fn(&'a crate::os_spr::MutationEnvelope) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<String, VcsError>> + 'a>>,
     /// Host-authoritative Emit apply: (pack, spr, encode_ops_vec) -> (pack, spr, ops text).
-    // 🚫️async: E4 fn-pointer erasure-table thunk (R1(ii)) — see `compile_dsl`'s tag above.
+    /// 🚫️async: E4 fn-pointer erasure-table thunk (R1(ii)) — see `compile_dsl`'s tag above.
     pub apply_ops_binary: for<'a> fn(&'a [u8], &'a [u8], &'a [u8]) -> ArtifactCodecApplyFuture<'a>,
     /// 📜️ Hub Check In fold: `(pack, spr, encode_envelopes) -> (pack, spr, ops text)` through the
     /// replica gate, see [`replay_envelopes_onto_pair`].
-    // 🚫️async: E4 fn-pointer erasure-table thunk (R1(ii)) — see `compile_dsl`'s tag above.
+    /// 🚫️async: E4 fn-pointer erasure-table thunk (R1(ii)) — see `compile_dsl`'s tag above.
     pub replay_envelopes: for<'a> fn(&'a [u8], &'a [u8], &'a [u8]) -> ArtifactCodecApplyFuture<'a>,
 }
 
@@ -10748,23 +10748,35 @@ where
 //#endregion 🗃️BoundedArtifactStoreOwners
 
 impl ArtifactCodec {
-    /// @emoji 🏗️ Monomorphizes three non-capturing bridge functions for `(P, Mutation)` — each a
+    /// 🏗️ Monomorphizes three non-capturing bridge functions for `(P, Mutation)` — each a
     /// genuine zero-sized `fn` item, coercible to a bare `fn` pointer — and pairs them with `schema`/
     /// `P::EXTENSION`. One call site per document kind (`register_document_codec_for_app`).
+    ///
+    /// 🚫️async: E4 fn-pointer erasure-table thunk — VALUE goes into `ArtifactCodec::compile_dsl`
+    /// (`fn` slot, unnameable if `async fn`); wraps its real async body in `Box::pin` per R1(ii).
+    ///
+    /// 🚫️async: E4 fn-pointer erasure-table thunk — see `compile_dsl_impl`'s tag above.
+    ///
+    /// 🚫️async: E4 fn-pointer erasure-table thunk — see `compile_dsl_impl`'s tag above.
+    ///
+    /// 🚫️async: E4 fn-pointer erasure-table thunk — see `compile_dsl_impl`'s tag above.
+    ///
+    /// 🚫️async: E4 fn-pointer erasure-table thunk — see `compile_dsl_impl`'s tag above.
+    ///
+    /// 🌀️ `schema_hash` is async; `Option::map`'s closure is sync (R10 shape 1), so it's
+    /// written as an explicit match instead.
     pub fn of<P, Mutation>(schema: impl Into<String>) -> Self
     where
         P: Clone + PartialEq + ToValue + FromValue + ArtifactDsl + ArtifactPack + Send + Sync + 'static,
         Mutation: self::Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + Send + Sync + 'static,
     {
-        // 🚫️async: E4 fn-pointer erasure-table thunk — VALUE goes into `ArtifactCodec::compile_dsl`
-        // (`fn` slot, unnameable if `async fn`); wraps its real async body in `Box::pin` per R1(ii).
+        /// 🕰️`'static`, not `'a`. These items are coerced to `for<'a> fn(..) -> ..` pointers, so a
+        /// `P: 'a` bound would have to hold for EVERY lifetime — which is `'static` by another name,
+        /// and which the compiler cannot infer from the bound as written ("one type is more general
+        /// than the other"). The enclosing `of<P, Mutation>` already requires `'static` of both, so
+        /// saying it here costs nothing and lets the coercion succeed.
         fn compile_dsl_impl<'a, P, Mutation>(dsl: &'a str, ops: &'a str) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(ArtifactPackFiles, String), VcsError>> + Send + 'a>>
         where
-            // 🕰️`'static`, not `'a`. These items are coerced to `for<'a> fn(..) -> ..` pointers, so a
-            // `P: 'a` bound would have to hold for EVERY lifetime — which is `'static` by another name,
-            // and which the compiler cannot infer from the bound as written ("one type is more general
-            // than the other"). The enclosing `of<P, Mutation>` already requires `'static` of both, so
-            // saying it here costs nothing and lets the coercion succeed.
             P: Clone + ArtifactDsl + ArtifactPack + Send + Sync + 'static,
             Mutation: OpText + OpBinary + self::Mutation<P> + Send + Sync + 'static,
         {
@@ -10778,14 +10790,13 @@ impl ArtifactCodec {
             })
         }
 
-        // 🚫️async: E4 fn-pointer erasure-table thunk — see `compile_dsl_impl`'s tag above.
+        /// 🕰️`'static`, not `'a`. These items are coerced to `for<'a> fn(..) -> ..` pointers, so a
+        /// `P: 'a` bound would have to hold for EVERY lifetime — which is `'static` by another name,
+        /// and which the compiler cannot infer from the bound as written ("one type is more general
+        /// than the other"). The enclosing `of<P, Mutation>` already requires `'static` of both, so
+        /// saying it here costs nothing and lets the coercion succeed.
         fn print_mirror_impl<'a, P, Mutation>(pack: &'a [u8], spr: &'a [u8]) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<ArtifactTextFiles, VcsError>> + Send + 'a>>
         where
-            // 🕰️`'static`, not `'a`. These items are coerced to `for<'a> fn(..) -> ..` pointers, so a
-            // `P: 'a` bound would have to hold for EVERY lifetime — which is `'static` by another name,
-            // and which the compiler cannot infer from the bound as written ("one type is more general
-            // than the other"). The enclosing `of<P, Mutation>` already requires `'static` of both, so
-            // saying it here costs nothing and lets the coercion succeed.
             P: Clone + ArtifactDsl + ArtifactPack + Send + Sync + 'static,
             Mutation: OpText + OpBinary + self::Mutation<P> + Send + Sync + 'static,
         {
@@ -10798,16 +10809,30 @@ impl ArtifactCodec {
             })
         }
 
-        // 🚫️async: E4 fn-pointer erasure-table thunk — see `compile_dsl_impl`'s tag above.
+        /// 🎯️ `encode_ops_vec(&[])` is a NON-empty framed header, not a zero-length byte
+        /// slice — the empty-batch fast path must key off the DECODED mutation count, or an
+        /// empty gesture builds a store, hits `EmptyApply`, and (before TC5) aborted in Drop.
+        ///
+        /// 🛂️ The throwaway reduction store gets the framework's own bounded owner
+        /// catalogue. `ArtifactStore::new` installs NONE, and an uninstalled store cannot
+        /// retire: the close cursor below answers `artifact store has no owner-supplied
+        /// bounded disposer` for the first nonempty batch through a LINKED Rust codec —
+        /// the path stdio and gis take on a hub. The guest twin
+        /// (`plugin_runtime::artifact_app_apply_ops`) installs the APP's own catalogue
+        /// there, which this thunk has no app type to ask for; the framework catalogue is
+        /// the exact equivalent for a store that lives only for one reduction (ticket
+        /// 26/09/18 slices TC3e §7d, TC4 §2).
+        ///
+        /// 🗄️ Never `?` while `store` is live: `ArtifactStore`'s Drop asserts a terminal
+        /// shallow shell, so an early return here aborts the process instead of reporting the
+        /// fault. Capture every fallible step as a value, run the close cursor, forget the
+        /// store, THEN propagate — the guest twin does the same (ticket 26/09/18 TC3e/TC5).
         fn apply_ops_binary_impl<'a, P, Mutation>(pack: &'a [u8], spr: &'a [u8], ops_vec: &'a [u8]) -> ArtifactCodecApplyFuture<'a>
         where
             P: Clone + ToValue + FromValue + ArtifactDsl + ArtifactPack + Send + Sync + 'static,
             Mutation: ToValue + FromValue + OpText + OpBinary + self::Mutation<P> + Send + Sync + 'static,
         {
             Box::pin(async move {
-                // 🎯️ `encode_ops_vec(&[])` is a NON-empty framed header, not a zero-length byte
-                // slice — the empty-batch fast path must key off the DECODED mutation count, or an
-                // empty gesture builds a store, hits `EmptyApply`, and (before TC5) aborted in Drop.
                 let mutations: Vec<Mutation> = if ops_vec.is_empty() {
                     Vec::new()
                 } else {
@@ -10840,22 +10865,9 @@ impl ArtifactCodec {
                     };
                     envelope.cursor = Some(ArtifactCursor::new(applied, redo, envelope.cursor.as_ref().and_then(|cursor| cursor.checkpoint_id.clone())));
                     let mut store = ArtifactStore::new(envelope).await?;
-                    // 🛂️ The throwaway reduction store gets the framework's own bounded owner
-                    // catalogue. `ArtifactStore::new` installs NONE, and an uninstalled store cannot
-                    // retire: the close cursor below answers `artifact store has no owner-supplied
-                    // bounded disposer` for the first nonempty batch through a LINKED Rust codec —
-                    // the path stdio and gis take on a hub. The guest twin
-                    // (`plugin_runtime::artifact_app_apply_ops`) installs the APP's own catalogue
-                    // there, which this thunk has no app type to ask for; the framework catalogue is
-                    // the exact equivalent for a store that lives only for one reduction (ticket
-                    // 26/09/18 slices TC3e §7d, TC4 §2).
                     store.install_document_store_owners_exact(bounded_artifact_store_owners::<P, Mutation>());
                     store
                 };
-                // 🗄️ Never `?` while `store` is live: `ArtifactStore`'s Drop asserts a terminal
-                // shallow shell, so an early return here aborts the process instead of reporting the
-                // fault. Capture every fallible step as a value, run the close cursor, forget the
-                // store, THEN propagate — the guest twin does the same (ticket 26/09/18 TC3e/TC5).
                 let applied = store.dispatch_apply_exact(mutations, None).await;
                 let printed = match &applied {
                     Ok(_) => print_document_pack(&store.envelope).await,
@@ -10869,7 +10881,6 @@ impl ArtifactCodec {
             })
         }
 
-        // 🚫️async: E4 fn-pointer erasure-table thunk — see `compile_dsl_impl`'s tag above.
         fn replay_envelopes_impl<'a, P, Mutation>(pack: &'a [u8], spr: &'a [u8], envelopes: &'a [u8]) -> ArtifactCodecApplyFuture<'a>
         where
             P: Clone + ToValue + FromValue + ArtifactDsl + ArtifactPack + Send + Sync + 'static,
@@ -10881,7 +10892,6 @@ impl ArtifactCodec {
             })
         }
 
-        // 🚫️async: E4 fn-pointer erasure-table thunk — see `compile_dsl_impl`'s tag above.
         fn edit_text_from_envelope_impl<'a, P, Mutation>(envelope: &'a crate::os_spr::MutationEnvelope) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<String, VcsError>> + 'a>>
         where
             Mutation: OpText + OpBinary,
@@ -10895,8 +10905,6 @@ impl ArtifactCodec {
         Self {
             schema: schema.into(),
             extension: P::EXTENSION,
-            // 🌀️ `schema_hash` is async; `Option::map`'s closure is sync (R10 shape 1), so it's
-            // written as an explicit match instead.
             pack_schema_hash: match P::record_spec() {
                 Some(spec) => crate::os_pack::schema_hash(&spec),
                 None => [0u8; 32],
@@ -11020,7 +11028,7 @@ pub async fn document_codec(schema: &str) -> Result<Option<ArtifactCodec>, Docum
     Ok(registry.get(schema).cloned())
 }
 
-/// @emoji 🧬️ A component codec answer still in flight. `Send` natively, where document owners run on
+/// 🧬️ A component codec answer still in flight. `Send` natively, where document owners run on
 /// the shared worker pool; the browser's single isolate needs no `Send`.
 #[cfg(not(target_arch = "wasm32"))]
 pub type ComponentDocumentCodecFuture<'a, T> = std::pin::Pin<Box<dyn std::future::Future<Output = Result<T, VcsError>> + Send + 'a>>;
@@ -11028,7 +11036,7 @@ pub type ComponentDocumentCodecFuture<'a, T> = std::pin::Pin<Box<dyn std::future
 #[cfg(target_arch = "wasm32")]
 pub type ComponentDocumentCodecFuture<'a, T> = std::pin::Pin<Box<dyn std::future::Future<Output = Result<T, VcsError>> + 'a>>;
 
-/// @emoji 🧬️ One document kind's codec as the COMPONENT that owns the kind answers it — the
+/// 🧬️ One document kind's codec as the COMPONENT that owns the kind answers it — the
 /// `world actor` `codec` interface (ticket 26/09/18 slice TC3b) — installed by the host that mounted
 /// that component. A process that links no Rust codec for a kind identifies and validates its documents
 /// through this, exactly as the hub's trusted catalog does for a package it links no codec for
@@ -11043,7 +11051,7 @@ pub trait ComponentDocumentCodec: Send + Sync {
     fn print_mirror<'a>(&'a self, pack: &'a [u8], spr: &'a [u8]) -> ComponentDocumentCodecFuture<'a, ArtifactTextFiles>;
 }
 
-/// @emoji 🧭️ The one codec a document owner resolves for a schema: the Rust codec this binary links
+/// 🧭️ The one codec a document owner resolves for a schema: the Rust codec this binary links
 /// when it links one, else the component codec installed for the mounted component that owns the kind.
 #[derive(Clone)]
 pub enum DocumentKindCodec {
@@ -11094,7 +11102,7 @@ pub async fn document_kind_codec(schema: &str) -> Result<Option<DocumentKindCode
     Ok(registry.get(schema).cloned().map(DocumentKindCodec::Component))
 }
 
-/// @emoji 📜️ Reads the document schema id from an encoded `.spr` history log.
+/// 📜️ Reads the document schema id from an encoded `.spr` history log.
 pub async fn lane_schema_from_spr(spr: &[u8]) -> Option<String> {
     if spr.is_empty() {
         return None;
@@ -11104,7 +11112,7 @@ pub async fn lane_schema_from_spr(spr: &[u8]) -> Option<String> {
 //#endregion 🔖️CodecRegistry
 
 //#region 🔖️DialectMigration
-/// @emoji 🧬️ One registered lossy/lossless pack-bytes transform between two dialects of the SAME
+/// 🧬️ One registered lossy/lossless pack-bytes transform between two dialects of the SAME
 /// artifact kind (`from.artifact_kind == to.artifact_kind` is a convention this registry doesn't
 /// itself enforce — callers key by the exact `(from, to)` pair they registered). `migrate_pack` is
 /// a bare `fn` pointer (same non-capturing-bridge-function shape `ArtifactCodec::of` already uses
@@ -11220,7 +11228,7 @@ pub fn register_dialect_migrations_in_assembly(_assembly: &ArtifactAssemblyTrans
     Ok(())
 }
 
-/// @emoji 🔁️ Looks up the exact `(from, to)` migration and runs its `migrate_pack` over
+/// 🔁️ Looks up the exact `(from, to)` migration and runs its `migrate_pack` over
 /// `pack_bytes`, or a clear `Err` naming both dialect coordinates when none is registered.
 #[must_use]
 pub async fn migrate_document(from: &crate::os_io::ArtifactDialect, to: &crate::os_io::ArtifactDialect, pack_bytes: &[u8]) -> Result<Vec<u8>, DialectMigrationError> {
@@ -11281,7 +11289,7 @@ pub fn commit_artifact_assembly_store_registry_guards(guards: &mut ArtifactAssem
 //#endregion 🔖️DialectMigration
 
 //#region 🔖️MergeHelpers
-/// @emoji 🌳️ Walks `checkpoint_id`'s ancestor chain via `parent_id` back to the root, nearest-first
+/// 🌳️ Walks `checkpoint_id`'s ancestor chain via `parent_id` back to the root, nearest-first
 /// (`checkpoint_id` itself is the first entry). Cycle-guarded (a malformed/adversarial parent chain
 /// stops instead of looping forever) — every well-formed chain built by `reconcile_alternative`/
 /// `CommitCheckpoint` is already acyclic, this is defense in depth, not a documented invariant break.
@@ -11300,7 +11308,7 @@ async fn checkpoint_ancestors<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutati
     chain
 }
 
-/// @emoji 🌳️ The merge-base of checkpoints `a` and `b`: the nearest checkpoint common to both
+/// 🌳️ The merge-base of checkpoints `a` and `b`: the nearest checkpoint common to both
 /// ancestor chains (via `parent_id`), or `None` if their histories share no common ancestor.
 /// Supports branch-merge tooling that needs to know "everything since the fork point" on either
 /// side. `b`'s chain is walked nearest-to-farthest so the FIRST hit in `a`'s ancestor set is the
@@ -11310,6 +11318,13 @@ pub async fn merge_base<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>, a
     checkpoint_ancestors(envelope, b).await.into_iter().find(|id| ancestors_a.contains(id))
 }
 
+/// 🌀️ `alternative_id` is both cloned and returned below — a future can only be awaited once
+/// (R10 shape 2), so it is resolved to a plain `String` here.
+///
+/// 🌀️ Same reasoning as `alternative_id` above — resolved once, before it is borrowed AND moved.
+///
+/// 🎯️ `&[]`: reconcile-alternative checkpoints carry no composition pins yet — the
+/// `CompositionCoordinator` that populates real `CompositionPin`s on commit is a later wave.
 pub async fn reconcile_alternative<P, Mutation>(envelope: &mut ArtifactEnvelope<P, Mutation>, alternative_name: &str, checkpoint_message: Option<String>, authors: Vec<Author>) -> Result<String, VcsError>
 where
     P: Clone + ToValue + FromValue,
@@ -11319,8 +11334,6 @@ where
         return Err(VcsError::NoCheckpoint);
     }
     let checkpoint_id = envelope.vcs.checkpoints.last().map(|checkpoint| checkpoint.id.clone()).ok_or(VcsError::NoCheckpoint)?;
-    // 🌀️ `alternative_id` is both cloned and returned below — a future can only be awaited once
-    // (R10 shape 2), so it is resolved to a plain `String` here.
     let alternative_id = mint_alternative_id(alternative_name, std::slice::from_ref(&checkpoint_id)).await;
     envelope.vcs.alternatives.try_push(Alternative { id: alternative_id.clone(), name: alternative_name.to_string(), checkpoint_ids: vec![checkpoint_id] }).map_err(|_| VcsError::ValidationFailed("alternative history ledger is saturated".into()))?;
     if let Some(message) = checkpoint_message {
@@ -11330,11 +11343,8 @@ where
         let mut change_ids = parent.map(|checkpoint| checkpoint.change_ids.clone()).unwrap_or_default();
         change_ids.push(change.id.clone());
         envelope.vcs.changes.try_push(change).map_err(|_| VcsError::ValidationFailed("change history ledger is saturated".into()))?;
-        // 🌀️ Same reasoning as `alternative_id` above — resolved once, before it is borrowed AND moved.
         let timestamp = now_iso();
         let checkpoint_message = Some("reconciled".to_string());
-        // 🎯️ `&[]`: reconcile-alternative checkpoints carry no composition pins yet — the
-        // `CompositionCoordinator` that populates real `CompositionPin`s on commit is a later wave.
         let id = content_addressed_checkpoint_id(parent_id.as_deref(), &change_ids, &envelope.vcs.changes, checkpoint_message.as_deref(), &authors, &timestamp, &[]).await;
         envelope
             .vcs
@@ -11357,10 +11367,10 @@ where
     create_document_envelope(schema, id, initial_snapshot, backbone)
 }
 
-/// @emoji 🧮️ Config snapshots use the same DSL law as documents — `ConfigRecord` marks config types.
+/// 🧮️ Config snapshots use the same DSL law as documents — `ConfigRecord` marks config types.
 pub trait ConfigRecord: ArtifactDsl {}
 
-/// @emoji 🎯️ Marks `$ty` as whole-record (no field-level diff — an operation replaces the entire
+/// 🎯️ Marks `$ty` as whole-record (no field-level diff — an operation replaces the entire
 /// config) with the trivial `ConfigRecord` + `MutationDiff<Self>` pair every hand-rolled
 /// `impl crate::os_store::ConfigRecord for XConfig {}` + `impl crate::os_spr::MutationDiff<XConfig> for XConfig {
 /// fn apply(...) -> XConfig { self.clone() } fn absorb(...) { *self = other; } }` duo repeated
@@ -11421,7 +11431,7 @@ where
     edit_ids
 }
 
-/// @emoji 🔂️ Full raw fold of `initial_snapshot` over every `applied_edit_ids` edit's `forwards`.
+/// 🔂️ Full raw fold of `initial_snapshot` over every `applied_edit_ids` edit's `forwards`.
 /// `crate::os_spr::command::Mutation::reconcile` and its diagnostic-bag-returning twin
 /// `materialize_document_snapshot_with_conflicts` are GONE
 /// (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C6/C10) — concurrent-merge
@@ -11537,7 +11547,7 @@ pub const EMPTY_CHECKPOINT_MESSAGE: &str = "cannot create an empty checkpoint";
 
 //#region 🔖️TextFormat
 //#region 🔖️TextFormat
-/// @emoji 📄️ The two files a textual VCS document is made of: the DSL text (initial snapshot) and
+/// 📄️ The two files a textual VCS document is made of: the DSL text (initial snapshot) and
 /// the append-only op log (every edit ever created, forwards-only — see {@link parse_document_text}).
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct ArtifactTextFiles {
@@ -11545,7 +11555,7 @@ pub struct ArtifactTextFiles {
     pub ops: String,
 }
 
-/// @emoji 🧩️ The result of loading a document from text: the reconstructed envelope plus the live
+/// 🧩️ The result of loading a document from text: the reconstructed envelope plus the live
 /// snapshot folded from every edit, so a caller never has to replay again after loading.
 #[derive(Debug, PartialEq)]
 pub struct ParsedDocumentText<P, Mutation> {
@@ -11580,7 +11590,7 @@ impl<P, Mutation: self::Mutation<P>> ParsedDocumentText<P, Mutation> {
 }
 
 //#region 🔖️OpsHeaderGrammar
-/// @emoji 🖋️ One `by=[...]` list entry on a `commit` line: id then name, both positional
+/// 🖋️ One `by=[...]` list entry on a `commit` line: id then name, both positional
 /// (bare-preferred, quoted only when needed — e.g. a name containing a space), then the optional
 /// avatar — every field the transition's content-addressed id covers.
 #[derive(Clone, Debug, PartialEq, DslRecord)]
@@ -11604,7 +11614,7 @@ impl From<OpsAuthor> for Author {
     }
 }
 
-/// @emoji 📌️ One `pins=[...]` entry on a `repin` line: child artifact uri, then its checkpoint.
+/// 📌️ One `pins=[...]` entry on a `repin` line: child artifact uri, then its checkpoint.
 #[derive(Clone, Debug, PartialEq, DslRecord)]
 struct OpsPin {
     #[dsl(positional)]
@@ -11613,7 +11623,7 @@ struct OpsPin {
     checkpoint: String,
 }
 
-/// @emoji 🧾️ One `.ops` header/structural line — `doc`/`edit` and one line per history transition
+/// 🧾️ One `.ops` header/structural line — `doc`/`edit` and one line per history transition
 /// (`revert`/`reinstate`/`commit`/`branch`/`checkout`/`repin`) — re-derived directly on the `dsl_schema` grammar engine (`#[derive(DslOps)]` generates
 /// `OpText::parse_op`/`print_op` from this declaration; see {@link print_edit_lines}/
 /// {@link print_document_text}/{@link parse_document_text}, its only callers). Sigil-free lowercase
@@ -11639,7 +11649,7 @@ enum OpsHeaderLine {
         key: Option<String>,
         description: Option<String>,
     },
-    /// @emoji ⏪️ A `Revert` transition: `clock` is the HLC as `physical.logical.actor`, `after` its
+    /// ⏪️ A `Revert` transition: `clock` is the HLC as `physical.logical.actor`, `after` its
     /// causal dependencies; every transition line carries both so its envelope id re-derives exactly.
     Revert {
         #[dsl(positional)]
@@ -11649,7 +11659,7 @@ enum OpsHeaderLine {
         after: Vec<String>,
         operations: Vec<String>,
     },
-    /// @emoji ⏩️ A `Reinstate` transition.
+    /// ⏩️ A `Reinstate` transition.
     Reinstate {
         #[dsl(positional)]
         id: String,
@@ -11658,7 +11668,7 @@ enum OpsHeaderLine {
         after: Vec<String>,
         operations: Vec<String>,
     },
-    /// @emoji 🚩️ A `Commit` transition with the change and checkpoint facts it introduces.
+    /// 🚩️ A `Commit` transition with the change and checkpoint facts it introduces.
     Commit {
         #[dsl(positional)]
         id: String,
@@ -11675,7 +11685,7 @@ enum OpsHeaderLine {
         message: Option<String>,
         at: String,
     },
-    /// @emoji 🌿️ A `Branch` transition.
+    /// 🌿️ A `Branch` transition.
     Branch {
         #[dsl(positional)]
         id: String,
@@ -11686,7 +11696,7 @@ enum OpsHeaderLine {
         name: String,
         checkpoint: String,
     },
-    /// @emoji 🎯️ A `Checkout` transition.
+    /// 🎯️ A `Checkout` transition.
     Checkout {
         #[dsl(positional)]
         id: String,
@@ -11696,7 +11706,7 @@ enum OpsHeaderLine {
         checkpoint: String,
         alternative: Option<String>,
     },
-    /// @emoji 🧩️ A `Repin` transition.
+    /// 🧩️ A `Repin` transition.
     Repin {
         #[dsl(positional)]
         id: String,
@@ -11707,13 +11717,13 @@ enum OpsHeaderLine {
         pinned: String,
         pins: Vec<OpsPin>,
     },
-    /// @emoji 🔙️ One edit's complete inverse sequence, encoded with the operation's own text grammar.
+    /// 🔙️ One edit's complete inverse sequence, encoded with the operation's own text grammar.
     Inverse { edit: String, ops: Vec<String> },
-    /// @emoji 🪪️ One authoritative metadata record for a forward operation.
+    /// 🪪️ One authoritative metadata record for a forward operation.
     Metadata { edit: String, index: u32, data: String },
-    /// @emoji 📨️ One durable diagnostic ledger entry, explicitly owned by an edit.
+    /// 📨️ One durable diagnostic ledger entry, explicitly owned by an edit.
     Message { edit: String, data: String },
-    /// @emoji ⚔️ One first-class conflict, including its content-addressed identity and lifecycle.
+    /// ⚔️ One first-class conflict, including its content-addressed identity and lifecycle.
     Conflict { data: String },
 }
 
@@ -11775,7 +11785,7 @@ impl OpBinary for OpsHeaderLine {
 
 //#endregion 🔖️OpsHeaderGrammar
 
-/// @emoji 📤️ Prints one edit as the complete hot-path append unit: `edit ...` header, one
+/// 📤️ Prints one edit as the complete hot-path append unit: `edit ...` header, one
 /// two-space-indented `print_op` line per forward operation, then the matching inverse record and
 /// one authoritative metadata record per forward — what `append_ops` / `replay_ops` require.
 pub async fn print_edit_lines<Mutation: OpText>(edit: &Edit<Mutation>) -> Result<String, VcsError> {
@@ -11820,13 +11830,13 @@ pub async fn print_edit_lines<Mutation: OpText>(edit: &Edit<Mutation>) -> Result
     Ok(out)
 }
 
-/// @emoji 📤️ Builds just the op-log half of a textual/pack document — `doc` header, every edit ever
+/// 📤️ Builds just the op-log half of a textual/pack document — `doc` header, every edit ever
 /// created as an `edit` block, then `change`/`checkpoint`/`alternative`/`active` records. Shared by
 /// `print_document_text` and `print_document_pack`: the op-log grammar never touches
 /// `initial_snapshot`, so it is provably format-invariant and both printers thin out to this plus
 /// their own initial-snapshot encoding. Every replay-critical value is explicit: forward and
 /// inverse operations, operation metadata, message ledger, conflicts, and cursor.
-/// @emoji ⏰️ `physical.logical.actor` — the textual HLC every transition line carries.
+/// ⏰️ `physical.logical.actor` — the textual HLC every transition line carries.
 fn print_clock(timestamp: &HybridLogicalTimestamp) -> String {
     format!("{}.{}.{}", timestamp.physical_ms, timestamp.logical, timestamp.actor)
 }
@@ -11847,7 +11857,7 @@ fn mutation_ids(ids: Vec<String>) -> Vec<MutationId> {
     ids.into_iter().map(MutationId).collect()
 }
 
-/// @emoji 🖨️ One transition envelope as its semantic `.ops` line.
+/// 🖨️ One transition envelope as its semantic `.ops` line.
 fn ops_line_from_transition(envelope: &crate::os_spr::MutationEnvelope) -> Result<OpsHeaderLine, VcsError> {
     let transition = crate::os_spr::history_transition_from_envelope(envelope).map_err(|error| VcsError::Serialize(error.to_string()))?.ok_or_else(|| VcsError::Serialize(format!("{} is not a history transition", envelope.mutation_id.0)))?;
     let id = envelope.mutation_id.0.clone();
@@ -11880,7 +11890,7 @@ fn ops_line_from_transition(envelope: &crate::os_spr::MutationEnvelope) -> Resul
     })
 }
 
-/// @emoji 🧾️ Rebuilds the transition envelope a `.ops` transition line describes, refusing a line
+/// 🧾️ Rebuilds the transition envelope a `.ops` transition line describes, refusing a line
 /// whose printed id is not the content-addressed id of what it states.
 fn transition_from_ops_line(document_id: &str, id: String, actor: String, clock: &str, after: Vec<String>, transition: crate::os_spr::HistoryTransition) -> Result<crate::os_spr::MutationEnvelope, String> {
     let envelope = crate::os_spr::history_transition_envelope(&transition, &ArtifactId(document_id.to_string()), &ActorId(actor), mutation_ids(after), parse_clock(clock)?);
@@ -11890,7 +11900,7 @@ fn transition_from_ops_line(document_id: &str, id: String, actor: String, clock:
     Ok(envelope)
 }
 
-/// @emoji 📚️ Materializes everything an envelope's event log projects to — change/checkpoint/
+/// 📚️ Materializes everything an envelope's event log projects to — change/checkpoint/
 /// alternative ledgers, the active alternative and the cursor — from [`fold_envelope_history`].
 /// The loaders call it right after reading the persisted events, which are all a document stores.
 fn project_envelope_history<P, Mutation>(envelope: &mut ArtifactEnvelope<P, Mutation>) -> Result<(), VcsError>
@@ -11949,7 +11959,7 @@ where
     Ok(ops)
 }
 
-/// @emoji 📤️ Prints the full textual VCS document: the DSL text (initial snapshot) and the complete
+/// 📤️ Prints the full textual VCS document: the DSL text (initial snapshot) and the complete
 /// event log (`doc` header, every edit with its inverse/meta/message records, every history
 /// transition, every conflict) — events only; positions are re-derived by folding on load.
 /// Replaces the JSON envelope as the canonical persisted form.
@@ -11963,7 +11973,7 @@ where
     Ok(ArtifactTextFiles { dsl, ops })
 }
 
-/// @emoji 🎞️ `crate::os_spr::UndoPolicy` ordinal, matching `HistoryOpMeta.undo_policy`'s wire shape —
+/// 🎞️ `crate::os_spr::UndoPolicy` ordinal, matching `HistoryOpMeta.undo_policy`'s wire shape —
 /// distinct from `undo_policy_ordinal` above, which maps THIS crate's `ArtifactCommand`-facing
 /// `UndoPolicy` (currently `semio_framework_replication::UndoPolicy`; the two enums have identical
 /// variants and will merge in the kernel-unification wave, see `protocol_core`'s own doc note).
@@ -12105,6 +12115,10 @@ async fn canonical_conflict_actors(actors: impl IntoIterator<Item = ActorId>) ->
     actors
 }
 
+/// 🎯️ A conflict's messages index its kind-specific flattened operation sequence: wire
+/// envelopes in `Quarantined` order, or every forward operation of `Degraded` edits in
+/// `edit_ids` order. This makes `op_index` globally unambiguous for a conflict rather
+/// than accidentally treating every message as if it belonged to its first edit.
 async fn validate_persisted_conflicts<P, Mutation>(envelope: &ArtifactEnvelopeOwners<P, Mutation>) -> Result<(), VcsError> {
     let mut conflict_ids = HashSet::new();
     let known_edits: HashMap<&str, &Edit<Mutation>> = envelope.vcs.edits.iter().map(|edit| (edit.id.as_str(), edit)).collect();
@@ -12115,10 +12129,6 @@ async fn validate_persisted_conflicts<P, Mutation>(envelope: &ArtifactEnvelopeOw
         if conflict.actors.is_empty() || conflict.actors.iter().any(|actor| actor.0.trim().is_empty()) || conflict.actors != canonical_conflict_actors(conflict.actors.clone()).await {
             return Err(VcsError::ValidationFailed(format!("conflict {} has malformed actor identities", conflict.id.0)));
         }
-        // 🎯️ A conflict's messages index its kind-specific flattened operation sequence: wire
-        // envelopes in `Quarantined` order, or every forward operation of `Degraded` edits in
-        // `edit_ids` order. This makes `op_index` globally unambiguous for a conflict rather
-        // than accidentally treating every message as if it belonged to its first edit.
         let (mutation_ids, operation_count) = match &conflict.kind {
             crate::os_spr::ConflictKind::Quarantined { envelopes } => {
                 if envelopes.is_empty() {
@@ -12187,7 +12197,7 @@ async fn validate_persisted_conflicts<P, Mutation>(envelope: &ArtifactEnvelopeOw
     Ok(())
 }
 
-/// @emoji 🧱️ Validates the complete durable history graph at every persistence boundary.
+/// 🧱️ Validates the complete durable history graph at every persistence boundary.
 /// Deliberately free of store construction bounds: codecs must reject malformed history before a
 /// caller needs to construct an `ArtifactStore`.
 async fn validate_durable_history<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>) -> Result<(), VcsError> {
@@ -12305,7 +12315,7 @@ async fn validate_history_lanes<P, Mutation>(envelope: &ArtifactEnvelope<P, Muta
     Ok(())
 }
 
-/// @emoji 🎯️ Builds the binary op-log twin of `print_ops_log` — a `crate::os_spr::HistoryLog` carrying
+/// 🎯️ Builds the binary op-log twin of `print_ops_log` — a `crate::os_spr::HistoryLog` carrying
 /// REAL `inverse`/binary op payloads/explicit meta/cursor, encoded via `crate::os_spr::encode_history`
 /// with `write_backwards_section: true`. Unlike the `.ops` text mirror (forwards-only, see
 /// `print_ops_log`'s doc), this is the AUTHORITATIVE persisted form: `parse_document_spr` recovers
@@ -12319,6 +12329,11 @@ async fn history_op_payloads<Mutation: OpBinary>(mutations: &[Mutation]) -> Resu
     Ok(payloads)
 }
 
+/// 🎯️ An empty `mutation_meta` (e.g. a hand-authored/externally-injected edit with no
+/// explicit meta, distinct from a real dispatch which always populates one entry per
+/// forward op) is treated as ABSENT, not as `Some(vec![])` — `encode_edit` requires
+/// `metas.len() == ops.len()` when meta is present at all, and an empty-but-`Some` vec
+/// would spuriously fail that check for a non-empty `ops`.
 async fn history_edit_from_edit<Mutation: OpBinary>(edit: &Edit<Mutation>, messages: &[crate::os_spr::MutationMessage], lane: Option<HistoryLane>) -> Result<crate::os_spr::HistoryEdit, VcsError> {
     if messages.iter().any(|message| message.op_index.is_none_or(|index| index as usize >= edit.forwards.len())) {
         return Err(VcsError::ValidationFailed(format!("edit {} carries a message without a valid operation index", edit.id)));
@@ -12332,11 +12347,6 @@ async fn history_edit_from_edit<Mutation: OpBinary>(edit: &Edit<Mutation>, messa
         description: edit.description.clone(),
         ops: history_op_payloads(&edit.forwards).await?,
         inverse: history_op_payloads(&edit.inverse).await?,
-        // 🎯️ An empty `mutation_meta` (e.g. a hand-authored/externally-injected edit with no
-        // explicit meta, distinct from a real dispatch which always populates one entry per
-        // forward op) is treated as ABSENT, not as `Some(vec![])` — `encode_edit` requires
-        // `metas.len() == ops.len()` when meta is present at all, and an empty-but-`Some` vec
-        // would spuriously fail that check for a non-empty `ops`.
         meta: if edit.mutation_meta.is_empty() {
             if messages.is_empty() {
                 None
@@ -12353,11 +12363,11 @@ async fn history_edit_from_edit<Mutation: OpBinary>(edit: &Edit<Mutation>, messa
     })
 }
 
+/// 🌀️ `encode_envelope` is async (📡️replication, out of this packet's scope); `map`'s
+/// closure is sync (R10 shape 1), so it's hoisted into an explicit loop.
 async fn history_conflict_from_conflict(conflict: &crate::os_spr::Conflict) -> crate::os_spr::history::HistoryConflict {
     let (kind, edit_ids, envelopes) = match &conflict.kind {
         crate::os_spr::ConflictKind::Quarantined { envelopes, .. } => {
-            // 🌀️ `encode_envelope` is async (📡️replication, out of this packet's scope); `map`'s
-            // closure is sync (R10 shape 1), so it's hoisted into an explicit loop.
             let mut encoded = Vec::with_capacity(envelopes.len());
             for envelope in envelopes {
                 let mut bytes = Vec::new();
@@ -12417,7 +12427,7 @@ fn conflict_from_history_conflict(conflict: crate::os_spr::history::HistoryConfl
     })
 }
 
-/// @emoji 🎯️ Encodes a bare, edit-free `.spr` op log for `schema` — the counterpart to a `.pack`
+/// 🎯️ Encodes a bare, edit-free `.spr` op log for `schema` — the counterpart to a `.pack`
 /// file carrying only an initial snapshot with no history yet (e.g. a single dropped `.pack`
 /// file with no accompanying `.spr` sidecar). `doc_id` may be empty when the caller mints a fresh
 /// id downstream (as `parse_document_spr` never cross-checks it against the pack). LAW:
@@ -12428,7 +12438,7 @@ pub async fn empty_document_spr(doc_id: &str, schema: &str) -> Vec<u8> {
     crate::os_spr::encode_history(&log, &crate::os_spr::EncodeOptions::default()).await.expect("encoding an edit-free HistoryLog is infallible")
 }
 
-/// @emoji 🪪️ Re-stamps an app-built document `.spr` with the identity of the live document it is
+/// 🪪️ Re-stamps an app-built document `.spr` with the identity of the live document it is
 /// loaded into — id, schema, dialect, owner — keeping every history event.
 /// A command replacing its whole document (`Effect::LoadDocument`) builds that log without knowing
 /// where its store is mounted, and archive hydration rejects any log whose identity differs.
@@ -12444,7 +12454,7 @@ pub async fn stamp_document_spr_identity(spr: &[u8], doc_id: &str, schema: &str,
     crate::os_spr::encode_history(&log, &options).await.map_err(|error| VcsError::Serialize(error.to_string()))
 }
 
-/// @emoji 🌱️ A brand-new owned member's full envelope pack — `initial_pack` plus an edit-free `.spr`
+/// 🌱️ A brand-new owned member's full envelope pack — `initial_pack` plus an edit-free `.spr`
 /// stamped with the child's id, `schema`, `dialect` and `owner` through the same
 /// `stamp_document_spr_identity` path a parent's own whole-document load takes — in exactly the
 /// `encode_document_pack_bytes` framing `MemberFactory::open` and archive member admission accept.
@@ -12458,7 +12468,7 @@ pub async fn genesis_member_envelope_pack(schema: &str, dialect: &crate::os_io::
     Ok(encode_document_pack_bytes(initial_pack, &spr).await)
 }
 
-/// @emoji ➕️ Appends `edits` and `transitions` to an already-encoded `.spr` byte log — decode,
+/// ➕️ Appends `edits` and `transitions` to an already-encoded `.spr` byte log — decode,
 /// extend, re-encode. The log holds events only, so an appended event is live for the next reader
 /// exactly as the fold orders it. O(history) per call — a caller appending many
 /// batches back-to-back pays the whole decode/encode cost each time; a streaming variant
@@ -12473,7 +12483,7 @@ pub async fn append_history_events_to_spr(spr: &[u8], edits: &[crate::os_spr::Hi
     crate::os_spr::encode_history(&log, &options).await.map_err(|error| VcsError::Serialize(error.to_string()))
 }
 
-/// @emoji 🧩️ Projects an envelope's composition facts (`owner`, `dialect`) into the durable
+/// 🧩️ Projects an envelope's composition facts (`owner`, `dialect`) into the durable
 /// `HistoryComposition` overlay, or `None` when the document
 /// has none — which is the overwhelming majority, so an ordinary leaf document's `.spr` gains not a
 /// single byte from this record existing. `ArtifactRef`s cross the boundary as their `to_uri()`
@@ -12488,7 +12498,7 @@ async fn history_composition_from_envelope<P, Mutation>(envelope: &ArtifactEnvel
     Some(crate::os_spr::HistoryComposition { owner, dialect })
 }
 
-/// @emoji 🧩️ Inverse of `history_composition_from_envelope`: malformed ownership rejects the
+/// 🧩️ Inverse of `history_composition_from_envelope`: malformed ownership rejects the
 /// authoritative history rather than being silently discarded. Checkpoint pins are not part of the
 /// overlay — they are facts of `Repin` transitions, folded like every other history fact.
 async fn apply_history_composition<P, Mutation>(envelope: &mut ArtifactEnvelope<P, Mutation>, composition: &crate::os_spr::HistoryComposition) -> Result<(), VcsError> {
@@ -12500,6 +12510,8 @@ async fn apply_history_composition<P, Mutation>(envelope: &mut ArtifactEnvelope<
     Ok(())
 }
 
+/// 🌀️ `history_conflict_from_conflict` is async (calls the 📡️replication `encode_envelope`);
+/// `Iterator::map`'s closure is sync (R10 shape 1), so it's hoisted into an explicit loop.
 pub async fn print_document_spr<P, Mutation>(envelope: &ArtifactEnvelopeOwners<P, Mutation>) -> Result<Vec<u8>, VcsError>
 where
     Mutation: OpBinary,
@@ -12525,8 +12537,6 @@ where
     for edit in &envelope.vcs.edits {
         edits.push(history_edit_from_edit::<Mutation>(edit, message_ledger.get(edit.id.as_str()).copied().unwrap_or(&[]), envelope.lanes.get(&edit.id).copied()).await?);
     }
-    // 🌀️ `history_conflict_from_conflict` is async (calls the 📡️replication `encode_envelope`);
-    // `Iterator::map`'s closure is sync (R10 shape 1), so it's hoisted into an explicit loop.
     let mut conflicts = Vec::with_capacity(envelope.conflicts.len());
     for conflict in &envelope.conflicts {
         conflicts.push(history_conflict_from_conflict(conflict).await);
@@ -12543,7 +12553,7 @@ where
     crate::os_spr::encode_history(&log, &options).await.map_err(|error| VcsError::Serialize(error.to_string()))
 }
 
-/// @emoji 🎯️ Inverse of [`print_document_spr`]: rebuilds an envelope's event log — `edits` (with
+/// 🎯️ Inverse of [`print_document_spr`]: rebuilds an envelope's event log — `edits` (with
 /// their persisted `inverse`/`mutation_meta`) and `transitions` — from a decoded `HistoryLog`, then
 /// folds it into every derived position and fact ([`project_envelope_history`]). The initial
 /// snapshot comes from `pack` via `ArtifactPack::decode_pack`, matching `parse_document_pack`'s contract.
@@ -12556,6 +12566,13 @@ where
     parse_decoded_document_spr(pack, log).await
 }
 
+/// 🧊️ The validation replay's final projection is a SCRATCH value nothing below reads — the
+/// authoritative one is rebuilt from the cursor further down. Shadowing it there left this
+/// binding to a bare drop at the end of the function, which aborts the process for any artifact
+/// whose projection owns a fail-closed root: every `.pack`/`.spr` load of a generation3d document
+/// with a layout entry died in `OrderedMap<WidgetLayout>::drop`
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). `ReplayProjection` now retires it on every early
+/// `?` above as well, which the explicit call below never covered.
 pub async fn parse_decoded_document_spr<P, Mutation>(pack: &[u8], mut log: crate::os_spr::HistoryLog) -> Result<ParsedDocumentText<P, Mutation>, TextError>
 where
     P: Clone + ArtifactPack,
@@ -12627,13 +12644,6 @@ where
             finished_at: history_edit.finished_at,
         });
     }
-    // 🧊️ The validation replay's final projection is a SCRATCH value nothing below reads — the
-    // authoritative one is rebuilt from the cursor further down. Shadowing it there left this
-    // binding to a bare drop at the end of the function, which aborts the process for any artifact
-    // whose projection owns a fail-closed root: every `.pack`/`.spr` load of a generation3d document
-    // with a layout entry died in `OrderedMap<WidgetLayout>::drop`
-    // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). `ReplayProjection` now retires it on every early
-    // `?` above as well, which the explicit call below never covered.
     drop(snapshot);
 
     let mut conflicts = Vec::with_capacity(log.conflicts.len());
@@ -12671,7 +12681,7 @@ where
     }
 }
 
-/// @emoji 📤️ Pack counterpart of `print_document_text`: identical op-log TEXT body (`print_ops_log`)
+/// 📤️ Pack counterpart of `print_document_text`: identical op-log TEXT body (`print_ops_log`)
 /// for the human-readable mirror, but the initial snapshot is encoded to pack bytes
 /// (`ArtifactPack::encode_pack`) instead of printed to DSL text — plus the AUTHORITATIVE `.spr`
 /// binary op log (`print_document_spr`), which carries real inverse/binary payloads/cursor.
@@ -12686,7 +12696,7 @@ where
     Ok(ArtifactPackFiles { pack, spr, ops })
 }
 
-/// @emoji 📥️ Parses the explicit `.ops` records against an already-obtained initial snapshot.
+/// 📥️ Parses the explicit `.ops` records against an already-obtained initial snapshot.
 /// Text persistence is intentionally strict: it requires inverse operations, one authoritative
 /// metadata record per forward operation, durable messages/conflicts, and exactly one cursor.
 async fn replay_ops<P, Mutation>(initial_snapshot: P, ops: &str) -> Result<ParsedDocumentText<P, Mutation>, TextError>
@@ -12863,7 +12873,7 @@ where
     settle_parsed_envelope(envelope).await
 }
 
-/// @emoji 🧮️ Finishes a load: folds the parsed event log into every derived position and fact,
+/// 🧮️ Finishes a load: folds the parsed event log into every derived position and fact,
 /// validates the result and materializes the live snapshot by replaying the applied edits over the
 /// genesis. A refused document is discarded through [`discard_parsed_envelope`], never dropped.
 async fn settle_parsed_envelope<P, Mutation>(mut envelope: ArtifactEnvelope<P, Mutation>) -> Result<ParsedDocumentText<P, Mutation>, TextError>
@@ -12891,7 +12901,7 @@ where
     }
 }
 
-/// @emoji 🧹️ Discards a refused, never-published parsed envelope: its shell is detached and its
+/// 🧹️ Discards a refused, never-published parsed envelope: its shell is detached and its
 /// genesis retired through the technology's own diff vocabulary; the plain history data drops.
 fn discard_parsed_envelope<P, Mutation>(envelope: ArtifactEnvelope<P, Mutation>)
 where
@@ -12906,7 +12916,7 @@ where
     retire_replayed_projection::<P, Mutation>(owners.vcs.initial_snapshot);
 }
 
-/// @emoji 📥️ Parses the textual VCS document back into an envelope plus its live (fully-replayed)
+/// 📥️ Parses the textual VCS document back into an envelope plus its live (fully-replayed)
 /// snapshot — obtains the initial snapshot via `P::parse_dsl` then shares `replay_ops`.
 pub async fn parse_document_text<P, Mutation>(dsl: &str, ops: &str) -> Result<ParsedDocumentText<P, Mutation>, TextError>
 where
@@ -12917,7 +12927,7 @@ where
     replay_ops(initial_snapshot, ops).await
 }
 
-/// @emoji 📥️ spr-first pack counterpart of `parse_document_text`: pack+spr are the AUTHORITATIVE
+/// 📥️ spr-first pack counterpart of `parse_document_text`: pack+spr are the AUTHORITATIVE
 /// pair (see `ArtifactPackFiles`'s doc) — this is a thin forward onto `parse_document_spr`, which
 /// recovers real `inverse`/`mutation_meta`/`cursor` instead of recomputing them via replay.
 pub async fn parse_document_pack<P, Mutation>(pack: &[u8], spr: &[u8]) -> Result<ParsedDocumentText<P, Mutation>, TextError>
@@ -12931,7 +12941,7 @@ where
 
 //#region 🔖️CommandFormat
 mod operation_envelope_serde {
-    /// @emoji 🧵️ `ToValue` twin of the former `serialize` — identical byte framing, wire shape is
+    /// 🧵️ `ToValue` twin of the former `serialize` — identical byte framing, wire shape is
     /// `DslValue::Array` of `DslValue::Number` (one per byte), matching `Vec<u8>`'s own
     /// `ToValue` codec exactly (so this is equivalent to `ToValue::to_value(&bytes)`).
     pub fn to_value(envelope: &crate::os_spr::MutationEnvelope) -> crate::os_dsl::DslValue {
@@ -12940,7 +12950,7 @@ mod operation_envelope_serde {
         crate::os_dsl::ToValue::to_value(&bytes)
     }
 
-    /// @emoji 🧵️ `FromValue` twin of `to_value` above.
+    /// 🧵️ `FromValue` twin of `to_value` above.
     pub fn from_value(value: crate::os_dsl::DslValue) -> Result<crate::os_spr::MutationEnvelope, crate::os_dsl::ValueError> {
         let bytes: Vec<u8> = crate::os_dsl::FromValue::from_value(value)?;
         let mut pos = 0;
@@ -12948,7 +12958,7 @@ mod operation_envelope_serde {
     }
 }
 
-/// @emoji 🕹️ One structural `ArtifactCommand` line — `apply`/`undo`/`redo`/`commit-checkpoint`/
+/// 🕹️ One structural `ArtifactCommand` line — `apply`/`undo`/`redo`/`commit-checkpoint`/
 /// `create-alternative`/`switch-alternative`/`checkout`/`amend` — the command-level twin of
 /// `OpsHeaderLine`, re-derived on the same `dsl_schema` grammar engine. `Apply`/`Amend` carry no
 /// operations here (those follow as 2-space-indented `Op::print_op` lines, exactly like
@@ -12983,7 +12993,7 @@ enum CommandHeaderLine {
         key: Option<String>,
     },
     PruneDrafts,
-    /// @emoji 🛤️ Text twin of `ArtifactCommand::ApplyInLane` — `lane` is a kebab token
+    /// 🛤️ Text twin of `ArtifactCommand::ApplyInLane` — `lane` is a kebab token
     /// (`history_lane_to_token`/`parse_history_lane_token`), matching `Undo.policy`'s convention.
     ApplyInLane {
         description: Option<String>,
@@ -12999,12 +13009,12 @@ enum CommandHeaderLine {
     RedoInLane {
         lane: String,
     },
-    /// @emoji ⚖️ Text twin of `ArtifactCommand::SetMergePolicy` — `policy` is a kebab token
+    /// ⚖️ Text twin of `ArtifactCommand::SetMergePolicy` — `policy` is a kebab token
     /// (`merge_policy_to_token`/`parse_merge_policy_token`), matching `Undo.policy`'s convention.
     SetMergePolicy {
         policy: String,
     },
-    /// @emoji ⚔️ Text twin of `ArtifactCommand::ResolveConflict` — `resolution` is a kebab token
+    /// ⚔️ Text twin of `ArtifactCommand::ResolveConflict` — `resolution` is a kebab token
     /// (`conflict_resolution_to_token`/`parse_conflict_resolution_token`).
     ResolveConflict {
         #[dsl(positional)]
@@ -13107,7 +13117,7 @@ fn undo_policy_from_ordinal(ordinal: u8) -> Result<UndoPolicy, crate::os_spr::Pr
     }
 }
 
-/// @emoji 🛤️ `HistoryLane`'s text token — the `ApplyInLane`/`AmendInLane`/`UndoInLane`/
+/// 🛤️ `HistoryLane`'s text token — the `ApplyInLane`/`AmendInLane`/`UndoInLane`/
 /// `RedoInLane` command lines' `lane=...` value, mirroring `undo_policy_to_token`'s convention.
 async fn history_lane_to_token(lane: HistoryLane) -> &'static str {
     match lane {
@@ -13124,7 +13134,7 @@ async fn parse_history_lane_token(token: &str) -> Result<HistoryLane, TextError>
     }
 }
 
-/// @emoji 🛤️ `HistoryLane`'s binary ordinal, mirroring `undo_policy_ordinal`'s convention.
+/// 🛤️ `HistoryLane`'s binary ordinal, mirroring `undo_policy_ordinal`'s convention.
 fn history_lane_ordinal(lane: HistoryLane) -> u8 {
     match lane {
         HistoryLane::Document => 0,
@@ -13140,7 +13150,7 @@ fn history_lane_from_ordinal(ordinal: u8) -> Result<HistoryLane, crate::os_spr::
     }
 }
 
-/// @emoji ⚖️ `crate::os_spr::MergePolicy`'s text token — the `SetMergePolicy` command line's
+/// ⚖️ `crate::os_spr::MergePolicy`'s text token — the `SetMergePolicy` command line's
 /// `policy=...` value, mirroring `undo_policy_to_token`'s convention.
 async fn merge_policy_to_token(policy: crate::os_spr::MergePolicy) -> &'static str {
     match policy {
@@ -13159,7 +13169,7 @@ async fn parse_merge_policy_token(token: &str) -> Result<crate::os_spr::MergePol
     }
 }
 
-/// @emoji ⚔️ `crate::os_spr::ConflictResolution`'s text token — the `ResolveConflict` command line's
+/// ⚔️ `crate::os_spr::ConflictResolution`'s text token — the `ResolveConflict` command line's
 /// `resolution=...` value, mirroring `undo_policy_to_token`'s convention.
 async fn conflict_resolution_to_token(resolution: crate::os_spr::ConflictResolution) -> &'static str {
     match resolution {
@@ -13176,7 +13186,7 @@ async fn parse_conflict_resolution_token(token: &str) -> Result<crate::os_spr::C
     }
 }
 
-/// @emoji ⚔️ `crate::os_spr::ConflictResolution`'s binary ordinal, mirroring
+/// ⚔️ `crate::os_spr::ConflictResolution`'s binary ordinal, mirroring
 /// `undo_policy_ordinal`'s convention.
 fn conflict_resolution_ordinal(resolution: crate::os_spr::ConflictResolution) -> u8 {
     match resolution {
@@ -13193,7 +13203,7 @@ fn conflict_resolution_from_ordinal(ordinal: u8) -> Result<crate::os_spr::Confli
     }
 }
 
-/// @emoji 📤️ Prints every 2-space-indented `Op::print_op` line for one `apply`/`amend` body,
+/// 📤️ Prints every 2-space-indented `Op::print_op` line for one `apply`/`amend` body,
 /// erroring exactly like `print_edit_lines` if any op prints a line containing a newline.
 async fn print_indented_ops<Op: OpText>(out: &mut String, mutations: &[Op]) -> Result<(), VcsError> {
     for mutation in mutations {
@@ -13208,7 +13218,7 @@ async fn print_indented_ops<Op: OpText>(out: &mut String, mutations: &[Op]) -> R
     Ok(())
 }
 
-/// @emoji 📥️ Parses every already-2-space-indented body line of an `apply`/`amend` command as one
+/// 📥️ Parses every already-2-space-indented body line of an `apply`/`amend` command as one
 /// operation each — the command-level twin of `replay_ops`'s indented-op-line branch.
 async fn parse_indented_ops<Op: OpText>(body_lines: &[&str]) -> Result<Vec<Op>, TextError> {
     let mut mutations = Vec::with_capacity(body_lines.len());
@@ -13221,7 +13231,7 @@ async fn parse_indented_ops<Op: OpText>(body_lines: &[&str]) -> Result<Vec<Op>, 
     Ok(mutations)
 }
 
-/// @emoji 📥️ Strips exactly one 2-space indent level from every line, joining them back into a
+/// 📥️ Strips exactly one 2-space indent level from every line, joining them back into a
 /// standalone command text — used to recurse `parse_command` into a `semantic-undo`/
 /// `compensating-action` nested command block.
 async fn dedent_command_lines(lines: &[&str]) -> Result<String, TextError> {
@@ -13236,7 +13246,7 @@ async fn dedent_command_lines(lines: &[&str]) -> Result<String, TextError> {
     Ok(out)
 }
 
-/// @emoji 📤️ Prints a `ArtifactCommand` as its one-line-per-structural-field header, plus any
+/// 📤️ Prints a `ArtifactCommand` as its one-line-per-structural-field header, plus any
 /// 2-space-indented operation lines (`Apply`/`AmendLast`) or a further-indented nested command
 /// block (`UndoWithPolicy`'s `semantic_command`) — the maximum-token-efficient textual twin of
 /// `encode_command`. `Author::avatar` is never printed, mirroring `OpsAuthor`'s `by=[...]` law.
@@ -13327,7 +13337,7 @@ pub async fn print_command<Op: OpText>(command: &ArtifactCommand<Op>) -> Result<
     Ok(out)
 }
 
-/// @emoji 📥️ Parses a `print_command`-produced (or hand-authored) command text back into a
+/// 📥️ Parses a `print_command`-produced (or hand-authored) command text back into a
 /// `ArtifactCommand`. LAW: `parse_command(&print_command(c)?) == Ok(c)` for every `c`.
 pub async fn parse_command<Op: OpText>(text: &str) -> Result<ArtifactCommand<Op>, TextError> {
     let all_lines: Vec<&str> = text.lines().collect();
@@ -13399,7 +13409,7 @@ pub async fn parse_command<Op: OpText>(text: &str) -> Result<ArtifactCommand<Op>
     }
 }
 
-/// @emoji 🎯️ Format byte every encoded command starts with — matches `crate::os_dsl::op_rt::OP_BINARY_FORMAT`
+/// 🎯️ Format byte every encoded command starts with — matches `crate::os_dsl::op_rt::OP_BINARY_FORMAT`
 /// (B-R6 "one wire convention": `format u8 | ordinal varint | record body`).
 pub const COMMAND_BINARY_FORMAT: u8 = 1;
 
@@ -13435,7 +13445,7 @@ fn read_command_ops<Op: OpBinary>(reader: &mut crate::os_pack::ByteReader<'_>) -
     Ok(mutations)
 }
 
-/// @emoji 🎯️ B-R6 "one documented generic impl": `ArtifactCommand<Op>` cannot go through
+/// 🎯️ B-R6 "one documented generic impl": `ArtifactCommand<Op>` cannot go through
 /// `#[derive(crate::os_dsl::DslOps)]` like every concrete per-technology `Mutation` enum does — it is generic
 /// over a FOREIGN `Op: OpBinary` from whichever technology is dispatching, and the derive
 /// only lowers a CONCRETE type's own fields to a `RecordSpec`; there is no way to describe "some
@@ -13640,7 +13650,7 @@ impl<Op: OpBinary> OpBinary for ArtifactCommand<Op> {
 
 //#region 🔖️History
 //#region 🔖️History
-/// @emoji 📜️ One row of a checkpoint history/ancestor graph.
+/// 📜️ One row of a checkpoint history/ancestor graph.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct HistoryColumn {
@@ -13664,13 +13674,13 @@ async fn is_checkpoint_main_only<P, Mutation>(envelope: &ArtifactEnvelope<P, Mut
     checkpoint_alternatives(envelope, checkpoint_id).await.is_empty()
 }
 
+/// 🌀️ Self-recursive async fn — `Box::pin` at the recursive call site only (R10 shape 3):
+/// the fn's own opaque future type would otherwise need to contain itself (E0733).
 async fn has_main_only_descendant<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>, children_of: &HashMap<String, Vec<String>>, checkpoint_id: &str, seen: &mut HashSet<String>) -> bool {
     if !seen.insert(checkpoint_id.to_string()) {
         return false;
     }
     for child_id in children_of.get(checkpoint_id).into_iter().flatten() {
-        // 🌀️ Self-recursive async fn — `Box::pin` at the recursive call site only (R10 shape 3):
-        // the fn's own opaque future type would otherwise need to contain itself (E0733).
         if is_checkpoint_main_only(envelope, child_id).await || Box::pin(has_main_only_descendant(envelope, children_of, child_id, seen)).await {
             return true;
         }
@@ -13678,7 +13688,7 @@ async fn has_main_only_descendant<P, Mutation>(envelope: &ArtifactEnvelope<P, Mu
     false
 }
 
-/// @emoji 🛤️ Assigns each checkpoint a swimlane: alternatives get lanes `1..n` in array order, lane
+/// 🛤️ Assigns each checkpoint a swimlane: alternatives get lanes `1..n` in array order, lane
 /// `0` is the main trunk. A checkpoint sits on lane 0 if it belongs to no alternative or has any
 /// main-only descendant (cycle-guarded DFS); otherwise it takes its single alternative's lane, or
 /// the minimum lane among several. Mirrors premigration `assignHistoryCheckpointLanes`.
@@ -13712,7 +13722,7 @@ async fn assign_history_checkpoint_lanes<P, Mutation>(envelope: &ArtifactEnvelop
     lane_by_checkpoint_id
 }
 
-/// @emoji 📜️ Builds the ancestor-graph rows for a checkpoint history view: newest checkpoint first,
+/// 📜️ Builds the ancestor-graph rows for a checkpoint history view: newest checkpoint first,
 /// each carrying its swimlane, labels (alternative names, `"main"` fallback on the newest unlabeled
 /// row), and authors. Mirrors premigration `buildHistoryColumns`.
 pub async fn build_history_columns<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>) -> Vec<HistoryColumn> {
@@ -13756,7 +13766,7 @@ struct CursorRevisionAccumulator {
     redo: Vec<CursorRevisionRecord>,
 }
 
-/// @emoji 🧮️ Domain-neutral incremental digest for retained store initialization. A
+/// 🧮️ Domain-neutral incremental digest for retained store initialization. A
 /// caller observes at most one already-admitted field/page per job step and never materializes a
 /// serialized document or edit merely to derive revision identity.
 pub struct ArtifactStoreInitializationDigest {
@@ -13854,7 +13864,7 @@ impl CursorRevisionAccumulator {
     }
 }
 
-/// @emoji 🏗️ Exact runtime owners assembled by a domain's retained store initializer.
+/// 🏗️ Exact runtime owners assembled by a domain's retained store initializer.
 /// Every mutating method advances one already-admitted history or reference owner; final store
 /// construction only moves these prepared authorities into their from-birth terminal shells.
 pub struct ArtifactStoreInitializationOwnerCatalog {
@@ -13996,7 +14006,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
         self.push_redo(edit.id.clone(), CursorRevisionAccumulator::edit_digest(edit))
     }
 
-    /// @emoji 🌱️ Seeds operation `id` of history entry `entry_id` into the causal owner. An edit a replica folded from a peer is
+    /// 🌱️ Seeds operation `id` of history entry `entry_id` into the causal owner. An edit a replica folded from a peer is
     /// named after its only operation (`edit_from_operation_envelope`), so an operation id equal to its own entry id is the node
     /// the entry already seeded — one node, never two; a repeat across entries still refuses as a duplicate.
     pub fn seed_edit_operation(&mut self, entry_id: &str, id: MutationId) -> Result<(), String> {
@@ -14026,7 +14036,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
         *self.local_actor_id = value;
     }
 
-    /// @emoji 🧹️ Retires one exact rejected initialization owner. The current snapshot is
+    /// 🧹️ Retires one exact rejected initialization owner. The current snapshot is
     /// always handed to the domain catalog; history identities and the causal graph then advance
     /// one retained child at a time before the shell can become terminal.
     pub fn close_step(&mut self, current_factory: &dyn ArtifactOwnedValueRetirementFactory<P>, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
@@ -14695,11 +14705,11 @@ impl ArtifactStoreOneItemLiveAuthority {
         &self.actor
     }
 
-    /// @emoji 🪪️ The globally unique identity of the edit this authority publishes — content-addressed
+    /// 🪪️ The globally unique identity of the edit this authority publishes — content-addressed
     /// over the actor, the sequence and the HLC tick the Store minted, so two replicas' edits never
     /// share an identity the way a replica-local counter would. The Store stamps it on the staged edit.
     ///
-    /// @emoji 🔏 A server-stamped publication instead publishes under the identity its durable
+    /// 🔏 A server-stamped publication instead publishes under the identity its durable
     /// decision was hashed over: the approval's own mutation id, itself content-addressed over the
     /// job and the proposal, so the uniqueness argument above still holds and the committed edit
     /// carries the identity every downstream verifier (WAL, ledger, actor frontier) binds against.
@@ -14727,7 +14737,7 @@ impl ArtifactStoreOneItemLiveAuthority {
         self.group_id.as_deref()
     }
 
-    /// @emoji 🔏 The server-stamped identity this publication was minted under, or `None` for every
+    /// 🔏 The server-stamped identity this publication was minted under, or `None` for every
     /// local gesture. The fold reads it to keep the stamped mutation id on the first folded item
     /// instead of rewriting it to the store's `<edit-id>#<position>` form.
     pub fn stamped_edit_id(&self) -> Option<&str> {
@@ -15514,19 +15524,19 @@ where
     edit_sequence: i32,
     generation: u64,
     last_projection_cause: Option<ArtifactProjectionCause>,
-    /// @emoji 🧭️ The checkpoint new commits parent onto; advances on commit/checkout/switch. Not
+    /// 🧭️ The checkpoint new commits parent onto; advances on commit/checkout/switch. Not
     /// part of the wire envelope — callers that reconstruct the store per call (e.g. a WASM plugin)
     /// must save/restore it themselves via {@link current_checkpoint_id}/{@link set_current_checkpoint_id}.
     current_checkpoint_id: std::mem::ManuallyDrop<Option<String>>,
-    /// @emoji 🖋️ Identity of the local actor driving this store. Set from each local `Apply`/
+    /// 🖋️ Identity of the local actor driving this store. Set from each local `Apply`/
     /// `AmendLast`'s operation author; compared against `Edit.actor` so undo never touches foreign
     /// edits. Not part of the wire envelope — callers that reconstruct the store per call must
     /// save/restore it via {@link local_actor_id}/{@link set_local_actor_id}.
     local_actor_id: std::mem::ManuallyDrop<Option<String>>,
-    /// @emoji ⚖️ This store's local `crate::os_spr::MergePolicy` — authority-local state, defaults
+    /// ⚖️ This store's local `crate::os_spr::MergePolicy` — authority-local state, defaults
     /// to `Normal`, never carried on the wire envelope (never part of an artifact's shared history).
     merge_policy: crate::os_spr::MergePolicy,
-    /// @emoji ⏰️ Monotone hybrid logical clock: `tick`s on every local apply, `merge`s in a remote
+    /// ⏰️ Monotone hybrid logical clock: `tick`s on every local apply, `merge`s in a remote
     /// tick on every ingest — replaces the old per-call `HybridLogicalTimestamp::new(0, now_ms())`
     /// construction in `replay_mutations`. Not part of the wire envelope.
     clock: HybridLogicalTimestamp,
@@ -15538,7 +15548,7 @@ where
     /// 🧬️ Prefix-authenticated applied/redo cursor state. Tail mutations update one record;
     /// load/reset and the already-cold interior-history paths rebuild only their changed suffix.
     revision_accumulator: std::mem::ManuallyDrop<CursorRevisionAccumulator>,
-    /// @emoji ⚡️ The live, incrementally-maintained RAW fold of `initial_snapshot` over every
+    /// ⚡️ The live, incrementally-maintained RAW fold of `initial_snapshot` over every
     /// `forwards` operation in `applied_edit_ids` order — i.e. exactly what a full
     /// {@link materialize_document_snapshot} replay computes BEFORE its single final
     /// {@link Mutation::reconcile} call. Kept in lock-step by every mutating command below instead of
@@ -15548,7 +15558,7 @@ where
     /// see `fold_current`. Differential ground truth: `test_support::assert_live_equals_replay`.
     current: std::mem::ManuallyDrop<Arc<P>>,
     current_detached: bool,
-    /// @emoji 🪢️ `(edit_id, snapshot right before that edit's forwards were first applied)` for
+    /// 🪢️ `(edit_id, snapshot right before that edit's forwards were first applied)` for
     /// whichever edit is CURRENTLY the tail of `applied_edit_ids` — refreshed by `Apply`/`AmendLast`
     /// (fresh-edit branch)/`Redo`, left untouched by further amends to the same edit (so it always
     /// points at the state before the edit as a whole, not before its latest increment). Powers an
@@ -15566,11 +15576,11 @@ where
     owned_disposer_terminal: bool,
     one_item_preparation_factory: std::mem::ManuallyDrop<Option<Arc<dyn ArtifactStoreOneItemPreparationFactory<P, Mutation>>>>,
     one_item_wire_preparation_factory: std::mem::ManuallyDrop<Option<Arc<dyn MemberStoreOneItemWirePreparationFactory<P, Mutation>>>>,
-    /// @emoji 📨️ Transient handoff from whichever `dispatch_inner` arm actually produced messages
+    /// 📨️ Transient handoff from whichever `dispatch_inner` arm actually produced messages
     /// this call (`apply_command`/`amend_command`/`ingest_remote`/`resolve_conflict`) to `dispatch`,
     /// which drains it into the returned `CommandReceipt`. Reset at the top of every `dispatch`
     /// call; every other arm leaves it at its `Default`. Not part of the wire envelope.
-    /// @emoji 🪆️ Member-addressed backbone messages this store pumped off its own transport but does
+    /// 🪆️ Member-addressed backbone messages this store pumped off its own transport but does
     /// NOT own: a composed document's children are replicas of their own, and only the composing app
     /// knows which live member a `(slot, child_id)` lane names. Buffered here so a pump inside an
     /// ordinary `dispatch` can never silently drop a child's remote edit, drained by
@@ -15591,7 +15601,7 @@ struct ArtifactStoreHistoryCommitReservation {
     rejected_owner: ArtifactStoreDisplacedOwnerReservation,
 }
 
-/// @emoji 📨️ See `ArtifactStore::pending_report`'s doc.
+/// 📨️ See `ArtifactStore::pending_report`'s doc.
 #[derive(Default)]
 struct PendingCommandReport {
     /// 🎯️ Overrides `dispatch`'s tail-diff `edit_ids` guess — needed once a merge can insert
@@ -15672,7 +15682,7 @@ impl Drop for ArtifactStorePendingReportRetirement {
 
 
 
-/// @emoji 🖋️ Derives an edit's authoring actor from its per-operation metadata (the author of its
+/// 🖋️ Derives an edit's authoring actor from its per-operation metadata (the author of its
 /// first operation), so a local edit records who produced it for later `UndoPolicy` classification.
 async fn edit_actor_from_meta(mutation_meta: &[MutationMeta]) -> Option<String> {
     mutation_meta.first().and_then(|meta| meta.author_id.clone()).map(|actor_id| actor_id.0)
@@ -15693,7 +15703,7 @@ async fn validate_composition_pins(pins: &[crate::os_vcs::CompositionPin]) -> Re
     Ok(())
 }
 
-/// @emoji 🎚️ Atomically adopts a retained config runtime after typed Pack and history validation.
+/// 🎚️ Atomically adopts a retained config runtime after typed Pack and history validation.
 pub fn config_store_from_initialized_runtime_with_owners<P, Mutation>(
     mut envelope: ArtifactEnvelope<P, Mutation>,
     runtime: ArtifactStoreInitializationRuntime<P>,
@@ -15800,18 +15810,18 @@ where
         Ok((dag, edit_sequence, clock, rejected))
     }
 
-    /// @emoji 🚫️ A store is always constructed with no backbone attached — the envelope's
+    /// 🚫️ A store is always constructed with no backbone attached — the envelope's
     /// `backbone` field is a descriptor of the last attachment, never an instruction to
     /// reconnect. Callers attach explicitly via {@link attach_backbone}/{@link attach_backbone_uri}.
     ///
-    /// @emoji 🎯️ `applied_edit_ids`/`redo_edit_ids`/`current_checkpoint_id`/the active alternative
+    /// 🎯️ `applied_edit_ids`/`redo_edit_ids`/`current_checkpoint_id`/the active alternative
     /// and `current` are derived by folding the envelope's event log ([`fold_envelope_history`]) —
     /// the persisted history carries events only, so a save/load cycle restores the exact position
     /// by replaying them. `local_actor_id` is seeded from the tail applied edit's actor so
     /// `UndoPolicy::ExactBaseOnly`'s foreign-edit check keeps working immediately after reload (a
     /// real `VcsArtifactApp` overrides it anyway via `set_local_actor_id` on every dispatch).
     ///
-    /// @emoji 🛡️ A REJECTED construction retires the candidate envelope it consumed. The envelope is
+    /// 🛡️ A REJECTED construction retires the candidate envelope it consumed. The envelope is
     /// a terminal shell whose `Drop` asserts its owners were detached ([`ArtifactEnvelope::into_owners`]),
     /// so letting a `?` drop it turned every malformed-document refusal — a dangling cursor edit id, a
     /// duplicated authoritative edit, an alternative pinned to a checkpoint that was never recorded —
@@ -15888,7 +15898,7 @@ where
         })
     }
 
-    /// @emoji 🏗️ Atomically adopts a domain-validated initialization runtime. Every
+    /// 🏗️ Atomically adopts a domain-validated initialization runtime. Every
     /// history/reference/snapshot owner was prepared under the caller's StepContext before this
     /// non-suspending move; no validation or collection traversal occurs at publication.
     pub fn from_initialized_runtime_with_owners(envelope: ArtifactEnvelope<P, Mutation>, runtime: ArtifactStoreInitializationRuntime<P>, generation: u64, owners: DocumentStoreOwners<P, Mutation>) -> Self {
@@ -15954,8 +15964,9 @@ where
     }
 
     /// 📣️ Returns the last successful transition through the shared projection invalidation seam.
+    ///
+    /// 🌀️ `projection_stamp` is async; `Option::map`'s closure is sync (R10 shape 1).
     pub fn last_projection_invalidation(&self) -> Option<ArtifactProjectionInvalidation> {
-        // 🌀️ `projection_stamp` is async; `Option::map`'s closure is sync (R10 shape 1).
         self.durable_group_read_root().map_or(self.last_projection_cause, |root| root.last_projection_cause).map(|cause| ArtifactProjectionInvalidation { cause, stamp: self.projection_stamp() })
     }
 
@@ -15983,8 +15994,9 @@ where
 
     /// 🛂️ Accepts only a result computed for the exact current revision and generation. Accepted
     /// semantic diffs are returned to their owning strict-apply boundary, never applied here.
+    ///
+    /// 🌀️ A future is consumed by one `.await` (R10 shape 2) — resolved once, reused below.
     pub fn accept_projection_result<Output, Diff>(&self, result: ArtifactProjectionResult<Output, Diff>) -> Result<AcceptedArtifactProjection<Output, Diff>, StaleArtifactProjection> {
-        // 🌀️ A future is consumed by one `.await` (R10 shape 2) — resolved once, reused below.
         let current = self.projection_stamp();
         if result.stamp != current {
             return Err(StaleArtifactProjection { computed_for: result.stamp, current });
@@ -15996,7 +16008,7 @@ where
         &self.envelope
     }
 
-    /// @emoji 👁️ Read-only envelope view — prefer this over mutating through public fields.
+    /// 👁️ Read-only envelope view — prefer this over mutating through public fields.
     pub fn envelope_view(&self) -> ArtifactEnvelopeView<'_, P, Mutation> {
         ArtifactEnvelopeView { envelope: &self.envelope }
     }
@@ -16005,44 +16017,44 @@ where
         self.durable_group_read_root().map_or((*self.applied_edit_ids).as_slice(), |root| root.applied_edit_ids.as_slice())
     }
 
-    /// @emoji ↪️ Pending redo stack (edit ids undone since the last fresh `Apply`).
+    /// ↪️ Pending redo stack (edit ids undone since the last fresh `Apply`).
     pub fn redo_edit_ids(&self) -> &[String] {
         self.durable_group_read_root().map_or((*self.redo_edit_ids).as_slice(), |root| root.redo_edit_ids.as_slice())
     }
 
-    /// @emoji 🧭️ The checkpoint new commits currently parent onto (defaults to the latest checkpoint
+    /// 🧭️ The checkpoint new commits currently parent onto (defaults to the latest checkpoint
     /// on construction/`set_state`; advances on commit/checkout/switch).
     pub fn current_checkpoint_id(&self) -> Option<&str> {
         self.current_checkpoint_id.as_deref()
     }
 
-    /// @emoji 🖋️ The local actor id used to distinguish this store's own edits from ingested ones.
+    /// 🖋️ The local actor id used to distinguish this store's own edits from ingested ones.
     /// Not part of the wire envelope — a caller reconstructing the store per call must save/restore
     /// it via {@link set_local_actor_id} for `UndoPolicy` to keep classifying foreign edits.
     pub fn local_actor_id(&self) -> Option<&str> {
         self.durable_group_read_root().map_or_else(|| self.local_actor_id.as_deref(), |root| root.local_actor_id.as_deref())
     }
 
-    /// @emoji 🖋️ Sets the local actor id (see {@link local_actor_id}). Called automatically from each
+    /// 🖋️ Sets the local actor id (see {@link local_actor_id}). Called automatically from each
     /// local `Apply`/`AmendLast`; callers that reconstruct the store per dispatch restore it here.
     pub fn set_local_actor_id(&mut self, actor_id: Option<String>) -> Result<(), VcsError> {
         self.ensure_durable_group_idle()?;
         self.replace_local_actor_retained(actor_id)
     }
 
-    /// @emoji 🔧️ The most recently created/amended edit's `(forwards, inverse, per-operation meta)`.
+    /// 🔧️ The most recently created/amended edit's `(forwards, inverse, per-operation meta)`.
     /// Used right after `dispatch(Apply{..})`/`AmendLast` to build a `KernelMutation`/`InvocationResult`
     /// with a true inverse from the just-recorded `Edit.inverse`.
     pub fn edit_mutations(&self) -> Option<(&[Mutation], &[Mutation], &[MutationMeta])> {
         self.envelope.vcs.edits.last().map(|edit| (edit.forwards.as_slice(), edit.inverse.as_slice(), edit.mutation_meta.as_slice()))
     }
 
-    /// @emoji 📜️ Ancestor-graph rows for this store's checkpoint history. See {@link build_history_columns}.
+    /// 📜️ Ancestor-graph rows for this store's checkpoint history. See {@link build_history_columns}.
     pub async fn history_columns(&self) -> Vec<HistoryColumn> {
         build_history_columns(&self.envelope).await
     }
 
-    /// @emoji ♻️ Sole public reload API: adopts `envelope`'s event log and derives every position from
+    /// ♻️ Sole public reload API: adopts `envelope`'s event log and derives every position from
     /// it — a reload replays history, it never injects a cursor.
     pub async fn reset(&mut self, envelope: ArtifactEnvelope<P, Mutation>) -> Result<CommandReceipt, VcsError> {
         self.ensure_durable_group_idle()?;
@@ -16051,7 +16063,7 @@ where
         Ok(CommandReceipt { edit_ids: (*self.applied_edit_ids).clone(), generation: self.generation(), messages: Vec::new(), worst: None })
     }
 
-    /// @emoji 💾️ Adopts full store state from `envelope`'s event log — applied edits, redo stack,
+    /// 💾️ Adopts full store state from `envelope`'s event log — applied edits, redo stack,
     /// checkpoint and alternative are the fold of its edits and transitions, so `Redo` survives
     /// round-tripping through a serialized envelope (e.g. one `dispatch` call per request).
     pub(crate) async fn set_state(&mut self, envelope: ArtifactEnvelope<P, Mutation>) -> Result<(), VcsError> {
@@ -16063,7 +16075,7 @@ where
         adopted
     }
 
-    /// @emoji 🛡️ The reload proper. Like {@link new}, a REFUSED reload leaves its candidate in the
+    /// 🛡️ The reload proper. Like {@link new}, a REFUSED reload leaves its candidate in the
     /// slot so {@link set_state} can retire it: the live store must survive a rejected reset, and a
     /// dropped populated envelope aborts on the terminal-shell witness instead of returning the
     /// `VcsError` the caller reads.
@@ -16112,7 +16124,7 @@ where
         Ok(())
     }
 
-    /// @emoji 📌️ Records the composed children a checkpoint was taken against. Not reachable through
+    /// 📌️ Records the composed children a checkpoint was taken against. Not reachable through
     /// an ordinary `Apply` (no mutation can touch checkpoint metadata), so — like `set_owner` — it
     /// needs its own setter. Called by `VcsArtifactApp`'s checkpoint cascade right after the
     /// checkpoint is created, since a pin can only name a child checkpoint that already exists.
@@ -16141,7 +16153,7 @@ where
         self.invalidate_projections(ArtifactProjectionCause::Checkpoint)
     }
 
-    /// @emoji ⚡️ The live snapshot: the incrementally-maintained `current` fold, as-is. Always `Ok`
+    /// ⚡️ The live snapshot: the incrementally-maintained `current` fold, as-is. Always `Ok`
     /// in practice (kept as `Result` for API stability); O(1) instead of a full replay. See the
     /// `current` field doc for the maintenance invariant.
     pub fn snapshot(&self) -> Result<P, VcsError> {
@@ -16195,7 +16207,7 @@ where
         Ok(())
     }
 
-    /// @emoji 🔐️ Installs the one domain-supplied owner catalog before a store can enter
+    /// 🔐️ Installs the one domain-supplied owner catalog before a store can enter
     /// retained replacement or close. There is no default catalog and a second installation faults.
     pub fn install_document_store_owners_exact(&mut self, owners: DocumentStoreOwners<P, Mutation>) {
         assert!(
@@ -16905,7 +16917,7 @@ where
         self.current_detached && self.envelope_detached && self.durable_group_root.is_none() && self.tail_undo_cache.is_none() && self.snapshot_read_leases_terminal_is_empty() && self.close_structural_owners_terminal_is_empty()
     }
 
-    /// @emoji 🔂️ Full raw fold of `initial_snapshot` over every `forwards` op in `applied_edit_ids`
+    /// 🔂️ Full raw fold of `initial_snapshot` over every `forwards` op in `applied_edit_ids`
     /// order, WITHOUT the final `Mutation::reconcile` pass — the from-scratch computation `current`
     /// is an incrementally-maintained cache of. Used to recompute `current` on the cold paths that
     /// reassign `applied_edit_ids` wholesale instead of appending/popping its tail.
@@ -17064,51 +17076,52 @@ where
         Ok(())
     }
 
-    /// @emoji ⚔️ Every conflict this store has ever raised (`Open`, `Accepted`, and `Discarded`
+    /// ⚔️ Every conflict this store has ever raised (`Open`, `Accepted`, and `Discarded`
     /// alike) — see {@link conflicts} field doc.
     pub fn conflicts(&self) -> &[crate::os_spr::Conflict] {
         &self.envelope.conflicts
     }
 
-    /// @emoji ⚔️ The subset of {@link conflicts} still `Open` — what a UI's Conflicts panel lists.
+    /// ⚔️ The subset of {@link conflicts} still `Open` — what a UI's Conflicts panel lists.
     pub fn open_conflicts(&self) -> impl Iterator<Item = &crate::os_spr::Conflict> {
         self.envelope.conflicts.iter().filter(|conflict| conflict.status == crate::os_spr::ConflictStatus::Open)
     }
 
-    /// @emoji ⚖️ This store's local `crate::os_spr::MergePolicy` (see the field doc).
+    /// ⚖️ This store's local `crate::os_spr::MergePolicy` (see the field doc).
     pub fn merge_policy(&self) -> crate::os_spr::MergePolicy {
         self.merge_policy
     }
 
-    /// @emoji ⚖️ Sets this store's local `crate::os_spr::MergePolicy`. Local/authority state only —
+    /// ⚖️ Sets this store's local `crate::os_spr::MergePolicy`. Local/authority state only —
     /// never wire-carried, never part of shared history; takes effect starting with the NEXT
     /// `dispatch`/`ingest_remote` call.
     pub fn set_merge_policy(&mut self, policy: crate::os_spr::MergePolicy) {
         self.merge_policy = policy;
     }
 
-    /// @emoji 📒️ Every `crate::os_spr::MutationMessage` `edit_id`'s own replay raised — empty for an
+    /// 📒️ Every `crate::os_spr::MutationMessage` `edit_id`'s own replay raised — empty for an
     /// edit that raised none (including an unknown `edit_id`), never an error (see the field doc).
     pub fn messages_for_edit(&self, edit_id: &str) -> &[crate::os_spr::MutationMessage] {
         self.envelope.edit_messages.get_by_id(edit_id).map_or(&[], |entry| entry.messages.as_slice())
     }
 
+    /// 🌀️ The unawaited future borrows `command`, which is then moved into `dispatch_inner`
+    /// below — awaited immediately instead of deferred to avoid a move-while-borrowed (E0505).
+    ///
+    /// Undo/redo shrink `applied_edit_ids`; Apply/AmendLast append past `before`; a merge that
+    /// rebased mid-history overrides this tail-diff guess via `pending_report.edit_ids`.
     pub async fn dispatch(&mut self, command: ArtifactCommand<Mutation>) -> Result<CommandReceipt, VcsError>
     where
         P: Sync,
     {
         self.ensure_durable_group_idle()?;
         self.pump().await?;
-        // 🌀️ The unawaited future borrows `command`, which is then moved into `dispatch_inner`
-        // below — awaited immediately instead of deferred to avoid a move-while-borrowed (E0505).
         let projection_cause = command.projection_cause().await;
         let before = self.applied_edit_ids.len();
         self.replace_pending_report_retained(PendingCommandReport::default())?;
         self.dispatch_inner(command).await?;
         self.last_projection_cause = projection_cause;
         self.flush_outbound().await?;
-        // Undo/redo shrink `applied_edit_ids`; Apply/AmendLast append past `before`; a merge that
-        // rebased mid-history overrides this tail-diff guess via `pending_report.edit_ids`.
         let edit_ids = self.pending_report.edit_ids.take().unwrap_or_else(|| if self.applied_edit_ids.len() >= before { self.applied_edit_ids[before..].to_vec() } else { Vec::new() });
         Ok(CommandReceipt { edit_ids, generation: self.generation(), messages: std::mem::take(&mut self.pending_report.messages), worst: self.pending_report.worst.take() })
     }
@@ -17234,6 +17247,20 @@ where
         self.begin_apply_batch(operation, expected_generation, expected_revision, actor, mutations, description, HistoryLane::Document, self.one_item_preparation_factory.as_ref())
     }
 
+    /// ⏰️ A stamped clock is compared against the document's OWN history, not against the
+    /// wall clock this Store happened to be constructed at. `clock` is seeded
+    /// `HybridLogicalTimestamp::new(0, now_ms())` at construction, so a Store that has published
+    /// no edit of its own carries a machine fact, not a document fact, and rejecting a stamp
+    /// against it refused every first publication whose stamp was minted anywhere but this
+    /// process's `now_ms()`. Once this Store has published an edit, `clock` IS the last edit's
+    /// stamp (the commit path assigns `self.clock = next_clock`), and strictly-after is then
+    /// exactly the hybrid-logical invariant the ordering depends on.
+    ///
+    /// 🔏 The stamped identity travels with the stamped clock: a durable committer hashes its
+    /// canonical command over BOTH before the Store is reached, so an authority that minted its
+    /// own content-addressed `edit_id()` published an edit that no verifier could bind back to
+    /// the approval it executed. It is admitted under the same fixed identity capacity every
+    /// other Store identity answers to.
     #[allow(clippy::too_many_arguments)]
     fn begin_apply_batch_owned<A>(
         &self,
@@ -17291,24 +17318,11 @@ where
         };
         let mut next_clock = self.clock;
         next_clock.tick(now_ms());
-        // ⏰️ A stamped clock is compared against the document's OWN history, not against the
-        // wall clock this Store happened to be constructed at. `clock` is seeded
-        // `HybridLogicalTimestamp::new(0, now_ms())` at construction, so a Store that has published
-        // no edit of its own carries a machine fact, not a document fact, and rejecting a stamp
-        // against it refused every first publication whose stamp was minted anywhere but this
-        // process's `now_ms()`. Once this Store has published an edit, `clock` IS the last edit's
-        // stamp (the commit path assigns `self.clock = next_clock`), and strictly-after is then
-        // exactly the hybrid-logical invariant the ordering depends on.
         match source.authority.as_ref().and_then(ArtifactStoreBatchItemAuthority::stamped_clock) {
             Some(stamped) if self.edit_sequence == 0 || (stamped.physical_ms, stamped.logical) > (self.clock.physical_ms, self.clock.logical) => next_clock = stamped,
             Some(_) => return Err(reject("stamped publication clock is not strictly after this Store's own last published edit".into(), source)),
             None => {}
         }
-        // 🔏 The stamped identity travels with the stamped clock: a durable committer hashes its
-        // canonical command over BOTH before the Store is reached, so an authority that minted its
-        // own content-addressed `edit_id()` published an edit that no verifier could bind back to
-        // the approval it executed. It is admitted under the same fixed identity capacity every
-        // other Store identity answers to.
         let stamped_edit_id = match source.authority.as_ref().and_then(ArtifactStoreBatchItemAuthority::stamped_mutation_id) {
             Some(identity) if identity.0.is_empty() || identity.0.len() > ARTIFACT_STORE_ONE_ITEM_ID_BYTES => {
                 return Err(reject("stamped publication identity exceeds its fixed identity capacity".into(), source));
@@ -17626,6 +17640,17 @@ where
         })
     }
 
+    /// 🔏 The gesture's declared row budget, not the budget minus its forwards. An item's
+    /// inverse row count is the VARIABLE part of a declaration, and reserving only the
+    /// leftover made the staging buffer — not the gesture-wide `PreflightingCommit` gate —
+    /// the first refuser of an under-declared multi-item gesture, with the wrong message and
+    /// before the fold had folded anything the gate could weigh. The gate still refuses the
+    /// overrun; this buffer only has to be able to hold the rows the per-item fold admits.
+    ///
+    /// 🔏 A stamped publication's first folded item keeps the identity its durable decision was
+    /// hashed over. The `#position` form is the store's way of naming the several mutations one
+    /// local gesture folds into one edit; rewriting the stamped item to it produced a committed
+    /// decision whose `mutation_id` no longer matched the approval target the WAL verifies.
     fn fold_batch_item(&mut self, publication: &mut ArtifactStoreBatchPublication<P, Mutation>) -> Result<(), VcsError> {
         let authority = Arc::clone(publication.authority.as_ref().ok_or_else(|| VcsError::ValidationFailed("batched fold lost its live authority".into()))?);
         let candidate = publication.preparation.as_ref().and_then(|owner| owner.prepared()).ok_or_else(|| VcsError::ValidationFailed("batched fold lost its prepared candidate before validation".into()))?;
@@ -17652,12 +17677,6 @@ where
             if staged.mutation_retirement.is_none() || staged.snapshot_retirement.is_none() {
                 return Err(VcsError::ValidationFailed("batched fold lacks exact snapshot or mutation retirement authority".into()));
             }
-            // 🔏 The gesture's declared row budget, not the budget minus its forwards. An item's
-            // inverse row count is the VARIABLE part of a declaration, and reserving only the
-            // leftover made the staging buffer — not the gesture-wide `PreflightingCommit` gate —
-            // the first refuser of an under-declared multi-item gesture, with the wrong message and
-            // before the fold had folded anything the gate could weigh. The gate still refuses the
-            // overrun; this buffer only has to be able to hold the rows the per-item fold admits.
             let inverse_capacity = publication.footprint.work_items;
             staged.edit.forwards.try_reserve_exact(publication.admitted_items).map_err(|_| VcsError::ValidationFailed("batched staged forwards exceeded its admitted fixed capacity".into()))?;
             staged.edit.mutation_meta.try_reserve_exact(publication.admitted_items).map_err(|_| VcsError::ValidationFailed("batched staged metadata exceeded its admitted fixed capacity".into()))?;
@@ -17693,10 +17712,6 @@ where
         }
         stage.edit.inverse.extend(inverse);
         let position = stage.edit.forwards.len();
-        // 🔏 A stamped publication's first folded item keeps the identity its durable decision was
-        // hashed over. The `#position` form is the store's way of naming the several mutations one
-        // local gesture folds into one edit; rewriting the stamped item to it produced a committed
-        // decision whose `mutation_id` no longer matched the approval target the WAL verifies.
         let folded_identity = match authority.stamped_edit_id() {
             Some(identity) if position == 0 => MutationId(identity.to_string()),
             _ => MutationId(format!("{}#{position}", stage.edit.id)),
@@ -17779,13 +17794,13 @@ where
     }
 
     //#region 🔖️EventSourcedHistory
-    /// @emoji 🪪️ The wire operations `edit_id` owns — the replica-neutral identity transitions name.
+    /// 🪪️ The wire operations `edit_id` owns — the replica-neutral identity transitions name.
     fn edit_mutation_ids(&self, edit_id: &str) -> Result<Vec<MutationId>, VcsError> {
         let edit = self.envelope.vcs.edits.iter().find(|edit| edit.id == edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.to_string()))?;
         Ok(crate::os_spr::mutation_ids_for_edit::<P, Mutation>(edit))
     }
 
-    /// @emoji 🌱️ The transition that brought `checkpoint_id` into being — a `Commit`, or the
+    /// 🌱️ The transition that brought `checkpoint_id` into being — a `Commit`, or the
     /// `Repin` that re-identified it — so a transition naming the checkpoint depends on it causally.
     fn checkpoint_origin(&self, checkpoint_id: &str) -> Option<MutationId> {
         self.envelope
@@ -17800,17 +17815,17 @@ where
             .map(|envelope| envelope.mutation_id.clone())
     }
 
-    /// @emoji ✉️ `edit`'s operations as causal wire envelopes — one per forward operation.
+    /// ✉️ `edit`'s operations as causal wire envelopes — one per forward operation.
     fn operation_envelopes(&self, edit: &Edit<Mutation>) -> Result<Vec<crate::os_spr::MutationEnvelope>, VcsError> {
         self.operation_envelopes_since(edit, 0)
     }
 
-    /// @emoji ✂️ The envelopes of `edit`'s operations from position `from` on: the range an amend appended.
+    /// ✂️ The envelopes of `edit`'s operations from position `from` on: the range an amend appended.
     fn operation_envelopes_since(&self, edit: &Edit<Mutation>, from: usize) -> Result<Vec<crate::os_spr::MutationEnvelope>, VcsError> {
         crate::os_spr::mutation_envelopes_from_edit_since::<P, Mutation>(edit, from, &ArtifactId(self.envelope.id.clone()), &SchemaId(self.envelope.schema.clone())).map_err(|error| VcsError::Serialize(error.to_string()))
     }
 
-    /// @emoji 👁️ The newest operation of an author other than `actor` this replica has applied — how far
+    /// 👁️ The newest operation of an author other than `actor` this replica has applied — how far
     /// an operation `actor` authors now has seen the other authors' work. Remote edits join the ledger in
     /// arrival order, which is the hub's commit order; an undone edit was seen all the same.
     fn observed_foreign_operation(&self, actor: &str) -> Option<MutationId> {
@@ -17818,7 +17833,7 @@ where
         crate::os_spr::mutation_ids_for_edit::<P, Mutation>(edit).pop()
     }
 
-    /// @emoji 📤️ Marks locally authored `operations` applied in the causal graph, stamps each with the
+    /// 📤️ Marks locally authored `operations` applied in the causal graph, stamps each with the
     /// foreign operation its author had observed (advisory, never an ordering constraint) and queues
     /// them for this command's outbound announcement. Announcement happens when the command authors
     /// them, so an edit made during a connection shortage names what its author saw THEN.
@@ -17839,7 +17854,7 @@ where
         Ok(())
     }
 
-    /// @emoji 🌱️ Marks every recorded event applied in the causal graph, so a peer's later events that
+    /// 🌱️ Marks every recorded event applied in the causal graph, so a peer's later events that
     /// depend on them are never held back — whatever path (load, batched publication) recorded them.
     fn seed_known_events(&mut self) -> Result<(), VcsError> {
         let mut identities: Vec<MutationId> = self.envelope.transitions.iter().map(|transition| transition.mutation_id.clone()).collect();
@@ -17856,7 +17871,7 @@ where
         Ok(())
     }
 
-    /// @emoji 📥️ Admits remote history transitions the causal graph released: known ones must repeat
+    /// 📥️ Admits remote history transitions the causal graph released: known ones must repeat
     /// their established payload, new ones join the log, and the projection follows the fold.
     async fn admit_remote_transitions(&mut self, transitions: Vec<crate::os_spr::MutationEnvelope>) -> Result<(), VcsError> {
         let mut admitted: Vec<MutationId> = Vec::new();
@@ -17879,14 +17894,14 @@ where
         Ok(())
     }
 
-    /// @emoji 📥️ Records `envelope` in the transition log at its `(hlc, id)` position.
+    /// 📥️ Records `envelope` in the transition log at its `(hlc, id)` position.
     fn insert_transition(&mut self, envelope: crate::os_spr::MutationEnvelope) {
         let key = envelope.timestamp.cmp_key();
         let position = self.envelope.transitions.partition_point(|known| (known.timestamp.cmp_key(), known.mutation_id.0.as_str()) < (key, envelope.mutation_id.0.as_str()));
         self.envelope.transitions.insert(position, envelope);
     }
 
-    /// @emoji ✍️ Authors one local history transition: stamps it on this replica's clock, records it
+    /// ✍️ Authors one local history transition: stamps it on this replica's clock, records it
     /// in the event log, and materializes the projection through the same fold remote transitions
     /// take. The caller's dispatch announces it outbound with every other new event.
     async fn commit_transition(&mut self, transition: crate::os_spr::HistoryTransition, dependencies: Vec<MutationId>) -> Result<(), VcsError> {
@@ -17906,7 +17921,7 @@ where
         self.bump()
     }
 
-    /// @emoji 🧮️ Re-derives every history position from the event log (`crate::os_spr::fold_history`)
+    /// 🧮️ Re-derives every history position from the event log (`crate::os_spr::fold_history`)
     /// and materializes the payload projection for it. The single path local commands and remote
     /// ingest converge through: the document is always the fold of its events, never a merge.
     async fn reproject(&mut self) -> Result<(), VcsError> {
@@ -17928,7 +17943,7 @@ where
         Ok(())
     }
 
-    /// @emoji 🎞️ The payload projection for `next`: O(1) through the tail cache when only the tail
+    /// 🎞️ The payload projection for `next`: O(1) through the tail cache when only the tail
     /// edit left, one edit's forwards when exactly one edit joined at the tail, a fold from the
     /// genesis snapshot otherwise.
     async fn project_applied(&mut self, next: &[String]) -> Result<Arc<P>, VcsError> {
@@ -17951,7 +17966,7 @@ where
         Ok(Arc::new(Self::fold_history(&self.envelope, next).await?))
     }
 
-    /// @emoji 📚️ Materializes the fold's change/checkpoint/alternative facts into the history
+    /// 📚️ Materializes the fold's change/checkpoint/alternative facts into the history
     /// ledgers: new facts are inserted, a re-identified (repinned) checkpoint is renamed in place,
     /// and every alternative's chain follows the fold.
     fn adopt_history_facts(&mut self, fold: &crate::os_spr::HistoryFold) -> Result<(), VcsError> {
@@ -18001,6 +18016,8 @@ where
     }
     //#endregion 🔖️EventSourcedHistory
 
+    /// 🛤️ Same edit-recording path as `Apply`, tagging the fresh edit into `lane` instead of
+    /// the implicit `Document` default — see `HistoryLane`'s doc.
     async fn dispatch_inner(&mut self, command: ArtifactCommand<Mutation>) -> Result<(), VcsError>
     where
         P: Sync,
@@ -18054,8 +18071,6 @@ where
                 self.commit_transition(crate::os_spr::HistoryTransition::Checkout { checkpoint_id, alternative_id }, dependencies).await
             }
             ArtifactCommand::Apply { mutations, description } => self.apply_command(mutations, description, HistoryLane::Document).await,
-            // 🛤️ Same edit-recording path as `Apply`, tagging the fresh edit into `lane` instead of
-            // the implicit `Document` default — see `HistoryLane`'s doc.
             ArtifactCommand::ApplyInLane { mutations, description, lane } => self.apply_command(mutations, description, lane).await,
             ArtifactCommand::AmendLast { mutations, coalesce_key } => self.amend_command(mutations, coalesce_key, HistoryLane::Document).await,
             ArtifactCommand::AmendLastInLane { mutations, coalesce_key, lane } => self.amend_command(mutations, coalesce_key, lane).await,
@@ -18089,7 +18104,7 @@ where
     }
 
     //#region 🔖️HistoryLane
-    /// @emoji 🛤️ The lane `edit_id` was recorded under. Absence from `envelope.lanes` means
+    /// 🛤️ The lane `edit_id` was recorded under. Absence from `envelope.lanes` means
     /// `Document` by construction — `apply_command`/`amend_command` below only ever insert a map
     /// entry for a NON-`Document` lane, so an ordinary document edit (and every edit that predates
     /// this field) never gets one. `HistoryLane` is `Copy`, so this returns by value like
@@ -18098,7 +18113,7 @@ where
         self.envelope.lanes.get(edit_id).copied().unwrap_or_default()
     }
 
-    /// @emoji ⏪️ Shared body of `Undo`/`UndoWithPolicy`: picks the edit the policy names and reverts it.
+    /// ⏪️ Shared body of `Undo`/`UndoWithPolicy`: picks the edit the policy names and reverts it.
     async fn undo_with_policy(&mut self, policy: UndoPolicy, semantic_command: Option<Box<ArtifactCommand<Mutation>>>) -> Result<(), VcsError>
     where
         P: Sync,
@@ -18119,13 +18134,13 @@ where
         }
     }
 
-    /// @emoji 🛤️ Nearest-to-top redo entry this actor authored whose lane satisfies `lane`. Another
+    /// 🛤️ Nearest-to-top redo entry this actor authored whose lane satisfies `lane`. Another
     /// actor's reverted edit sits on the shared redo stack too, but only its author may reinstate it.
     fn redo_position(&self, lane: impl Fn(HistoryLane) -> bool) -> Option<usize> {
         self.redo_edit_ids.iter().rposition(|id| self.edit_is_local(id) && lane(self.edit_lane(id)))
     }
 
-    /// @emoji ⏪️ Shared tail of every undo path: the applied edit at `position` must be this actor's
+    /// ⏪️ Shared tail of every undo path: the applied edit at `position` must be this actor's
     /// own; it is withdrawn by a `Revert` transition and the projection follows the event log.
     async fn undo_lane_position(&mut self, position: usize) -> Result<(), VcsError> {
         let edit_id = self.applied_edit_ids[position].clone();
@@ -18136,7 +18151,7 @@ where
         self.commit_transition(crate::os_spr::HistoryTransition::Revert { mutation_ids: mutation_ids.clone() }, mutation_ids).await
     }
 
-    /// @emoji ⏩️ Shared tail of every redo path: the redo entry at `position` is restored by a
+    /// ⏩️ Shared tail of every redo path: the redo entry at `position` is restored by a
     /// `Reinstate` transition, landing back at its own HLC position in the applied order.
     async fn redo_lane_position(&mut self, position: usize) -> Result<(), VcsError> {
         let edit_id = self.redo_edit_ids[position].clone();
@@ -18144,7 +18159,7 @@ where
         self.commit_transition(crate::os_spr::HistoryTransition::Reinstate { mutation_ids: mutation_ids.clone() }, mutation_ids).await
     }
 
-    /// @emoji 🚩️ Commits every applied-but-uncommitted edit as one change on a new checkpoint.
+    /// 🚩️ Commits every applied-but-uncommitted edit as one change on a new checkpoint.
     async fn commit_pending_checkpoint(&mut self, message: Option<String>, authors: Vec<Author>) -> Result<(), VcsError> {
         let pending = uncommitted_edit_ids(&self.envelope, &self.applied_edit_ids).await;
         if pending.is_empty() {
@@ -18169,16 +18184,17 @@ where
         self.commit_transition(crate::os_spr::HistoryTransition::Commit(checkpoint), dependencies).await
     }
 
-    /// @emoji 🛤️ Shared body of `Apply`/`ApplyInLane`: identical edit-recording logic to the
+    /// 🛤️ Shared body of `Apply`/`ApplyInLane`: identical edit-recording logic to the
     /// pre-lane `Apply` arm, plus tagging the fresh edit into `envelope.lanes` when `lane` isn't
     /// the default `Document` (kept sparse — see `ArtifactEnvelope.lanes`'s doc).
+    ///
+    /// ⚡️ `current` is always up to date (maintained by every mutating command below), so this
+    /// is an O(1) clone instead of a full replay — see the `current` field doc.
     async fn apply_command(&mut self, mutations: Vec<Mutation>, description: Option<String>, lane: HistoryLane) -> Result<(), VcsError> {
         if mutations.is_empty() {
             return Err(VcsError::EmptyApply);
         }
         let started_at = now_iso();
-        // ⚡️ `current` is always up to date (maintained by every mutating command below), so this
-        // is an O(1) clone instead of a full replay — see the `current` field doc.
         let pre_snapshot = Arc::clone(&*self.current);
         let (forwards, inverse, mutation_meta, post, messages) = self.replay_mutations(&pre_snapshot, mutations).await?;
         let actor = edit_actor_from_meta(&mutation_meta).await;
@@ -18215,10 +18231,14 @@ where
         Ok(())
     }
 
-    /// @emoji 🛤️ Shared body of `AmendLast`/`AmendLastInLane`: identical edit-recording logic to
+    /// 🛤️ Shared body of `AmendLast`/`AmendLastInLane`: identical edit-recording logic to
     /// the pre-lane `AmendLast` arm. Only the FRESH-edit branch can tag a lane — an edit absorbed
     /// into an already-coalescing target keeps whatever lane it was first created under (amending
     /// never changes an edit's lane after the fact).
+    ///
+    /// ⚡️ `current` already reflects this edit's existing forwards (it was folded in when
+    /// the edit was created or last amended), so it's always the correct base for the NEW
+    /// operations — O(1) instead of the old cache-validity dance.
     async fn amend_command(&mut self, mutations: Vec<Mutation>, coalesce_key: Option<String>, lane: HistoryLane) -> Result<(), VcsError> {
         if mutations.is_empty() {
             return Err(VcsError::EmptyApply);
@@ -18227,9 +18247,6 @@ where
         let amend_target =
             self.applied_edit_ids.last().cloned().filter(|last_id| coalesce_key.is_some() && uncommitted.contains(last_id) && self.envelope.vcs.edits.iter().find(|edit| edit.id == *last_id).is_some_and(|edit| edit.coalesce_key == coalesce_key));
         if let Some(edit_id) = amend_target {
-            // ⚡️ `current` already reflects this edit's existing forwards (it was folded in when
-            // the edit was created or last amended), so it's always the correct base for the NEW
-            // operations — O(1) instead of the old cache-validity dance.
             let pre_snapshot = Arc::clone(&*self.current);
             let (new_forwards, new_inverse, new_mutation_meta, post, messages) = self.replay_mutations(&pre_snapshot, mutations).await?;
             let mut announced_from = 0;
@@ -18336,7 +18353,7 @@ where
         Ok(())
     }
 
-    /// @emoji 🔂️ Replays `operations` over `pre_snapshot`, returning forwards, reversed-inverse,
+    /// 🔂️ Replays `operations` over `pre_snapshot`, returning forwards, reversed-inverse,
     /// per-operation metadata, the resulting snapshot, and every `crate::os_spr::MutationMessage`
     /// the replay raised. Shared by `Apply` and `AmendLast`. This IS the artifact engine —
     /// `crate::os_engine::ArtifactEngine` never existed as a live trait (see
@@ -18344,6 +18361,22 @@ where
     /// `inverse` are called directly here on purpose, not as a placeholder for a future indirection.
     /// ATOMIC: if `self.merge_policy.rejects(worst)`, returns `Err` before this method's caller has
     /// touched any store field — nothing about the attempted batch is applied.
+    ///
+    /// 🌀️ `.await` resolves to an owned value — `.reverse()` on the unawaited future's
+    /// result was mutating a throwaway temporary, never `back` itself.
+    ///
+    /// 🌀️ `mint_mutation_id` is async; `Option::unwrap_or_else`'s closure is sync
+    /// (R10 shape 1), so it's written as an explicit match instead.
+    ///
+    /// 🎯️ An authored timestamp is durable as authored; the local clock observes it
+    /// so its next generated timestamp remains causally later.
+    ///
+    /// 🎞️ CW3: direct blake3 (same primitive `crate::os_pack::ContentHash` uses) replaces the
+    /// old `framework_hash::hash_bytes` String hash — `crate::os_spr::PayloadHash` is
+    /// now `[u8; 32]`, not a hex string. NOT `crate::os_pack::content_hash`, which reads a pack
+    /// FILE's footer rather than hashing arbitrary bytes. 🎯️ B2: hashes the real
+    /// `OpBinary` encoding, not a JSON serialization — two ops that encode identically
+    /// via `encode_op()` but differ in JSON shape (or vice versa) must hash identically.
     async fn replay_mutations(&mut self, pre_snapshot: &P, mutations: Vec<Mutation>) -> Result<(Vec<Mutation>, Vec<Mutation>, Vec<MutationMeta>, P, Vec<crate::os_spr::MutationMessage>), VcsError> {
         let mut snapshot = pre_snapshot.clone();
         let mut candidate_clock = self.clock;
@@ -18353,8 +18386,6 @@ where
         let mut messages = Vec::new();
         for (op_index, mutation) in mutations.into_iter().enumerate() {
             let encoded = mutation.encode_op().map_err(|error| VcsError::ValidationFailed(error.to_string()))?;
-            // 🌀️ `.await` resolves to an owned value — `.reverse()` on the unawaited future's
-            // result was mutating a throwaway temporary, never `back` itself.
             let mut back = mutation.inverse(&snapshot);
             back.reverse();
             inverse.extend(back);
@@ -18368,8 +18399,6 @@ where
                     candidate_clock
                 }
             };
-            // 🌀️ `mint_mutation_id` is async; `Option::unwrap_or_else`'s closure is sync
-            // (R10 shape 1), so it's written as an explicit match instead.
             let mutation_id = match mutation.mutation_id() {
                 Some(id) => id,
                 None => MutationId(mint_mutation_id(&encoded, (candidate_clock.actor, candidate_clock.physical_ms, candidate_clock.logical)).await),
@@ -18379,16 +18408,8 @@ where
                 dependencies: mutation.dependencies(),
                 base_version: mutation.base_version().map_or(0, |version| version.0),
                 author_id: Some(mutation.author_id().unwrap_or_else(|| ActorId("local".into()))),
-                // 🎯️ An authored timestamp is durable as authored; the local clock observes it
-                // so its next generated timestamp remains causally later.
                 timestamp,
                 undo_policy: mutation.undo_policy(),
-                // 🎞️ CW3: direct blake3 (same primitive `crate::os_pack::ContentHash` uses) replaces the
-                // old `framework_hash::hash_bytes` String hash — `crate::os_spr::PayloadHash` is
-                // now `[u8; 32]`, not a hex string. NOT `crate::os_pack::content_hash`, which reads a pack
-                // FILE's footer rather than hashing arbitrary bytes. 🎯️ B2: hashes the real
-                // `OpBinary` encoding, not a JSON serialization — two ops that encode identically
-                // via `encode_op()` but differ in JSON shape (or vice versa) must hash identically.
                 payload_hash: Some(crate::os_spr::PayloadHash(*semio_framework_hash::hash(&encoded).as_bytes())),
                 semantic_kind: None,
                 label: None,
@@ -18413,7 +18434,7 @@ where
         Ok((forwards, inverse, mutation_meta, snapshot, messages))
     }
 
-    /// @emoji 🕹️ Parses `command_text` via [`parse_command`] and dispatches it — the op-line
+    /// 🕹️ Parses `command_text` via [`parse_command`] and dispatches it — the op-line
     /// textual entry point (op-efficient one-line-per-structural-field commands, indented op
     /// lines for `Apply`/`AmendLast`).
     pub async fn dispatch_text(&mut self, command_text: &str) -> Result<CommandReceipt, VcsError>
@@ -18425,7 +18446,7 @@ where
         self.dispatch(command).await
     }
 
-    /// @emoji 🕹️ Decodes `command_bytes` via [`decode_command`] and dispatches it — the binary
+    /// 🕹️ Decodes `command_bytes` via [`decode_command`] and dispatches it — the binary
     /// entry point used for both communication (backbone/semio_hub) and storage (`.spr`).
     pub async fn dispatch_binary(&mut self, command_bytes: &[u8]) -> Result<CommandReceipt, VcsError>
     where
@@ -18436,7 +18457,7 @@ where
         self.dispatch(command).await
     }
 
-    /// @emoji 📸️ The whole document as its persisted `pack` (genesis) + `spr` (event log) bytes —
+    /// 📸️ The whole document as its persisted `pack` (genesis) + `spr` (event log) bytes —
     /// for export and archive persistence; replicas never exchange it (they exchange events).
     pub async fn snapshot_pack(&self) -> Result<ArtifactPackFiles, VcsError> {
         print_document_pack(&self.envelope).await
@@ -18447,7 +18468,7 @@ where
         Ok(crate::os_pack::json::to_json_string(&snapshot))
     }
 
-    /// @emoji 📦️ Serializes the full document envelope (snapshot + VCS history) as JSON over the
+    /// 📦️ Serializes the full document envelope (snapshot + VCS history) as JSON over the
     /// first-party `ToValue` bridge. `capture_read()` stays fallible (a group-visibility
     /// consistency check); the resulting `ArtifactEnvelopeRead` is then infallibly convertible —
     /// see its own `impl ToValue` docstring.
@@ -18460,7 +18481,7 @@ where
         Ok(crate::os_pack::json::to_json_string(&read))
     }
 
-    /// @emoji 🔗️ Attaches a backbone channel: ingests whatever events the other end already queued,
+    /// 🔗️ Attaches a backbone channel: ingests whatever events the other end already queued,
     /// then announces this replica's genesis and its complete event log. The other end folds the
     /// events it lacks and ignores the ones it holds — no snapshot ever crosses the channel.
     pub async fn attach_backbone(&mut self, backbone: Backbones) -> Result<(), VcsError> {
@@ -18474,7 +18495,7 @@ where
         Ok(())
     }
 
-    /// @emoji 📜️ Every event of this replica's log as causal envelopes: each edit's operations in
+    /// 📜️ Every event of this replica's log as causal envelopes: each edit's operations in
     /// ledger order, then every history transition in HLC order.
     pub fn event_log(&self) -> Result<Vec<crate::os_spr::MutationEnvelope>, VcsError> {
         let mut events = Vec::new();
@@ -18485,14 +18506,14 @@ where
         Ok(events)
     }
 
-    /// @emoji 📦️ This replica's whole event log as ONE encoded envelope payload. A composed member has
+    /// 📦️ This replica's whole event log as ONE encoded envelope payload. A composed member has
     /// no transport of its own, so its composing parent announces this on the member's behalf under the
     /// member's `(slot, child_id)` lane the moment the parent attaches a backbone.
     pub fn event_log_payload(&self) -> Result<Vec<u8>, VcsError> {
         Ok(crate::os_spr::encode_envelopes(&self.event_log()?))
     }
 
-    /// @emoji 📤️ Seeds this replica's TAIL edit into its own causal dag and hands back exactly the
+    /// 📤️ Seeds this replica's TAIL edit into its own causal dag and hands back exactly the
     /// envelopes {@link flush_apply_outbound} would have sent, for a caller that owns the transport —
     /// the composed-member half of outbound announcement. Empty when nothing has ever been applied.
     pub fn announce_tail_edit_payload(&mut self) -> Result<Vec<u8>, VcsError> {
@@ -18510,7 +18531,7 @@ where
         Ok(crate::os_spr::encode_envelopes(&op_envelopes))
     }
 
-    /// @emoji 📥️ Folds an encoded envelope payload a composing parent routed to THIS member's lane.
+    /// 📥️ Folds an encoded envelope payload a composing parent routed to THIS member's lane.
     /// Inbound twin of {@link announce_tail_edit_payload}; each envelope goes through the same
     /// {@link ingest_remote} gate a parent-lane message does, so causal order and conflict
     /// quarantining are identical on both lanes.
@@ -18523,7 +18544,7 @@ where
         Ok(reports)
     }
 
-    /// @emoji 📮️ Announces one composed member's events on THIS store's backbone under that member's
+    /// 📮️ Announces one composed member's events on THIS store's backbone under that member's
     /// exact lane identity. A composed document owns one replica endpoint — the parent's — so without
     /// this a child lane's edits never leave the process and two replicas diverge on every child edit.
     pub async fn send_member_mutations(&mut self, slot: &str, child_id: &str, envelopes: Vec<u8>) -> Result<(), VcsError> {
@@ -18536,7 +18557,7 @@ where
         result
     }
 
-    /// @emoji 📬️ Drains every member-addressed message this store pumped off its transport, as
+    /// 📬️ Drains every member-addressed message this store pumped off its transport, as
     /// `(slot, child_id, envelopes)` — the composing app resolves the lane and folds it.
     pub fn take_member_inbound(&mut self) -> Vec<(String, String, Vec<u8>)> {
         self.member_inbox
@@ -18548,7 +18569,7 @@ where
             .collect()
     }
 
-    /// @emoji 📣️ Sends `Genesis` (the initial snapshot pack, identifying the document) followed by the
+    /// 📣️ Sends `Genesis` (the initial snapshot pack, identifying the document) followed by the
     /// whole event log in `Mutations` batches no larger than one document-backbone batch.
     async fn announce_history(&mut self) -> Result<(), VcsError> {
         if self.backbone.is_none() {
@@ -18592,7 +18613,7 @@ where
         Ok(())
     }
 
-    /// @emoji 🔗️ Resolves a backbone URI and attaches it. Only available inside the wasm sandbox,
+    /// 🔗️ Resolves a backbone URI and attaches it. Only available inside the wasm sandbox,
     /// where every scheme forwards to the host over the injected {@link BackboneChannelPort} (a pure
     /// queue). On native targets, callers attach an explicit `Backbones` value via
     /// {@link attach_backbone} — the `framework/sync` actor layer owns all IO-performing endpoints.
@@ -18601,9 +18622,9 @@ where
         self.attach_backbone(resolve_backbone(uri).await?).await
     }
 
-    /// @emoji ✂️ Detaches the backbone; the WIP graph stays in memory, simply unsynchronized.
+    /// ✂️ Detaches the backbone; the WIP graph stays in memory, simply unsynchronized.
     ///
-    /// @emoji 🛡️ {@link bump} runs FIRST so a refusal leaves the store exactly as it was. Clearing
+    /// 🛡️ {@link bump} runs FIRST so a refusal leaves the store exactly as it was. Clearing
     /// the persisted descriptor before the bump meant a store whose displaced-retirement
     /// destination was full (or whose generation was exhausted) reported a refusal while having
     /// already forgotten which backbone it was attached to — the descriptor was gone but the live
@@ -18619,7 +18640,7 @@ where
         self.envelope.backbone.as_ref()
     }
 
-    /// @emoji 📡️ Drains inbound backbone messages into the edit timeline. Safe to call anytime;
+    /// 📡️ Drains inbound backbone messages into the edit timeline. Safe to call anytime;
     /// `dispatch` already calls this before every command.
     pub async fn tick(&mut self) -> Result<bool, VcsError> {
         self.ensure_durable_group_idle()?;
@@ -18631,7 +18652,7 @@ where
         self.pump_with_reports().await.map(|(_, reports)| reports)
     }
 
-    /// @emoji 🕸️ Feeds a remote {@link MutationEnvelope} through the causal DAG, applying it (and any
+    /// 🕸️ Feeds a remote {@link MutationEnvelope} through the causal DAG, applying it (and any
     /// now-unblocked dependents) into the edit timeline. Closes the sync gap between
     /// `framework/sync`'s `MutationDag` and the vcs edit history. Sole public remote write gate —
     /// parallel to `dispatch` for causal envelopes. Implements the ticket's 9-step algorithm
@@ -18640,10 +18661,87 @@ where
     /// `applied_edit_ids`, replay only the divergent suffix, then either commit atomically (dag,
     /// history, ledger, `applied_edit_ids` all move together) or quarantine the whole batch as an
     /// `Open` `Conflict` — state and the dag's own applied-set never move on rejection.
+    ///
+    /// 1
+    ///
+    /// 2
+    ///
+    /// 3 — an edit's HLC is its first forward op's stamped meta timestamp.
+    ///
+    /// 🌀️ `HybridLogicalTimestamp::cmp_key` is async (📡️replication); `sort_by_key`/
+    /// `partition_point`/`position` all need sync predicates (R10 shape 1), so every key below
+    /// is resolved via an explicit `.await` first, then compared as a plain `(u64, u64, u64)`.
+    ///
+    /// Binary search replicating `partition_point`'s algorithm (assumes `applied_edit_ids` is
+    /// already HLC-sorted, exactly as `partition_point` itself would have assumed).
+    ///
+    /// 4 — stable HLC merge of `batch` into `applied_edit_ids[k..]`.
+    ///
+    /// 5
+    ///
+    /// 6 — walk order[k..] one edit at a time (H1 determinism fix): an already-committed edit
+    /// that this rewind proves invalid gets the SAME accept/quarantine verdict a fresh arrival
+    /// in true HLC order would have given it, instead of the whole suffix being judged
+    /// atomically. See `replay_suffix_partitioned`'s doc for why this makes the merge a pure
+    /// function of the envelope SET and `self.merge_policy`, never of arrival order.
+    ///
+    /// 7
+    ///
+    /// 🎯️ MEDIUM-3: `degraded_ids` only needs `committed_ids`/`replayed` (both already computed
+    /// above, before any mutation) — hoisted from below `# 9` so the open-conflict capacity check
+    /// can see BOTH conflicts this call might mint before touching any store field, keeping the
+    /// whole call atomic on a refusal exactly like a policy rejection already is.
+    /// 🌀️ `worst_level` is async; `Iterator::filter`'s closure is sync (R10 shape 1), so it's
+    /// hoisted into an explicit loop.
+    ///
+    /// 8 — quarantine: every edit whose OWN outcome the policy rejects — whether newly-arrived
+    /// this call or retroactively invalidated by this rewind — is pulled out of history. Its
+    /// forward ops/`MutationMeta` are left untouched wherever they already live in `vcs.edits`
+    /// (never rewritten, exactly like `Undo`); only its id drops out of `applied_edit_ids`, so
+    /// a future `resolve_conflict`/redelivery still finds its established payload.
+    ///
+    /// 🎯️ HIGH-2: `edits_for_ids` errors loudly instead of silently filtering — see its doc.
+    ///
+    /// 🌀️ The unawaited future would borrow `envelopes`, which is moved into `kind` below —
+    /// awaited immediately instead of deferred to avoid a move-while-borrowed (E0505).
+    ///
+    /// 🌀️ `mutation_ids_for_edit` is async (📡️replication); `flat_map`'s closure is sync
+    /// (R10 shape 1), so it's hoisted into an explicit loop.
+    ///
+    /// 🎯️ H1: `hlc`/`timestamp` come from the quarantined edits' OWN stamped HLCs, never
+    /// `self.clock` — `self.clock.merge` ticks its `logical` counter on every call, so its
+    /// running value depends on how many merges happened and in what order, not just on
+    /// this envelope set; hashing that into `ConflictId` reintroduced arrival-order
+    /// dependence even after state/`applied_edit_ids` converged.
+    /// 🌀️ `HybridLogicalTimestamp::cmp_key` is async; `max_by_key` needs a sync key extractor
+    /// (R10 shape 1), so the max is found by an explicit fold over resolved keys instead.
+    ///
+    /// `>=` (not `>`): `Iterator::max_by_key`'s documented tie-break keeps the LAST
+    /// equally-maximum element, so ties must still overwrite.
+    ///
+    /// 9 — commit the survivors: history, ledger, `applied_edit_ids`, `current` together. The
+    /// dag (decided right after the capacity check above) only advanced when nothing in this
+    /// suffix was quarantined, so a quarantined-but-not-yet-committed envelope can still be
+    /// retried on redelivery.
+    ///
+    /// 🎯️ HIGH-2: `edits_for_ids` errors loudly instead of silently filtering — see its doc.
+    /// Reads from `edits_by_id` (not `self.envelope.vcs.edits`): both already contain every
+    /// `degraded_ids` entry at this point, but `edits_by_id` doesn't depend on the `vcs.edits`
+    /// push above having already run, so this block's own correctness never depends on
+    /// sequencing against that mutation.
+    ///
+    /// 🌀️ `mutation_ids_for_edit` is async (📡️replication); `flat_map`'s closure is sync
+    /// (R10 shape 1), so it's hoisted into an explicit loop.
+    ///
+    /// 🎯️ H1: same reasoning as the quarantine conflict above — derive from the degraded
+    /// edits' own HLCs, not the arrival-order-dependent `self.clock`.
+    /// 🌀️ `HybridLogicalTimestamp::cmp_key` is async; `max_by_key` needs a sync key extractor
+    /// (R10 shape 1), so the max is found by an explicit fold over resolved keys instead.
+    ///
+    /// `>=`: `Iterator::max_by_key` keeps the LAST equally-maximum element on a tie.
     pub async fn ingest_remote(&mut self, envelope: crate::os_spr::MutationEnvelope) -> Result<crate::os_spr::MergeReport, VcsError> {
         self.ensure_durable_group_idle()?;
         let no_op_report = |policy: crate::os_spr::MergePolicy, insertion_index: usize| crate::os_spr::MergeReport { policy, accepted: true, insertion_index: insertion_index as u32, replayed: Vec::new(), worst: None, conflict: None };
-        // 1
         self.displaced_retirements.reserve(2)?;
         let mut candidate_dag = (*self.dag).clone();
         let insertion = match candidate_dag.insert(envelope.clone()) {
@@ -18661,7 +18759,6 @@ where
             equivalent?;
             return Ok(no_op_report(self.merge_policy, self.applied_edit_ids.len()));
         }
-        // 2
         let mut batch: Vec<Edit<Mutation>> = Vec::new();
         let mut ready_transitions: Vec<crate::os_spr::MutationEnvelope> = Vec::new();
         loop {
@@ -18718,17 +18815,11 @@ where
             self.last_projection_cause = Some(ArtifactProjectionCause::RemoteIngest);
             return Ok(no_op_report(self.merge_policy, self.applied_edit_ids.len()));
         }
-        // 3 — an edit's HLC is its first forward op's stamped meta timestamp.
         let edit_hlc = |edit: &Edit<Mutation>| edit.mutation_meta.first().map_or_else(|| HybridLogicalTimestamp { actor: 0, physical_ms: 0, logical: 0 }, |meta| meta.timestamp);
-        // 🌀️ `HybridLogicalTimestamp::cmp_key` is async (📡️replication); `sort_by_key`/
-        // `partition_point`/`position` all need sync predicates (R10 shape 1), so every key below
-        // is resolved via an explicit `.await` first, then compared as a plain `(u64, u64, u64)`.
         batch.sort_by_key(|edit| edit_hlc(edit).cmp_key());
         let batch_keys: Vec<(u64, u64, u64)> = batch.iter().map(|edit| edit_hlc(edit).cmp_key()).collect();
         let known_hlc = |edit_id: &str, edits: &ArtifactHistoryLedger<Edit<Mutation>>| edits.iter().find(|edit| edit.id == *edit_id).map(edit_hlc);
         let min_batch_key = batch_keys[0];
-        // Binary search replicating `partition_point`'s algorithm (assumes `applied_edit_ids` is
-        // already HLC-sorted, exactly as `partition_point` itself would have assumed).
         let mut lo = 0usize;
         let mut hi = self.applied_edit_ids.len();
         while lo < hi {
@@ -18749,7 +18840,6 @@ where
                 }
             }
         }
-        // 4 — stable HLC merge of `batch` into `applied_edit_ids[k..]`.
         let mut order: Vec<String> = (*self.applied_edit_ids).clone();
         for (edit, &hlc_key) in batch.iter().zip(batch_keys.iter()) {
             let mut insert_at = order.len();
@@ -18762,7 +18852,6 @@ where
             }
             order.insert(insert_at, edit.id.clone());
         }
-        // 5
         let base = if k == self.applied_edit_ids.len() {
             self.current.as_ref().clone()
         } else {
@@ -18774,11 +18863,6 @@ where
                 }
             }
         };
-        // 6 — walk order[k..] one edit at a time (H1 determinism fix): an already-committed edit
-        // that this rewind proves invalid gets the SAME accept/quarantine verdict a fresh arrival
-        // in true HLC order would have given it, instead of the whole suffix being judged
-        // atomically. See `replay_suffix_partitioned`'s doc for why this makes the merge a pure
-        // function of the envelope SET and `self.merge_policy`, never of arrival order.
         let mut edits_by_id: HashMap<String, Edit<Mutation>> = self.envelope.vcs.edits.iter().map(|edit| (edit.id.clone(), edit.clone())).collect();
         for edit in &batch {
             edits_by_id.insert(edit.id.clone(), edit.clone());
@@ -18793,16 +18877,9 @@ where
                 return self.refuse_with_candidate_dag(candidate_dag, error);
             }
         };
-        // 7
         let worst = replayed.iter().flat_map(|edit_messages| edit_messages.messages.iter()).map(|message| message.level).max();
         let document_id = ArtifactId(self.envelope.id.clone());
         let schema = SchemaId(self.envelope.schema.clone());
-        // 🎯️ MEDIUM-3: `degraded_ids` only needs `committed_ids`/`replayed` (both already computed
-        // above, before any mutation) — hoisted from below `# 9` so the open-conflict capacity check
-        // can see BOTH conflicts this call might mint before touching any store field, keeping the
-        // whole call atomic on a refusal exactly like a policy rejection already is.
-        // 🌀️ `worst_level` is async; `Iterator::filter`'s closure is sync (R10 shape 1), so it's
-        // hoisted into an explicit loop.
         let mut degraded_ids: Vec<String> = Vec::new();
         for id in &committed_ids {
             let is_degraded = match replayed.iter().find(|entry| &entry.edit_id == id) {
@@ -18828,44 +18905,25 @@ where
             self.displaced_retirements.reserve(1)?;
             self.displaced_retirements.push_reserved(Box::new(ArtifactStoreMutationDagRetirement::new(candidate_dag)));
         }
-        // 8 — quarantine: every edit whose OWN outcome the policy rejects — whether newly-arrived
-        // this call or retroactively invalidated by this rewind — is pulled out of history. Its
-        // forward ops/`MutationMeta` are left untouched wherever they already live in `vcs.edits`
-        // (never rewritten, exactly like `Undo`); only its id drops out of `applied_edit_ids`, so
-        // a future `resolve_conflict`/redelivery still finds its established payload.
         let mut quarantine_conflict_id = None;
         if !quarantined_ids.is_empty() {
-            // 🎯️ HIGH-2: `edits_for_ids` errors loudly instead of silently filtering — see its doc.
             let quarantined_edits = Self::edits_for_ids(&quarantined_ids, &edits_by_id)?;
             let mut envelopes: Vec<crate::os_spr::MutationEnvelope> = Vec::new();
             for edit in &quarantined_edits {
                 envelopes.extend(crate::os_spr::mutation_envelope_from_edit::<P, Mutation>(edit, &document_id, &schema).map_err(|error| VcsError::Serialize(error.to_string()))?);
             }
-            // 🌀️ The unawaited future would borrow `envelopes`, which is moved into `kind` below —
-            // awaited immediately instead of deferred to avoid a move-while-borrowed (E0505).
             let conflict_actors = canonical_conflict_actors(envelopes.iter().map(|envelope| envelope.actor.clone())).await;
-            // 🌀️ `mutation_ids_for_edit` is async (📡️replication); `flat_map`'s closure is sync
-            // (R10 shape 1), so it's hoisted into an explicit loop.
             let mut quarantine_mutation_ids: Vec<MutationId> = Vec::new();
             for edit in &quarantined_edits {
                 quarantine_mutation_ids.extend(crate::os_spr::mutation_ids_for_edit(edit));
             }
             let quarantine_messages = conflict_messages_for_edits(&quarantined_edits, &replayed).await?;
             let kind = crate::os_spr::ConflictKind::Quarantined { envelopes };
-            // 🎯️ H1: `hlc`/`timestamp` come from the quarantined edits' OWN stamped HLCs, never
-            // `self.clock` — `self.clock.merge` ticks its `logical` counter on every call, so its
-            // running value depends on how many merges happened and in what order, not just on
-            // this envelope set; hashing that into `ConflictId` reintroduced arrival-order
-            // dependence even after state/`applied_edit_ids` converged.
-            // 🌀️ `HybridLogicalTimestamp::cmp_key` is async; `max_by_key` needs a sync key extractor
-            // (R10 shape 1), so the max is found by an explicit fold over resolved keys instead.
             let mut conflict_hlc = self.clock;
             let mut conflict_hlc_key: Option<(u64, u64, u64)> = None;
             for edit in &quarantined_edits {
                 let hlc = edit_hlc(edit);
                 let key = hlc.cmp_key();
-                // `>=` (not `>`): `Iterator::max_by_key`'s documented tie-break keeps the LAST
-                // equally-maximum element, so ties must still overwrite.
                 if conflict_hlc_key.is_none_or(|current| key >= current) {
                     conflict_hlc_key = Some(key);
                     conflict_hlc = hlc;
@@ -18880,10 +18938,6 @@ where
             retire_scratch_edits::<P, Mutation>(quarantined_edits);
             quarantine_conflict_id = Some(id);
         }
-        // 9 — commit the survivors: history, ledger, `applied_edit_ids`, `current` together. The
-        // dag (decided right after the capacity check above) only advanced when nothing in this
-        // suffix was quarantined, so a quarantined-but-not-yet-committed envelope can still be
-        // retried on redelivery.
         for edit in &batch {
             if committed_ids.contains(&edit.id) && !self.envelope.vcs.edits.iter().any(|existing| existing.id == edit.id) {
                 let reservation = self.reserve_edit_history_slot()?;
@@ -18912,31 +18966,19 @@ where
         self.replace_current_retained(Arc::new(state))?;
         let mut degraded_conflict_id = None;
         if !degraded_ids.is_empty() {
-            // 🎯️ HIGH-2: `edits_for_ids` errors loudly instead of silently filtering — see its doc.
-            // Reads from `edits_by_id` (not `self.envelope.vcs.edits`): both already contain every
-            // `degraded_ids` entry at this point, but `edits_by_id` doesn't depend on the `vcs.edits`
-            // push above having already run, so this block's own correctness never depends on
-            // sequencing against that mutation.
             let degraded_edits = Self::edits_for_ids(&degraded_ids, &edits_by_id)?;
             let degraded_messages = conflict_messages_for_edits(&degraded_edits, &replayed).await?;
             let degraded_actors = canonical_conflict_actors(degraded_edits.iter().filter_map(|edit| edit.actor.clone()).map(ActorId));
-            // 🌀️ `mutation_ids_for_edit` is async (📡️replication); `flat_map`'s closure is sync
-            // (R10 shape 1), so it's hoisted into an explicit loop.
             let mut degraded_mutation_ids: Vec<MutationId> = Vec::new();
             for edit in &degraded_edits {
                 degraded_mutation_ids.extend(crate::os_spr::mutation_ids_for_edit(edit));
             }
             let kind = crate::os_spr::ConflictKind::Degraded { edit_ids: degraded_ids.clone() };
-            // 🎯️ H1: same reasoning as the quarantine conflict above — derive from the degraded
-            // edits' own HLCs, not the arrival-order-dependent `self.clock`.
-            // 🌀️ `HybridLogicalTimestamp::cmp_key` is async; `max_by_key` needs a sync key extractor
-            // (R10 shape 1), so the max is found by an explicit fold over resolved keys instead.
             let mut conflict_hlc = self.clock;
             let mut conflict_hlc_key: Option<(u64, u64, u64)> = None;
             for edit in &degraded_edits {
                 let hlc = edit_hlc(edit);
                 let key = hlc.cmp_key();
-                // `>=`: `Iterator::max_by_key` keeps the LAST equally-maximum element on a tie.
                 if conflict_hlc_key.is_none_or(|current| key >= current) {
                     conflict_hlc_key = Some(key);
                     conflict_hlc = hlc;
@@ -18960,7 +19002,7 @@ where
         Ok(crate::os_spr::MergeReport { policy: self.merge_policy, accepted, insertion_index: k as u32, replayed, worst, conflict: quarantine_conflict_id.or(degraded_conflict_id) })
     }
 
-    /// @emoji 🧹️ Refuses an ingest after its candidate causal graph was built: the candidate is
+    /// 🧹️ Refuses an ingest after its candidate causal graph was built: the candidate is
     /// retired through the bounded close protocol, never dropped, and the store stays unchanged.
     fn refuse_with_candidate_dag<T>(&mut self, candidate_dag: crate::os_spr::MutationDag, error: VcsError) -> Result<T, VcsError> {
         self.displaced_retirements.reserve(1)?;
@@ -18998,8 +19040,8 @@ where
         Err(VcsError::ValidationFailed(format!("remote mutation id {} was marked applied without an established payload", incoming.mutation_id.0)))
     }
 
-    // 🚫️async: E1 pure field comparison, consumed only through `is_some_and`/`Iterator::all`
-    // sync closures — see R9.
+    /// 🚫️async: E1 pure field comparison, consumed only through `is_some_and`/`Iterator::all`
+    /// sync closures — see R9.
     fn same_operation_identity_and_payload(left: &crate::os_spr::MutationEnvelope, right: &crate::os_spr::MutationEnvelope) -> bool {
         left.mutation_id == right.mutation_id && left.document_id == right.document_id && left.diff.schema == right.diff.schema && left.diff.payload == right.diff.payload
     }
@@ -19019,7 +19061,7 @@ where
     }
 
 
-    /// @emoji ⚖️ Resolves an `Open` `crate::os_spr::Conflict` by id (`26/08/16/MUTATION-OUTCOMES-
+    /// ⚖️ Resolves an `Open` `crate::os_spr::Conflict` by id (`26/08/16/MUTATION-OUTCOMES-
     /// MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C6). `Quarantined`+`Accept` admits the conflict's
     /// withheld events into the log and re-folds it, validated under `LaissezFaire` (a `Fatal`
     /// message still rejects — `LaissezFaire` never waives that), landing the same state
@@ -19061,7 +19103,7 @@ where
         }
     }
 
-    /// @emoji ✅️ Admits a quarantined conflict's withheld events: the log is re-folded as if the
+    /// ✅️ Admits a quarantined conflict's withheld events: the log is re-folded as if the
     /// conflict were accepted and the resulting order is replayed from genesis under `LaissezFaire`.
     /// A `Fatal` outcome reports the replay and changes nothing; otherwise the withheld edits join the
     /// log, the conflict turns `Accepted`, and the projection follows the fold.
@@ -19139,11 +19181,15 @@ where
         Ok(report)
     }
 
-    /// @emoji 📥️ Pumps every queued inbound message from the attached backbone into the timeline.
+    /// 📥️ Pumps every queued inbound message from the attached backbone into the timeline.
     async fn pump(&mut self) -> Result<bool, VcsError> {
         self.pump_with_reports().await.map(|(changed, _)| changed)
     }
 
+    /// 🪆️ A member lane names a document this store does not own; only the composing app can
+    /// resolve `(slot, child_id)` to a live member, so the message waits for its owner.
+    ///
+    /// A store never consumes acks (they flow store→actor); drain and ignore any that echo back.
     async fn pump_with_reports(&mut self) -> Result<(bool, Vec<crate::os_spr::MergeReport>), VcsError> {
         let Some(mut backbone) = self.backbone.take() else {
             return Ok((false, Vec::new()));
@@ -19167,10 +19213,7 @@ where
                     }
                     acked_op_ids.extend(op_ids);
                 }
-                // 🪆️ A member lane names a document this store does not own; only the composing app can
-                // resolve `(slot, child_id)` to a live member, so the message waits for its owner.
                 member @ BackboneMessage::Member { .. } => self.member_inbox.push_back(member),
-                // A store never consumes acks (they flow store→actor); drain and ignore any that echo back.
                 BackboneMessage::Ack { .. } => {}
             }
         }
@@ -19184,7 +19227,7 @@ where
         Ok((true, reports))
     }
 
-    /// @emoji 🧬️ A peer's `Genesis` must name this document's own initial snapshot: replicas of one
+    /// 🧬️ A peer's `Genesis` must name this document's own initial snapshot: replicas of one
     /// document share their genesis, so a mismatch is a different document, never something to merge.
     fn verify_genesis(&self, pack: &[u8]) -> Result<(), VcsError> {
         if *semio_framework_hash::hash(pack).as_bytes() != self.initial_digest {
@@ -19193,7 +19236,7 @@ where
         Ok(())
     }
 
-    /// @emoji 📤️ Announces every event the finished command authored — edit operations and history
+    /// 📤️ Announces every event the finished command authored — edit operations and history
     /// transitions alike — as one `BackboneMessage::Mutations` batch.
     async fn flush_outbound(&mut self) -> Result<(), VcsError> {
         if self.pending_report.outbound.is_empty() {
@@ -19208,7 +19251,7 @@ where
         result
     }
 
-    /// @emoji 📤️ Announces exactly the `items` operations ONE outbound batched publication appended at
+    /// 📤️ Announces exactly the `items` operations ONE outbound batched publication appended at
     /// position `from` of the tail applied edit, through the command outbound queue that
     /// `flush_outbound` drains. A coalesced gesture AMENDS the tail edit the previous gesture already
     /// announced; announcing the whole edit re-sent every earlier, already Accepted operation and the
@@ -19228,13 +19271,13 @@ where
         self.flush_outbound().await
     }
 
-    /// @emoji 🖋️ Whether `edit_id` was authored by the local actor. Unauthored (legacy) edits count
+    /// 🖋️ Whether `edit_id` was authored by the local actor. Unauthored (legacy) edits count
     /// as local; every other actor is foreign and must not be undone by this store.
     fn edit_is_local(&self, edit_id: &str) -> bool {
         self.envelope.vcs.edits.iter().find(|edit| edit.id == edit_id).is_some_and(|edit| edit.actor.is_none() || edit.actor.as_deref() == self.local_actor_id.as_deref())
     }
 
-    /// @emoji 🎯️ Mirrors `applied_edit_ids`/`redo_edit_ids`/`current_checkpoint_id` into
+    /// 🎯️ Mirrors `applied_edit_ids`/`redo_edit_ids`/`current_checkpoint_id` into
     /// `envelope.cursor` — the single choke point that keeps the persisted cursor in sync with
     /// live undo/redo state. Called from every `bump()`, so every mutating command re-syncs it.
     fn sync_cursor(&mut self) {
@@ -19356,7 +19399,7 @@ async fn merge_by_id<T: Clone + PartialEq>(local: &mut Vec<T>, remote: Vec<T>, i
 // `OpBinary`-encoded payloads — W5's frozen-contract signature). `hash_bytes`'s import above this
 // region stays needed elsewhere in this file (`replay_mutations`'s `payload_hash`, unaffected).
 
-/// @emoji 📦️ Recovers a single-op `Edit` from one causal wire envelope. `crate::os_spr::causal::
+/// 📦️ Recovers a single-op `Edit` from one causal wire envelope. `crate::os_spr::causal::
 /// MutationEnvelope` carries exactly one op per envelope (W5's binary reshape) — the receiving-
 /// side half of the per-op fan-out `crate::os_spr::mutation_envelope_from_edit` performs when sending
 /// (see `flush_outbound`). `sequence_number`/`started_at` are placeholders `ingest_envelope`
@@ -19466,7 +19509,7 @@ where
     }
 }
 
-/// @emoji 🧊️ Cold-retires scratch operations (a rebased or discarded inverse): an operation may own a
+/// 🧊️ Cold-retires scratch operations (a rebased or discarded inverse): an operation may own a
 /// fail-closed root, so a displaced copy never reaches `Drop` owning it.
 fn retire_scratch_operations<P, Mutation>(operations: Vec<Mutation>)
 where
@@ -19477,7 +19520,7 @@ where
     }
 }
 
-/// @emoji 🧊️ Cold-retires a scratch edit copy — a decoded arrival that history already holds, a replay
+/// 🧊️ Cold-retires a scratch edit copy — a decoded arrival that history already holds, a replay
 /// lookup clone, a conflict listing — through its operations' [`Mutation::retire_cold`].
 fn retire_scratch_edits<P, Mutation>(edits: impl IntoIterator<Item = Edit<Mutation>>)
 where
@@ -19489,7 +19532,7 @@ where
     }
 }
 
-/// @emoji 🧮️ Folds an envelope's complete event log — its edits and its history transitions — into
+/// 🧮️ Folds an envelope's complete event log — its edits and its history transitions — into
 /// the history projection (`crate::os_spr::fold_history`). Quarantined edits (every edit owning an
 /// operation of a quarantined conflict that was not accepted) stay inactive.
 pub fn fold_envelope_history<P, Mutation>(envelope: &ArtifactEnvelopeOwners<P, Mutation>) -> Result<crate::os_spr::HistoryFold, VcsError>
@@ -19499,7 +19542,7 @@ where
     fold_event_log::<P, Mutation>(&envelope.vcs.edits.iter().collect::<Vec<_>>(), &envelope.transitions, &envelope.conflicts)
 }
 
-/// @emoji 🧮️ [`fold_envelope_history`] over the bare event log: `edits`, `transitions` and the
+/// 🧮️ [`fold_envelope_history`] over the bare event log: `edits`, `transitions` and the
 /// `conflicts` whose quarantine withholds edits — for document shapes that hold the log without a
 /// full envelope.
 pub fn fold_event_log<P, Mutation>(edits: &[&Edit<Mutation>], transitions: &[crate::os_spr::MutationEnvelope], conflicts: &[crate::os_spr::Conflict]) -> Result<crate::os_spr::HistoryFold, VcsError>
@@ -19527,11 +19570,12 @@ where
     crate::os_spr::fold_history(&folded, transitions, &excluded).map_err(|error| VcsError::ValidationFailed(error.to_string()))
 }
 
-/// @emoji ⏰️ An edit's HLC: its first operation's stamped timestamp (the order key every fold uses).
+/// ⏰️ An edit's HLC: its first operation's stamped timestamp (the order key every fold uses).
 fn edit_timestamp<Mutation>(edit: &Edit<Mutation>) -> HybridLogicalTimestamp {
     edit.mutation_meta.first().map_or(HybridLogicalTimestamp { actor: 0, physical_ms: 0, logical: 0 }, |meta| meta.timestamp)
 }
 
+/// 🧮️ Mechanical wrap only — see `replay_mutations`'s matching note.
 async fn fold_history<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>, applied_edit_ids: &[String]) -> Result<P, VcsError>
 where
     P: Clone,
@@ -19545,7 +19589,6 @@ where
         }
         let edit = envelope.vcs.edits.iter().find(|entry| entry.id == *edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
         for operation in &edit.forwards {
-            // 🧮️ Mechanical wrap only — see `replay_mutations`'s matching note.
             let next = apply_mutation(&*snapshot, operation)?.0;
             snapshot.advance(next);
         }
@@ -19556,7 +19599,7 @@ where
 
 //#region 🔖️Backbone
 //#region 🔖️Backbone
-/// @emoji 📨️ Wire message exchanged over an attached backbone channel. B-R6 "kill hand-rolled binary
+/// 📨️ Wire message exchanged over an attached backbone channel. B-R6 "kill hand-rolled binary
 /// codecs": `#[derive(crate::os_dsl::DslOps)]` generates `OpBinary::encode_op`/`decode_op` (`format u8 (=1) |
 /// variant ordinal varint | record body`, `crate::os_dsl::op_rt`) — this is the one real binary encoding for
 /// every caller, including the wasm-sandbox `BackboneChannelPort` seam (see that trait's doc) — the
@@ -19569,22 +19612,22 @@ where
 /// (otherwise a bare `Vec<u8>` lowers to a `List<UInt>`, one DSL list element per byte).
 #[derive(Clone, Debug, PartialEq, DslOps)]
 pub enum BackboneMessage {
-    /// @emoji 🧬️ The document's initial snapshot pack — its identity, never its current state. A
+    /// 🧬️ The document's initial snapshot pack — its identity, never its current state. A
     /// replica announces it before its event log; an empty persistence end adopts it as the genesis
     /// it stores, every other end verifies it names the same document.
     Genesis {
         #[dsl(base64)]
         pack: Vec<u8>,
     },
-    /// @emoji ✉️ Semantic events — edit operations and history transitions — as causal envelopes.
+    /// ✉️ Semantic events — edit operations and history transitions — as causal envelopes.
     Mutations {
         #[dsl(base64)]
         envelopes: Vec<u8>,
     },
-    /// @emoji ✅️ Acknowledges inbound operations the store has ingested (store→actor). Lets a future actor
+    /// ✅️ Acknowledges inbound operations the store has ingested (store→actor). Lets a future actor
     /// implement at-least-once redelivery with id-based dedupe — safe across store crashes/reloads.
     Ack { op_ids: Vec<String> },
-    /// @emoji 🪆️ Semantic events authored on ONE composed member of this document, carrying that
+    /// 🪆️ Semantic events authored on ONE composed member of this document, carrying that
     /// member's exact `(slot, child_id)` lane identity. A composed document has exactly one replica
     /// endpoint — the parent's backbone — so a child lane's edits can only cross under this tag, and
     /// the receiving replica folds them into ITS own member of the same lane, never into the parent.
@@ -19653,7 +19696,7 @@ pub fn decode_hot_backbone_message_exact(bytes: &[u8]) -> Result<BackboneMessage
     Ok(message)
 }
 
-/// @emoji 🧵️ Non-blocking, IO-free in-memory queue contract between a `ArtifactStore` and its
+/// 🧵️ Non-blocking, IO-free in-memory queue contract between a `ArtifactStore` and its
 /// sync actor. `send`/`receive` MUST return immediately: implementations only enqueue/dequeue
 /// `BackboneMessage`s — never HTTP, never filesystem, never a blocking wait. All IO (persistence,
 /// semio_hub sync, file watching, presence) lives behind this queue in `framework/sync`'s actor layer,
@@ -19678,7 +19721,7 @@ pub trait BackbonePort {
 
 static HOST_BACKBONE_PORT: Mutex<Option<Arc<BackbonePorts>>> = Mutex::new(None);
 
-/// @emoji 🔌️ Injects the browser or dev-server backbone port for wasm file/folder IO.
+/// 🔌️ Injects the browser or dev-server backbone port for wasm file/folder IO.
 pub async fn set_host_backbone_port(port: Arc<BackbonePorts>) {
     if let Ok(mut guard) = HOST_BACKBONE_PORT.lock() {
         *guard = Some(port);
@@ -19716,7 +19759,7 @@ async fn local_storage_backbone_key(uri: &str) -> String {
     format!("semio:vcs:{uri}")
 }
 
-/// @emoji 💾️ Browser `localStorage` backbone port with in-memory fallback for native tests.
+/// 💾️ Browser `localStorage` backbone port with in-memory fallback for native tests.
 #[derive(Default)]
 pub struct LocalStorageBackbonePort {
     fallback: MemoryBackbonePort,
@@ -19765,7 +19808,7 @@ impl BackbonePort for LocalStorageBackbonePort {
     }
 }
 
-/// @emoji 🧬️ Enum dispatch over every `BackbonePort` implementor (O1 — dyn dispatch is dropped
+/// 🧬️ Enum dispatch over every `BackbonePort` implementor (O1 — dyn dispatch is dropped
 /// repo-wide in favor of enum/generated dispatch). The trait stays as the contract; this enum
 /// implements it by match-delegation so 🪐️space's blanket `impl<T: BackbonePort>
 /// SpaceBackbonePort for T` keeps covering every concrete port through the enum too.
@@ -19790,7 +19833,7 @@ impl BackbonePort for BackbonePorts {
     }
 }
 
-/// @emoji 🕸️ Injectable duplex transport across the wasm sandbox boundary (program ↔ host process).
+/// 🕸️ Injectable duplex transport across the wasm sandbox boundary (program ↔ host process).
 /// `message`/the `poll` result are `BackboneMessage::encode_op`/`decode_op` (`crate::os_spr::OpBinary`) bytes.
 pub trait BackboneChannelPort: Send + Sync {
     async fn send(&self, uri: &str, message: &[u8]) -> Result<(), VcsError>;
@@ -19910,7 +19953,7 @@ impl BackboneChannelPort for BackboneChannelPorts {
     }
 }
 
-/// @emoji 🧵️ Backbone that forwards messages across the wasm sandbox boundary to the host process,
+/// 🧵️ Backbone that forwards messages across the wasm sandbox boundary to the host process,
 /// which resolves the real `file://`/`folder://`/`remote://` backbone on its own (native) side. The
 /// channel is injected per instance via [`PortBackbone::with_channel`] — a pooled multi-instance
 /// actor cannot share one process-global channel (see `important.md`'s "Replace, never wrap" list,
@@ -19954,7 +19997,7 @@ impl Backbone for PortBackbone {
     }
 }
 
-/// @emoji 🔗️ Two crossed in-memory channel ends: whatever `a` sends, `b` receives, and vice versa.
+/// 🔗️ Two crossed in-memory channel ends: whatever `a` sends, `b` receives, and vice versa.
 pub struct MemoryBackbone {
     uri: String,
     inbox: Option<Arc<Mutex<VecDeque<BackboneMessage>>>>,
@@ -19985,7 +20028,7 @@ impl Backbone for MemoryBackbone {
     }
 }
 
-/// @emoji 🔗️ The store-side end of a pair of crossed in-memory queues. Implements the non-blocking
+/// 🔗️ The store-side end of a pair of crossed in-memory queues. Implements the non-blocking
 /// {@link Backbone} contract; the matching {@link ChannelBackboneRemote} is held by an external sync
 /// actor (built in `framework/sync`, a later workstream) that pushes inbound messages and drains the
 /// store's outbound ones. This crate only provides the queue plumbing — never the actor itself.
@@ -19996,7 +20039,7 @@ pub struct ChannelBackbone {
     outbound_wake: Arc<std::sync::OnceLock<Arc<dyn Fn() + Send + Sync>>>,
 }
 
-/// @emoji 🎛️ The actor-side end paired with a {@link ChannelBackbone}: `push` delivers a message to
+/// 🎛️ The actor-side end paired with a {@link ChannelBackbone}: `push` delivers a message to
 /// the store's inbound queue, `try_pop_front` takes one exact outbound owner. Not a
 /// `Backbone` — this is the handle an IO-owning actor endpoint holds across the store boundary.
 pub struct ChannelBackboneRemote {
@@ -20007,7 +20050,7 @@ pub struct ChannelBackboneRemote {
 }
 
 impl ChannelBackbone {
-    /// @emoji 🔗️ Creates a crossed pair sharing a URI: the store attaches the `ChannelBackbone`; the
+    /// 🔗️ Creates a crossed pair sharing a URI: the store attaches the `ChannelBackbone`; the
     /// actor keeps the `ChannelBackboneRemote`.
     pub async fn pair(uri: &str) -> (ChannelBackbone, ChannelBackboneRemote) {
         let inbound = Arc::new(Mutex::new(VecDeque::new()));
@@ -20041,19 +20084,19 @@ impl ChannelBackboneRemote {
         document_backbone_ref(&self.uri).await
     }
 
-    /// @emoji 📥️ Delivers a message to the store's inbound queue (actor→store).
+    /// 📥️ Delivers a message to the store's inbound queue (actor→store).
     pub async fn push(&self, message: BackboneMessage) -> Result<(), VcsError> {
         self.inbound.lock().map_err(|_| VcsError::Backbone("lock poisoned".into()))?.push_back(message);
         Ok(())
     }
 
-    /// @emoji 🔔️ Installs the actor's wake: every store→actor send resumes the actor that drains it,
+    /// 🔔️ Installs the actor's wake: every store→actor send resumes the actor that drains it,
     /// so an idle actor never sleeps on a queued outbound owner. Only the first install is kept.
     pub fn set_outbound_wake(&self, wake: Arc<dyn Fn() + Send + Sync>) {
         let _ = self.outbound_wake.set(wake);
     }
 
-    /// @emoji 🪄️ Takes at most one store→actor message without a bulk collection or a
+    /// 🪄️ Takes at most one store→actor message without a bulk collection or a
     /// blocking lock wait; contention preserves the exact queued owner for a later worker turn.
     pub fn try_pop_front(&self) -> Result<Option<BackboneMessage>, VcsError> {
         let mut outbound = self.outbound.try_lock().map_err(|error| match error {
@@ -20064,7 +20107,7 @@ impl ChannelBackboneRemote {
     }
 }
 
-/// @emoji 🧬️ Enum dispatch over every `Backbone` implementor (O1 — see `BackbonePorts`' doc comment
+/// 🧬️ Enum dispatch over every `Backbone` implementor (O1 — see `BackbonePorts`' doc comment
 /// for why: every former `Box<dyn Backbone>` seam becomes `Backbones` by value, no box needed).
 pub enum Backbones {
     Port(PortBackbone),
@@ -20266,7 +20309,7 @@ impl Backbone for Backbones {
     }
 }
 
-/// @emoji 🔌️ Resolves a backbone URI to a concrete channel implementation. Only available inside the
+/// 🔌️ Resolves a backbone URI to a concrete channel implementation. Only available inside the
 /// wasm sandbox, where every scheme forwards to the host process over the injected
 /// {@link BackboneChannelPort} (a pure in-memory queue). Native IO-performing backbones moved out of
 /// this crate entirely — the `framework/sync` actor layer owns them.
@@ -20282,7 +20325,7 @@ pub async fn resolve_backbone(uri: &str) -> Result<Backbones, VcsError> {
 mod blob_reference_schema;
 pub use blob_reference_schema::BlobRef;
 
-/// @emoji 🗄️ Content-addressed blob persistence backing any `ArtifactKind::ContentAddressedBlob`-
+/// 🗄️ Content-addressed blob persistence backing any `ArtifactKind::ContentAddressedBlob`-
 /// shaped field that needs to reference bytes durably without embedding them inline. `put` is
 /// idempotent — it dedupes by the Blake3 hash of the bytes ({@link framework_hash::hash_bytes}), so
 /// writing the same content twice never rewrites storage. Implementors decide the backing medium
@@ -20297,7 +20340,7 @@ pub trait BlobStore: Send + Sync {
 
 //#region 🔖️Space
 //#region SpaceMember
-/// @emoji 🧑️‍🤝️‍🧑️ Object-safe façade over a `ArtifactStore<P, Mutation>` so a space host can hold a
+/// 🧑️‍🤝️‍🧑️ Object-safe façade over a `ArtifactStore<P, Mutation>` so a space host can hold a
 /// heterogeneous registry of documents (`HashMap<String, Box<dyn SpaceMember>>`) without knowing
 /// each member's concrete `P`/`Mutation`. Blanket-implemented below by delegating to `dispatch` — never
 /// reimplement the underlying VCS mechanics here.
@@ -20336,7 +20379,7 @@ pub trait SpaceMember {
     /// Implementations must not serialize or clone the materialized snapshot to answer this read.
     fn content_revision_now(&self) -> [u8; 32];
     async fn content_revision(&self) -> [u8; 32];
-    /// @emoji 🩸️ Whether this member has edits applied since its last checkpoint (mirrors the
+    /// 🩸️ Whether this member has edits applied since its last checkpoint (mirrors the
     /// `CommitCheckpoint` dispatch's own "nothing to commit" check via `uncommitted_edit_ids`).
     async fn is_dirty(&self) -> bool;
     async fn commit_checkpoint(&mut self, message: String, authors: Vec<Author>) -> Result<String, VcsError>;
@@ -20344,35 +20387,19 @@ pub trait SpaceMember {
     async fn current_alternative_id(&self) -> Option<String>;
     async fn checkout(&mut self, checkpoint_id: &str, alternative_id: &str) -> Result<(), VcsError>;
     async fn create_alternative(&mut self, name: String) -> Result<String, VcsError>;
-    // 🎞️ CW3: `crate::os_spr::HybridLogicalTimestamp` (not `semio_framework`'s local one) — these
-    // read `MutationMeta.timestamp`, which is the moved struct's field, typed against protocol_core.
+    /// 🎞️ CW3: `crate::os_spr::HybridLogicalTimestamp` (not `semio_framework`'s local one) — these
+    /// read `MutationMeta.timestamp`, which is the moved struct's field, typed against protocol_core.
     async fn last_local_edit_timestamp(&self) -> Option<HybridLogicalTimestamp>;
     async fn last_undone_local_edit_timestamp(&self) -> Option<HybridLogicalTimestamp>;
     async fn undo(&mut self) -> Result<(), VcsError>;
     async fn redo(&mut self) -> Result<(), VcsError>;
-    /// @emoji 🪄️ Downcast escape hatch: a space host UI (or a test) needs the concrete
+    /// 🪄️ Downcast escape hatch: a space host UI (or a test) needs the concrete
     /// `ArtifactStore<P, Mutation>` back out of a `Box<dyn SpaceMember>` — e.g. to `Apply` a
     /// technology-specific `Mutation`, which can't appear in this object-safe trait. `Self: 'static` is
     /// implied by every real `P`/`Mutation` pair, so this never fails for a genuine member.
     async fn as_any_mut(&mut self) -> &mut dyn std::any::Any;
 
-    // 🎯️ B2 `CompositionCoordinator` seam (`UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`, `🔖️CompositionCoordinator`
-    // region below `🔖️Space`): nine object-safe methods, in two groups. `preview_wire`/
-    // `dispatch_wire`/`tail_group_id` are the three the task brief named explicitly (`preview_wire`
-    // itself renamed from `validate_wire` by `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-
-    // CLASS-CONFLICTS` §C6, once its `Result<(), String>` early-reject shape was replaced by the
-    // `Vec<MutationMessage>` dry run every `CompositionCoordinator` phase 1 now unions across
-    // members). The other six (`tail_edit_id`, `redo_tail`, `stamp_tail_group_id`, `set_owner`,
-    // `merge_policy`) are necessary, deliberate additions beyond that literal list — see
-    // `📓️wave1-reports/b2-store-composition-report.md`'s "Design decisions" for why each is
-    // unavoidable given the object-safety constraint: `GroupReceipt`/`GroupUndoReport` need real
-    // edit ids (not just group membership), `dispatch_group`'s phase 2 needs a way to stamp a shared
-    // `group_id` onto a member AFTER an ordinary `Apply` already hard-codes `group_id: None`,
-    // genesis needs a way to set `ArtifactEnvelope.owner` on a freshly-created child through the
-    // same type-erased interface, and `merge_policy` is what lets phase 1 fold every member's
-    // `preview_wire` messages against one authority-chosen `crate::os_spr::MergePolicy` without
-    // downcasting.
-    /// @emoji 🧪️ Decodes `ops` as a sequence of individually-`OpBinary`-encoded `Mutation`s (the
+    /// 🧪️ Decodes `ops` as a sequence of individually-`OpBinary`-encoded `Mutation`s (the
     /// SAME wire shape `ArtifactCommand::Apply.mutations` bundles — see `dispatch_wire`'s doc
     /// comment) and dry-runs each against a snapshot threaded forward through the whole slice, so
     /// op `i` previews against the state ops `0..i` would produce, never a stale base. Mirrors the
@@ -20385,8 +20412,25 @@ pub trait SpaceMember {
     /// live store is untouched no matter what this returns. `CompositionCoordinator` phase 1 unions
     /// this across every member, computes ONE worst `crate::os_dsl::Severity`, and consults
     /// `merge_policy()` to decide accept/reject for the whole group.
+    ///
+    /// 🎯️ B2 `CompositionCoordinator` seam (`UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`, `🔖️CompositionCoordinator`
+    /// region below `🔖️Space`): nine object-safe methods, in two groups. `preview_wire`/
+    /// `dispatch_wire`/`tail_group_id` are the three the task brief named explicitly (`preview_wire`
+    /// itself renamed from `validate_wire` by `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-
+    /// CLASS-CONFLICTS` §C6, once its `Result<(), String>` early-reject shape was replaced by the
+    /// `Vec<MutationMessage>` dry run every `CompositionCoordinator` phase 1 now unions across
+    /// members). The other six (`tail_edit_id`, `redo_tail`, `stamp_tail_group_id`, `set_owner`,
+    /// `merge_policy`) are necessary, deliberate additions beyond that literal list — see
+    /// `📓️wave1-reports/b2-store-composition-report.md`'s "Design decisions" for why each is
+    /// unavoidable given the object-safety constraint: `GroupReceipt`/`GroupUndoReport` need real
+    /// edit ids (not just group membership), `dispatch_group`'s phase 2 needs a way to stamp a shared
+    /// `group_id` onto a member AFTER an ordinary `Apply` already hard-codes `group_id: None`,
+    /// genesis needs a way to set `ArtifactEnvelope.owner` on a freshly-created child through the
+    /// same type-erased interface, and `merge_policy` is what lets phase 1 fold every member's
+    /// `preview_wire` messages against one authority-chosen `crate::os_spr::MergePolicy` without
+    /// downcasting.
     async fn preview_wire(&self, ops: &[Vec<u8>]) -> Vec<crate::os_spr::MutationMessage>;
-    /// @emoji 📡️ Decodes `cmd_bytes` as one binary `ArtifactCommand<Mutation>` and dispatches it via
+    /// 📡️ Decodes `cmd_bytes` as one binary `ArtifactCommand<Mutation>` and dispatches it via
     /// `dispatch_binary`. `CompositionCoordinator` builds `cmd_bytes` from a member's
     /// `ChildDispatch.ops`/`parent_ops` by replicating `write_command_ops`'s byte layout directly
     /// (length-prefixed already-encoded op bytes) WITHOUT ever decoding an individual op — the
@@ -20394,32 +20438,32 @@ pub trait SpaceMember {
     /// is that `SpaceMember` itself must stay object-safe (no generic method can appear on a trait
     /// object), so the coordinator stays fully agnostic of every member's concrete `Mutation` type.
     async fn dispatch_wire(&mut self, cmd_bytes: &[u8]) -> Result<CommandReceipt, VcsError>;
-    /// @emoji ⚖️ Applies a preflighted group command under the authority-selected policy without
+    /// ⚖️ Applies a preflighted group command under the authority-selected policy without
     /// changing this member's local policy after dispatch.
     async fn dispatch_wire_with_policy(&mut self, cmd_bytes: &[u8], policy: crate::os_spr::MergePolicy) -> Result<CommandReceipt, VcsError>;
-    /// @emoji 📦️ This member's whole event log as ONE encoded envelope payload, for a composing
+    /// 📦️ This member's whole event log as ONE encoded envelope payload, for a composing
     /// parent to announce on the member's behalf: a composed child owns no transport of its own.
     async fn event_log_payload(&self) -> Result<Vec<u8>, VcsError>;
-    /// @emoji 📤️ Seeds this member's TAIL edit into its causal dag and hands back the encoded
+    /// 📤️ Seeds this member's TAIL edit into its causal dag and hands back the encoded
     /// envelopes a replica needs to fold it — the outbound half of child-lane replication.
     async fn announce_tail_edit_payload(&mut self) -> Result<Vec<u8>, VcsError>;
-    /// @emoji 📥️ Folds an encoded envelope payload a composing parent routed to this member's lane.
+    /// 📥️ Folds an encoded envelope payload a composing parent routed to this member's lane.
     async fn ingest_remote_payload(&mut self, envelopes: &[u8]) -> Result<(), VcsError>;
-    /// @emoji 🏷️ The `MutationMeta.group_id` recorded on this member's TAIL applied edit's last
+    /// 🏷️ The `MutationMeta.group_id` recorded on this member's TAIL applied edit's last
     /// operation, if any — lets `CompositionCoordinator::undo_group` recognize "does this member's
     /// most recent edit belong to composite gesture X" without downcasting to a concrete
     /// `ArtifactStore<P, Mutation>`.
     async fn tail_group_id(&self) -> Option<String>;
-    /// @emoji 🆔️ The id of this member's TAIL applied edit, if any — `tail_group_id`'s companion
+    /// 🆔️ The id of this member's TAIL applied edit, if any — `tail_group_id`'s companion
     /// getter, so `GroupReceipt`/`GroupUndoReport` can report WHICH edit a group touched/undid, not
     /// only that group membership matched.
     async fn tail_edit_id(&self) -> Option<String>;
-    /// @emoji ↩️🏷️ `(tail_group_id, tail_edit_id)`'s REDO-direction mirror: the `(edit_id,
+    /// ↩️🏷️ `(tail_group_id, tail_edit_id)`'s REDO-direction mirror: the `(edit_id,
     /// group_id)` of whatever edit sits at the top of this member's redo stack (the one a following
     /// `redo()` would reapply), used by `CompositionCoordinator::redo_group` the way `tail_group_id`/
     /// `tail_edit_id` are used by `undo_group`.
     async fn redo_tail(&self) -> Option<(String, Option<String>)>;
-    /// @emoji 🖋️ Stamps `group_id` onto every `MutationMeta` entry of this member's TAIL applied
+    /// 🖋️ Stamps `group_id` onto every `MutationMeta` entry of this member's TAIL applied
     /// edit — the mechanism `CompositionCoordinator::dispatch_group`'s phase 2 uses to give every
     /// member of one composite gesture the SAME `MutationMeta.group_id` after dispatching each
     /// member's own `Apply` independently (the ordinary `Apply` path has no way to accept an
@@ -20428,7 +20472,7 @@ pub trait SpaceMember {
     /// all — never true on the path `dispatch_group` actually calls it from, since it always calls
     /// this immediately after a successful `dispatch_wire`.
     async fn stamp_tail_group_id(&mut self, group_id: &str) -> Result<(), VcsError>;
-    /// @emoji 🔀️ Stamps `origin` onto every `MutationMeta` entry of this member's TAIL applied
+    /// 🔀️ Stamps `origin` onto every `MutationMeta` entry of this member's TAIL applied
     /// edit — `stamp_tail_group_id`'s provenance-direction twin, used by
     /// `TransactionCoordinator::dispatch_group`'s `Peer` relation to mark a foreign member's edit
     /// `crate::os_spr::MutationOrigin::Transaction { initiator }` after dispatching it (the
@@ -20438,7 +20482,7 @@ pub trait SpaceMember {
     /// behaviour. Same `VcsError::UnknownEdit` failure mode as `stamp_tail_group_id` (never true on
     /// the path `dispatch_group` calls it from).
     async fn stamp_tail_origin(&mut self, origin: crate::os_spr::MutationOrigin) -> Result<(), VcsError>;
-    /// @emoji 🏠️ Sets (or clears) this member's own envelope `owner` stamp — the mechanism
+    /// 🏠️ Sets (or clears) this member's own envelope `owner` stamp — the mechanism
     /// `CompositionCoordinator::dispatch_group`'s phase 2 uses to record a freshly-`ChildGenesis`-
     /// created child's `OwnerRef` directly on the child's own envelope (see
     /// `ArtifactEnvelope.owner`'s doc comment for why ownership must be queryable from the child
@@ -20447,30 +20491,31 @@ pub trait SpaceMember {
     /// its own object-safe setter.
     async fn set_owner(&mut self, owner: Option<OwnerRef>);
 
-    // 📖️ Object-safe READ surface (this ticket's CW1-1b). Everything above either mutates a member
-    // or reports a scalar about it; nothing could get a member's CONTENT back out without
-    // downcasting through `as_any_mut` to a concrete `ArtifactStore<P, Mutation>` the caller must
-    // already know the types of. That is exactly what a composition parent cannot do (its children
-    // are heterogeneous and plugin-defined), so `ArtifactView.children` and `LinkResolver` both
-    // dead-ended here. All three return PACK bytes rather than a typed value for the same reason
-    // `dispatch_wire` takes bytes: no generic method can appear on a trait object.
-    /// @emoji 📦️ This member's CURRENT materialized snapshot, pack-encoded — the live content a
+    /// 📦️ This member's CURRENT materialized snapshot, pack-encoded — the live content a
     /// composition parent reads through `ArtifactView.children` and a `LinkPin::Head` resolves to.
     /// Reads through the live store, so it cannot go stale behind an undo/redo/checkout the way the
     /// `thread_local!` child caches this replaces did.
+    ///
+    /// 📖️ Object-safe READ surface (this ticket's CW1-1b). Everything above either mutates a member
+    /// or reports a scalar about it; nothing could get a member's CONTENT back out without
+    /// downcasting through `as_any_mut` to a concrete `ArtifactStore<P, Mutation>` the caller must
+    /// already know the types of. That is exactly what a composition parent cannot do (its children
+    /// are heterogeneous and plugin-defined), so `ArtifactView.children` and `LinkResolver` both
+    /// dead-ended here. All three return PACK bytes rather than a typed value for the same reason
+    /// `dispatch_wire` takes bytes: no generic method can appear on a trait object.
     async fn document_pack_bytes(&self) -> Result<Vec<u8>, VcsError>;
-    /// @emoji 🗄️ This member's WHOLE envelope (initial snapshot pack + `.spr` op log, in
+    /// 🗄️ This member's WHOLE envelope (initial snapshot pack + `.spr` op log, in
     /// `encode_document_pack_bytes` framing) — what gets persisted for a child and handed back to
     /// `ChildStoreFactory::open` on reload. The full history, not just the current content.
     async fn envelope_pack_bytes(&self) -> Result<Vec<u8>, VcsError>;
-    /// @emoji ⏮️📦️ This member's snapshot AS OF `checkpoint_id`, pack-encoded, without disturbing the
+    /// ⏮️📦️ This member's snapshot AS OF `checkpoint_id`, pack-encoded, without disturbing the
     /// live cursor — replays exactly the edit ids that checkpoint's changes cover, the same set
     /// `checkout_checkpoint_internal` would install. This is what makes `LinkPin::Checkpoint` real:
     /// a pinned reference resolves to the target's historical content rather than silently
     /// degrading to its head.
     async fn pack_at_checkpoint(&self, checkpoint_id: &str) -> Result<Vec<u8>, VcsError>;
 
-    /// @emoji ⚖️ This member's own `crate::os_spr::MergePolicy` — local/authority state (§C3: never
+    /// ⚖️ This member's own `crate::os_spr::MergePolicy` — local/authority state (§C3: never
     /// wire-carried, never part of shared history), consulted by `CompositionCoordinator` phase 1
     /// to decide whether the group's unioned `preview_wire` messages are accepted or rejected.
     /// Defaults to `MergePolicy::default()` (`Normal`) so every member reports a policy even before
@@ -20648,10 +20693,10 @@ where
         !uncommitted_edit_ids(&self.envelope, self.applied_edit_ids()).await.is_empty()
     }
 
+    /// 🏁️ `self.current_checkpoint_id()` resolves to the inherent method (`Option<&str>`), not this
+    /// trait method — Rust prefers inherent methods over trait methods of the same name.
     async fn commit_checkpoint(&mut self, message: String, authors: Vec<Author>) -> Result<String, VcsError> {
         self.dispatch(ArtifactCommand::CommitCheckpoint { message: Some(message), authors }).await?;
-        // `self.current_checkpoint_id()` resolves to the inherent method (`Option<&str>`), not this
-        // trait method — Rust prefers inherent methods over trait methods of the same name.
         self.current_checkpoint_id().map(|id| id.to_string()).ok_or(VcsError::NoCheckpoint)
     }
 
@@ -20678,8 +20723,8 @@ where
         self.envelope().active_alternative_id.clone().ok_or(VcsError::NoCheckpoint)
     }
 
-    // 🌀️ `edit_is_local`/`envelope` are async; `find_map`'s closure is sync (R10 shape 1), so both
-    // functions below use an explicit loop instead.
+    /// 🌀️ `edit_is_local`/`envelope` are async; `find_map`'s closure is sync (R10 shape 1), so both
+    /// functions below use an explicit loop instead.
     async fn last_local_edit_timestamp(&self) -> Option<HybridLogicalTimestamp> {
         let envelope = self.envelope();
         for edit_id in self.applied_edit_ids().iter().rev() {
@@ -20718,6 +20763,8 @@ where
         self
     }
 
+    /// 🌀️ `MutationMessage::at_op` is async (📡️replication); `Iterator::map`'s closure is
+    /// sync (R10 shape 1), so it's hoisted into an explicit loop.
     async fn preview_wire(&self, ops: &[Vec<u8>]) -> Vec<crate::os_spr::MutationMessage> {
         let mut running = match self.snapshot() {
             Ok(snapshot) => snapshot,
@@ -20739,8 +20786,6 @@ where
                     break;
                 }
             };
-            // 🌀️ `MutationMessage::at_op` is async (📡️replication); `Iterator::map`'s closure is
-            // sync (R10 shape 1), so it's hoisted into an explicit loop.
             for message in messages {
                 all_messages.push(message.at_op(index as u32));
             }
@@ -20753,12 +20798,12 @@ where
         self.dispatch_binary(cmd_bytes).await
     }
 
+    /// 🌀️ The unawaited future holds `&mut self`, so `self.merge_policy` cannot be reassigned
+    /// while it's still live (E0506) — awaited immediately instead of deferred, matching the
+    /// original synchronous "restore after dispatch completes" intent.
     async fn dispatch_wire_with_policy(&mut self, cmd_bytes: &[u8], policy: crate::os_spr::MergePolicy) -> Result<CommandReceipt, VcsError> {
         let local_policy = self.merge_policy;
         self.merge_policy = policy;
-        // 🌀️ The unawaited future holds `&mut self`, so `self.merge_policy` cannot be reassigned
-        // while it's still live (E0506) — awaited immediately instead of deferred, matching the
-        // original synchronous "restore after dispatch completes" intent.
         let result = self.dispatch_binary(cmd_bytes).await;
         self.merge_policy = local_policy;
         result
@@ -20848,7 +20893,7 @@ pub trait MemberFactory: Sized {
     async fn open(expected: &crate::os_io::ArtifactRef, owner: Option<&OwnerRef>, envelope_pack: &[u8]) -> Result<Self, VcsError>;
 }
 
-/// @emoji 🕳️ Uninhabited default `SpaceHost`/`CompositionCoordinator` member type — the STABLE
+/// 🕳️ Uninhabited default `SpaceHost`/`CompositionCoordinator` member type — the STABLE
 /// struct-param default so the many plugins that never compose members change nothing. Same
 /// stand-in shape as `BackboneChannelPorts`/`NoBlobStore`.
 pub enum NoMembers {}
@@ -21052,7 +21097,7 @@ impl MemberFactory for NoMembers {
     }
 }
 
-/// @emoji 🧬️ Generates a per-plugin `SpaceMember`+`MemberFactory` enum spanning several document
+/// 🧬️ Generates a per-plugin `SpaceMember`+`MemberFactory` enum spanning several document
 /// kinds composed under one `SpaceHost`/`CompositionCoordinator` — the O1 replacement for a
 /// `Box<dyn SpaceMember>` heterogeneous registry. Delegation arms are written ONCE here, next to
 /// `trait SpaceMember` itself, so drift between the trait and the macro is a compile error, never a
@@ -21277,8 +21322,8 @@ macro_rules! space_members {
 //#endregion SpaceMember
 
 //#region SpaceHistoryDocument
-/// @emoji 📌️ One member document's position at the moment a `SpaceCheckpoint` was recorded.
-/// @emoji 🔮️ serde stays TEST-ONLY: feeds `SpaceHistoryMutation`'s own `cfg_attr(test)` oracle
+/// 📌️ One member document's position at the moment a `SpaceCheckpoint` was recorded.
+/// 🔮️ serde stays TEST-ONLY: feeds `SpaceHistoryMutation`'s own `cfg_attr(test)` oracle
 /// derive transitively (`CommitSpaceCheckpoint` → `SpaceCheckpoint` → this type). Production never
 /// serializes through serde, so this never reaches a shipped plugin component.
 #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
@@ -21288,13 +21333,13 @@ macro_rules! space_members {
 pub struct SpaceMemberPin {
     pub document_id: String,
     pub checkpoint_id: String,
-    /// @emoji 🌿️ Empty string when the member had no active alternative (its own trunk) at pin time.
+    /// 🌿️ Empty string when the member had no active alternative (its own trunk) at pin time.
     #[cfg_attr(test, serde(default))]
     #[value(default)]
     pub alternative_id: String,
 }
 
-/// @emoji 🗄️ A space-wide checkpoint: one pin per registered member, so checking it out (or an
+/// 🗄️ A space-wide checkpoint: one pin per registered member, so checking it out (or an
 /// alternative built on top of it) fans out deterministically to every member's own VCS.
 #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
@@ -21308,7 +21353,7 @@ pub struct SpaceCheckpoint {
     pub members: Vec<SpaceMemberPin>,
 }
 
-/// @emoji 🔮️ serde stays TEST-ONLY — see `SpaceMemberPin`'s docstring above.
+/// 🔮️ serde stays TEST-ONLY — see `SpaceMemberPin`'s docstring above.
 #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -21319,14 +21364,14 @@ pub struct SpaceAlternative {
     pub checkpoint_ids: Vec<String>,
 }
 
-/// @emoji 🏷️ Schema id of the space-wide history meta-document — `"os.space.history"`, under the
+/// 🏷️ Schema id of the space-wide history meta-document — `"os.space.history"`, under the
 /// `os.` schema lattice (a generic os-shell abstraction, not the `s.` product lattice), separate
 /// from `space::S_SPACE_SCHEMA`/`space::S_COLLECTION_SCHEMA` (this crate sits below `space` in the
 /// dependency graph, so it declares its own constant rather than depending on that crate's). The
 /// `.spr` extension (`SpaceHistorySnapshot::EXTENSION`, `"space-history"`) is unchanged.
 pub const S_SPACE_HISTORY_SCHEMA: &str = "os.space.history";
 
-/// @emoji 🗄️ Snapshot of the `S_SPACE_HISTORY_SCHEMA` (`"os.space.history"`) meta-document: itself
+/// 🗄️ Snapshot of the `S_SPACE_HISTORY_SCHEMA` (`"os.space.history"`) meta-document: itself
 /// an ordinary `ArtifactVcs` document kind (dogfooded — no bespoke transport), holding the
 /// space-level checkpoint/alternative graph that `SpaceHost` composes on top of every registered
 /// member's own history.
@@ -21334,7 +21379,7 @@ pub const S_SPACE_HISTORY_SCHEMA: &str = "os.space.history";
 #[value(rename_all = "camelCase")]
 pub struct SpaceHistorySnapshot {
     pub checkpoints: Vec<SpaceCheckpoint>,
-    /// @emoji 🌿️ Held in ASCENDING `id` order, not in creation order. Two facts force it: a branch
+    /// 🌿️ Held in ASCENDING `id` order, not in creation order. Two facts force it: a branch
     /// list is unordered in the product (nothing reads `alternatives[0]` as "the first branch"), and
     /// only a canonical order makes `RemoveSpaceAlternative`'s inverse an exact inverse — re-adding
     /// a removed alternative by appending put it back at the END, so undoing a removal changed the
@@ -21497,7 +21542,7 @@ impl ArtifactPack for SpaceHistorySnapshot {
 //#endregion SpaceHistoryDocument
 
 //#region SpaceHost
-/// @emoji 🧹️ Owned-value retirement for the space meta document's snapshot root, its initial
+/// 🧹️ Owned-value retirement for the space meta document's snapshot root, its initial
 /// snapshot and its mutations. A `SpaceHistorySnapshot` owns only its own checkpoint/alternative/
 /// member-pin vectors — no blob handle, no disk row — so retiring one is taking it, one bounded
 /// step at a time.
@@ -21541,7 +21586,7 @@ impl ArtifactOwnedValueRetirementFactory<SpaceHistoryMutation> for SpaceHistoryO
     }
 }
 
-/// @emoji 🔐️ The one owner catalog the dogfooded `S_SPACE_HISTORY_SCHEMA` meta document installs.
+/// 🔐️ The one owner catalog the dogfooded `S_SPACE_HISTORY_SCHEMA` meta document installs.
 /// `install_document_store_owners_exact`'s own doc says there is NO default catalog, and every
 /// history insertion asks its store for the exact mutation retirement factory, so without this a
 /// `SpaceHost` could not record a single space checkpoint — `commit_space_checkpoint` refused with
@@ -21556,7 +21601,7 @@ pub fn space_history_store_owners() -> DocumentStoreOwners<SpaceHistorySnapshot,
     )
 }
 
-/// @emoji 🏛️ Composes many `SpaceMember` documents under one space-wide checkpoint/alternative
+/// 🏛️ Composes many `SpaceMember` documents under one space-wide checkpoint/alternative
 /// timeline, itself stored in a dogfooded `S_SPACE_HISTORY_SCHEMA` (`"os.space.history"`)
 /// meta-document. App-agnostic: this crate has no notion of what a member document *is*, only that
 /// it satisfies `SpaceMember`.
@@ -21565,7 +21610,7 @@ pub struct SpaceHost<M = NoMembers> {
     members: HashMap<String, M>,
 }
 
-/// @emoji 🚪️ Drains the meta document to `ArtifactStore::drop`'s exact terminal-empty witness
+/// 🚪️ Drains the meta document to `ArtifactStore::drop`'s exact terminal-empty witness
 /// before the host's own shell falls. The host OWNS its meta store outright — no caller is handed a
 /// handle to it — so there is nobody else who could retire it, and a bounded drain here is the same
 /// shape `🌉️mcp`'s `HeadlessWorkspace` uses at process shutdown. Registered MEMBERS are not touched:
@@ -21599,7 +21644,7 @@ impl<M: SpaceMember> SpaceHost<M> {
         self.members.insert(member.document_id().await.to_string(), member);
     }
 
-    /// @emoji 📚️ Batch counterpart to `register_member`: registers a space's manifest document, its
+    /// 📚️ Batch counterpart to `register_member`: registers a space's manifest document, its
     /// collection documents, and any currently-open artifact documents together in one call, so the
     /// very next `commit_space_checkpoint` pins all of them atomically in the SAME space-wide
     /// checkpoint (see `🪐️space`'s `SpaceSnapshot`/`CollectionSnapshot`/document-artifact
@@ -21632,14 +21677,14 @@ impl<M: SpaceMember> SpaceHost<M> {
         self.meta.snapshot()
     }
 
-    /// @emoji 🔗️ Attaches a backbone to the space-wide meta-document, same runtime-attach/detach
+    /// 🔗️ Attaches a backbone to the space-wide meta-document, same runtime-attach/detach
     /// contract as any other `ArtifactStore` — default is unattached, this is always an
     /// explicit call.
     pub async fn attach_backbone(&mut self, backbone: Backbones) -> Result<(), VcsError> {
         self.meta.attach_backbone(backbone).await
     }
 
-    /// @emoji ✂️ Detaches the meta-document's backbone; the space history stays in memory.
+    /// ✂️ Detaches the meta-document's backbone; the space history stays in memory.
     pub async fn detach_backbone(&mut self) -> Result<Option<Backbones>, VcsError> {
         self.meta.detach_backbone()
     }
@@ -21648,17 +21693,17 @@ impl<M: SpaceMember> SpaceHost<M> {
         self.meta.backbone_ref()
     }
 
-    /// @emoji 📡️ Drains inbound backbone messages into the meta-document's edit timeline.
+    /// 📡️ Drains inbound backbone messages into the meta-document's edit timeline.
     pub async fn tick(&mut self) -> Result<bool, VcsError> {
         self.meta.tick().await
     }
 
-    /// @emoji 💾️ Commits every dirty member (leaving clean members' existing checkpoints untouched),
+    /// 💾️ Commits every dirty member (leaving clean members' existing checkpoints untouched),
     /// pins each member's resulting `(checkpoint, alternative)`, and records one `SpaceCheckpoint`
     /// on the meta-document — applied *and* committed there too, so the space history itself is
     /// durable the moment this returns.
     ///
-    /// @emoji 📣️ BOTH meta commands go through `dispatch`, so BOTH flush their events. The `Apply`
+    /// 📣️ BOTH meta commands go through `dispatch`, so BOTH flush their events. The `Apply`
     /// used to go through `dispatch_inner` on the reasoning that the following `CommitCheckpoint`
     /// flushed a whole SNAPSHOT that already carried it — true until the event-sourced transition
     /// deleted snapshot broadcast (`BackboneMessage::Snapshot` → `Genesis`, identity only). After
@@ -21691,7 +21736,7 @@ impl<M: SpaceMember> SpaceHost<M> {
         Ok(checkpoint_id)
     }
 
-    /// @emoji 🌿️ Records a `SpaceAlternative` pinned at the current space checkpoint tip (or none,
+    /// 🌿️ Records a `SpaceAlternative` pinned at the current space checkpoint tip (or none,
     /// if nothing has been committed yet), so it can later be switched back into.
     pub async fn create_space_alternative(&mut self, name: String) -> Result<String, VcsError> {
         let checkpoint_ids: Vec<String> = self.meta.snapshot()?.checkpoints.last().map(|checkpoint| checkpoint.id.clone()).into_iter().collect();
@@ -21704,7 +21749,7 @@ impl<M: SpaceMember> SpaceHost<M> {
         Ok(alternative_id)
     }
 
-    /// @emoji 🔀️ Fans out to every member pinned by `checkpoint_id`'s `SpaceCheckpoint`, restoring
+    /// 🔀️ Fans out to every member pinned by `checkpoint_id`'s `SpaceCheckpoint`, restoring
     /// each to its exact recorded `(checkpoint, alternative)`.
     pub async fn checkout_space_checkpoint(&mut self, checkpoint_id: &str) -> Result<(), VcsError> {
         let snapshot = self.meta.snapshot()?;
@@ -21717,7 +21762,7 @@ impl<M: SpaceMember> SpaceHost<M> {
         Ok(())
     }
 
-    /// @emoji 🔀️ Switches the studio's active alternative and fans out to its tip checkpoint's pins.
+    /// 🔀️ Switches the studio's active alternative and fans out to its tip checkpoint's pins.
     pub async fn switch_space_alternative(&mut self, alternative_id: &str) -> Result<(), VcsError> {
         let snapshot = self.meta.snapshot()?;
         let alternative = snapshot.alternatives.iter().find(|alternative| alternative.id == alternative_id).ok_or_else(|| VcsError::UnknownAlternative(alternative_id.to_string()))?;
@@ -21726,7 +21771,7 @@ impl<M: SpaceMember> SpaceHost<M> {
         self.checkout_space_checkpoint(&checkpoint_id).await
     }
 
-    /// @emoji ↩️ Derived, local-only undo: targets whichever registered member has the most recent
+    /// ↩️ Derived, local-only undo: targets whichever registered member has the most recent
     /// `last_local_edit_timestamp` (by {@link HybridLogicalTimestamp::cmp_key}) and undoes just that
     /// member. Never dispatched against the meta-document — space-level undo has no `SpaceHistoryMutation`
     /// of its own, it is purely a cross-member ordering policy.
@@ -21742,7 +21787,7 @@ impl<M: SpaceMember> SpaceHost<M> {
         self.members.get_mut(&document_id).ok_or(VcsError::NothingToUndo)?.undo().await
     }
 
-    /// @emoji ↪️ Derived, local-only redo: mirrors `undo`, targeting the member with the most
+    /// ↪️ Derived, local-only redo: mirrors `undo`, targeting the member with the most
     /// recent `last_undone_local_edit_timestamp`.
     pub async fn redo(&mut self) -> Result<(), VcsError> {
         let mut candidates = Vec::new();
@@ -21778,7 +21823,7 @@ impl<M: SpaceMember> SpaceHost<M> {
 // messages phase 1 computed travel through unchanged as `GroupReceipt.messages`. `CompositionGraph`
 // tracks the ownership forest/link DAG this all leans on for cycle/ownership validation.
 
-/// @emoji 📮️ One child's share of a composite dispatch: which child, its ops (each individually
+/// 📮️ One child's share of a composite dispatch: which child, its ops (each individually
 /// `crate::os_spr::OpBinary`-encoded — the SAME per-op wire shape `ArtifactCommand::Apply.mutations`
 /// bundles, see `SpaceMember::dispatch_wire`'s doc comment), the schema those ops decode against,
 /// and human-readable labels (one per op, forward-compat metadata for a future audit/diagnostic
@@ -21792,7 +21837,7 @@ pub struct ChildDispatch {
     pub labels: Vec<crate::LocalizedLabel>,
 }
 
-/// @emoji 🌱️ One new child to create in this same composite gesture: which parent-relative `slot`,
+/// 🌱️ One new child to create in this same composite gesture: which parent-relative `slot`,
 /// what dialect it materializes as, and its baked initial pack bytes (fed to the registered
 /// `ChildStoreFactory::create`). No `ops` — a freshly-created child has nothing to replay yet, only
 /// an initial snapshot.
@@ -21803,7 +21848,7 @@ pub struct ChildGenesis {
     pub initial_pack: Vec<u8>,
 }
 
-/// @emoji 🧾️ Receipt from a successful `CompositionCoordinator::dispatch_group`: the minted shared
+/// 🧾️ Receipt from a successful `CompositionCoordinator::dispatch_group`: the minted shared
 /// `MutationMeta.group_id` every touched member's tail edit now carries, one `(member, edit_id)`
 /// pair per member that actually got a new edit (parent included when `parent_ops` was non-empty;
 /// a child with empty `ops` contributes none), and every `ChildGenesis`-created member's live
@@ -21827,7 +21872,7 @@ pub struct GroupReceipt<M> {
     pub messages: Vec<crate::os_spr::MutationMessage>,
 }
 
-/// @emoji 🎛️ Cross-member metadata for one `dispatch_group` call. `description` becomes every
+/// 🎛️ Cross-member metadata for one `dispatch_group` call. `description` becomes every
 /// dispatched member's own `ArtifactCommand::Apply.description`. `actor`/`coalesce_key` are
 /// accepted or forward-compat/audit purposes but NOT yet wired into dispatch — object-safe
 /// `SpaceMember` has no `set_local_actor_id`/`AmendLast` seam today (only `ArtifactStore`'s own
@@ -21844,7 +21889,7 @@ pub struct GroupMeta {
     pub group_id: Option<String>,
 }
 
-/// @emoji 🧾️ Best-effort group undo/redo report: `undone` is every member that WAS rolled
+/// 🧾️ Best-effort group undo/redo report: `undone` is every member that WAS rolled
 /// back/reapplied (with the edit id touched), `skipped` is every member whose tail didn't belong to
 /// the requested group, or whose own `undo()`/`redo()` itself failed — recorded as a diagnostic,
 /// never aborting the rest of the group. Generalizes the existing benign `NothingToUndo`/
@@ -21857,7 +21902,7 @@ pub struct GroupUndoReport {
     pub skipped: Vec<(crate::os_io::ArtifactRef, VcsError)>,
 }
 
-/// @emoji 🕸️ Ownership forest (`Owns`, each child has AT MOST one owner, no cycles) + reference DAG
+/// 🕸️ Ownership forest (`Owns`, each child has AT MOST one owner, no cycles) + reference DAG
 /// (`Links`, acyclic) over artifact ids — the structure `CompositionCoordinator::dispatch_group`'s
 /// phase 1 consults for ownership/cycle validation, incrementally maintained (`sync_member`) rather
 /// than ever rebuilt from scratch on the hot path. A `CompositionCoordinator` owns one; a host that
@@ -22132,7 +22177,7 @@ impl CompositionGraph {
     }
 }
 
-/// @emoji 🧵️ Builds the exact `ArtifactCommand::<Mutation>::Apply` binary layout (see that impl's
+/// 🧵️ Builds the exact `ArtifactCommand::<Mutation>::Apply` binary layout (see that impl's
 /// `OpBinary::encode_op` in `🔖️CommandFormat` above, ordinal-0 arm) directly from already-
 /// `OpBinary`-encoded op bytes, WITHOUT ever decoding them — this is how `CompositionCoordinator`
 /// stays fully generic over every technology's concrete `Mutation` type while still producing bytes
@@ -22154,7 +22199,7 @@ async fn build_apply_command_bytes(ops: &[Vec<u8>], description: Option<&str>) -
     out
 }
 
-/// @emoji 🧮️ Deterministic order-and-length-sensitive fingerprint of a raw op-bytes slice — the
+/// 🧮️ Deterministic order-and-length-sensitive fingerprint of a raw op-bytes slice — the
 /// `parent_edit_fingerprint` ingredient `mint_child_id`/`mint_invocation_id` hash into a new id, so
 /// two replicas that receive the identical `parent_ops`/`ChildDispatch.ops` converge on identical
 /// ids without ever needing to actually apply anything first.
@@ -22167,7 +22212,7 @@ async fn concat_ops_fingerprint(ops: &[Vec<u8>]) -> Vec<u8> {
     buffer
 }
 
-/// @emoji 🆔️ Deterministic child envelope/handle id — design doc §1's "Child envelope ids are
+/// 🆔️ Deterministic child envelope/handle id — design doc §1's "Child envelope ids are
 /// minted deterministically... `parent_id ++ slot ++ parent_edit_fingerprint ++ ordinal`" formula,
 /// using the SAME `content_addressed_entity_id` helper `🌿️vcs`'s other `mint_*_id` functions build
 /// on. This one id serves BOTH roles: it is the new child's `ArtifactRef.artifact_id` AND its
@@ -22184,7 +22229,7 @@ pub async fn mint_child_id(parent_id: &str, slot: &str, parent_edit_fingerprint:
     content_addressed_entity_id("child", &payload).await
 }
 
-/// @emoji 🆔️ Deterministic group/invocation id: hashes the parent id, the parent ops' fingerprint,
+/// 🆔️ Deterministic group/invocation id: hashes the parent id, the parent ops' fingerprint,
 /// and every dispatched child's `(child_id, ops fingerprint)` pair (sorted by child id first, so
 /// caller-supplied `children` order never affects convergence) — two replicas performing the
 /// identical composite gesture (same parent, same ops everywhere) converge on the identical
@@ -22204,7 +22249,7 @@ async fn mint_invocation_id(parent_id: &str, parent_edit_fingerprint: &[u8], chi
     content_addressed_entity_id("invocation", &payload).await
 }
 
-/// @emoji 🏷️ Prepends `member_path` (that member's own `crate::os_io::ArtifactRef::to_uri()`) as the
+/// 🏷️ Prepends `member_path` (that member's own `crate::os_io::ArtifactRef::to_uri()`) as the
 /// OUTERMOST segment of every message's `target` — the discipline §C4 mandates for composite step
 /// paths, generalized to a composition group: a caller unioning messages from several members must
 /// still be able to tell which member produced which message.
@@ -22218,7 +22263,7 @@ async fn prefix_message_target(messages: Vec<crate::os_spr::MutationMessage>, me
         .collect()
 }
 
-/// @emoji ⚖️ Phase 1's policy gate (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-
+/// ⚖️ Phase 1's policy gate (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-
 /// CONFLICTS` §C6): folds every already-prefixed message `dispatch_relation_group` collected via
 /// `SpaceMember::preview_wire` into ONE worst `crate::os_dsl::Severity` and consults `policy` — the
 /// parent-or-initiator's own `SpaceMember::merge_policy()`, since it is the member driving/owning
@@ -22248,17 +22293,18 @@ async fn reject_if_policy_rejects(policy: crate::os_spr::MergePolicy, messages: 
     Err(VcsError::Rejected { policy, messages: messages.to_vec() })
 }
 
-/// @emoji 🧯️ Folds a post-validation dispatch failure with its compensation report: if every
+/// 🧯️ Folds a post-validation dispatch failure with its compensation report: if every
 /// already-applied member rolled back cleanly (`report.skipped` empty), the ORIGINAL error is
 /// returned unchanged (compensation is a transparent implementation detail on the success path);
 /// otherwise wraps both into `VcsError::CompensationFailed` so the caller sees the full picture —
 /// what failed AND what could not be rolled back — rather than either fact silently.
+///
+/// 🌀️ `ArtifactRef::to_uri` is async (🚪️io, out of scope) — hoisted out of `Iterator::map`'s
+/// sync closure into an explicit loop (R10 shape 1).
 async fn fold_compensation_error(original: VcsError, report: GroupUndoReport) -> VcsError {
     if report.skipped.is_empty() {
         original
     } else {
-        // 🌀️ `ArtifactRef::to_uri` is async (🚪️io, out of scope) — hoisted out of `Iterator::map`'s
-        // sync closure into an explicit loop (R10 shape 1).
         let mut skipped_desc: Vec<String> = Vec::with_capacity(report.skipped.len());
         for (reference, error) in &report.skipped {
             skipped_desc.push(format!("{}: {error}", reference.to_uri()));
@@ -22267,7 +22313,7 @@ async fn fold_compensation_error(original: VcsError, report: GroupUndoReport) ->
     }
 }
 
-/// @emoji 🔀️ Which structural relationship holds between a `TransactionCoordinator::dispatch_group`
+/// 🔀️ Which structural relationship holds between a `TransactionCoordinator::dispatch_group`
 /// (or `dispatch_peer_group`) call's `parent`/initiator and its `children`/peers —
 /// `PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS` W1-C's generalization of
 /// the pre-existing composition machinery (contract-freeze §5, `📓️scout-2-group-undo-and-hosts.md`
@@ -22288,7 +22334,7 @@ pub enum MemberRelation {
     Peer,
 }
 
-/// @emoji 🧩️ Atomic composite/transactional dispatch across a parent-or-initiator + N children-
+/// 🧩️ Atomic composite/transactional dispatch across a parent-or-initiator + N children-
 /// or-peers — see this region's doc comment for the two-phase protocol and `MemberRelation` for
 /// what differs between `Owned` (`dispatch_group`) and `Peer` (`dispatch_peer_group`). Holds a
 /// `CompositionGraph` incrementally maintained across calls (`graph`/`graph_mut` for a host to
@@ -22304,7 +22350,7 @@ pub struct TransactionCoordinator {
     graph: CompositionGraph,
 }
 
-/// @emoji 🪪️ Source-compatible alias — see `TransactionCoordinator`'s own doc comment for why this
+/// 🪪️ Source-compatible alias — see `TransactionCoordinator`'s own doc comment for why this
 /// exists rather than a rename-in-place.
 pub type CompositionCoordinator = TransactionCoordinator;
 
@@ -22451,6 +22497,20 @@ impl TransactionCoordinator {
     /// `VcsError::CompensationFailed` (`fold_compensation_error`) carrying both the original
     /// failure and which members could not be rolled back, rather than silently leaving partial
     /// state unreported.
+    ///
+    /// 🌀️ `concat_ops_fingerprint` is async; `Iterator::map`'s closure is sync (R10 shape 1),
+    /// so it's hoisted into an explicit loop.
+    ///
+    /// 🎯️ O1: no more `ChildStoreFactory` global registry lookup — `M::create` (the
+    /// `space_members!`-generated `MemberFactory` impl) matches `kind` against M's OWN closed
+    /// variant set directly. Nothing to compensate on a genesis failure: no `dispatch_wire` has
+    /// run yet in this call, and any earlier-succeeding genesis member in this same loop was
+    /// never registered/dispatched to anywhere — it simply gets dropped along with this `Err`.
+    ///
+    /// 🔗️ Best-effort: `would_cycle_links` already cleared this exact edge in phase 1, so
+    /// this can only fail if a CONCURRENT graph mutation raced us between the two — not
+    /// worth failing an already-applied transaction over; the cycle guard still holds for
+    /// every edge that DID get recorded.
     async fn dispatch_relation_group<Mp: SpaceMember, Mc: SpaceMember + MemberFactory>(
         &mut self,
         relation: MemberRelation,
@@ -22461,7 +22521,6 @@ impl TransactionCoordinator {
         genesis: Vec<ChildGenesis>,
         meta: GroupMeta,
     ) -> Result<GroupReceipt<Mc>, VcsError> {
-        //#region Phase1Validate
         let mut all_messages: Vec<crate::os_spr::MutationMessage> = Vec::new();
         if !parent_ops.is_empty() {
             all_messages.extend(prefix_message_target(parent.preview_wire(&parent_ops).await, &parent_ref.to_uri()).await);
@@ -22493,11 +22552,7 @@ impl TransactionCoordinator {
         }
         let group_policy = parent.merge_policy().await;
         reject_if_policy_rejects(group_policy, &all_messages).await?;
-        //#endregion Phase1Validate
 
-        //#region Phase2Apply
-        // 🌀️ `concat_ops_fingerprint` is async; `Iterator::map`'s closure is sync (R10 shape 1),
-        // so it's hoisted into an explicit loop.
         let mut child_fingerprints: Vec<(String, Vec<u8>)> = Vec::with_capacity(children.len());
         for (_, dispatch) in children.iter() {
             child_fingerprints.push((dispatch.child.artifact_id.clone(), concat_ops_fingerprint(&dispatch.ops).await));
@@ -22507,11 +22562,6 @@ impl TransactionCoordinator {
             None => mint_invocation_id(&parent_ref.artifact_id, &parent_edit_fingerprint, &child_fingerprints).await,
         };
 
-        // 🎯️ O1: no more `ChildStoreFactory` global registry lookup — `M::create` (the
-        // `space_members!`-generated `MemberFactory` impl) matches `kind` against M's OWN closed
-        // variant set directly. Nothing to compensate on a genesis failure: no `dispatch_wire` has
-        // run yet in this call, and any earlier-succeeding genesis member in this same loop was
-        // never registered/dispatched to anywhere — it simply gets dropped along with this `Err`.
         let mut created_children: Vec<(crate::os_io::ArtifactRef, Mc)> = Vec::with_capacity(genesis.len());
         for (ordinal, spec) in genesis.into_iter().enumerate() {
             let child_id = minted_child_ids[ordinal].clone();
@@ -22547,10 +22597,6 @@ impl TransactionCoordinator {
                     let report = Self::compensate(parent_ref, parent, children, &applied_children, None).await;
                     return Err(fold_compensation_error(error, report).await);
                 }
-                // 🔗️ Best-effort: `would_cycle_links` already cleared this exact edge in phase 1, so
-                // this can only fail if a CONCURRENT graph mutation raced us between the two — not
-                // worth failing an already-applied transaction over; the cycle guard still holds for
-                // every edge that DID get recorded.
                 let _ = self.graph.insert_link(&parent_ref.artifact_id, &children[index].1.child.artifact_id).await;
             }
         }
@@ -22572,7 +22618,6 @@ impl TransactionCoordinator {
             }
             parent_edit_id = Some(edit_id);
         }
-        //#endregion Phase2Apply
 
         let mut member_edits: Vec<(crate::os_io::ArtifactRef, String)> = applied_children.iter().map(|(index, edit_id)| (children[*index].1.child.clone(), edit_id.clone())).collect();
         if let Some(edit_id) = parent_edit_id {
@@ -22653,7 +22698,7 @@ impl TransactionCoordinator {
 //#endregion 🔖️CompositionCoordinator
 
 //#region 🔖️TestSupport
-/// @emoji 🧪️ Round-trip assertions shared by every technology crate's `Mutation` test suite.
+/// 🧪️ Round-trip assertions shared by every technology crate's `Mutation` test suite.
 pub mod test_support {
     use super::*;
 
@@ -22771,7 +22816,7 @@ pub mod test_support {
     include!("🧪️tests/🔬️test-support-scratch-directory/🦀️.rs");
     //#endregion 📁️ScratchDirectory
 
-    /// @emoji 🔁️ Asserts that applying `operation` then applying its reversed `inverse(pre)` restores `pre`.
+    /// 🔁️ Asserts that applying `operation` then applying its reversed `inverse(pre)` restores `pre`.
     pub async fn assert_operation_round_trip<P, Mutation>(pre: &P, operation: Mutation)
     where
         P: Clone + PartialEq + std::fmt::Debug,
@@ -22787,7 +22832,7 @@ pub mod test_support {
         assert_eq!(&restored, pre, "operation inverse did not restore pre-state");
     }
 
-    /// @emoji 🗄️ Asserts a full store round trip: Apply→Undo restores `initial`, Redo restores the
+    /// 🗄️ Asserts a full store round trip: Apply→Undo restores `initial`, Redo restores the
     /// post-apply snapshot, and replay-materialization agrees with the live store snapshot.
     pub async fn assert_store_roundtrip<P, Mutation>(initial: P, operation: Mutation)
     where
@@ -22807,7 +22852,7 @@ pub mod test_support {
         close_plain_test_store(&mut store);
     }
 
-    /// @emoji 📜️ Asserts a DSL round trip: `P::parse_dsl(&snapshot.print_dsl())` recovers an equal
+    /// 📜️ Asserts a DSL round trip: `P::parse_dsl(&snapshot.print_dsl())` recovers an equal
     /// snapshot. The compile-time validation ground truth for every technology's `🔖️Dsl` region —
     /// call this from a `#[test]` over every `include_str!` fixture.
     pub fn assert_dsl_round_trip<P>(snapshot: &P)
@@ -22819,7 +22864,7 @@ pub mod test_support {
         assert_eq!(&parsed, snapshot, "dsl round trip diverged;\nprinted:\n{printed}");
     }
 
-    /// @emoji 🧊️ Cold twin of [`assert_dsl_round_trip`] for a projection that REJECTS a bare drop —
+    /// 🧊️ Cold twin of [`assert_dsl_round_trip`] for a projection that REJECTS a bare drop —
     /// one owning an `OrderedMap` root or a retirement ladder (`🧰️framework/🔨️modules/🌱️value/🗂️ordered/🦀️.rs:81`).
     /// The decoded value is handed to `retire` instead of being dropped, so the law can be asserted
     /// without aborting the test binary in a destructor.
@@ -22835,7 +22880,7 @@ pub mod test_support {
         assert!(matches, "dsl round trip diverged;\nprinted:\n{printed}\nparsed:\n{report}");
     }
 
-    /// @emoji 🧮️ Config artifact twin of [`assert_dsl_round_trip`] — same law for `ConfigRecord` snapshots.
+    /// 🧮️ Config artifact twin of [`assert_dsl_round_trip`] — same law for `ConfigRecord` snapshots.
     pub fn assert_config_round_trip<C>(snapshot: &C)
     where
         C: ConfigRecord + PartialEq + std::fmt::Debug,
@@ -22843,7 +22888,7 @@ pub mod test_support {
         assert_dsl_round_trip(snapshot);
     }
 
-    /// @emoji 🧭️ Non-panicking twin of [`assert_dsl_round_trip`] for a repo-wide fixture-law SWEEP
+    /// 🧭️ Non-panicking twin of [`assert_dsl_round_trip`] for a repo-wide fixture-law SWEEP
     /// (W6: `.🧬semio/🦑️repo/🎫️tickets/.../DSL-FIXTURE-LAW-SWEEP`): checks BOTH laws directly against real
     /// shipped `📚️examples/**` fixture TEXT (not a hand-built in-memory value), which is exactly what
     /// a single per-app round-trip test built on its own simpler hardcoded example can miss — a
@@ -22881,7 +22926,7 @@ pub mod test_support {
         Ok(())
     }
 
-    /// @emoji 📦️ Asserts a pack round trip: `P::decode_pack(&snapshot.encode_pack())` recovers an
+    /// 📦️ Asserts a pack round trip: `P::decode_pack(&snapshot.encode_pack())` recovers an
     /// equal snapshot — the pack sibling of `assert_dsl_round_trip`.
     pub fn assert_pack_round_trip<P>(snapshot: &P)
     where
@@ -22892,7 +22937,7 @@ pub mod test_support {
         assert_eq!(&decoded, snapshot, "pack round trip diverged");
     }
 
-    /// @emoji 🧬️ Asserts a document kind has a structural pack-schema identity: `record_spec()` is
+    /// 🧬️ Asserts a document kind has a structural pack-schema identity: `record_spec()` is
     /// declared, its `schema_hash` is nonzero, and `snapshot` round-trips exactly through the pack.
     pub fn assert_pack_schema_identity<P>(snapshot: &P) -> [u8; 32]
     where
@@ -22906,7 +22951,7 @@ pub mod test_support {
         hash
     }
 
-    /// @emoji ⚖️ Asserts dsl and pack are two encodings of the SAME value: `decode_pack(
+    /// ⚖️ Asserts dsl and pack are two encodings of the SAME value: `decode_pack(
     /// encode_pack(p)) == parse_dsl(print_dsl(p)) == p` — the compile-time validation ground truth
     /// for the whole pack rollout's central LAW (see `ArtifactPack`'s doc comment).
     pub fn assert_dsl_pack_equivalence<P>(snapshot: &P)
@@ -22920,7 +22965,7 @@ pub mod test_support {
         assert_eq!(via_pack, via_dsl, "pack and dsl round trips diverged from each other");
     }
 
-    /// @emoji 🧊️ Cold twin of [`assert_dsl_pack_equivalence`] for a projection that REJECTS a bare
+    /// 🧊️ Cold twin of [`assert_dsl_pack_equivalence`] for a projection that REJECTS a bare
     /// drop — both decoded values are handed to `retire` instead of being dropped.
     pub fn assert_dsl_pack_equivalence_cold<P>(snapshot: &P, mut retire: impl FnMut(P))
     where
@@ -22938,7 +22983,7 @@ pub mod test_support {
         assert!(agree, "pack and dsl round trips diverged from each other");
     }
 
-    /// @emoji 🧊️ Cold twin of [`assert_pack_round_trip`] for a projection that REJECTS a bare drop.
+    /// 🧊️ Cold twin of [`assert_pack_round_trip`] for a projection that REJECTS a bare drop.
     pub fn assert_pack_round_trip_cold<P>(snapshot: &P, retire: impl FnOnce(P))
     where
         P: ArtifactPack + PartialEq + std::fmt::Debug,
@@ -22950,7 +22995,7 @@ pub mod test_support {
         assert!(matches, "pack round trip diverged");
     }
 
-    /// @emoji ⚡️ Asserts an op-text round trip for a single operation: `print_op` contains no newline
+    /// ⚡️ Asserts an op-text round trip for a single operation: `print_op` contains no newline
     /// and `Op::parse_op` recovers an equal operation from it. The compile-time validation ground
     /// truth for every technology's `🔖️OpText` region — call this once per `Mutation` variant.
     pub fn assert_op_line_round_trip<Op>(operation: &Op)
@@ -22963,7 +23008,7 @@ pub mod test_support {
         assert_eq!(&parsed, operation, "op-text round trip diverged; printed: {printed:?}");
     }
 
-    /// @emoji 🧊️ Cold twin of [`assert_op_line_round_trip`] for an operation that REJECTS a bare drop —
+    /// 🧊️ Cold twin of [`assert_op_line_round_trip`] for an operation that REJECTS a bare drop —
     /// one carrying an `OrderedMap` root or a retirement ladder (`🧰️framework/🔨️modules/🌱️value/🗂️ordered/🦀️.rs:81`),
     /// e.g. a mutation payload holding a `neural_engine::Dictionary`. Every operation this helper
     /// decodes is handed to `retire` instead of being dropped, so the law can be asserted without
@@ -22981,7 +23026,7 @@ pub mod test_support {
         assert!(matches, "op-text round trip diverged; printed: {printed:?}\nparsed:\n{report}");
     }
 
-    /// @emoji 🧊️ Cold twin of [`assert_op_text_binary_equivalence`]; `retire` takes exact ownership of
+    /// 🧊️ Cold twin of [`assert_op_text_binary_equivalence`]; `retire` takes exact ownership of
     /// every operation this helper decodes (one from the text lane, one from the binary lane).
     pub fn assert_op_text_binary_equivalence_cold<Op>(operation: &Op, mut retire: impl FnMut(Op))
     where
@@ -22998,7 +23043,7 @@ pub mod test_support {
         assert!(matches, "op-binary round trip diverged from source operation\ndecoded:\n{report}");
     }
 
-    /// @emoji ⚖️ Asserts op text and op binary are two encodings of the SAME operation:
+    /// ⚖️ Asserts op text and op binary are two encodings of the SAME operation:
     /// `decode_op(encode_op(op)) == parse_op(print_op(op)) == op`, and the binary encoding is
     /// deterministic. The compile-time validation ground truth for every technology's `OpBinary`
     /// impl — the op-level mirror of {@link assert_dsl_pack_equivalence}.
@@ -23014,7 +23059,7 @@ pub mod test_support {
         assert_eq!(&decoded, operation, "op-binary round trip diverged from source operation");
     }
 
-    /// @emoji ⚖️ Asserts command text and command binary are two encodings of the SAME command:
+    /// ⚖️ Asserts command text and command binary are two encodings of the SAME command:
     /// `ArtifactCommand::decode_op(&c.encode_op()) == parse_command(print_command(c)) == c`, and the
     /// binary encoding is deterministic. The compile-time validation ground truth for
     /// `ArtifactCommand`'s text/binary pair — the command-level mirror of
@@ -23033,7 +23078,7 @@ pub mod test_support {
         assert_eq!(&decoded, command, "command binary round trip diverged from source command");
     }
 
-    /// @emoji 📄️ Asserts that printing a store's envelope to text and parsing it back yields the same
+    /// 📄️ Asserts that printing a store's envelope to text and parsing it back yields the same
     /// live snapshot the store already holds — the ground truth for {@link print_document_text}/
     /// {@link parse_document_text} on any technology once it implements `ArtifactDsl` + `OpText`.
     pub async fn assert_document_text_round_trip<P, Mutation>(store: &ArtifactStore<P, Mutation>)
@@ -23049,7 +23094,7 @@ pub mod test_support {
         retire_parsed_document(parsed);
     }
 
-    /// @emoji 🧹️ Bounded retirement for a parse-produced document that belongs to no store.
+    /// 🧹️ Bounded retirement for a parse-produced document that belongs to no store.
     /// Every terminal shell below `ParsedDocumentText` (`ArtifactEnvelope`, its `ArtifactVcs`, the
     /// history ledger, each `Edit`) asserts in `Drop` that its nested owners were retired through the
     /// bounded protocol first, and only an `ArtifactStore` ever runs that protocol — so a helper that
@@ -23072,7 +23117,7 @@ pub mod test_support {
         drop(snapshot);
     }
 
-    /// @emoji 🧪️ Retirement authorities for a test document whose snapshot and mutations are plain
+    /// 🧪️ Retirement authorities for a test document whose snapshot and mutations are plain
     /// data: every value retires in one bounded step, and the store closes through the real cursor
     /// disposer — so a test store records history and closes exactly like a production member.
     pub fn plain_document_store_owners<P, Mutation>() -> DocumentStoreOwners<P, Mutation>
@@ -23083,7 +23128,7 @@ pub mod test_support {
         DocumentStoreOwners::new(Arc::new(RoundTripValueRetirementFactory), Arc::new(RoundTripValueRetirementFactory), Arc::new(RoundTripValueRetirementFactory), Box::new(ArtifactStoreCursorDisposer::<P, Mutation>::new()))
     }
 
-    /// @emoji 🧪️ A store over `envelope` carrying [`plain_document_store_owners`].
+    /// 🧪️ A store over `envelope` carrying [`plain_document_store_owners`].
     pub async fn plain_test_store<P, Mutation>(envelope: ArtifactEnvelope<P, Mutation>) -> ArtifactStore<P, Mutation>
     where
         P: Clone + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
@@ -23094,7 +23139,7 @@ pub mod test_support {
         store
     }
 
-    /// @emoji 🧹️ Releases a test store's backbone and drives its owned close to the terminal-empty
+    /// 🧹️ Releases a test store's backbone and drives its owned close to the terminal-empty
     /// witness its `Drop` requires.
     pub fn close_plain_test_store<P, Mutation>(store: &mut ArtifactStore<P, Mutation>)
     where
@@ -23119,7 +23164,7 @@ pub mod test_support {
         }
     }
 
-    /// @emoji 🧹️ One-value retirement used only by [`retire_parsed_document`] — a parsed comparison
+    /// 🧹️ One-value retirement used only by [`retire_parsed_document`] — a parsed comparison
     /// document owns no domain resources, so releasing a value is exactly one bounded step.
     struct RoundTripValueRetirement<T>(Option<T>);
 
@@ -23147,7 +23192,7 @@ pub mod test_support {
         }
     }
 
-    /// @emoji 🗄️ Asserts a full pack-based document round trip: mirrors
+    /// 🗄️ Asserts a full pack-based document round trip: mirrors
     /// `assert_document_text_round_trip` but via `print_document_pack`/`parse_document_pack`, and
     /// additionally asserts the pack path's parsed snapshot agrees with the text path's — the two
     /// storage formats must never diverge on the same store.
@@ -23168,7 +23213,7 @@ pub mod test_support {
         retire_parsed_document(parsed_text);
     }
 
-    /// @emoji ✉️ Asserts that converting an `Edit<Mutation>` into `crate::os_spr::MutationEnvelope`s
+    /// ✉️ Asserts that converting an `Edit<Mutation>` into `crate::os_spr::MutationEnvelope`s
     /// (`protocol_causal`'s canonical wire/causal representation, moved from `framework/core` in CW3,
     /// via `crate::os_spr::mutation_envelope_from_edit`) preserves every operation's essential facts —
     /// the causal-wire sibling of `assert_pack_round_trip`/`assert_dsl_round_trip` for the app
@@ -23222,7 +23267,7 @@ pub mod test_support {
         }
     }
 
-    /// @emoji 🩺️ Asserts the store's incrementally-maintained live snapshot agrees with a
+    /// 🩺️ Asserts the store's incrementally-maintained live snapshot agrees with a
     /// from-scratch full replay — the differential check for `ArtifactStore`'s stateful `current`
     /// field. Call after arbitrary command sequences (apply/amend/undo/redo/checkpoint/switch
     /// interleavings) in a tech's own tests to confirm the incremental fast paths never diverge from

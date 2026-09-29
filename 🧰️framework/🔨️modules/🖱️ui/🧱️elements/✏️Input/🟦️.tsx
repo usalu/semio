@@ -374,7 +374,7 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
   const [isEditing, setIsEditing] = reactHostPort.useState(false);
   const [isFocused, setIsFocused] = reactHostPort.useState(false);
   const inputRef = reactHostPort.useRef<HTMLInputElement>(null);
-  /** @emoji 🧾️ Enter key already runs {@link onLazyChange} + blur; skip duplicate commit on the subsequent blur event. */
+  /** 🧾️ Enter key already runs {@link onLazyChange} + blur; skip duplicate commit on the subsequent blur event. */
   const skipLazyBlurCommitRef = reactHostPort.useRef(false);
   const commands = useInteractionCommands();
   const setActiveInteraction = commands?.setActiveInteraction;

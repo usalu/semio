@@ -64,7 +64,6 @@ export function testSequenceWindowOwnershipOracle(): void {
   assert.equal(fixture.childEditAfterReload.expectedLane, "child");
   assert.equal(JSON.stringify(fixture.document), documentBytes);
   for (const rejection of fixture.rejections) assert.throws(() => target(fixture.windowInstances, rejection.windowId, rejection.claimedWindowKindId), new RegExp(rejection.code));
-  console.log(`[DEBUG] sequence-window-ownership configs=${Object.keys(configs).length} transients=${Object.keys(transients).length} reload=config-restored-transient-reset child-edit=${fixture.childEditAfterReload.expectedLane}`);
 }
 
 testSequenceWindowOwnershipOracle();

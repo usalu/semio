@@ -54,7 +54,7 @@ mod tests {
                     }
                     _ => panic!("unknown durable Flow lane"),
                 }
-                eprintln!("[DEBUG] Flow durable lane={} grant={maximum_bytes} payloadBytes={payload_bytes} terminal=true", row["lane"]);
+                eprintln!("Flow durable lane={} grant={maximum_bytes} payloadBytes={payload_bytes} terminal=true", row["lane"]);
             }
         }
     }
@@ -92,7 +92,6 @@ mod tests {
             }
             assert!(retirement.terminal_is_empty());
         }
-        eprintln!("[DEBUG] real Flow editor/viewer parent projections matched five neutral identities and rejected each substituted coordinate");
     }
 
     #[test]

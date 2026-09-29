@@ -240,7 +240,7 @@ fn parse_document(json: &str) -> Result<RasterDocument, FrameworkSurfacePaintErr
 #[derive(Debug)]
 pub enum FrameworkSurfacePaintError {
     Json(serde_json::Error),
-    Image(image::ImageError),
+    Image(String),
     UnsupportedSchema(String),
     Composite(String),
 }
@@ -249,7 +249,7 @@ impl std::fmt::Display for FrameworkSurfacePaintError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Json(error) => error.fmt(formatter),
-            Self::Image(error) => error.fmt(formatter),
+            Self::Image(message) => formatter.write_str(message),
             Self::UnsupportedSchema(schema) => write!(formatter, "unsupported schema {schema}"),
             Self::Composite(message) => formatter.write_str(message),
         }
@@ -260,8 +260,7 @@ impl std::error::Error for FrameworkSurfacePaintError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Self::Json(error) => Some(error),
-            Self::Image(error) => Some(error),
-            Self::UnsupportedSchema(_) | Self::Composite(_) => None,
+            Self::Image(_) | Self::UnsupportedSchema(_) | Self::Composite(_) => None,
         }
     }
 }
@@ -274,7 +273,7 @@ impl From<serde_json::Error> for FrameworkSurfacePaintError {
 
 impl From<image::ImageError> for FrameworkSurfacePaintError {
     fn from(error: image::ImageError) -> Self {
-        Self::Image(error)
+        Self::Image(error.to_string())
     }
 }
 //#endregion ⚠️ Errors

@@ -15,7 +15,7 @@ import concreteForestFixtureDsl from "../../🗿️artifacts/◻️2d/🏅️sta
 import nakaginCapsuleTowerFixtureDsl from "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🏢️tower/🗣️.dsl.semio?raw";
 
 //#region WasmFixtureLoader
-/** @emoji 🧵️ Lazily loads+inits `@semio-tech/puzzle-wasm`'s wasm module once (mirrors the renderer react target's `createEngineSession` caching), then exposes `parse_dsl`'d fixture JSON via the crate's `puzzle2dParseDslJson` free export. */
+/** 🧵️ Lazily loads+inits `@semio-tech/puzzle-wasm`'s wasm module once (mirrors the renderer react target's `createEngineSession` caching), then exposes `parse_dsl`'d fixture JSON via the crate's `puzzle2dParseDslJson` free export. */
 type Puzzle2dWasmModule = { readonly default: (input?: unknown) => Promise<unknown>; readonly puzzle2dParseDslJson: (dslText: string) => string };
 let puzzle2dWasmModulePromise: Promise<Puzzle2dWasmModule> | null = null;
 function loadPuzzle2dWasm(): Promise<Puzzle2dWasmModule> {
@@ -99,7 +99,7 @@ const STORY_DEFAULT_RUNTIME: StoryPuzzle2dRuntime = {
   lodMode: "automatic",
 };
 
-/** @emoji 📬️ Story-local mirror of `apply_board_events_from_json` in `puzzle/plugin/rs/d2/mod.rs` (see `./Board.stories.tsx`'s copy) — only the event kinds the real fixtures need to demonstrate (camera pan/zoom, select, drag, delete). */
+/** 📬️ Story-local mirror of `apply_board_events_from_json` in `puzzle/plugin/rs/d2/mod.rs` (see `./Board.stories.tsx`'s copy) — only the event kinds the real fixtures need to demonstrate (camera pan/zoom, select, drag, delete). */
 function applyStoryBoardEvents(state: StoryPuzzle2dState, eventsJson: string): StoryPuzzle2dState {
   let events: readonly { readonly name: string; readonly payload?: Record<string, unknown> }[] = [];
   try {
@@ -152,7 +152,7 @@ function applyStoryBoardEvents(state: StoryPuzzle2dState, eventsJson: string): S
   return { fixture, runtime };
 }
 
-/** @emoji 🧩️ Story-local mirror of a subset of `Puzzle2dPlayApp::handle_action_patch_operations` — enough to click/pan/zoom/delete against the real fixtures. */
+/** 🧩️ Story-local mirror of a subset of `Puzzle2dPlayApp::handle_action_patch_operations` — enough to click/pan/zoom/delete against the real fixtures. */
 function reduceStoryPuzzle2dAction(state: StoryPuzzle2dState, action: string, args: Record<string, unknown> | undefined): StoryPuzzle2dState {
   const { fixture, runtime } = state;
   switch (action) {

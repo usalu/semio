@@ -31,5 +31,4 @@ async fn nested_table_text_remains_editable_in_the_document_window() {
         let rendered = render_windowed(&snapshot, &TreeWindows::unhosted(), locale).unwrap();
         assert_eq!(rendered.children.len(), 5);
     }
-    println!("[DEBUG] DOCX nested table fixture renders five canonical text drafts in English and German");
 }

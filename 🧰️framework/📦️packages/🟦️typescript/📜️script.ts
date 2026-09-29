@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** @emoji 🧰️ `@semio-tech/framework` router: `bun ./📜️script.ts test`. */
+/** 🧰️ `@semio-tech/framework` router: `bun ./📜️script.ts test`. */
 import { strict as assert } from "node:assert";
 import { spawnSync } from "node:child_process";
 import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runBunx, runVitest } from "../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
@@ -345,7 +345,7 @@ function retainedUiNativeStripOnly(): void {
   assert(result.readCancelTurns > 0 && result.readRetirementTurns > 0 && result.readCloseTurns > 0 && result.independentReadCloseTurns > 0 && result.readCancellations > 0);
   assert.equal(result.readCaptures, result.readCloses);
   assert.deepEqual({ retired: result.retired, cancellations: result.cancellations, siblingInsertions: result.siblingInsertions, validationCases: result.validationCases, hashCases: result.hashCases, readCases: result.readCases }, { retired: 4, cancellations: 1, siblingInsertions: 2, validationCases: 1, hashCases: 1, readCases: 1 });
-  console.log(`[DEBUG] retained UI native strip-only oracle: ${result.laws} fixture laws, ${result.grants} grants, ${result.retired} one-time retirements, ${result.cancellations} table cancellation, ${result.validationCancellations} validation cancellations, ${result.hashBytes} hash bytes in ${result.hashChunks} chunks over ${result.hashCalls} advances, ${result.hashCancellations} hash cancellations, ${result.readCancellations} read cancellations, ${result.readCaptures} read captures/releases, ${result.readCancelTurns} cancel turns, ${result.readRetirementTurns} publish-retirement turns, ${result.readCloseTurns} final read close turns`);
+  console.log(`retained UI native strip-only oracle: ${result.laws} fixture laws, ${result.grants} grants, ${result.retired} one-time retirements, ${result.cancellations} table cancellation, ${result.validationCancellations} validation cancellations, ${result.hashBytes} hash bytes in ${result.hashChunks} chunks over ${result.hashCalls} advances, ${result.hashCancellations} hash cancellations, ${result.readCancellations} read cancellations, ${result.readCaptures} read captures/releases, ${result.readCancelTurns} cancel turns, ${result.readRetirementTurns} publish-retirement turns, ${result.readCloseTurns} final read close turns`);
 }
 
 class TestScript extends BundleScript {

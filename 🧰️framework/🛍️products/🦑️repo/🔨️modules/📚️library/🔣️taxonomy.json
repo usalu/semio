@@ -8254,6 +8254,15 @@
         "🪟️sourcing-module-windows",
         "🪐️space",
         "🗄️stdio",
+        "🏠️stdio-bim",
+        "🔢️stdio-binary",
+        "🛠️stdio-cad",
+        "🖼️stdio-image",
+        "🎵️stdio-media",
+        "🔺️stdio-mesh",
+        "💼️stdio-office",
+        "📘️stdio-pdf",
+        "🧿️stdio-semio",
         "🔱️trinity",
         "🌿️vcs",
         "✒️writer"
@@ -10083,7 +10092,8 @@
         "📥️canvas-drop",
         "🗿️artifact",
         "💡️inference",
-        "🗃️apply-local-catalog-document"
+        "🗃️apply-local-catalog-document",
+        "✂️text-splice"
       ],
       "source": "registry"
     },
@@ -10269,7 +10279,8 @@
         "🔲️WindowSilhouette",
         "🪵️Log",
         "🌳️Tree",
-        "📊️ObservabilityPage"
+        "📊️ObservabilityPage",
+        "🎥️VideoRenderHost"
       ],
       "source": "registry"
     },
@@ -10739,7 +10750,22 @@
         "🔁️lifecycle",
         "🎒️zip-archive-cases",
         "⏳️transient-apply-refusal-v1",
-        "🚦️rate-limit-refusal-v1"
+        "🚦️rate-limit-refusal-v1",
+        "🔁️hub-tail-after-check-in",
+        "🎟️details-arena-headroom",
+        "📊️table-arena-headroom",
+        "📇️native-text-codecs",
+        "🗃️set-snapshot-applied",
+        "🧾️readme-afters",
+        "📇️projection-wire-v1",
+        "📬️apply-directory-page",
+        "🎞️video-render-program",
+        "🧵️video-render-job",
+        "✂️text-splice",
+        "🪪️kind-identity",
+        "🧊️mutate-gltf-2-0",
+        "📊️table-row-grid",
+        "🏠️row-capacity"
       ],
       "source": "registry"
     },
@@ -11152,7 +11178,28 @@
         "🕸️wasmpollster",
         "📁️folder",
         "📣️canonical-bootstrap-folder-mirror-v1",
-        "📐️schema"
+        "📐️schema",
+        "✍️set-run-text",
+        "➕️insert-block",
+        "➖️remove-block",
+        "🌳️set-style-based-on",
+        "💬️insert-style",
+        "📝️set-block-content",
+        "🔤️set-style-name",
+        "🗨️remove-style",
+        "🧩️set-part",
+        "🧹️remove-part",
+        "🪄️set-run-formatting",
+        "✅️apply-directory-page-applied",
+        "🚫️apply-directory-page-rejected",
+        "🟰️apply-directory-page-no-op",
+        "✂️unbind-node-child",
+        "🌲️bind-scene-root-node",
+        "🍂️unbind-scene-root-node",
+        "🎬️create-scene",
+        "🎭️change-material-alpha-mode",
+        "🔗️bind-node-child",
+        "🪞️change-material-double-sided"
       ],
       "source": "registry"
     },
@@ -11449,7 +11496,9 @@
         "🏗️materialization",
         "🔗️remote",
         "🏃️execution",
-        "📋️orchestration"
+        "📋️orchestration",
+        "🚑️actor-recovery",
+        "🤖️agent-delegations"
       ],
       "source": "registry"
     },
@@ -11645,7 +11694,8 @@
         "🔗️boot-query",
         "🚀️local-hub",
         "🎯️acceptance",
-        "🎒️zip"
+        "🎒️zip",
+        "🎥️video"
       ],
       "source": "registry"
     },
@@ -11705,7 +11755,8 @@
       ],
       "memberNames": [
         "↔️undirected",
-        "➡️directed"
+        "➡️directed",
+        "⚠️warns-that-an-already-removed-run-leaves-the-brief-unchanged"
       ],
       "source": "registry"
     },
@@ -11891,7 +11942,8 @@
         "🪐️space",
         "🪪️identity",
         "📡️live",
-        "🗜️deflate"
+        "🗜️deflate",
+        "🖌️raster"
       ],
       "source": "registry"
     },
@@ -11947,24 +11999,33 @@
       "memberNames": [
         "🌀️procedural",
         "🎮️control",
+        "🎵️media",
         "🏗️bim",
         "🏛️aec-building-structure",
+        "🏠️bim",
         "🏢️aec-building",
+        "💼️office",
         "📃️list",
         "📐️brep",
         "📐️spatial-shape",
         "📖️dictionary",
+        "📘️pdf",
         "📣️effect",
+        "🔢️binary",
         "🔤️primitive",
         "🔥️aec-building-energy",
         "🔩️metal",
+        "🔺️mesh",
         "🕸️wasm",
         "🖍️draw",
+        "🖼️image",
+        "🛠️cad",
         "🤖️robotic",
         "🧠️logic",
         "🧮️math",
         "🧱️concrete",
         "🧱️slabs",
+        "🧿️semio",
         "🪵️beams",
         "🪵️wood"
       ],
@@ -13665,7 +13726,12 @@
         "🕸️media-projection",
         "📤️retire-local-document",
         "📥️admit-local-document",
-        "🗂️set-named-layout"
+        "🗂️set-named-layout",
+        "🎟️details-arena-headroom",
+        "✂️splice-text",
+        "📇️directory-projection",
+        "📬️apply-directory-page",
+        "✂️text-splice"
       ],
       "source": "registry"
     },
@@ -15200,7 +15266,24 @@
         "🤝️hub-collaboration",
         "🤖️agent-ceiling",
         "🔬️media-export-raster-unit",
-        "🥾️boot-budget"
+        "🥾️boot-budget",
+        "🤖️agent-lane",
+        "🎟️details-arena-headroom",
+        "📊️table-arena-headroom",
+        "🧮️blake3",
+        "🤖️agent-lane-preview",
+        "🚑️actor-recovery",
+        "✂️concurrent-typing",
+        "⚠️warns-that-an-already-removed-run-leaves-the-brief-unchanged",
+        "🧩️registry",
+        "🔬️program-unit",
+        "🎯️action-args",
+        "🫧️mutate-s-home-1-any-editor-transient",
+        "🎞️video-render-program",
+        "🧵️video-render-job",
+        "🎞️ffmpeg-decode",
+        "✂️text-splice",
+        "📊️table-row-grid"
       ],
       "source": "registry"
     },
@@ -15461,7 +15544,8 @@
         "🌍️world3d-snapshot",
         "📐️math",
         "📦️pack",
-        "🖼️canvas2d-snapshot"
+        "🖼️canvas2d-snapshot",
+        "✂️text-splice"
       ],
       "source": "registry"
     },
@@ -15755,6 +15839,16 @@
       ],
       "memberNames": [
         "🗂️local-catalog"
+      ],
+      "source": "registry"
+    },
+    "members-of-composition": {
+      "ownerKindIds": [
+        "composition"
+      ],
+      "memberNames": [
+        "🏃️commands",
+        "🏗️build"
       ],
       "source": "registry"
     },
@@ -18095,7 +18189,16 @@
       "dev-plugin-interfaces-process-extension-wood",
       "dev-plugin-interfaces-sourcing-module-beams",
       "dev-plugin-interfaces-sourcing-module-windows",
-      "dev-plugin-interfaces-sourcing"
+      "dev-plugin-interfaces-sourcing",
+      "dev-plugin-interfaces-stdio-image",
+      "dev-plugin-interfaces-stdio-media",
+      "dev-plugin-interfaces-stdio-cad",
+      "dev-plugin-interfaces-stdio-bim",
+      "dev-plugin-interfaces-stdio-mesh",
+      "dev-plugin-interfaces-stdio-pdf",
+      "dev-plugin-interfaces-stdio-office",
+      "dev-plugin-interfaces-stdio-semio",
+      "dev-plugin-interfaces-stdio-binary"
     ],
     "dev-jco-filesystem-interfaces": [
       "dev-plugin-interfaces-layout"
@@ -18135,7 +18238,16 @@
       "dev-plugin-interfaces-puzzle",
       "dev-plugin-interfaces-block",
       "dev-plugin-interfaces-space",
-      "dev-plugin-interfaces-sourcing"
+      "dev-plugin-interfaces-sourcing",
+      "dev-plugin-interfaces-stdio-image",
+      "dev-plugin-interfaces-stdio-media",
+      "dev-plugin-interfaces-stdio-cad",
+      "dev-plugin-interfaces-stdio-bim",
+      "dev-plugin-interfaces-stdio-mesh",
+      "dev-plugin-interfaces-stdio-pdf",
+      "dev-plugin-interfaces-stdio-office",
+      "dev-plugin-interfaces-stdio-semio",
+      "dev-plugin-interfaces-stdio-binary"
     ]
   },
   "fixedFilenameContracts": {
@@ -19716,6 +19828,303 @@
       "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🗄️stdio/semio_s_plugin_stdio_component.core.wasm",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact stdio core module URL emitted by JCO",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "materialized JCO component pairing",
+      "expires": null
+    },
+    "dev-plugin-component-stdio-image-js": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🖼️stdio-image/semio_s_plugin_stdio_image_component.js",
+      "authority": "Bytecode Alliance JCO",
+      "reason": "Exact emitted Stdio Image JavaScript companion",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "materialized JCO component pairing",
+      "expires": null
+    },
+    "dev-plugin-component-stdio-image-declaration": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🖼️stdio-image/semio_s_plugin_stdio_image_component.d.ts",
+      "authority": "Bytecode Alliance JCO",
+      "reason": "Exact emitted Stdio Image TypeScript declaration",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "materialized JCO component pairing",
+      "expires": null
+    },
+    "dev-plugin-component-stdio-image-wasm": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🖼️stdio-image/semio_s_plugin_stdio_image_component.core.wasm",
+      "authority": "Bytecode Alliance JCO",
+      "reason": "Exact Stdio Image core module URL emitted by JCO",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "materialized JCO component pairing",
+      "expires": null
+    },
+    "dev-plugin-component-stdio-media-js": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🎵️stdio-media/semio_s_plugin_stdio_media_component.js",
+      "authority": "Bytecode Alliance JCO",
+      "reason": "Exact emitted Stdio Media JavaScript companion",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "materialized JCO component pairing",
+      "expires": null
+    },
+    "dev-plugin-component-stdio-media-declaration": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🎵️stdio-media/semio_s_plugin_stdio_media_component.d.ts",
+      "authority": "Bytecode Alliance JCO",
+      "reason": "Exact emitted Stdio Media TypeScript declaration",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "materialized JCO component pairing",
+      "expires": null
+    },
+    "dev-plugin-component-stdio-media-wasm": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🎵️stdio-media/semio_s_plugin_stdio_media_component.core.wasm",
+      "authority": "Bytecode Alliance JCO",
+      "reason": "Exact Stdio Media core module URL emitted by JCO",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "materialized JCO component pairing",
+      "expires": null
+    },
+    "dev-plugin-component-stdio-cad-js": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🛠️stdio-cad/semio_s_plugin_stdio_cad_component.js",
+      "authority": "Bytecode Alliance JCO",
+      "reason": "Exact emitted Stdio CAD JavaScript companion",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "materialized JCO component pairing",
+      "expires": null
+    },
+    "dev-plugin-component-stdio-cad-declaration": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🛠️stdio-cad/semio_s_plugin_stdio_cad_component.d.ts",
+      "authority": "Bytecode Alliance JCO",
+      "reason": "Exact emitted Stdio CAD TypeScript declaration",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "materialized JCO component pairing",
+      "expires": null
+    },
+    "dev-plugin-component-stdio-cad-wasm": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🛠️stdio-cad/semio_s_plugin_stdio_cad_component.core.wasm",
+      "authority": "Bytecode Alliance JCO",
+      "reason": "Exact Stdio CAD core module URL emitted by JCO",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "materialized JCO component pairing",
+      "expires": null
+    },
+    "dev-plugin-component-stdio-bim-js": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏠️stdio-bim/semio_s_plugin_stdio_bim_component.js",
+      "authority": "Bytecode Alliance JCO",
+      "reason": "Exact emitted Stdio BIM JavaScript companion",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "materialized JCO component pairing",
+      "expires": null
+    },
+    "dev-plugin-component-stdio-bim-declaration": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏠️stdio-bim/semio_s_plugin_stdio_bim_component.d.ts",
+      "authority": "Bytecode Alliance JCO",
+      "reason": "Exact emitted Stdio BIM TypeScript declaration",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "materialized JCO component pairing",
+      "expires": null
+    },
+    "dev-plugin-component-stdio-bim-wasm": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏠️stdio-bim/semio_s_plugin_stdio_bim_component.core.wasm",
+      "authority": "Bytecode Alliance JCO",
+      "reason": "Exact Stdio BIM core module URL emitted by JCO",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "materialized JCO component pairing",
+      "expires": null
+    },
+    "dev-plugin-component-stdio-mesh-js": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔺️stdio-mesh/semio_s_plugin_stdio_mesh_component.js",
+      "authority": "Bytecode Alliance JCO",
+      "reason": "Exact emitted Stdio Mesh JavaScript companion",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "materialized JCO component pairing",
+      "expires": null
+    },
+    "dev-plugin-component-stdio-mesh-declaration": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔺️stdio-mesh/semio_s_plugin_stdio_mesh_component.d.ts",
+      "authority": "Bytecode Alliance JCO",
+      "reason": "Exact emitted Stdio Mesh TypeScript declaration",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "materialized JCO component pairing",
+      "expires": null
+    },
+    "dev-plugin-component-stdio-mesh-wasm": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔺️stdio-mesh/semio_s_plugin_stdio_mesh_component.core.wasm",
+      "authority": "Bytecode Alliance JCO",
+      "reason": "Exact Stdio Mesh core module URL emitted by JCO",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "materialized JCO component pairing",
+      "expires": null
+    },
+    "dev-plugin-component-stdio-pdf-js": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📘️stdio-pdf/semio_s_plugin_stdio_pdf_component.js",
+      "authority": "Bytecode Alliance JCO",
+      "reason": "Exact emitted Stdio PDF JavaScript companion",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "materialized JCO component pairing",
+      "expires": null
+    },
+    "dev-plugin-component-stdio-pdf-declaration": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📘️stdio-pdf/semio_s_plugin_stdio_pdf_component.d.ts",
+      "authority": "Bytecode Alliance JCO",
+      "reason": "Exact emitted Stdio PDF TypeScript declaration",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "materialized JCO component pairing",
+      "expires": null
+    },
+    "dev-plugin-component-stdio-pdf-wasm": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📘️stdio-pdf/semio_s_plugin_stdio_pdf_component.core.wasm",
+      "authority": "Bytecode Alliance JCO",
+      "reason": "Exact Stdio PDF core module URL emitted by JCO",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "materialized JCO component pairing",
+      "expires": null
+    },
+    "dev-plugin-component-stdio-office-js": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/💼️stdio-office/semio_s_plugin_stdio_office_component.js",
+      "authority": "Bytecode Alliance JCO",
+      "reason": "Exact emitted Stdio Office JavaScript companion",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "materialized JCO component pairing",
+      "expires": null
+    },
+    "dev-plugin-component-stdio-office-declaration": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/💼️stdio-office/semio_s_plugin_stdio_office_component.d.ts",
+      "authority": "Bytecode Alliance JCO",
+      "reason": "Exact emitted Stdio Office TypeScript declaration",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "materialized JCO component pairing",
+      "expires": null
+    },
+    "dev-plugin-component-stdio-office-wasm": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/💼️stdio-office/semio_s_plugin_stdio_office_component.core.wasm",
+      "authority": "Bytecode Alliance JCO",
+      "reason": "Exact Stdio Office core module URL emitted by JCO",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "materialized JCO component pairing",
+      "expires": null
+    },
+    "dev-plugin-component-stdio-semio-js": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧿️stdio-semio/semio_s_plugin_stdio_semio_component.js",
+      "authority": "Bytecode Alliance JCO",
+      "reason": "Exact emitted Stdio Semio JavaScript companion",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "materialized JCO component pairing",
+      "expires": null
+    },
+    "dev-plugin-component-stdio-semio-declaration": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧿️stdio-semio/semio_s_plugin_stdio_semio_component.d.ts",
+      "authority": "Bytecode Alliance JCO",
+      "reason": "Exact emitted Stdio Semio TypeScript declaration",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "materialized JCO component pairing",
+      "expires": null
+    },
+    "dev-plugin-component-stdio-semio-wasm": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧿️stdio-semio/semio_s_plugin_stdio_semio_component.core.wasm",
+      "authority": "Bytecode Alliance JCO",
+      "reason": "Exact Stdio Semio core module URL emitted by JCO",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "materialized JCO component pairing",
+      "expires": null
+    },
+    "dev-plugin-component-stdio-binary-js": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔢️stdio-binary/semio_s_plugin_stdio_binary_component.js",
+      "authority": "Bytecode Alliance JCO",
+      "reason": "Exact emitted Stdio Binary JavaScript companion",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "materialized JCO component pairing",
+      "expires": null
+    },
+    "dev-plugin-component-stdio-binary-declaration": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔢️stdio-binary/semio_s_plugin_stdio_binary_component.d.ts",
+      "authority": "Bytecode Alliance JCO",
+      "reason": "Exact emitted Stdio Binary TypeScript declaration",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "materialized JCO component pairing",
+      "expires": null
+    },
+    "dev-plugin-component-stdio-binary-wasm": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔢️stdio-binary/semio_s_plugin_stdio_binary_component.core.wasm",
+      "authority": "Bytecode Alliance JCO",
+      "reason": "Exact Stdio Binary core module URL emitted by JCO",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "path-pattern"
@@ -24310,6 +24719,114 @@
       "verification": "materialized JCO output boundaries: exact interface roster",
       "expires": null
     },
+    "dev-plugin-interfaces-stdio-image": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🖼️stdio-image/interfaces",
+      "authority": "Bytecode Alliance JCO",
+      "reason": "Exact emitted Stdio Image component interface owner",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🖼️stdio-image/interfaces"
+      },
+      "verification": "materialized JCO output boundaries: exact interface roster",
+      "expires": null
+    },
+    "dev-plugin-interfaces-stdio-media": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🎵️stdio-media/interfaces",
+      "authority": "Bytecode Alliance JCO",
+      "reason": "Exact emitted Stdio Media component interface owner",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🎵️stdio-media/interfaces"
+      },
+      "verification": "materialized JCO output boundaries: exact interface roster",
+      "expires": null
+    },
+    "dev-plugin-interfaces-stdio-cad": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🛠️stdio-cad/interfaces",
+      "authority": "Bytecode Alliance JCO",
+      "reason": "Exact emitted Stdio CAD component interface owner",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🛠️stdio-cad/interfaces"
+      },
+      "verification": "materialized JCO output boundaries: exact interface roster",
+      "expires": null
+    },
+    "dev-plugin-interfaces-stdio-bim": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏠️stdio-bim/interfaces",
+      "authority": "Bytecode Alliance JCO",
+      "reason": "Exact emitted Stdio BIM component interface owner",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏠️stdio-bim/interfaces"
+      },
+      "verification": "materialized JCO output boundaries: exact interface roster",
+      "expires": null
+    },
+    "dev-plugin-interfaces-stdio-mesh": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔺️stdio-mesh/interfaces",
+      "authority": "Bytecode Alliance JCO",
+      "reason": "Exact emitted Stdio Mesh component interface owner",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔺️stdio-mesh/interfaces"
+      },
+      "verification": "materialized JCO output boundaries: exact interface roster",
+      "expires": null
+    },
+    "dev-plugin-interfaces-stdio-pdf": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📘️stdio-pdf/interfaces",
+      "authority": "Bytecode Alliance JCO",
+      "reason": "Exact emitted Stdio PDF component interface owner",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📘️stdio-pdf/interfaces"
+      },
+      "verification": "materialized JCO output boundaries: exact interface roster",
+      "expires": null
+    },
+    "dev-plugin-interfaces-stdio-office": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/💼️stdio-office/interfaces",
+      "authority": "Bytecode Alliance JCO",
+      "reason": "Exact emitted Stdio Office component interface owner",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/💼️stdio-office/interfaces"
+      },
+      "verification": "materialized JCO output boundaries: exact interface roster",
+      "expires": null
+    },
+    "dev-plugin-interfaces-stdio-semio": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧿️stdio-semio/interfaces",
+      "authority": "Bytecode Alliance JCO",
+      "reason": "Exact emitted Stdio Semio component interface owner",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧿️stdio-semio/interfaces"
+      },
+      "verification": "materialized JCO output boundaries: exact interface roster",
+      "expires": null
+    },
+    "dev-plugin-interfaces-stdio-binary": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔢️stdio-binary/interfaces",
+      "authority": "Bytecode Alliance JCO",
+      "reason": "Exact emitted Stdio Binary component interface owner",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔢️stdio-binary/interfaces"
+      },
+      "verification": "materialized JCO output boundaries: exact interface roster",
+      "expires": null
+    },
     "dev-plugin-interfaces-note": {
       "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🗒️note/interfaces",
       "authority": "Bytecode Alliance JCO",
@@ -25720,6 +26237,132 @@
       "authority": "JCO stdio declaration pairing",
       "verification": "materialized JCO component pairing"
     },
+    "dev-plugin-component-stdio-image-js": {
+      "contractKind": "fixed",
+      "disposition": "adapter-source",
+      "validator": "package-glue",
+      "authority": "JCO Stdio Image companion without purity exemption",
+      "verification": "materialized JCO component pairing"
+    },
+    "dev-plugin-component-stdio-image-declaration": {
+      "contractKind": "fixed",
+      "disposition": "adapter-source",
+      "validator": "package-glue",
+      "authority": "JCO Stdio Image declaration pairing",
+      "verification": "materialized JCO component pairing"
+    },
+    "dev-plugin-component-stdio-media-js": {
+      "contractKind": "fixed",
+      "disposition": "adapter-source",
+      "validator": "package-glue",
+      "authority": "JCO Stdio Media companion without purity exemption",
+      "verification": "materialized JCO component pairing"
+    },
+    "dev-plugin-component-stdio-media-declaration": {
+      "contractKind": "fixed",
+      "disposition": "adapter-source",
+      "validator": "package-glue",
+      "authority": "JCO Stdio Media declaration pairing",
+      "verification": "materialized JCO component pairing"
+    },
+    "dev-plugin-component-stdio-cad-js": {
+      "contractKind": "fixed",
+      "disposition": "adapter-source",
+      "validator": "package-glue",
+      "authority": "JCO Stdio CAD companion without purity exemption",
+      "verification": "materialized JCO component pairing"
+    },
+    "dev-plugin-component-stdio-cad-declaration": {
+      "contractKind": "fixed",
+      "disposition": "adapter-source",
+      "validator": "package-glue",
+      "authority": "JCO Stdio CAD declaration pairing",
+      "verification": "materialized JCO component pairing"
+    },
+    "dev-plugin-component-stdio-bim-js": {
+      "contractKind": "fixed",
+      "disposition": "adapter-source",
+      "validator": "package-glue",
+      "authority": "JCO Stdio BIM companion without purity exemption",
+      "verification": "materialized JCO component pairing"
+    },
+    "dev-plugin-component-stdio-bim-declaration": {
+      "contractKind": "fixed",
+      "disposition": "adapter-source",
+      "validator": "package-glue",
+      "authority": "JCO Stdio BIM declaration pairing",
+      "verification": "materialized JCO component pairing"
+    },
+    "dev-plugin-component-stdio-mesh-js": {
+      "contractKind": "fixed",
+      "disposition": "adapter-source",
+      "validator": "package-glue",
+      "authority": "JCO Stdio Mesh companion without purity exemption",
+      "verification": "materialized JCO component pairing"
+    },
+    "dev-plugin-component-stdio-mesh-declaration": {
+      "contractKind": "fixed",
+      "disposition": "adapter-source",
+      "validator": "package-glue",
+      "authority": "JCO Stdio Mesh declaration pairing",
+      "verification": "materialized JCO component pairing"
+    },
+    "dev-plugin-component-stdio-pdf-js": {
+      "contractKind": "fixed",
+      "disposition": "adapter-source",
+      "validator": "package-glue",
+      "authority": "JCO Stdio PDF companion without purity exemption",
+      "verification": "materialized JCO component pairing"
+    },
+    "dev-plugin-component-stdio-pdf-declaration": {
+      "contractKind": "fixed",
+      "disposition": "adapter-source",
+      "validator": "package-glue",
+      "authority": "JCO Stdio PDF declaration pairing",
+      "verification": "materialized JCO component pairing"
+    },
+    "dev-plugin-component-stdio-office-js": {
+      "contractKind": "fixed",
+      "disposition": "adapter-source",
+      "validator": "package-glue",
+      "authority": "JCO Stdio Office companion without purity exemption",
+      "verification": "materialized JCO component pairing"
+    },
+    "dev-plugin-component-stdio-office-declaration": {
+      "contractKind": "fixed",
+      "disposition": "adapter-source",
+      "validator": "package-glue",
+      "authority": "JCO Stdio Office declaration pairing",
+      "verification": "materialized JCO component pairing"
+    },
+    "dev-plugin-component-stdio-semio-js": {
+      "contractKind": "fixed",
+      "disposition": "adapter-source",
+      "validator": "package-glue",
+      "authority": "JCO Stdio Semio companion without purity exemption",
+      "verification": "materialized JCO component pairing"
+    },
+    "dev-plugin-component-stdio-semio-declaration": {
+      "contractKind": "fixed",
+      "disposition": "adapter-source",
+      "validator": "package-glue",
+      "authority": "JCO Stdio Semio declaration pairing",
+      "verification": "materialized JCO component pairing"
+    },
+    "dev-plugin-component-stdio-binary-js": {
+      "contractKind": "fixed",
+      "disposition": "adapter-source",
+      "validator": "package-glue",
+      "authority": "JCO Stdio Binary companion without purity exemption",
+      "verification": "materialized JCO component pairing"
+    },
+    "dev-plugin-component-stdio-binary-declaration": {
+      "contractKind": "fixed",
+      "disposition": "adapter-source",
+      "validator": "package-glue",
+      "authority": "JCO Stdio Binary declaration pairing",
+      "verification": "materialized JCO component pairing"
+    },
     "dev-plugin-component-note-js": {
       "contractKind": "fixed",
       "disposition": "adapter-source",
@@ -26761,7 +27404,7 @@
         "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📜️script.ts",
         "🧰️framework/🔨️modules/🖼️assets/🔣️icons/*/*.svg",
         "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🏗️builder/📽️projection/🟦️.ts",
-        "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🔣️shortcodes.json"
+        "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🔣️shortcodes.json"
       ],
       "outputRoots": [
         {
@@ -26900,8 +27543,8 @@
       "inputPatterns": [],
       "outputRoots": [
         {
-          "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🔣️shortcodes.json",
-          "inclusion": "ignored"
+          "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🔣️shortcodes.json",
+          "inclusion": "tracked"
         }
       ],
       "reason": "The pinned local gemoji snapshot is an explicit external input; the owned asset target validates its catalog and renders only deterministic bindings"
@@ -26992,7 +27635,7 @@
         },
         {
           "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings",
-          "inclusion": "tracked"
+          "inclusion": "ignored"
         }
       ],
       "reason": "The Flow core command invokes wasm-pack, then delegates browser, host, declaration, manifest and snippet publication to the semantic browser publisher"
@@ -27274,10 +27917,10 @@
       "outputRoots": [
         {
           "path": "🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale/🤖️generated",
-          "inclusion": "tracked"
+          "inclusion": "ignored"
         }
       ],
-      "reason": "The deterministic seeded fixture target writes two tracked JSON outputs and has a byte freshness check"
+      "reason": "The deterministic seeded fixture target writes two ignored JSON outputs that every reader regenerates through its Nx edge; a byte freshness check guards the renderer"
     },
     "schema-entity-catalog": {
       "ownership": "owned",
@@ -27459,7 +28102,7 @@
               "id": "frame-worker",
               "sourceRelativePath": "🎞️frame-worker/🟦️.ts",
               "outputRelativePath": "🎞️frame-worker/🤖️generated/🟨️.js",
-              "inclusion": "tracked"
+              "inclusion": "ignored"
             },
             {
               "id": "browser-boot",
@@ -27783,7 +28426,7 @@
       "outputRoots": [
         {
           "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🤖️generated/🟨️.js",
-          "inclusion": "tracked",
+          "inclusion": "ignored",
           "producer": {
             "ownerPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
             "target": "@semio-tech/framework-renderer-wgpu:generate-frame-worker"

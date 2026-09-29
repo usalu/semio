@@ -79,7 +79,6 @@ fn icon_gpu_export_matches_canvas_pixels_and_delivers_once_after_retirement() {
     }
     assert_eq!(fixture["deliveries"].as_u64(), Some(1));
     assert!(job.take_png().is_none());
-    eprintln!("[DEBUG] icon GPU export produced {}x{} PNG with {} bytes and retired all packet resources", image.width, image.height, bytes.len());
 }
 
 #[test]
@@ -98,7 +97,6 @@ fn icon_gpu_export_cancellation_retires_every_phase_without_publication() {
         assert!(job.take_png().is_none());
         finish(&mut job);
         assert!(job.take_png().is_none());
-        eprintln!("[DEBUG] icon GPU export cancelled and retired from {target}");
     }
     let mut rejected = match IconGpuPngExport::new(&source, 0, 1, packet(&fixture)) {
         Ok(_) => panic!("zero-width export admitted"),

@@ -152,7 +152,7 @@ async fn edit_cell_round_trips() {
 
 #[semio_framework_async_macros::async_test]
 async fn semantic_kinds_cover_every_variant() {
-    assert_eq!(SemioTableMutation::kinds().len(), 8);
+    assert_eq!(SemioTableMutation::kinds().len(), 9);
     let mutation = SemioTableMutation::RemoveRow(remove_row::RemoveRow { index: 2 });
     assert_eq!(mutation.semantics().kind, "remove-row");
     assert_eq!(mutation.semantics().record, "RemovedRow");

@@ -12,14 +12,13 @@ impl ProcedureChildOwnerOracle for SerdeJsonProcedureChildOwnerOracle {
     }
 }
 
-/// 🗂️ The manifest-facing `ArtifactKindSpec.schema` ("procedure.document") is deliberately NOT
-/// `PROCEDURE_DOCUMENT_SCHEMA` ("procedure.document/v1") — the former names the artifact kind in
-/// the OS media catalogue, the latter keys the store envelope. Pinned so a future edit can't silently
-/// merge them.
+/// 🪪️ `artifact_kind().schema` IS `PROCEDURE_DOCUMENT_SCHEMA`: a document kind has ONE schema identity — the hub's codec rows, document-open targets and genesis, the MCP workspace
+/// store and host-media contributions all key on it (ticket 26/09/23 W4: a distinct "media schema" left the package without a
+/// codec owner, so the trusted catalog refused it). The former media string stays declared as `source_format`.
 #[semio_framework_async_macros::async_test]
-async fn artifact_kind_keeps_the_media_schema_distinct_from_the_store_schema() {
-    assert_eq!(artifact_kind().schema, "procedure.document");
-    assert_eq!(PROCEDURE_DOCUMENT_SCHEMA, "procedure.document/v1");
+async fn artifact_kind_names_the_store_schema() {
+    assert_eq!(artifact_kind().schema, PROCEDURE_DOCUMENT_SCHEMA);
+    assert_eq!(artifact_kind().source_format, "procedure.document");
 }
 
 #[semio_framework_async_macros::async_test]

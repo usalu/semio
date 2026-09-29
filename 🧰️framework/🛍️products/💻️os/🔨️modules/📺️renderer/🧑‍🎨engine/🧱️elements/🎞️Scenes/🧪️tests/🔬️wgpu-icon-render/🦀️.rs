@@ -82,6 +82,8 @@ fn icon_camera_matches_the_shared_three_projection_contract() {
     }
 }
 
+/// 🖼️ The top border strip is `[frame.x, frame.y, frame.w, hair]` — its rect's height (index 3)
+/// must be exactly 2.0, matching React's `border-2`.
 #[test]
 fn frame_border_is_two_px_and_badge_uses_background_token() {
     let request: IconRenderRequestFields = serde_json::from_str(r#"{"assetUrl":"mesh://x","format":"png","camera":{"position":[0,0,5],"target":[0,0,0]},"width":64.0,"height":64.0,"shape":"rectangle"}"#).unwrap();
@@ -99,8 +101,6 @@ fn frame_border_is_two_px_and_badge_uses_background_token() {
         let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
         paint_icon_render_chrome(&mut ctx, bounds, frame, &request, "rectangle", None);
     }
-    // 🖼️ The top border strip is `[frame.x, frame.y, frame.w, hair]` — its rect's height (index 3)
-    // must be exactly 2.0, matching React's `border-2`.
     let top_border = draw
         .layers
         .iter()

@@ -1,16 +1,13 @@
-type TestSource = { readonly directory: string; readonly url: string };
+import { aabbVolume } from "../../../🧮️preview/🟦️.ts";
+import type { BrepjsTestDependencies } from "../../🟦️.ts";
+import type { Model, ModelSpaceJson } from "../../../📐️geometry/🟦️.ts";
+import type { EdgeRef, FaceRef, MutableSolidRecord, ShellRef, SolidRef, VertexRef, WireRef } from "../../../🧮️preview/🟦️.ts";
+import type { Vec3 } from "@semio-tech/s-3d-js";
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+type TestSource = { readonly url: string };
+
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: BrepjsTestDependencies, source: TestSource): Promise<void> {
   const { BrepjsKernel, Model, ModelSpace, aabbDifferencePieces, aabbIntersect, applyModelDiff, boxModelDiff, defaultModelDefinitionId, deserializeWorkerValue, face, faceCentroid, fuseSolidsToExternalFaces, geom, kernelGeometry, mesh, modelObjectAabb, serializeWorkerValue, solidRef } = dependencies;
-  type EdgeRef = any;
-  type FaceRef = any;
-  type ModelSpaceJson = any;
-  type MutableSolidRecord = any;
-  type ShellRef = any;
-  type SolidRef = any;
-  type Vec3 = any;
-  type VertexRef = any;
-  type WireRef = any;
 
   const { beforeEach, describe, expect, it } = vitest;
   const { bootstrapCadModules } = await import("../../../../../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts");
@@ -480,8 +477,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("concrete forest left play fixture roundtrips shape, building, energy, and structure models", async () => {
       const { readFile } = await import("node:fs/promises");
-      const { resolve } = await import("node:path");
-      const fixturePath = resolve(source.directory, "../../../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🎮️play/🔣️.json");
+      const fixturePath = new URL("../../../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🎮️play/🔣️.json", source.url);
       const fixtureJson = JSON.parse(await readFile(fixturePath, "utf8")) as ModelSpaceJson;
       const space = ModelSpace.fromJSON(fixtureJson);
       const shape = space.models[defaultModelDefinitionId()]!;

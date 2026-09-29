@@ -113,4 +113,4 @@ export function accessibilityProjectionSelfTests(): number {
   return checks;
 }
 
-if (import.meta.main) console.log(`[DEBUG] accessibility-projection-twin checks=${accessibilityProjectionSelfTests()}`);
+if (import.meta.main) console.log(`[TRACE] accessibility-projection-twin checks=${accessibilityProjectionSelfTests()}`);

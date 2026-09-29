@@ -1142,7 +1142,7 @@ pub fn compute_dock_drop_zone(pointer_x: f32, pointer_y: f32, tab_bars: &[(DockP
     None
 }
 
-/// @emoji 📐️ Half-panel rectangle for split drop preview inside a stack body.
+/// 📐️ Half-panel rectangle for split drop preview inside a stack body.
 pub fn split_drop_preview_in_body(body: Rect, side: DockSide) -> Rect {
     let half_w = body.w * 0.5;
     let half_h = body.h * 0.5;
@@ -1154,7 +1154,7 @@ pub fn split_drop_preview_in_body(body: Rect, side: DockSide) -> Rect {
     }
 }
 
-/// @emoji 🎯️ Resolves the on-canvas indicator rect for an active dock drop zone.
+/// 🎯️ Resolves the on-canvas indicator rect for an active dock drop zone.
 pub fn drop_zone_indicator_rect(zone: &DockDropZone, tab_bars: &[(DockPath, WindowStackCorner, Rect, Vec<f32>)], bodies: &[(DockPath, Rect, String)], canvas: Rect, gap: f32) -> Option<Rect> {
     match zone {
         DockDropZone::Tab { stack_path, corner, index } => {

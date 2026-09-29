@@ -18,8 +18,7 @@ fn file_prefs_store_round_trips_through_disk() {
         &serde_json::json!({
             "version": 1,
             "preferences": {},
-            "namedLayouts": { "draw": [{ "id": "wide" }] },
-            "dockLayouts": { "apps": {} },
+            "dockLayouts": { "apps": { "draw": { "version": 1 } } },
             "dockUi": { "apps": {} },
             "windowPanes": { "apps": {} }
         })
@@ -44,8 +43,7 @@ fn file_prefs_store_round_trips_through_disk() {
     let reloaded: HashMap<String, String> = serde_json::from_str(&raw).expect("valid JSON");
     let config: Value = serde_json::from_str(reloaded.get(OS_SHELL_CONFIG_STORAGE_KEY).expect("one config document")).expect("valid config JSON");
     assert_eq!(serde_json::from_str::<Value>(config["preferences"][UI_PREFERENCES_CONFIG_SCHEMA].as_str().expect("event log string")).expect("event log JSON")["events"][0]["appearance"], "dark");
-    assert_eq!(config["dockLayouts"]["apps"], serde_json::json!({}));
-    assert_eq!(config["namedLayouts"]["draw"][0]["id"], "wide", "preference writes must preserve sibling projections");
+    assert_eq!(config["dockLayouts"]["apps"]["draw"]["version"], 1, "preference writes must preserve sibling projections");
     assert_eq!(reloaded.len(), 1, "wgpu preferences use the shared OS config authority");
     system_fs::remove_dir_all(&dir).expect("terminal fixture output retires");
 }
@@ -70,7 +68,6 @@ fn canonical_ui_preference_fixture_replays_to_the_same_projection_as_typescript(
     assert_eq!(native.custom_drivers["studio"].config, serde_json::json!({ "scale": 1.25 }));
     assert_eq!(native.keybinding_overrides["edit.undo"], "Meta+Z");
     assert_eq!(native.worker_count, 3);
-    println!("[DEBUG] wgpu replayed the full shared OS UI preference fixture into its live host projection");
 }
 
 /// 🧭️ Installs one lock set and hands back the descriptor that was in place, so a law restores the
@@ -175,6 +172,8 @@ fn persist_ui_prefs_if_changed_is_idempotent_when_nothing_changed() {
 /// ⚫️ Since ticket 26/09/17 packet W2k mono is the ui target's own `Theme::mono`, resolved from the
 /// GENERATED `CHROME_MONO_*` palettes instead of 20 hand-written `Rgba::from_srgb8` literals in
 /// this crate — so its floor is mono's `chrome.base`, not the authored `canvas` the hand-port read.
+///
+/// Metrics are shared with the base theme (mono only recolors chrome paints).
 #[test]
 fn resolve_theme_for_ids_semio_and_mono_differ() {
     let semio_dark = resolve_theme_for_ids("semio", "dark");
@@ -184,7 +183,6 @@ fn resolve_theme_for_ids_semio_and_mono_differ() {
     assert_ne!(mono_dark.background, semio_dark.background);
     assert_eq!(mono_dark.background, ui_wgpu::wgpu::Theme::mono(true).background);
     assert_ne!(mono_dark.background, ui_wgpu::wgpu::Theme::mono(false).background, "both appearances resolve");
-    // Metrics are shared with the base theme (mono only recolors chrome paints).
     assert_eq!(mono_dark.navbar_height, semio_dark.navbar_height);
 }
 
@@ -225,6 +223,8 @@ fn ui_layout_round_trips_and_rejects_unknown_values() {
 
 /// 🧪️ EN/DE parity spot-check against `ui/js/react/index.tsx`'s `uiChromeTranslationBundles`
 /// "normal" labels (`:2898-3975`) for a sample of the keys this crate now routes through.
+///
+/// Unknown keys fall back to the key itself rather than inventing text.
 #[test]
 fn shell_chrome_string_matches_react_bundle_samples() {
     assert_eq!(shell_chrome_string("display.tab.windows", false), "Windows");
@@ -232,7 +232,6 @@ fn shell_chrome_string_matches_react_bundle_samples() {
     assert_eq!(shell_chrome_string("common.execute", false), "Execute");
     assert_eq!(shell_chrome_string("common.execute", true), "Ausführen");
     assert_eq!(shell_chrome_string("common.windowOptions", true), "Fensteroptionen");
-    // Unknown keys fall back to the key itself rather than inventing text.
     assert_eq!(shell_chrome_string("nonexistent.key", true), "nonexistent.key");
 }
 

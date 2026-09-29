@@ -67,7 +67,6 @@ fn inference_current_hub_wire_preserves_required_nullable_hash() {
     let mut substituted_page = page;
     substituted_page.schema = "semio.hub.inference-job-receipt/v1".to_string();
     assert!(!substituted_page.validate(&receipt.job_id));
-    println!("[DEBUG] native inference current Hub receipt and event page retain the nullable hash");
 }
 
 #[test]
@@ -88,7 +87,6 @@ fn inference_indeterminate_lifecycle_matches_neutral_corpus() {
         let observed: serde_json::Value = serde_json::from_str(&crate::os_pack::json::to_json_string(&status)).unwrap();
         assert_eq!(observed, row["expected"], "{}", row["name"]);
     }
-    println!("[DEBUG] native inference retained unknown owner until the original server cancellation");
 }
 
 #[derive(FromValue)]

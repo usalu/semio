@@ -59,5 +59,4 @@ export function testSharedMapDeltaOracle(): void {
     }
   }
   assert.throws(() => parseMapDelta({ entries: [fixture.cases[0]!.source[0], fixture.cases[0]!.source[0]] }));
-  console.log("[DEBUG] shared map delta matched Ajv, 12 JSON Patch vectors and 648 exhaustive sequential-composition bases with associative compact output");
 }

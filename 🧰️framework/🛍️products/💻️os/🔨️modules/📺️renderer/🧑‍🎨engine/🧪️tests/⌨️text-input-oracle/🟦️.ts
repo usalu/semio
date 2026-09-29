@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji ⌨️ The text-input model's TS half over `✍️editor/🧫️fixtures/⌨️text-input/🔣️.json`: the host's optimistic local echo
+/** ⌨️ The text-input model's TS half over `✍️editor/🧫️fixtures/⌨️text-input/🔣️.json`: the host's optimistic local echo
  * (`reconcileTextEditorEchoV1`, `refuseTextEditorEditV1`, the read-only refusals) replays `✏️TextEditor/🧫️fixtures/🔁️local-echo/🔣️.json`, and Chromium's native `<textarea>` editing — the third-party
  * oracle, driven with real key events — replays every typing `sequence` and must end at the fixture's text and selection,
  * the same answer the Rust `EditorHost` law gives under both token schedules. */

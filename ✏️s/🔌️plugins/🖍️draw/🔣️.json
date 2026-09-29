@@ -737,6 +737,92 @@
                     "interactiveJob": "migrated"
                   }
                 }
+              },
+              {
+                "id": "exportArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  },
+                  "reuse": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "export",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              },
+              {
+                "id": "importArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  },
+                  "reuse": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "import",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
               }
             ],
             "utilities": [
@@ -1418,7 +1504,27 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "description": {
+                "native": {
+                  "en": "Arranges the given layers, or the current selection when none are given, in one undoable step: groups or ungroups them, duplicates or deletes them, moves them one step or all the way to the front or back, aligns their edges or centres (two or more layers), or distributes them evenly (three or more). Every layer must be unlocked; grouping, duplicating, deleting and reordering need layers of one parent group.",
+                  "de": "Ordnet die angegebenen Ebenen, oder die aktuelle Auswahl, wenn keine angegeben sind, in einem rückgängig machbaren Schritt an: gruppiert sie oder hebt ihre Gruppierung auf, dupliziert oder löscht sie, verschiebt sie eine Ebene oder ganz nach vorne oder hinten, richtet ihre Kanten oder Mitten aus (ab zwei Ebenen) oder verteilt sie gleichmäßig (ab drei Ebenen). Jede Ebene muss entsperrt sein; Gruppieren, Duplizieren, Löschen und Umordnen verlangen Ebenen derselben Gruppe."
+                },
+                "reuse": {
+                  "en": "Arranges the given layers, or the current selection when none are given, in one undoable step: groups or ungroups them, duplicates or deletes them, moves them one step or all the way to the front or back, aligns their edges or centres (two or more layers), or distributes them evenly (three or more). Every layer must be unlocked; grouping, duplicating, deleting and reordering need layers of one parent group.",
+                  "de": "Ordnet die angegebenen Ebenen, oder die aktuelle Auswahl, wenn keine angegeben sind, in einem rückgängig machbaren Schritt an: gruppiert sie oder hebt ihre Gruppierung auf, dupliziert oder löscht sie, verschiebt sie eine Ebene oder ganz nach vorne oder hinten, richtet ihre Kanten oder Mitten aus (ab zwei Ebenen) oder verteilt sie gleichmäßig (ab drei Ebenen). Jede Ebene muss entsperrt sein; Gruppieren, Duplizieren, Löschen und Umordnen verlangen Ebenen derselben Gruppe."
+                }
+              },
+              "useWhen": [
+                "group the selected shapes",
+                "ungroup the selection",
+                "duplicate the selection",
+                "delete the selected layers",
+                "bring the selection forward",
+                "send the selection to the back",
+                "align the selected layers",
+                "distribute the selection evenly"
+              ]
             }
           },
           {
@@ -1500,7 +1606,26 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "description": {
+                "native": {
+                  "en": "Edits one unlocked path layer's geometry in one undoable step, given as a JSON node edit: moves or deletes chosen anchors and control handles, sets one point's position or coordinate, splits, deletes or converts a segment between line and cubic curve, opens, closes or joins the path at a node, or reverses its direction.",
+                  "de": "Bearbeitet die Geometrie einer entsperrten Pfadebene in einem rückgängig machbaren Schritt, angegeben als JSON-Knotenbearbeitung: verschiebt oder löscht gewählte Anker- und Steuerpunkte, setzt die Position oder eine Koordinate eines Punkts, teilt, löscht oder wandelt ein Segment zwischen Linie und kubischer Kurve um, öffnet, schließt oder verbindet den Pfad an einem Knoten oder kehrt seine Richtung um."
+                },
+                "reuse": {
+                  "en": "Edits one unlocked path layer's geometry in one undoable step, given as a JSON node edit: moves or deletes chosen anchors and control handles, sets one point's position or coordinate, splits, deletes or converts a segment between line and cubic curve, opens, closes or joins the path at a node, or reverses its direction.",
+                  "de": "Bearbeitet die Geometrie einer entsperrten Pfadebene in einem rückgängig machbaren Schritt, angegeben als JSON-Knotenbearbeitung: verschiebt oder löscht gewählte Anker- und Steuerpunkte, setzt die Position oder eine Koordinate eines Punkts, teilt, löscht oder wandelt ein Segment zwischen Linie und kubischer Kurve um, öffnet, schließt oder verbindet den Pfad an einem Knoten oder kehrt seine Richtung um."
+                }
+              },
+              "useWhen": [
+                "move a path node",
+                "drag a bezier handle",
+                "delete path points",
+                "split a path segment",
+                "convert a segment to a curve",
+                "close the path",
+                "reverse the path direction"
+              ]
             }
           },
           {
@@ -1582,7 +1707,24 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "description": {
+                "native": {
+                  "en": "Edits one unlocked layer's fill in one undoable step, given as a JSON fill edit: sets its type (none, solid, linear or radial gradient), a colour or its opacity, a gradient coordinate or stop offset, or adds or removes a gradient stop.",
+                  "de": "Bearbeitet die Füllung einer entsperrten Ebene in einem rückgängig machbaren Schritt, angegeben als JSON-Füllungsbearbeitung: setzt ihren Typ (keine, einfarbig, linearer oder radialer Verlauf), eine Farbe oder deren Deckkraft, eine Verlaufskoordinate oder den Versatz eines Farbstopps, oder fügt einen Farbstopp hinzu oder entfernt ihn."
+                },
+                "reuse": {
+                  "en": "Edits one unlocked layer's fill in one undoable step, given as a JSON fill edit: sets its type (none, solid, linear or radial gradient), a colour or its opacity, a gradient coordinate or stop offset, or adds or removes a gradient stop.",
+                  "de": "Bearbeitet die Füllung einer entsperrten Ebene in einem rückgängig machbaren Schritt, angegeben als JSON-Füllungsbearbeitung: setzt ihren Typ (keine, einfarbig, linearer oder radialer Verlauf), eine Farbe oder deren Deckkraft, eine Verlaufskoordinate oder den Versatz eines Farbstopps, oder fügt einen Farbstopp hinzu oder entfernt ihn."
+                }
+              },
+              "useWhen": [
+                "change the fill colour",
+                "make the fill a gradient",
+                "add a gradient stop",
+                "set the fill opacity",
+                "remove the fill"
+              ]
             }
           },
           {
@@ -6103,7 +6245,16 @@
         "artifactKinds": [
           {
             "id": "2d.drawing",
-            "name": "2D Drawing",
+            "label": {
+              "native": {
+                "en": "2D Drawing",
+                "de": "2D-Zeichnung"
+              },
+              "reuse": {
+                "en": "2D Drawing",
+                "de": "2D-Zeichnung"
+              }
+            },
             "sourceFormat": "drawing.document",
             "componentKind": "drawing",
             "dimension": "2d",
@@ -6331,6 +6482,92 @@
                     "interactiveJob": "migrated"
                   }
                 }
+              },
+              {
+                "id": "exportArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  },
+                  "reuse": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "export",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              },
+              {
+                "id": "importArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  },
+                  "reuse": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "import",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
               }
             ],
             "utilities": [],
@@ -6339,229 +6576,6 @@
           }
         ],
         "actions": [
-          {
-            "id": "undo",
-            "label": {
-              "native": {
-                "en": "Undo",
-                "de": "Rückgängig"
-              },
-              "reuse": {
-                "en": "Undo",
-                "de": "Rückgängig"
-              }
-            },
-            "kind": "history",
-            "iconId": "undo-2",
-            "args": [],
-            "keys": "mod+z",
-            "inPalette": true,
-            "semantics": {
-              "effects": {
-                "external": false,
-                "destructive": false,
-                "reversible": false
-              },
-              "policy": {
-                "scopes": [
-                  "artifacts.write"
-                ],
-                "approval": "never"
-              },
-              "execution": {
-                "preview": "none",
-                "undo": {
-                  "kind": "none"
-                },
-                "idempotency": "none",
-                "expectedRevision": false,
-                "cancellable": false,
-                "class": "interactive",
-                "interactiveJob": "migrated"
-              },
-              "description": {
-                "native": {
-                  "en": "Reverts the most recent edit on the open artifact and moves its head back one revision.",
-                  "de": "Macht die letzte Änderung am geöffneten Artefakt rückgängig und setzt den Kopf eine Revision zurück."
-                },
-                "reuse": {
-                  "en": "Reverts the most recent edit on the open artifact and moves its head back one revision.",
-                  "de": "Macht die letzte Änderung am geöffneten Artefakt rückgängig und setzt den Kopf eine Revision zurück."
-                }
-              },
-              "useWhen": [
-                "undo the last change",
-                "take that back",
-                "revert my last edit"
-              ]
-            }
-          },
-          {
-            "id": "redo",
-            "label": {
-              "native": {
-                "en": "Redo",
-                "de": "Wiederholen"
-              },
-              "reuse": {
-                "en": "Redo",
-                "de": "Wiederholen"
-              }
-            },
-            "kind": "history",
-            "iconId": "redo-2",
-            "args": [],
-            "keys": "mod+shift+z",
-            "inPalette": true,
-            "semantics": {
-              "effects": {
-                "external": false,
-                "destructive": false,
-                "reversible": false
-              },
-              "policy": {
-                "scopes": [
-                  "artifacts.write"
-                ],
-                "approval": "never"
-              },
-              "execution": {
-                "preview": "none",
-                "undo": {
-                  "kind": "none"
-                },
-                "idempotency": "none",
-                "expectedRevision": false,
-                "cancellable": false,
-                "class": "interactive",
-                "interactiveJob": "migrated"
-              },
-              "description": {
-                "native": {
-                  "en": "Re-applies the edit that was last undone and moves the artifact head forward one revision.",
-                  "de": "Wendet die zuletzt rückgängig gemachte Änderung erneut an und setzt den Kopf eine Revision vor."
-                },
-                "reuse": {
-                  "en": "Re-applies the edit that was last undone and moves the artifact head forward one revision.",
-                  "de": "Wendet die zuletzt rückgängig gemachte Änderung erneut an und setzt den Kopf eine Revision vor."
-                }
-              },
-              "useWhen": [
-                "redo",
-                "re-apply what I undid"
-              ]
-            }
-          },
-          {
-            "id": "commitCheckpoint",
-            "label": {
-              "native": {
-                "en": "Commit Checkpoint",
-                "de": "Checkpoint festschreiben"
-              },
-              "reuse": {
-                "en": "Commit Checkpoint",
-                "de": "Checkpoint festschreiben"
-              }
-            },
-            "kind": "history",
-            "iconId": "git-commit",
-            "args": [],
-            "inPalette": true,
-            "semantics": {
-              "effects": {
-                "external": false,
-                "destructive": false,
-                "reversible": false
-              },
-              "policy": {
-                "scopes": [
-                  "artifacts.write"
-                ],
-                "approval": "never"
-              },
-              "execution": {
-                "preview": "none",
-                "undo": {
-                  "kind": "none"
-                },
-                "idempotency": "none",
-                "expectedRevision": false,
-                "cancellable": false,
-                "class": "interactive",
-                "interactiveJob": "migrated"
-              },
-              "description": {
-                "native": {
-                  "en": "Writes a named checkpoint into the artifact's history so a later edit can be reverted back to exactly this state.",
-                  "de": "Schreibt einen benannten Checkpoint in die Historie des Artefakts, auf den später zurückgesetzt werden kann."
-                },
-                "reuse": {
-                  "en": "Writes a named checkpoint into the artifact's history so a later edit can be reverted back to exactly this state.",
-                  "de": "Schreibt einen benannten Checkpoint in die Historie des Artefakts, auf den später zurückgesetzt werden kann."
-                }
-              },
-              "useWhen": [
-                "save a checkpoint",
-                "mark this state"
-              ]
-            }
-          },
-          {
-            "id": "createAlternative",
-            "label": {
-              "native": {
-                "en": "Create Alternative",
-                "de": "Alternative erstellen"
-              },
-              "reuse": {
-                "en": "Create Alternative",
-                "de": "Alternative erstellen"
-              }
-            },
-            "kind": "history",
-            "iconId": "git-branch",
-            "args": [],
-            "inPalette": true,
-            "semantics": {
-              "effects": {
-                "external": false,
-                "destructive": false,
-                "reversible": false
-              },
-              "policy": {
-                "scopes": [
-                  "artifacts.write"
-                ],
-                "approval": "never"
-              },
-              "execution": {
-                "preview": "none",
-                "undo": {
-                  "kind": "none"
-                },
-                "idempotency": "none",
-                "expectedRevision": false,
-                "cancellable": false,
-                "class": "interactive",
-                "interactiveJob": "migrated"
-              },
-              "description": {
-                "native": {
-                  "en": "Branches the artifact's history into a new named alternative that can be edited without disturbing the current one.",
-                  "de": "Verzweigt die Historie des Artefakts in eine neue benannte Alternative, die unabhängig bearbeitet werden kann."
-                },
-                "reuse": {
-                  "en": "Branches the artifact's history into a new named alternative that can be edited without disturbing the current one.",
-                  "de": "Verzweigt die Historie des Artefakts in eine neue benannte Alternative, die unabhängig bearbeitet werden kann."
-                }
-              },
-              "useWhen": [
-                "try a variant",
-                "branch this design"
-              ]
-            }
-          },
           {
             "id": "switchAlternative",
             "label": {
@@ -6671,76 +6685,6 @@
             }
           },
           {
-            "id": "revertToCommand",
-            "label": {
-              "native": {
-                "en": "Revert to Command",
-                "de": "Auf Befehl zurücksetzen"
-              },
-              "reuse": {
-                "en": "Revert to Command",
-                "de": "Auf Befehl zurücksetzen"
-              }
-            },
-            "kind": "history",
-            "iconId": "clock",
-            "args": [
-              {
-                "id": "entrySeq",
-                "label": {
-                  "native": {
-                    "en": "Entry",
-                    "de": "Eintrag"
-                  },
-                  "reuse": {
-                    "en": "Entry",
-                    "de": "Eintrag"
-                  }
-                },
-                "schema": {
-                  "kind": "number",
-                  "integer": false
-                },
-                "required": true
-              }
-            ],
-            "inPalette": false,
-            "semantics": {
-              "effects": {
-                "external": false,
-                "destructive": false,
-                "reversible": false
-              },
-              "policy": {
-                "scopes": [
-                  "artifacts.write"
-                ],
-                "approval": "never"
-              },
-              "execution": {
-                "preview": "none",
-                "undo": {
-                  "kind": "none"
-                },
-                "idempotency": "none",
-                "expectedRevision": false,
-                "cancellable": false,
-                "class": "interactive",
-                "interactiveJob": "migrated"
-              },
-              "description": {
-                "native": {
-                  "en": "Rewinds the artifact to the state it had just after one numbered entry of the session command log.",
-                  "de": "Setzt das Artefakt auf den Zustand direkt nach einem nummerierten Eintrag des Sitzungsprotokolls zurück."
-                },
-                "reuse": {
-                  "en": "Rewinds the artifact to the state it had just after one numbered entry of the session command log.",
-                  "de": "Setzt das Artefakt auf den Zustand direkt nach einem nummerierten Eintrag des Sitzungsprotokolls zurück."
-                }
-              }
-            }
-          },
-          {
             "id": "copy",
             "label": {
               "native": {
@@ -6788,239 +6732,6 @@
                 "reuse": {
                   "en": "Copies the current selection of the focused window onto the workspace clipboard.",
                   "de": "Kopiert die aktuelle Auswahl des fokussierten Fensters in die Zwischenablage."
-                }
-              }
-            }
-          },
-          {
-            "id": "cut",
-            "label": {
-              "native": {
-                "en": "Cut",
-                "de": "Ausschneiden"
-              },
-              "reuse": {
-                "en": "Cut",
-                "de": "Ausschneiden"
-              }
-            },
-            "kind": "clipboard",
-            "iconId": "scissors",
-            "args": [],
-            "keys": "mod+x",
-            "inPalette": true,
-            "semantics": {
-              "effects": {
-                "external": false,
-                "destructive": false,
-                "reversible": false
-              },
-              "policy": {
-                "scopes": [
-                  "shell.clipboard"
-                ],
-                "approval": "never"
-              },
-              "execution": {
-                "preview": "none",
-                "undo": {
-                  "kind": "none"
-                },
-                "idempotency": "none",
-                "expectedRevision": false,
-                "cancellable": false,
-                "class": "interactive",
-                "interactiveJob": "migrated"
-              },
-              "description": {
-                "native": {
-                  "en": "Removes the current selection from the artifact and puts it on the workspace clipboard.",
-                  "de": "Entfernt die aktuelle Auswahl aus dem Artefakt und legt sie in der Zwischenablage ab."
-                },
-                "reuse": {
-                  "en": "Removes the current selection from the artifact and puts it on the workspace clipboard.",
-                  "de": "Entfernt die aktuelle Auswahl aus dem Artefakt und legt sie in der Zwischenablage ab."
-                }
-              }
-            }
-          },
-          {
-            "id": "paste",
-            "label": {
-              "native": {
-                "en": "Paste",
-                "de": "Einfügen"
-              },
-              "reuse": {
-                "en": "Paste",
-                "de": "Einfügen"
-              }
-            },
-            "kind": "clipboard",
-            "iconId": "clipboard",
-            "args": [
-              {
-                "id": "anchor",
-                "label": {
-                  "native": {
-                    "en": "Anchoring",
-                    "de": "Verankerung"
-                  },
-                  "reuse": {
-                    "en": "Anchoring",
-                    "de": "Verankerung"
-                  }
-                },
-                "schema": {
-                  "kind": "string",
-                  "options": [
-                    {
-                      "value": "original",
-                      "label": {
-                        "native": {
-                          "en": "Original",
-                          "de": "Original"
-                        },
-                        "reuse": {
-                          "en": "Original",
-                          "de": "Original"
-                        }
-                      }
-                    },
-                    {
-                      "value": "middle",
-                      "label": {
-                        "native": {
-                          "en": "Middle",
-                          "de": "Mitte"
-                        },
-                        "reuse": {
-                          "en": "Middle",
-                          "de": "Mitte"
-                        }
-                      }
-                    },
-                    {
-                      "value": "centroid",
-                      "label": {
-                        "native": {
-                          "en": "Centroid",
-                          "de": "Schwerpunkt"
-                        },
-                        "reuse": {
-                          "en": "Centroid",
-                          "de": "Schwerpunkt"
-                        }
-                      }
-                    },
-                    {
-                      "value": "bottomLeft",
-                      "label": {
-                        "native": {
-                          "en": "Bottom Left",
-                          "de": "Unten links"
-                        },
-                        "reuse": {
-                          "en": "Bottom Left",
-                          "de": "Unten links"
-                        }
-                      }
-                    },
-                    {
-                      "value": "bottomRight",
-                      "label": {
-                        "native": {
-                          "en": "Bottom Right",
-                          "de": "Unten rechts"
-                        },
-                        "reuse": {
-                          "en": "Bottom Right",
-                          "de": "Unten rechts"
-                        }
-                      }
-                    },
-                    {
-                      "value": "topLeft",
-                      "label": {
-                        "native": {
-                          "en": "Top Left",
-                          "de": "Oben links"
-                        },
-                        "reuse": {
-                          "en": "Top Left",
-                          "de": "Oben links"
-                        }
-                      }
-                    },
-                    {
-                      "value": "topRight",
-                      "label": {
-                        "native": {
-                          "en": "Top Right",
-                          "de": "Oben rechts"
-                        },
-                        "reuse": {
-                          "en": "Top Right",
-                          "de": "Oben rechts"
-                        }
-                      }
-                    }
-                  ]
-                },
-                "required": false,
-                "default": "original"
-              },
-              {
-                "id": "position",
-                "label": {
-                  "native": {
-                    "en": "Position",
-                    "de": "Position"
-                  },
-                  "reuse": {
-                    "en": "Position",
-                    "de": "Position"
-                  }
-                },
-                "schema": {
-                  "kind": "vec3"
-                },
-                "required": false
-              }
-            ],
-            "keys": "mod+v",
-            "inPalette": true,
-            "semantics": {
-              "effects": {
-                "external": false,
-                "destructive": false,
-                "reversible": false
-              },
-              "policy": {
-                "scopes": [
-                  "shell.clipboard"
-                ],
-                "approval": "never"
-              },
-              "execution": {
-                "preview": "none",
-                "undo": {
-                  "kind": "none"
-                },
-                "idempotency": "none",
-                "expectedRevision": false,
-                "cancellable": false,
-                "class": "interactive",
-                "interactiveJob": "migrated"
-              },
-              "description": {
-                "native": {
-                  "en": "Inserts the workspace clipboard's contents into the artifact at the chosen anchoring.",
-                  "de": "Fügt den Inhalt der Zwischenablage an der gewählten Verankerung in das Artefakt ein."
-                },
-                "reuse": {
-                  "en": "Inserts the workspace clipboard's contents into the artifact at the chosen anchoring.",
-                  "de": "Fügt den Inhalt der Zwischenablage an der gewählten Verankerung in das Artefakt ein."
                 }
               }
             }
@@ -7323,38 +7034,10 @@
         ],
         "keybindings": [
           {
-            "keys": "mod+z",
-            "action": {
-              "controllerId": "s.draw.drawing@1/*#viewer",
-              "action": "undo"
-            }
-          },
-          {
-            "keys": "mod+shift+z",
-            "action": {
-              "controllerId": "s.draw.drawing@1/*#viewer",
-              "action": "redo"
-            }
-          },
-          {
             "keys": "mod+c",
             "action": {
               "controllerId": "s.draw.drawing@1/*#viewer",
               "action": "copy"
-            }
-          },
-          {
-            "keys": "mod+x",
-            "action": {
-              "controllerId": "s.draw.drawing@1/*#viewer",
-              "action": "cut"
-            }
-          },
-          {
-            "keys": "mod+v",
-            "action": {
-              "controllerId": "s.draw.drawing@1/*#viewer",
-              "action": "paste"
             }
           }
         ],
@@ -7564,8 +7247,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "25a247b51f07b3c6a3100a59e9a6328f85ac38075bb2d609e1162aa65d1702d7",
-    "coreWasmSha256": "69336c6e4a024779416370185092b6c9d6b6ea9e6b0bf7616116c0c190229bb8",
-    "descriptorSha256": "d85e1bc9fe6a273dc667c544664a38deb144642304649bb88fb01485ec67d58c"
+    "wasmSha256": "0046bb7698c119c5c34ba3c03de9238ed65464c643831d42ec9e44b9bdb3340a",
+    "coreWasmSha256": "47dac425f18bbd7158344e1a3001d422cd49aa9f89a12d23d74da65197a0d3cc",
+    "descriptorSha256": "79aba6b3eae1d71ceadf70276eccaa5146baaf0fd3993304298bd505bdde2c91"
   }
 }

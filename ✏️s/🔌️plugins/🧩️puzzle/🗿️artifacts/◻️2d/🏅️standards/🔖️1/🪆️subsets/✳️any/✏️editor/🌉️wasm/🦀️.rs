@@ -132,7 +132,7 @@ impl BoardSession {
         self.state.borrow().host.defers_descriptor_sync_from_js()
     }
 
-    /// @emoji 🌊️ Binds WebGPU presentation to `canvas` once; `logical_w`/`logical_h` are CSS pixels, `dpr` scales the swapchain backing store; uses `future_to_promise` so wasm-bindgen does not hold `&mut BoardSession` across `await` (avoids `borrow_fail` vs `setSize` during GPU setup).
+    /// 🌊️ Binds WebGPU presentation to `canvas` once; `logical_w`/`logical_h` are CSS pixels, `dpr` scales the swapchain backing store; uses `future_to_promise` so wasm-bindgen does not hold `&mut BoardSession` across `await` (avoids `borrow_fail` vs `setSize` during GPU setup).
     #[wasm_bindgen(js_name = attach_canvas)]
     pub fn attach_canvas(&mut self, canvas: HtmlCanvasElement, logical_w: u32, logical_h: u32, dpr: f64) -> Promise {
         let inner = self.state.clone();
@@ -510,7 +510,7 @@ impl BoardSession {
         self.state.borrow().host.encoded_scene_hint()
     }
 
-    /// @emoji 🎨️ Presents one frame when a GPU surface is attached; otherwise no-operation `Ok`.
+    /// 🎨️ Presents one frame when a GPU surface is attached; otherwise no-operation `Ok`.
     #[wasm_bindgen(js_name = renderFrame)]
     pub fn render_frame(&mut self) -> Result<(), JsValue> {
         self.state.borrow_mut().render_frame_gpu()

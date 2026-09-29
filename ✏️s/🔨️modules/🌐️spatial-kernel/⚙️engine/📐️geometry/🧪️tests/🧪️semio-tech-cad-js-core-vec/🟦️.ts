@@ -1,20 +1,17 @@
-type TestSource = { readonly directory: string; readonly url: string };
+import { applyModelDiff } from "../../../🗺️spatial/🟦️.ts";
+import { CAD_GUMBALL_HIDDEN, cadGumballConfigVisible, collectGeometrySelectionTargets, modelDefinitionActionRegistry, runRegisteredAction } from "../../../../../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️.ts";
+import { preciseSpatialKernelMath } from "../../../🧮️preview/🟦️.ts";
+import type { EdgeRecord, EdgeRef, Expr, GeometryTestDependencies, ModelSpaceJson, ObjectRef, SelectionEvent, SelectionSpec, TypologyRef, VertexRef } from "../../🟦️.ts";
+import type { SpatialKernel, SpatialPreviewKernel } from "../../../🗺️spatial/🟦️.ts";
+import type { Vec3 } from "@semio-tech/s-3d-js";
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
-  const { AttributeTable, CAD_E2E_ROUTES_MODEL_SPACE_JSON, CAD_GUMBALL_HIDDEN, Model, ModelSpace, SpatialKernel, SpatialPreviewKernel, __geometryTestKernel, __geometryTestRuntime, actionAvailableInModelDefinition, applyModelDiff, applyTransformation, buildModelPrimitiveDocument, cadGumballConfigVisible, collectGeometrySelectionTargets, computeStat, countViewObjectsForModelDefinition, defaultModelDefinitionId, derivePropertyValue, evalExpr, evalGuard, expandSelectionTargetsForAccept, formatStatOutputValue, hashModelPrimitives, hashModelVertices, hashSolidRecord, hashVertexPosition, listApplicablePropertyDefinitionsForModelDefinition, listAttributeDefinitionsForModelDefinitionEntity, listModelDefinitionAttributeDefinitions, listModelDefinitionManifests, listModelDefinitionPropertyDefinitions, listModelDefinitionStatDefinitions, listModelDefinitionTypologies, listModelObjectsForModelDefinition, listPropertyDefinitionsForModelDefinition, listSelectionOperationsForModelDefinition, listStatDefinitionsForModelDefinition, listTransformationsFromModelDefinition, listTransformationsIntoModelDefinition, listTypologiesForModelDefinition, loadAttributeDefinition, loadPropertyDefinition, loadStatDefinition, loadTransformation, loadTypology, modelDefinitionActionRegistry, objectMatchesTypologyPrimitives, objectsForStatCompute, parseModelJson, resolveModelDefinitionScope, resolveTypologyStyle, runRegisteredAction, selectionEventMatches, solidRef, validateAttributeValue } = dependencies;
-  type EdgeRecord = any;
-  type EdgeRef = any;
-  type Expr = any;
-  type ModelSpaceJson = any;
-  type ObjectRef = any;
-  type SelectionEvent = any;
-  type SelectionSpec = any;
-  type TypologyRef = any;
-  type Vec3 = any;
-  type VertexRef = any;
+type TestSource = { readonly url: string };
+
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: GeometryTestDependencies, source: TestSource): Promise<void> {
+  const { AttributeTable, CAD_E2E_ROUTES_MODEL_SPACE_JSON, Model, ModelSpace, __geometryTestKernel, __geometryTestRuntime, actionAvailableInModelDefinition, applyTransformation, buildModelPrimitiveDocument, computeStat, countViewObjectsForModelDefinition, defaultModelDefinitionId, derivePropertyValue, evalExpr, evalGuard, expandSelectionTargetsForAccept, formatStatOutputValue, hashModelPrimitives, hashModelVertices, hashSolidRecord, hashVertexPosition, listApplicablePropertyDefinitionsForModelDefinition, listAttributeDefinitionsForModelDefinitionEntity, listModelDefinitionAttributeDefinitions, listModelDefinitionManifests, listModelDefinitionPropertyDefinitions, listModelDefinitionStatDefinitions, listModelDefinitionTypologies, listModelObjectsForModelDefinition, listPropertyDefinitionsForModelDefinition, listSelectionOperationsForModelDefinition, listStatDefinitionsForModelDefinition, listTransformationsFromModelDefinition, listTransformationsIntoModelDefinition, listTypologiesForModelDefinition, loadAttributeDefinition, loadPropertyDefinition, loadStatDefinition, loadTransformation, loadTypology, objectMatchesTypologyPrimitives, objectsForStatCompute, parseModelJson, resolveModelDefinitionScope, resolveTypologyStyle, selectionEventMatches, solidRef, validateAttributeValue } = dependencies;
 
   __geometryTestRuntime!.bootstrapCadModules();
-  const { BrepjsKernel, preciseSpatialKernelMath } = __geometryTestKernel!;
+  const { BrepjsKernel } = __geometryTestKernel!;
   const geometryRoutesFixtureJson = JSON.parse(CAD_E2E_ROUTES_MODEL_SPACE_JSON) as ModelSpaceJson;
   const M = preciseSpatialKernelMath;
   const { describe, expect, it } = vitest;
@@ -316,8 +313,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
     it("listModelObjectsForModelDefinition lists BIM class objects for aec.building", async () => {
       const { readFile } = await import("node:fs/promises");
-      const { resolve } = await import("node:path");
-      const fixturePath = resolve(source.directory, "../../../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🎮️play/🔣️.json");
+      const fixturePath = new URL("../../../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🎮️play/🔣️.json", source.url);
       const fixtureJson = JSON.parse(await readFile(fixturePath, "utf8")) as ModelSpaceJson;
       const space = ModelSpace.fromJSON(fixtureJson);
       const building = space.models["aec.building"]!;

@@ -277,7 +277,7 @@ mod projection_bridge {
         assert_eq!(rows.get(0).unwrap().value(), &Value::Int(42));
     }
 
-    /// @emoji ⚖️ The end-to-end law this bridge exists for: bytes a caller retrieved from
+    /// ⚖️ The end-to-end law this bridge exists for: bytes a caller retrieved from
     /// `db_projection::ProjectionEngine::state_at`/`preview_augmented` (simulated here by
     /// `ProjectionState::encode` on a hand-built row set, since this crate cannot construct a
     /// real `ProjectionEngine` without a `protocol::MutationEnvelope` — see the module doc)
@@ -350,7 +350,7 @@ mod execute_tests {
         assert_eq!(stream.count(), expected_len);
     }
 
-    /// @emoji 🧪️ A hand-rolled `FullTextLookup` double — exercises pushdown without needing a
+    /// 🧪️ A hand-rolled `FullTextLookup` double — exercises pushdown without needing a
     /// real `db_storage::IndexStorage` (not a dependency of this crate; see module doc).
     pub(super) struct FakeFullText(pub std::collections::HashMap<String, Vec<RowId>>);
     impl FullTextLookup for FakeFullText {
@@ -390,7 +390,7 @@ mod planner {
         assert_eq!(plan(&disjoined), QueryPlan::FullScan);
     }
 
-    /// @emoji ⚖️ The correctness law `QueryPlan::FullTextPushdown`'s doc promises: a pushdown
+    /// ⚖️ The correctness law `QueryPlan::FullTextPushdown`'s doc promises: a pushdown
     /// plan and a full scan must agree exactly, for the same query, modulo which rows the
     /// (possibly stale/approximate) full-text index happens to surface as candidates.
     #[semio_framework_async_macros::async_test]
@@ -500,7 +500,7 @@ mod live_query {
         ProjectionSource::from_value(Value::List(rows)).await.unwrap()
     }
 
-    /// @emoji 🆔️ `PVec`'s `RowId` is positional (index-based — see its `QuerySource` impl's
+    /// 🆔️ `PVec`'s `RowId` is positional (index-based — see its `QuerySource` impl's
     /// doc), so a diff's `added`/`removed`/`updated` classification is keyed by position, not
     /// by any notion of row identity: replacing `bob` with `cara` at the same index is an
     /// `updated` row, not a `removed` + `added` pair. This test exercises all three by keeping
@@ -529,7 +529,7 @@ mod live_query {
         assert!(diff.updated.is_empty());
     }
 
-    /// @emoji ⚖️ The round-trip law `LiveQuery`'s doc promises: old snapshot ⊕ diff == new
+    /// ⚖️ The round-trip law `LiveQuery`'s doc promises: old snapshot ⊕ diff == new
     /// snapshot, exactly.
     #[semio_framework_async_macros::async_test]
     async fn diff_applied_to_old_snapshot_reconstructs_new_snapshot() {
@@ -554,7 +554,7 @@ mod live_query {
     }
 
     //#region 🧪️IncrementalityLaw
-    /// @emoji ⚖️ The incrementality law this dissolve exists to prove (ticket
+    /// ⚖️ The incrementality law this dissolve exists to prove (ticket
     /// `26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS`): now that row
     /// content is routed through `QueryResultField: InferredField<QuerySnapshot>` (see
     /// `🔖️QueryResultField` above), a refresh over an UNCHANGED row set is all cache hits, and a

@@ -610,9 +610,7 @@ struct SceneSurfaceState {
     block_list_accessibility: SceneAccessibilityPresentation<BlockListAccessibilityControl>,
     event_feed_accessibility: SceneAccessibilityPresentation<EventFeedAccessibilityControl>,
     graph_timeline_accessibility: SceneAccessibilityPresentation<GraphTimelineAccessibilityControl>,
-    //#region GenericPointerDispatch
     last_pointer_pos: (f32, f32),
-    //#endregion GenericPointerDispatch
     /// 🕒️ Controller for the mounted surface's settled camera publication.
     camera_dispatch_controller_id: Option<String>,
     canvas_click: Option<CanvasClick>,
@@ -1595,7 +1593,7 @@ thread_local! {
 #[cfg(not(target_arch = "wasm32"))]
 static SCENE_LIST_TRANSFER: WorkerCell<SceneListTransferAuthority> = WorkerCell::new();
 
-/** @emoji 📁️ Toggles VFS row expand/collapse in scene-local state. */
+/** 📁️ Toggles VFS row expand/collapse in scene-local state. */
 pub fn toggle_vfs_row_expanded(surface_id: &str, row_id: &str) {
     mutate_scene_state(surface_id, |state| {
         if state.vfs_expanded_ids.contains(row_id) {
@@ -1606,7 +1604,7 @@ pub fn toggle_vfs_row_expanded(surface_id: &str, row_id: &str) {
     });
 }
 
-/** @emoji 📁️ Seeds default expanded VFS roots on first render. */
+/** 📁️ Seeds default expanded VFS roots on first render. */
 pub fn seed_vfs_expanded(surface_id: &str, row_ids: &[String]) {
     mutate_scene_state(surface_id, |state| {
         if state.vfs_expanded_ids.is_empty() {
@@ -1617,7 +1615,7 @@ pub fn seed_vfs_expanded(surface_id: &str, row_ids: &[String]) {
     });
 }
 
-/** @emoji 📁️ Computes VFS multi-select ids for shift/meta click semantics. */
+/** 📁️ Computes VFS multi-select ids for shift/meta click semantics. */
 pub fn vfs_selection_for_click(surface_id: &str, row_id: &str, ordered_ids: &[String], shift: bool, additive: bool) -> Vec<String> {
     let mut next = Vec::new();
     mutate_scene_state(surface_id, |state| {
@@ -1724,7 +1722,7 @@ pub(crate) fn retire_scene_identity(owner: &crate::interpreter::ScenePointerTarg
         });
         let _interaction = retire_tiled_map_scene_identity(owner);
         #[cfg(test)]
-        eprintln!("[DEBUG] scene retirement map host={} before={before:?} exact-interaction={_interaction}", owner.host_id);
+        eprintln!("[TRACE] scene retirement map host={} before={before:?} exact-interaction={_interaction}", owner.host_id);
     }
     if owner.kind == ui_wgpu::wgpu::SurfaceKind::Canvas2d {
         request_canvas_pointer_gesture_cancel_for_host(&owner.host_id);
@@ -1919,12 +1917,12 @@ fn scene_camera_action(surface_id: &str, controller_id: &str, viewport: Viewport
 include!("../../🧪️tests/🧊️wgpu-standalone/🦀️.rs");
 //#endregion SceneCameraDispatch
 
-/** @emoji 🖱️ Cheap read of a surface's pointer edge-detection fields, avoiding a full `SceneSurfaceState` clone. `pub(crate)` so `interpreter::apply_scene_ui_command` (the real per-event `UiCommand::Scene` handler — the sole caller of `handle_scene_pointer_button`/`handle_scene_pointer_move` now, `RenderEntry`'s own once-per-render-frame `apply_scene_wheel`/`apply_scene_pointer` having been deleted once every generic-fallback surface was proven reachable through this path) can read `pointer_was_down`/`last_pointer_pos` to derive `handle_scene_pointer_move`'s `down`/drag-delta parameters. */
+/** 🖱️ Cheap read of a surface's pointer edge-detection fields, avoiding a full `SceneSurfaceState` clone. `pub(crate)` so `interpreter::apply_scene_ui_command` (the real per-event `UiCommand::Scene` handler — the sole caller of `handle_scene_pointer_button`/`handle_scene_pointer_move` now, `RenderEntry`'s own once-per-render-frame `apply_scene_wheel`/`apply_scene_pointer` having been deleted once every generic-fallback surface was proven reachable through this path) can read `pointer_was_down`/`last_pointer_pos` to derive `handle_scene_pointer_move`'s `down`/drag-delta parameters. */
 pub(crate) fn scene_pointer_edge_state(surface_id: &str) -> (bool, f32, f32) {
     SCENE_STATE.with(|cell| cell.borrow().get(surface_id).map(|state| (state.pointer_was_down, state.last_pointer_pos.0, state.last_pointer_pos.1)).unwrap_or((false, 0.0, 0.0)))
 }
 
-/** @emoji 🖱️ Records `surface_id`'s latest known pointer position — the write half of `scene_pointer_edge_state`, `pub(crate)` for the same reason (see that fn's own doc comment). */
+/** 🖱️ Records `surface_id`'s latest known pointer position — the write half of `scene_pointer_edge_state`, `pub(crate)` for the same reason (see that fn's own doc comment). */
 pub(crate) fn set_scene_last_pointer_pos(surface_id: &str, x: f32, y: f32) {
     mutate_scene_state(surface_id, |state| {
         state.last_pointer_pos = (x, y);
@@ -2926,7 +2924,7 @@ impl SceneModifiers {
     }
 }
 
-/** @emoji 🖱️ The generic (non-bespoke, non-Canvas2d/Ink/TextEditor/Paint2d) per-event press route.
+/** 🖱️ The generic (non-bespoke, non-Canvas2d/Ink/TextEditor/Paint2d) per-event press route.
  * Every list kind resolves the press against its own painted row
  * geometry and publishes the action React's matching host dispatches — a row select, a header sort, a
  * stepper delta, a feed activation, a checkpoint checkout, a block add/remove/move, a virtual file
@@ -3007,7 +3005,7 @@ pub(crate) fn passive_scene_pointer_button(
     Ok(true)
 }
 
-/** @emoji 🖱️ The generic per-event move route: every list kind's own hover authority
+/** 🖱️ The generic per-event move route: every list kind's own hover authority
  * (`SceneSurfaceState::hovered_control_id`), which the next paint reads back to highlight the row
  * under the pointer. */
 pub(crate) fn passive_scene_pointer_move(scene: &UiComponentSceneNode, bounds: Rect, pointer_id: ui_render::PointerId, x: f32, y: f32, window_id: &str, document_generation: u64, driver_drag: UiDriverDrag) -> bool {
@@ -3026,7 +3024,7 @@ pub(crate) fn passive_scene_pointer_move(scene: &UiComponentSceneNode, bounds: R
     false
 }
 
-/** @emoji 🎯️ One resolved pointer target inside a list-like component scene: the control id the paint
+/** 🎯️ One resolved pointer target inside a list-like component scene: the control id the paint
  * drew it under (this module's hover authority — see `scene_hovered_control_id`) and the action a
  * primary-button RELEASE on it dispatches, byte-for-byte what the matching React host's own
  * `onClick`/`onSort`/`onSelectionChange` handler sends. A `None` action is a target that only owns
@@ -3046,7 +3044,7 @@ impl SceneListHit {
     }
 }
 
-/** @emoji 📃️ Surface kinds this module paints as a scrolling list of rows and resolves pointer input
+/** 📃️ Surface kinds this module paints as a scrolling list of rows and resolves pointer input
  * for by re-deriving that same row geometry. They register no usable retained hit target of their own
  * (`retained_scene_hit` mints ONE `HitKind::Generic` entry per `ComponentScene` leaf, and the chrome
  * walk stages it after this paint's rows, so it shadows every one of them) — so the press that lands
@@ -3088,7 +3086,7 @@ fn scene_double_click_action(scene: &UiComponentSceneNode, inner: Rect, x: f32, 
 //#endregion SceneInput
 
 //#region 🖱️SurfaceContextMenu
-/** @emoji 🖱️ One component scene's answer to a right-click: the `surface` half of the context-menu
+/** 🖱️ One component scene's answer to a right-click: the `surface` half of the context-menu
  * request its React host sends — `openSurfaceContextMenu({ menu, surface: { kind, hits, selection },
  * windowInstanceId })` in `🗣️Interpreter/🟦️.tsx:759`. Every field here is per-surface-kind by
  * convention, and the convention is the React host's: a kind that tracks no pick state reports
@@ -3105,7 +3103,7 @@ pub struct SceneContextMenuTarget {
     pub text: Option<ui_wgpu::wgpu::ContextMenuTextContext>,
 }
 
-/** @emoji 🖱️ Resolves `(x, y)` inside `scene` into that kind's own context-menu surface target.
+/** 🖱️ Resolves `(x, y)` inside `scene` into that kind's own context-menu surface target.
  * `bounds` is the surface's absolute rect, the same rect its paint and pointer resolvers use, so a
  * row hit here is the row the pointer is actually over.
  *
@@ -3229,7 +3227,7 @@ fn event_feed_context_menu_target(scene: &UiComponentSceneNode, bounds: Rect, x:
     SceneContextMenuTarget::default()
 }
 
-/** @emoji 🖋️ Every ink block under the pointer as `{domain:"block"}`, topmost first, plus the
+/** 🖋️ Every ink block under the pointer as `{domain:"block"}`, topmost first, plus the
  * selection the menu applies to — React's `inkItemsAtPoint` + the "right-click outside the selection
  * selects the topmost hit instead" rule (`🖋️InkCanvasHost/🟦️.tsx:1355-1367`). Unlike React this does
  * NOT dispatch `setSelection` as a side effect: the wgpu ink lane commits every selection write
@@ -3272,7 +3270,7 @@ mod surface_context_menu_tests;
 /// `inkItemsAtPoint` tolerance.
 const INK_CONTEXT_MENU_HIT_THRESHOLD: f64 = 6.0;
 
-/** @emoji 🏷️ The context-menu vocabulary id for a surface kind — the string React sends as BOTH
+/** 🏷️ The context-menu vocabulary id for a surface kind — the string React sends as BOTH
  * `menu.id` and `surface.kind` (`openSurfaceContextMenu({ menu: { id: "virtualFileSystem" },
  * surface: { kind: "virtualFileSystem" } })`). It is deliberately NOT `SurfaceKind`'s serde tag: the
  * scene wire is kebab-case (`virtual-file-system`), while the menu vocabulary a plugin matches on —
@@ -3363,6 +3361,17 @@ pub struct SceneEngineHosts<'a> {
 /// 🍿️ The editor's own popup chrome, painted LAST so it lands over the composited
 /// `EditorHost` texture phase 6 staged — React's absolutely-positioned overlays inside the
 /// host element (`🧱️elements/✏️TextEditor/🟦️.tsx:503-608`).
+///
+/// ✂️ Captions are clipped to the surface they annotate, exactly like React's overlay
+/// (`🕸️NodeGraph/🟦️.tsx` paints them inside the canvas's own `overflow: hidden` box):
+/// the engine publishes a row for EVERY node, including the ones the camera has pushed
+/// off screen, so an unclipped run of glyphs lands on the neighbouring window. The
+/// scissor also opens a fresh draw layer, which keeps the captions above the engine
+/// raster pushed in phase 6 whatever a single layer's own channel order is.
+///
+/// 🖌️🧭️ Paint2d's own two chrome overlays — the live marquee and the navigator's
+/// "you are here" rectangle — ride the SAME overlay phase, clipped to the surface so a
+/// lasso dragged past the pane edge cannot paint over its neighbour.
 pub fn render_component_scene_step(
     scene: &UiComponentSceneNode,
     bounds: Rect,
@@ -3480,12 +3489,6 @@ pub fn render_component_scene_step(
         }
         7 => {
             if scene.component_kind == SurfaceKind::NodeGraph {
-                // ✂️ Captions are clipped to the surface they annotate, exactly like React's overlay
-                // (`🕸️NodeGraph/🟦️.tsx` paints them inside the canvas's own `overflow: hidden` box):
-                // the engine publishes a row for EVERY node, including the ones the camera has pushed
-                // off screen, so an unclipped run of glyphs lands on the neighbouring window. The
-                // scissor also opens a fresh draw layer, which keeps the captions above the engine
-                // raster pushed in phase 6 whatever a single layer's own channel order is.
                 ctx.draw.push_scissor(bounds);
                 engine_canvas::paint_node_graph_labels(ctx, scene, bounds);
                 ctx.draw.pop_scissor();
@@ -3501,9 +3504,6 @@ pub fn render_component_scene_step(
             if scene.component_kind == SurfaceKind::NodeGraph {
                 engine_canvas::paint_node_graph_overlays(ctx, scene, bounds);
             }
-            // 🖌️🧭️ Paint2d's own two chrome overlays — the live marquee and the navigator's
-            // "you are here" rectangle — ride the SAME overlay phase, clipped to the surface so a
-            // lasso dragged past the pane edge cannot paint over its neighbour.
             if scene.component_kind == SurfaceKind::Paint2d {
                 ctx.draw.push_scissor(bounds);
                 engine_canvas::paint_paint2d_overlays(ctx, scene, bounds);
@@ -3671,6 +3671,9 @@ fn engine_surface_clear(kind: SurfaceKind, theme: &ui_wgpu::wgpu::Theme) -> ui_w
 /// raster key: attach, paint and composite are the same step. The state lives in the shell's
 /// `world3d_states` because every downstream ladder — asset fetch, snapshot apply, bounded pick/hover
 /// authority, the OS event loop's orbit/wheel dispatch — addresses it there.
+///
+/// 🎥️ The one point per frame that holds both the surface id and its LIVE orbit — `dumpMeshStats`
+/// reaches only the interpreter's `UI_ENGINE`, never the shell's `world3d_states`.
 fn render_world3d_surface_step(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, cursor: &mut ui_wgpu::wgpu::ScenePaintCursor, hosts: &mut SceneEngineHosts<'_>) -> ui_wgpu::wgpu::ScenePaintStep {
     let created = !hosts.world3d_states.contains_key(&scene.host_id);
     let surface_id = scene.surface_id.clone();
@@ -3684,18 +3687,22 @@ fn render_world3d_surface_step(scene: &UiComponentSceneNode, bounds: Rect, ctx: 
     infinite_world::world::render_world_3d(scene, bounds, ctx, state, hosts.world_resources, infinite_world::world::World3dShadowProfile::World);
     engine_canvas::register_engine_surface(scene, hosts.window_id, bounds, engine_canvas::EngineSurfaceKindDetail::World3d { status_json: scene.world_3d.as_ref().and_then(|world| world.status_json.clone()) }, created, None);
     world3d_surface_debug_log(scene, bounds, ctx, state);
-    // 🎥️ The one point per frame that holds both the surface id and its LIVE orbit — `dumpMeshStats`
-    // reaches only the interpreter's `UI_ENGINE`, never the shell's `world3d_states`.
     if semio_framework_trace::runtime_diagnostics_enabled() {
         crate::interpreter::note_world3d_live_camera(&scene.host_id, infinite_world::world::world3d_live_camera_json(state));
     }
     cursor.finish()
 }
 
-/// 🌍️ `[DEBUG] ` trace of what the World3d pass this step just pushed actually carries — the pass's
+/// 🌍️ `[TRACE] ` trace of what the World3d pass this step just pushed actually carries — the pass's
 /// mesh draws, their instances, its line draws and the surface it belongs to. Temporary: it is the
 /// only way to tell "no surface" from "a surface with no meshes" on 6118, where `eprintln!` is a
 /// no-op inside the frame Worker.
+///
+/// 📐️ The ORIGIN belongs in this trace as much as the size: every pointer, wheel and pick the
+/// surface receives is admitted by `bounds.contains(x, y)` in PAGE space, so a rect reported only
+/// as `WxH` cannot be told apart from the same rect at the wrong origin — which is the shape a
+/// silently undispatched hover/select/orbit takes (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+/// `📓️wgpu-input-hit-runtime-2026-09-13.md` §10.5).
 fn world3d_surface_debug_log(scene: &UiComponentSceneNode, bounds: Rect, ctx: &FrameworkWidgetContext<'_>, state: &infinite_world::world::World3dState) {
     if !semio_framework_trace::runtime_diagnostics_enabled() {
         return;
@@ -3734,13 +3741,8 @@ fn world3d_surface_debug_log(scene: &UiComponentSceneNode, bounds: Rect, ctx: &F
         None => "pass=none".to_string(),
     };
     let visual = infinite_world::world::world3d_live_camera_json(state);
-    // 📐️ The ORIGIN belongs in this trace as much as the size: every pointer, wheel and pick the
-    // surface receives is admitted by `bounds.contains(x, y)` in PAGE space, so a rect reported only
-    // as `WxH` cannot be told apart from the same rect at the wrong origin — which is the shape a
-    // silently undispatched hover/select/orbit takes (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
-    // `📓️wgpu-input-hit-runtime-2026-09-13.md` §10.5).
     debug_log_diagnostic(&format!(
-        "[DEBUG] world3d surface={} pane={:?} bounds={}x{}+{},{} {geometry} {} {} visual={} {payload}",
+        "[TRACE] world3d surface={} pane={:?} bounds={}x{}+{},{} {geometry} {} {} visual={} {payload}",
         scene.surface_id,
         scene.pane_id,
         bounds.w.round(),
@@ -3770,7 +3772,7 @@ fn debug_log_diagnostic(line: &str) {
     }
 }
 
-/** @emoji 🧭️ Surface kinds that already receive pointer/wheel input through their own bespoke per-frame host state (`world3d_states`/`node_graph_states`/`tiled_map_states`/`board2d_states`, driven directly by the OS event loop) and must not be double-dispatched through the generic `handle_scene_*` handlers below. `pub(crate)` so `interpreter::apply_scene_ui_command` (the real per-event `UiCommand::Scene` handler, and now the ONLY caller of `handle_scene_wheel`/`handle_scene_pointer_button`/`handle_scene_pointer_move` — see that fn's own doc comment) applies this SAME exclusion list. */
+/** 🧭️ Surface kinds that already receive pointer/wheel input through their own bespoke per-frame host state (`world3d_states`/`node_graph_states`/`tiled_map_states`/`board2d_states`, driven directly by the OS event loop) and must not be double-dispatched through the generic `handle_scene_*` handlers below. `pub(crate)` so `interpreter::apply_scene_ui_command` (the real per-event `UiCommand::Scene` handler, and now the ONLY caller of `handle_scene_wheel`/`handle_scene_pointer_button`/`handle_scene_pointer_move` — see that fn's own doc comment) applies this SAME exclusion list. */
 pub(crate) fn scene_has_bespoke_pointer_dispatch(kind: SurfaceKind) -> bool {
     matches!(kind, SurfaceKind::World3d | SurfaceKind::NodeGraph | SurfaceKind::TiledMap | SurfaceKind::Board2d)
 }
@@ -4496,6 +4498,11 @@ fn table_hit(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, theme: &
 
 /// 📊️ Renders `SurfaceKind::Table`: a sortable header band over a scrolling, selectable row body
 /// whose cells may themselves be steppers or action buttons — the port of `📊️Table/🟦️.tsx`.
+///
+/// 🖱️ The PAINT-time fallback action carries the unmodified merge: a paint cannot know which
+/// keys a press three frames later will hold. The live press resolves through
+/// `passive_scene_pointer_button` → `table_hit`, which re-derives this row from the same
+/// geometry WITH the press's own `SceneModifiers` — that is the path that answers shift/ctrl.
 fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, driver_drag: UiDriverDrag) {
     let theme = ctx.theme;
     let Some(table) = &scene.table else {
@@ -4578,10 +4585,6 @@ fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkW
             }
         }
         let drag_data = table.row_drag_mime.as_ref().and_then(|mime| row.get("_drag").map(|payload| HashMap::from([(mime.clone(), payload.to_string())])));
-        // 🖱️ The PAINT-time fallback action carries the unmodified merge: a paint cannot know which
-        // keys a press three frames later will hold. The live press resolves through
-        // `passive_scene_pointer_button` → `table_hit`, which re-derives this row from the same
-        // geometry WITH the press's own `SceneModifiers` — that is the path that answers shift/ctrl.
         ctx.input.register_hit(HitTarget { rect: row_rect, event: Some(table_row_action(scene, table, row, &row_id, SceneModifiers::default())), control_id: Some(control_id), kind: HitKind::Generic, drag_axis: None, drag_data });
     }
     stage_table_stepper_accessibility_cells(&scene.host_id, table_stepper_accessibility_cells(scene, bounds, driver_drag));
@@ -4640,7 +4643,7 @@ struct BlockListPaletteEntryJson {
     icon_id: String,
 }
 
-/** @emoji 🧩️ What one laid-out block-list target paints as. Keeping the geometry (`BlockListTarget`)
+/** 🧩️ What one laid-out block-list target paints as. Keeping the geometry (`BlockListTarget`)
  * and the appearance apart is what lets the paint and the pointer path share ONE layout pass: the
  * paint walks the plan forwards, the hit test walks it backwards so a card's own buttons win over
  * the card band they sit in. */
@@ -4664,7 +4667,7 @@ enum BlockListRole {
     PaletteHandle { kind: String },
 }
 
-/** @emoji 🧩️ One laid-out `SurfaceKind::BlockList` target: where it sits, the control id it is drawn
+/** 🧩️ One laid-out `SurfaceKind::BlockList` target: where it sits, the control id it is drawn
  * and hovered under, and the action a press on it dispatches (`None` for a disabled reorder button —
  * React renders those disabled, so the press must fall through to nothing, not to the card). */
 struct BlockListTarget {
@@ -5952,7 +5955,7 @@ mod event_feed_tests;
 //#endregion EventFeedTests
 
 //#region GraphTimeline
-/** @emoji 🗄️ Mirrors `store::HistoryColumn` / React `HistoryColumn` (`ui/js/react/index.tsx:19116`). */
+/** 🗄️ Mirrors `store::HistoryColumn` / React `HistoryColumn` (`ui/js/react/index.tsx:19116`). */
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct HistoryColumnAuthorJson {
@@ -9355,13 +9358,13 @@ impl InkInteractionJob {
 
 const INK_RESIZE_HANDLES: [&str; 8] = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
 
-/** @emoji 📝️ Pointer-down entry point for ink-canvas: mirrors handlePointerDown in ink-canvas-host.tsx. */
+/** 📝️ Pointer-down entry point for ink-canvas: mirrors handlePointerDown in ink-canvas-host.tsx. */
 
-/** @emoji 📝️ Pointer-up entry point for ink-canvas: commits the active gesture and finalizes marquee selection. */
+/** 📝️ Pointer-up entry point for ink-canvas: commits the active gesture and finalizes marquee selection. */
 
-/** @emoji 📝️ Pointer-move hover entry point for ink-canvas: mirrors the `!dragState` hover branch of handlePointerMove. */
+/** 📝️ Pointer-move hover entry point for ink-canvas: mirrors the `!dragState` hover branch of handlePointerMove. */
 
-/** @emoji 📝️ Wheel entry point for ink-canvas: zoom-at-cursor, mirrors handleWheel in ink-canvas-host.tsx. */
+/** 📝️ Wheel entry point for ink-canvas: zoom-at-cursor, mirrors handleWheel in ink-canvas-host.tsx. */
 
 //#endregion InkCanvasState
 
@@ -9755,7 +9758,7 @@ fn query_map_feature_hits(host: &framework_surface_tiled_map::tiled_map::MapHost
     }
 }
 
-/** @emoji 🗺️ The GIS map context-menu surface target for a screen-space right-click: the feature
+/** 🗺️ The GIS map context-menu surface target for a screen-space right-click: the feature
  * under the point as a `ContextMenuHit`, plus the live feature selection split into its
  * `"position"`/`"route"` groups. Port of `onContextMenu` in `🧭️TiledMapHost/🟦️.tsx` — the domains
  * are exactly the ones `gis2d_context_menu_items` matches on (`feature`/`position`/`route`), and the
@@ -10482,7 +10485,7 @@ fn icon_render_world_component_scene(
     }
 }
 
-/** @emoji 🖼️ Native counterpart of framework/renderer/react/components/icon-render-host.tsx: reframes the request into a synthetic World3dScene and delegates the actual GLB draw to infinite_world::world::render_world_3d, then paints the aspect-fit frame/badge/footer chrome on top. */
+/** 🖼️ Native counterpart of framework/renderer/react/components/icon-render-host.tsx: reframes the request into a synthetic World3dScene and delegates the actual GLB draw to infinite_world::world::render_world_3d, then paints the aspect-fit frame/badge/footer chrome on top. */
 fn render_icon_render(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, hosts: &mut SceneEngineHosts<'_>) {
     let Some(icon_render) = &scene.icon_render else {
         return render_icon_render_empty(bounds, ctx, hosts.chrome_labels.icon_render.empty_scene);
@@ -10744,7 +10747,7 @@ fn puzzle2d_entity_flag(entity: &Value, key: &str) -> bool {
     entity.get(key).and_then(Value::as_bool).unwrap_or(false)
 }
 
-/// @emoji 🖱️ Right-click menu for the current selection: Hide/Show, Lock/Unlock, Duplicate, Select same kind, Zoom to selection, Delete — mirrors `buildPuzzle2dSelectionMenuItems` in the React host.
+/// 🖱️ Right-click menu for the current selection: Hide/Show, Lock/Unlock, Duplicate, Select same kind, Zoom to selection, Delete — mirrors `buildPuzzle2dSelectionMenuItems` in the React host.
 pub fn build_puzzle2d_selection_menu_items(fixture_json: &str, selection_ids: &[String]) -> Vec<Puzzle2dSelectionMenuItem> {
     let fixture: Value = serde_json::from_str(fixture_json).unwrap_or(Value::Null);
     if selection_ids.is_empty() {
@@ -10808,7 +10811,7 @@ pub fn build_puzzle2d_selection_menu_items(fixture_json: &str, selection_ids: &[
 }
 //#endregion Puzzle2dSelectionMenu
 
-/// @emoji 🧩️ Pushes board-2d context-menu items for a screen-space hit, eagerly selecting the clicked target if it isn't already selected (mirrors the React host's `onContextMenu`).
+/// 🧩️ Pushes board-2d context-menu items for a screen-space hit, eagerly selecting the clicked target if it isn't already selected (mirrors the React host's `onContextMenu`).
 
 //#endregion Board2d
 
@@ -11373,7 +11376,7 @@ mod virtual_file_system_tests;
 /// to `0` to reposition the caret at all. `pointer_down_screen` now repositions the caret for every
 /// button (only a primary press also starts a drag-selection), so this region's `pointer_down`/
 /// `pointer_up` pair below passes the real button through instead of forcing it.
-/** @emoji ✍️ One text-editor surface's POPUP state — the completions dropdown, the multi-span rename
+/** ✍️ One text-editor surface's POPUP state — the completions dropdown, the multi-span rename
  * draft and the double-click edge, i.e. exactly the `useState` bucket React's `TextEditor` keeps
  * beside its wasm session (`completionsOpen`/`completionIndex`/`renameDraft`/`renamePosition`,
  * `🧱️elements/✏️TextEditor/🟦️.tsx:267-330`). The BUFFER, selection, carets and tokens are the
@@ -11502,7 +11505,7 @@ const TEXT_EDITOR_RENAME_WIDTH: f32 = 180.0;
 /// completion list (the dropdown is a dropdown, not a document — React never scrolls it either).
 const TEXT_EDITOR_OVERLAY_ITEMS: usize = 256;
 
-/** @emoji 🍿️ Paints the editor's popup chrome ABOVE the composited `EditorHost` texture: the
+/** 🍿️ Paints the editor's popup chrome ABOVE the composited `EditorHost` texture: the
  * completions dropdown and the live rename input. Drawn in the scene's own last cursor phase, so it
  * lands after `push_raster_quad` staged the editor texture and therefore over it — the wgpu
  * equivalent of React's absolutely-positioned `z-50` overlays inside the host element
@@ -11618,7 +11621,7 @@ fn render_text_editor_rename_input(scene: &UiComponentSceneNode, inner: Rect, ct
 //#endregion 🍿️Popups
 
 //#region ✍️PopupDrive
-/** @emoji 📋️ Opens the completions dropdown at the first row — React's `openCompletions`, which is a
+/** 📋️ Opens the completions dropdown at the first row — React's `openCompletions`, which is a
  * no-operation when the scene carries no completions. `true` when the popup actually opened, so a
  * caller can report the key as consumed the way `event.preventDefault()` does. */
 pub fn text_editor_open_completions(scene: &UiComponentSceneNode) -> bool {
@@ -11661,7 +11664,7 @@ pub fn text_editor_move_completion(scene: &UiComponentSceneNode, down: bool) -> 
     true
 }
 
-/** @emoji ✅️ Commits the highlighted completion — `applyCompletion`: replace
+/** ✅️ Commits the highlighted completion — `applyCompletion`: replace
  * `[identifier_prefix_start(text, caret), caret)` with the item's insert text, publish the buffer as
  * `textEdit`, and close the dropdown. */
 pub fn text_editor_apply_completion(scene: &UiComponentSceneNode, index: Option<usize>, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
@@ -11684,7 +11687,7 @@ pub fn text_editor_apply_completion(scene: &UiComponentSceneNode, index: Option<
     Ok(applied)
 }
 
-/** @emoji ✏️ Arms the multi-span rename — React's `startRename`: the draft carries the scene's own
+/** ✏️ Arms the multi-span rename — React's `startRename`: the draft carries the scene's own
  * `rename_json` occurrences and current name, and the input takes keyboard focus so the next
  * keystrokes type the new name instead of editing the buffer. */
 pub fn text_editor_start_rename(scene: &UiComponentSceneNode, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
@@ -11704,7 +11707,7 @@ pub fn text_editor_rename_active(surface_id: &str) -> bool {
     text_editor_ui(surface_id).rename.is_some()
 }
 
-/** @emoji ✏️ Retypes the rename draft and republishes the multi-span PREVIEW into the editor host —
+/** ✏️ Retypes the rename draft and republishes the multi-span PREVIEW into the editor host —
  * React's `updateRenamePreview` (`setText` + `setSelectionOccurrencesJson` + `setExtraCaretsJson`).
  * The preview is host-local; nothing is dispatched until the commit. */
 pub fn text_editor_update_rename(scene: &UiComponentSceneNode, next_text: &str) -> bool {
@@ -11766,7 +11769,7 @@ pub fn text_editor_cancel_rename(scene: &UiComponentSceneNode) -> bool {
     true
 }
 
-/** @emoji 🖱️ The context-menu rows a text editor answers ITSELF instead of dispatching to the guest —
+/** 🖱️ The context-menu rows a text editor answers ITSELF instead of dispatching to the guest —
  * React's `localActions` map (`🧱️elements/✏️TextEditor/🟦️.tsx:419-470`). `Ok(false)` means the row is
  * not local and the caller must dispatch it as a normal action.
  *
@@ -11803,7 +11806,7 @@ pub fn text_editor_local_menu_action(scene: &UiComponentSceneNode, inner: Rect, 
     Ok(true)
 }
 
-/** @emoji 🖱️ Parks one context-menu row for this surface to answer itself on the next paint, and
+/** 🖱️ Parks one context-menu row for this surface to answer itself on the next paint, and
  * answers whether the row IS local. The shell calls this before dispatching a menu row: `true` means
  * the row never reaches the guest, exactly as React's `dispatchTextEditorMenu` short-circuits an id
  * present in its own `localActions` map. */
@@ -11823,7 +11826,7 @@ const TEXT_EDITOR_LOCAL_MENU_ACTIONS: [&str; 6] = ["requestCompletions", "sugges
 /// real focused element and `onKeyDown` stops propagation. The draft text is tracked here rather
 /// than read back off `InputState::text_view` — that is a PAGED projection that is empty until the
 /// text pump has run, so a rename would have previewed the empty string on its first keystroke.
-/** @emoji ⌨️ The popup half of one keystroke, offered BEFORE the buffer sees it — React's
+/** ⌨️ The popup half of one keystroke, offered BEFORE the buffer sees it — React's
  * `onKeyDown` prelude (`🧱️elements/✏️TextEditor/🟦️.tsx:556-608`): `Ctrl/Cmd+Space` opens completions,
  * `F2` starts a rename, and while either popup is open its own arrow/commit/dismiss keys win over
  * editing. `false` leaves the key to `engine_canvas::text_editor_apply_key_into`. */
@@ -11884,7 +11887,7 @@ pub fn text_editor_popup_key(scene: &UiComponentSceneNode, key: &KeyAction, modi
     Ok(false)
 }
 
-/** @emoji 🖱️ The popup half of one press. An ALT-click with completions available opens the dropdown
+/** 🖱️ The popup half of one press. An ALT-click with completions available opens the dropdown
  * (React's `event.altKey && completions.length > 0` branch in `onContextMenu`); a press on an open
  * dropdown row commits that row; a press anywhere else closes it, the way an outside press dismisses
  * any popup. `false` leaves the press to the caret/selection path. */

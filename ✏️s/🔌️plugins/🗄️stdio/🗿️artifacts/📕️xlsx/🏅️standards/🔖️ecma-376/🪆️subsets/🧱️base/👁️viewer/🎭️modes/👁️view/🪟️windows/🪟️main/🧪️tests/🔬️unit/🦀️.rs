@@ -82,5 +82,4 @@ fn viewer_projects_requested_cell_and_column_windows_without_edit_bindings() {
             assert!(row.bindings.is_empty() && row.children.iter().all(|cell| cell.bindings.is_empty()));
         }
     }
-    println!("[DEBUG] XLSX viewer matches Calamine's saved workbook cell values and addresses across localized sheet/column windows without edit bindings");
 }

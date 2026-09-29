@@ -39,7 +39,7 @@ fn stmt_bar_spec() -> RecordSpec {
     RecordSpec::new(Some("bar"), RecordLayout::Lines, vec![FieldSpec::new(1, "y", Shape::Text)])
 }
 
-/// @emoji 🧬️ One field of every `Shape` variant, exercising every wire tag in a single spec.
+/// 🧬️ One field of every `Shape` variant, exercising every wire tag in a single spec.
 fn full_spec() -> RecordSpec {
     RecordSpec::new(
         None,
@@ -257,7 +257,7 @@ fn table_soa_round_trips_with_sparse_columns() {
     assert_eq!(r1.get(3), Some(&FieldValue::Float(-9.5)));
 }
 
-/// @emoji 🪟️ Regression for a `TableSoA` column whose element type is a nested (non-Option)
+/// 🪟️ Regression for a `TableSoA` column whose element type is a nested (non-Option)
 /// `Record` with its own `Option` sub-field left absent — `decode_table_soa`'s fallback branch
 /// must thread the known column shape through so `decode_record_fields` still backfills that
 /// sub-field as `Absent` instead of leaving it missing from the decoded `RecordValue` map.
@@ -284,7 +284,7 @@ fn table_soa_nested_record_column_backfills_absent_option_subfield() {
     assert_eq!(header.get(2), Some(&FieldValue::Absent), "nested record's Option sub-field must backfill to Absent, not be missing");
 }
 
-/// @emoji 🎯️ Regression for a `TableSoA` column whose element type is a fixed-size `Tuple`
+/// 🎯️ Regression for a `TableSoA` column whose element type is a fixed-size `Tuple`
 /// (e.g. a `[f32; 5]` lens-distortion field) — because every element is the same numeric
 /// kind, `encode_seq` collapses it to the packed `TAG_PACKED_F64` wire form, which carries no
 /// tuple-vs-list marker of its own. `decode_table_soa`'s fallback branch must thread the
@@ -640,7 +640,7 @@ fn retained_value_stack_refuses_subexact_allocation_and_closes_partial_roots_exa
         assert!(cursor.terminal_is_empty());
         assert_eq!(release, step.allocated_bytes);
     }
-    eprintln!("[DEBUG] retained-value partial-roots=0,1,2 subexact-preserved=true logical-frame-bound={} exact-release=true", usize::from(limits.max_depth) * 8);
+    eprintln!("retained-value partial-roots=0,1,2 subexact-preserved=true logical-frame-bound={} exact-release=true", usize::from(limits.max_depth) * 8);
 }
 
 #[test]
@@ -703,7 +703,6 @@ fn retained_record_body_zero_grants_preserve_unopened_cancellation() {
     assert_eq!(state(&cursor), before);
     assert_eq!(cursor.close_step(0, 1).expect("bytes-only metadata close"), crate::os_pack::format::RetainedPackCloseStep::Complete);
     assert!(cursor.terminal_is_empty());
-    eprintln!("[DEBUG] retained-record-body unopened-zero-grants=true bytes-only-metadata-close=true allocated-bytes=0");
 }
 
 #[test]
@@ -753,7 +752,6 @@ fn retained_record_body_indexes_multibyte_symbols_and_retires_all_logical_owners
     assert_eq!(released, total_allocation);
     assert!(cursor.terminal_is_empty());
     assert!(tokens.iter().any(|token| matches!(token, RetainedRecordBodyToken::CatalogComplete)));
-    eprintln!("[DEBUG] retained-record-body symbols=3 utf8-bytes=12 scalars=7 logical-before-physical=true allocated-bytes={total_allocation} released-bytes={released}");
 }
 
 #[test]
@@ -797,7 +795,6 @@ fn retained_record_body_crosses_a_symbol_leaf_and_preserves_maximum_plus_one_pen
     assert_eq!(excessive.pending, pending);
     assert_eq!(close_retained_record(&mut excessive), 0);
     assert!(excessive.terminal_is_empty());
-    eprintln!("[DEBUG] retained-record-body symbols={count} first-leaf-capacity={} multi-leaf=true max-plus-one-pending=true", first_leaf_capacity.expect("first leaf"));
 }
 
 #[test]
@@ -937,6 +934,5 @@ fn retained_record_body_fault_is_inline_sticky_and_closes_exactly() {
     assert_eq!((cursor.offset, cursor.pending, cursor.allocated_bytes()), before);
     assert_eq!(close_retained_record(&mut cursor), allocated);
     assert!(cursor.terminal_is_empty());
-    eprintln!("[DEBUG] retained-record-body inline-static-fault=true pending-preserved=true allocated-bytes={allocated} released-bytes={allocated}");
 }
 //#endregion 🔖️RecordBody

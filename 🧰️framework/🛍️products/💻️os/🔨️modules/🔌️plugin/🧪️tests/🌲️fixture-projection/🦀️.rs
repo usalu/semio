@@ -67,5 +67,4 @@ fn fixture_projection_retires_exact_tree_before_return_error_or_panic() {
         }
     }
     assert!(foreign.terminal_is_empty());
-    eprintln!("[DEBUG] fixture projection:success+rejection+panic returned after384 exact pages retired; full admission revalidated,foreign retained");
 }

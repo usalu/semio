@@ -76,6 +76,6 @@ mod tests {
         assert!(inverse[0].encode_op().unwrap().len() < maximum);
         assert_eq!(CsvMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
         assert_eq!(CsvMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
-        println!("[DEBUG] csv compact patch preserves unrelated {} byte field through forward/inverse codecs", row["largeValueBytes"]);
+        println!("[TRACE] csv compact patch preserves unrelated {} byte field through forward/inverse codecs", row["largeValueBytes"]);
     }
 }

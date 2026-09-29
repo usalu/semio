@@ -1333,28 +1333,28 @@ impl EngineCanvasPresenter {
         }
         self.stall_steps = self.stall_steps.saturating_add(1);
         if self.stall_steps.is_power_of_two() && self.stall_steps >= 64 {
-            engine_canvas_debug_log(&format!("[DEBUG] engine realize stalled arm={arm} steps={} scan={:?}", self.stall_steps, self.metrics_invalidation_scan));
+            engine_canvas_debug_log(&format!("[TRACE] engine realize stalled arm={arm} steps={} scan={:?}", self.stall_steps, self.metrics_invalidation_scan));
         }
     }
 
+    /// 🌱 A pending primary-metrics invalidation is THIS authority's own unfinished work, not a
+    /// foreign fault: the surface-resize cursor arms the scan and drains it on a different cadence
+    /// from the present cursor, so a frame that reaches the engine mid-scan used to quarantine the
+    /// whole surface with `engine primary metrics invalidation is pending`. Drive one scan unit and
+    /// answer "not yet" — the scan is bounded by `ENGINE_SURFACE_CAPACITY`
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    /// 🐕️ …and it is DRAINED HERE, not advanced one slot per frame. One slot per `realize_step`
+    /// spends `ENGINE_SURFACE_CAPACITY` (256) present steps on a scan whose whole work is
+    /// `candidate.begin_close()` per slot — microseconds of work paid for with a quarter of a
+    /// thousand blocked frames, during which `admit_next_frame` builds nothing and the whole host
+    /// stops. Measured on 6118: `[TRACE] engine realize stalled arm=metrics-invalidation-scan
+    /// steps=128 scan=Some(212)` on every example boot, with the frame gate reading
+    /// `blocked=true phase=Some(Engine)` across it
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-regressions-sweep-2026-09-15.md`).
     pub(crate) fn realize_step(&mut self, gpu: &mut GpuContext, packet: &EngineCanvasPacket, candidate_generation: ui_wgpu::wgpu::RasterTextureWitness, expected: ui_wgpu::wgpu::RasterTextureWitness) -> Result<bool, String> {
         if candidate_generation != expected {
             return Err("engine raster operation authority was stale before realization".to_string());
         }
-        // 🌱 A pending primary-metrics invalidation is THIS authority's own unfinished work, not a
-        // foreign fault: the surface-resize cursor arms the scan and drains it on a different cadence
-        // from the present cursor, so a frame that reaches the engine mid-scan used to quarantine the
-        // whole surface with `engine primary metrics invalidation is pending`. Drive one scan unit and
-        // answer "not yet" — the scan is bounded by `ENGINE_SURFACE_CAPACITY`
-        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-        // 🐕️ …and it is DRAINED HERE, not advanced one slot per frame. One slot per `realize_step`
-        // spends `ENGINE_SURFACE_CAPACITY` (256) present steps on a scan whose whole work is
-        // `candidate.begin_close()` per slot — microseconds of work paid for with a quarter of a
-        // thousand blocked frames, during which `admit_next_frame` builds nothing and the whole host
-        // stops. Measured on 6118: `[DEBUG] engine realize stalled arm=metrics-invalidation-scan
-        // steps=128 scan=Some(212)` on every example boot, with the frame gate reading
-        // `blocked=true phase=Some(Engine)` across it
-        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-regressions-sweep-2026-09-15.md`).
         if self.metrics_invalidation_scan.is_some() {
             for _ in 0..=ENGINE_SURFACE_CAPACITY {
                 if self.invalidate_primary_metrics_step() {
@@ -2443,6 +2443,19 @@ fn node_graph_frames_content(dag: &flow::dag::DagHost) -> bool {
 /// the frame's engine packet rebuild.
 ///
 /// @see `🧱️elements/🕸️NodeGraph/🟦️.tsx` — `syncFlowSessionStructureFromScene`/`syncFlowSessionEvalFromScene`
+///
+/// 🖼️ The opening camera is a DECISION, not a copy: a stored camera that does not frame this
+/// graph is replaced by a fit. Every later viewport the plugin publishes is one this renderer
+/// itself persisted from a gesture, so it is adopted verbatim. Twin of `dagStartupCamera` in
+/// `🧱️elements/🕸️NodeGraph/🟦️.tsx`.
+/// ⏳️ And it is a decision the engine can only take once it HAS the content to frame: the first
+/// viewport reaches this sync before the graph's own nodes are measured, where `startup_camera`
+/// has nothing to fit against and keeps the stored camera. Remembering the viewport then retires
+/// the decision forever — on the live generation3d flow graph that pinned the opening camera and
+/// left every node off screen. The decision is therefore retried until the content exists.
+///
+/// 🔀️ An example switch can move the whole graph out from under a live camera; only then is
+/// the camera the viewer set re-fitted (`CONTENT_REFIT_MAX_COVERAGE`).
 fn sync_node_graph_engine(engine: &mut NodeGraphEngine, cache: &mut NodeGraphSyncCache, graph: &ui_wgpu::wgpu::NodeGraphScene) -> bool {
     let mut changed = false;
     let mut fixture_changed = false;
@@ -2514,15 +2527,6 @@ fn sync_node_graph_engine(engine: &mut NodeGraphEngine, cache: &mut NodeGraphSyn
         cache.lod_json = graph.lod_json.clone();
         changed = true;
     }
-    // 🖼️ The opening camera is a DECISION, not a copy: a stored camera that does not frame this
-    // graph is replaced by a fit. Every later viewport the plugin publishes is one this renderer
-    // itself persisted from a gesture, so it is adopted verbatim. Twin of `dagStartupCamera` in
-    // `🧱️elements/🕸️NodeGraph/🟦️.tsx`.
-    // ⏳️ And it is a decision the engine can only take once it HAS the content to frame: the first
-    // viewport reaches this sync before the graph's own nodes are measured, where `startup_camera`
-    // has nothing to fit against and keeps the stored camera. Remembering the viewport then retires
-    // the decision forever — on the live generation3d flow graph that pinned the opening camera and
-    // left every node off screen. The decision is therefore retried until the content exists.
     if cache.viewport.as_ref() != graph.viewport.as_ref() {
         let first = cache.viewport.is_none();
         let mut decided = true;
@@ -2545,8 +2549,6 @@ fn sync_node_graph_engine(engine: &mut NodeGraphEngine, cache: &mut NodeGraphSyn
         }
         changed = true;
     } else if fixture_changed {
-        // 🔀️ An example switch can move the whole graph out from under a live camera; only then is
-        // the camera the viewer set re-fitted (`CONTENT_REFIT_MAX_COVERAGE`).
         let refitted = match engine {
             NodeGraphEngine::Flow(host) => host.refit_camera_if_content_left_view(),
             NodeGraphEngine::Dag(host) => host.dag.refit_camera_if_content_left_view(),
@@ -2803,6 +2805,9 @@ pub fn sync_tiled_map_scene(scene: &UiComponentSceneNode, window_id: &str, bound
 /// re-applies both silently right after — the rule React's `applyFixtureToSession` states explicitly.
 ///
 /// @see `🧱️elements/🖥️Board2dHost/🟦️.tsx` — `applyFixtureToSession`
+///
+/// 🎯️ Argument order on the normal port is `(nodes, edges, handles)`; the owning app's own
+/// selectable-kind filter decides which granularity a pick may reach at all.
 fn sync_board_engine(host: &mut infinite_canvas::BoardHost, cache: &mut BoardSyncCache, board: &ui_wgpu::wgpu::Board2dScene, width: u32, height: u32) -> bool {
     let mut changed = false;
     let size_key = format!("{width}x{height}");
@@ -2832,8 +2837,6 @@ fn sync_board_engine(host: &mut infinite_canvas::BoardHost, cache: &mut BoardSyn
         cache.placement_compatibility_json = Some(board.placement_compatibility_json.clone());
         changed = true;
     }
-    // 🎯️ Argument order on the normal port is `(nodes, edges, handles)`; the owning app's own
-    // selectable-kind filter decides which granularity a pick may reach at all.
     let selectable_kinds = (board.selectable_nodes, board.selectable_edges, board.selectable_handles);
     if fixture_applied || cache.selection_method.as_deref() != Some(board.selection_method.as_str()) || cache.selectable_kinds != Some(selectable_kinds) {
         host.set_selection_options(&board.selection_method, "replace", selectable_kinds.0, selectable_kinds.1, selectable_kinds.2);
@@ -3660,7 +3663,7 @@ pub fn node_graph_catalogue_drop_action(x: f32, y: f32, drag_data: &HashMap<Stri
             continue;
         }
         let world = node_graph_world_at(surface_id, bounds, x, y).unwrap_or_else(|| ((x - bounds.x) as f64, (y - bounds.y) as f64));
-        eprintln!("[DEBUG] catalogue workflow drop surface={surface_id} controller={controller_id} program={plugin_id} app={app_id} world=({:.1},{:.1})", world.0, world.1);
+        eprintln!("[TRACE] catalogue workflow drop surface={surface_id} controller={controller_id} program={plugin_id} app={app_id} world=({:.1},{:.1})", world.0, world.1);
         return Some(ActionDescriptor {
             controller_id: (*controller_id).to_string(),
             action: "spawnApp".into(),
@@ -3793,7 +3796,7 @@ fn node_graph_bounded_publish(surface_id: &str, controller_id: &str, plan: NodeG
     write_graph_interaction_actions(&mut reservation, wire_surface_id.as_str(), controller_id, &dispatch)?;
     write_graph_edit_action(&mut reservation, controller_id, &edits)?;
     if !edits.is_empty() {
-        engine_canvas_debug_log(&format!("[DEBUG] wgpu node-graph bounded gesture surface={surface_id} edits={edits:?}"));
+        engine_canvas_debug_log(&format!("[TRACE] wgpu node-graph bounded gesture surface={surface_id} edits={edits:?}"));
     }
     reservation.publish_with_checked(|| commit_node_graph_pointer(surface_id, plan))?;
     record_graph_interaction(surface_id, dispatch.digest);
@@ -3967,6 +3970,13 @@ fn engine_canvas_debug_log(line: &str) {
 /// `wgpu-shell graph move fault surface=procedural-main fault=Structure`, after which the frame loop
 /// published nothing further for the rest of the session (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
 /// `📓️wgpu-node-graph-surface-retention-2026-09-13.md`).
+///
+/// 🫳️ A gesture belongs to the path that STARTED it. A bounded drag whose pointer crossed a port
+/// or an inline widget was handed to the screen path mid-flight, and that path's
+/// `resync_interaction_projection` rebuilt the projection as IDLE — so the drag's own release saw
+/// no gesture to close: no `move` edit was ever journalled and the undo baseline it had armed
+/// stayed armed. Measured on 6118: a 90x60 px drag of `radius` published its selection and then
+/// nothing at all (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 fn node_graph_gesture_is_screen_path(surface_id: &str, at: Option<(f64, f64)>) -> bool {
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
@@ -3979,12 +3989,6 @@ fn node_graph_gesture_is_screen_path(surface_id: &str, at: Option<(f64, f64)>) -
         if dag.screen_pointer_gesture_active() {
             return true;
         }
-        // 🫳️ A gesture belongs to the path that STARTED it. A bounded drag whose pointer crossed a port
-        // or an inline widget was handed to the screen path mid-flight, and that path's
-        // `resync_interaction_projection` rebuilt the projection as IDLE — so the drag's own release saw
-        // no gesture to close: no `move` edit was ever journalled and the undo baseline it had armed
-        // stayed armed. Measured on 6118: a 90x60 px drag of `radius` published its selection and then
-        // nothing at all (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
         if bounded_gesture {
             return false;
         }
@@ -3994,7 +3998,7 @@ fn node_graph_gesture_is_screen_path(surface_id: &str, at: Option<(f64, f64)>) -
         let digest = graph_payload_digest(&[trace.as_str()]);
         if entry.published_graph_hit != digest {
             entry.published_graph_hit = digest;
-            engine_canvas_debug_log(&format!("[DEBUG] wgpu node-graph hit surface={surface_id} sx={sx:.1} sy={sy:.1} trace={trace}"));
+            engine_canvas_debug_log(&format!("[TRACE] wgpu node-graph hit surface={surface_id} sx={sx:.1} sy={sy:.1} trace={trace}"));
         }
         hit.is_screen_path()
     })
@@ -4010,6 +4014,10 @@ struct GraphScreenPointerOutcome {
 /// 🖱️ Runs one gesture through `DagHost`'s screen pointer entry — the same one React drives — and
 /// reads back what it did. The mutation happens INSIDE the caller's reservation window, so the
 /// action credits a dispatch needs are already held before the host is allowed to change.
+///
+/// 🎯️ The gather is this host's own per-gesture pick batch; the selection action
+/// written below reports the SAME live selection, so leaving it queued would only
+/// let a later caller dispatch the gesture twice.
 fn apply_node_graph_screen_pointer(surface_id: &str, intent: flow::dag::DagPointerIntent) -> Result<Option<GraphScreenPointerOutcome>, ui_wgpu::wgpu::BoundedActionFault> {
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
@@ -4027,9 +4035,6 @@ fn apply_node_graph_screen_pointer(surface_id: &str, intent: flow::dag::DagPoint
                 flow::dag::DagPointerPhase::Move => host.pointer_move_screen(intent.x, intent.y, intent.shift, intent.ctrl_or_meta, intent.alt),
                 flow::dag::DagPointerPhase::Up | flow::dag::DagPointerPhase::Leave => {
                     host.pointer_up_screen(intent.x, intent.y, intent.shift, intent.ctrl_or_meta, intent.alt);
-                    // 🎯️ The gather is this host's own per-gesture pick batch; the selection action
-                    // written below reports the SAME live selection, so leaving it queued would only
-                    // let a later caller dispatch the gesture twice.
                     let _ = host.take_selection_gather();
                 }
             },
@@ -4122,7 +4127,7 @@ fn node_graph_screen_pointer_into(surface_id: &str, controller_id: &str, intent:
         };
         let dispatch = graph_interaction_dispatch(published_graph_interaction(surface_id), outcome.snapshot, node_graph_interaction_domain(surface_id).as_deref())?;
         if !outcome.edits.is_empty() {
-            engine_canvas_debug_log(&format!("[DEBUG] wgpu node-graph screen gesture surface={surface_id} edits={:?}", outcome.edits));
+            engine_canvas_debug_log(&format!("[TRACE] wgpu node-graph screen gesture surface={surface_id} edits={:?}", outcome.edits));
         }
         write_graph_interaction_actions(&mut reservation, wire_surface_id.as_str(), controller_id, &dispatch)?;
         write_graph_edit_action(&mut reservation, controller_id, &outcome.edits)?;
@@ -4356,7 +4361,7 @@ fn log_graph_geometry_census(surface_id: &str) {
             return;
         }
         entry.published_graph_geometry = digest;
-        engine_canvas_debug_log(&format!("[DEBUG] wgpu node-graph geometry surface={surface_id} entities={census}"));
+        engine_canvas_debug_log(&format!("[TRACE] wgpu node-graph geometry surface={surface_id} entities={census}"));
     });
 }
 
@@ -4510,6 +4515,8 @@ fn label_overlay_fill(theme: &Theme, node_id: &str, ghost: bool, chrome: &LabelI
     theme.text_element
 }
 
+/// 📐️ The host publishes the caption's own screen budget (`maxScreenW`) because only it knows
+/// whether the caption sits INSIDE the node body or above it; `nodeW` is the fallback.
 fn paint_label_overlay_row(ctx: &mut FrameworkWidgetContext<'_>, inner: Rect, cam_x: f64, cam_y: f64, zoom: f64, row: &Value, chrome: &LabelInteractionChrome) {
     let Some(text) = row.get("text").and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()) else {
         return;
@@ -4523,8 +4530,6 @@ fn paint_label_overlay_row(ctx: &mut FrameworkWidgetContext<'_>, inner: Rect, ca
     let node_id = row.get("id").and_then(|v| v.as_str()).unwrap_or("");
     let is_port = row.get("kind").and_then(|v| v.as_str()) == Some("port") || matches!(align, Some("left") | Some("right"));
     let zoom_f = zoom.max(0.05) as f32;
-    // 📐️ The host publishes the caption's own screen budget (`maxScreenW`) because only it knows
-    // whether the caption sits INSIDE the node body or above it; `nodeW` is the fallback.
     let max_w = row.get("maxScreenW").and_then(|v| v.as_f64()).filter(|w| *w > 0.0).unwrap_or_else(|| (node_w * f64::from(zoom_f) * f64::from(LABEL_INSET)).max(4.0)) as f32;
     let max_h = if is_port {
         row.get("maxScreenH").and_then(|v| v.as_f64()).filter(|h| *h > 0.0).map(|h| h as f32).unwrap_or((node_h * f64::from(zoom_f) * f64::from(LABEL_INSET)).max(4.0) as f32)
@@ -4973,7 +4978,7 @@ pub fn tiled_map_wheel_into(surface_id: &str, controller_id: &str, inner: Rect, 
 //#endregion TiledMap
 
 //#region Board2d
-/// @emoji 🧩️ Raw event row drained from {@link infinite_canvas::BoardHost::drain_events_json}; mirrors the TS `BoardEventRow` shape.
+/// 🧩️ Raw event row drained from {@link infinite_canvas::BoardHost::drain_events_json}; mirrors the TS `BoardEventRow` shape.
 #[cfg(test)]
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub struct BoardEventRow {
@@ -4992,7 +4997,7 @@ const PUZZLE2D_TRANSIENT_EVENT_NAMES: &[&str] = &["preselect", "brushPreview", "
 #[cfg(test)]
 const PUZZLE2D_FLUSH_NOW_EVENT_NAMES: &[&str] = &["select", "preselectCancel", "brushCandidates", "brushPlace", "edgeCreate", "edgeDelete", "nodeDelete"];
 
-/// @emoji 📬️ Drops transient rows, coalesces `camera` to its latest value and `nodeMove` to one row per id (unless a `nodeDragEnd` follows), and flags whether the buffer should flush immediately. Port of `coalesceBoard2dEvents` in the React host.
+/// 📬️ Drops transient rows, coalesces `camera` to its latest value and `nodeMove` to one row per id (unless a `nodeDragEnd` follows), and flags whether the buffer should flush immediately. Port of `coalesceBoard2dEvents` in the React host.
 
 pub fn with_board_host_mut<R>(surface_id: &str, f: impl FnOnce(&mut infinite_canvas::BoardHost) -> R) -> Option<R> {
     ENGINE_SURFACES.with(|cell| {
@@ -5052,7 +5057,7 @@ pub fn puzzle_board_yield_to_pinch(surface_id: &str, sx: f64, sy: f64) -> bool {
     .is_some()
 }
 
-/// @emoji 🎯️ Most-specific pick target at a screen point, mirroring `pickMostSpecificCanvasTarget`.
+/// 🎯️ Most-specific pick target at a screen point, mirroring `pickMostSpecificCanvasTarget`.
 pub fn board_pick_best_target_id(surface_id: &str, sx: f64, sy: f64) -> Option<String> {
     with_board_host(surface_id, |host| {
         let json = host.pick_targets_at_screen_json(sx, sy);
@@ -5215,9 +5220,9 @@ fn board_peek_buffer_coalesced(surface_id: &str) -> Option<String> {
     })
 }
 
-/// @emoji 📤️ Unconditional drain + coalesce + dispatch, mirroring `flushBoardEvents` (used after pointer-up, pointer-leave, and wheel).
+/// 📤️ Unconditional drain + coalesce + dispatch, mirroring `flushBoardEvents` (used after pointer-up, pointer-leave, and wheel).
 
-/// @emoji 📤️ Drains into the buffer and only dispatches if a flush-now event (select, brushPlace, edgeCreate, ...) is pending, mirroring `drainAndMaybeFlush` (used on pointer-move).
+/// 📤️ Drains into the buffer and only dispatches if a flush-now event (select, brushPlace, edgeCreate, ...) is pending, mirroring `drainAndMaybeFlush` (used on pointer-move).
 
 fn write_board_events_flat(batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservation<'_>, controller_id: &str, events_json: &str) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
     let action = "applyBoardEvents";
@@ -5494,9 +5499,10 @@ pub fn puzzle_board_hover_into(surface_id: &str, controller_id: &str, input: &mu
 ///
 /// Returns `true` when the chord was consumed and must NOT fall through to the shell's keybinding
 /// dispatch — the Rust equivalent of React's `event.preventDefault()`.
+///
+/// 🪟️ React gates both listeners on `hoverActiveRef.current` (the pointer is over THIS pane) and
+/// on `scene.interactive`; the pointer-inside witness is this target's equivalent.
 pub fn puzzle_board_key_into(surface_id: &str, controller_id: &str, key: &KeyAction, modifiers: &PointerModifiers, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
-    // 🪟️ React gates both listeners on `hoverActiveRef.current` (the pointer is over THIS pane) and
-    // on `scene.interactive`; the pointer-inside witness is this target's equivalent.
     let armed = ENGINE_SURFACES.with(|cell| {
         let map = cell.borrow();
         let entry = map.get(surface_id)?;
@@ -5636,7 +5642,7 @@ pub fn puzzle_board_pointer_leave_into(surface_id: &str, controller_id: &str, al
     Ok(true)
 }
 
-/// @emoji 🖐️ True while a node drag or area-select gesture is in flight, so pointer-up outside the surface bounds still reaches the host (mirrors `tiled_map_drag_active`).
+/// 🖐️ True while a node drag or area-select gesture is in flight, so pointer-up outside the surface bounds still reaches the host (mirrors `tiled_map_drag_active`).
 pub fn board_drag_active(surface_id: &str) -> bool {
     with_board_host(surface_id, |host| host.defers_descriptor_sync_from_js() || host.is_dragging_area_select()).unwrap_or(false)
 }
@@ -5996,6 +6002,18 @@ fn paint2d_selection(scene: &UiComponentSceneNode) -> Vec<String> {
  * whose resulting camera is republished as `setCamera` exactly as React's `onPointerUp` does.
  *
  * @see `🧱️elements/🖌️Paint2dHost/🟦️.tsx` — `onPointerDown`/`onPointerUp` */
+/// 🧭️ A navigator pans the CONTENT camera with the middle button and does nothing else —
+/// React's `onPointerDown`/`onPointerUp` navigator arms (`🖌️Paint2dHost/🟦️.tsx:430`, `:453`).
+///
+/// 🖱️ React arms `marqueeRef` on the press and only promotes it to a real marquee once the
+/// pointer travels (`🖌️Paint2dHost/🟦️.tsx:438`), so a press that never moves stays a pick.
+///
+/// 🖱️ A committed MARQUEE takes the release: it asks the host which pixel layers the path
+/// covers and publishes them merged, never the single point under the pointer
+/// (`commitMarqueeSelection`, `🖌️Paint2dHost/🟦️.tsx:406-420`).
+///
+/// 🖱️ React reaches `onSelectTarget(target, …)` only through a resolved pick, so an empty
+/// release is a dismissed pick menu, never a selection clear.
 pub fn paint2d_pointer_button_into(
     scene: &UiComponentSceneNode,
     inner: Rect,
@@ -6011,8 +6029,6 @@ pub fn paint2d_pointer_button_into(
         return Ok(false);
     };
     if paint.view_mode == "navigator" {
-        // 🧭️ A navigator pans the CONTENT camera with the middle button and does nothing else —
-        // React's `onPointerDown`/`onPointerUp` navigator arms (`🖌️Paint2dHost/🟦️.tsx:430`, `:453`).
         if button == 1 {
             with_paint2d_marquee(&scene.host_id, |marquee| marquee.pan_last = down.then_some((x, y)));
         }
@@ -6023,8 +6039,6 @@ pub fn paint2d_pointer_button_into(
     if paint2d_selection_utility(&paint.active_utility) {
         let method = paint2d_selection_method(&paint.active_utility);
         if down {
-            // 🖱️ React arms `marqueeRef` on the press and only promotes it to a real marquee once the
-            // pointer travels (`🖌️Paint2dHost/🟦️.tsx:438`), so a press that never moves stays a pick.
             if method.is_some() {
                 with_paint2d_marquee(&scene.host_id, |marquee| {
                     *marquee = Paint2dMarquee { tracking: true, active: false, start: (x, y), points: vec![(x, y)], pan_last: None };
@@ -6032,9 +6046,6 @@ pub fn paint2d_pointer_button_into(
             }
             return Ok(false);
         }
-        // 🖱️ A committed MARQUEE takes the release: it asks the host which pixel layers the path
-        // covers and publishes them merged, never the single point under the pointer
-        // (`commitMarqueeSelection`, `🖌️Paint2dHost/🟦️.tsx:406-420`).
         let committed = method.and_then(|method| {
             let marquee = with_paint2d_marquee(&scene.host_id, |marquee| {
                 let snapshot = marquee.clone();
@@ -6057,8 +6068,6 @@ pub fn paint2d_pointer_button_into(
             return Ok(true);
         }
         let merge = paint2d_merge_mode(shift, ctrl_or_meta);
-        // 🖱️ React reaches `onSelectTarget(target, …)` only through a resolved pick, so an empty
-        // release is a dismissed pick menu, never a selection clear.
         let Some(hit) = paint2d_pick_layer(&scene.host_id, sx, sy) else {
             return Ok(false);
         };
@@ -6127,14 +6136,17 @@ pub fn paint2d_pointer_button_into(
  * `setCamera` republish otherwise.
  *
  * @see `🧱️elements/🖌️Paint2dHost/🟦️.tsx` — `onPointerMove` */
+/// 🧭️ Navigator pan drives the CONTENT camera, in content-world units: React divides the
+/// screen delta by the CONTENT camera's zoom and dispatches `setCamera`
+/// (`🖌️Paint2dHost/🟦️.tsx:453-462`). The navigator's own camera stays fit to the document.
+///
+/// 🖱️ The armed gesture becomes a marquee once the pointer clears the threshold, and the lasso
+/// accumulates its path — `onPointerMove`'s marquee branch (`🖌️Paint2dHost/🟦️.tsx:466-475`).
 pub fn paint2d_pointer_move_into(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     let Some(paint) = scene.paint_2d.as_ref() else {
         return Ok(false);
     };
     if paint.view_mode == "navigator" {
-        // 🧭️ Navigator pan drives the CONTENT camera, in content-world units: React divides the
-        // screen delta by the CONTENT camera's zoom and dispatches `setCamera`
-        // (`🖌️Paint2dHost/🟦️.tsx:453-462`). The navigator's own camera stays fit to the document.
         let Some((last_x, last_y)) = with_paint2d_marquee(&scene.host_id, |marquee| {
             let last = marquee.pan_last;
             if last.is_some() {
@@ -6157,8 +6169,6 @@ pub fn paint2d_pointer_move_into(scene: &UiComponentSceneNode, inner: Rect, x: f
     let sx = f64::from(x - inner.x);
     let sy = f64::from(y - inner.y);
     if paint2d_selection_utility(&paint.active_utility) {
-        // 🖱️ The armed gesture becomes a marquee once the pointer clears the threshold, and the lasso
-        // accumulates its path — `onPointerMove`'s marquee branch (`🖌️Paint2dHost/🟦️.tsx:466-475`).
         if let Some(method) = paint2d_selection_method(&paint.active_utility) {
             with_paint2d_marquee(&scene.host_id, |marquee| {
                 if !marquee.tracking {
@@ -6987,7 +6997,7 @@ pub fn text_editor_caret(scene: &UiComponentSceneNode) -> (usize, usize) {
     })
 }
 
-/** @emoji ✏️ Publishes the multi-span rename PREVIEW into the live `EditorHost`: the rewritten
+/** ✏️ Publishes the multi-span rename PREVIEW into the live `EditorHost`: the rewritten
  * buffer, the occurrence highlights and one extra caret per occurrence — React's
  * `updateRenamePreview` (`setText` + `setSelectionOccurrencesJson` + `setExtraCaretsJson` +
  * `renderFrame`, `🧱️elements/✏️TextEditor/🟦️.tsx:301-309`). Host-local only: nothing is dispatched

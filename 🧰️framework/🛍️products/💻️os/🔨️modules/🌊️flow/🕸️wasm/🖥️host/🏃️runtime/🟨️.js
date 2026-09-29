@@ -358,7 +358,7 @@ export function attachFlowSurface(features, canvas, { width, height, dpr = 1, bi
       active = features.surface.surfaceStatus({ surface, surfaceGeneration, status: "created" });
       active.subscribe(notify);
       await active.result;
-      console.log("[DEBUG] flow surface created surface=%s %sx%s dpr=%s present=%s", surface, width, height, dpr, presentsOnGpu ? "webgpu" : "2d");
+      console.log("[TRACE] flow surface created surface=%s %sx%s dpr=%s present=%s", surface, width, height, dpr, presentsOnGpu ? "webgpu" : "2d");
       return { surface, surfaceGeneration, canvas, presentsOnGpu };
     } catch (error) {
       const status = cancelled ? "cancelled" : "rejected";
@@ -728,13 +728,13 @@ export function renderFlowCanvas(canvas, state) {
   if (!context) {
     if (typeof canvas === "object" && !flowUnpresentableCanvases.has(canvas)) {
       flowUnpresentableCanvases.add(canvas);
-      console.warn("[DEBUG] flow surface cannot replay: the canvas refuses a 2D context while the frame presents in 2D — it must be replaced");
+      console.warn("[TRACE] flow surface cannot replay: the canvas refuses a 2D context while the frame presents in 2D — it must be replaced");
     }
     return FlowPresentation.unpresentable;
   }
   if (typeof canvas === "object" && !flowPresentedCanvases.has(canvas)) {
     flowPresentedCanvases.add(canvas);
-    console.log("[DEBUG] flow surface context created 2d %sx%s dpr=%s widgets=%s commands=%s", state?.width, state?.height, state?.dpr, (state?.fixture?.widgets ?? []).length, (state?.draw?.commands ?? []).length);
+    console.log("[TRACE] flow surface context created 2d %sx%s dpr=%s widgets=%s commands=%s", state?.width, state?.height, state?.dpr, (state?.fixture?.widgets ?? []).length, (state?.draw?.commands ?? []).length);
   }
   context.setTransform(dpr, 0, 0, dpr, 0, 0);
   context.globalAlpha = 1;

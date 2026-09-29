@@ -43,7 +43,7 @@ async fn contract_reassembles_a_maximal_anonymous_run() {
     assert_eq!(contracted, chain);
 }
 
-/// @emoji ⛓️‍💥️ A single unlabeled edge followed by a labeled one is NOT a 1-edge "chain of
+/// ⛓️‍💥️ A single unlabeled edge followed by a labeled one is NOT a 1-edge "chain of
 /// one" — `contract` returns `None` so the caller prints `edges[0]` as a standalone statement
 /// (never through `print_chain`) and retries `contract` from index 1. This matters for a
 /// three-edge run where only the first edge is unlabeled: the run never reaches 2 chainable
@@ -64,7 +64,7 @@ async fn contract_returns_none_when_endpoints_dont_thread() {
     assert_eq!(contract(&edges), None);
 }
 
-/// @emoji 📖️ The fragment's `.grammar` file must at least parse under `dsl_grammar`'s parser
+/// 📖️ The fragment's `.grammar` file must at least parse under `dsl_grammar`'s parser
 /// (the spec+conformance role decided for grammar files — this doesn't yet prove the
 /// recognizer accepts every fixture, only that the spec itself is well-formed).
 #[semio_framework_async_macros::async_test]

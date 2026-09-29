@@ -29,7 +29,7 @@ async fn render_projects_localized_cells_with_stable_native_addresses() {
     assert!(matches!(arguments.iter().find_map(|(key, value)| (key.as_str() == "sheetName").then_some(value)), Some(UiValue::Text(value)) if value.as_str() == "Sheet1"));
     assert!(matches!(arguments.iter().find_map(|(key, value)| (key.as_str() == "row").then_some(value)), Some(UiValue::Number(1.0))));
     assert!(matches!(arguments.iter().find_map(|(key, value)| (key.as_str() == "column").then_some(value)), Some(UiValue::Number(0.0))));
-    assert!(matches!(arguments.iter().find_map(|(key, value)| (key.as_str() == "revision").then_some(value)), Some(UiValue::Text(value)) if value.as_str() == xlsx_cell_revision(&XlsxCellValue::Number(1.0), &[])));
+    assert!(matches!(arguments.iter().find_map(|(key, value)| (key.as_str() == "revision").then_some(value)), Some(UiValue::Text(value)) if value.as_str() == crate::standards::v_ecma_376::subsets::base::schema::mutations::cell_address::xlsx_cell_address(&document, "Sheet1", 1, 0).expect("rendered cell address").revision));
     let german = render(&document, Locale::De, &TreeWindows::unhosted()).expect("German render");
     let Component::Table(props) = &german.component else { panic!("German table") };
     assert_eq!(props.columns.iter().map(|label| label.0.as_str()).collect::<Vec<_>>(), ["Arbeitsblatt", "Zeile", "Spalte", "Wert"]);

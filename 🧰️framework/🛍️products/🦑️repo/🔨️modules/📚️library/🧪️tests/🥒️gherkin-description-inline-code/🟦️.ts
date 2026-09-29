@@ -96,7 +96,7 @@ test("the vector is a closed, self-consistent contract with a real independent t
 for (const compiler of compilers) test(compiler.name + " actual extraction matches every declared case, including cross-line and blank-line reset discipline", () => {
   assertPureClosure();
   const spans = compiledSpans(compiler);
-  for (const row of vector.cases) expect(actualValues(spans(row.source), row.source), row.id).toEqual(row.expected);
+  for (const row of vector.cases) expect(actualValues(spans(row.source), row.source), row.id).toEqual<typeof row.expected>(row.expected);
 });
 
 test("both real compiler closures agree with each other on the full case set", () => {

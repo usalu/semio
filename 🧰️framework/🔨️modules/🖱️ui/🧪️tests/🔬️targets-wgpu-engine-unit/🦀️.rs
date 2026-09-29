@@ -917,7 +917,6 @@ fn puzzle3d_settings_document_completes_retained_paint() {
         assert_eq!(in_segment(thirds[0]), 0, "{key} minus comes from the icon atlas");
         assert!(in_segment(thirds[1]) >= control["formatted"].as_str().expect("formatted value").chars().count(), "{key} retains the formatted value glyph run");
         assert_eq!(in_segment(thirds[2]), 0, "{key} plus comes from the icon atlas");
-        eprintln!("[DEBUG] Puzzle3D Settings retained {key}: bounds={bounds:?} solids={} glyphs={}", solids.len(), glyphs.len());
     }
 }
 
@@ -1651,7 +1650,7 @@ fn assert_close(left: (f32, f32), right: (f32, f32), what: &str) {
     assert!((left.0 - right.0).abs() < 0.01 && (left.1 - right.1).abs() < 0.01, "{what}: {left:?} != {right:?}");
 }
 
-/** @emoji 🪟️ An OPEN floating overlay's BODY is positioned at its resolved placement, not at the
+/** 🪟️ An OPEN floating overlay's BODY is positioned at its resolved placement, not at the
  * in-flow slot it was authored in — and the body's own content keeps painting through the normal node
  * pipeline, which is what `scene_at` resolving the scene INSIDE the overlay proves (the walk that
  * answers it is the paint walk's own geometry). React gets the same from a portal plus

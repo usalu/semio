@@ -146,7 +146,6 @@ fn n_ready_surfaces_converge_in_two_crossings_when_their_patches_fit_the_budget(
         assert!(ledger.crossings <= ceiling, "{count} surfaces cost {} crossings against the declared {ceiling}", ledger.crossings);
         assert_eq!(ledger.with_patch, 1, "{count} surfaces that fit the budget must travel in ONE patch-carrying crossing");
         assert!(ledger.idle <= fixture["idleCrossingsAllowed"].as_u64().expect("declared idle allowance") as usize, "{count} surfaces cost {} crossings that carried neither an event nor a patch", ledger.idle);
-        eprintln!("[DEBUG] turn-patch-batch surfaces={count} crossings={} patch={} events={} idle={}", ledger.crossings, ledger.with_patch, ledger.with_events, ledger.idle);
     }
 }
 
@@ -171,7 +170,6 @@ fn a_refused_turn_page_returns_every_patch_to_its_own_slot_in_publication_order(
     }
     let mut again = take_turn_patch_page(generous_budget()).expect("turn patch page");
     assert_eq!(again.iter().map(|patch| (patch.surface.0.to_string(), patch.revision.0)).collect::<Vec<_>>(), expected, "a returned page reads back in the same publication order");
-    eprintln!("[DEBUG] turn-patch-batch handback count={count} order={expected:?}");
     drain_page(&mut again);
     retire_pending_authority();
 }
@@ -201,7 +199,6 @@ fn a_patch_over_the_turn_byte_budget_travels_on_the_next_turn_and_still_applies_
         }
     }
     assert_eq!(delivered, expected, "a batch the budget cut still delivers every publication exactly once, in order");
-    eprintln!("[DEBUG] turn-patch-batch split count={count} fit={fit} unit={cost}B delivered={}", delivered.len());
     retire_pending_authority();
 }
 
@@ -216,7 +213,6 @@ fn the_first_ready_patch_is_admitted_whatever_the_budget_says() {
     let mut page = take_turn_patch_page(fixture["overBudgetBytes"].as_u64().expect("declared over-budget grant") as usize).expect("turn patch page");
     assert_eq!(page.len(), 1, "a budget no publication fits still admits the first one");
     assert_eq!(drain_page(&mut page), expected[..1], "and it is the oldest queued publication");
-    eprintln!("[DEBUG] turn-patch-batch first-always-admitted len=1");
     let mut rest = take_turn_patch_page(generous_budget()).expect("turn patch page");
     assert_eq!(drain_page(&mut rest), expected[1..], "the rest follow in order");
     retire_pending_authority();
@@ -243,7 +239,6 @@ fn a_turn_patch_page_never_asks_the_guest_for_more_than_one_contiguous_ceiling()
     }
     assert_eq!(window(0), semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES, "a lane below the floor is lifted to one contiguous ceiling");
     assert_eq!(window(u32::MAX as usize), UI_TURN_PATCH_BUDGET_BYTES, "a lane above the ceiling is cut to the declared budget");
-    eprintln!("[DEBUG] turn-patch-batch capacity={UI_TURN_PATCHES_MAXIMUM} page={}B ceiling={}B budget={UI_TURN_PATCH_BUDGET_BYTES}B", size_of::<UiTurnPatches>(), semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES);
 }
 
 /// 🔒️ THE per-surface law: two queued publications of the SAME surface are a chain, never a batch, so
@@ -281,7 +276,6 @@ fn two_queued_patches_of_one_surface_never_travel_in_the_same_turn_page() {
     drain_page(&mut first);
     let mut second = take_turn_patch_page(generous_budget()).expect("turn patch page");
     assert_eq!(second.iter().map(|patch| (patch.surface.0.to_string(), patch.revision.0)).collect::<Vec<_>>(), vec![(name.clone(), 2)], "the deferred publication rides the very next turn, in order");
-    eprintln!("[DEBUG] turn-patch-batch per-surface deferral: page1={carried:?} page2=[({name}, 2)]");
     drain_page(&mut second);
     retire_pending_authority();
 }

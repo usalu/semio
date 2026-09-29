@@ -37,7 +37,7 @@ fn cad_window_stack(window_kind_id: &str, title: &str, size: Option<f64>) -> Win
     })
 }
 
-/// @emoji 🪟️ Quad play layout: shape/building left column, energy/structure classic right column.
+/// 🪟️ Quad play layout: shape/building left column, energy/structure classic right column.
 pub fn layout() -> WindowLayout {
     WindowLayout {
         root: WindowLayoutRoot::Axis(WindowLayoutAxisNode {
@@ -63,7 +63,7 @@ pub fn instance_is_component_hovered(view: &CadPlayView, object_id: &str) -> boo
     view.interaction.is_hovered(object_id)
 }
 
-/// @emoji 🕹️ Whether this window's active Dislocate utility has a visible handle for the selection:
+/// 🕹️ Whether this window's active Dislocate utility has a visible handle for the selection:
 /// the utility is active on this window, at least one of its transforms is enabled and the `"cad"`
 /// domain selects at least one of THIS pane's objects (`selected_ids`, already pane-scoped).
 pub fn gumball_active(selected_ids: &[String], active_utility: Option<&str>, options: CadDislocateOptions) -> bool {

@@ -10,7 +10,6 @@ async fn debug_plain_cylinder_volume() {
     let solid = make_cylinder(&mut body, 1.0, 2.0, &mut rec).unwrap();
     let v = solid_volume(&body, solid, 1e-4).unwrap();
     let expected = PI * 1.0 * 1.0 * 2.0;
-    println!("[DEBUG] plain cylinder v={v} expected={expected}");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -173,17 +172,17 @@ async fn debug_offset_cylinder2() {
     use crate::standards::v1::subsets::brep::schema::inferences::mass_properties::face_area;
     for f in body.solid_faces(grown) {
         let fd = body.faces.get(f).unwrap();
-        println!("[DEBUG] face {f:?} flipped={} area={:?} surface={:?}", fd.flipped, face_area(&body, f, 1e-4), body.surfaces.get(fd.surface));
+        println!("face {f:?} flipped={} area={:?} surface={:?}", fd.flipped, face_area(&body, f, 1e-4), body.surfaces.get(fd.surface));
         if let Some(o) = fd.outer {
             for cid in body.loop_coedges(o) {
                 let c = body.coedges.get(cid).unwrap();
                 let e = body.edges.get(c.edge).unwrap();
-                println!("[DEBUG]   coedge edge={:?} forward={} range={:?} v0={:?} v1={:?} curve={:?}", c.edge, c.forward, e.range, e.v0, e.v1, body.curves3.get(e.curve));
+                println!("  coedge edge={:?} forward={} range={:?} v0={:?} v1={:?} curve={:?}", c.edge, c.forward, e.range, e.v0, e.v1, body.curves3.get(e.curve));
             }
         }
     }
     let v = solid_volume(&body, grown, 1e-4);
-    println!("[DEBUG] volume={v:?}");
+    println!("volume={v:?}");
 }
 
 #[semio_framework_async_macros::async_test]

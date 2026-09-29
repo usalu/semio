@@ -296,8 +296,8 @@ function parseArgv(argv: readonly string[]): { probe: string; inputs: string[] }
 async function main(argv: readonly string[]): Promise<number> {
   const { probe, inputs } = parseArgv(argv);
   const started = Date.now();
-  const emit = (report: ProbeReport): number => {
-    process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
+  const emit = async (report: ProbeReport): Promise<number> => {
+    await new Promise<void>((resolve, reject) => process.stdout.write(`${JSON.stringify(report, null, 2)}\n`, (error) => (error ? reject(error) : resolve())));
     return report.status === "failed" ? 1 : 0;
   };
   const budgetMs = Number(process.env.SEMIO_PROBE_TIMEOUT_MS ?? 60_000);

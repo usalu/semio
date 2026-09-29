@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/🤖️AgentApprovals/component.tsx
-/** @emoji ✅️ `🤖️AgentApprovals` — the human-in-the-loop approval affordance: one live, keyboard-reachable
+/** ✅️ `🤖️AgentApprovals` — the human-in-the-loop approval affordance: one live, keyboard-reachable
  * surface per approval request `AgentBridge`'s `approvalRequested` frames deliver (verb, target, change
  * summary, risk, countdown, three decisions), rendered in the agent conversation, plus the footer notice
  * that points at waiting requests. The decision goes back over the bridge through `resolveApproval`.
@@ -119,7 +119,7 @@ function RiskBadge({ risk }: { readonly risk: ApprovalRisk | null }): ReactEleme
   );
 }
 
-/** @emoji ⛩️ THE approval affordance — the one live, keyboard-reachable place a human decides what the agent
+/** ⛩️ THE approval affordance — the one live, keyboard-reachable place a human decides what the agent
  * may do. It renders inside the agent conversation where the request arrived; the shell never opens a
  * second, modal copy of it (ticket 26/09/18 AP1 §6.5: the modal's veil made the inline decision unreachable
  * until dismissed). WHAT happens (verb, description), WHAT it applies to, WHO asked, the change summary, the
@@ -215,7 +215,7 @@ export function AgentApprovalAffordance({ approvalId, summary, requestedAtMs, st
   );
 }
 
-/** @emoji 📣️ The always-visible pointer to waiting approvals, in the shell footer: it decides nothing itself —
+/** 📣️ The always-visible pointer to waiting approvals, in the shell footer: it decides nothing itself —
  * it says how many requests wait and takes the human (and keyboard focus) to the first one. Announces a new
  * request politely through its live region. Renders nothing while nothing waits. */
 export function AgentApprovalsNotice({ approvals, onReview }: { readonly approvals: readonly PendingAgentApproval[]; readonly onReview: (approvalId: string) => void }): ReactElement | null {

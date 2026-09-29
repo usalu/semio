@@ -42,11 +42,11 @@ export interface InteractiveJobPort {
   readonly status: "unavailable" | "ready" | "quarantined" | "closed";
   getSnapshot(): InteractiveJobPortSnapshot;
   subscribe(listener: () => void): () => void;
-  /** @emoji ⏱️ Prices one consumer turn against the isolate's UI-turn ceiling. Answers `false` only to
+  /** ⏱️ Prices one consumer turn against the isolate's UI-turn ceiling. Answers `false` only to
    * ask the caller to YIELD the rest of its work to a later macrotask — never that the port has died;
    * a turn over the ceiling is a recorded measurement, not a verdict. */
   observeConsumerTurn(site: string, durationMs: number): boolean;
-  /** @emoji 💥️ Reports a consumer that THREW — the only consumer-side condition that may quarantine. */
+  /** 💥️ Reports a consumer that THREW — the only consumer-side condition that may quarantine. */
   reportConsumerFault(site: string, detail: string): void;
   submit(
     descriptor: InteractiveJobDescriptor,

@@ -398,7 +398,6 @@ fn session_close_receipt_retries_a_colliding_event_slot_and_preserves_sibling() 
         }
     }
     assert!(bridge.terminal_is_empty());
-    println!("[DEBUG] Flow session receipt retained a terminal domain across event-slot backpressure and preserved its live sibling");
 }
 
 #[test]

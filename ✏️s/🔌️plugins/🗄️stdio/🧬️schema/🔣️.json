@@ -196,7 +196,7 @@
           "const": 36
         },
         "nativeCodecCount": {
-          "const": 26
+          "const": 29
         },
         "surfaceCases": {
           "type": "array",

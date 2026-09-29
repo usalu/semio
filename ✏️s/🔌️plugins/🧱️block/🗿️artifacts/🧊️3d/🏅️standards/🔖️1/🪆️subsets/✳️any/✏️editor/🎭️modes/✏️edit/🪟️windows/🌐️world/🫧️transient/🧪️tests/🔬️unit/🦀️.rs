@@ -33,7 +33,6 @@ fn preview_replacement_publication_and_retirement_obey_tiny_grants() {
         }
         assert!(publication.terminal_is_empty());
     }
-    eprintln!("[DEBUG] Block3D preview: neutral serde snapshots published and retired under one-item/one-byte grants; zero-item grants preserve ownership");
 }
 
 #[test]

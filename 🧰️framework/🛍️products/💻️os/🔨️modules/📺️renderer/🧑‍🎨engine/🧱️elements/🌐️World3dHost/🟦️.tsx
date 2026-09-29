@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/World3dHost/component.tsx
-/** @emoji 🌐️ `World3dHost` — the 3D world viewport scene host: mesh/instance parsing, point-cloud and vortex-marker
+/** 🌐️ `World3dHost` — the 3D world viewport scene host: mesh/instance parsing, point-cloud and vortex-marker
  * layers, catalogue-drop and selection-preview stores, instance chrome, the transform gumball, and the full R3F
  * `World3dHost` component mounted inside a Mode window. The largest scene host in this package. */
 // #endregion 🧲️Header
@@ -1016,7 +1016,7 @@ export function world3dAutoFitKey(
   return `${revision}:${sceneCameraAttachJson}:${minimum.map(round).join(",")}:${maximum.map(round).join(",")}`;
 }
 
-/** @emoji 🎯️ Fits the orbit camera to the producer's published bounds (or, absent those, the scene
+/** 🎯️ Fits the orbit camera to the producer's published bounds (or, absent those, the scene
  * group's own AABB) once per fit key, preserving the view direction. */
 function WorldAutoFit({
   groupRef,
@@ -1086,7 +1086,7 @@ type WorldAcceptedFrameDiagnosticsProps = {
   readonly lod: WorldLodRecord;
 };
 
-/** @emoji 🩺️ Emits one deduplicated, diagnostics-gated receipt from the actual R3F camera after
+/** 🩺️ Emits one deduplicated, diagnostics-gated receipt from the actual R3F camera after
  * projection/framing and LOD frame runners have accepted their inputs. */
 function WorldAcceptedFrameDiagnostics(props: WorldAcceptedFrameDiagnosticsProps): null {
   const { camera, controls, size } = useThree();
@@ -1125,12 +1125,12 @@ function WorldAcceptedFrameDiagnostics(props: WorldAcceptedFrameDiagnosticsProps
     const encoded = JSON.stringify(receipt);
     if (encoded === lastReceiptRef.current) return;
     lastReceiptRef.current = encoded;
-    console.info(`[DEBUG] react-world-frame ${encoded}`);
+    console.info(`[TRACE] react-world-frame ${encoded}`);
   });
   return null;
 }
 
-/** @emoji 📷️ Frames the orbit camera on a live world AABB while keeping the current look direction.
+/** 📷️ Frames the orbit camera on a live world AABB while keeping the current look direction.
  * `radius` is the BOUNDING-SPHERE radius ({@link world3dBoundsRadius}), not half the longest edge. */
 export function world3dFrameCameraFromBounds(
   center: readonly [number, number, number],
@@ -1143,7 +1143,7 @@ export function world3dFrameCameraFromBounds(
   return { ...camera, position: fitted.position, target: fitted.target, zoom: fitted.zoom };
 }
 
-/** @emoji 📷️ Frames the orbit camera on instance centroids so table-scale vortex markers stay hittable. */
+/** 📷️ Frames the orbit camera on instance centroids so table-scale vortex markers stay hittable. */
 function world3dTableScaleInstances(instances: readonly WorldInstanceRecord[]): readonly WorldInstanceRecord[] {
   if (instances.length <= 1) return instances;
   const points = instances.map((instance) => instance.position ?? [instance.x ?? 0, instance.y ?? 0, instance.z ?? 0]);
@@ -1213,7 +1213,7 @@ function autofitCameraFromInstances(instances: readonly WorldInstanceRecord[]): 
   };
 }
 
-/** @emoji 📷️ Seeds a pending display-template projection, framing visible references/instances when present. */
+/** 📷️ Seeds a pending display-template projection, framing visible references/instances when present. */
 function seedPendingWorldProjectionCamera(
   pendingSpec: WorldProjectionSpec,
   sceneCamera: WorldParsedCameraState,
@@ -1234,7 +1234,7 @@ function seedPendingWorldProjectionCamera(
   return { ...pose, fov: worldProjectionModeFov(pendingSpec) ?? sceneCamera.fov, explicitProjection: true, projectionFrame: sceneCamera.projectionFrame };
 }
 
-/** @emoji 📷️ Viewport-aware reframe for a projection seed so orthographic panes fit content — re-runs whenever
+/** 📷️ Viewport-aware reframe for a projection seed so orthographic panes fit content — re-runs whenever
  * {@link worldSceneContentBoundsKey} changes (a running tool grows the scene) until the host stops enabling it
  * (user-owned orbit/pan/zoom). */
 function WorldProjectionContentFrame(props: {
@@ -1298,7 +1298,7 @@ function WorldProjectionContentFrame(props: {
   return null;
 }
 
-/** @emoji 🥽️ One built-in mesh kind's geometry, built from the engine's own primitives. The placement and
+/** 🥽️ One built-in mesh kind's geometry, built from the engine's own primitives. The placement and
  * extent are pinned against `🧰️framework/🔨️modules/🏗️mesh-engine/🧫️fixtures/🥽️scene-mesh-kinds/🔣️.json`,
  * the same fixture Rust's `mesh_from_kind` answers to — the two tessellate differently on purpose, so the
  * local bounding box, not the triangle list, is the contract. `cone` and `plane`/`torus` are re-placed
@@ -1329,7 +1329,7 @@ function worldMeshKindGeometry(kind: string): BufferGeometry {
 
 const worldMeshKindData = new Map<string, WorldMeshData>();
 
-/** @emoji 🥽️ Resolves a `{ id, kind }` scene mesh reference into the buffers every downstream path
+/** 🥽️ Resolves a `{ id, kind }` scene mesh reference into the buffers every downstream path
  * (shading, edge outlines, marquee bounds, component overlays) already expects. Memoized per kind: the
  * set is closed and tiny, and a scene refresh must not re-tessellate. */
 export function meshDataFromKind(kind: string): WorldMeshData {
@@ -1366,7 +1366,7 @@ function parseMeshes(meshesJson: string): WorldMeshRecord[] {
   }
 }
 
-/** @emoji 🔪️ Splits a JSON array's TEXT into its element texts without parsing any of them — a
+/** 🔪️ Splits a JSON array's TEXT into its element texts without parsing any of them — a
  * balanced scan over strings/escapes/nesting. `null` means "this is not a flat JSON array I can
  * account for", which every caller answers by falling back to a whole-document parse.
  *
@@ -1424,7 +1424,7 @@ export type WorldMeshResidencyV1 = {
   readonly records: readonly WorldMeshRecord[];
 };
 
-/** @emoji 🧊️ Advances a retained mesh set to `meshesJson`, keeping the object IDENTITY of every mesh
+/** 🧊️ Advances a retained mesh set to `meshesJson`, keeping the object IDENTITY of every mesh
  * whose wire text is unchanged. That identity is what lets the instanced-mesh layer rebuild the
  * `BufferGeometry` of exactly the meshes that moved instead of all of them: before this, a 3-mesh
  * surface re-tessellated all three whenever one upstream node re-evaluated, because the memo boundary
@@ -1508,7 +1508,7 @@ export function parseWorldInstanceDelta(deltaJson: string | null | undefined): W
 }
 
 /**
- * @emoji 🚚️ Advances one consumer's retained instance set by the publication it just received.
+ * 🚚️ Advances one consumer's retained instance set by the publication it just received.
  *
  * ⏱️ Ticket 26/09/02/PUZZLE-3D-END-TO-END wave B44. A pose edit on a large document republishes the
  * whole `instancesJson` lane — 55 KiB / 180 records on Nakagin — and every consumer used to re-parse
@@ -1950,7 +1950,7 @@ export function selectionGroupsFromDomains(domains: { readonly nodes: string[]; 
   return groups;
 }
 
-/** @emoji 🖱️ Maps plugin-authored {@link ContextMenuItemSpec} rows onto UI {@link ContextMenuItem} rows, binding select/hover to host `dispatch`.
+/** 🖱️ Maps plugin-authored {@link ContextMenuItemSpec} rows onto UI {@link ContextMenuItem} rows, binding select/hover to host `dispatch`.
  *
  * 🗂️ A `menu.group.<category>` row travels from the guest with `label: undefined` by contract — the
  * taxonomy is chrome vocabulary the SHELL owns, not app vocabulary (`plugin/🦀️.rs`'s `Menu::group`,
@@ -2013,7 +2013,7 @@ function parseLod(lodJson: string | undefined): WorldLodRecord {
 
 type WorldContextMenuTarget = { readonly kind: "vortex" | "object" | "reference"; readonly id: string };
 
-/** @emoji 🖱️ Resolves which entity a plain right-click should select-then-open a menu for, by priority: hovered vortex, object component, reference, then object. */
+/** 🖱️ Resolves which entity a plain right-click should select-then-open a menu for, by priority: hovered vortex, object component, reference, then object. */
 export function resolveWorldContextMenuTarget(interaction: WorldInteractionRecord, selection: WorldSelectionRecord): WorldContextMenuTarget | null {
   if (interaction.hoveredVortexFullId) return { kind: "vortex", id: interaction.hoveredVortexFullId };
   if (selection.hoveredComponent?.objectId) return { kind: "object", id: selection.hoveredComponent.objectId };
@@ -2023,7 +2023,7 @@ export function resolveWorldContextMenuTarget(interaction: WorldInteractionRecor
   return null;
 }
 
-/** @emoji 🪧️ The `surface` half of one world right-click's {@link PluginContextMenuRequest}: the entity under
+/** 🪧️ The `surface` half of one world right-click's {@link PluginContextMenuRequest}: the entity under
  * the pointer as the single `hits` row, and the painted selection as per-domain `selection` groups. The hit
  * target rides THIS request — an editor reads it straight off `ContextMenuSurfaceTarget.hits` — so no
  * separate target-recording dispatch precedes the menu. `contextMenuAt`, the action that used to carry it,
@@ -2040,12 +2040,12 @@ export function world3dContextMenuSurfaceV1(
   return { hits: target ? [{ domain: target.kind, id: target.id }] : [], selection: groups };
 }
 
-/** @emoji 🚫️ Instance-mesh picking must be disabled for brush engagements — otherwise a click meant for a vortex marker or a voxel gesture falls through and selects/gumballs the underlying object instead. */
+/** 🚫️ Instance-mesh picking must be disabled for brush engagements — otherwise a click meant for a vortex marker or a voxel gesture falls through and selects/gumballs the underlying object instead. */
 export function worldInstancePickBlocked(activeUtility: string | undefined): boolean {
   return activeUtility === "brush" || activeUtility === "volumeBrush" || activeUtility === "surfaceBrush";
 }
 
-/** @emoji 🎯️ The hover this pane is publishing, as an interaction target the background-click path may
+/** 🎯️ The hover this pane is publishing, as an interaction target the background-click path may
  * pick instead of clearing. `null` for empty canvas and for every MARKER layer — a vortex
  * (`kind:fullId`) and a reference (`reference:id`) carry a `:` and own dedicated pick handlers, so the
  * background path must never select them. Pure and exported for
@@ -2055,12 +2055,12 @@ export function hoveredInteractionTargetV1(hoveredId: string | null | undefined)
   return { granularity: "object", id: hoveredId };
 }
 
-/** @emoji 🚫️ `undefined` keeps the default mesh raycast; a no-op replaces it so a blocked instance cannot steal sibling vortex hits. */
+/** 🚫️ `undefined` keeps the default mesh raycast; a no-op replaces it so a blocked instance cannot steal sibling vortex hits. */
 export function worldInstanceMeshRaycast(pickEnabled: boolean): (() => null) | undefined {
   return pickEnabled ? undefined : () => null;
 }
 
-/** @emoji 🚫️ Walks a GLB/instance root and disables mesh raycasts when pick is blocked. */
+/** 🚫️ Walks a GLB/instance root and disables mesh raycasts when pick is blocked. */
 export function applyWorldInstanceMeshRaycast(
   root: { readonly traverse: (fn: (object: { readonly isMesh?: boolean; raycast: unknown }) => void) => void },
   pickEnabled: boolean,
@@ -2075,13 +2075,13 @@ export function applyWorldInstanceMeshRaycast(
 
 const WORLD_VORTEX_DEFAULT_RADIUS = 0.36;
 
-/** @emoji 🎯 Hit-proxy sphere stays `visible` so Three's raycaster does not skip it; radius is at least the published marker radius. */
+/** 🎯 Hit-proxy sphere stays `visible` so Three's raycaster does not skip it; radius is at least the published marker radius. */
 export function worldVortexHitProxy(radius?: number): { readonly visible: true; readonly radius: number } {
   const published = radius ?? WORLD_VORTEX_DEFAULT_RADIUS;
   return { visible: true, radius: Math.max(published, WORLD_VORTEX_DEFAULT_RADIUS) };
 }
 
-/** @emoji 🖱️ In brush mode or vertex selection mode, pointer-down on a vortex selects immediately; otherwise a click selects and a drag starts connect. */
+/** 🖱️ In brush mode or vertex selection mode, pointer-down on a vortex selects immediately; otherwise a click selects and a drag starts connect. */
 export function resolveVortexPointerDownIntent(brushMode: boolean, selectionMode?: string): "select" | "click-or-drag" {
   return brushMode || selectionMode === "vertex" ? "select" : "click-or-drag";
 }
@@ -2162,7 +2162,7 @@ function buildEdgeGeometry(mesh: WorldMeshData): BufferGeometry | null {
   return geometry;
 }
 
-/** @emoji 🧵️ Curve/centerline meshes have edge samples but no shaded triangles — pick/hover must treat them as whole instances. */
+/** 🧵️ Curve/centerline meshes have edge samples but no shaded triangles — pick/hover must treat them as whole instances. */
 export function isCurveOnlyWorldMesh(mesh: Pick<WorldMeshData, "indices" | "edgePositions">): boolean {
   return Boolean(mesh.edgePositions?.length) && !(mesh.indices?.length > 0);
 }
@@ -2189,7 +2189,7 @@ function buildFaceOverlayGeometry(mesh: WorldMeshData, faceIds: ReadonlySet<numb
   return geometry;
 }
 
-/** @emoji 🖱️➡️ Approximates a picked face's in-plane size from its triangles' local bounding box, dropping the
+/** 🖱️➡️ Approximates a picked face's in-plane size from its triangles' local bounding box, dropping the
  * smallest axis (roughly the one aligned with the face normal for axis-aligned primitive faces) — good
  * enough to size a push/pull tool's footprint without needing a true tangent-plane projection. */
 function faceExtentFromMesh(mesh: WorldMeshData, faceId: number): readonly [number, number] | undefined {
@@ -2304,7 +2304,7 @@ function PaintTexturedMesh({
 }
 
 //#region GlbMeshBounds
-/** @emoji 📦️ Local-space extents of every GLB the scene has loaded, keyed by the mesh record's own
+/** 📦️ Local-space extents of every GLB the scene has loaded, keyed by the mesh record's own
  * `url` and already carrying the {@link GLB_MESH_FRAME_ROTATION_X} frame rotation the instance group
  * applies — so an entry is exactly the eight local corners a pick or a marquee has to project.
  *
@@ -2627,7 +2627,7 @@ export function world3dGumballSelectionArgsV1(selection: {
   return { mode: selection.selectionMode ?? selection.granularity ?? "object", ids: [...(selection.gumballSelectionIds ?? selection.ids ?? [])] };
 }
 
-/** @emoji 🎛️ Builds one incremental `translateSelection` / `rotateSelection` / `scaleSelection` dispatch from consecutive gumball poses. */
+/** 🎛️ Builds one incremental `translateSelection` / `rotateSelection` / `scaleSelection` dispatch from consecutive gumball poses. */
 export function gumballTransformDeltaBetweenPoses(
   transformMode: string | undefined,
   before: GumballPose,
@@ -2664,13 +2664,13 @@ export function gumballTransformDeltaBetweenPoses(
   return { action: "scaleSelection", args: { ...base, sx, sy, sz } };
 }
 
-/** @emoji ⚡️ Local mid-drag gumball preview delta — applied imperatively to selected instance roots so meshes track the pointer without a WASM/React round-trip (same instant path as catalogue drop ghosts). */
+/** ⚡️ Local mid-drag gumball preview delta — applied imperatively to selected instance roots so meshes track the pointer without a WASM/React round-trip (same instant path as catalogue drop ghosts). */
 export type WorldGumballLivePreviewDelta =
   | { readonly kind: "translate"; readonly dx: number; readonly dy: number; readonly dz: number }
   | { readonly kind: "rotate"; readonly qx: number; readonly qy: number; readonly qz: number; readonly qw: number }
   | { readonly kind: "scale"; readonly sx: number; readonly sy: number; readonly sz: number };
 
-/** @emoji ⚡️ Absolute start→current gumball preview delta for local instance transforms. */
+/** ⚡️ Absolute start→current gumball preview delta for local instance transforms. */
 export function gumballLivePreviewDeltaBetweenPoses(
   transformMode: string | undefined,
   before: GumballPose,
@@ -2709,7 +2709,7 @@ type WorldGumballLivePose = {
   readonly scale: readonly [number, number, number];
 };
 
-/** @emoji ⚡️ Applies a local gumball preview delta onto a drag-start instance pose (matches puzzle/lowpoly/CAD scratch translate/rotate/scale semantics). */
+/** ⚡️ Applies a local gumball preview delta onto a drag-start instance pose (matches puzzle/lowpoly/CAD scratch translate/rotate/scale semantics). */
 export function applyGumballLivePreviewDeltaToPose(base: WorldGumballLivePose, delta: WorldGumballLivePreviewDelta): WorldGumballLivePose {
   if (delta.kind === "translate") {
     return {
@@ -2736,7 +2736,7 @@ export function applyGumballLivePreviewDeltaToPose(base: WorldGumballLivePose, d
 }
 
 /**
- * @emoji 🧿️ Whether the `<group>` ref the reconciler handed back is a real three.js instance root that
+ * 🧿️ Whether the `<group>` ref the reconciler handed back is a real three.js instance root that
  * owns a transform to write. The host mounts under hosts other than the three.js reconciler — jsdom
  * gesture mounts and `renderToStaticMarkup` — where the very same ref yields a DOM node instead, so
  * the imperative gumball preview registry admits only what it can actually pose. `isObject3D` is
@@ -2748,7 +2748,7 @@ export function isWorldInstanceRootObject3D(candidate: unknown): candidate is Gr
   return typeof candidate === "object" && candidate !== null && (candidate as { isObject3D?: unknown }).isObject3D === true;
 }
 
-/** @emoji ⚡️ Writes a live gumball preview pose onto a Three.js instance root. */
+/** ⚡️ Writes a live gumball preview pose onto a Three.js instance root. */
 export function applyGumballLivePreviewPoseToObject3D(target: Object3D, pose: WorldGumballLivePose): void {
   target.position.set(pose.position[0], pose.position[1], pose.position[2]);
   target.quaternion.set(pose.quaternion[0], pose.quaternion[1], pose.quaternion[2], pose.quaternion[3]);
@@ -2756,7 +2756,7 @@ export function applyGumballLivePreviewPoseToObject3D(target: Object3D, pose: Wo
   target.updateMatrixWorld(true);
 }
 
-/** @emoji 🌀 Applies the same gumball preview delta a selected instance root receives onto one world-space point (vortex markers, attraction endpoints). */
+/** 🌀 Applies the same gumball preview delta a selected instance root receives onto one world-space point (vortex markers, attraction endpoints). */
 export function gumballPreviewWorldPoint(
   pivot: readonly [number, number, number],
   transformMode: string | undefined,
@@ -2779,7 +2779,7 @@ export function gumballPreviewWorldPoint(
   return worldPoint;
 }
 
-/** @emoji 🌀 Applies gumball preview rotation to a world-space direction vector. */
+/** 🌀 Applies gumball preview rotation to a world-space direction vector. */
 export function gumballPreviewWorldDirection(
   transformMode: string | undefined,
   before: GumballPose,
@@ -2806,12 +2806,12 @@ export function gumballConfigForTransformMode(mode: string, plane?: GumballConfi
   return plane ? { ...groups, plane } : groups;
 }
 
-/** @emoji 🎛️ Transform-mode gumball config intersected with the planar subset implied by a window projection. */
+/** 🎛️ Transform-mode gumball config intersected with the planar subset implied by a window projection. */
 export function worldGumballConfigForProjection(mode: string, projectionSpec?: WorldProjectionSpec): GumballConfig {
   return gumballConfigForTransformMode(mode, worldProjectionGumballPlane(projectionSpec));
 }
 
-/** @emoji 🫥️ True while the canvas is hovered, or always true when `enabled` is false (driver gumball reveal is `"always"`). Listens directly on the R3F canvas DOM element — no prop drilling into the scene graph. */
+/** 🫥️ True while the canvas is hovered, or always true when `enabled` is false (driver gumball reveal is `"always"`). Listens directly on the R3F canvas DOM element — no prop drilling into the scene graph. */
 function useUiCanvasHovered(enabled: boolean): boolean {
   const gl = useThree((state) => state.gl);
   const [hovered, setHovered] = useState(!enabled);
@@ -4031,7 +4031,7 @@ function WorldVortexMarkers({
 }
 //#endregion WorldVortexMarkers
 
-/** @emoji 🧲️ Rubber-band line drawn from the drag-connect source vortex to the currently hovered vortex (or itself, if hovering nothing). */
+/** 🧲️ Rubber-band line drawn from the drag-connect source vortex to the currently hovered vortex (or itself, if hovering nothing). */
 function WorldConnectRubberBand({ from, to }: { readonly from: readonly [number, number, number]; readonly to: readonly [number, number, number] }) {
   const geometry = useMemo(() => {
     const positions = new Float32Array([from[0], from[1], from[2], to[0], to[1], to[2]]);
@@ -4046,7 +4046,7 @@ function WorldConnectRubberBand({ from, to }: { readonly from: readonly [number,
   );
 }
 
-/** @emoji 🧊️ Cursor-follow ghost box previewing the target volume that Alt+click would place, sized by the engagement's W/D/H steppers. */
+/** 🧊️ Cursor-follow ghost box previewing the target volume that Alt+click would place, sized by the engagement's W/D/H steppers. */
 function WorldVoxelPreviewBox({ origin, dims, gridFactor }: { readonly origin: readonly [number, number, number]; readonly dims: readonly [number, number, number]; readonly gridFactor: number }) {
   return (
     <mesh position={origin as [number, number, number]} raycast={() => null}>
@@ -4074,14 +4074,14 @@ function WorldAttractionLines({ attractions }: { readonly attractions: readonly 
   );
 }
 
-/** @emoji 👻️ GLB URL for a catalogue-drop ghost — scene mesh match when present, else the preview's own `meshUrl`, so a kind not placed yet still renders. */
+/** 👻️ GLB URL for a catalogue-drop ghost — scene mesh match when present, else the preview's own `meshUrl`, so a kind not placed yet still renders. */
 export function worldGhostMeshUrl(preview: { readonly meshUrl?: string }, meshes: readonly Pick<WorldMeshRecord, "url">[]): string | undefined {
   const meshUrl = preview.meshUrl;
   if (!meshUrl) return undefined;
   return meshes.find((mesh) => mesh.url === meshUrl)?.url ?? meshUrl;
 }
 
-/** @emoji 🎞️ Demand-frameloop kick when a token changes — box fallbacks and already-cached GLBs otherwise leave a ghost invisible until the next orbit tick. */
+/** 🎞️ Demand-frameloop kick when a token changes — box fallbacks and already-cached GLBs otherwise leave a ghost invisible until the next orbit tick. */
 function DemandInvalidateOnToken({ token }: { readonly token: string }) {
   const invalidate = useThree((state) => state.invalidate);
   useLayoutEffect(() => {
@@ -4090,7 +4090,7 @@ function DemandInvalidateOnToken({ token }: { readonly token: string }) {
   return null;
 }
 
-/** @emoji 🎞️ Demand-frameloop kick when the shared catalogue-drop preview store changes — HTML5 drags never fire pointermove, so the ghost must invalidate on dragover-driven store updates alone. */
+/** 🎞️ Demand-frameloop kick when the shared catalogue-drop preview store changes — HTML5 drags never fire pointermove, so the ghost must invalidate on dragover-driven store updates alone. */
 function CatalogueDropPreviewInvalidate({ preview }: { readonly preview: Puzzle3dCatalogueDropPreview | null }) {
   const invalidate = useThree((state) => state.invalidate);
   useLayoutEffect(() => {
@@ -4100,7 +4100,7 @@ function CatalogueDropPreviewInvalidate({ preview }: { readonly preview: Puzzle3
 }
 
 /**
- * @emoji ⏳️ The compute-status pane: what the producer says it is doing, how far it has got, and —
+ * ⏳️ The compute-status pane: what the producer says it is doing, how far it has got, and —
  * while it says so — a real button that stops it.
  *
  * 🛑️ The affordance is a `<button>`, not a clickable div, so it is in the tab order, answers Enter
@@ -4229,7 +4229,7 @@ function EngagementPreviewLayer({ items, color }: { readonly items: readonly Wor
   );
 }
 
-/** @emoji 🧭️ Floating per-vortex candidate popup opened by Alt+right-click or the context menu's "Suggest objects" — a one-shot placement picker that does not switch the active utility into brush mode; hovering a row previews the ghost, clicking places it. Icon + active highlight only (no color swatch — object-kind color stays on the 3D ghost). */
+/** 🧭️ Floating per-vortex candidate popup opened by Alt+right-click or the context menu's "Suggest objects" — a one-shot placement picker that does not switch the active utility into brush mode; hovering a row previews the ghost, clicking places it. Icon + active highlight only (no color swatch — object-kind color stays on the 3D ghost). */
 export function suggestionMenuItems(
   menu: Pick<WorldSuggestionMenuRecord, "pending" | "candidates" | "vortexFullId">,
   activeIndex: number,
@@ -4256,12 +4256,12 @@ export function suggestionMenuItems(
 export const WORLD3D_MARQUEE_DRAG_THRESHOLD_PX = 4;
 const MARQUEE_DRAG_THRESHOLD_PX = WORLD3D_MARQUEE_DRAG_THRESHOLD_PX;
 
-/** @emoji 🖱️ Marquee may steal the pointer only after the click slop — otherwise r3f never sees the click. */
+/** 🖱️ Marquee may steal the pointer only after the click slop — otherwise r3f never sees the click. */
 export function world3dMarqueePointerCaptureArmed(distancePx: number): boolean {
   return distancePx > MARQUEE_DRAG_THRESHOLD_PX;
 }
 
-/** @emoji 🎯️ The five-word `MergeMode` set algebra for non-string id sets — mirrors `selectionMergeIds`
+/** 🎯️ The five-word `MergeMode` set algebra for non-string id sets — mirrors `selectionMergeIds`
  * from `@semio-tech/ui-react`, which is string-only. `range` has no ordered topology in a world
  * viewport, so it replaces (see `🕹️interaction/🧫️fixtures/🎯️merge-modes.json`, `range.unorderedDomains`). */
 function mergeIdSet<T>(mode: MergeMode, current: readonly T[], incoming: readonly T[]): T[] {
@@ -4283,7 +4283,7 @@ function mergeIdSet<T>(mode: MergeMode, current: readonly T[], incoming: readonl
   return [...currentSet];
 }
 
-/** @emoji 🎯️ Resolves a world surface's declared selection mode before falling back to the shared selection toolbar. */
+/** 🎯️ Resolves a world surface's declared selection mode before falling back to the shared selection toolbar. */
 export function resolveWorldMergeMode(
   configuredMode: MergeMode | undefined,
   modifiers: { readonly shiftKey?: boolean; readonly ctrlKey?: boolean; readonly metaKey?: boolean },
@@ -4299,7 +4299,7 @@ export function resolveWorldMergeMode(
   return "replace";
 }
 
-/** @emoji 🖱️ The component (vertex/edge/face) pick's one deviation from the whole-instance pick: a BARE
+/** 🖱️ The component (vertex/edge/face) pick's one deviation from the whole-instance pick: a BARE
  * click toggles instead of replacing, because component picking is an accumulate gesture. Every other
  * chord resolves exactly as {@link resolveWorldMergeMode} says. The result is a `MergeMode` — the ONE
  * merge vocabulary of `🕹️interaction/🧬️schema/🔣️.json`, pinned by
@@ -4322,7 +4322,7 @@ function pointInMarqueeRect(sx: number, sy: number, marquee: readonly SelectionM
   return sx >= minX && sx <= maxX && sy >= minY && sy <= maxY;
 }
 
-/** @emoji 🎯️ Even-odd point-in-polygon test for lasso selection. */
+/** 🎯️ Even-odd point-in-polygon test for lasso selection. */
 function pointInPolygon(sx: number, sy: number, polygon: readonly SelectionMarqueePoint[]): boolean {
   let inside = false;
   for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
@@ -4339,7 +4339,7 @@ function pointInMarqueeRegion(sx: number, sy: number, method: SelectionMarqueeMe
   return pointInMarqueeRect(sx, sy, marquee);
 }
 
-/** @emoji 🎯️ Window (full containment, all points) vs crossing (partial, any point) semantics for multi-point elements. */
+/** 🎯️ Window (full containment, all points) vs crossing (partial, any point) semantics for multi-point elements. */
 function pointsSatisfyMarquee(points: readonly (readonly [number, number])[], method: SelectionMarqueeMethod, marquee: readonly SelectionMarqueePoint[], coverage: SelectionMarqueeCoverage): boolean {
   if (points.length === 0) return false;
   const test = (point: readonly [number, number]) => pointInMarqueeRegion(point[0], point[1], method, marquee);
@@ -4405,7 +4405,7 @@ function resolveMarqueeComponentIds(
   return [...hits];
 }
 
-/** @emoji 📦️ Local-space AABB corners of a mesh's vertex positions (or edge samples for curve-only meshes; fallback: origin). */
+/** 📦️ Local-space AABB corners of a mesh's vertex positions (or edge samples for curve-only meshes; fallback: origin). */
 export function meshBoundsCorners(meshData: WorldMeshData): readonly (readonly [number, number, number])[] {
   let minX = Infinity;
   let minY = Infinity;
@@ -4472,7 +4472,7 @@ function resolveMarqueeInstanceIds(
   return hits;
 }
 
-/** @emoji 🖱️ Whether a host-local click sits inside the axis-aligned screen box of projected mesh corners. */
+/** 🖱️ Whether a host-local click sits inside the axis-aligned screen box of projected mesh corners. */
 export function world3dProjectedAabbContainsClick(
   click: { readonly x: number; readonly y: number },
   corners: readonly (readonly [number, number])[],
@@ -4491,7 +4491,7 @@ export function world3dProjectedAabbContainsClick(
   return click.x >= minX && click.x <= maxX && click.y >= minY && click.y <= maxY;
 }
 
-/** @emoji 🖱️ Nearest projected AABB that contains the click; empty space returns null. */
+/** 🖱️ Nearest projected AABB that contains the click; empty space returns null. */
 export function resolveClickInstanceIdFromProjected(
   click: { readonly x: number; readonly y: number },
   candidates: readonly { readonly id: string; readonly corners: readonly (readonly [number, number])[]; readonly depth: number }[],
@@ -4553,7 +4553,7 @@ function CameraRefBridge({ cameraRef }: { readonly cameraRef: React.MutableRefOb
   return null;
 }
 
-/** @emoji 🧭️ Registers this window's live camera and entity data as the introduction demonstration
+/** 🧭️ Registers this window's live camera and entity data as the introduction demonstration
  * engine's resolver for `windowElementId(windowInstanceId)` — the same element id `windowElementId(kind.id)`
  * builds for authoring (see `mit-bestand/demonstrator/🪧️brand.ts`). Only the base (non-split) window instance
  * registers under its exact kind id this way, since `windowInstanceId` equals `kind.id` verbatim for it;
@@ -4659,7 +4659,7 @@ function IntroductionWorldResolverBridge({
   return null;
 }
 
-/** @emoji 🎯️ Widens Line/Points raycast hit area so thin edge/vertex geometry is reliably pickable without stealing face clicks. */
+/** 🎯️ Widens Line/Points raycast hit area so thin edge/vertex geometry is reliably pickable without stealing face clicks. */
 function RaycasterPickTuning() {
   const raycaster = useThree((state) => state.raycaster);
   useEffect(() => {
@@ -4748,7 +4748,7 @@ function paneSuffixFromSurfaceId(surfaceId?: string): string | undefined {
   return slash >= 0 ? surfaceId.slice(slash + 1) : surfaceId;
 }
 
-/** @emoji 📡️ World-space camera ray through an NDC point — orthographic uses parallel near→far unproject rays;
+/** 📡️ World-space camera ray through an NDC point — orthographic uses parallel near→far unproject rays;
  * perspective uses the pinhole from `camera.position`. Duck-types `isOrthographicCamera` (not `instanceof`) so
  * R3F-swapped cameras stay correct. */
 function worldRayFromNdc(ndcX: number, ndcY: number, camera: ThreeCamera): { origin: Vector3; direction: Vector3 } | null {
@@ -4765,7 +4765,7 @@ function worldRayFromNdc(ndcX: number, ndcY: number, camera: ThreeCamera): { ori
   return { origin, direction: direction.normalize() };
 }
 
-/** @emoji 🎯️ Intersects the camera ray through a client point with the world Z=0 ground plane (catalogue drop + face drag). */
+/** 🎯️ Intersects the camera ray through a client point with the world Z=0 ground plane (catalogue drop + face drag). */
 export function raycastGroundPoint(clientX: number, clientY: number, hostRect: DOMRect, camera: ThreeCamera): [number, number, number] | null {
   const ndcX = ((clientX - hostRect.left) / hostRect.width) * 2 - 1;
   const ndcY = -(((clientY - hostRect.top) / hostRect.height) * 2 - 1);
@@ -4809,7 +4809,7 @@ export function snapWorldPointToGrid(point: readonly [number, number, number], g
 }
 
 //#region WorldRelocateGesture
-/** @emoji 🚚️ Which object a Relocate-utility press grabs. A press with NOTHING selected grabs the object
+/** 🚚️ Which object a Relocate-utility press grabs. A press with NOTHING selected grabs the object
  * under the pointer outright (direct manipulation, no select-then-drag ceremony); a press on a DIFFERENT
  * object than the selected one grabs nothing and falls through to the ordinary marquee/pick path, so the
  * user can re-select without the scene jumping under the cursor.
@@ -4834,7 +4834,7 @@ export function world3dRelocateDragTargetV1(pressedId: string | null | undefined
   return selectedIds.includes(pressedId) ? pressedId : null;
 }
 
-/** @emoji 🚚️ The ONE `worldRelocate` payload a finished Relocate drag commits — the absolute world origin
+/** 🚚️ The ONE `worldRelocate` payload a finished Relocate drag commits — the absolute world origin
  * the guest's `world_relocate` arm decodes as `{objectId, position}`, never an incremental pose delta
  * (`gumballTransformDeltaBetweenPoses`'s `translateSelection` shape, which this verb deliberately is not).
  * The ground-plane travel `from → to` is added to the grabbed object's own origin and snapped exactly like
@@ -4865,7 +4865,7 @@ type World3dRelocateSession = {
 //#endregion WorldRelocateGesture
 
 //#region WorldVolumeBrushGesture
-/** @emoji 🧊️ Grid-snapped ground origin a Volume Brush hover previews and an Alt+click commits, from the
+/** 🧊️ Grid-snapped ground origin a Volume Brush hover previews and an Alt+click commits, from the
  * raw `raycastGroundPoint` hit. Always snaps (the guest re-snaps by its own `gridSpacing` anyway), so a
  * placed target volume, a dropped catalogue object and a relocated object all land on one lattice.
  * `null` when the pointer ray misses the ground plane, which is also what keeps the ghost box off screen. */
@@ -4873,7 +4873,7 @@ export function world3dVolumeBrushOriginV1(ground: readonly [number, number, num
   return ground ? snapWorldPointToGrid(ground, true, gridFactor) : null;
 }
 
-/** @emoji 🧊️ True when a Volume Brush pointer press must COMMIT a target volume instead of opening a
+/** 🧊️ True when a Volume Brush pointer press must COMMIT a target volume instead of opening a
  * marquee — the utility armed and Alt held. The gesture reads the ground through the host's own pointer
  * handlers (like relocate and catalogue drop) rather than an invisible r3f plane inside the canvas, which
  * the instance layer occluded on every click that landed on an object
@@ -4895,7 +4895,7 @@ function clientPointOverHost(clientX: number, clientY: number, hostRect: DOMRect
 }
 
 //#region WorldCatalogueDropPreviewStore
-/** @emoji 👻️ Shared world-space catalogue-drop ghosts keyed by controller — every {@link World3dHost} pane of that controller subscribes so the preview is never clipped to the hovered window. */
+/** 👻️ Shared world-space catalogue-drop ghosts keyed by controller — every {@link World3dHost} pane of that controller subscribes so the preview is never clipped to the hovered window. */
 const worldCatalogueDropPreviewByController = new Map<string, Puzzle3dCatalogueDropPreview>();
 const worldCatalogueDropPreviewListeners = new Set<() => void>();
 const worldCatalogueDropHostHitTests = new Map<string, { readonly controllerId: string; readonly hitTest: (clientX: number, clientY: number) => boolean }>();
@@ -4910,7 +4910,7 @@ function notifyWorldCatalogueDropPreviewListeners(): void {
   for (const listener of worldCatalogueDropPreviewListeners) listener();
 }
 
-/** @emoji 👻️ Subscribe to shared world-space catalogue-drop previews (all open World3d panes). */
+/** 👻️ Subscribe to shared world-space catalogue-drop previews (all open World3d panes). */
 export function subscribeWorldCatalogueDropPreview(listener: () => void): () => void {
   worldCatalogueDropPreviewListeners.add(listener);
   return () => {
@@ -4918,17 +4918,17 @@ export function subscribeWorldCatalogueDropPreview(listener: () => void): () => 
   };
 }
 
-/** @emoji 👻️ Current shared world-space catalogue-drop preview for `controllerId`, or `null` when no catalogue drag is live. */
+/** 👻️ Current shared world-space catalogue-drop preview for `controllerId`, or `null` when no catalogue drag is live. */
 export function getWorldCatalogueDropPreview(controllerId: string): Puzzle3dCatalogueDropPreview | null {
   return worldCatalogueDropPreviewByController.get(controllerId) ?? null;
 }
 
-/** @emoji 👻️ SSR snapshot for {@link useSyncExternalStore} — catalogue drops never hydrate with a live ghost. */
+/** 👻️ SSR snapshot for {@link useSyncExternalStore} — catalogue drops never hydrate with a live ghost. */
 export function getWorldCatalogueDropPreviewServerSnapshot(_controllerId: string): Puzzle3dCatalogueDropPreview | null {
   return null;
 }
 
-/** @emoji 👻️ Publish a world-space catalogue-drop ghost visible in every World3d pane of `controllerId`. */
+/** 👻️ Publish a world-space catalogue-drop ghost visible in every World3d pane of `controllerId`. */
 export function setWorldCatalogueDropPreview(controllerId: string, preview: Puzzle3dCatalogueDropPreview | null): void {
   const previous = worldCatalogueDropPreviewByController.get(controllerId) ?? null;
   if (worldCatalogueDropPreviewsEqual(previous, preview)) return;
@@ -4937,12 +4937,12 @@ export function setWorldCatalogueDropPreview(controllerId: string, preview: Puzz
   notifyWorldCatalogueDropPreviewListeners();
 }
 
-/** @emoji 👻️ Clears the shared catalogue-drop ghost across all World3d panes of `controllerId`. */
+/** 👻️ Clears the shared catalogue-drop ghost across all World3d panes of `controllerId`. */
 export function clearWorldCatalogueDropPreview(controllerId: string): void {
   setWorldCatalogueDropPreview(controllerId, null);
 }
 
-/** @emoji 🎯️ Registers a World3d pane's hit-test so shared clear logic can tell whether the pointer is over *any* pane of that controller. */
+/** 🎯️ Registers a World3d pane's hit-test so shared clear logic can tell whether the pointer is over *any* pane of that controller. */
 export function registerWorldCatalogueDropHost(controllerId: string, hostId: string, hitTest: (clientX: number, clientY: number) => boolean): () => void {
   const key = `${controllerId}\0${hostId}`;
   worldCatalogueDropHostHitTests.set(key, { controllerId, hitTest });
@@ -4951,7 +4951,7 @@ export function registerWorldCatalogueDropHost(controllerId: string, hostId: str
   };
 }
 
-/** @emoji 🎯️ True when any registered World3d pane of `controllerId` contains the client point. */
+/** 🎯️ True when any registered World3d pane of `controllerId` contains the client point. */
 export function worldCatalogueDropHostContainsPoint(controllerId: string, clientX: number, clientY: number): boolean {
   for (const entry of worldCatalogueDropHostHitTests.values()) {
     if (entry.controllerId !== controllerId) continue;
@@ -4991,7 +4991,7 @@ export type WorldSelectionPreview = {
   readonly mergedInstanceIds: readonly string[] | null;
 };
 
-/** @emoji 🎯️ Live selection previews keyed by controller so every sibling World3d pane paints the same in-progress marquee selection before the plugin round-trip commits it. */
+/** 🎯️ Live selection previews keyed by controller so every sibling World3d pane paints the same in-progress marquee selection before the plugin round-trip commits it. */
 const worldSelectionPreviewByController = new Map<string, WorldSelectionPreview>();
 const worldSelectionPreviewListeners = new Set<() => void>();
 
@@ -5006,7 +5006,7 @@ function notifyWorldSelectionPreviewListeners(): void {
   for (const listener of worldSelectionPreviewListeners) listener();
 }
 
-/** @emoji 🎯️ Subscribes a World3d pane to live selection previews from sibling panes. */
+/** 🎯️ Subscribes a World3d pane to live selection previews from sibling panes. */
 export function subscribeWorldSelectionPreview(listener: () => void): () => void {
   worldSelectionPreviewListeners.add(listener);
   return () => {
@@ -5014,17 +5014,17 @@ export function subscribeWorldSelectionPreview(listener: () => void): () => void
   };
 }
 
-/** @emoji 🎯️ Returns the live selection preview for `controllerId`, or `null` outside an in-progress gesture. */
+/** 🎯️ Returns the live selection preview for `controllerId`, or `null` outside an in-progress gesture. */
 export function getWorldSelectionPreview(controllerId: string): WorldSelectionPreview | null {
   return worldSelectionPreviewByController.get(controllerId) ?? null;
 }
 
-/** @emoji 🎯️ SSR snapshot for {@link useSyncExternalStore}; selection gestures never hydrate in progress. */
+/** 🎯️ SSR snapshot for {@link useSyncExternalStore}; selection gestures never hydrate in progress. */
 export function getWorldSelectionPreviewServerSnapshot(_controllerId: string): WorldSelectionPreview | null {
   return null;
 }
 
-/** @emoji 🎯️ Publishes an in-progress marquee result to every World3d pane using the same controller. */
+/** 🎯️ Publishes an in-progress marquee result to every World3d pane using the same controller. */
 export function setWorldSelectionPreview(controllerId: string, preview: WorldSelectionPreview | null): void {
   const previous = worldSelectionPreviewByController.get(controllerId) ?? null;
   if (worldSelectionPreviewsEqual(previous, preview)) return;
@@ -5033,7 +5033,7 @@ export function setWorldSelectionPreview(controllerId: string, preview: WorldSel
   notifyWorldSelectionPreviewListeners();
 }
 
-/** @emoji 🎯️ Clears a preview only when `sourceId` still owns it, preventing an idle sibling pane from cancelling the active pane's gesture. */
+/** 🎯️ Clears a preview only when `sourceId` still owns it, preventing an idle sibling pane from cancelling the active pane's gesture. */
 export function clearWorldSelectionPreview(controllerId: string, sourceId?: string): void {
   const current = worldSelectionPreviewByController.get(controllerId);
   if (!current || (sourceId && current.sourceId !== sourceId)) return;
@@ -5052,7 +5052,7 @@ export type WorldGumballTransformPreview = {
   readonly pivot: readonly [number, number, number];
 };
 
-/** @emoji 🧲️ Live gumball transform previews keyed by controller so every sibling World3d pane paints the same in-progress move/rotate before the plugin round-trip commits it. */
+/** 🧲️ Live gumball transform previews keyed by controller so every sibling World3d pane paints the same in-progress move/rotate before the plugin round-trip commits it. */
 const worldGumballTransformPreviewByController = new Map<string, WorldGumballTransformPreview>();
 const worldGumballTransformPreviewListeners = new Set<() => void>();
 
@@ -5076,7 +5076,7 @@ function notifyWorldGumballTransformPreviewListeners(): void {
   for (const listener of worldGumballTransformPreviewListeners) listener();
 }
 
-/** @emoji 🧲️ Subscribes a World3d pane to live gumball previews from sibling panes. */
+/** 🧲️ Subscribes a World3d pane to live gumball previews from sibling panes. */
 export function subscribeWorldGumballTransformPreview(listener: () => void): () => void {
   worldGumballTransformPreviewListeners.add(listener);
   return () => {
@@ -5084,17 +5084,17 @@ export function subscribeWorldGumballTransformPreview(listener: () => void): () 
   };
 }
 
-/** @emoji 🧲️ Returns the live gumball preview for `controllerId`, or `null` outside an in-progress gesture. */
+/** 🧲️ Returns the live gumball preview for `controllerId`, or `null` outside an in-progress gesture. */
 export function getWorldGumballTransformPreview(controllerId: string): WorldGumballTransformPreview | null {
   return worldGumballTransformPreviewByController.get(controllerId) ?? null;
 }
 
-/** @emoji 🧲️ SSR snapshot for {@link useSyncExternalStore}; gumball gestures never hydrate in progress. */
+/** 🧲️ SSR snapshot for {@link useSyncExternalStore}; gumball gestures never hydrate in progress. */
 export function getWorldGumballTransformPreviewServerSnapshot(_controllerId: string): WorldGumballTransformPreview | null {
   return null;
 }
 
-/** @emoji 🧲️ Publishes an in-progress gumball transform to every World3d pane using the same controller. */
+/** 🧲️ Publishes an in-progress gumball transform to every World3d pane using the same controller. */
 export function setWorldGumballTransformPreview(controllerId: string, preview: WorldGumballTransformPreview | null): void {
   const previous = worldGumballTransformPreviewByController.get(controllerId) ?? null;
   if (worldGumballTransformPreviewsEqual(previous, preview)) return;
@@ -5103,14 +5103,14 @@ export function setWorldGumballTransformPreview(controllerId: string, preview: W
   notifyWorldGumballTransformPreviewListeners();
 }
 
-/** @emoji 🧲️ Clears a preview only when `sourceId` still owns it, preventing an idle sibling pane from cancelling the active pane's gesture. */
+/** 🧲️ Clears a preview only when `sourceId` still owns it, preventing an idle sibling pane from cancelling the active pane's gesture. */
 export function clearWorldGumballTransformPreview(controllerId: string, sourceId?: string): void {
   const current = worldGumballTransformPreviewByController.get(controllerId);
   if (!current || (sourceId && current.sourceId !== sourceId)) return;
   setWorldGumballTransformPreview(controllerId, null);
 }
 
-/** @emoji 🌀 Maps committed vortex markers through an active gumball preview when they belong to a transformed instance. */
+/** 🌀 Maps committed vortex markers through an active gumball preview when they belong to a transformed instance. */
 export function worldVorticesWithGumballPreview(
   vortices: readonly WorldVortexRecord[],
   preview: WorldGumballTransformPreview | null,
@@ -5130,7 +5130,7 @@ export function worldVorticesWithGumballPreview(
   });
 }
 
-/** @emoji 🌀 Maps committed attraction endpoints through an active gumball preview when they touch a transformed instance's vortices. */
+/** 🌀 Maps committed attraction endpoints through an active gumball preview when they touch a transformed instance's vortices. */
 export function worldAttractionsWithGumballPreview(
   attractions: readonly WorldAttractionRecord[],
   vortices: readonly WorldVortexRecord[],
@@ -5292,7 +5292,7 @@ function useWorldInstanceChrome(
 
 //#endregion WorldInstanceChromeStore
 
-/** @emoji 🖱️➡️ Signed distance along `axis` (unit vector) from `origin` to the point on that line closest to the
+/** 🖱️➡️ Signed distance along `axis` (unit vector) from `origin` to the point on that line closest to the
  * camera ray through the current pointer position — the standard closest-point-between-two-lines
  * construction, used so a face-normal drag tracks naturally instead of needing a ground/tangent-plane
  * intersection (which is undefined for motion parallel to the plane, i.e. exactly along the normal). */
@@ -5314,7 +5314,7 @@ function axisDragParam(clientX: number, clientY: number, hostRect: DOMRect, came
   return (a * e - b * d) / denominator;
 }
 
-/** @emoji 🪪️ Element id of one world surface's projection pane. A world surface is mounted once per OPEN WINDOW
+/** 🪪️ Element id of one world surface's projection pane. A world surface is mounted once per OPEN WINDOW
  * INSTANCE of its kind (`WindowInstanceIdContext`), and {@link Pane} renders its `id` on the pane root plus two
  * derived control ids (`…pane.fold`, `…pane.foldControl`), so the bare `framework.worldOrbit.projection` it used
  * to carry put three DUPLICATE DOM ids in the document per extra pane — invalid HTML, and it makes the pane
@@ -5324,7 +5324,7 @@ export function world3dProjectionPaneElementId(windowElementSegment: string): st
   return childElementId("framework.worldOrbit.projection", windowElementSegment);
 }
 
-/** @emoji 🔀️ Portals the world's projection-kind switch into the enclosing window's pane host (see `usePaneSlot`), defaulting to bottom-right under the navigation cube — the cube sits above the folded chrome and the unfolded pane grows over it. Falls back to a local overlay when no pane host is mounted yet (or outside one). */
+/** 🔀️ Portals the world's projection-kind switch into the enclosing window's pane host (see `usePaneSlot`), defaulting to bottom-right under the navigation cube — the cube sits above the folded chrome and the unfolded pane grows over it. Falls back to a local overlay when no pane host is mounted yet (or outside one). */
 export function WorldOrbitProjectionSwitchPane({ spec, onSpecChange, windowElementSegment }: { readonly spec: WorldProjectionSpec; readonly onSpecChange: (spec: WorldProjectionSpec) => void; readonly windowElementSegment: string }) {
   const [anchor, setAnchor] = useState<Anchor>("bottom-right");
   const [folded, setFolded] = useState(true);
@@ -5356,7 +5356,7 @@ export function WorldOrbitProjectionSwitchPane({ spec, onSpecChange, windowEleme
 }
 
 //#region WorldWindowInstance
-/** @emoji 🪪️ Identifies which window *pane* (not just which window *kind*) a `ComponentSceneHost` is
+/** 🪪️ Identifies which window *pane* (not just which window *kind*) a `ComponentSceneHost` is
  * mounted for — every window kind's `UiNode` is shared verbatim across all of its open instances, so a
  * host can't otherwise tell which pane it is; provided per-pane around each `<InterpretedUiNode>` call. */
 export const WindowInstanceIdContext = createContext<string | null>(null);
@@ -5373,7 +5373,7 @@ export type World3dRetainedViewportV1 = Readonly<{
   pendingProjectionSpec: WorldProjectionSpec | null;
 }>;
 
-/** @emoji 📷️ Shell-session owner of live per-window world viewports. */
+/** 📷️ Shell-session owner of live per-window world viewports. */
 export class World3dWindowViewStoreV1 {
   readonly #views = new Map<string, World3dRetainedViewportV1>();
   #owner: string | null = null;
@@ -5397,7 +5397,7 @@ export class World3dWindowViewStoreV1 {
   }
 }
 
-/** @emoji 🪪️ Keeps independently-lived primary and spawned program viewport owners apart. */
+/** 🪪️ Keeps independently-lived primary and spawned program viewport owners apart. */
 export class World3dWindowViewRegistryV1 {
   readonly #stores = new Map<string, World3dWindowViewStoreV1>();
 
@@ -5419,20 +5419,20 @@ export class World3dWindowViewRegistryV1 {
   }
 }
 
-/** @emoji 🐚️ The current shell session's live world viewport owner. */
+/** 🐚️ The current shell session's live world viewport owner. */
 export const World3dWindowViewStoreContext = createContext<World3dWindowViewStoreV1 | null>(null);
 
-/** @emoji 🪟️ One-shot initial camera pose, keyed by window instance id, consumed by {@link World3dHost} on
+/** 🪟️ One-shot initial camera pose, keyed by window instance id, consumed by {@link World3dHost} on
  * mount and then discarded — the side-channel a Display "Windows" drag-and-drop template uses to seed a
  * freshly-opened pane's projection (dragging "Top" opens a pane that starts in the Top view, etc.). */
 const pendingWorldProjectionByWindowId = new Map<string, WorldProjectionSpec>();
 
-/** @emoji 🪟️ Registers `spec` to be consumed once by the next {@link World3dHost} mounted for `windowId`. */
+/** 🪟️ Registers `spec` to be consumed once by the next {@link World3dHost} mounted for `windowId`. */
 export function registerPendingWorldProjection(windowId: string, spec: WorldProjectionSpec): void {
   pendingWorldProjectionByWindowId.set(windowId, spec);
 }
 
-/** @emoji 🪟️ Peeks the sticky initial projection for `windowId` — kept until the pane is closed so React
+/** 🪟️ Peeks the sticky initial projection for `windowId` — kept until the pane is closed so React
  * Strict Mode's mount→unmount→remount pass still seeds both Top and Perspective (take-on-read / clear-on-apply
  * left the second mount on the shared scene camera and empty transparent canvases). */
 function peekPendingWorldProjection(windowId: string | null): WorldProjectionSpec | null {
@@ -5440,13 +5440,13 @@ function peekPendingWorldProjection(windowId: string | null): WorldProjectionSpe
   return pendingWorldProjectionByWindowId.get(windowId) ?? null;
 }
 
-/** @emoji 🪟️ Drops the initial projection seed when a pane is closed (not after first apply). */
+/** 🪟️ Drops the initial projection seed when a pane is closed (not after first apply). */
 export function clearPendingWorldProjection(windowId: string | null): void {
   if (!windowId) return;
   pendingWorldProjectionByWindowId.delete(windowId);
 }
 
-/** @emoji 🪦️ Retires projection seeds owned by a session that is leaving the shell. */
+/** 🪦️ Retires projection seeds owned by a session that is leaving the shell. */
 export function clearPendingWorldProjections(windowIds: readonly string[]): void {
   for (const windowId of windowIds) pendingWorldProjectionByWindowId.delete(windowId);
 }
@@ -5466,27 +5466,27 @@ export function world3dHoverActionArgs(domainId: string, granularity: string, id
   return { domainId, channel: "pointer", targets: JSON.stringify(targets) };
 }
 
-/** @emoji ✨ Alt+right-click opens suggestions only when a vortex marker is already hovered. */
+/** ✨ Alt+right-click opens suggestions only when a vortex marker is already hovered. */
 export function world3dSuggestionsGestureArmed(altKey: boolean, hoveredVortexFullId: string | null | undefined): boolean {
   return Boolean(altKey && hoveredVortexFullId);
 }
 
-/** @emoji ✨ Playwright/macOS often omit `event.altKey` on reconstructed pointer events — track the key. */
+/** ✨ Playwright/macOS often omit `event.altKey` on reconstructed pointer events — track the key. */
 export function world3dSuggestionsAltHeld(eventAltKey: boolean, altHeld: boolean): boolean {
   return Boolean(eventAltKey || altHeld);
 }
 
-/** @emoji ✨ Guest `interactionHover` may stay null after a spawn-admit miss — keep the local marker hover for Alt+right-click. */
+/** ✨ Guest `interactionHover` may stay null after a spawn-admit miss — keep the local marker hover for Alt+right-click. */
 export function world3dRetainLocalVortexHover(local: string | null | undefined, guest: string | null | undefined): string | null {
   return guest || local || null;
 }
 
-/** @emoji ✨ Alt+right-click is the suggestions gesture — consume contextmenu so workspace chrome cannot steal it. */
+/** ✨ Alt+right-click is the suggestions gesture — consume contextmenu so workspace chrome cannot steal it. */
 export function world3dSuggestionsGestureConsumesContextMenu(altKey: boolean): boolean {
   return altKey;
 }
 
-/** @emoji ✨ Chrome overlays steal bubbling button=2 before orbit's canvas listener — window capture over the host is the route. */
+/** ✨ Chrome overlays steal bubbling button=2 before orbit's canvas listener — window capture over the host is the route. */
 export function world3dSuggestionsRightDownRoutesOnWindowCapture(button: number, overHost: boolean): boolean {
   return button === 2 && overHost;
 }
@@ -5537,12 +5537,12 @@ if (typeof window !== "undefined") {
  * domain — `merge` is passed through as already resolved at the call site (marquee/click modifier
  * state), not recomputed here. */
 
-/** @emoji 🖱️ Instance picks join a scene interaction domain only when the instance names a topology id. */
+/** 🖱️ Instance picks join a scene interaction domain only when the instance names a topology id. */
 export function world3dInstancePickUsesInteractionDomain(record: { readonly interactionId?: string } | undefined): boolean {
   return typeof record?.interactionId === "string" && record.interactionId.length > 0;
 }
 
-/** @emoji 🖱️ A selection is a SET of topology ids, so the target list this builds is one: the same id
+/** 🖱️ A selection is a SET of topology ids, so the target list this builds is one: the same id
  * can be handed in twice (several rendered instances of one channel, a pick batch the caller did not
  * run through {@link interactionTargetsForInstances}), and a `Select` must be idempotent per id —
  * the host never emits a duplicate target. Live defect 2026-09-12 (ticket
@@ -6991,7 +6991,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
         // 🧯️ A drag whose pose did not move commits NOTHING. It used to synthesize a fixed 0.5 translate
         // along the handle's axis instead — a document edit the user never made, minted precisely when the
         // gesture failed to say anything (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B31). The record below
-        // is PERMANENT, not a `[DEBUG]` trace: it is what a zero-delta drag owes, so the cause is read off
+        // is PERMANENT, not a `[TRACE]` trace: it is what a zero-delta drag owes, so the cause is read off
         // the gesture rather than covered by a fabricated move.
         console.info("gumball pose delta skipped", {
           transformMode: selection.transformMode,
@@ -7160,7 +7160,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     return () => window.removeEventListener("keydown", onKeyDown, true);
   }, [endRelocateDrag, relocateMode]);
 
-  /** @emoji 🤏️ Abandons whatever single-pointer gesture is in flight and releases its capture, so the
+  /** 🤏️ Abandons whatever single-pointer gesture is in flight and releases its capture, so the
    * orbit rig owns the surface alone for the rest of a two-finger pinch/pan. */
   const yieldToPinch = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {

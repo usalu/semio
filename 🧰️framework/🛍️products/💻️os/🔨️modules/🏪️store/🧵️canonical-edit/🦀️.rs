@@ -83,6 +83,10 @@ enum CanonicalEditNode<'a, M> {
 }
 
 impl<'a, M: ArtifactCanonicalJson> CanonicalEditNode<'a, M> {
+    /// 🔤 camelCase, because `MutationOrigin`'s own `ToValue` is the normative key
+    /// spelling and this cursor must produce its bytes exactly. Its sibling
+    /// `transaction` variant was already aligned; `contributed` alone was not, so a
+    /// contributed edit's canonical form never matched its own value projection.
     fn fields(&self) -> [(&'static str, bool); 12] {
         let mut fields = [("", false); 12];
         match self {
@@ -119,10 +123,6 @@ impl<'a, M: ArtifactCanonicalJson> CanonicalEditNode<'a, M> {
             Self::Clock(_) => fields[..3].copy_from_slice(&[("actor", true), ("physical_ms", true), ("logical", true)]),
             Self::Origin(origin) => match origin {
                 crate::os_spr::MutationOrigin::Owner => fields[0] = ("kind", true),
-                // 🔤 camelCase, because `MutationOrigin`'s own `ToValue` is the normative key
-                // spelling and this cursor must produce its bytes exactly. Its sibling
-                // `transaction` variant was already aligned; `contributed` alone was not, so a
-                // contributed edit's canonical form never matched its own value projection.
                 crate::os_spr::MutationOrigin::Contributed { .. } => fields[..4].copy_from_slice(&[("kind", true), ("pluginId", true), ("mutationId", true), ("payloadHash", true)]),
                 crate::os_spr::MutationOrigin::Transaction { .. } => fields[..2].copy_from_slice(&[("kind", true), ("initiator", true)]),
             },
@@ -605,7 +605,7 @@ impl Drop for ArtifactStoreOneItemAuthorityRetirement {
 
 /// 📍️ Portable replay witness. Restoration re-executes each prior byte and verifies this prefix;
 /// no supplied hash state or digest can directly create publication authority.
-/// @emoji 🔮️ serde stays TEST-ONLY: this file's own round-trip test (`serde_json::to_vec`/
+/// 🔮️ serde stays TEST-ONLY: this file's own round-trip test (`serde_json::to_vec`/
 /// `from_slice` against `checkpoint()`) uses it as an independent differential oracle. Production
 /// never serializes this type through serde.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]

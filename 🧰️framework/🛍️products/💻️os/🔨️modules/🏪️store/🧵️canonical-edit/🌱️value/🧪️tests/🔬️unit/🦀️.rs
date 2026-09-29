@@ -70,7 +70,6 @@ fn shared_value_canonical_json_admission_rejects_duplicate_keys_before_exposing_
             assert!(admission.terminal_is_empty());
         }
     }
-    println!("[DEBUG] canonical value duplicate keys reject at 1, 7, and 256 bytes and return their exact immutable source");
 }
 
 #[test]
@@ -112,7 +111,6 @@ fn shared_value_canonical_json_admission_honors_grants_and_cancellation() {
             assert!(admission.terminal_is_empty());
         }
     }
-    println!("[DEBUG] canonical value admission obeys tiny grants and cancellation at every neutral checkpoint");
 }
 
 #[test]
@@ -163,7 +161,6 @@ fn shared_value_canonical_json_admission_returns_owners_after_limits_and_late_ca
     assert!(admission.take_value().is_none());
     assert_eq!(Arc::as_ptr(&close_and_return(&mut admission)), identity);
     assert!(admission.terminal_is_empty());
-    println!("[DEBUG] canonical value capacity, work, depth, non-finite, and completed cancellation preserve exact source ownership");
 }
 
 struct OrderedOracle<'a>(&'a DslValue);
@@ -232,5 +229,4 @@ fn shared_value_canonical_json_matches_neutral_vectors_and_serde_json_at_each_ch
             assert_eq!(actual, expected);
         }
     }
-    println!("[DEBUG] shared value canonical JSON: 11 neutral/adversarial values match serde_json at 1, 7, and 256 bytes per chunk");
 }

@@ -186,7 +186,7 @@ pub struct Canvas2dScene {
 }
 
 impl Canvas2dScene {
-    /** @emoji 🖼️ Builds a canvas-2d scene with every optional extension unset. */
+    /** 🖼️ Builds a canvas-2d scene with every optional extension unset. */
     pub fn base(camera_x: f64, camera_y: f64, zoom: f64, layers_json: String) -> Self {
         Self { camera_x, camera_y, zoom, layers_json, framing: None, snapshot: None, tool_run_trace: None, lanes: Vec::new() }
     }
@@ -579,7 +579,7 @@ pub fn world3d_default_selection_json() -> String {
 }
 
 impl World3dScene {
-    /** @emoji 🌐️ Builds a world-3d scene with optional extensions unset. */
+    /** 🌐️ Builds a world-3d scene with optional extensions unset. */
     pub fn base(camera_json: String, meshes_json: String, instances_json: String, selection_json: String) -> Self {
         Self {
             snapshot: None,
@@ -1456,7 +1456,7 @@ impl SceneDoc for NodeGraphScene {
 }
 
 impl NodeGraphScene {
-    /** @emoji 🕸️ Builds a node-graph scene with optional extensions unset. */
+    /** 🕸️ Builds a node-graph scene with optional extensions unset. */
     pub fn base(nodes: Vec<NodeGraphNodeRecord>, edges: Vec<NodeGraphEdgeRecord>, viewport: Viewport2d) -> Self {
         Self {
             nodes,
@@ -1630,7 +1630,7 @@ impl SceneDoc for TextEditorScene {
 pub const TEXT_EDITOR_BUFFER_LANE_KEY: &str = "framework.scene.text.buffer";
 
 impl TextEditorScene {
-    /** @emoji ✍️ Builds a text-editor scene with optional extensions unset. */
+    /** ✍️ Builds a text-editor scene with optional extensions unset. */
     pub fn base(buffer: String, language: Option<String>, selection_json: Option<String>) -> Self {
         Self {
             buffer,
@@ -1760,7 +1760,7 @@ pub const TABLE_COLUMNS_LANE_KEY: &str = "framework.scene.table.columns";
 pub const TABLE_ROWS_LANE_KEY: &str = "framework.scene.table.rows";
 
 impl TableScene {
-    /** @emoji 📋️ Builds a table scene with optional extensions (selection/drag/sort/domain) unset. */
+    /** 📋️ Builds a table scene with optional extensions (selection/drag/sort/domain) unset. */
     pub fn base(columns_json: impl Into<String>, rows_json: impl Into<String>) -> Self {
         Self { lanes: Vec::new(), columns_json: columns_json.into(), rows_json: rows_json.into(), selection_json: None, row_drag_mime: None, drop_action_json: None, sort_json: None, domain_id: None, domain_granularity_id: None }
     }
@@ -1801,7 +1801,7 @@ impl FromValue for TableScene {
 //#endregion 🔖️TableScene
 
 //#region 🔖️Paint2dScene
-/** @emoji 🖼️ Paint-2d scene: WASM `RasterSession` sync channels for the composite/navigator windows. */
+/** 🖼️ Paint-2d scene: WASM `RasterSession` sync channels for the composite/navigator windows. */
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Paint2dScene {
@@ -1988,7 +1988,7 @@ impl FromValue for Paint2dScene {
 //#endregion 🔖️Paint2dScene
 
 //#region 🔖️IconRenderScene
-/** @emoji 🖼️ Icon-render scene: client-side render request for a shot preview. */
+/** 🖼️ Icon-render scene: client-side render request for a shot preview. */
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct IconRenderScene {
@@ -2265,7 +2265,7 @@ pub fn tiled_map_default_selection_mode() -> String {
 }
 
 impl TiledMapScene {
-    /** @emoji 🗺️ Builds a tiled map scene with optional extensions unset. */
+    /** 🗺️ Builds a tiled map scene with optional extensions unset. */
     pub fn base(map_fixture_json: String, camera_json: String) -> Self {
         Self {
             map_fixture_json,
@@ -2578,7 +2578,7 @@ pub fn board2d_default_lod_mode() -> String {
 }
 
 impl Board2dScene {
-    /** @emoji 🧩️ Builds a 2D board scene with optional extensions unset. */
+    /** 🧩️ Builds a 2D board scene with optional extensions unset. */
     pub fn base(fixture_json: String, camera_json: String, interactive: bool) -> Self {
         Self {
             fixture_json,
@@ -2748,7 +2748,7 @@ pub fn ink_canvas_default_selection_json() -> String {
 }
 
 impl InkCanvasScene {
-    /** @emoji 🖊️ Builds an ink canvas scene with the default empty selection. */
+    /** 🖊️ Builds an ink canvas scene with the default empty selection. */
     pub fn base(document_json: String, active_utility: String, view_mode: String, interactive: bool) -> Self {
         Self { document_json, selection_json: ink_canvas_default_selection_json(), hovered_id: None, active_utility, view_mode, interactive, interaction_domain: None }
     }
@@ -2785,7 +2785,7 @@ impl FromValue for InkCanvasScene {
 //#endregion 🔖️InkCanvasScene
 
 //#region 🔖️GraphTimelineScene
-/** @emoji 🗄️ A checkpoint ancestor-graph history view. `columns_json` is a `HistoryColumn[]` array,
+/** 🗄️ A checkpoint ancestor-graph history view. `columns_json` is a `HistoryColumn[]` array,
  * newest checkpoint first. */
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -2812,7 +2812,7 @@ impl FromValue for GraphTimelineScene {
 //#endregion 🔖️GraphTimelineScene
 
 //#region 🔖️DiffViewScene
-/** @emoji 🆚️ A before/after text comparison. `mode` picks the renderer's layout (`"unified"` inline
+/** 🆚️ A before/after text comparison. `mode` picks the renderer's layout (`"unified"` inline
  * hunks or `"split"` side-by-side panes); `language` is an optional syntax-highlighting hint. */
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -2858,7 +2858,7 @@ impl FromValue for DiffViewScene {
 //#endregion 🔖️DiffViewScene
 
 //#region 🔖️EventFeedScene
-/** @emoji 📰️ A chronological feed of host-authored events. `entries_json` is a
+/** 📰️ A chronological feed of host-authored events. `entries_json` is a
  * `{id, timestampMs, iconId, title, detail?, tone?}[]` array; `activate_action` (if set) is the
  * action name fired with the clicked entry's `id` when an entry is activated. */
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

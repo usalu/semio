@@ -191,6 +191,17 @@ impl store::ErasedSnapshotRetirement for WriterMutationRetirement {
                 WriterMutation::ChangeUri(value) => &mut value.new_uri,
                 WriterMutation::ChangeLanguage(value) => &mut value.new_language_id,
                 WriterMutation::EditText(value) => &mut value.text,
+                WriterMutation::SpliceText(value) => {
+                    let released_bytes = value.deleted.len() + value.insert.len() + value.before.len() + value.after.len();
+                    if released_bytes > maximum_bytes {
+                        return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                    }
+                    for field in [&mut value.deleted, &mut value.insert, &mut value.before, &mut value.after] {
+                        drop(std::mem::take(field));
+                    }
+                    self.field_released = true;
+                    return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes });
+                }
             };
             if field.len() > maximum_bytes {
                 return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
@@ -370,7 +381,19 @@ const WRITER_MUTATION_FIELDS: &[store::OwnedSchemaFieldSpec] = &[
     store::OwnedSchemaFieldSpec { id: 3, key: "newUri", required: false },
     store::OwnedSchemaFieldSpec { id: 4, key: "newLanguageId", required: false },
     store::OwnedSchemaFieldSpec { id: 5, key: "text", required: false },
+    store::OwnedSchemaFieldSpec { id: 6, key: "start", required: false },
+    store::OwnedSchemaFieldSpec { id: 7, key: "deleted", required: false },
+    store::OwnedSchemaFieldSpec { id: 8, key: "insert", required: false },
+    store::OwnedSchemaFieldSpec { id: 9, key: "before", required: false },
+    store::OwnedSchemaFieldSpec { id: 10, key: "after", required: false },
 ];
+
+/// ✂️ `SpliceText`'s four string fields (ids 7–10) and its scalar `start` (id 6), gathered before the record completes.
+#[derive(Default)]
+struct WriterSplicePayload {
+    start: Option<u32>,
+    strings: [Option<String>; 4],
+}
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum WriterMutationKind {
@@ -378,6 +401,7 @@ enum WriterMutationKind {
     ChangeUri,
     ChangeLanguage,
     EditText,
+    SpliceText,
 }
 
 struct WriterMutationString {
@@ -394,6 +418,7 @@ struct WriterMutationDecodeAuthority {
     kind: Option<WriterMutationKind>,
     payload_field: Option<u16>,
     payload: std::mem::ManuallyDrop<Option<String>>,
+    splice: WriterSplicePayload,
     value: std::mem::ManuallyDrop<Option<WriterMutation>>,
     retirement: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
     published: bool,
@@ -411,6 +436,7 @@ impl WriterMutationDecodeAuthority {
             kind: None,
             payload_field: None,
             payload: std::mem::ManuallyDrop::new(None),
+            splice: WriterSplicePayload::default(),
             value: std::mem::ManuallyDrop::new(None),
             retirement: std::mem::ManuallyDrop::new(None),
             published: false,
@@ -429,15 +455,37 @@ impl WriterMutationDecodeAuthority {
                 Some("changeUri") => WriterMutationKind::ChangeUri,
                 Some("changeLanguage") => WriterMutationKind::ChangeLanguage,
                 Some("editText") => WriterMutationKind::EditText,
+                Some("spliceText") => WriterMutationKind::SpliceText,
                 _ => return Err(self.diagnostic("writer-envelope.unknown-mutation", 0)),
             });
             authority.cancel();
+            return Ok(());
+        }
+        if (7..=10).contains(&field_id) {
+            let slot = &mut self.splice.strings[usize::from(field_id - 7)];
+            if slot.is_some() {
+                return Err(self.diagnostic("writer-envelope.duplicate-mutation-payload", 0));
+            }
+            *slot = authority.take_string();
             return Ok(());
         }
         if self.payload_field.replace(field_id).is_some() {
             return Err(self.diagnostic("writer-envelope.duplicate-mutation-payload", 0));
         }
         *self.payload = authority.take_string();
+        Ok(())
+    }
+
+    /// 🔢️ `SpliceText.start`: the one scalar field of the mutation record, a non-negative integer that fits `u32`.
+    fn finish_start(&mut self, token: store::OwnedSchemaToken, source: &store::OwnedSchemaRecordCursor) -> Result<(), store::OwnedSchemaDecodeDiagnostic> {
+        let mut digits = [0u8; 10];
+        let length = usize::try_from(token.end - token.start).map_err(|_| self.diagnostic("writer-envelope.splice-start", token.start))?;
+        if token.kind != store::OwnedSchemaTokenKind::Number || length == 0 || length > digits.len() || self.splice.start.is_some() {
+            return Err(self.diagnostic("writer-envelope.splice-start", token.start));
+        }
+        source.copy_token_bytes(token, 0, &mut digits[..length]);
+        let text = std::str::from_utf8(&digits[..length]).map_err(|_| self.diagnostic("writer-envelope.splice-start", token.start))?;
+        self.splice.start = Some(text.parse::<u32>().map_err(|_| self.diagnostic("writer-envelope.splice-start", token.start))?);
         Ok(())
     }
 
@@ -448,8 +496,16 @@ impl WriterMutationDecodeAuthority {
             WriterMutationKind::ChangeUri => 3,
             WriterMutationKind::ChangeLanguage => 4,
             WriterMutationKind::EditText => 5,
+            WriterMutationKind::SpliceText => {
+                let [deleted, insert, before, after] = std::mem::take(&mut self.splice.strings);
+                let (Some(start), Some(deleted), Some(insert), Some(before), Some(after), None) = (self.splice.start.take(), deleted, insert, before, after, self.payload_field) else {
+                    return Err(self.diagnostic("writer-envelope.mutation-payload-mismatch", 0));
+                };
+                *self.value = Some(WriterMutation::SpliceText(schema::mutations::SpliceText { start, deleted, insert, before, after }));
+                return Ok(());
+            }
         };
-        if self.payload_field != Some(expected) {
+        if self.payload_field != Some(expected) || self.splice.start.is_some() || self.splice.strings.iter().any(Option::is_some) {
             return Err(self.diagnostic("writer-envelope.mutation-payload-mismatch", 0));
         }
         let payload = self.payload.take().ok_or_else(|| self.diagnostic("writer-envelope.missing-mutation-payload", 0))?;
@@ -458,6 +514,7 @@ impl WriterMutationDecodeAuthority {
             WriterMutationKind::ChangeUri => WriterMutation::ChangeUri(schema::mutations::ChangeUri { new_uri: payload }),
             WriterMutationKind::ChangeLanguage => WriterMutation::ChangeLanguage(schema::mutations::ChangeLanguage { new_language_id: payload }),
             WriterMutationKind::EditText => WriterMutation::EditText(schema::mutations::EditText { text: payload }),
+            WriterMutationKind::SpliceText => return Err(self.diagnostic("writer-envelope.mutation-payload-mismatch", 0)),
         });
         Ok(())
     }
@@ -491,6 +548,10 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<WriterMutation> for WriterMut
                 let authority = store::OwnedSchemaStringAuthority::try_new(self.operation, self.generation, token, self.path).map_err(|token| self.diagnostic("writer-envelope.mutation-field-string", token.start))?;
                 self.active = Some(WriterMutationString { field_id, authority });
                 self.accept_token(token, true, source, cx)
+            }
+            store::OwnedSchemaNestedRecordStep::FieldToken { field_id: 6, token, .. } => {
+                self.finish_start(token, source)?;
+                Ok(store::ArtifactEnvelopeFieldDecodeStep::TokenComplete)
             }
             store::OwnedSchemaNestedRecordStep::FieldToken { token, .. } => Err(self.diagnostic("writer-envelope.mutation-field-scalar", token.start)),
             store::OwnedSchemaNestedRecordStep::Complete => {
@@ -537,6 +598,14 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<WriterMutation> for WriterMut
             *self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&WriterMutationRetirementFactory, value));
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
+        if let Some(index) = self.splice.strings.iter().position(Option::is_some) {
+            let released_bytes = self.splice.strings[index].as_ref().map_or(0, String::len);
+            if released_bytes > maximum_bytes {
+                return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            drop(self.splice.strings[index].take());
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes });
+        }
         if let Some(payload) = self.payload.as_ref() {
             if payload.len() > maximum_bytes {
                 return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
@@ -550,7 +619,7 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<WriterMutation> for WriterMut
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.terminal && self.active.is_none() && self.payload.is_none() && self.value.is_none() && self.retirement.is_none()
+        self.terminal && self.active.is_none() && self.payload.is_none() && self.splice.strings.iter().all(Option::is_none) && self.value.is_none() && self.retirement.is_none()
     }
 }
 

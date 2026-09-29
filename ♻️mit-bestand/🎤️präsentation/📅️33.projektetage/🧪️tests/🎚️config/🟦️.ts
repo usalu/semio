@@ -12,7 +12,7 @@ const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️
 const dir = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
 const repoRoot = resolve(dir, "../../../../..");
 
-/** @emoji 🧪️ Vitest for `@semio-tech/mit-bestand-praesentation-projektetage`. */
+/** 🧪️ Vitest for `@semio-tech/mit-bestand-praesentation-projektetage`. */
 export default defineConfig({
   root: testRoot,
   plugins: [...semioAssetsVitePlugin(repoRoot), tailwindcss(), react()],

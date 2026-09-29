@@ -1,0 +1,151 @@
+[package]
+name = "semio-s-plugin-stdio-semio"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Stdio family component: the nineteen semio v1 file apps"
+
+[lints]
+workspace = true
+
+[package.metadata.component]
+package = "semio:stdio-semio"
+
+# 🔗️ `stdio` owns every kind this family opens (definitions, codecs, hub-native codec closure); the family ships only the
+# apps, so the host loads `stdio` beside it (`.depends_on("stdio", tree_pin!())` mirrors this row).
+[package.metadata.semio]
+role = "plugin"
+depends-on = ["stdio"]
+
+# 🎮️ ONE row per shipped editor, each pinning its own `app`: `semio-tech play`'s coverage laws reach every editor a
+# descriptor declares and every viewer through its pane's editor⇄viewer switch exactly when every shipped app owns a
+# row, and `🗄️stdio/🧪️tests/🚢️shipped-fleet` asserts these rows ARE the shipped editors. Ports continue stdio's block.
+[[package.metadata.semio.playground]]
+variant = "stdio-semio-brep"
+app = "s.stdio.semio@v1/brep#editor"
+aliases = ["stdio semio brep"]
+ports = { react = 6276, wgpu = 6376 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-semio-drawing"
+app = "s.stdio.semio@v1/drawing#editor"
+aliases = ["stdio semio drawing"]
+ports = { react = 6278, wgpu = 6378 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-semio-graph"
+app = "s.stdio.semio@v1/graph#editor"
+aliases = ["stdio semio graph"]
+ports = { react = 6279, wgpu = 6379 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-semio-kit"
+app = "s.stdio.semio@v1/kit#editor"
+aliases = ["stdio semio kit"]
+ports = { react = 6280, wgpu = 6380 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-semio-mesh"
+app = "s.stdio.semio@v1/mesh#editor"
+aliases = ["stdio semio mesh"]
+ports = { react = 6281, wgpu = 6381 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-semio-object"
+app = "s.stdio.semio@v1/object#editor"
+aliases = ["stdio semio object"]
+ports = { react = 6282, wgpu = 6382 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-semio-table"
+app = "s.stdio.semio@v1/table#editor"
+aliases = ["stdio semio table"]
+ports = { react = 6283, wgpu = 6383 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-semio-text"
+app = "s.stdio.semio@v1/text#editor"
+aliases = ["stdio semio text"]
+ports = { react = 6284, wgpu = 6384 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-semio-animation"
+app = "s.stdio.semio@v1/animation#editor"
+aliases = ["stdio semio animation"]
+ports = { react = 6285, wgpu = 6385 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-semio"
+app = "s.stdio.semio@v1/*#editor"
+aliases = ["stdio semio"]
+ports = { react = 6286, wgpu = 6386 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-semio-audio"
+app = "s.stdio.semio@v1/audio#editor"
+aliases = ["stdio semio audio"]
+ports = { react = 6287, wgpu = 6387 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-semio-cad"
+app = "s.stdio.semio@v1/cad#editor"
+aliases = ["stdio semio cad"]
+ports = { react = 6288, wgpu = 6388 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-semio-document"
+app = "s.stdio.semio@v1/document#editor"
+aliases = ["stdio semio document"]
+ports = { react = 6289, wgpu = 6389 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-semio-flow"
+app = "s.stdio.semio@v1/flow#editor"
+aliases = ["stdio semio flow"]
+ports = { react = 6290, wgpu = 6390 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-semio-image"
+app = "s.stdio.semio@v1/image#editor"
+aliases = ["stdio semio image"]
+ports = { react = 6291, wgpu = 6391 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-semio-model"
+app = "s.stdio.semio@v1/model#editor"
+aliases = ["stdio semio model"]
+ports = { react = 6292, wgpu = 6392 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-semio-presentation"
+app = "s.stdio.semio@v1/presentation#editor"
+aliases = ["stdio semio presentation"]
+ports = { react = 6293, wgpu = 6393 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-semio-value"
+app = "s.stdio.semio@v1/value#editor"
+aliases = ["stdio semio value"]
+ports = { react = 6294, wgpu = 6394 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-semio-video"
+app = "s.stdio.semio@v1/video#editor"
+aliases = ["stdio semio video"]
+ports = { react = 6295, wgpu = 6395 }
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "../../🦀️.rs"
+
+[features]
+# 🔌️ The WASM component entry point (`plugin_exports!`). Default-on so this family builds as its own component, and
+# switched off by any crate that links it as a library (the stdio census law links every family at once).
+default = ["plugin-root"]
+plugin-root = ["semio-framework-plugin/component-guest"]
+
+[dependencies]
+semio-s-artifact-stdio-semio = { workspace = true, features = ["component-app-assembly"] }
+semio-framework = { workspace = true }
+semio-framework-dispatch-macros = { workspace = true }
+semio-framework-plugin = { workspace = true }

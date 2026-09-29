@@ -50,7 +50,7 @@ import { syncBuiltPluginDescriptors } from "../../🏗️build/🛂️descriptor
 
 
 
-/** @emoji 🚰️ Builds a whole catalog of `orderedTargets`: cargo and materialize each run in bounded pools
+/** 🚰️ Builds a whole catalog of `orderedTargets`: cargo and materialize each run in bounded pools
  * sized by `cargoConcurrencyLimit()` / `materializeConcurrencyLimit()` (default `semioNxParallel()`), with
  * materialize work enqueued as each target's cargo build finishes so both stages overlap across the catalog.
  * `publishShardWorker()` (identical content for every target) is written once at the end rather than once

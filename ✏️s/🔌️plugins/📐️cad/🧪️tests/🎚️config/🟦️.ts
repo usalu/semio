@@ -32,7 +32,7 @@ const DOMAIN_FILES = [
   "🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️.ts",
 ];
 
-/** @emoji 🧪️ Vitest for `@semio-tech/cad-js` — one project covering all 10 domain files: artifact `✏️editor/⚙️engine` (renderer/stately/runtime/actions/artifact), `🌐️spatial-kernel` module `⚙️engine` (brepjs/geometry/spatial/semio), and `💡️inferences` schema leaf; base `environment` is `node`, renderer opts into jsdom via its own `@vitest-environment jsdom` file pragma (vitest 4 dropped `environmentMatchGlobs`). In-source suites use `includeSource` only (`include: []`) so vitest does not double-collect. */
+/** 🧪️ Vitest for `@semio-tech/cad-js` — one project covering all 10 domain files: artifact `✏️editor/⚙️engine` (renderer/stately/runtime/actions/artifact), `🌐️spatial-kernel` module `⚙️engine` (brepjs/geometry/spatial/semio), and `💡️inferences` schema leaf; base `environment` is `node`, renderer opts into jsdom via its own `@vitest-environment jsdom` file pragma (vitest 4 dropped `environmentMatchGlobs`). In-source suites use `includeSource` only (`include: []`) so vitest does not double-collect. */
 export default defineConfig({
   root: testRoot,
   plugins: [react()],

@@ -1,4 +1,4 @@
-//! @emoji 🍎️ Hand-written Metal backend for macOS.
+//! 🍎️ Hand-written Metal backend for macOS.
 //!
 //! Implements [`ui_render::GraphicsBackend`] for this platform. Everything above it — the element
 //! pipeline, layout, `Scene::finish`, the `RenderPacket` — is platform-neutral and shared, so this

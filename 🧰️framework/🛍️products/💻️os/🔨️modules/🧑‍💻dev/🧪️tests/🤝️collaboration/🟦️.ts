@@ -736,6 +736,28 @@ async function collabOpenCheckin(page: import("playwright").Page): Promise<impor
   return checkin.first();
 }
 
+/** 🕐️ The minute (epoch minutes, UTC) an artifact row's "updated" cell shows — en `2026-09-28 21:58 UTC`, de
+ * `28.09.2026, 21:58 UTC` — or `null` when the row shows none. */
+function collabRowUpdatedMinute(text: string): number | null {
+  const en = /(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}) UTC/u.exec(text);
+  const de = /(\d{2})\.(\d{2})\.(\d{4}), (\d{2}):(\d{2}) UTC/u.exec(text);
+  const parts = en ? [en[1], en[2], en[3], en[4], en[5]] : de ? [de[3], de[2], de[1], de[4], de[5]] : null;
+  return parts === null ? null : Math.floor(Date.UTC(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), Number(parts[3]), Number(parts[4])) / 60_000);
+}
+
+/** 🕐️ Waits until `page`'s row for `artifactId` shows `minute` or later in its "updated" cell (bounded); answers the last row read. */
+async function collabAwaitRowUpdatedMinute(page: import("playwright").Page, artifactId: string, minute: number, deadlineMs: number): Promise<{ readonly text: string; readonly minute: number | null }> {
+  const deadline = Date.now() + deadlineMs;
+  let text = "";
+  while (Date.now() < deadline) {
+    text = (await page.locator(`[data-ui-node-key="artifact:${artifactId}"]`).innerText().catch(() => "")) ?? "";
+    const shown = collabRowUpdatedMinute(text);
+    if (shown !== null && shown >= minute) return { text, minute: shown };
+    await page.waitForTimeout(1_000);
+  }
+  return { text, minute: collabRowUpdatedMinute(text) };
+}
+
 /** 📌️ The focused program's active checkpoint id, from the shell root's `data-history-json` (`null` before any). */
 async function collabCurrentCheckpointId(page: import("playwright").Page): Promise<string | null> {
   return page.evaluate(() => (JSON.parse(document.querySelector("[data-history-json]")?.getAttribute("data-history-json") ?? "null") as { readonly currentCheckpointId?: string | null } | null)?.currentCheckpointId ?? null);
@@ -1171,6 +1193,7 @@ async function collabRunScenario(
       await checkinButton.click();
       const message = `collab check-in ${Date.now()}`;
       await user1.locator('[id="s-checkin-message"]').fill(message);
+      const checkedInMinute = Math.floor(Date.now() / 60_000);
       await user1.locator('[id="s-checkin-message"]').press("Enter");
       const status = await collabAwaitCheckinStatus(user1, 60_000);
       spaceE2eAssert(status === COLLAB_E2E_LOCALES[locale].checkedIn, `the hub Check In ended as ${JSON.stringify(status)}, not ${JSON.stringify(COLLAB_E2E_LOCALES[locale].checkedIn)}`);
@@ -1178,33 +1201,13 @@ async function collabRunScenario(
       spaceE2eAssert(checkpointAfter !== null && checkpointAfter !== checkpointBefore, `the active checkpoint did not move (${checkpointBefore} → ${checkpointAfter})`);
       await collabOpenSpace(user1, spaceId);
       await collabWaitForRow(user1, "artifact", artifactId, 30_000);
-      const rowAfter1Deadline = Date.now() + 30_000;
-      let rowAfter1 = rowBefore1;
-      while (Date.now() < rowAfter1Deadline) {
-        rowAfter1 =
-          (await user1
-            .locator(`[data-ui-node-key="artifact:${artifactId}"]`)
-            .innerText()
-            .catch(() => "")) ?? "";
-        if (rowAfter1 !== rowBefore1) break;
-        await user1.waitForTimeout(1_000);
-      }
-      spaceE2eAssert(rowAfter1 !== rowBefore1, `user1's space table row for ${artifactId} did not change after check-in (before: ${JSON.stringify(rowBefore1)}, after: ${JSON.stringify(rowAfter1)})`);
+      const rowAfter1 = await collabAwaitRowUpdatedMinute(user1, artifactId, checkedInMinute, 30_000);
+      spaceE2eAssert(rowAfter1.minute !== null && rowAfter1.minute >= checkedInMinute, `user1's space table row for ${artifactId} does not show the check-in's minute (before: ${JSON.stringify(rowBefore1)}, after: ${JSON.stringify(rowAfter1.text)})`);
       await collabOpenSpace(user2, spaceId);
       await collabWaitForRow(user2, "artifact", artifactId, 30_000);
-      const rowAfter2Deadline = Date.now() + 30_000;
-      let rowAfter2 = rowBefore2;
-      while (Date.now() < rowAfter2Deadline) {
-        rowAfter2 =
-          (await user2
-            .locator(`[data-ui-node-key="artifact:${artifactId}"]`)
-            .innerText()
-            .catch(() => "")) ?? "";
-        if (rowAfter2 !== rowBefore2) break;
-        await user2.waitForTimeout(1_000);
-      }
-      spaceE2eAssert(rowAfter2 !== rowBefore2, `user2's space table row for ${artifactId} did not change after user1's check-in (before: ${JSON.stringify(rowBefore2)}, after: ${JSON.stringify(rowAfter2)})`);
-      record(6, true, `check-in "${message}" reads ${JSON.stringify(COLLAB_E2E_LOCALES[locale].checkedIn)}, checkpoint moved, the space table's row changed for both users`);
+      const rowAfter2 = await collabAwaitRowUpdatedMinute(user2, artifactId, checkedInMinute, 30_000);
+      spaceE2eAssert(rowAfter2.minute !== null && rowAfter2.minute >= checkedInMinute, `user2's space table row for ${artifactId} does not show user1's check-in minute (before: ${JSON.stringify(rowBefore2)}, after: ${JSON.stringify(rowAfter2.text)})`);
+      record(6, true, `check-in "${message}" reads ${JSON.stringify(COLLAB_E2E_LOCALES[locale].checkedIn)}, checkpoint moved, both users' space table rows show the check-in minute`);
     } catch (error) {
       await collabScreenshot(user1, "step6-user1");
       await collabScreenshot(user2, "step6-user2");

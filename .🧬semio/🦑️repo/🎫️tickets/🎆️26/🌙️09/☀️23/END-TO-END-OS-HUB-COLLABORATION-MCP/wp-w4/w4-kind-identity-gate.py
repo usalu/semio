@@ -10,11 +10,12 @@ The codec probe reuses the component the describe step already compiled (no seco
 kind (a full census of stdio's bundle costs minutes); a refusal lists every kind probed. Language-neutral fixture `🧫️fixtures/🪪️kind-identity/🔣️.json`
 drives the static-law test.
 
-usage: python3 w4-kind-identity-gate.py --dry-run | --write | --revert
+usage: python3 w4-kind-identity-gate.py --dry-run | --write | --revert [--root <tree>]
 """
 import json, os, sys
 
-ROOT = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe"
+TREE = sys.argv[sys.argv.index("--root") + 1] if "--root" in sys.argv else "/Users/ueli/Documents/semio"
+ROOT = f"{TREE}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe"
 EMITTER = "🛂️descriptor-emission/🦀️.rs"
 TESTS = "🧪️tests/🔬️unit/🦀️.rs"
 FIXTURE = "🧫️fixtures/🪪️kind-identity/🔣️.json"

@@ -136,7 +136,7 @@ const numberedPreviewItems: ContextMenuItem[] = [
   { id: "delete", label: uiDataLabel("Delete"), icon: "trash-2", destructive: true, shortcut: "⌫️" },
 ];
 
-/** @emoji 🎯️ Controlled fixed-position menu — mirrors how puzzle 2d canvas surfaces open a right-click menu at pointer coordinates. */
+/** 🎯️ Controlled fixed-position menu — mirrors how puzzle 2d canvas surfaces open a right-click menu at pointer coordinates. */
 const ControlledContextMenuDemo = () => {
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
@@ -170,7 +170,7 @@ export const Controlled: ControllerStory = {
   render: () => <ControlledContextMenuDemo />,
 };
 
-/** @emoji 🔢️ Numbered suggestion rows — press `1`/`2` to preview, Enter to accept the highlighted row. */
+/** 🔢️ Numbered suggestion rows — press `1`/`2` to preview, Enter to accept the highlighted row. */
 const NumberedPreviewContextMenuDemo = () => {
   const [open, setOpen] = useState(true);
   const [checkedId, setCheckedId] = useState("suggestion-0");

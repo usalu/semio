@@ -58,7 +58,6 @@ fn surface_canonical_document_nine_live_reconcilers_share_the_original_root_with
     for reader in &mut readers {
         while !reader.close_read_step_with_grant(1, 64).unwrap().complete {}
     }
-    eprintln!("[DEBUG] canonical-reconcilers actual-surfaces=9 exact-root-readers=9 roots-after-owner-close=9 typed-reader-close=true");
 }
 
 #[test]
@@ -78,7 +77,6 @@ fn surface_canonical_document_old_reader_keeps_original_credit_during_replacemen
         while !replacement.retire_one() {}
         assert_eq!(serde_json::to_value(reader.try_read().unwrap().node_at(0).unwrap()).unwrap(), before);
         while !reader.close_read_step_with_grant(1, grant).unwrap().complete {}
-        eprintln!("[DEBUG] canonical-reader-replacement grant={grant} original-root-unchanged=true original-credit-retained=true typed-terminal=true");
     }
 }
 
@@ -178,7 +176,7 @@ fn surface_canonical_document_completion_transfers_do_not_borrow_the_child_grant
     assert!(comparison_completed && copy_completed && source_returned && candidate_returned && full_close_grant);
     assert!(size_of::<ExistingComponentComparison>() <= SURFACE_COMPONENT_COPY_WORK_BYTES);
     eprintln!(
-        "[DEBUG] parent-child-grants compare-final={} lease-close=[{}, {}] node-record={} comparison-owner={} source-return={} candidate-physical={} separate-turns=true",
+        "parent-child-grants compare-final={} lease-close=[{}, {}] node-record={} comparison-owner={} source-return={} candidate-physical={} separate-turns=true",
         SURFACE_COMPONENT_COPY_WORK_BYTES,
         SURFACE_COMPONENT_COPY_WORK_BYTES,
         document_close_turn_ceiling(),
@@ -225,7 +223,7 @@ fn surface_canonical_document_existing_pair_stays_structurally_owned_across_unwi
         assert_eq!(serde_json::to_value(&current.read_record(id).unwrap().unwrap().component).unwrap(), before);
         while !cursor.retire_one() {}
         while !current.retire_one() {}
-        eprintln!("[DEBUG] existing-pair-unwind phase={phase} exact-current-unchanged=true retained-close=true");
+        eprintln!("existing-pair-unwind phase={phase} exact-current-unchanged=true retained-close=true");
     }
 }
 
@@ -264,7 +262,6 @@ fn surface_canonical_document_fresh_children_retain_completed_roots_for_a_separa
         while !current.retire_one() {}
         outcomes.push((field.to_string(), separate));
     }
-    eprintln!("[DEBUG] fresh-child-completion {outcomes:?}");
     assert!(outcomes.iter().all(|(_, separate)| *separate));
 }
 //#endregion 🧪️CanonicalRootLaws

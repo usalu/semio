@@ -1,16 +1,14 @@
-type TestSource = { readonly directory: string; readonly url: string };
+import type { StatelyMachineSpec, StatelyTestDependencies } from "../../🟦️.ts";
+import type { EdgeRef, FaceRef, Model, VertexRef, WireRef } from "../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import type { Command } from "@semio-tech/machine";
+import type { InteractionRuntime } from "../../../🗿️artifact/🟦️.ts";
+import type { ModelDiff } from "../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
+import type { Vec3 } from "@semio-tech/s-3d-js";
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+type TestSource = { readonly url: string };
+
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: StatelyTestDependencies, source: TestSource): Promise<void> {
   const { Model, NullInspector, __spatialStatelyTestKernel, __spatialStatelyTestRuntime, buildSpatialStatelyMachineCatalogView, buildStatelyMachine, createInteractionRuntime, defaultModelDefinitionId, emptyMeshTransfer, init, isEmptyModelDiff, listSpatialInteractionsForModelDefinition, loadSpatialInteraction, macrostep, makeAdvanceEvent, pureTsStateEngineProvider, solidRef, statelyStateEngineProvider } = dependencies;
-  type Command = any;
-  type EdgeRef = any;
-  type FaceRef = any;
-  type InteractionRuntime = any;
-  type ModelDiff = any;
-  type StatelyMachineSpec = any;
-  type Vec3 = any;
-  type VertexRef = any;
-  type WireRef = any;
 
   __spatialStatelyTestRuntime!.bootstrapCadModules();
   const { BrepjsKernel } = __spatialStatelyTestKernel!;

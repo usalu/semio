@@ -448,7 +448,7 @@ export function readVecBytes(bytes: Uint8Array, pos: [number]): number[][] {
  * `encode_presence_peer` (`📡️wire/🦀️.rs`). This is what `ClientFrame::Presence.peer`/
  * `ServerFrame::Presence.peers[]` actually carry — real binary, not JSON bytes. `flags` is a varint
  * (not a single byte) now that bit 9 exceeds a byte's range. */
-/** @emoji 🕳️ Presence-flag guard. A field is "present" only when it is neither `undefined` **nor
+/** 🕳️ Presence-flag guard. A field is "present" only when it is neither `undefined` **nor
  * `null`**: these peers are reconstructed from JSON view state, where an absent optional arrives as
  * `null`, and `null !== undefined` is true — so a bare `!== undefined` check set the flag and then
  * handed `null` to `writeStr`/`writeBytes`, throwing `Cannot read properties of null (reading

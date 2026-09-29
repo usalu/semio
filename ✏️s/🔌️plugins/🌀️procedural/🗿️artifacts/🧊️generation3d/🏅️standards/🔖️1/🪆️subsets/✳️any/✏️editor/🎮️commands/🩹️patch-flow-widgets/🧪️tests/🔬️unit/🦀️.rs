@@ -27,7 +27,6 @@ async fn a_patch_that_names_its_press_folds_under_that_press_and_an_anonymous_on
         })
     };
     assert_eq!(landed, Some(9.0), "a press must leave the document on the value it released on");
-    eprintln!("[DEBUG] patch press landed value={landed:?}");
 }
 
 /// ⚖️ LAW: a live patch declares the same narrow refresh scope a live `setSlider` does, and an

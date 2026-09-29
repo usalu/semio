@@ -118,7 +118,6 @@ async fn cancellation_retains_accepted_begin_live_without_a_terminal_app_operati
     let NoteBlockNode::Text { x, y, .. } = &after_fresh.blocks[1] else { panic!("fresh Ink block remains text") };
     assert_eq!((*x, *y), (88.0, 96.0));
     assert_eq!(law["freshGestureResult"], "begin-live-commit");
-    eprintln!("[DEBUG] Note cancellation retained accepted begin/live content and admitted a fresh committed gesture");
 }
 
 #[semio_framework_async_macros::async_test]

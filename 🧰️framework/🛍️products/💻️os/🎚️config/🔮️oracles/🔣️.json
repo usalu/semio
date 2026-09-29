@@ -1,7 +1,7 @@
 {
   "$schema": "../../../🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
-  "_comment": "🧩️ This owner's contribution. 🎚️config carries four typed mutation vocabularies, all mounted by the plugin host from direct semantic leaves: opening preferences (set-default-app, clear-default-app), merge policy (change-merge-policy), identity (sign-in, sign-out), and UI preferences (the nine set-* kinds of UiPreferencesConfigMutation). Each vocabulary is claimed by exactly one exhaustive case under 🔌️plugin/🖥️host/🧪️tests, and every kind in every vocabulary carries a committed (before, mutation, after, diff, outcome) specification vector beside its own leaf.",
+  "_comment": "🧩️ This owner's contribution. 🎚️config carries five typed mutation vocabularies, all mounted by the plugin host from direct semantic leaves: opening preferences (set-default-app, clear-default-app), merge policy (change-merge-policy), identity (sign-in, sign-out), the local document catalog (admit-local-document, retire-local-document), and UI preferences (the nine set-* kinds of UiPreferencesConfigMutation). Each vocabulary is claimed by exactly one exhaustive case under 🔌️plugin/🖥️host/🧪️tests, and every kind in every vocabulary carries a committed (before, mutation, after, diff, outcome) specification vector beside its own leaf.",
   "oracles": [],
   "noOracleDecisions": [
     {
@@ -121,6 +121,33 @@
           }
         ],
         "whyNoneQualifies": "os.config.ui-preferences is this operating system's own preference record with its own mutation vocabulary; no third party implements it, so none can adjudicate the nine set-* kinds."
+      }
+    },
+    {
+      "id": "os-config-local-catalog-mutation-semantics",
+      "capabilities": [],
+      "rationale": "`os.config.local-catalog` is this operating system's own persisted-local-only record of which documents one device keeps on its own disk — a list of `(documentId, schema, name, storage, target, admittedAtMs)` entries keyed on `documentId`, where `storage` names the device's own folder event log or single-file lane. No third party implements it and none could adjudicate it: what is under test is that `admit-local-document` is an UPSERT keyed on `documentId` that keeps the list ordered by id and leaves every sibling untouched, that `retire-local-document` unlists one id without deleting the document's own events, that both read their undo off the PRE-MUTATION record (re-admitting the prior entry, or retiring an id that was not listed), and that retiring an unlisted id is a warned no-op with no undo step. Confidence comes from the two committed, independently handcrafted specification vectors under `../🧬️schema/🧬️mutations/<slug>/🧫️fixtures/<fixture>/`, each unit-tested inside its own leaf and re-exercised end to end through `apply_local_catalog_config_mutation_reporting`; from the inverse law as a metamorphic property; and from the Rust and TypeScript leaves agreeing on the shared camel-case JSON projection. The capability claim stays withdrawn (as for its siblings since C2 2026-09-02): the mutation manifest below tracks the missing external-oracle discharge honestly.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws",
+        "independent-implementations"
+      ],
+      "coversMutations": true,
+      "referenceSurvey": {
+        "ecosystemsSearched": [
+          "pypi",
+          "npm",
+          "crates.io"
+        ],
+        "candidatesConsidered": [
+          {
+            "package": "xdg-recent-files",
+            "ecosystem": "posix",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "The XDG recently-used list records file URIs a desktop opened; it has no model of a semio document id, its artifact schema or its folder/file event lane, which is what admit-local-document and retire-local-document edit."
+          }
+        ],
+        "whyNoneQualifies": "os.config.local-catalog is repository-owned device configuration keyed by semio document ids; no third party holds or edits it, so none can adjudicate admit-local-document or retire-local-document."
       }
     }
   ],
@@ -356,6 +383,38 @@
             {
               "id": "keeps-keybinding",
               "directoryName": "🟰️keeps-keybinding"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "os-config-local-catalog-1-any",
+      "capability": "os-config-local-catalog-1-mutate",
+      "kinds": [
+        "admit-local-document",
+        "retire-local-document"
+      ],
+      "vectors": [
+        {
+          "mutationId": "admit-local-document",
+          "sourceMutationDirectoryName": "📥️admit-local-document",
+          "mutationDirectoryName": "📥️admit-local-document",
+          "scenarios": [
+            {
+              "id": "lists-a-persisted-studio-beside-an-imported-one",
+              "directoryName": "🧪️lists-a-persisted-studio-beside-an-imported-one"
+            }
+          ]
+        },
+        {
+          "mutationId": "retire-local-document",
+          "sourceMutationDirectoryName": "📤️retire-local-document",
+          "mutationDirectoryName": "📤️retire-local-document",
+          "scenarios": [
+            {
+              "id": "unlists-the-studio-and-keeps-its-sibling",
+              "directoryName": "🧪️unlists-the-studio-and-keeps-its-sibling"
             }
           ]
         }
@@ -667,6 +726,54 @@
           "oracleRequirements": [
             {
               "capability": "os-config-ui-preferences-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "os.config",
+      "standard": "1",
+      "subset": "local-catalog",
+      "mutations": [
+        {
+          "id": "admit-local-document",
+          "capability": "os-config-local-catalog-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "admit-local-document",
+            "bridgeVersion": 1,
+            "variant": "AdmitLocalDocument"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "os-config-local-catalog-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "retire-local-document",
+          "capability": "os-config-local-catalog-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "retire-local-document",
+            "bridgeVersion": 1,
+            "variant": "RetireLocalDocument"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "os-config-local-catalog-1-mutate",
               "qualifyingKind": "third-party-library"
             }
           ]

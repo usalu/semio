@@ -44,7 +44,7 @@ def edit_region(start, end, new, label, path=PATH):
 edit("""const DATABASE_SYNC_HELLO_FRAME_UNIT_BYTES: usize = 4 * 1024;
 """, """const DATABASE_SYNC_HELLO_FRAME_UNIT_BYTES: usize = 4 * 1024;
 
-/// @emoji 📦️ The most envelopes one hello tail frame carries before it ends on the next commit boundary: the tail a replica
+/// 📦️ The most envelopes one hello tail frame carries before it ends on the next commit boundary: the tail a replica
 /// lacks streams as a sequence of such frames — each with the exact frontier after its last commit, as a peer's relay
 /// carries — so no hello holds more than one frame of it, however long the document's history (ticket 26/09/23 session
 /// 14c: a 13 201-edit document could no longer be opened, its whole tail was decoded into one frame first).
@@ -151,7 +151,7 @@ async fn replay_sync_state_retained(
     Ok(DatabaseSyncHelloReplay { frontier: Frontier { document, head_seq, commit_seq, chain_hash, epoch: 0 }, head_edit_id, floor_head_seq })
 }
 
-/// @emoji 🧭️ Where a hello tail's next frame starts reading: the segment holding the first command it has not emitted, how
+/// 🧭️ Where a hello tail's next frame starts reading: the segment holding the first command it has not emitted, how
 /// many commands and transactions precede that segment, how far the chain has hashed and the replica has received, where
 /// the tail ends (the server frontier the welcome announced), and the chain over every hashed command.
 struct DatabaseSyncHelloTailCursor {
@@ -164,7 +164,7 @@ struct DatabaseSyncHelloTailCursor {
     chain: semio_framework_hash::Hasher,
 }
 
-/// @emoji 📄️ One read tail frame: its envelopes, the frontier after its last commit (`None` when nothing remained) and the
+/// 📄️ One read tail frame: its envelopes, the frontier after its last commit (`None` when nothing remained) and the
 /// cursor the next frame resumes from.
 struct DatabaseSyncHelloTailPage {
     cursor: DatabaseSyncHelloTailCursor,
@@ -174,7 +174,7 @@ struct DatabaseSyncHelloTailPage {
 
 type DatabaseSyncHelloTailPageFuture = std::pin::Pin<Box<dyn std::future::Future<Output = Result<DatabaseSyncHelloTailPage, DbError>> + Send>>;
 
-/// @emoji 🚰️ The tail a replica lacks, streamed from the WAL one frame at a time: each frame is read by one page future
+/// 🚰️ The tail a replica lacks, streamed from the WAL one frame at a time: each frame is read by one page future
 /// ([`database_sync_hello_tail_page`]) and carries the exact frontier after its last commit; its backing is charged while
 /// it is out and released when it closes, so a hello holds at most one frame of the tail however long it is.
 struct DatabaseSyncHelloTail {
@@ -235,7 +235,7 @@ impl DatabaseSyncHelloTail {
     }
 }
 
-/// @emoji 🚰️ Reads one frame of a hello tail: replays the WAL from `cursor`'s segment, skips the commands the chain already
+/// 🚰️ Reads one frame of a hello tail: replays the WAL from `cursor`'s segment, skips the commands the chain already
 /// covers, hashes the rest, decodes those the replica lacks and stops on the first commit boundary after
 /// [`DATABASE_SYNC_HELLO_TAIL_FRAME_ENVELOPES`] envelopes or at the tail's end. The cursor it answers resumes in the segment
 /// of the last transaction it read, so a frame reads at most that segment again.
@@ -375,7 +375,7 @@ edit("""impl DatabaseSyncHelloFollowUp {
             Self::Snapshot { pages, chunk_bytes, offset, page, page_offset, seq, chunk, done } => {
                 if *done {
                     return Ok(Some(None));
-                }""", """/// @emoji 🪜️ What one drive of a hello follow-up produced: a frame, the end of the stream, progress toward a frame (drive
+                }""", """/// 🪜️ What one drive of a hello follow-up produced: a frame, the end of the stream, progress toward a frame (drive
 /// again), or a read in flight whose completion wakes the hello.
 enum DatabaseSyncHelloFollowUpStep {
     Frame(protocol::ServerFrame),
@@ -618,7 +618,7 @@ async fn retained_hello_replay_derives_the_server_frontier_without_decoding_the_
     assert_eq!((ledger.items, ledger.bytes), (1, replay.head_edit_id.capacity()), "only the server head id is held");
 }
 
-/// @emoji 🚰️ Drives one retained hello to its end and answers the welcome's server frontier with every tail frame's
+/// 🚰️ Drives one retained hello to its end and answers the welcome's server frontier with every tail frame's
 /// envelopes and frontier, acknowledging each frame, plus the largest backing the hello held while a frame was out.
 async fn stream_hello_tail(storage: std::sync::Arc<db_storage::DbBackend>, document: ArtifactId, replica: Option<protocol::RuntimeFrontierSummary>) -> (protocol::RuntimeFrontierSummary, Vec<(Vec<protocol::MutationEnvelope>, protocol::RuntimeFrontierSummary)>, usize, usize) {
     let pool = std::sync::Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 2)));

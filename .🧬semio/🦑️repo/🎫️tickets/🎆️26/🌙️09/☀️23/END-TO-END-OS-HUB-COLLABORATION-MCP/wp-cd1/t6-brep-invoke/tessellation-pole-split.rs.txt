@@ -1,0 +1,33 @@
+
+/// 🧭 Splits every pole vertex whose two ring neighbours sit on different `u` branches into one ring vertex per branch
+/// (the same 3D point twice, both flagged pole — [`weld_and_compact`] fans them back into one vertex). A face whose
+/// boundary passes a pole WITHOUT an explicit degenerate edge — a cone's apex, whose single seam is walked up and back
+/// down, or two meridians meeting at an apex — arrives on one branch and departs on another; left as one UV vertex, the
+/// ring closed through a diagonal across the whole `u` range instead of along the degenerate side `v = v_pole`, and the
+/// triangulation dropped the corner it cut off (every cone lost ~21 % of its volume).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn split_pole_branches(positions: &mut Vec<Pnt3>, uvs: &mut Vec<(f64, f64)>, poles: &mut Vec<bool>) {
+    let n = uvs.len();
+    if n < 3 {
+        return;
+    }
+    let mut split_positions = Vec::with_capacity(n + 2);
+    let mut split_uvs = Vec::with_capacity(n + 2);
+    let mut split_poles = Vec::with_capacity(n + 2);
+    for i in 0..n {
+        let (arriving, departing) = (uvs[(i + n - 1) % n], uvs[(i + 1) % n]);
+        let branches = poles[i] && !poles[(i + n - 1) % n] && !poles[(i + 1) % n] && (arriving.0 - departing.0).abs() > POLE_BRANCH_TOL;
+        if branches {
+            split_positions.extend([positions[i], positions[i]]);
+            split_uvs.extend([(arriving.0, uvs[i].1), (departing.0, uvs[i].1)]);
+            split_poles.extend([true, true]);
+        } else {
+            split_positions.push(positions[i]);
+            split_uvs.push(uvs[i]);
+            split_poles.push(poles[i]);
+        }
+    }
+    *positions = split_positions;
+    *uvs = split_uvs;
+    *poles = split_poles;
+}

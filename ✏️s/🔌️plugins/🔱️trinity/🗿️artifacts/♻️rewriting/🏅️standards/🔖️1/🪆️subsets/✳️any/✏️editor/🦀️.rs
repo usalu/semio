@@ -314,7 +314,7 @@ pub(crate) fn rewriting_io() -> semio_framework_plugin::AppIo {
         ],
         export_formats: vec![],
         import_formats: vec![],
-        artifact: semio_framework_plugin::ArtifactPresentation { id: "trinity.rewriting".into(), name: "Trinity Rewrite Rule".into(), dimension: "graph".into(), component_kind: "trinity".into() },
+        artifact: semio_framework_plugin::ArtifactPresentation { id: crate::artifact_kind().id, name: "Trinity Rewrite Rule".into(), dimension: "graph".into(), component_kind: "trinity".into() },
     }
 }
 //#endregion 🔖️Io

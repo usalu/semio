@@ -1,12 +1,14 @@
 //! 🏙️ 🏙️ S Home launcher app command — `create-studio`.
 //! Temporary studios are classified `ephemeralLocalOnly` (no backbone);
-//! share/collaboration stay blocked until `promote-to-hub-space` or `persist-locally`.
+//! share/collaboration stay blocked until `promote-to-hub-space` or `persist-locally`. A folder studio is refused by name
+//! when no folder is named, when its folder cannot be written, or on a host that gives studios no filesystem (every
+//! `wasm32` guest) — never answered with an empty success.
 
 use crate::standards::v1::subsets::any::schema::mutations::change_catalog_generation;
 use crate::standards::v1::subsets::any::schema::mutations::text::SHomeMutation;
 use crate::SHomeSnapshot;
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, FaultOrigin};
 
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os::VcsError;
@@ -30,7 +32,7 @@ fn create_folder_studio(name: &str, folder_path: &str, owner_id: &str, owner_nam
     Ok(entry)
 }
 
-/// @emoji 🧭️ Builds the typed emit for a freshly-created studio: bump the catalog counter (operation)
+/// 🧭️ Builds the typed emit for a freshly-created studio: bump the catalog counter (operation)
 /// and navigate the shell to the new studio route (host effect).
 fn created_studio_emit(catalog_generation: u64, space_id: &str) -> Emit<SHomeMutation, HomeConfigMutation> {
     Emit { artifact_mutations: vec![change_catalog_generation(catalog_generation + 1)], effects: vec![Effect::Navigate { uri: format!("/spaces/{space_id}") }], ..Default::default() }
@@ -51,19 +53,17 @@ pub fn handle_with_identity(
     let owner_name = identity.display_name.as_str();
     match payload.kind.as_str() {
         "folder" => {
+            let folder_path = payload.folder_path.as_deref().map(str::trim).filter(|path| !path.is_empty()).ok_or_else(|| Fault::new(FaultOrigin::App, "s.home.create-studio.folder-path-required", "a folder studio names the folder it is kept in"))?;
             #[cfg(not(target_arch = "wasm32"))]
             {
-                if let Some(folder_path) = &payload.folder_path {
-                    if let Ok(entry) = create_folder_studio(&payload.name, folder_path, owner_id, owner_name) {
-                        return Ok(created_studio_emit(generation, &entry.id));
-                    }
-                }
+                let entry = create_folder_studio(&payload.name, folder_path, owner_id, owner_name).map_err(|error| Fault::new(FaultOrigin::App, "s.home.create-studio.io-failed", format!("creating a studio in {folder_path} failed: {error:?}")))?;
+                Ok(created_studio_emit(generation, &entry.id))
             }
             #[cfg(target_arch = "wasm32")]
             {
-                let _ = &payload.folder_path;
+                let _ = (folder_path, owner_id, owner_name);
+                Err(Fault::new(FaultOrigin::App, "s.home.create-studio.filesystem-unavailable", "this host gives studios no filesystem; create a temporary studio or a hub space instead"))
             }
-            Ok(Emit::default())
         }
         _ => {
             // 🌉️ `crate::create_and_register_ephemeral_studio` is a plugin-root async fn (outside

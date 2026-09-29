@@ -43,9 +43,7 @@ async fn set_active_example_republishes_the_flow_window_graph() {
     app.handle_action("setActiveExample", Some(&serde_json::json!({ "exampleId": PROCEDURAL_EXAMPLE_BOX_SHELL }).into()), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("setActiveExample dispatches");
     let receipt = context::settle(&mut app).await;
     assert!(!receipt.lanes.contains(&TypedOperationResultLane::Fault), "setActiveExample published a fault lane");
-    eprintln!("[DEBUG] example switch receipt: lanes={:?} ui_scope={:?} completions={} effects={}", receipt.lanes, receipt.ui_scope, receipt.completions, receipt.effects.len());
     let after = published_node_ids(&context::render_with_view(&mut app, flow_window::GENERATION_3D_PLAY_BODY_MAIN, &flow_view).await);
-    eprintln!("[DEBUG] flow window node ids after the switch: {after:?}");
     assert_eq!(after, authored_node_ids(PROCEDURAL_EXAMPLE_BOX_SHELL), "the flow window kept the previous example's graph");
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
 }
@@ -68,7 +66,6 @@ async fn every_example_switch_publishes_its_own_graph_without_leaking_the_previo
         for leaked in authored_node_ids(previous).difference(&authored) {
             assert!(!published.contains(leaked), "{example_id}: the previous example's node {leaked} survived the switch");
         }
-        eprintln!("[DEBUG] example switch {previous} -> {example_id}: published {} nodes ui_scope={:?}", published.len(), receipt.ui_scope);
         previous = example_id;
     }
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
@@ -90,7 +87,6 @@ async fn a_shell_dispatched_example_switch_republishes_both_windows_and_rearms_t
         .window_transient_snapshot(&preview_view)
         .expect("preview window transient snapshot")
         .and_then(|snapshot| snapshot.get::<Generation3dPreviewWindowTransientOwner>().and_then(|state| state.preview_eval_text.clone()));
-    eprintln!("[DEBUG] boot preview eval text bytes={:?}", evaluated.as_deref().map(str::len));
     let action_meta = semio_framework_plugin::ActionMeta { view_state: Some(flow_view.clone()), ..semio_framework_plugin::artifact_app_laws::meta("local") };
     app.handle_action("setActiveExample", Some(&serde_json::json!({ "exampleId": PROCEDURAL_EXAMPLE_BOX_SHELL }).into()), &action_meta).await.expect("the shell dispatches setActiveExample under the flow window");
     let receipt = context::settle(&mut app).await;
@@ -100,7 +96,6 @@ async fn a_shell_dispatched_example_switch_republishes_both_windows_and_rearms_t
     // 🔒️ The switch carries the run start on its OWN emit, and the link's one-request latch is what
     // keeps the following refresh poll from asking for a SECOND run on top of it.
     let polled = app.pending_effects(Some(&flow_view)).await;
-    eprintln!("[DEBUG] shell switch: lanes={:?} ui_scope={:?} own effects={} polled after switch={}", receipt.lanes, receipt.ui_scope, receipt.effects.len(), polled.len());
     assert_eq!(context::run_actions(&receipt.effects), vec![semio_framework_plugin::TOOL_RUN_START_ACTION_ID.to_string()], "the switched document must start the preview's evaluation run, got {:?}", receipt.effects);
     assert!(context::run_actions(&polled).is_empty(), "the refresh poll must ask for no second run, got {polled:?}");
     context::drain_armed_flow_eval_ticks_from(&mut app, &flow_view, &receipt.effects).await;
@@ -108,7 +103,6 @@ async fn a_shell_dispatched_example_switch_republishes_both_windows_and_rearms_t
         .window_transient_snapshot(&preview_view)
         .expect("preview window transient snapshot")
         .and_then(|snapshot| snapshot.get::<Generation3dPreviewWindowTransientOwner>().and_then(|state| state.preview_eval_text.clone()));
-    eprintln!("[DEBUG] switched preview eval text bytes={:?}", after.as_deref().map(str::len));
     assert!(after.is_some(), "the preview window published no evaluation for the switched example");
     assert_ne!(after, evaluated, "the preview window kept the PREVIOUS example's evaluation after the switch");
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
@@ -128,7 +122,6 @@ async fn set_active_example_starts_the_run_that_evaluates_every_attached_preview
     let receipt = context::settle(&mut app).await;
     assert_eq!(context::run_actions(&receipt.effects), vec![semio_framework_plugin::TOOL_RUN_START_ACTION_ID.to_string()], "the switch carries exactly one run start");
     let run = context::drive_preview_run(&mut app, &flow_view, &receipt.effects).await;
-    eprintln!("[DEBUG] setActiveExample run {run:?}");
     assert_eq!(run_windows(&run), vec![edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.to_string()], "the run must evaluate the attached preview window");
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
 }
@@ -227,7 +220,6 @@ async fn every_example_switch_row_of_the_fixture_holds() {
         }
         let published = published_node_ids(&context::render_with_view(&mut app, flow_window::GENERATION_3D_PLAY_BODY_MAIN, &flow_view).await);
         let expected: std::collections::BTreeSet<String> = row.published.iter().cloned().collect();
-        eprintln!("[DEBUG] example-switch row {} picks={:?} published={published:?} armed={armed:?}", row.id, row.picks);
         assert_eq!(published, expected, "{}: the flow window did not publish exactly this row's graph", row.id);
         for leaked in &row.retired {
             assert!(!published.contains(leaked), "{}: the previous example's widget {leaked} survived the switch", row.id);

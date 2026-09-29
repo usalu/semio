@@ -447,6 +447,7 @@
       "continuous": true,
       "outputs": [],
       "dependsOn": [
+        "generate-frame-worker",
         "@semio-tech/framework-os-dev:activate-s-wgpu-dev"
       ],
       "options": {
@@ -461,6 +462,7 @@
       "continuous": true,
       "outputs": [],
       "dependsOn": [
+        "generate-frame-worker",
         "@semio-tech/framework-os-dev:activate-s-wgpu-dev"
       ],
       "options": {
@@ -572,7 +574,8 @@
       "outputs": [],
       "dependsOn": [
         "native-build",
-        "@semio-tech/framework-os-scale-fixture:build-wasm"
+        "@semio-tech/framework-os-scale-fixture:build-wasm",
+        "@semio-tech/framework-os-dev:generate-scale-fixture"
       ],
       "options": {
         "cwd": "{projectRoot}",
@@ -586,12 +589,45 @@
       "outputs": [],
       "dependsOn": [
         "native-build-release",
-        "@semio-tech/framework-os-scale-fixture:build-wasm"
+        "@semio-tech/framework-os-scale-fixture:build-wasm",
+        "@semio-tech/framework-os-dev:generate-scale-fixture"
       ],
       "options": {
         "cwd": "{projectRoot}",
         "command": "bun ../../⌨️native-entrypoint/📜️script.ts scale release",
         "forwardAllArgs": true
+      }
+    },
+    "hub-collaboration-acceptance": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts hub-collaboration-acceptance",
+        "forwardAllArgs": true
+      },
+      "configurations": {
+        "wasm32": {
+          "args": "--journey wasm32"
+        },
+        "wasm32-react": {
+          "args": "--journey wasm32-react"
+        },
+        "wasm32-native": {
+          "args": "--journey wasm32-native"
+        },
+        "native-react": {
+          "args": "--journey native-react"
+        },
+        "native-react-cursors": {
+          "args": "--journey native-react-cursors"
+        },
+        "cursors": {
+          "args": "--journey cursors"
+        },
+        "agent-pixels": {
+          "args": "--journey agent-pixels"
+        }
       }
     }
   },

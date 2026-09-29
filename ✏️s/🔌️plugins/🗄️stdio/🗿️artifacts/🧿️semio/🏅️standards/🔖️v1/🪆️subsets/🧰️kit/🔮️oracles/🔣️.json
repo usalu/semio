@@ -223,6 +223,7 @@
         }
       ],
       "kinds": [
+        "set-snapshot",
         "create-object",
         "delete-object",
         "create-model",

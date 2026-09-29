@@ -29,12 +29,12 @@ function laneRank(lane: Lane): number {
   return MAILBOX_LANE_ORDER.indexOf(lane);
 }
 
-/** @emoji 🚦 What {@link BoundedMailbox.enqueue} reports back. `rejected` must always surface to the
+/** 🚦 What {@link BoundedMailbox.enqueue} reports back. `rejected` must always surface to the
  * UI as a busy signal — it must never be treated as a silent drop of a user action.
  * `Rejected` — muss der UI immer als Beschäftigt-Signal angezeigt werden, niemals als stilles Verwerfen. */
 export type Backpressure = { readonly kind: "accept" } | { readonly kind: "coalesced" } | { readonly kind: "dropped"; readonly lane: Lane } | { readonly kind: "rejected" };
 
-/** @emoji ✉️ One message offered to a {@link BoundedMailbox}: its scheduling lane, payload, an
+/** ✉️ One message offered to a {@link BoundedMailbox}: its scheduling lane, payload, an
  * optional coalescing key that lets a newer envelope replace an older queued one in place, and an
  * optional causal `order` key (see {@link createBoundedMailbox} `## causal order`). */
 export interface MailboxEnvelope<T> {
@@ -46,7 +46,7 @@ export interface MailboxEnvelope<T> {
   readonly payload: T;
 }
 
-/** @emoji 📬️ Bounded ring per actor: one FIFO queue per {@link Lane} (so `popNext` honors lane
+/** 📬️ Bounded ring per actor: one FIFO queue per {@link Lane} (so `popNext` honors lane
  * priority for free), a coalescing scan on `enqueue`, and eviction of the lowest-priority nonempty
  * lane before a hard `rejected`. */
 export interface BoundedMailbox<T> {
@@ -57,7 +57,7 @@ export interface BoundedMailbox<T> {
 }
 
 /**
- * @emoji 📬️ Creates a {@link BoundedMailbox} of `capacity` envelopes total across all four lanes —
+ * 📬️ Creates a {@link BoundedMailbox} of `capacity` envelopes total across all four lanes —
  * the TypeScript twin of Rust `Mailbox::new`/`Mailbox::enqueue`/`Mailbox::pop_next`.
  *
  * `enqueue` first does a latest-wins coalescing scan within the incoming envelope's own lane

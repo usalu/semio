@@ -9,22 +9,22 @@ import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "../../../../../🧰️f
 import { moduleDirectoryName } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 
 //#region 🔖️DemonstratorActivationLanes
-/** @emoji 🛣️ The pane whose own activation lane carries the Demonstrator's OWN component closure — the
+/** 🛣️ The pane whose own activation lane carries the Demonstrator's OWN component closure — the
  * `demonstrator` plugin and everything it depends on. Every other lane exists only to add a component
  * that closure does not already reach. */
 export const DEMONSTRATOR_PRIMARY_ACTIVATION_LANE = "generator";
 
-/** @emoji 📦️ Repository-relative root of the `@semio-tech/framework-os-dev` package every lane's
+/** 📦️ Repository-relative root of the `@semio-tech/framework-os-dev` package every lane's
  * `activate-<lane>-react-dev` target writes its receipt below. */
 const OS_DEV_PACKAGE_ROOT = "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript";
 
-/** @emoji 🧾️ The DEMONSTRATOR-OWNED directory holding the merged receipt this product's Vite server
+/** 🧾️ The DEMONSTRATOR-OWNED directory holding the merged receipt this product's Vite server
  * consumes. It is deliberately not one of the framework's per-variant lane directories: no single
  * `activate-<variant>-react-dev` target can ever produce the Demonstrator's cross-app union, because
  * each of them publishes exactly one playground session's plugin list. */
 export const DEMONSTRATOR_UNION_RECEIPT_DIRECTORY = "♻️mit-bestand/🧺️demonstrator/dist/♻️activation/dev";
 
-/** @emoji 🛣️ The activation lanes whose receipts together cover the Demonstrator's runtime union.
+/** 🛣️ The activation lanes whose receipts together cover the Demonstrator's runtime union.
  *
  * The primary lane already carries its own component closure, so a pane's runtime variant earns a lane
  * of its own only when its plugin is NOT inside an already-covered closure. That is what keeps
@@ -60,7 +60,7 @@ export function demonstratorActivationLaneReceiptDirectories(workspace: string):
 //#region 🔖️DemonstratorUnionReceipt
 export type DemonstratorActivationLaneReceipt = { readonly lane: string; readonly receipt: ActivationReceipt };
 
-/** @emoji 🧾️ Merges every lane's completion receipt into the ONE receipt describing the Demonstrator's
+/** 🧾️ Merges every lane's completion receipt into the ONE receipt describing the Demonstrator's
  * exact runtime union — pure, so the union rule is testable without a staged workspace.
  *
  * Every lane stages into the SAME `🔌️plugin-modules` root, so one plugin's `artifactSha256` cannot

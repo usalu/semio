@@ -46,5 +46,4 @@ async fn flow_empty_transient_close_matches_neutral_trace_and_exact_owner() {
         if reset_disposer.close_step(&mut owner, 1, 1).unwrap() == PluginCloseStep::Complete { break; }
     }
     assert!(reset_disposer.terminal_is_empty(&owner));
-    eprintln!("[DEBUG] Flow empty transient matched eleven neutral owner-transfer steps and rejected foreign and reset terminal ownership");
 }

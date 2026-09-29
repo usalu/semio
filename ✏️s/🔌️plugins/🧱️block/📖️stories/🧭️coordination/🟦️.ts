@@ -45,7 +45,7 @@ import hexagonalCutLeftGlbUrl from "../../../../../♻️mit-bestand/🖼️asse
 import capsuleJGlbUrl from "../../../../../🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/💊️capsules/🪝️j/🧊️capsule_J.glb?url";
 
 //#region 🔖️Model
-/** @emoji 🗂️ One parsed DSL document: the banner dialect/version, top-level scalars, `name { … }` blocks and `name [cols] { rows }` tables. */
+/** 🗂️ One parsed DSL document: the banner dialect/version, top-level scalars, `name { … }` blocks and `name [cols] { rows }` tables. */
 export type BlockDslDocument = {
   readonly dialect: string;
   readonly version: string;
@@ -56,7 +56,7 @@ export type BlockDslDocument = {
 //#endregion 🔖️Model
 
 //#region 🔖️Tokenizer
-/** @emoji ✂️ Splits one DSL row into its column tokens: a quoted string, a bracketed `[ … ]` group, or a bare word. Never splits inside quotes or brackets. */
+/** ✂️ Splits one DSL row into its column tokens: a quoted string, a bracketed `[ … ]` group, or a bare word. Never splits inside quotes or brackets. */
 function tokenizeRow(line: string): string[] {
   const tokens: string[] = [];
   let index = 0;
@@ -110,7 +110,7 @@ function tokenizeRow(line: string): string[] {
 const ANGLE_PATTERN = /^(-?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?)(rad|deg)$/;
 const NUMBER_PATTERN = /^-?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?$/;
 
-/** @emoji 🔢️ Coerces one column token to its typed value. `_` is the DSL's "absent" marker and becomes `undefined`; unknown column types fall back to the token's natural shape. */
+/** 🔢️ Coerces one column token to its typed value. `_` is the DSL's "absent" marker and becomes `undefined`; unknown column types fall back to the token's natural shape. */
 export function coerceDslValue(token: string, columnType?: string): unknown {
   if (token === "_") return undefined;
   if (token.startsWith('"')) {
@@ -131,7 +131,7 @@ export function coerceDslValue(token: string, columnType?: string): unknown {
   return token;
 }
 
-/** @emoji 🔤️ Column header `name:TYPE` → the camelCased record key the stories read plus the declared type. */
+/** 🔤️ Column header `name:TYPE` → the camelCased record key the stories read plus the declared type. */
 function parseColumnHeader(header: string): { readonly key: string; readonly type: string } {
   const colon = header.lastIndexOf(":");
   const rawName = colon > 0 ? header.slice(0, colon) : header;
@@ -139,7 +139,7 @@ function parseColumnHeader(header: string): { readonly key: string; readonly typ
   return { key: rawName.replace(/-([a-z0-9])/g, (_, letter: string) => letter.toUpperCase()), type };
 }
 
-/** @emoji 🧩️ Splits a block body's `key=value key=value …` text into typed entries; quoted values keep their spaces. */
+/** 🧩️ Splits a block body's `key=value key=value …` text into typed entries; quoted values keep their spaces. */
 function parseBlockBody(text: string): Record<string, unknown> {
   const record: Record<string, unknown> = {};
   for (const token of tokenizeAssignments(text)) {
@@ -151,7 +151,7 @@ function parseBlockBody(text: string): Record<string, unknown> {
   return record;
 }
 
-/** @emoji ✂️ Splits `key=value` assignments, keeping quoted values (which may contain spaces) intact. */
+/** ✂️ Splits `key=value` assignments, keeping quoted values (which may contain spaces) intact. */
 function tokenizeAssignments(text: string): string[] {
   const tokens: string[] = [];
   let current = "";
@@ -176,7 +176,7 @@ function tokenizeAssignments(text: string): string[] {
 //#endregion 🔖️Values
 
 //#region 🔖️Parser
-/** @emoji 📖️ Parses one `🗣️.dsl.semio` block document. Throws on a missing/foreign banner rather than returning a half-read document — a story rendering nothing is far harder to diagnose than a thrown fixture error. */
+/** 📖️ Parses one `🗣️.dsl.semio` block document. Throws on a missing/foreign banner rather than returning a half-read document — a story rendering nothing is far harder to diagnose than a thrown fixture error. */
 export function parseBlockDsl(text: string): BlockDslDocument {
   const lines = text.split(/\r?\n/);
   const banner = /^semio\s+(\S+)\s+v(\S+)\s*$/.exec(lines[0] ?? "");
@@ -240,7 +240,7 @@ export type BlockRepresentation = { readonly id: string; readonly name: string; 
 
 export type Block2dHandleKind = { readonly id: string; readonly name: string; readonly label: string; readonly color: string; readonly defaultWireKind: string };
 export type Block2dHandleTemplate = { readonly id: string; readonly handleKind: string; readonly angle: number; readonly radius: number };
-/** @emoji ◻️ The subset of `Block2dSnapshot` (`🗿️artifacts/◻️2d/…/🧬️schema/📸️snapshot/🦀️.rs`) the 2D stories render. */
+/** ◻️ The subset of `Block2dSnapshot` (`🗿️artifacts/◻️2d/…/🧬️schema/📸️snapshot/🦀️.rs`) the 2D stories render. */
 export type Block2dSnapshot = {
   readonly nodeKind: BlockKindIdentity;
   readonly camera2d: BlockCamera2d;
@@ -250,7 +250,7 @@ export type Block2dSnapshot = {
 
 export type Block3dVortexKind = { readonly id: string; readonly label: string; readonly color: string; readonly defaultCableKind: string };
 export type Block3dVortex = { readonly id: string; readonly vortexKind: string; readonly position: readonly [number, number, number]; readonly direction: readonly [number, number, number]; readonly radius: number; readonly label?: string };
-/** @emoji 🧊️ The subset of `Block3dSnapshot` the 3D stories render (`vortexKinds` is `vortex_kinds_of`'s result — the `vortex-kind-extra` overflow half, which is the whole catalogue for a standalone example). */
+/** 🧊️ The subset of `Block3dSnapshot` the 3D stories render (`vortexKinds` is `vortex_kinds_of`'s result — the `vortex-kind-extra` overflow half, which is the whole catalogue for a standalone example). */
 export type Block3dSnapshot = {
   readonly objectKind: BlockKindIdentity;
   readonly camera3d: BlockCamera3d;
@@ -269,7 +269,7 @@ export type Block5dGrip = {
   readonly direction: readonly [number, number, number];
   readonly radius3d: number;
 };
-/** @emoji 🖐️ The subset of `Block5dSnapshot` the 5D stories render — one part kind projected into both a 2D board and a 3D world. */
+/** 🖐️ The subset of `Block5dSnapshot` the 5D stories render — one part kind projected into both a 2D board and a 3D world. */
 export type Block5dSnapshot = {
   readonly partKind: BlockKindIdentity;
   readonly part2d: { readonly shape: string; readonly radius: number };
@@ -314,7 +314,7 @@ function representations(rows: readonly Readonly<Record<string, unknown>>[] | un
   }));
 }
 
-/** @emoji ◻️ `block.block2d.dsl` → the `Block2dSnapshot` slice the 2D stories render. */
+/** ◻️ `block.block2d.dsl` → the `Block2dSnapshot` slice the 2D stories render. */
 export function parseBlock2dDsl(dslText: string): Block2dSnapshot {
   const doc = parseBlockDsl(dslText);
   return {
@@ -325,7 +325,7 @@ export function parseBlock2dDsl(dslText: string): Block2dSnapshot {
   };
 }
 
-/** @emoji 🧊️ `block.block3d.dsl` → the `Block3dSnapshot` slice the 3D stories render. */
+/** 🧊️ `block.block3d.dsl` → the `Block3dSnapshot` slice the 3D stories render. */
 export function parseBlock3dDsl(dslText: string): Block3dSnapshot {
   const doc = parseBlockDsl(dslText);
   return {
@@ -344,7 +344,7 @@ export function parseBlock3dDsl(dslText: string): Block3dSnapshot {
   };
 }
 
-/** @emoji 🖐️ `block.block5d.dsl` → the `Block5dSnapshot` slice the 5D stories render. */
+/** 🖐️ `block.block5d.dsl` → the `Block5dSnapshot` slice the 5D stories render. */
 export function parseBlock5dDsl(dslText: string): Block5dSnapshot {
   const doc = parseBlockDsl(dslText);
   const part2d = doc.blocks["part-2d"];
@@ -369,7 +369,7 @@ export function parseBlock5dDsl(dslText: string): Block5dSnapshot {
 //#endregion 🔖️Projections
 
 //#region 🔖️ActionArgs
-/** @emoji 📨️ `ActionDescriptor.args` is declared `unknown` (`🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🪪️manifest/🟦️.ts`), so every story reducer narrows it here once instead of casting at each read. A non-object payload becomes an empty bag, exactly as a Rust handler sees no named arguments. */
+/** 📨️ `ActionDescriptor.args` is declared `unknown` (`🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🪪️manifest/🟦️.ts`), so every story reducer narrows it here once instead of casting at each read. A non-object payload becomes an empty bag, exactly as a Rust handler sees no named arguments. */
 export function blockStoryActionArgs(args: unknown): Record<string, unknown> {
   return typeof args === "object" && args !== null && !Array.isArray(args) ? (args as Record<string, unknown>) : {};
 }
@@ -377,7 +377,7 @@ export function blockStoryActionArgs(args: unknown): Record<string, unknown> {
 
 //#region 🔖️MeshResolution
 /**
- * @emoji 🧊️ Public mesh identity (the `mesh-url` a `representations` row carries) → the Vite-emitted url of the
+ * 🧊️ Public mesh identity (the `mesh-url` a `representations` row carries) → the Vite-emitted url of the
  * GLB the framework mesh catalog names as that identity's `source`. Built by asking `resolveMeshAsset` for each
  * identity so a catalog rename breaks this map loudly at module load instead of silently serving the wrong mesh
  * — mirroring `../puzzle/3d/World.stories.tsx`'s `STORY_REFERENCE_URL_OVERRIDES` for reference-plane images.
@@ -387,7 +387,7 @@ const BLOCK_STORY_MESH_SOURCES: Readonly<Record<string, string>> = {
   "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/💊️capsules/🪝️j/🧊️capsule_J.glb": capsuleJGlbUrl,
 };
 
-/** @emoji 🧊️ One representation's mesh url, resolved the way `World3dHost` does (`meshAssetTransportUrl` → `resolveMeshAsset`). `null` for an identity absent from the catalog (`/mesh/capsule_J.1to500.glb`, the nakagin `1:500` representation — no catalog anywhere names it) or present but without a bundled story asset, so callers can drop the representation and SAY so instead of rendering a broken mesh. */
+/** 🧊️ One representation's mesh url, resolved the way `World3dHost` does (`meshAssetTransportUrl` → `resolveMeshAsset`). `null` for an identity absent from the catalog (`/mesh/capsule_J.1to500.glb`, the nakagin `1:500` representation — no catalog anywhere names it) or present but without a bundled story asset, so callers can drop the representation and SAY so instead of rendering a broken mesh. */
 export function resolveBlockStoryMeshUrl(meshUrl: string | undefined): string | null {
   if (meshUrl === undefined || meshUrl === "") return null;
   if (!meshUrl.startsWith("/mesh/")) return meshUrl;
@@ -400,7 +400,7 @@ export function resolveBlockStoryMeshUrl(meshUrl: string | undefined): string | 
 //#endregion 🔖️MeshResolution
 
 //#region 🔖️Block2d
-/** @emoji 🎬️ The two `📚️examples/*` units the block2d subset registers (`◻️2d/…/✳️any/🦀️.rs`'s `examples()`) — the exact ids `setActiveExample` switches between. */
+/** 🎬️ The two `📚️examples/*` units the block2d subset registers (`◻️2d/…/✳️any/🦀️.rs`'s `examples()`) — the exact ids `setActiveExample` switches between. */
 export const BLOCK2D_STORY_EXAMPLES: Readonly<Record<string, string>> = {
   "hexagonal-cut-concrete-forest-left": block2dLeftDsl,
   "hexagonal-cut-concrete-forest-right": block2dRightDsl,
@@ -416,7 +416,7 @@ export function block2dStoryStateFor(exampleId: string): Block2dStoryState {
   return { exampleId, snapshot: parseBlock2dDsl(dslText) };
 }
 
-/** @emoji 🎲️ Mints an id avoiding every id already present — mirrors the collision re-mint in `✏️editor/🎮️commands/🌱️add-handle` / `🔘️add-handle-kind` without the real per-session serial counter. */
+/** 🎲️ Mints an id avoiding every id already present — mirrors the collision re-mint in `✏️editor/🎮️commands/🌱️add-handle` / `🔘️add-handle-kind` without the real per-session serial counter. */
 function nextBlockId(prefix: string, existing: ReadonlySet<string>): string {
   let index = existing.size;
   let candidate = `${prefix}${index}`;
@@ -427,7 +427,7 @@ function nextBlockId(prefix: string, existing: ReadonlySet<string>): string {
   return candidate;
 }
 
-/** @emoji 🧩️ Story-local mirror of block2d's `command_from_action` → `Block2dCommand::dispatch` path (`◻️2d/…/✏️editor/🦀️.rs`) for the six document-shaping actions the 2D stories exercise. An unknown action is ignored, exactly as the real `command_from_action` returns `None`. */
+/** 🧩️ Story-local mirror of block2d's `command_from_action` → `Block2dCommand::dispatch` path (`◻️2d/…/✏️editor/🦀️.rs`) for the six document-shaping actions the 2D stories exercise. An unknown action is ignored, exactly as the real `command_from_action` returns `None`. */
 export function reduceBlock2dStoryAction(state: Block2dStoryState, action: string, rawArgs: unknown): Block2dStoryState {
   const args = blockStoryActionArgs(rawArgs);
   const { snapshot } = state;
@@ -490,7 +490,7 @@ export function reduceBlock2dStoryAction(state: Block2dStoryState, action: strin
   }
 }
 
-/** @emoji 📋️ The exact `ui_text` lines block2d's viewer board window emits (`◻️2d/…/👁️viewer/🎭️modes/👁️view/🪟️windows/📋️board/🦀️.rs`'s `render`). The editor's own board window (`✏️editor/…/🪟️windows/📋️board`) prints the first line plus one `"<n> handle kinds, <m> handles"` count line, so this is a strict superset of both. */
+/** 📋️ The exact `ui_text` lines block2d's viewer board window emits (`◻️2d/…/👁️viewer/🎭️modes/👁️view/🪟️windows/📋️board/🦀️.rs`'s `render`). The editor's own board window (`✏️editor/…/🪟️windows/📋️board`) prints the first line plus one `"<n> handle kinds, <m> handles"` count line, so this is a strict superset of both. */
 export function block2dBoardRenderLines(snapshot: Block2dSnapshot): readonly string[] {
   const lines = [`Node kind: ${snapshot.nodeKind.label === "" ? "—" : snapshot.nodeKind.label}`, `${snapshot.handleKinds.length} handle kind(s)`];
   for (const kind of snapshot.handleKinds) lines.push(`  ◦ ${kind.label} (${kind.id}) — ${kind.color}`);
@@ -499,10 +499,10 @@ export function block2dBoardRenderLines(snapshot: Block2dSnapshot): readonly str
   return lines;
 }
 
-/** @emoji 🖼️ Board-space radius of the single node-kind glyph. A handle template's own `radius` is a NORMALIZED rim offset (0.36 in both examples), never a board-space size, so it scales the handle's placement off this radius instead of being used raw. */
+/** 🖼️ Board-space radius of the single node-kind glyph. A handle template's own `radius` is a NORMALIZED rim offset (0.36 in both examples), never a board-space size, so it scales the handle's placement off this radius instead of being used raw. */
 export const BLOCK2D_STORY_NODE_RADIUS = 120;
 
-/** @emoji 🗂️ Document-shaped kind catalogs → the engine-shaped `nodeKinds`/`handleKinds` the board reads — the same translation `../puzzle/2d/Board.stories.tsx`'s `storyBoardKindCatalogsJson` performs (the engine rejects a row still carrying the document's `label`). */
+/** 🗂️ Document-shaped kind catalogs → the engine-shaped `nodeKinds`/`handleKinds` the board reads — the same translation `../puzzle/2d/Board.stories.tsx`'s `storyBoardKindCatalogsJson` performs (the engine rejects a row still carrying the document's `label`). */
 export function block2dGlyphCatalogsJson(snapshot: Block2dSnapshot): string {
   return JSON.stringify({
     handleKinds: snapshot.handleKinds.map((kind) => ({ id: kind.id, name: kind.name, color: kind.color, defaultWireKind: kind.defaultWireKind })),
@@ -510,7 +510,7 @@ export function block2dGlyphCatalogsJson(snapshot: Block2dSnapshot): string {
   });
 }
 
-/** @emoji 📋️ One board node (the node kind itself) carrying one board handle per `Block2dHandleTemplate`, at that template's own angle. */
+/** 📋️ One board node (the node kind itself) carrying one board handle per `Block2dHandleTemplate`, at that template's own angle. */
 export function buildBlock2dSceneNode(snapshot: Block2dSnapshot, interactive: boolean, surfaceId = "block2d.play.board", controllerId = "block2d-story"): UiComponentSceneNode {
   const fixture = {
     schema: "block.2d.fixture",
@@ -554,7 +554,7 @@ export function buildBlock2dSceneNode(snapshot: Block2dSnapshot, interactive: bo
 //#endregion 🔖️Block2d
 
 //#region 🔖️Block3d
-/** @emoji 🎬️ The two `📚️examples/*` units the block3d subset registers. */
+/** 🎬️ The two `📚️examples/*` units the block3d subset registers. */
 export const BLOCK3D_STORY_EXAMPLES: Readonly<Record<string, string>> = {
   "hexagonal-cut-concrete-forest-left": block3dLeftDsl,
   "nakagin-capsule": block3dNakaginDsl,
@@ -568,7 +568,7 @@ export function block3dStorySnapshotFor(exampleId: string): Block3dSnapshot {
   return parseBlock3dDsl(dslText);
 }
 
-/** @emoji 🧊️ Per-representation mesh admission: the resolved story url, or `null` with the reason a representation had to be dropped. */
+/** 🧊️ Per-representation mesh admission: the resolved story url, or `null` with the reason a representation had to be dropped. */
 export type BlockStoryMeshAdmission = { readonly id: string; readonly name: string; readonly meshUrl: string | undefined; readonly resolved: string | null };
 
 export function admitBlockStoryRepresentations(representations: readonly { readonly id: string; readonly name: string; readonly meshUrl?: string }[]): readonly BlockStoryMeshAdmission[] {
@@ -578,7 +578,7 @@ export function admitBlockStoryRepresentations(representations: readonly { reado
 const BLOCK3D_STORY_CONTROLLER_ID = "block3d-story";
 
 /**
- * @emoji 🌐️ The block3d world window's scene, projected the way `🧊️3d/…/👁️viewer/🎭️modes/👁️view/🪟️windows/🌐️world/🦀️.rs`
+ * 🌐️ The block3d world window's scene, projected the way `🧊️3d/…/👁️viewer/🎭️modes/👁️view/🪟️windows/🌐️world/🦀️.rs`
  * builds it: one mesh + one instance per representation (at the document origin, identity rotation — a viewer
  * has no per-session arrangement offset), every rim vortex at its document position/direction/radius coloured
  * by its `vortex-kind-extra` row. Representations whose mesh identity does not resolve are DROPPED, never
@@ -632,7 +632,7 @@ export function buildBlock3dWorldSceneNode(snapshot: Block3dSnapshot, admitted: 
 //#endregion 🔖️Block3d
 
 //#region 🔖️Block5d
-/** @emoji 🎬️ The two `📚️examples/*` units the block5d subset registers (`🖐️5d/…/✳️any/🦀️.rs`'s `examples()`). */
+/** 🎬️ The two `📚️examples/*` units the block5d subset registers (`🖐️5d/…/✳️any/🦀️.rs`'s `examples()`). */
 export const BLOCK5D_STORY_EXAMPLES: Readonly<Record<string, string>> = {
   "hexagonal-cut-concrete-forest-left": block5dLeftDsl,
   "nakagin-capsule": block5dNakaginDsl,
@@ -648,7 +648,7 @@ export function block5dStoryStateFor(exampleId: string): Block5dStoryState {
   return { exampleId, snapshot: parseBlock5dDsl(dslText) };
 }
 
-/** @emoji 🧩️ Story-local mirror of block5d's seven-command table (`🖐️5d/…/✏️editor/🦀️.rs`, `BLOCK5D_RETAINED_TOOL_IDS`) for the six document-shaping actions the 5D stories exercise. */
+/** 🧩️ Story-local mirror of block5d's seven-command table (`🖐️5d/…/✏️editor/🦀️.rs`, `BLOCK5D_RETAINED_TOOL_IDS`) for the six document-shaping actions the 5D stories exercise. */
 export function reduceBlock5dStoryAction(state: Block5dStoryState, action: string, rawArgs: unknown): Block5dStoryState {
   const args = blockStoryActionArgs(rawArgs);
   const { snapshot } = state;
@@ -716,7 +716,7 @@ export function reduceBlock5dStoryAction(state: Block5dStoryState, action: strin
   }
 }
 
-/** @emoji 📋️ The `ui_text` lines block5d's board window emits (`🖐️5d/…/✏️editor/🎭️modes/✏️edit/🪟️windows/📋️board/🦀️.rs`'s `render`: part-kind label + `"2d grips: <n>"`), extended with one line per grip kind and per grip so the story's board panel shows the geometry it draws. */
+/** 📋️ The `ui_text` lines block5d's board window emits (`🖐️5d/…/✏️editor/🎭️modes/✏️edit/🪟️windows/📋️board/🦀️.rs`'s `render`: part-kind label + `"2d grips: <n>"`), extended with one line per grip kind and per grip so the story's board panel shows the geometry it draws. */
 export function block5dBoardRenderLines(snapshot: Block5dSnapshot): readonly string[] {
   const lines = [`Part kind: ${snapshot.partKind.label === "" ? "—" : snapshot.partKind.label}`, `2d grips: ${snapshot.grips.length}`, `${snapshot.gripKinds.length} grip kind(s)`];
   for (const kind of snapshot.gripKinds) lines.push(`  ◦ ${kind.label} (${kind.id}) — ${kind.color}`);
@@ -724,12 +724,12 @@ export function block5dBoardRenderLines(snapshot: Block5dSnapshot): readonly str
   return lines;
 }
 
-/** @emoji 🌐️ The `mesh:` line block5d's world window emits (`🖐️5d/…/🪟️windows/🌐️world/🦀️.rs`'s `render`: part-kind label + the FIRST representation's `mesh_url`, `"—"` when there is none). */
+/** 🌐️ The `mesh:` line block5d's world window emits (`🖐️5d/…/🪟️windows/🌐️world/🦀️.rs`'s `render`: part-kind label + the FIRST representation's `mesh_url`, `"—"` when there is none). */
 export function block5dWorldRenderLines(snapshot: Block5dSnapshot): readonly string[] {
   return [`Part kind: ${snapshot.partKind.label === "" ? "—" : snapshot.partKind.label}`, `mesh: ${snapshot.representations[0]?.meshUrl ?? "—"}`];
 }
 
-/** @emoji 📋️ block5d's 2D projection as a board fixture: the part kind as one `part-2d`-shaped glyph, every grip at its own `angle`/`radius-2d`. */
+/** 📋️ block5d's 2D projection as a board fixture: the part kind as one `part-2d`-shaped glyph, every grip at its own `angle`/`radius-2d`. */
 export function buildBlock5dBoardSceneNode(snapshot: Block5dSnapshot, interactive: boolean): UiComponentSceneNode {
   const radius = snapshot.part2d.radius;
   const fixture = {
@@ -777,7 +777,7 @@ export function buildBlock5dBoardSceneNode(snapshot: Block5dSnapshot, interactiv
 
 const BLOCK5D_STORY_CONTROLLER_ID = "block5d-story";
 
-/** @emoji 🌐️ block5d's 3D projection as a world scene — same shape as {@link buildBlock3dWorldSceneNode}, with grips standing in for vortices (`🖐️5d/…/👁️viewer/🎭️modes/👁️view/🪟️windows/🌐️world/🦀️.rs` builds its mesh window off the same `representations`). */
+/** 🌐️ block5d's 3D projection as a world scene — same shape as {@link buildBlock3dWorldSceneNode}, with grips standing in for vortices (`🖐️5d/…/👁️viewer/🎭️modes/👁️view/🪟️windows/🌐️world/🦀️.rs` builds its mesh window off the same `representations`). */
 export function buildBlock5dWorldSceneNode(snapshot: Block5dSnapshot, admitted: readonly BlockStoryMeshAdmission[], selectedIds: readonly string[], hoveredId: string | null): UiComponentSceneNode {
   const usable = admitted.filter((entry): entry is BlockStoryMeshAdmission & { readonly resolved: string } => entry.resolved !== null);
   const label = snapshot.partKind.label === "" ? snapshot.partKind.name : snapshot.partKind.label;

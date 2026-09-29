@@ -257,7 +257,6 @@ fn every_store_replacement_phase_unit_fits_the_interactive_step_budget() {
     }
     let (typical_phase, median_us) = best.worst();
     let (peak_phase, peak_us) = best.worst_unit();
-    eprintln!("[DEBUG] store replacement budget typical_phase={typical_phase} median_us={median_us} peak_phase={peak_phase} peak_us={peak_us} breakdown={}", best.report());
     assert!(median_us <= REPLACEMENT_PHASE_BUDGET_US, "store replacement phase {typical_phase}'s typical unit cost {median_us}us in every round, over the {REPLACEMENT_PHASE_BUDGET_US}us typical-unit budget (per-phase median/worst/units: {})", best.report());
     assert!(peak_us < REPLACEMENT_STEP_CEILING_US, "store replacement phase {peak_phase} ran one unit for {peak_us}us in every round, at or over the framework's {REPLACEMENT_STEP_CEILING_US}us interactive step ceiling (per-phase median/worst/units: {})", best.report());
 }

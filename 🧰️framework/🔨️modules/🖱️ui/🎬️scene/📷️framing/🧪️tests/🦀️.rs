@@ -13,7 +13,6 @@ fn canvas_framing_shared_fixtures() {
             assert!((actual-expected.as_f64().unwrap()).abs()<1e-10,"{}: {camera:?}",case["name"]);
         }
     }
-    eprintln!("[DEBUG] shared canvas framing fixtures resolved");
 }
 
 #[test]

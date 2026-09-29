@@ -169,13 +169,13 @@ fn unified_gutter_right_x(theme: &Theme) -> f32 {
     diff_view_metrics(Rect::new(0.0, 0.0, 400.0, 300.0), theme).unified_after_right_x
 }
 
+/// 🚫️ No translucent full-row wash left over — the old background-fill mechanism pushed a
+/// `push_solid` at `theme.accent.with_alpha(0.16)` for every added row.
 #[test]
 fn unified_added_line_text_uses_the_diff_added_token_without_a_row_background() {
     let (draw, theme) = render_diff("a\n", "a\nnew\n", Some("unified"));
     let colors = glyph_colors(&draw);
     assert!(colors.contains(&theme.diff_added), "added line glyphs should use the dedicated diff-added token, got {colors:?}");
-    // 🚫️ No translucent full-row wash left over — the old background-fill mechanism pushed a
-    // `push_solid` at `theme.accent.with_alpha(0.16)` for every added row.
     assert!(!colors.contains(&theme.accent.with_alpha(0.16)), "added rows must no longer paint a translucent background wash");
 }
 
@@ -186,14 +186,14 @@ fn unified_removed_line_text_is_tinted_error() {
     assert!(colors.contains(&theme.error), "removed line's glyph text should be tinted theme.error, got {colors:?}");
 }
 
+/// 🔢️ Scoped to the TEXT band: the gutter to its left is legitimately muted (React's
+/// `text-muted-foreground` number spans), and this law is about the line text only. It used to
+/// assert `theme.text_muted` was absent from the WHOLE palette, which is why the gutter could not
+/// be painted at all (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
+/// `📓️audit-w14-scenes-residual.md` item 8).
 #[test]
 fn unchanged_lines_stay_full_brightness_not_dimmed() {
     let (draw, theme) = render_diff("same\n", "same\n", Some("unified"));
-    // 🔢️ Scoped to the TEXT band: the gutter to its left is legitimately muted (React's
-    // `text-muted-foreground` number spans), and this law is about the line text only. It used to
-    // assert `theme.text_muted` was absent from the WHOLE palette, which is why the gutter could not
-    // be painted at all (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
-    // `📓️audit-w14-scenes-residual.md` item 8).
     let (_, text_colors) = glyph_colors_split_at_gutter(&draw, unified_gutter_right_x(&theme));
     assert!(text_colors.contains(&theme.text), "an unchanged line must render at full theme.text brightness (React never dims equal lines), got {text_colors:?}");
     assert!(!text_colors.contains(&theme.text_muted), "unchanged line TEXT must not be dimmed to theme.text_muted, got {text_colors:?}");

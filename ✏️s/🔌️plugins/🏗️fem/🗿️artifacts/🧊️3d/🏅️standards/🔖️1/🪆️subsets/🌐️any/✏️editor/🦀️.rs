@@ -880,7 +880,7 @@ impl ArtifactEditor for Fem3dPlayApp {
     /// the same geometry. See `crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_boot_snapshot`.
     fn initial_snapshot() -> Fem3dSnapshot {
         let snapshot = crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_boot_snapshot();
-        eprintln!("[DEBUG] fem3d editor boot snapshot: nodes={} elements={} solids={} materials={} loadCases={}", snapshot.nodes.len(), snapshot.elements.len(), snapshot.solids.len(), snapshot.materials.len(), snapshot.load_cases.len());
+        eprintln!("[TRACE] fem3d editor boot snapshot: nodes={} elements={} solids={} materials={} loadCases={}", snapshot.nodes.len(), snapshot.elements.len(), snapshot.solids.len(), snapshot.materials.len(), snapshot.load_cases.len());
         snapshot
     }
 
@@ -1273,6 +1273,7 @@ pub fn create_fem3d_app() -> AppDefinition {
             .document(["semio", "fem", "fem3d"])
             .terminology("reuse")
             .terminology_document("reuse", ["Entwerfen mit Bestand", "Statik"])
+            .artifact_kind(crate::document_artifact_kind())
             .artifact_kind(crate::computation_artifact_kind())
             .icon_id("fem-app")
             .mode(edit::MODE_ID, LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")

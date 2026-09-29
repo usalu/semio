@@ -28,7 +28,9 @@ pub mod derived_construction {
     use crate::{DocxDiff, DocxMutation, DocxSnapshot};
     use dsl::{Diagnostic, Severity};
     use semio_framework_plugin::ArtifactBuilder;
-    use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
+    #[cfg(test)]
+    use semio_s_artifact_stdio_xml::schema::snapshot::xml_document_to_text;
+    use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDocument, XmlNode};
     use semio_s_artifact_stdio_zip::opc::{OpcPackage, RELS_CONTENT_TYPE};
 
     //#region 🔖️Namespaces

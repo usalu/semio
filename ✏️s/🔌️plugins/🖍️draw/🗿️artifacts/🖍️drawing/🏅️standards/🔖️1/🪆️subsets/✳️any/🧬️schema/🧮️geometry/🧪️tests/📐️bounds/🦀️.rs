@@ -15,7 +15,6 @@ fn geometry_fixtures() {
         let expected: [f64; 6] = serde_json::from_value(case["expected"].clone()).unwrap();
         assert_eq!(multiply(parent, child), expected);
     }
-    eprintln!("[DEBUG] Drawing curve extrema and parent transforms validated");
 }
 
 #[test]

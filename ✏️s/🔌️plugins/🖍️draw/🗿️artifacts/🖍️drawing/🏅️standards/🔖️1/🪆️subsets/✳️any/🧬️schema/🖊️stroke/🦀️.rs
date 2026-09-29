@@ -74,7 +74,7 @@ mod tests {
                 }
             }
         }
-        eprintln!("[DEBUG] stroke cap and join codecs matched all shared enum cases");
+        eprintln!("[TRACE] stroke cap and join codecs matched all shared enum cases");
     }
 
     #[test]
@@ -85,6 +85,6 @@ mod tests {
             if case["error"] == true { assert!(parsed.is_err(), "{case}"); }
             else { assert_eq!(parsed.unwrap(), serde_json::from_value::<Option<Vec<f64>>>(case["dash"].clone()).unwrap(), "{case}"); }
         }
-        eprintln!("[DEBUG] stroke dash parsing matched all shared cases");
+        eprintln!("[TRACE] stroke dash parsing matched all shared cases");
     }
 }

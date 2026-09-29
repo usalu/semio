@@ -65,7 +65,6 @@ fn knife_cut_fixtures_preserve_surfaces_and_shared_boundaries() {
         }
         assert!((area / expected["area"].as_f64().unwrap() - 1.0).abs() < 1e-6, "{label}: area={area}");
         if let Some(expected) = expected["volume"].as_f64() { assert!((volume / expected - 1.0).abs() < 1e-6, "{label}: volume={volume}"); }
-        eprintln!("[DEBUG] knife cut {label}: vertices={} faces={} area={area} volume={volume}", mesh.vertex_count(), mesh.face_count());
     }
 }
 
@@ -169,7 +168,6 @@ fn loop_cut_fixtures_preserve_connected_surfaces() {
         }
         assert!((area - expected["area"].as_f64().unwrap()).abs() < 1e-6, "{label}: area={area}");
         if let Some(expected) = expected["volume"].as_f64() { assert!((volume - expected).abs() < 1e-6, "{label}: volume={volume}"); }
-        eprintln!("[DEBUG] loop cut {label}: vertices={} faces={} area={area} volume={volume}", mesh.vertex_count(), mesh.face_count());
     }
 }
 
@@ -237,7 +235,6 @@ fn sphere_refinement_has_no_missing_center_faces() {
             let point = mesh.vertex_position(VertexId(vertex as u32)).unwrap().0.map(|coordinate| coordinate as f64 / radius);
             assert!((point[0].hypot(point[1]).hypot(point[2]) - 1.0).abs() < 1e-6);
         }
-        eprintln!("[DEBUG] sphere level={level} radius={radius}: {} closed outward faces", mesh.face_count());
     }
     for (radius, level) in [(0.0, 0), (-1.0, 1), (f32::NAN, 1), (1.0, 6)] { assert!(HalfedgeMesh::ico_sphere_prim(radius, level).is_err()); }
 }
@@ -263,7 +260,6 @@ fn polygon_tessellation_preserves_shape_at_all_fixture_scales() {
             }
             assert!((area - case["area"].as_f64().unwrap()).abs() < 1e-6, "scale={scale}: area={area}");
             for normal in transfer.normals.chunks_exact(3) { assert!((normal[2] - 1.0).abs() < 1e-6, "scale={scale}: normal={normal:?}"); }
-            eprintln!("[DEBUG] polygon scale={scale}: normalized area={area}, triangles={}", transfer.indices.len() / 3);
         }
     }
 }
@@ -306,7 +302,6 @@ fn modeling_fixtures_preserve_closed_oriented_surfaces() {
         }
         assert!((area - case["area"].as_f64().unwrap()).abs() < 1e-5, "{label}: area {area}");
         assert!((volume - case["volume"].as_f64().unwrap()).abs() < 1e-5, "{label}: signed volume {volume}");
-        eprintln!("[DEBUG] {label}: vertices={} faces={} area={area} volume={volume}", mesh.vertex_count(), mesh.face_count());
     }
 }
 
@@ -342,6 +337,5 @@ fn subdivision_preserves_concave_polygon_area() {
             area += signed_area;
         }
         assert!((area as f64 - case["area"].as_f64().unwrap()).abs() < 1e-5);
-        eprintln!("[DEBUG] concave subdivision: area={area}, faces={}", mesh.face_count());
     }
 }

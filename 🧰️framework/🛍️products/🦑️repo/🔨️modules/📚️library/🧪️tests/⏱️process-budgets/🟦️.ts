@@ -9,7 +9,9 @@ import { buildBudgetMs, cmdBudgetMs, daemonBudgetMs, defaultBudgetMs, orchestrat
 const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/⏱️process-budgets/🔣️.json", import.meta.url), "utf8"));
 const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/⏱️process-budgets/🔣️.json", import.meta.url), "utf8"));
 const libraryPath = fileURLToPath(new URL("../../📦️packages/🟦️typescript/🟦️.ts", import.meta.url));
-const execa = createRequire(import.meta.url)("execa");
+/** 🧵️ The Execa 1.x completion oracle, typed at its CommonJS boundary. */
+type ExecaOracle = (file: string, args: readonly string[], options: { readonly env?: NodeJS.ProcessEnv; readonly timeout?: number; readonly reject?: boolean }) => Promise<{ readonly code: number | null; readonly stdout: string; readonly stderr: string; readonly timedOut: boolean }>;
+const execa: ExecaOracle = createRequire(import.meta.url)("execa");
 const budgetKeys = ["SEMIO_BUILD_BUDGET_MS", "SEMIO_CMD_BUDGET_MS", "SEMIO_ORCHESTRATOR_BUDGET_MS", "SEMIO_DAEMON_BUDGET_MS"];
 
 /** 🧼️ Keeps the budget contract independent of the developer's launch environment. */

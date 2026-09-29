@@ -5,7 +5,7 @@ import { getWorkspaceRoot } from "../../../../../../../🦑️repo/🔨️module
 
 const repoRoot = getWorkspaceRoot();
 
-/** @emoji 🥖️ Rejects browser code generation unless it uses the repository's exact Bun toolchain. */
+/** 🥖️ Rejects browser code generation unless it uses the repository's exact Bun toolchain. */
 export function assertPinnedBunVersion(actualVersion: string = Bun.version): string {
   const packageManager = (JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")) as { readonly packageManager?: string }).packageManager ?? "";
   const expectedVersion = /^bun@(\d+\.\d+\.\d+)$/u.exec(packageManager)?.[1];
@@ -14,7 +14,7 @@ export function assertPinnedBunVersion(actualVersion: string = Bun.version): str
   return expectedVersion;
 }
 
-/** @emoji 🔓️ `Bun.build({ target: "browser" })` escapes every astral-plane (non-BMP) code point in
+/** 🔓️ `Bun.build({ target: "browser" })` escapes every astral-plane (non-BMP) code point in
  * string/template literal text to a `\uXXXX\uXXXX` UTF-16 surrogate-pair escape (this repo's kind
  * and subject taxonomy emoji all live in the astral planes, so any embedded taxonomy path gets
  * mangled this way); BMP characters are left as literal UTF-8. The escape and the literal character
@@ -29,7 +29,7 @@ export function decodeAstralEscapes(text: string): string {
 
 let bundleLane: Promise<void> = Promise.resolve();
 
-/** @emoji 🧾️ Bundles one browser entry entirely in memory for identical generate/check bytes.
+/** 🧾️ Bundles one browser entry entirely in memory for identical generate/check bytes.
  * Bun labels every bundled module with a banner comment spelling that module's path RELATIVE TO
  * `process.cwd()` — the `root` build option does not govern it — so the identical sources rendered
  * from an Nx target's project cwd and from a repo-root dev lane differ in thousands of comment bytes

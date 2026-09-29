@@ -3,7 +3,7 @@ import type { AppRole, AppRef } from "./🧬️schema/🟦️.ts";
 export { surfaceAppId, parseSurfaceAppId, type AppRole, type AppRef } from "./🧬️schema/🟦️.ts";
 // #region 🛂️Manifest
 /// <reference types="vitest/importMeta" />
-/** @emoji 🛂️ `@semio-tech/framework` — AppDefinition, PluginManifest, contributions, and declarative UI contract. */
+/** 🛂️ `@semio-tech/framework` — AppDefinition, PluginManifest, contributions, and declarative UI contract. */
 import type { IconName } from "@semio-tech/assets";
 export type { IconName };
 import { SHELL_LOCALES, isShellLocale, SHELL_TERMINOLOGIES, isShellTerminology, type ShellLocale, type ShellTerminology, type LocalizedLabel } from "./🤖️generated/🎚️ui-axes/🟦️.ts";
@@ -858,8 +858,10 @@ export type ShellBrand = {
 };
 //#endregion 🏷️ShellBrand
 
-/** @emoji 🕹️ Mirrors `semio_framework_core::history_action_definitions` — the six framework-owned
- * History actions every app receives, used by the shell to render the same set without a wasm round trip. */
+/** 🕹️ Mirrors `semio_framework_core::history_action_definitions` — the six framework-owned
+ * History actions every editor receives, used by the shell to render the same set without a wasm round trip. A viewer
+ * receives only the read cursor (`switchAlternative`, `checkoutCheckpoint`): its manifest never declares a verb its guard
+ * rejects. */
 export const HISTORY_ACTION_IDS = ["undo", "redo", "commitCheckpoint", "createAlternative", "switchAlternative", "checkoutCheckpoint"] as const;
 
 export type PluginViewState = {
@@ -918,12 +920,12 @@ export type ViewTreeWindowRequest = { readonly bodyKey: string; readonly nodeKey
 export type ResolvedPluginViewState = PluginViewState & { readonly locale: "en" | "de"; readonly terminology: "native" | "reuse" };
 
 //#region 📏️PublicInvocationCapacity
-/** @emoji 📏️ Largest UTF-8 body one structurally addressed action/command JSON invocation may occupy
+/** 📏️ Largest UTF-8 body one structurally addressed action/command JSON invocation may occupy
  * on the way into a plugin process — `🎛️public-invocation/🧬️schema/🔣️.json`'s `maxBodyBytes`, the
  * Rust mirror being `PUBLIC_INVOCATION_BODY_BYTES` (`🛂️manifest/🦀️.rs`). */
 export const PUBLIC_INVOCATION_BODY_BYTES = 262_144;
 
-/** @emoji 📏️ Largest single JSON string one invocation may carry — `maxStringBytes`, counted as
+/** 📏️ Largest single JSON string one invocation may carry — `maxStringBytes`, counted as
  * escaped bytes minus their leading backslashes.
  *
  * This is the bound that actually sizes a host→guest push, and NO tool execution contract can widen
@@ -932,10 +934,10 @@ export const PUBLIC_INVOCATION_BODY_BYTES = 262_144;
  * {@link publicInvocationStringPages}. */
 export const PUBLIC_INVOCATION_STRING_BYTES = 4_096;
 
-/** @emoji 📏️ Deepest object/array nesting one invocation may reach — `maxDepth`. */
+/** 📏️ Deepest object/array nesting one invocation may reach — `maxDepth`. */
 export const PUBLIC_INVOCATION_DEPTH = 64;
 
-/** @emoji 📐️ What ONE character of a raw string costs against {@link PUBLIC_INVOCATION_STRING_BYTES}
+/** 📐️ What ONE character of a raw string costs against {@link PUBLIC_INVOCATION_STRING_BYTES}
  * once the JSON encoder has written it — the exact accounting the guest performs, which skips a
  * leading `\` and counts every byte after it. Non-ASCII is charged at its `\uXXXX` escape (five per
  * UTF-16 unit), never at its shorter raw UTF-8 form, so a page cut with this function is admitted
@@ -948,7 +950,7 @@ export function publicInvocationCharCost(character: string): number {
   return (code > 0xffff ? 2 : 1) * 5;
 }
 
-/** @emoji 📄️ Cuts one oversized string into the page run a public invocation can actually carry —
+/** 📄️ Cuts one oversized string into the page run a public invocation can actually carry —
  * each page filled to, and never past, {@link PUBLIC_INVOCATION_STRING_BYTES} as
  * {@link publicInvocationCharCost} measures it, split only on code-point boundaries.
  *
@@ -1419,11 +1421,13 @@ function resolveNativeLabel(label: unknown): { readonly en: string; readonly de:
 
 /** 🗂️ Every artifact-kind choice for the given `roles` — TS twin of Rust `artifact_kind_choices`.
  * Every app across `manifests` whose `role` is in `roles` and whose `io.artifactSchema` is non-empty
- * contributes one choice per dialect coordinate, labelled with the KIND's own label (the app's, then
- * the manifest's `artifactKinds` entry of that schema) — never its editor app's label, which every kind
- * of a package would share. Deduped by dialect coordinate (first manifest/app wins — callers pass owner
- * manifests first so the owner's label wins over a later contributor's), sorted by coordinate for
- * determinism — the pure resolver behind `ActionArgControl.artifactKind`. */
+ * and whose package declares an artifact kind of that schema (on any of its apps — a viewer shares its
+ * editor's kind — or on the manifest) contributes one choice per dialect coordinate, labelled with that
+ * KIND's own label, never its app's label (every editor app is labelled "Editor"). An app whose schema
+ * names no declared kind (a per-user Home, a studio) is not a creatable kind. Deduped by dialect
+ * coordinate (first manifest/app wins — callers pass owner manifests first so the owner's label wins
+ * over a later contributor's), sorted by coordinate for determinism — the pure resolver behind
+ * `ActionArgControl.artifactKind`. */
 export function artifactKindChoices(manifests: readonly { readonly apps: readonly unknown[]; readonly artifactKinds?: readonly unknown[] }[], roles: readonly AppRole[]): ArtifactKindChoice[] {
   const byCoordinate = new Map<string, ArtifactKindChoice>();
   for (const manifest of manifests) {
@@ -1432,9 +1436,10 @@ export function artifactKindChoices(manifests: readonly { readonly apps: readonl
       if (!roles.includes(app.role) || app.io.artifactSchema === "") continue;
       const coordinate = `${app.dialect.artifactKind}@${app.dialect.standard}/${app.dialect.subset}`;
       if (byCoordinate.has(coordinate)) continue;
-      const kinds = [...(app.artifactKinds ?? []), ...(manifest.artifactKinds ?? [])] as readonly { readonly schema?: string; readonly label?: unknown }[];
+      const kinds = [...manifest.apps.flatMap((other) => (other as { readonly artifactKinds?: readonly unknown[] }).artifactKinds ?? []), ...(manifest.artifactKinds ?? [])] as readonly { readonly schema?: string; readonly label?: unknown }[];
       const kind = kinds.find((candidate) => candidate.schema === app.io.artifactSchema);
-      byCoordinate.set(coordinate, { kindId: app.dialect.artifactKind, schema: app.io.artifactSchema, dialect: app.dialect, label: resolveNativeLabel(kind === undefined ? app.label : kind.label) });
+      if (kind === undefined) continue;
+      byCoordinate.set(coordinate, { kindId: app.dialect.artifactKind, schema: app.io.artifactSchema, dialect: app.dialect, label: resolveNativeLabel(kind.label) });
     }
   }
   return [...byCoordinate.keys()].sort().map((coordinate) => byCoordinate.get(coordinate)!);
@@ -1523,10 +1528,10 @@ export type ProgramHotSwapEvent = {
 //#endregion AppManifestProtocol
 
 //#region UiRefresh
-/** @emoji 🐢️ One requested window/panel section — `bodyKey` only applies to windows/panels; `hash` is the host's known fnv1a-64 hex of that section's last payload, or absent on first fetch. */
+/** 🐢️ One requested window/panel section — `bodyKey` only applies to windows/panels; `hash` is the host's known fnv1a-64 hex of that section's last payload, or absent on first fetch. */
 export type PluginUiRefreshSectionRequest = { readonly key: string; readonly bodyKey?: string; readonly hash?: string };
 
-/** @emoji 🐢️ One batched, hash-conditional refresh request — one round trip for the window/panel/engagements/measures/labels sections. Utility bars are no longer a plugin section: the renderer derives them from the utility registry via {@link deriveUtilityNodes}. */
+/** 🐢️ One batched, hash-conditional refresh request — one round trip for the window/panel/engagements/measures/labels sections. Utility bars are no longer a plugin section: the renderer derives them from the utility registry via {@link deriveUtilityNodes}. */
 export type PluginUiRefreshRequest = {
   readonly viewState: PluginViewState;
   readonly windows?: readonly PluginUiRefreshSectionRequest[];
@@ -1541,7 +1546,7 @@ export type PluginUiRefreshRequest = {
   readonly labels?: { readonly hash?: string };
 };
 
-/** @emoji 🧩️ The four refresh sections that are NOT authored window/panel bodies. Each is its own
+/** 🧩️ The four refresh sections that are NOT authored window/panel bodies. Each is its own
  * retained surface whose reserved body key names the plugin accessor the runtime calls in place of
  * `render` (`window_engagements`/`window_measures`/`tool_measures`/`app_catalogue`), so they publish,
  * re-publish and page through exactly the same `surface-visible` → mount → reconcile → patch law as a
@@ -1562,14 +1567,14 @@ export const UI_REFRESH_SECTIONS: readonly UiRefreshSection[] = [
   { key: "catalogue", bodyKey: "framework.section.catalogue" },
 ];
 
-/** @emoji 🎯️ Projects host-owned context for a section surface — the FULL view state, unnarrowed:
+/** 🎯️ Projects host-owned context for a section surface — the FULL view state, unnarrowed:
  * `window_measures`/`window_engagements` iterate `windowInstances` and re-project each instance
  * themselves, and `tool_measures` keys off `activeToolId`, so narrowing here would blind all three. */
 export function sectionViewContext(view: PluginViewState): PluginViewState {
   return { ...view };
 }
 
-/** @emoji 🐢️ `value` is present only when `hash` differs from what the request supplied — an unchanged section costs one hash compare instead of a full re-serialize. */
+/** 🐢️ `value` is present only when `hash` differs from what the request supplied — an unchanged section costs one hash compare instead of a full re-serialize. */
 export type PluginUiRefreshSectionResponse = { readonly key: string; readonly hash: string; readonly value?: unknown };
 
 export type PluginUiRefreshResponse = {
@@ -1588,7 +1593,7 @@ export type PluginUiRefreshResponse = {
 //#endregion UiRefresh
 
 //#region 🖱️ContextMenu
-/** @emoji 🖱️ Scene-target info for an on-demand context-menu request — hit-test results from the
+/** 🖱️ Scene-target info for an on-demand context-menu request — hit-test results from the
  * surface's own picking (hover/selection), not cached across clicks. */
 export type ContextMenuHit = {
   readonly domain: string;
@@ -1619,7 +1624,7 @@ export type PluginContextMenuSurfaceTarget = {
 
 export type PluginContextMenuPoint = { readonly x: number; readonly y: number };
 
-/** @emoji 🖱️ On-demand context-menu request — never cached, never batched into {@link PluginUiRefreshRequest}.
+/** 🖱️ On-demand context-menu request — never cached, never batched into {@link PluginUiRefreshRequest}.
  * `menu` is the {@link MenuRef} the host resolved from `data-menu-id`/a scene surface convention id
  * (`"world3d"`, `"nodeGraph"`, `"window"`, `"panel:<tabId>"`, ...). */
 export type PluginContextMenuRequest = {

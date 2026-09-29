@@ -25,7 +25,6 @@ fn fault_inline_layout_stays_within_the_language_neutral_budget() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧯️fault/🔣️.json")).unwrap();
     let maximum = fixture["maximumInlineBytes"].as_u64().unwrap() as usize;
     let actual = size_of::<Fault>();
-    eprintln!("[DEBUG] Fault inline bytes={actual} maximum={maximum}");
     assert!(actual <= maximum);
 }
 
@@ -46,5 +45,4 @@ fn fault_wire_projection_matches_language_neutral_serde_oracle() {
         rebuilt.causes = fault.causes.clone();
         assert_eq!(rebuilt, fault);
     }
-    eprintln!("[DEBUG] Fault wire projection matched four independent JSON vectors and preserved all scope fields");
 }

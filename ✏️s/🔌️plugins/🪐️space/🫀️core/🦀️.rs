@@ -76,7 +76,7 @@ pub async fn demo_os_document() -> OsWorkflowArtifactDocument {
     parse_demo_space_document().await
 }
 
-/// @emoji 🌱️ The demo space's bare `WorkflowSnapshot` — the studio app's `initial_snapshot`, parsed
+/// 🌱️ The demo space's bare `WorkflowSnapshot` — the studio app's `initial_snapshot`, parsed
 /// straight out of the packaged fixture (no envelope/runtime wrapper).
 pub async fn demo_space_projection() -> WorkflowSnapshot {
     demo_os_document().await.vcs.initial_snapshot
@@ -84,49 +84,30 @@ pub async fn demo_space_projection() -> WorkflowSnapshot {
 //#endregion 🔖️Fixtures
 
 //#region 🔖️DocumentHelpers
-/// 🧬️ O1 — enum dispatch, not a trait object: os-host's own `OsBackbonePorts` (the enum its
-/// `list_os_space_catalog_entries`/`seed_os_space_catalog_if_empty`/`load_os_space_document` are now
-/// closed over, `Store(store::BackbonePorts) | Space(..)`) wraps the `store::BackbonePorts` enum this
-/// function actually builds — no `dyn` anywhere, no separate trait-object "view" variable the way the
-/// pre-O1 code kept one.
+/// 🧬️ The guest's ONE local studio catalog port, minted and seeded once per process. The catalog tracks its studio uris
+/// per port identity (`list_os_space_catalog_entries` keys them by the `Arc`) and `LocalStorageBackbonePort` keeps its
+/// fallback bytes per instance, so a port minted per call listed nothing a previous call admitted: a studio bound,
+/// persisted or imported was gone on the next listing, and every call re-parsed and re-seeded the demo studio.
+/// O1 — enum dispatch (`OsBackbonePorts::Store(store::BackbonePorts)`), no `dyn`. The demo seed is a `SpaceSnapshot`
+/// manifest named after the bundled demo fixture and owned by the `"local"` guest sentinel: it runs before any user
+/// session exists, so there is no signed-in identity to attribute it to.
+/// @see ✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📎️bind-space-file/🦀️.rs
 async fn catalog_port_concrete() -> Arc<OsBackbonePorts> {
+    static PORT: OnceLock<Arc<OsBackbonePorts>> = OnceLock::new();
+    if let Some(port) = PORT.get() {
+        return port.clone();
+    }
     ensure_space_fixtures_registered().await;
-    // 🧬️ `::default()`, not `::new()`: `LocalStorageBackbonePort::new()` is `async fn` but defined to
-    // equal `Default::default()` exactly (store's own impl just forwards); using the sync constructor
-    // here avoids a pointless suspension point and keeps this line symmetric with
-    // `temp_catalog_port_concrete()` below, whose `OnceLock::get_or_init` closure cannot be async at all.
-    // 🧬️ `OsBackbonePorts::Store(..)`: os-host's O1 enum-dispatch closed the catalog-facing fns
-    // (`list_os_space_catalog_entries`/`seed_os_space_catalog_if_empty`) over its OWN `OsBackbonePorts`
-    // enum, not `store::BackbonePorts` directly — every real transport still routes through the
-    // `Store` variant's inner `store::BackbonePorts`.
     let port = Arc::new(OsBackbonePorts::Store(BackbonePorts::LocalStorage(LocalStorageBackbonePort::default())));
     if list_os_space_catalog_entries(&port).map_or(true, |entries| entries.is_empty()) {
-        // 🧬️ `parse_demo_space_document` yields a `WorkflowSnapshot` (the dissolved `OsProjection`'s
-        // workflow-graph half) — the space CATALOG this boot seed populates needs a `SpaceSnapshot`
-        // manifest instead. `demo_name` still comes from the bundled fixture's own name; the manifest
-        // itself is a fresh space with no workflow artifact wired in yet (`create_os_space`'s own doc: a
-        // space only auto-creates its default collection, never a workflow artifact — that stays a
-        // later, explicit user action).
-        let demo_name = {
-            let demo = parse_demo_space_document().await;
-            if demo.name.trim().is_empty() {
-                "Demo Studio".into()
-            } else {
-                demo.name
-            }
-        };
+        let demo = parse_demo_space_document().await;
+        let demo_name = if demo.name.trim().is_empty() { "Demo Studio".to_owned() } else { demo.name };
         let mut projection = empty_space_snapshot(&demo_name, SpaceKind::Atelier, SpaceVisibility::Private);
-        // 🪪️ Deliberately NOT threaded to a real session identity (unlike
-        // `create_and_register_ephemeral_studio`'s `owner_id`/`owner_name`): this seed runs once, lazily,
-        // from a process-global `static`/`LazyLock` at first catalog access, with no `HomeConfig`/
-        // `ActionMeta` in scope — there is no user session to attribute this bootstrap fixture to.
-        // `"local"` here names the pre-ticket guest sentinel, not a real signed-in user; fabricating one
-        // would misattribute ownership of a system-seeded demo space.
         projection.users.push(SpaceUser { id: "local".into(), name: demo_name.clone(), avatar: None, role: SpaceRole::Author });
         let seed: OsSpaceDocument = create_backbone_document(S_SPACE_SCHEMA, OS_BOOT_STUDIO_ID, &demo_name, projection);
         let _ = seed_os_space_catalog_if_empty(seed, &port);
     }
-    port
+    PORT.get_or_init(|| port).clone()
 }
 
 /// 🧬️ Session-local, ephemeral (in-memory only) counterpart to `catalog_port_concrete()`, used by the
@@ -211,7 +192,7 @@ pub async fn register_studio_port(space_id: &str, port: Arc<dyn OsBackbonePort>)
     }
 }
 
-/// @emoji 🆕️ Mints a fresh draft space manifest (empty, no collections) for the default create path — a
+/// 🆕️ Mints a fresh draft space manifest (empty, no collections) for the default create path — a
 /// `SpaceSnapshot` document registered as a draft (`kind_id = "s.space"`) at `draft_uri(id)` on the
 /// ephemeral port, never on the real catalog port, never tracked as a `space://` catalog entry.
 /// `owner_id`/`owner_name` carry the signed-in identity selected by the caller's current host view.
@@ -228,7 +209,7 @@ pub async fn create_and_register_ephemeral_studio(name: &str, owner_id: &str, ow
     draft.artifact_id
 }
 
-/// @emoji 📂️ Resolves a studio id against the draft catalog, registered ports, then catalogs.
+/// 📂️ Resolves a studio id against the draft catalog, registered ports, then catalogs.
 pub async fn resolve_studio_document(space_id: &str) -> Option<OsSpaceDocument> {
     let draft_port = draft_backbone_port().await;
     if let Ok(payload) = SpaceBackbonePort::read(draft_port.as_ref(), &draft_uri(space_id)) {
@@ -262,7 +243,7 @@ pub async fn resolve_studio_document(space_id: &str) -> Option<OsSpaceDocument> 
     None
 }
 
-/// @emoji 📦️ Pack+spr bytes for `Effect::LoadDocument` / host `loadAppArtifactPack`.
+/// 📦️ Pack+spr bytes for `Effect::LoadDocument` / host `loadAppArtifactPack`.
 pub async fn space_document_envelope_pack(document: &OsSpaceDocument) -> Option<store::ArtifactPackFiles> {
     export_os_space_pack(document).ok()
 }
@@ -380,7 +361,7 @@ pub async fn empty_workflow_artifact_document(space_id: &str, space_name: &str) 
     create_backbone_document(S_WORKFLOW_SCHEMA, space_id, space_name, empty_workflow_snapshot().await)
 }
 
-/// @emoji 📦️ `s.workflow` counterpart of `space_document_envelope_pack` — pack+spr bytes for
+/// 📦️ `s.workflow` counterpart of `space_document_envelope_pack` — pack+spr bytes for
 /// `Effect::LoadDocument` / host `loadAppArtifactPack`, sized to what the `🪐️space` studio app's
 /// `ArtifactApp::Snapshot` (`WorkflowSnapshot`) actually decodes.
 pub async fn workflow_artifact_envelope_pack(document: &OsWorkflowArtifactDocument) -> Option<store::ArtifactPackFiles> {
@@ -573,10 +554,13 @@ impl HomeSpaceRow {
 /// (`origin: "local"`) — a hub row wins on an id collision (a space promoted from local to hub keeps
 /// its hub-confirmed data, never a stale local shadow). Contract §C0 row-id grammar for the e2e is
 /// `space:<id>`; callers building the table's `data-row-id` prepend that prefix to `HomeSpaceRow.id`.
-pub async fn home_space_rows(directory: &store::os_directory::DirectoryReadModel, user_id: &str) -> Vec<HomeSpaceRow> {
+/// `retired_local_studio_ids` (sorted) are the Home config's tombstones: a retired local studio keeps its catalog
+/// document and is simply not listed. `hub_spaces` are the folded directory's rows in id order.
+pub async fn home_space_rows<'a>(hub_spaces: impl IntoIterator<Item = &'a store::os_directory::DirectorySpace>, user_id: &str, retired_local_studio_ids: &[String]) -> Vec<HomeSpaceRow> {
     let mut seen = HashSet::new();
     let mut rows = Vec::new();
-    for (id, space) in &directory.spaces {
+    for space in hub_spaces {
+        let id = &space.view.id;
         seen.insert(id.clone());
         rows.push(HomeSpaceRow {
             id: id.clone(),
@@ -591,7 +575,7 @@ pub async fn home_space_rows(directory: &store::os_directory::DirectoryReadModel
         });
     }
     for entry in list_all_space_catalog_entries().await {
-        if seen.contains(&entry.id) {
+        if seen.contains(&entry.id) || retired_local_studio_ids.binary_search(&entry.id).is_ok() {
             continue;
         }
         rows.push(HomeSpaceRow {

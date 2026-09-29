@@ -139,5 +139,4 @@ fn retained_history_id_cursor_matches_neutral_bytes_and_refuses_unowned_resoluti
             assert!(cursor.close_bytes(1) <= 1);
         }
     }
-    eprintln!("[DEBUG] retained semantic ID: 20 tagged wires x 3 grants, exact UTF-8/UUID, foreign dictionary denial, prefix capacity, every wire/dictionary boundary cancellation; no authority or typed snapshot publication");
 }

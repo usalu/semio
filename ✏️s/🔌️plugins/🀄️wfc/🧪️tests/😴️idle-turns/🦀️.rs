@@ -131,7 +131,6 @@ async fn measure_idle(runtime: &WfcRuntime, label: &str) -> IdleReading {
             break;
         }
     }
-    eprintln!("[DEBUG] {label} settle: settled={} after {} turns; sources {settle_sources:?}", reading.settled, reading.settle_turns);
     let before = semio_framework_trace::retained_heap_bytes();
     let mut hot_at = Vec::new();
     for index in 0..IDLE_TURNS {
@@ -143,7 +142,6 @@ async fn measure_idle(runtime: &WfcRuntime, label: &str) -> IdleReading {
         reading.produced += result.effects.len() + result.ui_patches.iter().count() + result.presence.len();
     }
     reading.retained = semio_framework_trace::retained_heap_bytes() - before;
-    eprintln!("[DEBUG] {label} idle {IDLE_TURNS} turns: hot={} at {hot_at:?} produced={} retained={} B ({} B/turn); sources {:?}", reading.hot_turns, reading.produced, reading.retained, reading.retained / IDLE_TURNS as isize, reading.sources);
     reading
 }
 
@@ -187,7 +185,6 @@ async fn an_unacknowledged_open_retains_nothing_per_turn() {
         record(&mut sources);
     }
     let retained = semio_framework_trace::retained_heap_bytes() - before;
-    eprintln!("[DEBUG] unacknowledged open, {IDLE_TURNS} turns: retained={retained} B ({} B/turn); sources {sources:?}", retained / IDLE_TURNS as isize);
     std::mem::forget(runtime);
     assert!(retained <= IDLE_GROWTH_CEILING_BYTES, "an unacknowledged open retained {retained} B over {IDLE_TURNS} turns ({} B/turn)", retained / IDLE_TURNS as isize);
 }

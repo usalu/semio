@@ -109,7 +109,7 @@ store::impl_whole_record_config!(RasterConfig);
 //#endregion 🔖️Config
 
 //#region 🔖️ConfigMutations
-/// @emoji 🧮️ B1: `RasterConfig`'s operation enum — one variant per settled interaction (mirrors the
+/// 🧮️ B1: `RasterConfig`'s operation enum — one variant per settled interaction (mirrors the
 /// pre-B1 `RasterPlayRuntime` field writes), plus a generic `Snapshot` every variant's `backwards()`
 /// returns — mirrors `shooting_op::ShootingConfigMutation`'s identical shape.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslOps)]

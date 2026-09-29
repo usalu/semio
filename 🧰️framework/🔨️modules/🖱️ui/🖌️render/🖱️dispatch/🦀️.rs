@@ -1,4 +1,4 @@
-//! @emoji 🖱️ Hit testing, capture/target/bubble propagation, focus, pointer capture, drag/drop and
+//! 🖱️ Hit testing, capture/target/bubble propagation, focus, pointer capture, drag/drop and
 //! `DispatchOutcome` — the frame-local dispatch tree that replaces `wgpu-old`'s retained-mode
 //! `events.rs`/`EventRouter`. Semantics are ported verbatim from that file; only the structure changes:
 //! a frame-local [`DispatchTree`] of generic [`DispatchNode`]s with typed [`ListenerSet`]s stands in

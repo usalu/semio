@@ -47,11 +47,11 @@ impl std::error::Error for SyncError {}
 //#endregion 🔖️Errors
 
 //#region 🔖️EnvelopeSerde
-/// @emoji 🧵️ JSON worker seam: `MutationEnvelope` vectors as `encode_envelopes` bytes (not struct JSON).
+/// 🧵️ JSON worker seam: `MutationEnvelope` vectors as `encode_envelopes` bytes (not struct JSON).
 mod envelope_serde {
     use crate::os_spr::{decode_envelopes, encode_envelopes, MutationEnvelope};
 
-    /// @emoji 🧵️ Byte framing for the `ArtifactActorMsg::LocalMutations`/`ArtifactEvent::
+    /// 🧵️ Byte framing for the `ArtifactActorMsg::LocalMutations`/`ArtifactEvent::
     /// RemoteMutations` `#[value(serialize_with = ..., deserialize_with = ...)]` field bridge —
     /// wire shape is a `DslValue::Array` of `DslValue::Number` (one per byte), matching what the
     /// former serde `serialize_seq` path produced.
@@ -60,7 +60,7 @@ mod envelope_serde {
         super::DslValue::Array(bytes.into_iter().map(|byte| super::DslValue::uint(byte as u64)).collect())
     }
 
-    /// @emoji 🧵️ `FromValue` twin of `deserialize` above.
+    /// 🧵️ `FromValue` twin of `deserialize` above.
     pub fn from_value(value: super::DslValue) -> Result<Vec<MutationEnvelope>, super::ValueError> {
         let super::DslValue::Array(items) = value else {
             return Err(super::ValueError::new("expected array of bytes"));
@@ -81,9 +81,9 @@ mod envelope_serde {
 //#endregion 🔖️EnvelopeSerde
 
 //#region 🔖️Protocol
-/// @emoji 🗃️ A durable place a document synchronizes with. A document may bind to several at once
+/// 🗃️ A durable place a document synchronizes with. A document may bind to several at once
 /// (folder-only, semio_hub-only, or both); the actor treats each as an independent peer.
-/// @emoji 🗃️ Durability × sharing class for persistence bindings and replication lanes.
+/// 🗃️ Durability × sharing class for persistence bindings and replication lanes.
 /// Preview/presence lanes are always `EphemeralShared` and must never be mistaken for durable WAL state.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
@@ -121,7 +121,7 @@ impl PersistenceDataClass {
     }
 }
 
-/// @emoji 🛤️ Classifies a wire lane. Preview and presence are broadcast-only (never WAL).
+/// 🛤️ Classifies a wire lane. Preview and presence are broadcast-only (never WAL).
 pub fn wire_lane_data_class(lane: &str) -> PersistenceDataClass {
     match lane {
         "preview" | "presence" => PersistenceDataClass::EphemeralShared,
@@ -130,7 +130,7 @@ pub fn wire_lane_data_class(lane: &str) -> PersistenceDataClass {
     }
 }
 
-/// @emoji 🗃️ Resolves the data class of an actor's bindings. Empty bindings are ephemeral local-only
+/// 🗃️ Resolves the data class of an actor's bindings. Empty bindings are ephemeral local-only
 /// (in-memory draft / studio with no backbone).
 pub fn bindings_data_class(bindings: &[PersistenceBinding]) -> PersistenceDataClass {
     match bindings.first() {
@@ -142,15 +142,15 @@ pub fn bindings_data_class(bindings: &[PersistenceBinding]) -> PersistenceDataCl
 #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum PersistenceBinding {
-    /// @emoji 📁️ Local canonical store. A directory uses the multi-document `folder://` event log;
+    /// 📁️ Local canonical store. A directory uses the multi-document `folder://` event log;
     /// a `*.json` path uses the single-blob `file://` export format.
     Folder { path: std::path::PathBuf },
-    /// @emoji ☁️ A semio_hub node reachable over WebSocket
+    /// ☁️ A semio_hub node reachable over WebSocket
     /// (`remote://host:port` → `ws://host:port/scopes/{space_id}%2F{id}/document/ws`).
     Hub {
         base_url: String,
         space_id: String,
-        /// @emoji 🎭️ Out-of-band presence scope (ticket 26/08/16/HUB-SPACES-…, contract §C0): rides
+        /// 🎭️ Out-of-band presence scope (ticket 26/08/16/HUB-SPACES-…, contract §C0): rides
         /// as `?surface=` on the WS URL rather than a wire field — `PresencePeer`'s flag byte is
         /// already full. `<kind>@<standard>/<subset>#<role>`, e.g. `s.space.home@1/*#editor`.
         #[value(default, skip_serializing_if = "Option::is_none")]
@@ -167,17 +167,17 @@ impl PersistenceBinding {
     }
 }
 
-/// @emoji 🧾️ Everything {@link ArtifactHost::open} needs to spawn one document's actor.
+/// 🧾️ Everything {@link ArtifactHost::open} needs to spawn one document's actor.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct ArtifactActorConfig {
     pub document_id: String,
     pub schema: String,
     pub bindings: Vec<PersistenceBinding>,
-    /// @emoji 👁️ Watch the folder binding for external edits (other processes writing the file).
+    /// 👁️ Watch the folder binding for external edits (other processes writing the file).
     #[value(default)]
     pub watch_external: bool,
-    /// @emoji 🖋️ The authoring actor id used for semio_hub `Hello`/presence and operation origin filtering.
+    /// 🖋️ The authoring actor id used for semio_hub `Hello`/presence and operation origin filtering.
     pub actor: String,
 }
 
@@ -215,30 +215,34 @@ impl ArtifactDocumentKey {
     }
 }
 
-/// @emoji 📨️ Caller → actor control messages, sent on the {@link ArtifactChannels} command channel.
+/// 📨️ Caller → actor control messages, sent on the {@link ArtifactChannels} command channel.
 #[derive(Clone, Debug, ToValue, FromValue)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum ArtifactActorMsg {
-    /// @emoji ⬆️ Wakes the actor to drain the store's outbound operations promptly. `envelopes` is a
+    /// ⬆️ Wakes the actor to drain the store's outbound operations promptly. `envelopes` is a
     /// direct-injection fallback used only when no store is attached to the channel (empty = pure wake).
     LocalMutations {
         #[value(serialize_with = "envelope_serde::to_value", deserialize_with = "envelope_serde::from_value")]
         envelopes: Vec<MutationEnvelope>,
     },
-    /// @emoji 🪢️ One canonical Store `BackboneMessage::Mutations` retained byte-for-byte by a
+    /// 🪢️ One canonical Store `BackboneMessage::Mutations` retained byte-for-byte by a
     /// mounted document port until its authoritative Hub command acknowledgment.
     DocumentBackbone { message: Vec<u8> },
-    /// @emoji 🗃️ One exact versioned root plus recursive-owned-member archive for durable persistence.
+    /// 🗃️ One exact versioned root plus recursive-owned-member archive for durable persistence.
     LocalDocumentArchive { archive: Vec<u8> },
-    /// @emoji 📡️ Broadcasts this peer's presence/selection to the semio_hub.
+    /// 📡️ Broadcasts this peer's presence/selection to the semio_hub.
     PresenceHeartbeat { peer: Box<PresencePeer> },
-    /// @emoji 👻️ Publishes an ephemeral, best-effort UI-state blob on the semio_hub's uncredited preview
+    /// 👻️ Publishes an ephemeral, best-effort UI-state blob on the semio_hub's uncredited preview
     /// lane (`crate::os_spr::wire::ClientFrame::PreviewPublish`) — e.g. a drag ghost or live cursor;
     /// `seq` is a per-`key` monotone counter so a receiver can drop stale-arriving previews.
     PublishPreview { key: String, seq: u64, payload: Vec<u8> },
-    /// @emoji 🔄️ Forces an immediate re-read + diff of the folder binding (test/manual poke hook).
+    /// 🛟️ The host re-seeded a rebootstrapping hub document ([`ArtifactEvent::RebootstrapRequired`]): the canonical
+    /// checkpoint pair it verified against the control and already loaded into the guest. The actor adopts it as its baseline,
+    /// hands its unacked local operations back to the guest and dials at once, saying Hello at the pair's baseline.
+    Reseed { pack: Vec<u8>, spr: Vec<u8>, baseline: crate::os_directory::ArtifactFrontier },
+    /// 🔄️ Forces an immediate re-read + diff of the folder binding (test/manual poke hook).
     ExternalChanged,
-    /// @emoji ✂️ Flushes any pending outbound operations, then stops the actor.
+    /// ✂️ Flushes any pending outbound operations, then stops the actor.
     Detach,
 }
 
@@ -584,12 +588,19 @@ fn artifact_actor_message_bytes(message: &ArtifactActorMsg) -> Option<usize> {
             add(&mut bytes, 8)?;
             add(&mut bytes, field(payload.len())?)?;
         }
+        ArtifactActorMsg::Reseed { pack, spr, baseline } => {
+            add(&mut bytes, field(pack.len())?)?;
+            add(&mut bytes, field(spr.len())?)?;
+            text(&mut bytes, &baseline.document_id)?;
+            text(&mut bytes, &baseline.head_edit_id)?;
+            add(&mut bytes, 48)?;
+        }
         ArtifactActorMsg::ExternalChanged | ArtifactActorMsg::Detach => {}
     }
     (bytes <= ARTIFACT_MAILBOX_BYTES).then_some(bytes)
 }
 
-/// @emoji 📶️ Connection state of a document's remote (semio_hub) transport.
+/// 📶️ Connection state of a document's remote (semio_hub) transport.
 #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum RemoteState {
@@ -599,7 +610,7 @@ pub enum RemoteState {
     Backoff { retry_in_ms: u64 },
 }
 
-/// @emoji 🚦️ Snapshot of a document's sync health for status badges.
+/// 🚦️ Snapshot of a document's sync health for status badges.
 #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct ArtifactSyncStatus {
@@ -617,42 +628,46 @@ impl Default for ArtifactSyncStatus {
     }
 }
 
-/// @emoji 📬️ Actor → subscriber events, delivered on the broadcast channel from {@link ArtifactHost::subscribe}.
+/// 📬️ Actor → subscriber events, delivered on the broadcast channel from {@link ArtifactHost::subscribe}.
 #[derive(Clone, Debug, ToValue, FromValue)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum ArtifactEvent {
-    /// @emoji 🕸️ Remote operations (semio_hub fan-out or appended external edits) — also pushed into the store's
+    /// 🕸️ Remote operations (semio_hub fan-out or appended external edits) — also pushed into the store's
     /// inbound queue so `store.tick()` materializes them.
     RemoteMutations {
         #[value(serialize_with = "envelope_serde::to_value", deserialize_with = "envelope_serde::from_value")]
         envelopes: Vec<MutationEnvelope>,
     },
-    /// @emoji 🪢️ One canonical Hub mutation batch for an exact mounted guest document port.
+    /// 🪢️ One canonical Hub mutation batch for an exact mounted guest document port.
     DocumentBackbone { message: Vec<u8> },
-    /// @emoji 🗃️ The whole root plus recursive owned-member closure was replaced atomically.
+    /// 🗃️ The whole root plus recursive owned-member closure was replaced atomically.
     DocumentArchiveReplaced { archive: Vec<u8> },
-    /// @emoji 📈️ Monotonic, bounded progress for one descriptor-bound artifact bootstrap.
+    /// 📈️ Monotonic, bounded progress for one descriptor-bound artifact bootstrap.
     /// A new transfer starts at zero after reconnect; no progress event implies a committed frontier.
     BootstrapProgress { received_bytes: u64, total_bytes: u64, received_chunks: u32, total_chunks: u32 },
-    /// @emoji 🚦️ Sync status changed.
+    /// 🚦️ Sync status changed.
     Status(ArtifactSyncStatus),
-    /// @emoji 📡️ The presence roster changed.
+    /// 📡️ The presence roster changed.
     Presence { peers: Vec<PresencePeer> },
-    /// @emoji 🎨️ The hub assigned (or re-confirmed, on reconnect) this connection's session color —
+    /// 🛟️ The hub made this document rebuild from its canonical checkpoint (fan-out lag, an approval checkpoint): the actor
+    /// dropped its projection and socket, keeps its unacked work and waits for the host's [`ArtifactActorMsg::Reseed`] with the
+    /// pair `control` names — the pair only the host's directory client fetches and only the host can load into the guest.
+    RebootstrapRequired { control: crate::os_directory::RebootstrapRequired },
+    /// 🎨️ The hub assigned (or re-confirmed, on reconnect) this connection's session color —
     /// `crate::os_spr::wire::ServerFrame::Session`, sent once per connection after `Welcome`. The
     /// actor stores it and stamps it onto every outbound `PresenceHeartbeat` via {@link stamp_session}.
     Session { actor: String, color: u8 },
-    /// @emoji 👻️ A peer published an ephemeral preview blob (`crate::os_spr::wire::ServerFrame::Preview`)
+    /// 👻️ A peer published an ephemeral preview blob (`crate::os_spr::wire::ServerFrame::Preview`)
     /// on the uncredited, loss-tolerant preview lane — the counterpart of
     /// {@link ArtifactActorMsg::PublishPreview}.
     Preview { actor: String, key: String, seq: u64, payload: Vec<u8> },
-    /// @emoji 📮️ The semio_hub's terminal disposition for one outbound `Commands` batch
+    /// 📮️ The semio_hub's terminal disposition for one outbound `Commands` batch
     /// (`crate::os_spr::wire::ServerFrame::Ack`'s `Applied` stage) — accepted as-is, transformed against
     /// concurrent history (the transformed envelope is already delivered as a
     /// {@link ArtifactEvent::RemoteMutations} replacing the speculative local one), or rejected
     /// (the speculative local head is rolled back via {@link rollback_envelope} before this fires).
     CommandOutcome { batch_id: u64, outcome: CommandAckOutcome },
-    /// @emoji ⚠️ A structural conflict (external divergence with local pending operations / semio_hub
+    /// ⚠️ A structural conflict (external divergence with local pending operations / semio_hub
     /// protocol-level reject), on the frozen diagnostic-bag vocabulary (contract freeze `26/08/16/
     /// MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C10) rather than the deleted
     /// per-domain conflict-bag type this used to wrap: `level` is `Error` (this actor has no finer
@@ -718,7 +733,7 @@ impl DocumentBackboneRetentionV1 {
 
 const ARTIFACT_BOOTSTRAP_DEADLINE_MS: u64 = 15_000;
 
-/// @emoji 🧬️ Binds a public artifact bootstrap to the already-selected document codec before
+/// 🧬️ Binds a public artifact bootstrap to the already-selected document codec before
 /// allocating or accepting any payload bytes.
 fn validate_artifact_bootstrap_identity(bootstrap: &ArtifactBootstrap, document_id: &str, schema: &str, pack_schema_hash: [u8; 32], server_frontier: &RuntimeFrontierSummary) -> Result<(), String> {
     if bootstrap.artifact_schema != schema {
@@ -748,7 +763,7 @@ fn frontier_reaches(actual: &RuntimeFrontierSummary, required: &RuntimeFrontierS
     actual == required
 }
 
-/// @emoji ⚖️ The client-side twin of `crate::os_spr::wire::ApplyOutcome`, minus the `Transformed`
+/// ⚖️ The client-side twin of `crate::os_spr::wire::ApplyOutcome`, minus the `Transformed`
 /// envelope payload (already delivered separately as {@link ArtifactEvent::RemoteMutations} by
 /// the time this fires — see {@link ArtifactEvent::CommandOutcome}).
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
@@ -761,7 +776,7 @@ pub enum CommandAckOutcome {
 //#endregion 🔖️Protocol
 
 //#region 🔖️BackboneWorkerWire
-/// @emoji 🧵️ Binary worker seam: `MAGIC` + `crate::os_store::pack_rt::encode_wire_value` over a `DslValue`
+/// 🧵️ Binary worker seam: `MAGIC` + `crate::os_store::pack_rt::encode_wire_value` over a `DslValue`
 /// tree (serde-shaped), shared by the wasm `store_worker` and `🏪️store/👷️worker/🟦️.ts`.
 pub mod backbone_worker_wire {
     use super::{ArtifactActorConfig, ArtifactActorMsg, ArtifactEvent, PersistenceBinding};
@@ -851,7 +866,7 @@ pub mod backbone_worker_wire {
 // log, which both actors (native and browser) read.
 use crate::os_spr::ArtifactId;
 
-/// @emoji 🆔️ One `HistoryEdit`'s op ids, matching `crate::os_spr::mutation_envelope_from_edit`'s own
+/// 🆔️ One `HistoryEdit`'s op ids, matching `crate::os_spr::mutation_envelope_from_edit`'s own
 /// fallback convention (`meta[i].op_id` when present, else `"{edit.id}#{i}"`) so this is the SAME
 /// id a live-dispatched envelope for this edit already carries. This is the ONE id domain the
 /// actor's dedup set uses — computed here and ONLY here, so a locally-flushed edit's spr entry
@@ -869,7 +884,7 @@ fn document_archive_hash(archive: &[u8]) -> String {
     semio_framework_hash::hash_bytes(archive)
 }
 
-/// @emoji 🆔️ Every event id in an spr byte log — each edit's op ids and each transition's id — the
+/// 🆔️ Every event id in an spr byte log — each edit's op ids and each transition's id — the
 /// actor's dedup/known-ids set, read directly off the binary history (NEVER via
 /// `parse_document_spr`, whose meta-absent branch mints fresh random ids on every read).
 #[cfg(not(target_arch = "wasm32"))]
@@ -883,7 +898,7 @@ async fn spr_op_ids(spr: &[u8]) -> Result<std::collections::HashSet<String>, Str
     Ok(ids)
 }
 
-/// @emoji 📜️ Every event an spr byte log persists, as the causal envelopes a store ingests: each
+/// 📜️ Every event an spr byte log persists, as the causal envelopes a store ingests: each
 /// edit's operations in log order, then every history transition — a persisted document IS its
 /// genesis pack plus exactly these events.
 async fn spr_events(spr: &[u8], document_id: &str, schema: &str) -> Result<Vec<MutationEnvelope>, String> {
@@ -896,7 +911,7 @@ async fn spr_events(spr: &[u8], document_id: &str, schema: &str) -> Result<Vec<M
     Ok(events)
 }
 
-/// @emoji 📦️ Rebuilds real {@link MutationEnvelope}s (one per forward op, genuine `OpBinary`
+/// 📦️ Rebuilds real {@link MutationEnvelope}s (one per forward op, genuine `OpBinary`
 /// payloads straight from the edit's own binary `OpPayload`s — no codec, no JSON) from one
 /// `HistoryEdit` decoded off the spr bytes, so an appended external edit can flow through the
 /// store's causal DAG (`ingest_remote` → `edit_from_operation_envelope`). A binary-less op payload
@@ -929,10 +944,20 @@ async fn envelopes_from_history_edit(edit: &crate::os_spr::HistoryEdit, document
     Ok(envelopes)
 }
 
-/// @emoji 📦️ The inverse of {@link envelopes_from_history_edit}: one `MutationEnvelope` -> one
+/// 📦️ The inverse of {@link envelopes_from_history_edit}: one `MutationEnvelope` -> one
 /// `HistoryEdit` with a real binary `OpPayload` and populated meta (`op_id` == the envelope's own
 /// id, so a later `op_ids_of` re-read agrees) — the byte-level twin of
 /// `crate::os_store::edit_from_operation_envelope`, for appending a locally-flushed envelope to the spr log.
+///
+/// 🎞️ `crate::os_spr::causal::MutationEnvelope` (this fn's input) carries no group_id —
+/// same precedent as its already-absent `semantic_kind`/`label`/`undo_policy`, see
+/// `command::MutationMeta.group_id`'s doc comment. A remote-ingested edit is therefore
+/// never a recognized composite-gesture member; group undo degrades it to a foreign/
+/// solitary edit, matching how this whole envelope is already `undo_policy: 0`-flattened.
+///
+/// 🔀️ A remote-ingested envelope carries no provenance of its own: the authoring peer
+/// already resolved any contribution or transaction locally and shipped the resulting
+/// OWNER ops, so this side records exactly what it receives — an owner edit.
 #[cfg(not(target_arch = "wasm32"))]
 async fn history_edit_from_envelope(envelope: &MutationEnvelope) -> crate::os_spr::HistoryEdit {
     crate::os_spr::HistoryEdit {
@@ -952,15 +977,7 @@ async fn history_edit_from_envelope(envelope: &MutationEnvelope) -> crate::os_sp
             hlt: Some((envelope.timestamp.actor, envelope.timestamp.physical_ms as i64, envelope.timestamp.logical)),
             undo_policy: 0,
             payload_hash: None,
-            // 🎞️ `crate::os_spr::causal::MutationEnvelope` (this fn's input) carries no group_id —
-            // same precedent as its already-absent `semantic_kind`/`label`/`undo_policy`, see
-            // `command::MutationMeta.group_id`'s doc comment. A remote-ingested edit is therefore
-            // never a recognized composite-gesture member; group undo degrades it to a foreign/
-            // solitary edit, matching how this whole envelope is already `undo_policy: 0`-flattened.
             group_id: None,
-            // 🔀️ A remote-ingested envelope carries no provenance of its own: the authoring peer
-            // already resolved any contribution or transaction locally and shipped the resulting
-            // OWNER ops, so this side records exactly what it receives — an owner edit.
             origin: crate::os_spr::command::MutationOrigin::Owner,
             messages: Vec::new(),
         }]),
@@ -968,7 +985,7 @@ async fn history_edit_from_envelope(envelope: &MutationEnvelope) -> crate::os_sp
     }
 }
 
-/// @emoji 🔗️ Derives a semio_hub WebSocket URL: `remote://host:port` (or `http(s)://`, `ws(s)://`) →
+/// 🔗️ Derives a semio_hub WebSocket URL: `remote://host:port` (or `http(s)://`, `ws(s)://`) →
 /// `ws(s)://host:port/scopes/{space_id}%2F{document_id}/document/ws`, with an out-of-band
 /// `?surface=` appended when the binding carries one (contract §C0's presence scope, ticket
 /// 26/08/16/HUB-SPACES-…: `(space_id, document_id, surface)` — `surface` rides outside the wire
@@ -987,7 +1004,7 @@ async fn hub_ws_url(base_url: &str, space_id: &str, document_id: &str, surface: 
 //#endregion 🔖️Endpoints
 
 //#region 🔖️DocumentSocketConnect
-/// @emoji 🧬️ The pack schema identity a document socket's hello and bootstrap are checked against: the
+/// 🧬️ The pack schema identity a document socket's hello and bootstrap are checked against: the
 /// kind's codec when this process resolves one ([`crate::os_store::document_kind_codec`] — the linked
 /// Rust codec, else the codec of the mounted component that owns the kind, asked of that component
 /// exactly as the hub's trusted catalog asks it), otherwise the verified execution-target lease's — the
@@ -1001,12 +1018,12 @@ pub async fn document_pack_schema_hash(schema: &str, lease: Option<&crate::os_di
     crate::os_directory::client::decode_lower_hex_32(&lease.artifact.pack_schema_hash)
 }
 
-/// @emoji 🎫️ What a document actor asks of the hub's open plan for its binding.
+/// 🎫️ What a document actor asks of the hub's open plan for its binding.
 pub fn document_socket_expectation(schema: &str, pack_schema_hash: [u8; 32], surface: Option<&str>, lease: Option<&crate::os_directory::DocumentExecutionTargetLeaseFieldsV1>) -> crate::os_directory::client::DocumentSocketExpectationV1 {
     crate::os_directory::client::DocumentSocketExpectationV1 { artifact_schema: schema.to_string(), pack_schema_hash, requested_surface_id: surface.map(str::to_string), lease: lease.cloned() }
 }
 
-/// @emoji 🧷️ The one binding a document actor holds a hub socket for.
+/// 🧷️ The one binding a document actor holds a hub socket for.
 #[derive(Clone, Copy, Debug)]
 pub struct DocumentSocketBinding<'a> {
     pub hub_base_url: &'a str,
@@ -1018,7 +1035,7 @@ pub struct DocumentSocketBinding<'a> {
     pub lease: Option<&'a crate::os_directory::DocumentExecutionTargetLeaseFieldsV1>,
 }
 
-/// @emoji ⚖️ Whether one admitted authority may carry this binding at `now_ms`: unexpired, from the bound
+/// ⚖️ Whether one admitted authority may carry this binding at `now_ms`: unexpired, from the bound
 /// hub origin, for exactly this scope, schema, pack identity and surface, and — when the client verified
 /// an execution-target lease — for exactly that lease.
 pub fn document_socket_authority_admits(authority: &crate::os_directory::client::DocumentSocketAuthorityV1, binding: &DocumentSocketBinding<'_>, now_ms: u64) -> bool {
@@ -1037,19 +1054,31 @@ fn canonical_pair_baseline(frontier: &crate::os_directory::ArtifactFrontier) -> 
     RuntimeFrontierSummary { document_id: ArtifactId(frontier.document_id.clone()), head_edit_ordinal: frontier.head_edit_ordinal, head_edit_id: frontier.head_edit_id.clone(), last_commit_seq: frontier.last_commit_seq, chain_hash: frontier.chain_hash.0 }
 }
 
-/// @emoji 👋️ The client-first frame every document socket opens with.
+/// 🛟️ A wire `RebootstrapRequired` control as the directory contract names it (its frontier already projected onto the
+/// public document id by the hub).
+fn rebootstrap_control(control: &crate::os_spr::RebootstrapRequired) -> crate::os_directory::RebootstrapRequired {
+    let frontier = &control.baseline_frontier;
+    crate::os_directory::RebootstrapRequired {
+        scope: crate::os_directory::DocumentScope::new(control.space_id.as_str(), control.document_id.as_str()),
+        checkpoint_id: crate::os_directory::ArtifactHash(control.checkpoint_id),
+        descriptor_digest_v1: crate::os_directory::ArtifactHash(control.descriptor_hash),
+        baseline_frontier: crate::os_directory::ArtifactFrontier { document_id: frontier.document_id.0.clone(), head_edit_ordinal: frontier.head_edit_ordinal, head_edit_id: frontier.head_edit_id.clone(), last_commit_seq: frontier.last_commit_seq, chain_hash: crate::os_directory::ArtifactHash(frontier.chain_hash) },
+    }
+}
+
+/// 👋️ The client-first frame every document socket opens with.
 pub fn document_socket_hello(schema: &str, pack_schema_hash: [u8; 32], resume_token: Option<String>, frontier: Option<RuntimeFrontierSummary>) -> ClientFrame {
     ClientFrame::SocketHelloV1 { wire_version: 1, protocol_version: 1, schema: schema.to_string(), pack_schema_hash, resume_token, frontier }
 }
 
-/// @emoji 🔐️ The one ordered subprotocol offer a document socket dials with — the grant receipt's
+/// 🔐️ The one ordered subprotocol offer a document socket dials with — the grant receipt's
 /// protocol, then the session capability — which a browser joins into the single
 /// `Sec-WebSocket-Protocol` value the hub splits on `", "`.
 pub fn document_socket_protocols(receipt_protocol: &str, capability: &str) -> [String; 2] {
     [receipt_protocol.to_string(), capability.to_string()]
 }
 
-/// @emoji 📦️ One `Commands` frame ready for a socket: its batch id, the local envelopes it relays (the
+/// 📦️ One `Commands` frame ready for a socket: its batch id, the local envelopes it relays (the
 /// rollback owner) and its encoded bytes.
 #[derive(Clone, Debug, PartialEq)]
 pub struct CommandsFrame {
@@ -1058,7 +1087,7 @@ pub struct CommandsFrame {
     pub bytes: Vec<u8>,
 }
 
-/// @emoji 📏️ The frames one relay sends, every one within the socket's ceiling, plus the envelopes that
+/// 📏️ The frames one relay sends, every one within the socket's ceiling, plus the envelopes that
 /// cannot fit a frame even alone.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct CommandsFramePlan {
@@ -1066,7 +1095,7 @@ pub struct CommandsFramePlan {
     pub oversized: Vec<MutationEnvelope>,
 }
 
-/// @emoji ✂️ Splits one relay into `Commands` frames no larger than `max_frame_bytes`, halving a batch
+/// ✂️ Splits one relay into `Commands` frames no larger than `max_frame_bytes`, halving a batch
 /// until it fits and keeping envelope order; batch ids run consecutively from `first_batch_id`. `local`
 /// and `wire` are the same envelopes before and after socket stamping.
 pub async fn commands_frames_within(max_frame_bytes: usize, first_batch_id: u64, local: Vec<MutationEnvelope>, wire: Vec<MutationEnvelope>) -> CommandsFramePlan {
@@ -1091,7 +1120,7 @@ pub async fn commands_frames_within(max_frame_bytes: usize, first_batch_id: u64,
     plan
 }
 
-/// @emoji 🎲️ One document actor's hybrid-logical-clock replica seed: platform entropy, so two replicas
+/// 🎲️ One document actor's hybrid-logical-clock replica seed: platform entropy, so two replicas
 /// of one user (two tabs, two processes) never tie on `(seed, counter)` — H4's per-replica law.
 pub fn replica_hlc_seed() -> Result<u64, crate::os_identity::EntropyError> {
     crate::os_identity::entropy_u64()
@@ -1099,7 +1128,7 @@ pub fn replica_hlc_seed() -> Result<u64, crate::os_identity::EntropyError> {
 //#endregion 🔖️DocumentSocketConnect
 
 //#region 🔖️DocumentLinkShortage
-/// @emoji 🔌️ The capped doubling reconnect and the longest shortage one hub document's link rides out
+/// 🔌️ The capped doubling reconnect and the longest shortage one hub document's link rides out
 /// (`🧬️schema/document-link-shortage/🔣️.json` `$defs/Policy`). The bound is twice the backoff cap, so at
 /// least two capped reconnect attempts fall inside it, and no retry is ever scheduled past it: the last
 /// attempt of every shortage runs AT the bound. An attempt that never answers ends the link at the
@@ -1150,7 +1179,7 @@ pub fn document_link_terminal_message(document_id: &str, status: DocumentLinkSta
     MutationMessage { level: crate::os_dsl::Severity::Error, code: crate::os_dsl::FaultCode::new(status.code()), message: status.text(false).unwrap_or_default().to_string(), target: vec![document_id.to_string()], op_index: None }
 }
 
-/// @emoji 🔌️ A hub document's link, the ONE state machine the native actor, the browser actor and the
+/// 🔌️ A hub document's link, the ONE state machine the native actor, the browser actor and the
 /// React worker drive (ticket 26/09/23 audit P2-2): while `Unlinked` the document stays mounted, local
 /// edits keep applying and queue, and the link retries at `retry_at_ms`; a shortage that outlasts the
 /// policy bound becomes `Expired` (AGENTS.md: short shortages, never long offline periods) and a hub that
@@ -1281,7 +1310,7 @@ impl DocumentLink {
 //#endregion 🔖️DocumentLinkShortage
 
 //#region 🔁️DocumentEchoSuppression
-/// @emoji 🔁️ The envelopes of one server `Commands` frame a replica applies, in order: echo suppression is by operation identity,
+/// 🔁️ The envelopes of one server `Commands` frame a replica applies, in order: echo suppression is by operation identity,
 /// never by frame origin. An envelope is applied unless its id is one this replica authored or already applied, and every admitted id
 /// is recorded in `applied`. A frame is never discarded whole — the hub's hello catch-up tail carries anyone's edits, the joiner's own
 /// earlier device included (ticket 26/09/23 session 12, run s12i: late joiners saw no history). Schema
@@ -1290,11 +1319,11 @@ pub fn admit_remote_envelopes(applied: &mut std::collections::HashSet<String>, e
     envelopes.into_iter().filter(|envelope| applied.insert(envelope.mutation_id.0.clone())).collect()
 }
 
-/// @emoji 🔁️ Records the operations this replica authored, so their echo is never applied a second time.
+/// 🔁️ Records the operations this replica authored, so their echo is never applied a second time.
 pub fn note_authored_envelopes(applied: &mut std::collections::HashSet<String>, envelopes: &[MutationEnvelope]) {
     applied.extend(envelopes.iter().map(|envelope| envelope.mutation_id.0.clone()));
 }
-/// @emoji ✅️ Settles this replica's own operations the hub's log already holds: a `Commands` frame (a catch-up tail or a relay)
+/// ✅️ Settles this replica's own operations the hub's log already holds: a `Commands` frame (a catch-up tail or a relay)
 /// that carries an operation still in `outbox` or a `pending` batch proves the hub committed it although its `Ack` was lost with the
 /// socket, so it leaves both (a batch left empty leaves too) and is never resent — a resend is re-stamped and the hub refuses it as a
 /// replayed operation (ticket 26/09/23 session 13, run s13b). Answers the settled envelopes, whose backbone retention the caller
@@ -1316,7 +1345,7 @@ pub fn settle_committed_envelopes(outbox: &mut Vec<MutationEnvelope>, pending: &
 //#endregion 🔁️DocumentEchoSuppression
 
 //#region 🔖️DocumentSocketDoor
-/// @emoji 📬️ One observation of a browser document socket's receive side.
+/// 📬️ One observation of a browser document socket's receive side.
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum DocumentSocketPoll {
@@ -1326,7 +1355,7 @@ pub enum DocumentSocketPoll {
     Lost(u32),
 }
 
-/// @emoji 🔌️ One page-owned document socket as the browser actor drives it: never blocking, polled on
+/// 🔌️ One page-owned document socket as the browser actor drives it: never blocking, polled on
 /// the actor's own cadence, and honest about loss — a dropped frame is [`DocumentSocketPoll::Lost`],
 /// which the actor answers with a reconnect and a hub catch-up rather than a silent gap.
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
@@ -1339,7 +1368,7 @@ pub trait DocumentSocket {
     fn close(&mut self);
 }
 
-/// @emoji ☎️ Opens document sockets for the browser actor. The host injects it (the wgpu renderer's
+/// ☎️ Opens document sockets for the browser actor. The host injects it (the wgpu renderer's
 /// duplex socket door), so the kernel names no page API and every browser socket has one owner.
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 pub trait DocumentSocketDialer {
@@ -1358,7 +1387,7 @@ pub trait DocumentSocketDialer {
 // now-deleted bridge (`payload_hash` was write-only; `schema_version`/`deps` were only read back
 // by these same two functions and two test assertions, both updated alongside this change).
 
-/// @emoji ↩️ Synthesizes a local "undo" envelope from a speculative envelope's own precomputed
+/// ↩️ Synthesizes a local "undo" envelope from a speculative envelope's own precomputed
 /// `inverse`, so a semio_hub `Ack::Applied::{Rejected,Transformed}` outcome can roll back (or replace)
 /// the local speculative head without a second round trip. This actor stays JSON-payload-typed end
 /// to end (never touches `vcs`/`protocol_command`'s typed `Mutation`/`MutationDiff` trait
@@ -1387,14 +1416,14 @@ async fn rollback_envelope(envelope: &MutationEnvelope) -> Option<MutationEnvelo
     })
 }
 
-/// @emoji 📡️ `PresencePeer` -> the binary blob `crate::os_spr::wire::ClientFrame::Presence` carries
+/// 📡️ `PresencePeer` -> the binary blob `crate::os_spr::wire::ClientFrame::Presence` carries
 /// opaquely (`crate::os_spr::encode_presence_peer` — `protocol_wire` has no dependency on
 /// this crate's `PresencePeer` type, so the frame only ever moves the pre-encoded bytes).
 async fn presence_to_bytes(peer: &PresencePeer) -> Vec<u8> {
     crate::os_spr::encode_presence_peer(peer).await
 }
 
-/// @emoji 📡️ The inverse of {@link presence_to_bytes}, for `ServerFrame::Presence`'s peer roster.
+/// 📡️ The inverse of {@link presence_to_bytes}, for `ServerFrame::Presence`'s peer roster.
 async fn presence_from_bytes(bytes: &[u8]) -> Option<PresencePeer> {
     crate::os_spr::decode_presence_peer(bytes).await.ok()
 }
@@ -1407,7 +1436,7 @@ async fn presence_from_bytes(bytes: &[u8]) -> Option<PresencePeer> {
 // list) rather than re-exported here — every call site below already goes through
 // `crate::os_spr::assemble_presence_interaction` directly.
 
-/// @emoji 🎨️ Stamps a peer's hub-assigned session color and canonical surface onto an outbound
+/// 🎨️ Stamps a peer's hub-assigned session color and canonical surface onto an outbound
 /// `PresencePeer` right before {@link presence_to_bytes} — the ONE place either field is ever
 /// filled; shells never set `peer.color`/`peer.surface` themselves (contract-freeze §C7.4). Pure so
 /// both the native and wasm actors (and their tests) can share it.
@@ -1416,7 +1445,7 @@ async fn stamp_session(peer: &mut PresencePeer, session_color: Option<u8>, surfa
     peer.surface = surface.map(str::to_string);
 }
 
-/// @emoji ⏰️ Millisecond wall-clock reads for {@link next_timestamp}: `SystemTime` on native AND
+/// ⏰️ Millisecond wall-clock reads for {@link next_timestamp}: `SystemTime` on native AND
 /// `wasm32-wasip2` (WASI's clock backs it fine), `js_sys::Date` only in the actual browser wasm
 /// build (`target_arch = "wasm32"` is TRUE for wasip2 too, so that arm is narrowed to exclude it).
 #[cfg(any(not(target_arch = "wasm32"), target_env = "p2"))]
@@ -1429,7 +1458,7 @@ async fn now_ms() -> u64 {
     js_sys::Date::now() as u64
 }
 
-/// @emoji 🧮️ A stable, deterministic `u64` seed for an actor id string, for
+/// 🧮️ A stable, deterministic `u64` seed for an actor id string, for
 /// `crate::os_spr::HybridLogicalTimestamp::actor` (which is `u64`-shaped; this actor's own id is a
 /// free-form `String`).
 async fn actor_seed(actor: &str) -> u64 {
@@ -1439,7 +1468,7 @@ async fn actor_seed(actor: &str) -> u64 {
     hasher.finish()
 }
 
-/// @emoji ⏰️ Advances `counter` and stamps a fresh {@link crate::os_spr::HybridLogicalTimestamp} for an
+/// ⏰️ Advances `counter` and stamps a fresh {@link crate::os_spr::HybridLogicalTimestamp} for an
 /// outbound envelope — freshly stamped on every send (this actor never round-trips a locally-
 /// authored envelope's own timestamp back in; a remote-delivered envelope's `timestamp` is simply
 /// carried through unchanged).
@@ -1450,7 +1479,7 @@ async fn next_timestamp(seed: u64, counter: &mut u64) -> crate::os_spr::HybridLo
 //#endregion 🔖️WireBridge
 
 //#region 🔖️SyncSession
-/// @emoji 🔁️ Pairs a document's vcs store with the causal DAG that reconciles remote envelopes into
+/// 🔁️ Pairs a document's vcs store with the causal DAG that reconciles remote envelopes into
 /// it. Extended into the actor world via {@link SyncSession::attach}: it holds the actor command
 /// channel and event stream, drains status on {@link SyncSession::tick}, and delegates store IO.
 pub struct SyncSession<P, Mutation>
@@ -1473,7 +1502,7 @@ where
         Self { store, cmd_tx: None, events: None, status: ArtifactSyncStatus::default() }
     }
 
-    /// @emoji 🔌️ Attaches this session's store to a document actor: the actor's `ChannelBackbone` end
+    /// 🔌️ Attaches this session's store to a document actor: the actor's `ChannelBackbone` end
     /// is wired into the store, and the command/event channels are retained for wake + status.
     pub async fn attach(&mut self, channels: ArtifactChannels, events: broadcast::Receiver<ArtifactEvent>) -> Result<(), SyncError> {
         self.store.attach_backbone(Backbones::Channel(channels.channel_backbone)).await.map_err(|error| SyncError::Vcs(error.to_string()))?;
@@ -1482,7 +1511,7 @@ where
         Ok(())
     }
 
-    /// @emoji ✂️ Detaches from the actor (asking it to flush + stop) and unbinds the store's backbone.
+    /// ✂️ Detaches from the actor (asking it to flush + stop) and unbinds the store's backbone.
     pub async fn detach(&mut self) {
         if let Some(cmd_tx) = &self.cmd_tx {
             let _ = cmd_tx.send(ArtifactActorMsg::Detach);
@@ -1492,14 +1521,14 @@ where
         self.events = None;
     }
 
-    /// @emoji 🔔️ Nudges the actor to drain the store's outbound queue without waiting for its poll tick.
+    /// 🔔️ Nudges the actor to drain the store's outbound queue without waiting for its poll tick.
     pub async fn wake(&self) {
         if let Some(cmd_tx) = &self.cmd_tx {
             let _ = cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() });
         }
     }
 
-    /// @emoji 👻️ Publishes an ephemeral preview blob on the semio_hub's preview lane. See
+    /// 👻️ Publishes an ephemeral preview blob on the semio_hub's preview lane. See
     /// {@link ArtifactActorMsg::PublishPreview}.
     pub async fn publish_preview(&self, key: String, seq: u64, payload: Vec<u8>) {
         if let Some(cmd_tx) = &self.cmd_tx {
@@ -1507,7 +1536,7 @@ where
         }
     }
 
-    /// @emoji 📥️ Advances one buffered sync event, then gives the store one inbound pump opportunity.
+    /// 📥️ Advances one buffered sync event, then gives the store one inbound pump opportunity.
     pub async fn tick(&mut self) -> Result<bool, SyncError> {
         if let Some(events) = &mut self.events {
             if let Ok(ArtifactEvent::Status(status)) = events.try_recv() {
@@ -1517,12 +1546,12 @@ where
         self.store.tick().await.map_err(|error| SyncError::Vcs(error.to_string()))
     }
 
-    /// @emoji 🚦️ The latest sync status seen on the event stream (updated by {@link SyncSession::tick}).
+    /// 🚦️ The latest sync status seen on the event stream (updated by {@link SyncSession::tick}).
     pub async fn status(&self) -> ArtifactSyncStatus {
         self.status.clone()
     }
 
-    /// @emoji 🕸️ Feeds a remote envelope through the store's causal DAG, materializing it (and any
+    /// 🕸️ Feeds a remote envelope through the store's causal DAG, materializing it (and any
     /// now-unblocked dependents) into the edit timeline. Kept for direct/test injection.
     pub async fn receive(&mut self, envelope: MutationEnvelope) -> Result<(), SyncError> {
         self.store.dispatch(crate::os_store::ArtifactCommand::IngestRemote { envelope }).await.map(|_| ()).map_err(|error| SyncError::Vcs(error.to_string()))
@@ -1535,18 +1564,18 @@ where
 //#endregion 🔖️SyncSession
 
 //#region 🔖️Host
-/// @emoji 💓️ Maximum generic host heartbeat frequency. Presence is lossy, last-writer-wins state:
+/// 💓️ Maximum generic host heartbeat frequency. Presence is lossy, last-writer-wins state:
 /// callers may offer cursor/viewport/app-presence updates as often as input arrives, while the host
 /// publishes only the newest complete peer snapshot at ten hertz.
 pub const PRESENCE_HEARTBEAT_INTERVAL_MS: u64 = 100;
 
-/// @emoji 🧮️ The summary a peer may publish: `completed` never above `total`, so the wire decoder never refuses it.
+/// 🧮️ The summary a peer may publish: `completed` never above `total`, so the wire decoder never refuses it.
 pub fn presence_tool_run_clamped(tool_run: PresenceToolRun) -> PresenceToolRun {
     let completed = tool_run.total.map_or(tool_run.completed, |total| tool_run.completed.min(total));
     PresenceToolRun { completed, ..tool_run }
 }
 
-/// @emoji 💓️ Per-document last-writer-wins presence producer. The producer owns cadence rather than
+/// 💓️ Per-document last-writer-wins presence producer. The producer owns cadence rather than
 /// every renderer/app inventing a timer: offers inside the minimum interval replace `pending`, the
 /// first offer publishes immediately, and a later offer publishes the newest complete snapshot.
 #[derive(Clone, Debug)]
@@ -1564,13 +1593,13 @@ impl Default for PresenceHeartbeatProducer {
 }
 
 impl PresenceHeartbeatProducer {
-    // 🚫️async: E1 pure struct-literal builder consumed by `impl Default` (sync-only external
-    // trait) — see R9. No I/O, no suspension point.
+    /// 🚫️async: E1 pure struct-literal builder consumed by `impl Default` (sync-only external
+    /// trait) — see R9. No I/O, no suspension point.
     pub fn new(interval_ms: u64) -> Self {
         Self { interval_ms: interval_ms.max(1), last_sent_at_ms: None, pending: None, observed_tool_run: None }
     }
 
-    /// @emoji ⏯️ Records the document instance's latest tool run summary (a guest's `AppFrame::Ephemeral.tool_run`,
+    /// ⏯️ Records the document instance's latest tool run summary (a guest's `AppFrame::Ephemeral.tool_run`,
     /// `📋️tool-run-contract.md` §3.4). Once observed, the guest's summary is authoritative: every later offer
     /// carries it (or its absence) instead of whatever the offering renderer assembled.
     pub fn observe_tool_run(&mut self, tool_run: Option<PresenceToolRun>) {
@@ -1581,7 +1610,7 @@ impl PresenceHeartbeatProducer {
         self.observed_tool_run = Some(tool_run);
     }
 
-    /// @emoji 📡️ Offers the newest whole peer snapshot and returns it only when this document's
+    /// 📡️ Offers the newest whole peer snapshot and returns it only when this document's
     /// cadence permits a publish. A backward-moving clock conservatively waits for the next interval.
     /// The tool run summary is the observed one when there is one, and `completed ≤ total` either way.
     pub fn offer(&mut self, now_ms: u64, mut peer: PresencePeer) -> Option<PresencePeer> {
@@ -1603,14 +1632,14 @@ impl PresenceHeartbeatProducer {
     }
 }
 
-/// @emoji 🎛️ The channels {@link ArtifactHost::open} hands back to a caller: attach `channel_backbone`
+/// 🎛️ The channels {@link ArtifactHost::open} hands back to a caller: attach `channel_backbone`
 /// to your `ArtifactStore`, and send control messages (or wakes) on `cmd_tx`.
 pub struct ArtifactChannels {
     pub cmd_tx: ArtifactMailboxSender,
     pub document_key: ArtifactDocumentKey,
     #[cfg(not(target_arch = "wasm32"))]
     pub runner: ArtifactActorRunnerTicket,
-    /// @emoji 🔗️ The store-side backbone end. The caller owns store attachment:
+    /// 🔗️ The store-side backbone end. The caller owns store attachment:
     /// `store.attach_backbone(Backbones::Channel(channels.channel_backbone))`.
     pub channel_backbone: ChannelBackbone,
 }
@@ -1655,7 +1684,7 @@ impl ArtifactHostState {
     }
 }
 
-/// @emoji 🏛️ Registry of open per-document actors. One `ArtifactHost` per host process (wgpu native,
+/// 🏛️ Registry of open per-document actors. One `ArtifactHost` per host process (wgpu native,
 /// tests, or the browser wgpu build) owns every open document's actor + event fan-out.
 pub struct ArtifactHost {
     inner: std::sync::Arc<std::sync::Mutex<ArtifactHostState>>,
@@ -1685,7 +1714,7 @@ impl Clone for ArtifactHost {
 }
 
 impl ArtifactHost {
-    /// @emoji 🧩️ Creates a host on the process WorkerPool; callers must inject the same pool
+    /// 🧩️ Creates a host on the process WorkerPool; callers must inject the same pool
     /// used by their service and renderer runtimes.
     pub fn new(pool: std::sync::Arc<semio_framework_async::WorkerPool>) -> Self {
         Self {
@@ -1739,13 +1768,13 @@ impl ArtifactHost {
         true
     }
 
-    /// @emoji ☎️ Installs the browser's document-socket dialer; every later hub document actor dials through it.
+    /// ☎️ Installs the browser's document-socket dialer; every later hub document actor dials through it.
     #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
     pub fn set_document_socket_dialer(&self, dialer: std::sync::Arc<dyn DocumentSocketDialer>) {
         *self.document_socket_dialer.write().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(dialer);
     }
 
-    /// @emoji 🟢️ Whether a hub document opened now can dial at once: a credential, a grant source and,
+    /// 🟢️ Whether a hub document opened now can dial at once: a credential, a grant source and,
     /// in a browser, the socket dialer the page owns.
     pub fn local_hub_ready(&self) -> bool {
         let admitted = self.credential.read().unwrap_or_else(std::sync::PoisonError::into_inner).is_some() && self.socket_grant_source.read().unwrap_or_else(std::sync::PoisonError::into_inner).is_some();
@@ -1754,8 +1783,18 @@ impl ArtifactHost {
         admitted
     }
 
-    /// @emoji 🚀️ Spawns (or replaces) the actor for `config.document_id` and returns the channels the
+    /// 🚀️ Spawns (or replaces) the actor for `config.document_id` and returns the channels the
     /// caller wires into its store. Idempotent per id: opening an already-open id closes the old actor.
+    ///
+    /// 🌉️ Narrowed to match `mod wasm_actor`'s own gate: it is a browser WebSocket/`web_sys`
+    /// bridge, and `target_arch = "wasm32"` is TRUE for `wasm32-wasip2` too. On the WASI
+    /// component target neither actor exists — `native_actor` is `tokio_tungstenite`/
+    /// `tokio::net::TcpStream`, which a component cannot open — so `open` registers the document
+    /// and hands back its channels WITHOUT a sync actor, which is the only thing a component
+    /// with no socket of its own can do. That is already the documented story: no plugin
+    /// activates the `sync`/`worker` features that reach this module (see `mod wasm_actor`).
+    /// `OpenDocument::runner` and `ArtifactChannels::runner` are themselves
+    /// `cfg(not(target_arch = "wasm32"))`, so nothing downstream expects a runner here.
     pub async fn open(&self, config: ArtifactActorConfig) -> ArtifactChannels {
         let document_id = config.document_id.clone();
         let document_key = ArtifactDocumentKey::for_config(&config);
@@ -1771,15 +1810,6 @@ impl ArtifactHost {
         let document_cancel = self.cancel.child_now();
         #[cfg(not(target_arch = "wasm32"))]
         let runner = spawn_actor(self.pool.clone(), generation, config, remote, cmd_rx, event_tx.clone(), self.credential.clone(), self.socket_grant_source.clone(), document_execution_target_lease, seed, document_cancel.clone()).await;
-        // 🌉️ Narrowed to match `mod wasm_actor`'s own gate: it is a browser WebSocket/`web_sys`
-        // bridge, and `target_arch = "wasm32"` is TRUE for `wasm32-wasip2` too. On the WASI
-        // component target neither actor exists — `native_actor` is `tokio_tungstenite`/
-        // `tokio::net::TcpStream`, which a component cannot open — so `open` registers the document
-        // and hands back its channels WITHOUT a sync actor, which is the only thing a component
-        // with no socket of its own can do. That is already the documented story: no plugin
-        // activates the `sync`/`worker` features that reach this module (see `mod wasm_actor`).
-        // `OpenDocument::runner` and `ArtifactChannels::runner` are themselves
-        // `cfg(not(target_arch = "wasm32"))`, so nothing downstream expects a runner here.
         #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
         spawn_actor(
             config,
@@ -1823,7 +1853,7 @@ impl ArtifactHost {
         }
     }
 
-    /// @emoji 📬️ A fresh event receiver for `document_id`. If the document is not open the receiver's
+    /// 📬️ A fresh event receiver for `document_id`. If the document is not open the receiver's
     /// sender is dropped, so it simply reports closed.
     pub async fn subscribe(&self, document_id: &str) -> broadcast::Receiver<ArtifactEvent> {
         self.subscribe_key(&ArtifactDocumentKey::local(document_id)).await
@@ -1840,7 +1870,7 @@ impl ArtifactHost {
         }
     }
 
-    /// @emoji 🔔️ Sends a control message to a document's actor (e.g. a presence heartbeat or a wake).
+    /// 🔔️ Sends a control message to a document's actor (e.g. a presence heartbeat or a wake).
     pub async fn send(&self, document_id: &str, message: ArtifactActorMsg) {
         self.send_key(&ArtifactDocumentKey::local(document_id), message).await;
     }
@@ -1851,14 +1881,14 @@ impl ArtifactHost {
         }
     }
 
-    /// @emoji 💓️ Offers a generic cursor/viewport/app-presence heartbeat for one open document.
+    /// 💓️ Offers a generic cursor/viewport/app-presence heartbeat for one open document.
     /// Returns `true` only when the host actually queued a publish; faster offers are coalesced onto
     /// the document's producer and cannot flood the preview lane.
     pub fn presence_heartbeat(&self, document_id: &str, now_ms: u64, peer: PresencePeer) -> bool {
         self.presence_heartbeat_key(&ArtifactDocumentKey::local(document_id), now_ms, peer)
     }
 
-    /// @emoji ⏯️ Records an open document's latest tool run summary for its presence heartbeats — the host
+    /// ⏯️ Records an open document's latest tool run summary for its presence heartbeats — the host
     /// calls this with each `AppFrame::Ephemeral.tool_run` it decodes. `false` when the document is not open.
     pub fn observe_presence_tool_run_key(&self, document_key: &ArtifactDocumentKey, tool_run: Option<PresenceToolRun>) -> bool {
         let mut state = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -1874,10 +1904,10 @@ impl ArtifactHost {
         document.cmd_tx.send(ArtifactActorMsg::PresenceHeartbeat { peer: Box::new(peer) }).is_ok()
     }
 
-    /// @emoji ✂️ Transfers a document into generation-keyed retained close ownership. The runner
+    /// ✂️ Transfers a document into generation-keyed retained close ownership. The runner
     /// rejects later mailbox ingress and drains one mailbox, backbone, actor, or job owner per grant.
-    // 🚫️async: E1 pure lock/remove + sync channel send, no real suspension point — consumed by
-    // `impl Drop` (sync-only external trait); see R9.
+    /// 🚫️async: E1 pure lock/remove + sync channel send, no real suspension point — consumed by
+    /// `impl Drop` (sync-only external trait); see R9.
     pub fn close(&self, document_id: &str) -> Option<u64> {
         self.close_key(&ArtifactDocumentKey::local(document_id))
     }
@@ -1912,9 +1942,9 @@ impl ArtifactHost {
         self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).closing.get(&generation).cloned()
     }
 
-    /// @emoji 🧹️ Ids of every currently-open document.
-    // 🚫️async: E1 pure lock-and-collect consumed by `impl Drop` (sync-only external trait) — see
-    // R9. No I/O, no suspension point.
+    /// 🧹️ Ids of every currently-open document.
+    /// 🚫️async: E1 pure lock-and-collect consumed by `impl Drop` (sync-only external trait) — see
+    /// R9. No I/O, no suspension point.
     pub fn open_artifacts(&self) -> Vec<ArtifactDocumentKey> {
         self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).documents.keys().cloned().collect()
     }
@@ -2052,7 +2082,7 @@ mod native_actor {
         Terminal,
     }
 
-    /// @emoji 📁️ A folder/file binding's storage driver, keyed for multi-document sqlite or single
+    /// 📁️ A folder/file binding's storage driver, keyed for multi-document sqlite or single
     /// pack-backed blob. Both variants move real `pack`+`spr` bytes end to end — this actor never
     /// touches JSON. `Sqlite` is fully codec-free (its row IS the pack+spr pair, no bridging
     /// needed). `Pack` requires the schema codec for both authoritative DSL fallback validation
@@ -2063,7 +2093,7 @@ mod native_actor {
     }
 
     impl FolderEndpoint {
-        /// @emoji 🗃️ Reads one exact versioned recursive-document archive.
+        /// 🗃️ Reads one exact versioned recursive-document archive.
         async fn read_archive(&self) -> Result<Option<Vec<u8>>, String> {
             match self {
                 FolderEndpoint::EventLog { storage, document_id, .. } => storage.read_archive(document_id).await.map_err(|error| error.to_string()),
@@ -2090,7 +2120,7 @@ mod native_actor {
             }
         }
 
-        /// @emoji 🗃️ Persists one exact versioned recursive-document archive and its root text mirrors.
+        /// 🗃️ Persists one exact versioned recursive-document archive and its root text mirrors.
         async fn write_archive(&self, archive_bytes: &[u8]) -> Result<(), String> {
             let archive = crate::os_spr::decode_document_archive_bytes(archive_bytes).await.map_err(|error| error.to_string())?;
             match self {
@@ -2106,7 +2136,7 @@ mod native_actor {
 
     }
 
-    /// @emoji 🎭️ One document's backbone actor: drains the store's outbound queue to persist + relay,
+    /// 🎭️ One document's backbone actor: drains the store's outbound queue to persist + relay,
     /// ingests semio_hub/file changes back into the store, and keeps subscribers current with status/events.
     pub(super) struct ArtifactActor {
         pool: Arc<semio_framework_async::WorkerPool>,
@@ -2130,16 +2160,16 @@ mod native_actor {
         socket_actor_confirmed: bool,
         socket_authority: Option<crate::os_directory::client::DocumentSocketAuthorityV1>,
         socket_authority_deadline: Option<Instant>,
-        /// @emoji 🎨️ This connection's hub-assigned session color (`ServerFrame::Session.color`) —
+        /// 🎨️ This connection's hub-assigned session color (`ServerFrame::Session.color`) —
         /// `None` until the hub sends it (or for a folder-only document, which never connects to a
         /// hub). Stamped onto every outbound `PresenceHeartbeat` via {@link stamp_session}.
         session_color: Option<u8>,
         semio_hub: Option<HubConn>,
         connect_future: Option<ConnectFuture>,
-        /// @emoji 🏔️ Last frontier the semio_hub reported (`Welcome.server_frontier` / `Commands.frontier` /
+        /// 🏔️ Last frontier the semio_hub reported (`Welcome.server_frontier` / `Commands.frontier` /
         /// `Ack.frontier`) — the wire-v2 replacement for the old `hub_version: i64` counter.
         server_frontier: Option<RuntimeFrontierSummary>,
-        /// @emoji 🎟️ The semio_hub's last `Welcome.resume_token`, echoed in the next `SocketHelloV1` after a
+        /// 🎟️ The semio_hub's last `Welcome.resume_token`, echoed in the next `SocketHelloV1` after a
         /// reconnect so the semio_hub can resume rather than replay from scratch.
         resume_token: Option<String>,
         pending_resume_token: Option<String>,
@@ -2150,14 +2180,14 @@ mod native_actor {
         link: DocumentLink,
         reconnect_at: Option<Instant>,
         link_expires_at: Option<Instant>,
-        /// @emoji 🧺️ Outbound `Commands` batches awaiting an `Ack`, keyed by `batch_id`, so `Rejected`/
+        /// 🧺️ Outbound `Commands` batches awaiting an `Ack`, keyed by `batch_id`, so `Rejected`/
         /// `Transformed` can roll back exactly the envelopes that batch sent.
         pending_batches: std::collections::HashMap<u64, Vec<MutationEnvelope>>,
         outbox: Vec<MutationEnvelope>,
         document_backbone_retention: DocumentBackboneRetentionV1,
         next_batch_id: u64,
         next_local_rejection_batch_id: u64,
-        /// @emoji ⏰️ This actor's `HybridLogicalTimestamp` seed (derived from `actor`) + logical tick
+        /// ⏰️ This actor's `HybridLogicalTimestamp` seed (derived from `actor`) + logical tick
         /// counter, for {@link next_timestamp} on every outbound wire envelope.
         hlc_seed: u64,
         hlc_counter: u64,
@@ -2165,7 +2195,7 @@ mod native_actor {
         current_spr: Option<Vec<u8>>,
         current_archive: Option<Vec<u8>>,
         known_op_ids: HashSet<String>,
-        /// @emoji 🔁️ Every operation id this replica authored or applied — the echo filter ([`admit_remote_envelopes`]).
+        /// 🔁️ Every operation id this replica authored or applied — the echo filter ([`admit_remote_envelopes`]).
         applied_op_ids: HashSet<String>,
         last_written_hash: Option<String>,
         remote_state: RemoteState,
@@ -2294,8 +2324,33 @@ mod native_actor {
         /// `SocketHelloV1` names its baseline, so the hub sends only what followed it. A pair whose SPR cannot be read
         /// is reported as a conflict and the document starts unseeded.
         pub(super) async fn seed_hub_document(&mut self, pair: crate::os_directory::CanonicalCheckpointPairV1) {
-            let seeded = match spr_op_ids(&pair.spr_bytes).await {
-                Ok(op_ids) => crate::os_spr::encode_document_archive_bytes(&crate::os_spr::DocumentArchivePack { parent_pack: pair.pack_bytes.clone(), parent_spr: pair.spr_bytes.clone(), members: Vec::new() }).map(|archive| (op_ids, archive)).map_err(|error| error.to_string()),
+            self.install_hub_seed(pair.pack_bytes, pair.spr_bytes, &pair.baseline_frontier).await;
+        }
+
+        /// 🛟️ Restarts a rebootstrapping hub document at the pair the host verified and loaded into the guest
+        /// ([`ArtifactActorMsg::Reseed`]): the pair becomes the baseline, the unacked local operations the pair does not already
+        /// hold go back to the guest, and the actor dials at once — no outage backoff, Hello at the baseline.
+        async fn reseed_hub_document(&mut self, pack: Vec<u8>, spr: Vec<u8>, baseline: crate::os_directory::ArtifactFrontier) {
+            if !self.artifact_rebootstrap_required {
+                return;
+            }
+            if !self.install_hub_seed(pack, spr, &baseline).await {
+                return;
+            }
+            let known = &self.known_op_ids;
+            self.outbox.retain(|envelope| !known.contains(&envelope.mutation_id.0));
+            if !self.outbox.is_empty() {
+                self.emit(ArtifactEvent::RemoteMutations { envelopes: self.outbox.clone() });
+            }
+            self.artifact_rebootstrap_required = false;
+            self.reconnect_at = None;
+            self.start_connect_hub().await;
+        }
+
+        /// 🪢️ Adopts one verified pair as this document's baseline; `false` (and one conflict) when its SPR cannot be read.
+        async fn install_hub_seed(&mut self, pack: Vec<u8>, spr: Vec<u8>, baseline: &crate::os_directory::ArtifactFrontier) -> bool {
+            let seeded = match spr_op_ids(&spr).await {
+                Ok(op_ids) => crate::os_spr::encode_document_archive_bytes(&crate::os_spr::DocumentArchivePack { parent_pack: pack.clone(), parent_spr: spr.clone(), members: Vec::new() }).map(|archive| (op_ids, archive)).map_err(|error| error.to_string()),
                 Err(error) => Err(error),
             };
             let (op_ids, archive) = match seeded {
@@ -2308,7 +2363,7 @@ mod native_actor {
                         target: vec![self.document_id.clone()],
                         op_index: None,
                     }));
-                    return;
+                    return false;
                 }
             };
             if let Some(folder) = self.folder.as_ref() {
@@ -2317,13 +2372,14 @@ mod native_actor {
                 }
             }
             self.known_op_ids = op_ids;
-            self.server_frontier = Some(canonical_pair_baseline(&pair.baseline_frontier));
-            self.current_pack = Some(pair.pack_bytes);
-            self.current_spr = Some(pair.spr_bytes);
+            self.server_frontier = Some(canonical_pair_baseline(baseline));
+            self.current_pack = Some(pack);
+            self.current_spr = Some(spr);
             self.current_archive = Some(archive);
+            true
         }
 
-        /// @emoji 🏃️ Advances exactly one command, readiness source, timer, backbone owner, or status turn.
+        /// 🏃️ Advances exactly one command, readiness source, timer, backbone owner, or status turn.
         /// It idles only after observing an empty mailbox and an empty store outbound in the same turn:
         /// a command that relayed one backbone owner consumes that owner's wake, so a second queued
         /// owner has no wake left (ticket 26/09/23 `📓️wp-h6.md`).
@@ -2457,7 +2513,7 @@ mod native_actor {
             ArtifactDrive::MoreWork
         }
 
-        /// @emoji 📡️ Polls one hub frame under the actor's readiness waker; `None` parks until the socket wakes it.
+        /// 📡️ Polls one hub frame under the actor's readiness waker; `None` parks until the socket wakes it.
         fn poll_hub_message(&mut self) -> Option<Option<Result<Message, tokio_tungstenite::tungstenite::Error>>> {
             let readiness = self.readiness.clone()?;
             let waker = std::task::Waker::from(Arc::new(ArtifactReadinessWake(readiness)));
@@ -2468,7 +2524,7 @@ mod native_actor {
             }
         }
 
-        /// @emoji 🌱️ Seeds persistence state from any already-stored recursive archive and installs the file watcher.
+        /// 🌱️ Seeds persistence state from any already-stored recursive archive and installs the file watcher.
         async fn setup(&mut self) {
             let seeded = match self.folder.as_ref().filter(|_| self.current_pack.is_none()) {
                 Some(folder) => folder.read_archive().await.ok().flatten(),
@@ -2496,7 +2552,7 @@ mod native_actor {
             }
         }
 
-        /// @emoji 📨️ Handles a caller control message. Returns `true` when the actor should stop.
+        /// 📨️ Handles a caller control message. Returns `true` when the actor should stop.
         async fn handle_cmd(&mut self, message: ArtifactActorMsg) -> bool {
             match message {
                 ArtifactActorMsg::LocalMutations { envelopes } => {
@@ -2550,6 +2606,10 @@ mod native_actor {
                     self.handle_external_change().await;
                     false
                 }
+                ArtifactActorMsg::Reseed { pack, spr, baseline } => {
+                    self.reseed_hub_document(pack, spr, baseline).await;
+                    false
+                }
                 ArtifactActorMsg::Detach => true,
             }
         }
@@ -2560,7 +2620,7 @@ mod native_actor {
             self.emit(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Rejected { reason: reason.into(), messages } });
         }
 
-        /// @emoji 📤️ Pops and advances exactly one store-to-actor FIFO owner.
+        /// 📤️ Pops and advances exactly one store-to-actor FIFO owner.
         async fn relay_one_backbone(&mut self) -> Result<bool, vcs::VcsError> {
             let Some(message) = self.remote.try_pop_front()? else { return Ok(false) };
             match message {
@@ -2577,7 +2637,7 @@ mod native_actor {
         }
 
         //#region 🔖️Folder
-        /// @emoji ✍️ Persists the current recursive archive to the folder binding and records the
+        /// ✍️ Persists the current recursive archive to the folder binding and records the
         /// content hash for self-write suppression. A write failure (e.g. no `crate::os_store::ArtifactCodec`
         /// registered for this document's schema on the `Pack` endpoint — see `FolderEndpoint::write_archive`)
         /// is swallowed here the same way every other best-effort path in this actor already is, but
@@ -2601,7 +2661,7 @@ mod native_actor {
             self.current_archive = Some(bytes);
         }
 
-        /// @emoji 🧬️ Adopts the store's genesis: an empty binding persists it as the document's
+        /// 🧬️ Adopts the store's genesis: an empty binding persists it as the document's
         /// initial snapshot with an event-free history; a bound document must share it, otherwise
         /// the store names a different document and the mismatch is reported, never merged.
         async fn persist_genesis(&mut self, pack: Vec<u8>) {
@@ -2624,7 +2684,7 @@ mod native_actor {
             }
         }
 
-        /// @emoji ➕️ Appends locally-applied operations to the persisted spr log (append-only),
+        /// ➕️ Appends locally-applied operations to the persisted spr log (append-only),
         /// keeping the on-disk copy coherent so self-writes are never mistaken for external edits.
         async fn persist_operations(&mut self, envelopes: &[MutationEnvelope]) {
             if self.folder.is_none() {
@@ -2658,9 +2718,13 @@ mod native_actor {
             self.current_spr = Some(new_spr);
         }
 
-        /// @emoji 👁️ Re-reads the folder binding and classifies the change: append-only → `RemoteMutations`,
+        /// 👁️ Re-reads the folder binding and classifies the change: append-only → `RemoteMutations`,
         /// divergence → `DocumentArchiveReplaced`, divergence with local pending operations → `Conflict`. Self-writes
         /// (content hash match) are ignored.
+        ///
+        /// Append-only spr events decoded without HistoryOpMeta carry HLT(0,0). Ingest merges
+        /// by HLC, so a zero stamp would reorder under already-applied local edits and leave
+        /// the live snapshot at the older head. Stamp each new envelope with this actor clock.
         async fn handle_external_change(&mut self) {
             let seeded = match self.folder.as_ref() {
                 Some(folder) => folder.read_archive().await.ok().flatten(),
@@ -2681,9 +2745,6 @@ mod native_actor {
             if lost.is_empty() && !new_ids.is_empty() {
                 let Ok(events) = spr_events(&spr, &self.document_id, &self.schema).await else { return };
                 let mut appended: Vec<MutationEnvelope> = events.into_iter().filter(|event| new_ids.contains(&event.mutation_id.0)).collect();
-                // Append-only spr events decoded without HistoryOpMeta carry HLT(0,0). Ingest merges
-                // by HLC, so a zero stamp would reorder under already-applied local edits and leave
-                // the live snapshot at the older head. Stamp each new envelope with this actor clock.
                 for envelope in &mut appended {
                     if envelope.timestamp == crate::os_spr::HybridLogicalTimestamp::new(0, 0) {
                         envelope.timestamp = next_timestamp(self.hlc_seed, &mut self.hlc_counter).await;
@@ -2773,9 +2834,11 @@ mod native_actor {
             self.schedule_reconnect().await;
         }
 
-        /// @emoji ♻️ Hub lag forces a canonical pair refresh: clear the live projection tokens, keep
-        /// unacked work queued, and reconnect — mirrors the browser worker's `requireArtifactRebootstrap`.
-        async fn require_artifact_rebootstrap(&mut self) {
+        /// ♻️ Hub lag forces a canonical pair refresh: clear the live projection tokens, keep unacked work queued,
+        /// drop the socket and ask the host for the pair ([`ArtifactEvent::RebootstrapRequired`]); the actor dials again only
+        /// once the host re-seeded it ([`Self::reseed_hub_document`]) — never into a Welcome it would have to refuse, and never
+        /// after an outage backoff (the rebuild's own close is not a shortage).
+        async fn require_artifact_rebootstrap(&mut self, control: crate::os_directory::RebootstrapRequired) {
             self.requeue_pending_batches();
             self.abort_artifact_bootstrap();
             self.current_pack = None;
@@ -2789,8 +2852,9 @@ mod native_actor {
             self.known_op_ids.clear();
             self.semio_hub = None;
             self.clear_socket_epoch();
+            self.reconnect_at = None;
             self.set_remote_state(RemoteState::Connecting).await;
-            self.fail_link().await;
+            self.emit(ArtifactEvent::RebootstrapRequired { control });
         }
 
         async fn flush_outbox(&mut self) {
@@ -2817,7 +2881,7 @@ mod native_actor {
 
         async fn start_connect_hub(&mut self) {
             let Some(base_url) = self.hub_base_url.clone() else { return };
-            if self.semio_hub.is_some() || self.connect_future.is_some() || !self.link.admits_local_edits() || self.reconnect_at.is_some_and(|deadline| deadline > Instant::now()) {
+            if self.artifact_rebootstrap_required || self.semio_hub.is_some() || self.connect_future.is_some() || !self.link.admits_local_edits() || self.reconnect_at.is_some_and(|deadline| deadline > Instant::now()) {
                 return;
             }
             let Some(credential) = self.credential.read().unwrap_or_else(std::sync::PoisonError::into_inner).clone() else {
@@ -3099,6 +3163,11 @@ mod native_actor {
         }
 
         #[cfg(test)]
+        pub(super) async fn handle_test_cmd(&mut self, message: ArtifactActorMsg) -> bool {
+            self.handle_cmd(message).await
+        }
+
+        #[cfg(test)]
         pub(super) fn inject_bootstrap_local_replay_failure(&mut self) {
             self.fail_bootstrap_local_replay_once = true;
         }
@@ -3214,16 +3283,15 @@ mod native_actor {
             )
         }
 
+        /// 🪙️ Command-lane credit-based flow control: no client-side backpressure
+        /// implemented this wave (scope is frame plumbing, not congestion control) —
+        /// accepted and ignored.
         async fn on_hub_frame(&mut self, frame: ServerFrame) {
             match frame {
                 ServerFrame::Welcome { session_id: _, resume_token, server_frontier, bootstrap } => {
                     self.requeue_pending_batches();
                     match bootstrap {
                         Bootstrap::None => {
-                            if self.artifact_rebootstrap_required {
-                                self.fail_artifact_bootstrap("artifact rebootstrap returned no canonical pair").await;
-                                return;
-                            }
                             self.abort_artifact_bootstrap();
                             self.resume_token = Some(resume_token);
                             self.server_frontier = Some(server_frontier);
@@ -3231,10 +3299,6 @@ mod native_actor {
                             self.flush_outbox().await;
                         }
                         Bootstrap::Tail => {
-                            if self.artifact_rebootstrap_required {
-                                self.fail_artifact_bootstrap("artifact rebootstrap returned tail without a canonical pair").await;
-                                return;
-                            }
                             self.abort_artifact_bootstrap();
                             self.pending_resume_token = Some(resume_token);
                             self.required_tail_frontier = Some(server_frontier);
@@ -3244,7 +3308,6 @@ mod native_actor {
                             self.fail_artifact_bootstrap("database-private snapshot cannot seed an artifact client").await;
                         }
                         Bootstrap::ArtifactBootstrap(bootstrap) => {
-                            self.artifact_rebootstrap_required = false;
                             self.start_artifact_bootstrap(*bootstrap, resume_token, server_frontier).await;
                         }
                     }
@@ -3256,7 +3319,7 @@ mod native_actor {
                     if control.document_id != self.document_id || self.hub_space_id.as_deref() != Some(control.space_id.as_str()) || control.baseline_frontier.document_id.0 != self.document_id {
                         self.fail_artifact_bootstrap("rebootstrap control scope mismatch").await;
                     } else {
-                        self.require_artifact_rebootstrap().await;
+                        self.require_artifact_rebootstrap(rebootstrap_control(&control)).await;
                     }
                 }
                 ServerFrame::ArtifactBootstrapChunk { descriptor_hash, index, bytes } => {
@@ -3342,9 +3405,6 @@ mod native_actor {
                     self.flush_outbox().await;
                 }
                 ServerFrame::CreditGrant { .. } => {
-                    // 🪙️ Command-lane credit-based flow control: no client-side backpressure
-                    // implemented this wave (scope is frame plumbing, not congestion control) —
-                    // accepted and ignored.
                 }
                 ServerFrame::Error { code, message } => {
                     self.emit(ArtifactEvent::Conflict(MutationMessage { level: crate::os_dsl::Severity::Error, code: crate::os_dsl::FaultCode::new(code), message, target: vec![self.hub_base_url.clone().unwrap_or_default()], op_index: None }));
@@ -3352,7 +3412,7 @@ mod native_actor {
             }
         }
 
-        /// @emoji 📮️ Resolves one outbound `Commands` batch's terminal `Applied` stage: `Accepted`
+        /// 📮️ Resolves one outbound `Commands` batch's terminal `Applied` stage: `Accepted`
         /// just clears the pending batch; `Transformed`/`Rejected` both roll back the speculative
         /// local head first (via {@link rollback_envelope}, replayed as remote operations), and
         /// `Transformed` then delivers the semio_hub's replacement envelope the same way.
@@ -3448,7 +3508,7 @@ mod native_actor {
         //#endregion 🔖️Hub
 
         //#region 🔖️Deliver
-        /// @emoji 🕸️ Pushes remote operations into the store's inbound queue and notifies subscribers.
+        /// 🕸️ Pushes remote operations into the store's inbound queue and notifies subscribers.
         async fn deliver_remote_operations(&mut self, envelopes: Vec<MutationEnvelope>) -> bool {
             if envelopes.is_empty() {
                 return true;
@@ -3468,7 +3528,7 @@ mod native_actor {
             true
         }
 
-        /// @emoji 🗃️ Publishes a replaced recursive archive. An external rewrite that LOST events cannot be
+        /// 🗃️ Publishes a replaced recursive archive. An external rewrite that LOST events cannot be
         /// expressed as new events, so it is a document replacement: the host reloads the store from
         /// the archive by replaying its events — nothing is pushed into (or merged by) the live store.
         async fn deliver_archive(&mut self, bytes: Vec<u8>) {
@@ -3509,7 +3569,7 @@ mod native_actor {
         //#endregion 🔖️Deliver
     }
 
-    /// @emoji 🔀️ A binding path with a file extension addresses one document's text blob directly
+    /// 🔀️ A binding path with a file extension addresses one document's text blob directly
     /// (`Text`, generalizing the deleted single-file `FileJsonStorage` beyond `.json`); an extensionless
     /// directory path is the canonical multi-document append-only store (`EventLog`).
     async fn build_folder_endpoint(path: &Path, document_id: &str, schema: &str) -> FolderEndpoint {
@@ -3522,7 +3582,7 @@ mod native_actor {
         }
     }
 
-    /// @emoji 📍️ The on-disk path a folder binding writes to: the `<document_id>.<extension>` text blob
+    /// 📍️ The on-disk path a folder binding writes to: the `<document_id>.<extension>` text blob
     /// itself, or the multi-document sqlite db under `<folder>/.semio/documents.db`.
     async fn folder_watch_path_for(path: &Path) -> PathBuf {
         if path.extension().is_some() {
@@ -3532,7 +3592,7 @@ mod native_actor {
         }
     }
 
-    /// @emoji 👁️ Creates the owned non-recursive watcher; its first probe establishes a
+    /// 👁️ Creates the owned non-recursive watcher; its first probe establishes a
     /// baseline and later snapshots feed the actor's existing 200 ms debounce.
     fn install_watcher(watch_path: &Path, pool: Arc<semio_framework_async::WorkerPool>, readiness: Arc<dyn Fn() + Send + Sync>) -> semio_framework_os_services::OwnedFileChangeWatcher {
         semio_framework_os_services::OwnedFileChangeWatcher::new(watch_path, pool, readiness)
@@ -3819,6 +3879,9 @@ mod native_actor {
             });
         }
 
+        /// 🏃️ TurnFault retains the future in `terminal_turn`. Do not `enqueue` a drain job:
+        /// against a shut-down pool that would mint a second `Pool(Shutdown)` terminal_job
+        /// grant and leak mailbox ownership (one-owner-per-grant). Host `close_one` drains.
         fn run_job(self: Arc<Self>) {
             if self.terminal.load(std::sync::atomic::Ordering::Acquire) {
                 self.close_one_terminal_owner();
@@ -3905,9 +3968,6 @@ mod native_actor {
                     *self.terminal_turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(ActorTurnOwner::Future(future));
                     self.begin_terminal(ArtifactActorTerminalReason::TurnFault);
                     self.scheduled.store(false, std::sync::atomic::Ordering::Release);
-                    // TurnFault retains the future in `terminal_turn`. Do not `enqueue` a drain job:
-                    // against a shut-down pool that would mint a second `Pool(Shutdown)` terminal_job
-                    // grant and leak mailbox ownership (one-owner-per-grant). Host `close_one` drains.
                 }
             }
         }
@@ -4080,7 +4140,7 @@ mod native_actor {
             .clone()
     }
 
-    /// @emoji 🚀️ Creates one finite-turn actor on the process WorkerPool. Tokio remains only the
+    /// 🚀️ Creates one finite-turn actor on the process WorkerPool. Tokio remains only the
     /// platform I/O reactor ([`document_socket_io_reactor`]); it never owns an actor or timer thread.
     pub(super) async fn spawn_actor(
         pool: Arc<semio_framework_async::WorkerPool>,
@@ -4158,7 +4218,7 @@ pub use native_actor::{ArtifactActorRunnerHandle, ArtifactActorRunnerTicket, Art
 //#endregion 🔖️NativeActor
 
 //#region 🔖️WasmActor
-/// @emoji 🌐️ Browser wgpu build: the document actor runs on the isolate's own executor and reaches its
+/// 🌐️ Browser wgpu build: the document actor runs on the isolate's own executor and reaches its
 /// hub through the same `semio.session.v1` admission the native actor uses (open plan → plan-bound socket
 /// grant → one socket whose single subprotocol value carries the session capability), over the socket
 /// the host's injected [`DocumentSocketDialer`] opens. No filesystem, so a folder binding is never
@@ -4264,7 +4324,7 @@ mod wasm_actor {
         socket_actor: Option<String>,
         socket_actor_confirmed: bool,
         socket_authority: Option<crate::os_directory::client::DocumentSocketAuthorityV1>,
-        /// @emoji 🎨️ See the native actor's matching field — same role, browser side.
+        /// 🎨️ See the native actor's matching field — same role, browser side.
         session_color: Option<u8>,
         server_frontier: Option<RuntimeFrontierSummary>,
         resume_token: Option<String>,
@@ -4274,7 +4334,7 @@ mod wasm_actor {
         artifact_bootstrap: Option<PendingWasmArtifactBootstrap>,
         pending_batches: std::collections::HashMap<u64, Vec<MutationEnvelope>>,
         outbox: Vec<MutationEnvelope>,
-        /// @emoji 🔁️ Every operation id this replica authored or applied — the echo filter ([`admit_remote_envelopes`]).
+        /// 🔁️ Every operation id this replica authored or applied — the echo filter ([`admit_remote_envelopes`]).
         applied_op_ids: std::collections::HashSet<String>,
         document_backbone_retention: DocumentBackboneRetentionV1,
         next_batch_id: u64,
@@ -4317,7 +4377,7 @@ mod wasm_actor {
         /// is dialed until credential, grant source, dialer, replica seed and kind identity all exist.
         async fn connect(&mut self) {
             let Some(base_url) = self.hub_base_url.clone() else { return };
-            if self.socket.is_some() || self.operation_cancel.is_cancelled_now() || !self.link.retry_due(wall_ms()) {
+            if self.artifact_rebootstrap_required || self.socket.is_some() || self.operation_cancel.is_cancelled_now() || !self.link.retry_due(wall_ms()) {
                 return;
             }
             let credential = self.credential.read().unwrap_or_else(std::sync::PoisonError::into_inner).clone();
@@ -4495,7 +4555,7 @@ mod wasm_actor {
         //#endregion 🔖️Connect
 
         //#region 🔖️Relay
-        /// @emoji 🧺️ Builds + sends `Commands` batches under the hub-issued socket actor, tracking each in
+        /// 🧺️ Builds + sends `Commands` batches under the hub-issued socket actor, tracking each in
         /// `pending_batches` for {@link WasmActor::handle_ack}. Mirrors the native `relay_operations_to_hub`:
         /// nothing leaves before the hub confirmed the socket actor and every catch-up completed. A batch
         /// whose frame exceeds the socket's own ceiling is halved until it fits; one envelope that can never
@@ -4596,6 +4656,7 @@ mod wasm_actor {
                 ArtifactActorMsg::PublishPreview { key, seq, payload } => {
                     self.send_frame(&ClientFrame::PreviewPublish { key, seq, payload }, Lane::Preview).await;
                 }
+                ArtifactActorMsg::Reseed { baseline, .. } => self.reseed_hub_document(baseline),
                 ArtifactActorMsg::ExternalChanged | ArtifactActorMsg::Detach => {}
             }
         }
@@ -4652,16 +4713,30 @@ mod wasm_actor {
             self.disconnect();
         }
 
-        /// ♻️ Hub lag forces a canonical pair refresh: keep unacked work queued, clear the projection
-        /// tokens and reconnect — the native `require_artifact_rebootstrap`.
-        fn require_artifact_rebootstrap(&mut self) {
+        /// ♻️ Hub lag forces a canonical pair refresh: keep unacked work queued, clear the projection tokens, drop the socket
+        /// and ask the host for the pair — the native `require_artifact_rebootstrap`; no dial until the host's reseed.
+        fn require_artifact_rebootstrap(&mut self, control: crate::os_directory::RebootstrapRequired) {
             self.requeue_pending_batches();
             self.abort_artifact_bootstrap();
             self.server_frontier = None;
             self.resume_token = None;
             self.artifact_rebootstrap_required = true;
             self.close_socket();
-            self.schedule_reconnect();
+            self.set_remote_state(RemoteState::Connecting);
+            let _ = self.events.send(ArtifactEvent::RebootstrapRequired { control });
+        }
+
+        /// 🛟️ The browser twin of the native reseed: the pair's baseline is the next Hello's frontier, the unacked local
+        /// operations go back to the guest, and the next turn dials at once.
+        fn reseed_hub_document(&mut self, baseline: crate::os_directory::ArtifactFrontier) {
+            if !self.artifact_rebootstrap_required {
+                return;
+            }
+            self.server_frontier = Some(canonical_pair_baseline(&baseline));
+            if !self.outbox.is_empty() {
+                let _ = self.events.send(ArtifactEvent::RemoteMutations { envelopes: self.outbox.clone() });
+            }
+            self.artifact_rebootstrap_required = false;
         }
 
         async fn finish_catchup_if_ready(&mut self) {
@@ -4773,10 +4848,6 @@ mod wasm_actor {
                     self.requeue_pending_batches();
                     match bootstrap {
                         Bootstrap::None => {
-                            if self.artifact_rebootstrap_required {
-                                self.fail_artifact_bootstrap("artifact rebootstrap returned no canonical pair");
-                                return;
-                            }
                             self.abort_artifact_bootstrap();
                             self.resume_token = Some(resume_token);
                             self.server_frontier = Some(server_frontier);
@@ -4784,10 +4855,6 @@ mod wasm_actor {
                             self.flush_outbox().await;
                         }
                         Bootstrap::Tail => {
-                            if self.artifact_rebootstrap_required {
-                                self.fail_artifact_bootstrap("artifact rebootstrap returned tail without a canonical pair");
-                                return;
-                            }
                             self.abort_artifact_bootstrap();
                             self.pending_resume_token = Some(resume_token);
                             self.required_tail_frontier = Some(server_frontier);
@@ -4795,7 +4862,6 @@ mod wasm_actor {
                         }
                         Bootstrap::Snapshot { .. } => self.fail_artifact_bootstrap("database-private snapshot cannot seed an artifact client"),
                         Bootstrap::ArtifactBootstrap(bootstrap) => {
-                            self.artifact_rebootstrap_required = false;
                             self.start_artifact_bootstrap(*bootstrap, resume_token, server_frontier).await;
                         }
                     }
@@ -4805,7 +4871,7 @@ mod wasm_actor {
                     if control.document_id != self.document_id || self.hub_space_id.as_deref() != Some(control.space_id.as_str()) || control.baseline_frontier.document_id.0 != self.document_id {
                         self.fail_artifact_bootstrap("rebootstrap control scope mismatch");
                     } else {
-                        self.require_artifact_rebootstrap();
+                        self.require_artifact_rebootstrap(rebootstrap_control(&control));
                     }
                 }
                 ServerFrame::ArtifactBootstrapChunk { descriptor_hash, index, bytes } => {
@@ -4898,7 +4964,7 @@ mod wasm_actor {
             }
         }
 
-        /// @emoji 📮️ Mirrors the native actor's `handle_ack` — see its doc comment.
+        /// 📮️ Mirrors the native actor's `handle_ack` — see its doc comment.
         async fn handle_ack(&mut self, batch_id: u64, stages: Vec<AckStage>) {
             for stage in stages {
                 let AckStage::Applied { outcome } = stage else { continue };
@@ -5041,7 +5107,7 @@ use wasm_actor::spawn_actor;
 //#endregion 🔖️WasmActor
 
 //#region 🔖️Fixtures
-/// @emoji 🎬️ A scripted actor test vector shared by cargo test (here) and vitest (WS-E's TS twin).
+/// 🎬️ A scripted actor test vector shared by cargo test (here) and vitest (WS-E's TS twin).
 /// Each fixture drives inbound events at a document actor and asserts the resulting `ArtifactEvent`
 /// sequence and the final persisted envelope edit ids. See `framework/sync/fixtures/README.md`.
 #[derive(Clone, Debug)]
@@ -5049,35 +5115,35 @@ pub struct ActorFixture {
     pub name: String,
     pub schema: String,
     pub document_id: String,
-    /// @emoji 📥️ Inbound stimulus applied to the actor, in order.
+    /// 📥️ Inbound stimulus applied to the actor, in order.
     pub inbound: Vec<FixtureInbound>,
-    /// @emoji 📤️ The `ArtifactEvent` variant tags expected on the subscriber channel, in order.
+    /// 📤️ The `ArtifactEvent` variant tags expected on the subscriber channel, in order.
     pub expected_events: Vec<String>,
-    /// @emoji 📇️ Edit ids expected in the document's timeline after replay.
+    /// 📇️ Edit ids expected in the document's timeline after replay.
     pub expected_edit_ids: Vec<String>,
 }
 
-/// @emoji 📥️ One scripted inbound stimulus: either a semio_hub server frame or an external folder edit.
+/// 📥️ One scripted inbound stimulus: either a semio_hub server frame or an external folder edit.
 /// Document/op CONTENT lives in sibling text files (never JSON) — this is the LOADED shape
 /// (content already read off disk); see `RawFixtureInbound` for the on-disk manifest shape that
 /// only references filenames.
 #[derive(Clone, Debug)]
 pub enum FixtureInbound {
-    /// @emoji 📬️ A raw `crate::os_spr::wire::ServerFrame`'s encoded bytes (`crate::os_spr::encode_server_frame`
+    /// 📬️ A raw `crate::os_spr::wire::ServerFrame`'s encoded bytes (`crate::os_spr::encode_server_frame`
     /// output, `lane` byte included), delivered as if received over the semio_hub WebSocket — already
     /// real binary, not document/op content, so it stays inline in the manifest as a JSON number
     /// array. Driven by `🏪️store/👷️worker/🟦️.ts`'s TS fallback vitest harness (which decodes these
     /// bytes with its own binary decoder); the folder-only Rust harness skips these.
     HubFrame { frame_bytes: Vec<u8> },
-    /// @emoji 📁️ An external folder edit: `.ops`-grammar text (one or more `edit ...` blocks) to
+    /// 📁️ An external folder edit: `.ops`-grammar text (one or more `edit ...` blocks) to
     /// append to the spr log out-of-band.
     ExternalEdits { ops_text: String },
-    /// @emoji ♻️ An external whole-document rewrite (divergent history): dsl + ops text compiled
+    /// ♻️ An external whole-document rewrite (divergent history): dsl + ops text compiled
     /// via `codec.compile_dsl` and written in place of the stored document.
     ReplaceDocument { dsl_text: String, ops_text: String },
 }
 
-/// @emoji 📄️ The on-disk manifest shape: `kind`-tagged like `FixtureInbound`, but content-bearing
+/// 📄️ The on-disk manifest shape: `kind`-tagged like `FixtureInbound`, but content-bearing
 /// variants reference a sibling filename (relative to the fixture's own directory) instead of
 /// carrying the text inline — `load_fixtures` resolves these into real `FixtureInbound`s.
 #[derive(Clone, Debug, ToValue, FromValue)]
@@ -5162,7 +5228,7 @@ async fn parse_fixture_dsl_manifest(text: &str) -> Option<FixtureManifest> {
     Some(FixtureManifest { name: name?, schema: schema?, document_id: document_id?, inbound, expected_events, expected_edit_ids })
 }
 
-/// @emoji 📂️ Loads every `<name>/🔣️fixture.dsl` manifest directory under `dir`, resolving each
+/// 📂️ Loads every `<name>/🔣️fixture.dsl` manifest directory under `dir`, resolving each
 /// content-bearing inbound entry against its sibling text file. A fixture whose manifest or
 /// any referenced file is missing/unreadable is skipped (never a partial/silently-wrong fixture).
 #[cfg(not(target_arch = "wasm32"))]
@@ -5203,7 +5269,7 @@ pub async fn load_fixtures(dir: &std::path::Path) -> Vec<ActorFixture> {
 //#endregion 🔖️Fixtures
 
 //#region 🔖️FolderStorage
-/// @emoji 📜️ Owned append-only folder event log. Documents are written as indivisible
+/// 📜️ Owned append-only folder event log. Documents are written as indivisible
 /// `(schema, pack, spr)` snapshot events; blobs are content-addressed put/delete events. Reads fold
 /// the log deterministically, so persistence follows the repo's event-sourced model without a CRUD
 /// database. Every record is length-delimited and checksummed; an incomplete final record from a
@@ -5410,28 +5476,28 @@ impl FolderEventLogStorage {
         Ok(events)
     }
 
-    /// @emoji 📖️ Folds the latest stored `(pack, spr)` event for `document_id`.
+    /// 📖️ Folds the latest stored `(pack, spr)` event for `document_id`.
     pub async fn read(&self, document_id: &str) -> Result<Option<(Vec<u8>, Vec<u8>)>, vcs::VcsError> {
         Ok(self.events()?.into_iter().rev().find(|event| event.kind == DOCUMENT_PUT_EVENT && event.key == document_id).map(|event| (event.primary, event.secondary)))
     }
 
-    /// @emoji ✍️ Appends an indivisible document snapshot event.
+    /// ✍️ Appends an indivisible document snapshot event.
     pub async fn write(&self, document_id: &str, schema: &str, pack: &[u8], spr: &[u8]) -> Result<(), vcs::VcsError> {
         self.append(&FolderEvent { kind: DOCUMENT_PUT_EVENT, updated_at_ms: now_ms().await, key: document_id.into(), metadata: schema.into(), primary: pack.into(), secondary: spr.into() })
     }
 
-    /// @emoji 🗃️ Folds the latest exact recursive archive for `document_id`.
+    /// 🗃️ Folds the latest exact recursive archive for `document_id`.
     pub async fn read_archive(&self, document_id: &str) -> Result<Option<Vec<u8>>, vcs::VcsError> {
         Ok(self.events()?.into_iter().rev().find(|event| event.kind == DOCUMENT_ARCHIVE_PUT_EVENT && event.key == document_id).map(|event| event.primary))
     }
 
-    /// @emoji 🗃️ Appends one indivisible recursive-document archive event.
+    /// 🗃️ Appends one indivisible recursive-document archive event.
     pub async fn write_archive(&self, document_id: &str, schema: &str, archive: &[u8]) -> Result<(), vcs::VcsError> {
         crate::os_spr::decode_document_archive_bytes(archive).await.map_err(|error| vcs::VcsError::Backbone(error.to_string()))?;
         self.append(&FolderEvent { kind: DOCUMENT_ARCHIVE_PUT_EVENT, updated_at_ms: now_ms().await, key: document_id.into(), metadata: schema.into(), primary: archive.into(), secondary: Vec::new() })
     }
 
-    /// @emoji 📇️ Lists latest document events in newest-write-first order.
+    /// 📇️ Lists latest document events in newest-write-first order.
     pub async fn document_ids(&self) -> Result<Vec<String>, vcs::VcsError> {
         let mut latest = std::collections::HashMap::<String, u64>::new();
         for event in self.events()? {
@@ -5445,7 +5511,7 @@ impl FolderEventLogStorage {
     }
 }
 
-/// @emoji 🗃️ Textual persistence for one folder of documents: `<id>.<ext>` holds the DSL text (initial
+/// 🗃️ Textual persistence for one folder of documents: `<id>.<ext>` holds the DSL text (initial
 /// snapshot), `<id>.<ext>.ops` holds the append-only op log (see `crate::os_store::print_document_text`/
 /// `crate::os_store::parse_document_text`). No `Backbone` impl: like `FolderEventLogStorage` above, this actor
 /// layer drives it from its own thread; this crate only owns the file format. Additive alongside the
@@ -5471,22 +5537,22 @@ impl FolderTextStorage {
         self.folder.join(crate::os_store::semio_format::semio_filename(document_id, envelope_id, crate::os_store::semio_format::Component::Op))
     }
 
-    /// @emoji 🏷️ Path of the authoritative binary pack file.
+    /// 🏷️ Path of the authoritative binary pack file.
     pub async fn pack_path(&self, document_id: &str, envelope_id: &str) -> std::path::PathBuf {
         self.folder.join(crate::os_store::semio_format::semio_filename(document_id, envelope_id, crate::os_store::semio_format::Component::Pack))
     }
 
-    /// @emoji 🏷️ Path of the authoritative binary op-log file.
+    /// 🏷️ Path of the authoritative binary op-log file.
     pub async fn spr_path(&self, document_id: &str, envelope_id: &str) -> std::path::PathBuf {
         self.folder.join(crate::os_store::semio_format::semio_filename(document_id, envelope_id, crate::os_store::semio_format::Component::Spr))
     }
 
-    /// @emoji 🗃️ Path of the authoritative recursive-document archive.
+    /// 🗃️ Path of the authoritative recursive-document archive.
     pub async fn archive_path(&self, document_id: &str, envelope_id: &str) -> std::path::PathBuf {
         self.folder.join(format!("{document_id}.{envelope_id}.archive.semio"))
     }
 
-    /// @emoji 🗃️ Reads one exact recursive-document archive, or `None` when none was persisted.
+    /// 🗃️ Reads one exact recursive-document archive, or `None` when none was persisted.
     pub async fn read_archive(&self, document_id: &str, envelope_id: &str) -> Result<Option<Vec<u8>>, vcs::VcsError> {
         let bytes = match std::fs::read(self.archive_path(document_id, envelope_id).await) {
             Ok(bytes) => bytes,
@@ -5497,7 +5563,7 @@ impl FolderTextStorage {
         Ok(Some(bytes))
     }
 
-    /// @emoji 🗃️ Publishes derived root mirrors before atomically replacing archive authority.
+    /// 🗃️ Publishes derived root mirrors before atomically replacing archive authority.
     pub async fn write_archive(&self, document_id: &str, envelope_id: &str, archive: &[u8], files: &ArtifactPackFiles, dsl_mirror: &str) -> Result<(), vcs::VcsError> {
         crate::os_spr::decode_document_archive_bytes(archive).await.map_err(|error| vcs::VcsError::Backbone(error.to_string()))?;
         std::fs::create_dir_all(&self.folder).map_err(|error| vcs::VcsError::Backbone(error.to_string()))?;
@@ -5515,7 +5581,7 @@ impl FolderTextStorage {
         Ok(())
     }
 
-    /// @emoji 📖️ Reads both files for `document_id`, or `None` if the DSL file does not exist yet.
+    /// 📖️ Reads both files for `document_id`, or `None` if the DSL file does not exist yet.
     pub async fn read(&self, document_id: &str, envelope_id: &str) -> Result<Option<ArtifactTextFiles>, vcs::VcsError> {
         let dsl = match std::fs::read_to_string(self.dsl_path(document_id, envelope_id).await) {
             Ok(text) => text,
@@ -5530,7 +5596,7 @@ impl FolderTextStorage {
         Ok(Some(ArtifactTextFiles { dsl, ops }))
     }
 
-    /// @emoji ✍️ Overwrites both files wholesale — the structural-command cold path (undo/redo/
+    /// ✍️ Overwrites both files wholesale — the structural-command cold path (undo/redo/
     /// checkpoint/alternative).
     pub async fn write(&self, document_id: &str, envelope_id: &str, files: &ArtifactTextFiles) -> Result<(), vcs::VcsError> {
         std::fs::create_dir_all(&self.folder).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
@@ -5538,7 +5604,7 @@ impl FolderTextStorage {
         std::fs::write(self.ops_path(document_id, envelope_id).await, &files.ops).map_err(|e| vcs::VcsError::Backbone(e.to_string()))
     }
 
-    /// @emoji 📖️ pack+spr-first read: reads the AUTHORITATIVE pair for `document_id`, or `None` if
+    /// 📖️ pack+spr-first read: reads the AUTHORITATIVE pair for `document_id`, or `None` if
     /// the `.pack` file itself doesn't exist (unlike `read`, the DSL mirror's existence alone
     /// doesn't count — pack+spr are authoritative per the disk-layout LAW, the DSL file is
     /// import-only). A present `.pack` with a missing `.spr` is a hard error — no legacy: they are
@@ -5565,7 +5631,7 @@ impl FolderTextStorage {
         Ok(Some(ArtifactPackFiles { pack, spr, ops }))
     }
 
-    /// @emoji ✍️ Overwrites all four files: the AUTHORITATIVE `.pack` + `.spr` pair, the shared
+    /// ✍️ Overwrites all four files: the AUTHORITATIVE `.pack` + `.spr` pair, the shared
     /// `.ops` text mirror, and the always-written DSL mirror `dsl_mirror` (`print_dsl` on the
     /// initial snapshot) — the pack-aware sibling of `write`.
     pub async fn write_pack(&self, document_id: &str, envelope_id: &str, files: &ArtifactPackFiles, dsl_mirror: &str) -> Result<(), vcs::VcsError> {
@@ -5576,7 +5642,7 @@ impl FolderTextStorage {
         std::fs::write(self.dsl_path(document_id, envelope_id).await, dsl_mirror).map_err(|e| vcs::VcsError::Backbone(e.to_string()))
     }
 
-    /// @emoji ➕️ Appends already-printed op-log lines (one complete {@link print_edit_lines} unit:
+    /// ➕️ Appends already-printed op-log lines (one complete {@link print_edit_lines} unit:
     /// edit + inverse + metadata) to the `.ops` file without rewriting it — O(new edit).
     pub async fn append_ops(&self, document_id: &str, envelope_id: &str, lines: &str) -> Result<(), vcs::VcsError> {
         use std::io::Write;
@@ -5585,7 +5651,7 @@ impl FolderTextStorage {
         file.write_all(lines.as_bytes()).map_err(|e| vcs::VcsError::Backbone(e.to_string()))
     }
 
-    /// @emoji 📇️ Lists every stored document id (by DSL `.semio` file stem) for a given envelope id.
+    /// 📇️ Lists every stored document id (by DSL `.semio` file stem) for a given envelope id.
     pub async fn document_ids(&self, envelope_id: &str) -> Result<Vec<String>, vcs::VcsError> {
         let suffix = format!(".{envelope_id}.dsl.semio");
         let entries = match std::fs::read_dir(&self.folder) {
@@ -5609,7 +5675,7 @@ impl FolderTextStorage {
 
 //#region 🔖️BlobStoreImpl
 
-/// @emoji 🗄️ Content-addressed blob events in [`FolderEventLogStorage`].
+/// 🗄️ Content-addressed blob events in [`FolderEventLogStorage`].
 #[cfg(not(target_arch = "wasm32"))]
 impl crate::os_store::BlobStore for FolderEventLogStorage {
     async fn put(&self, bytes: &[u8], media_type: &str) -> Result<crate::os_store::BlobRef, vcs::VcsError> {

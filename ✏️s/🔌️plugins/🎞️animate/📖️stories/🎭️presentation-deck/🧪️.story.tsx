@@ -22,7 +22,7 @@ import "@semio-tech/animate-js/globals.css";
 // #endregion 🔌️Adapters
 
 // #region 🎬️StoryDeckFixture
-/** @emoji 🎬️ One title/body text slide, unique embodiment ids per slide so each carries its own copy. */
+/** 🎬️ One title/body text slide, unique embodiment ids per slide so each carries its own copy. */
 function textSlide(slideIndex: number, headingLines: readonly string[], bodyLines: readonly string[], headingLevel: "title" | "heading" = "heading"): Slide {
   return {
     arrangement: {
@@ -40,7 +40,7 @@ function textSlide(slideIndex: number, headingLines: readonly string[], bodyLine
   };
 }
 
-/** @emoji 🎬️ 3-slide deck: title, a feature slide, a closing slide — one chapter/sequence/thought. */
+/** 🎬️ 3-slide deck: title, a feature slide, a closing slide — one chapter/sequence/thought. */
 const storyPresentation: Presentation = {
   id: "storybook-deck",
   name: "Storybook Deck",
@@ -79,7 +79,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** @emoji 🎬️ 3-slide reveal.js deck — arrow keys / space to navigate, no URL hash sync inside Storybook. */
+/** 🎬️ 3-slide reveal.js deck — arrow keys / space to navigate, no URL hash sync inside Storybook. */
 export const ThreeSlideDeck: Story = {
   args: {
     presentation: storyPresentation,

@@ -863,7 +863,7 @@ impl<I: ServerInstance> ServerState<I> {
         Ok(authority.store().events_since(actor, since).await?)
     }
 
-    /// @emoji 🚰️ Hand up to `limit` committed outbox rows to this instance's workflows and run every
+    /// 🚰️ Hand up to `limit` committed outbox rows to this instance's workflows and run every
     /// follow-up command as its own turn, returning what each turn answered.
     ///
     /// The two halves are deliberately one call. A drain that only *returned* commands would leave

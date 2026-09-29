@@ -10,38 +10,38 @@ import { cn } from "../🏷️class-name-composition/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🌀️StatusBorderPresentation
-/** @emoji 🌀️ Dashed waiting border. */
+/** 🌀️ Dashed waiting border. */
 export const waitingBorderClass = "border-waiting";
 
-/** @emoji 🌀️ Active waiting border. */
+/** 🌀️ Active waiting border. */
 export const waitingBorderActiveClass = cn(waitingBorderClass, "border-waiting-active");
 
-/** @emoji 🌀️ Spinning loading border. */
+/** 🌀️ Spinning loading border. */
 export const loadingBorderClass = "border-loading";
 
-/** @emoji 🌀️ Active loading border. */
+/** 🌀️ Active loading border. */
 export const loadingBorderActiveClass = cn(loadingBorderClass, "border-loading-active");
 
-/** @emoji 🌀️ Waiting border selected from state. */
+/** 🌀️ Waiting border selected from state. */
 export function waitingBorderStateClass(waiting: boolean, active = false): string {
   return waiting ? (active ? waitingBorderActiveClass : waitingBorderClass) : "";
 }
 
-/** @emoji 🌀️ Loading border selected from state. */
+/** 🌀️ Loading border selected from state. */
 export function loadingBorderStateClass(loading: boolean, active = false): string {
   return loading ? (active ? loadingBorderActiveClass : loadingBorderClass) : "";
 }
 
-/** @emoji 🌀️ Chrome status mapped to its border presentation. */
+/** 🌀️ Chrome status mapped to its border presentation. */
 export function chromeStatusBorderClass(status: UiStatus | undefined, active = false): string {
   if (status === "loading") return loadingBorderStateClass(true, active);
   if (status === "waiting") return waitingBorderStateClass(true, active);
   return "";
 }
 
-/** @emoji 🌀️ Loading border in the level-aware element color. */
+/** 🌀️ Loading border in the level-aware element color. */
 export const loadingBorderElementClass = cn(loadingBorderClass, "border-loading-element");
 
-/** @emoji 🌀️ Waiting border in the level-aware element color. */
+/** 🌀️ Waiting border in the level-aware element color. */
 export const waitingBorderElementClass = cn(waitingBorderClass, "border-waiting-element");
 // #endregion 🌀️StatusBorderPresentation

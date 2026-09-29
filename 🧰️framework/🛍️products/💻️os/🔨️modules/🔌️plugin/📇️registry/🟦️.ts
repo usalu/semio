@@ -1,5 +1,5 @@
 // #region 🗂️PluginCatalog
-/** @emoji 🗂️ `@semio-tech/framework-os` plugin package — builds the framework kernel's injected
+/** 🗂️ `@semio-tech/framework-os` plugin package — builds the framework kernel's injected
  * `PluginCatalog` from this product's generated plugin/playground registry output
  * (`📇️registry/🤖️generated/🧩️plugins/🟦️.ts` + `🤖️generated/🎮️playgrounds/🟦️.ts`). This is the ONE place in
  * the codebase allowed to import that generated output on the kernel's behalf — the generic

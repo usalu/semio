@@ -12,11 +12,13 @@ impl FormsChildOwnerOracle for SerdeJsonFormsChildOwnerOracle {
     }
 }
 
+/// 🪪️ `artifact_kind().schema` IS `FORMS_DOCUMENT_SCHEMA`: a document kind has ONE schema identity — the hub's codec rows, document-open targets and genesis, the MCP workspace
+/// store and host-media contributions all key on it (ticket 26/09/23 W4: a distinct "media schema" left the package without a
+/// codec owner, so the trusted catalog refused it). The former media string stays declared as `source_format`.
 #[semio_framework_async_macros::async_test]
-async fn artifact_kind_uses_the_dictionary_media_kind_as_both_id_and_schema() {
-    assert_eq!(artifact_kind().id, "form.dictionary");
-    assert_eq!(artifact_kind().schema, "form.dictionary");
-    assert_eq!(FORMS_DOCUMENT_SCHEMA, "forms.form");
+async fn artifact_kind_names_the_store_schema() {
+    assert_eq!(artifact_kind().schema, FORMS_DOCUMENT_SCHEMA);
+    assert_eq!(artifact_kind().source_format, "form.dictionary");
 }
 
 #[semio_framework_async_macros::async_test]

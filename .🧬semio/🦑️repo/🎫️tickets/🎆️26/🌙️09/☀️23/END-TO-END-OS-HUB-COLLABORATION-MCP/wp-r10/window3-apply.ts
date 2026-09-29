@@ -13,11 +13,15 @@
  *   seed       curated launch rows (`seedRows`), row edits (`seedRowEdits`, `seedTextEdits`) in `.vscode/🧩️launch.seed.jsonc`
  *   render     `.vscode/launch.json` rendered by the registry's own generator (never hand-spliced)
  *   plan       goal-plan checks (`planChecks`) into the acceptance plan
+ *   st2-r10    ST2's per-family stdio set, R10's part (`wp-st2/st2-apply.py --part r10`: taxonomy rows, project manifests,
+ *              launch seed/json, `🧩️composition` → `🏘️composition`): every edited file backed up, the new files and the move
+ *              recorded in the backup's `.r10-manifest.json` so `revert st2-r10` deletes and moves them back
  *   revert     `revert <step> --apply` restores the files the newest applied run of that step changed
- * Every applied write keeps the file's previous bytes under `generated/window3-backups/<step>-<time>/`.
+ * Every applied write keeps the file's previous bytes under `<STATE>/window3-backups/<step>-<time>/`; every input and output
+ * (kinds probes, candidate, previews) lives in STATE = `.🧬semio/🌐hub/s14-r10-state/` (gitignored ticket dirs are swept).
  * Usage: bun window3-apply.ts <step> [--apply]
  */
-import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
 const ROOT = "/Users/ueli/Documents/semio";
@@ -28,7 +32,9 @@ const LAUNCH = join(ROOT, ".vscode/launch.json");
 const PLAN = join(ROOT, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/🎚️config/🔣️.json");
 const LAW = join(ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🚀️launch/🟦️.ts");
 const DISCOVERY_PATCH = join(ROOT, ".tmp-ticket/wp-r9/launch-manifest-inputs.discovery.patch");
-const KINDS = ["generated/tax-kinds-2.json", "generated/tax-kinds-3.json", "generated/tax-kinds-4.json", "generated/tax-kinds-5.json", "generated/tax-kinds-window3.json", "generated/tax-kinds-planned-1.json"].map((path) => join(HERE, path));
+const STATE = join(ROOT, ".🧬semio/🌐hub/s14-r10-state");
+mkdirSync(STATE, { recursive: true });
+const KINDS = (): string[] => readdirSync(STATE).filter((name) => /^tax-kinds-.*\.json$/u.test(name) && !name.endsWith(".live.json")).sort().map((name) => join(STATE, name));
 
 type Spec = {
   targets: { hold?: string; project: string; projectJson: string; name: string; command: string; forwardAllArgs: boolean; cache: boolean; dependsOn?: string[]; configurations?: Record<string, { args: string }> }[];
@@ -43,7 +49,7 @@ type Spec = {
 const spec = JSON.parse(readFileSync(join(HERE, "window3-spec.json"), "utf8")) as Spec;
 const [step, revertStep] = process.argv.slice(2);
 const apply = process.argv.includes("--apply");
-const BACKUPS = join(HERE, "generated", "window3-backups");
+const BACKUPS = join(STATE, "window3-backups");
 const backupDir = join(BACKUPS, `${step}-${new Date().toISOString().replaceAll(":", "-")}`);
 
 /** 💾️ Writes a live file, first keeping its current bytes under this run's backup directory (`revert <step>` restores
@@ -61,7 +67,17 @@ function stepRevert(): void {
   const newest = readdirSync(BACKUPS).filter((name) => name.startsWith(`${revertStep}-`)).sort().at(-1);
   if (!newest) throw new Error(`no backup of step ${revertStep}`);
   const walk = (dir: string): string[] => readdirSync(dir, { withFileTypes: true }).flatMap((entry) => (entry.isDirectory() ? walk(join(dir, entry.name)) : [join(dir, entry.name)]));
-  for (const kept of walk(join(BACKUPS, newest))) {
+  const manifestPath = join(BACKUPS, newest, ".r10-manifest.json");
+  const manifest = existsSync(manifestPath) ? (JSON.parse(readFileSync(manifestPath, "utf8")) as { created: string[]; moves: [string, string][] }) : { created: [], moves: [] };
+  for (const [from, to] of manifest.moves) {
+    console.log(`move back ${to} → ${from}`);
+    if (apply && existsSync(join(ROOT, to))) renameSync(join(ROOT, to), join(ROOT, from));
+  }
+  for (const created of manifest.created) {
+    console.log(`remove ${created}`);
+    if (apply) rmSync(join(ROOT, created), { force: true });
+  }
+  for (const kept of walk(join(BACKUPS, newest)).filter((path) => path !== manifestPath)) {
     const live = join(ROOT, kept.slice(join(BACKUPS, newest).length + 1));
     console.log(`restore ${live.slice(ROOT.length + 1)}`);
     if (apply) copyFileSync(kept, live);
@@ -89,10 +105,10 @@ function objectEnd(text: string, open: number): number {
 }
 
 function stepTaxonomy(): void {
-  const candidate = join(HERE, "generated/taxonomy.window3.json");
+  const candidate = join(STATE, "taxonomy.window3.json");
   const excluded: string[] = [];
   for (let attempt = 0; ; attempt += 1) {
-    const register = run(["python3", join(HERE, "taxonomy-register.py"), ...KINDS.filter(existsSync), ...excluded.flatMap((name) => ["--exclude", name]), "--base", TAXONOMY, "--out", candidate, "--report", join(HERE, "generated/tax-register-window3.json")]);
+    const register = run(["python3", join(HERE, "taxonomy-register.py"), ...KINDS(), ...excluded.flatMap((name) => ["--exclude", name]), "--base", TAXONOMY, "--out", candidate, "--report", join(STATE, "tax-register-window3.json")]);
     console.log(register.out.trim());
     if (register.code !== 0) throw new Error("taxonomy registration failed");
     const validate = run(["bun", join(HERE, "taxonomy-validate.ts"), candidate]);
@@ -166,7 +182,7 @@ function stepTargets(): void {
     const reparsed = JSON.parse(text) as { targets: Record<string, unknown> };
     for (const target of missing) if (!(target.name in reparsed.targets)) throw new Error(`insertion of ${target.name} failed`);
     if (apply) save(path, text);
-    else writeFileSync(join(HERE, "generated", `preview-${parsed.name.replaceAll("/", "_")}.json`), text);
+    else writeFileSync(join(STATE, `preview-${parsed.name.replaceAll("/", "_")}.json`), text);
   }
 }
 
@@ -236,7 +252,7 @@ function stepSeed(): void {
   text = replaceExactlyOnce(text, (spec.seedTextEdits ?? []).map((edit) => ({ label: `seed row ${edit.row}`, before: edit.before, after: edit.after })));
   Bun.JSONC.parse(text);
   if (apply) save(SEED, text);
-  else writeFileSync(join(HERE, "generated", "preview-launch.seed.jsonc"), text);
+  else writeFileSync(join(STATE, "preview-launch.seed.jsonc"), text);
 }
 
 async function stepRender(): Promise<void> {
@@ -286,7 +302,7 @@ async function stepPlan(): Promise<void> {
     text = `${text.slice(0, close)},\n        ${JSON.stringify(check)}${text.slice(close)}`;
     console.log(`plan check ${check.id}: added to ${stepId}`);
   }
-  const preview = join(HERE, "generated", "preview-plan.json");
+  const preview = join(STATE, "preview-plan.json");
   writeFileSync(preview, text);
   const { readGoalPlan } = await import(`${ROOT}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts`);
   const valid = readGoalPlan(ROOT, preview) as { steps: { checks: unknown[] }[] };
@@ -294,7 +310,26 @@ async function stepPlan(): Promise<void> {
   if (apply) save(PLAN, text);
 }
 
-const steps: Record<string, () => void | Promise<void>> = { taxonomy: stepTaxonomy, discovery: stepDiscovery, targets: () => { stepTargets(); stepProjectEdits(); }, seed: stepSeed, render: stepRender, plan: stepPlan, revert: stepRevert };
+const ST2_APPLY = join(ROOT, ".tmp-ticket/wp-st2/st2-apply.py");
+
+function stepSt2R10(): void {
+  const dry = run(["python3", ST2_APPLY, "--dry-run", "--part", "r10"]);
+  console.log(dry.out.trim());
+  if (dry.code !== 0 || !/dry run — nothing written/u.test(dry.out)) throw new Error("st2-apply --part r10 dry run is not clean");
+  const edits = [...dry.out.matchAll(/^edit\s+(.+?)\s+\+\d+ -\d+$/gmu)].map((match) => match[1]!);
+  const created = [...dry.out.matchAll(/^new\s+(.+?)\s+\d+ lines$/gmu)].map((match) => match[1]!);
+  const moves = [...dry.out.matchAll(/^move\s+(.+?) → (.+?)\s+\(\d+ files\)$/gmu)].map((match) => [match[1]!, match[2]!] as [string, string]);
+  console.log(`st2-r10: ${edits.length} edits, ${created.length} new files, ${moves.length} moves`);
+  if (!apply) return;
+  for (const edit of edits) save(join(ROOT, edit), readFileSync(join(ROOT, edit), "utf8"));
+  mkdirSync(backupDir, { recursive: true });
+  writeFileSync(join(backupDir, ".r10-manifest.json"), JSON.stringify({ created, moves }, null, 1));
+  const write = run(["python3", ST2_APPLY, "--write", "--part", "r10"]);
+  console.log(write.out.trim());
+  if (write.code !== 0) throw new Error("st2-apply --write --part r10 failed — run `revert st2-r10 --apply`");
+}
+
+const steps: Record<string, () => void | Promise<void>> = { "st2-r10": stepSt2R10, taxonomy: stepTaxonomy, discovery: stepDiscovery, targets: () => { stepTargets(); stepProjectEdits(); }, seed: stepSeed, render: stepRender, plan: stepPlan, revert: stepRevert };
 if (!step || !steps[step]) throw new Error(`usage: bun window3-apply.ts <${Object.keys(steps).join("|")}> [--apply]`);
 console.log(`[window3] ${step} ${apply ? "APPLY" : "dry run"}`);
 await steps[step]();

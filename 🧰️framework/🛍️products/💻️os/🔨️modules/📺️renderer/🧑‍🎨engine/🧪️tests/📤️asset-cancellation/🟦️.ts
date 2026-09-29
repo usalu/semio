@@ -1,4 +1,4 @@
-/** @emoji 🛑️ Chromium AbortController validates exact-request cancellation isolation. */
+/** 🛑️ Chromium AbortController validates exact-request cancellation isolation. */
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";

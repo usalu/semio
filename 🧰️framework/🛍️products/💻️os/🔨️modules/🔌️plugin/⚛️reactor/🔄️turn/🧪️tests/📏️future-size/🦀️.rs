@@ -48,6 +48,19 @@ const SETTLED_TURNS: isize = 256;
 /// the guest's whole budget is one fixed linear memory with no process to restart.
 const SETTLED_TURN_RETENTION_CEILING_BYTES: isize = 64;
 
+/// 🧵️ The turn runs on THIS thread, so the law differences this thread's own allocator scope.
+/// The process-wide reading is not a measurement of one turn under `cargo test`: libtest runs the
+/// whole crate in one process on many threads, and the same law reads −144 B alone but tens of
+/// kilobytes of its neighbours' work in a full suite. Isolating the scope is not loosening the
+/// ceiling — `SETTLED_TURN_RETENTION_CEILING_BYTES` is unchanged.
+///
+/// 🧹️ The lifetime is retired and the runtime dropped BEFORE the assertion, never after it.
+/// `NativeLifecycleRegistry`'s own `Drop` asserts that every runtime lifetime reached its
+/// terminal exact ACK (`⚛️reactor/🚪️lifetime/🦀️.rs:489`); with the assertion first, a failed
+/// reading unwound past `reactor_native_lifecycle_finish`, that `Drop` panicked a SECOND time
+/// while unwinding, and "panic in a destructor during cleanup" is a NON-UNWINDING panic —
+/// SIGABRT for the whole test binary, silently cancelling every one of this file's other laws.
+/// A measurement that fails must fail as one red test, not as a process abort.
 #[semio_framework_async_macros::async_test]
 async fn a_settled_reactor_turn_retains_nothing_the_guest_cannot_afford() {
     let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
@@ -58,11 +71,6 @@ async fn a_settled_reactor_turn_retains_nothing_the_guest_cannot_afford() {
     for _ in 0..32 {
         reactor_native_lifecycle_poll(&runtime, Vec::new()).await;
     }
-    // 🧵️ The turn runs on THIS thread, so the law differences this thread's own allocator scope.
-    // The process-wide reading is not a measurement of one turn under `cargo test`: libtest runs the
-    // whole crate in one process on many threads, and the same law reads −144 B alone but tens of
-    // kilobytes of its neighbours' work in a full suite. Isolating the scope is not loosening the
-    // ceiling — `SETTLED_TURN_RETENTION_CEILING_BYTES` is unchanged.
     let settled = semio_framework_trace::retained_heap_bytes_on_this_thread();
     for _ in 0..SETTLED_TURNS {
         reactor_native_lifecycle_poll(&runtime, Vec::new()).await;
@@ -70,13 +78,6 @@ async fn a_settled_reactor_turn_retains_nothing_the_guest_cannot_afford() {
     let after = semio_framework_trace::retained_heap_bytes_on_this_thread();
     let per_turn = (after - settled) / SETTLED_TURNS;
     eprintln!("settled reactor turn retention: settled={settled} after={after} per_turn={per_turn} B");
-    // 🧹️ The lifetime is retired and the runtime dropped BEFORE the assertion, never after it.
-    // `NativeLifecycleRegistry`'s own `Drop` asserts that every runtime lifetime reached its
-    // terminal exact ACK (`⚛️reactor/🚪️lifetime/🦀️.rs:489`); with the assertion first, a failed
-    // reading unwound past `reactor_native_lifecycle_finish`, that `Drop` panicked a SECOND time
-    // while unwinding, and "panic in a destructor during cleanup" is a NON-UNWINDING panic —
-    // SIGABRT for the whole test binary, silently cancelling every one of this file's other laws.
-    // A measurement that fails must fail as one red test, not as a process abort.
     reactor_native_lifecycle_finish(&runtime, lifetime, 9).await;
     drop(runtime);
     assert!(per_turn <= SETTLED_TURN_RETENTION_CEILING_BYTES, "a settled reactor turn retains {per_turn} B — {} B over {SETTLED_TURNS} turns; the guest's linear memory is fixed", after - settled);

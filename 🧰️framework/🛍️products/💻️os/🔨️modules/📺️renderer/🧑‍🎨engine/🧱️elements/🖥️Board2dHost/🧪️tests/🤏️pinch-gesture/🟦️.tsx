@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🤏️ `🖥️Board2dHost` multi-touch laws, driven with real `PointerEvent`s through a stub board
+/** 🤏️ `🖥️Board2dHost` multi-touch laws, driven with real `PointerEvent`s through a stub board
  * session: two contacts pinch the camera and pan it, the single-pointer lane goes quiet for the whole
  * gesture, and exactly ONE `setCamera` dispatch settles at the end (never one per move). */
 // #endregion 🧲️Header

@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
 
-/** @emoji 🧪️ Vitest for `@semio-tech/presentation`: the owner's canonical cases. */
+/** 🧪️ Vitest for `@semio-tech/presentation`: the owner's canonical cases. */
 export default {
   root,
   resolve: {

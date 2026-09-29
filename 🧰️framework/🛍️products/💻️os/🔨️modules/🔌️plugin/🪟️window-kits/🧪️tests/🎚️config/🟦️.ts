@@ -7,7 +7,7 @@ const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 
-/** @emoji 🧪️ Vitest for `@semio-tech/plugin-window-kits` — seven independent `import.meta.vitest`
+/** 🧪️ Vitest for `@semio-tech/plugin-window-kits` — seven independent `import.meta.vitest`
  * in-source suites, one per window kit, no shared barrel to alias. */
 export default {
   root: testRoot,

@@ -7,7 +7,7 @@ use protocol::Patchable;
 use std::cmp::Ordering;
 use std::fmt;
 // #region 🔖️EntityId
-/// @emoji 🆔️ Stable string identity for any program entity or register row.
+/// 🆔️ Stable string identity for any program entity or register row.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(transparent)]
@@ -15,7 +15,7 @@ use std::fmt;
 pub struct EntityId(pub String);
 
 impl EntityId {
-    /// @emoji 🔢️ Process-local unique id under `prefix` (monotonic serial).
+    /// 🔢️ Process-local unique id under `prefix` (monotonic serial).
     ///
     /// `material` is retained for call-site clarity but uniqueness comes from a process-wide
     /// counter — many creators pass a constant label and still need distinct ids.
@@ -45,7 +45,7 @@ impl PartialOrd for EntityId {
     }
 }
 
-/// @emoji 🔗️ Hand-written (not derived): `EntityId` is a tuple struct — `#[derive(dsl::DslRecord)]`
+/// 🔗️ Hand-written (not derived): `EntityId` is a tuple struct — `#[derive(dsl::DslRecord)]`
 /// only supports named fields, and `#[derive(dsl::DslScalar)]` only unit-variant enums — so its
 /// `dsl::DslField` binding is written directly, bridging straight to `Shape::Text` like `String`'s
 /// own blanket impl does.
@@ -66,7 +66,7 @@ impl dsl::DslField for EntityId {
 // #endregion
 
 // #region 🔖️Priority
-/// @emoji 🎚️ Relative importance band for requirements, relationships, and entities.
+/// 🎚️ Relative importance band for requirements, relationships, and entities.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
@@ -83,7 +83,7 @@ pub enum Priority {
 // #endregion
 
 // #region 🔖️LifecycleStatus
-/// @emoji 🔄️ Lifecycle and workflow status for register entities.
+/// 🔄️ Lifecycle and workflow status for register entities.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
@@ -109,7 +109,7 @@ pub enum LifecycleStatus {
 // #endregion
 
 // #region 🔖️Ownership
-/// @emoji 👥️ Ownership and authority roles attached to an entity header.
+/// 👥️ Ownership and authority roles attached to an entity header.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -123,7 +123,7 @@ pub struct Ownership {
 // #endregion
 
 // #region 🔖️Text
-/// @emoji 📝️ Rich or plain text payload with optional format hint.
+/// 📝️ Rich or plain text payload with optional format hint.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -141,7 +141,7 @@ impl TextField {
     }
 }
 
-/// @emoji 🏷️ Tagged free-text note on an entity.
+/// 🏷️ Tagged free-text note on an entity.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -151,7 +151,7 @@ pub struct TaggedNote {
     pub text: String,
 }
 
-/// @emoji 🕒️ Created/updated audit timestamps on an entity header.
+/// 🕒️ Created/updated audit timestamps on an entity header.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -176,7 +176,7 @@ impl Default for TimestampMeta {
 // #endregion
 
 // #region 🔖️EntityHeader
-/// @emoji 📋️ Common header shared by all register entities via serde flatten.
+/// 📋️ Common header shared by all register entities via serde flatten.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -207,7 +207,7 @@ impl EntityHeader {
 // #endregion
 
 // #region 🔖️QuantitySpec
-/// @emoji 📐️ Numeric quantity with min/max/target bands and unit.
+/// 📐️ Numeric quantity with min/max/target bands and unit.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -245,7 +245,7 @@ impl QuantitySpec {
 // #endregion
 
 // #region 🔖️Trace
-/// @emoji 🔗️ Semantic trace link between two entities for auditability.
+/// 🔗️ Semantic trace link between two entities for auditability.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
@@ -273,7 +273,7 @@ pub enum TraceKind {
     FullAuditTrail,
 }
 
-/// @emoji 🧭️ Directed trace edge stored in the plugin trace register.
+/// 🧭️ Directed trace edge stored in the plugin trace register.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -302,7 +302,7 @@ impl protocol::Identified<EntityId> for TraceLink {
 // #endregion
 
 // #region 🔖️Diagnostics
-/// @emoji ⚠️ Severity band for validation and analysis diagnostics.
+/// ⚠️ Severity band for validation and analysis diagnostics.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
@@ -313,7 +313,7 @@ pub enum DiagnosticSeverity {
     Error,
 }
 
-/// @emoji 🩺️ Non-fatal program validation or analysis finding.
+/// 🩺️ Non-fatal program validation or analysis finding.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]

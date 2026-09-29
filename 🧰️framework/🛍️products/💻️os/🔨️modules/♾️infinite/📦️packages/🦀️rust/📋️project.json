@@ -117,7 +117,7 @@
       "!{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/**/*.svg",
       "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/**/*.svg",
       "!{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🤖️generated/**/*.svg",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🔣️shortcodes.json"
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🔣️icons/🔣️shortcodes.json"
     ],
     "default": [
       "nativeAssets"

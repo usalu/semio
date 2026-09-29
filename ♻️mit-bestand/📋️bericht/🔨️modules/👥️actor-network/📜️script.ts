@@ -321,7 +321,7 @@ export function validateActorNetwork(data = actorNetworkData()): void {
   const fingerprint = edgeFingerprint(data.edges);
   if (fingerprint !== data.relationshipSync.edgeSha256) errors.push(`edge checksum mismatch ${fingerprint}`);
   if (errors.length) throw new Error(`Akteursnetz validation failed (${errors.length}):\n${errors.slice(0, 80).join("\n")}`);
-  console.error(`[DEBUG] Akteursnetz valid: ${data.nodes.length} nodes, ${data.edges.length} edges, ${data.programs.length} programs`);
+  console.error(`Akteursnetz valid: ${data.nodes.length} nodes, ${data.edges.length} edges, ${data.programs.length} programs`);
 }
 
 const GRAPH_WIDTH = 181;
@@ -688,7 +688,7 @@ function renderActorFigures(data: ActorNetworkData, ids: Map<string, string>): s
     "{\\SemioSans\\fontsize{7.6pt}{9.5pt}\\selectfont Ein Länderblock je Land \\textendash\\ alle streng belegten Verbindungen. Sehr dichte Netze werden in Teilpanels gegliedert. \\SemioGraphLegend{focal=Projekt, attested=neu recherchiert, hypo=Land erschlossen}. Kräftige Linie = projektbezogener Reuse-Beitrag, blasse Linie = geprüfte Organisationsbindung. Zahl = Tabellen-ID.\\\\[2mm]}",
     "\\begin{GraphSpread}"];
   for (const country of COUNTRIES) {
-    console.error(`[DEBUG] Akteursnetz layout: ${country}`);
+    console.error(`Akteursnetz layout: ${country}`);
     const nodes = data.nodes.filter((node) => node.country === country);
     const keys = new Set(nodes.map((node) => node.key));
     const edges = data.edges.filter((edge) => keys.has(edge.source) && keys.has(edge.target));
@@ -793,7 +793,7 @@ function renderActorNetwork(): void {
   const ledger = readFileSync(ACTOR_NETWORK_LEDGER, "utf8"), files = actorNetworkArtifacts(ledger);
   if (readFileSync(ACTOR_NETWORK_LEDGER, "utf8") !== ledger) throw new Error("Akteursnetz source changed during rendering; rerun the generator.");
   for (const [path, content] of files) writeFileSync(path, content);
-  console.log(`[DEBUG] Akteursnetz: published ${files.size} deterministic fragments`);
+  console.log(`Akteursnetz: published ${files.size} deterministic fragments`);
 }
 //#endregion Akteursnetz
 
@@ -816,7 +816,7 @@ export class ActorNetworkScript extends BundleScript {
     if (command === "check") {
       const files = actorNetworkArtifacts(readFileSync(ACTOR_NETWORK_LEDGER, "utf8"));
       for (const [path, content] of files) assert.equal(readFileSync(path, "utf8"), content, `Stale generated report fragment: ${path}`);
-      console.log("[DEBUG] Report actor-network fragments are current");
+      console.log("Report actor-network fragments are current");
       return;
     }
     if (command === "render") return renderActorNetwork();

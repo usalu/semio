@@ -212,7 +212,7 @@ type DemoUtilityNode =
   | { readonly id: string; readonly label: string; readonly icon: DemoUtilityLeaf["icon"]; readonly kind: "leaves"; readonly leaves: readonly DemoUtilityLeaf[] }
   | { readonly id: string; readonly label: string; readonly icon: DemoUtilityLeaf["icon"]; readonly kind: "group"; readonly children: readonly DemoUtilityNode[] };
 
-/** @emoji 🪟️ Window-scoped categories only (selection / utilities) — what belongs in a window's own bottom-left panel. Mode-wide categories like actions/history/sync don't: they're shared across every window in the mode, so they live once in the footer instead (see {@link ModeWideFooterCategories}). */
+/** 🪟️ Window-scoped categories only (selection / utilities) — what belongs in a window's own bottom-left panel. Mode-wide categories like actions/history/sync don't: they're shared across every window in the mode, so they live once in the footer instead (see {@link ModeWideFooterCategories}). */
 const WINDOW_CATEGORY_DEMO_TREE: readonly DemoUtilityNode[] = [
   {
     id: "selection",
@@ -289,7 +289,7 @@ const FOOTER_CATEGORY_DEMO_TREE: readonly DemoUtilityNode[] = [
   },
 ];
 
-/** @emoji 🗂️ Builds `up`-stacked ribbon rows from a demo utility tree: at most one active group per level, activating a level appends its children as another line, recursing until a leaves group is reached or nothing is active. Mirrors {@link buildUtilityRibbonSegments} in `@semio-tech/framework-renderer-react` for storybook without pulling in the full renderer package. */
+/** 🗂️ Builds `up`-stacked ribbon rows from a demo utility tree: at most one active group per level, activating a level appends its children as another line, recursing until a leaves group is reached or nothing is active. Mirrors {@link buildUtilityRibbonSegments} in `@semio-tech/framework-renderer-react` for storybook without pulling in the full renderer package. */
 function buildRecursiveCategoryRows(tree: readonly DemoUtilityNode[], activePath: readonly string[], onActivate: (depth: number, value: string) => void): RibbonRow[] {
   const rows: RibbonRow[] = [];
   let level = tree;

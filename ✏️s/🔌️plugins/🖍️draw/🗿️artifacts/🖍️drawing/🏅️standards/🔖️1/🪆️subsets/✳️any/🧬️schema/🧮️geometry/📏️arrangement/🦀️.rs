@@ -31,6 +31,6 @@ mod tests {
             assert_eq!(super::arrange(&bounds,row["operation"].as_str().unwrap()),expected,"{}",row["name"]);
         }
         assert!(super::arrange(&[[0.0,0.0,f64::INFINITY,1.0],[1.0,0.0,1.0,1.0]],"alignLeft").is_none());
-        eprintln!("[DEBUG] document-axis arrangement matches shared alignment and spacing fixtures");
+        eprintln!("[TRACE] document-axis arrangement matches shared alignment and spacing fixtures");
     }
 }

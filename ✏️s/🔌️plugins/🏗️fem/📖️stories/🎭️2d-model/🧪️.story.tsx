@@ -38,10 +38,10 @@ import {
 } from "../🧭️coordination/🟦️.ts";
 
 //#region StoryHost
-/** @emoji 🪟️ `WINDOW_KIND_ID` / `BODY_KEY` / `FEM2D_APP_ID` as the Rust window declares them. */
+/** 🪟️ `WINDOW_KIND_ID` / `BODY_KEY` / `FEM2D_APP_ID` as the Rust window declares them. */
 const FEM2D_MODEL_BODY_KEY = "fem2d.play.model";
 const FEM2D_EDITOR_CONTROLLER_ID = "fem2d-play";
-/** @emoji 🕳️ Any id other than the bundled example's own resets fem2d to an empty document. */
+/** 🕳️ Any id other than the bundled example's own resets fem2d to an empty document. */
 const FEM2D_CLEARED_EXAMPLE_ID = "none";
 
 function Fem2dModelStoryHost({ initialExampleId, locale }: { readonly initialExampleId: string; readonly locale: FemStoryLocale }): ReactElement {

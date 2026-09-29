@@ -7,7 +7,7 @@ const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
 
-/** @emoji 🧪️ Vitest for `@semio-tech/repo-coordinator`: the owner module's per-case suites under
+/** 🧪️ Vitest for `@semio-tech/repo-coordinator`: the owner module's per-case suites under
  * `🎛️coordinator/🧪️tests`, which assert the `repo.server.coordinator` parsers against the ajv draft-07
  * oracle and the `repo.server` `<Table>Row` exports against the native PostgreSQL DDL. */
 export default {

@@ -21,7 +21,7 @@ import { formatControlTooltipText } from "../../🔨️modules/💡️control-to
 // #endregion 🔌️Adapters
 
 // #region 🏷️Label
-/** @emoji 🪁️ Typed {@link useTranslation} bound to {@link UiTranslationKey} and registered product bundles. */
+/** 🪁️ Typed {@link useTranslation} bound to {@link UiTranslationKey} and registered product bundles. */
 export function useUiTranslation(): { readonly t: UiTranslateFn; readonly i18n: typeof i18next } {
   const { t, i18n } = useTranslation();
   return { t: t as UiTranslateFn, i18n };
@@ -66,7 +66,7 @@ export function useLabel(id: UiTranslationKey | UiRegisteredTranslationKey | und
   return undefined;
 }
 /**
- * @emoji 🏷️ Resolves a label only when `id` happens to be a registered translation key — the deliberate
+ * 🏷️ Resolves a label only when `id` happens to be a registered translation key — the deliberate
  * dynamic port for generic components whose `id` is not a key contract (e.g. resolved from an arbitrary
  * DOM/control id via `resolveControlLabelId`). Chrome call sites with a known key must use the strict
  * {@link useLabel} instead. Checks existence first, so it never echoes an unresolved id back as if it
@@ -153,7 +153,7 @@ export function resolveTranslationLabel(value: unknown): string | undefined {
 
   return undefined;
 }
-/** @emoji 🏷️ Resolves the user-facing caption for a control (i18n, explicit text, or `ui.*` fallback). */
+/** 🏷️ Resolves the user-facing caption for a control (i18n, explicit text, or `ui.*` fallback). */
 export function useControlAccessibleLabel(id: string | undefined, text?: string): string | undefined {
   if (text !== undefined && text !== "") return text;
   if (!id || isInternalChromeControlId(id)) return undefined;
@@ -169,17 +169,17 @@ export function useControlAccessibleLabel(id: string | undefined, text?: string)
   if (labelId.startsWith("ui.")) return humanizeControlId(labelId);
   return undefined;
 }
-/** @emoji 🏷️ Resolves inline icon+label caption for buttons/toggles; omitted when the driver hides labels. */
+/** 🏷️ Resolves inline icon+label caption for buttons/toggles; omitted when the driver hides labels. */
 export function useControlInlineText(id: string | undefined, text?: string): string | undefined {
   const driver = useUiDriver();
   const accessibleLabel = useControlAccessibleLabel(id, text);
   return driver.labels === "icons" ? undefined : accessibleLabel;
 }
-/** @emoji 💬 Options for {@link useControlTooltipText}. */
+/** 💬 Options for {@link useControlTooltipText}. */
 export interface ControlTooltipTextOptions {
   readonly always?: boolean;
 }
-/** @emoji 💬 Resolves native hover tooltip text for icon-only chrome controls, appending hotkeys when present. */
+/** 💬 Resolves native hover tooltip text for icon-only chrome controls, appending hotkeys when present. */
 export function useControlTooltipText(id: string | undefined, text?: string, options?: ControlTooltipTextOptions): string | undefined {
   const driver = useUiDriver();
   const inlineText = useControlInlineText(id, text);

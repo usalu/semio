@@ -1,6 +1,6 @@
 // #region 🖥️Platform
 /// <reference types="vitest/importMeta" />
-/** @emoji 🖥️ `@semio-tech/framework` — element ids, presence, dock/pane persistence, and inspector helpers. */
+/** 🖥️ `@semio-tech/framework` — element ids, presence, dock/pane persistence, and inspector helpers. */
 import type { IconName } from "@semio-tech/assets";
 import {
   type ActionDescriptor,
@@ -67,25 +67,25 @@ export function panelTabFirstDraggableElementId(tabId: string): string {
 //#region 🧭️UiPresence
 const DEFAULT_UI_PRESENCE: UiPresence = { state: "normal", status: "idle", hover: false, selected: false, color: null, peers: [] };
 
-/** @emoji 🧭️ Resolves optional wire-format `presence` to the shared default inert model. */
+/** 🧭️ Resolves optional wire-format `presence` to the shared default inert model. */
 export function resolveUiPresence(presence?: UiPresence): UiPresence {
   return presence ?? DEFAULT_UI_PRESENCE;
 }
 
-/** @emoji 🧭️ True when the element should show a skeleton instead of its content. */
+/** 🧭️ True when the element should show a skeleton instead of its content. */
 export function uiPresenceShowsSkeleton(presence?: UiPresence): boolean {
   const status = resolveUiPresence(presence).status;
   return status === "loading" || status === "waiting";
 }
 
-/** @emoji 🧭️ Maps measure chrome booleans to the shared status axis until generated `WindowMeasure` gains `presence`. */
+/** 🧭️ Maps measure chrome booleans to the shared status axis until generated `WindowMeasure` gains `presence`. */
 export function windowMeasureChromeStatus(measure: { readonly loading?: boolean; readonly waiting?: boolean }): UiStatus {
   if (measure.loading) return "loading";
   if (measure.waiting) return "waiting";
   return "idle";
 }
 
-/** @emoji 🧭️ Shared presence stamp for shell surfaces waiting on `refreshUi`. */
+/** 🧭️ Shared presence stamp for shell surfaces waiting on `refreshUi`. */
 export const UI_PENDING_PRESENCE: UiPresence = { state: "normal", status: "loading", hover: false, selected: false, color: null, peers: [] };
 
 /** 🧬️ Contract-neutral defaults for a freshly authored {@link BuiltNode} — every field a record
@@ -113,7 +113,7 @@ function builtNode(key: string, component: Component, children: readonly BuiltNo
   };
 }
 
-/** @emoji 🦴 Declarative placeholder node while a window body is still loading. `activity: "loading"`
+/** 🦴 Declarative placeholder node while a window body is still loading. `activity: "loading"`
  * is the contract's own mechanism for this (see `Activity`'s docstring: "was `UiStatus` on the old
  * wgpu target's `UiPresence`") — never a `presence` field baked into the node, which the new contract
  * deliberately keeps as a separate, document-external channel (`UiPresenceOverlayContext`). */
@@ -121,7 +121,7 @@ export function pendingWindowUiNode(): BuiltNode {
   return { ...builtNode("pending", { type: "container", role: "plain", label: null, description: null, required: null, error: null, defaultOpen: null, dropOverlay: null }), activity: "loading" };
 }
 
-/** @emoji 🦴 Declarative placeholder node while a panel tab body is still loading. */
+/** 🦴 Declarative placeholder node while a panel tab body is still loading. */
 export function pendingPanelUiNode(): BuiltNode {
   return { ...builtNode("pending", { type: "tree", interactionDomain: null }), activity: "loading" };
 }
@@ -132,7 +132,7 @@ export function canvasPickTargetKey(target: CanvasPickTarget): string {
   return `${target.domain}:${target.id}`;
 }
 
-/** @emoji 🪪️ Parses a pick target key into domain and id. */
+/** 🪪️ Parses a pick target key into domain and id. */
 export function parseCanvasPickTargetKey(key: string): { readonly domain: string; readonly id: string } | null {
   const colon = key.indexOf(":");
   if (colon < 0) return null;
@@ -237,7 +237,7 @@ export interface StoragePort {
   remove(key: string): void;
 }
 
-/** @emoji 🎚️ The single persisted local-only OS shell configuration document. The three device-local shell
+/** 🎚️ The single persisted local-only OS shell configuration document. The three device-local shell
  * projections share this schema and storage key, so persistence has one authority rather than independent key-value
  * stores that can drift across shell instances. Saved named layouts are not among them: they are the user's
  * `setNamedLayout` preference events (`💻️os/🎚️config` UI preferences), which follow the user to every device. */
@@ -264,7 +264,7 @@ function emptyOsShellConfig(): OsShellConfigSnapshot {
   return { version: 1, preferences: {}, dockLayouts: { apps: {} }, dockUi: { apps: {} }, windowPanes: { apps: {} } };
 }
 
-/** @emoji 🎚️ Typed config-lane adapter over the host's storage port. Writes always re-read the
+/** 🎚️ Typed config-lane adapter over the host's storage port. Writes always re-read the
  * latest complete document before applying a projection update, preserving sibling projections
  * when several store views share a browser origin. */
 export class OsShellConfig extends Store<OsShellConfigSnapshot> {

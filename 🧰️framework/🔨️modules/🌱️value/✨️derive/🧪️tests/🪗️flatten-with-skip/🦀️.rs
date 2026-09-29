@@ -204,7 +204,7 @@ fn skip_with_default_path_uses_that_path_not_type_default() {
 /// `expand_from_value`'s call sites, not just the impl header, since the struct below only compiles
 /// at all if every one of them resolves under this non-default path.
 mod value_root {
-    pub use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
+    pub use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueEdit, ValueError, ValueShape};
 }
 
 #[derive(Debug, Clone, PartialEq, ToValue, FromValue)]

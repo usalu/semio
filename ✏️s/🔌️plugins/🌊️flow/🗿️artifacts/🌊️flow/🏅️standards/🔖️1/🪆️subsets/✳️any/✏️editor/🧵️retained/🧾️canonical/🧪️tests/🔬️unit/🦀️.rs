@@ -61,7 +61,6 @@ fn every_artifact_variant_matches_serde_bytes_including_nested_chrome() {
         assert_eq!(bytes, serde_json::to_vec(&serde_json::Value::from(dsl::ToValue::to_value(&value))).unwrap(), "mutation {:?}", row["mutation"]);
         crate::retirement::retire_mutation(value).retire_cold();
     }
-    eprintln!("[DEBUG] Flow borrowed canonical bytes match typed-DSL serde oracle:9 widgets,10 mutations,nonempty ports");
 }
 
 #[test]
@@ -83,5 +82,4 @@ fn large_unicode_key_and_label_scene_matches_serde_without_an_ordinal_map_scan()
     let mut retirement = semio_framework_artifact_flow_flow::retained::FlowRetirement::default();
     retirement.push(semio_framework_artifact_flow_flow::retained::FlowOwner::Neurons(vec![absent_tree]));
     retirement.retire_cold();
-    eprintln!("[DEBUG] Flow borrowed canonical bytes preserve large Unicode keys, labels and explicit absent-tree null");
 }

@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/🔗️HubConnection/component.tsx
-/** @emoji 🔗️ `🔗️HubConnection` — the headless hook that owns a human's relationship with one hub:
+/** 🔗️ `🔗️HubConnection` — the headless hook that owns a human's relationship with one hub:
  * which hub is chosen, signing in against `POST /auth/sessions`, holding the minted capability in
  * memory only, listing/creating spaces and invitations through the directory command path, and
  * redeeming an invitation. Presentation lives in `🔐️HubSignIn` and `🏘️SpaceBrowser`; every network

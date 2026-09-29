@@ -9,5 +9,6 @@
   "customThemes": {},
   "keybindingOverrides": {
     "edit.undo": "Meta+Z"
-  }
+  },
+  "namedLayouts": {}
 }

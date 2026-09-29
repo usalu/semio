@@ -160,17 +160,17 @@ mod derive_transformation {
         Some(([centroid[0] / area_sum, centroid[1] / area_sum, centroid[2] / area_sum], [normal[0] / len, normal[1] / len, normal[2] / len]))
     }
 
-    /// @emoji 📍️ Face centroid via tessellated triangle area weighting (premigration `faceCentroid` equivalent).
+    /// 📍️ Face centroid via tessellated triangle area weighting (premigration `faceCentroid` equivalent).
     pub fn face_centroid_sync(kernel: &Brep, face: &GeometryHandle) -> Option<Vec3> {
         face_mesh_analytics(kernel, face).map(|(centroid, _)| centroid)
     }
 
-    /// @emoji 🧭️ Face outward normal from tessellated triangle winding.
+    /// 🧭️ Face outward normal from tessellated triangle winding.
     pub fn face_normal_sync(kernel: &Brep, face: &GeometryHandle) -> Option<Vec3> {
         face_mesh_analytics(kernel, face).map(|(_, normal)| normal)
     }
 
-    /// @emoji 🗂️ Groups coplanar faces by dominant axis, sign, and quantized centroid (premigration `facePlaneGroupKey`).
+    /// 🗂️ Groups coplanar faces by dominant axis, sign, and quantized centroid (premigration `facePlaneGroupKey`).
     pub fn face_plane_group_key(normal: Vec3, centroid: Vec3) -> String {
         let [nx, ny, nz] = normal;
         let abs = [nx.abs(), ny.abs(), nz.abs()];
@@ -248,7 +248,7 @@ mod derive_transformation {
     //#endregion 🔖️FaceAnalytics
 
     //#region 🔖️SolidConstruction
-    /// @emoji 📦️ Builds or reuses a kernel solid for a CAD object.
+    /// 📦️ Builds or reuses a kernel solid for a CAD object.
     pub(crate) fn solid_for_object(kernel: &mut Brep, object: &CadObject) -> Option<GeometryHandle> {
         if let Some(handle) = object.solid_handle.as_ref() {
             if kernel.kind(&GeometryHandle(handle.clone())).is_ok() {
@@ -262,7 +262,7 @@ mod derive_transformation {
         Some(handle)
     }
 
-    /// @emoji 📦️ Builds a kernel solid sized from extent without mutating the object.
+    /// 📦️ Builds a kernel solid sized from extent without mutating the object.
     pub fn build_solid_for_typology(kernel: &mut Brep, typology: &str, extent: [f64; 3]) -> Option<GeometryHandle> {
         let [ex, ey, ez] = extent;
         let (width, depth, height) = (ex.max(0.05), ey.max(0.05), ez.max(0.05));
@@ -299,7 +299,7 @@ mod derive_transformation {
         format!("{prefix}-{index}")
     }
 
-    /// @emoji 🔄️ Derives energy objects from shape-pane solids via fuse + face classification.
+    /// 🔄️ Derives energy objects from shape-pane solids via fuse + face classification.
     #[cfg(test)]
     pub(crate) fn run_derive_from_geometry(kernel: &mut Brep, source_objects: &[CadObject], id_seed: &str) -> Vec<CadObject> {
         let solids: Vec<GeometryHandle> = source_objects.iter().filter_map(|object| solid_for_object(kernel, object)).collect();
@@ -439,7 +439,7 @@ mod construct_query {
     const REL_BOUNDED_BY: &str = "BOUNDED_BY";
     const REL_CONTAINS: &str = "CONTAINS";
 
-    /// @emoji 🕸️ One `CadGeometry` pane (e.g. `scene.shape_geometry`), exposed as a Jack
+    /// 🕸️ One `CadGeometry` pane (e.g. `scene.shape_geometry`), exposed as a Jack
     /// `QueryableGraph` — read-only, matching `construct.md`'s explicit constraint that direct
     /// graph mutation is unsafe for a B-rep and must go through a validated command layer instead.
     pub struct CadTopologyGraph<'a> {
@@ -550,7 +550,7 @@ mod construct_query {
         }
     }
 
-    /// @emoji 🔍️ Runs a Jack query against one `CadGeometry` pane and returns its JSON result —
+    /// 🔍️ Runs a Jack query against one `CadGeometry` pane and returns its JSON result —
     /// the single entry point `cad-ui`/an MCP tool calls for topology queries (`saved selections`,
     /// non-manifold-edge checks, adjacency lookups), reusing `graph::dsl::run_query_json`
     /// unchanged.
@@ -575,7 +575,8 @@ pub use construct_query::*;
 // `⚙️engine` (D5 behavioural).
 mod scene_compute {
     use crate::standards::v1::subsets::any::io::geometry_import::{
-        centroid_from_host_snapshot_primitives, objects_from_host_snapshot_model, parse_geometry, semio_model_snapshot_from_objects, tessellate_object_mesh, tessellate_object_mesh_from_host_snapshot, CadGeometry, CadObject, CadPrimitiveSlot,
+        centroid_from_host_snapshot_primitives, import_geometry_handles, objects_from_host_snapshot_model, parse_geometry, resolve_primitive_handle, semio_model_snapshot_from_objects, tessellate_geometry_handle, tessellate_object_mesh, tessellate_object_mesh_from_host_snapshot, CadGeometry, CadObject,
+        CadPrimitiveSlot,
     };
     use crate::{cad_model_child_handle, CadCamera, CadModelChild, CadNode, CadPaneId, CadProjectionDsl, CadReference, CadSnapshot, CadWorkingScene, CAD_PLAY_DOCUMENT_SCHEMA};
     use semio_framework::parse_contributions;
@@ -588,7 +589,7 @@ mod scene_compute {
 
     pub const CAD_DEFAULT_TYPOLOGY_EXTENT: [f64; 3] = [1.0, 1.0, 1.0];
 
-    /// @emoji 🗂️ Indices into the quad play fixture's `models[]` array — one model definition per pane.
+    /// 🗂️ Indices into the quad play fixture's `models[]` array — one model definition per pane.
     const CAD_MODEL_INDEX_SHAPE: usize = 0;
 
     const CAD_MODEL_INDEX_BUILDING: usize = 1;
@@ -634,7 +635,7 @@ mod scene_compute {
         Brep::new()
     }
 
-    /// @emoji 📐️ Tessellates a typology's primitive sized from authored geometry (or a universal
+    /// 📐️ Tessellates a typology's primitive sized from authored geometry (or a universal
     /// fallback extent when no geometry was captured), instead of hardcoded per-typology constants.
     fn typology_brep_mesh(typology: &str, extent: Option<[f64; 3]>, solid_handle: Option<&str>, centroid: Option<[f64; 3]>) -> MeshData {
         let mut kernel = cad_brep_kernel();
@@ -644,14 +645,7 @@ mod scene_compute {
                 return mesh_data_from_mesh_transfer(&mesh);
             }
         }
-        let [ex, ey, ez] = extent.unwrap_or(CAD_DEFAULT_TYPOLOGY_EXTENT);
-        let (width, depth, height) = (ex.max(0.05), ey.max(0.05), ez.max(0.05));
-        let handle = match typology_mesh_kind(typology) {
-            "cylinder" => kernel.cylinder_prim(width.max(depth) * 0.5, height),
-            "sphere" => kernel.sphere_prim(width.max(depth).max(height) * 0.5),
-            _ => kernel.box_prim(width, depth, height),
-        };
-        let Ok(handle) = handle else {
+        let Some(handle) = typology_local_solid(&mut kernel, typology, extent) else {
             return mesh_from_kind(typology_mesh_kind(typology));
         };
         let mesh: MeshTransfer = match kernel.tessellate(&handle, 0.1) {
@@ -669,6 +663,63 @@ mod scene_compute {
         mesh_data
     }
 
+    /// 🧊️ A typology's primitive as a local kernel solid, sized from authored geometry (or the universal fallback
+    /// extent) — the one size rule [`typology_brep_mesh`] tessellates and [`pane_world_solids`] exports.
+    fn typology_local_solid(kernel: &mut Brep, typology: &str, extent: Option<[f64; 3]>) -> Option<GeometryHandle> {
+        let [ex, ey, ez] = extent.unwrap_or(CAD_DEFAULT_TYPOLOGY_EXTENT);
+        let (width, depth, height) = (ex.max(0.05), ey.max(0.05), ez.max(0.05));
+        match typology_mesh_kind(typology) {
+            "cylinder" => kernel.cylinder_prim(width.max(depth) * 0.5, height),
+            "sphere" => kernel.sphere_prim(width.max(depth).max(height) * 0.5),
+            _ => kernel.box_prim(width, depth, height),
+        }
+        .ok()
+    }
+
+    /// 🌍️ A pane's visible objects as WORLD-space kernel solids, built the way the viewport builds their meshes
+    /// ([`object_mesh_data`]): the host-snapshot primitive an object names (moved onto the primitives' centroid, as
+    /// [`align_mesh_to_host_snapshot_centroid`] moves the mesh), else its typology primitive — then placed by its
+    /// instance's node transform (`world_instances_json`). What a STEP/OBJ/STL export writes is what the pane shows.
+    pub(crate) fn pane_world_solids(kernel: &mut Brep, objects: &[CadObject], geometry: Option<&CadGeometry>) -> Vec<GeometryHandle> {
+        let handles = geometry.map(|geometry| import_geometry_handles(kernel, geometry)).unwrap_or_default();
+        objects
+            .iter()
+            .filter(|object| object.visible)
+            .filter_map(|object| {
+                let local = geometry.filter(|_| !object.primitives.is_empty()).and_then(|geometry| host_snapshot_local_solid(kernel, object, geometry, &handles)).or_else(|| typology_local_solid(kernel, &object.typology, object.extent))?;
+                place_object_solid(kernel, local, object)
+            })
+            .collect()
+    }
+
+    /// 🧲️ The imported host-snapshot primitive an object names, moved onto the primitives' own centroid when it
+    /// is more than 5 cm away — the kernel twin of [`align_mesh_to_host_snapshot_centroid`].
+    fn host_snapshot_local_solid(kernel: &mut Brep, object: &CadObject, geometry: &CadGeometry, handles: &std::collections::HashMap<String, String>) -> Option<GeometryHandle> {
+        let (handle_id, kind) = resolve_primitive_handle(&object.primitives, handles)?;
+        let handle = GeometryHandle(handle_id.clone());
+        let Some(target) = centroid_from_host_snapshot_primitives(geometry, &object.primitives) else {
+            return Some(handle);
+        };
+        let current = tessellate_geometry_handle(kernel, &handle_id, &kind).as_ref().and_then(mesh_centroid)?;
+        let delta = [target[0] - f64::from(current[0]), target[1] - f64::from(current[1]), target[2] - f64::from(current[2])];
+        if delta[0].abs() + delta[1].abs() + delta[2].abs() > 0.05 {
+            kernel.translate(&handle, delta).ok()
+        } else {
+            Some(handle)
+        }
+    }
+
+    /// 📍️ An object's node transform applied to its local solid: scale about the local origin, rotation by its
+    /// unit quaternion `[x, y, z, w]`, translation to `origin` — the order the viewport composes an instance.
+    fn place_object_solid(kernel: &mut Brep, local: GeometryHandle, object: &CadObject) -> Option<GeometryHandle> {
+        let scale = object.scale.unwrap_or([1.0, 1.0, 1.0]);
+        let scaled = if scale == [1.0, 1.0, 1.0] { local } else { kernel.scale_axes(&local, scale, [0.0, 0.0, 0.0]).ok()? };
+        let [x, y, z, w] = object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
+        let sine = (x * x + y * y + z * z).sqrt();
+        let rotated = if sine <= f64::EPSILON { scaled } else { kernel.rotate(&scaled, [x / sine, y / sine, z / sine], 2.0 * sine.atan2(w)).ok()? };
+        kernel.translate(&rotated, object.origin).ok()
+    }
+
     fn mesh_centroid(mesh: &MeshData) -> Option<[f32; 3]> {
         if mesh.positions.is_empty() {
             return None;
@@ -684,7 +735,7 @@ mod scene_compute {
         Some([sum[0] / n, sum[1] / n, sum[2] / n])
     }
 
-    /// @emoji 📐️ Shifts a tessellated mesh onto the authored fixture primitive centroid when kernel output drifts.
+    /// 📐️ Shifts a tessellated mesh onto the authored fixture primitive centroid when kernel output drifts.
     pub(crate) fn align_mesh_to_host_snapshot_centroid(mesh: &mut MeshData, geometry: &CadGeometry, primitives: &[CadPrimitiveSlot]) {
         let Some(target) = centroid_from_host_snapshot_primitives(geometry, primitives) else {
             return;
@@ -698,7 +749,7 @@ mod scene_compute {
         }
     }
 
-    /// @emoji 🖼️ Centers the concrete-forest reference and moves it forward from the authored base corner.
+    /// 🖼️ Centers the concrete-forest reference and moves it forward from the authored base corner.
     fn forest_reference_origin(reference_z: f64) -> [f64; 3] {
         let height_world = CAD_FOREST_REFERENCE_WIDTH_WORLD * CAD_FOREST_REFERENCE_IMAGE_HEIGHT_PX / CAD_FOREST_REFERENCE_IMAGE_WIDTH_PX;
         [CAD_FOREST_REFERENCE_BASE_ORIGIN_XY[0] + CAD_FOREST_REFERENCE_WIDTH_WORLD * 0.5, CAD_FOREST_REFERENCE_BASE_ORIGIN_XY[1] + height_world * (0.5 + CAD_FOREST_REFERENCE_Y_OFFSET_RATIO), reference_z]
@@ -720,7 +771,7 @@ mod scene_compute {
         }
     }
 
-    /// @emoji 🗃️ Reads one pane's objects and geometry from the shared quad fixture.
+    /// 🗃️ Reads one pane's objects and geometry from the shared quad fixture.
     pub(crate) fn cad_document_pane_bundle(source_json: &str, model_index: usize) -> (Vec<CadObject>, CadGeometry) {
         let Ok(root) = protocol::json::parse(source_json) else {
             return (Vec::new(), CadGeometry::default());
@@ -736,7 +787,7 @@ mod scene_compute {
         (objects, geometry)
     }
 
-    /// @emoji 🌲️ `cad_document_pane_bundle`, scoped to the Concrete Forest Left fixture and keyed by
+    /// 🌲️ `cad_document_pane_bundle`, scoped to the Concrete Forest Left fixture and keyed by
     /// `CadPaneId` rather than a raw fixture index — the real, non-stub object+geometry source
     /// `crate::editor::cad::forest_working_scene` (the app layer's `CadWorkingScene` test/render
     /// fixture) builds each pane from.
@@ -820,7 +871,7 @@ mod scene_compute {
         Some(cad_model_child_handle(pane, &content_json).with_local_owner(scene))
     }
 
-    /// @emoji 📟️ Builds the quad play document: shape/building/energy/structure-classic panes each
+    /// 📟️ Builds the quad play document: shape/building/energy/structure-classic panes each
     /// sourced from their own model definition inside the shared fixture JSON via
     /// `cad_document_pane_bundle` — the real importer, never a parallel one. Empty panes stay empty —
     /// never collapse to `default_document` (that single-box placeholder was the cut-concrete bug).
@@ -857,7 +908,7 @@ mod scene_compute {
         }
     }
 
-    /// @emoji 🌲️ The Concrete Forest Left example projection — a bare `CadSnapshot` (no runtime/history),
+    /// 🌲️ The Concrete Forest Left example projection — a bare `CadSnapshot` (no runtime/history),
     /// wrapped into a `ArtifactStore` by `VcsArtifactApp` when spawned. Cached so manifest registration,
     /// `initial_snapshot`, and `setActiveExample` share one BREP import instead of rebuilding thrice.
     pub fn forest_play_scene() -> CadSnapshot {
@@ -974,7 +1025,7 @@ mod scene_compute {
         object.scale.unwrap_or([1.0, 1.0, 1.0])
     }
 
-    /// @emoji 🧵️ Tessellates a representative mesh for the OS mesh-exporter boundary — the document's
+    /// 🧵️ Tessellates a representative mesh for the OS mesh-exporter boundary — the document's
     /// first object across panes, or the default box typology for an empty scene (no runtime selection
     /// exists at this boundary).
     /// ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: this used to scan the

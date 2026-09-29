@@ -85,7 +85,6 @@ export function testNormResultsWindowOwnershipOracle(): void {
   applyRows(fixture.redoMutations);
   assert.deepEqual(actual, fixture.expected);
   for (const rejection of fixture.rejections) assert.throws(() => target(fixture.windowInstances, rejection), new RegExp(rejection.code));
-  console.log("[DEBUG] norm-results-window-ownership families=15 same-kind-windows=2 focus=inspection schema=ajv implementation=typescript oracle=json-patch document=stable");
 }
 
 testNormResultsWindowOwnershipOracle();

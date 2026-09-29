@@ -25,7 +25,7 @@
     "--test-threads=1",
     "--show-output"
   ],
-  "capturedOutput": "[DEBUG] retained native owner reached its terminal witness",
+  "capturedOutput": "retained native owner reached its terminal witness",
   "activeLease": {
     "directoryPrefix": ".exact-cargo-laws-active-",
     "manifestName": "lease.json",

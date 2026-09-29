@@ -74,7 +74,7 @@ import { assertPluginOutputChildren, describeBuiltPlugin, stagePluginDescriptor 
 
 
 
-/** @emoji 🧵️ Publishes the single package-agnostic shard worker at `🔌️plugin-modules/🧵️shard/`, the
+/** 🧵️ Publishes the single package-agnostic shard worker at `🔌️plugin-modules/🧵️shard/`, the
  * URL `ShardClient` pool members are constructed from (H2 design). Idempotent: rewritten on every
  * plugin build so a source change to `shardWorkerSource` always reaches the browser. */
 function publishShardWorker(): void {
@@ -97,7 +97,7 @@ function ensurePreview2ShimVendor(): void {
   ensurePreview2ShimVendorAt(preview2ShimVendorDir(), repoRoot);
 }
 
-/** @emoji 🫙 Ensures `🪞️vendor/🔤️guestslim-typst-fonts.bin` exists in the dev runner's module root: the shared
+/** 🫙 Ensures `🪞️vendor/🔤️guestslim-typst-fonts.bin` exists in the dev runner's module root: the shared
  * {@link ensureGuestSlimTypstFontsAt} from the staged seed, else the font tool builds it in place. */
 function ensureGuestSlimTypstFontsAsset(): void {
   if (ensureGuestSlimTypstFontsAt(pluginOutRoot, repoRoot)) return;
@@ -109,7 +109,7 @@ function ensureGuestSlimTypstFontsAsset(): void {
   }
 }
 
-/** @emoji 🔚️ Rewrites bare `@bytecodealliance/preview2-shim/*` imports in already-staged plugin JS. */
+/** 🔚️ Rewrites bare `@bytecodealliance/preview2-shim/*` imports in already-staged plugin JS. */
 function rewriteExistingPluginShimImports(): void {
   if (!existsSync(pluginOutRoot)) return;
   const vendor = preview2ShimVendorDir();
@@ -130,7 +130,7 @@ async function readPackageName(cratePath: string): Promise<string> {
   return match[1]!;
 }
 
-/** @emoji 🔑️ The `stageArtifacts` ownership key one component's staged module directory carries — byte
+/** 🔑️ The `stageArtifacts` ownership key one component's staged module directory carries — byte
  * for byte the key `@semio-tech/framework-plugin-web`'s `materialize <profile> --manifest <Cargo.toml>`
  * writes, so the catalog builder and the per-crate Nx target own the SAME directory in the one staging
  * root instead of each claiming a tree of its own. */
@@ -153,7 +153,7 @@ async function buildPluginCargo(target: PluginRegistryEntry): Promise<{ readonly
   return { target, artifact };
 }
 
-/** @emoji 🎯️ One target's MATERIALIZE stage: jco transpile, `wasm-opt`, bridge/host-shim file
+/** 🎯️ One target's MATERIALIZE stage: jco transpile, `wasm-opt`, bridge/host-shim file
  * emission, extension publish, hot-swap marker — everything downstream of a finished cargo artifact
  * that touches neither the shared `target/` build-directory lock nor the global `~/.cargo`
  * package-cache lock, so it is safe to run several of these at once (see `buildPluginCatalog`). Does

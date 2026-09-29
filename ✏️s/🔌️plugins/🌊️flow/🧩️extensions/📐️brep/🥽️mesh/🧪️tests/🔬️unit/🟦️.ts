@@ -55,7 +55,6 @@ for (const fixture of knives.cases) test(`knife cut and Three.js surface oracle:
   }
   expect(oracleArea / fixture.expected.area).toBeCloseTo(1, 6);
   if (fixture.expected.volume) expect(oracleVolume / fixture.expected.volume).toBeCloseTo(1, 6);
-  console.log(`[DEBUG] knife cut ${fixture.name}: ${JSON.stringify(report)}`);
 });
 test("knife cut rejects invalid or non-finite input without mutation", () => {
   const input = structuredClone(knives.cases[0].mesh);
@@ -86,7 +85,6 @@ for (const fixture of componentTransforms.cases) test(`component transform and T
       expect(actual.vertices[id][axis]).toBeCloseTo(oracle.getComponent(axis), 6);
     }
   }
-  console.log(`[DEBUG] component transform ${fixture.name}: vertices=${ids}, pivot=${pivot.toArray()}`);
 });
 test("component transforms reject invalid targets and nonfinite or collapsed transforms atomically", () => {
   const mesh = structuredClone(componentTransforms.mesh), base = componentTransforms.cases[0].transform;
@@ -147,7 +145,6 @@ describe("portable mesh widgets", () => {
     if (area === 0) expect(report.area).toBe(0);
     else expect(report.area / area).toBeCloseTo(1, 6);
     if (report.volume !== undefined) expect(report.volume / Math.abs(signedVolume)).toBeCloseTo(1, 6);
-    console.log(`[DEBUG] ${fixture.name}: ${JSON.stringify(report)}`);
   });
   for (const fixture of fixtures.invalid) test(fixture.name, () => expect(() => parsePolygonMesh(JSON.stringify(fixture.mesh))).toThrow());
   test("closed winding faults withhold volume", () => {
@@ -190,7 +187,6 @@ for (const fixture of modeling.loopCuts) test(`connected loop cut: ${fixture.nam
   }
   expect(area).toBeCloseTo(fixture.expected.area, 6);
   if (fixture.expected.volume !== undefined) expect(volume).toBeCloseTo(fixture.expected.volume, 6);
-  console.log(`[DEBUG] loop cut ${fixture.name}: ${JSON.stringify(report)}`);
 });
 test("loop cut rejects invalid input without changing its mesh", () => {
   for (const fixture of modeling.invalidLoopCuts) {

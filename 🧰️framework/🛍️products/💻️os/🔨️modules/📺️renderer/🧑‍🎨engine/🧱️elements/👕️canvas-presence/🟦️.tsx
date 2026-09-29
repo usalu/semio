@@ -1,4 +1,4 @@
-/** @emoji 👕️ In-canvas remote presence overlays — peer cursors, viewport rects, selection chips.
+/** 👕️ In-canvas remote presence overlays — peer cursors, viewport rects, selection chips.
  * Domain-neutral; Board2d / World3d / TextEditor hosts mount this over their surface.
  */
 import { useMemo, useSyncExternalStore, type CSSProperties, type ReactElement } from "react";

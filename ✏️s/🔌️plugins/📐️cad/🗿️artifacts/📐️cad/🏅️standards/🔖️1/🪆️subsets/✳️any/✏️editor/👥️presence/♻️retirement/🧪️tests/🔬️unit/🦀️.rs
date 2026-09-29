@@ -39,7 +39,6 @@ fn retained_cad_presence_close_preserves_shared_roots_and_byte_grants() {
         }
         assert!(retirement.terminal_is_empty());
         assert_eq!(released, expected);
-        eprintln!("[DEBUG] CAD presence close case={} retired_bytes={released}", case["name"]);
     }
 }
 
@@ -62,7 +61,6 @@ fn retained_cad_presence_close_worker_unwind_preserves_the_original_panic() {
         }
     }
     assert!(retirement.terminal_is_empty());
-    eprintln!("[DEBUG] CAD presence unwind preserved the original panic and retained its exact root for explicit retirement");
 }
 
 #[test]
@@ -117,6 +115,5 @@ fn retained_cad_presence_close_nonempty_roster_retains_readers_and_domain_bytes(
         assert_eq!(observed_blocked, shared);
         assert_eq!(retired_bytes, case["expectedBytes"].as_u64().unwrap() as usize);
         assert!(owner.begin_peer_publication().is_err());
-        eprintln!("[DEBUG] CAD presence roster close case={} retired_bytes={retired_bytes} held_reader={observed_blocked}", case["name"]);
     }
 }

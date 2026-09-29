@@ -8,5 +8,4 @@ export function testRewritingMapOwnershipOracle(): void {
     const actual = jsonPatch.applyPatch(structuredClone(row.before), row.patches as Operation[], true, false).newDocument;
     assert.deepEqual(actual, row.after, row.name);
   }
-  console.log("[DEBUG] independent JSON Patch preserved null-valued entries and validated insert/remove composition");
 }

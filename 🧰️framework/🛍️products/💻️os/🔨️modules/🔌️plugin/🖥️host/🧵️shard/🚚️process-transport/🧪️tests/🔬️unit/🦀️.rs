@@ -63,12 +63,12 @@ fn nonblocking_decoder_rejects_oversized_prefix_before_payload_allocation() {
 //#endregion 🧪️FramingTests
 
 //#region 🧪️SelectionTests
+/// 🧯️ Env-var mutation makes this test order-sensitive vs. any OTHER test reading the same
+/// var in the same process; none exists in this crate today (grepped before writing), and
+/// `cargo test`'s default multi-threaded runner still serializes same-process env access
+/// adequately for a single var this test both sets and restores.
 #[semio_framework_async_macros::async_test]
 async fn shard_runtime_kind_defaults_to_thread_and_opts_into_process_explicitly() {
-    // 🧯️ Env-var mutation makes this test order-sensitive vs. any OTHER test reading the same
-    // var in the same process; none exists in this crate today (grepped before writing), and
-    // `cargo test`'s default multi-threaded runner still serializes same-process env access
-    // adequately for a single var this test both sets and restores.
     let previous = std::env::var("SEMIO_SHARD_KIND").ok();
     std::env::remove_var("SEMIO_SHARD_KIND");
     assert_eq!(ShardRuntimeKind::from_env().await, ShardRuntimeKind::Thread, "unset must default to Thread — never Process by default in P1");
@@ -90,12 +90,12 @@ async fn watchdog_does_not_fire_while_heartbeats_keep_advancing() {
     assert!(!watchdog.poll(2500, 2600).await);
 }
 
+/// 🐕️ Heartbeat frozen at 0 forever — three separate `timeout_ms`-apart polls must each count
+/// exactly one miss, matching `ShardClient`'s `lastMissCountedAtMs` gate (a flurry of polls
+/// inside the SAME window must not multi-count).
 #[semio_framework_async_macros::async_test]
 async fn watchdog_fires_after_three_consecutive_stale_windows() {
     let mut watchdog = ProcessShardWatchdog::new(1000, 0).await;
-    // heartbeat frozen at 0 forever — three separate `timeout_ms`-apart polls must each count
-    // exactly one miss, matching `ShardClient`'s `lastMissCountedAtMs` gate (a flurry of polls
-    // inside the SAME window must not multi-count).
     assert!(!watchdog.poll(0, 1500).await);
     assert!(!watchdog.poll(0, 1600).await, "same window as the previous miss — must not double-count");
     assert!(!watchdog.poll(0, 2600).await);
@@ -127,12 +127,13 @@ async fn poll_with_liveness_fires_immediately_on_a_dead_child_without_waiting_ou
 /// component built first. The `semio-shard`-hosted, real-wasmtime-actor version of this same
 /// proof (kill -9, detect, rebuild, sibling unaffected) is `👶️child/🦀️.rs`'s own
 /// `#[ignore]`d integration test — see the P1 report's `## kill-rebuild-evidence`.
+///
+/// 👶️ host-dedyn: `#[test] fn` is a sanctioned `block_on` entry point (R4 clause 5) —
+/// `ShardTransport`'s methods are `async fn` now (O1); every impl here resolves on its
+/// first poll (pure `Mutex`/`AtomicBool`/pipe I/O, no real suspension), so `block_on` never
+/// actually parks.
 #[semio_framework_async_macros::async_test]
 async fn process_transport_round_trips_bytes_through_a_real_child_process() {
-    // 👶️ host-dedyn: `#[test] fn` is a sanctioned `block_on` entry point (R4 clause 5) —
-    // `ShardTransport`'s methods are `async fn` now (O1); every impl here resolves on its
-    // first poll (pure `Mutex`/`AtomicBool`/pipe I/O, no real suspension), so `block_on` never
-    // actually parks.
     let transport = ProcessTransport::spawn(Path::new("cat"), &[]).await.expect("spawn cat");
     semio_framework_async::block_on(transport.send(b"hello-process-shard"));
     let mut received = None;
@@ -163,13 +164,13 @@ async fn kill_terminates_the_child_and_is_observed_as_eof_on_recv_side() {
     assert!(dead, "reader thread must observe EOF after kill()");
 }
 
+/// 🔪️ An INVOLUNTARY death — `kill -9` from OUTSIDE this type, mirroring the packet's
+/// required proof ("kill -9 a shard child -> the parent detects it") rather than merely
+/// exercising this type's OWN `kill()` method (the test above already covers that).
 #[semio_framework_async_macros::async_test]
 async fn an_externally_killed_child_is_detected_as_dead_without_this_type_calling_kill() {
     let transport = ProcessTransport::spawn(Path::new("sleep"), &["30".to_string()]).await.expect("spawn sleep 30");
     let pid = transport.child_id().await.expect("pid");
-    // 🔪️ An INVOLUNTARY death — `kill -9` from OUTSIDE this type, mirroring the packet's
-    // required proof ("kill -9 a shard child -> the parent detects it") rather than merely
-    // exercising this type's OWN `kill()` method (the test above already covers that).
     let status = Command::new("kill").args(["-9", &pid.to_string()]).status().expect("run kill -9");
     assert!(status.success());
     let mut dead = false;
@@ -204,6 +205,15 @@ async fn an_externally_killed_child_is_detected_as_dead_without_this_type_callin
 /// routing slot ("rebuild"), activate a fresh actor on it, confirm it replies — proving the
 /// shard is usable again. Throughout, shard `b` — untouched — must still answer a SECOND turn,
 /// proving the failure was isolated to `a`.
+///
+/// 🔪️ Involuntary death, exactly the packet's required proof — `kill -9` from OUTSIDE this
+/// process's own `ProcessTransport::kill()`.
+///
+/// ▶️ Rebuild: a fresh child at a fresh actor id (a real restart would restore-from-checkpoint
+/// here — out of this test's scope, `GuestRuntime::checkpoint`/`restore` are proven separately
+/// by `🧵️shard/🦀️.rs`'s K1 tests; this proves the PROCESS half of rebuild).
+///
+/// 🎯️ Sibling isolation: shard b, never touched, is still alive and answers a SECOND turn.
 #[semio_framework_async_macros::async_test]
 #[ignore = "needs a pre-built wasm32-wasip2 component at SEMIO_SCALE_FIXTURE_WASM; see this test's own doc comment"]
 async fn process_shard_kill_is_detected_and_the_shard_rebuilds_while_a_sibling_shard_stays_healthy() {
@@ -225,8 +235,6 @@ async fn process_shard_kill_is_detected_and_the_shard_rebuilds_while_a_sibling_s
     assert!(matches!(outcome_b, crate::shard::ShardOutcome::Turn { actor: 2, .. }), "shard b: expected ShardOutcome::Turn, got {outcome_b:?}");
 
     let pid_a = shard_a.child_id().await.expect("shard a pid");
-    // 🔪️ Involuntary death, exactly the packet's required proof — `kill -9` from OUTSIDE this
-    // process's own `ProcessTransport::kill()`.
     let status = Command::new("kill").args(["-9", &pid_a.to_string()]).status().expect("run kill -9 on shard a");
     assert!(status.success(), "kill -9 shard a must succeed");
 
@@ -241,15 +249,11 @@ async fn process_shard_kill_is_detected_and_the_shard_rebuilds_while_a_sibling_s
     }
     assert!(lost, "the watchdog must detect shard a as lost after the external kill -9");
 
-    // ▶️ Rebuild: a fresh child at a fresh actor id (a real restart would restore-from-checkpoint
-    // here — out of this test's scope, `GuestRuntime::checkpoint`/`restore` are proven separately
-    // by `🧵️shard/🦀️.rs`'s K1 tests; this proves the PROCESS half of rebuild).
     let shard_a2 = ProcessTransport::spawn(Path::new(&shard_bin), &[wasm_path, "scale-fixture-a".to_string(), "3".to_string()]).await.expect("rebuild shard a");
     semio_framework_async::block_on(shard_a2.send(&instance_open_envelope(3, 1, "idle").await));
     let outcome_a2 = recv_outcome(&shard_a2, 400).await.expect("rebuilt shard a must reply");
     assert!(matches!(outcome_a2, crate::shard::ShardOutcome::Turn { actor: 3, .. }), "rebuilt shard a: expected ShardOutcome::Turn, got {outcome_a2:?}");
 
-    // 🎯️ Sibling isolation: shard b, never touched, is still alive and answers a SECOND turn.
     assert!(shard_b.is_child_alive().await, "shard b must be unaffected by shard a's death");
     semio_framework_async::block_on(shard_b.send(&wake_envelope(2, 2).await));
     let outcome_b2 = recv_outcome(&shard_b, 400).await.expect("shard b must still respond after shard a's kill+rebuild");

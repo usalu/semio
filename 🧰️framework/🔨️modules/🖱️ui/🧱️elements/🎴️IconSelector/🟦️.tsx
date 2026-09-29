@@ -113,7 +113,7 @@ export interface IconSelectorProps {
   classifyIconSelectorMode?: (raw: string) => IconSelectorMode;
 }
 
-/** @emoji 🖼️ Canonical `iconKind` editor for all canvases. */
+/** 🖼️ Canonical `iconKind` editor for all canvases. */
 export function IconSelector({ id, value, onChange, disabled = false, uniform = true, classifyIconSelectorMode: classifyModeProp, "aria-labelledby": labelledBy }: IconSelectorProps): React.ReactElement {
   const classifyMode = classifyModeProp ?? classifyIconSelectorMode;
   const activeMode = classifyMode(value);

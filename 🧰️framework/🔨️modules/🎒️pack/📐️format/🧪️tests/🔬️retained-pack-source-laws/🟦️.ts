@@ -147,5 +147,5 @@ export function testRetainedPackPhysicalOwnership(): void {
   ];
   const typedTerminal = applyPatch({ pending: true, typedItems: 9, historyRecords: 3, allocatedBytes: 65536, ownerTransferred: true, closed: false }, typedRelease, true).newDocument;
   assert.deepEqual(typedTerminal, corpus.retainedTypedPersistence.terminal);
-  console.log("[DEBUG] Retained Pack physical source, catalog, value, diagnostic and inflater fixtures agree with Ajv 2020, fast-json-patch and platform UTF-8; history=32768 dynamic=318 distances=1,32768 terminal-ledgers=zero; typed-persistence=planned-owner-ledger-handoff");
+  console.log("Retained Pack physical source, catalog, value, diagnostic and inflater fixtures agree with Ajv 2020, fast-json-patch and platform UTF-8; history=32768 dynamic=318 distances=1,32768 terminal-ledgers=zero; typed-persistence=planned-owner-ledger-handoff");
 }

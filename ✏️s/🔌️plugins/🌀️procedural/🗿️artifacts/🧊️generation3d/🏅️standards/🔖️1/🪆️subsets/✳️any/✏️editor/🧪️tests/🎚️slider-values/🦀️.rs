@@ -264,7 +264,6 @@ async fn every_moved_slider_converges_on_the_geometry_its_released_value_makes()
         let boot_oracle = &oracles[&(row.example.clone(), authored.to_bits())];
         let boot = delivered_preview(&context::render_with_view(&mut app, edit_preview::GENERATION_3D_PLAY_BODY_PREVIEW, &preview_view).await);
         let boot_label = format!("{} · boot · {} = {authored}", row.example, row.slider);
-        eprintln!("[DEBUG] slider delivery {boot_label}: meshes={:?} oracle={:?} phase={} errors={:?} oracleErrors={:?}", boot.reading.mesh_ids, boot_oracle.mesh_ids, boot.phase, boot.reading.widget_errors, boot_oracle.widget_errors);
         faults.extend(press_faults(&boot_label, boot_oracle, &boot, fixture.bounds_tolerance));
         for (index, gesture) in row.gestures.iter().enumerate() {
             let released = *gesture.values.last().expect("a press releases on a value");
@@ -273,7 +272,7 @@ async fn every_moved_slider_converges_on_the_geometry_its_released_value_makes()
             let delivered = delivered_preview(&context::render_with_view(&mut app, edit_preview::GENERATION_3D_PLAY_BODY_PREVIEW, &preview_view).await);
             let label = format!("{} · {} · {} = {released}", row.example, gesture.row, row.slider);
             eprintln!(
-                "[DEBUG] slider delivery {label}: meshes={:?} oracle={:?} phase={} computing={} errors={:?} oracleErrors={:?}",
+                "slider delivery {label}: meshes={:?} oracle={:?} phase={} computing={} errors={:?} oracleErrors={:?}",
                 delivered.reading.mesh_ids, oracle.mesh_ids, delivered.phase, delivered.computing, delivered.reading.widget_errors, oracle.widget_errors
             );
             let row_faults = press_faults(&label, oracle, &delivered, fixture.bounds_tolerance);
@@ -284,7 +283,7 @@ async fn every_moved_slider_converges_on_the_geometry_its_released_value_makes()
                     if row_faults.is_empty() {
                         faults.push(format!("{label}: converges now, but the fixture still hands it on to {owner} — delete the tag and the reason: {reason}"));
                     } else {
-                        eprintln!("[DEBUG] handed on to {owner}: {}", row_faults.join(" | "));
+                        eprintln!("handed on to {owner}: {}", row_faults.join(" | "));
                     }
                 }
             }

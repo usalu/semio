@@ -1,4 +1,4 @@
-//! @emoji 🎨️ Design-token `StyleSpec` — closed enums over ui_styling tokens, never raw values.
+//! 🎨️ Design-token `StyleSpec` — closed enums over ui_styling tokens, never raw values.
 //!
 //! ⚠️ SCAFFOLD — owned by packet `contract-layout`. Replace this placeholder wholesale; keep the region
 //! structure and the U1 sync rule (no `async fn` in this crate).

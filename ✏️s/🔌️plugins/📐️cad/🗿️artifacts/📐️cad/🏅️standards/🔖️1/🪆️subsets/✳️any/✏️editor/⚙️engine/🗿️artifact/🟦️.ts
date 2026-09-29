@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🧭️ `@semio-tech/cad-js` — CAD domain module facet. See `cad/AGENTS.md`. */
+/** 🧭️ `@semio-tech/cad-js` — CAD domain module facet. See `cad/AGENTS.md`. */
 import { ephemeralBox, ephemeralMap, ephemeralWeakMap } from "@semio-tech/framework";
 import type { ArcPlaneFrame, EdgeCurve, EdgeGroup, EdgeInfo, FaceGroup, FaceInfo, MeshTransfer, Vec3 } from "@semio-tech/s-3d-js";
 import { emptyMeshTransfer, kernelGeometry, solidRef } from "@semio-tech/s-3d-js";
@@ -16,14 +16,14 @@ import { ActionContextPatch, ActionRegistry, ConstructQueryResult, ConstructRunn
 
 // #region 📦️📄️document
 // #region 📄️Document
-/** @emoji 📄️ Single committed modeling operation node. */
+/** 📄️ Single committed modeling operation node. */
 export interface ShapeNode {
   readonly id: string;
   readonly operationKind: string;
   readonly solidRef?: SolidRef;
 }
 
-/** @emoji 📄️ Working document: model + committed shape nodes + command stack. */
+/** 📄️ Working document: model + committed shape nodes + command stack. */
 export interface ModelDocument {
   readonly model: Model;
   nodes: ShapeNode[];
@@ -32,14 +32,14 @@ export interface ModelDocument {
 // #endregion 📄️Document
 
 // #region 📨️Response
-/** @emoji 📨️ Portable command outcome envelope (`diff` + `data` + messages). */
+/** 📨️ Portable command outcome envelope (`diff` + `data` + messages). */
 export interface InteractionMessage {
   readonly code: string;
   readonly message: string;
   readonly path?: string;
 }
 
-/** @emoji 📨️ Result returned by `InteractionRuntime.commit` — modeling output is always `diff` (model geometry); `data` is auxiliary. */
+/** 📨️ Result returned by `InteractionRuntime.commit` — modeling output is always `diff` (model geometry); `data` is auxiliary. */
 export interface InteractionResponse<TData = unknown> {
   readonly ok: boolean;
   readonly errors: readonly InteractionMessage[];
@@ -47,11 +47,11 @@ export interface InteractionResponse<TData = unknown> {
   readonly infos: readonly InteractionMessage[];
   readonly diff: ModelDiff;
   readonly data: TData | null;
-  /** @emoji 📦️ Context clone immediately before the post-commit `confirm` transition; null when commit aborted before confirm. */
+  /** 📦️ Context clone immediately before the post-commit `confirm` transition; null when commit aborted before confirm. */
   readonly archiveContext: Record<string, unknown> | null;
 }
 
-/** @emoji 📨️ Default empty success payload for guards and early returns. */
+/** 📨️ Default empty success payload for guards and early returns. */
 export const EMPTY_INTERACTION_RESPONSE: InteractionResponse<null> = {
   ok: true,
   errors: [],
@@ -62,7 +62,7 @@ export const EMPTY_INTERACTION_RESPONSE: InteractionResponse<null> = {
   archiveContext: null,
 };
 
-/** @emoji 📄️ One committed model change plus inverse diff for document-level undo/redo. */
+/** 📄️ One committed model change plus inverse diff for document-level undo/redo. */
 export interface Modification {
   readonly id: string;
   readonly interactionId: string;
@@ -71,7 +71,7 @@ export interface Modification {
   readonly backwardsDiff: ModelDiff;
 }
 
-/** @emoji 📄️ Two-stack modification history (undo / redo) keyed by model diffs. */
+/** 📄️ Two-stack modification history (undo / redo) keyed by model diffs. */
 export class DocumentHistory {
   private undoStack: Modification[] = [];
   private redoStack: Modification[] = [];
@@ -92,12 +92,12 @@ export class DocumentHistory {
     return n ? this.redoStack[n - 1]! : null;
   }
 
-  /** @emoji 📚️ Committed undo stack in document order for renderer views. */
+  /** 📚️ Committed undo stack in document order for renderer views. */
   entries(): readonly Modification[] {
     return [...this.undoStack];
   }
 
-  /** @emoji 🧹️ Drops undo and redo stacks when the host swaps the base document. */
+  /** 🧹️ Drops undo and redo stacks when the host swaps the base document. */
   clear(): void {
     this.undoStack = [];
     this.redoStack = [];
@@ -122,14 +122,14 @@ export class DocumentHistory {
 // #endregion 📨️Response
 
 // #region 📜️Interaction
-/** @emoji 🩺️ Non-fatal runtime diagnostic surfaced in snapshots. */
+/** 🩺️ Non-fatal runtime diagnostic surfaced in snapshots. */
 export interface Diagnostic {
   readonly severity: "info" | "warning" | "error";
   readonly code: string;
   readonly message: string;
 }
 
-/** @emoji 📜️ Host frame while a nested interaction session is active (chain via `outer`). */
+/** 📜️ Host frame while a nested interaction session is active (chain via `outer`). */
 export interface InteractionNestedHostFrame {
   readonly hostInteractionId: string;
   readonly hostState: string;
@@ -137,7 +137,7 @@ export interface InteractionNestedHostFrame {
   readonly outer?: InteractionNestedHostFrame;
 }
 
-/** @emoji 📜️ Serializable interaction snapshot for hosts and renderers. */
+/** 📜️ Serializable interaction snapshot for hosts and renderers. */
 export interface InteractionSnapshot {
   readonly interactionId: string;
   readonly state: string;
@@ -166,7 +166,7 @@ export interface InteractionRuntimeOptions {
   readonly activeModelDefinitionId?: string | null;
 }
 
-/** @emoji 📞️ Resolves an interaction spec for `interaction.call` (registry first, then shipped assets). */
+/** 📞️ Resolves an interaction spec for `interaction.call` (registry first, then shipped assets). */
 export function resolveInteractionSpecForCall(interactionId: string, registry?: InteractionRegistry): InteractionSpec | null {
   return registry?.get(interactionId) ?? loadSpatialInteraction(interactionId);
 }
@@ -240,7 +240,7 @@ function clearInteractionLengthEntryFields(ctx: Record<string, unknown>): void {
 }
 // #endregion 📏️PointerContext
 
-/** @emoji 📜️ Headless + interactive interaction controller (`send`, `commit`, `undo`). */
+/** 📜️ Headless + interactive interaction controller (`send`, `commit`, `undo`). */
 export class InteractionRuntime {
   private readonly sm: StateEngine;
   private readonly actions: ActionRegistry;
@@ -262,17 +262,17 @@ export class InteractionRuntime {
     this.actions = opts.actions ?? modelDefinitionActionRegistry();
   }
 
-  /** @emoji 🔌️ Precise BREP kernel wired into this runtime (tessellation, commit, derived views). */
+  /** 🔌️ Precise BREP kernel wired into this runtime (tessellation, commit, derived views). */
   kernel(): SpatialKernel {
     return this.opts.kernel;
   }
 
-  /** @emoji ⚡️ `fast` uses `previewKernel`; `precise` uses the BREP kernel for preview math too. */
+  /** ⚡️ `fast` uses `previewKernel`; `precise` uses the BREP kernel for preview math too. */
   computeMode(): SpatialComputeMode {
     return this.opts.mode ?? "precise";
   }
 
-  /** @emoji ⚡️ Active preview kernel for the current `mode` (fast renderer vs precise brep). */
+  /** ⚡️ Active preview kernel for the current `mode` (fast renderer vs precise brep). */
   previewKernel(): SpatialPreviewKernel {
     const mode = this.computeMode();
     if (mode === "fast") {
@@ -533,13 +533,13 @@ export class InteractionRuntime {
     }
   }
 
-  /** @emoji 🧭️ Accepted geometry entity kinds for the active machine state (`[]` when none). */
+  /** 🧭️ Accepted geometry entity kinds for the active machine state (`[]` when none). */
   listActiveSelectionAccept(): readonly ModelEntityKind[] {
     if (this.child) return this.child.listActiveSelectionAccept();
     return getActiveSelectionSpec(this.spec, this.sm.getState())?.accept ?? [];
   }
 
-  /** @emoji 🔍️ Executes a `construct` script via `opts.query` (host registers `@semio-tech/cad-js/query`). */
+  /** 🔍️ Executes a `construct` script via `opts.query` (host registers `@semio-tech/cad-js/query`). */
   async query(text: string): Promise<ConstructQueryResult> {
     if (this.child) return this.child.query(text);
     const runner = this.opts.query;
@@ -607,14 +607,14 @@ export class InteractionRuntime {
     for (const l of this.listeners) l();
   }
 
-  /** @emoji 📜️ Merges `start.targets` when `compileInteraction` began in the post-start state without running transition effects. */
+  /** 📜️ Merges `start.targets` when `compileInteraction` began in the post-start state without running transition effects. */
   private applyInstantStartPayload(event: InteractionEvent): void {
     const raw = event.targets;
     if (!Array.isArray(raw) || raw.length === 0) return;
     this.sm.getContext().seedTargets = raw;
   }
 
-  /** @emoji 📜️ Dispatches a typed interaction event through the statechart + optional kernel queries. */
+  /** 📜️ Dispatches a typed interaction event through the statechart + optional kernel queries. */
   async send(event: InteractionEvent): Promise<void> {
     if (this.child) {
       await this.child.send(event);
@@ -842,19 +842,19 @@ export class InteractionRuntime {
     return res;
   }
 
-  /** @emoji 📜️ Executes `commit.operation` against `kernel`, applies `diff` to `document.model`, records history. */
+  /** 📜️ Executes `commit.operation` against `kernel`, applies `diff` to `document.model`, records history. */
   async commit(): Promise<InteractionResponse> {
     if (this.child) return this.child.commit();
     return this.runCommit(true);
   }
 }
 
-/** @emoji 📜️ Constructs a `InteractionRuntime` from a compiled `InteractionSpec`. */
+/** 📜️ Constructs a `InteractionRuntime` from a compiled `InteractionSpec`. */
 export function createInteractionRuntime(spec: InteractionSpec, opts: InteractionRuntimeOptions): InteractionRuntime {
   return new InteractionRuntime(compileInteraction(spec), opts);
 }
 
-/** @emoji 🪪️ Runs a `selection.*` action (declarative headless command, no interaction session). */
+/** 🪪️ Runs a `selection.*` action (declarative headless command, no interaction session). */
 export async function runSelectionOperationInteraction(
   interactionId: string,
   opts: InteractionRuntimeOptions & { readonly seedTargets?: readonly SelectionTarget[] },
@@ -940,7 +940,7 @@ function selectionOperationsForModelDefinitionFromActions(modelDefinitionId: str
   return out.sort((a, b) => a.id.localeCompare(b.id));
 }
 
-/** @emoji 🪪️ Maps a `selection.*` interaction id to headless `SelectionApplyParams`. */
+/** 🪪️ Maps a `selection.*` interaction id to headless `SelectionApplyParams`. */
 export function selectionApplyParamsForInteraction(defn: SelectionOperationInteractionDef, seedTargets: readonly SelectionTarget[] = []): SelectionApplyParams {
   return {
     operation: defn.operation,
@@ -949,12 +949,12 @@ export function selectionApplyParamsForInteraction(defn: SelectionOperationInter
   };
 }
 
-/** @emoji 🪪️ True when a selection command targets authored `object` rows on the model. */
+/** 🪪️ True when a selection command targets authored `object` rows on the model. */
 export function selectionOperationUsesModelObjects(defn: Pick<SelectionOperationInteractionDef, "kinds">): boolean {
   return defn.kinds?.includes("object") ?? false;
 }
 
-/** @emoji 🪪️ Default seed targets for invert/deselectAll (otherwise empty). */
+/** 🪪️ Default seed targets for invert/deselectAll (otherwise empty). */
 export function selectionSeedTargetsForOperation(operation: SelectionApplyOperation, seedCell: SelectionTarget = { kind: "solid", id: "e2e-box", editable: true }): readonly SelectionTarget[] {
   return operation === "invert" || operation === "deselectAll" ? [seedCell] : [];
 }
@@ -971,7 +971,7 @@ function shippedSpatialInteractionCatalog(): readonly SpatialInteraction[] {
   return shippedInteractionJsons().map(interactionFixtureRow);
 }
 
-/** @emoji 🧭️ Resolves a typed token to an interaction in one model definition (`key`, `id`, or compact `label`). */
+/** 🧭️ Resolves a typed token to an interaction in one model definition (`key`, `id`, or compact `label`). */
 export function resolveSpatialInteractionKeyForModelDefinition(modelDefinitionId: string, token: string): SpatialInteraction | null {
   const t = token.trim().toLowerCase();
   if (!t) return null;
@@ -984,22 +984,22 @@ export function resolveSpatialInteractionKeyForModelDefinition(modelDefinitionId
   return null;
 }
 
-/** @emoji 🧭️ model-definition `InteractionSpec` map (fixtures + host `registerInteraction`). */
+/** 🧭️ model-definition `InteractionSpec` map (fixtures + host `registerInteraction`). */
 export type InteractionRegistry = ReadonlyMap<string, InteractionSpec>;
 
-/** @emoji 🧭️ Registers one compiled interaction; returns a new registry (immutable update). */
+/** 🧭️ Registers one compiled interaction; returns a new registry (immutable update). */
 export function registerInteractionSpec(registry: InteractionRegistry, spec: InteractionSpec): InteractionRegistry {
   const next = new Map(registry);
   next.set(spec.id, spec);
   return next;
 }
 
-/** @emoji 🧭️ Lists registered interaction specs in stable id order. */
+/** 🧭️ Lists registered interaction specs in stable id order. */
 export function listInteractionSpecs(registry: InteractionRegistry): readonly InteractionSpec[] {
   return [...registry.values()].sort((a, b) => a.id.localeCompare(b.id));
 }
 
-/** @emoji 🧭️ Shipped model-definition interactions compiled from fixtures. */
+/** 🧭️ Shipped model-definition interactions compiled from fixtures. */
 export function modelDefinitionInteractionRegistry(): InteractionRegistry {
   const map = new Map<string, InteractionSpec>();
   for (const raw of shippedInteractionJsons()) {
@@ -1013,7 +1013,7 @@ const COMPILED_INTERACTION_BY_ID = ephemeralMap<string, InteractionSpec>("s.plug
 /** Clears the derived interaction compile cache when model-definition assets change. */
 interactionCompileCacheClear.current = () => COMPILED_INTERACTION_BY_ID.clear();
 
-/** @emoji 📚️ Loads a model-definition interaction by stable `id` (compiled once per id for stable React runtime identity). */
+/** 📚️ Loads a model-definition interaction by stable `id` (compiled once per id for stable React runtime identity). */
 export function loadSpatialInteraction(interactionId: string): InteractionSpec | null {
   const cached = COMPILED_INTERACTION_BY_ID.get(interactionId);
   if (cached) return cached;
@@ -1031,27 +1031,27 @@ function requireSpatialInteraction(interactionId: string): InteractionSpec {
   return spec;
 }
 
-/** @emoji 📦️ Compiled `primitive.box` interaction from model-definition assets. */
+/** 📦️ Compiled `primitive.box` interaction from model-definition assets. */
 export function buildBoxInteractionSpec(): InteractionSpec {
   return requireSpatialInteraction("primitive.box");
 }
 
-/** @emoji 📦️ Compiled `feature.extrudeWire` interaction from model-definition assets. */
+/** 📦️ Compiled `feature.extrudeWire` interaction from model-definition assets. */
 export function buildExtrudeInteractionSpec(): InteractionSpec {
   return requireSpatialInteraction("feature.extrudeWire");
 }
 
-/** @emoji 📦️ Compiled `feature.offsetSurface` interaction from model-definition assets. */
+/** 📦️ Compiled `feature.offsetSurface` interaction from model-definition assets. */
 export function buildOffsetSurfaceInteractionSpec(): InteractionSpec {
   return requireSpatialInteraction("feature.offsetSurface");
 }
 
-/** @emoji 📦️ Compiled `measure.distance` interaction from model-definition assets. */
+/** 📦️ Compiled `measure.distance` interaction from model-definition assets. */
 export function buildDistanceInteractionSpec(): InteractionSpec {
   return requireSpatialInteraction("measure.distance");
 }
 
-/** @emoji 📦️ Compiled `measure.area` interaction from model-definition assets. */
+/** 📦️ Compiled `measure.area` interaction from model-definition assets. */
 export function buildAreaInteractionSpec(): InteractionSpec {
   return requireSpatialInteraction("measure.area");
 }
@@ -1061,9 +1061,6 @@ export function buildAreaInteractionSpec(): InteractionSpec {
 // #endregion 📦️📄️document
 
 // #region 🧪️Tests
-import { EdgeRef, FaceRef, ModelSpace, ModelSpaceJson, ObjectRef, TypologyRef, VertexRef, WireRef, actionOwnedByModelDefinition, isCallableOnlyInteraction, isShapeModelDefinition, listModelDefinitionManifests, listModelDefinitionTypologies, listModelObjectsForModelDefinition, listSelectionOperationsForModelDefinition, listTypologiesForModelDefinition, loadTypology, modelDefinitionIdForInteraction, parseModelJson } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
-import { listConstructableTypologiesForModelDefinition, typologyConstructAssetIds, typologyConstructModeActionIds, typologyHasNativeConstructKit } from "../🧬️typology/🟦️.ts";
-import { collectGeometrySelectionTargets, executeSelectionApply, interactionControlForState, interactionLengthEntryLiveDistance, interactionNumericEntryCommitEvent, interactionNumericEntryExplicitLockValue, interactionNumericEntryLockedValue, interactionStepFinalizeEvent, listActionDefs, listModelDefinitionActionSpecs, parseActionSpec, registerActionDef, runSelectionApply, selectionTargetsFromContext, selectionTargetsPointTransformDiff } from "../🎬️actions/🟦️.ts";
 
 const __artifactTestRuntime = import.meta.vitest ? await import("../🏃️runtime/🟦️.ts") : null;
 const __artifactTestKernel = import.meta.vitest ? await import("../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️.ts") : null;
@@ -1074,8 +1071,56 @@ const CAD_E2E_ROUTES_MODEL_SPACE_JSON =
 const CAD_E2E_BUILDING_BOOLEAN_MODEL_SPACE_JSON =
   '{"schema":"spatial.modelspace","revision":1,"models":[{"id":"spatial.shape","model":{"schema":"spatial.model","revision":1,"objects":[{"id":"object-small-building-cell-123052045","typology":"spatial.shape.primitive.box","primitives":[{"kind":"vertex","id":"small-building-vertex-1027259450","position":[-64.506666,41.273333,-9.407222]},{"kind":"vertex","id":"small-building-vertex-1412665337","position":[-18.586667,41.273333,-43.847222]},{"kind":"vertex","id":"small-building-vertex-200778251","position":[-18.586667,3.553333,-9.407222]},{"kind":"vertex","id":"small-building-vertex-354458280","position":[-18.586667,3.553333,-43.847222]},{"kind":"vertex","id":"small-building-vertex-560960189","position":[-64.506666,3.553333,-9.407222]},{"kind":"vertex","id":"small-building-vertex-566043311","position":[-64.506666,41.273333,-43.847222]},{"kind":"vertex","id":"small-building-vertex-584100920","position":[-64.506666,3.553333,-43.847222]},{"kind":"vertex","id":"small-building-vertex-834828749","position":[-18.586667,41.273333,-9.407222]},{"kind":"curve","id":"small-building-edge-1660152326","vertexIds":["small-building-vertex-354458280","small-building-vertex-1412665337"]},{"kind":"curve","id":"small-building-edge-1943812986","vertexIds":["small-building-vertex-566043311","small-building-vertex-584100920"]},{"kind":"curve","id":"small-building-edge-2004107109","vertexIds":["small-building-vertex-200778251","small-building-vertex-560960189"]},{"kind":"curve","id":"small-building-edge-2075229525","vertexIds":["small-building-vertex-1027259450","small-building-vertex-566043311"]},{"kind":"curve","id":"small-building-edge-224238197","vertexIds":["small-building-vertex-584100920","small-building-vertex-560960189"]},{"kind":"curve","id":"small-building-edge-229106015","vertexIds":["small-building-vertex-1027259450","small-building-vertex-834828749"]},{"kind":"curve","id":"small-building-edge-278123677","vertexIds":["small-building-vertex-584100920","small-building-vertex-354458280"]},{"kind":"curve","id":"small-building-edge-278867947","vertexIds":["small-building-vertex-834828749","small-building-vertex-200778251"]},{"kind":"curve","id":"small-building-edge-332998341","vertexIds":["small-building-vertex-200778251","small-building-vertex-354458280"]},{"kind":"curve","id":"small-building-edge-757634469","vertexIds":["small-building-vertex-1412665337","small-building-vertex-834828749"]},{"kind":"curve","id":"small-building-edge-779379499","vertexIds":["small-building-vertex-1412665337","small-building-vertex-566043311"]},{"kind":"curve","id":"small-building-edge-951546977","vertexIds":["small-building-vertex-560960189","small-building-vertex-1027259450"]},{"kind":"curve","id":"small-building-wire-1366152152","edgeIds":["small-building-edge-278123677","small-building-edge-1943812986","small-building-edge-779379499","small-building-edge-1660152326"]},{"kind":"curve","id":"small-building-wire-1559546061","edgeIds":["small-building-edge-2075229525","small-building-edge-229106015","small-building-edge-757634469","small-building-edge-779379499"]},{"kind":"curve","id":"small-building-wire-1742634236","edgeIds":["small-building-edge-278867947","small-building-edge-332998341","small-building-edge-1660152326","small-building-edge-757634469"]},{"kind":"curve","id":"small-building-wire-456551683","edgeIds":["small-building-edge-1943812986","small-building-edge-224238197","small-building-edge-951546977","small-building-edge-2075229525"]},{"kind":"curve","id":"small-building-wire-515231130","edgeIds":["small-building-edge-224238197","small-building-edge-278123677","small-building-edge-332998341","small-building-edge-2004107109"]},{"kind":"curve","id":"small-building-wire-978200956","edgeIds":["small-building-edge-951546977","small-building-edge-2004107109","small-building-edge-278867947","small-building-edge-229106015"]},{"kind":"surface","id":"small-building-face-1071813579","wireIds":["small-building-wire-1559546061"]},{"kind":"surface","id":"small-building-face-1198070201","wireIds":["small-building-wire-456551683"]},{"kind":"surface","id":"small-building-face-1321487947","wireIds":["small-building-wire-1742634236"]},{"kind":"surface","id":"small-building-face-1833451572","wireIds":["small-building-wire-1366152152"]},{"kind":"surface","id":"small-building-face-383803774","wireIds":["small-building-wire-515231130"]},{"kind":"surface","id":"small-building-face-624717229","wireIds":["small-building-wire-978200956"]},{"kind":"shell","id":"small-building-shell-319815043","faceIds":["small-building-face-1198070201","small-building-face-1833451572","small-building-face-383803774","small-building-face-624717229","small-building-face-1071813579","small-building-face-1321487947"]},{"kind":"solid","slot":"solid","id":"small-building-cell-123052045","shellIds":["small-building-shell-319815043"]}]},{"id":"object-small-building-cell-1278694563","typology":"spatial.shape.primitive.box","primitives":[{"kind":"vertex","id":"small-building-vertex-1052483923","position":[-18.586667,-57.126666,-9.407222]},{"kind":"vertex","id":"small-building-vertex-1078954806","position":[-64.506666,-57.126666,-9.407222]},{"kind":"vertex","id":"small-building-vertex-1417750768","position":[-18.586667,3.553333,54.142777]},{"kind":"vertex","id":"small-building-vertex-1487235108","position":[-64.506666,-57.126666,25.852777]},{"kind":"vertex","id":"small-building-vertex-1653716766","position":[-64.506666,3.553333,54.142777]},{"kind":"vertex","id":"small-building-vertex-1928378833","position":[-64.506666,-7.926666,62.752777]},{"kind":"vertex","id":"small-building-vertex-200778251","position":[-18.586667,3.553333,-9.407222]},{"kind":"vertex","id":"small-building-vertex-551332595","position":[-18.586667,-7.926666,62.752777]},{"kind":"vertex","id":"small-building-vertex-560960189","position":[-64.506666,3.553333,-9.407222]},{"kind":"vertex","id":"small-building-vertex-945778871","position":[-18.586667,-57.126666,25.852777]},{"kind":"curve","id":"small-building-edge-1070453701","vertexIds":["small-building-vertex-945778871","small-building-vertex-1052483923"]},{"kind":"curve","id":"small-building-edge-1108121009","vertexIds":["small-building-vertex-945778871","small-building-vertex-1487235108"]},{"kind":"curve","id":"small-building-edge-1261178177","vertexIds":["small-building-vertex-560960189","small-building-vertex-1653716766"]},{"kind":"curve","id":"small-building-edge-1422159112","vertexIds":["small-building-vertex-1078954806","small-building-vertex-1487235108"]},{"kind":"curve","id":"small-building-edge-1567786765","vertexIds":["small-building-vertex-551332595","small-building-vertex-945778871"]},{"kind":"curve","id":"small-building-edge-1705326756","vertexIds":["small-building-vertex-1928378833","small-building-vertex-551332595"]},{"kind":"curve","id":"small-building-edge-2004107109","vertexIds":["small-building-vertex-200778251","small-building-vertex-560960189"]},{"kind":"curve","id":"small-building-edge-2102926252","vertexIds":["small-building-vertex-1928378833","small-building-vertex-1653716766"]},{"kind":"curve","id":"small-building-edge-349583852","vertexIds":["small-building-vertex-1052483923","small-building-vertex-1078954806"]},{"kind":"curve","id":"small-building-edge-354613623","vertexIds":["small-building-vertex-1487235108","small-building-vertex-1928378833"]},{"kind":"curve","id":"small-building-edge-432705901","vertexIds":["small-building-vertex-200778251","small-building-vertex-1052483923"]},{"kind":"curve","id":"small-building-edge-432807106","vertexIds":["small-building-vertex-1417750768","small-building-vertex-200778251"]},{"kind":"curve","id":"small-building-edge-467629952","vertexIds":["small-building-vertex-1078954806","small-building-vertex-560960189"]},{"kind":"curve","id":"small-building-edge-49481349","vertexIds":["small-building-vertex-1417750768","small-building-vertex-551332595"]},{"kind":"curve","id":"small-building-edge-508083477","vertexIds":["small-building-vertex-1417750768","small-building-vertex-1653716766"]},{"kind":"curve","id":"small-building-wire-1095357825","edgeIds":["small-building-edge-467629952","small-building-edge-1422159112","small-building-edge-354613623","small-building-edge-2102926252","small-building-edge-1261178177"]},{"kind":"curve","id":"small-building-wire-1399618711","edgeIds":["small-building-edge-349583852","small-building-edge-432705901","small-building-edge-2004107109","small-building-edge-467629952"]},{"kind":"curve","id":"small-building-wire-1676387167","edgeIds":["small-building-edge-1070453701","small-building-edge-432705901","small-building-edge-432807106","small-building-edge-49481349","small-building-edge-1567786765"]},{"kind":"curve","id":"small-building-wire-1755121565","edgeIds":["small-building-edge-2004107109","small-building-edge-432807106","small-building-edge-508083477","small-building-edge-1261178177"]},{"kind":"curve","id":"small-building-wire-285005499","edgeIds":["small-building-edge-349583852","small-building-edge-1070453701","small-building-edge-1108121009","small-building-edge-1422159112"]},{"kind":"curve","id":"small-building-wire-311748032","edgeIds":["small-building-edge-354613623","small-building-edge-1108121009","small-building-edge-1567786765","small-building-edge-1705326756"]},{"kind":"curve","id":"small-building-wire-924227310","edgeIds":["small-building-edge-49481349","small-building-edge-508083477","small-building-edge-2102926252","small-building-edge-1705326756"]},{"kind":"surface","id":"small-building-face-1144073303","wireIds":["small-building-wire-1755121565"]},{"kind":"surface","id":"small-building-face-1382526041","wireIds":["small-building-wire-1095357825"]},{"kind":"surface","id":"small-building-face-1891411219","wireIds":["small-building-wire-1399618711"]},{"kind":"surface","id":"small-building-face-2019874201","wireIds":["small-building-wire-311748032"]},{"kind":"surface","id":"small-building-face-2129815768","wireIds":["small-building-wire-924227310"]},{"kind":"surface","id":"small-building-face-512606747","wireIds":["small-building-wire-285005499"]},{"kind":"surface","id":"small-building-face-816291467","wireIds":["small-building-wire-1676387167"]},{"kind":"shell","id":"small-building-shell-115098816","faceIds":["small-building-face-816291467","small-building-face-512606747","small-building-face-1891411219","small-building-face-1144073303","small-building-face-2129815768","small-building-face-2019874201","small-building-face-1382526041"]},{"kind":"solid","slot":"solid","id":"small-building-cell-1278694563","shellIds":["small-building-shell-115098816"]}]}]}}]}';
 
+/** 🎒️ The values this module hands its extracted suite `./🧪️tests/🧪️semio-tech-cad-js-core-interactions/🟦️.ts`. */
+export type ArtifactTestDependencies = {
+  readonly CAD_E2E_BUILDING_BOOLEAN_MODEL_SPACE_JSON: typeof CAD_E2E_BUILDING_BOOLEAN_MODEL_SPACE_JSON;
+  readonly CAD_E2E_LOOM_MODEL_SPACE_JSON: typeof CAD_E2E_LOOM_MODEL_SPACE_JSON;
+  readonly CAD_E2E_ROUTES_MODEL_SPACE_JSON: typeof CAD_E2E_ROUTES_MODEL_SPACE_JSON;
+  readonly DocumentHistory: typeof DocumentHistory;
+  readonly EMPTY_MODEL_DIFF: typeof EMPTY_MODEL_DIFF;
+  readonly InteractionRuntime: typeof InteractionRuntime;
+  readonly Model: typeof Model;
+  readonly __artifactTestKernel: typeof __artifactTestKernel;
+  readonly __artifactTestRuntime: typeof __artifactTestRuntime;
+  readonly applyModelDiff: typeof applyModelDiff;
+  readonly buildAreaInteractionSpec: typeof buildAreaInteractionSpec;
+  readonly buildBoxInteractionSpec: typeof buildBoxInteractionSpec;
+  readonly buildDistanceInteractionSpec: typeof buildDistanceInteractionSpec;
+  readonly clampPointAlongDirection: typeof clampPointAlongDirection;
+  readonly compileInteraction: typeof compileInteraction;
+  readonly createInteractionRuntime: typeof createInteractionRuntime;
+  readonly defaultModelDefinitionId: typeof defaultModelDefinitionId;
+  readonly emptyMeshTransfer: typeof emptyMeshTransfer;
+  readonly ensureTypologyObjectFromCreateDiff: typeof ensureTypologyObjectFromCreateDiff;
+  readonly interactionLengthEntryForState: typeof interactionLengthEntryForState;
+  readonly interactionRecordsDocumentHistory: typeof interactionRecordsDocumentHistory;
+  readonly isEmptyModelDiff: typeof isEmptyModelDiff;
+  readonly isFinalInteractionState: typeof isFinalInteractionState;
+  readonly listInteractionSpecs: typeof listInteractionSpecs;
+  readonly listSpatialInteractionsForModelDefinition: typeof listSpatialInteractionsForModelDefinition;
+  readonly loadSpatialInteraction: typeof loadSpatialInteraction;
+  readonly mergeInteractionCallOutputs: typeof mergeInteractionCallOutputs;
+  readonly modelDefinitionActionRegistry: typeof modelDefinitionActionRegistry;
+  readonly modelDefinitionInteractionRegistry: typeof modelDefinitionInteractionRegistry;
+  readonly parseInteractionSpec: typeof parseInteractionSpec;
+  readonly pureTsStateEngineProvider: typeof pureTsStateEngineProvider;
+  readonly readInteractionContextVec3: typeof readInteractionContextVec3;
+  readonly registerInteractionSpec: typeof registerInteractionSpec;
+  readonly requireSpatialInteraction: typeof requireSpatialInteraction;
+  readonly resolveDisplay: typeof resolveDisplay;
+  readonly runRegisteredAction: typeof runRegisteredAction;
+  readonly runSelectionOperationInteraction: typeof runSelectionOperationInteraction;
+  readonly selectionApplyParamsForInteraction: typeof selectionApplyParamsForInteraction;
+  readonly selectionSeedTargetsForOperation: typeof selectionSeedTargetsForOperation;
+  readonly selectionTargetsFromActionResult: typeof selectionTargetsFromActionResult;
+  readonly solidRef: typeof solidRef;
+  readonly typologyConstructCommitActionForMode: typeof typologyConstructCommitActionForMode;
+  readonly typologyConstructKitByInteraction: typeof typologyConstructKitByInteraction;
+  readonly typologyIdForInteractionCommit: typeof typologyIdForInteractionCommit;
+};
+
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️semio-tech-cad-js-core-interactions/🟦️.ts");
-  await registerTests1(import.meta.vitest, { CAD_E2E_BUILDING_BOOLEAN_MODEL_SPACE_JSON, CAD_E2E_LOOM_MODEL_SPACE_JSON, CAD_E2E_ROUTES_MODEL_SPACE_JSON, DocumentHistory, EMPTY_MODEL_DIFF, EdgeRef, FaceRef, InteractionEvent, InteractionRuntime, InteractionSpec, Model, ModelDiff, ModelEntityKind, ModelSpace, ModelSpaceJson, ObjectRef, SelectionOperationInteractionDef, SelectionTarget, SolidRef, SpatialKernel, SpatialPreviewKernel, TypologyRef, VertexRef, WireRef, __artifactTestKernel, __artifactTestRuntime, actionOwnedByModelDefinition, applyModelDiff, buildAreaInteractionSpec, buildBoxInteractionSpec, buildDistanceInteractionSpec, clampPointAlongDirection, collectGeometrySelectionTargets, compileInteraction, createInteractionRuntime, defaultModelDefinitionId, emptyMeshTransfer, ensureTypologyObjectFromCreateDiff, executeSelectionApply, interactionControlForState, interactionLengthEntryForState, interactionLengthEntryLiveDistance, interactionNumericEntryCommitEvent, interactionNumericEntryExplicitLockValue, interactionNumericEntryLockedValue, interactionRecordsDocumentHistory, interactionStepFinalizeEvent, isCallableOnlyInteraction, isEmptyModelDiff, isFinalInteractionState, isShapeModelDefinition, listActionDefs, listConstructableTypologiesForModelDefinition, listInteractionSpecs, listModelDefinitionActionSpecs, listModelDefinitionManifests, listModelDefinitionTypologies, listModelObjectsForModelDefinition, listSelectionOperationsForModelDefinition, listSpatialInteractionsForModelDefinition, listTypologiesForModelDefinition, loadSpatialInteraction, loadTypology, mergeInteractionCallOutputs, modelDefinitionActionRegistry, modelDefinitionIdForInteraction, modelDefinitionInteractionRegistry, parseActionSpec, parseInteractionSpec, parseModelJson, pureTsStateEngineProvider, readInteractionContextVec3, registerActionDef, registerInteractionSpec, requireSpatialInteraction, resolveDisplay, runRegisteredAction, runSelectionApply, runSelectionOperationInteraction, selectionApplyParamsForInteraction, selectionSeedTargetsForOperation, selectionTargetsFromActionResult, selectionTargetsFromContext, selectionTargetsPointTransformDiff, solidRef, typologyConstructAssetIds, typologyConstructCommitActionForMode, typologyConstructKitByInteraction, typologyConstructModeActionIds, typologyHasNativeConstructKit, typologyIdForInteractionCommit }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { CAD_E2E_BUILDING_BOOLEAN_MODEL_SPACE_JSON, CAD_E2E_LOOM_MODEL_SPACE_JSON, CAD_E2E_ROUTES_MODEL_SPACE_JSON, DocumentHistory, EMPTY_MODEL_DIFF, InteractionRuntime, Model, __artifactTestKernel, __artifactTestRuntime, applyModelDiff, buildAreaInteractionSpec, buildBoxInteractionSpec, buildDistanceInteractionSpec, clampPointAlongDirection, compileInteraction, createInteractionRuntime, defaultModelDefinitionId, emptyMeshTransfer, ensureTypologyObjectFromCreateDiff, interactionLengthEntryForState, interactionRecordsDocumentHistory, isEmptyModelDiff, isFinalInteractionState, listInteractionSpecs, listSpatialInteractionsForModelDefinition, loadSpatialInteraction, mergeInteractionCallOutputs, modelDefinitionActionRegistry, modelDefinitionInteractionRegistry, parseInteractionSpec, pureTsStateEngineProvider, readInteractionContextVec3, registerInteractionSpec, requireSpatialInteraction, resolveDisplay, runRegisteredAction, runSelectionOperationInteraction, selectionApplyParamsForInteraction, selectionSeedTargetsForOperation, selectionTargetsFromActionResult, solidRef, typologyConstructCommitActionForMode, typologyConstructKitByInteraction, typologyIdForInteractionCommit }, { url: import.meta.url });
 }
 // #endregion 🧪️Tests

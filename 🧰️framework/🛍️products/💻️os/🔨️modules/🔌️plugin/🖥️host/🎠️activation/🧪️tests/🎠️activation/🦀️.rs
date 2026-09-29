@@ -61,7 +61,6 @@ async fn neutral_activation_failures_retire_the_exact_kernel_and_guest_owners() 
         assert_eq!(kernel.actor_record(actor).await.is_some(), row["actorRetained"].as_bool().unwrap(), "{}", row["id"]);
         assert_eq!(mock.instantiate_admissions.load(std::sync::atomic::Ordering::Acquire) as u64, row["instantiations"].as_u64().unwrap(), "{}", row["id"]);
         assert_eq!(mock.drop_admissions.load(std::sync::atomic::Ordering::Acquire) as u64, row["drops"].as_u64().unwrap(), "{}", row["id"]);
-        eprintln!("[DEBUG] activation ownership case={} admitted={} kernel-retained={} drops={}", row["id"], result.is_ok(), kernel.actor_record(actor).await.is_some(), row["drops"]);
     }
 }
 
@@ -88,5 +87,4 @@ async fn artifact_kind_app_ids_reach_the_guest_as_the_declared_activation_event(
         }
         _ => panic!("activation_turn_event must marshal onto the WIT activate event"),
     }
-    eprintln!("[DEBUG] activation reason reaches the guest: s.beta.sheet@1/*#editor -> on-artifact-kind(s.beta.sheet)");
 }

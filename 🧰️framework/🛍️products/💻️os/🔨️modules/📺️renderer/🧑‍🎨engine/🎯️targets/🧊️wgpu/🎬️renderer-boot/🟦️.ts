@@ -1,8 +1,8 @@
 // #region 🧲️Header
-/** @emoji 🧊️ `@semio-tech/framework-renderer-wgpu` — raw wgpu WASM renderer boot for declarative Rust program UI trees. */
+/** 🧊️ `@semio-tech/framework-renderer-wgpu` — raw wgpu WASM renderer boot for declarative Rust program UI trees. */
 // #endregion 🧲️Header
 
-import { watchAgentBridgeOffer } from "../../../🧱️elements/🔗️AgentBridge/🛰️offer/🟦️.ts";
+import { agentBridgeOfferScopeFromJsonV1, watchAgentBridgeOffer } from "../../../🧱️elements/🔗️AgentBridge/🛰️offer/🟦️.ts";
 import { ICON_NAMES, ICONS } from "@semio-tech/assets";
 import { loadPluginModule, pluginHandleForBridge } from "../🐚️plugin-bridge/🟦️.ts";
 import { installWgpuPageHostIo } from "../🚪️host-io/🟦️.ts";
@@ -200,6 +200,7 @@ export async function bootFrameworkOsWgpu(options: FrameworkOsWgpuBootOptions = 
     semioWgpuSetHostLocale?: (locale: string) => void;
     semioWgpuSetHostStorage?: (snapshotJson: string) => void;
     semioWgpuSetAgentBridgeConfig?: (url: string, admissionProof: string) => void;
+    dumpAgentBridgeOfferScope?: () => string;
     uploadIconAtlas?: (width: number, height: number, pixels: Uint8Array, entriesJson: string) => void;
   };
   if (rendererModule.default) await rendererModule.default();
@@ -233,7 +234,9 @@ export async function bootFrameworkOsWgpu(options: FrameworkOsWgpuBootOptions = 
   window.addEventListener("storage", publishAppearance);
   window.addEventListener("storage", publishHostStorage);
   rendererModule.semioWgpuMount(canvas, handles, descriptor.pluginVariant);
-  const stopAgentBridgeOffer = watchAgentBridgeOffer((offer) => rendererModule.semioWgpuSetAgentBridgeConfig?.(offer?.url ?? "", offer?.admissionProof ?? ""));
+  const stopAgentBridgeOffer = watchAgentBridgeOffer((offer) => rendererModule.semioWgpuSetAgentBridgeConfig?.(offer?.url ?? "", offer?.admissionProof ?? ""), {
+    offerScope: async () => agentBridgeOfferScopeFromJsonV1(rendererModule.dumpAgentBridgeOfferScope?.() ?? null),
+  });
   if (rendererModule.uploadIconAtlas) {
     rendererModule.uploadIconAtlas(iconAtlas.width, iconAtlas.height, iconAtlas.pixels, JSON.stringify(iconAtlas.entries));
   }

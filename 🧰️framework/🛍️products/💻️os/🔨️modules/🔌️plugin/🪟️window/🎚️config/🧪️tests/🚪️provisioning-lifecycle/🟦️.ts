@@ -357,7 +357,6 @@ export function testWindowConfigProvisioningLifecycleOracle(): void {
     assert.deepEqual(patched, scenario.expected, `${scenario.id}: independent JSON Patch oracle`);
     assert.equal(actual.metrics.readMaterializations, 0, `${scenario.id}: reads must not create owners`);
   }
-  console.log(`[DEBUG] window-config-provisioning-lifecycle scenarios=${lifecycle.scenarios.length} capturePaths=9 policies=${lifecycle.kinds.length} readMaterializations=0`);
 }
 
 if (import.meta.main) testWindowConfigProvisioningLifecycleOracle();

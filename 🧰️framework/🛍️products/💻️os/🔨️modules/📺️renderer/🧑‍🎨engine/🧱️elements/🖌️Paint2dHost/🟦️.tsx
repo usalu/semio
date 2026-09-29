@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/Paint2dHost/component.tsx
-/** @emoji 🖌️ `Paint2dHost` — raster-2d `ComponentSceneHost`: drives a `paint2d`-shaped scene through
+/** 🖌️ `Paint2dHost` — raster-2d `ComponentSceneHost`: drives a `paint2d`-shaped scene through
  * the raster wasm session (brush/selection utilities, marquee selection, navigator viewport), reusing
  * `Canvas2dHost`'s pan/zoom camera math and `Interpreter`'s surface context-menu plumbing. */
 // #endregion 🧲️Header
@@ -660,7 +660,7 @@ function Paint2dCanvasSurface({
     [clientPoint, dispatch, isNavigator, scene.cameraJson, scene.compositeViewportJson],
   );
 
-  /** @emoji 🖱️ Pick targets fresh at the click point via the raster wasm session (mirrors `pickInteraction.resolveTargetsAtClient`) — raster layers have no live pick/hover state cached in React, so hits are recomputed here rather than reused. */
+  /** 🖱️ Pick targets fresh at the click point via the raster wasm session (mirrors `pickInteraction.resolveTargetsAtClient`) — raster layers have no live pick/hover state cached in React, so hits are recomputed here rather than reused. */
   const onContextMenu = useCallback(
     (event: MouseEvent<HTMLDivElement>): void => {
       event.preventDefault();

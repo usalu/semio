@@ -26,13 +26,13 @@ pub struct HistoryLog {
     pub doc_id: String,
     pub schema: String,
     pub edits: Vec<HistoryEdit>,
-    /// @emoji 🔀️ Structural history steps (`REC_TRANSITION`) — undo/redo, commits, branches,
+    /// 🔀️ Structural history steps (`REC_TRANSITION`) — undo/redo, commits, branches,
     /// checkouts and repins — in persisted order; the fold orders them by `(hlt, id)`.
     pub transitions: Vec<HistoryTransitionRecord>,
-    /// @emoji 🧩️ Composition overlay (`REC_COMPOSITION`): who owns this document and which dialect
+    /// 🧩️ Composition overlay (`REC_COMPOSITION`): who owns this document and which dialect
     /// it materializes as. Absent for every non-composed document.
     pub composition: Option<HistoryComposition>,
-    /// @emoji ⚔️ First-class merge conflicts (`REC_CONFLICT`), durable per
+    /// ⚔️ First-class merge conflicts (`REC_CONFLICT`), durable per
     /// `.🧬semio/🦑️repo/🎫️tickets/26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS/
     /// 📋️contract-freeze.md` §C7: a `Quarantined` batch rejected outright, or a `Degraded`
     /// accepted-but-messy merge — see `crate::os_spr::conflict::ConflictKind`. Empty for the
@@ -40,7 +40,7 @@ pub struct HistoryLog {
     pub conflicts: Vec<HistoryConflict>,
 }
 
-/// @emoji 🔀️ One persisted history transition: the [`crate::os_spr::MutationEnvelope`] minus its
+/// 🔀️ One persisted history transition: the [`crate::os_spr::MutationEnvelope`] minus its
 /// document id and schema (implied by `REC_DOC` and [`crate::os_spr::HISTORY_TRANSITION_SCHEMA`]).
 /// `hlt` is `(actor, physical_ms, logical)` like [`HistoryConflict::hlt`]; `payload` is the encoded
 /// [`crate::os_spr::HistoryTransition`], opaque to this codec.
@@ -53,7 +53,7 @@ pub struct HistoryTransitionRecord {
     pub payload: Vec<u8>,
 }
 
-/// @emoji 🧩️ The durable form of a document's composition facts, carried as ONE extension record
+/// 🧩️ The durable form of a document's composition facts, carried as ONE extension record
 /// rather than as new fields on the format-frozen critical `REC_DOC`: an older/foreign reader must
 /// be able to skip it without failing the whole file. Checkpoint pins are not stored here — they
 /// are facts of `Repin` transitions, derived by [`HistoryLog::fold`].
@@ -65,7 +65,7 @@ pub struct HistoryComposition {
     pub dialect: Option<(String, String, String)>,
 }
 
-/// @emoji ⚔️ Durable form of `crate::os_spr::conflict::Conflict` (`REC_CONFLICT`): `kind`/`status`
+/// ⚔️ Durable form of `crate::os_spr::conflict::Conflict` (`REC_CONFLICT`): `kind`/`status`
 /// are the numeric mirrors of `crate::os_spr::conflict::ConflictKind`/`ConflictStatus`
 /// (`kind`: 0 = `Quarantined`, 1 = `Degraded`; `status`: 0 = `Open`, 1 = `Accepted`, 2 =
 /// `Discarded`) — `envelopes` is populated only for `Quarantined` (opaque, already-serialized
@@ -87,7 +87,7 @@ pub struct HistoryConflict {
     pub messages: Vec<HistoryMessage>,
 }
 
-/// @emoji 📨️ Durable form of `crate::os_spr::command::MutationMessage`: `level` is the numeric
+/// 📨️ Durable form of `crate::os_spr::command::MutationMessage`: `level` is the numeric
 /// mirror of `crate::os_dsl::Severity` (`as_u8`/`from_u8`, 0..3), `code` is dict-interned (the
 /// frozen seven `mutation.*` codes repeat heavily across one document's history — see
 /// `📋️contract-freeze.md` §C2), `message`/`target` are plain strings (English prose / element
@@ -110,17 +110,17 @@ pub struct HistoryEdit {
     pub coalesce_key: Option<String>,
     pub description: Option<String>,
     pub ops: Vec<OpPayload>,
-    /// @emoji 🔙️ The edit's inverse operations, in apply order (mirrors `crate::os_spr::command::Edit
+    /// 🔙️ The edit's inverse operations, in apply order (mirrors `crate::os_spr::command::Edit
     /// ::inverse`). Empty for text-compiled/imported logs — a decoder recomputing them from a
     /// fresh replay never touches this field; when non-empty, `write_backwards_section` persisted
     /// them explicitly (only the `.spr` binary path ever sets this — the `.ops` text mirror stays
     /// forwards-only, see `crate::os_store::print_document_spr`/`parse_document_spr`).
     pub inverse: Vec<OpPayload>,
-    /// @emoji 🧮️ Present iff the caller supplied it; absent for text-compiled/imported logs. Not
+    /// 🧮️ Present iff the caller supplied it; absent for text-compiled/imported logs. Not
     /// required for round-trip — a decoder recomputing inverse/meta from a fresh replay never
     /// touches this field.
     pub meta: Option<Vec<HistoryOpMeta>>,
-    /// @emoji 🛤️ Which undo/redo cursor this edit belongs to, as the document layer's own lane name
+    /// 🛤️ Which undo/redo cursor this edit belongs to, as the document layer's own lane name
     /// (`crate::os_store::HistoryLane`'s camelCase word). `None` means the default DOCUMENT lane, so
     /// an ordinary edit costs nothing on the wire. It has to live here and not only on the envelope:
     /// without it a save/load cycle turned every side-lane edit back into a document edit, and the
@@ -129,7 +129,7 @@ pub struct HistoryEdit {
     pub lane: Option<String>,
 }
 
-/// @emoji 🧾️ `binary` carries the `crate::os_spr::command::OpBinary` encoding of this op when the
+/// 🧾️ `binary` carries the `crate::os_spr::command::OpBinary` encoding of this op when the
 /// caller has one (the `.spr` binary path always sets it, and since the binary-only-spr flip
 /// this is the ONLY face `.spr` ever carries); `text` is the `OpText::print_op` form, present
 /// only when a text-tooling caller supplied it (`.ops` compile, hand-authored logs). Invariant:
@@ -150,19 +150,19 @@ pub struct HistoryOpMeta {
     pub hlt: Option<(u64, i64, u64)>,
     pub undo_policy: u8,
     pub payload_hash: Option<[u8; 32]>,
-    /// @emoji 🧑‍🤝‍🧑️ Durable twin of `crate::os_spr::command::MutationMeta.group_id` — the composite-
+    /// 🧑‍🤝‍🧑️ Durable twin of `crate::os_spr::command::MutationMeta.group_id` — the composite-
     /// gesture stamp, present iff the op it describes was authored as one member of a multi-
     /// document composite gesture. Dict-interned like `op_id`/`author_id`/`dependencies` (bullet
     /// design point: every sibling member of one composite gesture shares the identical string,
     /// so the dictionary compresses it near-for-free across a whole edit/checkpoint).
     pub group_id: Option<String>,
-    /// @emoji 🔀️ Durable twin of `crate::os_spr::command::MutationMeta.origin` — canonical-JSON
+    /// 🔀️ Durable twin of `crate::os_spr::command::MutationMeta.origin` — canonical-JSON
     /// encoded (not dict-interned like the id fields above: an origin's `Contributed`/`Transaction`
     /// payload carries structured data, not a short repeated token). `MutationOrigin::Owner`
     /// (`Default`) whenever absent from the byte log, matching `group_id`'s own "absent for logs
     /// predating this field" contract.
     pub origin: crate::os_spr::command::MutationOrigin,
-    /// @emoji 📨️ Durable ledger twin of `crate::os_spr::command::MutationOutcome::messages` — every
+    /// 📨️ Durable ledger twin of `crate::os_spr::command::MutationOutcome::messages` — every
     /// diagnostic this op's `diff` raised, persisted rather than recomputed (unlike inverse/meta's
     /// general "a fresh replay never touches this field" contract, messages are NOT reproducible
     /// from a replay alone — they are the durable record of what actually happened at write time).
@@ -175,7 +175,7 @@ pub struct HistoryOpMeta {
 
 //#region 🔖️Fold
 impl HistoryTransitionRecord {
-    /// @emoji 📥️ Strips `envelope`'s document id and schema, keeping every other transition fact.
+    /// 📥️ Strips `envelope`'s document id and schema, keeping every other transition fact.
     pub fn from_envelope(envelope: &crate::os_spr::MutationEnvelope) -> Self {
         Self {
             id: envelope.mutation_id.0.clone(),
@@ -186,7 +186,7 @@ impl HistoryTransitionRecord {
         }
     }
 
-    /// @emoji 📤️ The transition envelope of `document_id`: [`crate::os_spr::HISTORY_TRANSITION_SCHEMA`]
+    /// 📤️ The transition envelope of `document_id`: [`crate::os_spr::HISTORY_TRANSITION_SCHEMA`]
     /// diff carrying `payload`, empty inverse under the same schema.
     pub fn to_envelope(&self, document_id: &str) -> crate::os_spr::MutationEnvelope {
         let schema = crate::os_spr::SchemaId(crate::os_spr::HISTORY_TRANSITION_SCHEMA.to_string());
@@ -205,7 +205,7 @@ impl HistoryTransitionRecord {
 }
 
 impl HistoryLog {
-    /// @emoji 🧮️ Folds this log's edits and transitions ([`crate::os_spr::fold_history`]) into every
+    /// 🧮️ Folds this log's edits and transitions ([`crate::os_spr::fold_history`]) into every
     /// derived history fact and position. An edit's clock is its first operation's `hlt` (zero when
     /// absent); its mutation ids are each operation's `op_id`, else `{edit.id}#{index}` (the
     /// [`crate::os_spr::mutation_ids_for_edit`] fallback). Edits owning an operation of a
@@ -290,7 +290,7 @@ fn edit_spec() -> RecordSpec {
     )
 }
 
-/// @emoji 🔀️ `transition <id> actor=<actor> hlc=<actor>,<physical_ms>,<logical> dependencies=[...]
+/// 🔀️ `transition <id> actor=<actor> hlc=<actor>,<physical_ms>,<logical> dependencies=[...]
 /// payload=<base64>` — one [`HistoryTransitionRecord`].
 fn transition_spec() -> RecordSpec {
     RecordSpec::new(
@@ -351,7 +351,7 @@ fn text_error_to_protocol(err: crate::os_dsl::TextError) -> ProtocolError {
     ProtocolError::Malformed { what: "ops text", offset: err.span.line as u64, detail: err.message }
 }
 
-/// @emoji 📥️ Parses the full `.ops` text into a `HistoryLog`. Blank lines and `#`-comments
+/// 📥️ Parses the full `.ops` text into a `HistoryLog`. Blank lines and `#`-comments
 /// normalize away; a two-space-indented line under a pending `edit` header is an opaque forward
 /// op line (never interpreted). Unlike `crate::os_store::replay_ops`, this never replays operation semantics
 /// (ops are opaque here) — `HistoryEdit::meta`/inverse are simply never populated from text.
@@ -433,7 +433,7 @@ pub fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
     Ok(log)
 }
 
-/// @emoji 📤️ Prints a `HistoryLog` back to `.ops` text: `doc`, every edit (header + two-space
+/// 📤️ Prints a `HistoryLog` back to `.ops` text: `doc`, every edit (header + two-space
 /// indented forward op lines), then one `transition` line per [`HistoryTransitionRecord`]. Errors if any op payload carries no text
 /// (the binary-only `.spr` convention): this crate is schema-agnostic and cannot recover text
 /// from an opaque binary payload — printing `.ops` for a real app document goes through the
@@ -547,7 +547,7 @@ fn read_id_field<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ordinal_t
 // Shared wire shape for one `HistoryMessage`, used by both `HistoryOpMeta.messages` (🔖️Edit) and
 // `HistoryConflict.messages` (🔖️Conflict) — one definition, both call sites.
 
-/// @emoji 🎯️ `level u8 | code(idfield, dict-interned) | message(strfield) | target_count varint +
+/// 🎯️ `level u8 | code(idfield, dict-interned) | message(strfield) | target_count varint +
 /// target(strfield)* | op_index presence u8 + [varint]`.
 async fn write_history_message(out: &mut ByteWriter, message: &HistoryMessage, dict: &mut DictBuilder) -> Result<(), ProtocolError> {
     out.write_u8(message.level);
@@ -567,7 +567,7 @@ async fn write_history_message(out: &mut ByteWriter, message: &HistoryMessage, d
     Ok(())
 }
 
-/// @emoji 🎯️ Inverse of [`write_history_message`].
+/// 🎯️ Inverse of [`write_history_message`].
 async fn read_history_message(input: &mut ByteReader<'_>, dict: &DictReader) -> Result<HistoryMessage, ProtocolError> {
     let level = input.read_u8()?;
     if crate::os_dsl::Severity::from_u8(level).is_none() {
@@ -627,7 +627,7 @@ pub async fn decode_doc(payload: &[u8], dict: &DictReader) -> Result<(String, St
 // write_op_meta) — always keyed by op_count, never back_count, since meta describes the forward
 // ops only].
 
-/// @emoji 🎯️ Writes one op payload: `op_tag u8 [bit0 has_text=1 required in v1, bit1 has_binary]
+/// 🎯️ Writes one op payload: `op_tag u8 [bit0 has_text=1 required in v1, bit1 has_binary]
 /// + text_len varint + utf8 + [binary_len varint + bytes iff bit1]`. Used for both `edit.ops`
 /// and `edit.inverse` — the two sections share this exact wire shape.
 async fn write_op_payload(out: &mut ByteWriter, op: &OpPayload) -> Result<(), ProtocolError> {
@@ -646,7 +646,7 @@ async fn write_op_payload(out: &mut ByteWriter, op: &OpPayload) -> Result<(), Pr
     Ok(())
 }
 
-/// @emoji 🎯️ Inverse of [`write_op_payload`].
+/// 🎯️ Inverse of [`write_op_payload`].
 async fn read_op_payload(input: &mut ByteReader<'_>) -> Result<OpPayload, ProtocolError> {
     let op_tag = input.read_u8()?;
     if op_tag & 0b11 == 0 {
@@ -898,13 +898,13 @@ pub async fn decode_edit<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id
 //#endregion 🔖️Edit
 
 //#region 🔖️Transition
-/// @emoji 🔀️ Caller-defined extension record (the 0x40..=0x7E range, next to `REC_COMPOSITION`/
+/// 🔀️ Caller-defined extension record (the 0x40..=0x7E range, next to `REC_COMPOSITION`/
 /// `REC_CONFLICT`) carrying one history transition. Written CRITICAL: a reader that skipped it
 /// would fold a different history, so it must refuse the file instead. One frame per transition,
 /// appended exactly like `REC_EDIT`.
 pub const REC_TRANSITION: u8 = 0x43;
 
-/// @emoji 🎯️ `format u8 (=1) | id(idfield) | actor(idfield) | hlt(actor varint, physical_ms
+/// 🎯️ `format u8 (=1) | id(idfield) | actor(idfield) | hlt(actor varint, physical_ms
 /// varint, logical varint) | dependency_count varint + dependency(idfield)* | payload_len varint +
 /// payload`. Ids, actor and dependencies are dict-interned like every other identifier here.
 pub async fn encode_transition(transition: &HistoryTransitionRecord, dict: &mut DictBuilder) -> Result<Vec<u8>, ProtocolError> {
@@ -924,7 +924,7 @@ pub async fn encode_transition(transition: &HistoryTransitionRecord, dict: &mut 
     Ok(out.into_bytes())
 }
 
-/// @emoji 🎯️ Inverse of [`encode_transition`]; refuses trailing payload bytes.
+/// 🎯️ Inverse of [`encode_transition`]; refuses trailing payload bytes.
 pub async fn decode_transition(payload: &[u8], dict: &DictReader) -> Result<HistoryTransitionRecord, ProtocolError> {
     let miss = &|ord: u64| Err(ProtocolError::DictMiss(ord as u32));
     let mut input = ByteReader::new(payload);
@@ -950,12 +950,12 @@ pub async fn decode_transition(payload: &[u8], dict: &DictReader) -> Result<Hist
 //#endregion 🔖️Transition
 
 //#region 🔖️Composition
-/// @emoji 🧩️ Caller-defined extension record in the 0x40..=0x7E range, written NON-critical: a
+/// 🧩️ Caller-defined extension record in the 0x40..=0x7E range, written NON-critical: a
 /// reader that does not know about composition skips it under the standard skip-unknown rule and
 /// still reads a fully valid document. Last-wins.
 pub const REC_COMPOSITION: u8 = 0x41;
 
-/// @emoji 🧩️ `format u8 (=1) | presence u8 (bit0 owner, bit1 dialect) | [owner triple] |
+/// 🧩️ `format u8 (=1) | presence u8 (bit0 owner, bit1 dialect) | [owner triple] |
 /// [dialect triple]`. Every string goes through the shared dictionary via `write_id_field`, same
 /// as every other identifier in this crate.
 pub async fn encode_composition(composition: &HistoryComposition, dict: &mut DictBuilder) -> Result<Vec<u8>, ProtocolError> {
@@ -977,7 +977,7 @@ pub async fn encode_composition(composition: &HistoryComposition, dict: &mut Dic
     Ok(out.into_bytes())
 }
 
-/// @emoji 🧩️ Inverse of [`encode_composition`].
+/// 🧩️ Inverse of [`encode_composition`].
 pub async fn decode_composition<'d>(payload: &[u8], dict: &'d DictReader) -> Result<HistoryComposition, ProtocolError> {
     let miss: &(dyn Fn(u64) -> Result<&'d str, ProtocolError> + Send + Sync) = &|ord: u64| Err(ProtocolError::DictMiss(ord as u32));
     let mut input = ByteReader::new(payload);
@@ -998,7 +998,7 @@ pub async fn decode_composition<'d>(payload: &[u8], dict: &'d DictReader) -> Res
 //#endregion 🔖️Composition
 
 //#region 🔖️Conflict
-/// @emoji ⚔️ Caller-defined extension record (`REC_COMPOSITION`'s neighbour in the 0x40..=0x7E
+/// ⚔️ Caller-defined extension record (`REC_COMPOSITION`'s neighbour in the 0x40..=0x7E
 /// range), written NON-critical for the same reason: a reader that doesn't know
 /// about first-class conflicts (`📋️contract-freeze.md` §C5/§C7) skips the whole record and still
 /// reads a fully valid document. Unlike `REC_EDIT` (one frame per edit, the hot streaming path),
@@ -1076,7 +1076,7 @@ async fn read_conflict<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ord
     Ok(HistoryConflict { id, kind, status, actors, hlt, edit_ids, envelopes, messages })
 }
 
-/// @emoji 🎯️ `format u8 (=1) | count varint + count x conflict entry` — single top-level format
+/// 🎯️ `format u8 (=1) | count varint + count x conflict entry` — single top-level format
 /// byte, then a length-prefixed list: each entry is `id(idfield) | kind u8 | status u8 | actor_count
 /// varint + actor(idfield)* | hlt(actor varint, physical_ms varint, logical varint) |
 /// edit_id_count varint + edit_id(idfield, edit-ordinal-eligible)* | envelope_count varint +
@@ -1095,7 +1095,7 @@ pub async fn encode_conflicts(conflicts: &[HistoryConflict], dict: &mut DictBuil
     Ok(out.into_bytes())
 }
 
-/// @emoji 🎯️ Inverse of [`encode_conflicts`].
+/// 🎯️ Inverse of [`encode_conflicts`].
 pub async fn decode_conflicts<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id: impl Fn(u64) -> Result<&'d str, ProtocolError> + Send + Sync) -> Result<Vec<HistoryConflict>, ProtocolError> {
     let ordinal_to_id: &(dyn Fn(u64) -> Result<&'d str, ProtocolError> + Send + Sync) = &ordinal_to_id;
     let mut input = ByteReader::new(payload);
@@ -1627,21 +1627,21 @@ impl<S: PackSink> HistoryAppender<S> {
         Ok(offset)
     }
 
-    /// @emoji 🔀️ Appends one `REC_TRANSITION` frame (critical); returns its offset.
+    /// 🔀️ Appends one `REC_TRANSITION` frame (critical); returns its offset.
     pub async fn append_transition(&mut self, transition: &HistoryTransitionRecord) -> Result<u64, ProtocolError> {
         let payload = encode_transition(transition, &mut self.dict).await?;
         flush_dict_delta(&mut self.writer, &self.dict, &mut self.dict_base).await?;
         self.writer.write_record(REC_TRANSITION, true, &payload, CodecId(0)).await
     }
 
-    /// @emoji 🧩️ Appends the composition overlay record (skippable extension); returns its offset.
+    /// 🧩️ Appends the composition overlay record (skippable extension); returns its offset.
     pub async fn append_composition(&mut self, composition: &HistoryComposition) -> Result<u64, ProtocolError> {
         let payload = encode_composition(composition, &mut self.dict).await?;
         flush_dict_delta(&mut self.writer, &self.dict, &mut self.dict_base).await?;
         self.writer.write_record(REC_COMPOSITION, false, &payload, CodecId(0)).await
     }
 
-    /// @emoji ⚔️ Appends the log's one conflict record, resolving `Degraded` edit references against
+    /// ⚔️ Appends the log's one conflict record, resolving `Degraded` edit references against
     /// the edits appended so far; a file carries at most one such record.
     pub async fn append_conflicts(&mut self, conflicts: &[HistoryConflict]) -> Result<u64, ProtocolError> {
         let ordinals = &self.edit_ordinals;
@@ -1744,7 +1744,7 @@ struct RevEditIterReady<'a> {
     remaining: usize,
 }
 
-/// @emoji 🚧️ `edits_rev` cannot return `Result` per the frozen contract signature, so a prescan
+/// 🚧️ `edits_rev` cannot return `Result` per the frozen contract signature, so a prescan
 /// failure (needed to build the full dict + edit-id table up front — see `prescan_full`) is
 /// deferred: the first `next()` call yields it, every call after that yields `None`.
 pub struct RevEditIter<'a> {
@@ -1787,7 +1787,7 @@ impl<'a> Iterator for RevEditIter<'a> {
     }
 }
 
-/// @emoji 🔎️ Builds the FULL dictionary and the FULL forward-ordered edit-id table in one forward
+/// 🔎️ Builds the FULL dictionary and the FULL forward-ordered edit-id table in one forward
 /// pass. Safe to reuse for decoding any earlier record: dict indices and edit ordinals are both
 /// append-only and stable once assigned, so the final state is a superset valid at every offset.
 async fn prescan_full(trusted: &[u8]) -> Result<(DictReader, Vec<String>), ProtocolError> {
@@ -1836,7 +1836,7 @@ pub enum FrontierComparison {
     Diverged { common_edit_count: u64 },
 }
 
-/// @emoji 🧭️ Compares two frontiers by head edit ordinal, then head edit id/chain hash for the
+/// 🧭️ Compares two frontiers by head edit ordinal, then head edit id/chain hash for the
 /// equal-ordinal case. `Diverged::common_edit_count` is a conservative estimate (the shared
 /// ordinal itself) — `FrontierSummary` alone carries no shared-ancestry data to verify a true
 /// common ancestor; documented "your choice" per the contract.

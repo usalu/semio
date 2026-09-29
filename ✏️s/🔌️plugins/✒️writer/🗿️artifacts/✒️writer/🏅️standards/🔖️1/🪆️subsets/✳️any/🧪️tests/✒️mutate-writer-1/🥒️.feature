@@ -4,10 +4,10 @@
 @mutations-writer-1-any
 Feature: Apply every typed writer document mutation twice — once in Rust, once in Python — and require the same answer
   This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️component.py` in this directory: a
-  second implementation of the `s.writer.writer` document and its four typed mutations, written in
+  second implementation of the `s.writer.writer` document and its five typed mutations, written in
   Python from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`, from rule 1 of
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md`, and
-  from the four committed vectors. It imports nothing from this repository's Rust.
+  from the five committed vectors. It imports nothing from this repository's Rust.
 
   Why a second implementation rather than a third-party library, and why the previous answer was
   wrong. This case used to say that because `s.writer.writer` is persisted through this subset's own
@@ -26,7 +26,11 @@ Feature: Apply every typed writer document mutation twice — once in Rust, once
   [{level: warn, code: mutation.no-op}]}` for a text identical to that payload, and the reference
   adjudicates exactly that — a warned no-op that moves nothing and whose inverse is empty. What no
   committed vector shows is the other branch: what the child handle becomes when the text really does
-  change. Adding one such vector, plus the child-addressing rule, closes it.
+  change. Adding one such vector, plus the child-addressing rule, closes it. The fifth, `splice-text`,
+  is the range edit two humans type with at once (`semio.ui.scene.text-splice.v1`): its committed vector
+  deletes a run a co-author already removed, so the splice relocates to nothing, deletes nothing and is
+  the same warned no-op; the reference locates it with its own implementation of the five relocation
+  steps and refuses a splice that really changes the body for the same child-addressing reason.
 
   🚧️ ONE OF THE NINE SCENARIOS IS REFUSED BY CLAUSE, and reported rather than worked around.
   `identity-round-trip`. The committed grammar is the repository-wide PLACEHOLDER: its whole
@@ -58,6 +62,7 @@ Feature: Apply every typed writer document mutation twice — once in Rust, once
       | change-uri      | 🔗change-uri/🔗️republishes-the-brief-under-a-new-uri            |
       | change-language | 🌐change-language/🔤️switches-the-brief-from-plaintext-to-markdown |
       | edit-text       | ✏️edit-text/⚠️warns-that-the-brief-body-is-unchanged             |
+      | splice-text     | ✂️splice-text/⚠️warns-that-an-already-removed-run-leaves-the-brief-unchanged |
 
   @id-inverse
   @level-exhaustive
@@ -76,6 +81,7 @@ Feature: Apply every typed writer document mutation twice — once in Rust, once
       | change-uri      | 🔗change-uri/🔗️republishes-the-brief-under-a-new-uri            |
       | change-language | 🌐change-language/🔤️switches-the-brief-from-plaintext-to-markdown |
       | edit-text       | ✏️edit-text/⚠️warns-that-the-brief-body-is-unchanged             |
+      | splice-text     | ✂️splice-text/⚠️warns-that-an-already-removed-run-leaves-the-brief-unchanged |
 
   @id-identity-round-trip
   @level-long

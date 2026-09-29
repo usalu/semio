@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/Table/component.tsx
-/** @emoji 📊️ `Table` — the tabular data scene host: column/row/selection/sort parsing, stepper and
+/** 📊️ `Table` — the tabular data scene host: column/row/selection/sort parsing, stepper and
  * row-action-button cell renderers, row drag source wiring, row drop targets, and the per-row
  * context menu (program-supplied items merged with row-scoped button-placement actions). */
 // #endregion 🧲️Header

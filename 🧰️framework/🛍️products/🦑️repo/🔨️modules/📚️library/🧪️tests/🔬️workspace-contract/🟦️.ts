@@ -99,7 +99,7 @@ describe("extension Cargo installation owner", () => {
       expect(parsed.version).toBe(workspace.workspace.package.version);
       expect(parsed.componentPackageId).toBe(reference.metadata.component.package.slice("semio:".length));
       expect(parsed.extends).toBe(reference.metadata.semio.extends);
-      expect(parsed.contributes).toEqual(reference.metadata.semio.contributes);
+      expect(parsed.contributes).toEqual<typeof reference.metadata.semio.contributes>(reference.metadata.semio.contributes);
     }
     const bad = structuredClone(fixture);
     bad.cases[0].directoryName = "rust";
@@ -187,7 +187,7 @@ describe("finite exact fixed parent scope", () => {
     const scopeSchema = { type: "object", additionalProperties: false, required: ["kind", "fixedDirectoryContractIds"], properties: { kind: { const: "fixed-directory-contract-set" }, fixedDirectoryContractIds: { type: "array", minItems: 1, maxItems: 256, uniqueItems: true, items: { enum: Object.keys(parents) } } } };
     const validate = new Ajv({ strict: true }).compile(scopeSchema);
     for (const candidate of [vector.accepted, ...vector.rejected]) {
-      if (validate(candidate)) expect(discovery.parseFixedDirectoryContractSetScope(candidate, parents)).toEqual(candidate);
+      if (validate(candidate)) expect(discovery.parseFixedDirectoryContractSetScope(candidate, parents)).toEqual<typeof candidate>(candidate);
       else expect(() => discovery.parseFixedDirectoryContractSetScope(candidate, parents)).toThrow();
     }
     expect(() => discovery.parseFixedDirectoryContractSetScope(vector.accepted, { ...parents, right: { ...parents.right, pathPattern: "**/interfaces" } })).toThrow();
@@ -241,6 +241,27 @@ describe("finite exact fixed parent scope", () => {
   }, 30_000);
 });
 
+describe("fresh-clone generator outputs", () => {
+  test("every declared-tracked output is visible to a clone and every external input is tracked", () => {
+    const taxonomy = loadCatalogTaxonomy();
+    expect(validateTaxonomy(taxonomy).filter((problem) => problem.includes("no clone has it"))).toEqual([]);
+    const outputs = Object.values(taxonomy.generatorContracts).flatMap((contract) => contract.outputRoots.map((output) => ({ ownership: contract.ownership, ...output })));
+    const tracked = outputs.filter((output) => output.inclusion === "tracked").map((output) => output.path);
+    expect(outputs.filter((output) => output.ownership === "external" && output.inclusion !== "tracked")).toEqual([]);
+    const probes = tracked.map((path) => (existsSync(join(getWorkspaceRoot(), path)) && lstatSync(join(getWorkspaceRoot(), path)).isDirectory() ? `${path}/probe` : path));
+    const oracle = Bun.spawnSync(["git", "check-ignore", "--no-index", "--stdin"], { cwd: getWorkspaceRoot(), stdin: new TextEncoder().encode(`${probes.join("\n")}\n`), stdout: "pipe", stderr: "pipe" });
+    expect(oracle.stdout.toString().split("\n").filter(Boolean)).toEqual([]);
+    const violated = probeClone(taxonomy) as unknown as Taxonomy;
+    const scale = violated.generatorContracts["scale-fixture"]!.outputRoots[0] as { inclusion: string };
+    scale.inclusion = "tracked";
+    const shortcodes = violated.generatorContracts["external-emoji-shortcodes"]!.outputRoots[0] as { inclusion: string };
+    shortcodes.inclusion = "ignored";
+    const problems = validateTaxonomy(violated).filter((problem) => problem.includes("no clone has it"));
+    expect(problems.some((problem) => problem.includes("scale-fixture") && problem.includes("inside 🤖️generated"))).toBe(true);
+    expect(problems.some((problem) => problem.includes("external-emoji-shortcodes") && problem.includes("external input"))).toBe(true);
+  }, 60_000);
+});
+
 describe("materialized JCO interface filename boundaries", () => {
   test("admits the exact physical matrix through indexed and direct resolvers", async () => {
     const discovery = await import("../../🔍️discovery/🟦️.ts"), ts = await import("typescript"), picomatch = (await import("picomatch")).default;
@@ -248,7 +269,7 @@ describe("materialized JCO interface filename boundaries", () => {
     const contracts = Object.entries(taxonomy.fixedFilenameContracts).filter(([id]) => id.startsWith("dev-jco-interface-"));
     const parentIds = taxonomy.fixedDirectoryContractSets!["dev-jco-all-interfaces"];
     expect(contracts).toHaveLength(31);
-    expect(parentIds).toHaveLength(60);
+    expect(parentIds).toHaveLength(69);
     const normalSource = readFileSync(join(import.meta.dir, "../../🧹️normalization/🟦️.ts"), "utf8");
     const syntax = ts.createSourceFile("🟦️.ts", normalSource, ts.ScriptTarget.Latest, true);
     const declaration = syntax.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === "fixedScopeMatches");
@@ -287,11 +308,11 @@ describe("materialized JCO interface filename boundaries", () => {
 });
 
 describe("materialized JCO companion boundaries", () => {
-  test("preserves only the 60 exact compiler-linked triples", async () => {
+  test("preserves only the 69 exact compiler-linked triples", async () => {
     const discovery = await import("../../🔍️discovery/🟦️.ts"), ts = await import("typescript"), picomatch = (await import("picomatch")).default;
     const taxonomy = loadTaxonomy(), root = findRepoRoot(import.meta.dir), resolver = discovery.createFixedContractResolver(taxonomy);
     const contracts = Object.entries(taxonomy.fixedFilenameContracts).filter(([id]) => /^dev-(plugin|extension)-component-/u.test(id));
-    expect(contracts).toHaveLength(180);
+    expect(contracts).toHaveLength(207);
     const options = { allowJs: true, moduleResolution: ts.ModuleResolutionKind.Bundler, module: ts.ModuleKind.ESNext };
     for (const [id, contract] of contracts) {
       const path = contract.pathPattern;
@@ -425,7 +446,7 @@ describe("package language semantic handoff", () => {
           const exact = matches.filter((candidate) => candidate.id === slug), selected = exact.length ? exact : matches;
           const duplicateBoundary = parentKindId === "packages" && Object.keys(registry.packageBoundaryRules).filter((name) => fold(name) === fold(step.name)).length > 1;
           const oracle = duplicateBoundary ? { path: parentCanonical + "/" + step.name, kindId: null, violationCodes: ["package-language-ambiguous"] } : selected.length === 1 ? { path: parentCanonical + "/" + selected[0].emoji + slug, kindId: selected[0].id, violationCodes: [] } : { path: parentCanonical + "/" + step.name, kindId: null, violationCodes: [selected.length > 1 ? "directory-kind-ambiguous" : "directory-kind-unresolved"] };
-          expect(oracle, scenario.id).toEqual(expected);
+          expect(oracle, scenario.id).toEqual<typeof expected>(expected);
           expect(actual, scenario.id).toEqual(expected);
           parentCanonical = result.path;
           previousKind = result.kindId ?? undefined;
@@ -479,7 +500,8 @@ describe("package language semantic handoff", () => {
       expect(win32.normalize(win32.join(expected.packagePath, path)).replaceAll("\\", "/")).not.toBe(expected.sourcePath);
     }
     const workspaceText = readFileSync(join(root, "Cargo.toml"), "utf8"), workspace = toml.parse(workspaceText).workspace as { members: string[]; dependencies: Record<string, unknown>; package: Record<string, unknown> };
-    expect(Bun.TOML.parse(workspaceText).workspace).toEqual(workspace);
+    const parsedWorkspace = Bun.TOML.parse(workspaceText);
+    expect("workspace" in parsedWorkspace ? parsedWorkspace.workspace : undefined).toEqual(workspace);
     expect(workspace.members.filter(path => path === expected.packagePath)).toHaveLength(1);
     expect(workspace.dependencies[expected.cargo.package.name]).toEqual({ path: expected.packagePath });
     expect(workspace.package).toMatchObject({ version: "0.1.0", edition: "2021", "rust-version": "1.95" });
@@ -613,7 +635,8 @@ describe("package language semantic handoff", () => {
       const workspaceInput = semanticOwnedInputFileSnapshot(root, "Cargo.toml");
       expect(workspaceInput?.nodeKind).toBe("file");
       const workspaceBefore = Buffer.from(workspaceInput!.bytes), workspace = readToml<CargoWorkspaceManifest>(workspaceBefore.toString("utf8")).workspace;
-      expect(Bun.TOML.parse(workspaceBefore.toString("utf8")).workspace).toEqual(workspace);
+      const parsedBefore = Bun.TOML.parse(workspaceBefore.toString("utf8"));
+      expect("workspace" in parsedBefore ? parsedBefore.workspace : undefined).toEqual(workspace);
       expect(workspace.members.filter((path) => path === expected.packagePath)).toEqual([expected.packagePath]);
       expect(workspace.dependencies[expected.cargo.name]).toEqual({ path: expected.packagePath });
       expect(semanticOwnedInputFileSnapshot(root, expected.packagePath + "/package.json")).toBeNull();
@@ -839,7 +862,7 @@ describe("active ticket clean protection", () => {
 
 //#region 🪟️WindowsCheckoutTicketPaths
 describe("Windows checkout ticket paths", () => {
-  test("rejects Windows-illegal components and keeps ticket files below the legacy path limit", { timeout: 15_000 }, async () => {
+  test("rejects Windows-illegal components and keeps ticket files below the legacy path limit", async () => {
     const { cleanIsWindowsIllegalName } = await import("../../🧼️workspace-cleanup/🛡️protection/🟦️.ts");
     const root = findRepoRoot(import.meta.dir);
     const fixturePath = join(import.meta.dir, "../../🧫️fixtures/🪟️windows-checkout-paths");
@@ -868,7 +891,7 @@ describe("Windows checkout ticket paths", () => {
       && (untrackedPaths.has(path) || existsSync(join(root, path))),
     );
     expect(oversize).toEqual([]);
-  });
+  }, { timeout: 15_000 });
 });
 //#endregion 🪟️WindowsCheckoutTicketPaths
 
@@ -922,12 +945,12 @@ describe("cargo provider manifest projection", () => {
     expect(validate(fixture)).toBe(true);
     expect(validate({ ...fixture, extra: true })).toBe(false);
     for (const vector of fixture.accepted) {
-      expect(toml.parse(vector.source), vector.id).toEqual(vector.tomlOracle);
-      expect(projectCargoProviderManifest({ locator: vector.locator, source: vector.source }), vector.id).toEqual(vector.expected);
+      expect(toml.parse(vector.source), vector.id).toEqual<typeof vector.tomlOracle>(vector.tomlOracle);
+      expect(projectCargoProviderManifest({ locator: vector.locator, source: vector.source }), vector.id).toEqual<typeof vector.expected>(vector.expected);
     }
     for (const vector of fixture.rejected) {
       if (vector.tomlOracle === null) expect(() => toml.parse(vector.source), vector.id).toThrow();
-      else expect(toml.parse(vector.source), vector.id).toEqual(vector.tomlOracle);
+      else expect(toml.parse(vector.source), vector.id).toEqual<typeof vector.tomlOracle>(vector.tomlOracle);
       expect(() => projectCargoProviderManifest({ locator: vector.locator, source: vector.source }), vector.reason).toThrow();
     }
   });
@@ -2239,7 +2262,7 @@ describe("package boundary guards", () => {
         }
       }
     }
-    expect([0, 1]).toContain(listed.status);
+    expect<readonly (number | null)[]>([0, 1]).toContain(listed.status);
     expect(offenders).toEqual([]);
   });
 
@@ -4704,6 +4727,9 @@ describe.if(testLevelAtLeast("long"))("artifact path projection authority", () =
     const nx = JSON.parse(context.files["nx.json"]!.content);
     for (const row of nx.plugins.filter((entry: { plugin: string }) => entry.plugin.startsWith("."))) expect(context.files[row.plugin.slice(2)]).toBeDefined();
     const nxScript = (JSON.parse(context.files["package.json"]!.content) as { scripts: Record<string, string> }).scripts.nx!.match(/^bun \.\/(\S+) nx$/u)?.[1];
+    if (nxScript === undefined) throw new Error("package.json names no `bun ./<script> nx` runner");
+    if (nxScript === undefined) throw new Error("package.json names no `bun ./<script> nx` runner");
+    if (nxScript === undefined) throw new Error("package.json names no `bun ./<script> nx` runner");
     expect(DRAW_SOURCE_SCENARIO.producerContext.compilerRoots).toEqual([nxScript]);
     for (const row of context.modules) {
       if (row.kind === "json-data") {
@@ -5615,7 +5641,7 @@ describe.if(testLevelAtLeast("long"))("taxonomy normalization", () => {
     try {
       const { plan } = normalizationPlan(fixture);
       expect(plan.unresolved).toEqual([]);
-      expect(plan.regenerations.map(({ contractId }) => contractId).sort()).toEqual(DRAW_SOURCE_SCENARIO.oracle.activatedGeneratorIds);
+      expect(plan.regenerations.map(({ contractId }) => contractId).sort()).toEqual<readonly string[]>(DRAW_SOURCE_SCENARIO.oracle.activatedGeneratorIds);
       expect(plan.edits.some(({ path }) => path === NORMALIZATION_SCHEMA_REL)).toBe(false);
       const cad = projectionGolden("artifact-example-model-catalog-v1");
       const draw = projectionGolden("artifact-editor-command-bundle-v1");
@@ -6216,7 +6242,7 @@ describe.if(testLevelAtLeast("long"))("taxonomy normalization", () => {
       writeFileSync(schemaPath, `${JSON.stringify(schema, null, 2)}\n`);
       const inventory = inventoryTaxonomy({ ...fixture.options, scope: exactScope });
       const plan = planTaxonomy(inventory, { baselineCommit: fixture.baselineCommit, excludedTreeDigests: [] });
-      expect(plan.regenerations.map(({ contractId }) => contractId).sort()).toEqual(DRAW_SOURCE_SCENARIO.oracle.activatedGeneratorIds);
+      expect(plan.regenerations.map(({ contractId }) => contractId).sort()).toEqual<readonly string[]>(DRAW_SOURCE_SCENARIO.oracle.activatedGeneratorIds);
       expect(plan.unresolved.filter((entry) => entry.code === "projection-old-token-stale" && entry.path === declaredStalePath)).toHaveLength(1);
       expect(plan.moves.filter((move) => move.rationaleRule === cad.rationaleRule)).toHaveLength(cad.sourceFileCount);
       expect(plan.edits.some((edit) => !inScopeForTest(edit.path, exactScope))).toBe(true);
@@ -7149,7 +7175,7 @@ describe("direct mutation ownership", () => {
         const compilerOracle = spawnSync("rustc", ["--crate-type=lib", "--crate-name", "mutation_codec_ownership_probe", "--edition", "2021", "--out-dir", compilerOutput, "-"], { encoding: "utf8", input: source });
         expect(parserOracle.status).toBe(0);
         expect(compilerOracle.status === 0).toBe(vector.expected.length === 0);
-        expect(inspect(vector.source).map(({ kind }) => kind)).toEqual(vector.expected);
+        expect(inspect(vector.source).map(({ kind }) => kind)).toEqual<readonly string[]>(vector.expected);
         expect(policyMutationStructuralBreaches(root, [golden.mutationRoot]).filter(({ kind }) => kind === "mutation/codec-ownership").length > 0).toBe(vector.expected.length > 0);
       }
     } finally {

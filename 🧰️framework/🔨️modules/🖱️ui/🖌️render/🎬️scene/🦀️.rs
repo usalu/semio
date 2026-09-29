@@ -1,4 +1,4 @@
-//! @emoji 🎬️ Scene primitives, the stacked-scissor/silhouette-clip/glass-region/overlay-stream
+//! 🎬️ Scene primitives, the stacked-scissor/silhouette-clip/glass-region/overlay-stream
 //! builder model, `Scene::finish` (validate → snap → order → batch → hash) and `RenderPacket`.
 //!
 //! This is the backend-neutral half of the wgpu target's fused `draw.rs`: the display-list model and

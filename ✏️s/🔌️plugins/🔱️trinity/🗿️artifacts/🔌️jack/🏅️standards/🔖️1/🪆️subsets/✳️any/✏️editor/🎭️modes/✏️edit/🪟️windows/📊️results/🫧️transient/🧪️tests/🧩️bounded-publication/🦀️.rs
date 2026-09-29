@@ -81,5 +81,4 @@ fn results_window_large_output_preserves_alias_cancel_and_bounded_disposal() {
         }
     }
     assert!(retirement.terminal_is_empty());
-    eprintln!("[DEBUG] Jack results transient: >4KiB serde output moved once, tracked alias returned, cancellation preserved state, and all owners retired with one-item/one-byte grants");
 }

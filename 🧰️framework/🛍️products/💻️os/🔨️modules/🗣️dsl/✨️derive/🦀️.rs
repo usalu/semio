@@ -736,7 +736,7 @@ enum FieldKind {
     VecTable(Box<Type>),
 }
 
-/// @emoji 🪆️ Strips `macro_rules!`-introduced invisible-delimiter `Type::Group` wrappers so a type
+/// 🪆️ Strips `macro_rules!`-introduced invisible-delimiter `Type::Group` wrappers so a type
 /// captured through a `:ty` metavariable — then re-emitted through another technology-local
 /// declarative macro (e.g. an `entity_input!`-style struct-generating macro) before ever reaching
 /// this derive — still structurally matches `Type::Path` here exactly like directly-written source.
@@ -771,7 +771,7 @@ fn is_vec_u8(ty: &Type) -> bool {
     inner_of(ty, "Vec").is_some_and(|inner| matches!(strip_groups(&inner), Type::Path(p) if p.path.is_ident("u8")))
 }
 
-/// @emoji 🗺️ Extracts `V` from `BTreeMap<String, V>` — `None` for any other type, including a
+/// 🗺️ Extracts `V` from `BTreeMap<String, V>` — `None` for any other type, including a
 /// `BTreeMap` keyed by something other than `String` (the engine's `Shape::Map` is string-keyed
 /// only, matching every hand-rolled `{ key=value }` grammar it replaces).
 // 🚫️async: E1 pure accessor consumed by external-trait/E3 proc-macro entry points — see R9
@@ -901,7 +901,7 @@ fn plan_fields(fields: &Fields) -> Vec<FieldPlan> {
     out
 }
 
-/// @emoji 🏗️ Builds the three code fragments shared by `DslRecord`/`DslArtifact`/`DslOps` variant
+/// 🏗️ Builds the three code fragments shared by `DslRecord`/`DslArtifact`/`DslOps` variant
 /// bodies: the `RecordSpec` field-spec expressions, the struct→`RecordValue` conversion, and the
 /// `RecordValue`→struct conversion.
 // 🚫️async: E1 pure accessor consumed by external-trait/E3 proc-macro entry points — see R9
@@ -1432,7 +1432,7 @@ pub fn expand_dsl_scalar(input: TokenStream) -> TokenStream {
 //#endregion 🔖️DslScalar
 
 //#region 🔖️DslOps
-/// @emoji 🌿️ Builds the `impl ::dsl::DslVariants for #name` block shared by `DslEnum` (data-only
+/// 🌿️ Builds the `impl ::dsl::DslVariants for #name` block shared by `DslEnum` (data-only
 /// tagged enums, e.g. a recursive block tree) and `DslOps` (operation enums, which additionally get
 /// `store::OpText` on top of this same `DslVariants` foundation).
 // 🚫️async: E1 pure accessor consumed by external-trait/E3 proc-macro entry points — see R9
@@ -1550,7 +1550,7 @@ pub fn expand_dsl_enum(input: TokenStream) -> TokenStream {
 //#endregion 🔖️DslEnum
 
 //#region 🔖️Mutations
-/// @emoji 🗣️ `#[mutations(snapshot = ..., diff = ..., schema = "..." [, retire_cold = path])]` container
+/// 🗣️ `#[mutations(snapshot = ..., diff = ..., schema = "..." [, retire_cold = path])]` container
 /// attrs for `#[derive(Mutations)]` — see that macro's doc. `retire_cold` names a `fn(Self)` that
 /// disposes an operation owning fail-closed roots; the generated `Mutation::retire_cold` calls it.
 #[derive(Default)]
@@ -1845,7 +1845,7 @@ mod mandatory_mutations_tests;
 //#endregion 🧪️MandatoryMutations
 
 //#region 🔖️CompositeMutation
-/// @emoji 🌉️ `#[composite(snapshot = ..., op = ...)]` container attrs for
+/// 🌉️ `#[composite(snapshot = ..., op = ...)]` container attrs for
 /// `#[derive(CompositeMutation)]` — see that macro's doc.
 #[derive(Default)]
 struct CompositeAttrs {
@@ -1937,7 +1937,7 @@ mod composite_timestamp_tests;
 //#endregion 🧪️CompositeTimestamp
 
 //#region 🔖️VariantHelpers
-/// @emoji 🔡️ Converts a Rust identifier (`PascalCase`/`camelCase`/`snake_case`, any mix) into
+/// 🔡️ Converts a Rust identifier (`PascalCase`/`camelCase`/`snake_case`, any mix) into
 /// lowercase `kebab-case` — the unified syntax law's key/keyword/tag convention. Falls back to
 /// this whenever no explicit `#[dsl(key = "...")]` override is given, for variant keywords,
 /// record field keys, and `DslScalar` variant tags alike, so `SetCamera` -> `set-camera`,
@@ -1976,7 +1976,7 @@ fn to_kebab(name: &str) -> String {
     out
 }
 
-/// @emoji 🏗️ Like the `to_value` half of `record_codegen`, but reading from bare local bindings
+/// 🏗️ Like the `to_value` half of `record_codegen`, but reading from bare local bindings
 /// (`ident`) instead of `self.ident` — what a `match self { Variant { fields... } => ... }` arm
 /// needs, since enum variant fields aren't reached through `self.field` syntax.
 // 🚫️async: E1 pure accessor consumed by external-trait/E3 proc-macro entry points — see R9

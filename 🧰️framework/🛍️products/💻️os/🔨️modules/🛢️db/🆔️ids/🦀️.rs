@@ -1,7 +1,7 @@
 //! 🆔 Db identity types, DbError, and resource limits.
 
 //#region 🔖️Ids
-/// @emoji 🪪️ A document's identity, decoupled from `protocol::ArtifactId` (see module doc) but
+/// 🪪️ A document's identity, decoupled from `protocol::ArtifactId` (see module doc) but
 /// sharing its single-`String` shape so conversions at the `db`/`protocol` boundary are lossless.
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct ArtifactId(pub String);
@@ -24,7 +24,7 @@ impl From<String> for ArtifactId {
     }
 }
 
-/// @emoji 👤️ An actor's (author's) identity, decoupled from `protocol::ActorId` — see
+/// 👤️ An actor's (author's) identity, decoupled from `protocol::ActorId` — see
 /// `ArtifactId`'s doc for the shared-shape conversion rationale.
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct ActorId(pub String);
@@ -47,7 +47,7 @@ impl From<String> for ActorId {
     }
 }
 
-/// @emoji 🔁️ A document actor's supervision generation (bumped on every restart by `db_actor`'s
+/// 🔁️ A document actor's supervision generation (bumped on every restart by `db_actor`'s
 /// `OneForOne`/`OneForAll`/`Escalate` supervision). `ArtifactHandle` (the `db` facade's stable
 /// API) carries one alongside its mailbox sender so a handle obtained before a restart fails
 /// loudly (`DbError::StaleGeneration`) instead of silently talking to a dead mailbox.
@@ -55,10 +55,10 @@ impl From<String> for ActorId {
 pub struct GenerationId(pub u64);
 
 impl GenerationId {
-    /// @emoji 🌱️ The generation of a freshly spawned actor that has never restarted.
+    /// 🌱️ The generation of a freshly spawned actor that has never restarted.
     pub const INITIAL: GenerationId = GenerationId(0);
 
-    /// @emoji ⏭️ The next generation after a supervised restart.
+    /// ⏭️ The next generation after a supervised restart.
     // 🚫️async: E1 pure accessor, only consumed by sync `#[test] fn` assertions — see R9
     pub fn next(self) -> GenerationId {
         GenerationId(self.0 + 1)
@@ -67,7 +67,7 @@ impl GenerationId {
 //#endregion 🔖️Ids
 
 //#region 🔖️Errors
-/// @emoji 🚨️ The one error type every `db_*` public fn returns; never leaks `std::io::Error` (or
+/// 🚨️ The one error type every `db_*` public fn returns; never leaks `std::io::Error` (or
 /// any other foreign error type) — every crate below `db_artifact` wraps its own errors into this.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DbError {
@@ -92,7 +92,7 @@ pub enum DbError {
     Unauthorized(String),
     Unimplemented(&'static str),
     Internal(String),
-    /// @emoji ⚖️ `db_artifact::ArtifactEngine::submit`'s outcome-step gate (contract
+    /// ⚖️ `db_artifact::ArtifactEngine::submit`'s outcome-step gate (contract
     /// `MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C9): `policy` rejected the
     /// batch's `worst` graded `Severity` before anything reached the WAL — `messages` is every
     /// graded `protocol::MutationMessage` the caller (`db_engine`/`semio_hub`) needs to explain why,
@@ -132,7 +132,7 @@ impl std::fmt::Display for DbError {
 impl std::error::Error for DbError {}
 
 impl From<pack::PackError> for DbError {
-    /// @emoji 🔀️ `db_wal`/`db_snapshot` sit directly on top of `pack`/`protocol`'s `.spr`/`.spk`
+    /// 🔀️ `db_wal`/`db_snapshot` sit directly on top of `pack`/`protocol`'s `.spr`/`.spk`
     /// containers; this lets them use `?` without hand-rolling the same mapping repeatedly.
     /// Corruption-flavored `PackError` variants map to `DbError::Corrupt`, resource-flavored ones
     /// to `DbError::LimitExceeded`/`Io`, and schema mismatches to `DbError::InvalidArgument`.
@@ -148,7 +148,7 @@ impl From<pack::PackError> for DbError {
 //#endregion 🔖️Errors
 
 //#region 🔖️Limits
-/// @emoji 🛡️ Corruption/resource-hardening ceilings the `db` family validates against before
+/// 🛡️ Corruption/resource-hardening ceilings the `db` family validates against before
 /// allocating (mirrors `pack::PackLimits`'s stated invariant) — every decoder/mailbox/query
 /// path in the family checks a length against these before growing a buffer.
 #[derive(Clone, Debug)]
@@ -162,7 +162,7 @@ pub struct DbLimits {
     pub max_preview_ttl_ms: u64,
 }
 
-/// @emoji 📦️ `max_batch_commands` is the wire's declared document-backbone batch maximum
+/// 📦️ `max_batch_commands` is the wire's declared document-backbone batch maximum
 /// (`protocol::DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES`): an authority never refuses, for its own
 /// capacity, a batch the wire declares legal (ticket 26/09/23 session 14, C12 P1 — a link cut's whole
 /// outbox arrives as one batch).
@@ -175,7 +175,7 @@ impl Default for DbLimits {
 const DECLARED_BATCH_COMMANDS: u32 = protocol::DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES as u32;
 const _: () = assert!(DECLARED_BATCH_COMMANDS as usize == protocol::DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES);
 
-/// @emoji 📏️ Validates `len` against `max` BEFORE the caller allocates anything sized by it —
+/// 📏️ Validates `len` against `max` BEFORE the caller allocates anything sized by it —
 /// shared by every length check across the `db` family so the "validate before allocating"
 /// invariant has exactly one implementation to audit.
 // 🚫️async: E1 pure accessor called from bounded storage executors — see R9

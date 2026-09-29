@@ -16,7 +16,7 @@ export async function runTransactionV2(repoRoot: string, segments: string[]): Pr
   const runId = `${process.pid}-${crypto.randomUUID()}`;
   const bundleRoot = transactionV2BundleRoot(repoRoot, runId);
   const runRoot = dirname(bundleRoot);
-  console.error(`[DEBUG] Transaction v2 run owner ${runRoot}`);
+  console.error(`[TRACE] Transaction v2 run owner ${runRoot}`);
   const bundle = join(bundleRoot, "🟦️.test.js");
   const identityPaths = transactionV2IdentityPaths(repoRoot);
   const beforeIdentities = transactionV2Identities(identityPaths);

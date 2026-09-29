@@ -25,7 +25,7 @@ pub struct HandleDescJson {
     /// CSS `#rgb` / `#rrggbb` / `#rrggbbaa` overriding catalog color for this handle.
     #[serde(default)]
     pub color: Option<String>,
-    /// @emoji 🏷️ Runtime host encoding: `typst:`, `emoji:`, `image:data:…`, catalog id, or inline SVG for detail LOD.
+    /// 🏷️ Runtime host encoding: `typst:`, `emoji:`, `image:data:…`, catalog id, or inline SVG for detail LOD.
     #[serde(default)]
     pub icon_kind: Option<String>,
     #[serde(default)]
@@ -145,7 +145,7 @@ pub struct HandleData {
     pub handle_kind: String,
     /// Parsed from descriptor `color` when set (overrides catalog fill).
     pub color_fill: Option<Color>,
-    /// @emoji 🏷️ Runtime host encoding: `typst:`, `emoji:`, `image:data:…`, catalog id, or inline SVG for detail LOD.
+    /// 🏷️ Runtime host encoding: `typst:`, `emoji:`, `image:data:…`, catalog id, or inline SVG for detail LOD.
     pub icon_kind: Option<String>,
     pub properties: PropertyBag,
 }

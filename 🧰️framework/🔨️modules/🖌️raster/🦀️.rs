@@ -268,6 +268,10 @@ fn read_pixels(device: &wgpu::Device, queue: &wgpu::Queue, texture: &wgpu::Textu
 
 //#endregion 🔖️SceneRasterizer
 
+/// 🎥️ The video tier: first-party H.264 encoding and MP4 muxing of rasterized frames (`🎥️video/🦀️.rs`).
+#[path = "🎥️video/🦀️.rs"]
+pub mod video;
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

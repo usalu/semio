@@ -18,6 +18,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub struct SetEditorSelection {
     pub start: usize,
     pub end: usize,
+    pub splice: u64,
 }
 
 pub fn handle(_payload: &SetEditorSelection, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<WriterMutation, NoConfigMutation>, Fault> {

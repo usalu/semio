@@ -20,7 +20,6 @@ fn nested_curve_selection_fixture() {
         let mut query = TracePointerJob::new_query(&document, point, 0.0, case["includeControls"].as_bool().unwrap_or(false));
         while !query.advance(&document) {}
         assert_eq!(query.best.as_ref().map(|hit| hit.layer_id.as_str()), if case["selected"] == true { Some("curve") } else { None }, "{}", case["name"]);
-        eprintln!("[DEBUG] curve selection case {} completed in {} work units", case["name"], query.completed_work);
     }
 }
 
@@ -57,7 +56,6 @@ fn lasso_samples_yield_and_select_the_polygon_instead_of_its_rectangle() {
     assert_eq!(query.hits.iter().cloned().collect::<Vec<_>>(),vec![expected]);
     session.step_gesture(drawing_gesture::Event::Escape,&document,&NoConfig::default());
     assert_eq!(session.preview().phase,DrawingGesturePreviewPhase::Idle);
-    eprintln!("[DEBUG] lasso consumed the complete pointer batch and selected only enclosed geometry");
 }
 
 #[test]
@@ -222,7 +220,6 @@ fn direct_drag_previews_then_commits_parent_space_translation_once() {
     assert!((update.transform.x-5.0).abs()<1e-10);
     assert!((update.transform.y+2.0).abs()<1e-10);
     assert_eq!(update.layer_id,id);
-    eprintln!("[DEBUG] direct drag retained its preview and emitted one parent-space transform on release");
 }
 
 #[test]
@@ -244,7 +241,6 @@ fn cancelled_direct_drag_and_subthreshold_click_do_not_mutate() {
         assert!(session.preview().transformation.is_none());
         assert!(session.gesture.matches("idle"));
     }
-    eprintln!("[DEBUG] direct drag cancellation and clicks leave the document unchanged");
 }
 
 #[test]
@@ -270,7 +266,6 @@ fn selection_move_preparation_yields_and_rejects_locked_or_missing_targets_atomi
         assert!(error,"{invalid}");
         assert_eq!(document,before);
     }
-    eprintln!("[DEBUG] selected movement yields and refuses invalid targets before any mutation");
 }
 
 #[test]
@@ -368,7 +363,6 @@ fn selected_handle_previews_are_ephemeral_and_release_one_absolute_transform() {
             }
         }
     }
-    eprintln!("[DEBUG] resize and rotation preserve the snapshot during preview and emit one transform only on release");
 }
 
 #[test]
@@ -384,7 +378,6 @@ fn point_selection_reaches_the_painted_path_behind_a_concave_frame() {
     let mut query=TracePointerJob::new_query(&document,[20.0,50.0],1.0,false);
     while !query.advance(&document){}
     assert_eq!(query.best.unwrap().layer_id,expected);
-    eprintln!("[DEBUG] Concave frame picking reaches the painted layer behind its empty bounding area");
 }
 
 #[test]
@@ -410,7 +403,6 @@ fn primitive_picking_uses_painted_contours() {
         while !query.advance(&document) {}
         assert_eq!(query.best.is_some(),sample["expected"].as_bool().unwrap(),"{}",sample["name"]);
         assert!(!query.overflowed);
-        eprintln!("[DEBUG] primitive pick {} completed in {} work units",sample["name"],query.completed_work);
     }
 }
 
@@ -429,7 +421,6 @@ fn compound_path_picking_uses_the_authored_fill_rule() {
         assert!(!query.overflowed);
         assert_eq!(query.best.is_some(),row["hit"].as_bool().unwrap(),"{}",row["name"]);
     }
-    eprintln!("[DEBUG] compound path picking follows the same authored fill rule as scene paint");
 }
 
 #[test]
@@ -445,7 +436,6 @@ fn node_marquee_collects_snapshot_bound_anchors_in_bounded_steps() {
     loop {let before=query.completed_work;let done=query.advance(&document);assert!(query.completed_work-before<=TRACE_POINTER_WORK_PER_STEP);steps+=1;if done {break;}}
     assert!(steps>1);assert!(!query.overflowed);
     assert_eq!(query.hits.iter().cloned().collect::<Vec<_>>(),(4..=6).map(|index|points::point_id("path",&geometry,index,PathPoint::Anchor).unwrap()).collect::<Vec<_>>());
-    eprintln!("[DEBUG] 5000-anchor marquee hashes and selects incrementally in {steps} bounded slices");
 }
 
 #[test]
@@ -476,7 +466,6 @@ fn node_publication_uses_merged_point_targets_and_actual_json_byte_limit() {
     assert!(oversized.len()<DRAWING_QUERY_TARGET_BYTES);
     query.node_selection=Some(vec![oversized]);
     assert!(matches!(query.publication_step(),DrawingQueryPublication::Fault));
-    eprintln!("[DEBUG] node publication emits point granularity after merging and refuses escaped output over its byte budget");
 }
 
 #[test]

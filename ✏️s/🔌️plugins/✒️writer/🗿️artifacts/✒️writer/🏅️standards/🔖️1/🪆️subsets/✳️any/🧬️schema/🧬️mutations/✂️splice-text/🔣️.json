@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️splice-text",
+  "semanticKind": "splice-text",
+  "displayName": "Splice Text",
+  "emoji": "✂️",
+  "aggregateVariant": "SpliceText",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "splice-text",
+  "binaryTag": 4,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

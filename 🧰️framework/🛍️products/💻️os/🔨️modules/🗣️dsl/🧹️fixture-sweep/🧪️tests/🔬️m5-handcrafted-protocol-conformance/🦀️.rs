@@ -8,13 +8,13 @@ async fn inner_payload_from_semio_example(bytes: &[u8], label: &str) -> Option<V
     match unwrap_binary(bytes) {
         Ok((_, inner)) => Some(inner.to_vec()),
         Err(error) => {
-            eprintln!("[DEBUG] soft-skip {label}: unwrap failed: {error}");
+            eprintln!("soft-skip {label}: unwrap failed: {error}");
             None
         }
     }
 }
 
-/// @emoji ✅️ Real check, no panics — lets the caller choose hard-assert vs. soft-log per facet.
+/// ✅️ Real check, no panics — lets the caller choose hard-assert vs. soft-log per facet.
 async fn check_protocol_conformance(protocol_semio: &str, bytes: &[u8]) -> Result<(), String> {
     verify_protocol_source(protocol_semio, bytes)?;
     let spec = parse_protocol(protocol_semio).map_err(|error| format!("parse_protocol: {error:?}"))?;
@@ -42,7 +42,6 @@ async fn all_discovered_snapshot_protocols_walk_their_shipped_fixtures() {
             ProtocolFacetKind::Spr => ".spr.semio",
         };
         let Some(example_bytes) = pilot_resolve::read_example_bytes(&facet.artifact_rel, facet.standard.as_deref(), kind_suffix).await else {
-            eprintln!("[DEBUG] soft-skip {}: no {kind_suffix} under 📚️examples (🖼️assets-first walk)", facet.label);
             soft_skipped += 1;
             continue;
         };
@@ -63,7 +62,6 @@ async fn all_discovered_snapshot_protocols_walk_their_shipped_fixtures() {
             let stdio_exempt = facet.is_stdio && m5_auto_discovery::stdio_is_exempt(conformance_facet, &facet.artifact, facet.standard.as_deref()).await;
             let known_gap = !facet.is_stdio && m5_auto_discovery::non_stdio_is_known_gap(conformance_facet, &facet.plugin, &facet.artifact, facet.standard.as_deref()).await;
             if stdio_exempt || known_gap {
-                eprintln!("[DEBUG] soft (stdio-exempt or known pre-existing gap) protocol conformance failure for {}: {detail}", facet.label);
                 soft_failures.push(facet.label.clone());
             } else {
                 hard_failures.push(format!("{}: {detail}", facet.label));

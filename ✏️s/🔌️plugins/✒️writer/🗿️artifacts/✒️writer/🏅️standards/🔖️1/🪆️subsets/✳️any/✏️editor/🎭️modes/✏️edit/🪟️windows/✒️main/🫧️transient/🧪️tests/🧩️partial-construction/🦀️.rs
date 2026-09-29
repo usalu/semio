@@ -48,5 +48,4 @@ fn writer_window_state_partial_construction_preserves_large_utf8_and_cancels() {
             assert!(publication.terminal_is_empty());
         }
     }
-    eprintln!("[DEBUG] Writer partial construction: three neutral serde projections and mid-construction cancellation preserve 12KiB UTF-8 state under one-item/one-byte grants");
 }

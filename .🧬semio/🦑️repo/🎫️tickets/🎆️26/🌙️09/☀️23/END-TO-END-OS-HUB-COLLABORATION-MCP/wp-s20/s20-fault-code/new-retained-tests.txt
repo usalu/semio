@@ -1,0 +1,27 @@
+/// 🧯️ LAW: a refused reducer step reports the APP's own fault, structurally. Every refusal used to read `retained
+/// command reducer rejected operation` — a missing retained session, an unsupported export format and a rejected route
+/// were one indistinguishable message (ticket 26/09/09/PROCEDURAL-3D-END-TO-END) — and after that the domain code rode
+/// inside the text under the wrapper code `interactive-job.app-owned-output` (ticket 26/09/23, S20 LW1). The job fault
+/// detail is now the typed-operation fault framing, so the fault page decodes to the app's code and message exactly.
+#[test]
+fn a_refused_reducer_step_carries_the_apps_own_code_and_message_structurally() {
+    let fault = semio_framework::Fault::new(semio_framework::FaultOrigin::App, semio_framework::FaultCode::new("generation3d.io.export"), "format `dwg` has no readable descriptor set");
+    let (code, message) = crate::app::decode_typed_operation_fault_page(&crate::app::typed_operation_fault_detail(&fault));
+    assert_eq!((code.0.as_str(), message.as_str()), ("generation3d.io.export", "format `dwg` has no readable descriptor set"));
+}
+
+/// 🧯️ LAW: a runaway message narrows on a char boundary with its code intact, and a code the frame cannot carry leaves
+/// the message readable under the generic app-owned output code instead of corrupting the frame.
+#[test]
+fn an_oversized_or_unframeable_reducer_fault_narrows_and_keeps_its_message() {
+    let long = semio_framework::Fault::new(semio_framework::FaultOrigin::App, semio_framework::FaultCode::new("x"), "ü".repeat(4096));
+    let (code, message) = crate::app::decode_typed_operation_fault_page(&crate::app::typed_operation_fault_detail(&long));
+    assert_eq!(code.0, "x");
+    assert!(!message.is_empty() && message.len() <= crate::app::TYPED_OPERATION_FAULT_BYTES && message.chars().all(|scalar| scalar == 'ü'), "a clipped message keeps whole code points");
+    let oversized_code = "c".repeat(crate::app::TYPED_OPERATION_FAULT_CODE_BYTES + 1);
+    for unframeable in ["", oversized_code.as_str(), "a\u{1f}b"] {
+        let fault = semio_framework::Fault::new(semio_framework::FaultOrigin::App, semio_framework::FaultCode::new(unframeable), "the message survives");
+        let (code, message) = crate::app::decode_typed_operation_fault_page(&crate::app::typed_operation_fault_detail(&fault));
+        assert_eq!((code.0.as_str(), message.as_str()), ("interactive-job.app-owned-output", "the message survives"), "{unframeable:?}");
+    }
+}

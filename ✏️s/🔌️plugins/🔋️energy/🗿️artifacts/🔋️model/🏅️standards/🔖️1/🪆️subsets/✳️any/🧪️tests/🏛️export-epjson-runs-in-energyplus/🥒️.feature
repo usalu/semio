@@ -44,11 +44,14 @@ Feature: The epJSON this subset writes is a real EnergyPlus document, and Energy
   3. The run scenarios are restricted to 600/600FF/900/900FF. Every case is ~25 s of EnergyPlus and
      every one of them is the same codec on the same object subset; the schema-validity scenarios
      cover all ten committed cases at `@level-quick` instead.
-  4. The exported window is a `WindowMaterial:SimpleGlazingSystem`, because `Fenestration` carries
-     U/SHGC/VLT and no layer stack. Both routes therefore consume the SAME simple glazing, which is
-     precisely why the tolerance below is 3 % and not the sibling case's 10 %: the glazing offset
-     `📓️bestest-contract.md` documents is common to both sides here and cannot appear as a
-     difference.
+  4. The committed reference is EnergyPlus run on NREL's own encoding of ASHRAE 140 (honeybee
+     `native`: the standard's two-pane window, daily shadow updates). Every case model binds its
+     windows to the same two-pane stack (`Fenestration.glazing_construction_id`), and the codec
+     writes that stack, a constant design flow for `ScheduledAch` infiltration, every ring from its
+     upper-left corner and daily shadow updates — so both documents describe one building, and the
+     four run scenarios measured 0.0000 deviation on every metric (ticket 26/09/23, `📓️wp-en2.md`).
+     The simple-glazing offset `📓️bestest-contract.md` documents for the sibling case does not
+     arise here, which is why the tolerance below is 3 % and not that case's 10 %.
 
   Tolerance: annual heating and cooling within 3 % relative, free-float minimum/maximum/mean within
   ±0.5 K, of the committed `🔮️energyplus.json`. Both numbers come out of EnergyPlus 25.2.0; the only

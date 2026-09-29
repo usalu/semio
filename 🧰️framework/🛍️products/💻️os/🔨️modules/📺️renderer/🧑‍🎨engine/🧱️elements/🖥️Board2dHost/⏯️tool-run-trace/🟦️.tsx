@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🎲️ The board-2d twin of `📐️Canvas2dHost/⏯️tool-run-trace`: how a board draws the placement2d subjects of its
+/** 🎲️ The board-2d twin of `📐️Canvas2dHost/⏯️tool-run-trace`: how a board draws the placement2d subjects of its
  * `Board2dScene.toolRunTrace` lane. A subject's `shape` indexes `glyphCatalogsJson.nodeKinds` — the order a board fill
  * run captures its kinds in — and its footprint is `kindSize × scale`, a square for shape `rectangle`, else a circle.
  * Pinned by `🖱️ui/🎬️scene/🧫️fixtures/🚚️board2d-scene-lanes/🔣️.json` `traceShapes`; the wgpu twin is

@@ -76,7 +76,6 @@ fn svg_preserves_shared_isolated_compositing_hierarchies() {
         let mut actual=std::collections::BTreeMap::new();visit(&root,&mut Vec::new(),&mut actual);
         let expected=nodes.iter().map(|node|(node.id.clone(),node.groups.iter().map(|group|group.id.clone()).collect::<Vec<_>>())).collect::<std::collections::BTreeMap<_,_>>();
         assert_eq!(actual,expected,"{}",case["name"]);
-        eprintln!("[DEBUG] {} SVG preserves isolated compositing scope membership",case["name"]);
     }
 }
 
@@ -99,7 +98,6 @@ fn drawing_projection_keeps_isolation_without_changing_leaf_opacity() {
     assert_eq!(nodes[0].groups.iter().map(|g|g.id.as_str()).collect::<Vec<_>>(),vec!["half"]);
     assert_eq!(nodes[1].groups.iter().map(|g|g.id.as_str()).collect::<Vec<_>>(),vec!["half","blend"]);
     for node in &nodes {assert_eq!(node.opacity,1.0);assert_eq!(node.transform[4],15.0);assert_eq!(node.groups[0].opacity,0.5);}
-    eprintln!("[DEBUG] scene projection carries isolated ancestry and complete transforms without multiplying leaf opacity");
 }
 
 #[test]
@@ -112,5 +110,4 @@ fn explicit_isolation_survives_unit_opacity_scene_projection() {
     assert_eq!(nodes[0].groups.len(),1);assert_eq!(nodes[0].groups[0].id,"isolated");assert_eq!(nodes[0].groups[0].opacity,1.0);
     let crate::DrawingLayerNode::Group(body)=&mut document.layers[0] else {unreachable!()};body.isolation=false;
     assert!(flatten_drawing_document_to_scene_nodes(&document)[0].groups.is_empty());
-    eprintln!("[DEBUG] explicit isolation reaches the renderer even at unit opacity and normal blend");
 }

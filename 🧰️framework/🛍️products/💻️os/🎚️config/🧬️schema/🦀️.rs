@@ -92,6 +92,18 @@ pub struct UiTheme {
     pub config: JsonValue,
 }
 
+/// 🗂️ One window layout the user saved — its label and the arrangement it restores; the layout id is its key in
+/// [`UiPreferences::named_layouts`]. The arrangement stays the schema's `WindowLayout` JSON here: the renderer that
+/// restores it owns the typed form.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+pub struct UserNamedLayout {
+    pub label: String,
+    #[value(with = "json_value_bridge")]
+    pub layout: JsonValue,
+}
+
 /// ⚙️ Persisted local-only OS UI preferences. Optional selections preserve the absence of a
 /// preferred language or presentation choice until the host supplies one.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
@@ -107,6 +119,7 @@ pub struct UiPreferences {
     pub theme_id: Option<String>,
     pub custom_themes: HashMap<String, UiTheme>,
     pub keybinding_overrides: HashMap<String, String>,
+    pub named_layouts: HashMap<String, HashMap<String, UserNamedLayout>>,
 }
 
 /// 🪪️ The schema id this facet is registered under.

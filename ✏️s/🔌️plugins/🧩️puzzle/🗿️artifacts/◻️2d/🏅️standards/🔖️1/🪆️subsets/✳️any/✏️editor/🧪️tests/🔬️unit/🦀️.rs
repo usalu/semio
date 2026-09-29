@@ -578,7 +578,6 @@ async fn exact_overview_window_cameras_isolate_render_and_reload_through_registe
     assert_eq!(rendered_camera(&render_window(&mut reopened, overview::BODY_KEY, window_b)), (-9.0, 6.0, 0.5));
     close_app(&mut reopened);
     close_app(&mut app);
-    eprintln!("[DEBUG] two Puzzle 2D overview windows published and rendered independent cameras, preserved document and app config, reloaded both persisted partitions, and closed their registered apps");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -608,7 +607,6 @@ async fn exact_overview_window_transient_isolates_abort_and_resets_on_reload() {
     drop((transient_a, transient_b, aborted, reset));
     close_app(&mut reopened);
     close_app(&mut app);
-    eprintln!("[DEBUG] Puzzle 2D transient engagement stayed exact-window isolated, abort cleared only its owner, reload reset ephemeral state, and both registered apps reached terminal-empty close");
 }
 
 /// 🐢️ Regression test for a perf-round-2 bug: `parse_fixture_v1` always `clear_scene()`s then

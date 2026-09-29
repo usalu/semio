@@ -288,7 +288,7 @@ fn canonical_reader_error_after_partial_unicode_output_accounts_every_initialize
             assert_eq!(complete, fixture["expectedComplete"].as_bool().unwrap());
             assert_eq!(count.load(Ordering::SeqCst) as u64, fixture["expectedRootRetirements"].as_u64().unwrap());
             assert_eq!(retired as u64, fixture["expectedSnapshotBytes"].as_u64().unwrap());
-            eprintln!("[DEBUG] canonical reader failed mode={mode} grant={bytes} with all{reported} initialized prefix bytes owned and exact snapshot retirement={retired}");
+            eprintln!("canonical reader failed mode={mode} grant={bytes} with all{reported} initialized prefix bytes owned and exact snapshot retirement={retired}");
         }
     }
 }
@@ -321,7 +321,6 @@ fn canonical_reader_indexed_cursor_error_preserves_actual_chunk_prefix() {
         assert_eq!(failure.as_deref(), fixture["expectedError"].as_str());
         assert_eq!(actual, fixture["expectedPrefix"].as_str().unwrap().as_bytes());
         assert!(!cursor.is_complete());
-        eprintln!("[DEBUG] indexed canonical cursor retained exact partial-error prefix bytes={} grant={maximum}", actual.len());
     }
 }
 
@@ -382,7 +381,7 @@ fn canonical_reader_sealer_failed_prefix_is_accounted_without_minting_authority(
             }
             assert!(owner.terminal_is_empty());
             assert_eq!(count.load(Ordering::SeqCst), 1);
-            eprintln!("[DEBUG] failed canonical sealer retained {} prefix bytes, no prepared authority, exact close borrowed={borrowed} grant={maximum_bytes}", actual.len());
+            eprintln!("failed canonical sealer retained {} prefix bytes, no prepared authority, exact close borrowed={borrowed} grant={maximum_bytes}", actual.len());
         }
     }
 }

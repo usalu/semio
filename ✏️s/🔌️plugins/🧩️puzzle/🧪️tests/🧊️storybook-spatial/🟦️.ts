@@ -12,7 +12,7 @@ function significantConsoleErrors(messages: string[]): string[] {
   return messages.filter((text) => !/Failed to load resource:.*\b40[0-9]\b/i.test(text));
 }
 
-/** @emoji 🧪️ Base assertion shared by every story in this file, minus the 2D board-specific canvas lookup. */
+/** 🧪️ Base assertion shared by every story in this file, minus the 2D board-specific canvas lookup. */
 async function expectStoryLoads(page: Page, storyId: string): Promise<void> {
   const pageErrors: Error[] = [];
   const consoleErrors: string[] = [];

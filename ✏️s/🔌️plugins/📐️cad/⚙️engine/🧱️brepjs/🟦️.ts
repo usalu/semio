@@ -23,6 +23,8 @@ export type OwnedBrepGroupedGeometry = {
   readonly groups: readonly { readonly start: number; readonly count: number; readonly faceId: number }[];
 };
 export type OwnedBrepLineGeometry = { readonly position: Float32Array };
+export type OwnedBrepVolumeProps = { readonly volume: number; readonly centerOfMass: readonly [number, number, number] };
+export type OwnedBrepBounds = { readonly xMin: number; readonly xMax: number; readonly yMin: number; readonly yMax: number; readonly zMin: number; readonly zMax: number };
 //#endregion 🔖️OwnedBrepContract
 
 //#region 🧱️Implementation
@@ -34,14 +36,14 @@ function invoke<T>(operation: keyof typeof implementation, args: readonly unknow
 
 export const ownedOpenCascadeWasmBundledUrl: string = openCascadeWasmBundledUrl;
 
-/** @emoji 📂️ Resolves the owned OpenCascade WASM implementation for Node-based tests. */
+/** 📂️ Resolves the owned OpenCascade WASM implementation for Node-based tests. */
 export async function resolveOwnedOpenCascadeWasmFileUrl(): Promise<string> {
   const { createRequire } = await import("node:module");
   const { pathToFileURL } = await import("node:url");
   return pathToFileURL(createRequire(import.meta.url).resolve("brepjs-opencascade/src/brepjs_single.wasm")).href;
 }
 
-/** @emoji 🧩️ Initializes the external OpenCascade runtime and binds it to the owned B-Rep surface. */
+/** 🧩️ Initializes the external OpenCascade runtime and binds it to the owned B-Rep surface. */
 export async function initializeOwnedOpenCascade(locateFile: (path: string) => string): Promise<void> {
   const openCascade = await (initOpenCascade as (options?: { locateFile?: (path: string) => string }) => Promise<unknown>)({ locateFile });
   invoke<void>("initFromOC", [openCascade]);
@@ -179,6 +181,14 @@ export function measureVolume(...args: readonly unknown[]): OwnedBrepResult<numb
   return invoke("measureVolume", args);
 }
 
+export function measureVolumeProps(...args: readonly unknown[]): OwnedBrepResult<OwnedBrepVolumeProps> {
+  return invoke("measureVolumeProps", args);
+}
+
+export function getBounds(...args: readonly unknown[]): OwnedBrepBounds {
+  return invoke("getBounds", args);
+}
+
 export function mesh(...args: readonly unknown[]): OwnedBrepMesh {
   return invoke("mesh", args);
 }
@@ -205,6 +215,18 @@ export function sewShells(...args: readonly unknown[]): OwnedBrepResult<OwnedBre
 
 export function solidFromShell(...args: readonly unknown[]): OwnedBrepResult<OwnedBrepSolid> {
   return invoke("solidFromShell", args);
+}
+
+export function rotate(...args: readonly unknown[]): OwnedBrepShape {
+  return invoke("rotate", args);
+}
+
+export function scale(...args: readonly unknown[]): OwnedBrepShape {
+  return invoke("scale", args);
+}
+
+export function mirror(...args: readonly unknown[]): OwnedBrepShape {
+  return invoke("mirror", args);
 }
 
 export function sphere(...args: readonly unknown[]): OwnedBrepSolid {

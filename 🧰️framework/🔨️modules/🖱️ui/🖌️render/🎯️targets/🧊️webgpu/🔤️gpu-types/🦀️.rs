@@ -1,4 +1,4 @@
-//! @emoji 🔤️ Pure `ui_render::shader_contract` → `wgpu` translations. Every fn here maps one enum/
+//! 🔤️ Pure `ui_render::shader_contract` → `wgpu` translations. Every fn here maps one enum/
 //! struct to its `wgpu` mirror and nothing else — no device, no allocation — so each is exercised by
 //! `#[cfg(test)]` without a device, per this packet's brief ("resource-op→GPU-op translation" and
 //! sibling pure-logic units).

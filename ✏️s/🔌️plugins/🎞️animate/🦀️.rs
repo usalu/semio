@@ -1,7 +1,7 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
 use semio_framework_plugin::__semio_dispatch_PluginApp;
-use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
+use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest, MEDIA_VIDEO_RENDER_CAPABILITY};
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{EditorApp, ExecutionMode, Plugin, PluginApp, PluginAssemblyError, VcsArtifactApp, ViewerApp};
 
@@ -29,6 +29,7 @@ pub fn plugin() -> Result<Plugin<AnimateApps>, PluginAssemblyError> {
         .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::presentation::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
         .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist animate presentation edits to the open document".into(), optional: false })
+        .requests(CapabilityRequest { id: CapabilityId(MEDIA_VIDEO_RENDER_CAPABILITY.into()), scope: "plugin".into(), reason: "render the presentation deck to an MP4 video on this device".into(), optional: false })
         .try_build()
 }
 

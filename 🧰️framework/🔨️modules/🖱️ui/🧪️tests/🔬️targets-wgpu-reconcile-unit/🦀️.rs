@@ -32,11 +32,22 @@ fn clear_dirty(tree: &mut UiTree, id: NodeId) {
 }
 
 #[test]
-fn a_declarative_table_row_does_not_turn_its_remove_action_into_row_activation() {
-    let row: ui_contract::UiNodeRecord = serde_json::from_value(serde_json::json!({
+fn an_editable_table_row_keeps_one_child_per_cell_and_its_remove_action_as_a_row_action() {
+    let table: ui_contract::UiNodeRecord = serde_json::from_value(serde_json::json!({
         "id": 0,
+        "key": "table",
+        "children": [1],
+        "component": { "type": "table", "label": "People", "columns": ["Name"], "actionsLabel": "Actions" },
+        "layout": { "kind": "stack", "axis": "vertical", "gap": "none", "padding": { "all": "none" }, "align": "stretch", "justify": "start", "wrap": false, "grow": false },
+        "style": {},
+        "activity": "idle",
+        "accessibility": {}
+    }))
+    .expect("table fixture");
+    let row: ui_contract::UiNodeRecord = serde_json::from_value(serde_json::json!({
+        "id": 1,
         "key": "row-7",
-        "children": [1, 2],
+        "children": [2],
         "component": {
             "type": "tableRow",
             "cells": ["Ada"],
@@ -46,7 +57,7 @@ fn a_declarative_table_row_does_not_turn_its_remove_action_into_row_activation()
                 "action": {
                     "trigger": "activate",
                     "action": { "scope": "s.stdio.csv@rfc4180/*#editor", "name": "remove-row", "version": 1 },
-                    "args": { "row": 7, "revision": "0123456789abcdef" }
+                    "args": { "revision": "0123456789abcdef", "row": 7 }
                 }
             }]
         },
@@ -56,8 +67,8 @@ fn a_declarative_table_row_does_not_turn_its_remove_action_into_row_activation()
         "accessibility": {}
     }))
     .expect("table row fixture");
-    let child: ui_contract::UiNodeRecord = serde_json::from_value(serde_json::json!({
-        "id": 1,
+    let cell: ui_contract::UiNodeRecord = serde_json::from_value(serde_json::json!({
+        "id": 2,
         "key": "cell-0",
         "component": { "type": "input", "kind": "text", "value": "Ada", "commit": "blur" },
         "layout": { "kind": "leaf", "width": "hug", "height": "hug" },
@@ -66,30 +77,28 @@ fn a_declarative_table_row_does_not_turn_its_remove_action_into_row_activation()
         "accessibility": { "label": "Name" }
     }))
     .expect("cell fixture");
-    let action: ui_contract::UiNodeRecord = serde_json::from_value(serde_json::json!({
-        "id": 2,
-        "key": "row-action-0",
-        "component": { "type": "button", "icon": "trash-2", "label": "Remove row" },
-        "bindings": [{
-            "trigger": "activate",
-            "action": { "scope": "s.stdio.csv@rfc4180/*#editor", "name": "remove-row", "version": 1 },
-            "args": { "row": 7, "revision": "0123456789abcdef" }
-        }],
-        "layout": { "kind": "leaf", "width": "hug", "height": "hug" },
-        "style": {},
-        "activity": "idle",
-        "accessibility": { "label": "Remove row" }
-    }))
-    .expect("row action fixture");
-    let header = ui_contract::UiDocumentLeaseHeader { generation: 1, surface: ui_contract::SurfaceId::try_from("table.action").expect("surface"), revision: ui_contract::UiRevision(0), root: row.id, layout_epoch: 0, node_count: 3 };
+    let header = ui_contract::UiDocumentLeaseHeader { generation: 1, surface: ui_contract::SurfaceId::try_from("table.action").expect("surface"), revision: ui_contract::UiRevision(0), root: table.id, layout_epoch: 0, node_count: 3 };
     let mut document = UiDocumentTree::new(header).expect("document");
+    document.try_upsert_record(table).expect("table record");
     document.try_upsert_record(row).expect("row record");
-    document.try_upsert_record(child).expect("cell record");
-    document.try_upsert_record(action).expect("action record");
+    document.try_upsert_record(cell).expect("cell record");
     {
-        let row = document.record(ui_contract::UiNodeId(0)).expect("row");
-        let UiNode::Stack(projected) = ui_node_from_record(&document, row, "table.action", "s.stdio.csv@rfc4180/*#editor") else { panic!("a table row with declarative cells projects as a stack") };
+        let row = document.record(ui_contract::UiNodeId(1)).expect("row");
+        let UiNode::Stack(projected) = ui_node_from_record(&document, row, "table.action", "s.stdio.csv@rfc4180/*#editor") else { panic!("a table row mounts as its keyed identity row") };
         assert!(projected.activate.is_none(), "focusing or activating an editable row must not run its destructive trailing action");
+        let table = document.record(ui_contract::UiNodeId(0)).expect("table");
+        let UiNode::Tree(projected) = ui_node_from_record(&document, table, "table.action", "s.stdio.csv@rfc4180/*#editor") else { panic!("a table paints through the retained tree") };
+        let [section] = projected.sections.as_slice() else { panic!("a table is ONE section") };
+        assert_eq!(section.id, "table", "the section is keyed by the table's own record key");
+        let [item] = section.items.as_slice() else { panic!("one row item") };
+        assert_eq!((item.id.as_str(), item.label.as_str()), ("row-7", "Ada"), "a row is named by its first cell");
+        assert!(item.action.is_none(), "the row action is not the row's activation");
+        let Some([remove]) = item.actions.as_deref() else { panic!("the RowAction prop is the row's one trailing action") };
+        assert_eq!(remove.label.as_ref().map(|label| label.as_str()), Some("Remove row"));
+        assert_eq!(remove.action.action, "remove-row");
+        let Some(DslValue::Object(arguments)) = &remove.action.args else { panic!("remove address is retained") };
+        assert!(arguments.contains(&("revision".into(), DslValue::String("0123456789abcdef".into()))));
+        assert!(arguments.contains(&("row".into(), DslValue::uint(7))));
     }
     let mut tree = UiTree::new();
     tree.publish_document(document);
@@ -100,15 +109,11 @@ fn a_declarative_table_row_does_not_turn_its_remove_action_into_row_activation()
             break;
         }
     }
-    let row = tree.document_node(ui_contract::UiNodeId(0)).expect("row mounted");
+    let row = tree.document_node(ui_contract::UiNodeId(1)).expect("row mounted");
     let children = tree.children(row).collect::<Vec<_>>();
-    assert_eq!(children.len(), 2);
-    let UiNode::Button(action) = &tree.node(children[1]).expect("action mounted").spec.0 else { panic!("the row action mounts as its own button") };
-    assert_eq!(action.label.as_str(), "Remove row");
-    assert_eq!(action.action.action, "remove-row");
-    let Some(DslValue::Object(arguments)) = &action.action.args else { panic!("remove address is retained") };
-    assert!(arguments.contains(&("revision".into(), DslValue::String("0123456789abcdef".into()))));
-    assert!(arguments.contains(&("row".into(), DslValue::uint(7))));
+    let [cell] = children.as_slice() else { panic!("an editable row keeps exactly one child per materialised cell") };
+    let UiNode::Input(input) = &tree.node(*cell).expect("cell mounted").spec.0 else { panic!("the cell mounts as its own input") };
+    assert_eq!(input.id, "cell-0");
 }
 
 #[test]
@@ -139,8 +144,8 @@ fn a_childless_table_row_never_implicitly_activates_its_first_row_action() {
     let mut document = UiDocumentTree::new(header).expect("document");
     document.try_upsert_record(row).expect("row record");
     let row = document.record(ui_contract::UiNodeId(0)).expect("row");
-    let UiNode::Button(projected) = ui_node_from_record(&document, row, "table.childless", "s.stdio.csv@rfc4180/*#editor") else { panic!("childless row projects as its legacy button") };
-    assert!(projected.action.action.is_empty(), "the row action is not borrowed as an implicit destructive row activation");
+    let UiNode::Stack(projected) = ui_node_from_record(&document, row, "table.childless", "s.stdio.csv@rfc4180/*#editor") else { panic!("a childless table row mounts as its keyed identity row") };
+    assert!(projected.activate.is_none(), "the row action is not borrowed as an implicit destructive row activation");
 }
 
 fn any_dirty(tree: &UiTree, id: NodeId) -> bool {

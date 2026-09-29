@@ -67,7 +67,6 @@ fn namespace_projection_matches_independent_expanded_names_and_false_flags() {
             .collect::<Vec<_>>();
         assert_eq!(oracle_ids, ids);
     }
-    println!("[DEBUG] DOCX semantic projection matches six independent namespace and explicit formatting cases");
 }
 
 #[test]
@@ -113,7 +112,6 @@ fn namespace_formatting_and_style_edits_preserve_qualified_attributes_and_invers
             assert_eq!(styled, before);
         }
     }
-    println!("[DEBUG] DOCX direct formatting false, style identity, namespace-qualified attributes, save and compact inverse agree");
 }
 
 fn project(snapshot: &DocxSnapshot) -> DocxDocument {
@@ -416,5 +414,4 @@ async fn top_level_table_projection_matches_independent_xml_text_order() {
             resolve_docx_xml_address(&snapshot, &run.address).unwrap();
         }
     }
-    println!("[DEBUG] DOCX top-level projections retain all five paragraph/nested-table runs and canonical physical XML addresses");
 }

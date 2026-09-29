@@ -72,7 +72,6 @@ fn surface_ownership_existing_component_refuses_before_cloning_unadmitted_payloa
     let source_unchanged = serde_json::to_value(&cursor.record_diff.as_ref().unwrap().record.component).unwrap() == expected;
     while !cursor.retire_one() {}
     while !current.retire_one() {}
-    eprintln!("[DEBUG] existing-component-refusal rejected={rejected} allocation-before-admission={allocation} source-unchanged={source_unchanged}");
     assert!(rejected && source_unchanged);
     assert_eq!(allocation, fixture()["existingComponent"]["rejectionAllocationBytes"].as_u64().unwrap() as usize);
 }
@@ -114,7 +113,6 @@ fn surface_ownership_existing_component_retains_comparison_and_copy_between_turn
     while !current.retire_one() {}
     assert_eq!(candidate, expected);
     assert!(old_unchanged);
-    eprintln!("[DEBUG] existing-component-copy turns={turns} allocation-ledger={allocation} old-unchanged={old_unchanged}");
     assert!(turns > data["minimumTurns"].as_u64().unwrap());
     assert!(allocation >= data["payloadBytes"].as_u64().unwrap() as usize);
 }
@@ -152,7 +150,6 @@ fn surface_ownership_component_copy_charges_actual_surface_backing_before_public
     assert_eq!(serde_json::to_value(fresh).unwrap(), expected);
     while !cursor.retire_one() {}
     while !current.retire_one() {}
-    eprintln!("[DEBUG] surface-component-copy turns={turns} reported={reported} ledger-allocation={} actual-allocation=32768", after - before);
     assert_eq!(after - before, data["payloadBytes"].as_u64().unwrap() as usize);
     assert!(reported >= data["payloadBytes"].as_u64().unwrap() as usize);
     assert!(turns > 8);
@@ -206,7 +203,6 @@ fn surface_ownership_binding_clone_requires_bounded_backing_and_copy() {
     assert_eq!(serde_json::to_value(&diff.record.bindings).unwrap(), expected);
     while !cursor.retire_one() {}
     while !current.retire_one() {}
-    eprintln!("[DEBUG] surface-binding-clone turns={turns} allocated={previous_allocated} initialized={previous_initialized} maximum-allocation={largest_allocation} maximum-placement={largest_initialization}");
     assert!(largest_allocation <= data["maximumBytesPerTurn"].as_u64().unwrap() as usize, "a retained field clone must pre-admit bounded backing");
     assert!(largest_initialization <= data["maximumBytesPerTurn"].as_u64().unwrap() as usize, "a field cannot copy all bindings as one bounded item");
     assert!(turns > 32);
@@ -249,7 +245,6 @@ fn surface_ownership_component_copy_unwind_and_credit_refusal_keep_exact_source(
         }
         assert!(terminal && cursor.record_diff.is_none());
         while !current.retire_one() {}
-        eprintln!("[DEBUG] surface-component-unwind frontier={frontier} retained-outside-callback=true terminal-close=true");
     }
     let component: ui_contract::Component = serde_json::from_value(serde_json::json!({"type":"surface","kind":"canvas-2d","docSchema":"wire","doc":{"bytes":[1,2,3]},"bindings":[]})).unwrap();
     let node = crate::TreeNode::try_new("surface", component).unwrap();
@@ -269,7 +264,6 @@ fn surface_ownership_component_copy_unwind_and_credit_refusal_keep_exact_source(
     assert!(cursor.record_diff.as_ref().unwrap().owned_copy.as_ref().and_then(RecordOwnedCopy::component).unwrap().source().is_some());
     while !cursor.retire_one() {}
     while !current.retire_one() {}
-    eprintln!("[DEBUG] surface-component-refusal actual-allocation=0 source-retained=true terminal=true");
 }
 
 #[test]
@@ -311,7 +305,7 @@ fn surface_ownership_patch_backing_is_admitted_in_separate_turns() {
             patch.ops.close_step(1, 4096).unwrap();
         }
     }
-    eprintln!("[DEBUG] surface-patch-allocation turns={allocation_turns} largest={largest} operation-bytes={}", size_of::<ui_contract::UiPatchOp>());
+    eprintln!("surface-patch-allocation turns={allocation_turns} largest={largest} operation-bytes={}", size_of::<ui_contract::UiPatchOp>());
     assert!(largest <= fixture()["patchAllocation"]["maximumBytesPerTurn"].as_u64().unwrap() as usize, "directory and payload allocations require distinct admitted opportunities");
     assert_eq!(allocation_turns, 2);
 }
@@ -354,7 +348,6 @@ fn surface_ownership_binding_copy_cancel_keeps_all_original_and_partial_backings
         }
         assert!(terminal && cursor.record_diff.is_none());
         while !current.retire_one() {}
-        eprintln!("[DEBUG] surface-binding-cancel frontier={frontier} retained={retained} terminal=true allocation-during-close=0");
     }
 }
 
@@ -384,7 +377,6 @@ fn surface_ownership_binding_copy_unwind_keeps_owners_outside_callback() {
         assert!(owner.source_allocated_bytes() != 0);
         while !cursor.retire_one() {}
         while !current.retire_one() {}
-        eprintln!("[DEBUG] surface-binding-unwind frontier={frontier} same-owner=true terminal-close=true");
     }
 }
 
@@ -406,7 +398,6 @@ fn surface_ownership_transfer_preserves_backing_without_allocating_replacement()
     assert_eq!(source.len(), case["sourceItems"].as_u64().unwrap() as usize);
     let source_bytes = size_of_val(source.entries.as_ref());
     while moved.pop().is_some() {}
-    eprintln!("[DEBUG] surface-backing-transfer source-bytes={source_bytes} moved-bytes={original_bytes}");
     assert_eq!(source_bytes, case["sourceBackingBytes"].as_u64().unwrap() as usize, "a moved-from owner must not allocate a replacement full backing");
     let mut source = SurfaceFixedVec::<String, 4>::default();
     let moved = source.take_all();
@@ -420,7 +411,6 @@ fn surface_ownership_transfer_preserves_backing_without_allocating_replacement()
     assert_eq!(size_of_val(source.entries.as_ref()), 0);
     assert!(source.is_empty());
     assert!(moved.is_empty());
-    eprintln!("[DEBUG] surface-moved-source rejected-exact-payload=true payload-capacity={capacity} replacement-bytes=0");
 }
 
 #[test]
@@ -453,7 +443,6 @@ fn surface_ownership_patch_refusal_and_cancel_keep_exact_unallocated_owner() {
         assert!(cursor.pending_op.terminal_is_empty());
         assert!(cursor.ops.terminal_is_empty());
         while !current.retire_one() {}
-        eprintln!("[DEBUG] surface-patch-cancel stage={turns} retained-before={allocated} terminal=true allocation-during-close=0");
     }
 }
 
@@ -512,7 +501,6 @@ fn surface_ownership_finalize_transfers_exact_record_and_index_allocations() {
         while patch.ops.pop().is_some() {}
         patch.ops.release_empty_allocation().unwrap();
     }
-    eprintln!("[DEBUG] surface-finalize-transfer exact-records=true exact-indexes=true replacement-bytes=0 closed=true");
 }
 
 #[test]
@@ -532,7 +520,6 @@ fn surface_ownership_inline_fields_do_not_allocate_a_second_owner() {
         let before_usage = census(&before);
         let after_usage = census(&after);
         let difference = after_usage.bytes.checked_sub(before_usage.bytes).unwrap();
-        eprintln!("[DEBUG] surface-inline-footprint name={} before={} after={} delta={} items-before={} items-after={}", case["name"], before_usage.bytes, after_usage.bytes, difference, before_usage.items, after_usage.items);
         differences.push(difference);
         expected.push(case["additionalOwnedBytes"].as_u64().unwrap() as usize);
         assert!(after_usage.items >= before_usage.items, "additional traversal work remains accounted independently");
@@ -577,7 +564,7 @@ fn surface_ownership_native_backing_inventory_preserves_capacity() {
         ("reconciler", size_of::<SurfaceReconciler>()),
     ];
     for (owner, bytes) in sizes {
-        eprintln!("[DEBUG] surface-physical-owner owner={owner} bytes={bytes}");
+        eprintln!("surface-physical-owner owner={owner} bytes={bytes}");
     }
 }
 #[test]
@@ -593,7 +580,6 @@ fn surface_ownership_resident_reservation_uses_one_shared_aggregate_ledger() {
     release_surface_reconcile(credit);
     let after = ui_contract::UiResidentPermit::snapshot().unwrap();
     assert_eq!(after, before);
-    eprintln!("[DEBUG] runtime-resident-join expected-bytes={bytes} observed-bytes={} expected-slots=1 observed-slots={}", during.bytes - before.bytes, during.used_slots - before.used_slots);
     assert_eq!(during.bytes - before.bytes, bytes, "the runtime must not retain an independent second aggregate ledger");
     assert_eq!(during.used_slots - before.used_slots, 1);
 }
@@ -623,6 +609,5 @@ fn surface_ownership_resident_return_maintenance_preserves_contended_credit() {
     }
     assert!(complete);
     assert_eq!(ui_contract::UiResidentPermit::snapshot().unwrap(), before);
-    eprintln!("[DEBUG] runtime-resident-return mutex-busy-keeps-credit=true maintenance-resumes=true exact-return=65536");
 }
 //#endregion 🧪️Laws

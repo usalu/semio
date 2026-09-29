@@ -188,13 +188,13 @@ impl semio_framework_os_kernel::os_directory::client::DirectoryWsConnection for 
         self.socket.send(crate::socket_door::SocketMessage::Binary(bytes)).map_err(TransportError::Io)
     }
 
+    /// 🛟️ A binary frame on the directory endpoint is off-contract; skip it rather than
+    /// fabricating text, exactly as the native transport skips a `Message::Binary`.
     fn try_recv_text(&mut self) -> Result<semio_framework_os_kernel::os_directory::client::DirectoryWsPoll, TransportError> {
         use semio_framework_os_kernel::os_directory::client::DirectoryWsPoll;
         loop {
             match self.socket.try_recv() {
                 Some(crate::socket_door::SocketMessage::Text(text)) => return Ok(DirectoryWsPoll::Text(text)),
-                // 🛟️ A binary frame on the directory endpoint is off-contract; skip it rather than
-                // fabricating text, exactly as the native transport skips a `Message::Binary`.
                 Some(crate::socket_door::SocketMessage::Binary(_)) => continue,
                 None => break,
             }

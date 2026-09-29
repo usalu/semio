@@ -11,7 +11,7 @@ class TestScript extends BundleScript {
       runCmd(process.execPath, [entry], { cwd: this.repoRoot });
     }
     runCmd(process.execPath, ["test", resolve(subset, "✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts"), resolve(subset, "📚️examples/🎬️demo/🧪️tests/🧩️example/🟦️.ts")], { cwd: this.repoRoot });
-    console.log("[DEBUG] Sequence artifact browser, protocol oracle and examples passed");
+    console.log("Sequence artifact browser, protocol oracle and examples passed");
   }
 }
 

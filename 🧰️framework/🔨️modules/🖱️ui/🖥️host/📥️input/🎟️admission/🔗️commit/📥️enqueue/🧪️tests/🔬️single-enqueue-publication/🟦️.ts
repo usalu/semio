@@ -60,5 +60,5 @@ export function testSingleEnqueuePublicationFixture(): void {
     hostile.invariants[invariant] = true;
     assert.equal(validate(hostile), false);
   }
-  console.log("[DEBUG] single-enqueue schema/Buffer oracle: 3 exact 24-byte tuples, 5 hostiles; queue+scene only, unchanged build input; native interlock is a separate gate");
+  console.log("single-enqueue schema/Buffer oracle: 3 exact 24-byte tuples, 5 hostiles; queue+scene only, unchanged build input; native interlock is a separate gate");
 }

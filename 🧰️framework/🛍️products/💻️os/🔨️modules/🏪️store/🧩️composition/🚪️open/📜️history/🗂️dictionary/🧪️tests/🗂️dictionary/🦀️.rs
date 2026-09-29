@@ -264,9 +264,7 @@ async fn member_history_dictionary_is_atomic_and_bounded_by_neutral_records() {
             }
         }
     }
-    println!(
-        "[DEBUG] retained dictionary owner:34 exact production-writer histories x3 grants; canonical critical flags, atomic deltas, full request identity, cumulative caps, one private handoff and literal complete retirement; no typed publication"
-    );
+    println!("retained dictionary owner:34 exact production-writer histories x3 grants; canonical critical flags, atomic deltas, full request identity, cumulative caps, one private handoff and literal complete retirement; no typed publication");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -416,5 +414,5 @@ async fn member_history_dictionary_retains_every_denied_owner_until_exact_close(
             assert_eq!(retired - facts.2 - 72 - facts.1 * 1024 - pending - lookup, row["idBytes"].as_u64().unwrap() as usize, "{}", row["id"]);
         }
     }
-    println!("[DEBUG] retained dictionary rejection owner:11 authority transitions +7 payload scratch +9 pending-copy/ID scratch traces x3 grants; original witness retained and exactly closed; no public member");
+    println!("retained dictionary rejection owner:11 authority transitions +7 payload scratch +9 pending-copy/ID scratch traces x3 grants; original witness retained and exactly closed; no public member");
 }

@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🐚️ wgpu-web's plugin-loading + bridge-adapter pair — MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME
+/** 🐚️ wgpu-web's plugin-loading + bridge-adapter pair — MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME
  * (`wgpu-web-shard`) replacement for the deleted `acquirePluginModule`/`pluginHandleForBridge` (both
  * removed from `@semio-tech/framework` when the kernel was ported — see `📓️terra-web-shard-*` reports)
  * and for `🟦️.ts`'s own retired `PluginWorkerClient` (one dedicated `Worker` per plugin, the
@@ -66,7 +66,6 @@ import {
   createTurnOutcomeBroadcast,
   fetchDescriptorManifest,
   fetchPackageDescriptor,
-  reachableKindsFromUnknown,
   scopeContributionsJson,
   type BuiltNode,
   type Component,
@@ -123,7 +122,7 @@ import {
 // #endregion 🔌️Imports
 
 //#region 🧵️MainThreadShardWorkers
-/** @emoji 🧵️ A shard worker that the UI ISOLATE owns, reached over a `MessagePort`.
+/** 🧵️ A shard worker that the UI ISOLATE owns, reached over a `MessagePort`.
  *
  * This frame worker cannot call `new Worker(...)` for a shard itself: a NESTED dedicated worker fails
  * to load outright in some embedded browsers — measured here, where even a one-line
@@ -189,7 +188,7 @@ class MainThreadShardWorker implements ShardWorkerLike {
 const shardPortWaiters = new Map<number, (port: MessagePort) => void>();
 let shardPortsRouted = false;
 
-/** @emoji 📬️ Arms the `shard-port` handoff route the UI isolate answers a `shard-spawn` with, on the
+/** 📬️ Arms the `shard-port` handoff route the UI isolate answers a `shard-spawn` with, on the
  * FIRST shard this isolate spawns rather than at module scope. The worker global only exists in the
  * isolate that spawns shards, so a module-scope `self.addEventListener` made merely IMPORTING this
  * bridge throw `ReferenceError: self is not defined` in every other host — which took the package's own
@@ -212,7 +211,7 @@ function getShardClient(): ShardClient {
   pooledRuntime ??= createPooledActorRuntime({
     createWorker: (shardIndex: number) => new MainThreadShardWorker(shardIndex),
     residentLedger: rendererResidentLedger(),
-    // [DEBUG] temporary watchdog widening — measures whether the edit-mode `procedural.play.main`
+    // [TRACE] temporary watchdog widening — measures whether the edit-mode `procedural.play.main`
     // render turn is a HANG or a long-but-finite build. On THIS target the shard is a
     // `MainThreadShardWorker`, so a compute-bound guest turn blocks the very progress ticker the
     // 5 s ladder reads and the whole isolate logs nothing for the turn's duration (measured: 19 202 ms
@@ -372,19 +371,19 @@ const WGPU_UI_GRANT = Object.freeze({ maxItems: 1, maxBytes: 4_096 });
  * through it at `shell-boot` as `wgpu-ui.intake-budget-exhausted`. */
 export const WGPU_UI_INTAKE_STEP_CEILING = retainedUiIntakeStepCeiling(DEFAULT_UI_DOCUMENT_LIMITS);
 type WgpuActorExecutor = <T>(work: () => Promise<T>) => Promise<T>;
-/** @emoji 📄️ What the owned-UI route itself can answer: the surface as the guest published it.
+/** 📄️ What the owned-UI route itself can answer: the surface as the guest published it.
  * `effects` is NOT part of it — a turn's leftover host effects belong to the caller that drained
  * them, which is why `renderSurfaceSerialized` is the only place the two are joined. */
 type WgpuOwnedUiDocument = Readonly<{ node: BuiltNode; document: Readonly<{ surface: string; revision: number; root: number; nodes: readonly object[]; layoutEpoch: number }> }>;
 
 type WgpuOwnedUiProjection = WgpuOwnedUiDocument & Readonly<{ effects: readonly Effect[] }>;
 
-/** @emoji ⏳️ How long this bridge may hold the isolate between yields — the SAME ceiling
+/** ⏳️ How long this bridge may hold the isolate between yields — the SAME ceiling
  * `../../../⏱️turn-budget/🟦️.ts` prices a frame-Worker step against, so an intake never blocks a frame
  * longer than a frame step is allowed to. */
 const WGPU_UI_YIELD_BUDGET_MS = WORKER_STEP_BUDGET_MS;
 
-/** @emoji 🚏️ An UNTHROTTLED macrotask.
+/** 🚏️ An UNTHROTTLED macrotask.
  *
  * 🩸️ What this replaces: `setTimeout(resolve, 0)`. Every browser clamps a `setTimeout` nested more than
  * five deep to **4 ms**, and a page whose tab/pane is hidden clamps its timers — the Worker's included —
@@ -409,14 +408,14 @@ function unthrottledMacrotask(): Promise<void> {
   });
 }
 
-/** @emoji ⏳️ Hands the isolate back only once this drive has actually held it for
+/** ⏳️ Hands the isolate back only once this drive has actually held it for
  * {@link WGPU_UI_YIELD_BUDGET_MS}. A fixed every-Nth-step cadence cannot know what a step cost: it
  * yielded ~20 000 times for one document's worth of sub-microsecond steps, which is pure clamp on the
  * browser and pure scheduling on Node. Deadline-driven, a document costs one yield per 8 ms of real work
  * and the isolate is still never held longer than one frame step. */
 let yieldDeadlineMs = 0;
 
-/** @emoji ⏳️ The same decision, reported as NOTHING TO AWAIT while the drive is still inside its hold
+/** ⏳️ The same decision, reported as NOTHING TO AWAIT while the drive is still inside its hold
  * budget — the shape a per-phase caller needs.
  *
  * 🩸️ What this replaces: `await yieldWgpuUi()` on every step. An `async` function allocates a promise
@@ -441,7 +440,7 @@ async function yieldWgpuUi(): Promise<void> {
   if (pending) await pending;
 }
 
-/** @emoji 🚏️ Hands the ISOLATE back at a slice boundary and restarts the hold budget — one task, and
+/** 🚏️ Hands the ISOLATE back at a slice boundary and restarts the hold budget — one task, and
  * the intake resumes on the very next one.
  *
  * 🩸️ What this replaces: an `await requestAnimationFrame(…)`. Nothing in the frame Worker is
@@ -713,7 +712,7 @@ export function reconcileRetainedWindowPatch(previous: RetainedSurface | null, p
 //#endregion 🧪️RetainedPatchOracle
 
 
-/** @emoji 🧭️ Posts a nested `boot-phase` when the frame worker installed the helper. Parent `shell-boot` stays declared. */
+/** 🧭️ Posts a nested `boot-phase` when the frame worker installed the helper. Parent `shell-boot` stays declared. */
 function declareWgpuBootSubphase(name: string): { leave: (extra?: string) => void } {
   const started = performance.now();
   const declare = (globalThis as { semioDeclareBootSubphase?: (phase: string, state: "enter" | "leave", elapsedMs: number) => void }).semioDeclareBootSubphase;
@@ -726,35 +725,33 @@ function declareWgpuBootSubphase(name: string): { leave: (extra?: string) => voi
   };
 }
 
-/** @emoji 🎯️ Loaded wgpu handles by plugin id — extension dispatch resolves the callee from this table. */
+/** 🎯️ Loaded wgpu handles by plugin id — extension dispatch resolves the callee from this table. */
 const loadedWgpuHandles = new Map<string, object>();
 const contributionManifests = new Map<string, PluginManifest>();
 
-/** @emoji 🗂️ Remembers a plugin descriptor so wgpu can send scoped contributions without instantiating every actor. */
+/** 🗂️ Remembers a plugin descriptor so wgpu can send scoped contributions without instantiating every actor. */
 export async function primeContributionManifest(pluginId: string, moduleUrl: string, signal?: AbortSignal): Promise<void> {
   const manifest = await fetchDescriptorManifest(pluginId, moduleUrl, signal);
   contributionManifests.set(pluginId, manifest);
 }
 
-/** @emoji 🎛️ The receiver's `consumes` row from this product's generated registry — what scopes a
- * capability pack (a contribution no operator graph can reach). An id the catalog does not list
- * consumes nothing, which forwards no foreign capability pack. */
+/** 🎛️ The receiver's `consumes` row from this product's generated registry — the one thing that
+ * scopes a contributions pack. An id the catalog does not list consumes nothing, which forwards no
+ * foreign contribution. */
 function wgpuConsumedTopics(receiverPluginId: string): readonly string[] {
   const row = [...PLUGIN_CATALOG.plugins, ...PLUGIN_CATALOG.extensions].find((entry) => entry.pluginId === receiverPluginId);
   return row?.consumes ?? [];
 }
 
-/** @emoji 📦️ One pack-sized contributions payload — receiver plus flow-graph-reachable operators only. */
+/** 📦️ One pack-sized contributions payload — the receiver's own contributions plus every topic it consumes. */
 export function wgpuBuildScopedContributionsPack(
   receiverPluginId: string,
-  reachabilityValues: readonly unknown[],
   loadedManifests?: ReadonlyArray<{ readonly pluginId: string; readonly manifest: Pick<PluginManifest, "topicContributions"> }>,
   consumedTopics: readonly string[] = wgpuConsumedTopics(receiverPluginId),
 ): { readonly json: string; readonly bytes: Uint8Array; readonly pluginIds: readonly string[]; readonly chars: number; readonly crossings: 1 } | null {
   const loaded = loadedManifests ?? [...contributionManifests.entries()].map(([pluginId, manifest]) => ({ pluginId, manifest }));
   if (!loaded.length) return null;
-  const reachableKinds = reachableKindsFromUnknown(reachabilityValues);
-  const json = scopeContributionsJson(loaded, receiverPluginId, reachableKinds, consumedTopics);
+  const json = scopeContributionsJson(loaded, receiverPluginId, consumedTopics);
   if (!json || json === "[]") return null;
   const bytes = new TextEncoder().encode(json);
   const pluginIds = [...new Set((JSON.parse(json) as { readonly pluginId?: string }[]).map((entry) => entry.pluginId).filter((id): id is string => typeof id === "string"))];
@@ -763,7 +760,7 @@ export function wgpuBuildScopedContributionsPack(
 
 export const WGPU_CONTRIBUTIONS_SLIM_VIEW = Object.freeze({ locale: "en", terminology: "native" });
 
-/** @emoji 🧹 Drops the host-owned panel payload from the live view so the scoped pack is the only bulk
+/** 🧹 Drops the host-owned panel payload from the live view so the scoped pack is the only bulk
  * thing this crossing carries, and resolves the preferences the guest's `ViewModel` declares
  * non-optional. Contributions are no longer a view-state field at all — they are installed by this
  * very `setContributions` run — so there is nothing left here to strip on their account
@@ -786,12 +783,12 @@ function unsignedVarintByteLength(value: number): number {
   return bytes;
 }
 
-/** @emoji 📏️ Exact encoded length of AppCommand::Command for its sequence and two packed vectors. */
+/** 📏️ Exact encoded length of AppCommand::Command for its sequence and two packed vectors. */
 export function wgpuCommandIngressByteLength(sequence: number, commandBytes: Uint8Array, viewBytes: Uint8Array): number {
   return 1 + unsignedVarintByteLength(sequence) + unsignedVarintByteLength(commandBytes.byteLength) + commandBytes.byteLength + unsignedVarintByteLength(viewBytes.byteLength) + viewBytes.byteLength;
 }
 
-/** @emoji 📕️ Command-ingress size of one setContributions pack crossing — slim view, never the live document. */
+/** 📕️ Command-ingress size of one setContributions pack crossing — slim view, never the live document. */
 export function wgpuContributionsIngressSize(command: unknown, viewState: unknown, sequence: number): { readonly commandBytes: number; readonly viewBytes: number; readonly ingressBytes: number; readonly ingressPages: number } {
   const commandBytes = encodePackValue(command);
   const viewBytes = encodePackValue(viewContextWireValue(viewState));
@@ -821,7 +818,7 @@ export function wgpuEffectDispatchScope(pluginId: string, appId: string, viewSta
 
 
 
-/** @emoji 📄️ JSON-safe leftover effects — `req` is a bigint on the wire and JSON.stringify refuses it. */
+/** 📄️ JSON-safe leftover effects — `req` is a bigint on the wire and JSON.stringify refuses it. */
 function jsonEffects(effects: readonly Effect[]): unknown[] {
   return JSON.parse(JSON.stringify(effects, (_key, value) => (typeof value === "bigint" ? Number(value) : value))) as unknown[];
 }
@@ -969,7 +966,7 @@ export type WgpuPluginExtensionCompletion = {
   complete(outcome: { readonly ok: Uint8Array } | { readonly fault: Uint8Array }): Promise<InvocationResponse>;
 };
 
-/** @emoji 📄️ Cuts one host answer into guest-safe pages — the wgpu twin of PluginRuntime's capture. */
+/** 📄️ Cuts one host answer into guest-safe pages — the wgpu twin of PluginRuntime's capture. */
 export function wgpuGuestAnswerPages(answer: Uint8Array): { readonly prologue: readonly Uint8Array[]; readonly terminal: Uint8Array } {
   return guestAnswerPages(answer);
 }
@@ -1178,7 +1175,7 @@ export interface WgpuPluginHandle {
    * renderer targets cannot diverge into two inbound-call ABIs. */
   readonly invoke: (capability: string, request: Uint8Array | string, context?: WgpuPluginInvokeContext) => Promise<Uint8Array>;
   readonly dispatchInvokeExtension: (instanceId: number, extensionId: string, capability: string, requestJson: string, req: bigint) => Promise<InvocationResponse>;
-  readonly pushScopedContributions: (instanceId: number, appId: string, reachabilityJson: string, viewStateJson: string) => Promise<InvocationResponse>;
+  readonly pushScopedContributions: (instanceId: number, appId: string, viewStateJson: string) => Promise<InvocationResponse>;
   /** 📡️ Binds or retires this instance's document backbone at `uri` for `bindingGeneration` — the
    * browser twin of the native `DocumentBackboneBindingCommandV1` exchange. Resolves the host effects
    * the guest left beside its verified receipt; a refusal rejects with the guest's own code. */
@@ -1237,12 +1234,12 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
   const requireActorId = (instanceId: number): string => {
     const actorId = actorIdByInstance.get(instanceId);
     if (disposing) throw new Error("wgpu-plugin-handle.closed");
-    if (!actorId || closingInstances.has(instanceId)) throw new Error(`[DEBUG] program ${pluginId}: no actor for instance ${instanceId} (createApp not called, or already destroyed)`);
+    if (!actorId || closingInstances.has(instanceId)) throw new Error(`program ${pluginId}: no actor for instance ${instanceId} (createApp not called, or already destroyed)`);
     return actorId;
   };
   const requireChannel = (instanceId: number): AppChannelClient => {
     const client = channelByInstance.get(instanceId);
-    if (!client) throw new Error(`[DEBUG] program ${pluginId}: no channel for instance ${instanceId} (createApp not called, or already destroyed)`);
+    if (!client) throw new Error(`program ${pluginId}: no channel for instance ${instanceId} (createApp not called, or already destroyed)`);
     return client;
   };
   const requireUiRoute = (instanceId: number): WgpuOwnedUiInstanceRoute => {
@@ -1418,13 +1415,13 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
           await accept(submitted);
         }
         for (let continuation = 0; terminal !== "command-complete" && continuation < 1_024; continuation += 1) {
-          if (terminal === "fault") throw new Error(`[DEBUG] plugin ${pluginId}: command ingress fault`);
-          if (terminal === "backpressure") throw new Error(`[DEBUG] plugin ${pluginId}: command ingress backpressure after serialized submission`);
+          if (terminal === "fault") throw new Error(`plugin ${pluginId}: command ingress fault`);
+          if (terminal === "backpressure") throw new Error(`plugin ${pluginId}: command ingress backpressure after serialized submission`);
           const continued = await submitTurn(actorId, drive.takeAcknowledgements());
           await accept(continued);
           terminal = continued.commandIngress?.tag;
         }
-        if (terminal !== "command-complete") throw new Error(`[DEBUG] plugin ${pluginId}: command ingress did not complete within 1024 continuations`);
+        if (terminal !== "command-complete") throw new Error(`plugin ${pluginId}: command ingress did not complete within 1024 continuations`);
       }
       for (let settle = 0; drive.owesASettle(results.at(-1)) && settle < WGPU_TYPED_OPERATION_SETTLE_LIMIT; settle += 1) {
         const before = results.length;
@@ -1488,7 +1485,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
             if (frame && shellFrameAnswersACaller(frame)) frames.push(frame);
             else leftover.push(effect);
           }
-          if (leftover.length > WGPU_TYPED_OPERATION_EFFECT_CAPACITY) throw new Error(`[DEBUG] wgpu-bridge typed-operation host effects for instance ${instanceId} exceeded their ${WGPU_TYPED_OPERATION_EFFECT_CAPACITY}-entry authority`);
+          if (leftover.length > WGPU_TYPED_OPERATION_EFFECT_CAPACITY) throw new Error(`wgpu-bridge typed-operation host effects for instance ${instanceId} exceeded their ${WGPU_TYPED_OPERATION_EFFECT_CAPACITY}-entry authority`);
           pendingTurnEffects.set(instanceId, leftover);
           // 🧵️ A poll can uncover a reserved tool job just as a command can — an `interactionHover`
           // the guest armed between two host calls arrives here and nowhere else.
@@ -1672,21 +1669,14 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     return completion.complete(outcome);
   };
 
-  const pushScopedContributions = async (instanceId: number, appId: string, reachabilityJson: string, viewStateJson: string): Promise<InvocationResponse> => {
-    let reachability: unknown = [];
-    try {
-      reachability = JSON.parse(reachabilityJson);
-    } catch {
-      reachability = [];
-    }
+  const pushScopedContributions = async (instanceId: number, appId: string, viewStateJson: string): Promise<InvocationResponse> => {
     let viewState: unknown = {};
     try {
       viewState = JSON.parse(viewStateJson);
     } catch {
       viewState = {};
     }
-    const values = Array.isArray(reachability) ? reachability : [reachability];
-    const pack = wgpuBuildScopedContributionsPack(pluginId, values);
+    const pack = wgpuBuildScopedContributionsPack(pluginId);
     if (!pack) {
       return emptyInvocation();
     }
@@ -1696,7 +1686,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     if (sequenceOwner === Number.MAX_SAFE_INTEGER) throw new Error("app-channel.sequence-exhausted");
     const ingress = wgpuContributionsIngressSize(command, slimView, sequenceOwner + 1);
     if (ingress.ingressPages > SHARD_COMMAND_MAXIMUM_PAGES) {
-      throw new Error(`[DEBUG] contributions pack ingress ${ingress.ingressPages} pages exceeds ${SHARD_COMMAND_MAXIMUM_PAGES}`);
+      throw new Error(`contributions pack ingress ${ingress.ingressPages} pages exceeds ${SHARD_COMMAND_MAXIMUM_PAGES}`);
     }
     const result = await performInvocation(requireChannel(instanceId), instanceId, command, slimView);
     const ticks: InvocationResponse[] = [];
@@ -1916,7 +1906,7 @@ export interface WgpuJsBridge {
   readonly renderDocument: (instanceId: number, surfaceId: string, bodyKey: string, viewStatePack: string) => Promise<string>;
   readonly contextMenu: (instanceId: number, requestJson: string) => Promise<string>;
   readonly dispatchInvokeExtension: (instanceId: number, extensionId: string, capability: string, requestJson: string, req: number) => Promise<string>;
-  readonly pushScopedContributions: (instanceId: number, appId: string, reachabilityJson: string, viewStateJson: string) => Promise<string>;
+  readonly pushScopedContributions: (instanceId: number, appId: string, viewStateJson: string) => Promise<string>;
   /** 📡️ `bindingGeneration` crosses as a decimal string: it is a `u64`, which a JS `number` cannot
    * carry exactly. Resolves the `InvocationResponse` JSON whose `requestedEffects` the shell routes. */
   readonly documentBackbone: (instanceId: number, operation: string, bindingGeneration: string, uri: string) => Promise<string>;
@@ -1979,7 +1969,7 @@ export function pluginHandleForBridge(handle: WgpuPluginHandle): WgpuJsBridge {
     renderDocument: (instanceId, surfaceId, bodyKey, viewStatePack) => handle.renderDocument(instanceId, surfaceId, bodyKey, packValueFromBase64(viewStatePack)),
     contextMenu: (instanceId, requestJson) => handle.contextMenu(instanceId, JSON.parse(requestJson)).then((items) => JSON.stringify(items)),
     dispatchInvokeExtension: (instanceId, extensionId, capability, requestJson, req) => handle.dispatchInvokeExtension(instanceId, extensionId, capability, requestJson, BigInt(req)).then(invocationResponseJson),
-    pushScopedContributions: (instanceId, appId, reachabilityJson, viewStateJson) => handle.pushScopedContributions(instanceId, appId, reachabilityJson, viewStateJson).then(invocationResponseJson),
+    pushScopedContributions: (instanceId, appId, viewStateJson) => handle.pushScopedContributions(instanceId, appId, viewStateJson).then(invocationResponseJson),
     documentBackbone: (instanceId, operation, bindingGeneration, uri) => {
       if (operation !== "bind" && operation !== "retire") return Promise.reject(new Error(`actor-document-control.operation:${operation}`));
       return handle.documentBackbone(instanceId, operation, BigInt(bindingGeneration), uri).then(invocationResponseJson);

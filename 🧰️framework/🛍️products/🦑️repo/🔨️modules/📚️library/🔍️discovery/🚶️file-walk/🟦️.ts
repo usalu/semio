@@ -1,10 +1,13 @@
+import { isGeneratedDirectoryName } from "../../⚡️caching/🟦️.ts";
 import { POLICY_SKIP_DIRS, POLICY_SOURCE_OPERATIONS, policySourceDirectory, type PolicySourceOperations } from "../📖️source-access/🟦️.ts";
 
 export type PolicySourceWalkIssue = Readonly<{ path: string; state: "unreadable" | "symlink" | "not-directory" }>;
 
 export type PolicySourceWalk = Readonly<{ files: readonly string[]; issues: readonly PolicySourceWalkIssue[] }>;
 
-/** 🚶️ Walks admitted directories for matching files without following links or collapsing unavailable evidence. */
+/** 🚶️ Walks admitted directories for matching files without following links or collapsing unavailable evidence; a policy-declared
+ * generated directory (`🗑️generated`, `⚡️cache`, …) is disposable output, never source evidence, so the walk never enters it and
+ * nothing inside it (a test run's linked fixture, say) can abort the walk. */
 export function policyWalkRelFileSources(
   repoRoot: string,
   relRoots: readonly string[],
@@ -23,6 +26,7 @@ export function policyWalkRelFileSources(
     }
     for (const entry of source.entries) {
       const childRel = relDir ? `${relDir}/${entry.name}` : entry.name;
+      if (!entry.isFile && isGeneratedDirectoryName(entry.name)) continue;
       if (entry.isSymbolicLink) {
         issues.set(childRel, { path: childRel, state: "symlink" });
         continue;

@@ -1,10 +1,11 @@
 // #region 🎬️Scene
 /// <reference types="vitest/importMeta" />
-/** @emoji 🎬️ `@semio-tech/framework` — component scene protocol payloads shared by render hosts. */
+/** 🎬️ `@semio-tech/framework` — component scene protocol payloads shared by render hosts. */
 import type { IconName } from "@semio-tech/assets";
 import type { LocalizedLabel } from "../../🛂️manifest/🤖️generated/🎚️ui-axes/🟦️.ts";
 import type { ActionDescriptor, PluginContextMenuRequest } from "../../🛂️manifest/🟦️.ts";
 import type { Viewport2d } from "../🪟️viewport/◻️2d/🧬️schema/🟦️.ts";
+export * from "./✂️text-splice/🟦️.ts";
 
 //#region ComponentSceneProtocol
 /** 🖼️ A 2D canvas surface scene payload — mirrors the wasm `componentScene` node's `canvas2d` field. */
@@ -378,7 +379,7 @@ export type World3dScene = {
 export type World3dComputeLabelV1 = { readonly en: string; readonly de: string };
 
 /**
- * @emoji ⏳️ The declared shape of {@link World3dScene.statusJson} — what a surface may render and
+ * ⏳️ The declared shape of {@link World3dScene.statusJson} — what a surface may render and
  * what a producer must therefore fill.
  *
  * 🛑️ `cancellable` + `cancelAction` are the CANCEL CONTRACT, and they are deliberately part of the
@@ -458,7 +459,7 @@ function world3dComputeNumber(value: unknown): number {
 }
 
 /**
- * @emoji ⏳️ The ONE reader of {@link World3dScene.statusJson}. Total: malformed JSON, a missing
+ * ⏳️ The ONE reader of {@link World3dScene.statusJson}. Total: malformed JSON, a missing
  * field or a hostile type degrades to the neutral status rather than throwing inside a render — a
  * status overlay must never be able to blank the viewport it annotates.
  *
@@ -994,6 +995,7 @@ export function createContinuousGestureLane<Value>(ports: ContinuousGestureLaneP
 
 export const textEditorActions = {
   edit: "textEdit",
+  splice: "textSplice",
   select: "textSelect",
   hover: "textHover",
   requestCompletions: "requestCompletions",

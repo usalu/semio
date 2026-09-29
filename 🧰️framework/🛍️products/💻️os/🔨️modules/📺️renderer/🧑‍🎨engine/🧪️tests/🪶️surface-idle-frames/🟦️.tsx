@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🪶️ The idle budget of every wasm canvas surface family, replayed from `🧫️fixtures/🪶️surface-idle-frames/🔣️.json`
+/** 🪶️ The idle budget of every wasm canvas surface family, replayed from `🧫️fixtures/🪶️surface-idle-frames/🔣️.json`
  * against the REAL host components mounted by React DOM (the third-party renderer) with a stub wasm session on a faked
  * frame + wall clock: a settled surface paints no frame while nothing changes, a change paints it again, unmount stops
  * it. A host that repaints every animation frame fails every `idle` step. */

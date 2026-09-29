@@ -1,4 +1,4 @@
-/** @emoji 🎬️ A World3d window mounts its scene's `toolRunTrace` lane for real in jsdom: the lane pages of
+/** 🎬️ A World3d window mounts its scene's `toolRunTrace` lane for real in jsdom: the lane pages of
  * `🧫️fixtures/⏯️tool-run-trace-mount.json` travel as base64url lane text into `World3dHost`, which must mount one
  * live `THREE.InstancedMesh` per resident `(mesh, verdict)` carrying exactly the fixture's instance counts,
  * draw each through `meshesJson[mesh]`, publish the `data-tool-run-*` counters and paint provisional instances
@@ -118,7 +118,7 @@ function mountedBatches(ledger: ToolRunTraceStore): Batch[] {
       });
       expect(hit, `instance ${at} of a live batch matches no resident record`).toBeTruthy();
       const subject = hit![1].subject as Extract<ToolRunTraceSubject, { kind: "instance3d" }>;
-      expect(mesh.geometry.getAttribute("position").count, "[DEBUG] a batch must draw through meshesJson[mesh]").toBe(fixture.meshes[subject.mesh]!.data.positions.length / 3);
+      expect(mesh.geometry.getAttribute("position").count, "[TRACE] a batch must draw through meshesJson[mesh]").toBe(fixture.meshes[subject.mesh]!.data.positions.length / 3);
       kinds.add(`${subject.mesh}:${hit![1].verdict}`);
     }
     expect(kinds.size, "one instanced mesh carries exactly one (mesh, verdict)").toBe(1);
@@ -157,7 +157,7 @@ describe("🎬️ world 3d host tool run trace mount", () => {
     setRuntimeDiagnostics(true);
     runMountedFrames();
     expect(info).toHaveBeenCalledTimes(1);
-    const prefix = "[DEBUG] react-world-frame ";
+    const prefix = "[TRACE] react-world-frame ";
     const line = info.mock.calls[0]![0] as string;
     expect(line.startsWith(prefix)).toBe(true);
     const receipt = JSON.parse(line.slice(prefix.length)) as Record<string, any>;

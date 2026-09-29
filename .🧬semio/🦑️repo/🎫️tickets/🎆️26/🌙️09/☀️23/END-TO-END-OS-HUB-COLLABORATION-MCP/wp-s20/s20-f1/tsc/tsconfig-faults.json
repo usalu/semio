@@ -1,0 +1,22 @@
+{
+  "extends": "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "incremental": false
+  },
+  "include": [],
+  "files": [
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🔨️modules/🎠️kernel/🟦️.ts",
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts",
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🔨️modules/🎭️actor/🧪️tests/🗞️typed-operation-page/🟦️.ts",
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧯️typed-operation-fault/🟦️.ts",
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🤖️agent-lane-preview/🟦️.ts",
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🩺️fault/🟦️.ts",
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx",
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx",
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🩺️window-fault/🟦️.ts",
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts",
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/🧪️tests/🧮️source-census/🟦️.ts",
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🪪️manifest/🟦️.ts"
+  ]
+}

@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🧭️ The ONE boot-axis vocabulary every wgpu entry point speaks.
+/** 🧭️ The ONE boot-axis vocabulary every wgpu entry point speaks.
  *
  * React has a single boot door ({@link FrameworkOsBootOptions} in
  * `🧱️elements/🐚️Shell/🟦️.tsx`, fed by `🧑‍💻dev/🟦️.ts` + `🧑‍💻dev/🔗️boot-query/🟦️.ts`); wgpu has three
@@ -13,21 +13,21 @@
  * @see 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔗️boot-query/🟦️.ts */
 // #endregion 🧲️Header
 
-/** @emoji 📏️ Bound on ONE descriptor field, restated from the trunk page's own former local constant.
+/** 📏️ Bound on ONE descriptor field, restated from the trunk page's own former local constant.
  * Every field the three doors accept passes through {@link boundedBootField}, so no door can hand the
  * renderer an unbounded string. */
 export const WGPU_BOOT_FIELD_CAPACITY = 2048;
 
-/** @emoji 📏️ Bound on the raw `location.search`/`location.hash` before it is parsed — the twin of
+/** 📏️ Bound on the raw `location.search`/`location.hash` before it is parsed — the twin of
  * `🧑‍💻dev/🔗️boot-query/🟦️.ts`'s `BOOT_QUERY_CAPACITY`, so both renderers refuse the same oversized url
  * instead of handing it to `URLSearchParams`. */
 export const WGPU_BOOT_LOCATION_CAPACITY = 8192;
 
-/** @emoji 🔗️ The four per-navigation query axes, spelled exactly as `🔗️boot-query/🟦️.ts` spells them
+/** 🔗️ The four per-navigation query axes, spelled exactly as `🔗️boot-query/🟦️.ts` spells them
  * plus the hub trio. A name here is a url parameter name, never a descriptor field name. */
 export const WGPU_BOOT_QUERY_PARAMS = { plugin: "plugin", app: "app", role: "role", mode: "mode", example: "example", hub: "hub", user: "user", dataDir: "dataDir" } as const;
 
-/** @emoji 🏷️ The `<meta name="…">` axes the wgpu page serves per SERVER, the twin of React's
+/** 🏷️ The `<meta name="…">` axes the wgpu page serves per SERVER, the twin of React's
  * `VITE_SEMIO_*` build-time env (`🧑‍💻dev/🟦️.ts`): the query is the per-navigation axis, these are the
  * per-server default. `semio-plugin` is injected by `../🌐️server/🟦️.ts`'s `wgpu-browser-selection`
  * plugin and predates this module. */
@@ -47,14 +47,14 @@ export const WGPU_BOOT_META_NAMES = {
   lockedAppearance: "semio-locked-appearance",
 } as const;
 
-/** @emoji #️⃣ The one `#` route both shells understand: a 64-hex local-hub broker proof handed over by
+/** #️⃣ The one `#` route both shells understand: a 64-hex local-hub broker proof handed over by
  * `🌎️hub/…/📜️script.ts` when it opens a browser. React reads it once at module scope and immediately
  * rewrites the url without it (`🏛️ShellHost/🟦️.tsx:209-214`); {@link readBootBrokerProof} is that
  * reader and {@link stripBootBrokerProof} is that rewrite. It is deliberately one-shot: a proof that
  * stayed in the address bar would be re-usable from history. */
 export const WGPU_BOOT_BROKER_HASH_PATTERN = /^#semio-broker=([0-9a-f]{64})$/u;
 
-/** @emoji 🔒️ Boot-time preference LOCKS — the wgpu twin of React's `FrameworkOsLocks`. A locked
+/** 🔒️ Boot-time preference LOCKS — the wgpu twin of React's `FrameworkOsLocks`. A locked
  * preference removes its in-app switcher; an unknown value still stays locked (falling back to a safe
  * default), matching `resolveShellLocks`'s "the CLI asked for no switching, a typo must not restore
  * it" rule. `""` means unset, never "locked to the empty string". */
@@ -66,38 +66,38 @@ export type WgpuBootLocks = {
   readonly appearance: string;
 };
 
-/** @emoji 🎛️ Boot-time preference DEFAULTS — seeds that keep their in-app switcher visible, React's
+/** 🎛️ Boot-time preference DEFAULTS — seeds that keep their in-app switcher visible, React's
  * `FrameworkOsDefaults`. */
 export type WgpuBootDefaults = {
   readonly exampleId: string;
 };
 
-/** @emoji 🏷️ The brand REGISTRY row this boot resolved — what `resolveShellBrandById(brandId)`
+/** 🏷️ The brand REGISTRY row this boot resolved — what `resolveShellBrandById(brandId)`
  * (`🧑‍💻dev/🏷️brand/🟦️.ts`) answers, reduced to the facts the shell itself reads. The catalogue stays
  * TypeScript; only the resolved row crosses into the renderer, exactly as `locks`/`defaults` already
  * do, so a brand added to the catalogue needs no Rust edit. Its Rust twin is `WgpuBootBrand`. */
 export type WgpuBootBrand = {
-  /** @emoji 🏷️ `ShellBrand.windowTitle` — `""` leaves the shell's default title. */
+  /** 🏷️ `ShellBrand.windowTitle` — `""` leaves the shell's default title. */
   readonly windowTitle: string;
-  /** @emoji 🧊️ `ShellBrand.ephemeral`: no device-local shell state is read or written. */
+  /** 🧊️ `ShellBrand.ephemeral`: no device-local shell state is read or written. */
   readonly ephemeral: boolean;
-  /** @emoji 🎓️ `ShellBrand.replayIntroductionOnLoad` — auto-start every load, persist no seen flag. */
+  /** 🎓️ `ShellBrand.replayIntroductionOnLoad` — auto-start every load, persist no seen flag. */
   readonly replayIntroductionOnLoad: boolean;
 };
 
-/** @emoji 🌐️ The hub trio (`?hub=&user=&dataDir=`), present only when a hub url was named. */
+/** 🌐️ The hub trio (`?hub=&user=&dataDir=`), present only when a hub url was named. */
 export type WgpuBootHub = {
   readonly hubUrl: string;
   readonly user: string;
   readonly dataDir: string;
 };
 
-/** @emoji 🧭️ Every boot axis, resolved. Field-for-field the Rust `WgpuBootDescriptor`'s serde shape:
+/** 🧭️ Every boot axis, resolved. Field-for-field the Rust `WgpuBootDescriptor`'s serde shape:
  * absent axes are `""`/`{}` rather than optional, so the three doors cannot disagree about what
  * "unset" serializes to. */
 export type WgpuBootDescriptor = {
   readonly pluginVariant: string;
-  /** @emoji 📌️ Pinned app id — React's `appId`. Empty falls through to the variant's own default app,
+  /** 📌️ Pinned app id — React's `appId`. Empty falls through to the variant's own default app,
    * never reaching the shell as a pin (`🧑‍💻dev/🟦️.ts`'s own note on `VITE_SEMIO_APP_ID`). */
   readonly appId: string;
   readonly appRole: "viewer" | "editor";
@@ -111,7 +111,7 @@ export type WgpuBootDescriptor = {
   readonly hub: WgpuBootHub | null;
 };
 
-/** @emoji 🧭️ What a caller may say instead of the page: every axis, all optional. The embeddable door
+/** 🧭️ What a caller may say instead of the page: every axis, all optional. The embeddable door
  * (`../🎬️renderer-boot/🟦️.ts`) passes exactly this; the trunk page passes nothing and reads the url. */
 export type WgpuBootOverrides = {
   readonly plugin?: string;
@@ -126,7 +126,7 @@ export type WgpuBootOverrides = {
   readonly hub?: WgpuBootHub;
 };
 
-/** @emoji 📏️ Refuses an oversized field by NAME, so the fault text says which axis overflowed. */
+/** 📏️ Refuses an oversized field by NAME, so the fault text says which axis overflowed. */
 export function boundedBootField(value: string, field: string): string {
   if (value.length > WGPU_BOOT_FIELD_CAPACITY) throw new Error(`boot-descriptor-overflow: ${field} exceeds ${WGPU_BOOT_FIELD_CAPACITY} code units`);
   return value;
@@ -137,12 +137,12 @@ function boundedLocation(value: string, field: string): string {
   return value;
 }
 
-/** @emoji #️⃣ The 64-hex broker proof a `#semio-broker=…` hash carries, or `""`. */
+/** #️⃣ The 64-hex broker proof a `#semio-broker=…` hash carries, or `""`. */
 export function readBootBrokerProof(hash: string): string {
   return WGPU_BOOT_BROKER_HASH_PATTERN.exec(boundedLocation(hash, "location.hash"))?.[1] ?? "";
 }
 
-/** @emoji #️⃣ Rewrites the address bar without the one-shot proof, exactly as React does — same
+/** #️⃣ Rewrites the address bar without the one-shot proof, exactly as React does — same
  * `replaceState` (no history entry), same `pathname + search` target. A page with no proof is left
  * alone, so this never touches a url it did not put there. */
 export function stripBootBrokerProof(location: Location, history: History): void {
@@ -150,10 +150,10 @@ export function stripBootBrokerProof(location: Location, history: History): void
   history.replaceState(history.state, "", `${location.pathname}${location.search}`);
 }
 
-/** @emoji 🏷️ Reads one `<meta name="…" content="…">` axis, or `""`. */
+/** 🏷️ Reads one `<meta name="…" content="…">` axis, or `""`. */
 export type WgpuBootMetaReader = (name: string) => string;
 
-/** @emoji 🏷️ The document-backed reader the trunk page uses. */
+/** 🏷️ The document-backed reader the trunk page uses. */
 export function documentBootMetaReader(documentRef: Document): WgpuBootMetaReader {
   return (name) => documentRef.querySelector<HTMLMetaElement>(`meta[name="${name}"]`)?.content ?? "";
 }
@@ -208,25 +208,25 @@ export function resolveWgpuBootDescriptor(input: { readonly search?: string; rea
 }
 
 // #region 🌓️HostAppearance
-/** @emoji 🌓️ The one media query both renderers ask — React asks it in
+/** 🌓️ The one media query both renderers ask — React asks it in
  * `ensureElementsSurfaceChromeSystemListeners` and `resolveElementsSurfaceChromeDark`. */
 export const WGPU_PREFERS_DARK_MEDIA_QUERY = "(prefers-color-scheme: dark)";
 
-/** @emoji 🔑️ Byte-identical to `OsShellConfig`'s own storage key and to the wgpu shell's Rust mirror
+/** 🔑️ Byte-identical to `OsShellConfig`'s own storage key and to the wgpu shell's Rust mirror
  * `OS_SHELL_CONFIG_STORAGE_KEY` (`🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`). Mirrored rather than
  * imported on purpose: this module is bundled into BOTH browser artifacts, and importing
  * `🎚️UiPreferences/🟦️.ts` would drag `@semio-tech/framework` and `@semio-tech/ui-react` into the trunk
  * page and the frame Worker for two string constants. */
 export const WGPU_OS_SHELL_CONFIG_STORAGE_KEY = "semio.os.config";
 
-/** @emoji 🔑️ Byte-identical to `UI_PREFERENCES_CONFIG_SCHEMA` (`🎚️UiPreferences/🟦️.ts`). */
+/** 🔑️ Byte-identical to `UI_PREFERENCES_CONFIG_SCHEMA` (`🎚️UiPreferences/🟦️.ts`). */
 export const WGPU_UI_PREFERENCES_CONFIG_SCHEMA = "os.config.ui-preferences";
 
-/** @emoji 🌓️ The persisted appearance preference, `""` when the event log holds no `setAppearance` —
+/** 🌓️ The persisted appearance preference, `""` when the event log holds no `setAppearance` —
  * React's `preferences.appearance == null`, before `resolveUiPreferences`'s `?? "system"` seed. */
 export type WgpuHostAppearancePreference = "" | "system" | "light" | "dark";
 
-/** @emoji 🌓️ The two appearance inputs the renderer wasm cannot read for itself, resolved by whoever
+/** 🌓️ The two appearance inputs the renderer wasm cannot read for itself, resolved by whoever
  * owns a `window`. Handed to `semioWgpuSetHostAppearance` (`🧊️renderer/🦀️.rs`, region 🌓️HostAppearance)
  * at boot and again on every change.
  *
@@ -236,7 +236,7 @@ export type WgpuHostAppearancePreference = "" | "system" | "light" | "dark";
  * the wgpu shell booted DARK. Both reads move here, to the one thread that can make them. */
 export type WgpuHostAppearance = { readonly preference: WgpuHostAppearancePreference; readonly systemDark: boolean };
 
-/** @emoji 🌓️ Replays the persisted `os.config.ui-preferences` event log for its LAST `setAppearance`
+/** 🌓️ Replays the persisted `os.config.ui-preferences` event log for its LAST `setAppearance`
  * — the same projection `replayUiPreferenceEvents` performs, narrowed to the one field a boot needs,
  * and the same read the React serve's own pre-paint inline script makes
  * (`🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts`'s `PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT`). Every step
@@ -262,7 +262,7 @@ export function readPersistedAppearancePreference(storage: Pick<Storage, "getIte
   }
 }
 
-/** @emoji 🌓️ Both inputs from one page realm. `systemDark` falls back to `false` where `matchMedia`
+/** 🌓️ Both inputs from one page realm. `systemDark` falls back to `false` where `matchMedia`
  * is unavailable, byte-for-byte `resolveElementsSurfaceChromeDark`'s own `typeof window === "undefined"`
  * arm (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx`) — never the `true` the Worker used to fall through to. */
 export function resolveWgpuHostAppearance(view: { readonly localStorage?: Pick<Storage, "getItem">; readonly matchMedia?: (query: string) => MediaQueryList }): WgpuHostAppearance {
@@ -277,7 +277,7 @@ export function resolveWgpuHostAppearance(view: { readonly localStorage?: Pick<S
 // #endregion 🌓️HostAppearance
 
 // #region ⌨️HostPlatform
-/** @emoji ⌨️ The host's own platform string, as React's `keybindingPlatformUsesMetaV1`
+/** ⌨️ The host's own platform string, as React's `keybindingPlatformUsesMetaV1`
  * (`🖱️ui/🔨️modules/🔤️keybinding-text-interpretation/🟦️.ts`) reads it: `userAgentData.platform`
  * (`"macOS"`) when the browser publishes it, else the legacy `navigator.platform` (`"MacIntel"`, …).
  * `""` means "nothing to say", which the renderer reads as its own compile-time default.
@@ -290,7 +290,7 @@ export function resolveWgpuHostAppearance(view: { readonly localStorage?: Pick<S
  * `🧪️tests/🧭️boot-axis-parity/🦀️.rs` holds both lists to the same shape. */
 export type WgpuHostPlatform = string;
 
-/** @emoji ⌨️ The page realm's platform read. Every step is guarded: a realm with no `navigator`, or
+/** ⌨️ The page realm's platform read. Every step is guarded: a realm with no `navigator`, or
  * one that throws on `userAgentData`, answers `""` rather than pinning a platform nobody is on. */
 export function resolveWgpuHostPlatform(view: { readonly navigator?: Navigator }): WgpuHostPlatform {
   try {
@@ -308,7 +308,7 @@ export function resolveWgpuHostPlatform(view: { readonly navigator?: Navigator }
 // #endregion ⌨️HostPlatform
 
 // #region 🗄️HostStorage
-/** @emoji 🔑️ Every durable browser key the wgpu shell's OWN persistence lane reads or writes, in the
+/** 🔑️ Every durable browser key the wgpu shell's OWN persistence lane reads or writes, in the
  * spelling React's `StoragePort` uses (`🖥️platform/🟦️.ts`'s `createBrowserStoragePort` — flat
  * `localStorage`, one key per entry). Byte-identical spellings are the whole point: a host that chose
  * Light, dismissed a tour or rearranged its dock in React must find all three again after switching to
@@ -325,34 +325,34 @@ export function resolveWgpuHostPlatform(view: { readonly navigator?: Navigator }
  * two lists against React's own constants. */
 export const WGPU_HOST_STORAGE_KEYS = ["SEMIO_RUNTIME_DIAGNOSTICS", "semio.os.config", "ui.compute.workerCount"] as const;
 
-/** @emoji 🔑️ Key FAMILIES the snapshot scans for, because their tail is a runtime app id —
+/** 🔑️ Key FAMILIES the snapshot scans for, because their tail is a runtime app id —
  * `UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX` (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx`). */
 export const WGPU_HOST_STORAGE_KEY_PREFIXES = ["ui.introduction.seen."] as const;
 
-/** @emoji 📏️ Per-value ceiling, the same 64 KiB `OS_SHELL_CONFIG_MAX_BYTES` the shell already refuses a
+/** 📏️ Per-value ceiling, the same 64 KiB `OS_SHELL_CONFIG_MAX_BYTES` the shell already refuses a
  * larger `semio.os.config` document at, so the door cannot become the wider hole. */
 export const WGPU_HOST_STORAGE_VALUE_MAX_BYTES = 64 * 1024;
 
-/** @emoji 📏️ Ceiling on the whole boot snapshot. A snapshot is structured-cloned into the frame Worker
+/** 📏️ Ceiling on the whole boot snapshot. A snapshot is structured-cloned into the frame Worker
  * before its first frame, so it is priced like any other boot payload rather than left unbounded. */
 export const WGPU_HOST_STORAGE_SNAPSHOT_MAX_BYTES = 128 * 1024;
 
-/** @emoji 🗄️ Which browser store one door call addresses — React's two, no more. */
+/** 🗄️ Which browser store one door call addresses — React's two, no more. */
 export type WgpuHostStorageScope = "local" | "session";
 
-/** @emoji 🗄️ The page realm's read of every carried key, handed to the renderer wasm's
+/** 🗄️ The page realm's read of every carried key, handed to the renderer wasm's
  * `semioWgpuSetHostStorage` with the boot descriptor so the shell's FIRST frame can answer
  * appearance, tour-seen and dock-skeleton reads synchronously — no flash, no second boot pass. */
 export type WgpuHostStorageSnapshot = Readonly<Record<string, string>>;
 
-/** @emoji 🔑️ Whether the door may address `key` at all. The door is an allowlist, not a general
+/** 🔑️ Whether the door may address `key` at all. The door is an allowlist, not a general
  * `localStorage` proxy: the shell is the only caller and its census is closed, so an unknown key is a
  * defect worth refusing loudly rather than a value worth serving. */
 export function wgpuHostStorageCarriesKey(key: string): boolean {
   return (WGPU_HOST_STORAGE_KEYS as readonly string[]).includes(key) || WGPU_HOST_STORAGE_KEY_PREFIXES.some((prefix) => key.startsWith(prefix) && key.length > prefix.length);
 }
 
-/** @emoji 🗄️ Reads every carried key from the page's `localStorage`, in sorted key order so two reads of
+/** 🗄️ Reads every carried key from the page's `localStorage`, in sorted key order so two reads of
  * one store produce one snapshot. Each step is guarded: a sandboxed page throws on `localStorage`, an
  * oversized value is dropped rather than truncated (a half document parses as garbage), and the scan
  * stops at {@link WGPU_HOST_STORAGE_SNAPSHOT_MAX_BYTES} rather than growing with the store. */
@@ -392,12 +392,12 @@ export function readWgpuHostStorageSnapshot(view: { readonly localStorage?: Stor
 // #endregion 🗄️HostStorage
 
 // #region 🔖️ReadinessBeacon
-/** @emoji 🪪️ React's own beacon value when no plugin filter resolved (`pluginFilter ?? "unknown"`,
+/** 🪪️ React's own beacon value when no plugin filter resolved (`pluginFilter ?? "unknown"`,
  * `🏛️ShellHost/🟦️.tsx`'s 🔖️ReadinessBeacon effect) — reached on this target only when the boot failed
  * before a descriptor could be built. */
 export const WGPU_READINESS_BEACON_UNKNOWN_PLUGIN = "unknown";
 
-/** @emoji 🚦️ The two-attribute readiness beacon React writes on `document.documentElement`:
+/** 🚦️ The two-attribute readiness beacon React writes on `document.documentElement`:
  * `data-semio-os-ready` and `data-semio-os-error`, each carrying the plugin id and each CLEARING the
  * other, so a reader never sees both and never has to guess which is newer.
  *

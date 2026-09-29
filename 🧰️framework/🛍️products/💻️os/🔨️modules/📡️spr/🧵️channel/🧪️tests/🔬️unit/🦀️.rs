@@ -34,7 +34,7 @@ fn sample_document_archive() -> DocumentArchivePack {
     }
 }
 
-/// @emoji #️⃣ Tiny hand-rolled `&[u8] -> String` hex encoder for this crate's own fixture-corpus
+/// #️⃣ Tiny hand-rolled `&[u8] -> String` hex encoder for this crate's own fixture-corpus
 /// tests — mirrors `db_engine`'s `write!("{byte:02x}")` idiom (no `hex` crate dependency exists
 /// anywhere in `framework/product/os`, so this crate does not introduce one either).
 async fn hex_encode(bytes: &[u8]) -> String {
@@ -793,7 +793,7 @@ async fn decode_app_frame_never_panics_on_arbitrary_short_buffers() {
 // `channel_frame_fixture_hex` below are this codec's own committed golden hex per label —
 // sourced from `encode_app_command`/`encode_app_frame`'s actual output, not hand-computed.
 
-/// @emoji 🧾️ Named `AppCommand` fixture corpus, one entry per variant.
+/// 🧾️ Named `AppCommand` fixture corpus, one entry per variant.
 async fn channel_command_fixture_corpus() -> Vec<(&'static str, AppCommand)> {
     let mut presence_roster = PresenceRosterWire::empty();
     presence_roster.try_push(vec![1, 2]).expect("bounded presence fixture entry");
@@ -836,7 +836,7 @@ async fn channel_command_fixture_corpus() -> Vec<(&'static str, AppCommand)> {
     ]
 }
 
-/// @emoji 🧾️ Named `AppFrame` fixture corpus, one entry per variant.
+/// 🧾️ Named `AppFrame` fixture corpus, one entry per variant.
 async fn channel_frame_fixture_corpus() -> Vec<(&'static str, AppFrame)> {
     vec![
         ("Done", AppFrame::Done { in_reply_to: 1 }),
@@ -876,7 +876,7 @@ async fn channel_frame_fixture_corpus() -> Vec<(&'static str, AppFrame)> {
     ]
 }
 
-/// @emoji 🔒️ Golden hex per `AppCommand` fixture-corpus label — sourced by actually running
+/// 🔒️ Golden hex per `AppCommand` fixture-corpus label — sourced by actually running
 /// `encode_app_command` over `channel_command_fixture_corpus()` (never hand-computed), then
 /// committed here as the drift guard: any future codec change that shifts these bytes fails
 /// this test, forcing a deliberate update of both this table and the TS-side twin (WP-0B).
@@ -920,7 +920,7 @@ async fn channel_command_fixture_hex(label: &str) -> &'static str {
     }
 }
 
-/// @emoji 🔒️ Golden hex per `AppFrame` fixture-corpus label — see
+/// 🔒️ Golden hex per `AppFrame` fixture-corpus label — see
 /// `channel_command_fixture_hex`'s docstring for provenance/drift-guard rationale.
 async fn channel_frame_fixture_hex(label: &str) -> &'static str {
     match label {
@@ -1013,7 +1013,7 @@ async fn channel_version_matches_the_shared_cross_language_pin() {
     assert_eq!(u64::from(CHANNEL_VERSION), pinned, "CHANNEL_VERSION and the shared cross-language pin disagree — bump both, plus APP_CHANNEL_VERSION in 🟦️.ts");
 }
 
-/// @emoji 🔗️ Cross-language drift guard for the M2 transaction variants (tags 17-21/15-18): the
+/// 🔗️ Cross-language drift guard for the M2 transaction variants (tags 17-21/15-18): the
 /// two JSON files under `🧫️fixtures/📡️channel/` are the single source of truth this codec's TS
 /// twin (`🟦️.ts`'s `AppChannelCodec` `🧪️Tests` region) loads and asserts against too —
 /// a change to either side's encode/decode that shifts these bytes fails on exactly one side.
@@ -1040,7 +1040,7 @@ async fn channel_transaction_fixtures_match_shared_cross_language_json_vectors()
     }
 }
 
-/// @emoji 🔗️ Cross-language drift guard for the C3 opening variants (tags 22-24): the JSON file
+/// 🔗️ Cross-language drift guard for the C3 opening variants (tags 22-24): the JSON file
 /// under `🧫️fixtures/📡️channel/` is the single source of truth this codec's TS twin
 /// (`🟦️.ts`'s `AppChannelCodec` `🧪️Tests` region) loads and asserts against too — no
 /// `AppFrame` variants were added for opening, so only the command-side vector file exists.
@@ -1058,7 +1058,7 @@ async fn channel_opening_fixtures_match_shared_cross_language_json_vectors() {
     }
 }
 
-/// @emoji 🔗️ Cross-language drift guard for the C8 merge-policy/conflict variants (tags 25-27,
+/// 🔗️ Cross-language drift guard for the C8 merge-policy/conflict variants (tags 25-27,
 /// 19-20) plus the extended `Invocation`/`Error` frames: the two JSON files under
 /// `🧫️fixtures/📡️channel/` are the single source of truth this codec's TS twin
 /// (`🟦️.ts`'s `AppChannelCodec` `🧪️Tests` region) loads and asserts against too — see
@@ -1147,7 +1147,7 @@ fn the_command_ingress_authorities_are_derived_from_the_guest_memory_budget() {
         semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES
     );
     eprintln!(
-        "[DEBUG] command ingress authorities: pages={COMMAND_MAXIMUM_PAGES} bytes={COMMAND_MAXIMUM_BYTES} slot={} B spine={} B ceiling={} B",
+        "command ingress authorities: pages={COMMAND_MAXIMUM_PAGES} bytes={COMMAND_MAXIMUM_BYTES} slot={} B spine={} B ceiling={} B",
         size_of::<FixedCommandPage>(),
         CommandPageSet::reservation_bytes(COMMAND_MAXIMUM_PAGES),
         semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES

@@ -1272,7 +1272,7 @@ async fn read_local_interaction_while_rendering(app: &mut Puzzle3dApp, request_i
             break;
         }
     }
-    eprintln!("[DEBUG] local interaction read {request_id} turns={turns} bytes={}", capture.len());
+    eprintln!("local interaction read {request_id} turns={turns} bytes={}", capture.len());
     assert!(started, "local interaction read {request_id} never published its Started reply");
     assert!(closed, "local interaction read {request_id} never terminated: the actor stayed runnable without ever publishing Closed, or quiesced with nothing left for the host to answer");
     capture
@@ -1393,7 +1393,6 @@ async fn every_maintenance_unit_stays_inside_the_interactive_step_budget() {
         }
         let (typical_stage, median_us) = best.worst();
         let (peak_stage, peak_us) = best.worst_unit();
-        eprintln!("[DEBUG] maintenance budget example={example} typical_stage={typical_stage} median_us={median_us} peak_stage={peak_stage} peak_us={peak_us} breakdown={}", best.report());
         assert!(median_us <= MAINTENANCE_UNIT_BUDGET_US, "{example}: maintenance stage {typical_stage}'s typical unit cost {median_us}us in every round, over the {MAINTENANCE_UNIT_BUDGET_US}us typical-unit budget (per-stage median/worst/units: {})", best.report());
         assert!(u128::from(peak_us) < PUZZLE3D_INTERACTIVE_STEP_CEILING.as_micros(), "{example}: maintenance stage {peak_stage} ran one unit for {peak_us}us in every round, at or over the framework's interactive step ceiling {PUZZLE3D_INTERACTIVE_STEP_CEILING:?} (per-stage median/worst/units: {})", best.report());
     }
@@ -2040,7 +2039,6 @@ async fn reserved_refresh_section_payloads_admit_into_the_retained_section_carri
         let projected: serde_json::Value = serde_json::from_str(&semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("carrier projects")).expect("carrier projection is json");
         assert_eq!(projected["key"], section.body_key());
         assert_eq!(semio_framework_plugin::artifact_app_laws::fixture_carrier_text(&projected), payload, "{} carrier must round-trip byte-exactly", section.key());
-        eprintln!("[DEBUG] puzzle3d {} section payload is {} bytes", section.key(), payload.len());
     }
 }
 
@@ -2522,7 +2520,6 @@ async fn interaction_select_leftover_window_instance_rides_the_encode() {
             "the leftover encode must name the window instance the pick addressed, got {:?}",
             view.get("windowId")
         );
-        eprintln!("[DEBUG] leftover encode for {window} carries windowId={:?}", view.get("windowId").and_then(dsl::DslValue::as_str));
     }
 }
 
@@ -3110,7 +3107,7 @@ async fn the_nakagin_world_scene_publishes_every_lane_under_the_page_cap_with_th
     let instances = census.lane(semio_framework_plugin::World3dSceneLane::Instances.body_key()).expect("the instances lane always publishes");
     assert!(parse(&census.assembled.instances_json).expect("instances lane is json").as_array().is_some_and(|array| array.len() > 100), "Nakagin publishes its whole catalog of objects through the instances lane");
     eprintln!(
-        "[DEBUG] nakagin popup-open world scene: spine={}B of {}B, {} lanes carrying {}B total ({}), widest lane={}B in {} leaves",
+        "nakagin popup-open world scene: spine={}B of {}B, {} lanes carrying {}B total ({}), widest lane={}B in {} leaves",
         census.doc_bytes,
         census.capacity,
         census.lanes.len(),
@@ -3119,7 +3116,7 @@ async fn the_nakagin_world_scene_publishes_every_lane_under_the_page_cap_with_th
         instances.bytes,
         instances.leaves
     );
-    eprintln!("[DEBUG] nakagin lane paging: {}", census.lanes.iter().map(|lane| format!("{}={}leaves@depth{}", lane.key.trim_start_matches(semio_framework_plugin::WORLD3D_SCENE_LANE_KEY_PREFIX), lane.leaves, lane.leaf_depth)).collect::<Vec<_>>().join(" "));
+    eprintln!("nakagin lane paging: {}", census.lanes.iter().map(|lane| format!("{}={}leaves@depth{}", lane.key.trim_start_matches(semio_framework_plugin::WORLD3D_SCENE_LANE_KEY_PREFIX), lane.leaves, lane.leaf_depth)).collect::<Vec<_>>().join(" "));
     assert!(census.payload_bytes() > census.capacity, "this law is only meaningful while the Nakagin payload is past what one fixed doc could ever hold");
 }
 
@@ -3143,7 +3140,6 @@ async fn a_nakagin_lane_that_did_not_change_does_not_republish_on_a_partial_refr
     let changed: Vec<&str> = picked.lanes.iter().filter(|lane| before.lane(&lane.key).is_none_or(|previous| previous.declared_hash != lane.declared_hash)).map(|lane| lane.key.as_str()).collect();
     assert!(!changed.contains(&semio_framework_plugin::World3dSceneLane::Instances.body_key()), "a selection change must not republish the instances lane");
     assert_eq!(picked.lane(semio_framework_plugin::World3dSceneLane::Instances.body_key()).map(|lane| lane.declared_hash.as_str()), before.lane(semio_framework_plugin::World3dSceneLane::Instances.body_key()).map(|lane| lane.declared_hash.as_str()));
-    eprintln!("[DEBUG] nakagin partial refresh: camera move republished 0 of {} lanes; a selection republished {changed:?}", before.lanes.len());
 }
 //#endregion 🚚️PagedSceneCarrier
 
@@ -3437,7 +3433,6 @@ async fn window_options_are_local_to_the_window_instance_not_shared_across_split
     assert_eq!(render_window(&mut reopened, second_window).await, second_render);
     assert!(close_witness(reopened).expect("reopened app close"));
     assert!(close_witness(app).expect("source app close"));
-    eprintln!("[DEBUG] two Puzzle 3D windows isolated and rendered persisted options, preserved document and app config, reloaded exact packs, and reached terminal-empty close");
 }
 
 /// 📏 Wave B12: grid / spacing / LOD / vortex-show must publish into Puzzle3dWindowConfig and the
@@ -3461,7 +3456,6 @@ async fn window_option_rail_round_trips_grid_lod_and_vortex_into_published_confi
     assert_eq!(find_measure_slider(rail, &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-grid-spacing")), Some(25.0));
     assert_eq!(find_measure_toggle(rail, &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-auto")), Some(false));
     assert_eq!(find_measure_select(rail, &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-vortex-show")).as_deref(), Some(PUZZLE3D_VORTEX_SHOW_ALWAYS));
-    eprintln!("[DEBUG] window-option rail round-tripped grid/lod/vortex into published WindowConfig generations={}", after - before);
 }
 
 /// 🪟️ The whole per-window option round trip, on the two instances the default layout actually opens
@@ -3614,7 +3608,6 @@ async fn window_transient_is_exact_instance_local_and_resets_on_reload() {
     drop(reset);
     assert!(close_witness(reopened).expect("reopened app close"));
     assert!(close_witness(app).expect("source app close"));
-    eprintln!("[DEBUG] Puzzle 3D transient suggestions stayed exact-window isolated, close cleared their owner, reload reset ephemeral state, and both registered apps reached terminal-empty close");
 }
 
 /// 🧹️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave S. A mounted worker job session is admitted out of a
@@ -4292,7 +4285,7 @@ async fn assert_brush_options_after_open_vortex_suggestions() {
 //#endregion 🔖️Distribution
 
 //#region 🔖️UiScope
-/// @emoji 🐢️ THE scope law: every declared MUTATING command's `UiDirtyScope` names the panels its
+/// 🐢️ THE scope law: every declared MUTATING command's `UiDirtyScope` names the panels its
 /// mutation changes. A document edit moves the artifact outliner (the object roster), the field
 /// inspector (the selected entity's own fields) and the framework history panel (one command row per
 /// dispatch) — so a mutation whose scope is `Partial` and omits any of those three leaves that panel
@@ -4540,7 +4533,6 @@ async fn adding_a_catalogued_concrete_forest_kind_places_an_object_carrying_its_
     let object = projection.get("objects").and_then(Value::as_array).and_then(|objects| objects.last()).expect("the placed object").clone();
     assert_eq!(object.get("objectKind").and_then(Value::as_str), Some(kind_id.as_str()), "the placed instance references the catalogued kind");
     assert_eq!(object.get("meshUrl").and_then(Value::as_str), Some(expected.as_str()), "the placed instance must carry its kind's representation url as its mesh identity");
-    eprintln!("[DEBUG] catalogue add kind={kind_id} meshUrl={expected}");
 }
 
 /// 🌱️ A catalog TEMPLATE seats its vortex at `point`; a PLACED vortex carries `position`. The
@@ -4559,7 +4551,6 @@ fn catalogued_kind_templates_seed_vortices_at_their_catalog_points() {
         let point: [f64; 3] = template.get("point").and_then(|value| dsl::FromValue::from_value(value.clone()).ok()).expect("every template declares its point");
         assert_eq!(seat.position, point, "seeded vortex {} must sit on its template point", seat.id);
     }
-    eprintln!("[DEBUG] catalogued kind seats={} first={:?}", seats.len(), seats.first().map(|seat| seat.position));
 }
 
 /// 🛍️ Both doors onto the default document carry the same catalogue: the INITIAL snapshot the app
@@ -4580,7 +4571,6 @@ async fn the_initial_snapshot_and_set_active_example_both_carry_the_concrete_for
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("empty");
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_CONCRETE_FOREST })), None).await.expect("concrete-forest");
     assert_eq!(catalogued(&app), declared, "switching back to concrete-forest restores its catalogue");
-    eprintln!("[DEBUG] concrete-forest catalogued kinds={declared:?}");
 }
 
 /// 🧊️ Wave B11 (checklist §10, `📓️2026-09-11-wave-B1-battery-extension.md` §5 defect 12): the Volume
@@ -5595,7 +5585,6 @@ fn measured_cold_runs(tool_id: &'static str, command: &Puzzle3dCommand, snapshot
         }
     }
     let (index, worst) = best.iter().enumerate().max_by_key(|(_, turn)| **turn).map_or((0, std::time::Duration::ZERO), |(index, turn)| (index + 1, *turn));
-    eprintln!("[DEBUG] puzzle3d {tool_id}: {} turns, worst turn {index} at {worst:?}", best.len());
     (best.len(), worst)
 }
 
@@ -5853,7 +5842,6 @@ async fn every_context_menu_row_dispatches_a_declared_action() {
                 assert_eq!(action, "focusSelection", "the zoom row must dispatch the registered camera verb");
             }
         }
-        eprintln!("[DEBUG] context menu {granularity} rows={rows:?}");
     }
     assert_eq!(zoom_rows, 3, "object, vortex and reference selections each carry a Zoom to Selection row");
     // 🎯️ Reachability, not just declaration: the id the row carries must be one the typed command
@@ -5957,7 +5945,6 @@ async fn every_advertised_engagement_verb_is_implemented() {
     assert_eq!(selected(&render_composite(&mut app).await), 1, "the object must be selected before clear");
     dispatch(&mut app, "engagementSubmit", Some(&json!({ "value": "clear" })), None).await.expect("engagementSubmit clear");
     assert_eq!(selected(&render_composite(&mut app).await), 0, "typing clear must empty the framework-owned selection");
-    eprintln!("[DEBUG] engagement verbs={PUZZLE3D_ENGAGEMENT_VERBS:?}");
 }
 
 /// 🪣️ Wave B13, `📓️2026-09-11-wave-B1-battery-extension.md` §14 `engagement-fill-verb`: typing `fill <n>`
@@ -6041,7 +6028,6 @@ async fn the_engagement_brush_verb_arms_the_utility_of_a_pane_instance_never_the
             _ => None,
         })
         .collect();
-    eprintln!("[DEBUG] engagement brush addressed={addressed:?} fallback={fallback:?}");
     assert!(
         fallback.iter().all(|window_id| !crate::editor::puzzle3d::puzzle3d_window_id_is_kind(window_id)),
         "a verb that carries no window of its own must still resolve a pane INSTANCE, never the bare kind: {fallback:?}",
@@ -6136,7 +6122,6 @@ async fn a_refused_placement_surfaces_exactly_one_notice() {
     // 🎯️ The happy path stays quiet.
     let placed = dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [1.0, 0.0, 0.0] })), None).await.expect("addObjectKind");
     assert!(notices(&placed).is_empty(), "a successful action must not raise a notice: {:?}", placed.requested_effects);
-    eprintln!("[DEBUG] refusal notices orphan={:?} unknown={:?}", notices(&orphan), notices(&unknown));
 }
 
 /// 🙈️ `📓️2026-09-09-user-feature-checklist.md` §16 (re-checked for W-D4's §17 law): the inspection
@@ -6265,7 +6250,6 @@ async fn outliner_hide_reaches_the_world_instance_lane_and_flips_the_row_control
     assert_eq!(instance_scale(&hidden, &object_id), vec![0.0, 0.0, 0.0], "a hidden object must publish a zero scale into the world instance lane");
     let after_icon = visibility_control_icon(&render_body(&mut app, artifact::BODY_KEY).await, &object_id);
     assert_eq!(after_icon.as_deref(), Some("eye-off"), "a hidden object's row must re-render as the Show control");
-    eprintln!("[DEBUG] outliner hide world lane scale={:?} rowIcon={after_icon:?}", instance_scale(&hidden, &object_id));
 }
 
 /// 👁️ The RESTORE half of the law above, in the SAME settle: the row's Show control must put the object's
@@ -6321,7 +6305,6 @@ async fn an_explicit_outliner_flag_write_ignores_whatever_is_selected() {
     dispatch(&mut app, "setSelectionFlag", Some(&json!({ "entity": "object", "flag": "hidden", "ids": [object_id.clone()], "value": true })), None).await.expect("hide the object by its own row");
 
     assert_eq!(object_flag(&app, &object_id, "hidden"), Some(true), "the row's explicit id decides what is hidden — never the live selection, and never its lock");
-    eprintln!("[DEBUG] explicit flag write hidden={:?} locked={:?} selection=vortex", object_flag(&app, &object_id, "hidden"), object_flag(&app, &object_id, "locked"));
 }
 
 fn first_target_volume_id(app: &Puzzle3dApp) -> String {
@@ -6846,7 +6829,6 @@ async fn export_fixture_names_the_download_after_the_active_example() {
     assert_eq!(exported_filename(&mut app).await, "nakagin-capsule-tower.json", "the picker alias must still export the canonical example id");
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("clear to a blank document");
     assert_eq!(exported_filename(&mut app).await, "puzzle-3d.json", "clearing the example clears the name it exported under");
-    eprintln!("[DEBUG] export filename law reached the blank/concrete/nakagin/blank sequence");
 }
 
 /// ⬇️ Wave B43: an export above what ONE segmented download may carry is refused with a NOTICE, and the
@@ -7320,7 +7302,6 @@ async fn flipping_one_panes_projection_repaints_that_panes_camera_and_leaves_its
     let restored = published_camera(&mut app, main::WINDOW_INSTANCE_PERSPECTIVE).await;
     assert_eq!(restored.pointer("/projection/mode/kind").and_then(Value::as_str), Some("threePoint"), "flipping back is symmetric: {restored}");
     assert_ne!(camera_position(&restored), camera_position(&after), "and moves the pose back off the plan axis: after={after} restored={restored}");
-    eprintln!("[DEBUG] projection repaint: before={} plan={} restored={}", camera_position(&before).len(), camera_position(&after).len(), camera_position(&restored).len());
 }
 //#endregion 📷️OpeningCamera
 

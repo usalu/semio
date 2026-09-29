@@ -28,5 +28,4 @@ export function testWindowConfigPackIdentityContract(): void {
     if (!row.accepted) assert.deepEqual(actual, before);
     if (!row.targetExists && !row.accepted) assert.equal(Object.hasOwn(actual.partitions, targetId), false, `${row.id}: foreign target remains absent`);
   }
-  console.log(`[DEBUG] Window Pack exact identity: ${fixture.cases.length} Ajv/JSON Patch cases; native admission is a separate gate`);
 }

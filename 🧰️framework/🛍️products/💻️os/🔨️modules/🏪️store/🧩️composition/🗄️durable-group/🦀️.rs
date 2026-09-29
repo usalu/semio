@@ -644,6 +644,12 @@ where
     Ok(())
 }
 
+/// 🪢️ Staging cached the pre-commit snapshot as this group's tail-undo entry
+/// (`Arc::clone(&store.current)`), so the outgoing current and the incoming tail are the SAME
+/// owner. Displacing it here would queue a retirement the tail cache still aliases, and the
+/// close cursor drains displaced owners nine phases BEFORE `TailSnapshot` — it would meet an
+/// `Arc` it cannot unwrap and answer `Blocked` forever. The tail cache keeps the owner instead,
+/// exactly as the symmetric guards below and in `commit_document_roots_retained` do.
 fn adopt_staged_store_member<P, Mutation>(store: &mut ArtifactStore<P, Mutation>, visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>) -> Result<(), DurableOwnedGroupDecisionError>
 where
     P: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
@@ -672,12 +678,6 @@ where
         retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, Box::new(super::ArtifactStoreRevisionAccumulatorRetirement::new(previous_revision)));
     }
     let previous_current = std::mem::replace(&mut *store.current, root.current.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?);
-    // 🪢️ Staging cached the pre-commit snapshot as this group's tail-undo entry
-    // (`Arc::clone(&store.current)`), so the outgoing current and the incoming tail are the SAME
-    // owner. Displacing it here would queue a retirement the tail cache still aliases, and the
-    // close cursor drains displaced owners nine phases BEFORE `TailSnapshot` — it would meet an
-    // `Arc` it cannot unwrap and answer `Blocked` forever. The tail cache keeps the owner instead,
-    // exactly as the symmetric guards below and in `commit_document_roots_retained` do.
     let next_tail = root.tail_undo_cache.take();
     if next_tail.as_ref().is_some_and(|(_, snapshot)| Arc::ptr_eq(snapshot, &previous_current)) {
         drop(previous_current);

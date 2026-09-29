@@ -1,13 +1,7 @@
 /** 🧬️ HomeConfig */
 export interface HomeConfig {
   /** @state config */
-  directoryJson: string;
-  /** @state config */
-  directorySessionBindingSha256: string;
-  /** @state config */
-  directoryAuthorizationGeneration: number;
-  /** @state config */
-  directoryReceiptSha256: string;
+  retiredLocalStudioIds: string[];
 }
 
 //#region 🚪️Parsers
@@ -60,9 +54,6 @@ export const spaceHomeConfigGuardConstant = <T extends string | number | boolean
 export function parseHomeConfig(value: unknown, at = "$"): HomeConfig {
   const row = spaceHomeConfigGuardObject(value, at);
   return {
-    directoryJson: spaceHomeConfigGuardString(row["directoryJson"], `${at}.directoryJson`),
-    directorySessionBindingSha256: spaceHomeConfigGuardString(row["directorySessionBindingSha256"], `${at}.directorySessionBindingSha256`),
-    directoryAuthorizationGeneration: spaceHomeConfigGuardInteger(row["directoryAuthorizationGeneration"], `${at}.directoryAuthorizationGeneration`, {"minimum": 0, "maximum": 9007199254740991}),
-    directoryReceiptSha256: spaceHomeConfigGuardString(row["directoryReceiptSha256"], `${at}.directoryReceiptSha256`),
+    retiredLocalStudioIds: row["retiredLocalStudioIds"] === undefined ? [] : spaceHomeConfigGuardArray(row["retiredLocalStudioIds"], `${at}.retiredLocalStudioIds`, {"maxItems": 256}).map((item, index) => spaceHomeConfigGuardString(item, `${at}.retiredLocalStudioIds[${index}]`, {"minLength": 1})),
   };
 }

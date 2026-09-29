@@ -1,12 +1,12 @@
 // #region 🧲️Header
-/** @emoji 🖼️ Theme-aware catalog and metabolism icon SVG resolution. */
+/** 🖼️ Theme-aware catalog and metabolism icon SVG resolution. */
 // #endregion 🧲️Header
 
 //#region 🔖️CatalogIcons
 import { ICONS, isIconName, type IconName } from "../🔣️icons/🤖️generated/🖼️icons/🟦️.ts";
 import type { UiThemeIcons } from "../../🖱️ui/🎨️styling/📦️packages/🟦️typescript/🟦️.ts";
 
-/** @emoji 🖼️ Resolves catalog icon SVG markup with optional theme aliases and variants. */
+/** 🖼️ Resolves catalog icon SVG markup with optional theme aliases and variants. */
 export function resolveCatalogIconSvgFromTheme(name: IconName, icons: UiThemeIcons | undefined): string {
   const variant = icons?.variants?.[name];
   if (variant) {
@@ -17,7 +17,7 @@ export function resolveCatalogIconSvgFromTheme(name: IconName, icons: UiThemeIco
   return ICONS[resolved];
 }
 
-/** @emoji 🔍️ Resolves a catalog icon id through theme aliases to a compile-time {@link IconName}. */
+/** 🔍️ Resolves a catalog icon id through theme aliases to a compile-time {@link IconName}. */
 export function resolveCatalogIconNameFromTheme(name: IconName, icons: UiThemeIcons | undefined): IconName {
   const alias = icons?.aliases?.[name];
   return alias && isIconName(alias) ? alias : name;
@@ -27,7 +27,7 @@ export function resolveCatalogIconNameFromTheme(name: IconName, icons: UiThemeIc
 //#region 🔖️MetabolismIcons
 import { METABOLISM_ICONS, isMetabolismIconName, type MetabolismIconName } from "../🌱️metabolism/🔣️icons/🤖️generated/🖼️icons/🟦️.ts";
 
-/** @emoji 🖼️ Resolves metabolism icon SVG markup with optional theme aliases and variants. */
+/** 🖼️ Resolves metabolism icon SVG markup with optional theme aliases and variants. */
 export function resolveMetabolismIconSvgFromTheme(name: MetabolismIconName, icons: UiThemeIcons | undefined): string {
   const variant = icons?.themedVariants?.[name];
   if (variant) {
@@ -38,7 +38,7 @@ export function resolveMetabolismIconSvgFromTheme(name: MetabolismIconName, icon
   return METABOLISM_ICONS[resolved];
 }
 
-/** @emoji 🔍️ Resolves a metabolism icon id through theme aliases to a compile-time {@link MetabolismIconName}. */
+/** 🔍️ Resolves a metabolism icon id through theme aliases to a compile-time {@link MetabolismIconName}. */
 export function resolveMetabolismIconNameFromTheme(name: MetabolismIconName, icons: UiThemeIcons | undefined): MetabolismIconName {
   const alias = icons?.themedAliases?.[name];
   return alias && isMetabolismIconName(alias) ? alias : name;

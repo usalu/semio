@@ -1,0 +1,50 @@
+{
+  "$schema": "../../../../🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🎥️ The raster video tier's contribution to the repository test platform. The tier writes H.264 and MP4 by itself (no encoder library at runtime), so the reference is the decoder every media stack is measured against: FFmpeg's `mov` demuxer and `h264` decoder, driven as a third-party CLI from the TypeScript adapter of `🧪️tests/🎞️ffmpeg-decode`.",
+  "oracles": [
+    {
+      "id": "ffmpeg",
+      "kind": "third-party-cli",
+      "ecosystem": "native",
+      "package": "ffmpeg",
+      "version": "8.1",
+      "source": {
+        "repository": "https://git.ffmpeg.org/ffmpeg.git",
+        "license": "LGPL-2.1-or-later"
+      },
+      "engine": {
+        "family": "ffmpeg",
+        "implementation": "libavformat mov demuxer + libavcodec h264 decoder (ffprobe -count_frames / -show_entries frame=key_frame; ffmpeg -f rawvideo -pix_fmt yuv420p)",
+        "version": "8.1"
+      },
+      "capabilities": [
+        "avc-mp4-decode"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://ffmpeg.org",
+      "rationale": "🎥️ The encoder under test writes Constrained Baseline H.264 (all-`I_PCM` IDR pictures, all-`P_Skip` repeats) and an ISO-BMFF container, both first-party. An encoder is only as correct as the decoders that read it, and FFmpeg's `h264` decoder is the reference implementation of ITU-T H.264 decoding outside the JM reference software; its `mov` demuxer reads the `avcC`, `stts`, `stss`, `stsz` and `stco` boxes the muxer writes. Because `I_PCM` carries raw samples and `P_Skip` copies its reference exactly, the decode is lossless in the 4:2:0 domain, so the comparison is exact: FFmpeg must report the declared codec, profile, size, rate, frame count and key frames, and every decoded frame's planes must hash to what the encoder claims. `mp4` 0.14 (the stdio oracle) was considered and not used: it demuxes but cannot decode a sample, so it could not see a wrong macroblock.",
+      "hostImplementation": "typescript",
+      "executables": [
+        "ffmpeg",
+        "ffprobe"
+      ]
+    }
+  ],
+  "noOracleDecisions": [],
+  "comparisonProfiles": [],
+  "oracleHostPackages": []
+}

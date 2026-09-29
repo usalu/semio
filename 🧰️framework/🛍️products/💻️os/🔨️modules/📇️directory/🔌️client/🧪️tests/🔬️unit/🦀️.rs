@@ -402,6 +402,23 @@ fn document_expectation(schema: &str, surface_id: Option<&str>) -> DocumentSocke
     DocumentSocketExpectationV1 { artifact_schema: schema.to_string(), pack_schema_hash: [0x11; 32], requested_surface_id: surface_id.map(str::to_string), lease: None }
 }
 
+/// 🌐️ The execution-target status vocabulary is ONE vocabulary: every code of the language-neutral corpus
+/// (`document-execution-target-lease-v1` `expected.status` / `statusRoles`) decodes to the Rust twin with the corpus's exact
+/// English and German text and live-region role, and the twin has no code the corpus lacks.
+#[test]
+fn execution_target_status_vocabulary_matches_the_corpus() {
+    use crate::os_directory::schema::{DocumentExecutionTargetLocaleV1, DocumentExecutionTargetStatusCodeV1};
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🌎️hub/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution target lease corpus");
+    let status = corpus["expected"]["status"].as_object().expect("corpus status vocabulary");
+    for (code, text) in status {
+        let decoded: DocumentExecutionTargetStatusCodeV1 = crate::os_pack::json::from_json_str(&format!("\"{code}\"")).unwrap_or_else(|_| panic!("the Rust twin lacks status {code}"));
+        assert_eq!(decoded.text(DocumentExecutionTargetLocaleV1::En), text["en"].as_str().expect("en"), "{code} en");
+        assert_eq!(decoded.text(DocumentExecutionTargetLocaleV1::De), text["de"].as_str().expect("de"), "{code} de");
+        assert_eq!(decoded.aria_role(), corpus["expected"]["statusRoles"][code.as_str()].as_str().expect("role"), "{code} role");
+    }
+    assert_eq!(status.len(), 9, "the corpus names every status the twins speak");
+}
+
 /// 🪪️ The one shared full-field lease relation, driven by the language-neutral
 /// `document-execution-target-lease-v1` corpus: the positive GIS Map viewer vector's plan
 /// projection equals its manifest, its exact component and descriptor bytes hash to the declared
@@ -1165,5 +1182,52 @@ async fn the_canonical_pair_is_fetched_verified_and_admitted_as_the_authorized_c
         };
         assert_eq!(named, refusal);
         assert_eq!(transport.requests.lock().unwrap().len(), if status == 503 { CANONICAL_CHECKPOINT_PAIR_TRANSIENT_ATTEMPTS as usize } else { 1 }, "{status}");
+    }
+}
+
+/// 🛟️ A rebootstrap fetch reads the same route and admits the pair only as the control's checkpoint.
+#[semio_framework_async_macros::async_test]
+async fn a_rebootstrap_pair_is_admitted_only_as_the_controls_checkpoint() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧫️fixtures/📇️directory/🪢️canonical-checkpoint-pair-v1.json")).expect("canonical pair fixture");
+    let capability = format!("session.v1.{}.{}", "a".repeat(32), "b".repeat(64));
+    for case in fixture["rebootstrapAdmissions"].as_array().unwrap() {
+        let pair = fixture["pairs"].as_array().unwrap().iter().find(|pair| pair["id"] == case["pair"]).unwrap();
+        let text = pair["bodyHex"].as_str().unwrap();
+        let body: Vec<u8> = (0..text.len()).step_by(2).map(|index| u8::from_str_radix(&text[index..index + 2], 16).unwrap()).collect();
+        let raw = &case["control"];
+        let hash = |value: &serde_json::Value| crate::os_directory::ArtifactHash::parse_hex(value.as_str().unwrap()).unwrap();
+        let control = crate::os_directory::RebootstrapRequired {
+            scope: DocumentScope::new(raw["scope"]["spaceId"].as_str().unwrap(), raw["scope"]["documentId"].as_str().unwrap()),
+            checkpoint_id: hash(&raw["checkpointId"]),
+            descriptor_digest_v1: hash(&raw["descriptorDigestV1"]),
+            baseline_frontier: crate::os_pack::json::from_json_str(&raw["baselineFrontier"].to_string()).expect("fixture baseline"),
+        };
+        let transport = FakeTransport::default();
+        transport.push_response(Ok(HttpResponse { status: 200, body })).await;
+        let answer = authenticated_client(transport.clone(), &capability).rebootstrap_canonical_checkpoint_pair(&root_ctx(), &control).await;
+        match case["refusal"].as_str() {
+            None => assert!(answer.is_ok(), "{}: {answer:?}", case["id"]),
+            Some(code) => assert!(matches!(&answer, Err(DirectoryClientError::Decode(detail)) if detail == code), "{}: {answer:?}", case["id"]),
+        }
+        assert_eq!(transport.requests.lock().unwrap()[0].url, format!("http://hub.local{}", canonical_checkpoint_pair_path(&control.scope)));
+    }
+}
+
+/// 🤖️ The Rust twin answers the shared delegation-list vectors (`🤖️delegations/🧫️fixtures/📋️agent-delegation-list.json`) the
+/// TypeScript parser + ShellHost filter answer: a malformed row is dropped, never the listing; revoked or expired rows name no agent.
+#[test]
+fn live_agent_principals_answer_the_shared_delegation_list_vectors() {
+    let vectors = crate::os_pack::json::parse(include_str!("../../../🤖️delegations/🧫️fixtures/📋️agent-delegation-list.json")).expect("the delegation vectors parse");
+    let cases = vectors.get("cases").and_then(crate::os_pack::json::Value::as_array).expect("cases");
+    assert!(!cases.is_empty());
+    for case in cases {
+        let name = case.get("name").and_then(crate::os_pack::json::Value::as_str).expect("name");
+        let body = match case.get("body") {
+            Some(body) => crate::os_pack::json::to_string(body),
+            None => case.get("bodyText").and_then(crate::os_pack::json::Value::as_str).expect("bodyText").to_string(),
+        };
+        let now_ms = case.get("nowMs").and_then(crate::os_pack::json::Value::as_i64).expect("nowMs");
+        let expected: Vec<String> = case.get("principals").and_then(crate::os_pack::json::Value::as_array).expect("principals").iter().map(|principal| principal.as_str().expect("principal").to_string()).collect();
+        assert_eq!(agent_delegations::live_agent_principals(&body, now_ms), expected, "{name}");
     }
 }

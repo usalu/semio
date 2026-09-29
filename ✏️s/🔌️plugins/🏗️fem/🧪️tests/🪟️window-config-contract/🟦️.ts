@@ -29,7 +29,6 @@ export function testFem2dWindowConfigContract(): void {
   testFemDocumentAdmission("2d");
   testFem2dModelWindowConfigContract();
   testFem2dResultsWindowConfigContract();
-  console.log("[DEBUG] FEM 2D exact-window ownership facets passed independent neutral validation");
 }
 
 export function testFem3dWindowConfigContract(): void {
@@ -48,24 +47,19 @@ export function testFem3dWindowConfigContract(): void {
     assert(!validateCommands(wrongOwner), id);
   }
   assert(!Object.hasOwn(fem3dDocumentSchema.$defs, "Fem3dRetainedCommandLimits"));
-  console.log("[DEBUG] FEM 3D command-owned route schema rejects application config lanes for exact window commands");
   testMeshEdgeAuthority();
   const validateOutcomes = new Ajv({ strict: true, allErrors: true }).compile(childOutcomesSchema);
   assert(validateOutcomes(childOutcomes), JSON.stringify(validateOutcomes.errors));
   for (const row of childOutcomes.cases) assert.deepEqual(applyPatch(structuredClone(row.before), row.patch as Operation[], true).newDocument, row.expected, row.kind);
-  console.log("[DEBUG] All child outcome ownership cases agree with Ajv and fast-json-patch");
   testFemDocumentAdmission("3d");
   const validateGrants = new Ajv({ strict: true, allErrors: true }).compile(closeGrantsSchema);
   assert(validateGrants(closeGrants), JSON.stringify(validateGrants.errors));
   for (const row of closeGrants.cases) assert.deepEqual(applyPatch(structuredClone(row.before), row.patch as Operation[], true).newDocument, row.expected, row.id);
-  console.log("[DEBUG] FEM visual close grant cases agree with Ajv and fast-json-patch");
   const validateClose = new Ajv({ strict: true, allErrors: true }).compile(mountedCloseSchema);
   assert(validateClose(mountedClose), JSON.stringify(validateClose.errors));
   for (const row of mountedClose.cases) assert.deepEqual(applyPatch(structuredClone(row.before), row.patch as Operation[], true).newDocument, row.expected, row.id);
-  console.log("[DEBUG] FEM 3D mounted-close neutral cases agree with Ajv and fast-json-patch");
   testFem3dModelWindowConfigContract();
   testFem3dResultsWindowConfigContract();
-  console.log("[DEBUG] FEM 3D exact-window ownership facets passed independent neutral validation");
 }
 
 function testFemDocumentAdmission(dimension: "2d" | "3d"): void {
@@ -84,7 +78,6 @@ function testFemDocumentAdmission(dimension: "2d" | "3d"): void {
     assert(!validate(candidate), field.key);
     assert.throws(() => parse(candidate), field.key);
   }
-  console.log(`[DEBUG] FEM ${dimension} document admission rejects window/OS fields in agreement with Ajv`);
 }
 
 if (import.meta.main) {
